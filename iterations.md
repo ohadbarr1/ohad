@@ -87,22 +87,28 @@ half-width ≈ ±11% of mid. Matches the reference frame.
 - Fixed-% TP ≥ +100% with close fills: the 2025 trade's TP lands above the Dec-2025
   high (498.8) → position never closes → 3 closed trades.
 
+| 10 | Iteration-9 rules + monthly B-Xtrender gate (RSI(EMA(c,s1)−EMA(c,s2),s3)−50; param sets (5,20,15)/(5,21,14)/(14,21,5)/(5,14,21)/(1,14,5); gate = positive / rising / either / both at the confirmed signal month) | 2-3 | — | — | — | — | — | **fail — hypothesis rejected.** Every gate variant suppresses the 2022-10 entry (monthly momentum was negative/falling through the whole Oct-Nov 2022 dip), which is the reference's deep −43%-class stop. No variant kills the 2015-2017 pair while keeping 2022. The momentum-gate explanation for the reference's trade set is dead; the residual gap is feed-dependence of the marginal 2016-10 flip (explanation 1 below). |
+
 ## Open gap + hypothesis for next pass
 
 Avg win/avg loss remain compressed vs the reference (+72/−28.7 vs +111.1/−42.7). Both
 residuals trace to the 2015-11 and 2017-03 trades, which hinge on band touches that
-are within feed noise (the marginal 2016-10 bear flip). Two candidate explanations,
-untestable from one screenshot:
-1. TradingView's TSLA feed shifts those touches → different early trades (e.g. no
-   2016-10 flip → no 2015/2017 pair; a 2013 flip TP ~+134% and a deeper 2022-10 entry
-   would land avg win ≈ +111 / avg loss ≈ −43 exactly).
-2. THT gates entries with their unpublished "THT Long Term v1.4" / monthly B-Xtrender
-   state (visible as a second indicator on the reference chart), suppressing the
-   2015-2017 entries.
-Next verification must happen ON TradingView with the real feed: load the v2 script on
-TSLA 1W, read the band triple at Jun-2026 (expect ≈340.9/301.7/273.3 ✓ if the feed
-matches) and compare the trade list; then, if the early trades still appear, test gate
-hypothesis 2.
+are within feed noise (the marginal 2016-10 bear flip: monthly close 13.18 vs lower
+band 13.42, a 1.8% margin). The momentum-gate explanation was tested and rejected
+(iteration 10). Remaining explanation: TradingView's TSLA feed shifts those touches →
+different early trades (e.g. no 2016-10 flip removes the 2015/2017 pair; a 2013-cycle
+TP ~+134% plus a deeper 2022-10 entry would land avg win ≈ +111 / avg loss ≈ −43
+exactly — arithmetic consistent with the reference).
+
+**Next verification must happen ON TradingView with the real feed** (offline replica
+has converged):
+1. Load the v2 script on TSLA · 1W, backtest window 2010-06-28 → 2026-07-20, 100K.
+2. Anchor assertion: hover a June-2026 weekly bar — the status line should read
+   ≈ 340.9 / 301.7 / 273.3 (±2%). If yes, the band math is confirmed on the real feed.
+3. Compare the trade list. If 2015-11/2017-03 entries are absent on TV data, the
+   stats should land near the reference; if present, tune `TP = entry + k × width`
+   (k input) and the entry/re-arm toggles — every degree of freedom is exposed as an
+   input for exactly this purpose.
 
 ## Guardrails held (v2)
 
