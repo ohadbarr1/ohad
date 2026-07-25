@@ -1,0 +1,309 @@
+// =====================================================================================
+//  THT Monthly 33FVB — Strategy Engine (visual + statistical reconstruction, v2)
+//
+//  v2 — CALIBRATED AGAINST THE REFERENCE SCREENSHOT (TSLA · 1W · 2010-06-28 → 2026-07-20)
+//
+//  ── WHAT CHANGED IN v2 AND WHY ───────────────────────────────────────────────────────
+//  (1) BAND MATH REPLACED (root defect in v1). The bands are NOT ±1 standard deviation.
+//      Reference readout at the Jun-2026 anchor bar is 340.90 / 301.74 / 273.30 —
+//      half-width ≈ ±11% of the midline and slightly asymmetric. ta.stdev(ohlc4,33) on
+//      monthly TSLA gives ±25-30% (trend-dominated): ~3x too wide. Hypothesis testing
+//      against real TSLA monthly data (H1 SMA-of-extremes channel / H2 ATR / H3 detrended
+//      stdev / H4 return-stdev) leaves exactly one survivor:
+//          upper = SMA(high, 33)   ·   mid = SMA(ohlc4, 33)   ·   lower = SMA(low, 33)
+//      computed on 1M. Replica values at the anchor: 337.21 / 302.90 / 268.44 — all
+//      within ±1.8% of the reference triple (residual = data-feed difference). Every
+//      symmetric dispersion measure misses by 7-22% and cannot produce the asymmetry.
+//      The trailing "1" in the param string is a width multiplier around the mid.
+//  (2) ENTRY INVERTED: breakout → discount. v1 bought the flip ABOVE the band and fired
+//      ~10x too often. The reference buys the first weekly close that pulls back INTO
+//      the band while the monthly regime is bull ("in the band gives you a 60 to 70%
+//      win rate"), at most once per regime cycle. On TSLA this yields exactly 4 trades
+//      since 2010 (2 TP / 2 stops, win rate 50%), entry Mar-2025 in the band and TP at
+//      the 2025 extension — matching the reference marks.
+//  (3) EXIT: take-profit is a LIMIT order at entry + k × band width (default k = 3.6,
+//      back-solved from the reference TP location); stop-out on the monthly regime
+//      flipping bear. Calibration on TSLA replica: Trades 4 ✓, TP/Stop 2/2 ✓, WR 50% ✓,
+//      avg hold ~30 bars (ref 28.5) ✓, total return ~+37% (ref +38.5%) ✓, maxDD ~-49%
+//      (ref -48.2%) ✓. Avg win/avg loss remain smaller than the reference (+72%/-29%
+//      vs +111%/-43%) — the residual sits in two 2015-2017 trades on marginal band
+//      touches where feed differences flip the outcome; see iterations.md.
+//
+//  ── CARRIED OVER FROM v1, STILL TRUE ─────────────────────────────────────────────────
+//  • The coloured green/red line through the cloud IS the 33 midline; the two thin
+//    WHITE lines are the band edges ("Image match" preset, default).
+//  • The UNIVERSE panel is display-only text. A single-symbol strategy cannot compute
+//    cross-symbol fund statistics; the twelve fields are free-text inputs (prefilled
+//    with the reference video's published figures — replace with your own). The
+//    BACKTEST panel below it is fully computed from strategy.* built-ins and is real.
+//  • Entry/exit rules are a reconstruction — THT has never published them. Everything
+//    is parameterised so the logic can keep being tuned toward the reference.
+// =====================================================================================
+//@version=5
+strategy("THT Monthly 33FVB Strategy", shorttitle="THT 33FVB / SMZ", overlay=true,
+     initial_capital       = 100000,
+     default_qty_type      = strategy.percent_of_equity,
+     default_qty_value     = 100,
+     pyramiding            = 0,
+     commission_type       = strategy.commission.percent,
+     commission_value      = 0.03,
+     process_orders_on_close = true,
+     calc_on_every_tick    = false)
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+//  Inputs
+// ─────────────────────────────────────────────────────────────────────────────────────
+gB = "▸ Fair Value Bands"
+htf       = input.timeframe("1M", "Source timeframe", group=gB)
+maLen     = input.int(33,  "SMA length", minval=1, group=gB)
+srcMid    = input.source(ohlc4, "Midline source", group=gB,
+     tooltip="The band edges are SMAs of HIGH and LOW; this source only feeds the midline.")
+bwMult    = input.float(1.0, "Band width multiple", minval=0.1, step=0.1, group=gB,
+     tooltip="Scales the SMA(high)/SMA(low) envelope around the midline.\n1.0 = the raw high/low SMA channel (matches the reference).")
+confirmed = input.bool(true, "Confirmed HTF bars only (no repaint)", group=gB,
+     tooltip="ON  = the bands step only when a monthly bar CLOSES, and never move again.\nOFF = the bands drift all month.\nlookahead_off alone does not prevent this — this toggle does.")
+
+gS = "▸ Smoothing"
+smoothOn  = input.bool(true, "Smooth bands below weekly charts", group=gS)
+smoothLen = input.int(12, "EMA smoothing length", minval=1, group=gS,
+     tooltip="Cosmetic only. Removes the monthly staircase on daily charts, but an EMA(12) of a step function lags the true level by roughly half its length. Signals are always computed from the RAW bands, never the smoothed ones.")
+
+gT = "▸ Trade logic (reconstruction — not published by THT)"
+entryMode = input.string("Pullback into band", "Entry trigger",
+     options=["Pullback into band","Flip to BULL","Flip or pullback"], group=gT,
+     tooltip="Pullback into band = first weekly close that crosses from above the upper band back inside it while the monthly regime is bull (reference behaviour).\nFlip to BULL = v1 breakout behaviour, kept for comparison.")
+oncePerRegime = input.bool(true, "At most one entry per regime cycle", group=gT,
+     tooltip="Blocks re-entry until the monthly regime flips bear and bull again. Required to reproduce the reference's 4-trades-in-16-years rarity.")
+rearmAfterTP  = input.bool(false, "Re-arm after a take-profit", group=gT,
+     tooltip="If ON, a completed TP allows one more entry inside the same bull regime.")
+tpMode  = input.string("Band multiple", "Take-profit basis", options=["Band multiple","Fixed %"], group=gT)
+tpMult  = input.float(3.6,  "TP = entry + k × band width", minval=0.1, step=0.1, group=gT)
+tpPct   = input.float(100.0, "TP = entry + %", minval=1.0, step=5.0, group=gT)
+useStop = input.bool(true, "Stop out on flip to BEAR", group=gT)
+
+gV = "▸ Visuals"
+preset    = input.string("Image match", "Band preset", options=["Image match","Brief spec"], group=gV)
+cBull     = input.color(#00e676, "Bull", inline="v", group=gV)
+cBear     = input.color(#ff1744, "Bear", inline="v", group=gV)
+cBand     = input.color(#d9d9d9, "Band lines (image preset)", group=gV)
+fillTr    = input.int(82, "Cloud transparency", minval=0, maxval=100, group=gV)
+zoneTr    = input.int(90, "Open-trade zone transparency", minval=0, maxval=100, group=gV)
+showDash  = input.bool(true, "Show dashboard", group=gV)
+
+gU = "▸ UNIVERSE panel (display-only text — nothing is computed here)"
+uCAGR   = input.string("+17.6%", "CAGR",          group=gU)
+uSharpe = input.string("0.99",   "Sharpe",        group=gU)
+uWin    = input.string("71.5%",  "Win rate",      group=gU)
+uPF     = input.string("2.91",   "Profit factor", group=gU)
+uAvgW   = input.string("+26.2%", "Avg win",       group=gU)
+uAvgL   = input.string("-22.6%", "Avg loss",      group=gU)
+uRVR    = input.string("1.16",   "RVR",           group=gU)
+uTrades = input.string("1,426",  "Trades",        group=gU)
+uHMin   = input.string("5",      "Held min",      group=gU)
+uHAvg   = input.string("39",     "Held avg",      group=gU)
+uHMed   = input.string("37",     "Held median",   group=gU)
+uHMax   = input.string("118",    "Held max",      group=gU)
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+//  Bands + monthly regime (both computed inside the HTF context, shifted back one HTF
+//  bar when confirmed-only, so nothing reads the developing monthly bar)
+// ─────────────────────────────────────────────────────────────────────────────────────
+offset = confirmed ? 1 : 0
+
+f_bands() =>
+    up  = ta.sma(high,  maLen)
+    lo  = ta.sma(low,   maLen)
+    mid = ta.sma(srcMid, maLen)
+    // Persistent monthly regime: judged against the CONFIRMED band of the prior month,
+    // exactly like the weekly-chart signals below. Computed here so a monthly close
+    // decides the flip — not an intra-month weekly close.
+    var int reg = 0
+    if close > up[1]
+        reg := 1
+    else if close < lo[1]
+        reg := -1
+    [up[offset], lo[offset], mid[offset], reg[offset]]
+
+[upSma, loSma, basisRaw, regimeM] = request.security(syminfo.tickerid, htf, f_bands(),
+     gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_off)
+
+upperRaw = basisRaw + bwMult * (upSma - basisRaw)
+lowerRaw = basisRaw - bwMult * (basisRaw - loSma)
+
+// Display-only smoothing. Signals below use the RAW series.
+applySmooth = smoothOn and timeframe.in_seconds() < timeframe.in_seconds("1W")
+basisPlot = applySmooth ? ta.ema(basisRaw, smoothLen) : basisRaw
+upperPlot = applySmooth ? ta.ema(upperRaw, smoothLen) : upperRaw
+lowerPlot = applySmooth ? ta.ema(lowerRaw, smoothLen) : lowerRaw
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+//  Regime bookkeeping on the chart timeframe
+// ─────────────────────────────────────────────────────────────────────────────────────
+regime    = regimeM
+regimeCol = regime == 1 ? cBull : regime == -1 ? cBear : color.gray
+flipBull  = regime == 1 and nz(regime[1]) != 1
+flipBear  = regime == -1 and nz(regime[1]) != -1
+
+var bool armed = true          // one entry per regime cycle
+if regime != nz(regime[1])
+    armed := true
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+//  Trade logic
+// ─────────────────────────────────────────────────────────────────────────────────────
+// Pullback: first close crossing from above the upper band back inside the channel.
+crossIn  = regime == 1 and close <= upperRaw and close >= lowerRaw and nz(close[1]) > nz(upperRaw[1], upperRaw)
+entrySig = entryMode == "Pullback into band" ? crossIn :
+           entryMode == "Flip to BULL"       ? flipBull :
+           flipBull or crossIn
+
+var float tpPx = na
+
+if entrySig and strategy.position_size == 0 and (not oncePerRegime or armed)
+    bw = upperRaw - lowerRaw
+    tpPx := tpMode == "Band multiple" ? close + tpMult * bw : close * (1 + tpPct / 100.0)
+    strategy.entry("Long", strategy.long)
+    strategy.exit("TP", "Long", limit=tpPx)
+    armed := false
+
+hitStop = strategy.position_size > 0 and useStop and regime == -1
+if hitStop
+    strategy.close("Long", comment="Stop")
+
+// Detect how the position closed (limit TP fills intrabar; stop closes on the bar close)
+justOut  = strategy.position_size == 0 and nz(strategy.position_size[1]) > 0
+tpFilled = justOut and not na(tpPx) and high >= tpPx and not hitStop
+
+var int nTP   = 0
+var int nStop = 0
+if tpFilled
+    nTP += 1
+    if rearmAfterTP
+        armed := true
+if justOut and not tpFilled
+    nStop += 1
+
+inTrade = strategy.position_size > 0
+justIn  = strategy.position_size > 0 and nz(strategy.position_size[1]) == 0
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+//  Plots
+// ─────────────────────────────────────────────────────────────────────────────────────
+imageMode = preset == "Image match"
+bandCol   = imageMode ? cBand : regimeCol
+
+// NOTE: plot() linewidth must be a CONST int — it cannot branch on an input. The two
+// presets are therefore differentiated by colour, not thickness.
+pMid = plot(imageMode ? basisPlot : na, "33 midline", color=color.new(regimeCol, 0), linewidth=2)
+pUp  = plot(upperPlot, "Upper band", color=color.new(bandCol, 0), linewidth=1)
+pDn  = plot(lowerPlot, "Lower band", color=color.new(bandCol, 0), linewidth=1)
+
+fill(pUp, pDn, color=color.new(regimeCol, fillTr), title="Fair value cloud")
+
+// Open-trade zone
+bgcolor(inTrade ? color.new(color.green, zoneTr) : na, title="Open trade zone")
+
+// Markers
+plotshape(justIn,  title="BUY", style=shape.triangleup,   location=location.belowbar,
+     color=#00bcd4, text="BUY", textcolor=color.white, size=size.small)
+plotshape(tpFilled, title="TP", style=shape.triangledown, location=location.abovebar,
+     color=#2196f3, text="TP", textcolor=color.white, size=size.small)
+plotshape(justOut and not tpFilled, title="Stop", style=shape.triangledown, location=location.abovebar,
+     color=#9e9e9e, text="SL", textcolor=color.white, size=size.small)
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+//  Dashboard
+// ─────────────────────────────────────────────────────────────────────────────────────
+cHdrBg = color.new(#5c5c5c, 15)
+cRowBg = color.new(#1c1c1c, 15)
+cPos   = #00e676
+cNeg   = #ff5252
+
+f_txtCol(string s) =>
+    str.startswith(s, "-") or str.startswith(s, "−") ? cNeg : str.startswith(s, "+") ? cPos : color.white
+
+f_numCol(float v) =>
+    na(v) ? color.silver : v > 0 ? cPos : v < 0 ? cNeg : color.silver
+
+f_hdr(table t, int r, string s) =>
+    table.cell(t, 0, r, s, text_color=color.white, text_size=size.tiny, text_halign=text.align_left,  bgcolor=cHdrBg)
+    table.cell(t, 1, r, "", text_color=color.white, text_size=size.tiny, bgcolor=cHdrBg)
+
+f_row(table t, int r, string k, string v, color vc) =>
+    table.cell(t, 0, r, k, text_color=color.silver, text_size=size.tiny, text_halign=text.align_left,  bgcolor=cRowBg)
+    table.cell(t, 1, r, v, text_color=vc,           text_size=size.tiny, text_halign=text.align_right, bgcolor=cRowBg)
+
+f_show(string s) =>
+    str.length(s) == 0 ? "—" : s
+
+var table dash = table.new(position.top_right, 2, 25, border_width=1,
+     border_color=color.new(#3a3a3a, 0), frame_width=1, frame_color=color.new(#3a3a3a, 0))
+
+if showDash and barstate.islast
+    // ── BACKTEST maths (all real, from strategy.* built-ins) ──────────────────────────
+    int   n     = strategy.closedtrades
+    float wSum  = 0.0
+    int   wCnt  = 0
+    float lSum  = 0.0
+    int   lCnt  = 0
+    float hSum  = 0.0
+    if n > 0
+        for i = 0 to n - 1
+            ep  = strategy.closedtrades.entry_price(i)
+            xp  = strategy.closedtrades.exit_price(i)
+            pct = ep != 0 ? (xp / ep - 1) * 100.0 : 0.0
+            if pct >= 0
+                wSum += pct
+                wCnt += 1
+            else
+                lSum += pct
+                lCnt += 1
+            hSum += strategy.closedtrades.exit_bar_index(i) - strategy.closedtrades.entry_bar_index(i)
+
+    float winRate = n > 0 ? wCnt / n * 100.0 : na
+    float avgWin  = wCnt > 0 ? wSum / wCnt : na
+    float avgLoss = lCnt > 0 ? lSum / lCnt : na
+    float pf      = strategy.grossloss > 0 ? strategy.grossprofit / strategy.grossloss : na
+    float expct   = n > 0 ? (nz(winRate) / 100.0 * nz(avgWin)) + ((1 - nz(winRate) / 100.0) * nz(avgLoss)) : na
+    float totRet  = strategy.initial_capital != 0 ? strategy.netprofit / strategy.initial_capital * 100.0 : na
+    float maxDD   = strategy.initial_capital != 0 ? -strategy.max_drawdown / strategy.initial_capital * 100.0 : na
+    float avgHold = n > 0 ? hSum / n : na
+
+    // ── Section 1: UNIVERSE (user-supplied, nothing computed) ─────────────────────────
+    f_hdr(dash, 0, "UNIVERSE — Fund — " + htf)
+    f_row(dash, 1,  "CAGR",          f_show(uCAGR),   f_txtCol(uCAGR))
+    f_row(dash, 2,  "Sharpe",        f_show(uSharpe), f_txtCol(uSharpe))
+    f_row(dash, 3,  "Win rate",      f_show(uWin),    f_txtCol(uWin))
+    f_row(dash, 4,  "Profit factor", f_show(uPF),     f_txtCol(uPF))
+    f_row(dash, 5,  "Avg win",       f_show(uAvgW),   f_txtCol(uAvgW))
+    f_row(dash, 6,  "Avg loss",      f_show(uAvgL),   f_txtCol(uAvgL))
+    f_row(dash, 7,  "RVR",           f_show(uRVR),    f_txtCol(uRVR))
+    f_row(dash, 8,  "Trades",        f_show(uTrades), f_txtCol(uTrades))
+    f_row(dash, 9,  "Held min",      f_show(uHMin),   f_txtCol(uHMin))
+    f_row(dash, 10, "Held avg",      f_show(uHAvg),   f_txtCol(uHAvg))
+    f_row(dash, 11, "Held median",   f_show(uHMed),   f_txtCol(uHMed))
+    f_row(dash, 12, "Held max",      f_show(uHMax),   f_txtCol(uHMax))
+
+    // ── Section 2: BACKTEST (computed) ────────────────────────────────────────────────
+    f_hdr(dash, 13, "BACKTEST — this symbol")
+    f_row(dash, 14, "Trades",          str.tostring(n),                                color.white)
+    f_row(dash, 15, "Win rate",        na(winRate) ? "—" : str.tostring(winRate, "#")  + "%",  color.white)
+    f_row(dash, 16, "Profit factor",   na(pf)      ? "—" : str.tostring(pf, "#.#"),           f_numCol(nz(pf) - 1))
+    f_row(dash, 17, "Avg win",         na(avgWin)  ? "—" : str.tostring(avgWin,  "+#.#") + "%", f_numCol(avgWin))
+    f_row(dash, 18, "Avg loss",        na(avgLoss) ? "—" : str.tostring(avgLoss, "+#.#") + "%", f_numCol(avgLoss))
+    f_row(dash, 19, "Expectancy",      na(expct)   ? "—" : str.tostring(expct,   "+#.#") + "%", f_numCol(expct))
+    f_row(dash, 20, "Total return",    na(totRet)  ? "—" : str.tostring(totRet,  "+#.#") + "%", f_numCol(totRet))
+    f_row(dash, 21, "Max drawdown",    na(maxDD)   ? "—" : str.tostring(maxDD,   "#.#")  + "%", cNeg)
+    f_row(dash, 22, "Avg hold (bars)", na(avgHold) ? "—" : str.tostring(avgHold, "#.#"),        color.white)
+    f_row(dash, 23, "TP / Stop",       str.tostring(nTP) + " / " + str.tostring(nStop),         color.white)
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+//  Guard + alerts
+// ─────────────────────────────────────────────────────────────────────────────────────
+if timeframe.in_seconds() > timeframe.in_seconds(htf) and barstate.islast
+    label.new(bar_index, high, "⚠ Chart TF exceeds the source TF (" + htf + ").",
+         style=label.style_label_down, color=color.new(color.orange, 20), textcolor=color.black, size=size.small)
+
+alertcondition(flipBull, "Regime turns BULL", "Monthly close above the 33-month high-SMA band")
+alertcondition(flipBear, "Regime turns BEAR", "Monthly close below the 33-month low-SMA band")
+alertcondition(crossIn,  "Pullback into band", "Weekly close pulled back inside the monthly 33 fair-value band (bull regime)")
