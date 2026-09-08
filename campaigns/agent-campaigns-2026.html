@@ -1,0 +1,497 @@
+<title>מבצעי סוכנים סוף 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700&display=swap">
+<style>
+:root{
+  --paper:#FAF8F3; --surface:#FFFFFF; --ink:#191F2A; --ink-2:#4A515F; --muted:#767D8B;
+  --rule:#E3DDD1; --rule-soft:#EFEAE0; --accent:#22405E; --accent-soft:#E9EDF3;
+  --gold:#9C6F18; --pos:#1F6B4E; --warn:#9A4A1E;
+  --c-clal:#1F5FA8; --c-menora:#5B3FA8; --c-migdal:#24397A; --c-harel:#B4601F; --c-more:#A82D4C;
+  --shadow:0 1px 2px rgba(25,31,42,.05), 0 8px 24px -18px rgba(25,31,42,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#13161C; --surface:#1A1E26; --ink:#E9E5DC; --ink-2:#B6BAC4; --muted:#8B909C;
+    --rule:#2C313B; --rule-soft:#232830; --accent:#8FB4DC; --accent-soft:#1E2530;
+    --gold:#D9A93F; --pos:#5FC199; --warn:#E09A5F;
+    --c-clal:#6BA5E8; --c-menora:#A98CE8; --c-migdal:#7E93DE; --c-harel:#E0964F; --c-more:#E8788F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#13161C; --surface:#1A1E26; --ink:#E9E5DC; --ink-2:#B6BAC4; --muted:#8B909C;
+  --rule:#2C313B; --rule-soft:#232830; --accent:#8FB4DC; --accent-soft:#1E2530;
+  --gold:#D9A93F; --pos:#5FC199; --warn:#E09A5F;
+  --c-clal:#6BA5E8; --c-menora:#A98CE8; --c-migdal:#7E93DE; --c-harel:#E0964F; --c-more:#E8788F;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+}
+*{box-sizing:border-box}
+body{
+  direction:rtl; background:var(--paper); color:var(--ink);
+  font-family:"Heebo",-apple-system,"Segoe UI",Arial,sans-serif; font-weight:400;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:40px 24px 80px}
+h1,h2,h3{font-family:"Frank Ruhl Libre",Georgia,serif; text-wrap:balance; margin:0}
+a{color:var(--accent)}
+
+/* ---------- masthead ---------- */
+.masthead{border-bottom:2px solid var(--ink); padding-bottom:14px; margin-bottom:8px}
+.kicker{font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:500}
+h1{font-size:clamp(30px,4.6vw,46px); font-weight:900; line-height:1.12; margin:8px 0 6px; letter-spacing:-.01em}
+.dek{font-size:16px; color:var(--ink-2); max-width:66ch}
+.stamp{display:flex; flex-wrap:wrap; gap:6px 22px; font-size:12px; color:var(--muted);
+  border-bottom:1px solid var(--rule); padding:9px 0 16px; margin-bottom:30px}
+.stamp b{color:var(--ink-2); font-weight:500}
+
+/* ---------- bottom line ---------- */
+.bl{background:var(--surface); border:1px solid var(--rule); border-top:3px solid var(--accent);
+  border-radius:2px; padding:22px 26px; box-shadow:var(--shadow); margin-bottom:34px}
+.bl h2{font-size:19px; font-weight:700; margin-bottom:12px}
+.bl ol{margin:0; padding-inline-start:20px; display:flex; flex-direction:column; gap:9px}
+.bl li{color:var(--ink-2); max-width:88ch}
+.bl li b{color:var(--ink); font-weight:500}
+
+/* ---------- section ---------- */
+section{margin-bottom:42px; scroll-margin-top:20px}
+.sec-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  border-bottom:1px solid var(--ink); padding-bottom:7px; margin-bottom:16px}
+.sec-head h2{font-size:23px; font-weight:700}
+.sec-head .sub{font-size:13px; color:var(--muted)}
+.num{font-family:"Frank Ruhl Libre",serif; font-size:13px; color:var(--muted); font-weight:500}
+
+/* ---------- tables ---------- */
+.scroller{overflow-x:auto; border:1px solid var(--rule); border-radius:2px; background:var(--surface); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:640px}
+caption{caption-side:top; text-align:right; font-size:12px; color:var(--muted); padding:0 0 7px}
+th,td{padding:9px 12px; text-align:right; vertical-align:top; border-bottom:1px solid var(--rule-soft)}
+thead th{background:var(--accent-soft); color:var(--ink); font-weight:500; font-size:12px;
+  letter-spacing:.03em; border-bottom:1px solid var(--rule); white-space:nowrap; position:relative}
+tbody tr:last-child td{border-bottom:none}
+td.n,th.n{font-variant-numeric:tabular-nums; white-space:nowrap; font-feature-settings:"tnum"}
+td.lead{font-weight:500; color:var(--ink); white-space:nowrap}
+tbody tr:hover{background:var(--accent-soft)}
+.grp td{background:var(--rule-soft); font-weight:500; font-size:12px; letter-spacing:.04em; color:var(--ink-2)}
+tr.grp:hover td{background:var(--rule-soft)}
+
+/* ---------- company chip ---------- */
+.chip{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:500;
+  border:1px solid currentColor; border-radius:2px; padding:1px 8px; white-space:nowrap}
+.clal{color:var(--c-clal)} .menora{color:var(--c-menora)} .migdal{color:var(--c-migdal)}
+.harel{color:var(--c-harel)} .more{color:var(--c-more)}
+.bar{width:3px; align-self:stretch; border-radius:2px}
+
+/* ---------- terms list ---------- */
+.terms{margin-top:14px; display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:0 34px}
+.terms h3{font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+  font-family:"Heebo",sans-serif; font-weight:500; margin:14px 0 6px; grid-column:1/-1}
+.terms ul{margin:0; padding-inline-start:17px; font-size:13px; color:var(--ink-2)}
+.terms li{margin-bottom:5px}
+.terms li b{color:var(--ink); font-weight:500}
+
+/* ---------- callouts ---------- */
+.note{border-inline-start:3px solid var(--gold); background:var(--surface); padding:11px 15px;
+  font-size:13px; color:var(--ink-2); margin-top:14px; border-radius:0 2px 2px 0}
+.note b{color:var(--ink); font-weight:500}
+.tag{font-size:11px; font-weight:500; letter-spacing:.04em; padding:1px 6px; border-radius:2px;
+  border:1px solid var(--rule); color:var(--muted); white-space:nowrap}
+.tag.est{color:var(--gold); border-color:var(--gold)}
+.tag.gate{color:var(--warn); border-color:var(--warn)}
+
+/* ---------- footnotes ---------- */
+.fn{margin-top:52px; border-top:2px solid var(--ink); padding-top:16px; font-size:12px; color:var(--muted)}
+.fn h2{font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-family:"Heebo",sans-serif;
+  font-weight:500; color:var(--ink-2); margin-bottom:10px}
+.fn ol{padding-inline-start:18px; margin:0 0 14px; display:flex; flex-direction:column; gap:5px}
+.fn p{margin:0 0 8px; max-width:92ch}
+sup{font-size:10px; color:var(--accent); font-weight:500}
+@media (max-width:640px){ .wrap{padding:26px 14px 60px} }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="kicker">מבצעי סוכנים · פנסיה, גמל, פיננסים וסיכונים</div>
+  <h1>מבצעי סוף שנת 2026 — סיכום השוואתי</h1>
+  <p class="dek">חמישה מבצעי סוכנים פעילים במקביל בחמש חברות. הדף מרכז את יעדי התפוקה, הפרסים, תנאי הסף ולוחות הזמנים — כפי שהם מופיעים בעלוני המבצע עצמם.</p>
+</header>
+<div class="stamp">
+  <span><b>מקור:</b> עלוני המבצע הרשמיים של החברות</span>
+  <span><b>מטבע:</b> ₪, לפי הגדרות התפוקה של כל חברה</span>
+  <span><b>חתך:</b> ספטמבר 2026 – פברואר 2027</span>
+  <span><b>סטטוס:</b> תמצית — התקנון המלא של כל חברה גובר</span>
+</div>
+
+<div class="bl">
+  <h2>שורה תחתונה</h2>
+  <ol>
+    <li><b>אותו פרס, מכפיל של פי ~80 בין ערוצים.</b> כרטיס טיסה זוגי נקנה ב־₪150–250 אלף תפוקת סיכונים, ב־₪2–3.75 מיליון תפוקת פנסיה, או ב־₪12–19 מיליון תפוקה פיננסית. מי שיש לו זרימת סיכונים מגיע ליעד בשבריר מהמאמץ הנומינלי.</li>
+    <li><b>מנורה היא היחידה שמתמחרת את הפרס.</b> מפתח ההמרה לכסף (₪13–26 אלף לכרטיס) מאפשר לחשב עלות פרס משתמעת: כ־<b>8%–10%</b> מיעד תפוקת הסיכונים, כ־<b>0.5%–0.7%</b> מיעד הפנסיה וכ־<b>0.10%–0.14%</b> מיעד הפיננסים. זהו מדד השוואה שאין לו מקבילה מפורסמת אצל המתחרות.</li>
+    <li><b>היעד הזול ביותר לכרטיס בודד הוא בערוץ הסיכונים של כלל/פוריה</b> — ₪120 אלף פרמיה לכרטיס יחיד לקנקון־מיאמי, מול ₪170 אלף במנורה ו־₪250 אלף במגדל (סיכונים מלא).</li>
+    <li><b>אין השוואה ישירה בין "פנסיה" של חברה אחת ל"גיוס" של אחרת.</b> מנורה ומגדל מודדות תפוקת פנסיה (פרמיה שנתית), מור וכלל מודדות גיוס/הפקדות (צבירה). אלו יחידות שונות — ראו הערת אזהרה בהמשך.<sup>†</sup></li>
+    <li><b>שער כניסה, לא רק יעד.</b> ארבע מהחמש מתנות את הזכאות בגידול או בשימור: כלל דורשת גידול 10% מול ספט׳–דצמ׳ 2025, מגדל 5% גידול, מנורה אי־ירידה מול אשתקד ושימור 80%/85%, ומור סף של 80% העברות נטו. עמידה חלקית ביעד אינה מזכה בכלום.</li>
+  </ol>
+</div>
+
+<!-- ============ MASTER TABLE ============ -->
+<section id="master">
+  <div class="sec-head">
+    <span class="num">01</span>
+    <h2>טבלת מאסטר — חמשת המבצעים במבט אחד</h2>
+    <span class="sub">כל השורות מצוטטות מעלון המבצע של החברה</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <thead>
+      <tr>
+        <th>חברה</th><th>שם המבצע / פרס</th><th>תקופת המבצע</th><th>בסיס מדידה</th>
+        <th>יעד כניסה (הנמוך ביותר)</th><th>יעד עליון</th><th>תנאי סף / שער</th><th>דדליין כספים</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="lead"><span class="chip clal">כלל</span></td>
+        <td>טסים על זה — קנקון־מיאמי / קפריסין</td>
+        <td class="n">1.9.26–31.12.26</td>
+        <td>הפקדות חד־פעמיות לפוליסות חיסכון פיננסי</td>
+        <td class="n">12,000,000 ₪</td>
+        <td class="n">17,000,000 ₪</td>
+        <td><span class="tag gate">גידול 10%</span> מול ספט׳–דצמ׳ 2025</td>
+        <td class="n">31.12.26</td>
+      </tr>
+      <tr>
+        <td class="lead"><span class="chip clal">כלל · פוריה</span></td>
+        <td>קנקון־מיאמי / חופשה משפחתית בקפריסין</td>
+        <td class="n">1.9.26–31.12.26</td>
+        <td>פרמיית סיכונים ("פרמיה קובעת ליעדים נטו")</td>
+        <td class="n">120,000 ₪</td>
+        <td class="n">240,000 ₪</td>
+        <td>מבצע ייעודי לסוכני אור פוריה</td>
+        <td class="n">31.12.26</td>
+      </tr>
+      <tr>
+        <td class="lead"><span class="chip menora">מנורה מבטחים</span></td>
+        <td>TRIPLE Mile — רכבי יוקרה / מרקש / היער השחור</td>
+        <td class="n">1.9.26–31.1.27</td>
+        <td>סיכונים · פנסיה · פיננסים (טהור או משולב)</td>
+        <td class="n">90,000 ₪ <span class="tag">משולב</span></td>
+        <td class="n">24,000,000 ₪</td>
+        <td><span class="tag gate">אי־ירידה מול אשתקד</span> · שימור 80%/85%</td>
+        <td class="n">15.2.27 · 31.3.27</td>
+      </tr>
+      <tr>
+        <td class="lead"><span class="chip migdal">מגדל</span></td>
+        <td>מכוונים גבוה — איטליה 2026 / יפן 2026</td>
+        <td class="n">23.8.26–14.1.27</td>
+        <td>פנסיה+סיכונים · סיכונים מלא · פיננסים · המרה לקצבה</td>
+        <td class="n">250,000 ₪ <span class="tag">סיכונים</span></td>
+        <td class="n">21,000,000 ₪</td>
+        <td><span class="tag gate">גידול 5%</span> מול התקופה המקבילה</td>
+        <td class="n">14.1.27</td>
+      </tr>
+      <tr>
+        <td class="lead"><span class="chip harel">הראל</span></td>
+        <td>חופשה חלומית במיקונוס</td>
+        <td class="n">1.8.26–30.11.26</td>
+        <td>צבירות חדשות בגמל, השתלמות, תיקים וקרן אלטרנטיב</td>
+        <td colspan="2">יעד <b>אישי</b> לכל סוכן — לא מפורסם בעלון</td>
+        <td>עמידה ביעד האישי בתקנון הסוכן</td>
+        <td class="n">31.12.26</td>
+      </tr>
+      <tr>
+        <td class="lead"><span class="chip more">מור גמל ופנסיה</span></td>
+        <td>בהילוך גבוה — מסלול מרוצים באירופה</td>
+        <td class="n">1.9.26–31.12.26</td>
+        <td>גיוס במוצרי גמל, השתלמות ופנסיה (לקוחות חדשים)</td>
+        <td class="n">12,000,000 ₪</td>
+        <td class="n">15,000,000 ₪ <span class="tag">מסלול מפוצל</span></td>
+        <td><span class="tag gate">80% העברות נטו</span> מיעד המכירות</td>
+        <td class="n">31.1.27 · 28.2.27</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note"><b>איך לקרוא את "יעד הכניסה":</b> העמודה מציגה את היעד הנמוך ביותר שמזכה בפרס כלשהו באותו מבצע, ולא בהכרח באותו סוג פרס. מנורה מציגה ₪90,000 בזכות מסלול משולב (סיכונים + פנסיה/פיננסים), ולכן אינו בר־השוואה ישירה ל־₪120,000 טהורים של כלל/פוריה.</div>
+</section>
+
+<!-- ============ CROSS-COMPANY BENCHMARK ============ -->
+<section id="bench">
+  <div class="sec-head">
+    <span class="num">02</span>
+    <h2>בנצ׳מרק — כמה תפוקה עולה כרטיס, לפי ערוץ</h2>
+    <span class="sub">היעד הנדרש לכרטיס יחיד/זוגי, בכל חברה, באותו ערוץ מכירה</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <caption>הערכים מצוטטים כלשונם מעלוני המבצע. אין להשוות בין ערוצים — ראו הערת יחידות בהמשך.<sup>†</sup></caption>
+    <thead>
+      <tr><th>ערוץ</th><th>חברה</th><th>יעד לכרטיס יחיד</th><th>יעד לכרטיס זוגי</th><th>הערה</th></tr>
+    </thead>
+    <tbody>
+      <tr class="grp"><td colspan="5">סיכונים — פרמיה שנתית נטו</td></tr>
+      <tr><td class="lead">סיכונים טהור</td><td><span class="chip clal">כלל · פוריה</span></td><td class="n">120,000 ₪</td><td class="n">240,000 ₪</td><td>קנקון־מיאמי; ₪120K גם לכרטיס זוגי בקפריסין</td></tr>
+      <tr><td class="lead">סיכונים טהור</td><td><span class="chip menora">מנורה</span></td><td class="n">160,000–170,000 ₪</td><td class="n">250,000 ₪</td><td>יחיד: מרקש 160K / רכבי יוקרה 170K</td></tr>
+      <tr><td class="lead">סיכונים מלא</td><td><span class="chip migdal">מגדל</span></td><td class="n">250,000 ₪</td><td class="n">350,000 ₪</td><td>יחיד = יפן; זוגי = יפן (זוגי איטליה ב־250K)</td></tr>
+      <tr class="grp"><td colspan="5">פנסיה — תפוקת פרמיה שנתית</td></tr>
+      <tr><td class="lead">פנסיה טהור</td><td><span class="chip menora">מנורה</span></td><td class="n">2,000,000 ₪</td><td class="n">3,750,000 ₪</td><td>זוגי = מרקש</td></tr>
+      <tr><td class="lead">פנסיה + סיכונים א׳</td><td><span class="chip migdal">מגדל</span></td><td class="n">1,100,000 ₪ <span class="tag">+95K סיכונים</span></td><td class="n">1,800,000 ₪ <span class="tag">+155K סיכונים</span></td><td>מותנה בניוד נכנס 5.5M / 9.5M ₪</td></tr>
+      <tr class="grp"><td colspan="5">פיננסים / גיוס — צבירה או תפוקה פיננסית</td></tr>
+      <tr><td class="lead">פיננסים טהור</td><td><span class="chip menora">מנורה</span></td><td class="n">12,500,000–13,000,000 ₪</td><td class="n">19,000,000 ₪</td><td>יחיד: מרקש 12.5M / רכבי יוקרה 13M</td></tr>
+      <tr><td class="lead">פיננסים</td><td><span class="chip migdal">מגדל</span></td><td class="n">13,500,000 ₪</td><td class="n">21,000,000 ₪</td><td>מתוכם חסכונות פרט נזילים 3.5M / 5.5M ₪</td></tr>
+      <tr><td class="lead">חיסכון פיננסי (חד־פעמי)</td><td><span class="chip clal">כלל</span></td><td class="n">12,000,000 ₪</td><td class="n">17,000,000 ₪</td><td>הפקדות חד־פעמיות בלבד; זוגי קפריסין כבר ב־12M</td></tr>
+      <tr><td class="lead">גיוס גמל+השתלמות</td><td><span class="chip more">מור</span></td><td colspan="2" class="n">12,000,000 ₪ — או 10,000,000 ₪ + 5,000,000 ₪ פנסיה</td><td>פרס אחיד: טיול פרמיום באירופה</td></tr>
+      <tr><td class="lead">המרה מיידית לקצבה</td><td><span class="chip migdal">מגדל</span></td><td class="n">11,000,000 ₪</td><td class="n">17,000,000 ₪</td><td>מסלול נפרד בטבלת היעדים</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============ IMPLIED PRIZE COST ============ -->
+<section id="cost">
+  <div class="sec-head">
+    <span class="num">03</span>
+    <h2>עלות פרס משתמעת — מנורה מבטחים</h2>
+    <span class="sub">החברה היחידה שפרסמה מפתח המרה לכסף, ולכן היחידה שניתן לתמחר</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <caption>חישוב שלנו: שווי הכרטיס במזומן (כולל מע״מ, לפי מפתח ההמרה של מנורה) חלקי יעד התפוקה. <span class="tag est">חישוב</span></caption>
+    <thead>
+      <tr><th>חוויה / כרטיס</th><th class="n">שווי המרה (₪, כולל מע״מ)</th><th class="n">יעד סיכונים</th><th class="n">% מהיעד</th><th class="n">יעד פנסיה</th><th class="n">% מהיעד</th><th class="n">יעד פיננסים</th><th class="n">% מהיעד</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="lead">SOLO — רכבי יוקרה, יחיד</td><td class="n">14,000</td><td class="n">170,000</td><td class="n">8.24%</td><td class="n">2,000,000</td><td class="n">0.70%</td><td class="n">13,000,000</td><td class="n">0.11%</td></tr>
+      <tr><td class="lead">COUPLE — מרקש, יחיד</td><td class="n">14,000</td><td class="n">160,000</td><td class="n">8.75%</td><td class="n">2,000,000</td><td class="n">0.70%</td><td class="n">12,500,000</td><td class="n">0.11%</td></tr>
+      <tr><td class="lead">COUPLE — מרקש, זוגי</td><td class="n">26,000</td><td class="n">250,000</td><td class="n">10.40%</td><td class="n">3,750,000</td><td class="n">0.69%</td><td class="n">19,000,000</td><td class="n">0.14%</td></tr>
+      <tr><td class="lead">FAMILY — היער השחור, זוגי</td><td class="n">13,000</td><td class="n">150,000</td><td class="n">8.67%</td><td class="n">2,000,000</td><td class="n">0.65%</td><td class="n">12,000,000</td><td class="n">0.11%</td></tr>
+      <tr><td class="lead">FAMILY — זוגי + 1</td><td class="n">17,000</td><td class="n">200,000</td><td class="n">8.50%</td><td class="n">3,000,000</td><td class="n">0.57%</td><td class="n">16,000,000</td><td class="n">0.11%</td></tr>
+      <tr><td class="lead">FAMILY — זוגי + 2</td><td class="n">21,000</td><td class="n">250,000</td><td class="n">8.40%</td><td class="n">4,000,000</td><td class="n">0.53%</td><td class="n">20,000,000</td><td class="n">0.11%</td></tr>
+      <tr><td class="lead">FAMILY — זוגי + 3</td><td class="n">25,000</td><td class="n">300,000</td><td class="n">8.33%</td><td class="n">5,000,000</td><td class="n">0.50%</td><td class="n">24,000,000</td><td class="n">0.10%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note"><b>קריאה אנליטית:</b> שווי ההמרה במזומן הוא רצפה לשווי הפרס, לא אומדן שוק שלו — סוכן שממיר מקבל את הסכום בעמלות, כך שהחברה מתמחרת כאן את עלותה ולא את חוויית הנסיעה. גם כך, הפער בין 8%–10% מפרמיית הסיכונים ל־0.10% מהתפוקה הפיננסית מלמד היכן החברה רואה את הערך השולי הגבוה ביותר: <b>גיוס סיכונים חדש</b>.</div>
+</section>
+
+<!-- ============ MENORA DETAIL ============ -->
+<section id="menora">
+  <div class="sec-head">
+    <span class="num">04</span>
+    <h2><span class="chip menora">מנורה מבטחים</span> &nbsp;TRIPLE Mile — מבצע סוף שנה</h2>
+    <span class="sub">1.9.2026 – 31.1.2027 · שלושה יעדים, שלוש חוויות</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <thead>
+      <tr><th>חוויה</th><th>סוג מסלול</th><th>כרטיס</th><th class="n">סיכונים</th><th class="n">פנסיה</th><th class="n">פיננסים</th></tr>
+    </thead>
+    <tbody>
+      <tr class="grp"><td colspan="6">SOLO · חווית אקסטרים — Drive your dream, רכבי יוקרה</td></tr>
+      <tr><td class="lead">SOLO</td><td>מסלול טהור</td><td>יחיד</td><td class="n">170,000 ₪</td><td class="n">2,000,000 ₪</td><td class="n">13,000,000 ₪</td></tr>
+      <tr><td class="lead">SOLO</td><td>מסלול משולב</td><td>יחיד</td><td class="n">100,000 ₪ +</td><td class="n">900,000 ₪</td><td class="n">או 6,000,000 ₪</td></tr>
+      <tr class="grp"><td colspan="6">COUPLE · חוויה זוגית — מרקש</td></tr>
+      <tr><td class="lead">COUPLE</td><td>מסלול טהור</td><td>יחיד</td><td class="n">160,000 ₪</td><td class="n">2,000,000 ₪</td><td class="n">12,500,000 ₪</td></tr>
+      <tr><td class="lead">COUPLE</td><td>מסלול טהור</td><td>זוגי</td><td class="n">250,000 ₪</td><td class="n">3,750,000 ₪</td><td class="n">19,000,000 ₪</td></tr>
+      <tr><td class="lead">COUPLE</td><td>מסלול משולב</td><td>יחיד</td><td class="n">95,000 ₪ +</td><td class="n">800,000 ₪</td><td class="n">או 5,000,000 ₪</td></tr>
+      <tr><td class="lead">COUPLE</td><td>מסלול משולב</td><td>זוגי</td><td class="n">150,000 ₪ +</td><td class="n">1,750,000 ₪</td><td class="n">או 11,500,000 ₪</td></tr>
+      <tr class="grp"><td colspan="6">FAMILY · חוויה משפחתית — היער השחור</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול טהור</td><td>זוגי</td><td class="n">150,000 ₪</td><td class="n">2,000,000 ₪</td><td class="n">12,000,000 ₪</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול טהור</td><td>זוג + 1</td><td class="n">200,000 ₪</td><td class="n">3,000,000 ₪</td><td class="n">16,000,000 ₪</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול טהור</td><td>זוגי + 2</td><td class="n">250,000 ₪</td><td class="n">4,000,000 ₪</td><td class="n">20,000,000 ₪</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול טהור</td><td>זוגי + 3</td><td class="n">300,000 ₪</td><td class="n">5,000,000 ₪</td><td class="n">24,000,000 ₪</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול משולב</td><td>זוגי</td><td class="n">90,000 ₪ +</td><td class="n">800,000 ₪</td><td class="n">או 6,000,000 ₪</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול משולב</td><td>זוגי + 1</td><td class="n">115,000 ₪ +</td><td class="n">1,200,000 ₪</td><td class="n">או 9,000,000 ₪</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול משולב</td><td>זוגי + 2</td><td class="n">150,000 ₪ +</td><td class="n">1,600,000 ₪</td><td class="n">או 12,000,000 ₪</td></tr>
+      <tr><td class="lead">FAMILY</td><td>מסלול משולב</td><td>זוגי + 3</td><td class="n">180,000 ₪ +</td><td class="n">2,000,000 ₪</td><td class="n">או 15,000,000 ₪</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="terms">
+    <h3>הגדרות לזכאות</h3>
+    <ul>
+      <li><b>מסלול סיכונים:</b> תפוקות שיתקבלו 1.9.2026–31.1.2027 ויופקו עד 15.2.2027.</li>
+      <li><b>מוצרים משתתפים בסיכונים:</b> בריאות פיצוי, הוצאות רפואיות, ריסק פרט, ריסק משכנתא, מטריה.</li>
+      <li><b>מדידה:</b> פרמיה/תפוקה שנתית נטו, בניכוי ביטולי שנה א׳ לאחר הנחה ובנטרול גידולים/קיטונים ריאליים.</li>
+      <li><b>פנסיה ופיננסים:</b> טפסי הצטרפות של מצטרפים חדשים 1.9.2026–31.1.2027; שיוכי כספים עד 31.3.2027.</li>
+      <li><b>שכר מבוטח בקרן הפנסיה:</b> לא פחות מ־₪8,000 (מחושב לפי הפרשות 20.83%).</li>
+      <li><b>"עמית חדש":</b> מצטרף ראשון או מחדש פעילות לאחר יותר מ־12 חודשים ללא הפקדה.</li>
+    </ul>
+    <h3>שערים, קנסות והמרה</h3>
+    <ul>
+      <li><b>שער אשתקד:</b> התפוקה בתקופת המבצע לא תפחת מהתפוקה בתקופה המקבילה אשתקד באותו מסלול זוכה.</li>
+      <li><b>שימור:</b> מעל 80% בסיכונים, 85% בפנסיה ו־85% בגמל (לפי ינואר 2027).</li>
+      <li><b>קנס ביטולים:</b> בדיקה לאחר 12 חודשים — שיעור ביטולים מעל 15% מחייב את הסוכן בעלות הפרס.</li>
+      <li><b>ניוד:</b> הפרס במסלול פנסיה מותנה במאזן ניוד נטו חיובי לתקופה.</li>
+      <li><b>המרה לכסף:</b> יחיד רכבי יוקרה ₪14,000 · יחיד מרקש ₪14,000 · זוגי מרקש ₪26,000 · זוגי יער שחור ₪13,000 · +1 ₪17,000 · +2 ₪21,000 · +3 ₪25,000 (הכל כולל מע״מ, מזוכה בעמלות).</li>
+      <li><b>תקרה:</b> מקסימום כרטיס זוגי בכל המסלולים, למעט מבצע משפחות.</li>
+      <li><b>מוחרגים:</b> מוקדים, סוכנויות הסדר, בתי סוכן ברמת מאגד/סניף, וסוכנים בעלי מבצעים אישיים.</li>
+      <li><b>ליווי:</b> בן משפחה מקרבה ראשונה מעל גיל 17; "ילד" במבצע משפחות — עד גיל 11 במועד היציאה.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ MIGDAL ============ -->
+<section id="migdal">
+  <div class="sec-head">
+    <span class="num">05</span>
+    <h2><span class="chip migdal">מגדל</span> &nbsp;מבצע סופשנה 2026 — "מכוונים גבוה. ממריאים רחוק."</h2>
+    <span class="sub">23.8.2026 – 14.1.2027 · איטליה 2026 / יפן 2026</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <thead>
+      <tr><th>מסלול</th><th>רכיב</th><th class="n">זוגי איטליה או יחיד יפן</th><th class="n">זוגי יפן</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="lead" rowspan="2">פנסיה + סיכונים א׳<sup>1</sup></td><td>פנסיה שוטף</td><td class="n">1,100,000 ₪</td><td class="n">1,800,000 ₪</td></tr>
+      <tr><td>וגם סיכונים א׳</td><td class="n">95,000 ₪</td><td class="n">155,000 ₪</td></tr>
+      <tr><td class="lead">סיכונים מלא</td><td>—</td><td class="n">250,000 ₪</td><td class="n">350,000 ₪</td></tr>
+      <tr><td class="lead" rowspan="2">פיננסים<sup>3</sup></td><td>סך פיננסים</td><td class="n">13,500,000 ₪</td><td class="n">21,000,000 ₪</td></tr>
+      <tr><td>מתוכם חסכונות פרט נזילים</td><td class="n">3,500,000 ₪</td><td class="n">5,500,000 ₪</td></tr>
+      <tr><td class="lead">המרה מיידית לקצבה<sup>2</sup></td><td>—</td><td class="n">11,000,000 ₪</td><td class="n">17,000,000 ₪</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="terms">
+    <h3>תנאים</h3>
+    <ul>
+      <li><b>תנאי מינימום במסלול פנסיה + סיכונים א׳:</b> ניוד נכנס פנסיה של ₪5.5 מיליון לפרס יחיד יפן / זוגי איטליה, ו־₪9.5 מיליון לפרס זוגי יפן.</li>
+      <li><b>ספירת ניודים:</b> רק ניודים שנקלטו ושויכו בחברה בין 23.8.2026 ל־14.1.2027.</li>
+      <li><b>שער גידול:</b> הזכאות לכלל הפרסים מותנית בגידול מכירות של <b>5%</b> מול התקופה המקבילה אשתקד, בנוסף לעמידה ביעדי הטבלה.</li>
+    </ul>
+    <h3>פערי מידע</h3>
+    <ul>
+      <li>העלון מפנה לפירוט "תנאי מבצע ניוד פנסיה, המרות לקצבה, סיכונים ופיננסים" שאינו מוצג בשקף — יש לדרוש את התקנון המלא לפני בניית תוכנית עבודה סביב המסלול הפנסיוני.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ CLAL ============ -->
+<section id="clal">
+  <div class="sec-head">
+    <span class="num">06</span>
+    <h2><span class="chip clal">כלל</span> &nbsp;טסים על זה — שני מבצעים מקבילים</h2>
+    <span class="sub">1.9.2026 – 31.12.2026 · אין כפל פרסים בין השניים</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <thead><tr><th>מבצע</th><th>בסיס מדידה</th><th class="n">יעד</th><th>פרס</th></tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="4">א. סוגרים שנה בחיסכון פיננסי — מבצע החברה</td></tr>
+      <tr><td class="lead">חיסכון פיננסי</td><td>הפקדות חד־פעמיות מזכות לפוליסות חיסכון פיננסי</td><td class="n">12,000,000 ₪</td><td>יחיד קנקון־מיאמי <b>או</b> זוגי קפריסין</td></tr>
+      <tr><td class="lead">חיסכון פיננסי</td><td>הפקדות חד־פעמיות מזכות לפוליסות חיסכון פיננסי</td><td class="n">17,000,000 ₪</td><td>זוגי קנקון־מיאמי <b>או</b> חופשה משפחתית בקפריסין (זוג+2)</td></tr>
+      <tr class="grp"><td colspan="4">ב. מסלול סיכונים — סוכנות אור פוריה (2022) בע״מ</td></tr>
+      <tr><td class="lead">קנקון־מיאמי</td><td>יעד בסיכונים</td><td class="n">120,000 ₪</td><td>כרטיס יחיד</td></tr>
+      <tr><td class="lead">קנקון־מיאמי</td><td>יעד בסיכונים</td><td class="n">240,000 ₪</td><td>כרטיס זוגי</td></tr>
+      <tr><td class="lead">קפריסין</td><td>יעד בסיכונים</td><td class="n">120,000 ₪</td><td>כרטיס זוגי</td></tr>
+      <tr><td class="lead">קפריסין</td><td>יעד בסיכונים</td><td class="n">150,000 ₪</td><td>כרטיס זוגי + 1 ילד</td></tr>
+      <tr><td class="lead">קפריסין</td><td>יעד בסיכונים</td><td class="n">180,000 ₪</td><td>כרטיס זוגי + 2 ילדים</td></tr>
+      <tr><td class="lead">קפריסין</td><td>יעד בסיכונים</td><td class="n">240,000 ₪</td><td>כרטיס זוגי + 3 ילדים</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="terms">
+    <h3>תנאי הזכאות — מבצע החיסכון הפיננסי</h3>
+    <ul>
+      <li><b>שער גידול:</b> גידול של לפחות <b>10%</b> בהפקדות מול ספטמבר–דצמבר 2025, לפי נתוני החברה.</li>
+      <li><b>אין כפל פרס</b> עם מבצע "טסים על זה" בסיכונים.</li>
+      <li>פרס אחד בלבד, לפי מדרגת הזכייה הגבוהה ביותר; <b>עמידה חלקית ביעד אינה מזכה כלל</b>.</li>
+      <li>נספרות רק הפקדות חד־פעמיות לפוליסות חיסכון פיננסי שהתקבלו בפועל 1.9.26–31.12.26 והופקדו במישרין דרך הסוכן/סוכנות. אין איחוד תפוקות בין סוכנים — כל עוסק מורשה ישות נפרדת.</li>
+      <li><b>מוחרגים:</b> סוכנים הפועלים דרך מוקדי מכירה טלפוניים, סוכנויות־על ומנהלי הסדר.</li>
+      <li><b>ילד</b> לעניין מבצע משפחות: גילאי 2–12 בלבד (טרם מלאו 12 במועד המימוש); חריגה מחייבת בתוספת תשלום מלא.</li>
+      <li>כמות הכרטיסים מוגבלת, כל הקודם זוכה; אין פרס חליפי ואין זיכוי כספי.</li>
+      <li><b>ביטולים:</b> עלות הפרס ברוטו (כולל גילום ומע״מ) תחולק בפרמיה הקובעת לתשלום נטו, יחסית לכלל ההפקדות המזכות; ינוכו ביטולים כמפורט בידיעון השיווק.</li>
+      <li>בדיקה סופית של ההפקדות המזכות תיערך לאחר 31.12.26.</li>
+    </ul>
+    <h3>מבצע פוריה</h3>
+    <ul>
+      <li>סוכן על / סוכנות על: <b>אור פוריה סוכנות לביטוח פנסיוני (2022) בע״מ</b>.</li>
+      <li>כל היעדים במונחי <b>"פרמיה קובעת ליעדים נטו"</b> של הפוליסות המזכות.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ MORE ============ -->
+<section id="more">
+  <div class="sec-head">
+    <span class="num">07</span>
+    <h2><span class="chip more">מור גמל ופנסיה</span> &nbsp;מסיימים את השנה בהילוך גבוה</h2>
+    <span class="sub">1.9.2026 – 31.12.2026 · טיול פרמיום בגרמניה ובחבל אלזס</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <thead><tr><th>חלופת יעד</th><th>רכיב</th><th class="n">יעד גיוס</th><th>פרס</th></tr></thead>
+    <tbody>
+      <tr><td class="lead">חלופה א׳</td><td>מוצרי גמל והשתלמות</td><td class="n">12,000,000 ₪</td><td rowspan="3">טיול פרמיום: נהיגה ברכבי פורשה בין נופים, נסיעה על מסלול מרוצים מקצועי, ואירוח במלונות ספא</td></tr>
+      <tr><td class="lead" rowspan="2">חלופה ב׳</td><td>מוצרי גמל והשתלמות</td><td class="n">10,000,000 ₪</td></tr>
+      <tr><td>וגם מוצרי פנסיה</td><td class="n">5,000,000 ₪</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="terms">
+    <h3>תנאים</h3>
+    <ul>
+      <li><b>תנאי סף:</b> עמידה בשיעור של <b>80% העברות נטו</b> מיעד המכירות הנבחר.</li>
+      <li><b>לוחות זמנים לכספים:</b> מוצרי גמל והשתלמות עד <b>31.1.2027</b>; מוצרי פנסיה עד <b>28.2.2027</b>.</li>
+      <li>המבצע חל על <b>לקוחות חדשים בלבד</b>; העברות פנימיות של מוצרי גמל או פנסיה המנוהלים בחברה אינן נספרות ליעד.</li>
+      <li>ההזמנה אישית — רק לסוכנויות ולסוכנים שקיבלו הזמנה אישית מהחברה.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ HAREL ============ -->
+<section id="harel">
+  <div class="sec-head">
+    <span class="num">08</span>
+    <h2><span class="chip harel">הראל</span> &nbsp;חופשה חלומית במיקונוס</h2>
+    <span class="sub">1.8.2026 – 30.11.2026 · יעד אישי לכל סוכן</span>
+  </div>
+  <div class="scroller">
+  <table>
+    <thead><tr><th>מוצר משתתף</th><th>שקלול לצורך היעד</th><th class="n">תקרת ספירה</th></tr></thead>
+    <tbody>
+      <tr><td class="lead">מגוון השקעות</td><td>משוקלל ב־<b>130%</b></td><td class="n">4,000,000 ₪ לתעודת זהות</td></tr>
+      <tr><td class="lead">קרן אלטרנטיב</td><td>משוקללת ב־<b>50%</b></td><td class="n">3,000,000 ₪ לתיק/קרן</td></tr>
+      <tr><td class="lead">גמל להשקעה</td><td>100%</td><td class="n">—</td></tr>
+      <tr><td class="lead">השתלמות</td><td>100%</td><td class="n">—</td></tr>
+      <tr><td class="lead">גמל ומנגנון גמל</td><td>100%</td><td class="n">—</td></tr>
+      <tr><td class="lead">תיקים מנוהלים</td><td>100% (למעט תיקים תאגידיים)</td><td class="n">—</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="terms">
+    <h3>אופן החישוב</h3>
+    <ul>
+      <li><b>אין יעד אחיד:</b> נקבע יעד אישי לכל סוכן בהתאם לרמת המכירות שלו במוצרים המשתתפים. עמידה ביעד מזכה בפרס כמפורט בתקנון האישי.</li>
+      <li>הזכייה בפרסים היא <b>בנוסף</b> לעמלות שהסוכן זכאי להן ב־2026.</li>
+      <li><b>תקופה:</b> צבירות חדשות מטפסים שיתקבלו 1.8–30.11.2026, שהכספים בגינם יעברו לקופות/פוליסות עד 31.12.2026.</li>
+    </ul>
+    <h3>תנאים כלליים</h3>
+    <ul>
+      <li>כל מספרי הסוכן של אותו סוכן ירוכזו לחשבון אחד לבדיקת הזכאות.</li>
+      <li>הזכאות אישית ואינה ניתנת להעברה; ניתנת לבעלי מספר עצמאי בחברה.</li>
+      <li>קופות אישיות של הסוכן ומשפחתו מקרבה ראשונה — <b>לא</b> נספרות.</li>
+      <li>הגדלות בתיקים מנוהלים קיימים — <b>לא</b> נספרות; העברה מקופה אחרת בקבוצת הראל אינה נחשבת העברה.</li>
+      <li><b>תקרות בהפקדות שוטפות חדשות:</b> השתלמות — סך תפוקה שנתית עד ₪24,000; גמל להשקעה — עד ₪83,641.</li>
+      <li>הראל שומרת את הזכות לשנות את יעד הנסיעה; הנסיעה לסוכני החברה בלבד, ליווי מעל גיל 18 בתוספת תשלום.</li>
+      <li>הפרס הכספי בעת הפדיון הוא במונחי ברוטו כולל מע״מ; עלות הפרס תתווסף לעמלות לפי נספח התגמול השנתי לצורך התחשבנות המס.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ FOOTNOTES ============ -->
+<div class="fn">
+  <h2>הערות, הגדרות ומקורות</h2>
+  <p><sup>†</sup> <b>אזהרת יחידות — קריטית להשוואה.</b> "פנסיה" אצל מנורה ומגדל נמדדת בתפוקת פרמיה שנתית; "גיוס" אצל מור וכלל נמדד בצבירה/הפקדות שעברו בפועל. שתי היחידות אינן ניתנות להשוואה ישירה — יעד פנסיה של ₪2 מיליון במנורה אינו "זול" פי חמישה מיעד פנסיה של ₪5 מיליון גיוס במור, אלא נמדד במכנה אחר לחלוטין. השוואה תקפה קיימת רק בתוך אותו ערוץ ואותה הגדרת מדידה.</p>
+  <ol>
+    <li><b>מגדל, פנסיה + סיכונים א׳:</b> שני הרכיבים במצטבר ("וגם"), ובנוסף תנאי מינימום של ניוד נכנס — ₪5.5 מיליון או ₪9.5 מיליון לפי מדרגת הפרס.</li>
+    <li><b>המרה מיידית לקצבה:</b> מסלול זכייה עצמאי בטבלת מגדל.</li>
+    <li><b>פיננסים במגדל:</b> יעד כולל, שבתוכו נדרשת מכסת מינימום של חסכונות פרט נזילים.</li>
+    <li><b>עלות פרס משתמעת (סעיף 03):</b> חישוב שלנו = שווי ההמרה לכסף שפרסמה מנורה (כולל מע״מ) חלקי יעד התפוקה באותו מסלול. אינו אומדן לעלות הרכישה בפועל של החבילה, ואינו מתייחס לגילום מס.</li>
+  </ol>
+  <p><b>מקורות:</b> עלון "טסים על זה — סוגרים שנה בחיסכון פיננסי", כלל חברה לביטוח (חתום: שלומי תמן, משנה למנכ״ל ומנהל מערך הסוכנים) · שקף מבצע כלל / סוכנות פוריה · שקף מבצע סופשנה 2026, מגדל · שקף "חופשה חלומית במיקונוס", הראל ביטוח ופיננסים · עלון "מסיימים את השנה בהילוך גבוה", מור גמל ופנסיה · עלון "מבצע סוף שנה TRIPLE Mile", מנורה מבטחים.</p>
+  <p><b>הסתייגות:</b> המסמך הוא תמצית עבודה ואינו תחליף לתקנוני המבצע. בכל מקרה של סתירה — תקנון המבצע של החברה, ידיעון השיווק והסכם העבודה של הסוכן גוברים. כל החברות שומרות לעצמן את הזכות לשנות או לבטל את המבצע ואת תנאיו.</p>
+</div>
+
+</div>
