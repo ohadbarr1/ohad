@@ -1,0 +1,250 @@
+<title>מעקב CSM הפניקס</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a research-terminal panel. Header, KPI strip, then chart beside a metrics table that doubles as the series picker. */
+:root {
+  --bg: #f3f5f8;
+  --panel: #ffffff;
+  --fg: #12171f;
+  --muted: #5a6575;
+  --line: #dde2ea;
+  --soft: #eaeef4;
+  --c-ns: #0b66c3;
+  --c-yd: #7b8798;
+  --c-ny: #c27d0e;
+  --up: #17794a;
+  --down: #c0392b;
+  --font-body: "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1218; --panel: #161b23; --fg: #e7ebf1; --muted: #98a3b3; --line: #2a313c; --soft: #1e2530;
+    --c-ns: #5aa9f0; --c-yd: #7f8b9d; --c-ny: #e0a232; --up: #4cc58a; --down: #ef7b6e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1218; --panel: #161b23; --fg: #e7ebf1; --muted: #98a3b3; --line: #2a313c; --soft: #1e2530;
+  --c-ns: #5aa9f0; --c-yd: #7f8b9d; --c-ny: #e0a232; --up: #4cc58a; --down: #ef7b6e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.5; padding-inline: 16px; padding-block: 20px 40px; }
+.wrap { max-width: 1120px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+.num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.mono { font-family: var(--font-mono); }
+
+header { display: flex; flex-direction: column; gap: 6px; }
+.eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
+h1 { margin: 0; font-size: clamp(22px, 3.4vw, 30px); font-weight: 700; line-height: 1.2; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 70ch; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi .l { font-size: 12px; color: var(--muted); }
+.kpi .v { font-size: 24px; font-weight: 600; }
+.kpi .s { font-size: 12px; color: var(--muted); }
+.pos { color: var(--up); } .neg { color: var(--down); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.panel h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 12px; padding: 5px 10px; background: transparent; color: var(--muted); border: 0; cursor: pointer; }
+.seg button + button { border-inline-start: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--soft); color: var(--fg); font-weight: 600; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--c-ns); outline-offset: 2px; }
+#chart { width: 100%; height: 340px; }
+
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td { padding: 7px 5px; border-bottom: 1px solid var(--line); text-align: end; white-space: nowrap; }
+th:first-child, td:first-child { text-align: start; white-space: normal; min-width: 120px; }
+thead th { font-weight: 500; font-size: 12px; color: var(--muted); }
+thead th small { display: block; font-weight: 400; font-family: var(--font-mono); font-size: 10.5px; }
+tbody tr.pick { cursor: pointer; }
+tbody tr.pick:hover { background: var(--soft); }
+.name { display: flex; gap: 8px; align-items: flex-start; }
+.name input { margin-top: 3px; accent-color: var(--c-ns); }
+.dot { width: 9px; height: 9px; border-radius: 2px; margin-top: 5px; flex: none; }
+.name b { font-weight: 600; display: block; }
+.name span.sub { color: var(--muted); font-size: 11.5px; display: block; }
+tr.total td { font-weight: 600; border-bottom: 0; }
+.check { font-size: 11.5px; color: var(--muted); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.notes h2 { margin-bottom: 4px; }
+.notes ul { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
+.notes li b { color: var(--fg); font-weight: 600; }
+.src { font-size: 11.5px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">הפניקס חברה לביטוח · דוחות כספיים ביניים ל-30.6.2026 · מגזר ביטוח חיים וחיסכון ארוך טווח · מיליוני ש"ח</div>
+    <h1>התפתחות ה-CSM בפוליסות ללא רכיב חיסכון</h1>
+    <p class="lede">מרווח השירות החוזי לפי קבוצת תיק. סמן שורות בטבלה כדי להוסיף אותן לגרף. הנתונים הועתקו מביאור 3 לדוח, והסכומים נבדקו מול הסה"כ המודפס.</p>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="מדדים עיקריים"></section>
+
+  <div class="main">
+    <section class="panel" aria-labelledby="chart-h">
+      <div class="bar">
+        <h2 id="chart-h">יתרת CSM לפי קבוצת תיק <span class="sub" id="unit" style="color:var(--muted);font-weight:400">(מיליוני ש"ח)</span></h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="seg" role="group" aria-label="סוג מדד">
+            <button type="button" id="m-val" aria-pressed="true">ערך</button>
+            <button type="button" id="m-pct" aria-pressed="false">% מהסה"כ</button>
+          </div>
+          <div class="seg" role="group" aria-label="סוג גרף">
+            <button type="button" id="t-bar" aria-pressed="true">עמודות</button>
+            <button type="button" id="t-line" aria-pressed="false">קווים</button>
+          </div>
+        </div>
+      </div>
+      <div id="chart" role="img" aria-label="גרף יתרת CSM לפי קבוצת תיק בשלושה תאריכים"></div>
+      <div class="src">מקור: דוחות כספיים ביניים של הפניקס חברה לביטוח, ביאור 3 (מגזרי פעילות), סעיף ב'. עמודים בדוח ה-PDF מצוינים בטבלה.</div>
+    </section>
+
+    <section class="panel" aria-labelledby="tbl-h">
+      <h2 id="tbl-h">מדדים</h2>
+      <div class="scroll">
+        <table id="tbl"></table>
+      </div>
+      <div class="check" id="check"></div>
+    </section>
+  </div>
+
+  <section class="panel notes" aria-labelledby="notes-h">
+    <div>
+      <h2 id="notes-h">מה הדוח הזה מאפשר לראות</h2>
+      <ul>
+        <li><b>שלוש נקודות יתרה בלבד.</b> 30.6.2025, 31.12.2025 ו-30.6.2026. הדוח הביניים אינו כולל גשר CSM (פתיחה, עסק חדש, ריבית, שחרור, שינוי הנחות, סגירה) לפי קבוצת תיק.</li>
+        <li><b>הגשר המלא נמצא במקור אחר.</b> דוח הדירקטוריון ומצגת המשקיעים של החברה. הוא אינו בקובץ שהועלה, ולכן אי אפשר להסביר מכאן למה היתרה ירדה.</li>
+        <li><b>שחרור CSM לרווח (כל מגזר החיים, כל הקבוצות).</b> 132.7 מיליון ש"ח ב-H1 2026 מול 161.3 מיליון ש"ח ב-H1 2025 (ביאור 6, עמ' 138-139). הנתון אינו מפוצל לפי קבוצת תיק.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>נקודות לבדיקה</h2>
+      <ul>
+        <li><b>קבוצת חיסכון שאינו תלוי תשואה</b> ירדה מ-42.6 מיליון ש"ח לאפס, ובדצמבר 2025 נרשם בה רכיב הפסד של 31.5 מיליון ש"ח (עמ' 91). אפשר שה-CSM נשחק או הומר לרכיב הפסד. זו השערה ולא ממצא.</li>
+        <li><b>הרכב התיק זז לכיוון החיסכון.</b> חלקם של פוליסות ללא רכיב חיסכון בסה"כ ה-CSM ירד, והחיסכון התלוי תשואה גדל מדצמבר 2025.</li>
+        <li><b>יחידות והגדרה.</b> הנתונים מוצגים כפי שמופיעים בביאור, כלומר חוזי ביטוח ישירים. ביטוח משנה מוצג בשורות נפרדות. יש לאמת מול ה-PDF לפני שימוש חיצוני.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script>
+(function () {
+  document.documentElement.lang = 'he';
+  document.documentElement.dir = 'rtl';
+  // Values in NIS thousands, as printed in the filing. Life segment, Phoenix Insurance Company.
+  var DATES = ['30.6.2025', '31.12.2025', '30.6.2026'];
+  var PAGES = ['90', '91', '89'];
+  var GROUPS = [
+    { id: 'ns', name: 'פוליסות ללא רכיב חיסכון', sub: 'ריסק מוות, נכות ואובדן כושר עבודה', color: '--c-ns', v: [1178666, 767064, 697294] },
+    { id: 'yd', name: 'חיסכון תלוי תשואה', sub: 'משתתפות ברווחים, דמי ניהול משתנים', color: '--c-yd', v: [1526977, 1465197, 1595006] },
+    { id: 'ny', name: 'חיסכון שאינו תלוי תשואה', sub: 'פוליסות מבטיחות תשואה, הונפקו עד 1990', color: '--c-ny', v: [42576, 0, 0] }
+  ];
+  var TOTAL = [2748219, 2232261, 2292300];
+  var state = { sel: { ns: true, yd: false, ny: false }, mode: 'val', type: 'bar' };
+
+  function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function fmt(k, d) { var n = (k / 1000).toLocaleString('en-US', { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }); return n.replace('-', '−'); }
+  function pct(x, d) { return x.toLocaleString('en-US', { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }); }
+  function chg(a, b) { return b === 0 && a === 0 ? null : (a === 0 ? null : (b / a - 1) * 100); }
+  function sgn(x) { return x == null ? '–' : (x > 0 ? '+' : x < 0 ? '−' : '') + pct(Math.abs(x)) + '%'; }
+  function cls(x) { return x == null ? '' : x > 0 ? 'pos' : x < 0 ? 'neg' : ''; }
+  function span(t, c) { return '<span class="num ' + (c || '') + '">' + t + '</span>'; }
+
+  // KPI strip
+  var ns = GROUPS[0].v;
+  var kp = [
+    { l: 'CSM ללא רכיב חיסכון, 30.6.2026', v: fmt(ns[2]) , s: 'מיליון ש"ח' },
+    { l: 'שינוי מול 31.12.2025', v: sgn(chg(ns[1], ns[2])), c: cls(chg(ns[1], ns[2])), s: '<span class="num">' + fmt(ns[2] - ns[1]) + '</span> מיליון ש"ח' },
+    { l: 'שינוי שנתי (מול 30.6.2025)', v: sgn(chg(ns[0], ns[2])), c: cls(chg(ns[0], ns[2])), s: '<span class="num">' + fmt(ns[2] - ns[0]) + '</span> מיליון ש"ח' },
+    { l: 'חלק מסך ה-CSM בחיים', v: pct(ns[2] / TOTAL[2] * 100) + '%', s: 'לעומת <span class="num">' + pct(ns[0] / TOTAL[0] * 100) + '%</span> ב-30.6.2025' }
+  ];
+  document.getElementById('kpis').innerHTML = kp.map(function (k) {
+    return '<div class="kpi"><div class="l">' + k.l + '</div><div class="v">' + span(k.v, k.c) + '</div><div class="s">' + k.s + '</div></div>';
+  }).join('');
+
+  // Table
+  function renderTable() {
+    var h = '<thead><tr><th>קבוצת תיק</th>' + DATES.map(function (d, i) { return '<th>' + span(d) + '<small>עמ\' ' + PAGES[i] + '</small></th>'; }).join('') + '<th>חצי שנה</th><th>שנתי</th></tr></thead><tbody>';
+    GROUPS.forEach(function (g) {
+      var a = chg(g.v[1], g.v[2]), y = chg(g.v[0], g.v[2]);
+      h += '<tr class="pick" data-id="' + g.id + '"><td><label class="name"><input type="checkbox" id="cb-' + g.id + '"' + (state.sel[g.id] ? ' checked' : '') + '><i class="dot" style="background:var(' + g.color + ')"></i><span><b>' + g.name + '</b><span class="sub">' + g.sub + '</span></span></label></td>' +
+        g.v.map(function (x) { return '<td>' + span(x === 0 ? '–' : fmt(x)) + '</td>'; }).join('') +
+        '<td>' + span(sgn(a), cls(a)) + '</td><td>' + span(sgn(y), cls(y)) + '</td></tr>';
+    });
+    var ta = chg(TOTAL[1], TOTAL[2]), ty = chg(TOTAL[0], TOTAL[2]);
+    h += '<tr class="total"><td>סה"כ מגזר חיים</td>' + TOTAL.map(function (x) { return '<td>' + span(fmt(x)) + '</td>'; }).join('') + '<td>' + span(sgn(ta), cls(ta)) + '</td><td>' + span(sgn(ty), cls(ty)) + '</td></tr></tbody>';
+    document.getElementById('tbl').innerHTML = h;
+    GROUPS.forEach(function (g) {
+      document.getElementById('cb-' + g.id).addEventListener('change', function (e) {
+        state.sel[g.id] = e.target.checked;
+        if (!GROUPS.some(function (x) { return state.sel[x.id]; })) { state.sel[g.id] = true; e.target.checked = true; }
+        draw();
+      });
+    });
+    var ok = DATES.map(function (d, i) {
+      var s = GROUPS.reduce(function (a, g) { return a + g.v[i]; }, 0);
+      return s === TOTAL[i];
+    });
+    document.getElementById('check').textContent = ok.every(Boolean)
+      ? 'בדיקת התאמה: סכום הקבוצות שווה לסה"כ המודפס בשלושת התאריכים.'
+      : 'בדיקת התאמה: נמצא פער בין סכום הקבוצות לסה"כ.';
+  }
+
+  // Chart
+  var chart = echarts.init(document.getElementById('chart'), null, { renderer: 'canvas' });
+  function draw() {
+    var fg = css('--fg'), muted = css('--muted'), line = css('--line');
+    var groups = GROUPS.filter(function (g) { return state.sel[g.id]; });
+    var isPct = state.mode === 'pct', isLine = state.type === 'line';
+    var series = groups.map(function (g) {
+      var data = g.v.map(function (x, i) { return isPct ? +(x / TOTAL[i] * 100).toFixed(2) : +(x / 1000).toFixed(1); });
+      var base = { name: g.name, data: data, itemStyle: { color: css(g.color) }, lineStyle: { color: css(g.color), width: 2.5 }, symbolSize: 7 };
+      if (isLine) return Object.assign(base, { type: 'line', label: { show: true, position: 'top', color: fg, fontSize: 11, formatter: function (p) { return p.value === 0 ? '' : (isPct ? p.value.toFixed(1) + '%' : p.value.toLocaleString('en-US', { minimumFractionDigits: 1 })); } } });
+      return Object.assign(base, {
+        type: 'bar', stack: isPct ? 'tot' : 'abs', barMaxWidth: 64,
+        label: { show: true, position: groups.length > 1 ? 'inside' : 'top', color: groups.length > 1 ? '#ffffff' : fg, fontSize: 11,
+          formatter: function (p) { var v = p.value; if (!v) return ''; if (groups.length > 1 && (isPct ? v < 6 : v < 90)) return ''; return isPct ? v.toFixed(1) + '%' : v.toLocaleString('en-US', { minimumFractionDigits: 1 }); } }
+      });
+    });
+    document.getElementById('unit').textContent = isPct ? '(% מסה"כ CSM בחיים)' : '(מיליוני ש"ח)';
+    chart.setOption({
+      animation: false,
+      textStyle: { fontFamily: 'Heebo, system-ui, sans-serif', color: fg },
+      grid: { left: 52, right: 16, top: 40, bottom: 34 },
+      legend: { top: 0, textStyle: { color: muted, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: css('--panel'), borderColor: line, textStyle: { color: fg, fontSize: 12 },
+        valueFormatter: function (v) { return isPct ? v.toFixed(1) + '%' : v.toLocaleString('en-US', { minimumFractionDigits: 1 }) + ' מ׳ ש"ח'; } },
+      xAxis: { type: 'category', data: DATES, axisLine: { lineStyle: { color: line } }, axisTick: { show: false }, axisLabel: { color: muted, fontSize: 12 } },
+      yAxis: { type: 'value', axisLabel: { color: muted, fontSize: 11, formatter: function (v) { return isPct ? v + '%' : v.toLocaleString('en-US'); } }, splitLine: { lineStyle: { color: line, type: 'dashed' } }, max: isPct && !isLine ? 100 : undefined },
+      series: series
+    }, true);
+  }
+
+  function setPressed(ids, on) { ids.forEach(function (id) { document.getElementById(id).setAttribute('aria-pressed', id === on ? 'true' : 'false'); }); }
+  document.getElementById('m-val').onclick = function () { state.mode = 'val'; setPressed(['m-val', 'm-pct'], 'm-val'); draw(); };
+  document.getElementById('m-pct').onclick = function () { state.mode = 'pct'; setPressed(['m-val', 'm-pct'], 'm-pct'); draw(); };
+  document.getElementById('t-bar').onclick = function () { state.type = 'bar'; setPressed(['t-bar', 't-line'], 't-bar'); draw(); };
+  document.getElementById('t-line').onclick = function () { state.type = 'line'; setPressed(['t-bar', 't-line'], 't-line'); draw(); };
+  window.addEventListener('resize', function () { chart.resize(); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  renderTable();
+  draw();
+})();
+</script>
