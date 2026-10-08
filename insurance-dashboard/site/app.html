@@ -1,0 +1,417 @@
+<title>שוק החיסכון הפנסיוני</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: research terminal. Sticky tab bar, one working view at a time (overview, ranking, company, funds, method). */
+:root {
+  --bg: #f3f5f8; --panel: #ffffff; --fg: #12171f; --muted: #5a6575; --line: #dde2ea; --soft: #eaeef4;
+  --accent: #0b66c3; --up: #17794a; --down: #c0392b; --warn: #a86a00;
+  --s1: #0b66c3; --s2: #c27d0e; --s3: #1c8a7a; --s4: #b0457d; --s5: #6b57c9; --s6: #7a8a3a; --s7: #9a5b3a; --s8: #6d7a8c; --s9: #d1553c; --s10: #2a9bb8; --s11: #8a4fa0;
+  --font-body: "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1218; --panel: #161b23; --fg: #e7ebf1; --muted: #98a3b3; --line: #2a313c; --soft: #1e2530;
+    --accent: #5aa9f0; --up: #4cc58a; --down: #ef7b6e; --warn: #e0a232;
+    --s1: #5aa9f0; --s2: #e0a232; --s3: #46c2ae; --s4: #e07cb0; --s5: #9b8cf0; --s6: #aabf5c; --s7: #d09068; --s8: #8d99ab; --s9: #ef7b6e; --s10: #5ccbe6; --s11: #c08ad8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1218; --panel: #161b23; --fg: #e7ebf1; --muted: #98a3b3; --line: #2a313c; --soft: #1e2530;
+  --accent: #5aa9f0; --up: #4cc58a; --down: #ef7b6e; --warn: #e0a232;
+  --s1: #5aa9f0; --s2: #e0a232; --s3: #46c2ae; --s4: #e07cb0; --s5: #9b8cf0; --s6: #aabf5c; --s7: #d09068; --s8: #8d99ab; --s9: #ef7b6e; --s10: #5ccbe6; --s11: #c08ad8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.5; padding-inline: 16px; padding-block: 0 40px; }
+.wrap { max-width: 1180px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+.num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.pos { color: var(--up); } .neg { color: var(--down); } .muted { color: var(--muted); }
+button, select, input { font: inherit; color: inherit; }
+button:focus-visible, select:focus-visible, input:focus-visible, th[data-k]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px 8px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; justify-content: space-between; }
+.brand h1 { margin: 0; font-size: 18px; font-weight: 700; }
+.brand .asof { font-size: 12px; color: var(--muted); }
+.tabs { display: flex; gap: 4px; overflow-x: auto; }
+.tabs a { padding: 6px 12px; border-radius: 8px; text-decoration: none; color: var(--muted); white-space: nowrap; font-weight: 500; border: 1px solid transparent; }
+.tabs a[aria-current="page"] { background: var(--panel); color: var(--fg); border-color: var(--line); }
+.tabs a:hover { color: var(--fg); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.field label { font-size: 11.5px; color: var(--muted); }
+select, input[type="search"] { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; max-width: 100%; min-width: 130px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { background: transparent; border: 0; padding: 6px 11px; cursor: pointer; color: var(--muted); font-size: 13px; }
+.seg button + button { border-inline-start: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--soft); color: var(--fg); font-weight: 600; }
+.btn { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; cursor: pointer; font-size: 13px; }
+.btn:hover { background: var(--soft); }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.kpi .l { font-size: 12px; color: var(--muted); } .kpi .v { font-size: 22px; font-weight: 600; } .kpi .s { font-size: 12px; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.grid21 { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .grid2, .grid21 { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.panel h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.panel .hd { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.chart { width: 100%; height: 320px; } .chart.tall { height: 520px; } .chart.short { height: 260px; }
+.src { font-size: 11.5px; color: var(--muted); }
+
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td { padding: 6px 7px; border-bottom: 1px solid var(--line); text-align: end; white-space: nowrap; }
+th:first-child, td:first-child { text-align: start; white-space: normal; min-width: 120px; }
+thead th { font-weight: 500; font-size: 11.5px; color: var(--muted); position: sticky; top: 0; background: var(--panel); }
+th[data-k] { cursor: pointer; user-select: none; }
+th[aria-sort] { color: var(--fg); }
+tbody tr:hover { background: var(--soft); }
+tr.tot td { font-weight: 600; }
+tr.pickrow { cursor: pointer; }
+tr.pickrow.on td { background: var(--soft); }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; border: 1px solid var(--line); }
+.chip.pass { color: var(--up); border-color: var(--up); } .chip.review { color: var(--warn); border-color: var(--warn); } .chip.fail { color: var(--down); border-color: var(--down); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-inline-end: 6px; }
+.prose { display: flex; flex-direction: column; gap: 8px; max-width: 80ch; }
+.prose p, .prose ul { margin: 0; } .prose ul { padding-inline-start: 18px; display: flex; flex-direction: column; gap: 4px; }
+.prose h3 { margin: 8px 0 0; font-size: 13.5px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>שוק החיסכון הפנסיוני: פנסיה, גמל ופוליסות חיסכון</h1><span class="asof" id="asof"></span></div>
+    <nav class="tabs" id="tabs" aria-label="תצוגות"></nav>
+  </header>
+  <main id="view" style="display:flex;flex-direction:column;gap:14px"></main>
+  <div class="src" id="foot"></div>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script>
+(function () {
+  document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl';
+  var D = JSON.parse(document.getElementById('data').textContent);
+  var P = D.periods, NP = P.length, LAST = NP - 1;
+  var PROD = D.products, GROUPS = D.groups;
+  var FAMS = [['pension', D.families.pension], ['gemel', D.families.gemel], ['insurance', D.families.insurance]];
+  var INS = PROD.map(function (p) { return p.family === 'insurance'; });
+  var rowsByP = P.map(function () { return []; });
+  D.rows.forEach(function (r) { rowsByP[r[0]].push(r); });
+
+  // ---------- selection sets ----------
+  var SETS = [{ id: 'all', label: 'כל המוצרים', idx: PROD.map(function (_, i) { return i; }) }];
+  FAMS.forEach(function (f) { SETS.push({ id: 'fam:' + f[0], label: f[1], idx: idxWhere(function (p) { return p.family === f[0]; }) }); });
+  PROD.forEach(function (p, i) { SETS.push({ id: 'p:' + p.key, label: p.label, idx: [i], sub: true }); });
+  function idxWhere(fn) { var o = []; PROD.forEach(function (p, i) { if (fn(p)) o.push(i); }); return o; }
+  var SETMAP = {}; SETS.forEach(function (s) { s.has = {}; s.idx.forEach(function (i) { s.has[i] = 1; }); SETMAP[s.id] = s; });
+
+  // ---------- aggregation ----------
+  var memo = {};
+  function cell(pi, setId, g) {
+    var k = pi + '|' + setId + '|' + g;
+    if (memo[k]) return memo[k];
+    var s = SETMAP[setId], o = { a: 0, af: 0, dep: 0, wd: 0, tr: 0, fa: 0, fn: 0, fd: 0, yn: 0, yd: 0 };
+    if (pi >= 0) rowsByP[pi].forEach(function (r) {
+      if (!s.has[r[1]] || (g !== -1 && r[2] !== g)) return;
+      o.a += r[3]; if (!INS[r[1]]) o.af += r[3]; o.dep += r[4]; o.wd += r[5]; o.tr += r[6]; o.fa += r[7]; o.fn += r[8]; o.fd += r[9]; o.yn += r[10]; o.yd += r[11];
+    });
+    memo[k] = o; return o;
+  }
+  function windowIdx(pi, w) {
+    if (w === 'm') return [pi];
+    var n = w === 'ltm' ? 12 : P[pi] % 100, from = pi - n + 1;
+    if (from < 0) return null;
+    var o = []; for (var i = from; i <= pi; i++) o.push(i); return o;
+  }
+  function baseIdx(pi, w) { return w === 'm' ? pi - 1 : w === 'ltm' ? pi - 12 : pi - (P[pi] % 100); }
+  function ret(pi, w, setId, g) {
+    var ix = windowIdx(pi, w); if (!ix) return null;
+    var f = 1;
+    for (var j = 0; j < ix.length; j++) { var c = cell(ix[j], setId, g); if (!(c.yd > 0)) return null; f *= 1 + c.yn / c.yd / 100; }
+    return (f - 1) * 100;
+  }
+  function flows(pi, w, setId, g) { // returns {org, tr} in NIS m, null when flow data is not published for the window
+    var ix = windowIdx(pi, w); if (!ix) return null;
+    var org = 0, tr = 0;
+    for (var j = 0; j < ix.length; j++) { var c = cell(ix[j], setId, g); if (!(c.af > 0) || c.fa < 0.98 * c.af) return null; org += c.dep - c.wd; tr += c.tr; }
+    return { org: org, tr: tr };
+  }
+  function growth(pi, w, setId, g) {
+    var b = baseIdx(pi, w); if (b < 0) return null;
+    var a0 = cell(b, setId, g).a, a1 = cell(pi, setId, g).a;
+    return a0 > 0 ? (a1 / a0 - 1) * 100 : null;
+  }
+  var METRICS = {
+    assets: { label: 'נכסים מנוהלים', unit: 'מיליארד ש"ח', win: false, kind: 'abs', v: function (pi, w, s, g) { return cell(pi, s, g).a / 1000; } },
+    share: { label: 'נתח שוק', unit: '%', win: false, kind: 'abs', v: function (pi, w, s, g) { var m = cell(pi, s, -1).a; return m > 0 ? cell(pi, s, g).a / m * 100 : null; } },
+    growth: { label: 'שינוי בנכסים', unit: '%', win: true, kind: 'ratio', v: growth },
+    organic: { label: 'צבירה אורגנית (הפקדות פחות משיכות)', unit: 'מיליארד ש"ח', win: true, kind: 'abs', v: function (pi, w, s, g) { var f = flows(pi, w, s, g); return f ? f.org / 1000 : null; } },
+    transfers: { label: 'העברות (ניוד) נטו', unit: 'מיליארד ש"ח', win: true, kind: 'abs', v: function (pi, w, s, g) { var f = flows(pi, w, s, g); return f ? f.tr / 1000 : null; } },
+    netflow: { label: 'צבירה נטו כולל ניוד', unit: 'מיליארד ש"ח', win: true, kind: 'abs', v: function (pi, w, s, g) { var f = flows(pi, w, s, g); return f ? (f.org + f.tr) / 1000 : null; } },
+    rate: { label: 'צבירה אורגנית כ-% מנכסי פתיחה', unit: '%', win: true, kind: 'ratio', v: function (pi, w, s, g) { var f = flows(pi, w, s, g), b = baseIdx(pi, w); if (!f || b < 0) return null; var a0 = cell(b, s, g).af; return a0 > 0 ? f.org / a0 * 100 : null; } },
+    fee: { label: 'דמי ניהול ממוצעים (משוקללים בנכסים)', unit: '%', win: false, kind: 'ratio', dec: 2, v: function (pi, w, s, g) { var c = cell(pi, s, g); return c.fd > 0 ? c.fn / c.fd : null; } },
+    ret: { label: 'תשואה (משוקללת בנכסים, ריבית דריבית)', unit: '%', win: true, kind: 'ratio', v: function (pi, w, s, g) { return ret(pi, w, s, g); } }
+  };
+  var WIN = { m: 'חודש', ytd: 'מתחילת השנה', ltm: '12 חודשים' };
+
+  // ---------- formatting ----------
+  var MN = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
+  function plabel(pi) { return MN[P[pi] % 100 - 1] + ' ' + Math.floor(P[pi] / 100); }
+  function nf(v, d) { return v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }).replace('-', '−'); }
+  function sn(v, d) { return (v > 0 ? '+' : '') + nf(v, d); }
+  function span(t, c) { return '<span class="num' + (c ? ' ' + c : '') + '">' + t + '</span>'; }
+  function fmtMetric(key, v, signed) {
+    if (v == null || isNaN(v)) return '<span class="muted">–</span>';
+    var m = METRICS[key], d = m.dec != null ? m.dec : (m.unit === '%' ? 1 : (Math.abs(v) < 10 ? 2 : 1));
+    var t = (signed ? sn(v, d) : nf(v, d)) + (m.unit === '%' ? '%' : '');
+    var c = signed ? (v > 0 ? 'pos' : v < 0 ? 'neg' : '') : '';
+    return span(t, c);
+  }
+  function signedKey(k) { return k !== 'assets' && k !== 'share' && k !== 'fee'; }
+  function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function copyText(t, btn) {
+    var done = function (ok) { var o = btn.textContent; btn.textContent = ok ? 'הועתק' : 'ההעתקה נחסמה'; setTimeout(function () { btn.textContent = o; }, 1600); };
+    try { navigator.clipboard.writeText(t).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
+  }
+
+  // ---------- state & shell ----------
+  var S = { view: 'overview', pi: LAST, set: 'all', metric: 'assets', win: 'ltm', group: 'הראל', cmetric: 'assets', fset: 'all', fgroup: '', fq: '', fsort: 'assets', fdir: -1 };
+  var VIEWS = [['overview', 'סקירת שוק'], ['rank', 'דירוג חברות'], ['company', 'חברה'], ['funds', 'קופות'], ['method', 'מתודולוגיה ובקרה']];
+  var charts = [];
+  function mkChart(id) { var c = echarts.init(document.getElementById(id)); charts.push(c); return c; }
+  function disposeCharts() { charts.forEach(function (c) { c.dispose(); }); charts = []; }
+  document.getElementById('asof').textContent = 'נתונים עד ' + plabel(LAST) + ' · ' + D.meta.units;
+  document.getElementById('foot').textContent = 'מקור: ' + D.meta.source + '. עודכן ' + D.meta.generated + '. חישובים: נכסים ותזרימים מסוכמים לפי קבוצה, תשואה ודמי ניהול משוקללים בנכסים.';
+  function renderTabs() {
+    document.getElementById('tabs').innerHTML = VIEWS.map(function (v) { return '<a href="#' + v[0] + '"' + (S.view === v[0] ? ' aria-current="page"' : '') + '>' + v[1] + '</a>'; }).join('');
+  }
+  function fromHash() { var h = location.hash.replace('#', ''); if (VIEWS.some(function (v) { return v[0] === h; })) S.view = h; }
+  window.addEventListener('hashchange', function () { fromHash(); render(); });
+
+  function selectHtml(id, label, opts, val) {
+    return '<div class="field"><label for="' + id + '">' + label + '</label><select id="' + id + '">' + opts.map(function (o) { return o.group ? '<optgroup label="' + esc(o.group) + '"></optgroup>' : '<option value="' + esc(o.v) + '"' + (String(o.v) === String(val) ? ' selected' : '') + '>' + esc(o.l) + '</option>'; }).join('') + '</select></div>';
+  }
+  function setOpts() { return SETS.map(function (s) { return { v: s.id, l: (s.sub ? '   ' : '') + s.label }; }); }
+  function monthOpts() { var o = []; for (var i = LAST; i >= 0; i--) o.push({ v: i, l: plabel(i) }); return o; }
+  function segHtml(id, opts, val) { return '<div class="seg" id="' + id + '" role="group">' + opts.map(function (o) { return '<button type="button" data-v="' + o[0] + '" aria-pressed="' + (o[0] === val) + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+  function bindSeg(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) fn(b.getAttribute('data-v')); }); }
+  function bindSel(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener('change', function () { fn(el.value); }); }
+
+  function render() {
+    disposeCharts(); renderTabs();
+    var v = document.getElementById('view');
+    ({ overview: viewOverview, rank: viewRank, company: viewCompany, funds: viewFunds, method: viewMethod })[S.view](v);
+    window.scrollTo(0, 0);
+  }
+  function rerender() { var y = window.scrollY; disposeCharts(); var v = document.getElementById('view'); ({ overview: viewOverview, rank: viewRank, company: viewCompany, funds: viewFunds, method: viewMethod })[S.view](v); window.scrollTo(0, y); }
+
+  // ---------- chart base ----------
+  function baseOpt() {
+    var fg = css('--fg'), mu = css('--muted'), ln = css('--line');
+    return { fg: fg, mu: mu, ln: ln, text: { fontFamily: 'Heebo, system-ui, sans-serif', color: fg }, tip: { backgroundColor: css('--panel'), borderColor: ln, textStyle: { color: fg, fontSize: 12 } } };
+  }
+  function timeAxis(b) { return { type: 'category', data: P.map(function (p, i) { return i; }), boundaryGap: false, axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11, formatter: function (i) { var x = P[+i]; return x % 100 === 1 || +i === 0 ? String(Math.floor(x / 100)) : ''; }, interval: 0 } }; }
+
+  // ---------- OVERVIEW ----------
+  function viewOverview(el) {
+    var fam = FAMS.map(function (f) { return f[0]; });
+    var tot = cell(LAST, 'all', -1).a, tot12 = cell(LAST - 12, 'all', -1).a;
+    var kp = [{ l: 'סך נכסים (פנסיה, גמל ופוליסות חיסכון)', v: nf(tot / 1000, 0), s: 'מיליארד ש"ח · ' + plabel(LAST) }, { l: 'שינוי ב-12 חודשים', v: sn((tot / tot12 - 1) * 100, 1) + '%', c: 'pos', s: 'כולל תשואה, צבירה והעברות תיקים' }];
+    fam.forEach(function (f) {
+      var a = cell(LAST, 'fam:' + f, -1).a, g = growth(LAST, 'ltm', 'fam:' + f, -1);
+      kp.push({ l: D.families[f], v: nf(a / 1000, 0), s: 'מיליארד ש"ח · ' + (g == null ? '' : sn(g, 1) + '% ב-12 חודשים') });
+    });
+    var fo = flows(LAST, 'ltm', 'fam:pension', -1), fg = flows(LAST, 'ltm', 'fam:gemel', -1);
+    if (fo && fg) kp.push({ l: 'צבירה אורגנית ב-12 חודשים (פנסיה וגמל)', v: sn((fo.org + fg.org) / 1000, 1), s: 'מיליארד ש"ח, לפני העברות (ניוד)' });
+    var rows = PROD.map(function (p, i) { return { p: p, i: i, id: 'p:' + p.key }; }).filter(function (r) { return cell(LAST, r.id, -1).a > 0; });
+    var cols = ['assets', 'growth', 'organic', 'fee', 'ret'];
+    var th = '<thead><tr><th>מוצר</th>' + cols.map(function (c) { return '<th>' + METRICS[c].label.split(' (')[0] + (METRICS[c].win ? '<br>12 חודשים' : '') + '</th>'; }).join('') + '</tr></thead>';
+    var body = rows.map(function (r) {
+      return '<tr><td>' + esc(r.p.label) + '</td>' + cols.map(function (c) { return '<td>' + fmtMetric(c, METRICS[c].v(LAST, 'ltm', r.id, -1), signedKey(c)) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    el.innerHTML = '<section class="kpis">' + kp.map(function (k) { return '<div class="kpi"><div class="l">' + k.l + '</div><div class="v">' + span(k.v, k.c) + '</div><div class="s">' + k.s + '</div></div>'; }).join('') + '</section>' +
+      '<div class="grid21"><section class="panel"><div class="hd"><h2>נכסים לפי משפחת מוצר (מיליארד ש"ח)</h2></div><div class="chart" id="c1"></div></section>' +
+      '<section class="panel"><div class="hd"><h2>צבירה אורגנית מתגלגלת, 12 חודשים (מיליארד ש"ח)</h2></div><div class="chart" id="c2"></div><div class="src">פנסיה-נט אינו מפרסם הפקדות ומשיכות לפני אמצע 2016, ולכן הקו מתחיל מאוחר יותר. ביטוח-נט אינו כולל תזרימים.</div></section></div>' +
+      '<section class="panel"><div class="hd"><h2>לפי מוצר, ' + plabel(LAST) + '</h2></div><div class="scroll"><table>' + th + '<tbody>' + body + '</tbody></table></div>' +
+      '<div class="src">תשואה משוקללת בנכסים לפי קבוצת מוצר ומושפעת מהרכב המסלולים (מניות מול אג"ח). שינוי בנכסים כולל תשואה, צבירה והעברות תיקים.</div></section>';
+    var b = baseOpt(), colors = [css('--s1'), css('--s2'), css('--s3')];
+    var c1 = mkChart('c1'), start = 0;
+    c1.setOption({
+      animation: false, textStyle: b.text, grid: { left: 46, right: 12, top: 36, bottom: 28 },
+      legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
+      tooltip: { trigger: 'axis', backgroundColor: b.tip.backgroundColor, borderColor: b.tip.borderColor, textStyle: b.tip.textStyle, valueFormatter: function (v) { return nf(v, 0) + ' מיליארד'; }, axisPointer: { type: 'line' }, formatter: function (ps) { var t = plabel(ps[0].axisValue) + '<br>'; var s = 0; ps.forEach(function (p) { s += p.value; t += p.marker + ' ' + p.seriesName + ': <b>' + nf(p.value, 0) + '</b><br>'; }); return t + 'סה"כ: <b>' + nf(s, 0) + '</b>'; } },
+      xAxis: timeAxis(b), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+      series: fam.map(function (f, k) { return { name: D.families[f], type: 'line', stack: 'a', areaStyle: { opacity: 0.85 }, symbol: 'none', lineStyle: { width: 1, color: colors[k] }, itemStyle: { color: colors[k] }, data: P.map(function (_, i) { return +(cell(i, 'fam:' + f, -1).a / 1000).toFixed(1); }) }; })
+    });
+    var c2 = mkChart('c2');
+    c2.setOption({
+      animation: false, textStyle: b.text, grid: { left: 40, right: 12, top: 36, bottom: 28 },
+      legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
+      tooltip: { trigger: 'axis', backgroundColor: b.tip.backgroundColor, borderColor: b.tip.borderColor, textStyle: b.tip.textStyle, formatter: function (ps) { var t = plabel(ps[0].axisValue) + '<br>'; ps.forEach(function (p) { if (p.value != null) t += p.marker + ' ' + p.seriesName + ': <b>' + nf(p.value, 1) + '</b><br>'; }); return t; } },
+      xAxis: timeAxis(b), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+      series: ['pension', 'gemel'].map(function (f, k) { return { name: D.families[f], type: 'line', symbol: 'none', connectNulls: false, lineStyle: { width: 2, color: colors[k] }, itemStyle: { color: colors[k] }, data: P.map(function (_, i) { var x = flows(i, 'ltm', 'fam:' + f, -1); return x ? +(x.org / 1000).toFixed(1) : null; }) }; })
+    });
+  }
+
+  // ---------- RANKING ----------
+  function rankData(metric, pi, win, setId) {
+    var m = METRICS[metric];
+    var out = [];
+    GROUPS.forEach(function (g, gi) {
+      if (!(cell(pi, setId, gi).a > 0)) return;
+      var v = m.v(pi, win, setId, gi);
+      if (v != null && !isNaN(v)) out.push({ g: g, v: v });
+    });
+    out.sort(function (x, y) { return y.v - x.v; });
+    return out;
+  }
+  function viewRank(el) {
+    var m = METRICS[S.metric], mk = Object.keys(METRICS).map(function (k) { return { v: k, l: METRICS[k].label }; });
+    var mkt = m.v(S.pi, S.win, S.set, -1);
+    el.innerHTML = '<section class="controls">' + selectHtml('f-month', 'חודש', monthOpts(), S.pi) + selectHtml('f-set', 'מוצר', setOpts(), S.set) + selectHtml('f-metric', 'מדד', mk, S.metric) +
+      (m.win ? '<div class="field"><label>חלון</label>' + segHtml('f-win', [['m', 'חודש'], ['ytd', 'מתחילת השנה'], ['ltm', '12 חודשים']], S.win) + '</div>' : '') + '</section>' +
+      '<section class="panel"><div class="hd"><h2>' + m.label + (m.win ? ' · ' + WIN[S.win] : '') + ' · ' + plabel(S.pi) + '</h2><span>כלל השוק: ' + fmtMetric(S.metric, mkt, signedKey(S.metric)) + ' <span class="muted">' + (m.unit === '%' ? '' : m.unit) + '</span></span></div><div class="chart tall" id="c1"></div>' +
+      '<div class="src">מוצגות רק קבוצות עם נתון זמין. ' + (m.kind === 'ratio' && S.metric !== 'fee' ? '' : '') + (['organic', 'transfers', 'netflow', 'rate'].indexOf(S.metric) >= 0 ? 'תזרימים כוללים פנסיה וגמל בלבד. ביטוח-נט אינו מפרסם תזרימים, ופנסיה-נט אינו מפרסם אותם לפני אמצע 2016. ' : '') + 'הקו המקווקו מציג את כלל השוק במוצר שנבחר.</div></section>' +
+      '<section class="panel"><div class="hd"><h2>כל המדדים לפי קבוצה</h2><button class="btn" id="copy" type="button">העתק לאקסל</button></div><div class="scroll" id="rtab"></div></section>';
+    bindSel('f-month', function (v) { S.pi = +v; rerender(); }); bindSel('f-set', function (v) { S.set = v; rerender(); }); bindSel('f-metric', function (v) { S.metric = v; rerender(); }); bindSeg('f-win', function (v) { S.win = v; rerender(); });
+    var data = rankData(S.metric, S.pi, S.win, S.set), b = baseOpt(), dec = m.dec != null ? m.dec : (m.unit === '%' ? 1 : 1);
+    var ch = mkChart('c1');
+    ch.setOption({
+      animation: false, textStyle: b.text, grid: { left: 112, right: 64, top: 12, bottom: 24 },
+      tooltip: { show: true, trigger: 'item', backgroundColor: b.tip.backgroundColor, borderColor: b.tip.borderColor, textStyle: b.tip.textStyle, formatter: function (p) { return p.name + ': <b>' + nf(p.value, dec) + (m.unit === '%' ? '%' : '') + '</b>'; } },
+      xAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+      yAxis: { type: 'category', inverse: true, data: data.map(function (d) { return d.g; }), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.fg, fontSize: 12 } },
+      series: [{ type: 'bar', barMaxWidth: 26, data: data.map(function (d) { return { value: +d.v.toFixed(3), name: d.g, itemStyle: { color: d.v < 0 ? css('--down') : css('--accent') } }; }),
+        label: { show: true, position: 'right', color: b.fg, fontSize: 11.5, formatter: function (p) { return nf(p.value, dec) + (m.unit === '%' ? '%' : ''); } },
+        markLine: m.kind === 'ratio' && mkt != null ? { silent: true, symbol: 'none', label: { show: true, formatter: 'שוק ' + nf(mkt, dec) + (m.unit === '%' ? '%' : ''), color: css('--down'), fontSize: 11 }, lineStyle: { color: css('--down'), type: 'dashed' }, data: [{ xAxis: mkt }] } : undefined }]
+    });
+    // table with all metrics
+    var cols = ['assets', 'share', 'growth', 'organic', 'rate', 'fee', 'ret'];
+    var groups = GROUPS.map(function (g, gi) { return gi; }).filter(function (gi) { return cell(S.pi, S.set, gi).a > 0; }).sort(function (a, c) { return cell(S.pi, S.set, c).a - cell(S.pi, S.set, a).a; });
+    var rowsT = groups.map(function (gi) { return { n: GROUPS[gi], vals: cols.map(function (c) { return METRICS[c].v(S.pi, S.win, S.set, gi); }) }; });
+    rowsT.push({ n: 'כלל השוק', tot: 1, vals: cols.map(function (c) { return METRICS[c].v(S.pi, S.win, S.set, -1); }) });
+    document.getElementById('rtab').innerHTML = '<table><thead><tr><th>קבוצה</th>' + cols.map(function (c) { return '<th>' + METRICS[c].label.split(' (')[0] + (METRICS[c].win ? '<br>' + WIN[S.win] : '') + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      rowsT.map(function (r) { return '<tr' + (r.tot ? ' class="tot"' : '') + '><td>' + esc(r.n) + '</td>' + r.vals.map(function (v, k) { return '<td>' + fmtMetric(cols[k], v, signedKey(cols[k])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
+    document.getElementById('copy').addEventListener('click', function (e) {
+      var t = ['קבוצה'].concat(cols.map(function (c) { return METRICS[c].label + ' (' + METRICS[c].unit + ')'; })).join('\t') + '\n' + rowsT.map(function (r) { return [r.n].concat(r.vals.map(function (v) { return v == null ? '' : (+v).toFixed(4); })).join('\t'); }).join('\n');
+      copyText(t, e.currentTarget);
+    });
+  }
+
+  // ---------- COMPANY ----------
+  var CM = ['assets', 'share', 'organic', 'rate', 'fee', 'ret'];
+  function viewCompany(el) {
+    var gi = GROUPS.indexOf(S.group); if (gi < 0) { S.group = GROUPS[0]; gi = 0; }
+    var gopts = GROUPS.map(function (g, i) { return { v: g, l: g }; }).filter(function (o, i) { return GROUPS.indexOf(o.v) >= 0 && cell(LAST, 'all', i).a > 0; });
+    if (!gopts.some(function (o) { return o.v === S.group; })) gopts.push({ v: S.group, l: S.group + ' (לא פעילה כיום)' });
+    var rowsM = CM.map(function (k) {
+      var win = METRICS[k].win ? 'ltm' : 'm', now = METRICS[k].v(LAST, win, S.set, gi), prev = LAST >= 12 ? METRICS[k].v(LAST - 12, win, S.set, gi) : null, mk = METRICS[k].v(LAST, win, S.set, -1);
+      return { k: k, now: now, prev: prev, mk: mk, win: win };
+    });
+    el.innerHTML = '<section class="controls">' + selectHtml('f-group', 'קבוצה', gopts, S.group) + selectHtml('f-set', 'מוצר', setOpts(), S.set) + '</section>' +
+      '<div class="grid21"><section class="panel"><div class="hd"><h2 id="ct">' + esc(METRICS[S.cmetric].label) + '</h2><span class="muted" id="cu"></span></div><div class="chart" id="c1"></div></section>' +
+      '<section class="panel"><div class="hd"><h2>מדדים, ' + plabel(LAST) + '</h2></div><div class="scroll"><table><thead><tr><th>מדד</th><th>' + plabel(LAST) + '</th><th>לפני שנה</th><th>כלל השוק</th></tr></thead><tbody>' +
+      rowsM.map(function (r) { return '<tr class="pickrow' + (r.k === S.cmetric ? ' on' : '') + '" data-k="' + r.k + '" tabindex="0"><td>' + METRICS[r.k].label.split(' (')[0] + (METRICS[r.k].win ? '<br><span class="muted">12 חודשים</span>' : '') + '</td><td>' + fmtMetric(r.k, r.now, false) + '</td><td>' + fmtMetric(r.k, r.prev, false) + '</td><td>' + fmtMetric(r.k, r.mk, false) + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+      '<div class="src">לחיצה על שורה מחליפה את הגרף. ערכי "12 חודשים" הם תזרים או תשואה מצטברים בתקופה. תזרימים כוללים פנסיה וגמל בלבד.</div></section></div>' +
+      '<section class="panel"><div class="hd"><h2>נכסים לפי מוצר (מיליארד ש"ח, דצמבר של כל שנה ו-' + plabel(LAST) + ')</h2></div><div class="chart short" id="c2"></div></section>';
+    bindSel('f-group', function (v) { S.group = v; rerender(); }); bindSel('f-set', function (v) { S.set = v; rerender(); });
+    el.querySelectorAll('tr.pickrow').forEach(function (tr) { var f = function () { S.cmetric = tr.getAttribute('data-k'); rerender(); }; tr.addEventListener('click', f); tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') f(); }); });
+    var m = METRICS[S.cmetric], win = m.win ? 'ltm' : 'm', b = baseOpt();
+    document.getElementById('cu').textContent = m.unit + (m.win ? ' · מתגלגל, 12 חודשים' : '');
+    var own = P.map(function (_, i) { var v = m.v(i, win, S.set, gi); return v == null || isNaN(v) ? null : +v.toFixed(3); });
+    var mkt = P.map(function (_, i) { var v = m.v(i, win, S.set, -1); return v == null || isNaN(v) ? null : +v.toFixed(3); });
+    var dec = m.dec != null ? m.dec : (m.unit === '%' ? 1 : 1);
+    var series = [{ name: S.group, type: 'line', symbol: 'none', lineStyle: { width: 2.5, color: css('--accent') }, itemStyle: { color: css('--accent') }, data: own }];
+    if (m.kind === 'ratio') series.push({ name: 'כלל השוק', type: 'line', symbol: 'none', lineStyle: { width: 1.5, type: 'dashed', color: css('--muted') }, itemStyle: { color: css('--muted') }, data: mkt });
+    mkChart('c1').setOption({
+      animation: false, textStyle: b.text, grid: { left: 44, right: 12, top: 34, bottom: 28 },
+      legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 14, itemHeight: 3, icon: 'roundRect' },
+      tooltip: { trigger: 'axis', backgroundColor: b.tip.backgroundColor, borderColor: b.tip.borderColor, textStyle: b.tip.textStyle, formatter: function (ps) { var t = plabel(ps[0].axisValue) + '<br>'; ps.forEach(function (p) { if (p.value != null) t += p.marker + ' ' + p.seriesName + ': <b>' + nf(p.value, dec) + (m.unit === '%' ? '%' : '') + '</b><br>'; }); return t; } },
+      xAxis: timeAxis(b), yAxis: { type: 'value', scale: m.kind === 'ratio', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } }, series: series
+    });
+    // stacked assets by product at each December + latest
+    var pts = []; P.forEach(function (p, i) { if (p % 100 === 12 || i === LAST) pts.push(i); });
+    var cols = [css('--s1'), css('--s2'), css('--s3'), css('--s4'), css('--s5'), css('--s6'), css('--s7'), css('--s8'), css('--s9'), css('--s10'), css('--s11')];
+    var used = PROD.map(function (p, i) { return i; }).filter(function (i) { return SETMAP[S.set].has[i] && pts.some(function (pi) { return cell(pi, 'p:' + PROD[i].key, gi).a > 0; }); });
+    mkChart('c2').setOption({
+      animation: false, textStyle: b.text, grid: { left: 44, right: 12, top: 44, bottom: 28 },
+      legend: { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.tip.backgroundColor, borderColor: b.tip.borderColor, textStyle: b.tip.textStyle, valueFormatter: function (v) { return nf(v, 1); } },
+      xAxis: { type: 'category', data: pts.map(function (i) { return i === LAST ? plabel(i) : String(Math.floor(P[i] / 100)); }), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },
+      yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+      series: used.map(function (i) { return { name: PROD[i].label, type: 'bar', stack: 'a', barMaxWidth: 36, itemStyle: { color: cols[i] }, data: pts.map(function (pi) { return +(cell(pi, 'p:' + PROD[i].key, gi).a / 1000).toFixed(2); }) }; })
+    });
+  }
+
+  // ---------- FUNDS ----------
+  var FCOLS = [
+    ['name', 'קופה', function (f) { return esc(f.name); }, 's'], ['grp', 'קבוצה', function (f) { return esc(f.grp); }, 's'],
+    ['assets', 'נכסים (מיליון ש"ח)', function (f) { return f.assets == null ? '–' : span(nf(f.assets, 0)); }, 'n'], ['fee', 'דמי ניהול %', function (f) { return f.fee == null ? '–' : span(nf(f.fee, 2)); }, 'n'],
+    ['ytd', 'תשואה מתחילת שנה %', function (f) { return f.ytd == null ? '–' : span(sn(f.ytd, 1), f.ytd >= 0 ? 'pos' : 'neg'); }, 'n'], ['y12', 'תשואה 12 חודשים %', function (f) { return f.y12 == null ? '–' : span(sn(f.y12, 1), f.y12 >= 0 ? 'pos' : 'neg'); }, 'n'],
+    ['a3', 'ממוצע שנתי 3 שנים %', function (f) { return f.a3 == null ? '–' : span(nf(f.a3, 1)); }, 'n'], ['a5', 'ממוצע שנתי 5 שנים %', function (f) { return f.a5 == null ? '–' : span(nf(f.a5, 1)); }, 'n'],
+    ['sharpe', 'שארפ', function (f) { return f.sharpe == null ? '–' : span(nf(f.sharpe, 2)); }, 'n'], ['stock', 'חשיפה למניות %', function (f) { return f.stock == null ? '–' : span(nf(f.stock, 0)); }, 'n'],
+    ['foreign', 'חשיפה לחו"ל %', function (f) { return f.foreign == null ? '–' : span(nf(f.foreign, 0)); }, 'n'], ['net12', 'צבירה אורגנית 12 ח׳ (מיליון ש"ח)', function (f) { return f.net12 == null ? '–' : span(sn(f.net12, 0), f.net12 >= 0 ? 'pos' : 'neg'); }, 'n']
+  ];
+  function fundList() {
+    var s = SETMAP[S.fset], q = S.fq.trim();
+    var L = D.funds.filter(function (f) { return s.has[PROD.findIndex(function (p) { return p.key === f.prod; })] && (!S.fgroup || f.grp === S.fgroup) && (!q || f.name.indexOf(q) >= 0); });
+    var k = S.fsort, d = S.fdir;
+    L.sort(function (a, b) { var x = a[k], y = b[k]; if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return typeof x === 'string' ? d * x.localeCompare(y, 'he') : d * (x - y); });
+    return L;
+  }
+  function viewFunds(el) {
+    var gopts = [{ v: '', l: 'כל הקבוצות' }].concat(GROUPS.filter(function (g, gi) { return cell(LAST, 'all', gi).a > 0; }).map(function (g) { return { v: g, l: g }; }));
+    el.innerHTML = '<section class="controls">' + selectHtml('f-set', 'מוצר', setOpts(), S.fset) + selectHtml('f-grp', 'קבוצה', gopts, S.fgroup) +
+      '<div class="field"><label for="f-q">חיפוש בשם קופה</label><input type="search" id="f-q" value="' + esc(S.fq) + '"></div><button class="btn" id="copy" type="button">העתק לאקסל</button></section>' +
+      '<section class="panel"><div class="hd"><h2 id="fcount"></h2><span class="muted">' + plabel(LAST) + ' · לחיצה על כותרת ממיינת</span></div><div class="scroll" id="ftab" style="max-height:640px"></div></section>';
+    bindSel('f-set', function (v) { S.fset = v; fill(); }); bindSel('f-grp', function (v) { S.fgroup = v; fill(); });
+    var q = document.getElementById('f-q'); q.addEventListener('input', function () { S.fq = q.value; fill(); });
+    function fill() {
+      var L = fundList(), show = L.slice(0, 300);
+      document.getElementById('fcount').textContent = nf(L.length, 0) + ' קופות' + (L.length > 300 ? ' (מוצגות 300 הראשונות)' : '');
+      document.getElementById('ftab').innerHTML = '<table><thead><tr>' + FCOLS.map(function (c) { return '<th data-k="' + c[0] + '" tabindex="0"' + (S.fsort === c[0] ? ' aria-sort="' + (S.fdir > 0 ? 'ascending' : 'descending') + '"' : '') + '>' + c[1] + (S.fsort === c[0] ? (S.fdir > 0 ? ' ▲' : ' ▼') : '') + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        show.map(function (f) { return '<tr>' + FCOLS.map(function (c) { return '<td>' + c[2](f) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
+      document.querySelectorAll('#ftab th[data-k]').forEach(function (th) { var go = function () { var k = th.getAttribute('data-k'); if (S.fsort === k) S.fdir = -S.fdir; else { S.fsort = k; S.fdir = (k === 'name' || k === 'grp') ? 1 : -1; } fill(); }; th.addEventListener('click', go); th.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); }); });
+    }
+    fill();
+    document.getElementById('copy').addEventListener('click', function (e) {
+      var L = fundList(); var t = FCOLS.map(function (c) { return c[1]; }).join('\t') + '\n' + L.map(function (f) { return FCOLS.map(function (c) { var v = f[c[0]]; return v == null ? '' : v; }).join('\t'); }).join('\n');
+      copyText(t, e.currentTarget);
+    });
+  }
+
+  // ---------- METHOD ----------
+  function viewMethod(el) {
+    var chk = D.qa.checks.map(function (c) { var st = c.status || (c.ok ? 'pass' : 'fail'); return '<tr><td>' + esc(c.name) + '</td><td><span class="chip ' + st + '">' + ({ pass: 'תקין', review: 'לבדיקה', fail: 'נכשל' })[st] + '</span></td><td style="text-align:start;white-space:normal">' + esc(c.detail) + '</td></tr>'; }).join('');
+    el.innerHTML = '<section class="panel"><div class="hd"><h2>בקרת נתונים (רצה בכל בנייה של המאגר)</h2></div><div class="scroll"><table><thead><tr><th>בדיקה</th><th>סטטוס</th><th style="text-align:start">פירוט</th></tr></thead><tbody>' + chk + '</tbody></table></div><div class="prose"><ul>' + D.qa.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul></div></section>' +
+      '<section class="panel"><div class="prose"><h2 style="margin:0;font-size:14px">הגדרות</h2><ul>' +
+      '<li><b>נכסים:</b> סכום "סך נכסים" ברמת קופה, מיליוני ש"ח, בסוף החודש.</li>' +
+      '<li><b>צבירה אורגנית:</b> הפקדות פחות משיכות. אינה כוללת ניוד בין גופים.</li>' +
+      '<li><b>העברות (ניוד) נטו:</b> כניסות פחות יציאות של לקוחות. בקבוצה בודדת זה מדד לשימור וגיוס. בסך השוק הוא אינו מתאפס (ב-12 החודשים האחרונים כ-15 מיליארד ש"ח בגמל וכ-32 מיליארד ש"ח בפנסיה), כנראה כי כולל העברות ממוצרים שאינם במאגר. הסיבה אינה מאומתת.</li>' +
+      '<li><b>צבירה נטו כולל ניוד:</b> צבירה אורגנית ועוד העברות. זהה לשדה "הפקדות נטו" ברשות.</li>' +
+      '<li><b>תשואה:</b> תשואה חודשית של כל קופה משוקללת בנכסי הקופה בסוף החודש הקודם, ומורכבת ריבית דריבית לחלון. הנוסחה שוחזרה מול "תשואה מתחילת השנה" שפרסמה הרשות (ראה בקרה).</li>' +
+      '<li><b>דמי ניהול:</b> ממוצע משוקלל בנכסים של "דמי ניהול שנתיים ממוצעים" כפי שדווחו, בקופות שדיווחו.</li>' +
+      '<li><b>שינוי בנכסים:</b> כולל תשואה, צבירה והעברות תיקים בין גופים. אינו מדד לצמיחה אורגנית.</li></ul>' +
+      '<h2 style="margin:8px 0 0;font-size:14px">מגבלות</h2><ul>' +
+      '<li><b>שיוך לקבוצה</b> לפי שם החברה המנהלת (או החברה המבטחת בביטוח-נט), לא לפי בעלות פורמלית. כלל וקבוצות ענפיות שאינן ברשימה מופיעים תחת "' + esc('קרנות ענפיות ואחרות') + '".</li>' +
+      '<li><b>רציפות היסטורית (pro-forma):</b> נכסי פסגות (כ-49.8 מיליארד ש"ח) ונכסי הלמן אלדובי (כ-18.4 מיליארד ש"ח) נעלמו באוקטובר 2021 ובאותו חודש עלו נכסי אלטשולר שחם בכ-49.8 מיליארד והפניקס בכ-22.3 מיליארד. לכן שיוך ההיסטוריה שלהם נעשה לגופים אלה. זו הסקה מהנתונים ויש לאמתה מול הודעות החברות.</li>' +
+      '<li><b>פוליסות חיסכון (ביטוח-נט)</b> מכסות מסלולי השקעה של פוליסות. אין בהן הפקדות ומשיכות, והן אינן דוח רווח והפסד של חברת הביטוח.</li>' +
+      '<li><b>דירוג תשואה בין קבוצות</b> מושפע מהרכב המסלולים (מניות מול אג"ח). להשוואה הוגנת בחר מוצר אחד, ובתוכו מסלול דומה בתצוגת "קופות".</li>' +
+      '<li>נתוני הרשות אינם כוללים רווח והפסד או הון של חברות הביטוח ומנהלי הקופות. הדוחות הכספיים של המבטחים יצורפו בשלב הבא.</li></ul></div></section>';
+  }
+
+  fromHash(); render();
+  var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { charts.forEach(function (c) { c.resize(); }); }, 120); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { rerender(); });
+  new MutationObserver(function () { rerender(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+</script>
