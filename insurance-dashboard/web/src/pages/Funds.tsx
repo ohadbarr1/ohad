@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
@@ -81,16 +81,32 @@ export function Funds() {
 
   const all = data?.funds ?? [];
   const tracks = useMemo(() => { const m = new Map<string, number>(); all.filter((f) => f.prod === prod).forEach((f) => m.set(f.track, (m.get(f.track) ?? 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [all, prod]);
-  const T = tracks.some(([t]) => t === track) ? track : tracks[0]?.[0] ?? '';
-  const members = useMemo(() => all.filter((f) => f.prod === prod && f.track === T), [all, prod, T]);
-  const rows = useMemo(() => {
-    const shown = members.filter((f) => closed || !f.closed);  // the rank is among the tracks on screen
-    const ranked = shown.filter((f) => f[per] != null).sort((a, b) => b[per]! - a[per]!);
-    const rank = new Map(ranked.map((f, i) => [f.k, i + 1]));
+  const ALL = 'all';
+  const T = track === ALL || tracks.some(([t]) => t === track) ? track : tracks[0]?.[0] ?? '';
+  const [open, setOpen] = useState<string[]>([]);
+  // one group per track; a single track is the same table with one group
+  const groups = useMemo(() => {
     const t = q.trim();
-    return { n: ranked.length, list: [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => !t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)).map((f) => ({ f, rank: rank.get(f.k) ?? null })) };
-  }, [members, per, closed, q]);
-  const cat = cats?.[`${prod} | ${T}`];
+    return (T === ALL ? tracks.map(([x]) => x) : [T]).map((tr) => {
+      const shown = all.filter((f) => f.prod === prod && f.track === tr && (closed || !f.closed));  // the rank is among the tracks on screen
+      const ranked = shown.filter((f) => f[per] != null).sort((a, b) => b[per]! - a[per]!);
+      const rank = new Map(ranked.map((f, i) => [f.k, i + 1]));
+      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => !t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)).map((f) => ({ f, rank: rank.get(f.k) ?? null }));
+      return { tr, list, n: ranked.length, assets: shown.reduce((u, f) => u + (f.assets ?? 0), 0), cat: cats?.[`${prod} | ${tr}`] };
+    }).filter((g) => g.list.length).sort((x, y) => y.assets - x.assets);
+  }, [all, tracks, T, prod, per, closed, q, cats]);
+  const rows = { n: groups.reduce((u, g) => u + g.n, 0) };
+  // manufacturer against the market: where each managing group stands in every track (its largest track there, ranked on the chosen period)
+  const makers = useMemo(() => {
+    const size = new Map<string, number>();
+    groups.forEach((g) => g.list.forEach(({ f }) => size.set(f.grp, (size.get(f.grp) ?? 0) + (f.assets ?? 0))));
+    const names = [...size.entries()].filter(([n]) => n !== 'קרנות ענפיות ואחרות').sort((a, b) => b[1] - a[1]).slice(0, 14).map(([n]) => n);
+    const cell = (g: typeof groups[number], name: string) => g.list.filter((x) => x.f.grp === name && x.rank != null).sort((a, b) => (b.f.assets ?? 0) - (a.f.assets ?? 0))[0] ?? null;
+    const score = names.map((name) => { const c = groups.map((g) => ({ g, x: cell(g, name) })).filter((y) => y.x && y.g.n >= 4); return { n: c.length, top: c.filter((y) => y.x!.rank! <= Math.ceil(y.g.n / 4)).length }; });
+    return { names, cell, score };
+  }, [groups]);
+  const maker = sp.get('mk') ?? '';
+  const cat = T === ALL ? undefined : cats?.[`${prod} | ${T}`];
 
   // histories of the tracks picked for comparison
   const [hist, setHist] = useState<Record<string, FundHist>>({});
@@ -114,19 +130,47 @@ export function Funds() {
       <Sub />
       <section className="controls">
         <Field label="מוצר"><select value={prod} onChange={(e) => set({ prod: e.target.value, track: '', sel: '' })}>{PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
-        <Field label="מסלול"><select value={T} onChange={(e) => set({ track: e.target.value, sel: '' })}>{tracks.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select></Field>
+        <Field label="מסלול"><select value={T} onChange={(e) => set({ track: e.target.value, sel: '' })}><option value={ALL}>כל המסלולים ({tracks.reduce((u, [, c]) => u + c, 0)})</option>{tracks.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select></Field>
         <div className="field"><span>דירוג לפי</span><Seg label="תקופה" value={per} onChange={(v) => set({ per: v })} options={PERIODS} /></div>
         <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם קופה או גוף" /></Field>
         <button type="button" className="chip" aria-pressed={closed} onClick={() => setClosed(!closed)}>כולל קופות ענפיות ומפעליות</button>
       </section>
 
-      <Panel title={`${prod} · ${T}`} aside={<><span>{rows.n} מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}<span>סמן עד 6 להשוואה</span></>}>
-        {rows.list.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
+      {T === ALL && makers.names.length > 0 && (
+        <Panel title="יצרן מול השוק" aside={<><span>מקום בכל מסלול לפי {PERIODS.find(([k]) => k === per)?.[1]} · המסלול הגדול של היצרן</span><span className="chip est">נגזר</span></>}>
+          <div className="scroll"><table className="heat">
+            <thead><tr><th>מסלול</th>{makers.names.map((n) => <th key={n} className={n === maker ? 'on' : ''}><button type="button" className="thbtn" aria-pressed={n === maker} onClick={() => set({ mk: n === maker ? '' : n })}>{n}</button></th>)}</tr></thead>
+            <tbody>
+              {groups.map((g) => (
+                <tr key={g.tr}>
+                  <td><button type="button" className="thbtn" onClick={() => set({ track: g.tr })}>{g.tr}</button> <span className="muted num">{g.n}</span></td>
+                  {makers.names.map((n) => { const x = makers.cell(g, n); const q4 = x && g.n >= 4 ? (x.rank! <= Math.ceil(g.n / 4) ? 'pos' : x.rank! > g.n - Math.floor(g.n / 4) ? 'neg' : '') : '';
+                    return <td key={n} className={`${n === maker ? 'on' : ''} ${q4 ? 'q-' + q4 : ''}`}>{x ? <Link className="num" to={`/funds/${x.f.k}`} title={`${x.f.name} · ${pct(x.f[per]!, 1, true)} · מקום ${x.rank} מתוך ${g.n}`}>{x.rank}</Link> : <span className="muted">·</span>}</td>; })}
+                </tr>
+              ))}
+              <tr className="tot"><td>רבע עליון</td>{makers.score.map((sc, i) => <td key={i} className={makers.names[i] === maker ? 'on' : ''}><span className="num">{sc.n ? `${sc.top}/${sc.n}` : '–'}</span></td>)}</tr>
+            </tbody>
+          </table></div>
+          <div className="src">ירוק: רבע עליון במסלול. אדום: רבע תחתון. לחיצה על יצרן מדגישה את העמודה שלו; לחיצה על מסלול פותחת את הדירוג המלא.</div>
+        </Panel>
+      )}
+
+      <Panel title={`${prod} · ${T === ALL ? 'כל המסלולים' : T}`} aside={<>{T === ALL && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.tr))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}<span>{rows.n} מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}{T === ALL && <span>שורת קבוצה: ממוצע המסלול, משוקלל נכסים</span>}<span>סמן עד 6 להשוואה</span></>}>
+        {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
           <div className="scroll" style={{ maxHeight: 640 }}><table className="rank">
             <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th></tr></thead>
             <tbody>
-              {cat && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><P v={catReturn(cat, k, asof)} /></td>)}<td></td><td className="wide-only"><span className="num">{nf(members.reduce((t, f) => t + (f.assets ?? 0), 0), 0)}</span></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
-              {rows.list.map(({ f, rank }) => (
+              {groups.map((g) => (
+                <Fragment key={g.tr}>
+                  {T === ALL && (
+                    <tr className="sec grp" onClick={() => setOpen(open.includes(g.tr) ? open.filter((x) => x !== g.tr) : [...open, g.tr])} aria-expanded={open.includes(g.tr)}>
+                      <td><button type="button" className="twist" aria-label={open.includes(g.tr) ? `כווץ את ${g.tr}` : `פתח את ${g.tr}`}>{open.includes(g.tr) ? '▾' : '◂'}</button>{g.tr} <span className="muted" style={{ fontWeight: 400 }}>· {g.list.length}</span></td>
+                      <td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><P v={catReturn(g.cat, k, asof)} /></td>)}<td></td>
+                      <td className="wide-only"><span className="num">{nf(g.assets, 0)}</span></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td>
+                    </tr>
+                  )}
+                  {g.cat && T !== ALL && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><P v={catReturn(g.cat, k, asof)} /></td>)}<td></td><td className="wide-only"><span className="num">{nf(g.assets, 0)}</span></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
+              {(T !== ALL || open.includes(g.tr)) && g.list.map(({ f, rank }) => (
                 <tr key={f.k}>
                   <td><span style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}><input type="checkbox" checked={sel.includes(f.k)} onChange={() => toggle(f.k)} aria-label={`השווה את ${f.name}`} style={{ marginTop: 4, accentColor: 'var(--accent)' }} />
                     <span><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link>{f.closed && <span className="chip" style={{ marginInlineStart: 6 }}>סגורה</span>}<span className="dim">{f.grp}</span></span></span></td>
@@ -138,6 +182,8 @@ export function Funds() {
                   <td className="wide-only"><span className="num">{f.st == null ? '–' : `${nf(f.st, 0)}%`}</span></td>
                   <td className="wide-only">{f.yrs ? <span className={`num ${f.top! * 2 > f.yrs ? 'pos' : ''}`}>{f.top}/{f.yrs}</span> : <span className="muted">–</span>}</td>
                 </tr>
+              ))}
+                </Fragment>
               ))}
             </tbody>
           </table></div>

@@ -359,3 +359,19 @@ td a.name { color: var(--fg); font-weight: 500; transition: color var(--fast); }
 
 /* a tag that follows a figure keeps its distance (the page is RTL, so the gap is on the right of the tag) */
 .num + .chip, a.num + .chip { margin-right: 6px; }
+
+/* grouped rows that open and close, as in a spreadsheet outline */
+tr.grp { cursor: pointer; } tr.grp td { padding-top: 11px; background: color-mix(in oklch, var(--panel2) 55%, transparent); border-bottom-color: var(--line); font-size: 13.5px; }
+tbody tr.sec.grp:hover td { background: var(--panel2); }
+.twist { background: none; border: 0; color: var(--accent); cursor: pointer; width: 26px; height: 26px; font-size: 13px; padding: 0; margin-inline-end: 4px; }
+
+/* manufacturer by track: a rank grid, tinted by quartile, one column lit */
+table.heat th, table.heat td { text-align: center; padding: 7px 8px; min-width: 62px; }
+table.heat th:first-child, table.heat td:first-child { text-align: start; min-width: 150px; }
+table.heat thead th { white-space: normal; line-height: 1.25; vertical-align: bottom; }
+table.heat td.q-pos { background: color-mix(in oklch, var(--up) 16%, transparent); } table.heat td.q-pos a { color: var(--up); font-weight: 700; }
+table.heat td.q-neg { background: color-mix(in oklch, var(--down) 14%, transparent); } table.heat td.q-neg a { color: var(--down); }
+table.heat td a.num { text-decoration: none; display: block; }
+table.heat .on { box-shadow: inset 1px 0 0 var(--accent-line), inset -1px 0 0 var(--accent-line); background-image: linear-gradient(var(--accent-soft), var(--accent-soft)); }
+.thbtn { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; font-weight: 600; text-align: inherit; } .thbtn:hover, .thbtn[aria-pressed="true"] { color: var(--accent); }
+.panel table.heat td:not(:first-child), .panel table.heat th:not(:first-child) { min-width: 62px; }
