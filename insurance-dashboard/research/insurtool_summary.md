@@ -6,7 +6,7 @@
 
 ## שורה תחתונה
 
-1. **האוניברסום גדל מ-11 ל-18 ישויות**, בניגוד ל-HANDOFF: Harel, Phoenix, Menora Holdings, Menora Insurance, Clal, Migdal, Ayalon, IDI, Shomera, Wesure Globaltech, Wesure Insurance, AIG, Hachshara, Haklai, Libra, Shlomo, David Shield, Securitas, Ankor. חלקן חברות בנות של אחרות (Menora Insurance, Shomera, Wesure Insurance).
+1. **האוניברסום גדל מ-11 ל-19 ישויות במסננים (18 בגרף הראשי)**, בניגוד ל-HANDOFF: Harel, Phoenix, Menora Holdings, Menora Insurance, Clal, Migdal, Ayalon, IDI, Shomera, Wesure Globaltech, Wesure Insurance, AIG, Hachshara, Haklai, Libra, Shlomo, David Shield, Securitas, Ankor. חלקן חברות בנות של אחרות (Menora Insurance, Shomera, Wesure Insurance).
 2. **אין מודול CSM נפרד.** הכפתור "CSM Life & Health" בעמוד הבית מוביל לעמודי CSM בתוך Overview ו-New Business. בפועל 6 מודולים עם תוכן: Overview (11), P&C (10), New Business (3), Health (9), Life (11), Investment Contracts (2), ועוד Annex (7).
 3. **InsurTool הוא חתך רוחב של רבעון, לא סדרת זמן:** בורר שנה (2025/2026) ורבעון (Q1/Q2), השוואה לשנה קודמת בלבד. הגרף היחיד עם ציר זמן הוא שווי שוק (6 נקודות). זה הפער שלנו: 30 רבעונים לכל מדד.
 4. **רוב העבודה של EY היא הערות שוליים על השוואתיות**, לא הנתונים עצמם. הן חוזרות ב-30+ עמודים וחייבות להיכנס אצלנו כשדה `basis` לכל חברה ומדד.
