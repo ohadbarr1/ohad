@@ -79,7 +79,8 @@ def classify(title):
         return None
     for name, pat in RULES:
         if re.search(pat, t):
-            return name
+            # English translations call interim reports "Periodic Report for Q1"
+            return "quarterly" if name == "annual" and re.search(r"for q[1-4]", t) else name
     return None
 
 
