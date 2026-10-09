@@ -66,19 +66,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bridge import solve  # noqa: E402
 
 py = int(period[:4])
-win = "fy" if period.endswith("FY") else "ytd"
-open_dates = {f"{py - 1}-12-31", f"{py}-01-01"}
+wins = ["fy"] if period.endswith("FY") else ["ytd", "q"]
+q_open = {"Q1": f"{py - 1}-12-31", "Q2": f"{py}-03-31", "Q3": f"{py}-06-30"}.get(period[4:])
 csm = [f for f in num if f["metric"].startswith("csm_") and f["metric"] != "csm_expected_release" and not f.get("transition") and not f.get("model")
        and not f["metric"].startswith(("csm_other:Balance", "csm_subtotal"))]
 tally = {}
-for seg, basis in sorted({(f["segment"], f["basis"]) for f in csm}):
-    rows = [f for f in csm if f["segment"] == seg and f["basis"] == basis]
-    op = [f["value"] for f in rows if f["metric"] == "csm_opening" and (f["date"] in open_dates or (f["window"] == win and f["date"] == end))]
-    cl = [f["value"] for f in rows if f["metric"] == "csm_closing" and f["date"] == end]
-    mv = [f["value"] for f in rows if f["window"] == win and f["date"] == end and f["metric"] not in ("csm_opening", "csm_closing")]
-    if op and cl and mv:
-        _, how = solve(op[0], cl[0], mv)
-        tally[how] = tally.get(how, 0) + 1
-        if how in (None, "ambiguous"):
-            print(f"   CSM bridge does not close: {seg} / {basis}: opening {op[0]:,.0f}, {len(mv)} movement rows summing {sum(mv):,.0f}, closing {cl[0]:,.0f} ({how or 'no sign assignment works'})")
+for win in wins:
+    open_dates = {q_open} if win == "q" else {f"{py - 1}-12-31", f"{py}-01-01"}
+    for seg, basis in sorted({(f["segment"], f["basis"]) for f in csm}):
+        rows = [f for f in csm if f["segment"] == seg and f["basis"] == basis]
+        op = [f["value"] for f in rows if f["metric"] == "csm_opening" and (f["date"] in open_dates or (f["window"] == win and f["date"] == end))]
+        cl = [f["value"] for f in rows if f["metric"] == "csm_closing" and f["date"] == end]
+        mv = [f["value"] for f in rows if f["window"] == win and f["date"] == end and f["metric"] not in ("csm_opening", "csm_closing")]
+        if op and cl and mv:
+            _, how = solve(op[0], cl[0], mv)
+            tally[how] = tally.get(how, 0) + 1
+            if how in (None, "ambiguous"):
+                print(f"   CSM bridge does not close ({win}): {seg} / {basis}: opening {op[0]:,.0f}, {len(mv)} movement rows summing {sum(mv):,.0f}, closing {cl[0]:,.0f} ({how or 'no sign assignment works'})")
 print("   CSM bridges:", ", ".join(f"{n} {k or 'open'}" for k, n in tally.items()) or "none extracted")

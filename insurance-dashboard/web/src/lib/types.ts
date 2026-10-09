@@ -47,3 +47,15 @@ export interface PriceData { ticker: string; source: string; unit: 'agorot'; aso
 export interface KpiData { asof: string; source: string; notes?: { company: string; corrected: string[]; withheld: string[] }[]; companies: Record<string, { periods: string[]; end: string[]; values: Record<string, (number | null)[]> }> }
 export interface IfrsFact { c: string; m: string; dv?: number; sn?: number; s: string; g: string; b: string; w: string; d: string; v: number; pg: number | null; l: string; n?: string; src?: string; model?: string; tr?: string; bk?: string; fx?: string }
 export interface IfrsData { unit: string; files: { company: string; period: string; report_id: number; url: string | null; facts: number }[] }
+
+/** Savings economics (pension / provident managing-company profitability): printed figures in NIS millions; `der` rows are ratios in percent. */
+export interface SavingsRow {
+  c: string; pk: string; a: 'pension' | 'provident' | 'combined' | 'entity' | 'investment_contracts'; m: string; v: number; w: string; d: string;
+  pg: number | null; url: string | null; l: string; s: string; rm: string; file: string;
+  kind?: 'pbt' | 'cibt' | 'op'; ns?: 1; ent?: 1; der?: 1; src?: string; pg2?: number | null; url2?: string | null;
+}
+export interface SavingsEcon {
+  unit: string; periods: { k: string; end: string; w: 'fy' | 'ytd' | 'q' }[]; companies: string[]; limits: Record<string, string[]>;
+  verify: Record<string, { facts: number; kept: number; moved: number; dropped: number }>;
+  files: { company: string; period: string; report_id: number; url: string | null }[]; rows: SavingsRow[];
+}

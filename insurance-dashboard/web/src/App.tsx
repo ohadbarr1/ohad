@@ -10,6 +10,7 @@ import { Compare } from './pages/Compare';
 import { IndustryLayout, IndustrySavings } from './pages/Industry';
 import { IndustryIfrs } from './pages/IndustryIfrs';
 import { IndustryCapital } from './pages/IndustryCapital';
+import { IndustryEcon } from './pages/IndustryEcon';
 import { Dcf, Sotp, ValuationLayout } from './pages/Valuation';
 import { Managers } from './pages/Managers';
 
@@ -39,6 +40,7 @@ export function App() {
           <Route index element={<Navigate to="savings" replace />} />
           <Route path="savings" element={<IndustrySavings />} />
           <Route path="ifrs" element={<IndustryIfrs />} />
+          <Route path="econ" element={<IndustryEcon />} />
           <Route path="capital" element={<IndustryCapital />} />
           <Route path="headline" element={<Compare />} />
         </Route>

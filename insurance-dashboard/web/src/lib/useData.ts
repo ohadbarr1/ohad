@@ -76,3 +76,5 @@ export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string 
   const kpis = useMemo(() => (data ? new Map(ids.map((id) => [id, new CompanyKpi(id, data.companies[id], prices[id] ?? null)])) : null), [data, ids, prices]);
   return { kpis, asof: data?.asof ?? null, notes: data?.notes ?? [], error };
 }
+
+export const useSavingsEcon = () => useLoad<import('./types').SavingsEcon>('savings_econ.json');
