@@ -34,7 +34,7 @@ export function MarketLayout() {
       <div className="pagehead">
         <div>
           <h1>שוק החיסכון הפנסיוני</h1>
-          <div className="sub">פנסיה, גמל והשתלמות ופוליסות חיסכון · נתוני הרשות לשוק ההון · מיליארדי ש"ח</div>
+          <div className="sub">פנסיה, גמל והשתלמות, ביטוחי מנהלים ופוליסות חיסכון · נתוני הרשות לשוק ההון · מיליארדי ש"ח</div>
         </div>
       </div>
       <nav className="subnav" aria-label="שוק">

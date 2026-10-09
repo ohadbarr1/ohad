@@ -43,3 +43,8 @@ export function ErrorBox({ what, error }: { what: string; error: string }) {
 export function copyText(text: string, done: (ok: boolean) => void) {
   try { navigator.clipboard.writeText(text).then(() => done(true), () => done(false)); } catch { done(false); }
 }
+
+/** Marks a CSM figure whose table total also contains the (non-CSM) future profit of pure savings policies. */
+export function IncChip({ f }: { f: { inc?: number; m: string } | null | undefined }) {
+  return f && f.inc === 1 && f.m.startsWith('csm') ? <> <span className="chip est" title="הסכום בטבלת החברה כולל רווח עתידי בפוליסות חיסכון, שאינו CSM לפי התקן">כולל פוליסות חיסכון</span></> : null;
+}

@@ -47,7 +47,7 @@ export function Home() {
 
       {m && (
         <section className="kpis">
-          {([['סך נכסים מנוהלים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['פוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
+          {([['סך נכסים מנוהלים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['ביטוחי מנהלים ופוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
             <div className="kpi" key={s}>
               <div className="l">{label}</div>
               <div className="v num"><Count value={fam(s)} /></div>

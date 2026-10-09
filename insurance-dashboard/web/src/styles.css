@@ -356,3 +356,6 @@ table.tight th.wide-only, table.tight td.wide-only { width: 120px; }
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 td a.name { color: var(--fg); font-weight: 500; transition: color var(--fast); } td a.name:hover { color: var(--accent); text-decoration: none; }
+
+/* a tag that follows a figure keeps its distance (the page is RTL, so the gap is on the right of the tag) */
+.num + .chip, a.num + .chip { margin-right: 6px; }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { nf } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
@@ -46,7 +46,7 @@ export function IndustryMatrix() {
         const lh = c.m?.startsWith('csm') ? sort(mine.filter((f) => f.g === 'life_health')) : [];
         return lh.length ? { f: lh[0], alt: true } : null;
       };
-      const cells: Record<string, { v: number; f?: IfrsFact; alt?: boolean; calc?: boolean; n?: number; sum?: boolean } | null> = {};
+      const cells: Record<string, { v: number; f?: IfrsFact; alt?: boolean; calc?: boolean; n?: number; sum?: boolean; mixed?: boolean } | null> = {};
       COLS.filter((c) => c.m).forEach((c) => {
         const p = pickOne(c);
         if (!p) {
@@ -65,7 +65,7 @@ export function IndustryMatrix() {
         const [a, b, how] = c.calc!, x = cells[a], y = cells[b];
         // a ratio is shown only when both sides exist and, for CSM flows, share a basis
         const ok = x && y && y.v !== 0 && (how === 'ratio' || x.f!.b === y.f!.b);
-        cells[c.k] = ok ? { v: how === 'pct' ? (x!.v / y!.v) * 100 : x!.v / y!.v, calc: true } : null;
+        cells[c.k] = ok ? { v: how === 'pct' ? (x!.v / y!.v) * 100 : x!.v / y!.v, calc: true, mixed: !!(x!.f?.inc || y!.f?.inc) } : null;  // a ratio inherits the caveat of the figures it is built from
       });
       return { id, cells };
     });
@@ -101,9 +101,9 @@ export function IndustryMatrix() {
             <tr key={r.id}>
               <td><Link to={`/company/${r.id}/review`}>{name(r.id)}</Link></td>
               {COLS.map((c) => { const x = r.cells[c.k]; return (
-                <td key={c.k}>{!x ? <span className="muted">–</span> : x.calc ? <span className="num">{show(c, x.v)}</span> : (
+                <td key={c.k}>{!x ? <span className="muted">–</span> : x.calc ? <><span className="num">{show(c, x.v)}</span>{x.mixed && <span className="chip est" title="מחושב מסכום שכולל רווח עתידי בפוליסות חיסכון, שאינו CSM לפי התקן">כולל פוליסות חיסכון</span>}</> : (
                   <>{url(x.f!) && x.f!.pg != null ? <a className={`num ${x.v < 0 ? 'neg' : ''}`} href={`${url(x.f!)}#page=${x.f!.pg}`} target="_blank" rel="noreferrer" title={`${x.f!.l} · עמ׳ ${x.f!.pg}`}>{show(c, x.v)}</a> : <span className="num">{show(c, x.v)}</span>}
-                    {(x.f!.b !== 'na' || x.alt || x.f!.src === 'chart') && <span className="dim">{x.f!.b !== 'na' && BASIS[x.f!.b]}{x.alt && ' · חיים ובריאות'}{x.f!.src === 'chart' && ' · מגרף'}</span>}{x.sum && <span className="chip est" title="חיים + בריאות, אותו בסיס">נגזר: חיים + בריאות</span>}{(x.n ?? 1) > 1 && <span className="chip est" title="סכום של כמה שורות באותה טבלה">{x.n} שורות</span>}</>
+                    <IncChip f={x.f} />{(x.f!.b !== 'na' || x.alt || x.f!.src === 'chart') && <span className="dim">{x.f!.b !== 'na' && BASIS[x.f!.b]}{x.alt && ' · חיים ובריאות'}{x.f!.src === 'chart' && ' · מגרף'}</span>}{x.sum && <span className="chip est" title="חיים + בריאות, אותו בסיס">נגזר: חיים + בריאות</span>}{(x.n ?? 1) > 1 && <span className="chip est" title="סכום של כמה שורות באותה טבלה">{x.n} שורות</span>}</>
                 )}</td>
               ); })}
             </tr>

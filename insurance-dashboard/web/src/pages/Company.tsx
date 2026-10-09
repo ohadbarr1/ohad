@@ -281,7 +281,7 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
   const [on, setOn] = useState<Record<number, boolean>>({});
   const [mode, setMode] = useState<'val' | 'pct'>('val');
   const pal = palette();
-  const shortDim = (s: string) => s.replace(/\s*\(\d+\)\s*$/, '');
+  const shortDim = (s: string) => s.replace(/\s*\(\d+\)\s*$/, '').replace(/^(פוליסות הכוללות רכיב חיסכון.*)$/, '$1 (ביטוחי מנהלים)');
   const defaultOn = (idx: number) => on[idx] ?? (seg === 'F.N03_חיים_מאזן' ? shortDim(d.metrics[idx].dim ?? '') === 'פוליסות ללא רכיב חיסכון' : idx === parts[0]?.i);
   const chosen = parts.filter(({ i }) => defaultOn(i));
   const val = (mi: number, pi: number) => store.val(mi, pi);

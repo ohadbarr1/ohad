@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
-import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
@@ -14,7 +14,7 @@ export const METRICS: [string, string][] = [
   ['insurance_revenue', 'הכנסות משירותי ביטוח'], ['insurance_service_result', 'תוצאות שירותי ביטוח'], ['comprehensive_income_before_tax', 'רווח כולל לפני מס'],
   ['gross_written_premiums', 'פרמיות ברוטו'], ['new_business_annualized_premiums', 'פרמיה משונתת, עסק חדש'], ['management_fees', 'דמי ניהול'], ['pension_gemel_profit_before_tax', 'רווח לפני מס, פנסיה וגמל'],
 ];
-export const SEGS: [string, string][] = [['group', 'קבוצה'], ['life', 'חיים וחיסכון'], ['health', 'בריאות'], ['life_health', 'חיים ובריאות'], ['pc', 'כללי'], ['savings', 'פנסיה וגמל'], ['investment_contracts', 'חוזי השקעה']];
+export const SEGS: [string, string][] = [['group', 'קבוצה'], ['life', 'חיים וחיסכון'], ['health', 'בריאות'], ['life_health', 'חיים ובריאות'], ['pc', 'כללי'], ['savings', 'פנסיה וגמל'], ['investment_contracts', 'פוליסות חיסכון (חוזי השקעה)']];
 export const WINS: [string, string][] = [['instant', 'יתרה'], ['q', 'QTD'], ['ytd', 'YTD'], ['fy', 'FY']];
 export const BASIS: Record<string, string> = { net: 'נטו', gross: 'ברוטו', reinsurance: 'ביטוח משנה', na: 'לא צוין' };
 export const val = (f: IfrsFact) => f.dv ?? f.v;
@@ -108,7 +108,7 @@ export function IndustryIfrs() {
               <tr key={r.id} className={r.id === co ? 'lead' : ''} style={{ cursor: 'pointer' }} onClick={() => setCo(r.id)}>
                 <td><span className="num muted">{r.f ? i + 1 : ''}</span> <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link>{r.f && r.f.s !== r.f.g && <span className="dim">{r.f.s}</span>}</td>
                 <td style={{ width: '36%' }}>{r.f && <div className="bar"><i style={{ width: `${(Math.abs(val(r.f)) / max) * 100}%`, background: val(r.f) < 0 ? 'var(--down)' : pal[ids.indexOf(r.id) % pal.length] }} /></div>}</td>
-                <td><span className={`num ${r.f && val(r.f) < 0 ? 'neg' : ''}`}>{r.f ? nf(val(r.f), Math.abs(val(r.f)) < 100 ? 1 : 0) : 'לא דווח'}</span></td>
+                <td><span className={`num ${r.f && val(r.f) < 0 ? 'neg' : ''}`}>{r.f ? nf(val(r.f), Math.abs(val(r.f)) < 100 ? 1 : 0) : 'לא דווח'}</span><IncChip f={r.f} /></td>
                 <td>{r.f && <span className={`chip ${r.f.b === basis ? '' : 'est'}`}>{BASIS[r.f.b] ?? r.f.b}</span>}{r.f?.src === 'chart' && <span className="chip est">מגרף</span>}{r.f?.sn === 1 && <span className="chip" title="הסימן הותאם כך שהגשר נסגר">סימן מנורמל</span>}</td>
                 <td>{r.f && <Src f={r.f} d={d} p={P} />}</td>
               </tr>
@@ -143,7 +143,7 @@ export function IndustryIfrs() {
         <div className="scroll" style={{ maxHeight: 520 }}><table>
           <thead><tr><th>חברה</th><th>מגזר כפי שדווח</th><th>שורה בדוח</th><th>בסיס</th><th>גישת מעבר</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{detail.sort((a, b) => a.c.localeCompare(b.c) || a.s.localeCompare(b.s)).map((f, i) => (
-            <tr key={i}><td>{name(f.c)}</td><td>{f.s}</td><td className="lbl">{f.l}{f.n && <span className="dim clamp" title={f.n}>{f.n}</span>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ?? ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{f.d}</span></td><td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)}</span></td><td><Src f={f} d={d} p={P} /></td></tr>
+            <tr key={i}><td>{name(f.c)}</td><td>{f.s}</td><td className="lbl">{f.l}{f.n && <span className="dim clamp" title={f.n}>{f.n}</span>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ?? ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{f.d}</span></td><td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)}</span><IncChip f={f} /></td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
         </table></div>
       </Panel>

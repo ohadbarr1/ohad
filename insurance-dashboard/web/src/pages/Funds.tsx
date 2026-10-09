@@ -6,7 +6,7 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
 import { load, useFundCats, useFundHist, useFunds, type Fund, type FundCats, type FundHist } from '../lib/useData';
 
-const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון, 2004 ואילך', 'פוליסות 1992-2003', 'פוליסות 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
+const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'ביטוח 2004 ואילך: מנהלים וחיסכון', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 type Per = 'm1' | 'ytd' | 'y12' | 'a3' | 'a5';
 const PERIODS: [Per, string][] = [['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']];
 type Win = '12' | '36' | '60' | '120' | 'max';

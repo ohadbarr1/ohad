@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Empty, ErrorBox, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { nf, pct } from '../lib/format';
 import { useIfrsCompany, useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
@@ -11,6 +11,7 @@ const SECTIONS: [string, string[]][] = [
   ['רווח והון', ['profit_attributable', 'comprehensive_income_attributable', 'comprehensive_income_before_tax', 'operating_profit_before_tax', 'core_profit', 'roe_reported', 'equity_attributable', 'total_assets', 'dividend_declared', 'dividend_paid']],
   ['שירותי ביטוח', ['insurance_revenue', 'insurance_service_result', 'insurance_finance_result', 'net_investment_and_finance_result', 'gross_written_premiums', 'new_business_annualized_premiums', 'combined_ratio']],
   ['CSM', ['csm_closing', 'csm_new_business', 'csm_release', 'csm_interest_accretion', 'csm_changes_in_estimates', 'risk_adjustment', 'ra_closing', 'loss_component', 'losses_on_onerous_contracts']],
+  ['פוליסות חיסכון (חוזי השקעה, IFRS 9): רווח עתידי גלום, לא CSM', ['future_profit_closing', 'future_profit_new_business', 'future_profit_release']],
   ['חיסכון וניהול נכסים', ['management_fees', 'pension_gemel_profit_before_tax', 'aum_total', 'aum_pension', 'aum_gemel']],
   ['כושר פירעון', ['solvency_ratio_with_transitional', 'solvency_ratio_without_transitional', 'solvency_surplus', 'own_funds', 'scr']],
 ];
@@ -23,7 +24,8 @@ function Val({ f, d, p }: { f: IfrsFact | null; d: IfrsData; p: string }) {
   if (!f) return <span className="muted">–</span>;
   const url = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === p)?.url;
   const txt = nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
-  return url && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.u !== undefined ? 'מצגת, ' : ''}עמ׳ ${f.pg}`}>{txt}</a> : <span className={`num ${f.v < 0 ? 'neg' : ''}`}>{txt}</span>;
+  const v = url && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.u !== undefined ? 'מצגת, ' : ''}עמ׳ ${f.pg}`}>{txt}</a> : <span className={`num ${f.v < 0 ? 'neg' : ''}`}>{txt}</span>;
+  return <>{v}<IncChip f={f} /></>;
 }
 function Delta({ a, b }: { a: IfrsFact | null; b: IfrsFact | null }) {
   if (!a || !b) return null;
@@ -71,7 +73,7 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
     const find = (pool: IfrsFact[], k: string, w: string, dt: string) => pool.filter((f) => key(f) === k && f.w === w && f.d === dt);
     return SECTIONS.map(([title, metrics]) => {
       const rows = metrics.flatMap((m) => {
-        const mine = A.filter((f) => f.m === m);
+        const mine = A.filter((f) => f.m === m && (title !== 'CSM' || (f.g !== 'investment_contracts' && !f.m.startsWith('future_profit'))));
         const flow = mine.some((f) => f.w !== 'instant');
         // a filer that prints only cumulative columns for this row falls back to the cumulative window
         const W = !flow ? 'instant' : annual ? 'fy' : mine.some((f) => f.w === win && f.d === end) ? win : mine.some((f) => f.w === 'q' && f.d === end) ? 'q' : 'ytd';

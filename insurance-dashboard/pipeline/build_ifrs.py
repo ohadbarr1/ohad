@@ -81,6 +81,15 @@ for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
         if x.get("note"):
             row["n"] = " ".join(str(x["note"]).split())[:160]
         out.append(row)
+# Savings policies without a risk component are investment contracts under IFRS 9 and carry no CSM. Where a filer prints a column for
+# them in a CSM table (Phoenix: embedded-value future profit, "not included in the CSM as defined"), the rows are renamed so they never
+# enter a CSM comparison, and the totals of that same table are flagged as including them.
+for r in out:
+    if r["g"] == "investment_contracts" and r["m"].startswith("csm_"):
+        r["m"] = "future_profit_" + r["m"][4:]
+        mixed = [x for x in out if x["c"] == r["c"] and x["p"] == r["p"] and x["pg"] == r["pg"] and x.get("u") == r.get("u") and x["g"] == "group" and x["m"].startswith("csm_")]
+        for x in mixed:
+            x["inc"] = 1
 # Bridge-consistent signs: `dv` is the movement as a change in the CSM balance (and balances as positive numbers),
 # set only where opening + movements = closing can be made to hold in exactly one way.
 groups = {}

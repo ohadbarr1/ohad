@@ -33,7 +33,7 @@ export function Managers() {
     <>
       <div className="pagehead"><div><h1>מנהלים וקופות</h1><div className="sub"><span className="num">{rows.length}</span> חברות מנהלות · <span className="num">{nf(total, 0)}</span> מיליארד ש"ח · <span className="num">{asof}</span></div></div></div>
       <section className="controls">
-        <div className="field"><span>מוצר</span><Seg<Fam> label="מוצר" value={fam} onChange={setFam} options={[['all', 'הכול'], ['pension', 'פנסיה'], ['gemel', 'גמל והשתלמות'], ['insurance', 'פוליסות חיסכון']]} /></div>
+        <div className="field"><span>מוצר</span><Seg<Fam> label="מוצר" value={fam} onChange={setFam} options={[['all', 'הכול'], ['pension', 'פנסיה'], ['gemel', 'גמל והשתלמות'], ['insurance', 'ביטוח: מנהלים וחיסכון']]} /></div>
         <Field label="קבוצה"><select value={grp} onChange={(e) => setGrp(e.target.value)}><option value="all">כל הקבוצות</option>{groups.map((g) => <option key={g}>{g}</option>)}</select></Field>
       </section>
       <Panel aside={<span>דמי ניהול ותשואות משוקללים בנכסים · צבירה וניוד: LTM, מיליארדי ש"ח</span>}>
@@ -63,7 +63,7 @@ export function Managers() {
             </Fragment>
           ))}</tbody>
         </table></div>
-        <div className="src">מקור: רשות שוק ההון, גמל-נט, פנסיה-נט וביטוח-נט. לפוליסות חיסכון אין נתוני צבירה.</div>
+        <div className="src">מקור: רשות שוק ההון, גמל-נט, פנסיה-נט וביטוח-נט. למסלולי הביטוח (ביטוחי מנהלים ופוליסות חיסכון) אין נתוני צבירה.</div>
       </Panel>
     </>
   );

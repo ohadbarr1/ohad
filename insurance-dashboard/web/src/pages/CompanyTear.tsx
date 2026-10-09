@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { IncChip } from '../components/ui';
 import { nf, pct } from '../lib/format';
 import { useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
@@ -51,7 +52,7 @@ export function CompanyTear({ id }: { id: string }) {
         return (
           <div className="kpi" key={x.l}>
             <div className="l">{x.l}{f.b !== 'na' && ` · ${BASIS[f.b]}`}{f.g === 'life_health' && ' · חיים ובריאות'}</div>
-            <div className="v num">{url(f) && f.pg != null ? <a href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.l} · עמ׳ ${f.pg}`}>{txt}</a> : txt}</div>
+            <div className="v num">{url(f) && f.pg != null ? <a href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.l} · עמ׳ ${f.pg}`}>{txt}</a> : txt}<IncChip f={f} /></div>
             <div className="s">{ch != null ? <span className={ch < 0 ? 'neg' : 'pos'}>{pct(ch, 1, true)} YoY</span> : f.d !== end ? <span className="num">{f.d}</span> : f.src === 'chart' ? 'מגרף' : ' '}</div>
           </div>
         );

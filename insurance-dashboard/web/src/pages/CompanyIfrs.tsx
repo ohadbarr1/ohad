@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chart } from '../components/Chart';
-import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf } from '../lib/format';
 import { useIfrsData, useIfrsFacts } from '../lib/useData';
@@ -26,7 +26,7 @@ const HE: Record<string, string> = {
 const FAMILIES: [string, string, RegExp][] = [
   ['all', 'הכול', /./], ['csm', 'CSM', /^(csm|note17d)/], ['ra', 'RA ורכיב הפסד', /^(ra_|risk_adj|loss|losses)/], ['rev', 'הכנסות והוצאות שירותי ביטוח', /^(rev_|insurance_(revenue|service)|ise_|reins)/],
   ['fin', 'מימון והשקעות', /^(insurance_finance|net_investment|investment_|total_investment|excess_financial|discount)/], ['cap', 'הון, כושר פירעון ודיבידנד', /^(own_funds|scr|mcr|solvency|surplus|dividend|capital_)/],
-  ['tgt', 'יעדי הנהלה', /^target_/], ['sens', 'רגישויות והנחות', /^(sensitivity|assumption)/], ['sav', 'חיסכון ונכסים מנוהלים', /^(aum_|management_fees|contributions|pension_gemel|investment_contract|receipts|proceeds|yield_)/],
+  ['tgt', 'יעדי הנהלה', /^target_/], ['sens', 'רגישויות והנחות', /^(sensitivity|assumption)/], ['sav', 'חיסכון ונכסים מנוהלים', /^(aum_|management_fees|contributions|pension_gemel|yield_)/], ['ic', 'פוליסות חיסכון (IFRS 9)', /^future_profit_|investment_contract|receipts_investment|proceeds_investment/],
   ['pl', 'רווח והון', /^(profit|comprehensive|net_income|income_|equity|total_assets|roe|core_|operating|combined|gross_written|new_business|one_time)/],
 ];
 const CAPITAL = /^(own_funds|scr|mcr|solvency|surplus|target_.*(solvency|dividend|capital))/;
@@ -62,7 +62,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const B = bases.includes(basis) ? basis : bases[0] ?? 'gross';
   const bridge = useMemo(() => {
     const own = csm.filter((f) => f.b === B);
-    const cols = SEGS.map(([g]) => g).filter((g) => own.some((f) => f.g === g && f.m === 'csm_closing' && f.d === end));
+    const cols = SEGS.map(([g]) => g).filter((g) => g !== 'investment_contracts').filter((g) => own.some((f) => f.g === g && f.m === 'csm_closing' && f.d === end));
     const extra: [string, string, 1 | -1 | 0][] = [...new Set(own.filter((f) => f.m.startsWith('csm_other:') && !f.m.startsWith('csm_other:Balance') && f.d === end && f.w === W).map((f) => f.m))].map((m) => [m, TEXT_HE[m.slice(10)] ?? m.slice(10), 1]);
     const open = startOf(P || '2026Q2', W);
     const rows = [...WF.slice(0, -2), ...extra, ...WF.slice(-2)].map(([m, label, sign]) => ({ m, label, sign, cells: cols.map((g) => {
@@ -106,7 +106,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   if (!P) return <Empty title="הדוחות של החברה טרם חולצו">{docs > 0 && <Link to="../filings">{docs} מסמכי מקור</Link>}</Empty>;
   if (facts.error) return <ErrorBox what="נתוני הדוח" error={facts.error} />;
   if (!facts.data) return <Loading what="נתוני הדוח" />;
-  const cell = (f: IfrsFact | null, v?: number) => (f ? <><span className={`num ${(v ?? val(f)) < 0 ? 'neg' : ''}`}>{fmt(f, v ?? val(f))}</span> <span className="dim"><Src f={f} d={d} p={P} /></span></> : <span className="muted">–</span>);
+  const cell = (f: IfrsFact | null, v?: number) => (f ? <><span className={`num ${(v ?? val(f)) < 0 ? 'neg' : ''}`}>{fmt(f, v ?? val(f))}</span> <span className="dim"><Src f={f} d={d} p={P} /></span><IncChip f={f} /></> : <span className="muted">–</span>);
 
   return (
     <>
@@ -183,7 +183,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           <tbody>{list.slice(0, 600).map((f, i) => (
             <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{[subLabel(f), f.bk ? bkName(f.bk) : ''].filter(Boolean).join(' · ')}{f.tr ? ` · ${f.tr}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
               <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{f.d}</span></td>
-              <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span>{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
+              <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span><IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
         </table></div>
       </Panel>

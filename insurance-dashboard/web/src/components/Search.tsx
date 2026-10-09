@@ -24,7 +24,7 @@ function useIndex(enabled: boolean): Item[] {
     if (!enabled) return [];
     const out: Item[] = [];
     reg.data?.forEach((c) => out.push({ kind: 'חברה', label: `${c.name_he} (${c.name_en})`, meta: c.has_financials ? 'דוחות כספיים + שוק' : 'נתוני שוק', to: `/company/${c.id}` }));
-    market.data?.groups.forEach((g) => out.push({ kind: 'קבוצה', label: g, meta: 'פנסיה, גמל ופוליסות חיסכון', to: `/market/group/${encodeURIComponent(g)}` }));
+    market.data?.groups.forEach((g) => out.push({ kind: 'קבוצה', label: g, meta: 'פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון', to: `/market/group/${encodeURIComponent(g)}` }));
     market.data?.funds.forEach((f) => out.push({ kind: 'קופה', label: f.name, meta: f.grp, to: `/market/funds?q=${encodeURIComponent(f.name)}` }));
     if (phoenix.data) {
       const seen = new Set<string>();

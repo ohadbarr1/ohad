@@ -26,7 +26,7 @@ export function IndustryLayout() {
 }
 
 type Tab = 'all' | 'fam:pension' | 'fam:gemel' | 'fam:insurance';
-const TABS: [Tab, string][] = [['all', 'ניהול נכסים'], ['fam:pension', 'פנסיה'], ['fam:gemel', 'גמל'], ['fam:insurance', 'פוליסות חיסכון']];
+const TABS: [Tab, string][] = [['all', 'ניהול נכסים'], ['fam:pension', 'פנסיה'], ['fam:gemel', 'גמל'], ['fam:insurance', 'ביטוח: מנהלים וחיסכון']];
 const short = (g: string) => g.replace('מנורה מבטחים', 'מנורה').replace('אלטשולר שחם', 'אלטשולר').replace('ילין לפידות', 'ילין').replace('ביטוח ישיר', 'ישיר');
 
 /** The quarterly peer deck: every chart is one metric, companies side by side, at the period the user picks. */
@@ -83,7 +83,7 @@ function Deck({ m }: { m: Market }) {
   };
   const mix = () => {
     const { b, common } = base(), pal = palette();
-    const fams: [string, string, number][] = [['fam:pension', 'פנסיה', 4], ['fam:gemel', 'גמל', 7], ['fam:insurance', 'פוליסות חיסכון', 0]];
+    const fams: [string, string, number][] = [['fam:pension', 'פנסיה', 4], ['fam:gemel', 'גמל', 7], ['fam:insurance', 'ביטוח: מנהלים וחיסכון', 0]];
     return { ...common, grid: { left: 4, right: 4, top: 26, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
       tooltip: { ...common.tooltip, valueFormatter: (v: number) => `${nf(v, 0)}%` }, xAxis: xAxis(b, (g) => { const t = m.cell(pi, 'all', g).a; return t ? `+${nf(t / 1000, 0)}` : null; }),
       yAxis: { type: 'value', max: 100, show: false },

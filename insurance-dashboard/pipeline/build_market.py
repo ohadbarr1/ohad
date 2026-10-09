@@ -29,11 +29,11 @@ PRODUCTS = [  # key, label, family, source classification
     ("gemel_child", "גמל להשקעה: חיסכון לילד", "gemel", "קופת גמל להשקעה - חסכון לילד"),
     ("severance", "מרכזית לפיצויים", "gemel", "מרכזית לפיצויים"),
     ("other_purpose", "גמל למטרה אחרת", "gemel", "מטרה אחרת"),
-    ("policy_2004", "פוליסות חיסכון: מ-2004", "insurance", "פוליסות שהונפקו החל משנת 2004"),
-    ("policy_1992", "פוליסות חיסכון: 1992-2003", "insurance", "פוליסות שהונפקו בשנים 1992-2003"),
-    ("policy_1990", "פוליסות חיסכון: 1990-1991", "insurance", "פוליסות שהונפקו בשנים 1990-1991"),
+    ("policy_2004", "ביטוח מ-2004: מנהלים וחיסכון", "insurance", "פוליסות שהונפקו החל משנת 2004"),
+    ("policy_1992", "ביטוחי מנהלים: 1992-2003", "insurance", "פוליסות שהונפקו בשנים 1992-2003"),
+    ("policy_1990", "ביטוחי מנהלים: 1990-1991", "insurance", "פוליסות שהונפקו בשנים 1990-1991"),
 ]
-FAMILY_LABEL = {"pension": "פנסיה", "gemel": "גמל והשתלמות", "insurance": "פוליסות חיסכון (ביטוח-נט)"}
+FAMILY_LABEL = {"pension": "פנסיה", "gemel": "גמל והשתלמות", "insurance": "ביטוחי מנהלים ופוליסות חיסכון (ביטוח-נט)"}
 
 # Managing corporation / insurer name prefix -> group. Order matters (first match wins).
 # Pro-forma: Psagot (49.8bn) and Helman-Aldubi (18.4bn) vanish in Oct-2021 while Altshuler Shaham (+49.8bn) and
