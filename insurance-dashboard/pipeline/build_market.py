@@ -17,6 +17,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
 OUT = ROOT / "data" / "market.json"
+WEB_OUT = ROOT / "web" / "public" / "data" / "market.json"
 START = 201201  # pension-net starts 2011-10; first full year for all products
 
 PRODUCTS = [  # key, label, family, source classification
@@ -231,6 +232,8 @@ def main():
         "qa": {"checks": checks, "notes": notes},
     }
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    WEB_OUT.parent.mkdir(parents=True, exist_ok=True)
+    WEB_OUT.write_text(OUT.read_text(encoding="utf-8"), encoding="utf-8")
     print(f"latest={latest} rows={len(rows):,} funds={len(snap):,} groups={len(groups)} -> {OUT} ({OUT.stat().st_size/1e3:.0f} KB)")
     for c in checks:
         print(("PASS " if c["ok"] else "REVIEW " if c.get("status") == "review" else "FAIL ") + c["name"] + " | " + c["detail"])

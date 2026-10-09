@@ -1,0 +1,156 @@
+[
+ {
+  "id": "phoenix",
+  "name_he": "הפניקס",
+  "name_en": "Phoenix",
+  "kind": "insurance_group",
+  "market_group": "הפניקס",
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "F",
+    "name": "הפניקס פיננסים בע\"מ",
+    "doc": "דוחות כספיים ביניים מאוחדים ל-30.6.2026",
+    "url": "https://phoenixfinancial.co.il/wp-content/uploads/2026/08/P1765739-00.pdf",
+    "pages": 221
+   },
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "I",
+    "name": "הפניקס חברה לביטוח בע\"מ",
+    "doc": "דוחות כספיים ביניים מאוחדים ל-30.6.2026",
+    "url": "http://www.fnx.co.il/sites/docs/genery/DohotKaspiyim/doch_bituach_q_2_2026_isa_mungash.pdf",
+    "pages": 167
+   }
+  ]
+ },
+ {
+  "id": "harel",
+  "name_he": "הראל",
+  "name_en": "Harel",
+  "kind": "insurance_group",
+  "market_group": "הראל",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "migdal",
+  "name_he": "מגדל",
+  "name_en": "Migdal",
+  "kind": "insurance_group",
+  "market_group": "מגדל",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "clal",
+  "name_he": "כלל",
+  "name_en": "Clal",
+  "kind": "insurance_group",
+  "market_group": "כלל",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "menora",
+  "name_he": "מנורה מבטחים",
+  "name_en": "Menora Holdings",
+  "kind": "insurance_group",
+  "market_group": "מנורה מבטחים",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "hachshara",
+  "name_he": "הכשרה",
+  "name_en": "Hachshara",
+  "kind": "insurance_group",
+  "market_group": "הכשרה",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "ayalon",
+  "name_he": "איילון",
+  "name_en": "Ayalon",
+  "kind": "insurance_group",
+  "market_group": "איילון",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "idi",
+  "name_he": "ביטוח ישיר",
+  "name_en": "IDI",
+  "kind": "insurance_group",
+  "market_group": "ביטוח ישיר",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "meitav",
+  "name_he": "מיטב",
+  "name_en": "Meitav",
+  "kind": "fund_house",
+  "market_group": "מיטב",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "altshuler",
+  "name_he": "אלטשולר שחם",
+  "name_en": "Altshuler Shaham",
+  "kind": "fund_house",
+  "market_group": "אלטשולר שחם",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "more",
+  "name_he": "מור",
+  "name_en": "More",
+  "kind": "fund_house",
+  "market_group": "מור",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "analyst",
+  "name_he": "אנליסט",
+  "name_en": "Analyst",
+  "kind": "fund_house",
+  "market_group": "אנליסט",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "yelin",
+  "name_he": "ילין לפידות",
+  "name_en": "Yelin Lapidot",
+  "kind": "fund_house",
+  "market_group": "ילין לפידות",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "infinity",
+  "name_he": "אינפיניטי",
+  "name_en": "Infinity",
+  "kind": "fund_house",
+  "market_group": "אינפיניטי",
+  "has_financials": false,
+  "filings": []
+ },
+ {
+  "id": "globalnet",
+  "name_he": "גלובלנט",
+  "name_en": "",
+  "kind": "fund_house",
+  "market_group": "גלובלנט",
+  "has_financials": false,
+  "filings": []
+ }
+]
