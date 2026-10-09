@@ -32,6 +32,7 @@ export function Layout() {
           <div className="top-in">
             <NavLink to="/" className="wordmark">fox<span>.</span></NavLink>
             <Search />
+            <button className="iconbtn" type="button" onClick={toggle} aria-label={theme === 'dark' ? 'ערכה בהירה' : 'ערכה כהה'}><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>
           </div>
           <Tape />
         </header>

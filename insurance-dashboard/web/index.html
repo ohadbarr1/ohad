@@ -7,6 +7,11 @@
       try { var t = localStorage.getItem('theme'); document.documentElement.setAttribute('data-theme', t === 'light' || t === 'dark' ? t : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')); } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
     </script>
     <title>fox</title>
+    <meta name="theme-color" content="#14110f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="fox" />
+    <link rel="apple-touch-icon" href="./fox.svg" />
     <link rel="icon" type="image/svg+xml" href="./fox.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
