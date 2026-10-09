@@ -80,3 +80,18 @@ Metrics (all windows printed: `fy`, `ytd`, `q`, with prior-period comparatives):
 - `fee_rate_from_assets`, `fee_rate_from_deposits` (percent, as printed)
 - `members` / `accounts` if printed
 Put the exact row label in `label`. If the report gives only a combined pension-and-provident figure, say so in `not_found` for the separate ones.
+
+## Sources of profit and line-of-business tables (v3)
+
+Output: `data/extracted_sop/<company>/<period>.json`, same envelope and fact fields as v1 (`metric, segment, basis, window, date, value, page_he, doc, label, source, note`).
+Scope: tables in the board report (and, where the report has none, the investor presentation, `doc: "pres"`) that break profit down by its source or by line of business. Copy numbers as printed, in NIS millions; never compute.
+
+1. **Sources of profit** (often titled מקורות הרווח / ניתוח מקורות הרווח / הרווח לפי מקורות, per segment or for the group). One fact per printed row and column:
+   `metric: "sop:<row label exactly as printed in Hebrew>"`, `segment`: the segment the table or column belongs to (group, life, health, pc, pension_gemel, investment_contracts, other, or the printed sub-segment name), `window`: q / ytd / fy as the column header states, plus the comparative period columns with their own `date`.
+   Typical rows: underwriting or insurance service result, CSM release, RA release, experience variances, onerous contracts, financial margin / investment income above the discount rate, interest-rate effects, special items, management fees, expenses, profit before tax. Keep the filer's own row names; do not map them.
+   If the table prints a total row, record it with `metric: "sop_total:<label>"`.
+2. **P&C by line** (compulsory motor, motor property, property and other, liability): per line `insurance_revenue`, `insurance_service_result`, `comprehensive_income_before_tax`, `combined_ratio`, `loss_ratio`, `gross_written_premiums`, with `segment: "pc:<line as printed>"`.
+3. **Health by line** (long-term care, medical expenses, critical illness, etc.) and **life by line** (risk, disability, policies with a savings component: these are managers' insurance, IFRS 17; investment contracts are pure savings policies, IFRS 9, segment `investment_contracts`): same metrics as (2) where printed, `segment: "health:<line>"` / `"life:<line>"`.
+4. **Nostro asset allocation** if printed as a table of the group's own (non-participating) investment portfolio by asset class: `metric: "nostro:<asset class as printed>"`, `segment: group`, `window: instant`, value in NIS millions and, if printed, a second fact `metric: "nostro_pct:<asset class>"` in percent.
+
+Before finishing run `.venv/bin/python pipeline/verify_sop.py <company> <period>`: every value must be printed on its cited page. Put what is not printed in `not_found` with the reason.

@@ -290,6 +290,13 @@
    "report_id": 1561226,
    "check": "manual",
    "evidence": "Printed 3m 8,458 / 9m 19,751; tagged 8,458 = 3m. 6m 11,293 (Q2 report) + 8,458 = 19,751."
+  },
+  "2023Q2": {
+   "tagged": "wrong",
+   "q": 9457,
+   "ytd": 11293,
+   "check": "manual",
+   "evidence": "Tagged 8,458 equals neither printed figure (it is the Q3 quarter). Income statement prints 9,457 for the quarter and 11,293 for six months; read by the verification agent, not re-read."
   }
  }
 }

@@ -4,7 +4,7 @@ import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
-import { load, useFundCats, useFundHist, useFunds, type Fund, type FundCats, type FundHist } from '../lib/useData';
+import { load, useFundCats, useFundHist, useFunds, useRegistry, type Fund, type FundCats, type FundHist } from '../lib/useData';
 
 const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 type Per = 'm1' | 'ytd' | 'y12' | 'a3' | 'a5';
@@ -75,7 +75,7 @@ export function Funds() {
   const prod = sp.get('prod') ?? 'השתלמות', track = sp.get('track') ?? 'כללי', per = (sp.get('per') as Per) ?? 'y12';
   const sel = useMemo(() => (sp.get('sel') ?? '').split(',').filter(Boolean), [sp]);
   const [closed, setClosed] = useState(false);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(sp.get('q') ?? '');
   const [win, setWin] = useState<Win>('60');
   const set = (patch: Record<string, string>) => { const next = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k))); setSp(next, { replace: true }); };
 
@@ -88,7 +88,7 @@ export function Funds() {
     const ranked = shown.filter((f) => f[per] != null).sort((a, b) => b[per]! - a[per]!);
     const rank = new Map(ranked.map((f, i) => [f.k, i + 1]));
     const t = q.trim();
-    return { n: ranked.length, list: [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => !t || f.name.includes(t) || f.mgr.includes(t)).map((f) => ({ f, rank: rank.get(f.k) ?? null })) };
+    return { n: ranked.length, list: [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => !t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)).map((f) => ({ f, rank: rank.get(f.k) ?? null })) };
   }, [members, per, closed, q]);
   const cat = cats?.[`${prod} | ${T}`];
 
@@ -123,9 +123,9 @@ export function Funds() {
       <Panel title={`${prod} · ${T}`} aside={<><span>{rows.n} מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}<span>סמן עד 6 להשוואה</span></>}>
         {rows.list.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
           <div className="scroll" style={{ maxHeight: 640 }}><table className="rank">
-            <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th></tr></thead>
+            <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th></tr></thead>
             <tbody>
-              {cat && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><P v={catReturn(cat, k, asof)} /></td>)}<td></td><td className="wide-only"><span className="num">{nf(members.reduce((t, f) => t + (f.assets ?? 0), 0), 0)}</span></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
+              {cat && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><P v={catReturn(cat, k, asof)} /></td>)}<td></td><td className="wide-only"><span className="num">{nf(members.reduce((t, f) => t + (f.assets ?? 0), 0), 0)}</span></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
               {rows.list.map(({ f, rank }) => (
                 <tr key={f.k}>
                   <td><span style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}><input type="checkbox" checked={sel.includes(f.k)} onChange={() => toggle(f.k)} aria-label={`השווה את ${f.name}`} style={{ marginTop: 4, accentColor: 'var(--accent)' }} />
@@ -136,6 +136,7 @@ export function Funds() {
                   <td className="wide-only"><span className="num">{f.assets == null ? '–' : nf(f.assets, 0)}</span></td>
                   <td className="wide-only"><span className="num">{f.sharpe == null ? '–' : nf(f.sharpe, 2)}</span></td>
                   <td className="wide-only"><span className="num">{f.st == null ? '–' : `${nf(f.st, 0)}%`}</span></td>
+                  <td className="wide-only">{f.yrs ? <span className={`num ${f.top! * 2 > f.yrs ? 'pos' : ''}`}>{f.top}/{f.yrs}</span> : <span className="muted">–</span>}</td>
                 </tr>
               ))}
             </tbody>
@@ -169,6 +170,7 @@ export function FundCard() {
   const f = data?.funds.find((x) => x.k === k);
   const h = hist.data;
   const cat = f && cats ? cats[catKey(f)] : undefined;
+  const company = useRegistry().data?.find((c) => f && c.market_group === f.grp);
   // ranked against the tracks open to everyone, as in the table
   const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed)) : []), [data, f]);
   const years = useMemo(() => {
@@ -190,7 +192,7 @@ export function FundCard() {
 
   return (
     <>
-      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><Link className="chip" to={`/funds?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span></div></div></div>
+      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span>{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span></div></div></div>
       <Sub />
       <section className="kpis">
         <Kpi label="LTM" value={f.y12 == null ? '–' : pct(f.y12, 1, true)} tone={f.y12 == null ? undefined : f.y12 < 0 ? 'neg' : 'pos'} sub={rankOf('y12') ? `מקום ${rankOf('y12')}` : ' '} />
@@ -199,7 +201,7 @@ export function FundCard() {
         <Kpi label="YTD" value={f.ytd == null ? '–' : pct(f.ytd, 1, true)} sub={rankOf('ytd') ? `מקום ${rankOf('ytd')}` : ' '} />
         <Kpi label="דמי ניהול מצבירה" value={f.fee == null ? '–' : `${nf(f.fee, 2)}%`} sub={f.depfee != null ? `מהפקדה ${nf(f.depfee, 2)}%` : ' '} />
         <Kpi label="נכסים" value={f.assets == null ? '–' : nf(f.assets, 0)} sub={'מיליוני ש"ח'} />
-        <Kpi label="שארפ" value={f.sharpe == null ? '–' : nf(f.sharpe, 2)} sub={f.sd != null ? `סטיית תקן ${nf(f.sd, 2)}` : ' '} />
+        <Kpi label="שארפ" value={f.sharpe == null ? '–' : nf(f.sharpe, 2)} sub={f.yrs ? `רבע עליון ב-${f.top} מתוך ${f.yrs} שנים` : f.sd != null ? `סטיית תקן ${nf(f.sd, 2)}` : ' '} />
         <Kpi label="חשיפה למניות" value={f.st == null ? '–' : `${nf(f.st, 0)}%`} sub={f.fo != null ? `חו"ל ${nf(f.fo, 0)}% · מט"ח ${f.fx == null ? '–' : nf(f.fx, 0) + '%'}` : ' '} />
       </section>
 
@@ -245,6 +247,16 @@ export function FundCard() {
           }} />
         </Panel>
       </div>
+      <Panel title="פרטי המסלול" aside={<span>כפי שמדווח לרשות שוק ההון</span>}>
+        <div className="scroll"><table>
+          <tbody>
+            {([['מספר ברשות', String(f.id)], ['סיווג', f.cls], ['התמחות', [f.spec, f.sub].filter(Boolean).join(' · ') || null], ['אוכלוסיית יעד', f.target], ['מועד הקמה', f.since ? f.since.slice(0, 10) : null], ['גוף מנהל', f.mgr], ['תאגיד שולט', f.ctrl],
+              ['נכסים נזילים', f.liq == null ? null : `${nf(f.liq, 1)}%`], ['חשיפה למניות', f.st == null ? null : `${nf(f.st, 1)}%`], ['חשיפה לחו"ל', f.fo == null ? null : `${nf(f.fo, 1)}%`], ['חשיפה למט"ח', f.fx == null ? null : `${nf(f.fx, 1)}%`],
+              ['היסטוריה', `${f.n} חודשים, מ-${ym(h.p[0])}`]] as [string, string | null][]).filter(([, x]) => x).map(([l, x]) => <tr key={l}><td className="muted">{l}</td><td style={{ textAlign: 'start' }}>{x}</td></tr>)}
+          </tbody>
+        </table></div>
+        <div className="src">הרכב נכסים מפורט ומדיניות השקעה מוצהרת אינם במאגרי הרשות הפתוחים; הם מתפרסמים באתר של כל גוף מנהל.</div>
+      </Panel>
       {h.dep && (
         <Panel title="תזרים, LTM" aside={<span>מיליוני ש"ח</span>}>
           <section className="kpis" style={{ border: 0, boxShadow: 'none', background: 'none' }}>

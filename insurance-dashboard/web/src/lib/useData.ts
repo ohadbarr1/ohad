@@ -109,7 +109,8 @@ export function useDocsOf(ids: string[]): (DocsData['docs'][number] & { company:
 
 export interface Fund { k: string; fam: string; prod: string; track: string; name: string; mgr: string; grp: string; assets: number | null; fee: number | null; depfee: number | null;
   m1: number | null; ytd: number | null; y12: number | null; y3: number | null; y5: number | null; a3: number | null; a5: number | null; sd: number | null; sharpe: number | null;
-  st: number | null; fo: number | null; fx: number | null; n: number; closed: boolean }
+  st: number | null; fo: number | null; fx: number | null; n: number; top: number | null; yrs: number | null; closed: boolean;
+  id: number; spec: string | null; sub: string | null; target: string | null; since: string | null; ctrl: string | null; liq: number | null; cls: string | null }
 export interface FundHist { p: number[]; y: (number | null)[]; a: (number | null)[]; fee: (number | null)[]; st: (number | null)[]; fo: (number | null)[]; fx: (number | null)[]; dep?: (number | null)[]; wd?: (number | null)[]; tr?: (number | null)[] }
 export type FundCats = Record<string, { p: number[]; y: number[]; n: number[] }>;
 export const useFunds = () => useLoad<{ asof: number; source: string; funds: Fund[] }>('funds.json');

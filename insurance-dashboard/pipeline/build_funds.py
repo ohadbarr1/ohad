@@ -48,6 +48,10 @@ def track_of(sub, name):
     return "אחר"
 
 
+def txt(x):
+    return None if x is None or pd.isna(x) or not str(x).strip() else " ".join(str(x).split())[:60]
+
+
 def v(x, nd=2):
     return None if x is None or pd.isna(x) else round(float(x), nd)
 
@@ -92,6 +96,15 @@ for key, g in hist.groupby("key"):
 last12 = hist[hist["REPORT_PERIOD"] > latest - 100].pivot_table(index="key", columns="REPORT_PERIOD", values="MONTHLY_YIELD")
 y12 = (1 + last12.dropna() / 100).prod(axis=1).sub(1).mul(100) if last12.shape[1] == 12 else pd.Series(dtype=float)
 
+# consistency: in how many of the last five full calendar years the track finished in the top quarter of its category
+yr = hist[hist["MONTHLY_YIELD"].notna()].assign(y=lambda x: x["REPORT_PERIOD"] // 100)
+ann = yr.groupby(["key", "y"])["MONTHLY_YIELD"].agg(n="count", r=lambda v_: (1 + v_ / 100).prod() - 1).reset_index()
+ann = ann[(ann["n"] == 12) & (ann["y"] >= latest // 100 - 5) & (ann["y"] < latest // 100)].merge(cur[["key", "cat"]], on="key")
+ann["rk"] = ann.groupby(["cat", "y"])["r"].rank(ascending=False, method="min")
+ann["of"] = ann.groupby(["cat", "y"])["r"].transform("count")
+ann["top"] = (ann["of"] >= 4) & (ann["rk"] <= np.ceil(ann["of"] / 4))
+cons = ann[ann["of"] >= 4].groupby("key").agg(top=("top", "sum"), yrs=("y", "count"))
+
 funds = []
 ca = cur["TOTAL_ASSETS"].replace(0, np.nan)
 for r, st, fo, fx in zip(cur.itertuples(index=False), cur["STOCK_MARKET_EXPOSURE"] / ca * 100, cur["FOREIGN_EXPOSURE"] / ca * 100, cur["FOREIGN_CURRENCY_EXPOSURE"] / ca * 100):
@@ -101,8 +114,11 @@ for r, st, fo, fx in zip(cur.itertuples(index=False), cur["STOCK_MARKET_EXPOSURE
                   "grp": group_of(" ".join(str(r.FUND_NAME).split())), "assets": v(r.TOTAL_ASSETS, 1), "fee": v(r.AVG_ANNUAL_MANAGEMENT_FEE), "depfee": v(r.AVG_DEPOSIT_FEE),
                   "m1": v(r.MONTHLY_YIELD), "ytd": v(r.YEAR_TO_DATE_YIELD), "y12": v(y12.get(r.key, np.nan)), "y3": v(r.YIELD_TRAILING_3_YRS), "y5": v(r.YIELD_TRAILING_5_YRS),
                   "a3": v(r.AVG_ANNUAL_YIELD_TRAILING_3YRS), "a5": v(r.AVG_ANNUAL_YIELD_TRAILING_5YRS), "sd": v(r.STANDARD_DEVIATION), "sharpe": v(r.SHARPE_RATIO),
-                  "st": v(st, 1), "fo": v(fo, 1), "fx": v(fx, 1), "n": months.get(r.key, 0),
-                  "closed": bool(isinstance(target, str) and target != "כלל האוכלוסיה")})
+                  "st": v(st, 1), "fo": v(fo, 1), "fx": v(fx, 1), "n": months.get(r.key, 0), "top": int(cons["top"].get(r.key, 0)) if r.key in cons.index else None, "yrs": int(cons["yrs"].get(r.key, 0)) if r.key in cons.index else None,
+                  "closed": bool(isinstance(target, str) and target != "כלל האוכלוסיה"),
+                  # as the regulator describes the track
+                  "id": int(r.FUND_ID), "spec": txt(getattr(r, "SPECIALIZATION", None)), "sub": txt(getattr(r, "SUB_SPECIALIZATION", None)), "target": txt(target),
+                  "since": txt(getattr(r, "INCEPTION_DATE", None)), "ctrl": txt(getattr(r, "CONTROLLING_CORPORATION", None)), "liq": v(r.LIQUID_ASSETS_PERCENT, 1), "cls": txt(r.FUND_CLASSIFICATION)})
 funds.sort(key=lambda f: -(f["assets"] or 0))
 
 # category return: today's members, weighted by each month's assets

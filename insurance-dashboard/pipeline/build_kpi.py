@@ -62,9 +62,12 @@ if hand.exists():
     for comp, per_ in json.loads(hand.read_text(encoding="utf-8")).items():
         if not comp.startswith("_"):
             windows.setdefault(comp, {}).update(per_)
+wrong = {}
 for comp, per_ in windows.items():
     for p, h in per_.items():
-        if h["check"] in ("arithmetic", "manual"):
+        if h.get("tagged") == "wrong":  # the tag matches neither printed figure: the printed quarter replaces it, other flows are left out
+            wrong[(comp, p)] = h["q"]
+        elif h["check"] in ("arithmetic", "manual"):
             truth[(comp, p)] = {"q": h["q"], "ytd": h["ytd"]}  # same report as the tag; an extracted later report may carry a restated comparative
 
 manual = json.loads((ROOT / "data" / "registry" / "kpi_verified.json").read_text(encoding="utf-8"))
@@ -75,6 +78,11 @@ for comp, per in out.items():
     for p in order:
         if p.endswith("FY"):
             status[p] = "fy"
+            continue
+        if (comp, p) in wrong:
+            for key in FLOWS:
+                per[p]["vals"][key] = wrong[(comp, p)] if key == "profit" else None
+            status[p] = "corrected"
             continue
         t, v = truth.get((comp, p)), per[p]["vals"].get("profit")
         near = lambda a, b: a is not None and b is not None and abs(a - b) <= max(1500, abs(b) * 0.002)
