@@ -78,3 +78,31 @@ export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string 
 }
 
 export const useSavingsEcon = () => useLoad<import('./types').SavingsEcon>('savings_econ.json');
+
+/** Extracted facts of one company across several reports, keyed by period. Periods that fail to load are left out. */
+export function useIfrsCompany(id: string, periods: string[]): Map<string, IfrsFact[]> {
+  const [all, setAll] = useState<Map<string, IfrsFact[]>>(new Map());
+  const key = periods.join();
+  useEffect(() => {
+    let live = true;
+    setAll(new Map());
+    periods.forEach((p) => load<IfrsFact[]>(`ifrs_${p}.json`).then((fs) => live && setAll((cur) => new Map(cur).set(p, fs.filter((f) => f.c === id))), () => {}));
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, key]);
+  return all;
+}
+
+/** Filing lists of several companies, flattened and tagged with the company id. */
+export function useDocsOf(ids: string[]): (DocsData['docs'][number] & { company: string })[] {
+  const [docs, setDocs] = useState<(DocsData['docs'][number] & { company: string })[]>([]);
+  const key = ids.join();
+  useEffect(() => {
+    let live = true;
+    setDocs([]);
+    ids.forEach((id) => load<DocsData>(`companies/${id}.docs.json`).then((d) => live && setDocs((cur) => [...cur, ...d.docs.map((x) => ({ ...x, company: id }))]), () => {}));
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return docs;
+}

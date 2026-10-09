@@ -3,7 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCompanyData, useMarketData, useRegistry } from '../lib/useData';
 import { sheetName } from '../lib/company';
 
-interface Item { kind: 'חברה' | 'קבוצה' | 'קופה' | 'שורה בדוח'; label: string; meta: string; to: string }
+interface Item { kind: 'חברה' | 'פונקציה' | 'קבוצה' | 'קופה' | 'שורה בדוח'; label: string; meta: string; to: string }
+
+/** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
+const FUNCS: { code: string; label: string; keys: string[]; to: (id: string) => string }[] = [
+  { code: 'ER', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'דוח', 'yoy', 'qoq'], to: (id) => `/company/${id}/review` },
+  { code: 'CSM', label: 'IFRS 17 · CSM', keys: ['csm', 'ifrs', '17', 'ra', 'רגישויות', 'הון', 'solvency'], to: (id) => `/company/${id}/ifrs17` },
+  { code: 'FA', label: 'דוחות לאורך זמן', keys: ['fa', 'דוחות', 'financials'], to: (id) => `/company/${id}/financials` },
+  { code: 'LTS', label: 'חיסכון ארוך טווח', keys: ['lts', 'חיסכון', 'פנסיה', 'גמל', 'aum'], to: (id) => `/company/${id}/savings` },
+  { code: 'DOC', label: 'מסמכים וחיפוש בדוחות', keys: ['doc', 'docs', 'מסמכים', 'חיפוש', 'filings'], to: (id) => `/company/${id}/filings` },
+  { code: 'DCF', label: 'הערכת שווי, DCF', keys: ['dcf', 'שווי', 'valuation'], to: (id) => `/valuation/${id}/dcf` },
+  { code: 'SOTP', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
+];
 
 function useIndex(enabled: boolean): Item[] {
   const market = useMarketData();
@@ -38,17 +49,30 @@ export function Search({ big = false }: { big?: boolean }) {
   const nav = useNavigate();
   const index = useIndex(open || q.length > 0);
 
+  const reg = useRegistry();
   const hits = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (s.length < 2) return [];
     const words = s.split(/\s+/);
+    // a company name followed by a function code or word opens that screen directly
+    const funcs: Item[] = [];
+    (reg.data ?? []).forEach((c) => {
+      const names = `${c.name_he} ${c.name_en} ${c.id}`.toLowerCase();
+      const own = words.filter((w) => names.includes(w)), rest = words.filter((w) => !names.includes(w));
+      if (!own.length) return;
+      FUNCS.filter((f) => rest.every((w) => f.keys.some((k) => k.startsWith(w)) || f.code.toLowerCase().startsWith(w))).slice(0, rest.length ? 3 : 7)
+        .forEach((f) => funcs.push({ kind: 'פונקציה', label: `${c.name_he} · ${f.label}`, meta: f.code, to: f.to(c.id) }));
+    });
+    if (funcs.length && words.length > 1) return funcs.slice(0, 10);
     const score = (it: Item) => {
       const t = (it.label + ' ' + it.meta).toLowerCase();
       if (!words.every((w) => t.includes(w))) return -1;
       return (it.label.toLowerCase().startsWith(s) ? 3 : 0) + (it.kind === 'חברה' ? 2 : it.kind === 'קבוצה' ? 1 : 0);
     };
-    return index.map((it) => [score(it), it] as const).filter(([sc]) => sc >= 0).sort((a, b) => b[0] - a[0]).slice(0, 14).map(([, it]) => it);
-  }, [q, index]);
+    const found = index.map((it) => [score(it), it] as const).filter(([sc]) => sc >= 0).sort((a, b) => b[0] - a[0]).slice(0, 14).map(([, it]) => it);
+    const companies = found.filter((it) => it.kind === 'חברה');
+    return [...companies, ...(companies.length === 1 ? funcs.slice(0, 7) : []), ...found.filter((it) => it.kind !== 'חברה')];
+  }, [q, index, reg.data]);
 
   useEffect(() => {
     const close = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
@@ -68,12 +92,12 @@ export function Search({ big = false }: { big?: boolean }) {
   }, [big]);
 
   const go = (it: Item) => { setOpen(false); setQ(''); nav(it.to); };
-  const kinds: Item['kind'][] = ['חברה', 'קבוצה', 'קופה', 'שורה בדוח'];
+  const kinds: Item['kind'][] = ['חברה', 'פונקציה', 'קבוצה', 'קופה', 'שורה בדוח'];
 
   return (
     <div className={`search ${big ? 'big' : ''}`} ref={box}>
       <input ref={input}
-        type="search" value={q} placeholder="חברה, קופה או שורה בדוח" aria-label="חיפוש"
+        type="search" value={q} placeholder="חברה, קופה, או חברה + פונקציה: הראל csm" aria-label="חיפוש"
         onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => Math.min(h + 1, hits.length - 1)); }

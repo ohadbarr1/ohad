@@ -6,9 +6,11 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf } from '../lib/format';
 import { useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
+import { BUCKET_HE, EFFECT_HE, METRIC_HE, SEGMENT_HE, TEXT_HE } from '../lib/labels';
 import { BASIS, METRICS, SEGS, Src, WF, WINS, endOf, startOf, val } from './IndustryIfrs';
 
 const HE: Record<string, string> = {
+  ...METRIC_HE,
   ...Object.fromEntries(METRICS),
   own_funds: 'הון עצמי לעניין SCR', scr: 'הון נדרש (SCR)', mcr: 'סף הון (MCR)', own_funds_mcr: 'הון עצמי לעניין MCR', solvency_surplus: 'עודף הון',
   solvency_ratio_with_transitional: 'יחס כושר פירעון, עם הוראות מעבר', solvency_ratio_without_transitional: 'יחס כושר פירעון, ללא הוראות מעבר',
@@ -29,12 +31,16 @@ const FAMILIES: [string, string, RegExp][] = [
 ];
 const CAPITAL = /^(own_funds|scr|mcr|solvency|surplus|target_.*(solvency|dividend|capital))/;
 export const isPct = (m: string) => /ratio|_pct|payout|confidence|discount_rate|roe_reported|threshold|target_solvency/.test(m);
-export const he = (m: string) => { const [k, rest] = m.split(/:(.*)/); return (HE[k] ?? k) + (rest ? `: ${rest}` : ''); };
+export const he = (m: string) => { const [k, rest] = m.split(/:(.*)/); return (HE[k] ?? k) + (rest ? `: ${TEXT_HE[rest] ?? rest}` : ''); };
+const HEB = /[\u0590-\u05FF]/;
+/** Secondary row label: keep when Hebrew, hide an English-only label once the metric has a Hebrew name. */
+const subLabel = (f: IfrsFact) => (HEB.test(f.l) || !HE[f.m.split(':')[0]] ? f.l : '');
+export const bkName = (b: string) => BUCKET_HE[b] ?? b;
 const fmt = (f: IfrsFact, v = f.v) => nf(v, isPct(f.m) || Math.abs(v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
 const SUB: [RegExp, string][] = [[/^pension(_funds)?$/i, 'פנסיה'], [/^(provident(_funds)?|gemel)$/i, 'גמל'], [/^pension_gemel$/i, 'פנסיה וגמל'], [/^pc_incl_overseas$/, 'כללי כולל חו"ל'], [/insurer_subsidiary|_insurance$| Insurance$/i, 'חברת הביטוח'],
   [/^Life Insurance and Long-Term Savings$/, 'חיים וחיסכון'], [/^Health Insurance$/, 'בריאות'], [/^P&C Insurance$/, 'כללי'], [/^life\+health\+pc$/, 'חיים, בריאות וכללי'], [/^(life\+health|life_and_health|Life and Health Segments)$/, 'חיים ובריאות'],
   [/^Long-Term Savings$/, 'חיסכון ארוך טווח'], [/^Life and Health Risks$/, 'סיכוני חיים ובריאות'], [/^financial_services$/, 'שירותים פיננסיים'], [/^credit(_cards)?$/i, 'אשראי'], [/^(Non-segmented|not_attributed)$/, 'לא מיוחס'], [/^Adjustments and offsets$/, 'התאמות וקיזוזים'], [/^insurance_companies_overseas$/, 'חברות ביטוח בחו"ל']];
-export const segName = (g: string) => SEGS.find(([k]) => k === g)?.[1] ?? SUB.find(([re]) => re.test(g))?.[1] ?? (g === 'insurer' ? 'חברת הביטוח' : g === 'other' ? 'אחר' : g);
+export const segName = (g: string) => SEGS.find(([k]) => k === g)?.[1] ?? SEGMENT_HE[g] ?? SUB.find(([re]) => re.test(g))?.[1] ?? (g === 'insurer' ? 'חברת הביטוח' : g === 'other' ? 'אחר' : g);
 export const periodName = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
 
 /** Everything extracted from one company's report: capital, CSM movement by segment, expected CSM release, sensitivities, and the full fact list. Every figure links to its page. */
@@ -57,7 +63,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const bridge = useMemo(() => {
     const own = csm.filter((f) => f.b === B);
     const cols = SEGS.map(([g]) => g).filter((g) => own.some((f) => f.g === g && f.m === 'csm_closing' && f.d === end));
-    const extra: [string, string, 1 | -1 | 0][] = [...new Set(own.filter((f) => f.m.startsWith('csm_other:') && !f.m.startsWith('csm_other:Balance') && f.d === end && f.w === W).map((f) => f.m))].map((m) => [m, m.slice(10), 1]);
+    const extra: [string, string, 1 | -1 | 0][] = [...new Set(own.filter((f) => f.m.startsWith('csm_other:') && !f.m.startsWith('csm_other:Balance') && f.d === end && f.w === W).map((f) => f.m))].map((m) => [m, TEXT_HE[m.slice(10)] ?? m.slice(10), 1]);
     const open = startOf(P || '2026Q2', W);
     const rows = [...WF.slice(0, -2), ...extra, ...WF.slice(-2)].map(([m, label, sign]) => ({ m, label, sign, cells: cols.map((g) => {
       const c = own.filter((f) => f.g === g && f.m === m && (m === 'csm_opening' ? f.d === open : m === 'csm_closing' ? f.d === end : f.w === W && f.d === end));
@@ -101,7 +107,6 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   if (facts.error) return <ErrorBox what="נתוני הדוח" error={facts.error} />;
   if (!facts.data) return <Loading what="נתוני הדוח" />;
   const cell = (f: IfrsFact | null, v?: number) => (f ? <><span className={`num ${(v ?? val(f)) < 0 ? 'neg' : ''}`}>{fmt(f, v ?? val(f))}</span> <span className="dim"><Src f={f} d={d} p={P} /></span></> : <span className="muted">–</span>);
-  const FX: Record<string, string> = { profit_after_tax: 'רווח', equity_after_tax: 'הון', csm: 'CSM', comprehensive_income: 'רווח כולל', profit_before_tax: 'רווח לפני מס', oci: 'רווח כולל אחר' };
 
   return (
     <>
@@ -133,12 +138,12 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
                 return { animationDuration: 650, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 4, right: 4, top: 30, bottom: 4, containLabel: true },
                   legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10 },
                   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-                  xAxis: { type: 'category', data: runoff.buckets, axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10.5, interval: 0, rotate: 30 } },
+                  xAxis: { type: 'category', data: runoff.buckets.map(bkName), axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10.5, interval: 0, rotate: 30 } },
                   yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
                   series: runoff.segs.map((g, i) => ({ type: 'bar', stack: 'r', name: segName(g), data: runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null), itemStyle: { color: pal[i % pal.length] } })) };
               }} />
               <div className="scroll"><table>
-                <thead><tr><th>מגזר</th>{runoff.buckets.map((bk) => <th key={bk}>{bk}</th>)}<th>סה"כ</th></tr></thead>
+                <thead><tr><th>מגזר</th>{runoff.buckets.map((bk) => <th key={bk}>{bkName(bk)}</th>)}<th>סה"כ</th></tr></thead>
                 <tbody>{runoff.segs.map((g) => { const vs = runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null); return <tr key={g}><td>{segName(g)}</td>{vs.map((v, i) => <td key={i}><span className="num">{v == null ? '–' : nf(v, 0)}</span></td>)}<td><span className="num">{nf(vs.reduce((t: number, v) => t + (v ?? 0), 0), 0)}</span></td></tr>; })}</tbody>
               </table></div>
             </>
@@ -157,8 +162,8 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
       {sens.rows.length > 0 && (
         <Panel title="רגישויות" aside={<span>השפעה במיליוני ש"ח · {end}</span>}>
           <div className="scroll"><table>
-            <thead><tr><th>תרחיש</th><th>מגזר</th>{sens.cols.map((c) => { const [fx, b] = c.split('|'); return <th key={c}>{FX[fx] ?? fx} · {BASIS[b] ?? b}</th>; })}</tr></thead>
-            <tbody>{sens.rows.map((r) => { const [m, s] = r.split('|'); return <tr key={r}><td className="lbl">{m.slice(12)}</td><td>{segName(s)}</td>{sens.cols.map((c) => <td key={c}>{cell(sens.at(r, c))}</td>)}</tr>; })}</tbody>
+            <thead><tr><th>תרחיש</th><th>מגזר</th>{sens.cols.map((c) => { const [fx, b] = c.split('|'); return <th key={c}>{EFFECT_HE[fx] ?? fx} · {BASIS[b] ?? b}</th>; })}</tr></thead>
+            <tbody>{sens.rows.map((r) => { const [m, s] = r.split('|'); return <tr key={r}><td className="lbl">{he(m).replace(/^[^:]*: /, '')}</td><td>{segName(s)}</td>{sens.cols.map((c) => <td key={c}>{cell(sens.at(r, c))}</td>)}</tr>; })}</tbody>
           </table></div>
         </Panel>
       )}
@@ -171,7 +176,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         <div className="scroll" style={{ maxHeight: 560 }}><table>
           <thead><tr><th>מדד</th><th>מגזר</th><th>בסיס</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{list.slice(0, 600).map((f, i) => (
-            <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{f.l}{f.bk ? ` · ${f.bk}` : ''}{f.tr ? ` · ${f.tr}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
+            <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{[subLabel(f), f.bk ? bkName(f.bk) : ''].filter(Boolean).join(' · ')}{f.tr ? ` · ${f.tr}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
               <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{f.d}</span></td>
               <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span>{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>

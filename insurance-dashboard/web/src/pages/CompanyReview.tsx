@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, Loading, Panel, Seg } from '../components/ui';
 import { nf, pct } from '../lib/format';
-import { useIfrsData, useIfrsFacts } from '../lib/useData';
+import { useIfrsCompany, useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
 import { he, isPct, periodName, segName } from './CompanyIfrs';
@@ -38,6 +38,20 @@ function Delta({ a, b }: { a: IfrsFact | null; b: IfrsFact | null }) {
   return <span className={`chg num ${x < 0 ? 'neg' : x > 0 ? 'pos' : 'muted'}`}>{txt}</span>;
 }
 
+/** Reported values of one row across the extracted reports, oldest first, the latest marked. */
+function Trend({ pts }: { pts: { p: string; v: number }[] }) {
+  if (pts.length < 3) return <span className="muted">–</span>;
+  const W = 92, H = 26, lo = Math.min(...pts.map((x) => x.v)), hi = Math.max(...pts.map((x) => x.v)), span = hi - lo || 1;
+  const xy = pts.map((x, i) => [3 + (i / (pts.length - 1)) * (W - 6), H - 4 - ((x.v - lo) / span) * (H - 8)] as const);
+  return (
+    <svg className="trend" width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={pts.map((x) => `${periodName(x.p)} ${nf(x.v, 0)}`).join(', ')}>
+      <title>{pts.map((x) => `${periodName(x.p)}: ${nf(x.v, Math.abs(x.v) < 100 ? 1 : 0)}`).join('\n')}</title>
+      <polyline points={xy.map((c) => c.join(',')).join(' ')} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={xy[xy.length - 1][0]} cy={xy[xy.length - 1][1]} r="2.6" className="last" />
+    </svg>
+  );
+}
+
 /** One report against the same period a year earlier and the previous quarter. Every figure is as printed and opens its source page. */
 export function CompanyReview({ id, docs }: { id: string; docs: number }) {
   const { data: d, error } = useIfrsData();
@@ -47,6 +61,7 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
   const P = periods.includes(period) ? period : periods[0] ?? '';
   const PP = P && periods.includes(prevPeriod(P)) ? prevPeriod(P) : null;
   const cur = useIfrsFacts(P || null), prev = useIfrsFacts(PP);
+  const hist = useIfrsCompany(id, periods);
   const annual = P.endsWith('FY'), end = P ? endOf(P) : '', pend = P ? endOf(prevPeriod(P)) : '';
 
   const sections = useMemo(() => {
@@ -68,12 +83,17 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
           const yoy = find(A, k, W, yearBack(at))[0] ?? null;
           const qoqW = W === 'instant' ? 'instant' : 'q';
           const qoq = annual || W === 'ytd' || at !== end ? null : find(A, k, qoqW, pend)[0] ?? find(B, k, qoqW, pend)[0] ?? null;
-          return { k, f, n: new Set(c.map((x) => x.v)).size, yoy, qoq, qoqIn: qoq && A.includes(qoq) ? P : PP ?? P, W, at };
+          // the same row in every extracted report, each read at its own period end (annual reports give a balance, not a quarter's flow)
+          const tw = W === 'instant' ? 'instant' : annual ? 'fy' : 'q';
+          const trend = [...periods].sort((a, b) => endOf(a).localeCompare(endOf(b))).filter((p) => (tw === 'fy' ? p.endsWith('FY') : tw === 'q' ? !p.endsWith('FY') : true))
+            .map((p) => ({ p, v: (hist.get(p) ?? []).find((x) => key(x) === k && x.w === tw && x.d === endOf(p) && !x.tr && !x.model && !x.bk)?.v }))
+            .filter((x): x is { p: string; v: number } => x.v != null);
+          return { k, f, n: new Set(c.map((x) => x.v)).size, yoy, qoq, qoqIn: qoq && A.includes(qoq) ? P : PP ?? P, W, at, trend };
         });
       }).sort((a, b) => metrics.indexOf(a.f.m) - metrics.indexOf(b.f.m) || SEG_ORDER.indexOf(a.f.g) - SEG_ORDER.indexOf(b.f.g) || B_ORDER.indexOf(a.f.b) - B_ORDER.indexOf(b.f.b));
       return { title, rows };
     }).filter((s) => s.rows.length);
-  }, [cur.data, prev.data, id, win, annual, end, pend, P, PP]);
+  }, [cur.data, prev.data, hist, periods, id, win, annual, end, pend, P, PP]);
 
   if (error) return <ErrorBox what="נתוני הדוחות" error={error} />;
   if (!d) return <Loading what="סקירת דוח" />;
@@ -94,16 +114,17 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
       {sections.map((s) => (
         <Panel key={s.title} title={s.title}>
           <div className="scroll"><table className="tight">
-            <thead><tr><th>שורה</th><th>{periodName(P)}</th><th>{periodName(`${Number(P.slice(0, 4)) - 1}${P.slice(4)}`)} · YoY</th>{!annual && <th>{periodName(prevPeriod(P))} · QoQ</th>}</tr></thead>
+            <thead><tr><th>שורה</th><th>{periodName(P)}</th><th>{periodName(`${Number(P.slice(0, 4)) - 1}${P.slice(4)}`)} · YoY</th>{!annual && <th>{periodName(prevPeriod(P))} · QoQ</th>}<th className="wide-only">{periods.length} דוחות</th></tr></thead>
             <tbody>{s.rows.map((r, i) => { const multi = (k: number) => s.rows.filter((x) => x.f.m === s.rows[k].f.m).length > 1; return (
               <Fragment key={r.k + r.W}>
-                {multi(i) && (i === 0 || s.rows[i - 1].f.m !== r.f.m) && <tr className="sec"><td colSpan={annual ? 3 : 4}>{he(r.f.m)}</td></tr>}
+                {multi(i) && (i === 0 || s.rows[i - 1].f.m !== r.f.m) && <tr className="sec"><td colSpan={annual ? 4 : 5}>{he(r.f.m)}</td></tr>}
                 <tr>
                   <td className="lbl">{multi(i) ? segName(r.f.s) : <>{he(r.f.m)}{r.f.g !== 'group' && <span className="muted"> · {segName(r.f.s)}</span>}</>}
                     {(r.f.b !== 'na' || r.W === 'ytd' && win === 'q' || r.at !== end || r.n > 1 || r.f.src === 'chart') && <span className="dim">{r.f.b !== 'na' && <span className="chip">{BASIS[r.f.b]}</span>}{r.W === 'ytd' && win === 'q' && <span className="chip est">YTD</span>}{r.at !== end && <span className="chip est">{r.at}</span>}{r.n > 1 && <span className="chip est" title="אותה שורה מופיעה בדוח בכמה ערכים; ראו לשונית IFRS 17">{r.n} ערכים</span>}{r.f.src === 'chart' && <span className="chip est">מגרף</span>}</span>}</td>
                   <td><Val f={r.f} d={d} p={P} /></td>
                   <td><Val f={r.yoy} d={d} p={P} /><Delta a={r.f} b={r.yoy} /></td>
                   {!annual && <td><Val f={r.qoq} d={d} p={r.qoqIn} /><Delta a={r.f} b={r.qoq} /></td>}
+                  <td className="wide-only"><Trend pts={r.trend} /></td>
                 </tr>
               </Fragment>
             ); })}</tbody>

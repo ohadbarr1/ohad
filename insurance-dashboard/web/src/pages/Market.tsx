@@ -48,11 +48,15 @@ export function MarketLayout() {
   );
 }
 
-const timeAxis = (m: Market, b: ReturnType<typeof chartBase>) => ({
-  type: 'category' as const, data: m.P.map((_, i) => i), boundaryGap: false,
-  axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false },
-  axisLabel: { color: b.mu, fontSize: 11, interval: 0, formatter: (i: string) => (m.P[+i] % 100 === 1 ? String(Math.floor(m.P[+i] / 100)) : '') },
-});
+const timeAxis = (m: Market, b: ReturnType<typeof chartBase>, half = false) => {
+  const w = typeof window !== 'undefined' ? window.innerWidth : 1400;
+  const step = w < 640 ? 4 : half && w < 1700 ? 2 : 1;
+  return {
+    type: 'category' as const, data: m.P.map((_, i) => i), boundaryGap: false,
+    axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false },
+    axisLabel: { color: b.mu, fontSize: 11, interval: 0, hideOverlap: true, formatter: (i: string) => (m.P[+i] % 100 === 1 && Math.floor(m.P[+i] / 100) % step === 0 ? String(Math.floor(m.P[+i] / 100)) : '') },
+  };
+};
 
 /* ---------- overview ---------- */
 export function MarketOverview() {
@@ -91,7 +95,7 @@ function OverviewInner({ m }: { m: Market }) {
                   ps.forEach((p) => { s += p.value; t += `${p.marker} ${p.seriesName}: <b>${nf(p.value, 0)}</b><br>`; });
                   return t + `סה"כ: <b>${nf(s, 0)}</b>`;
                 } },
-              xAxis: timeAxis(m, b), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+              xAxis: timeAxis(m, b), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
               series: fams.map((f, k) => ({ name: m.d.families[f], type: 'line', stack: 'a', symbol: 'none', areaStyle: { opacity: 0.85 }, lineStyle: { width: 1, color: c[k] }, itemStyle: { color: c[k] }, data: m.P.map((_, i) => +(m.cell(i, 'fam:' + f, -1).a / 1000).toFixed(1)) })),
             };
           }} />
@@ -104,7 +108,7 @@ function OverviewInner({ m }: { m: Market }) {
               legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
               tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
                 formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number | null }[]) => m.plabel(+ps[0].axisValue) + '<br>' + ps.filter((p) => p.value != null).map((p) => `${p.marker} ${p.seriesName}: <b>${nf(p.value as number, 1)}</b>`).join('<br>') },
-              xAxis: timeAxis(m, b), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+              xAxis: timeAxis(m, b, true), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
               series: (['pension', 'gemel'] as const).map((f, k) => ({ name: m.d.families[f], type: 'line', symbol: 'none', lineStyle: { width: 2, color: c[k] }, itemStyle: { color: c[k] }, data: m.P.map((_, i) => { const x = m.flows(i, 'ltm', 'fam:' + f, -1); return x ? +(x.org / 1000).toFixed(1) : null; }) })),
             };
           }} />
@@ -242,7 +246,7 @@ function FundsInner({ m }: { m: Market }) {
       <Panel title={`${nf(list.length, 0)} קופות${list.length > 300 ? ' (מוצגות 300 הראשונות)' : ''}`} aside={<>{m.plabel(m.LAST)} · לחיצה על כותרת ממיינת</>}>
         <div className="scroll" style={{ maxHeight: 680 }}>
           <table>
-            <thead><tr>{FCOLS.map((c) => <th key={c.k} className="sortable" tabIndex={0} aria-sort={sort === c.k ? (dir > 0 ? 'ascending' : 'descending') : undefined}
+            <thead><tr>{FCOLS.map((c, ci) => <th key={c.k} className="sortable" style={ci === 0 ? { minWidth: 220 } : undefined} tabIndex={0} aria-sort={sort === c.k ? (dir > 0 ? 'ascending' : 'descending') : undefined}
               onClick={() => { if (sort === c.k) setDir(-dir); else { setSort(c.k); setDir(c.text ? 1 : -1); } }}>{c.label}{sort === c.k ? (dir > 0 ? ' ▲' : ' ▼') : ''}</th>)}</tr></thead>
             <tbody>{list.slice(0, 300).map((f) => (
               <tr key={f.fam + f.id}>{FCOLS.map((c) => <td key={c.k}>{c.text ? c.fmt(f) : <span className={`num ${c.tone ? c.tone(f) : ''}`}>{c.fmt(f)}</span>}</td>)}</tr>
@@ -296,7 +300,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
               legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 14, itemHeight: 3, icon: 'roundRect' },
               tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
                 formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number | null }[]) => m.plabel(+ps[0].axisValue) + '<br>' + ps.filter((p) => p.value != null).map((p) => `${p.marker} ${p.seriesName}: <b>${nf(p.value as number, dec)}${def.unit === '%' ? '%' : ''}</b>`).join('<br>') },
-              xAxis: timeAxis(m, b), yAxis: { type: 'value', scale: def.ratio, axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } }, series,
+              xAxis: timeAxis(m, b), yAxis: { type: 'value', scale: def.ratio, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } }, series,
             };
           }} />
         </Panel>
@@ -321,7 +325,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
             legend: { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
             tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
             xAxis: { type: 'category', data: pts.map((i) => (i === L ? m.plabel(i) : String(Math.floor(m.P[i] / 100)))), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },
-            yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+            yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
             series: prodIdx.map((i) => ({ name: m.d.products[i].label, type: 'bar', stack: 'a', barMaxWidth: 36, itemStyle: { color: pal[i % pal.length] }, data: pts.map((pi) => +(m.cell(pi, 'p:' + m.d.products[i].key, gi).a / 1000).toFixed(2)) })),
           };
         }} />

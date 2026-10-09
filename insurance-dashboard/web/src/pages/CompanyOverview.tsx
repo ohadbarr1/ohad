@@ -118,6 +118,7 @@ function LatestDocs({ docs }: { docs: DocEntry[] }) {
 }
 
 import { CompanyTear } from './CompanyTear';
+import { Notes, Star } from '../components/Follow';
 
 export function CompanyOverview() {
   const { entry, store, market, storeError } = useCtx();
@@ -152,6 +153,7 @@ export function CompanyOverview() {
         </section>
       )}
       {docs.data && <LatestDocs docs={docs.data.docs} />}
+      <Panel title="הערות" aside={<><span>מעקב</span><Star id={entry.id} name={entry.name_he} /></>}><Notes id={entry.id} /></Panel>
     </>
   );
 }

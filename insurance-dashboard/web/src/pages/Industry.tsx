@@ -60,12 +60,12 @@ function Deck({ m }: { m: Market }) {
     return { b, common: { animationDuration: 650, animationEasing: 'cubicOut' as const, textStyle: { fontFamily: CHART_FONT, color: b.fg },
       tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' as const }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } } } };
   };
-  const xAxis = (b: ReturnType<typeof chartBase>, extra: (g: number) => string | null, wide = false) => ({
+  const xAxis = (b: ReturnType<typeof chartBase>, extra: (g: number) => string | null, wide = false) => { const rot = window.innerWidth < 760 || (!wide && names.length > 7); return {
     type: 'category' as const, data: [...names.map(short), 'סך השוק'], axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } },
-    axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, hideOverlap: false, rotate: window.innerWidth < 760 || (!wide && names.length > 7) ? 50 : 0,  // half-width charts cannot fit thirteen names flat
-      formatter: (v: string, i: number) => { const e = extra(i < groups.length ? groups[i] : -1); return e ? `${v}\n{${e.startsWith('+') ? 'u' : 'd'}|${e}}` : v; },
+    axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, hideOverlap: false, rotate: rot ? 50 : 0,  // half-width charts cannot fit thirteen names flat
+      formatter: (v: string, i: number) => { const e = extra(i < groups.length ? groups[i] : -1); return e ? (rot ? `${v}  \u200E${e}` : `${v}\n{${e.startsWith('+') ? 'u' : 'd'}|\u200E${e}}`) : v; },
       rich: { u: { color: b.up, fontSize: 10.5, padding: [3, 0, 0, 0] }, d: { color: b.down, fontSize: 10.5, padding: [3, 0, 0, 0] } } },
-  });
+  }; };
   const tone = (g: number, i: number, k: number, pal: string[], b: ReturnType<typeof chartBase>) => (g >= 0 && m.d.groups[g] === lead ? [0.45, 0.65, 0.85, 1][4 - pts.length + k] : 1) && (i >= 0 ? (g >= 0 && m.d.groups[g] === lead ? b.accent : pal[7]) : pal[7]);
   const opacity = (k: number) => [0.4, 0.6, 0.8, 1][4 - pts.length + k];
 
@@ -94,7 +94,7 @@ function Deck({ m }: { m: Market }) {
   const flow = (key: MetricKey, wins: [Win, number, string][], dec = 1) => () => {
     const { b, common } = base(), pal = palette();
     return { ...common, grid: { left: 4, right: 4, top: 26, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-      xAxis: { ...xAxis(b, () => null), data: names.map(short) }, yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
+      xAxis: { ...xAxis(b, () => null), data: names.map(short) }, yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
       series: wins.map(([w, i, name], k) => ({ name, type: 'bar', barGap: '8%',
         data: groups.map((g) => { const v = i >= 0 ? m.value(key, i, w, tab, g) : null; return v == null ? null : { value: +v.toFixed(dec + 1), itemStyle: { color: m.d.groups[g] === lead ? b.accent : v < 0 ? b.down : pal[k === wins.length - 1 ? 1 : 7], opacity: k === wins.length - 1 ? 1 : 0.55, borderRadius: v < 0 ? [0, 0, 2, 2] : [2, 2, 0, 0] } }; }),
         itemStyle: { color: pal[k === wins.length - 1 ? 1 : 7], opacity: k === wins.length - 1 ? 1 : 0.55 },

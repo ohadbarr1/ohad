@@ -49,7 +49,7 @@ export function IndustryCapital() {
       <section className="controls">
         <Field label="דוח"><select value={P} onChange={(e) => setPeriod(e.target.value)}>{periods.map((p) => <option key={p} value={p}>{periodName(p)}</option>)}</select></Field>
         <span className="chip">מיליוני ש"ח · כפי שדווח · חברת הביטוח</span>
-        <span className="chip est">כמה ערכים בתא: עם וללא הוראות מעבר, לפני ואחרי פעולות הון, או כמה חברות בנות</span>
+        <span className="chip est" style={{ whiteSpace: 'normal', borderRadius: 12, lineHeight: 1.4 }}>כמה ערכים בתא: עם וללא הוראות מעבר, לפני ואחרי פעולות הון, או כמה חברות בנות</span>
       </section>
       <Panel title="כושר פירעון, הון ודיבידנד">
         <div className="scroll"><table>

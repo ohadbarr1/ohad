@@ -174,7 +174,7 @@ tr.sec td { color: var(--fg); font-size: 12.5px; font-weight: 700; padding-top: 
 tbody tr.sec:hover td { background: transparent; }
 tr.lead td { background: var(--accent-soft); }
 tr.lead td:first-child { box-shadow: inset 3px 0 0 var(--accent); } [dir="rtl"] tr.lead td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
-td.lbl { min-width: 200px; max-width: 420px; }
+td.lbl { min-width: 200px; max-width: 420px; white-space: normal; }
 .panel table td:not(:first-child), .panel table th:not(:first-child) { min-width: 78px; }
 /* .num is direction:ltr, so its logical margins resolve left-to-right; the page is RTL, hence physical margins here */
 td .chg { display: inline-block; min-width: 66px; margin-right: 12px; font-size: 12px; font-weight: 600; text-align: left; }
@@ -326,3 +326,24 @@ td.heat { transition: background var(--mid); }
   h2.band { font-size: 19px; }
 }
 @media (hover: none) { .mcard .open { opacity: 1; } .mcard:hover, a.card:hover { transform: none; } .panel::before, .mcard::before, .card::before, .kpis::before { display: none; } }
+
+/* review trend, follow star, notes, latest filings */
+svg.trend { color: var(--muted); vertical-align: middle; overflow: visible; } svg.trend .last { fill: var(--accent); filter: drop-shadow(0 0 5px var(--accent-line)); }
+tr:hover svg.trend { color: var(--fg); }
+table.tight th.wide-only, table.tight td.wide-only { width: 120px; }
+@media (max-width: 760px) { .wide-only { display: none; } }
+.star { display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; background: transparent; cursor: pointer; color: var(--faint); border-radius: 8px; transition: color var(--fast), transform var(--mid) var(--spring); }
+.star:hover { color: var(--fg); transform: scale(1.15); } .star[aria-pressed="true"] { color: var(--accent); filter: drop-shadow(0 0 8px var(--accent-line)); }
+.star svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; } .star[aria-pressed="true"] svg { fill: currentColor; }
+.notes textarea { width: 100%; min-height: 92px; resize: vertical; background: var(--panel2); border: 1px solid var(--line-soft); border-radius: 12px; padding: 10px 12px; color: var(--fg); font: inherit; line-height: 1.6; transition: border-color var(--fast), box-shadow var(--mid); }
+.notes textarea:focus { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 4px var(--accent-soft); }
+@media (max-width: 760px) { .notes textarea { font-size: 16px; } }
+
+/* QA sweep: mobile touch targets (>= ~40px) */
+@media (max-width: 760px) {
+  .seg button { min-height: 40px; }
+  button.chip, a.chip { min-height: 36px; }
+  a.doc { min-height: 36px; align-items: center; }
+  .star { width: 40px; height: 40px; }
+  .mcard .open { padding: 10px 12px; }
+}

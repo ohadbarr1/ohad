@@ -45,7 +45,7 @@ export function CompanyLayout() {
       <nav className="subnav" aria-label="חברה">
         <NavLink to="." end>סקירה</NavLink>
         <NavLink to="review">סקירת דוח</NavLink>
-        <NavLink to="financials">דוחות</NavLink>
+        {entry.has_financials && <NavLink to="financials">דוחות</NavLink>}
         <NavLink to="ifrs17">IFRS 17</NavLink>
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>
         <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
@@ -197,7 +197,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
                 xAxis: { type: 'category', data: cols.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12 } },
                 yAxis: [
-                  { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+                  { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
                   ...(secondary ? [{ type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { show: false } }] : []),
                 ],
                 series: series.map((s) => {

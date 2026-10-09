@@ -113,7 +113,7 @@ export function Dcf() {
             <tr><td>ערך נוכחי של חלוקות, {a.years} שנים</td><td><span className="num">{nf(r.sum, 0)}</span></td><td><span className="num muted">{pct(r.sum / r.value * 100, 0)}</span></td></tr>
             <tr><td>ערך נוכחי של ערך הסיום</td><td><span className="num">{nf(r.pvTv, 0)}</span></td><td><span className="num muted">{pct(r.pvTv / r.value * 100, 0)}</span></td></tr>
             <tr><td>מכפיל הון משתמע מהמודל</td><td><span className="num">{eq?.v ? nf(r.value / eq.v, 2) : '–'}</span></td><td /></tr>
-            <tr><td>מכפיל הון מוצדק: (ROE − g) / (ke − g)<span className="dim">ROE {roe?.v != null ? pct(roe.v, 1) : '–'}, LTM</span></td><td><span className="num">{jpb == null ? '–' : nf(jpb, 2)}</span></td><td /></tr>
+            <tr><td>מכפיל הון מוצדק: <bdi dir="ltr">(ROE − g) / (ke − g)</bdi><span className="dim">ROE {roe?.v != null ? pct(roe.v, 1) : '–'}, LTM</span></td><td><span className="num">{jpb == null ? '–' : nf(jpb, 2)}</span></td><td /></tr>
             <tr><td>מחיר הון משתמע ממחיר השוק</td><td><span className="num">{ik == null ? '–' : pct(ik, 1)}</span></td><td /></tr>
           </tbody></table>
         </Panel>
@@ -125,7 +125,7 @@ export function Dcf() {
                 legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number) => nf(v, 0) },
                 xAxis: { type: 'category', data: r.rows.map((x) => `+${x.t}`), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },
-                yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
+                yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
                 series: [{ name: 'רווח', type: 'bar', data: r.rows.map((x) => +x.e.toFixed(0)), itemStyle: { color: pal[7], opacity: 0.5, borderRadius: [2, 2, 0, 0] }, barGap: '-100%' },
                   { name: 'חלוקה', type: 'bar', data: r.rows.map((x) => +x.d.toFixed(0)), itemStyle: { color: pal[0], borderRadius: [2, 2, 0, 0] } },
                   { name: 'ערך נוכחי', type: 'line', data: r.rows.map((x) => +x.pv.toFixed(0)), symbolSize: 6, lineStyle: { color: pal[1], width: 2 }, itemStyle: { color: pal[1] } }] };
