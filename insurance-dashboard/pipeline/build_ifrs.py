@@ -84,6 +84,7 @@ for r in out:
     if r["m"].startswith("csm_") and r["m"] != "csm_expected_release" and not r["m"].startswith(("csm_subtotal", "csm_other:Balance")) and "tr" not in r and "model" not in r:
         groups.setdefault((r["c"], r["p"], r["s"], r["b"]), []).append(r)
 closed = 0
+rejected = []
 for (comp, period, seg, basis), rows in groups.items():
     for o in [r for r in rows if r["m"] == "csm_opening"]:
         for c in [r for r in rows if r["m"] == "csm_closing" and r["d"] > o["d"]]:
@@ -95,13 +96,19 @@ for (comp, period, seg, basis), rows in groups.items():
                 if not signs:
                     continue
                 flip = -1 if (o["v"] < 0 and c["v"] < 0) else 1  # liabilities printed as negatives
+                if how != "as printed":
+                    # a sign search can close by coincidence when a row is missing: require the release row, and economically possible signs
+                    dv = {r["m"]: flip * sg * r["v"] for r, sg in zip(mv, signs)}
+                    if "csm_release" not in dv or dv["csm_release"] > 0 or dv.get("csm_interest_accretion", 0) < 0 or dv.get("csm_new_business", 0) < 0:
+                        rejected.append((comp, period, seg, basis, w))
+                        continue
                 o["dv"], c["dv"] = flip * o["v"], flip * c["v"]
                 for r, sg in zip(mv, signs):
                     r["dv"] = round(flip * sg * r["v"], 3)
                     if how != "as printed" or flip == -1:
                         r["sn"] = 1
                 closed += 1
-print(closed, "CSM bridges close")
+print(closed, "CSM bridges close;", len(rejected), "sign-normalised fits rejected as implausible:", rejected)
 DATA = ROOT / "web" / "public" / "data"
 for period in sorted({f["period"] for f in files}):
     rows = [{k: v for k, v in r.items() if k != "p"} for r in out if r["p"] == period]

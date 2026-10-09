@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CompanyIfrs } from './CompanyIfrs';
 import { Link, NavLink, Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
@@ -259,11 +260,8 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
 
 /* ---------- IFRS 17: CSM by portfolio group ---------- */
 export function CompanyIfrs17() {
-  const { entry, store, storeError } = useCtx();
-  if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
-  if (!entry.has_financials) return <NoFinancials entry={entry} />;
-  if (!store) return <Loading what="דוחות כספיים" />;
-  return <CsmExplorer store={store} />;
+  const { entry, store } = useCtx();
+  return <><CompanyIfrs id={entry.id} docs={entry.docs} />{store && <CsmExplorer store={store} />}</>;
 }
 
 function CsmExplorer({ store }: { store: CompanyStore }) {

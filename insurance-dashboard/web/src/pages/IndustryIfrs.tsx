@@ -7,27 +7,27 @@ import { nf } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 
-const METRICS: [string, string][] = [
+export const METRICS: [string, string][] = [
   ['csm_closing', 'CSM: יתרת סגירה'], ['csm_new_business', 'CSM: עסק חדש'], ['csm_release', 'CSM: שחרור לרווח'], ['csm_interest_accretion', 'CSM: צבירת ריבית'],
   ['csm_changes_in_estimates', 'CSM: שינויי אומדן'], ['csm_opening', 'CSM: יתרת פתיחה'], ['risk_adjustment', 'התאמת סיכון (RA)'], ['ra_closing', 'RA: יתרת סגירה'], ['ra_release', 'RA: שחרור'], ['loss_component', 'רכיב הפסד'], ['losses_on_onerous_contracts', 'הפסדים מחוזים מכבידים'],
   ['rev_csm_release', 'הכנסות: שחרור CSM'], ['rev_ra_release', 'הכנסות: שחרור RA'], ['rev_expected_claims_and_expenses', 'הכנסות: תביעות והוצאות צפויות'], ['insurance_finance_result', 'הכנסות (הוצאות) מימון ביטוח'],
   ['insurance_revenue', 'הכנסות משירותי ביטוח'], ['insurance_service_result', 'תוצאות שירותי ביטוח'], ['comprehensive_income_before_tax', 'רווח כולל לפני מס'],
   ['gross_written_premiums', 'פרמיות ברוטו'], ['new_business_annualized_premiums', 'פרמיה משונתת, עסק חדש'], ['management_fees', 'דמי ניהול'], ['pension_gemel_profit_before_tax', 'רווח לפני מס, פנסיה וגמל'],
 ];
-const SEGS: [string, string][] = [['group', 'קבוצה'], ['life', 'חיים וחיסכון'], ['health', 'בריאות'], ['life_health', 'חיים ובריאות'], ['pc', 'כללי'], ['savings', 'פנסיה וגמל'], ['investment_contracts', 'חוזי השקעה']];
-const WINS: [string, string][] = [['instant', 'יתרה'], ['q', 'רבעון'], ['ytd', 'מצטבר'], ['fy', 'שנתי']];
-const BASIS: Record<string, string> = { net: 'נטו', gross: 'ברוטו', reinsurance: 'ביטוח משנה', na: 'לא צוין' };
-const val = (f: IfrsFact) => f.dv ?? f.v;
+export const SEGS: [string, string][] = [['group', 'קבוצה'], ['life', 'חיים וחיסכון'], ['health', 'בריאות'], ['life_health', 'חיים ובריאות'], ['pc', 'כללי'], ['savings', 'פנסיה וגמל'], ['investment_contracts', 'חוזי השקעה']];
+export const WINS: [string, string][] = [['instant', 'יתרה'], ['q', 'רבעון'], ['ytd', 'מצטבר'], ['fy', 'שנתי']];
+export const BASIS: Record<string, string> = { net: 'נטו', gross: 'ברוטו', reinsurance: 'ביטוח משנה', na: 'לא צוין' };
+export const val = (f: IfrsFact) => f.dv ?? f.v;
 const INSTANT = ['csm_closing', 'csm_opening', 'risk_adjustment', 'ra_closing', 'loss_component'];
-const WF: [string, string, 1 | -1 | 0][] = [['csm_opening', 'פתיחה', 0], ['csm_new_business', 'עסק חדש', 1], ['csm_interest_accretion', 'ריבית', 1], ['csm_changes_in_estimates', 'שינויי אומדן', 1], ['csm_economic_interest_and_other_effects', 'ריבית והשפעות אחרות', 1], ['csm_experience_adjustments', 'סטיות ניסיון', 1], ['csm_fx_and_other', 'אחר', 1], ['csm_release', 'שחרור', -1], ['csm_closing', 'סגירה', 0]];
-const endOf = (p: string) => `${p.slice(0, 4)}-${({ Q1: '03-31', Q2: '06-30', Q3: '09-30', FY: '12-31' } as Record<string, string>)[p.slice(4)]}`;
-const startOf = (p: string, w: string) => (w === 'q' ? ({ Q1: `${Number(p.slice(0, 4)) - 1}-12-31`, Q2: `${p.slice(0, 4)}-03-31`, Q3: `${p.slice(0, 4)}-06-30` } as Record<string, string>)[p.slice(4)] : `${Number(p.slice(0, 4)) - 1}-12-31`);
+export const WF: [string, string, 1 | -1 | 0][] = [['csm_opening', 'פתיחה', 0], ['csm_new_business', 'עסק חדש', 1], ['csm_interest_accretion', 'ריבית', 1], ['csm_changes_in_estimates', 'שינויי אומדן', 1], ['csm_economic_interest_and_other_effects', 'ריבית והשפעות אחרות', 1], ['csm_experience_adjustments', 'סטיות ניסיון', 1], ['csm_fx_and_other', 'אחר', 1], ['csm_release', 'שחרור', -1], ['csm_closing', 'סגירה', 0]];
+export const endOf = (p: string) => `${p.slice(0, 4)}-${({ Q1: '03-31', Q2: '06-30', Q3: '09-30', FY: '12-31' } as Record<string, string>)[p.slice(4)]}`;
+export const startOf = (p: string, w: string) => (w === 'q' ? ({ Q1: `${Number(p.slice(0, 4)) - 1}-12-31`, Q2: `${p.slice(0, 4)}-03-31`, Q3: `${p.slice(0, 4)}-06-30` } as Record<string, string>)[p.slice(4)] : `${Number(p.slice(0, 4)) - 1}-12-31`);
 
-function pick(facts: IfrsFact[], pref: string): IfrsFact | null {
+export function pick(facts: IfrsFact[], pref: string): IfrsFact | null {
   const order = [pref, 'net', 'gross', 'na'];
   return [...facts].sort((a, b) => (order.indexOf(a.b) + 9) % 9 - (order.indexOf(b.b) + 9) % 9 || (a.s === a.g ? -1 : 1))[0] ?? null;
 }
-function Src({ f, d, p }: { f: IfrsFact; d: IfrsData; p: string }) {
+export function Src({ f, d, p }: { f: IfrsFact; d: IfrsData; p: string }) {
   const url = d.files.find((x) => x.company === f.c && x.period === p)?.url;
   return f.pg == null ? <>–</> : url ? <a href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" className="num">עמ׳ {f.pg}</a> : <span className="num">עמ׳ {f.pg}</span>;
 }
