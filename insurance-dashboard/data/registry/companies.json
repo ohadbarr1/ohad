@@ -1,17 +1,115 @@
 [
-  {"id": "phoenix", "name_he": "הפניקס", "name_en": "Phoenix", "kind": "insurance_group", "market_group": "הפניקס"},
-  {"id": "harel", "name_he": "הראל", "name_en": "Harel", "kind": "insurance_group", "market_group": "הראל"},
-  {"id": "migdal", "name_he": "מגדל", "name_en": "Migdal", "kind": "insurance_group", "market_group": "מגדל"},
-  {"id": "clal", "name_he": "כלל", "name_en": "Clal", "kind": "insurance_group", "market_group": "כלל"},
-  {"id": "menora", "name_he": "מנורה מבטחים", "name_en": "Menora Holdings", "kind": "insurance_group", "market_group": "מנורה מבטחים"},
-  {"id": "hachshara", "name_he": "הכשרה", "name_en": "Hachshara", "kind": "insurance_group", "market_group": "הכשרה"},
-  {"id": "ayalon", "name_he": "איילון", "name_en": "Ayalon", "kind": "insurance_group", "market_group": "איילון"},
-  {"id": "idi", "name_he": "ביטוח ישיר", "name_en": "IDI", "kind": "insurance_group", "market_group": "ביטוח ישיר"},
-  {"id": "meitav", "name_he": "מיטב", "name_en": "Meitav", "kind": "fund_house", "market_group": "מיטב"},
-  {"id": "altshuler", "name_he": "אלטשולר שחם", "name_en": "Altshuler Shaham", "kind": "fund_house", "market_group": "אלטשולר שחם"},
-  {"id": "more", "name_he": "מור", "name_en": "More", "kind": "fund_house", "market_group": "מור"},
-  {"id": "analyst", "name_he": "אנליסט", "name_en": "Analyst", "kind": "fund_house", "market_group": "אנליסט"},
-  {"id": "yelin", "name_he": "ילין לפידות", "name_en": "Yelin Lapidot", "kind": "fund_house", "market_group": "ילין לפידות"},
-  {"id": "infinity", "name_he": "אינפיניטי", "name_en": "Infinity", "kind": "fund_house", "market_group": "אינפיניטי"},
-  {"id": "globalnet", "name_he": "גלובלנט", "name_en": "", "kind": "fund_house", "market_group": "גלובלנט"}
+ {
+  "id": "phoenix",
+  "name_he": "הפניקס",
+  "name_en": "Phoenix",
+  "kind": "insurance_group",
+  "market_group": "הפניקס",
+  "maya_id": 767
+ },
+ {
+  "id": "harel",
+  "name_he": "הראל",
+  "name_en": "Harel",
+  "kind": "insurance_group",
+  "market_group": "הראל",
+  "maya_id": 585
+ },
+ {
+  "id": "migdal",
+  "name_he": "מגדל",
+  "name_en": "Migdal",
+  "kind": "insurance_group",
+  "market_group": "מגדל",
+  "maya_id": 1041
+ },
+ {
+  "id": "clal",
+  "name_he": "כלל",
+  "name_en": "Clal",
+  "kind": "insurance_group",
+  "market_group": "כלל",
+  "maya_id": 224
+ },
+ {
+  "id": "menora",
+  "name_he": "מנורה מבטחים",
+  "name_en": "Menora Holdings",
+  "kind": "insurance_group",
+  "market_group": "מנורה מבטחים",
+  "maya_id": 566
+ },
+ {
+  "id": "hachshara",
+  "name_he": "הכשרה",
+  "name_en": "Hachshara",
+  "kind": "insurance_group",
+  "market_group": "הכשרה"
+ },
+ {
+  "id": "ayalon",
+  "name_he": "איילון",
+  "name_en": "Ayalon",
+  "kind": "insurance_group",
+  "market_group": "איילון",
+  "maya_id": 209
+ },
+ {
+  "id": "idi",
+  "name_he": "ביטוח ישיר",
+  "name_en": "IDI",
+  "kind": "insurance_group",
+  "market_group": "ביטוח ישיר",
+  "maya_id": 1089
+ },
+ {
+  "id": "meitav",
+  "name_he": "מיטב",
+  "name_en": "Meitav",
+  "kind": "fund_house",
+  "market_group": "מיטב",
+  "maya_id": 1064
+ },
+ {
+  "id": "altshuler",
+  "name_he": "אלטשולר שחם",
+  "name_en": "Altshuler Shaham",
+  "kind": "fund_house",
+  "market_group": "אלטשולר שחם"
+ },
+ {
+  "id": "more",
+  "name_he": "מור",
+  "name_en": "More",
+  "kind": "fund_house",
+  "market_group": "מור"
+ },
+ {
+  "id": "analyst",
+  "name_he": "אנליסט",
+  "name_en": "Analyst",
+  "kind": "fund_house",
+  "market_group": "אנליסט"
+ },
+ {
+  "id": "yelin",
+  "name_he": "ילין לפידות",
+  "name_en": "Yelin Lapidot",
+  "kind": "fund_house",
+  "market_group": "ילין לפידות"
+ },
+ {
+  "id": "infinity",
+  "name_he": "אינפיניטי",
+  "name_en": "Infinity",
+  "kind": "fund_house",
+  "market_group": "אינפיניטי"
+ },
+ {
+  "id": "globalnet",
+  "name_he": "גלובלנט",
+  "name_en": "",
+  "kind": "fund_house",
+  "market_group": "גלובלנט"
+ }
 ]

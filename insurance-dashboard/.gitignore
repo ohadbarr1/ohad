@@ -4,3 +4,5 @@ __pycache__/
 web/node_modules/
 web/dist/
 web/dist-single/
+data/sources/pdf/
+.venv/
