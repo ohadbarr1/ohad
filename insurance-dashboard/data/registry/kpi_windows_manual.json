@@ -1,0 +1,295 @@
+{
+ "_note": "Hand readings of the income statement for quarters verify_kpi_window.py could not settle.",
+ "altshuler": {
+  "2023Q3": {
+   "tagged": "q",
+   "q": 37900,
+   "ytd": 107577,
+   "page": 28,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1559296,
+   "check": "manual",
+   "evidence": "Printed 3m 37,900 / ytd 107,577; tagged 37,900 = 3m. 69,677 (6m (Q2'24 comparative)) + 37,900 = 107,577."
+  },
+  "2024Q2": {
+   "tagged": "q",
+   "q": 28166,
+   "ytd": 55899,
+   "page": 31,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1611882,
+   "check": "manual",
+   "evidence": "Printed 3m 28,166 / ytd 55,899; tagged 28,166 = 3m. 27,733 (Q1 tagged 27,733) + 28,166 = 55,899."
+  },
+  "2024Q3": {
+   "tagged": "q",
+   "q": 27570,
+   "ytd": 83469,
+   "page": 33,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1628082,
+   "check": "manual",
+   "evidence": "Printed 3m 27,570 / ytd 83,469; tagged 27,570 = 3m. 55,899 (6m 55,899) + 27,570 = 83,469."
+  },
+  "2025Q2": {
+   "tagged": "q",
+   "q": 31482,
+   "ytd": 55075,
+   "page": 46,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1687450,
+   "check": "manual",
+   "evidence": "Printed 3m 31,482 / ytd 55,075; tagged 31,482 = 3m. 23,593 (Q1 tagged 23,593) + 31,482 = 55,075."
+  },
+  "2025Q3": {
+   "tagged": "q",
+   "q": 28413,
+   "ytd": 83488,
+   "page": 46,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1705856,
+   "check": "manual",
+   "evidence": "Printed 3m 28,413 / ytd 83,488; tagged 28,413 = 3m. 55,075 (6m 55,075) + 28,413 = 83,488."
+  },
+  "2026Q2": {
+   "tagged": "q",
+   "q": 22134,
+   "ytd": 50810,
+   "page": 40,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1764730,
+   "check": "manual",
+   "evidence": "Printed 3m 22,134 / ytd 50,810; tagged 22,134 = 3m. 28,676 (Q1 tagged 28,676) + 22,134 = 50,810."
+  }
+ },
+ "ayalon": {
+  "2023Q2": {
+   "tagged": "ytd",
+   "q": 3046,
+   "ytd": 3306,
+   "page": 41,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1542770,
+   "check": "manual",
+   "evidence": "Printed 3m 3,046 / 6m 3,306; tagged 3,306 = 6m. Q1 tagged 260 + 3,046 = 3,306."
+  },
+  "2023Q3": {
+   "tagged": "ytd",
+   "q": 26316,
+   "ytd": 29622,
+   "page": 42,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1559385,
+   "check": "manual",
+   "evidence": "Printed 3m 26,316 / 9m 29,622; tagged 29,622 = 9m. 6m 3,306 + 26,316 = 29,622."
+  },
+  "2024Q3": {
+   "tagged": "q",
+   "q": 23583,
+   "ytd": 118323,
+   "page": 52,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1629496,
+   "check": "manual",
+   "evidence": "Printed 3m 23,583 / 9m 118,323; tagged 23,583 = 3m. 9m comparative restated (common control, note 2a), so 6m 94,740 + 23,583 = 118,323 closes on restated, not on originally tagged 6m 90,376."
+  }
+ },
+ "clal": {
+  "2022Q2": {
+   "tagged": "q",
+   "q": -442350,
+   "ytd": -57971,
+   "page": 40,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1471650,
+   "check": "manual",
+   "evidence": "Printed 3m (442,350) / 6m (57,971); tagged = 3m. Q1 384,379 + (442,350) = (57,971)."
+  },
+  "2022Q3": {
+   "tagged": "q",
+   "q": 139925,
+   "ytd": 81954,
+   "page": 44,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1489644,
+   "check": "manual",
+   "evidence": "Printed 3m 139,925 / 9m 81,954; tagged = 3m. 6m (57,971) + 139,925 = 81,954."
+  }
+ },
+ "migdal": {
+  "2023Q2": {
+   "tagged": "q",
+   "q": -170969,
+   "ytd": -79978,
+   "page": 46,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1542497,
+   "check": "manual",
+   "evidence": "Printed 3m (170,969) / 6m (79,978); tagged = 3m. Q1 90,991 + (170,969) = (79,978)."
+  },
+  "2023Q3": {
+   "tagged": "q",
+   "q": 224211,
+   "ytd": 144233,
+   "page": 60,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1559237,
+   "check": "manual",
+   "evidence": "Printed 3m 224,211 / 9m 144,233; tagged = 3m. 6m (79,978) + 224,211 = 144,233."
+  },
+  "2024Q3": {
+   "tagged": "q",
+   "q": 20266,
+   "ytd": 575116,
+   "page": 53,
+   "row": "בעלי המניות של החברה",
+   "report_id": 1628022,
+   "check": "manual",
+   "evidence": "Printed 3m 20,266 / 9m 575,116; tagged = 3m. Q1 94,940 + Q2 459,910 + 20,266 = 575,116."
+  }
+ },
+ "ibi": {
+  "2022Q2": {
+   "tagged": "ytd",
+   "q": 25216,
+   "ytd": 37057,
+   "page": 23,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1470512,
+   "check": "manual",
+   "evidence": "Printed 3m 25,216 / ytd 37,057; tagged 37,057 = ytd. Q1 11,841 + 25,216 = 37,057."
+  },
+  "2022Q3": {
+   "tagged": "q",
+   "q": 19883,
+   "ytd": 56940,
+   "page": 23,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1488973,
+   "check": "manual",
+   "evidence": "Printed 3m 19,883 / ytd 56,940; tagged 19,883 = 3m. 6m 37,057 + 19,883 = 56,940."
+  },
+  "2023Q2": {
+   "tagged": "q",
+   "q": 47766,
+   "ytd": 93956,
+   "page": 25,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1544204,
+   "check": "manual",
+   "evidence": "Printed 3m 47,766 / ytd 93,956; tagged 47,766 = 3m. Q1 46,190 + 47,766 = 93,956."
+  },
+  "2023Q3": {
+   "tagged": "q",
+   "q": 41887,
+   "ytd": 135843,
+   "page": 27,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1560310,
+   "check": "manual",
+   "evidence": "Printed 3m 41,887 / ytd 135,843; tagged 41,887 = 3m. 6m 93,956 + 41,887 = 135,843."
+  },
+  "2024Q2": {
+   "tagged": "q",
+   "q": 74091,
+   "ytd": 113368,
+   "page": 27,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1611966,
+   "check": "manual",
+   "evidence": "Printed 3m 74,091 / ytd 113,368; tagged 74,091 = 3m. Q1 39,277 + 74,091 = 113,368."
+  },
+  "2024Q3": {
+   "tagged": "q",
+   "q": 31992,
+   "ytd": 145360,
+   "page": 28,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1630062,
+   "check": "manual",
+   "evidence": "Printed 3m 31,992 / ytd 145,360; tagged 31,992 = 3m. 6m 113,368 + 31,992 = 145,360."
+  },
+  "2025Q2": {
+   "tagged": "q",
+   "q": 36887,
+   "ytd": 67848,
+   "page": 29,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1686893,
+   "check": "manual",
+   "evidence": "Printed 3m 36,887 / ytd 67,848; tagged 36,887 = 3m. Q1 30,961 + 36,887 = 67,848."
+  },
+  "2025Q3": {
+   "tagged": "q",
+   "q": 45486,
+   "ytd": 113334,
+   "page": 27,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1705600,
+   "check": "manual",
+   "evidence": "Printed 3m 45,486 / ytd 113,334; tagged 45,486 = 3m. 6m 67,848 + 45,486 = 113,334."
+  },
+  "2026Q2": {
+   "tagged": "q",
+   "q": 64938,
+   "ytd": 159375,
+   "page": 31,
+   "row": "בעלי מניות של החברה האם",
+   "report_id": 1764704,
+   "check": "manual",
+   "evidence": "Printed 3m 64,938 / ytd 159,375; tagged 64,938 = 3m. Q1 94,437 + 64,938 = 159,375."
+  }
+ },
+ "analyst": {
+  "2019Q2": {
+   "tagged": "ytd",
+   "q": null,
+   "ytd": 12677,
+   "page": 29,
+   "row": "רווח לתקופה",
+   "report_id": 1246880,
+   "check": "manual",
+   "evidence": "Statement prints only 6m columns (12,677 and prior 6,820); no 3m printed; tagged 12,677 = 6m."
+  },
+  "2020Q2": {
+   "tagged": "ytd",
+   "q": null,
+   "ytd": -11276,
+   "page": 32,
+   "row": "רווח (הפסד) לתקופה",
+   "report_id": 1314539,
+   "check": "manual",
+   "evidence": "Statement prints only 6m columns ((11,276) and prior 12,677); no 3m printed; tagged (11,276) = 6m."
+  },
+  "2021Q2": {
+   "tagged": "ytd",
+   "q": null,
+   "ytd": 13715,
+   "page": 30,
+   "row": "רווח (הפסד) לתקופה",
+   "report_id": 1392917,
+   "check": "manual",
+   "evidence": "Statement prints only 6m columns (13,715 and prior (11,276)); no 3m printed; tagged 13,715 = 6m."
+  },
+  "2022Q2": {
+   "tagged": "ytd",
+   "q": null,
+   "ytd": -8275,
+   "page": 31,
+   "row": "רווח (הפסד) לתקופה",
+   "report_id": 1469739,
+   "check": "manual",
+   "evidence": "Statement prints only 6m columns ((8,275) and prior 13,715); no 3m printed; tagged (8,275) = 6m."
+  },
+  "2023Q3": {
+   "tagged": "q",
+   "q": 8458,
+   "ytd": 19751,
+   "page": 30,
+   "row": "רווח (הפסד) לתקופה",
+   "report_id": 1561226,
+   "check": "manual",
+   "evidence": "Printed 3m 8,458 / 9m 19,751; tagged 8,458 = 3m. 6m 11,293 (Q2 report) + 8,458 = 19,751."
+  }
+ }
+}

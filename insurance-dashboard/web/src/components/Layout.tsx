@@ -7,7 +7,7 @@ import { useTheme } from '../lib/theme';
 
 const NAV: [string, string, string][] = [
   ['/', 'home', 'בית'], ['/companies', 'companies', 'חברות'], ['/industry', 'compare', 'השוואה ענפית'],
-  ['/valuation', 'value', 'שווי'], ['/market', 'market', 'שוק וקופות'],
+  ['/valuation', 'value', 'שווי'], ['/funds', 'market', 'קופות ושוק'],
 ];
 
 export function Layout() {
@@ -31,7 +31,7 @@ export function Layout() {
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox"><Logo size={36} /></NavLink>
         <nav aria-label="ראשי">
-          {NAV.map(([to, icon, label]) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `item${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/market' && loc.pathname.startsWith('/managers')) ? ' active' : ''}`}><Icon name={icon} />{label}</NavLink>)}
+          {NAV.map(([to, icon, label]) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `item${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} />{label}</NavLink>)}
         </nav>
         <div className="foot">
           <button className="iconbtn" type="button" onClick={toggle} aria-label={theme === 'dark' ? 'ערכה בהירה' : 'ערכה כהה'}><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>

@@ -4,7 +4,7 @@ import type { CompanyData, DocsData, IfrsData, IfrsFact, KpiData, MarketData, Pr
 const BASE = import.meta.env.BASE_URL;
 const cache = new Map<string, Promise<unknown>>();
 
-function load<T>(path: string): Promise<T> {
+export function load<T>(path: string): Promise<T> {
   if (!cache.has(path)) {
     cache.set(path, fetch(`${BASE}data/${path}`).then((r) => {
       if (!r.ok) throw new Error(`${path}: ${r.status}`);
@@ -106,3 +106,12 @@ export function useDocsOf(ids: string[]): (DocsData['docs'][number] & { company:
   }, [key]);
   return docs;
 }
+
+export interface Fund { k: string; fam: string; prod: string; track: string; name: string; mgr: string; grp: string; assets: number | null; fee: number | null; depfee: number | null;
+  m1: number | null; ytd: number | null; y12: number | null; y3: number | null; y5: number | null; a3: number | null; a5: number | null; sd: number | null; sharpe: number | null;
+  st: number | null; fo: number | null; fx: number | null; n: number; closed: boolean }
+export interface FundHist { p: number[]; y: (number | null)[]; a: (number | null)[]; fee: (number | null)[]; st: (number | null)[]; fo: (number | null)[]; fx: (number | null)[]; dep?: (number | null)[]; wd?: (number | null)[]; tr?: (number | null)[] }
+export type FundCats = Record<string, { p: number[]; y: number[]; n: number[] }>;
+export const useFunds = () => useLoad<{ asof: number; source: string; funds: Fund[] }>('funds.json');
+export const useFundCats = () => useLoad<FundCats>('funds/cat.json');
+export const useFundHist = (k: string | null) => useLoad<FundHist>(k ? `funds/${k}.json` : null);

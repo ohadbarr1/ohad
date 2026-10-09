@@ -56,9 +56,15 @@ for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
 
 # And what the income statement of every Q2/Q3 report shows (pipeline/verify_kpi_window.py), where the reading closes arithmetically.
 windows = json.loads((ROOT / "data" / "registry" / "kpi_windows.json").read_text(encoding="utf-8"))
+# readings made by hand for the quarters the script could not settle (same shape, check = "manual")
+hand = ROOT / "data" / "registry" / "kpi_windows_manual.json"
+if hand.exists():
+    for comp, per_ in json.loads(hand.read_text(encoding="utf-8")).items():
+        if not comp.startswith("_"):
+            windows.setdefault(comp, {}).update(per_)
 for comp, per_ in windows.items():
     for p, h in per_.items():
-        if h["check"] == "arithmetic":
+        if h["check"] in ("arithmetic", "manual"):
             truth[(comp, p)] = {"q": h["q"], "ytd": h["ytd"]}  # same report as the tag; an extracted later report may carry a restated comparative
 
 manual = json.loads((ROOT / "data" / "registry" / "kpi_verified.json").read_text(encoding="utf-8"))
