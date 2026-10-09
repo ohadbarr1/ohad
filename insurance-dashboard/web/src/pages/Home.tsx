@@ -74,7 +74,7 @@ export function Home() {
       )}
 
       <section className="panel">
-        <div className="hd"><h2>חברות</h2><div className="aside"><span>מיליוני ש"ח, מהדוח האחרון</span><Link to="/industry/matrix">מטריצת עמיתים</Link></div></div>
+        <div className="hd"><h2>חברות</h2><div className="aside"><span>מיליוני ש"ח, מהדוח האחרון</span><Link to="/industry/matrix">מטריצת עמיתים</Link><Link to="/funds/makers">יצרן מול השוק</Link></div></div>
         <div className="scroll"><table className="rank">
           <thead><tr><th>חברה</th><th>דוח אחרון</th><th>רווח נקי, QTD</th><th>YoY</th><th>רווח נקי, LTM</th><th>הון</th><th>ROE, LTM <span className="chip est">נגזר</span></th><th>נכסים מנוהלים, מיליארד</th><th>מסמכים</th></tr></thead>
           <tbody>{rows.map(({ c, q, yoy, ltm, eq, roe, aum }) => (

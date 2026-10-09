@@ -43,6 +43,7 @@ function Sub() {
   return (
     <nav className="subnav" aria-label="קופות ושוק">
       <NavLink to="/funds" end>מסלולים</NavLink>
+      <NavLink to="/funds/makers">יצרן מול השוק</NavLink>
       <NavLink to="/market/overview">שוק</NavLink>
       <NavLink to="/market/ranking">דירוג חברות</NavLink>
       <NavLink to="/managers">מנהלים</NavLink>
@@ -68,7 +69,7 @@ function Growth({ periods, lines, deps }: { periods: number[]; lines: { name: st
 }
 
 /** Every savings track the regulator publishes, compared inside its own product and track. */
-export function Funds() {
+export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
   const { data, error } = useFunds();
   const cats = useFundCats().data;
   const [sp, setSp] = useSearchParams();
@@ -82,7 +83,7 @@ export function Funds() {
   const all = data?.funds ?? [];
   const tracks = useMemo(() => { const m = new Map<string, number>(); all.filter((f) => f.prod === prod).forEach((f) => m.set(f.track, (m.get(f.track) ?? 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [all, prod]);
   const ALL = 'all';
-  const T = track === ALL || tracks.some(([t]) => t === track) ? track : tracks[0]?.[0] ?? '';
+  const T = makersOnly || track === ALL || tracks.some(([t]) => t === track) ? (makersOnly ? ALL : track) : tracks[0]?.[0] ?? '';
   const [open, setOpen] = useState<string[]>([]);
   // one group per track; a single track is the same table with one group
   const groups = useMemo(() => {
@@ -96,16 +97,22 @@ export function Funds() {
     }).filter((g) => g.list.length).sort((x, y) => y.assets - x.assets);
   }, [all, tracks, T, prod, per, closed, q, cats]);
   const rows = { n: groups.reduce((u, g) => u + g.n, 0) };
+  // the highlighted manufacturer may arrive as a company id (from search or a company page) or as the group name
+  const regs = useRegistry().data;
+  const mk = sp.get('mk') ?? '';
+  const maker = regs?.find((c) => c.id === mk)?.market_group ?? mk;
   // manufacturer against the market: where each managing group stands in every track (its largest track there, ranked on the chosen period)
   const makers = useMemo(() => {
     const size = new Map<string, number>();
     groups.forEach((g) => g.list.forEach(({ f }) => size.set(f.grp, (size.get(f.grp) ?? 0) + (f.assets ?? 0))));
-    const names = [...size.entries()].filter(([n]) => n !== 'קרנות ענפיות ואחרות').sort((a, b) => b[1] - a[1]).slice(0, 14).map(([n]) => n);
+    const top = [...size.entries()].filter(([n]) => n !== 'קרנות ענפיות ואחרות').sort((a, b) => b[1] - a[1]).slice(0, 14).map(([n]) => n);
+    // the chosen manufacturer leads, so it is the first column on a phone, and is shown even when it is not among the largest
+    const names = maker && size.has(maker) ? [maker, ...top.filter((n) => n !== maker)] : top;
     const cell = (g: typeof groups[number], name: string) => g.list.filter((x) => x.f.grp === name && x.rank != null).sort((a, b) => (b.f.assets ?? 0) - (a.f.assets ?? 0))[0] ?? null;
     const score = names.map((name) => { const c = groups.map((g) => ({ g, x: cell(g, name) })).filter((y) => y.x && y.g.n >= 4); return { n: c.length, top: c.filter((y) => y.x!.rank! <= Math.ceil(y.g.n / 4)).length }; });
     return { names, cell, score };
-  }, [groups]);
-  const maker = sp.get('mk') ?? '';
+  }, [groups, maker]);
+
   const cat = T === ALL ? undefined : cats?.[`${prod} | ${T}`];
 
   // histories of the tracks picked for comparison
@@ -126,13 +133,13 @@ export function Funds() {
 
   return (
     <>
-      <div className="pagehead"><div><h1>קופות ומסלולים</h1><div className="sub">{nf(all.length, 0)} מסלולים · {ym(asof)} · {data.source}</div></div></div>
+      <div className="pagehead"><div><h1>{makersOnly ? 'יצרן מול השוק' : 'קופות ומסלולים'}</h1><div className="sub">{nf(all.length, 0)} מסלולים · {ym(asof)} · {data.source}</div></div></div>
       <Sub />
       <section className="controls">
         <Field label="מוצר"><select value={prod} onChange={(e) => set({ prod: e.target.value, track: '', sel: '' })}>{PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
-        <Field label="מסלול"><select value={T} onChange={(e) => set({ track: e.target.value, sel: '' })}><option value={ALL}>כל המסלולים ({tracks.reduce((u, [, c]) => u + c, 0)})</option>{tracks.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select></Field>
+        {!makersOnly && <Field label="מסלול"><select value={T} onChange={(e) => set({ track: e.target.value, sel: '' })}><option value={ALL}>כל המסלולים ({tracks.reduce((u, [, c]) => u + c, 0)})</option>{tracks.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select></Field>}
         <div className="field"><span>דירוג לפי</span><Seg label="תקופה" value={per} onChange={(v) => set({ per: v })} options={PERIODS} /></div>
-        <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם קופה או גוף" /></Field>
+        {!makersOnly && <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם קופה או גוף" /></Field>}
         <button type="button" className="chip" aria-pressed={closed} onClick={() => setClosed(!closed)}>כולל קופות ענפיות ומפעליות</button>
       </section>
 
@@ -143,7 +150,7 @@ export function Funds() {
             <tbody>
               {groups.map((g) => (
                 <tr key={g.tr}>
-                  <td><button type="button" className="thbtn" onClick={() => set({ track: g.tr })}>{g.tr}</button> <span className="muted num">{g.n}</span></td>
+                  <td><Link className="name" to={`/funds?prod=${encodeURIComponent(prod)}&track=${encodeURIComponent(g.tr)}`}>{g.tr}</Link> <span className="muted num">{g.n}</span></td>
                   {makers.names.map((n) => { const x = makers.cell(g, n); const q4 = x && g.n >= 4 ? (x.rank! <= Math.ceil(g.n / 4) ? 'pos' : x.rank! > g.n - Math.floor(g.n / 4) ? 'neg' : '') : '';
                     return <td key={n} className={`${n === maker ? 'on' : ''} ${q4 ? 'q-' + q4 : ''}`}>{x ? <Link className="num" to={`/funds/${x.f.k}`} title={`${x.f.name} · ${pct(x.f[per]!, 1, true)} · מקום ${x.rank} מתוך ${g.n}`}>{x.rank}</Link> : <span className="muted">·</span>}</td>; })}
                 </tr>
@@ -155,7 +162,7 @@ export function Funds() {
         </Panel>
       )}
 
-      <Panel title={`${prod} · ${T === ALL ? 'כל המסלולים' : T}`} aside={<>{T === ALL && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.tr))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}<span>{rows.n} מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}{T === ALL && <span>שורת קבוצה: ממוצע המסלול, משוקלל נכסים</span>}<span>סמן עד 6 להשוואה</span></>}>
+      {!makersOnly && <Panel title={`${prod} · ${T === ALL ? 'כל המסלולים' : T}`} aside={<>{T === ALL && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.tr))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}<span>{rows.n} מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}{T === ALL && <span>שורת קבוצה: ממוצע המסלול, משוקלל נכסים</span>}<span>סמן עד 6 להשוואה</span></>}>
         {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
           <div className="scroll" style={{ maxHeight: 640 }}><table className="rank">
             <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th></tr></thead>
@@ -188,9 +195,9 @@ export function Funds() {
             </tbody>
           </table></div>
         )}
-      </Panel>
+      </Panel>}
 
-      {picked.length > 0 && (
+      {!makersOnly && picked.length > 0 && (
         <Panel title="השוואה" aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} /><button type="button" className="chip" onClick={() => set({ sel: '' })}>נקה</button></>}>
           <Growth periods={axis} deps={[sel.join(), win, Object.keys(hist).length]} lines={[...picked.map((f) => ({ name: f.name, data: rebased(axis, hist[f.k]) })), ...(cat ? [{ name: 'ממוצע המסלול', data: rebased(axis, cat), dash: true }] : [])]} />
           <div className="scroll"><table>
@@ -314,3 +321,6 @@ export function FundCard() {
     </>
   );
 }
+
+/** Every managing group against the whole market: its place in each track of a product, on one screen. */
+export function FundMakers() { return <Funds makersOnly />; }

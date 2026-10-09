@@ -39,6 +39,7 @@ export function MarketLayout() {
       </div>
       <nav className="subnav" aria-label="שוק">
         <NavLink to="/funds">מסלולים</NavLink>
+        <NavLink to="/funds/makers">יצרן מול השוק</NavLink>
         <NavLink to="overview">סקירה</NavLink>
         <NavLink to="ranking">דירוג חברות</NavLink>
         <NavLink to="funds">קופות</NavLink>

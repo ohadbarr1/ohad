@@ -148,7 +148,7 @@ export function CompanyOverview() {
       )}
       {mk.length > 0 && market && (
         <section>
-          <h2 className="band">חיסכון ארוך טווח<span className="muted">רשות שוק ההון · דצמבר של כל שנה ו-{market.plabel(market.LAST)} · <Link to={`/funds?q=${encodeURIComponent(entry.market_group ?? '')}`}>המסלולים של החברה</Link></span></h2>
+          <h2 className="band">חיסכון ארוך טווח<span className="muted">רשות שוק ההון · דצמבר של כל שנה ו-{market.plabel(market.LAST)} · <Link to={`/funds/makers?mk=${encodeURIComponent(entry.market_group ?? '')}`}>החברה מול השוק, לפי מסלול</Link> · <Link to={`/funds?q=${encodeURIComponent(entry.market_group ?? '')}`}>המסלולים של החברה</Link></span></h2>
           <div className="mgrid stagger">{mk.map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
         </section>
       )}

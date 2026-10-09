@@ -8,6 +8,8 @@ interface Item { kind: 'חברה' | 'פונקציה' | 'קבוצה' | 'קופה'
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
 const FUNCS: { code: string; label: string; keys: string[]; to: (id: string) => string }[] = [
   { code: 'ER', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'דוח', 'yoy', 'qoq'], to: (id) => `/company/${id}/review` },
+  { code: 'RANK', label: 'מול השוק, לפי מסלול', keys: ['rank', 'דירוג', 'מסלולים', 'יצרן', 'תשואות'], to: (id) => `/funds/makers?mk=${id}` },
+  { code: 'SOP', label: 'מקורות רווח וענפים', keys: ['sop', 'מקורות', 'ענפים', 'נוסטרו', 'combined', 'lob'], to: (id) => `/company/${id}/profit` },
   { code: 'CSM', label: 'IFRS 17 · CSM', keys: ['csm', 'ifrs', '17', 'ra', 'רגישויות', 'הון', 'solvency'], to: (id) => `/company/${id}/ifrs17` },
   { code: 'FA', label: 'דוחות לאורך זמן', keys: ['fa', 'דוחות', 'financials'], to: (id) => `/company/${id}/financials` },
   { code: 'LTS', label: 'חיסכון ארוך טווח', keys: ['lts', 'חיסכון', 'פנסיה', 'גמל', 'aum'], to: (id) => `/company/${id}/savings` },

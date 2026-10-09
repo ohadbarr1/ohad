@@ -3,7 +3,7 @@ import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { MarketLayout, MarketOverview, MarketRanking, MarketFunds, MarketGroup } from './pages/Market';
 import { Companies } from './pages/Companies';
-import { CompanyLayout, CompanyFinancials, CompanyIfrs17, CompanyReviewTab, CompanySavings } from './pages/Company';
+import { CompanyLayout, CompanyFinancials, CompanyIfrs17, CompanyReviewTab, CompanySavings, CompanySopTab } from './pages/Company';
 import { CompanyOverview } from './pages/CompanyOverview';
 import { CompanyDocs } from './pages/CompanyDocs';
 import { Compare } from './pages/Compare';
@@ -13,7 +13,7 @@ import { IndustryCapital } from './pages/IndustryCapital';
 import { IndustryEcon } from './pages/IndustryEcon';
 import { IndustryMatrix } from './pages/IndustryMatrix';
 import { DocSearch } from './pages/DocSearch';
-import { FundCard, Funds } from './pages/Funds';
+import { FundCard, FundMakers, Funds } from './pages/Funds';
 import { Dcf, Sotp, ValuationLayout } from './pages/Valuation';
 import { Managers } from './pages/Managers';
 
@@ -34,6 +34,7 @@ export function App() {
           <Route index element={<CompanyOverview />} />
           <Route path="review" element={<CompanyReviewTab />} />
           <Route path="financials" element={<CompanyFinancials />} />
+          <Route path="profit" element={<CompanySopTab />} />
           <Route path="ifrs17" element={<CompanyIfrs17 />} />
           <Route path="savings" element={<CompanySavings />} />
           <Route path="filings" element={<CompanyDocs />} />
@@ -50,6 +51,7 @@ export function App() {
           <Route path="search" element={<DocSearch />} />
         </Route>
         <Route path="funds" element={<Funds />} />
+        <Route path="funds/makers" element={<FundMakers />} />
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
         <Route path="valuation" element={<ValuationLayout />} />
