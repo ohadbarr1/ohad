@@ -6,7 +6,7 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
 import { load, useFundCats, useFundHist, useFunds, type Fund, type FundCats, type FundHist } from '../lib/useData';
 
-const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'ביטוח 2004 ואילך: מנהלים וחיסכון', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
+const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 type Per = 'm1' | 'ytd' | 'y12' | 'a3' | 'a5';
 const PERIODS: [Per, string][] = [['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']];
 type Win = '12' | '36' | '60' | '120' | 'max';
@@ -120,7 +120,7 @@ export function Funds() {
         <button type="button" className="chip" aria-pressed={closed} onClick={() => setClosed(!closed)}>כולל קופות ענפיות ומפעליות</button>
       </section>
 
-      <Panel title={`${prod} · ${T}`} aside={<><span>{rows.n} מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span><span>סמן עד 6 להשוואה</span></>}>
+      <Panel title={`${prod} · ${T}`} aside={<><span>{rows.n} מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}<span>סמן עד 6 להשוואה</span></>}>
         {rows.list.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
           <div className="scroll" style={{ maxHeight: 640 }}><table className="rank">
             <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th></tr></thead>

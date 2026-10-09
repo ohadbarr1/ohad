@@ -87,8 +87,15 @@ for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
 for r in out:
     if r["g"] == "investment_contracts" and r["m"].startswith("csm_"):
         r["m"] = "future_profit_" + r["m"][4:]
-        mixed = [x for x in out if x["c"] == r["c"] and x["p"] == r["p"] and x["pg"] == r["pg"] and x.get("u") == r.get("u") and x["g"] == "group" and x["m"].startswith("csm_")]
-        for x in mixed:
+for r in [x for x in out if x["m"].startswith("future_profit_")]:
+    # the group total printed in the same table includes this column: take it out, keep what was printed in v0, and say so (cl = cleaned)
+    for x in out:
+        if (x["c"], x["p"], x["pg"], x.get("u"), x["g"], x["w"], x["d"], x["b"]) == (r["c"], r["p"], r["pg"], r.get("u"), "group", r["w"], r["d"], r["b"]) and x["m"] == "csm_" + r["m"][14:] and "cl" not in x:
+            x["v0"], x["v"], x["cl"] = x["v"], round(x["v"] - r["v"], 3), 1
+for r in [x for x in out if x["m"].startswith("future_profit_")]:
+    # movement rows of that table with no savings-policy counterpart cannot be cleaned: flag them as still including it
+    for x in out:
+        if (x["c"], x["p"], x["pg"], x.get("u"), x["g"]) == (r["c"], r["p"], r["pg"], r.get("u"), "group") and x["m"].startswith("csm_") and "cl" not in x:
             x["inc"] = 1
 # Bridge-consistent signs: `dv` is the movement as a change in the CSM balance (and balances as positive numbers),
 # set only where opening + movements = closing can be made to hold in exactly one way.

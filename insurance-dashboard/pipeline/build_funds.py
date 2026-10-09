@@ -61,6 +61,15 @@ d = pd.concat(frames, ignore_index=True).sort_values(["key", "REPORT_PERIOD"])
 latest = int(d["REPORT_PERIOD"].max())
 cur = d[d["REPORT_PERIOD"] == latest].copy()
 cur["prod"] = cur["FUND_CLASSIFICATION"].map(PRODUCT).fillna(cur["FUND_CLASSIFICATION"])
+# Bituach-Net does not say which product a track belongs to. The public comparison sites treat the tracks of policies issued from 2004 as the
+# savings-policy universe (a pure savings policy sold today invests in exactly these tracks; managers' insurance issued since 2004 shares them),
+# so the return of a track is the return of the savings policy. Tracks that can only belong to managers' insurance are split off:
+# annuity-recipient tracks, the participating "קרן י' חדשה" funds, and tracks marked as participating or pre-2004.
+MANAGERS_ONLY = re.compile(r"\(משת\)|משתתף ברווחים|לפני 2004|מקבלי קצבה|קרן י' חדשה")
+SHARED = "ביטוח 2004 ואילך: מנהלים וחיסכון"
+names = cur["FUND_NAME"].astype(str)
+cur.loc[(cur["prod"] == SHARED) & names.str.contains(MANAGERS_ONLY), "prod"] = "ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים"
+cur.loc[cur["prod"] == SHARED, "prod"] = "פוליסות חיסכון"
 cur["track"] = [track_of(s, n) for s, n in zip(cur.get("SUB_SPECIALIZATION"), cur["FUND_NAME"])]
 cur["cat"] = cur["prod"] + " | " + cur["track"]
 hist = d[d["key"].isin(cur["key"])]
