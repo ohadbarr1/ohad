@@ -54,6 +54,13 @@ for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
             if m in (3, 6, 9):
                 truth.setdefault((f.parent.name, f"{y}Q{m // 3}"), {})[x["window"]] = x["value"] * 1000
 
+# And what the income statement of every Q2/Q3 report shows (pipeline/verify_kpi_window.py), where the reading closes arithmetically.
+windows = json.loads((ROOT / "data" / "registry" / "kpi_windows.json").read_text(encoding="utf-8"))
+for comp, per_ in windows.items():
+    for p, h in per_.items():
+        if h["check"] == "arithmetic":
+            truth[(comp, p)] = {"q": h["q"], "ytd": h["ytd"]}  # same report as the tag; an extracted later report may carry a restated comparative
+
 manual = json.loads((ROOT / "data" / "registry" / "kpi_verified.json").read_text(encoding="utf-8"))
 site, notes = {}, []
 for comp, per in out.items():
@@ -81,6 +88,8 @@ for comp, per in out.items():
                 cur = per[p]["vals"].get(key)
                 prev = [per.get(k, {}).get("vals", {}).get(key) for k in prior]
                 per[p]["vals"][key] = cur - sum(prev) if ok and cur is not None and all(x is not None for x in prev) else None
+            if truth.get((comp, p), {}).get("q") is not None:  # the quarter's profit is printed: use it rather than a difference
+                per[p]["vals"]["profit"] = truth[(comp, p)]["q"]
             status[p] = "corrected"
         elif status[p] == "unverified" and cumulative_filer and not p.endswith("Q1"):
             for key in FLOWS:  # cannot tell quarter from year to date without the report: leave a gap rather than a wrong number
