@@ -347,3 +347,7 @@ table.tight th.wide-only, table.tight td.wide-only { width: 120px; }
   .star { width: 40px; height: 40px; }
   .mcard .open { padding: 10px 12px; }
 }
+
+/* company title: the English name sits beside the Hebrew one on a wide screen and beneath it, smaller, on a phone */
+.pagehead h1 .en { white-space: nowrap; }
+@media (max-width: 760px) { .pagehead h1 .en { display: block; font-size: 0.56em; letter-spacing: -0.01em; margin-top: 4px; } .pagehead h1 .en .sep { display: none; } }

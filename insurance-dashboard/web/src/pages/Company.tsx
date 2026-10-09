@@ -32,7 +32,7 @@ export function CompanyLayout() {
     <>
       <div className="pagehead">
         <div>
-          <h1>{entry.name_he}{entry.name_en && <span className="muted" style={{ fontWeight: 400 }}> · {entry.name_en}</span>}</h1>
+          <h1>{entry.name_he}{entry.name_en && <> <span className="muted en"><span className="sep">· </span><bdi>{entry.name_en}</bdi></span></>}</h1>
           <div className="sub row" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span>{KIND[entry.kind]}</span>
             {entry.has_financials && <span className="chip loaded">נתונים: {latest}</span>}

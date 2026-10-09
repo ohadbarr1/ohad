@@ -152,8 +152,13 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         <Panel title="הון, כושר פירעון ודיבידנד" aside={<span>{capital.length} שורות</span>}>
           {capital.length === 0 ? <Empty title="לא נמצאו נתוני הון בדוח" /> : (
             <div className="scroll" style={{ maxHeight: 420 }}><table>
-              <thead><tr><th>שורה</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
-              <tbody>{capital.map((f, i) => <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{f.l}{f.s !== f.g ? ` · ${f.s}` : ''}</span></td><td><span className="num">{f.d}</span></td><td><span className="num">{fmt(f)}</span>{f.src === 'text' && <span className="chip est">מטקסט</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>)}</tbody>
+              <thead><tr><th>שורה</th><th>ערך</th></tr></thead>
+              <tbody>{capital.map((f, i) => (
+                <tr key={i}>
+                  <td className="lbl">{he(f.m)}<span className="dim">{/[\u0590-\u05ff]/.test(f.l) ? f.l : ''}{f.s !== f.g ? `${/[\u0590-\u05ff]/.test(f.l) ? ' · ' : ''}${segName(f.s)}` : ''}</span></td>
+                  <td>{cell(f, f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className="dim num">{f.d}</span></td>
+                </tr>
+              ))}</tbody>
             </table></div>
           )}
         </Panel>
