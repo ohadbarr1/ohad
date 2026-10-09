@@ -61,7 +61,10 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
     const open = startOf(P || '2026Q2', W);
     const rows = [...WF.slice(0, -2), ...extra, ...WF.slice(-2)].map(([m, label, sign]) => ({ m, label, sign, cells: cols.map((g) => {
       const c = own.filter((f) => f.g === g && f.m === m && (m === 'csm_opening' ? f.d === open : m === 'csm_closing' ? f.d === end : f.w === W && f.d === end));
-      return c.sort((a, b) => Number(b.dv != null) - Number(a.dv != null) || Number(b.s === b.g) - Number(a.s === a.g))[0] ?? null;
+      const f = c.sort((a, b) => Number(b.dv != null) - Number(a.dv != null) || Number(b.s === b.g) - Number(a.s === a.g))[0] ?? null;
+      // a filer may print one movement as several rows (release of run-off and of growth products): rows tied into the same bridge add up
+      const parts = f && sign !== 0 && f.dv != null ? c.filter((x) => x.dv != null && x.s === f.s && x.l !== f.l) : [];
+      return f && parts.length ? { ...f, dv: f.dv! + parts.reduce((t, x) => t + x.dv!, 0), l: `${parts.length + 1} שורות` , n: 'sum' } : f;
     }) })).filter((r) => r.cells.some(Boolean));
     const step = (f: IfrsFact, sign: number) => (f.dv != null ? f.dv : sign === -1 ? -Math.abs(f.v) : f.v);
     const gap = cols.map((_, i) => {
@@ -114,7 +117,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           <div className="scroll"><table>
             <thead><tr><th>שורה</th>{bridge.cols.map((g) => <th key={g}>{segName(g)}</th>)}</tr></thead>
             <tbody>
-              {bridge.rows.map((r) => <tr key={r.m} className={r.sign === 0 ? 'lead' : ''}><td className="lbl">{r.label}</td>{r.cells.map((f, i) => <td key={i}>{cell(f, f && r.sign !== 0 ? bridge.step(f, r.sign) : undefined)}</td>)}</tr>)}
+              {bridge.rows.map((r) => <tr key={r.m} className={r.sign === 0 ? 'lead' : ''}><td className="lbl">{r.label}</td>{r.cells.map((f, i) => <td key={i}>{cell(f, f && r.sign !== 0 ? bridge.step(f, r.sign) : undefined)}{f?.n === 'sum' && <span className="chip est" title="סכום של כמה שורות באותה טבלה">{f.l}</span>}</td>)}</tr>)}
               <tr><td className="lbl muted">פער לסגירה</td>{bridge.gap.map((g, i) => <td key={i}><span className={`num ${g != null && Math.abs(g) > 2 ? 'neg' : 'muted'}`}>{g == null ? '–' : nf(Math.round(g) || 0, 0)}</span></td>)}</tr>
             </tbody>
           </table></div>
