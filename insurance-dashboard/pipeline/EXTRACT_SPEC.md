@@ -10,7 +10,7 @@ Output: `data/extracted/<company>/<period>.json`
 {"company": "harel", "period": "2026Q2", "report_id_he": 1766123, "unit": "NIS millions",
  "facts": [{"metric": "csm_closing", "segment": "life", "basis": "net", "window": "instant",
             "date": "2026-06-30", "value": 5952, "page_he": 31, "page_en": 33,
-            "label": "exact row label as printed", "note": ""}],
+            "label": "exact row label as printed", "source": "table", "note": ""}],
  "not_found": [{"metric": "...", "segment": "...", "why": "not disclosed / ambiguous"}]}
 ```
 
@@ -22,6 +22,11 @@ Rules
 5. `segment`: `group`, `life` (life and long-term savings), `health`, `pc` (general insurance), `pension_gemel`, `other`, or a sub-segment name as printed.
 6. `page_he` is mandatory and must be the page where the number is printed in the Hebrew file. Verify every value against the Hebrew page, even if you found it first in English.
 7. If the same metric appears in two places with different values, report both and explain in `note`.
+8. `source`: `table` (a printed table), `text` (a sentence), or `chart` (read from a chart or its labels). Chart readings are allowed only when the label-to-series mapping is unambiguous; otherwise put the metric in `not_found`.
+9. Ranges and targets: set `value` to null and add `value_low` and `value_high`; put the target year and the sentence in `note`.
+10. Dividends: `dividend_declared` is the amount recognised in the statement of changes in equity for the window; `dividend_paid` is cash paid per the cash flow statement. Report both when printed. A dividend declared after the balance sheet date is `dividend_declared_after_period`.
+11. CSM basis: record `gross` or `net` exactly as the table header states; when the roll-forward table does not say, use `na` and quote the header in `note`.
+12. Opening balances use the opening date in `date` and `window: instant`.
 
 Metrics (take all that are printed)
 - Group: `profit_attributable`, `comprehensive_income_attributable`, `comprehensive_income_before_tax`, `equity_attributable`, `total_assets`, `dividend_paid`, `dividend_declared`, `roe_reported`, `aum_total`, `insurance_revenue`, `insurance_service_result`, `net_investment_and_finance_result`

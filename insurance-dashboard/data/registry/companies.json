@@ -49,7 +49,8 @@
   "name_he": "הכשרה",
   "name_en": "Hachshara",
   "kind": "insurance_group",
-  "market_group": "הכשרה"
+  "market_group": "הכשרה",
+  "maya_id": 1187
  },
  {
   "id": "ayalon",
@@ -82,28 +83,32 @@
   "name_he": "אלטשולר שחם",
   "name_en": "Altshuler Shaham",
   "kind": "fund_house",
-  "market_group": "אלטשולר שחם"
+  "market_group": "אלטשולר שחם",
+  "maya_id": 2367
  },
  {
   "id": "more",
   "name_he": "מור",
   "name_en": "More",
   "kind": "fund_house",
-  "market_group": "מור"
+  "market_group": "מור",
+  "maya_id": 1692
  },
  {
   "id": "analyst",
   "name_he": "אנליסט",
   "name_en": "Analyst",
   "kind": "fund_house",
-  "market_group": "אנליסט"
+  "market_group": "אנליסט",
+  "maya_id": 1008
  },
  {
   "id": "yelin",
   "name_he": "ילין לפידות",
   "name_en": "Yelin Lapidot",
   "kind": "fund_house",
-  "market_group": "ילין לפידות"
+  "market_group": "ילין לפידות",
+  "maya_id": 1307
  },
  {
   "id": "infinity",
@@ -118,5 +123,21 @@
   "name_en": "",
   "kind": "fund_house",
   "market_group": "גלובלנט"
+ },
+ {
+  "id": "more_gemel",
+  "name_he": "מור גמל ופנסיה",
+  "name_en": "More Provident & Pension",
+  "kind": "fund_house",
+  "market_group": "מור",
+  "maya_id": 2358
+ },
+ {
+  "id": "ibi",
+  "name_he": "אי.בי.אי",
+  "name_en": "IBI",
+  "kind": "fund_house",
+  "market_group": null,
+  "maya_id": 175
  }
 ]
