@@ -28,11 +28,14 @@ const FAMILIES: [string, string, RegExp][] = [
   ['pl', 'רווח והון', /^(profit|comprehensive|net_income|income_|equity|total_assets|roe|core_|operating|combined|gross_written|new_business|one_time)/],
 ];
 const CAPITAL = /^(own_funds|scr|mcr|solvency|surplus|target_.*(solvency|dividend|capital))/;
-const isPct = (m: string) => /ratio|_pct|payout|confidence|discount_rate|roe_reported|threshold|target_solvency/.test(m);
-const he = (m: string) => { const [k, rest] = m.split(/:(.*)/); return (HE[k] ?? k) + (rest ? `: ${rest}` : ''); };
+export const isPct = (m: string) => /ratio|_pct|payout|confidence|discount_rate|roe_reported|threshold|target_solvency/.test(m);
+export const he = (m: string) => { const [k, rest] = m.split(/:(.*)/); return (HE[k] ?? k) + (rest ? `: ${rest}` : ''); };
 const fmt = (f: IfrsFact, v = f.v) => nf(v, isPct(f.m) || Math.abs(v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
-const segName = (g: string) => SEGS.find(([k]) => k === g)?.[1] ?? (g === 'insurer' ? 'חברת הביטוח' : g === 'other' ? 'אחר' : g);
-const periodName = (p: string) => (p.endsWith('FY') ? `שנתי ${p.slice(0, 4)}` : `${p.slice(4)} ${p.slice(0, 4)}`);
+const SUB: [RegExp, string][] = [[/^pension(_funds)?$/i, 'פנסיה'], [/^(provident(_funds)?|gemel)$/i, 'גמל'], [/^pension_gemel$/i, 'פנסיה וגמל'], [/^pc_incl_overseas$/, 'כללי כולל חו"ל'], [/insurer_subsidiary|_insurance$| Insurance$/i, 'חברת הביטוח'],
+  [/^Life Insurance and Long-Term Savings$/, 'חיים וחיסכון'], [/^Health Insurance$/, 'בריאות'], [/^P&C Insurance$/, 'כללי'], [/^life\+health\+pc$/, 'חיים, בריאות וכללי'], [/^(life\+health|life_and_health|Life and Health Segments)$/, 'חיים ובריאות'],
+  [/^Long-Term Savings$/, 'חיסכון ארוך טווח'], [/^Life and Health Risks$/, 'סיכוני חיים ובריאות'], [/^financial_services$/, 'שירותים פיננסיים'], [/^credit(_cards)?$/i, 'אשראי'], [/^(Non-segmented|not_attributed)$/, 'לא מיוחס'], [/^Adjustments and offsets$/, 'התאמות וקיזוזים'], [/^insurance_companies_overseas$/, 'חברות ביטוח בחו"ל']];
+export const segName = (g: string) => SEGS.find(([k]) => k === g)?.[1] ?? SUB.find(([re]) => re.test(g))?.[1] ?? (g === 'insurer' ? 'חברת הביטוח' : g === 'other' ? 'אחר' : g);
+export const periodName = (p: string) => (p.endsWith('FY') ? `שנתי ${p.slice(0, 4)}` : `${p.slice(4)} ${p.slice(0, 4)}`);
 
 /** Everything extracted from one company's report: capital, CSM movement by segment, expected CSM release, sensitivities, and the full fact list. Every figure links to its page. */
 export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
@@ -165,7 +168,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         <div className="scroll" style={{ maxHeight: 560 }}><table>
           <thead><tr><th>מדד</th><th>מגזר</th><th>בסיס</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{list.slice(0, 600).map((f, i) => (
-            <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{f.l}{f.bk ? ` · ${f.bk}` : ''}{f.tr ? ` · ${f.tr}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{f.s}</span>}</td>
+            <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{f.l}{f.bk ? ` · ${f.bk}` : ''}{f.tr ? ` · ${f.tr}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
               <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{f.d}</span></td>
               <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span>{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>

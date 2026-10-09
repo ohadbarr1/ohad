@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CompanyIfrs } from './CompanyIfrs';
+import { CompanyReview } from './CompanyReview';
 import { Link, NavLink, Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
@@ -43,6 +44,7 @@ export function CompanyLayout() {
       </div>
       <nav className="subnav" aria-label="חברה">
         <NavLink to="." end>סקירה</NavLink>
+        <NavLink to="review">סקירת דוח</NavLink>
         <NavLink to="financials">דוחות</NavLink>
         <NavLink to="ifrs17">IFRS 17</NavLink>
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>
@@ -259,6 +261,11 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
 }
 
 /* ---------- IFRS 17: CSM by portfolio group ---------- */
+export function CompanyReviewTab() {
+  const { entry } = useCtx();
+  return <CompanyReview id={entry.id} docs={entry.docs} />;
+}
+
 export function CompanyIfrs17() {
   const { entry, store } = useCtx();
   return <><CompanyIfrs id={entry.id} docs={entry.docs} />{store && <CsmExplorer store={store} />}</>;

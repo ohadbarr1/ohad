@@ -3,7 +3,7 @@ import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { MarketLayout, MarketOverview, MarketRanking, MarketFunds, MarketGroup } from './pages/Market';
 import { Companies } from './pages/Companies';
-import { CompanyLayout, CompanyFinancials, CompanyIfrs17, CompanySavings } from './pages/Company';
+import { CompanyLayout, CompanyFinancials, CompanyIfrs17, CompanyReviewTab, CompanySavings } from './pages/Company';
 import { CompanyOverview } from './pages/CompanyOverview';
 import { CompanyDocs } from './pages/CompanyDocs';
 import { Compare } from './pages/Compare';
@@ -27,6 +27,7 @@ export function App() {
         <Route path="companies" element={<Companies />} />
         <Route path="company/:id" element={<CompanyLayout />}>
           <Route index element={<CompanyOverview />} />
+          <Route path="review" element={<CompanyReviewTab />} />
           <Route path="financials" element={<CompanyFinancials />} />
           <Route path="ifrs17" element={<CompanyIfrs17 />} />
           <Route path="savings" element={<CompanySavings />} />
