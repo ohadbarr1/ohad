@@ -14,6 +14,7 @@ export function IndustryLayout() {
       <nav className="subnav" aria-label="השוואה ענפית">
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>
         <NavLink to="ifrs">IFRS 17 · CSM</NavLink>
+        <NavLink to="capital">הון ודיבידנד</NavLink>
         <NavLink to="headline">מדדי כותרת</NavLink>
       </nav>
       <Outlet />
