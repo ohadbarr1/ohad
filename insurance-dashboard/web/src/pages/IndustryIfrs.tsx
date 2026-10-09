@@ -143,7 +143,7 @@ export function IndustryIfrs() {
         <div className="scroll" style={{ maxHeight: 520 }}><table>
           <thead><tr><th>חברה</th><th>מגזר כפי שדווח</th><th>שורה בדוח</th><th>בסיס</th><th>גישת מעבר</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{detail.sort((a, b) => a.c.localeCompare(b.c) || a.s.localeCompare(b.s)).map((f, i) => (
-            <tr key={i}><td>{name(f.c)}</td><td>{f.s}</td><td className="lbl">{f.l}{f.n && <span className="dim">{f.n}</span>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ?? ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{f.d}</span></td><td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)}</span></td><td><Src f={f} d={d} p={P} /></td></tr>
+            <tr key={i}><td>{name(f.c)}</td><td>{f.s}</td><td className="lbl">{f.l}{f.n && <span className="dim clamp" title={f.n}>{f.n}</span>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ?? ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{f.d}</span></td><td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)}</span></td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
         </table></div>
       </Panel>

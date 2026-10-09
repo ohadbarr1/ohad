@@ -351,3 +351,6 @@ table.tight th.wide-only, table.tight td.wide-only { width: 120px; }
 /* company title: the English name sits beside the Hebrew one on a wide screen and beneath it, smaller, on a phone */
 .pagehead h1 .en { white-space: nowrap; }
 @media (max-width: 760px) { .pagehead h1 .en { display: block; font-size: 0.56em; letter-spacing: -0.01em; margin-top: 4px; } .pagehead h1 .en .sep { display: none; } }
+
+/* long extraction notes: two lines, the rest on hover */
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
