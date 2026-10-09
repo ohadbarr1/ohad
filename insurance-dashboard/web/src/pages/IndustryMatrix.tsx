@@ -90,11 +90,11 @@ export function IndustryMatrix() {
     <>
       <section className="controls">
         <Field label="דוח"><select value={P} onChange={(e) => setPeriod(e.target.value)}>{periods.map((p) => <option key={p} value={p}>{periodName(p)}</option>)}</select></Field>
-        {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'רבעון'], ['ytd', 'מצטבר']]} /></div>}
+        {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'QTD'], ['ytd', 'YTD']]} /></div>}
         <span className="chip">מיליוני ש"ח · קבוצה · כפי שדווח</span>
         <button type="button" className="chip" onClick={csv}>ייצוא CSV</button>
       </section>
-      <Panel title="מטריצת עמיתים" aside={<span>{periodName(P)} · {annual ? 'שנתי' : win === 'q' ? 'רבעון' : 'מצטבר'}</span>}>
+      <Panel title="מטריצת עמיתים" aside={<span>{periodName(P)} · {annual ? 'FY' : win === 'q' ? 'QTD' : 'YTD'}</span>}>
         <div className="scroll"><table>
           <thead><tr><th>חברה</th>{COLS.map((c) => <th key={c.k}>{c.l}{c.calc && <span className="chip est">נגזר</span>}</th>)}</tr></thead>
           <tbody>{rows.map((r) => (

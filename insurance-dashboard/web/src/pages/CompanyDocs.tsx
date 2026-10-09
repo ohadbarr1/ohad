@@ -37,7 +37,7 @@ export function CompanyDocs() {
             <a key={d.url} href={d.url} target="_blank" rel="noreferrer" title={d.title} className="doc">{d.en ? 'EN' : DOC_TYPE[d.type]}<span className="num">{d.pages ?? ''}</span></a>
           ));
           const first = ds.filter((d) => d.type === REPORT(p)).map((d) => d.date).sort()[0] ?? ds.map((d) => d.date).sort()[0];
-          return <tr key={p}><td><span className="num">{p.endsWith('FY') ? `FY ${p.slice(0, 4)}` : `${p.slice(4)} ${p.slice(0, 4)}`}</span></td><td>{cell(['annual', 'quarterly'])}</td><td>{cell(['presentation'])}</td><td>{cell(['solvency'])}</td><td><span className="num">{first}</span></td></tr>;
+          return <tr key={p}><td><span className="num">{p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`}</span></td><td>{cell(['annual', 'quarterly'])}</td><td>{cell(['presentation'])}</td><td>{cell(['solvency'])}</td><td><span className="num">{first}</span></td></tr>;
         })}</tbody>
       </table></div>
       <div className="src">המספר בכל תא: עמודים ב-PDF. {COLS.length} סוגי מסמך, מסווגים לפי כותרת הדיווח.</div>

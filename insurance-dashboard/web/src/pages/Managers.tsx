@@ -36,9 +36,9 @@ export function Managers() {
         <div className="field"><span>מוצר</span><Seg<Fam> label="מוצר" value={fam} onChange={setFam} options={[['all', 'הכול'], ['pension', 'פנסיה'], ['gemel', 'גמל והשתלמות'], ['insurance', 'פוליסות חיסכון']]} /></div>
         <Field label="קבוצה"><select value={grp} onChange={(e) => setGrp(e.target.value)}><option value="all">כל הקבוצות</option>{groups.map((g) => <option key={g}>{g}</option>)}</select></Field>
       </section>
-      <Panel aside={<span>דמי ניהול ותשואות משוקללים בנכסים · צבירה וניוד: 12 חודשים, מיליארדי ש"ח</span>}>
+      <Panel aside={<span>דמי ניהול ותשואות משוקללים בנכסים · צבירה וניוד: LTM, מיליארדי ש"ח</span>}>
         <div className="scroll"><table>
-          <thead><tr><th>חברה מנהלת</th><th>נכסים, מיליארד</th><th /><th>מסלולים</th><th>דמי ניהול מצבירה</th><th>מהפקדה</th><th>תשואה 12 ח׳</th><th>שנתית 5 ש׳</th><th>צבירה נטו</th><th>ניוד נטו</th></tr></thead>
+          <thead><tr><th>חברה מנהלת</th><th>נכסים, מיליארד</th><th /><th>מסלולים</th><th>דמי ניהול מצבירה</th><th>מהפקדה</th><th>תשואה, LTM</th><th>5Y, שנתי</th><th>צבירה נטו</th><th>ניוד נטו</th></tr></thead>
           <tbody>{rows.map((r) => (
             <Fragment key={r.mgr}>
               <tr style={{ cursor: 'pointer' }} className={open === r.mgr ? 'lead' : ''} onClick={() => setOpen(open === r.mgr ? null : r.mgr)}>

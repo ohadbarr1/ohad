@@ -7,7 +7,7 @@ import { nf } from '../lib/format';
 import { KPI_BY_KEY, KPI_DEFS, periodLabelShort, type Basis } from '../lib/kpi';
 import { useKpis, useRegistry } from '../lib/useData';
 
-const BASIS: [Basis, string][] = [['q', 'רבעון'], ['ltm', '12 חודשים'], ['fy', 'שנתי']];
+const BASIS: [Basis, string][] = [['q', 'QTD'], ['ltm', 'LTM'], ['fy', 'FY']];
 const fmt = (v: number | null, unit: string) => (v == null ? '–' : unit === '%' ? nf(v, 1) + '%' : unit === 'x' ? nf(v, 2) : unit === 'nis' ? nf(v, 2) : nf(v, 0));
 const UNIT: Record<string, string> = { m: 'מיליוני ש"ח', nis: 'ש"ח', '%': '%', x: 'מכפיל' };
 
@@ -102,7 +102,7 @@ export function Compare() {
         </table></div>
         <div className="src">עד 2024: כפי שדווח במקור לפי IFRS 4, לא הוצג מחדש. מ-2025: IFRS 17.</div>
         {notes.length > 0 && <div className="src">{notes.map((n) => `${name(n.company)}: ${n.corrected.length} רבעונים תוקנו לפי הדוח (ב-XBRL תויג מצטבר)${n.withheld.length ? `, ${n.withheld.length} רבעונים שלא אומתו הוסרו` : ''}`).join(' · ')}</div>}
-        {def.derived && <div className="src">{metric === 'roe' ? 'ROE: רווח 12 חודשים חלקי הון ממוצע (פתיחה וסגירה).' : metric === 'leverage' ? 'סך נכסים חלקי הון לבעלי המניות.' : 'שווי שוק: מחיר סגירה במועד הדוח כפול מספר מניות נגזר (רווח שנתי חלקי רווח למניה). אומדן.'}</div>}
+        {def.derived && <div className="src">{metric === 'roe' ? 'ROE: רווח LTM חלקי הון ממוצע (פתיחה וסגירה).' : metric === 'leverage' ? 'סך נכסים חלקי הון לבעלי המניות.' : 'שווי שוק: מחיר סגירה במועד הדוח כפול מספר מניות נגזר (רווח שנתי חלקי רווח למניה). אומדן.'}</div>}
       </Panel>
     </>
   );

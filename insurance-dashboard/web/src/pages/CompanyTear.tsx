@@ -52,7 +52,7 @@ export function CompanyTear({ id }: { id: string }) {
           <div className="kpi" key={x.l}>
             <div className="l">{x.l}{f.b !== 'na' && ` · ${BASIS[f.b]}`}{f.g === 'life_health' && ' · חיים ובריאות'}</div>
             <div className="v num">{url(f) && f.pg != null ? <a href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.l} · עמ׳ ${f.pg}`}>{txt}</a> : txt}</div>
-            <div className="s">{ch != null ? <span className={ch < 0 ? 'neg' : 'pos'}>{pct(ch, 1, true)} מול אשתקד</span> : f.d !== end ? <span className="num">{f.d}</span> : f.src === 'chart' ? 'מגרף' : ' '}</div>
+            <div className="s">{ch != null ? <span className={ch < 0 ? 'neg' : 'pos'}>{pct(ch, 1, true)} YoY</span> : f.d !== end ? <span className="num">{f.d}</span> : f.src === 'chart' ? 'מגרף' : ' '}</div>
           </div>
         );
       })}</div>

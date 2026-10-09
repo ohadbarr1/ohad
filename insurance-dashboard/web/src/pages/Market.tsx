@@ -71,12 +71,12 @@ function OverviewInner({ m }: { m: Market }) {
     <>
       <section className="kpis">
         <Kpi label="סך נכסים" value={nf(tot / 1000, 0)} sub={`מיליארד ש"ח · ${m.plabel(L)}`} />
-        <Kpi label="שינוי ב-12 חודשים" value={pct((tot / tot12 - 1) * 100, 1, true)} tone="pos" sub="תשואה, צבירה והעברות תיקים" />
+        <Kpi label="שינוי YoY" value={pct((tot / tot12 - 1) * 100, 1, true)} tone="pos" sub="תשואה, צבירה והעברות תיקים" />
         {fams.map((f) => {
           const g = m.growth(L, 'ltm', 'fam:' + f, -1);
-          return <Kpi key={f} label={m.d.families[f]} value={nf(m.cell(L, 'fam:' + f, -1).a / 1000, 0)} sub={<>מיליארד ש"ח · <span className="num">{pct(g, 1, true)}</span> ב-12 חודשים</>} />;
+          return <Kpi key={f} label={m.d.families[f]} value={nf(m.cell(L, 'fam:' + f, -1).a / 1000, 0)} sub={<>מיליארד ש"ח · <span className="num">{pct(g, 1, true)}</span> YoY</>} />;
         })}
-        {fo && fg && <Kpi label="צבירה אורגנית, 12 חודשים (פנסיה וגמל)" value={sn((fo.org + fg.org) / 1000, 1)} sub={'מיליארד ש"ח, לפני העברות (ניוד)'} />}
+        {fo && fg && <Kpi label="צבירה אורגנית, LTM (פנסיה וגמל)" value={sn((fo.org + fg.org) / 1000, 1)} sub={'מיליארד ש"ח, לפני העברות (ניוד)'} />}
       </section>
       <div className="grid21">
         <Panel title='נכסים לפי משפחת מוצר (מיליארד ש"ח)'>
@@ -96,7 +96,7 @@ function OverviewInner({ m }: { m: Market }) {
             };
           }} />
         </Panel>
-        <Panel title='צבירה אורגנית מתגלגלת, 12 חודשים (מיליארד ש"ח)'>
+        <Panel title='צבירה אורגנית LTM (מיליארד ש"ח)'>
           <Chart label="צבירה אורגנית" height={330} deps={[m]} build={() => {
             const b = chartBase(), c = colors();
             return {
@@ -113,7 +113,7 @@ function OverviewInner({ m }: { m: Market }) {
       </div>
       <Panel title={`לפי מוצר, ${m.plabel(L)}`}>
         <div className="scroll"><table>
-          <thead><tr><th>מוצר</th>{cols.map((c) => <th key={c}>{METRIC_BY_KEY[c].short}{METRIC_BY_KEY[c].win && <><br />12 חודשים</>}</th>)}</tr></thead>
+          <thead><tr><th>מוצר</th>{cols.map((c) => <th key={c}>{METRIC_BY_KEY[c].short}{METRIC_BY_KEY[c].win && <><br />LTM</>}</th>)}</tr></thead>
           <tbody>{rows.map((r) => (
             <tr key={r.id}><td>{r.p.label}</td>{cols.map((c) => { const v = m.value(c, L, 'ltm', r.id, -1); return <td key={c}><span className={`num ${toneOf(c, v)}`}>{fmtMetric(c, v, signedKey(c))}</span></td>; })}</tr>
           ))}</tbody>
@@ -156,7 +156,7 @@ function RankingInner({ m }: { m: Market }) {
         <Field label="חודש"><select value={pi} onChange={(e) => setPi(+e.target.value)}>{m.P.map((_, i) => m.P.length - 1 - i).map((i) => <option key={i} value={i}>{m.plabel(i)}</option>)}</select></Field>
         <Field label="מוצר"><select value={set} onChange={(e) => setSet(e.target.value)}>{m.sets.map((s) => <option key={s.id} value={s.id}>{s.sub ? '  ' : ''}{s.label}</option>)}</select></Field>
         <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value as MetricKey)}>{METRIC_DEFS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</select></Field>
-        {def.win && <div className="field"><span>חלון</span><Seg<Win> label="חלון" value={win} onChange={setWin} options={[['m', 'חודש'], ['ytd', 'מתחילת השנה'], ['ltm', '12 חודשים']]} /></div>}
+        {def.win && <div className="field"><span>חלון</span><Seg<Win> label="חלון" value={win} onChange={setWin} options={[['m', 'חודש'], ['ytd', 'YTD'], ['ltm', 'LTM']]} /></div>}
       </section>
       <Panel title={`${def.label}${def.win ? ' · ' + WIN_LABEL[win] : ''} · ${m.plabel(pi)}`} aside={<>כלל השוק: <b className={`num ${toneOf(metric, mkt)}`}>{fmtMetric(metric, mkt, signedKey(metric))}</b>{def.unit === 'bn' && ' מיליארד ש"ח'}</>}>
         {data.length === 0 ? <Empty title="אין נתון זמין לבחירה זו">תזרימים מפורסמים לפנסיה וגמל בלבד, ופנסיה-נט מתחיל באמצע 2016.</Empty> : (
@@ -198,12 +198,12 @@ const FCOLS: { k: FKey; label: string; fmt: (f: Fund) => string; tone?: (f: Fund
   { k: 'name', label: 'קופה', fmt: (f) => f.name, text: true }, { k: 'grp', label: 'קבוצה', fmt: (f) => f.grp, text: true },
   { k: 'assets', label: 'נכסים (מיליון ש"ח)', fmt: (f) => (f.assets == null ? '–' : nf(f.assets, 0)) },
   { k: 'fee', label: 'דמי ניהול %', fmt: (f) => (f.fee == null ? '–' : nf(f.fee, 2)) },
-  { k: 'ytd', label: 'תשואה מתחילת שנה %', fmt: (f) => (f.ytd == null ? '–' : sn(f.ytd, 1)), tone: (f) => cls(f.ytd) },
-  { k: 'y12', label: 'תשואה 12 חודשים %', fmt: (f) => (f.y12 == null ? '–' : sn(f.y12, 1)), tone: (f) => cls(f.y12) },
-  { k: 'a3', label: 'ממוצע שנתי 3 שנים %', fmt: (f) => (f.a3 == null ? '–' : nf(f.a3, 1)) }, { k: 'a5', label: 'ממוצע שנתי 5 שנים %', fmt: (f) => (f.a5 == null ? '–' : nf(f.a5, 1)) },
+  { k: 'ytd', label: 'תשואה YTD %', fmt: (f) => (f.ytd == null ? '–' : sn(f.ytd, 1)), tone: (f) => cls(f.ytd) },
+  { k: 'y12', label: 'תשואה LTM %', fmt: (f) => (f.y12 == null ? '–' : sn(f.y12, 1)), tone: (f) => cls(f.y12) },
+  { k: 'a3', label: '3Y, שנתי %', fmt: (f) => (f.a3 == null ? '–' : nf(f.a3, 1)) }, { k: 'a5', label: '5Y, שנתי %', fmt: (f) => (f.a5 == null ? '–' : nf(f.a5, 1)) },
   { k: 'sharpe', label: 'שארפ', fmt: (f) => (f.sharpe == null ? '–' : nf(f.sharpe, 2)) },
   { k: 'stock', label: 'חשיפה למניות %', fmt: (f) => (f.stock == null ? '–' : nf(f.stock, 0)) }, { k: 'foreign', label: 'חשיפה לחו"ל %', fmt: (f) => (f.foreign == null ? '–' : nf(f.foreign, 0)) },
-  { k: 'net12', label: 'צבירה אורגנית 12 ח׳ (מיליון ש"ח)', fmt: (f) => (f.net12 == null ? '–' : sn(f.net12, 0)), tone: (f) => cls(f.net12) },
+  { k: 'net12', label: 'צבירה אורגנית LTM (מיליון ש"ח)', fmt: (f) => (f.net12 == null ? '–' : sn(f.net12, 0)), tone: (f) => cls(f.net12) },
 ];
 export function MarketFunds() {
   return <Gate>{(m) => <FundsInner m={m} />}</Gate>;
@@ -286,7 +286,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
         <Field label="קבוצה"><select value={group} onChange={(e) => nav(`/market/group/${encodeURIComponent(e.target.value)}`)}>{gopts.map((g) => <option key={g}>{g}</option>)}</select></Field></div>}
       <section className="controls"><Field label="מוצר"><select value={set} onChange={(e) => setSet(e.target.value)}>{m.sets.map((s) => <option key={s.id} value={s.id}>{s.sub ? '  ' : ''}{s.label}</option>)}</select></Field></section>
       <div className="grid21">
-        <Panel title={def.label} aside={def.unit === 'bn' ? 'מיליארד ש"ח' : def.win ? 'מתגלגל, 12 חודשים' : undefined}>
+        <Panel title={def.label} aside={def.unit === 'bn' ? 'מיליארד ש"ח' : def.win ? 'LTM' : undefined}>
           <Chart label="סדרה לאורך זמן" height={320} deps={[m, group, set, metric]} build={() => {
             const b = chartBase();
             const series: object[] = [{ name: group, type: 'line', symbol: 'none', lineStyle: { width: 2.5, color: b.accent }, itemStyle: { color: b.accent }, data: own.map((v) => (v == null ? null : +v.toFixed(3))) }];
@@ -302,10 +302,10 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
         </Panel>
         <Panel title={`מדדים, ${m.plabel(L)}`}>
           <div className="scroll"><table>
-            <thead><tr><th>מדד</th><th>{m.plabel(L)}</th><th>לפני שנה</th><th>כלל השוק</th></tr></thead>
+            <thead><tr><th>מדד</th><th>{m.plabel(L)}</th><th>{m.plabel(L - 12)}</th><th>כלל השוק</th></tr></thead>
             <tbody>{rows.map((r) => (
               <tr key={r.k} style={{ cursor: 'pointer', background: r.k === metric ? 'var(--accent-soft)' : undefined }} onClick={() => setMetric(r.k)}>
-                <td>{METRIC_BY_KEY[r.k].short}{METRIC_BY_KEY[r.k].win && <span className="dim">12 חודשים</span>}</td>
+                <td>{METRIC_BY_KEY[r.k].short}{METRIC_BY_KEY[r.k].win && <span className="dim">LTM</span>}</td>
                 <td><span className="num">{fmtMetric(r.k, r.now)}</span></td><td><span className="num">{fmtMetric(r.k, r.prev)}</span></td><td><span className="num">{fmtMetric(r.k, r.mk)}</span></td>
               </tr>
             ))}</tbody>

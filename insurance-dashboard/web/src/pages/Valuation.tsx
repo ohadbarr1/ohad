@@ -85,13 +85,13 @@ export function Dcf() {
   const jpb = roe?.v != null && a.ke > a.gt ? (roe.v - a.gt) / (a.ke - a.gt) : null;
   const kes = [-2, -1, 0, 1, 2].map((d) => a.ke + d), gts = [-1, -0.5, 0, 0.5, 1].map((d) => a.gt + d);
   const pal = palette();
-  if (!base?.v) return <Empty title="אין רווח 12 חודשים לחברה זו" />;
+  if (!base?.v) return <Empty title="אין רווח LTM לחברה זו" />;
   return (
     <div className="grid12">
       <Panel title="הנחות" aside={<button type="button" className="btn" onClick={() => setA(init)}>איפוס</button>}>
         <div className="assume">
           <h4>בסיס</h4>
-          <label>רווח נקי בסיס<small>מיליוני ש"ח · ברירת מחדל: 12 חודשים עד {base.period}</small></label><Num value={a.e0} onChange={(v) => set({ e0: v })} step={10} />
+          <label>רווח נקי בסיס<small>מיליוני ש"ח · ברירת מחדל: LTM עד {base.period}</small></label><Num value={a.e0} onChange={(v) => set({ e0: v })} step={10} />
           <h4>תחזית</h4>
           <label>צמיחת רווח שנתית<small>%</small></label><Num value={a.g} onChange={(v) => set({ g: v })} step={0.5} />
           <label>שנות תחזית</label><Num value={a.years} onChange={(v) => set({ years: Math.max(1, Math.min(15, Math.round(v) || 1)) })} />
@@ -113,7 +113,7 @@ export function Dcf() {
             <tr><td>ערך נוכחי של חלוקות, {a.years} שנים</td><td><span className="num">{nf(r.sum, 0)}</span></td><td><span className="num muted">{pct(r.sum / r.value * 100, 0)}</span></td></tr>
             <tr><td>ערך נוכחי של ערך הסיום</td><td><span className="num">{nf(r.pvTv, 0)}</span></td><td><span className="num muted">{pct(r.pvTv / r.value * 100, 0)}</span></td></tr>
             <tr><td>מכפיל הון משתמע מהמודל</td><td><span className="num">{eq?.v ? nf(r.value / eq.v, 2) : '–'}</span></td><td /></tr>
-            <tr><td>מכפיל הון מוצדק: (ROE − g) / (ke − g)<span className="dim">ROE {roe?.v != null ? pct(roe.v, 1) : '–'}, 12 חודשים</span></td><td><span className="num">{jpb == null ? '–' : nf(jpb, 2)}</span></td><td /></tr>
+            <tr><td>מכפיל הון מוצדק: (ROE − g) / (ke − g)<span className="dim">ROE {roe?.v != null ? pct(roe.v, 1) : '–'}, LTM</span></td><td><span className="num">{jpb == null ? '–' : nf(jpb, 2)}</span></td><td /></tr>
             <tr><td>מחיר הון משתמע ממחיר השוק</td><td><span className="num">{ik == null ? '–' : pct(ik, 1)}</span></td><td /></tr>
           </tbody></table>
         </Panel>

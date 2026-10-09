@@ -35,7 +35,7 @@ const SUB: [RegExp, string][] = [[/^pension(_funds)?$/i, 'פנסיה'], [/^(prov
   [/^Life Insurance and Long-Term Savings$/, 'חיים וחיסכון'], [/^Health Insurance$/, 'בריאות'], [/^P&C Insurance$/, 'כללי'], [/^life\+health\+pc$/, 'חיים, בריאות וכללי'], [/^(life\+health|life_and_health|Life and Health Segments)$/, 'חיים ובריאות'],
   [/^Long-Term Savings$/, 'חיסכון ארוך טווח'], [/^Life and Health Risks$/, 'סיכוני חיים ובריאות'], [/^financial_services$/, 'שירותים פיננסיים'], [/^credit(_cards)?$/i, 'אשראי'], [/^(Non-segmented|not_attributed)$/, 'לא מיוחס'], [/^Adjustments and offsets$/, 'התאמות וקיזוזים'], [/^insurance_companies_overseas$/, 'חברות ביטוח בחו"ל']];
 export const segName = (g: string) => SEGS.find(([k]) => k === g)?.[1] ?? SUB.find(([re]) => re.test(g))?.[1] ?? (g === 'insurer' ? 'חברת הביטוח' : g === 'other' ? 'אחר' : g);
-export const periodName = (p: string) => (p.endsWith('FY') ? `שנתי ${p.slice(0, 4)}` : `${p.slice(4)} ${p.slice(0, 4)}`);
+export const periodName = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
 
 /** Everything extracted from one company's report: capital, CSM movement by segment, expected CSM release, sensitivities, and the full fact list. Every figure links to its page. */
 export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
@@ -108,11 +108,11 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
       <section className="controls">
         <div className="field"><span>דוח</span><Seg label="דוח" value={P} onChange={setPeriod} options={periods.map((p) => [p, periodName(p)])} /></div>
         {bases.length > 1 && <div className="field"><span>בסיס</span><Seg label="בסיס" value={B} onChange={setBasis} options={bases.map((b) => [b, BASIS[b] ?? b])} /></div>}
-        {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'רבעון'], ['ytd', 'מצטבר']]} /></div>}
+        {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'QTD'], ['ytd', 'YTD']]} /></div>}
         <span className="chip">{all.length} נתונים מהדוח · מיליוני ש"ח</span>
       </section>
 
-      <Panel title="תנועה ב-CSM לפי מגזר" aside={<><span className="chip">{BASIS[B] ?? B}</span><span className="chip">{annual ? 'שנתי' : win === 'q' ? 'רבעון' : 'מצטבר'}</span><span>עד {end}</span></>}>
+      <Panel title="תנועה ב-CSM לפי מגזר" aside={<><span className="chip">{BASIS[B] ?? B}</span><span className="chip">{annual ? 'FY' : win === 'q' ? 'QTD' : 'YTD'}</span><span>עד {end}</span></>}>
         {bridge.cols.length === 0 ? <Empty title="לא נמצאה תנועת CSM בדוח לבסיס ולחלון שנבחרו" /> : (
           <div className="scroll"><table>
             <thead><tr><th>שורה</th>{bridge.cols.map((g) => <th key={g}>{segName(g)}</th>)}</tr></thead>

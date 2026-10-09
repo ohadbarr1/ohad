@@ -86,21 +86,21 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
     <>
       <section className="controls">
         <div className="field"><span>דוח</span><Seg label="דוח" value={P} onChange={setPeriod} options={periods.map((p) => [p, periodName(p)])} /></div>
-        {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'רבעון'], ['ytd', 'מצטבר']]} /></div>}
+        {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'QTD'], ['ytd', 'YTD']]} /></div>}
         <span className="chip">מיליוני ש"ח · כפי שדווח</span>
         {file?.url && <a className="chip" href={file.url} target="_blank" rel="noreferrer">הדוח המלא</a>}
-        {!annual && !PP && <span className="chip est">הרבעון הקודם טרם חולץ</span>}
+        {!annual && !PP && <span className="chip est">QoQ: {periodName(prevPeriod(P))} טרם חולץ</span>}
       </section>
       {sections.map((s) => (
         <Panel key={s.title} title={s.title}>
           <div className="scroll"><table className="tight">
-            <thead><tr><th>שורה</th><th>{annual ? P.slice(0, 4) : periodName(P)}</th><th>אשתקד</th>{!annual && <th>רבעון קודם</th>}</tr></thead>
+            <thead><tr><th>שורה</th><th>{periodName(P)}</th><th>{periodName(`${Number(P.slice(0, 4)) - 1}${P.slice(4)}`)} · YoY</th>{!annual && <th>{periodName(prevPeriod(P))} · QoQ</th>}</tr></thead>
             <tbody>{s.rows.map((r, i) => { const multi = (k: number) => s.rows.filter((x) => x.f.m === s.rows[k].f.m).length > 1; return (
               <Fragment key={r.k + r.W}>
                 {multi(i) && (i === 0 || s.rows[i - 1].f.m !== r.f.m) && <tr className="sec"><td colSpan={annual ? 3 : 4}>{he(r.f.m)}</td></tr>}
                 <tr>
                   <td className="lbl">{multi(i) ? segName(r.f.s) : <>{he(r.f.m)}{r.f.g !== 'group' && <span className="muted"> · {segName(r.f.s)}</span>}</>}
-                    {(r.f.b !== 'na' || r.W === 'ytd' && win === 'q' || r.at !== end || r.n > 1 || r.f.src === 'chart') && <span className="dim">{r.f.b !== 'na' && <span className="chip">{BASIS[r.f.b]}</span>}{r.W === 'ytd' && win === 'q' && <span className="chip est">מצטבר</span>}{r.at !== end && <span className="chip est">{r.at}</span>}{r.n > 1 && <span className="chip est" title="אותה שורה מופיעה בדוח בכמה ערכים; ראו לשונית IFRS 17">{r.n} ערכים</span>}{r.f.src === 'chart' && <span className="chip est">מגרף</span>}</span>}</td>
+                    {(r.f.b !== 'na' || r.W === 'ytd' && win === 'q' || r.at !== end || r.n > 1 || r.f.src === 'chart') && <span className="dim">{r.f.b !== 'na' && <span className="chip">{BASIS[r.f.b]}</span>}{r.W === 'ytd' && win === 'q' && <span className="chip est">YTD</span>}{r.at !== end && <span className="chip est">{r.at}</span>}{r.n > 1 && <span className="chip est" title="אותה שורה מופיעה בדוח בכמה ערכים; ראו לשונית IFRS 17">{r.n} ערכים</span>}{r.f.src === 'chart' && <span className="chip est">מגרף</span>}</span>}</td>
                   <td><Val f={r.f} d={d} p={P} /></td>
                   <td><Val f={r.yoy} d={d} p={P} /><Delta a={r.f} b={r.yoy} /></td>
                   {!annual && <td><Val f={r.qoq} d={d} p={r.qoqIn} /><Delta a={r.f} b={r.qoq} /></td>}

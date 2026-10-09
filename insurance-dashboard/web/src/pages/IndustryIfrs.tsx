@@ -15,7 +15,7 @@ export const METRICS: [string, string][] = [
   ['gross_written_premiums', 'פרמיות ברוטו'], ['new_business_annualized_premiums', 'פרמיה משונתת, עסק חדש'], ['management_fees', 'דמי ניהול'], ['pension_gemel_profit_before_tax', 'רווח לפני מס, פנסיה וגמל'],
 ];
 export const SEGS: [string, string][] = [['group', 'קבוצה'], ['life', 'חיים וחיסכון'], ['health', 'בריאות'], ['life_health', 'חיים ובריאות'], ['pc', 'כללי'], ['savings', 'פנסיה וגמל'], ['investment_contracts', 'חוזי השקעה']];
-export const WINS: [string, string][] = [['instant', 'יתרה'], ['q', 'רבעון'], ['ytd', 'מצטבר'], ['fy', 'שנתי']];
+export const WINS: [string, string][] = [['instant', 'יתרה'], ['q', 'QTD'], ['ytd', 'YTD'], ['fy', 'FY']];
 export const BASIS: Record<string, string> = { net: 'נטו', gross: 'ברוטו', reinsurance: 'ביטוח משנה', na: 'לא צוין' };
 export const val = (f: IfrsFact) => f.dv ?? f.v;
 const INSTANT = ['csm_closing', 'csm_opening', 'risk_adjustment', 'ra_closing', 'loss_component'];
@@ -94,7 +94,7 @@ export function IndustryIfrs() {
   return (
     <>
       <section className="controls">
-        <Field label="דוח"><select value={P} onChange={(e) => setPeriod(e.target.value)}>{periods.map((p) => <option key={p} value={p}>{p.endsWith('FY') ? `שנתי ${p.slice(0, 4)}` : `${p.slice(4)} ${p.slice(0, 4)}`}</option>)}</select></Field>
+        <Field label="דוח"><select value={P} onChange={(e) => setPeriod(e.target.value)}>{periods.map((p) => <option key={p} value={p}>{p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`}</option>)}</select></Field>
         <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value)}>{METRICS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
         <Field label="מגזר"><select value={seg} onChange={(e) => setSeg(e.target.value)}>{SEGS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
         {isFlow && !annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win === 'instant' ? 'ytd' : win} onChange={setWin} options={WINS.filter(([k]) => k === 'q' || k === 'ytd')} /></div>}
@@ -135,7 +135,7 @@ export function IndustryIfrs() {
                   { type: 'bar', stack: 'w', data: down, itemStyle: { color: b.down, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `−${nf(p.value, 0)}` } }] };
             }} />
           )}
-          {o && c && steps.length > 0 && (() => { const sum = val(o.f!) + steps.reduce((t, x) => t + (x.f!.dv != null ? x.f!.dv : x.sign === -1 ? -Math.abs(x.f!.v) : x.f!.v), 0), gap = val(c.f!) - sum; return <div className="src">{wfWin === 'q' ? 'רבעון' : wfWin === 'fy' ? 'שנה' : 'מצטבר מתחילת השנה'} · בסיס: {BASIS[c.f!.b]} · פער בין הרכיבים לסגירה: <span className="num">{nf(gap, 0)}</span>{Math.abs(gap) > 2 && ' (שורות שלא חולצו או בסיס מעורב)'}</div>; })()}
+          {o && c && steps.length > 0 && (() => { const sum = val(o.f!) + steps.reduce((t, x) => t + (x.f!.dv != null ? x.f!.dv : x.sign === -1 ? -Math.abs(x.f!.v) : x.f!.v), 0), gap = val(c.f!) - sum; return <div className="src">{wfWin === 'q' ? 'QTD' : wfWin === 'fy' ? 'FY' : 'YTD'} · בסיס: {BASIS[c.f!.b]} · פער בין הרכיבים לסגירה: <span className="num">{nf(gap, 0)}</span>{Math.abs(gap) > 2 && ' (שורות שלא חולצו או בסיס מעורב)'}</div>; })()}
         </Panel>
       </div>
 

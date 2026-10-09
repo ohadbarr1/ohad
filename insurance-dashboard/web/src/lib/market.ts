@@ -8,7 +8,7 @@ export type MetricKey = 'assets' | 'share' | 'growth' | 'organic' | 'transfers' 
 interface Cell { a: number; af: number; dep: number; wd: number; tr: number; fa: number; fn: number; fd: number; yn: number; yd: number }
 export interface MetricDef { key: MetricKey; label: string; short: string; unit: '%' | 'bn'; win: boolean; ratio: boolean; dec?: number }
 
-export const WIN_LABEL: Record<Win, string> = { m: 'חודש', q: 'רבעון', ytd: 'מתחילת השנה', ltm: '12 חודשים' };
+export const WIN_LABEL: Record<Win, string> = { m: 'חודש', q: 'QTD', ytd: 'YTD', ltm: 'LTM' };
 
 export const METRIC_DEFS: MetricDef[] = [
   { key: 'assets', label: 'נכסים מנוהלים', short: 'נכסים', unit: 'bn', win: false, ratio: false },

@@ -17,7 +17,7 @@ const METRICS: [string, string, 'm' | 'p'][] = [
 const KIND: Record<string, string> = { cibt: 'כולל לפני מס', op: 'רווח מגזרי' };
 const LIMIT: Record<string, string> = { no_split: 'ללא פיצול שיווק / הנה"כ', combined_only: 'מגזר משולב בלבד', no_pension: 'אין פנסיה', ic_main: 'בעיקר חוזי השקעה', entity_costs: 'הוצאות ברמת החברה' };
 const COSTS = ['sm', 'ga', 'sm_pct', 'ga_pct'];
-const periodLabel = (k: string) => (k.endsWith('FY') ? `שנתי ${k.slice(0, 4)}` : `${k.slice(4)} ${k.slice(0, 4)}`);
+const periodLabel = (k: string) => (k.endsWith('FY') ? `FY'${k.slice(2, 4)}` : `${k.slice(4)}'${k.slice(2, 4)}`);
 const fmt = (v: number, u: 'm' | 'p') => (u === 'p' ? `${nf(v, 1)}%` : nf(v, Math.abs(v) < 100 ? 1 : 0));
 
 /** Which of a company's disclosure limits explain an empty cell for this activity and metric. */

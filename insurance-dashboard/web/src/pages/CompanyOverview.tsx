@@ -22,12 +22,12 @@ function priceCards(p: PriceData): MetricCardProps[] {
   const years = [...byYear.keys()].sort();
   const ttm = p.dividends.filter(([d]) => d > shiftIso(p.asof, -1)).reduce((s, [, v]) => s + v, 0);
   const cards: MetricCardProps[] = [{
-    title: 'מחיר מניה', unit: 'ש"ח', value: nf(p.last / 100, 2), delta: { text: pct(chg(p.last, yearAgo), 1, true) + ' בשנה', tone: tone(chg(p.last, yearAgo)) },
+    title: 'מחיר מניה', unit: 'ש"ח', value: nf(p.last / 100, 2), delta: { text: pct(chg(p.last, yearAgo), 1, true) + ' YoY', tone: tone(chg(p.last, yearAgo)) },
     x, series: [{ name: 'סגירה שבועית', data: close }], kind: 'area', color: 2, dec: 2, foot: `${p.ticker} · ${p.source} · ${p.asof}`,
   }];
   if (years.length) cards.push({
-    title: 'דיבידנד למניה', unit: 'ש"ח, 12 חודשים', value: nf(ttm / 100, 2), delta: ttm ? { text: `תשואה ${pct(ttm / p.last * 100, 1)}` } : undefined,
-    x: years.map((y) => `'${y.slice(2)}`), series: [{ name: 'דיבידנד בשנה', data: years.map((y) => +((byYear.get(y) ?? 0) / 100).toFixed(2)) }], color: 5, dec: 2, foot: `${p.source} · לפי יום האקס`,
+    title: 'דיבידנד למניה', unit: 'ש"ח, LTM', value: nf(ttm / 100, 2), delta: ttm ? { text: `תשואה ${pct(ttm / p.last * 100, 1)}` } : undefined,
+    x: years.map((y) => `'${y.slice(2)}`), series: [{ name: 'דיבידנד, FY', data: years.map((y) => +((byYear.get(y) ?? 0) / 100).toFixed(2)) }], color: 5, dec: 2, foot: `${p.source} · לפי יום האקס`,
   });
   return cards;
 }
@@ -45,7 +45,7 @@ function marketCards(m: Market, group: string): MetricCardProps[] {
     const data = pts.map((i) => { const v = m.value(key, i, w, set, g); return v == null ? null : +v.toFixed(3); });
     const now = data[data.length - 1], prev = data[data.length - 2];
     const d = now != null && prev != null ? (def.unit === '%' ? { text: `${sn(now - prev, dec)} נק׳`, tone: key === 'fee' ? undefined : tone(now - prev) } : { text: pct(chg(now, prev), 1, true), tone: tone(chg(now, prev)) }) : undefined;
-    return { title, unit: def.unit === '%' ? (def.win ? '%, 12 חודשים' : '%') : `מיליארד ש"ח${def.win ? ', 12 חודשים' : ''}`, value: now == null ? '–' : nf(now, dec), delta: key === 'assets' || ((key === 'share' || key === 'fee') && Math.abs(now! - prev!) >= 0.5 / 10 ** dec) ? d : undefined, x, series: [{ name: title, data }], color, dec, to };
+    return { title, unit: def.unit === '%' ? (def.win ? '%, LTM' : '%') : `מיליארד ש"ח${def.win ? ', LTM' : ''}`, value: now == null ? '–' : nf(now, dec), delta: key === 'assets' || ((key === 'share' || key === 'fee') && Math.abs(now! - prev!) >= 0.5 / 10 ** dec) ? d : undefined, x, series: [{ name: title, data }], color, dec, to };
   };
   const fams: [string, string][] = [['fam:pension', 'פנסיה'], ['fam:gemel', 'גמל והשתלמות'], ['fam:insurance', 'פוליסות חיסכון']];
   const stack: MetricCardProps = {
@@ -90,17 +90,17 @@ function kpiCards(k: CompanyKpi): MetricCardProps[] {
     const s = k.series(key, basis).filter((p) => Number(p.period.slice(0, 4)) >= from && p.v != null);
     const now = s[s.length - 1]?.v ?? null, prev = s[s.length - 5]?.v ?? null;
     const isRatio = unit === '%' || unit === 'מכפיל';
-    const d = now != null && prev != null ? (isRatio ? { text: `${sn(now - prev, dec)} בשנה`, tone: tone(now - prev) } : prev > 0 ? { text: pct(chg(now, prev), 1, true) + ' בשנה', tone: tone(chg(now, prev)) } : undefined) : undefined;
+    const d = now != null && prev != null ? (isRatio ? { text: `${sn(now - prev, dec)} YoY`, tone: tone(now - prev) } : prev > 0 ? { text: pct(chg(now, prev), 1, true) + ' YoY', tone: tone(chg(now, prev)) } : undefined) : undefined;
     return { title, tag, unit, value: now == null ? '–' : nf(now, dec), delta: d, x: s.map((p) => periodLabelShort(p.period)), series: [{ name: title, data: s.map((p) => +p.v!.toFixed(3)) }], color, dec, kind: isRatio ? 'area' : 'bar', to: `/industry/headline?k=${key}&b=${basis}`, foot: 'XBRL, דוחות תקופתיים' };
   };
   return [
-    card('profit', 'q', 'רווח נקי לבעלי המניות, רבעוני', 'מיליוני ש"ח', 0, 0),
-    card('profit', 'ltm', 'רווח נקי, 12 חודשים', 'מיליוני ש"ח', 0, 0),
-    card('oci', 'q', 'רווח כולל, רבעוני', 'מיליוני ש"ח', 3, 0),
+    card('profit', 'q', 'רווח נקי לבעלי המניות, QTD', 'מיליוני ש"ח', 0, 0),
+    card('profit', 'ltm', 'רווח נקי, LTM', 'מיליוני ש"ח', 0, 0),
+    card('oci', 'q', 'רווח כולל, QTD', 'מיליוני ש"ח', 3, 0),
     card('equity', 'q', 'הון לבעלי המניות', 'מיליוני ש"ח', 7, 0),
-    card('roe', 'q', 'ROE, 12 חודשים', '%', 1, 1, 'נגזר'),
+    card('roe', 'q', 'ROE, LTM', '%', 1, 1, 'נגזר'),
     card('pb', 'q', 'מכפיל הון (P/B)', 'מכפיל', 2, 2, 'נגזר'),
-    card('eps', 'q', 'רווח למניה, רבעוני', 'ש"ח', 4, 2),
+    card('eps', 'q', 'רווח למניה, QTD', 'ש"ח', 4, 2),
     card('assets', 'q', 'סך הנכסים', 'מיליוני ש"ח', 9, 0),
   ];
 }
@@ -135,7 +135,7 @@ export function CompanyOverview() {
       <CompanyTear id={entry.id} />
       {(kc.length > 0 || px.length > 0) && (
         <section>
-          <h2 className="band">דוחות<span className="muted">31 רבעונים</span></h2>
+          <h2 className="band">דוחות<span className="muted">{k ? `${periodLabelShort(k.quarters[0].period)} עד ${periodLabelShort(k.quarters[k.quarters.length - 1].period)}` : ''}</span></h2>
           <div className="mgrid stagger">{[...kc, ...px].map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
         </section>
       )}

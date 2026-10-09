@@ -41,5 +41,5 @@ export function periodLabel(type: string, end: string): string {
   return `${Number(end.slice(8, 10))} ${MN[m - 1]} '${y}`;
 }
 export function periodLong(type: string): string {
-  return type === 'FY' ? 'שנתי' : type === 'H' ? 'מצטבר 6 חודשים' : type === 'Q' ? 'רבעון' : 'תאריך מאזן';
+  return type === 'FY' ? 'FY' : type === 'H' ? 'H1' : type === 'Q' ? 'Q' : 'תאריך מאזן';
 }

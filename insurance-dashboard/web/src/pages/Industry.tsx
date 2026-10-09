@@ -114,9 +114,9 @@ function Deck({ m }: { m: Market }) {
         <Field label="חברות"><select value={n} onChange={(e) => setN(Number(e.target.value))}>{[8, 10, 13, 16, 20].map((x) => <option key={x} value={x}>{x} הגדולות</option>)}</select></Field>
       </section>
 
-      <Panel title={`${tabLabel}: מגמות בנכס מנוהל`} aside={<span>מיליארדי ש"ח · השינוי מתחת לשם: מתחילת השנה</span>}>
+      <Panel title={`${tabLabel}: מגמות בנכס מנוהל`} aside={<span>מיליארדי ש"ח · השינוי מתחת לשם: YTD</span>}>
         <Chart label="נכס מנוהל" height={330} deps={deps} build={trend('assets', 0, true)} />
-        <div className="src">סך השוק ל-{m.plabel(pi)}: <span className="num">{nf(m.cell(pi, tab, -1).a / 1000, 0)}</span> מיליארד ש"ח{ytdBase != null && <> · <span className="num">{pct((m.cell(pi, tab, -1).a / m.cell(ytdBase, tab, -1).a - 1) * 100, 1, true)}</span> מתחילת השנה</>}</div>
+        <div className="src">סך השוק ל-{m.plabel(pi)}: <span className="num">{nf(m.cell(pi, tab, -1).a / 1000, 0)}</span> מיליארד ש"ח{ytdBase != null && <> · <span className="num">{pct((m.cell(pi, tab, -1).a / m.cell(ytdBase, tab, -1).a - 1) * 100, 1, true)}</span> YTD</>}</div>
       </Panel>
       <div className="grid2">
         <Panel title={`${tabLabel}: נתח שוק`} aside={<span>% מנכסי הענף</span>}><Chart label="נתח שוק" height={270} deps={deps} build={trend('share', 1, false)} /></Panel>
@@ -131,14 +131,14 @@ function Deck({ m }: { m: Market }) {
               <Chart label="ניוד נטו" height={270} deps={deps} build={flow('transfers', [['ytd', pi - 12, `1-${mo}/${y - 1}`], ['ytd', pi, `1-${mo}/${y}`]])} />
             </Panel>
             <Panel title={`${tabLabel}: ניוד נטו לפי רבעונים`} aside={<span>מיליארדי ש"ח</span>}>
-              <Chart label="ניוד רבעוני" height={270} deps={deps} build={flow('transfers', [['q', prevQ, m.plabel(prevQ)], ['q', pi, m.plabel(pi)]])} />
+              <Chart label="ניוד נטו, QoQ" height={270} deps={deps} build={flow('transfers', [['q', prevQ, m.plabel(prevQ)], ['q', pi, m.plabel(pi)]])} />
             </Panel>
           </div>
           <div className="grid2">
             <Panel title={`${tabLabel}: צבירה אורגנית (הפקדות פחות משיכות)`} aside={<span>מיליארדי ש"ח</span>}>
               <Chart label="צבירה אורגנית" height={270} deps={deps} build={flow('organic', [['ytd', pi - 12, `1-${mo}/${y - 1}`], ['ytd', pi, `1-${mo}/${y}`]])} />
             </Panel>
-            <Panel title={`${tabLabel}: צבירה נטו כ-% מנכסי הפתיחה`} aside={<span>%, מתחילת השנה</span>}>
+            <Panel title={`${tabLabel}: צבירה נטו כ-% מנכסי הפתיחה`} aside={<span>%, YTD</span>}>
               <Chart label="צבירה מנכסים" height={270} deps={deps} build={flow('rate', [['ytd', pi - 12, `1-${mo}/${y - 1}`], ['ytd', pi, `1-${mo}/${y}`]])} />
             </Panel>
           </div>
@@ -146,7 +146,7 @@ function Deck({ m }: { m: Market }) {
       )}
       <Panel title={`${tabLabel}: טבלה, ${m.plabel(pi)}`} aside={<span>מקור: רשות שוק ההון · {qLabel}</span>}>
         <div className="scroll"><table>
-          <thead><tr><th>חברה</th><th>נכסים, מיליארד</th><th>נתח שוק</th><th>מתחילת השנה</th><th>12 חודשים</th>{hasFlows && <><th>ניוד נטו, רבעון</th><th>ניוד נטו, מתחילת השנה</th><th>צבירה אורגנית, מתחילת השנה</th></>}{tab !== 'all' && <th>דמי ניהול</th>}<th>תשואה, 12 ח׳</th></tr></thead>
+          <thead><tr><th>חברה</th><th>נכסים, מיליארד</th><th>נתח שוק</th><th>YTD</th><th>LTM</th>{hasFlows && <><th>ניוד נטו, QTD</th><th>ניוד נטו, YTD</th><th>צבירה אורגנית, YTD</th></>}{tab !== 'all' && <th>דמי ניהול</th>}<th>תשואה, LTM</th></tr></thead>
           <tbody>{[...groups, -1].map((g) => {
             const v = (k: MetricKey, w: Win) => m.value(k, pi, w, tab, g), c = (x: number | null) => (x == null ? '' : x > 0 ? 'pos' : x < 0 ? 'neg' : '');
             const f = (x: number | null, d = 1) => (x == null ? '–' : nf(x, d));

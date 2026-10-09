@@ -13,7 +13,7 @@ export const KPI_DEFS: KpiDef[] = [
   { key: 'roe', label: 'תשואה על ההון (ROE)', unit: '%', flow: false, derived: true, group: 'יחסים' },
   { key: 'leverage', label: 'נכסים להון', unit: 'x', flow: false, derived: true, group: 'יחסים' },
   { key: 'pb', label: 'מכפיל הון (P/B)', unit: 'x', flow: false, derived: true, group: 'שוק ההון' },
-  { key: 'pe', label: 'מכפיל רווח (P/E), 12 חודשים', unit: 'x', flow: false, derived: true, group: 'שוק ההון' },
+  { key: 'pe', label: 'מכפיל רווח (P/E), LTM', unit: 'x', flow: false, derived: true, group: 'שוק ההון' },
   { key: 'mcap', label: 'שווי שוק', unit: 'm', flow: false, derived: true, group: 'שוק ההון' },
 ];
 export const KPI_BY_KEY = Object.fromEntries(KPI_DEFS.map((d) => [d.key, d]));

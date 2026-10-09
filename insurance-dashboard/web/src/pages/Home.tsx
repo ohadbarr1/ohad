@@ -40,7 +40,7 @@ export function Home() {
             <div className="kpi" key={s}>
               <div className="l">{label}</div>
               <div className="v num"><Count value={fam(s)} /></div>
-              <div className="s">מיליארד ש"ח · <span className={`num ${(m.growth(L, 'ltm', s, -1) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{pct(m.growth(L, 'ltm', s, -1), 1, true)}</span> בשנה · {m.plabel(L)}</div>
+              <div className="s">מיליארד ש"ח · <span className={`num ${(m.growth(L, 'ltm', s, -1) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{pct(m.growth(L, 'ltm', s, -1), 1, true)}</span> YoY · {m.plabel(L)}</div>
             </div>
           ))}
         </section>
@@ -49,7 +49,7 @@ export function Home() {
       <section className="panel">
         <div className="hd"><h2>חברות</h2><div className="aside"><span>מיליוני ש"ח, מהדוח האחרון</span><Link to="/industry/matrix">מטריצת עמיתים</Link></div></div>
         <div className="scroll"><table className="rank">
-          <thead><tr><th>חברה</th><th>דוח אחרון</th><th>רווח נקי, רבעון</th><th>מול אשתקד</th><th>רווח נקי, 12 חודשים</th><th>הון</th><th>ROE, 12 חודשים <span className="chip est">נגזר</span></th><th>נכסים מנוהלים, מיליארד</th><th>מסמכים</th></tr></thead>
+          <thead><tr><th>חברה</th><th>דוח אחרון</th><th>רווח נקי, QTD</th><th>YoY</th><th>רווח נקי, LTM</th><th>הון</th><th>ROE, LTM <span className="chip est">נגזר</span></th><th>נכסים מנוהלים, מיליארד</th><th>מסמכים</th></tr></thead>
           <tbody>{rows.map(({ c, q, yoy, ltm, eq, roe, aum }) => (
             <tr key={c.id}>
               <td><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span></td>
