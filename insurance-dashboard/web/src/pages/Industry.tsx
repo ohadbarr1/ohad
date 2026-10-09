@@ -13,11 +13,11 @@ export function IndustryLayout() {
       <div className="pagehead"><div><h1>השוואה ענפית</h1></div></div>
       <nav className="subnav" aria-label="השוואה ענפית">
         <NavLink to="matrix">מטריצת עמיתים</NavLink>
-        <NavLink to="savings">חיסכון ארוך טווח</NavLink>
-        <NavLink to="econ">רווחיות פנסיה וגמל</NavLink>
         <NavLink to="ifrs">IFRS 17 · CSM</NavLink>
         <NavLink to="capital">הון ודיבידנד</NavLink>
-        <NavLink to="headline">מדדי כותרת</NavLink>
+        <NavLink to="econ">רווחיות פנסיה וגמל</NavLink>
+        <NavLink to="savings">נכסים מנוהלים</NavLink>
+        <NavLink to="headline">לאורך זמן</NavLink>
         <NavLink to="search">חיפוש בדוחות</NavLink>
       </nav>
       <Outlet />
@@ -60,9 +60,9 @@ function Deck({ m }: { m: Market }) {
     return { b, common: { animationDuration: 650, animationEasing: 'cubicOut' as const, textStyle: { fontFamily: CHART_FONT, color: b.fg },
       tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' as const }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } } } };
   };
-  const xAxis = (b: ReturnType<typeof chartBase>, extra: (g: number) => string | null) => ({
+  const xAxis = (b: ReturnType<typeof chartBase>, extra: (g: number) => string | null, wide = false) => ({
     type: 'category' as const, data: [...names.map(short), 'סך השוק'], axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } },
-    axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, hideOverlap: false, rotate: window.innerWidth < 760 ? 50 : 0,
+    axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, hideOverlap: false, rotate: window.innerWidth < 760 || (!wide && names.length > 7) ? 50 : 0,  // half-width charts cannot fit thirteen names flat
       formatter: (v: string, i: number) => { const e = extra(i < groups.length ? groups[i] : -1); return e ? `${v}\n{${e.startsWith('+') ? 'u' : 'd'}|${e}}` : v; },
       rich: { u: { color: b.up, fontSize: 10.5, padding: [3, 0, 0, 0] }, d: { color: b.down, fontSize: 10.5, padding: [3, 0, 0, 0] } } },
   });
@@ -74,7 +74,7 @@ function Deck({ m }: { m: Market }) {
     const val = (i: number, g: number) => { const v = m.value(key, i, 'm', tab, g); return v == null ? null : +v.toFixed(dec + 1); };
     const all = [...groups, -1];
     return { ...common, grid: { left: 4, right: 4, top: 26, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-      xAxis: xAxis(b, (g) => { if (!growth || ytdBase == null) return null; const a = m.cell(ytdBase, tab, g).a, c = m.cell(pi, tab, g).a; return a > 0 ? `${sn((c / a - 1) * 100, 1)}%` : null; }),
+      xAxis: xAxis(b, (g) => { if (!growth || ytdBase == null) return null; const a = m.cell(ytdBase, tab, g).a, c = m.cell(pi, tab, g).a; return a > 0 ? `${sn((c / a - 1) * 100, 1)}%` : null; }, growth),
       yAxis: [{ type: 'value', show: false }, { type: 'value', show: false }],
       series: pts.map((i, k) => ({ name: plab(i), type: 'bar', barGap: '8%', barCategoryGap: '18%', yAxisIndex: 0,
         data: all.map((g) => (g === -1 && key === 'assets' ? null : { value: val(i, g), itemStyle: { color: tone(g, i, k, pal, b), opacity: opacity(k), borderRadius: [2, 2, 0, 0] } })),

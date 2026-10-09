@@ -22,7 +22,9 @@ export interface MetricCardProps {
   i?: number;
 }
 
-/** One metric, one colour, one small chart. The overview is a grid of these. */
+const alpha = (rgb: string, a: number) => (rgb.startsWith('rgb(') ? rgb.replace('rgb(', 'rgba(').replace(')', `,${a})`) : rgb);
+
+/** One metric, one small chart, the latest period marked. The overview is a grid of these. */
 export function MetricCard({ title, tag, unit, value, delta, x, series, kind = 'bar', color = 0, dec = 1, to, foot, wide, i = 0 }: MetricCardProps) {
   const empty = !series.some((s) => s.data.some((v) => v != null));
   return (
@@ -44,9 +46,14 @@ export function MetricCard({ title, tag, unit, value, delta, x, series, kind = '
               axisLabel: { color: b.mu, fontSize: 10, interval: kind === 'area' ? (i: number) => i > 0 && x[i] !== x[i - 1] : (i: number) => (x.length - 1 - i) % step === 0, hideOverlap: true } },
             yAxis: { type: 'value', scale: kind === 'area', splitNumber: 3, axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
             series: series.map((s, i) => {
-              const c = pal[(s.color ?? color + i) % pal.length];
-              if (kind === 'area') return { name: s.name, type: 'line', data: s.data, symbol: 'none', lineStyle: { color: c, width: 1.5 }, itemStyle: { color: c }, areaStyle: { color: c, opacity: 0.22 } };
-              return { name: s.name, type: 'bar', stack: kind === 'stack' ? 'a' : undefined, data: s.data, barCategoryGap: '22%', itemStyle: { color: c, opacity: 0.9, borderRadius: kind === 'stack' ? 0 : [2, 2, 0, 0] } };
+              // one series: ember bars fading to nothing, the latest period at full strength; several: the categorical palette
+              const single = series.length === 1, c = single ? b.accent : pal[(s.color ?? color + i) % pal.length];
+              const fade = (top: number, bottom: number) => ({ type: 'linear' as const, x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: alpha(c, top) }, { offset: 1, color: alpha(c, bottom) }] });
+              const last = s.data.reduce((at, v, k) => (v != null ? k : at), -1);
+              if (kind === 'area') return { name: s.name, type: 'line', data: s.data, symbol: 'none', smooth: 0.25, lineStyle: { color: c, width: 2, shadowColor: alpha(c, 0.6), shadowBlur: 10 }, itemStyle: { color: c }, areaStyle: { color: fade(0.32, 0) } };
+              return { name: s.name, type: 'bar', stack: kind === 'stack' ? 'a' : undefined, barCategoryGap: '24%',
+                data: single ? s.data.map((v, k) => (k === last ? { value: v, itemStyle: { color: fade(1, 0.55), shadowColor: alpha(c, 0.55), shadowBlur: 14 } } : v)) : s.data,
+                itemStyle: { color: single ? fade(0.62, 0.14) : c, opacity: single ? 1 : 0.92, borderRadius: kind === 'stack' ? 0 : [3, 3, 0, 0] } };
             }),
           };
         }} />

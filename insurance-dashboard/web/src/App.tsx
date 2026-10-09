@@ -39,7 +39,7 @@ export function App() {
         </Route>
         <Route path="compare" element={<Navigate to="/industry/headline" replace />} />
         <Route path="industry" element={<IndustryLayout />}>
-          <Route index element={<Navigate to="savings" replace />} />
+          <Route index element={<Navigate to="matrix" replace />} />
           <Route path="savings" element={<IndustrySavings />} />
           <Route path="ifrs" element={<IndustryIfrs />} />
           <Route path="matrix" element={<IndustryMatrix />} />

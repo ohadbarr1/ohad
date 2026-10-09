@@ -4,61 +4,66 @@ import { Logo } from '../components/Logo';
 import { Count } from '../components/Count';
 import { nf, pct } from '../lib/format';
 import { useKpis, useMarket, useRegistry } from '../lib/useData';
-import type { CompanyKpi } from '../lib/kpi';
-import type { RegistryCompany } from '../lib/types';
-import type { Market } from '../lib/market';
+import { periodLabelShort } from '../lib/kpi';
 
-function CompanyCard({ c, m, k, i }: { c: RegistryCompany; m: Market | null; k: CompanyKpi | undefined; i: number }) {
-  const g = m ? m.groupIndex(c.market_group ?? '') : -1;
-  const pb = k?.latest('pb'), roe = k?.latest('roe');
-  return (
-    <Link to={`/company/${c.id}`} className="card" style={{ ['--i' as string]: i }}>
-      <h3>{c.name_he} <span className="muted" style={{ fontWeight: 400, fontSize: 12.5 }}>{c.name_en}</span></h3>
-      <div className="row">
-        {pb?.v != null && <span className="chip est" title="נגזר: מחיר כפול מספר מניות משוער, חלקי הון">P/B <span className="num">{nf(pb.v, 2)}</span></span>}
-        {roe?.v != null && <span className="chip">ROE <span className="num">{pct(roe.v, 1)}</span></span>}
-      </div>
-      <div className="row muted" style={{ fontSize: 12 }}>
-        {m && g >= 0 && <span>נכסים <span className="num">{nf(m.value('assets', m.LAST, 'm', 'all', g) ?? 0, 0)}</span> מיליארד</span>}
-        {c.docs > 0 && <span>· <span className="num">{c.docs}</span> מסמכים</span>}
-      </div>
-    </Link>
-  );
-}
+const KIND: Record<string, string> = { insurer: 'ביטוח', manager: 'בית השקעות', group: 'ביטוח' };
 
+/** Front page: the search, the market in four numbers, and every company on one line with its latest reported figures. */
 export function Home() {
   const { market: m } = useMarket();
   const reg = useRegistry();
   const { kpis } = useKpis();
   const L = m?.LAST ?? 0;
   const fam = (s: string) => (m ? m.cell(L, s, -1).a / 1000 : null);
+  const rows = (reg.data ?? []).map((c) => {
+    const k = kpis?.get(c.id);
+    const q = k?.latest('profit', 'q') ?? null;
+    const prior = q && k ? k.series('profit', 'q').find((p) => p.period === `${Number(q.period.slice(0, 4)) - 1}${q.period.slice(4)}`)?.v ?? null : null;
+    const g = m ? m.groupIndex(c.market_group ?? '') : -1;
+    return { c, q, yoy: q?.v != null && prior != null && prior > 0 && q.v > 0 ? (q.v / prior - 1) * 100 : null, ltm: k?.latest('profit', 'ltm') ?? null, eq: k?.latest('equity') ?? null, roe: k?.latest('roe') ?? null,
+      aum: m && g >= 0 ? m.value('assets', L, 'm', 'all', g) : null };
+  }).sort((a, b) => (b.eq?.v ?? -1) - (a.eq?.v ?? -1) || (b.aum ?? 0) - (a.aum ?? 0));
   return (
     <>
-      <section className="hero">
+      <header className="mast">
         <div>
           <h1>fox<span>.</span></h1>
           <p className="tagline">ביטוח, פנסיה וגמל. מהדוח, עם עמוד המקור.</p>
           <Search big />
         </div>
-        <div className="mark"><Logo size={168} animated /></div>
-      </section>
+        <div className="mark"><Logo size={170} animated /></div>
+      </header>
 
       {m && (
         <section className="kpis">
-          {([['סך נכסים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['פוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
+          {([['סך נכסים מנוהלים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['פוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
             <div className="kpi" key={s}>
               <div className="l">{label}</div>
               <div className="v num"><Count value={fam(s)} /></div>
-              <div className="s">מיליארד ש"ח · <span className={`num ${(m.growth(L, 'ltm', s, -1) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{pct(m.growth(L, 'ltm', s, -1), 1, true)}</span> בשנה</div>
+              <div className="s">מיליארד ש"ח · <span className={`num ${(m.growth(L, 'ltm', s, -1) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{pct(m.growth(L, 'ltm', s, -1), 1, true)}</span> בשנה · {m.plabel(L)}</div>
             </div>
           ))}
-          <div className="kpi"><div className="l">קופות ומסלולים</div><div className="v num"><Count value={m.d.meta.funds_latest} /></div><div className="s">{m.plabel(L)} · רשות שוק ההון</div></div>
         </section>
       )}
 
-      <section>
-        <h2 className="band">חברות</h2>
-        <div className="grid3 stagger">{reg.data?.map((c, i) => <CompanyCard key={c.id} c={c} m={m} k={kpis?.get(c.id)} i={i} />)}</div>
+      <section className="panel">
+        <div className="hd"><h2>חברות</h2><div className="aside"><span>מיליוני ש"ח, מהדוח האחרון</span><Link to="/industry/matrix">מטריצת עמיתים</Link></div></div>
+        <div className="scroll"><table className="rank">
+          <thead><tr><th>חברה</th><th>דוח אחרון</th><th>רווח נקי, רבעון</th><th>מול אשתקד</th><th>רווח נקי, 12 חודשים</th><th>הון</th><th>ROE, 12 חודשים <span className="chip est">נגזר</span></th><th>נכסים מנוהלים, מיליארד</th><th>מסמכים</th></tr></thead>
+          <tbody>{rows.map(({ c, q, yoy, ltm, eq, roe, aum }) => (
+            <tr key={c.id}>
+              <td><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span></td>
+              <td>{q ? <span className="num">{periodLabelShort(q.period)}</span> : <span className="muted">–</span>}</td>
+              <td>{q?.v != null ? <span className={`num ${q.v < 0 ? 'neg' : ''}`}>{nf(q.v, 0)}</span> : <span className="muted">–</span>}</td>
+              <td>{yoy != null ? <span className={`num ${yoy < 0 ? 'neg' : 'pos'}`}>{pct(yoy, 1, true)}</span> : <span className="muted">–</span>}</td>
+              <td>{ltm?.v != null ? <span className="num">{nf(ltm.v, 0)}</span> : <span className="muted">–</span>}</td>
+              <td>{eq?.v != null ? <span className="num">{nf(eq.v, 0)}</span> : <span className="muted">–</span>}</td>
+              <td>{roe?.v != null ? <span className="num">{pct(roe.v, 1)}</span> : <span className="muted">–</span>}</td>
+              <td>{aum != null ? <span className="num">{nf(aum, 0)}</span> : <span className="muted">–</span>}</td>
+              <td>{c.docs > 0 ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : <span className="muted">–</span>}</td>
+            </tr>
+          ))}</tbody>
+        </table></div>
       </section>
     </>
   );

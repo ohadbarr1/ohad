@@ -42,4 +42,4 @@ export function palette(): string[] {
 export function chartBase() {
   return { fg: cssColor('--fg'), mu: cssColor('--muted'), ln: cssColor('--line'), panel: cssColor('--panel'), accent: cssColor('--accent'), down: cssColor('--down'), up: cssColor('--up') };
 }
-export const CHART_FONT = '"IBM Plex Sans Hebrew", "IBM Plex Sans", sans-serif';
+export const CHART_FONT = '"Heebo", "Inter", sans-serif';

@@ -41,6 +41,7 @@ export function MarketLayout() {
         <NavLink to="overview">סקירה</NavLink>
         <NavLink to="ranking">דירוג חברות</NavLink>
         <NavLink to="funds">קופות</NavLink>
+        <NavLink to="/managers">מנהלים</NavLink>
       </nav>
       <Outlet />
     </>
