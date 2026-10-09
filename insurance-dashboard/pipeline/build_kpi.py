@@ -45,23 +45,51 @@ for (comp, rid), r in sorted(reports.items()):
             months[key] = round((e - start).days / 30.4)
     out.setdefault(comp, {})[period] = {"end": str(end), "rid": rid, "vals": vals, "months": months}  # later report id wins
 
-site = {}
+# What the reports themselves say, where a filing has been extracted: profit for the quarter and year to date.
+truth = {}
+for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
+    for x in json.loads(f.read_text(encoding="utf-8"))["facts"]:
+        if x["metric"] == "profit_attributable" and x["segment"] == "group" and x["window"] in ("q", "ytd") and isinstance(x["value"], (int, float)):
+            y, m = int(x["date"][:4]), int(x["date"][5:7])
+            if m in (3, 6, 9):
+                truth.setdefault((f.parent.name, f"{y}Q{m // 3}"), {})[x["window"]] = x["value"] * 1000
+
+manual = json.loads((ROOT / "data" / "registry" / "kpi_verified.json").read_text(encoding="utf-8"))
+site, notes = {}, []
 for comp, per in out.items():
     order = sorted(per, key=lambda p: (per[p]["end"], p))
-    # undo cumulative interim tagging
+    status = {}
     for p in order:
         if p.endswith("FY"):
+            status[p] = "fy"
             continue
-        y, q = int(p[:4]), int(p[5])
-        for key, m in per[p]["months"].items():
-            if m > 4:
-                prior = [per.get(f"{y}Q{k}", {}).get("vals", {}).get(key) for k in range(1, q)]
-                if all(x is not None for x in prior):
-                    per[p]["vals"][key] -= sum(prior)
-                else:
-                    per[p]["vals"].pop(key, None)
-    site[comp] = {"periods": order, "end": [per[p]["end"] for p in order],
+        t, v = truth.get((comp, p)), per[p]["vals"].get("profit")
+        near = lambda a, b: a is not None and b is not None and abs(a - b) <= max(1500, abs(b) * 0.002)
+        if manual.get(comp, {}).get(p, {}).get("window") == "q" or (t and near(v, t.get("q"))):
+            status[p] = "verified"
+        elif t and near(v, t.get("ytd")):
+            status[p] = "cumulative"  # the filer tagged year-to-date figures in a quarter context
+        else:
+            status[p] = "unverified"
+    cumulative_filer = "cumulative" in status.values()
+    for p in order:
+        if status[p] == "cumulative":
+            y, q = int(p[:4]), int(p[5])
+            prior = [f"{y}Q{k}" for k in range(1, q)]
+            ok = all(status.get(k) in ("verified", "corrected") or (k.endswith("Q1")) for k in prior)
+            for key in FLOWS:
+                cur = per[p]["vals"].get(key)
+                prev = [per.get(k, {}).get("vals", {}).get(key) for k in prior]
+                per[p]["vals"][key] = cur - sum(prev) if ok and cur is not None and all(x is not None for x in prev) else None
+            status[p] = "corrected"
+        elif status[p] == "unverified" and cumulative_filer and not p.endswith("Q1"):
+            for key in FLOWS:  # cannot tell quarter from year to date without the report: leave a gap rather than a wrong number
+                per[p]["vals"][key] = None
+            status[p] = "withheld"
+    if cumulative_filer:
+        notes.append({"company": comp, "corrected": [p for p in order if status[p] == "corrected"], "withheld": [p for p in order if status[p] == "withheld"]})
+    site[comp] = {"periods": order, "end": [per[p]["end"] for p in order], "status": [status[p] for p in order],
                   "values": {k: [per[p]["vals"].get(k) for p in order] for k in CONCEPTS}}
-    print(comp, len(order), order[0], order[-1])
+    print(comp, len(order), {s: list(status.values()).count(s) for s in set(status.values())})
 (ROOT / "web" / "public" / "data" / "kpi.json").write_text(json.dumps(
-    {"asof": str(date.today()), "source": "XBRL attached to periodic reports, MAYA", "companies": site}), encoding="utf-8")
+    {"asof": str(date.today()), "source": "XBRL attached to periodic reports, MAYA", "notes": notes, "companies": site}), encoding="utf-8")

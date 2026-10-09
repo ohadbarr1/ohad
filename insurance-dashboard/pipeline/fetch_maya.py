@@ -15,7 +15,7 @@ import re
 import sys
 import time
 import urllib.request
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import duckdb
@@ -155,7 +155,7 @@ def list_window(cid, start, end, family=None):
 
 def list_reports(cid, family=None):
     """The API rejects deep offsets, so walk half-year windows and dedupe."""
-    seen, today = {}, date.today()
+    seen, today = {}, date.today() - timedelta(days=1)  # the server clock can trail local time
     for y in range(int(START[:4]), today.year + 1):
         for a, b in ((f"{y}-01-01", f"{y}-06-30"), (f"{y}-07-01", f"{y}-12-31")):
             if a > today.isoformat():

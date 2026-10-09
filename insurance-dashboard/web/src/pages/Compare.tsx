@@ -13,7 +13,7 @@ const UNIT: Record<string, string> = { m: 'מיליוני ש"ח', nis: 'ש"ח', 
 
 /** One reported KPI across companies and periods. */
 export function Compare() {
-  const { kpis, error } = useKpis();
+  const { kpis, notes, error } = useKpis();
   const reg = useRegistry();
   const [sp, setSp] = useSearchParams();
   const [metric, setMetric] = useState(KPI_BY_KEY[sp.get('k') ?? ''] ? sp.get('k')! : 'roe');
@@ -102,6 +102,8 @@ export function Compare() {
               {[...data.periods].reverse().map((p) => { const v = shown(id, p); return <td key={p}><span className={`num ${v != null && v < 0 ? 'neg' : ''}`}>{index ? (v == null ? '–' : nf(v, 0)) : fmt(v, def.unit)}</span></td>; })}</tr>
           ))}</tbody>
         </table></div>
+        <div className="src">עד 2024: כפי שדווח במקור לפי IFRS 4, לא הוצג מחדש. מ-2025: IFRS 17.</div>
+        {notes.length > 0 && <div className="src">{notes.map((n) => `${name(n.company)}: ${n.corrected.length} רבעונים תוקנו לפי הדוח (ב-XBRL תויג מצטבר)${n.withheld.length ? `, ${n.withheld.length} רבעונים שלא אומתו הוסרו` : ''}`).join(' · ')}</div>}
         {def.derived && <div className="src">{metric === 'roe' ? 'ROE: רווח 12 חודשים חלקי הון ממוצע (פתיחה וסגירה).' : metric === 'leverage' ? 'סך נכסים חלקי הון לבעלי המניות.' : 'שווי שוק: מחיר סגירה במועד הדוח כפול מספר מניות נגזר (רווח שנתי חלקי רווח למניה). אומדן.'}</div>}
       </Panel>
     </>

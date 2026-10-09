@@ -1,0 +1,5 @@
+{
+ "_note": "Interim periods whose tagged XBRL profit was checked by hand against the Hebrew report. q = the tagged figure is the single quarter.",
+ "clal": {"2025Q3": {"window": "q", "evidence": "report 1705136: quarter 592, nine months 1,538 = 407 + 539 + 592"}},
+ "menora": {"2025Q3": {"window": "q", "evidence": "report 1706474, income statement: quarter 588,957, nine months 1,708,345 (NIS thousands)"}}
+}

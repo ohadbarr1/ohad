@@ -62,7 +62,7 @@ import { CompanyKpi } from './kpi';
 import type { PriceData as Px } from './types';
 
 /** Headline-figure engines for every company in kpi.json, with prices attached when they have loaded. */
-export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string | null; error: string | null } {
+export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string | null; notes: NonNullable<KpiData['notes']>; error: string | null } {
   const { data, error } = useKpiData();
   const ids = useMemo(() => (data ? Object.keys(data.companies) : []), [data]);
   const [prices, setPrices] = useState<Record<string, Px>>({});
@@ -72,5 +72,5 @@ export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string 
     return () => { live = false; };
   }, [ids]);
   const kpis = useMemo(() => (data ? new Map(ids.map((id) => [id, new CompanyKpi(id, data.companies[id], prices[id] ?? null)])) : null), [data, ids, prices]);
-  return { kpis, asof: data?.asof ?? null, error };
+  return { kpis, asof: data?.asof ?? null, notes: data?.notes ?? [], error };
 }
