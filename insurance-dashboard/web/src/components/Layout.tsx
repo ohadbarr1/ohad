@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { Search } from './Search';
 import { Logo } from './Logo';
 import { Icon } from './Icon';
-import { Tape } from './Tape';
 import { useTheme } from '../lib/theme';
 
 const NAV: [string, string, string][] = [
@@ -34,7 +33,6 @@ export function Layout() {
             <Search />
             <button className="iconbtn" type="button" onClick={toggle} aria-label={theme === 'dark' ? 'ערכה בהירה' : 'ערכה כהה'}><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>
           </div>
-          <Tape />
         </header>
         <main className="page" key={section}><Outlet /></main>
       </div>

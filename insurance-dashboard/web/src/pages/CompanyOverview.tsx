@@ -126,14 +126,14 @@ export function CompanyOverview() {
   const k = kpis?.get(entry.id);
   const kc = k ? kpiCards(k) : [];
   const fin = store ? financialCards(store).filter((c) => c.tag === 'IFRS 17') : [];
-  const px = price.data ? priceCards(price.data) : [];
+  const px = price.data ? priceCards(price.data).slice(1) : [];  // dividends only: no price display
   const mk = market && entry.market_group ? marketCards(market, entry.market_group) : [];
   return (
     <>
       {(kc.length > 0 || px.length > 0) && (
         <section>
-          <h2 className="band">מניה ודוחות<span className="muted">31 רבעונים</span></h2>
-          <div className="mgrid stagger">{[...px, ...kc].map((c, i) => <MetricCard key={c.title} {...c} i={i} wide={i === 0} />)}</div>
+          <h2 className="band">דוחות<span className="muted">31 רבעונים</span></h2>
+          <div className="mgrid stagger">{[...kc, ...px].map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
         </section>
       )}
       {fin.length > 0 && (

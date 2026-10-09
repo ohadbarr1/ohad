@@ -1,0 +1,153 @@
+{
+ "company": "ayalon",
+ "period": "2025FY",
+ "report_id_he": 1732151,
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 12.258,
+   "doc": "he_1732151",
+   "page_he": 246,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 9.116,
+   "doc": "he_1732151",
+   "page_he": 246,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 3.142,
+   "doc": "he_1732151",
+   "page_he": 246,
+   "label": "רווח (הפסד) לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 6.427,
+   "doc": "he_1732151",
+   "page_he": 247,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 6.72,
+   "doc": "he_1732151",
+   "page_he": 247,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": -0.293,
+   "doc": "he_1732151",
+   "page_he": 247,
+   "label": "רווח (הפסד) לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands -> millions"
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "management_fees",
+   "segment": "pension",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "provident",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "selling_and_marketing_expenses",
+   "segment": "pension",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "selling_and_marketing_expenses",
+   "segment": "provident",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "general_and_administrative_expenses",
+   "segment": "pension",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "general_and_administrative_expenses",
+   "segment": "provident",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "pension",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "provident",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "aum",
+   "segment": "pension",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "aum",
+   "segment": "provident",
+   "why": "Company states it conducts no provident/pension fund activity as of the report date (p28 footnote; entry approved by board Nov 2024, licence pending)"
+  },
+  {
+   "metric": "selling_and_marketing_expenses",
+   "segment": "investment_contracts",
+   "why": "segment table shows only 'other operating expenses'; no split"
+  },
+  {
+   "metric": "general_and_administrative_expenses",
+   "segment": "investment_contracts",
+   "why": "not separated"
+  },
+  {
+   "metric": "aum",
+   "segment": "investment_contracts",
+   "why": "not located"
+  }
+ ]
+}

@@ -1,0 +1,336 @@
+{
+ "company": "hachshara",
+ "period": "2025FY",
+ "report_id_he": 1732795,
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 202.257,
+   "doc": "he_1732795",
+   "page_he": 169,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 155.381,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 166.068,
+   "doc": "he_1732795",
+   "page_he": 169,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table; single printed line, selling/marketing and G&A are not shown separately"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 136.05,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table; single printed line, selling/marketing and G&A are not shown separately"
+  },
+  {
+   "metric": "comprehensive_income_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 36.189,
+   "doc": "he_1732795",
+   "page_he": 169,
+   "label": "רווח כולל לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "comprehensive_income_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 19.331,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "רווח כולל לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "deposits",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 6185.661,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "תקבולים בגין חוזי השקעה",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "deposits",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 5699.065,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "תקבולים בגין חוזי השקעה",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "deposits_periodic_new_business",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 42.786,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "deposits_periodic_new_business",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 24.899,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "deposits_lump_sum",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 6053.221,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "deposits_lump_sum",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 5580.754,
+   "doc": "he_1732795",
+   "page_he": 170,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "source": "table",
+   "note": "thousands converted to NIS millions. investment-contracts column of Note 4 A.1 table"
+  },
+  {
+   "metric": "aum",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 26777.1,
+   "doc": "he_1732795",
+   "page_he": 79,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "source": "table",
+   "note": "liabilities for yield-dependent investment contracts (balance-sheet proxy for managed assets)"
+  },
+  {
+   "metric": "aum",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 20763.1,
+   "doc": "he_1732795",
+   "page_he": 79,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "source": "table",
+   "note": "liabilities for yield-dependent investment contracts (balance-sheet proxy for managed assets)"
+  },
+  {
+   "metric": "profit_from_investment_contracts",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 36.2,
+   "doc": "he_1732795",
+   "page_he": 81,
+   "label": "רווח מחוזי השקעה",
+   "source": "table",
+   "note": "board-report table, rounded to 0.1"
+  },
+  {
+   "metric": "profit_from_investment_contracts",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 19.3,
+   "doc": "he_1732795",
+   "page_he": 81,
+   "label": "רווח מחוזי השקעה",
+   "source": "table",
+   "note": "board-report table, rounded to 0.1"
+  },
+  {
+   "metric": "profit_from_investment_contracts",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2025-12-31",
+   "value": 13.3,
+   "doc": "he_1732795",
+   "page_he": 81,
+   "label": "רווח מחוזי השקעה",
+   "source": "table",
+   "note": "Q4, board-report table, rounded to 0.1"
+  },
+  {
+   "metric": "profit_from_investment_contracts",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2024-12-31",
+   "value": 9.8,
+   "doc": "he_1732795",
+   "page_he": 81,
+   "label": "רווח מחוזי השקעה",
+   "source": "table",
+   "note": "Q4, board-report table, rounded to 0.1"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "participating_policies_estimate",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 257.71,
+   "doc": "he_1732795",
+   "page_he": 82,
+   "label": "דמי ניהול",
+   "source": "table",
+   "note": "estimated management fees charged to yield-dependent insurance policies per Commissioner guidelines; insurance reserves, not the investment-contracts activity"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "participating_policies_estimate",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 187.31,
+   "doc": "he_1732795",
+   "page_he": 82,
+   "label": "דמי ניהול",
+   "source": "table",
+   "note": "estimated management fees charged to yield-dependent insurance policies per Commissioner guidelines; insurance reserves, not the investment-contracts activity"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "participating_policies_estimate",
+   "basis": "na",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 162.1,
+   "doc": "he_1732795",
+   "page_he": 82,
+   "label": "דמי ניהול",
+   "source": "table",
+   "note": "estimated management fees charged to yield-dependent insurance policies per Commissioner guidelines; insurance reserves, not the investment-contracts activity"
+  },
+  {
+   "metric": "deposits_gross_best_invest",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 6185.7,
+   "doc": "he_1732795",
+   "page_he": 33,
+   "label": "תקבולים ממכירת פוליסות בסט אינווסט",
+   "source": "text",
+   "note": "text, NIS millions"
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "management_fees",
+   "segment": "pension",
+   "why": "company does not manage pension funds"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "provident",
+   "why": "company does not manage provident/gemel/hishtalmut funds; savings activity is investment contracts (Best Invest)"
+  },
+  {
+   "metric": "selling_and_marketing_expenses",
+   "segment": "investment_contracts",
+   "why": "not separated; only 'other operating expenses' printed per activity"
+  },
+  {
+   "metric": "general_and_administrative_expenses",
+   "segment": "investment_contracts",
+   "why": "not separated; only unallocated corporate G&A printed in board table, sign unclear in FY column"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "pension",
+   "why": "not applicable"
+  },
+  {
+   "metric": "aum_average",
+   "segment": "investment_contracts",
+   "why": "not disclosed"
+  },
+  {
+   "metric": "net_transfers",
+   "segment": "investment_contracts",
+   "why": "not disclosed"
+  },
+  {
+   "metric": "fee_rate_from_assets",
+   "segment": "investment_contracts",
+   "why": "not disclosed as one rate"
+  }
+ ]
+}

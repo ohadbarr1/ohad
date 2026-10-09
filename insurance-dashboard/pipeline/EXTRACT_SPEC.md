@@ -65,3 +65,18 @@ Coverage rule for long tables: finish a table once you start it. A half-copied r
 - Printed subtotals inside a roll-forward are `csm_subtotal:<row label>` (or `ra_subtotal:` etc.), never `csm_other:`.
 - The finance row of a CSM roll-forward is `csm_interest_accretion`, with the printed label in `label`.
 - Before finishing, check each roll-forward: opening + movement rows = closing (under one sign convention, within rounding). If it does not hold, find the duplicate, subtotal or missing row.
+
+## Savings economics (managing-company profitability)
+
+Purpose: the long-term-savings peer comparison (pension and provident separately, per company): fee income, selling and marketing, general and administrative, profit, and the asset base. Output file: `data/extracted_savings/<company>/<period>.json`, same schema and rules as above (nothing calculated, Hebrew page mandatory, `doc` folder, `source`).
+
+Where it is printed: the operating-segments note (pension and provident / long-term savings / asset management segment and its sub-segments), the board report's section on pension and provident, and, for a fund house, its consolidated income statement and segment note. Take the figures for each activity separately when the report separates them, using these `segment` values: `pension`, `provident` (gemel and hishtalmut), `pension_provident` (when only the combined figure is printed), `investment_contracts` / `savings_policies` when the report shows them as a managed-asset activity, and the printed name for anything else.
+
+Metrics (all windows printed: `fy`, `ytd`, `q`, with prior-period comparatives):
+- `management_fees` (total); `management_fees_from_assets` and `management_fees_from_deposits` when split
+- `selling_and_marketing_expenses` (commissions, marketing and acquisition), `general_and_administrative_expenses`, `other_expenses`, `total_expenses`
+- `profit_before_tax`, `comprehensive_income_before_tax`, `operating_profit` (as labelled)
+- `aum` at period end and `aum_average` if printed; `deposits` / `contributions`; `net_transfers`, `transfers_in`, `transfers_out`; `new_business_annualized_premiums`
+- `fee_rate_from_assets`, `fee_rate_from_deposits` (percent, as printed)
+- `members` / `accounts` if printed
+Put the exact row label in `label`. If the report gives only a combined pension-and-provident figure, say so in `not_found` for the separate ones.

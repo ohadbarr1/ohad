@@ -1,0 +1,268 @@
+{
+ "company": "ayalon",
+ "period": "2026Q2",
+ "report_id_he": 1764938,
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 15.574,
+   "doc": "he_1764938",
+   "page_he": 103,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 13.283,
+   "doc": "he_1764938",
+   "page_he": 103,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 2.291,
+   "doc": "he_1764938",
+   "page_he": 103,
+   "label": "רווח (הפסד) לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 4.633,
+   "doc": "he_1764938",
+   "page_he": 104,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 2.531,
+   "doc": "he_1764938",
+   "page_he": 104,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 2.102,
+   "doc": "he_1764938",
+   "page_he": 104,
+   "label": "רווח (הפסד) לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 9.122,
+   "doc": "he_1764938",
+   "page_he": 105,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 7.871,
+   "doc": "he_1764938",
+   "page_he": 105,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 1.251,
+   "doc": "he_1764938",
+   "page_he": 105,
+   "label": "רווח (הפסד) לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 2.654,
+   "doc": "he_1764938",
+   "page_he": 106,
+   "label": "הכנסות מדמי ניהול",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 1.827,
+   "doc": "he_1764938",
+   "page_he": 106,
+   "label": "הוצאות תפעוליות אחרות",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "basis": "na",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 0.827,
+   "doc": "he_1764938",
+   "page_he": 106,
+   "label": "רווח (הפסד) לפני מסים על הכנסה",
+   "source": "table",
+   "note": "thousands -> millions"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "provident",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 0.793,
+   "doc": "he_1764938",
+   "page_he": 103,
+   "label": "הוצאות תפעוליות אחרות (עמודת גמל)",
+   "source": "table",
+   "note": "thousands -> millions; column 'גמל' (Ayalon Gemel began operating July 2026; amount is pre-launch cost, fee income shown as '-')"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "provident",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": -0.793,
+   "doc": "he_1764938",
+   "page_he": 103,
+   "label": "רווח (הפסד) לפני מסים על הכנסה (עמודת גמל)",
+   "source": "table",
+   "note": "thousands -> millions; column 'גמל'"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "provident",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 0.793,
+   "doc": "he_1764938",
+   "page_he": 105,
+   "label": "הוצאות תפעוליות אחרות (עמודת גמל)",
+   "source": "table",
+   "note": "thousands -> millions; column 'גמל' (Ayalon Gemel began operating July 2026; amount is pre-launch cost, fee income shown as '-')"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "provident",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": -0.793,
+   "doc": "he_1764938",
+   "page_he": 105,
+   "label": "רווח (הפסד) לפני מסים על הכנסה (עמודת גמל)",
+   "source": "table",
+   "note": "thousands -> millions; column 'גמל'"
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "management_fees",
+   "segment": "pension",
+   "why": "no pension fund activity"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "pension",
+   "why": "no pension fund activity"
+  },
+  {
+   "metric": "aum",
+   "segment": "pension",
+   "why": "no pension fund activity"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "provident",
+   "why": "Ayalon Gemel started operating July 2026 (after period end); no fee income, AUM or expense split disclosed beyond 'other operating expenses' column"
+  },
+  {
+   "metric": "selling_and_marketing_expenses",
+   "segment": "provident",
+   "why": "Ayalon Gemel started operating July 2026 (after period end); no fee income, AUM or expense split disclosed beyond 'other operating expenses' column"
+  },
+  {
+   "metric": "general_and_administrative_expenses",
+   "segment": "provident",
+   "why": "Ayalon Gemel started operating July 2026 (after period end); no fee income, AUM or expense split disclosed beyond 'other operating expenses' column"
+  },
+  {
+   "metric": "aum",
+   "segment": "provident",
+   "why": "Ayalon Gemel started operating July 2026 (after period end); no fee income, AUM or expense split disclosed beyond 'other operating expenses' column"
+  },
+  {
+   "metric": "selling_and_marketing_expenses",
+   "segment": "investment_contracts",
+   "why": "not separated"
+  },
+  {
+   "metric": "general_and_administrative_expenses",
+   "segment": "investment_contracts",
+   "why": "not separated"
+  },
+  {
+   "metric": "aum",
+   "segment": "investment_contracts",
+   "why": "not separated"
+  }
+ ]
+}

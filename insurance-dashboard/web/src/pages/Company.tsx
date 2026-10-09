@@ -6,8 +6,7 @@ import { GroupPanel } from './Market';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { SCALES, fmtCell, nf, periodLong, scaleValue, sn, type Scale } from '../lib/format';
-import { useCompanyNotes, useCompanyPrice, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
-import { Count } from '../components/Count';
+import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
 import type { Market } from '../lib/market';
 import type { RegistryCompany } from '../lib/types';
 
@@ -23,7 +22,6 @@ export function CompanyLayout() {
   const entry = reg.data?.find((c) => c.id === id) ?? null;
   const { store, error: storeError } = useCompanyStore(id ?? null, !!entry?.has_financials);
   const { market } = useMarket();
-  const price = useCompanyPrice(id ?? null, !!entry?.has_price).data;
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <Empty title="החברה לא נמצאה">בדוק את הכתובת או חפש בשורת החיפוש.</Empty>;
@@ -40,9 +38,7 @@ export function CompanyLayout() {
             {market && entry.market_group && <span className="chip">שוק: {market.plabel(market.LAST)}</span>}
           </div>
         </div>
-        {price && (() => { const yr = price.close[Math.max(0, price.close.length - 53)], d = (price.last / yr - 1) * 100; return (
-          <div className="quote"><span className="px num"><Count value={price.last / 100} dec={2} /></span><span className="u">ש"ח</span><span className={`num ${d >= 0 ? 'pos' : 'neg'}`}>{d >= 0 ? '+' : ''}{nf(d, 1)}% בשנה</span><Link className="chip" to={`/valuation/${entry.id}/dcf`}>הערכת שווי</Link></div>
-        ); })()}
+        <Link className="chip" to={`/valuation/${entry.id}/dcf`}>הערכת שווי</Link>
       </div>
       <nav className="subnav" aria-label="חברה">
         <NavLink to="." end>סקירה</NavLink>

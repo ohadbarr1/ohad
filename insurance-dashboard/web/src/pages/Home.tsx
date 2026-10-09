@@ -2,26 +2,11 @@ import { Link } from 'react-router-dom';
 import { Search } from '../components/Search';
 import { Logo } from '../components/Logo';
 import { Count } from '../components/Count';
-import { Chart } from '../components/Chart';
-import { chartBase } from '../lib/theme';
 import { nf, pct } from '../lib/format';
-import { useCompanyPrice, useKpis, useMarket, useRegistry } from '../lib/useData';
+import { useKpis, useMarket, useRegistry } from '../lib/useData';
 import type { CompanyKpi } from '../lib/kpi';
 import type { RegistryCompany } from '../lib/types';
 import type { Market } from '../lib/market';
-
-function Spark({ id }: { id: string }) {
-  const { data: p } = useCompanyPrice(id, true);
-  if (!p) return <div className="spark" />;
-  const n = 104, close = p.close.slice(-n), up = close[close.length - 1] >= close[0];
-  return (
-    <div className="spark"><Chart label="מחיר, שנתיים" height={44} deps={[p.asof]} build={() => {
-      const b = chartBase(), c = up ? b.up : b.down;
-      return { animationDuration: 900, grid: { left: 0, right: 0, top: 4, bottom: 0 }, xAxis: { type: 'category', show: false, data: close.map((_, i) => i), boundaryGap: false },
-        yAxis: { type: 'value', show: false, scale: true }, series: [{ type: 'line', data: close, symbol: 'none', lineStyle: { color: c, width: 1.5 }, areaStyle: { color: c, opacity: 0.14 } }] };
-    }} /></div>
-  );
-}
 
 function CompanyCard({ c, m, k, i }: { c: RegistryCompany; m: Market | null; k: CompanyKpi | undefined; i: number }) {
   const g = m ? m.groupIndex(c.market_group ?? '') : -1;
@@ -30,11 +15,9 @@ function CompanyCard({ c, m, k, i }: { c: RegistryCompany; m: Market | null; k: 
     <Link to={`/company/${c.id}`} className="card" style={{ ['--i' as string]: i }}>
       <h3>{c.name_he} <span className="muted" style={{ fontWeight: 400, fontSize: 12.5 }}>{c.name_en}</span></h3>
       <div className="row">
-        {k?.lastPrice() != null && <span className="big num">{nf(k.lastPrice()!, 2)}</span>}
-        {pb?.v != null && <span className="chip">P/B <span className="num">{nf(pb.v, 2)}</span></span>}
+        {pb?.v != null && <span className="chip est" title="נגזר: מחיר כפול מספר מניות משוער, חלקי הון">P/B <span className="num">{nf(pb.v, 2)}</span></span>}
         {roe?.v != null && <span className="chip">ROE <span className="num">{pct(roe.v, 1)}</span></span>}
       </div>
-      {c.has_price ? <Spark id={c.id} /> : null}
       <div className="row muted" style={{ fontSize: 12 }}>
         {m && g >= 0 && <span>נכסים <span className="num">{nf(m.value('assets', m.LAST, 'm', 'all', g) ?? 0, 0)}</span> מיליארד</span>}
         {c.docs > 0 && <span>· <span className="num">{c.docs}</span> מסמכים</span>}
