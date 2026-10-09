@@ -38,3 +38,24 @@ Metrics (take all that are printed)
 - Solvency (insurer subsidiary): `solvency_ratio_with_transitional`, `solvency_ratio_without_transitional`, `solvency_surplus`, `solvency_date`
 - Asset management: `management_fees`, `pension_gemel_profit_before_tax`, `aum_pension`, `aum_gemel`
 - Management targets, if stated: `target_*` with the text in `note`
+
+## v2 additions (annual reports and IFRS 17 notes)
+
+File layout for a filing with more than one text folder: each fact carries `"doc": "<folder name>"` (for example `he_1731047`) next to `page_he`; `page_he` is the 1-based page inside that folder. `page_en` refers to the English folder when one exists.
+
+For an annual report the windows are `fy` (the year) and `instant` (31 December); also take the prior-year comparatives printed beside them.
+
+IFRS 17 notes: take every row of these tables, per segment (life / health / pc, or the portfolio names as printed) and in total, and for direct contracts (`basis: gross`), reinsurance held (`basis: reinsurance`) and net when printed:
+- CSM roll-forward: `csm_opening`, `csm_new_business` (contracts initially recognised), `csm_interest_accretion`, `csm_changes_in_estimates` (changes that adjust the CSM), `csm_experience_adjustments`, `csm_release` (recognised in profit or loss for services provided), `csm_fx_and_other`, `csm_closing`. If the table has a row that does not fit, keep it as `csm_other:<row label>`.
+- By measurement model when the table is split that way: put `GMM`, `VFA` or `PAA` in `"model"`.
+- By transition approach when printed: `"transition"`: `full_retrospective`, `modified_retrospective`, `fair_value`, `post_transition`.
+- `risk_adjustment` opening / release / closing: `ra_opening`, `ra_release`, `ra_closing`.
+- `loss_component` closing and the charge for the year: `loss_component`, `losses_on_onerous_contracts`.
+- Insurance revenue analysis: `rev_expected_claims_and_expenses`, `rev_ra_release`, `rev_csm_release`, `rev_acquisition_cashflow_recovery`, `rev_paa`, `insurance_revenue`.
+- Expected recognition of the CSM in future periods: `csm_expected_release` with the time bucket as printed in `"bucket"` (for example `up to 1 year`, `1-2 years`, `over 10 years`).
+- Insurance finance income or expense: `insurance_finance_result` (profit or loss) and `insurance_finance_oci`.
+- Sensitivity tables: `sensitivity:<shock as printed>` with the effect on profit / comprehensive income / CSM in `"effect_on"`.
+- Discount curves: `discount_rate` with the tenor in `"bucket"` and the portfolio or illiquidity level in `note`.
+- Solvency (insurer subsidiary), as printed in the annual report or the board report: ratios with and without transitional measures, `own_funds`, `scr`, `mcr`, and the board's capital target `target_solvency_ratio`.
+
+Coverage rule for long tables: finish a table once you start it. A half-copied roll-forward is worse than none; if a table cannot be completed, leave it out and say so in `not_found`.

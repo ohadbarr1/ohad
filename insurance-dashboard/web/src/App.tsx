@@ -7,6 +7,8 @@ import { CompanyLayout, CompanyFinancials, CompanyIfrs17, CompanySavings } from 
 import { CompanyOverview } from './pages/CompanyOverview';
 import { CompanyDocs } from './pages/CompanyDocs';
 import { Compare } from './pages/Compare';
+import { IndustryLayout, IndustrySavings } from './pages/Industry';
+import { IndustryIfrs } from './pages/IndustryIfrs';
 import { Dcf, Sotp, ValuationLayout } from './pages/Valuation';
 import { Managers } from './pages/Managers';
 
@@ -30,7 +32,13 @@ export function App() {
           <Route path="savings" element={<CompanySavings />} />
           <Route path="filings" element={<CompanyDocs />} />
         </Route>
-        <Route path="compare" element={<Compare />} />
+        <Route path="compare" element={<Navigate to="/industry/headline" replace />} />
+        <Route path="industry" element={<IndustryLayout />}>
+          <Route index element={<Navigate to="savings" replace />} />
+          <Route path="savings" element={<IndustrySavings />} />
+          <Route path="ifrs" element={<IndustryIfrs />} />
+          <Route path="headline" element={<Compare />} />
+        </Route>
         <Route path="managers" element={<Managers />} />
         <Route path="valuation" element={<ValuationLayout />} />
         <Route path="valuation/:id" element={<ValuationLayout />}>

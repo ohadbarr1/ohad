@@ -7,7 +7,7 @@ import { Tape } from './Tape';
 import { useTheme } from '../lib/theme';
 
 const NAV: [string, string, string][] = [
-  ['/', 'home', 'בית'], ['/companies', 'companies', 'חברות'], ['/compare', 'compare', 'השוואה'],
+  ['/', 'home', 'בית'], ['/companies', 'companies', 'חברות'], ['/industry', 'compare', 'השוואה ענפית'],
   ['/valuation', 'value', 'שווי'], ['/market', 'market', 'שוק'], ['/managers', 'funds', 'מנהלים וקופות'],
 ];
 

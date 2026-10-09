@@ -91,7 +91,7 @@ function kpiCards(k: CompanyKpi): MetricCardProps[] {
     const now = s[s.length - 1]?.v ?? null, prev = s[s.length - 5]?.v ?? null;
     const isRatio = unit === '%' || unit === 'מכפיל';
     const d = now != null && prev != null ? (isRatio ? { text: `${sn(now - prev, dec)} בשנה`, tone: tone(now - prev) } : prev > 0 ? { text: pct(chg(now, prev), 1, true) + ' בשנה', tone: tone(chg(now, prev)) } : undefined) : undefined;
-    return { title, tag, unit, value: now == null ? '–' : nf(now, dec), delta: d, x: s.map((p) => periodLabelShort(p.period)), series: [{ name: title, data: s.map((p) => +p.v!.toFixed(3)) }], color, dec, kind: isRatio ? 'area' : 'bar', to: `/compare?k=${key}&b=${basis}`, foot: 'XBRL, דוחות תקופתיים' };
+    return { title, tag, unit, value: now == null ? '–' : nf(now, dec), delta: d, x: s.map((p) => periodLabelShort(p.period)), series: [{ name: title, data: s.map((p) => +p.v!.toFixed(3)) }], color, dec, kind: isRatio ? 'area' : 'bar', to: `/industry/headline?k=${key}&b=${basis}`, foot: 'XBRL, דוחות תקופתיים' };
   };
   return [
     card('profit', 'q', 'רווח נקי לבעלי המניות, רבעוני', 'מיליוני ש"ח', 0, 0),

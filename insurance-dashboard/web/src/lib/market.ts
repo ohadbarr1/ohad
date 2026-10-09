@@ -2,13 +2,13 @@ import type { Family, MarketData } from './types';
 
 /** A selection of products: everything, a family, or a single product. */
 export interface ProductSet { id: string; label: string; sub?: boolean; has: Set<number> }
-export type Win = 'm' | 'ytd' | 'ltm';
+export type Win = 'm' | 'q' | 'ytd' | 'ltm';
 export type MetricKey = 'assets' | 'share' | 'growth' | 'organic' | 'transfers' | 'netflow' | 'rate' | 'fee' | 'ret';
 
 interface Cell { a: number; af: number; dep: number; wd: number; tr: number; fa: number; fn: number; fd: number; yn: number; yd: number }
 export interface MetricDef { key: MetricKey; label: string; short: string; unit: '%' | 'bn'; win: boolean; ratio: boolean; dec?: number }
 
-export const WIN_LABEL: Record<Win, string> = { m: 'חודש', ytd: 'מתחילת השנה', ltm: '12 חודשים' };
+export const WIN_LABEL: Record<Win, string> = { m: 'חודש', q: 'רבעון', ytd: 'מתחילת השנה', ltm: '12 חודשים' };
 
 export const METRIC_DEFS: MetricDef[] = [
   { key: 'assets', label: 'נכסים מנוהלים', short: 'נכסים', unit: 'bn', win: false, ratio: false },
@@ -69,11 +69,11 @@ export class Market {
 
   private windowIdx(pi: number, w: Win): number[] | null {
     if (w === 'm') return [pi];
-    const n = w === 'ltm' ? 12 : this.P[pi] % 100, from = pi - n + 1;
+    const n = w === 'ltm' ? 12 : w === 'q' ? 3 : this.P[pi] % 100, from = pi - n + 1;
     if (from < 0) return null;
     return Array.from({ length: n }, (_, i) => from + i);
   }
-  private baseIdx(pi: number, w: Win): number { return w === 'm' ? pi - 1 : w === 'ltm' ? pi - 12 : pi - (this.P[pi] % 100); }
+  private baseIdx(pi: number, w: Win): number { return w === 'm' ? pi - 1 : w === 'q' ? pi - 3 : w === 'ltm' ? pi - 12 : pi - (this.P[pi] % 100); }
 
   ret(pi: number, w: Win, s: string, g: number): number | null {
     const ix = this.windowIdx(pi, w); if (!ix) return null;

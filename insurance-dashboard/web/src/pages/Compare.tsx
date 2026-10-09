@@ -54,9 +54,7 @@ export function Compare() {
 
   return (
     <>
-      <div className="pagehead">
-        <div><h1>השוואה</h1><div className="sub">{def.label} · {index ? 'אינדקס, תקופה ראשונה = 100' : UNIT[def.unit]}{def.derived && <> · <span className="chip est">נגזר</span></>}</div></div>
-      </div>
+      <div className="src">{def.label} · {index ? 'אינדקס, תקופה ראשונה = 100' : UNIT[def.unit]}{def.derived && <> · <span className="chip est">נגזר</span></>}</div>
       <section className="controls">
         <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value)}>
           {(['דוחות', 'יחסים', 'שוק ההון'] as const).map((g) => <optgroup key={g} label={g}>{KPI_DEFS.filter((d) => d.group === g).map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</optgroup>)}
