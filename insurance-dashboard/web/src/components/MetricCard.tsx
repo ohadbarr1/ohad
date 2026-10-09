@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Chart } from './Chart';
-import { chartBase, palette } from '../lib/theme';
+import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf } from '../lib/format';
 
 export interface CardSeries { name: string; data: (number | null)[]; color?: number }
@@ -18,15 +18,17 @@ export interface MetricCardProps {
   dec?: number;
   to?: string;
   foot?: ReactNode;
+  wide?: boolean;
+  i?: number;
 }
 
 /** One metric, one colour, one small chart. The overview is a grid of these. */
-export function MetricCard({ title, tag, unit, value, delta, x, series, kind = 'bar', color = 0, dec = 1, to, foot }: MetricCardProps) {
+export function MetricCard({ title, tag, unit, value, delta, x, series, kind = 'bar', color = 0, dec = 1, to, foot, wide, i = 0 }: MetricCardProps) {
   const empty = !series.some((s) => s.data.some((v) => v != null));
   return (
-    <section className="mcard">
+    <section className={`mcard${wide ? ' wide' : ''}`} style={{ ['--i' as string]: i }}>
       <header>
-        <h3>{tag && <span className="tag">{tag}</span>}{title}</h3>
+        <h3>{tag && <span className={`tag${tag === 'נגזר' ? ' est' : ''}`}>{tag}</span>}{title}</h3>
         {to && <Link to={to} className="open" aria-label={`פתח: ${title}`}>⤢</Link>}
       </header>
       <div className="mval"><span className="v num">{value}</span><span className="u">{unit}</span>{delta && <span className={`d num ${delta.tone ?? ''}`}>{delta.text}</span>}</div>
@@ -35,7 +37,7 @@ export function MetricCard({ title, tag, unit, value, delta, x, series, kind = '
           const b = chartBase(), pal = palette();
           const step = Math.max(1, Math.ceil(x.length / 7));
           return {
-            animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 4, right: 4, top: 8, bottom: 2, containLabel: true },
+            animationDuration: 800, animationEasing: 'cubicOut', animationDelay: (idx: number) => idx * 12, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 4, right: 4, top: 8, bottom: 2, containLabel: true },
             tooltip: { trigger: 'axis', axisPointer: { type: kind === 'area' ? 'line' : 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, confine: true,
               valueFormatter: (v: number | null) => (v == null ? '–' : nf(v, dec)) },
             xAxis: { type: 'category', data: x, boundaryGap: kind !== 'area', axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false },

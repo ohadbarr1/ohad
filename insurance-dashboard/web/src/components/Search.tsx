@@ -34,6 +34,7 @@ export function Search({ big = false }: { big?: boolean }) {
   const [open, setOpen] = useState(false);
   const [hl, setHl] = useState(0);
   const box = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const nav = useNavigate();
   const index = useIndex(open || q.length > 0);
 
@@ -55,22 +56,33 @@ export function Search({ big = false }: { big?: boolean }) {
     return () => document.removeEventListener('mousedown', close);
   }, []);
   useEffect(() => setHl(0), [q]);
+  useEffect(() => {
+    if (big) return;
+    const key = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      const typing = t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA';
+      if ((e.key === '/' && !typing) || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); input.current?.focus(); input.current?.select(); }
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [big]);
 
   const go = (it: Item) => { setOpen(false); setQ(''); nav(it.to); };
   const kinds: Item['kind'][] = ['חברה', 'קבוצה', 'קופה', 'שורה בדוח'];
 
   return (
     <div className={`search ${big ? 'big' : ''}`} ref={box}>
-      <input
-        type="search" value={q} placeholder="חיפוש חברה, קבוצה, קופה או שורה בדוח כספי…" aria-label="חיפוש"
+      <input ref={input}
+        type="search" value={q} placeholder="חברה, קופה או שורה בדוח" aria-label="חיפוש"
         onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => Math.min(h + 1, hits.length - 1)); }
           if (e.key === 'ArrowUp') { e.preventDefault(); setHl((h) => Math.max(h - 1, 0)); }
           if (e.key === 'Enter' && hits[hl]) go(hits[hl]);
-          if (e.key === 'Escape') setOpen(false);
+          if (e.key === 'Escape') { setOpen(false); input.current?.blur(); }
         }}
       />
+      {!big && !q && <span className="hint"><kbd>/</kbd></span>}
       {open && q.trim().length >= 2 && (
         <div className="results" role="listbox">
           {hits.length === 0 && <div className="muted" style={{ padding: 10 }}>{index.length ? 'לא נמצאו תוצאות' : 'טוען אינדקס…'}</div>}

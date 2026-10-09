@@ -3,10 +3,11 @@ import { Link, NavLink, Outlet, useOutletContext, useParams, useSearchParams } f
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { GroupPanel } from './Market';
-import { chartBase, palette } from '../lib/theme';
+import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { SCALES, fmtCell, nf, periodLong, scaleValue, sn, type Scale } from '../lib/format';
-import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
+import { useCompanyNotes, useCompanyPrice, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
+import { Count } from '../components/Count';
 import type { Market } from '../lib/market';
 import type { RegistryCompany } from '../lib/types';
 
@@ -22,6 +23,7 @@ export function CompanyLayout() {
   const entry = reg.data?.find((c) => c.id === id) ?? null;
   const { store, error: storeError } = useCompanyStore(id ?? null, !!entry?.has_financials);
   const { market } = useMarket();
+  const price = useCompanyPrice(id ?? null, !!entry?.has_price).data;
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <Empty title="החברה לא נמצאה">בדוק את הכתובת או חפש בשורת החיפוש.</Empty>;
@@ -38,6 +40,9 @@ export function CompanyLayout() {
             {market && entry.market_group && <span className="chip">שוק: {market.plabel(market.LAST)}</span>}
           </div>
         </div>
+        {price && (() => { const yr = price.close[Math.max(0, price.close.length - 53)], d = (price.last / yr - 1) * 100; return (
+          <div className="quote"><span className="px num"><Count value={price.last / 100} dec={2} /></span><span className="u">ש"ח</span><span className={`num ${d >= 0 ? 'pos' : 'neg'}`}>{d >= 0 ? '+' : ''}{nf(d, 1)}% בשנה</span><Link className="chip" to={`/valuation/${entry.id}/dcf`}>הערכת שווי</Link></div>
+        ); })()}
       </div>
       <nav className="subnav" aria-label="חברה">
         <NavLink to="." end>סקירה</NavLink>
@@ -189,7 +194,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
               const b = chartBase();
               const secondary = mode === 'value' && series.some((s) => s.m.unit !== 'k') && series.some((s) => s.m.unit === 'k');
               return {
-                animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 56, right: secondary ? 56 : 14, top: 18, bottom: 30 },
+                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: secondary ? 56 : 14, top: 18, bottom: 30 },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
                 xAxis: { type: 'category', data: cols.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12 } },
                 yAxis: [
@@ -295,7 +300,7 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
           <Chart label="CSM לפי קבוצת תיק" height={340} deps={[seg, on, mode, store]} build={() => {
             const b = chartBase();
             return {
-              animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 50, right: 14, top: 40, bottom: 30 },
+              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 50, right: 14, top: 40, bottom: 30 },
               legend: { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11.5 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
               tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number) => nf(v, mode === 'val' ? 1 : 1) + (mode === 'pct' ? '%' : '') },
               xAxis: { type: 'category', data: dates.map((x) => store.plabel(x.i)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12 } },

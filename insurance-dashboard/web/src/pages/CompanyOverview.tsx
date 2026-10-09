@@ -5,7 +5,8 @@ import { nf, pct, sn } from '../lib/format';
 import type { CompanyStore } from '../lib/company';
 import type { Market, MetricKey, Win } from '../lib/market';
 import { METRIC_BY_KEY } from '../lib/market';
-import { useCompanyDocs, useCompanyPrice } from '../lib/useData';
+import { useCompanyDocs, useCompanyPrice, useKpis } from '../lib/useData';
+import { periodLabelShort, type CompanyKpi } from '../lib/kpi';
 import type { DocEntry, PriceData } from '../lib/types';
 import { DOC_TYPE, useCtx } from './Company';
 
@@ -83,6 +84,27 @@ function financialCards(store: CompanyStore): MetricCardProps[] {
   return out;
 }
 
+function kpiCards(k: CompanyKpi): MetricCardProps[] {
+  const from = 2019;
+  const card = (key: string, basis: 'q' | 'ltm', title: string, unit: string, color: number, dec: number, tag?: string): MetricCardProps => {
+    const s = k.series(key, basis).filter((p) => Number(p.period.slice(0, 4)) >= from && p.v != null);
+    const now = s[s.length - 1]?.v ?? null, prev = s[s.length - 5]?.v ?? null;
+    const isRatio = unit === '%' || unit === 'מכפיל';
+    const d = now != null && prev != null ? (isRatio ? { text: `${sn(now - prev, dec)} בשנה`, tone: tone(now - prev) } : prev > 0 ? { text: pct(chg(now, prev), 1, true) + ' בשנה', tone: tone(chg(now, prev)) } : undefined) : undefined;
+    return { title, tag, unit, value: now == null ? '–' : nf(now, dec), delta: d, x: s.map((p) => periodLabelShort(p.period)), series: [{ name: title, data: s.map((p) => +p.v!.toFixed(3)) }], color, dec, kind: isRatio ? 'area' : 'bar', to: `/compare?k=${key}&b=${basis}`, foot: 'XBRL, דוחות תקופתיים' };
+  };
+  return [
+    card('profit', 'q', 'רווח נקי לבעלי המניות, רבעוני', 'מיליוני ש"ח', 0, 0),
+    card('profit', 'ltm', 'רווח נקי, 12 חודשים', 'מיליוני ש"ח', 0, 0),
+    card('oci', 'q', 'רווח כולל, רבעוני', 'מיליוני ש"ח', 3, 0),
+    card('equity', 'q', 'הון לבעלי המניות', 'מיליוני ש"ח', 7, 0),
+    card('roe', 'q', 'ROE, 12 חודשים', '%', 1, 1, 'נגזר'),
+    card('pb', 'q', 'מכפיל הון (P/B)', 'מכפיל', 2, 2, 'נגזר'),
+    card('eps', 'q', 'רווח למניה, רבעוני', 'ש"ח', 4, 2),
+    card('assets', 'q', 'סך הנכסים', 'מיליוני ש"ח', 9, 0),
+  ];
+}
+
 function LatestDocs({ docs }: { docs: DocEntry[] }) {
   return (
     <Panel title="דיווחים אחרונים" aside={<Link to="filings">כל המסמכים</Link>}>
@@ -100,21 +122,30 @@ export function CompanyOverview() {
   const price = useCompanyPrice(entry.id, entry.has_price);
   const docs = useCompanyDocs(entry.id, entry.docs > 0);
   if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
-  const fin = store ? financialCards(store) : [];
+  const { kpis } = useKpis();
+  const k = kpis?.get(entry.id);
+  const kc = k ? kpiCards(k) : [];
+  const fin = store ? financialCards(store).filter((c) => c.tag === 'IFRS 17') : [];
   const px = price.data ? priceCards(price.data) : [];
   const mk = market && entry.market_group ? marketCards(market, entry.market_group) : [];
   return (
     <>
-      {(fin.length > 0 || px.length > 0) && (
+      {(kc.length > 0 || px.length > 0) && (
         <section>
-          <h2 className="band">דוחות ומניה{store && <span className="muted"> · {store.d.sources[0]?.doc}</span>}</h2>
-          <div className="mgrid">{[...px, ...fin].map((c) => <MetricCard key={c.title} {...c} />)}</div>
+          <h2 className="band">מניה ודוחות<span className="muted">31 רבעונים</span></h2>
+          <div className="mgrid stagger">{[...px, ...kc].map((c, i) => <MetricCard key={c.title} {...c} i={i} wide={i === 0} />)}</div>
+        </section>
+      )}
+      {fin.length > 0 && (
+        <section>
+          <h2 className="band">IFRS 17<span className="muted">{store?.d.sources[0]?.doc}</span></h2>
+          <div className="mgrid stagger">{fin.map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
         </section>
       )}
       {mk.length > 0 && market && (
         <section>
-          <h2 className="band">פנסיה, גמל ופוליסות חיסכון<span className="muted"> · רשות שוק ההון · דצמבר של כל שנה ו-{market.plabel(market.LAST)}</span></h2>
-          <div className="mgrid">{mk.map((c) => <MetricCard key={c.title} {...c} />)}</div>
+          <h2 className="band">חיסכון ארוך טווח<span className="muted">רשות שוק ההון · דצמבר של כל שנה ו-{market.plabel(market.LAST)}</span></h2>
+          <div className="mgrid stagger">{mk.map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
         </section>
       )}
       {docs.data && <LatestDocs docs={docs.data.docs} />}

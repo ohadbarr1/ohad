@@ -1,46 +1,82 @@
 import { Link } from 'react-router-dom';
 import { Search } from '../components/Search';
-import { Kpi, Panel } from '../components/ui';
+import { Logo } from '../components/Logo';
+import { Count } from '../components/Count';
+import { Chart } from '../components/Chart';
+import { chartBase } from '../lib/theme';
 import { nf, pct } from '../lib/format';
-import { useMarket, useRegistry } from '../lib/useData';
+import { useCompanyPrice, useKpis, useMarket, useRegistry } from '../lib/useData';
+import type { CompanyKpi } from '../lib/kpi';
+import type { RegistryCompany } from '../lib/types';
+import type { Market } from '../lib/market';
+
+function Spark({ id }: { id: string }) {
+  const { data: p } = useCompanyPrice(id, true);
+  if (!p) return <div className="spark" />;
+  const n = 104, close = p.close.slice(-n), up = close[close.length - 1] >= close[0];
+  return (
+    <div className="spark"><Chart label="מחיר, שנתיים" height={44} deps={[p.asof]} build={() => {
+      const b = chartBase(), c = up ? b.up : b.down;
+      return { animationDuration: 900, grid: { left: 0, right: 0, top: 4, bottom: 0 }, xAxis: { type: 'category', show: false, data: close.map((_, i) => i), boundaryGap: false },
+        yAxis: { type: 'value', show: false, scale: true }, series: [{ type: 'line', data: close, symbol: 'none', lineStyle: { color: c, width: 1.5 }, areaStyle: { color: c, opacity: 0.14 } }] };
+    }} /></div>
+  );
+}
+
+function CompanyCard({ c, m, k, i }: { c: RegistryCompany; m: Market | null; k: CompanyKpi | undefined; i: number }) {
+  const g = m ? m.groupIndex(c.market_group ?? '') : -1;
+  const pb = k?.latest('pb'), roe = k?.latest('roe');
+  return (
+    <Link to={`/company/${c.id}`} className="card" style={{ ['--i' as string]: i }}>
+      <h3>{c.name_he} <span className="muted" style={{ fontWeight: 400, fontSize: 12.5 }}>{c.name_en}</span></h3>
+      <div className="row">
+        {k?.lastPrice() != null && <span className="big num">{nf(k.lastPrice()!, 2)}</span>}
+        {pb?.v != null && <span className="chip">P/B <span className="num">{nf(pb.v, 2)}</span></span>}
+        {roe?.v != null && <span className="chip">ROE <span className="num">{pct(roe.v, 1)}</span></span>}
+      </div>
+      {c.has_price ? <Spark id={c.id} /> : null}
+      <div className="row muted" style={{ fontSize: 12 }}>
+        {m && g >= 0 && <span>נכסים <span className="num">{nf(m.value('assets', m.LAST, 'm', 'all', g) ?? 0, 0)}</span> מיליארד</span>}
+        {c.docs > 0 && <span>· <span className="num">{c.docs}</span> מסמכים</span>}
+      </div>
+    </Link>
+  );
+}
 
 export function Home() {
   const { market: m } = useMarket();
   const reg = useRegistry();
+  const { kpis } = useKpis();
   const L = m?.LAST ?? 0;
-  const tot = m ? m.cell(L, 'all', -1).a : 0;
+  const fam = (s: string) => (m ? m.cell(L, s, -1).a / 1000 : null);
   return (
     <>
       <section className="hero">
-        <h1>ביטוח, פנסיה וגמל</h1>
-        <Search big />
+        <div>
+          <h1>fox<span>.</span></h1>
+          <p className="tagline">ביטוח, פנסיה וגמל. מהדוח, עם עמוד המקור.</p>
+          <Search big />
+        </div>
+        <div className="mark"><Logo size={168} animated /></div>
       </section>
 
       {m && (
         <section className="kpis">
-          <Kpi label="סך נכסים בשוק" value={nf(tot / 1000, 0)} sub={`מיליארד ש"ח · ${m.plabel(L)}`} />
-          <Kpi label="פנסיה" value={nf(m.cell(L, 'fam:pension', -1).a / 1000, 0)} sub={<>מיליארד ש"ח · <span className="num">{pct(m.growth(L, 'ltm', 'fam:pension', -1), 1, true)}</span> בשנה</>} />
-          <Kpi label="גמל והשתלמות" value={nf(m.cell(L, 'fam:gemel', -1).a / 1000, 0)} sub={<>מיליארד ש"ח · <span className="num">{pct(m.growth(L, 'ltm', 'fam:gemel', -1), 1, true)}</span> בשנה</>} />
-          <Kpi label="פוליסות חיסכון" value={nf(m.cell(L, 'fam:insurance', -1).a / 1000, 0)} sub={<>מיליארד ש"ח · <span className="num">{pct(m.growth(L, 'ltm', 'fam:insurance', -1), 1, true)}</span> בשנה</>} />
-          <Kpi label="קופות במאגר" value={nf(m.d.meta.funds_latest, 0)} sub="פעילות בחודש האחרון" />
+          {([['סך נכסים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['פוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
+            <div className="kpi" key={s}>
+              <div className="l">{label}</div>
+              <div className="v num"><Count value={fam(s)} /></div>
+              <div className="s">מיליארד ש"ח · <span className={`num ${(m.growth(L, 'ltm', s, -1) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{pct(m.growth(L, 'ltm', s, -1), 1, true)}</span> בשנה</div>
+            </div>
+          ))}
+          <div className="kpi"><div className="l">קופות ומסלולים</div><div className="v num"><Count value={m.d.meta.funds_latest} /></div><div className="s">{m.plabel(L)} · רשות שוק ההון</div></div>
         </section>
       )}
 
-      <Panel title="חברות" aside={<Link to="/companies">כל החברות</Link>}>
-        <div className="grid3">
-          {reg.data?.slice(0, 15).map((c) => {
-            const g = m ? m.groupIndex(c.market_group ?? '') : -1;
-            return (
-              <Link key={c.id} to={`/company/${c.id}`} className="card">
-                <h3>{c.name_he} {c.name_en && <span className="muted" style={{ fontWeight: 400 }}>{c.name_en}</span>}</h3>
-                <div className="row">{c.has_financials && <span className="chip loaded">נתונים: {c.filings[0]?.period}</span>}{c.docs > 0 && <span className="chip">{c.docs} מסמכים</span>}</div>
-                {m && g >= 0 && <div className="row"><span className="big num">{nf(m.value('assets', L, 'm', 'all', g) ?? 0, 0)}</span><span className="muted">מיליארד ש"ח נכסים · נתח <span className="num">{pct(m.value('share', L, 'm', 'all', g), 1)}</span></span></div>}
-              </Link>
-            );
-          })}
-        </div>
-      </Panel>
-
+      <section>
+        <h2 className="band">חברות</h2>
+        <div className="grid3 stagger">{reg.data?.map((c, i) => <CompanyCard key={c.id} c={c} m={m} k={kpis?.get(c.id)} i={i} />)}</div>
+      </section>
     </>
   );
 }

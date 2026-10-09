@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { CompanyData, DocsData, MarketData, PriceData, RegistryCompany } from './types';
+import type { CompanyData, DocsData, KpiData, MarketData, PriceData, RegistryCompany } from './types';
 
 const BASE = import.meta.env.BASE_URL;
 const cache = new Map<string, Promise<unknown>>();
@@ -34,6 +34,7 @@ export const useCompanyData = (id: string | null, enabled = true) => useLoad<Com
 export const useCompanyNotes = (id: string | null, enabled: boolean) => useLoad<Record<string, string>>(id && enabled ? `companies/${id}.notes.json` : null);
 export const useCompanyDocs = (id: string | null, enabled: boolean) => useLoad<DocsData>(id && enabled ? `companies/${id}.docs.json` : null);
 export const useCompanyPrice = (id: string | null, enabled: boolean) => useLoad<PriceData>(id && enabled ? `companies/${id}.price.json` : null);
+export const useKpiData = () => useLoad<KpiData>('kpi.json');
 
 import { useMemo } from 'react';
 import { Market } from './market';
@@ -55,4 +56,21 @@ export function useCompanyStore(id: string | null, enabled = true): { store: Com
   const { data, error } = useCompanyData(id, enabled);
   const store = useMemo(() => (data ? new CompanyStore(data) : null), [data]);
   return { store, error };
+}
+
+import { CompanyKpi } from './kpi';
+import type { PriceData as Px } from './types';
+
+/** Headline-figure engines for every company in kpi.json, with prices attached when they have loaded. */
+export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string | null; error: string | null } {
+  const { data, error } = useKpiData();
+  const ids = useMemo(() => (data ? Object.keys(data.companies) : []), [data]);
+  const [prices, setPrices] = useState<Record<string, Px>>({});
+  useEffect(() => {
+    let live = true;
+    ids.forEach((id) => load<Px>(`companies/${id}.price.json`).then((p) => live && setPrices((cur) => ({ ...cur, [id]: p })), () => {}));
+    return () => { live = false; };
+  }, [ids]);
+  const kpis = useMemo(() => (data ? new Map(ids.map((id) => [id, new CompanyKpi(id, data.companies[id], prices[id] ?? null)])) : null), [data, ids, prices]);
+  return { kpis, asof: data?.asof ?? null, error };
 }

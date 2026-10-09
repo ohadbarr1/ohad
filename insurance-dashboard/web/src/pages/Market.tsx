@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg, copyText } from '../components/ui';
-import { chartBase, cssVar, palette } from '../lib/theme';
+import { CHART_FONT, chartBase, cssVar, palette } from '../lib/theme';
 import { METRIC_BY_KEY, METRIC_DEFS, WIN_LABEL, type Market, type MetricKey, type Win } from '../lib/market';
 import { cls, nf, pct, sn } from '../lib/format';
 import { useMarket } from '../lib/useData';
@@ -82,7 +82,7 @@ function OverviewInner({ m }: { m: Market }) {
           <Chart label="נכסים לפי משפחת מוצר" height={330} deps={[m]} build={() => {
             const b = chartBase(), c = colors();
             return {
-              animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 46, right: 12, top: 36, bottom: 28 },
+              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 46, right: 12, top: 36, bottom: 28 },
               legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
               tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
                 formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number }[]) => {
@@ -99,7 +99,7 @@ function OverviewInner({ m }: { m: Market }) {
           <Chart label="צבירה אורגנית" height={330} deps={[m]} build={() => {
             const b = chartBase(), c = colors();
             return {
-              animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 40, right: 12, top: 36, bottom: 28 },
+              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 40, right: 12, top: 36, bottom: 28 },
               legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
               tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
                 formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number | null }[]) => m.plabel(+ps[0].axisValue) + '<br>' + ps.filter((p) => p.value != null).map((p) => `${p.marker} ${p.seriesName}: <b>${nf(p.value as number, 1)}</b>`).join('<br>') },
@@ -162,7 +162,7 @@ function RankingInner({ m }: { m: Market }) {
           <Chart label="דירוג קבוצות" height={Math.max(260, data.length * 32 + 40)} deps={[m, data, mkt, metric]} build={() => {
             const b = chartBase();
             return {
-              animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 112, right: 64, top: 12, bottom: 24 },
+              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 112, right: 64, top: 12, bottom: 24 },
               tooltip: { trigger: 'item', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, formatter: (p: { name: string; value: number }) => `${p.name}: <b>${nf(p.value, dec)}${def.unit === '%' ? '%' : ''}</b>` },
               xAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
               yAxis: { type: 'category', inverse: true, data: data.map((d) => d.g), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.fg, fontSize: 12 } },
@@ -291,7 +291,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
             const series: object[] = [{ name: group, type: 'line', symbol: 'none', lineStyle: { width: 2.5, color: b.accent }, itemStyle: { color: b.accent }, data: own.map((v) => (v == null ? null : +v.toFixed(3))) }];
             if (def.ratio) series.push({ name: 'כלל השוק', type: 'line', symbol: 'none', lineStyle: { width: 1.5, type: 'dashed', color: b.mu }, itemStyle: { color: b.mu }, data: mkt.map((v) => (v == null ? null : +v.toFixed(3))) });
             return {
-              animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 44, right: 12, top: 34, bottom: 28 },
+              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 44, right: 12, top: 34, bottom: 28 },
               legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 14, itemHeight: 3, icon: 'roundRect' },
               tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
                 formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number | null }[]) => m.plabel(+ps[0].axisValue) + '<br>' + ps.filter((p) => p.value != null).map((p) => `${p.marker} ${p.seriesName}: <b>${nf(p.value as number, dec)}${def.unit === '%' ? '%' : ''}</b>`).join('<br>') },
@@ -316,7 +316,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
         <Chart label="נכסים לפי מוצר" height={280} deps={[m, group, set]} build={() => {
           const b = chartBase(), pal = palette();
           return {
-            animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 44, right: 12, top: 44, bottom: 28 },
+            animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 44, right: 12, top: 44, bottom: 28 },
             legend: { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
             tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
             xAxis: { type: 'category', data: pts.map((i) => (i === L ? m.plabel(i) : String(Math.floor(m.P[i] / 100)))), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },

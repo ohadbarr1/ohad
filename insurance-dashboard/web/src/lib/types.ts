@@ -44,3 +44,4 @@ export interface RegistryCompany {
 export interface DocEntry { id: number; date: string; type: 'annual' | 'quarterly' | 'presentation' | 'solvency'; period: string; title: string; pages: number | null; kb: number | null; en: boolean; url: string }
 export interface DocsData { source: string; docs: DocEntry[] }
 export interface PriceData { ticker: string; source: string; unit: 'agorot'; asof: string; last: number; dates: string[]; close: number[]; dividends: [string, number][] }
+export interface KpiData { asof: string; source: string; companies: Record<string, { periods: string[]; end: string[]; values: Record<string, (number | null)[]> }> }
