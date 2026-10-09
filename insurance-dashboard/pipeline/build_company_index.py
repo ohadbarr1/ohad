@@ -21,6 +21,8 @@ for c in REG:
         label = f"H{1 if m <= 6 else 2} {y}" if last["type"] == "H" else (f"FY {y}" if last["type"] == "FY" else f"Q{(m - 1) // 3 + 1} {y}")
         for s in d["sources"]:
             filings.append({"period": label, "end": last["end"], "entity": s["entity"], "name": s["name"], "doc": s["doc"], "url": s["url"], "pages": s["pages"]})
-    out.append({**c, "has_financials": f.exists(), "filings": filings})
+    docs_f, price_f = OUT_DIR / f"{c['id']}.docs.json", OUT_DIR / f"{c['id']}.price.json"
+    docs = len(json.loads(docs_f.read_text(encoding="utf-8"))["docs"]) if docs_f.exists() else 0
+    out.append({**c, "has_financials": f.exists(), "filings": filings, "docs": docs, "has_price": price_f.exists()})
 (OUT_DIR / "index.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 print(f"{len(out)} companies, {sum(1 for c in out if c['has_financials'])} with financials -> {OUT_DIR / 'index.json'}")

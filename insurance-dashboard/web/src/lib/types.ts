@@ -37,6 +37,10 @@ export interface CompanyData {
 
 export interface RegistryCompany {
   id: string; name_he: string; name_en: string; kind: 'insurance_group' | 'fund_house';
-  market_group: string | null; has_financials: boolean;
+  market_group: string | null; has_financials: boolean; docs: number; has_price: boolean;
   filings: { period: string; end: string; entity: string; name: string; doc: string; url: string | null; pages: number | null }[];
 }
+
+export interface DocEntry { id: number; date: string; type: 'annual' | 'quarterly' | 'presentation' | 'solvency'; period: string; title: string; pages: number | null; kb: number | null; en: boolean; url: string }
+export interface DocsData { source: string; docs: DocEntry[] }
+export interface PriceData { ticker: string; source: string; unit: 'agorot'; asof: string; last: number; dates: string[]; close: number[]; dividends: [string, number][] }

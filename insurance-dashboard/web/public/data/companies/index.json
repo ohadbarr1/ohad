@@ -5,6 +5,8 @@
   "name_en": "Phoenix",
   "kind": "insurance_group",
   "market_group": "הפניקס",
+  "maya_id": 767,
+  "yahoo": "PHOE.TA",
   "has_financials": true,
   "filings": [
    {
@@ -25,7 +27,9 @@
     "url": "http://www.fnx.co.il/sites/docs/genery/DohotKaspiyim/doch_bituach_q_2_2026_isa_mungash.pdf",
     "pages": 167
    }
-  ]
+  ],
+  "docs": 116,
+  "has_price": true
  },
  {
   "id": "harel",
@@ -33,8 +37,12 @@
   "name_en": "Harel",
   "kind": "insurance_group",
   "market_group": "הראל",
+  "maya_id": 585,
+  "yahoo": "HARL.TA",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 109,
+  "has_price": true
  },
  {
   "id": "migdal",
@@ -42,8 +50,12 @@
   "name_en": "Migdal",
   "kind": "insurance_group",
   "market_group": "מגדל",
+  "maya_id": 1041,
+  "yahoo": "MGDL.TA",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 78,
+  "has_price": true
  },
  {
   "id": "clal",
@@ -51,8 +63,12 @@
   "name_en": "Clal",
   "kind": "insurance_group",
   "market_group": "כלל",
+  "maya_id": 224,
+  "yahoo": "CLIS.TA",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 101,
+  "has_price": true
  },
  {
   "id": "menora",
@@ -60,8 +76,12 @@
   "name_en": "Menora Holdings",
   "kind": "insurance_group",
   "market_group": "מנורה מבטחים",
+  "maya_id": 566,
+  "yahoo": "MMHD.TA",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 95,
+  "has_price": true
  },
  {
   "id": "hachshara",
@@ -70,7 +90,9 @@
   "kind": "insurance_group",
   "market_group": "הכשרה",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  },
  {
   "id": "ayalon",
@@ -78,8 +100,12 @@
   "name_en": "Ayalon",
   "kind": "insurance_group",
   "market_group": "איילון",
+  "maya_id": 209,
+  "yahoo": "AYAL.TA",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 69,
+  "has_price": true
  },
  {
   "id": "idi",
@@ -87,8 +113,11 @@
   "name_en": "IDI",
   "kind": "insurance_group",
   "market_group": "ביטוח ישיר",
+  "maya_id": 1089,
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  },
  {
   "id": "meitav",
@@ -96,8 +125,12 @@
   "name_en": "Meitav",
   "kind": "fund_house",
   "market_group": "מיטב",
+  "maya_id": 1064,
+  "yahoo": "MTAV.TA",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": true
  },
  {
   "id": "altshuler",
@@ -106,7 +139,9 @@
   "kind": "fund_house",
   "market_group": "אלטשולר שחם",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  },
  {
   "id": "more",
@@ -115,7 +150,9 @@
   "kind": "fund_house",
   "market_group": "מור",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  },
  {
   "id": "analyst",
@@ -124,7 +161,9 @@
   "kind": "fund_house",
   "market_group": "אנליסט",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  },
  {
   "id": "yelin",
@@ -133,7 +172,9 @@
   "kind": "fund_house",
   "market_group": "ילין לפידות",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  },
  {
   "id": "infinity",
@@ -142,7 +183,9 @@
   "kind": "fund_house",
   "market_group": "אינפיניטי",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  },
  {
   "id": "globalnet",
@@ -151,6 +194,8 @@
   "kind": "fund_house",
   "market_group": "גלובלנט",
   "has_financials": false,
-  "filings": []
+  "filings": [],
+  "docs": 0,
+  "has_price": false
  }
 ]

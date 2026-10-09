@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { CompanyData, MarketData, RegistryCompany } from './types';
+import type { CompanyData, DocsData, MarketData, PriceData, RegistryCompany } from './types';
 
 const BASE = import.meta.env.BASE_URL;
 const cache = new Map<string, Promise<unknown>>();
@@ -32,6 +32,8 @@ export const useMarketData = () => useLoad<MarketData>('market.json');
 export const useRegistry = () => useLoad<RegistryCompany[]>('companies/index.json');
 export const useCompanyData = (id: string | null, enabled = true) => useLoad<CompanyData>(id && enabled ? `companies/${id}.json` : null);
 export const useCompanyNotes = (id: string | null, enabled: boolean) => useLoad<Record<string, string>>(id && enabled ? `companies/${id}.notes.json` : null);
+export const useCompanyDocs = (id: string | null, enabled: boolean) => useLoad<DocsData>(id && enabled ? `companies/${id}.docs.json` : null);
+export const useCompanyPrice = (id: string | null, enabled: boolean) => useLoad<PriceData>(id && enabled ? `companies/${id}.price.json` : null);
 
 import { useMemo } from 'react';
 import { Market } from './market';

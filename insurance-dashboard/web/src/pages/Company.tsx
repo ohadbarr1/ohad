@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
+import { Link, NavLink, Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
-import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { GroupPanel } from './Market';
 import { chartBase, palette } from '../lib/theme';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
-import { SCALES, fmtCell, nf, pct, periodLong, scaleValue, sn, type Scale } from '../lib/format';
+import { SCALES, fmtCell, nf, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
 import type { Market } from '../lib/market';
 import type { RegistryCompany } from '../lib/types';
 
-interface Ctx { entry: RegistryCompany; store: CompanyStore | null; storeError: string | null; market: Market | null }
-const useCtx = () => useOutletContext<Ctx>();
+export interface Ctx { entry: RegistryCompany; store: CompanyStore | null; storeError: string | null; market: Market | null }
+export const useCtx = () => useOutletContext<Ctx>();
+export const DOC_TYPE: Record<string, string> = { annual: 'שנתי', quarterly: 'רבעוני', presentation: 'מצגת', solvency: 'כושר פירעון' };
 
 const KIND: Record<string, string> = { insurance_group: 'קבוצת ביטוח ופיננסים', fund_house: 'בית השקעות / מנהל קופות' };
 
@@ -32,17 +33,18 @@ export function CompanyLayout() {
           <h1>{entry.name_he}{entry.name_en && <span className="muted" style={{ fontWeight: 400 }}> · {entry.name_en}</span>}</h1>
           <div className="sub row" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span>{KIND[entry.kind]}</span>
-            <span className={`chip ${entry.has_financials ? 'loaded' : 'pending'}`}>{entry.has_financials ? `דוחות כספיים: ${latest}` : 'דוחות כספיים: טרם נקלטו'}</span>
-            {market && <span className="chip loaded">נתוני שוק: {market.plabel(market.LAST)}</span>}
+            {entry.has_financials && <span className="chip loaded">נתונים: {latest}</span>}
+            {entry.docs > 0 && <span className="chip loaded">{entry.docs} מסמכים</span>}
+            {market && entry.market_group && <span className="chip">שוק: {market.plabel(market.LAST)}</span>}
           </div>
         </div>
       </div>
       <nav className="subnav" aria-label="חברה">
         <NavLink to="." end>סקירה</NavLink>
-        <NavLink to="financials">דוחות כספיים</NavLink>
-        <NavLink to="ifrs17">IFRS 17 · CSM</NavLink>
-        <NavLink to="savings">פנסיה, גמל ופוליסות</NavLink>
-        <NavLink to="filings">מסמכי מקור</NavLink>
+        <NavLink to="financials">דוחות</NavLink>
+        <NavLink to="ifrs17">IFRS 17</NavLink>
+        <NavLink to="savings">חיסכון ארוך טווח</NavLink>
+        <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
       </nav>
       <Outlet context={{ entry, store, storeError, market } satisfies Ctx} />
     </>
@@ -50,107 +52,7 @@ export function CompanyLayout() {
 }
 
 function NoFinancials({ entry }: { entry: RegistryCompany }) {
-  return (
-    <Empty title={`הדוחות הכספיים של ${entry.name_he} טרם נקלטו`}>
-      נתוני השוק (פנסיה, גמל ופוליסות חיסכון) זמינים בלשונית "פנסיה, גמל ופוליסות". כדי לקלוט דוח כספי יש להניח את קובץ ה-PDF בתיקיית הקלט ולהריץ את צינור החילוץ. ראה "כיסוי נתונים".{' '}
-      <Link to="/coverage">לטבלת הכיסוי</Link>
-    </Empty>
-  );
-}
-
-/* ---------- overview ---------- */
-export function CompanyOverview() {
-  const { entry, store, market, storeError } = useCtx();
-  if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
-  return (
-    <>
-      {entry.market_group && market && <MarketKpis m={market} group={entry.market_group} />}
-      {entry.has_financials ? (store ? <FinancialOverview store={store} /> : <Loading what="דוחות כספיים" />) : <NoFinancials entry={entry} />}
-    </>
-  );
-}
-
-function MarketKpis({ m, group }: { m: Market; group: string }) {
-  const L = m.LAST, g = m.groupIndex(group);
-  if (g < 0) return null;
-  const org = m.value('organic', L, 'ltm', 'all', g), ret = m.value('ret', L, 'ltm', 'fam:pension', g);
-  return (
-    <section>
-      <div className="src" style={{ marginBottom: 6 }}>שוק הפנסיה, הגמל ופוליסות החיסכון · {m.plabel(L)}</div>
-      <div className="kpis">
-        <Kpi label="נכסים מנוהלים" value={nf(m.value('assets', L, 'm', 'all', g) ?? 0, 1)} sub='מיליארד ש"ח (פנסיה, גמל ופוליסות)' />
-        <Kpi label="נתח שוק" value={pct(m.value('share', L, 'm', 'all', g), 1)} sub="מכלל הנכסים" />
-        <Kpi label="שינוי בנכסים, 12 חודשים" value={pct(m.value('growth', L, 'ltm', 'all', g), 1, true)} tone={(m.value('growth', L, 'ltm', 'all', g) ?? 0) >= 0 ? 'pos' : 'neg'} />
-        <Kpi label="צבירה אורגנית, 12 חודשים" value={org == null ? '–' : sn(org, 1)} sub='מיליארד ש"ח (פנסיה וגמל)' tone={(org ?? 0) >= 0 ? 'pos' : 'neg'} />
-        <Kpi label="תשואה בפנסיה, 12 חודשים" value={pct(ret, 1, true)} sub="משוקללת בנכסים" />
-      </div>
-    </section>
-  );
-}
-
-function FinancialOverview({ store }: { store: CompanyStore }) {
-  const P = (type: string, end: string) => store.periodIndex(type, end);
-  const h26 = P('H', '2026-06-30'), h25 = P('H', '2025-06-30'), j26 = P('I', '2026-06-30'), d25 = P('I', '2025-12-31');
-  const D2 = 'F.D2_רווח_הפסד', D1 = 'F.D1_מצב_כספי';
-  const f = (sheet: string, label: string, dim?: string) => store.find(sheet, label, { exact: true, dim });
-  const profit = f(D2, 'בעלי המניות של החברה'), service = f(D2, 'רווח משירותי ביטוח'), invest = f(D2, 'רווח מהשקעות ומימון, נטו');
-  const eq = f(D1, 'סך הכל הון המיוחס לבעלי המניות של החברה'), assets = f(D1, 'סה"כ נכסים');
-  const eps = store.find(D2, 'רווח בסיסי');
-  const csmLife = store.find('F.N03_חיים_מאזן', 'מרווח השירות החוזי', { dim: 'סך הכל' });
-  const csmHealth = store.find('F.N03_בריאות_מאזן', 'מרווח השירות החוזי', { dim: 'סך הכל' });
-  const mm = (v: number | null) => (v == null ? '–' : nf(v / 1000, 0));
-  const yoy = (a: number | null, b: number | null) => (a != null && b ? (a / b - 1) * 100 : null);
-  const pNow = store.val(profit, h26), pPrev = store.val(profit, h25);
-  const eNow = store.val(eq, j26), eDec = store.val(eq, d25);
-  const roe = pNow != null && eNow != null && eDec != null ? (pNow * 2) / ((eNow + eDec) / 2) * 100 : null;
-  const cl = store.val(csmLife, j26), clPrev = store.val(csmLife, d25), ch = store.val(csmHealth, j26), chPrev = store.val(csmHealth, d25);
-  const tone = (v: number | null) => (v == null ? undefined : v >= 0 ? 'pos' as const : 'neg' as const);
-
-  const lines: [string, number | null][] = [
-    ['רווח משירותי ביטוח', service], ['רווח מהשקעות ומימון, נטו', invest], ['הכנסות מדמי ניהול', f(D2, 'הכנסות מדמי ניהול')],
-    ['רווח לפני מסים', f(D2, 'רווח לפני מסים על הכנסה')], ['רווח לתקופה', f(D2, 'רווח לתקופה')],
-  ];
-  return (
-    <>
-      <section>
-        <div className="src" style={{ marginBottom: 6 }}>דוחות כספיים ביניים · 30.6.2026 · הפניקס פיננסים (מאוחד) · מיליוני ש"ח</div>
-        <div className="kpis">
-          <Kpi label="רווח לבעלי המניות, H1'26" value={mm(pNow)} sub={<>מול <span className="num">{mm(pPrev)}</span> ב-H1'25 · <span className="num">{pct(yoy(pNow, pPrev), 1, true)}</span></>} tone={tone(yoy(pNow, pPrev))} />
-          <Kpi label="רווח משירותי ביטוח, H1'26" value={mm(store.val(service, h26))} sub={<>מול <span className="num">{mm(store.val(service, h25))}</span> · <span className="num">{pct(yoy(store.val(service, h26), store.val(service, h25)), 1, true)}</span></>} tone={tone(yoy(store.val(service, h26), store.val(service, h25)))} />
-          <Kpi label="הון לבעלי המניות" value={mm(eNow)} sub={<>מול <span className="num">{mm(eDec)}</span> בדצמבר 2025</>} />
-          <Kpi label="ROE מחושב (שנתי)" value={pct(roe, 1)} sub="רווח H1 × 2 חלקי הון ממוצע. מחושב כאן ואינו מדד מדווח" />
-          <Kpi label={'סה"כ נכסים'} value={mm(store.val(assets, j26))} sub={`מיליוני ש"ח · ${store.val(eps, h26) != null ? 'רווח למניה ' + nf(store.val(eps, h26)!, 2) + ' ש"ח' : ''}`} />
-          <Kpi label="CSM חיים" value={mm(cl)} sub={<>מול <span className="num">{mm(clPrev)}</span> בדצמבר 2025 · <span className="num">{pct(yoy(cl, clPrev), 1, true)}</span></>} tone={tone(yoy(cl, clPrev))} />
-          <Kpi label="CSM בריאות" value={mm(ch)} sub={<>מול <span className="num">{mm(chPrev)}</span> בדצמבר 2025 · <span className="num">{pct(yoy(ch, chPrev), 1, true)}</span></>} tone={tone(yoy(ch, chPrev))} />
-        </div>
-      </section>
-      <div className="grid21">
-        <Panel title="רווח והפסד: H1'26 מול H1'25 (מיליוני ש&quot;ח)">
-          <Chart label="השוואת רווח והפסד" height={300} deps={[store]} build={() => {
-            const b = chartBase(), pal = palette();
-            return {
-              animation: false, textStyle: { fontFamily: 'Heebo, sans-serif', color: b.fg }, grid: { left: 52, right: 12, top: 36, bottom: 56 },
-              legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-              tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number) => nf(v, 0) },
-              xAxis: { type: 'category', data: lines.map((l) => l[0]), axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 11, interval: 0, width: 80, overflow: 'break' } },
-              yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
-              series: [["H1'25", h25, pal[7]], ["H1'26", h26, pal[0]]].map(([name, pi, color]) => ({
-                name, type: 'bar', barMaxWidth: 30, itemStyle: { color }, label: { show: true, position: 'top', color: b.mu, fontSize: 10.5, formatter: (p: { value: number }) => nf(p.value, 0) },
-                data: lines.map((l) => { const v = store.val(l[1], pi as number); return v == null ? null : +(v / 1000).toFixed(1); }),
-              })),
-            };
-          }} />
-        </Panel>
-        <Panel title="מה נקלט">
-          <div className="prose">
-            <p>{store.d.stats.sheets_with_facts as number} טבלאות מתוך {store.d.stats.sheets_total as number} גיליונות, {nf(store.d.stats.facts as number, 0)} נתונים, {nf(store.d.stats.metrics as number, 0)} שורות. לכל נתון מצורף עמוד המקור ב-PDF.</p>
-            <p>הדוחות כוללים את הפניקס פיננסים (מאוחד) ואת הפניקס חברה לביטוח. גשר CSM, יחס כושר פירעון ומדדי עסק חדש נמצאים בדוח הדירקטוריון ובמצגת המשקיעים ואינם בקובץ הזה.</p>
-            <p><Link to="financials">פתח את הדוחות הכספיים</Link> · <Link to="ifrs17">CSM לפי קבוצת תיק</Link></p>
-          </div>
-        </Panel>
-      </div>
-    </>
-  );
+  return <Empty title="הנתונים מהדוחות טרם חולצו">{entry.docs > 0 && <Link to="../filings">{entry.docs} מסמכי מקור</Link>}</Empty>;
 }
 
 /* ---------- financials: the metric table that drives the chart ---------- */
@@ -167,15 +69,17 @@ export function CompanyFinancials() {
 function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId: string }) {
   const [sp, setSp] = useSearchParams();
   const d = store.d;
-  const initMetric = sp.get('m') != null ? Number(sp.get('m')) : null;
-  const initSheet = sp.get('sheet') ?? (initMetric != null ? d.metrics[initMetric]?.sheet : null) ?? 'F.D2_רווח_הפסד';
+  // the view lives in the URL: sheet, selected rows, period type, units, mode, column order
+  const initSel = (sp.get('m') ?? '').split(',').filter(Boolean).map(Number).filter((i) => d.metrics[i]);
+  const initSheet = sp.get('sheet') ?? d.metrics[initSel[0]]?.sheet ?? 'F.D2_רווח_הפסד';
   const [entity, setEntity] = useState<'F' | 'I'>(initSheet.startsWith('I.') ? 'I' : 'F');
   const [sheetCode, setSheetCode] = useState(initSheet);
-  const [type, setType] = useState<string>('');
-  const [scale, setScale] = useState<Scale>('m');
-  const [mode, setMode] = useState<'value' | 'yoy'>('value');
+  const [type, setType] = useState<string>(sp.get('t') ?? '');
+  const [scale, setScale] = useState<Scale>((['k', 'm', 'b'] as Scale[]).find((x) => x === sp.get('u')) ?? 'm');
+  const [mode, setMode] = useState<'value' | 'yoy'>(sp.get('v') === 'yoy' ? 'yoy' : 'value');
+  const [oldestFirst, setOldestFirst] = useState(sp.get('r') === '1');
   const [dim, setDim] = useState('all');
-  const [sel, setSel] = useState<number[]>(initMetric != null ? [initMetric] : []);
+  const [sel, setSel] = useState<number[]>(initSel);
   const [kind, setKind] = useState<Record<number, 'bar' | 'line'>>({});
   const [explain, setExplain] = useState<number | null>(null);
   const notes = useCompanyNotes(companyId, explain != null);
@@ -189,7 +93,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const curType = types.includes(type) ? type : types[0] ?? '';
 
   const cols = useMemo(() => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType) : []), [sv, d, curType]);
-  const colsDesc = useMemo(() => [...cols].reverse(), [cols]);
+  const colsDesc = useMemo(() => (oldestFirst ? cols : [...cols].reverse()), [cols, oldestFirst]);
 
   const rows = useMemo(() => {
     if (!sv) return [];
@@ -214,6 +118,15 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     });
   }, [rows]);
   useEffect(() => { setDim('all'); }, [sheetCode]);
+  useEffect(() => {
+    const q: Record<string, string> = { sheet: sheetCode };
+    if (sel.length) q.m = sel.join(',');
+    if (curType) q.t = curType;
+    if (scale !== 'm') q.u = scale;
+    if (mode !== 'value') q.v = mode;
+    if (oldestFirst) q.r = '1';
+    setSp(q, { replace: true });
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, setSp]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
   const cell = (mi: number, pi: number): number | null => {
@@ -230,6 +143,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   };
 
   const sheets = useMemo(() => d.sheets.filter((s) => s.entity === entity), [d, entity]);
+  const curGroup = sheets.filter((x) => x.group === sv?.group);
   const optGroups = GROUP_ORDER.map((g) => ({ g, items: sheets.filter((s) => s.group === g) })).filter((x) => x.items.length);
 
   const series = sel.filter((i) => rows.some((r) => r.idx === i)).map((mi, k) => {
@@ -256,20 +170,20 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   return (
     <>
       <section className="controls">
-        <div className="field"><span>ישות מדווחת</span><Seg<'F' | 'I'> label="ישות" value={entity} onChange={(e) => { setEntity(e); const first = d.sheets.find((s) => s.entity === e && s.group === 'income'); if (first) { setSheetCode(first.code); setSp({}); } }} options={[['F', 'הפניקס פיננסים (מאוחד)'], ['I', 'הפניקס חברה לביטוח']]} /></div>
-        <Field label="דוח / ביאור">
-          <select value={sheetCode} onChange={(e) => { setSheetCode(e.target.value); setSel([]); setSp({}); }}>
-            {optGroups.map(({ g, items }) => <optgroup key={g} label={d.groups[g]}>{items.map((s) => <option key={s.code} value={s.code}>{sheetName(s.code)}</option>)}</optgroup>)}
-          </select>
-        </Field>
+        <div className="field"><span>ישות מדווחת</span><Seg<'F' | 'I'> label="ישות" value={entity} onChange={(e) => { setEntity(e); const first = d.sheets.find((s) => s.entity === e && s.group === 'income'); if (first) { setSheetCode(first.code); setSel([]); } }} options={[['F', 'הפניקס פיננסים (מאוחד)'], ['I', 'הפניקס חברה לביטוח']]} /></div>
+        <div className="field"><span>דוח</span><div className="seg wrap" role="group" aria-label="דוח">
+          {optGroups.map(({ g, items }) => <button key={g} type="button" aria-pressed={sv?.group === g} onClick={() => { setSheetCode(items[0].code); setSel([]); }}>{d.groups[g]}</button>)}
+        </div></div>
+        {curGroup.length > 1 && <Field label="טבלה"><select value={sheetCode} onChange={(e) => { setSheetCode(e.target.value); setSel([]); }}>{curGroup.map((x) => <option key={x.code} value={x.code}>{sheetName(x.code)}</option>)}</select></Field>}
         <div className="field"><span>תקופה</span><Seg<string> label="תקופה" value={curType} onChange={setType} options={types.map((t) => [t, periodLong(t)] as [string, string])} /></div>
         <Field label="יחידות"><select value={scale} onChange={(e) => setScale(e.target.value as Scale)} disabled={mode === 'yoy'}>{SCALES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></Field>
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', '% שינוי שנתי']]} /></div>
+        <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש ← ישן'], ['old', 'ישן ← חדש']]} /></div>
         {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
       </section>
 
-      <Panel title={series.length ? 'השוואה בין התקופות' : 'בחר שורות בטבלה כדי להציג אותן בגרף'} aside={<span>{unitLabel}</span>}>
-        {series.length === 0 || cols.length === 0 ? <Empty title="אין שורה נבחרת">סמן שורות בטבלה למטה.</Empty> : (
+      <Panel title={series.length === 1 ? series[0].name : 'גרף'} aside={<span>{unitLabel}</span>}>
+        {series.length === 0 || cols.length === 0 ? <Empty title="אין שורה נבחרת" /> : (
           <>
             <Chart label="גרף שורות נבחרות" height={320} deps={[sel, cols, mode, scale, sheetCode, kind, series.length]} build={() => {
               const b = chartBase();
@@ -308,7 +222,6 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         <div className="explain">
           <b>{d.metrics[explain].label}</b>
           <div>{notes.error ? 'לא ניתן לטעון הסברים.' : explainText ?? (notes.data ? 'אין הסבר לשורה זו.' : 'טוען הסבר…')}</div>
-          <div className="src">ההערות נכתבו בעת חילוץ הדוח. תגית [חישוב] מציינת חישוב מתוך הטבלה, [הסבר כללי] ידע כללי שאינו בדוח, [הערכה] פרשנות.</div>
         </div>
       )}
 
@@ -338,7 +251,6 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
             </tbody>
           </table>
         </div>
-        <div className="src">הערכים כפי שהודפסו בדוח (אלפי ש"ח), מוצגים ביחידה שנבחרה. מקף בדוח מוצג כאפס. לחיצה על מספר העמוד פותחת את הדוח המקורי באותו עמוד.</div>
       </Panel>
     </>
   );
@@ -396,7 +308,7 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
               })),
             };
           }} />
-          <div className="src">יתרות בתאריכי מאזן, כפי שדווחו בביאור 3 (מגזרי פעילות). חוזי ביטוח ישירים. סכום הקבוצות נבדק מול הסה"כ המודפס.</div>
+          <div className="src">ביאור 3, מגזרי פעילות · חוזי ביטוח ישירים · <Link to={`../financials?sheet=${encodeURIComponent(seg)}`}>טבלה מלאה</Link></div>
         </Panel>
         <Panel title="קבוצות תיק">
           <div className="scroll"><table>
@@ -417,15 +329,6 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
           </table></div>
         </Panel>
       </div>
-      <Panel title="מה אפשר ומה אי אפשר לראות מכאן">
-        <div className="prose">
-          <ul>
-            <li><b>יתרות בלבד.</b> הדוח הביניים אינו כולל גשר CSM (פתיחה, עסק חדש, ריבית, שחרור, שינוי הנחות, סגירה) לפי קבוצת תיק. הגשר נמצא בדוח הדירקטוריון ובמצגת המשקיעים, ולכן אי אפשר להסביר מכאן למה היתרה השתנתה.</li>
-            <li><b>שחרור CSM לרווח</b> מפורסם לכל מגזר החיים יחד, לא לפי קבוצה. ראה "דוחות כספיים" ← רווח משירותי ביטוח.</li>
-          </ul>
-          <p><Link to={`../financials?sheet=${encodeURIComponent(seg)}`}>פתח את הטבלה המלאה בדוחות הכספיים</Link></p>
-        </div>
-      </Panel>
     </>
   );
 }
@@ -436,40 +339,4 @@ export function CompanySavings() {
   if (!entry.market_group) return <Empty title="אין שיוך לנתוני שוק" />;
   if (!market) return <Loading what="נתוני שוק" />;
   return <GroupPanel m={market} group={entry.market_group} />;
-}
-
-/* ---------- filings ---------- */
-export function CompanyFilings() {
-  const { entry, store } = useCtx();
-  const nav = useNavigate();
-  if (!entry.has_financials) return <NoFinancials entry={entry} />;
-  return (
-    <>
-      <Panel title="מסמכי מקור שנקלטו">
-        <div className="scroll"><table>
-          <thead><tr><th>ישות</th><th>תקופה</th><th>מסמך</th><th>עמודים</th><th>קישור</th></tr></thead>
-          <tbody>{entry.filings.map((f) => (
-            <tr key={f.entity}><td>{f.name}</td><td>{f.period}</td><td>{f.doc}</td><td><span className="num">{f.pages ?? '–'}</span></td><td>{f.url ? <a href={f.url} target="_blank" rel="noreferrer">פתח PDF</a> : '–'}</td></tr>
-          ))}</tbody>
-        </table></div>
-      </Panel>
-      {store && (
-        <Panel title="מפת המסמך: איפה כל טבלה" aside={<span>לחיצה על שורה פותחת את הדוח הכספי</span>}>
-          <div className="scroll" style={{ maxHeight: 560 }}><table>
-            <thead><tr><th>ישות</th><th>קבוצה</th><th>טבלה</th><th>עמודים ב-PDF</th></tr></thead>
-            <tbody>{store.d.sheets.map((s) => {
-              const first = Number(String(s.pages).split('-')[0]);
-              const url = store.sourceUrl(s.entity, Number.isFinite(first) ? first : null);
-              return (
-                <tr key={s.code} style={{ cursor: 'pointer' }} onClick={() => nav(`../financials?sheet=${encodeURIComponent(s.code)}`)}>
-                  <td>{s.entity === 'F' ? 'פיננסים' : 'ביטוח'}</td><td>{store.d.groups[s.group]}</td><td>{sheetName(s.code)}</td>
-                  <td>{url ? <a href={url} target="_blank" rel="noreferrer" className="num" onClick={(e) => e.stopPropagation()}>{s.pages}</a> : <span className="num">{s.pages}</span>}</td>
-                </tr>
-              );
-            })}</tbody>
-          </table></div>
-        </Panel>
-      )}
-    </>
-  );
 }

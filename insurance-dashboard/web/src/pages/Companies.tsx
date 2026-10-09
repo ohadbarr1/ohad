@@ -16,7 +16,7 @@ export function Companies() {
         <Seg label="סוג" value={kind} onChange={setKind} options={[['all', 'הכול'], ['insurance_group', 'קבוצות ביטוח'], ['fund_house', 'בתי השקעות']]} /></div>
       <Panel>
         <div className="scroll"><table>
-          <thead><tr><th>חברה</th><th>נכסים (מיליארד ש"ח)</th><th>נתח שוק</th><th>שינוי 12 חודשים</th><th>צבירה אורגנית 12 ח׳</th><th>דמי ניהול</th><th>דוחות כספיים</th></tr></thead>
+          <thead><tr><th>חברה</th><th>נכסים (מיליארד ש"ח)</th><th>נתח שוק</th><th>שינוי 12 חודשים</th><th>צבירה אורגנית 12 ח׳</th><th>דמי ניהול</th><th>מסמכים</th></tr></thead>
           <tbody>{list.map((c) => {
             const g = m ? m.groupIndex(c.market_group ?? '') : -1;
             const v = (k: Parameters<NonNullable<typeof m>['value']>[0]) => (m && g >= 0 ? m.value(k, L, 'ltm', 'all', g) : null);
@@ -28,12 +28,12 @@ export function Companies() {
                 <td><span className={`num ${cls(v('growth'))}`}>{pct(v('growth'), 1, true)}</span></td>
                 <td><span className={`num ${cls(v('organic'))}`}>{v('organic') == null ? '–' : nf(v('organic')!, 1)}</span></td>
                 <td><span className="num">{pct(v('fee'), 2)}</span></td>
-                <td><span className={`chip ${c.has_financials ? 'loaded' : 'pending'}`}>{c.has_financials ? c.filings[0]?.period : 'טרם נקלטו'}</span></td>
+                <td><span className="num">{c.docs || '–'}</span></td>
               </tr>
             );
           })}</tbody>
         </table></div>
-        <div className="src">צבירה אורגנית כוללת פנסיה וגמל בלבד. נכסים כוללים גם פוליסות חיסכון של חברות הביטוח.</div>
+        <div className="src">נכסים: פנסיה, גמל ופוליסות חיסכון · צבירה: פנסיה וגמל · מקור: רשות שוק ההון</div>
       </Panel>
     </>
   );

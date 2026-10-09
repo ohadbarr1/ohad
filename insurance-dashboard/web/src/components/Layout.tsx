@@ -16,8 +16,6 @@ export function Layout() {
           <nav className="nav" aria-label="ראשי">
             <NavLink to="/market">שוק</NavLink>
             <NavLink to="/companies">חברות</NavLink>
-            <NavLink to="/coverage">כיסוי נתונים</NavLink>
-            <NavLink to="/methodology">מתודולוגיה</NavLink>
           </nav>
           <button className="iconbtn" type="button" onClick={toggle} aria-label="החלפת ערכת נושא">{theme === 'dark' ? 'בהיר' : 'כהה'}</button>
         </div>

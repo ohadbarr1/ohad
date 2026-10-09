@@ -129,3 +129,26 @@ td.lbl { min-width: 200px; }
   .topbar-in { gap: 8px; }
   .search { flex-basis: 100%; max-width: none; order: 3; }
 }
+
+/* overview: grid of single-metric cards */
+h2.band { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+h2.band .muted { font-weight: 400; font-size: 12px; }
+.mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.mcard { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mcard header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.mcard h3 { margin: 0; font-size: 13px; font-weight: 500; color: var(--muted); display: flex; gap: 6px; align-items: center; min-width: 0; }
+.mcard .tag { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; padding: 1px 5px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; direction: ltr; }
+.mcard .open { color: var(--muted); font-size: 14px; line-height: 1; padding: 2px 4px; border-radius: 4px; }
+.mcard .open:hover { color: var(--fg); background: var(--panel2); text-decoration: none; }
+.mval { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.mval .v { font-size: 22px; font-weight: 600; line-height: 1.2; }
+.mval .u { font-size: 11.5px; color: var(--muted); }
+.mval .d { font-size: 12px; margin-inline-start: auto; }
+.mcard footer { font-size: 11px; color: var(--muted); }
+.mnone { height: 150px; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.subnav .count { margin-inline-start: 6px; font-size: 11px; color: var(--muted); background: var(--panel2); border-radius: 999px; padding: 0 6px; }
+.seg.wrap { flex-wrap: wrap; }
+table.docs td { vertical-align: top; }
+a.doc { display: inline-flex; gap: 6px; align-items: baseline; margin: 1px 0 1px 6px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; color: var(--fg); }
+a.doc:hover { border-color: var(--accent); text-decoration: none; }
+a.doc .num { color: var(--muted); font-size: 11px; }

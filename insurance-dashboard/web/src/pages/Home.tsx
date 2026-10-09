@@ -12,8 +12,7 @@ export function Home() {
   return (
     <>
       <section className="hero">
-        <h1>מחקר ביטוח, פנסיה וגמל על בסיס הדוחות</h1>
-        <p>חיפוש חברה, קופה או שורה בדוח כספי. טבלת מדדים שמזינה גרף, עם מקור בעמוד המדויק ב-PDF. נתוני שוק חודשיים מהרשות לשוק ההון, ודוחות כספיים של חברות שנקלטים ממסמכי המקור.</p>
+        <h1>ביטוח, פנסיה וגמל</h1>
         <Search big />
       </section>
 
@@ -29,12 +28,12 @@ export function Home() {
 
       <Panel title="חברות" aside={<Link to="/companies">כל החברות</Link>}>
         <div className="grid3">
-          {reg.data?.slice(0, 9).map((c) => {
+          {reg.data?.slice(0, 15).map((c) => {
             const g = m ? m.groupIndex(c.market_group ?? '') : -1;
             return (
               <Link key={c.id} to={`/company/${c.id}`} className="card">
                 <h3>{c.name_he} {c.name_en && <span className="muted" style={{ fontWeight: 400 }}>{c.name_en}</span>}</h3>
-                <div className="row"><span className={`chip ${c.has_financials ? 'loaded' : 'pending'}`}>{c.has_financials ? `דוחות: ${c.filings[0]?.period}` : 'דוחות: טרם נקלטו'}</span></div>
+                <div className="row">{c.has_financials && <span className="chip loaded">נתונים: {c.filings[0]?.period}</span>}{c.docs > 0 && <span className="chip">{c.docs} מסמכים</span>}</div>
                 {m && g >= 0 && <div className="row"><span className="big num">{nf(m.value('assets', L, 'm', 'all', g) ?? 0, 0)}</span><span className="muted">מיליארד ש"ח נכסים · נתח <span className="num">{pct(m.value('share', L, 'm', 'all', g), 1)}</span></span></div>}
               </Link>
             );
@@ -42,22 +41,6 @@ export function Home() {
         </div>
       </Panel>
 
-      <div className="grid2">
-        <Panel title="שוק">
-          <div className="prose"><ul>
-            <li><Link to="/market/overview">סקירת שוק</Link>: נכסים, צבירה ותשואות לפי מוצר.</li>
-            <li><Link to="/market/ranking">דירוג חברות</Link>: חודש, מוצר, מדד וחלון, עם קו שוק.</li>
-            <li><Link to="/market/funds">קופות</Link>: 1,251 קופות עם דמי ניהול, תשואות וחשיפות.</li>
-          </ul></div>
-        </Panel>
-        <Panel title="דוחות כספיים">
-          <div className="prose"><ul>
-            <li><Link to="/company/phoenix/financials">הפניקס: דוחות כספיים</Link>, טבלת מדדים עם גרף ועמוד מקור.</li>
-            <li><Link to="/company/phoenix/ifrs17">הפניקס: CSM לפי קבוצת תיק</Link>, ביטוח חיים ובריאות.</li>
-            <li><Link to="/coverage">כיסוי נתונים</Link>: אילו חברות ותקופות נקלטו ומה חסר.</li>
-          </ul></div>
-        </Panel>
-      </div>
     </>
   );
 }
