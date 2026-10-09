@@ -28,8 +28,8 @@ export function pick(facts: IfrsFact[], pref: string): IfrsFact | null {
   return [...facts].sort((a, b) => (order.indexOf(a.b) + 9) % 9 - (order.indexOf(b.b) + 9) % 9 || (a.s === a.g ? -1 : 1))[0] ?? null;
 }
 export function Src({ f, d, p }: { f: IfrsFact; d: IfrsData; p: string }) {
-  const url = d.files.find((x) => x.company === f.c && x.period === p)?.url;
-  return f.pg == null ? <>–</> : url ? <a href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" className="num">עמ׳ {f.pg}</a> : <span className="num">עמ׳ {f.pg}</span>;
+  const url = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === p)?.url;
+  return f.pg == null ? <>–</> : url ? <a href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" className="num">{f.u !== undefined ? 'מצגת ' : ''}עמ׳ {f.pg}</a> : <span className="num">עמ׳ {f.pg}</span>;
 }
 
 /** Reported IFRS 17 figures side by side, each with its basis and source page. */

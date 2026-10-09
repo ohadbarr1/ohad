@@ -41,7 +41,7 @@ export function IndustryCapital() {
   if (!d || !reg.data || (P && !facts.data && !facts.error)) return <Loading what="הון ודיבידנד" />;
   if (!P) return <Empty title="אין דוחות מחולצים" />;
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
-  const url = (f: IfrsFact) => d.files.find((x) => x.company === f.c && x.period === P)?.url;
+  const url = (f: IfrsFact) => f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === P)?.url;
   const show = (f: IfrsFact, p?: boolean) => nf(f.m === 'dividend_declared' ? Math.abs(f.v) : f.v, p || Math.abs(f.v) < 100 ? (Number.isInteger(f.v) ? 0 : 1) : 0) + (p ? '%' : '');
 
   return (

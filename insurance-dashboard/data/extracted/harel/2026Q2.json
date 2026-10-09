@@ -1314,7 +1314,7 @@
   },
   {
    "metric": "csm_release",
-   "segment": "run_off_products",
+   "segment": "group",
    "basis": "net",
    "window": "ytd",
    "date": "2026-06-30",
@@ -1322,11 +1322,11 @@
    "page_he": 19,
    "page_en": 22,
    "label": "CSM release - Run Off products",
-   "note": "Six months 2026. Negative as printed in the roll-forward."
+   "note": "Six months 2026. Negative as printed in the roll-forward. Sub-row of the group net roll-forward (run_off_products)."
   },
   {
    "metric": "csm_release",
-   "segment": "growth_products",
+   "segment": "group",
    "basis": "net",
    "window": "ytd",
    "date": "2026-06-30",
@@ -1334,7 +1334,7 @@
    "page_he": 19,
    "page_en": 22,
    "label": "CSM release - growth products",
-   "note": "Six months 2026. Negative as printed in the roll-forward."
+   "note": "Six months 2026. Negative as printed in the roll-forward. Sub-row of the group net roll-forward (growth_products)."
   },
   {
    "metric": "csm_new_business",
@@ -1398,7 +1398,7 @@
   },
   {
    "metric": "csm_release",
-   "segment": "run_off_products",
+   "segment": "group",
    "basis": "net",
    "window": "ytd",
    "date": "2025-06-30",
@@ -1406,11 +1406,11 @@
    "page_he": 19,
    "page_en": 22,
    "label": "CSM release - Run Off products",
-   "note": "Six months 2025 (comparative). Negative as printed in the roll-forward."
+   "note": "Six months 2025 (comparative). Negative as printed in the roll-forward. Sub-row of the group net roll-forward (run_off_products)."
   },
   {
    "metric": "csm_release",
-   "segment": "growth_products",
+   "segment": "group",
    "basis": "net",
    "window": "ytd",
    "date": "2025-06-30",
@@ -1418,7 +1418,7 @@
    "page_he": 19,
    "page_en": 22,
    "label": "CSM release - growth products",
-   "note": "Six months 2025 (comparative). Negative as printed in the roll-forward."
+   "note": "Six months 2025 (comparative). Negative as printed in the roll-forward. Sub-row of the group net roll-forward (growth_products)."
   },
   {
    "metric": "csm_new_business",
@@ -1482,7 +1482,7 @@
   },
   {
    "metric": "csm_release",
-   "segment": "run_off_products",
+   "segment": "group",
    "basis": "net",
    "window": "q",
    "date": "2026-06-30",
@@ -1490,11 +1490,11 @@
    "page_he": 19,
    "page_en": 23,
    "label": "CSM release - Run Off products",
-   "note": "Q2 2026. Negative as printed in the roll-forward."
+   "note": "Q2 2026. Negative as printed in the roll-forward. Sub-row of the group net roll-forward (run_off_products)."
   },
   {
    "metric": "csm_release",
-   "segment": "growth_products",
+   "segment": "group",
    "basis": "net",
    "window": "q",
    "date": "2026-06-30",
@@ -1502,7 +1502,7 @@
    "page_he": 19,
    "page_en": 23,
    "label": "CSM release - growth products",
-   "note": "Q2 2026. Negative as printed in the roll-forward."
+   "note": "Q2 2026. Negative as printed in the roll-forward. Sub-row of the group net roll-forward (growth_products)."
   },
   {
    "metric": "csm_new_business",
@@ -1566,7 +1566,7 @@
   },
   {
    "metric": "csm_release",
-   "segment": "run_off_products",
+   "segment": "group",
    "basis": "net",
    "window": "q",
    "date": "2025-06-30",
@@ -1574,11 +1574,11 @@
    "page_he": 19,
    "page_en": 23,
    "label": "CSM release - Run Off products",
-   "note": "Q2 2025 (comparative). Negative as printed in the roll-forward."
+   "note": "Q2 2025 (comparative). Negative as printed in the roll-forward. Sub-row of the group net roll-forward (run_off_products)."
   },
   {
    "metric": "csm_release",
-   "segment": "growth_products",
+   "segment": "group",
    "basis": "net",
    "window": "q",
    "date": "2025-06-30",
@@ -1586,7 +1586,7 @@
    "page_he": 19,
    "page_en": 23,
    "label": "CSM release - growth products",
-   "note": "Q2 2025 (comparative). Negative as printed in the roll-forward."
+   "note": "Q2 2025 (comparative). Negative as printed in the roll-forward. Sub-row of the group net roll-forward (growth_products)."
   },
   {
    "metric": "csm_new_business",
@@ -2389,6 +2389,58 @@
    "page_en": 12,
    "label": "Adjusted ROE 22%-23% (strategic plan chart)",
    "note": "Percent. Chart row 'Adjusted ROE' shows 20% 22% 21% 22%-23% against axis labels 2024, 2025, H1.26, 2027, 2028; the range is assumed to be the 2028 target (only 4 values for 5 axis labels, column alignment not verifiable from text). Adjusted ROE is on core-profit basis."
+  },
+  {
+   "metric": "csm_other:Changes in reinsurance CSM",
+   "segment": "group",
+   "basis": "net",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": -50,
+   "page_he": 19,
+   "page_en": 23,
+   "label": "שינויים ב-CSM ביטוח משנה",
+   "note": "Row of the group net CSM movement table on the board report page; added on review, read from the printed table.",
+   "source": "table"
+  },
+  {
+   "metric": "csm_other:Changes in reinsurance CSM",
+   "segment": "group",
+   "basis": "net",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 70,
+   "page_he": 19,
+   "page_en": 23,
+   "label": "שינויים ב-CSM ביטוח משנה",
+   "note": "Row of the group net CSM movement table on the board report page; added on review, read from the printed table.",
+   "source": "table"
+  },
+  {
+   "metric": "csm_other:Changes in reinsurance CSM",
+   "segment": "group",
+   "basis": "net",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": -47,
+   "page_he": 19,
+   "page_en": 23,
+   "label": "שינויים ב-CSM ביטוח משנה",
+   "note": "Row of the group net CSM movement table on the board report page; added on review, read from the printed table.",
+   "source": "table"
+  },
+  {
+   "metric": "csm_other:Changes in reinsurance CSM",
+   "segment": "group",
+   "basis": "net",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 54,
+   "page_he": 19,
+   "page_en": 23,
+   "label": "שינויים ב-CSM ביטוח משנה",
+   "note": "Row of the group net CSM movement table on the board report page; added on review, read from the printed table.",
+   "source": "table"
   }
  ],
  "not_found": [

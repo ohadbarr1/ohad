@@ -58,6 +58,7 @@ except duckdb.IOException:  # warehouse busy: the exported registry has the same
     import csv
     pdf = {int(r["report_id"]): r["url"] for r in csv.DictReader(open(ROOT / "data" / "registry" / "documents.csv", encoding="utf-8")) if r["file_type"] == "pdf1"}
 out, files = [], []
+PRES = json.loads((ROOT / "data" / "registry" / "presentations.json").read_text(encoding="utf-8"))
 for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
     d = json.loads(f.read_text(encoding="utf-8"))
     comp, period = f.parent.name, f.stem
@@ -74,6 +75,9 @@ for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
         for k_in, k_out in (("source", "src"), ("model", "model"), ("transition", "tr"), ("bucket", "bk"), ("effect_on", "fx")):
             if x.get(k_in) and x[k_in] != "table":
                 row[k_out] = x[k_in]
+        if x.get("doc") == "pres":  # the page number refers to the investor presentation, not the report
+            pu = pdf.get(PRES.get(f"{comp}_{period}"))
+            row["u"], row["src"] = (FILES + pu if pu else None), row.get("src", "pres")
         if x.get("note"):
             row["n"] = " ".join(str(x["note"]).split())[:160]
         out.append(row)

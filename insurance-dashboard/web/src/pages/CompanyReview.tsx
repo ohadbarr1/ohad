@@ -21,9 +21,9 @@ const yearBack = (iso: string) => `${Number(iso.slice(0, 4)) - 1}${iso.slice(4)}
 
 function Val({ f, d, p }: { f: IfrsFact | null; d: IfrsData; p: string }) {
   if (!f) return <span className="muted">–</span>;
-  const url = d.files.find((x) => x.company === f.c && x.period === p)?.url;
+  const url = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === p)?.url;
   const txt = nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
-  return url && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`עמ׳ ${f.pg}`}>{txt}</a> : <span className={`num ${f.v < 0 ? 'neg' : ''}`}>{txt}</span>;
+  return url && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.u !== undefined ? 'מצגת, ' : ''}עמ׳ ${f.pg}`}>{txt}</a> : <span className={`num ${f.v < 0 ? 'neg' : ''}`}>{txt}</span>;
 }
 function Delta({ a, b }: { a: IfrsFact | null; b: IfrsFact | null }) {
   if (!a || !b) return <span className="muted">–</span>;
