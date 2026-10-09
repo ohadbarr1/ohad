@@ -7,3 +7,4 @@ web/dist-single/
 data/sources/pdf/
 .venv/
 data/sources/xbrl/
+data/work/
