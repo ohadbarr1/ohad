@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { CompanyData, DocsData, IfrsData, KpiData, MarketData, PriceData, RegistryCompany } from './types';
+import type { CompanyData, DocsData, IfrsData, IfrsFact, KpiData, MarketData, PriceData, RegistryCompany } from './types';
 
 const BASE = import.meta.env.BASE_URL;
 const cache = new Map<string, Promise<unknown>>();
@@ -36,6 +36,7 @@ export const useCompanyDocs = (id: string | null, enabled: boolean) => useLoad<D
 export const useCompanyPrice = (id: string | null, enabled: boolean) => useLoad<PriceData>(id && enabled ? `companies/${id}.price.json` : null);
 export const useKpiData = () => useLoad<KpiData>('kpi.json');
 export const useIfrsData = () => useLoad<IfrsData>('ifrs.json');
+export const useIfrsFacts = (period: string | null) => useLoad<IfrsFact[]>(period ? `ifrs_${period}.json` : null);
 
 import { useMemo } from 'react';
 import { Market } from './market';

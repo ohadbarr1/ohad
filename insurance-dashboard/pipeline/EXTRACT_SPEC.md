@@ -59,3 +59,9 @@ IFRS 17 notes: take every row of these tables, per segment (life / health / pc, 
 - Solvency (insurer subsidiary), as printed in the annual report or the board report: ratios with and without transitional measures, `own_funds`, `scr`, `mcr`, and the board's capital target `target_solvency_ratio`.
 
 Coverage rule for long tables: finish a table once you start it. A half-copied roll-forward is worse than none; if a table cannot be completed, leave it out and say so in `not_found`.
+
+## v2.1 naming rules (from the FY2025 round)
+- A metric name belongs to one table. Rows of the CSM roll-forward use the `csm_*` names; the same amounts shown in another note get that note's own name: `rev_csm_release` (insurance revenue analysis), `reins_expense_csm_release` / `reins_expense_ra_release` (reinsurance expense analysis), `note<N>_*` for anything else.
+- Printed subtotals inside a roll-forward are `csm_subtotal:<row label>` (or `ra_subtotal:` etc.), never `csm_other:`.
+- The finance row of a CSM roll-forward is `csm_interest_accretion`, with the printed label in `label`.
+- Before finishing, check each roll-forward: opening + movement rows = closing (under one sign convention, within rounding). If it does not hold, find the duplicate, subtotal or missing row.

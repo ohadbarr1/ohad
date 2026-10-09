@@ -89,9 +89,10 @@
   "name_en": "Hachshara",
   "kind": "insurance_group",
   "market_group": "הכשרה",
+  "maya_id": 1187,
   "has_financials": false,
   "filings": [],
-  "docs": 0,
+  "docs": 52,
   "has_price": false
  },
  {
@@ -138,10 +139,12 @@
   "name_en": "Altshuler Shaham",
   "kind": "fund_house",
   "market_group": "אלטשולר שחם",
+  "maya_id": 2367,
+  "yahoo": "ALTF.TA",
   "has_financials": false,
   "filings": [],
-  "docs": 0,
-  "has_price": false
+  "docs": 22,
+  "has_price": true
  },
  {
   "id": "more",
@@ -149,10 +152,12 @@
   "name_en": "More",
   "kind": "fund_house",
   "market_group": "מור",
+  "maya_id": 1692,
+  "yahoo": "MRIN.TA",
   "has_financials": false,
   "filings": [],
-  "docs": 0,
-  "has_price": false
+  "docs": 70,
+  "has_price": true
  },
  {
   "id": "analyst",
@@ -160,10 +165,12 @@
   "name_en": "Analyst",
   "kind": "fund_house",
   "market_group": "אנליסט",
+  "maya_id": 1008,
+  "yahoo": "ANLT.TA",
   "has_financials": false,
   "filings": [],
-  "docs": 0,
-  "has_price": false
+  "docs": 32,
+  "has_price": true
  },
  {
   "id": "yelin",
@@ -171,10 +178,13 @@
   "name_en": "Yelin Lapidot",
   "kind": "fund_house",
   "market_group": "ילין לפידות",
+  "maya_id": 1307,
+  "yahoo": "ATRY.TA",
+  "note_he": "דוחות ומניה של אטראו שוקי הון, המחזיקה בילין לפידות",
   "has_financials": false,
   "filings": [],
-  "docs": 0,
-  "has_price": false
+  "docs": 31,
+  "has_price": true
  },
  {
   "id": "infinity",
@@ -197,5 +207,31 @@
   "filings": [],
   "docs": 0,
   "has_price": false
+ },
+ {
+  "id": "more_gemel",
+  "name_he": "מור גמל ופנסיה",
+  "name_en": "More Provident & Pension",
+  "kind": "fund_house",
+  "market_group": "מור",
+  "maya_id": 2358,
+  "yahoo": "MPP.TA",
+  "has_financials": false,
+  "filings": [],
+  "docs": 45,
+  "has_price": true
+ },
+ {
+  "id": "ibi",
+  "name_he": "אי.בי.אי",
+  "name_en": "IBI",
+  "kind": "fund_house",
+  "market_group": null,
+  "maya_id": 175,
+  "yahoo": "IBI.TA",
+  "has_financials": false,
+  "filings": [],
+  "docs": 46,
+  "has_price": true
  }
 ]

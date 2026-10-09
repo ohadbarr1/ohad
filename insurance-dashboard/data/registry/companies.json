@@ -84,7 +84,8 @@
   "name_en": "Altshuler Shaham",
   "kind": "fund_house",
   "market_group": "אלטשולר שחם",
-  "maya_id": 2367
+  "maya_id": 2367,
+  "yahoo": "ALTF.TA"
  },
  {
   "id": "more",
@@ -92,7 +93,8 @@
   "name_en": "More",
   "kind": "fund_house",
   "market_group": "מור",
-  "maya_id": 1692
+  "maya_id": 1692,
+  "yahoo": "MRIN.TA"
  },
  {
   "id": "analyst",
@@ -100,7 +102,8 @@
   "name_en": "Analyst",
   "kind": "fund_house",
   "market_group": "אנליסט",
-  "maya_id": 1008
+  "maya_id": 1008,
+  "yahoo": "ANLT.TA"
  },
  {
   "id": "yelin",
@@ -108,7 +111,9 @@
   "name_en": "Yelin Lapidot",
   "kind": "fund_house",
   "market_group": "ילין לפידות",
-  "maya_id": 1307
+  "maya_id": 1307,
+  "yahoo": "ATRY.TA",
+  "note_he": "דוחות ומניה של אטראו שוקי הון, המחזיקה בילין לפידות"
  },
  {
   "id": "infinity",
@@ -130,7 +135,8 @@
   "name_en": "More Provident & Pension",
   "kind": "fund_house",
   "market_group": "מור",
-  "maya_id": 2358
+  "maya_id": 2358,
+  "yahoo": "MPP.TA"
  },
  {
   "id": "ibi",
@@ -138,6 +144,7 @@
   "name_en": "IBI",
   "kind": "fund_house",
   "market_group": null,
-  "maya_id": 175
+  "maya_id": 175,
+  "yahoo": "IBI.TA"
  }
 ]

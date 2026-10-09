@@ -45,5 +45,5 @@ export interface DocEntry { id: number; date: string; type: 'annual' | 'quarterl
 export interface DocsData { source: string; docs: DocEntry[] }
 export interface PriceData { ticker: string; source: string; unit: 'agorot'; asof: string; last: number; dates: string[]; close: number[]; dividends: [string, number][] }
 export interface KpiData { asof: string; source: string; notes?: { company: string; corrected: string[]; withheld: string[] }[]; companies: Record<string, { periods: string[]; end: string[]; values: Record<string, (number | null)[]> }> }
-export interface IfrsFact { c: string; p: string; m: string; s: string; g: string; b: string; w: string; d: string; v: number; pg: number | null; l: string; n?: string; src?: string; model?: string; tr?: string; bk?: string; fx?: string }
-export interface IfrsData { unit: string; files: { company: string; period: string; report_id: number; url: string | null; facts: number }[]; facts: IfrsFact[] }
+export interface IfrsFact { c: string; m: string; dv?: number; sn?: number; s: string; g: string; b: string; w: string; d: string; v: number; pg: number | null; l: string; n?: string; src?: string; model?: string; tr?: string; bk?: string; fx?: string }
+export interface IfrsData { unit: string; files: { company: string; period: string; report_id: number; url: string | null; facts: number }[] }

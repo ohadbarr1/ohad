@@ -10,6 +10,10 @@ from pathlib import Path
 
 import duckdb
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from bridge import solve  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 FILES = "https://mayafiles.tase.co.il/"
 
@@ -73,5 +77,34 @@ for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
         if x.get("note"):
             row["n"] = " ".join(str(x["note"]).split())[:160]
         out.append(row)
-(ROOT / "web" / "public" / "data" / "ifrs.json").write_text(json.dumps({"unit": "NIS millions", "files": files, "facts": out}, ensure_ascii=False), encoding="utf-8")
+# Bridge-consistent signs: `dv` is the movement as a change in the CSM balance (and balances as positive numbers),
+# set only where opening + movements = closing can be made to hold in exactly one way.
+groups = {}
+for r in out:
+    if r["m"].startswith("csm_") and r["m"] != "csm_expected_release" and not r["m"].startswith(("csm_subtotal", "csm_other:Balance")) and "tr" not in r and "model" not in r:
+        groups.setdefault((r["c"], r["p"], r["s"], r["b"]), []).append(r)
+closed = 0
+for (comp, period, seg, basis), rows in groups.items():
+    for o in [r for r in rows if r["m"] == "csm_opening"]:
+        for c in [r for r in rows if r["m"] == "csm_closing" and r["d"] > o["d"]]:
+            for w in ("q", "ytd", "fy"):
+                mv = [r for r in rows if r["w"] == w and r["d"] == c["d"] and r["m"] not in ("csm_opening", "csm_closing")]
+                if not mv or opening_date(c["d"], w) != o["d"]:
+                    continue
+                signs, how = solve(o["v"], c["v"], [r["v"] for r in mv])
+                if not signs:
+                    continue
+                flip = -1 if (o["v"] < 0 and c["v"] < 0) else 1  # liabilities printed as negatives
+                o["dv"], c["dv"] = flip * o["v"], flip * c["v"]
+                for r, sg in zip(mv, signs):
+                    r["dv"] = round(flip * sg * r["v"], 3)
+                    if how != "as printed" or flip == -1:
+                        r["sn"] = 1
+                closed += 1
+print(closed, "CSM bridges close")
+DATA = ROOT / "web" / "public" / "data"
+for period in sorted({f["period"] for f in files}):
+    rows = [{k: v for k, v in r.items() if k != "p"} for r in out if r["p"] == period]
+    (DATA / f"ifrs_{period}.json").write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+(DATA / "ifrs.json").write_text(json.dumps({"unit": "NIS millions", "files": files}, ensure_ascii=False), encoding="utf-8")
 print(len(out), "facts from", len(files), "filings;", sum(1 for x in files if x["url"]), "with a source link")
