@@ -72,7 +72,8 @@ csm = [f for f in num if f["metric"].startswith("csm_") and f["metric"] != "csm_
        and not f["metric"].startswith(("csm_other:Balance", "csm_subtotal"))]
 tally = {}
 for win in wins:
-    open_dates = {q_open} if win == "q" else {f"{py - 1}-12-31", f"{py}-01-01"}
+    q_next = {"Q1": f"{py}-01-01", "Q2": f"{py}-04-01", "Q3": f"{py}-07-01"}.get(period[4:])
+    open_dates = {q_open, q_next} if win == "q" else {f"{py - 1}-12-31", f"{py}-01-01"}
     for seg, basis in sorted({(f["segment"], f["basis"]) for f in csm}):
         rows = [f for f in csm if f["segment"] == seg and f["basis"] == basis]
         op = [f["value"] for f in rows if f["metric"] == "csm_opening" and (f["date"] in open_dates or (f["window"] == win and f["date"] == end))]

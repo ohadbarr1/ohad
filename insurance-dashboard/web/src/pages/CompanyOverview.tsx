@@ -117,6 +117,8 @@ function LatestDocs({ docs }: { docs: DocEntry[] }) {
   );
 }
 
+import { CompanyTear } from './CompanyTear';
+
 export function CompanyOverview() {
   const { entry, store, market, storeError } = useCtx();
   const price = useCompanyPrice(entry.id, entry.has_price);
@@ -130,6 +132,7 @@ export function CompanyOverview() {
   const mk = market && entry.market_group ? marketCards(market, entry.market_group) : [];
   return (
     <>
+      <CompanyTear id={entry.id} />
       {(kc.length > 0 || px.length > 0) && (
         <section>
           <h2 className="band">דוחות<span className="muted">31 רבעונים</span></h2>

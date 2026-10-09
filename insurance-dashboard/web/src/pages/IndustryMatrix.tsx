@@ -46,10 +46,16 @@ export function IndustryMatrix() {
         const lh = c.m?.startsWith('csm') ? sort(mine.filter((f) => f.g === 'life_health')) : [];
         return lh.length ? { f: lh[0], alt: true } : null;
       };
-      const cells: Record<string, { v: number; f?: IfrsFact; alt?: boolean; calc?: boolean; n?: number } | null> = {};
+      const cells: Record<string, { v: number; f?: IfrsFact; alt?: boolean; calc?: boolean; n?: number; sum?: boolean } | null> = {};
       COLS.filter((c) => c.m).forEach((c) => {
         const p = pickOne(c);
-        if (!p) { cells[c.k] = null; return; }
+        if (!p) {
+          // no group or combined line: life and health are added when both are printed on one basis, and the cell is marked as derived
+          const part = (g: string) => F.filter((f) => f.c === id && f.m === c.m && f.g === g && f.s === g && f.d === end && (c.inst ? f.w === 'instant' : f.w === W)).sort((a, b) => B_ORDER.indexOf(a.b) - B_ORDER.indexOf(b.b));
+          const l = part('life'), h = c.m?.startsWith('csm') ? part('health').find((x) => l[0] && x.b === l[0].b) : undefined;
+          cells[c.k] = l[0] && h ? { v: c.k === 'rel' ? Math.abs(l[0].v) + Math.abs(h.v) : l[0].v + h.v, f: l[0], sum: true } : null;
+          return;
+        }
         // one movement printed as several rows of the same tied-out table adds up
         const parts = !c.inst && p.f.dv != null ? F.filter((x) => x.c === id && x.m === p.f.m && x.s === p.f.s && x.b === p.f.b && x.w === p.f.w && x.d === p.f.d && x.dv != null && x.l !== p.f.l) : [];
         const v = (p.f.dv ?? p.f.v) + parts.reduce((t, x) => t + x.dv!, 0);
@@ -97,7 +103,7 @@ export function IndustryMatrix() {
               {COLS.map((c) => { const x = r.cells[c.k]; return (
                 <td key={c.k}>{!x ? <span className="muted">–</span> : x.calc ? <span className="num">{show(c, x.v)}</span> : (
                   <>{url(x.f!) && x.f!.pg != null ? <a className={`num ${x.v < 0 ? 'neg' : ''}`} href={`${url(x.f!)}#page=${x.f!.pg}`} target="_blank" rel="noreferrer" title={`${x.f!.l} · עמ׳ ${x.f!.pg}`}>{show(c, x.v)}</a> : <span className="num">{show(c, x.v)}</span>}
-                    {(x.f!.b !== 'na' || x.alt || x.f!.src === 'chart') && <span className="dim">{x.f!.b !== 'na' && BASIS[x.f!.b]}{x.alt && ' · חיים ובריאות'}{x.f!.src === 'chart' && ' · מגרף'}</span>}{(x.n ?? 1) > 1 && <span className="chip est" title="סכום של כמה שורות באותה טבלה">{x.n} שורות</span>}</>
+                    {(x.f!.b !== 'na' || x.alt || x.f!.src === 'chart') && <span className="dim">{x.f!.b !== 'na' && BASIS[x.f!.b]}{x.alt && ' · חיים ובריאות'}{x.f!.src === 'chart' && ' · מגרף'}</span>}{x.sum && <span className="chip est" title="חיים + בריאות, אותו בסיס">נגזר: חיים + בריאות</span>}{(x.n ?? 1) > 1 && <span className="chip est" title="סכום של כמה שורות באותה טבלה">{x.n} שורות</span>}</>
                 )}</td>
               ); })}
             </tr>

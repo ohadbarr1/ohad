@@ -12,6 +12,7 @@ import { IndustryIfrs } from './pages/IndustryIfrs';
 import { IndustryCapital } from './pages/IndustryCapital';
 import { IndustryEcon } from './pages/IndustryEcon';
 import { IndustryMatrix } from './pages/IndustryMatrix';
+import { DocSearch } from './pages/DocSearch';
 import { Dcf, Sotp, ValuationLayout } from './pages/Valuation';
 import { Managers } from './pages/Managers';
 
@@ -45,6 +46,7 @@ export function App() {
           <Route path="econ" element={<IndustryEcon />} />
           <Route path="capital" element={<IndustryCapital />} />
           <Route path="headline" element={<Compare />} />
+          <Route path="search" element={<DocSearch />} />
         </Route>
         <Route path="managers" element={<Managers />} />
         <Route path="valuation" element={<ValuationLayout />} />

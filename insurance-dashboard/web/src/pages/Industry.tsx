@@ -18,6 +18,7 @@ export function IndustryLayout() {
         <NavLink to="ifrs">IFRS 17 · CSM</NavLink>
         <NavLink to="capital">הון ודיבידנד</NavLink>
         <NavLink to="headline">מדדי כותרת</NavLink>
+        <NavLink to="search">חיפוש בדוחות</NavLink>
       </nav>
       <Outlet />
     </>

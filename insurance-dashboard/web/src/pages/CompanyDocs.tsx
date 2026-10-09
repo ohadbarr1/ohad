@@ -4,6 +4,8 @@ import { nf } from '../lib/format';
 import { useCompanyDocs } from '../lib/useData';
 import type { DocEntry } from '../lib/types';
 import { DOC_TYPE, useCtx } from './Company';
+import { DocSearch } from './DocSearch';
+import { useIfrsData } from '../lib/useData';
 
 const COLS: DocEntry['type'][] = ['annual', 'quarterly', 'presentation', 'solvency'];
 const REPORT = (p: string): DocEntry['type'] => (p.endsWith('FY') ? 'annual' : 'quarterly');
@@ -12,6 +14,7 @@ const REPORT = (p: string): DocEntry['type'] => (p.endsWith('FY') ? 'annual' : '
 export function CompanyDocs() {
   const { entry } = useCtx();
   const { data, error } = useCompanyDocs(entry.id, entry.docs > 0);
+  const ifrs = useIfrsData().data;
   const [lang, setLang] = useState<'all' | 'he' | 'en'>('all');
   const periods = useMemo(() => {
     const by = new Map<string, DocEntry[]>();
@@ -23,7 +26,8 @@ export function CompanyDocs() {
   if (error) return <ErrorBox what="רשימת המסמכים" error={error} />;
   if (!data) return <Loading what="מסמכים" />;
   const all = data.docs;
-  return (
+  return (<>
+    {ifrs?.files.some((f) => f.company === entry.id) && <DocSearch company={entry.id} />}
     <Panel title={<>{nf(all.length, 0)} מסמכים · <span className="num">{nf(all.reduce((s, d) => s + (d.pages ?? 0), 0), 0)}</span> עמודים</>}
       aside={<><span>מקור: MAYA</span><Seg label="שפה" value={lang} onChange={setLang} options={[['all', 'הכול'], ['he', 'עברית'], ['en', 'English']]} /></>}>
       <div className="scroll" style={{ maxHeight: 720 }}><table className="docs">
@@ -38,5 +42,5 @@ export function CompanyDocs() {
       </table></div>
       <div className="src">המספר בכל תא: עמודים ב-PDF. {COLS.length} סוגי מסמך, מסווגים לפי כותרת הדיווח.</div>
     </Panel>
-  );
+  </>);
 }
