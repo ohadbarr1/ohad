@@ -106,7 +106,8 @@ def norm(t):
     t = re.sub(r"סה\s*כ|סך\s+ה?כל", "סך", t)
     for a, b in (("מיסים", "מסים"), ("פיננסיים", "פיננסים"), ("לשנה", "לתקופה"), ("השנה", "התקופה"), ("למניה", ""), ("בשח", "")):
         t = t.replace(a, b)
-    return " ".join(sorted(w.lstrip("ה") for w in t.split() if len(w.lstrip("ה")) > 1 and w not in ("של", "ש", "ח", "בת", "בנות")))
+    key = " ".join(sorted(w.lstrip("ה") for w in t.split() if len(w.lstrip("ה")) > 1 and w not in ("של", "ש", "ח", "בת", "בנות")))
+    return {"רווח": "לתקופה רווח", "נקי רווח": "לתקופה רווח"}.get(key, key)  # the bottom line is printed as "רווח", "רווח נקי" or "רווח לתקופה"
 
 
 def statements(comp):
