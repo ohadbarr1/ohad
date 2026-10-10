@@ -79,14 +79,16 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const d = store.d;
   // the view lives in the URL: sheet, selected rows, period type, units, mode, column order
   const initSel = (sp.get('m') ?? '').split(',').filter(Boolean).map(Number).filter((i) => d.metrics[i]);
-  const wanted = sp.get('sheet') ?? d.metrics[initSel[0]]?.sheet ?? 'F.D2_רווח_הפסד';
-  const initSheet = d.sheets.some((s) => s.code === wanted) ? wanted : (d.sheets.find((s) => s.group === 'income') ?? d.sheets[0])?.code ?? wanted;
-  const entities = useMemo(() => d.sources.filter((s) => d.sheets.some((x) => x.entity === s.entity)).map((s) => [s.entity, s.entity === 'F' ? `${s.name} (מאוחד)` : s.name] as [string, string]), [d]);
+  // without a deep link the workbook opens on the continuous quarterly series (2021 onward), not on the latest report alone
+  const wanted = sp.get('sheet') ?? d.metrics[initSel[0]]?.sheet ?? '';
+  const initSheet = d.sheets.some((s) => s.code === wanted) ? wanted : (d.sheets.find((s) => s.entity === 'X' && s.group === 'income') ?? d.sheets.find((s) => s.group === 'income') ?? d.sheets[0])?.code ?? wanted;
+  const entities = useMemo(() => d.sources.filter((s) => d.sheets.some((x) => x.entity === s.entity)).map((s) => [s.entity, s.entity === 'F' ? `${s.name} (מאוחד)` : s.name] as [string, string]).sort((a, b) => Number(b[0] === 'X') - Number(a[0] === 'X')), [d]);
   const [entity, setEntity] = useState<string>(initSheet.split('.')[0]);
   const [sheetCode, setSheetCode] = useState(initSheet);
   const [type, setType] = useState<string>(sp.get('t') ?? '');
   const [scale, setScale] = useState<Scale>((['k', 'm', 'b'] as Scale[]).find((x) => x === sp.get('u')) ?? 'm');
   const [mode, setMode] = useState<'value' | 'yoy'>(sp.get('v') === 'yoy' ? 'yoy' : 'value');
+  const [showChart, setShowChart] = useState(sp.get('g') === '1');
   const [oldestFirst, setOldestFirst] = useState(sp.get('r') === '1');
   const [dim, setDim] = useState('all');
   const [sel, setSel] = useState<number[]>(initSel);
@@ -135,8 +137,9 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     if (scale !== 'm') q.u = scale;
     if (mode !== 'value') q.v = mode;
     if (oldestFirst) q.r = '1';
+    if (showChart) q.g = '1';
     setSp(q, { replace: true });
-  }, [sheetCode, sel, curType, scale, mode, oldestFirst, setSp]);
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, setSp]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
   const cell = (mi: number, pi: number): number | null => {
@@ -189,10 +192,11 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         <Field label="יחידות"><select value={scale} onChange={(e) => setScale(e.target.value as Scale)} disabled={mode === 'yoy'}>{SCALES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></Field>
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
         <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש ← ישן'], ['old', 'ישן ← חדש']]} /></div>
+        <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'מוצג' : 'הצגת גרף'}</button></div>
         {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
       </section>
 
-      <Panel title={series.length === 1 ? series[0].name : 'גרף'} aside={<span>{unitLabel}</span>}>
+      {showChart && <Panel title={series.length === 1 ? series[0].name : 'גרף'} aside={<><span>{unitLabel}</span><button type="button" className="btn" onClick={() => setShowChart(false)}>סגירת הגרף</button></>}>
         {series.length === 0 || cols.length === 0 ? <Empty title="אין שורה נבחרת" /> : (
           <>
             <Chart label="גרף שורות נבחרות" height={320} deps={[sel, cols, mode, scale, sheetCode, kind, series.length]} build={() => {
@@ -226,7 +230,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
             </div>
           </>
         )}
-      </Panel>
+      </Panel>}
 
       {explain != null && (
         <div className="explain">
@@ -249,8 +253,8 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                 return (
                   <tr key={r.idx}>
                     <td className="lbl"><div className="mrow">
-                      <input type="checkbox" checked={on} onChange={() => toggle(r.idx)} aria-label={`הצג בגרף: ${r.m.label}`} />
-                      {on && <span className="dot" style={{ background: pal[k % pal.length] }} />}
+                      <input type="checkbox" checked={showChart && on} onChange={() => { if (!showChart) { setShowChart(true); setSel([r.idx]); } else toggle(r.idx); }} aria-label={`הצג בגרף: ${r.m.label}`} title="הצגה בגרף" />
+                      {showChart && on && <span className="dot" style={{ background: pal[k % pal.length] }} />}
                       <span>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       <button type="button" className="info" onClick={() => setExplain(explain === r.idx ? null : r.idx)} aria-label="הסבר">i</button>
                     </div></td>
