@@ -1,9 +1,10 @@
+import { foxOption } from '../lib/foxchart';
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Navigate, Outlet, useOutletContext, useParams, useNavigate } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Count } from '../components/Count';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
-import { CHART_FONT, chartBase, palette } from '../lib/theme';
+import { chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
 import type { CompanyKpi } from '../lib/kpi';
 import { useKpis, useMarket, useRegistry } from '../lib/useData';
@@ -120,15 +121,10 @@ export function Dcf() {
         <div className="grid2">
           <Panel title="חלוקות חזויות וערך נוכחי" aside={<span>מיליוני ש"ח</span>}>
             <Chart label="חלוקות" height={230} deps={[a]} build={() => {
-              const b = chartBase();
-              return { animationDuration: 500, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 6, right: 6, top: 26, bottom: 2, containLabel: true },
-                legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number) => nf(v, 0) },
-                xAxis: { type: 'category', data: r.rows.map((x) => `+${x.t}`), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },
-                yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
-                series: [{ name: 'רווח', type: 'bar', data: r.rows.map((x) => +x.e.toFixed(0)), itemStyle: { color: pal[7], opacity: 0.5, borderRadius: [2, 2, 0, 0] }, barGap: '-100%' },
-                  { name: 'חלוקה', type: 'bar', data: r.rows.map((x) => +x.d.toFixed(0)), itemStyle: { color: pal[0], borderRadius: [2, 2, 0, 0] } },
-                  { name: 'ערך נוכחי', type: 'line', data: r.rows.map((x) => +x.pv.toFixed(0)), symbolSize: 6, lineStyle: { color: pal[1], width: 2 }, itemStyle: { color: pal[1] } }] };
+              return foxOption({ x: r.rows.map((x) => `+${x.t}`), unit: 'מיליוני ש"ח', full: true, labels: false, series: [
+                { name: 'רווח', kind: 'bar', color: pal[7], opacity: 0.5, dec: 0, data: r.rows.map((x) => +x.e.toFixed(0)) },
+                { name: 'חלוקה', kind: 'bar', overlay: true, color: pal[0], dec: 0, data: r.rows.map((x) => +x.d.toFixed(0)) },
+                { name: 'ערך נוכחי', kind: 'line', color: pal[1], dec: 0, data: r.rows.map((x) => +x.pv.toFixed(0)) }] });
             }} />
           </Panel>
           <Panel title="רגישות: שווי למניה" aside={<span>מחיר הון × צמיחה לטווח ארוך</span>}>

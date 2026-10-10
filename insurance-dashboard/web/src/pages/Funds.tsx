@@ -1,8 +1,9 @@
+import { foxOption } from '../lib/foxchart';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
-import { CHART_FONT, chartBase, palette } from '../lib/theme';
+import { chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
 import { load, useFundCats, useFundHist, useFunds, useRegistry, type Fund, type FundCats, type FundHist } from '../lib/useData';
 
@@ -55,16 +56,9 @@ function Growth({ periods, lines, deps }: { periods: number[]; lines: { name: st
   return (
     <Chart label="תשואה מצטברת, בסיס 100" height={320} deps={deps} build={() => {
       const b = chartBase(), pal = palette();
-      return {
-        animationDuration: 700, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 6, right: 14, top: 34, bottom: 4, containLabel: true },
-        legend: { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 14, itemHeight: 3 },
-        tooltip: { trigger: 'axis', confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number | null) => (v == null ? '–' : nf(v, 1)) },
-        xAxis: { type: 'category', data: periods.map(ym), boundaryGap: false, axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10, hideOverlap: true } },
-        yAxis: { type: 'value', scale: true, axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
-        series: lines.map((l, i) => ({ name: l.name, type: 'line', data: l.data, symbol: 'none', connectNulls: true,
-          lineStyle: { width: l.dash ? 1.5 : 2.2, type: l.dash ? 'dashed' : 'solid', color: l.dash ? b.mu : pal[i % pal.length] }, itemStyle: { color: l.dash ? b.mu : pal[i % pal.length] } })),
-      };
-    }} />
+      return foxOption({ x: periods.map(ym), unit: 'בסיס 100', dense: true, scale: true, legend: true,
+        series: lines.map((l, i) => ({ name: l.name, data: l.data, kind: 'line' as const, dashed: l.dash, color: l.dash ? b.mu : pal[i % pal.length], dec: 1 })) });
+            }} />
   );
 }
 
@@ -280,24 +274,18 @@ export function FundCard() {
       <div className="grid2">
         <Panel title="חשיפות" aside={<span>% מהנכסים · 10 שנים</span>}>
           <Chart label="חשיפות" height={260} deps={[k, h.p.length]} build={() => {
-            const b = chartBase(), pal = palette();
-            const line = (name: string, data: (number | null)[], i: number) => ({ name, type: 'line', data: last(data), symbol: 'none', connectNulls: true, lineStyle: { width: 2, color: pal[i] }, itemStyle: { color: pal[i] } });
-            return { animationDuration: 700, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 6, right: 12, top: 30, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 14, itemHeight: 3 },
-              tooltip: { trigger: 'axis', confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number | null) => (v == null ? '–' : `${nf(v, 1)}%`) },
-              xAxis: { type: 'category', data: last(h.p).map(ym), boundaryGap: false, axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10, hideOverlap: true } },
-              yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
-              series: [line('מניות', h.st, 0), line('חו"ל', h.fo, 1), line('מט"ח', h.fx, 2)] };
-          }} />
+            const pal = palette();
+            return foxOption({ x: last(h.p).map(ym), unit: '%', dense: true, full: true,
+              series: ([['מניות', h.st], ['חו"ל', h.fo], ['מט"ח', h.fx]] as [string, (number | null)[]][]).map(([name, data], i) => ({ name, data: last(data), kind: 'line' as const, pct: true, color: pal[i] })) });
+            }} />
         </Panel>
         <Panel title="נכסים ודמי ניהול" aside={<span>מיליוני ש"ח · 10 שנים</span>}>
           <Chart label="נכסים" height={260} deps={[k, h.p.length]} build={() => {
             const b = chartBase();
-            return { animationDuration: 700, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 6, right: 6, top: 30, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 14, itemHeight: 3 },
-              tooltip: { trigger: 'axis', confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-              xAxis: { type: 'category', data: last(h.p).map(ym), axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10, hideOverlap: true } },
-              yAxis: [{ type: 'value', axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } }, { type: 'value', axisLabel: { color: b.mu, fontSize: 10, formatter: '{value}%' }, splitLine: { show: false } }],
-              series: [{ name: 'נכסים', type: 'bar', data: last(h.a), itemStyle: { color: b.mu, opacity: 0.45 }, barCategoryGap: '10%' }, { name: 'דמי ניהול מצבירה', type: 'line', yAxisIndex: 1, data: last(h.fee), symbol: 'none', connectNulls: true, lineStyle: { width: 2, color: b.accent }, itemStyle: { color: b.accent } }] };
-          }} />
+            return foxOption({ x: last(h.p).map(ym), unit: 'מיליוני ש"ח', dense: true, full: true, series: [
+              { name: 'נכסים', data: last(h.a), kind: 'bar', color: b.mu, opacity: 0.45, dec: 0 },
+              { name: 'דמי ניהול מצבירה', data: last(h.fee), kind: 'line', pct: true, color: b.accent, dec: 2 }] });
+            }} />
         </Panel>
       </div>
       <Panel title="פרטי המסלול" aside={<span>כפי שמדווח לרשות שוק ההון</span>}>

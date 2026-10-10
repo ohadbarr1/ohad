@@ -1,3 +1,4 @@
+import { foxOption } from '../lib/foxchart';
 import { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
@@ -50,15 +51,6 @@ export function MarketLayout() {
   );
 }
 
-const timeAxis = (m: Market, b: ReturnType<typeof chartBase>, half = false) => {
-  const w = typeof window !== 'undefined' ? window.innerWidth : 1400;
-  const step = w < 640 ? 4 : half && w < 1700 ? 2 : 1;
-  return {
-    type: 'category' as const, data: m.P.map((_, i) => i), boundaryGap: false,
-    axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false },
-    axisLabel: { color: b.mu, fontSize: 11, interval: 0, hideOverlap: true, formatter: (i: string) => (m.P[+i] % 100 === 1 && Math.floor(m.P[+i] / 100) % step === 0 ? String(Math.floor(m.P[+i] / 100)) : '') },
-  };
-};
 
 /* ---------- overview ---------- */
 export function MarketOverview() {
@@ -87,33 +79,17 @@ function OverviewInner({ m }: { m: Market }) {
       <div className="grid21">
         <Panel title='נכסים לפי משפחת מוצר (מיליארד ש"ח)'>
           <Chart label="נכסים לפי משפחת מוצר" height={330} deps={[m]} build={() => {
-            const b = chartBase(), c = colors();
-            return {
-              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 46, right: 12, top: 36, bottom: 28 },
-              legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-              tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
-                formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number }[]) => {
-                  let s = 0, t = m.plabel(+ps[0].axisValue) + '<br>';
-                  ps.forEach((p) => { s += p.value; t += `${p.marker} ${p.seriesName}: <b>${nf(p.value, 0)}</b><br>`; });
-                  return t + `סה"כ: <b>${nf(s, 0)}</b>`;
-                } },
-              xAxis: timeAxis(m, b), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
-              series: fams.map((f, k) => ({ name: m.d.families[f], type: 'line', stack: 'a', symbol: 'none', areaStyle: { opacity: 0.85 }, lineStyle: { width: 1, color: c[k] }, itemStyle: { color: c[k] }, data: m.P.map((_, i) => +(m.cell(i, 'fam:' + f, -1).a / 1000).toFixed(1)) })),
-            };
-          }} />
+            const c = colors();
+            return foxOption({ x: m.P.map((_, i) => m.plabel(i)), unit: 'מיליארד ש"ח', dense: true, full: true, total: true,
+              series: fams.map((f, k) => ({ name: m.d.families[f], kind: 'line' as const, area: true, stack: true, color: c[k], dec: 0, data: m.P.map((_, i) => +(m.cell(i, 'fam:' + f, -1).a / 1000).toFixed(1)) })) });
+            }} />
         </Panel>
         <Panel title='צבירה אורגנית LTM (מיליארד ש"ח)'>
           <Chart label="צבירה אורגנית" height={330} deps={[m]} build={() => {
-            const b = chartBase(), c = colors();
-            return {
-              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 40, right: 12, top: 36, bottom: 28 },
-              legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-              tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
-                formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number | null }[]) => m.plabel(+ps[0].axisValue) + '<br>' + ps.filter((p) => p.value != null).map((p) => `${p.marker} ${p.seriesName}: <b>${nf(p.value as number, 1)}</b>`).join('<br>') },
-              xAxis: timeAxis(m, b, true), yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
-              series: (['pension', 'gemel'] as const).map((f, k) => ({ name: m.d.families[f], type: 'line', symbol: 'none', lineStyle: { width: 2, color: c[k] }, itemStyle: { color: c[k] }, data: m.P.map((_, i) => { const x = m.flows(i, 'ltm', 'fam:' + f, -1); return x ? +(x.org / 1000).toFixed(1) : null; }) })),
-            };
-          }} />
+            const c = colors();
+            return foxOption({ x: m.P.map((_, i) => m.plabel(i)), unit: 'מיליארד ש"ח', dense: true,
+              series: (['pension', 'gemel'] as const).map((f, k) => ({ name: m.d.families[f], kind: 'line' as const, color: c[k], dec: 1, data: m.P.map((_, i) => { const x = m.flows(i, 'ltm', 'fam:' + f, -1); return x ? +(x.org / 1000).toFixed(1) : null; }) })) });
+            }} />
           <div className="src">פנסיה-נט אינו מפרסם הפקדות ומשיכות לפני אמצע 2016. ביטוח-נט אינו כולל תזרימים.</div>
         </Panel>
       </div>
@@ -294,17 +270,11 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
       <div className="grid21">
         <Panel title={def.label} aside={def.unit === 'bn' ? 'מיליארד ש"ח' : def.win ? 'LTM' : undefined}>
           <Chart label="סדרה לאורך זמן" height={320} deps={[m, group, set, metric]} build={() => {
-            const b = chartBase();
-            const series: object[] = [{ name: group, type: 'line', symbol: 'none', lineStyle: { width: 2.5, color: b.accent }, itemStyle: { color: b.accent }, data: own.map((v) => (v == null ? null : +v.toFixed(3))) }];
-            if (def.ratio) series.push({ name: 'כלל השוק', type: 'line', symbol: 'none', lineStyle: { width: 1.5, type: 'dashed', color: b.mu }, itemStyle: { color: b.mu }, data: mkt.map((v) => (v == null ? null : +v.toFixed(3))) });
-            return {
-              animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 44, right: 12, top: 34, bottom: 28 },
-              legend: { top: 0, textStyle: { color: b.mu, fontSize: 12 }, itemWidth: 14, itemHeight: 3, icon: 'roundRect' },
-              tooltip: { trigger: 'axis', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
-                formatter: (ps: { axisValue: number; marker: string; seriesName: string; value: number | null }[]) => m.plabel(+ps[0].axisValue) + '<br>' + ps.filter((p) => p.value != null).map((p) => `${p.marker} ${p.seriesName}: <b>${nf(p.value as number, dec)}${def.unit === '%' ? '%' : ''}</b>`).join('<br>') },
-              xAxis: timeAxis(m, b), yAxis: { type: 'value', scale: def.ratio, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } }, series,
-            };
-          }} />
+            const b = chartBase(), pct = def.unit === '%';
+            return foxOption({ x: m.P.map((_, i) => m.plabel(i)), unit: pct ? '%' : def.unit === 'bn' ? 'מיליארד ש"ח' : '', dense: true, scale: !!def.ratio, legend: true, series: [
+              { name: group, kind: 'line', lead: true, pct, color: b.accent, dec, data: own.map((v) => (v == null ? null : +v.toFixed(3))) },
+              ...(def.ratio ? [{ name: 'כלל השוק', kind: 'line' as const, dashed: true, pct, color: b.mu, dec, data: mkt.map((v) => (v == null ? null : +v.toFixed(3))) }] : [])] });
+            }} />
         </Panel>
         <Panel title={`מדדים, ${m.plabel(L)}`}>
           <div className="scroll"><table>
@@ -321,16 +291,10 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
       </div>
       <Panel title={`נכסים לפי מוצר (מיליארד ש"ח, דצמבר של כל שנה ו-${m.plabel(L)})`}>
         <Chart label="נכסים לפי מוצר" height={280} deps={[m, group, set]} build={() => {
-          const b = chartBase(), pal = palette();
-          return {
-            animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 44, right: 12, top: 44, bottom: 28 },
-            legend: { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-            xAxis: { type: 'category', data: pts.map((i) => (i === L ? m.plabel(i) : String(Math.floor(m.P[i] / 100)))), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },
-            yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
-            series: prodIdx.map((i) => ({ name: m.d.products[i].label, type: 'bar', stack: 'a', barMaxWidth: 36, itemStyle: { color: pal[i % pal.length] }, data: pts.map((pi) => +(m.cell(pi, 'p:' + m.d.products[i].key, gi).a / 1000).toFixed(2)) })),
-          };
-        }} />
+          const pal = palette();
+          return foxOption({ x: pts.map((i) => (i === L ? m.plabel(i) : String(Math.floor(m.P[i] / 100)))), unit: 'מיליארד ש"ח', full: true, total: true, labels: false,
+            series: prodIdx.map((i) => ({ name: m.d.products[i].label, kind: 'bar' as const, stack: true, color: pal[i % pal.length], dec: 1, data: pts.map((pi) => +(m.cell(pi, 'p:' + m.d.products[i].key, gi).a / 1000).toFixed(2)) })) });
+            }} />
       </Panel>
     </>
   );

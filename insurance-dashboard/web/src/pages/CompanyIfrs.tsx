@@ -1,8 +1,9 @@
+import { foxOption } from '../lib/foxchart';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
-import { CHART_FONT, chartBase, palette } from '../lib/theme';
+import { palette } from '../lib/theme';
 import { nf, byPeriodDesc } from '../lib/format';
 import { useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
@@ -134,14 +135,10 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           {runoff.buckets.length === 0 ? <Empty title={annual ? 'לוח השחרור לא נמצא בדוח' : 'לוח השחרור מתפרסם בדוח השנתי'} /> : (
             <>
               <Chart label="שחרור CSM צפוי לפי שנים" height={280} deps={[id, P, runoff.rb, runoff.buckets.length]} build={() => {
-                const b = chartBase(), pal = palette();
-                return { animationDuration: 650, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 4, right: 4, top: 30, bottom: 4, containLabel: true },
-                  legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10 },
-                  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-                  xAxis: { type: 'category', data: runoff.buckets.map(bkName), axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10.5, interval: 0, rotate: 30 } },
-                  yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
-                  series: runoff.segs.map((g, i) => ({ type: 'bar', stack: 'r', name: segName(g), data: runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null), itemStyle: { color: pal[i % pal.length] } })) };
-              }} />
+                const pal = palette();
+                return foxOption({ x: runoff.buckets.map(bkName), unit: 'מיליוני ש"ח', full: true, total: true, rotate: 30, labels: false,
+                  series: runoff.segs.map((g, i) => ({ name: segName(g), kind: 'bar' as const, stack: true, color: pal[i % pal.length], dec: 0, data: runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null) })) });
+            }} />
               <div className="scroll"><table>
                 <thead><tr><th>מגזר</th>{runoff.buckets.map((bk) => <th key={bk}>{bkName(bk)}</th>)}<th>סה"כ</th></tr></thead>
                 <tbody>{runoff.segs.map((g) => { const vs = runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null); return <tr key={g}><td>{segName(g)}</td>{vs.map((v, i) => <td key={i}><span className="num">{v == null ? '–' : nf(v, 0)}</span></td>)}<td><span className="num">{nf(vs.reduce((t: number, v) => t + (v ?? 0), 0), 0)}</span></td></tr>; })}</tbody>

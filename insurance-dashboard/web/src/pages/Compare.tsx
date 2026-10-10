@@ -1,8 +1,9 @@
+import { foxOption } from '../lib/foxchart';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
-import { CHART_FONT, chartBase, palette } from '../lib/theme';
+import { palette } from '../lib/theme';
 import { nf } from '../lib/format';
 import { KPI_BY_KEY, KPI_DEFS, periodLabelShort, type Basis } from '../lib/kpi';
 import { useKpis, useRegistry } from '../lib/useData';
@@ -74,17 +75,9 @@ export function Compare() {
       {on.length === 0 || data.periods.length === 0 ? <Empty title="אין נתונים לבחירה" /> : (
         <div className="grid21">
           <Panel title={def.label} aside={<span>{lab(data.periods[0])} עד {lab(last)}</span>}>
-            <Chart label={def.label} height={380} deps={[metric, basis, from, on.join(), index, kpis, lead]} build={() => {
-              const b = chartBase();
-              return {
-                animationDuration: 700, animationEasing: 'cubicOut', textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 8, right: 12, top: 14, bottom: 4, containLabel: true },
-                tooltip: { trigger: 'axis', confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number | null) => (index ? (v == null ? '–' : nf(v, 0)) : fmt(v, def.unit)), order: 'valueDesc' },
-                xAxis: { type: 'category', data: data.periods.map(lab), boundaryGap: false, axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },
-                yAxis: { type: 'value', scale: true, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
-                series: on.map((id) => ({ name: name(id), type: 'line', data: data.periods.map((p) => { const v = shown(id, p); return v == null ? null : +v.toFixed(3); }), connectNulls: true, symbol: 'circle', symbolSize: 5, showSymbol: data.periods.length <= 16,
-                  lineStyle: { color: color(id), width: lead === id ? 3.4 : 2.2, opacity: lead && lead !== id ? 0.28 : 1 }, itemStyle: { color: color(id), opacity: lead && lead !== id ? 0.28 : 1 }, z: lead === id ? 9 : 2, emphasis: { focus: 'series' }, endLabel: { show: false } })),
-              };
-            }} />
+            <Chart label={def.label} height={380} deps={[metric, basis, from, on.join(), index, kpis, lead]} build={() => foxOption({ x: data.periods.map(lab), unit: index ? 'אינדקס, תקופה ראשונה = 100' : UNIT[def.unit], scale: true, legend: false, labels: false,
+              series: on.map((id) => ({ name: name(id), kind: 'line' as const, color: color(id), lead: lead === id, dim: !!lead && lead !== id, dec: index ? 0 : undefined,
+                pct: !index && /%/.test(UNIT[def.unit] ?? ''), data: data.periods.map((p) => { const v = shown(id, p); return v == null ? null : +v.toFixed(3); }) })) })} />
           </Panel>
           <Panel title={`דירוג, ${lab(last)}`} aside={<span>{UNIT[def.unit]}</span>}>
             <table><tbody>{rank.map((r, i) => (
