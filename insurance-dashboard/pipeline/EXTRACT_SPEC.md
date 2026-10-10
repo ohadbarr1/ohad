@@ -107,3 +107,15 @@ Take what the report prints for the year and for the comparative year (own `date
 - Life: `new_business_annualized_premiums`, `one_time_premium_new_business`, value of new business or embedded value figures if a table prints them (`embedded_value`, `value_of_new_business`).
 - Solvency of the insurer subsidiary (board report or the solvency section): `solvency_ratio_with_transitional`, `solvency_ratio_without_transitional`, `own_funds`, `scr`, `solvency_surplus`, `target_solvency_ratio`, each with its own date.
 Rules 1-12 of v1 apply. Check every value against the cited Hebrew page with `pipeline/verify_sop.py`-style discipline: run `.venv/bin/python pipeline/verify_hist.py <company> <period>` before finishing.
+
+### v4, interim reports (IFRS 4 quarters, 2022Q1 to 2024Q3)
+Same output directory and metrics as v4, from the quarterly report. Record the three-month column as `window: "q"` and the cumulative column as `window: "ytd"` (in a Q1 report they are the same: record `q` only), each with the period-end `date`, and the comparative prior-year columns with their own date. Balances are `instant`. The priority is the per-segment line: `comprehensive_income_before_tax` and `profit_before_tax` for every operating segment, premiums and management fees per segment, group profit and comprehensive income, equity, total assets, AUM, dividends, the solvency figures printed, and the motor-property combined ratio where printed. Check with `.venv/bin/python pipeline/verify_hist.py <company> <period>`.
+
+## Asset managers (v5): fund houses and investment houses, every period
+
+Output: `data/extracted_hist/<company>/<period>.json`, v1 envelope plus `"standard": "asset manager"`. These companies have no insurance contracts: no CSM, no solvency ratio. NIS millions (the reports print NIS thousands: convert and say so in `note`).
+- Group: `revenue_total`, `profit_before_tax`, `profit_attributable`, `comprehensive_income_attributable`, `equity_attributable`, `total_assets`, `dividend_declared`, `dividend_paid`, `aum_total`, `operating_profit`.
+- Revenue and profit by activity, as the report segments them (provident / gemel, pension, mutual funds, portfolio management, ETFs, brokerage, credit, insurance agencies, alternative, other): `management_fees` (or `revenue` when the line is not fees), `segment_profit` (the segment result as printed, with its printed name in `label`), `aum_<activity>` as `segment: "<activity as printed>"`.
+- Costs: `selling_and_marketing_expenses`, `general_and_administrative_expenses`, `commissions_expense`, `salaries_expense`, `total_expenses`, at group level and per segment where printed.
+- Flows where printed: `net_inflows`, `deposits`, `withdrawals`, `transfers_net` per activity.
+Windows: `q` and `ytd` in interim reports (Q1: `q` only), `fy` in annual reports; comparatives with their own date. Rules 1-12 of v1 apply. Check with `.venv/bin/python pipeline/verify_hist.py <company> <period>`.

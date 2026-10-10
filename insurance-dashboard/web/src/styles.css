@@ -375,3 +375,10 @@ table.heat td a.num { text-decoration: none; display: block; }
 table.heat .on { box-shadow: inset 1px 0 0 var(--accent-line), inset -1px 0 0 var(--accent-line); background-image: linear-gradient(var(--accent-soft), var(--accent-soft)); }
 .thbtn { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; font-weight: 600; text-align: inherit; } .thbtn:hover, .thbtn[aria-pressed="true"] { color: var(--accent); }
 .panel table.heat td:not(:first-child), .panel table.heat th:not(:first-child) { min-width: 62px; }
+
+/* quarterly record: a long grid with the change of standard drawn as a rule, restated and derived figures told apart by tone */
+table.series th, table.series td { padding: 7px 10px; }
+table.series td.old { background: color-mix(in oklch, var(--bg) 55%, transparent); }
+table.series .brk { box-shadow: inset 2px 0 0 var(--accent-line); } [dir="rtl"] table.series .brk { box-shadow: inset -2px 0 0 var(--accent-line); }
+table.series a.cmp { color: var(--muted); } table.series .der { font-style: italic; color: var(--muted); }
+table.series thead th .dim { color: var(--accent); font-size: 10px; }
