@@ -531,3 +531,20 @@ tr.sec.std td { background: var(--panel2); color: var(--accent); font-size: 13px
 .charttools { display: flex; gap: 6px; justify-content: flex-end; }
 .charttools button { background: transparent; border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px 11px; font-size: 11.5px; color: var(--muted); cursor: pointer; transition: color var(--fast), border-color var(--fast); }
 .charttools button:hover { color: var(--fg); border-color: var(--accent-line); }
+
+/* peer matrix as a screener: sortable heads, a quiet bar behind each figure, numbered notes instead of chips */
+table.matrix th { padding: 0; }
+table.matrix th:first-child { padding: 9px 12px; }
+.thsort { display: flex; gap: 4px; align-items: flex-end; justify-content: flex-end; width: 100%; background: none; border: 0; padding: 9px 12px; font: inherit; color: inherit; cursor: pointer; white-space: normal; text-align: end; line-height: 1.3; min-width: 96px; }
+.thsort:hover { color: var(--accent); }
+.thsort i { font-style: normal; font-size: 9px; color: var(--accent); min-width: 9px; }
+table.matrix th[aria-sort="descending"], table.matrix th[aria-sort="ascending"] { color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+table.matrix td.bar { background: linear-gradient(to left, var(--accent-soft) var(--w), transparent var(--w)) no-repeat 0 78% / 100% 3px; }
+table.matrix td sup, .fnotes sup { color: var(--accent); font-weight: 700; margin-inline-start: 2px; cursor: help; }
+table.matrix .rk { display: inline-block; min-width: 18px; margin-left: 6px; color: var(--faint); font-size: 11.5px; }
+table.matrix tfoot td { border-top: 1px solid var(--line); border-bottom: 0; color: var(--muted); font-weight: 600; padding: 9px 12px; text-align: end; white-space: nowrap; }
+table.matrix tfoot td:first-child { text-align: start; }
+.fnotes { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 18px; color: var(--muted); font-size: 12px; }
+.colpick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; animation: pop var(--mid) var(--ease); }
+.colpick button:not(.linkbtn) { border: 1px solid var(--line-soft); background: var(--panel); color: var(--muted); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 12.5px; transition: color var(--fast), border-color var(--fast), background var(--fast); }
+.colpick button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--fg); font-weight: 600; }
