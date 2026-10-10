@@ -8,6 +8,7 @@ import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { GroupPanel } from './Market';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
+import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { SCALES, fmtCell, nf, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
@@ -289,37 +290,17 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         {series.length === 0 || cols.length === 0 ? <Empty title="סמנו שורה בטבלה כדי להציג אותה בגרף" /> : (
           <>
             <Chart label="גרף שורות נבחרות" exportName={`${companyId}-${sheetName(sheetCode)}`} height={340} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth]} build={() => {
-              const b = chartBase();
-              // amounts on the main axis; percentages (ratio rows and growth lines) on the second one when both are drawn
-              const isPct = (u: string) => mode === 'value' && u === 'pct';
-              const hasAmt = mode === 'yoy' || series.some((s) => !isPct(s.m.unit));
-              const second = mode === 'value' && hasAmt && series.some((s) => isPct(s.m.unit) || s.gvals);
-              const pctAxis = second ? 1 : 0;
-              const has = cols.map((_, ci) => series.some((x) => x.vals[ci] != null || x.gvals?.[ci] != null));
-              const lo = Math.max(0, has.indexOf(true)), hi = has.lastIndexOf(true) + 1, xs = cols.slice(lo, hi);
-              const out: Record<string, unknown>[] = [];
+              // rows as printed become series; a rate row or a growth line goes to the percent axis; IFRS 4 figures are drawn lighter and the break is marked
+              const isPct = (u: string) => mode === 'yoy' || u === 'pct';
+              const fox: FoxSeries[] = [];
               series.forEach((s) => {
-                const t = kind[s.mi] ?? (isPct(s.m.unit) ? 'line' : 'bar'), color = pal[s.k % pal.length], pct = isPct(s.m.unit);
-                const dec = mode === 'yoy' || pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1;
-                const data = s.vals.slice(lo, hi).map((v, i) => (v == null ? null : { value: +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3), itemStyle: s.olds[lo + i] ? { opacity: 0.5 } : undefined }));
-                out.push({ name: s.name, type: t, data, yAxisIndex: pct ? pctAxis : 0, stack: stack && t === 'bar' && !pct && !s.m.total ? 'total' : undefined, tooltip: { valueFormatter: (v: number | null) => (v == null ? '–' : `\u200E${nf(v, dec)}${mode === 'yoy' || pct ? '%' : ''}`) }, barMaxWidth: 46, symbolSize: 6, itemStyle: { color }, lineStyle: { color, width: 2.5 },
-                  label: { show: !stack && series.length <= 2 && xs.length <= 14, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, dec)) } });
-                if (s.gvals) out.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, type: 'line', data: s.gvals.slice(lo, hi).map((v) => (v == null ? null : +v.toFixed(2))), yAxisIndex: pctAxis, symbolSize: 5, connectNulls: false, tooltip: { valueFormatter: (v: number | null) => (v == null ? '–' : `\u200E${Math.abs(v) >= 300 ? (v > 0 ? 'מעל ' : 'מתחת ל-') : ''}${nf(v, 1)}%`) }, itemStyle: { color }, lineStyle: { color, width: 2, type: 'dashed' }, z: 5 });
+                const pct = isPct(s.m.unit), color = pal[s.k % pal.length];
+                fox.push({ name: s.name, color, pct, kind: kind[s.mi] ?? (mode === 'value' && s.m.unit === 'pct' ? 'line' : 'bar'), stack: stack && !s.m.total, faded: s.olds,
+                  dec: pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1, data: s.vals.map((v) => (v == null ? null : +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3))) });
+                if (s.gvals) fox.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, color, pct: true, kind: 'line', dashed: true, cap: 300, data: s.gvals.map((v) => (v == null ? null : +v.toFixed(2))) });
               });
-              // the accounting-standard break: a line before the first IFRS 17 column, when the plotted rows carry IFRS 4 values
-              const brk = series.some((x) => x.olds.some(Boolean)) ? xs.findIndex((_, i) => !series.some((x) => x.olds[lo + i])) : -1;
-              if (brk > 0 && out[0]) out[0].markLine = { silent: true, symbol: 'none', lineStyle: { color: b.mu, type: 'dashed', width: 1 }, label: { formatter: 'IFRS 17', color: b.mu, fontSize: 11, position: 'insideEndTop' }, data: [{ xAxis: brk - 0.5 }] };
-              const unit = mode === 'yoy' || !hasAmt ? '%' : SCALES.find((x) => x.id === scale)!.label;
-              return {
-                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: second ? 56 : 14, top: 34, bottom: xs.length > 14 ? 44 : 30 },
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-                xAxis: { type: 'category', data: xs.map((pi) => pl(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12, rotate: xs.length > 14 ? 45 : 0 } },
-                yAxis: [
-                  { type: 'value', name: unit, nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${nf(v, 0)}${!hasAmt && mode === 'value' ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
-                  ...(second ? [{ type: 'value', name: '%', nameTextStyle: { color: b.mu, fontSize: 11 }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}%` }, splitLine: { show: false } }] : []),
-                ],
-                series: out,
-              };
+              const first17 = series.some((x) => x.olds.some(Boolean)) ? cols.findIndex((_, i) => !series.some((x) => x.olds[i])) : -1;
+              return foxOption({ x: cols.map((pi) => pl(pi)), series: fox, unit: SCALES.find((x) => x.id === scale)!.label, breakAt: first17 > 0 ? first17 : undefined, breakLabel: 'IFRS 17' });
             }} />
             <div className="legend">
               {series.map((s) => {

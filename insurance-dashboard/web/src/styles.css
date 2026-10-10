@@ -548,3 +548,4 @@ table.matrix tfoot td:first-child { text-align: start; }
 .colpick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; animation: pop var(--mid) var(--ease); }
 .colpick button:not(.linkbtn) { border: 1px solid var(--line-soft); background: var(--panel); color: var(--muted); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 12.5px; transition: color var(--fast), border-color var(--fast), background var(--fast); }
 .colpick button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--fg); font-weight: 600; }
+tbody tr.on td { background: var(--accent-soft); }

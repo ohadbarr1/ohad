@@ -20,14 +20,17 @@ export function Compare() {
   const [basis, setBasis] = useState<Basis>((['q', 'ltm', 'fy'] as Basis[]).find((b) => b === sp.get('b')) ?? 'ltm');
   const [from, setFrom] = useState(Number(sp.get('y')) || 2022);
   const [off, setOff] = useState<string[]>((sp.get('x') ?? '').split(',').filter(Boolean));
+  // one company in focus: its line at full strength, the rest stay as context
+  const [lead, setLead] = useState<string>(sp.get('c') ?? '');
   const [index, setIndex] = useState(sp.get('i') === '1');
   const def = KPI_BY_KEY[metric];
   useEffect(() => {
     const q: Record<string, string> = { k: metric, b: basis, y: String(from) };
     if (off.length) q.x = off.join(',');
     if (index) q.i = '1';
+    if (lead) q.c = lead;
     setSp(q, { replace: true });
-  }, [metric, basis, from, off, index, setSp]);
+  }, [metric, basis, from, off, index, lead, setSp]);
 
   const ids = useMemo(() => (kpis ? [...kpis.keys()] : []), [kpis]);
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
@@ -62,6 +65,7 @@ export function Compare() {
         {def.flow && <div className="field"><span>בסיס</span><Seg label="בסיס" value={basis} onChange={setBasis} options={BASIS} /></div>}
         <Field label="משנת"><select value={from} onChange={(e) => setFrom(Number(e.target.value))}>{[2019, 2020, 2021, 2022, 2023, 2024, 2025].map((y) => <option key={y}>{y}</option>)}</select></Field>
         <div className="field"><span>תצוגה</span><Seg<'v' | 'i'> label="תצוגה" value={index ? 'i' : 'v'} onChange={(v) => setIndex(v === 'i')} options={[['v', 'ערך'], ['i', 'אינדקס 100']]} /></div>
+        <Field label="מיקוד"><select value={lead} onChange={(e) => setLead(e.target.value)}><option value="">כל החברות שוות</option>{ids.filter((id) => !off.includes(id)).map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>
         <div className="field"><span>חברות</span><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {ids.map((id) => <button key={id} type="button" className="chip" aria-pressed={!off.includes(id)} onClick={() => setOff((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]))}><i className="sw" style={{ background: color(id) }} />{name(id)}</button>)}
         </div></div>
@@ -70,7 +74,7 @@ export function Compare() {
       {on.length === 0 || data.periods.length === 0 ? <Empty title="אין נתונים לבחירה" /> : (
         <div className="grid21">
           <Panel title={def.label} aside={<span>{lab(data.periods[0])} עד {lab(last)}</span>}>
-            <Chart label={def.label} height={380} deps={[metric, basis, from, on.join(), index, kpis]} build={() => {
+            <Chart label={def.label} height={380} deps={[metric, basis, from, on.join(), index, kpis, lead]} build={() => {
               const b = chartBase();
               return {
                 animationDuration: 700, animationEasing: 'cubicOut', textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 8, right: 12, top: 14, bottom: 4, containLabel: true },
@@ -78,13 +82,13 @@ export function Compare() {
                 xAxis: { type: 'category', data: data.periods.map(lab), boundaryGap: false, axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11 } },
                 yAxis: { type: 'value', scale: true, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
                 series: on.map((id) => ({ name: name(id), type: 'line', data: data.periods.map((p) => { const v = shown(id, p); return v == null ? null : +v.toFixed(3); }), connectNulls: true, symbol: 'circle', symbolSize: 5, showSymbol: data.periods.length <= 16,
-                  lineStyle: { color: color(id), width: 2.2 }, itemStyle: { color: color(id) }, emphasis: { focus: 'series' }, endLabel: { show: false } })),
+                  lineStyle: { color: color(id), width: lead === id ? 3.4 : 2.2, opacity: lead && lead !== id ? 0.28 : 1 }, itemStyle: { color: color(id), opacity: lead && lead !== id ? 0.28 : 1 }, z: lead === id ? 9 : 2, emphasis: { focus: 'series' }, endLabel: { show: false } })),
               };
             }} />
           </Panel>
           <Panel title={`דירוג, ${lab(last)}`} aside={<span>{UNIT[def.unit]}</span>}>
             <table><tbody>{rank.map((r, i) => (
-              <tr key={r.id}><td><span className="num muted">{i + 1}</span> <Link to={`/company/${r.id}`}>{name(r.id)}</Link></td>
+              <tr key={r.id} className={lead === r.id ? 'on' : undefined} onClick={() => setLead(lead === r.id ? '' : r.id)} style={{ cursor: 'pointer' }} title="מיקוד בגרף"><td><span className="num muted">{i + 1}</span> <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link></td>
                 <td style={{ width: '45%' }}><div className="bar"><i style={{ width: `${(Math.abs(r.v!) / max) * 100}%`, background: r.v! < 0 ? 'var(--down)' : color(r.id) }} /></div></td>
                 <td><span className={`num ${r.v! < 0 ? 'neg' : ''}`}>{fmt(r.v, def.unit)}</span></td></tr>
             ))}</tbody></table>

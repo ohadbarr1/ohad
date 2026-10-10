@@ -5,6 +5,7 @@ import { GridComponent, LegendComponent, MarkLineComponent, TooltipComponent } f
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsCoreOption } from 'echarts/core';
 import { useTheme } from '../lib/theme';
+import { polish } from '../lib/foxchart';
 
 echarts.use([BarChart, LineChart, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 
@@ -13,7 +14,8 @@ function save(name: string, href: string) { const a = document.createElement('a'
 
 /** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens.
  *  With `exportName` the chart carries its own export: the picture as PNG and the plotted series as CSV. */
-export function Chart({ build, height = 320, deps, label, exportName }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string }) {
+export function Chart({ build, height = 320, deps, label, exportName: named }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string }) {
+  const exportName = named ?? (height >= 200 ? `fox-${label.replace(/[\s,]+/g, '-')}` : undefined);
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
   const { theme } = useTheme();
@@ -28,7 +30,7 @@ export function Chart({ build, height = 320, deps, label, exportName }: { build:
 
   useEffect(() => {
     // wait one frame so the new theme's CSS variables are applied before we read them
-    const id = requestAnimationFrame(() => chart.current?.setOption(build(), true));
+    const id = requestAnimationFrame(() => chart.current?.setOption(polish(build()), true));
     return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, ...deps]);
@@ -37,7 +39,7 @@ export function Chart({ build, height = 320, deps, label, exportName }: { build:
   const csv = () => {
     const o = chart.current?.getOption() as Opt | undefined;
     if (!o) return;
-    const xs = o.xAxis?.[0]?.data ?? [], ss = o.series ?? [];
+    const xs = o.xAxis?.[0]?.data ?? (o as { yAxis?: { data?: (string | number)[] }[] }).yAxis?.[0]?.data ?? [], ss = o.series ?? [];
     const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const rows = [['', ...ss.map((x) => x.name ?? '')], ...xs.map((x, i) => [x, ...ss.map((q) => { const v = q.data?.[i]; return v != null && typeof v === 'object' ? v.value : v; })])];
     save(`${exportName}.csv`, URL.createObjectURL(new Blob(['\uFEFF' + rows.map((r) => r.map(cell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })));
