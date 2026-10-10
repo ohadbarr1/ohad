@@ -110,11 +110,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
 
   // A statement that changed accounting standard is read one structure at a time: IFRS 17 as reported from 2024, IFRS 4 as reported until 2024,
   // or only the lines that exist under both and so run through the break.
-  const [stdTab, setStdTab] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? 'c');  // the page opens on the lines that run through the whole history
-  const hasStd = !!sv?.rows.some((r) => r.m.std);
-  const hideOld = hasStd && stdTab === '17';
-  const seen = (f: { old?: boolean } | undefined): boolean => !!f && !(hideOld && f.old);
-  const val = (mi: number | null, pi: number): number | null => { if (mi == null || pi < 0) return null; const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null; };
+  const [stdPick, setStdTab] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? 'c');  // the page opens on the lines that run through the whole history
   const tabRows = useMemo(() => {
     const by: Record<'17' | '4' | 'c', Set<number>> = { 17: new Set(), 4: new Set(), c: new Set() };
     let seg = -1;
@@ -126,6 +122,12 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     }
     return by;
   }, [sv]);
+  // a statement with no line common to both standards opens on the current standard instead
+  const stdTab: '17' | '4' | 'c' = tabRows[stdPick].size ? stdPick : '17';
+  const hasStd = !!sv?.rows.some((r) => r.m.std);
+  const hideOld = hasStd && stdTab === '17';
+  const seen = (f: { old?: boolean } | undefined): boolean => !!f && !(hideOld && f.old);
+  const val = (mi: number | null, pi: number): number | null => { if (mi == null || pi < 0) return null; const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null; };
   const inTab = (idx: number) => !hasStd || tabRows[stdTab].has(idx);
   const colsOf = (tab: '17' | '4' | 'c') => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType && sv.rows.some((r) => tabRows[tab].has(r.idx) && (() => { const f = r.values.get(pi); return !!f && !(tab === '17' && f.old); })())) : []);
   const allCols = useMemo(() => (!sv ? [] : hasStd ? colsOf(stdTab) : sv.periodIdx.filter((pi) => d.periods[pi].type === curType)), [sv, d, curType, hasStd, stdTab, tabRows]);  // eslint-disable-line react-hooks/exhaustive-deps
