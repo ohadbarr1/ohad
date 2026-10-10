@@ -1,3 +1,4 @@
+import { byPeriodDesc } from '../lib/format';
 import { useEffect, useMemo, useState } from 'react';
 import { Empty, Field, Panel } from '../components/ui';
 import { useRegistry } from '../lib/useData';
@@ -21,7 +22,7 @@ export function DocSearch({ company }: { company?: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   useEffect(() => { fetch(`${import.meta.env.BASE_URL}data/search/index.json`).then((r) => r.json()).then(setIdx, () => setErr('אינדקס החיפוש לא נטען')); }, []);
-  const periods = useMemo(() => [...new Set((idx ?? []).filter((x) => co === 'all' || x.company === co).map((x) => x.period))].sort().reverse(), [idx, co]);
+  const periods = useMemo(() => [...new Set((idx ?? []).filter((x) => co === 'all' || x.company === co).map((x) => x.period))].sort(byPeriodDesc), [idx, co]);
   const P = periods.includes(period) ? period : periods[0] ?? '';
   // one company: every report; all companies: one period at a time, to keep the download small
   const scope = useMemo(() => (idx ?? []).filter((x) => (co === 'all' ? x.period === P : x.company === co && (period === 'all' || x.period === P))), [idx, co, P, period]);

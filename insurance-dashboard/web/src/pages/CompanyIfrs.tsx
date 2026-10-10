@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
-import { nf } from '../lib/format';
+import { nf, byPeriodDesc } from '../lib/format';
 import { useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BUCKET_HE, EFFECT_HE, METRIC_HE, SEGMENT_HE, TEXT_HE } from '../lib/labels';
@@ -46,7 +46,7 @@ export const periodName = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)
 /** Everything extracted from one company's report: capital, CSM movement by segment, expected CSM release, sensitivities, and the full fact list. Every figure links to its page. */
 export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const { data: d, error } = useIfrsData();
-  const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort().reverse(), [d, id]);
+  const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
   const [period, setPeriod] = useState('');
   const P = periods.includes(period) ? period : periods[0] ?? '';
   const facts = useIfrsFacts(P || null);

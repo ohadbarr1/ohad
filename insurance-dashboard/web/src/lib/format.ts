@@ -44,3 +44,7 @@ export function periodLabel(type: string, end: string): string {
 export function periodLong(type: string): string {
   return type === 'FY' ? 'FY' : type === 'H' ? 'H' : type === '9M' ? '9M' : type === 'Q' ? 'Q' : 'תאריך מאזן';
 }
+
+/** Report periods ("2025Q3", "2025FY") newest first; the annual report sorts as the fourth quarter of its year, after Q3. */
+const periodKey = (p: string): string => `${p.slice(0, 4)}${p.endsWith('FY') ? 'Q4' : p.slice(4)}`;
+export const byPeriodDesc = (a: string, b: string): number => periodKey(b).localeCompare(periodKey(a));

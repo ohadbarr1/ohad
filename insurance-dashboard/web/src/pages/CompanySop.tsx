@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, Field, Loading, Panel, Seg } from '../components/ui';
-import { nf } from '../lib/format';
+import { nf, byPeriodDesc } from '../lib/format';
 import { load } from '../lib/useData';
 import { he, periodName, segName } from './CompanyIfrs';
 
@@ -18,7 +18,7 @@ const rowName = (m: string) => (m.startsWith('sop_total:') ? m.slice(10) : m.sta
 export function CompanySop({ id, docs }: { id: string; docs: number }) {
   const [data, setData] = useState<SopData | null | undefined>(undefined);
   useEffect(() => { setData(undefined); load<SopData>(`sop/${id}.json`).then(setData, () => setData(null)); }, [id]);
-  const periods = useMemo(() => Object.keys(data ?? {}).sort().reverse(), [data]);
+  const periods = useMemo(() => Object.keys(data ?? {}).sort(byPeriodDesc), [data]);
   const [period, setPeriod] = useState('');
   const [fam, setFam] = useState('sop');
   const [col, setCol] = useState('');

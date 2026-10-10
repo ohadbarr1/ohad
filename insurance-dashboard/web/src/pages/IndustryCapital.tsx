@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
-import { nf } from '../lib/format';
+import { nf, byPeriodDesc } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { periodName } from './CompanyIfrs';
@@ -23,7 +23,7 @@ const COLS: { k: string; l: string; re: RegExp; pctv?: boolean; flow?: boolean }
 export function IndustryCapital() {
   const { data: d, error } = useIfrsData();
   const reg = useRegistry();
-  const periods = useMemo(() => [...new Set((d?.files ?? []).map((f) => f.period))].sort().reverse(), [d]);
+  const periods = useMemo(() => [...new Set((d?.files ?? []).map((f) => f.period))].sort(byPeriodDesc), [d]);
   const [period, setPeriod] = useState('');
   const P = periods.includes(period) ? period : periods.find((p) => p.endsWith('FY')) ?? periods[0] ?? '';
   const facts = useIfrsFacts(P || null);

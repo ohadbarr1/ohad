@@ -93,6 +93,8 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const [flip, setFlip] = useState<Record<number, boolean>>({});
   const [growth, setGrowth] = useState<Record<number, 'yoy' | 'qoq' | undefined>>({});
   const [q, setQ] = useState('');
+  // units, display, column order, period window and row search sit behind one button on a phone, so the first screen shows figures
+  const [more, setMore] = useState(() => window.matchMedia('(min-width: 761px)').matches);
   const [oldestFirst, setOldestFirst] = useState(sp.get('r') === '1');
   const [dim, setDim] = useState('all');
   const [sel, setSel] = useState<number[]>(initSel);
@@ -246,10 +248,12 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         </div></div>
         {curGroup.length > 1 && <Field label="טבלה"><select value={sheetCode} onChange={(e) => { setSheetCode(e.target.value); setSel([]); }}>{curGroup.map((x) => <option key={x.code} value={x.code}>{sheetName(x.code)}{span(x.code)}</option>)}</select></Field>}
         <div className="field"><span>תקופה</span><Seg<string> label="תקופה" value={curType} onChange={setType} options={types.map((t) => [t, periodLong(t)] as [string, string])} /></div>
+        <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'מוצג' : 'הצגת גרף'}</button></div>
+        <div className="field"><span>עוד</span><button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${range[0] || range[1] || q || mode === 'yoy' || dim !== 'all' ? ' •' : ''}`}</button></div>
+        {more && <>
         <Field label="יחידות"><select value={scale} onChange={(e) => setScale(e.target.value as Scale)} disabled={mode === 'yoy'}>{SCALES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></Field>
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
         <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש ← ישן'], ['old', 'ישן ← חדש']]} /></div>
-        <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'מוצג' : 'הצגת גרף'}</button></div>
         {nAll > 2 && <div className="field"><span>טווח תקופות: <b className="num">{store.plabel(allCols[loI])}</b> עד <b className="num">{store.plabel(allCols[hiI])}</b>{(range[0] || range[1]) && <button type="button" className="linkbtn" onClick={() => setRange([null, null])}>כל התקופות</button>}</span>
           <div className="range2" style={{ ['--lo' as string]: `${(loI / (nAll - 1)) * 100}%`, ['--hi' as string]: `${(hiI / (nAll - 1)) * 100}%` }}>
             <input type="range" min={0} max={nAll - 1} step={1} value={loI} onChange={(e) => setLo(Number(e.target.value))} aria-label="מתקופה" />
@@ -257,6 +261,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
           </div></div>}
         <Field label="חיפוש שורה"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="רווח, פרמיות, CSM" /></Field>
         {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
+        </>}
       </section>
 
       {showChart && <Panel title={series.length === 1 ? series[0].name : 'גרף'} aside={<>
@@ -333,7 +338,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
           return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{store.plabel(cs[0])} עד {store.plabel(cs[cs.length - 1])}</span><small>{note}</small></button>;
         })}
       </div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 או H2 מחושב מהדוח השנתי · כל ערך מקושר לדוח שלו · אפור = לפי IFRS 4 כפי שדווח' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'נטוי = מחושב מהשנתי · אפור = IFRS 4 · כל ערך מקושר לעמוד המקור' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>

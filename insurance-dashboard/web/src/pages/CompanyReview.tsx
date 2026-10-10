@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, IncChip, Loading, Panel, Seg } from '../components/ui';
-import { nf, pct } from '../lib/format';
+import { nf, pct, byPeriodDesc } from '../lib/format';
 import { useIfrsCompany, useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
@@ -57,7 +57,7 @@ function Trend({ pts }: { pts: { p: string; v: number }[] }) {
 /** One report against the same period a year earlier and the previous quarter. Every figure is as printed and opens its source page. */
 export function CompanyReview({ id, docs }: { id: string; docs: number }) {
   const { data: d, error } = useIfrsData();
-  const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort().reverse(), [d, id]);
+  const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
   const [period, setPeriod] = useState('');
   const [win, setWin] = useState<'q' | 'ytd'>('q');
   const P = periods.includes(period) ? period : periods[0] ?? '';

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
-import { nf } from '../lib/format';
+import { nf, byPeriodDesc } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 
@@ -37,7 +37,7 @@ export function IndustryIfrs() {
   const { data: d, error } = useIfrsData();
   const reg = useRegistry();
   const [sp, setSp] = useSearchParams();
-  const periods = useMemo(() => [...new Set((d?.files ?? []).map((f) => f.period))].sort().reverse(), [d]);
+  const periods = useMemo(() => [...new Set((d?.files ?? []).map((f) => f.period))].sort(byPeriodDesc), [d]);
   const [period, setPeriod] = useState(sp.get('p') ?? '');
   const [metric, setMetric] = useState(sp.get('m') ?? 'csm_closing');
   const [seg, setSeg] = useState(sp.get('s') ?? 'group');

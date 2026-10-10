@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
-import { nf } from '../lib/format';
+import { nf, byPeriodDesc } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
@@ -27,7 +27,7 @@ const B_ORDER = ['net', 'na', 'gross', 'reinsurance'];
 export function IndustryMatrix() {
   const { data: d, error } = useIfrsData();
   const reg = useRegistry();
-  const periods = useMemo(() => [...new Set((d?.files ?? []).map((f) => f.period))].sort().reverse(), [d]);
+  const periods = useMemo(() => [...new Set((d?.files ?? []).map((f) => f.period))].sort(byPeriodDesc), [d]);
   const [period, setPeriod] = useState('');
   const [win, setWin] = useState<'q' | 'ytd'>('q');
   const P = periods.includes(period) ? period : periods[0] ?? '';
