@@ -1,3 +1,4 @@
+import { Scene3D } from '../components/Icon3D';
 import { Link } from 'react-router-dom';
 import { Search } from '../components/Search';
 import { Logo } from '../components/Logo';
@@ -43,6 +44,7 @@ export function Home() {
           <Search big />
         </div>
         <div className="mark"><Logo size={170} animated /></div>
+        <Scene3D />
       </header>
 
       {m && (

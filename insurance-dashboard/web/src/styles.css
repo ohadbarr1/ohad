@@ -382,3 +382,93 @@ table.series td.old { background: color-mix(in oklch, var(--bg) 55%, transparent
 table.series .brk { box-shadow: inset 2px 0 0 var(--accent-line); } [dir="rtl"] table.series .brk { box-shadow: inset -2px 0 0 var(--accent-line); }
 table.series a.cmp { color: var(--muted); } table.series .der { font-style: italic; color: var(--muted); }
 table.series thead th .dim { color: var(--accent); font-size: 10px; }
+
+/* a workbook cell that opens the report page it was read from */
+a.cellsrc { color: inherit; text-decoration: none; }
+a.cellsrc:hover .num { text-decoration: underline; text-decoration-color: var(--accent, currentColor); text-underline-offset: 3px; }
+
+/* ---------- Phoenix: the house look and the default. White content surfaces on a cool grey page, navy for the frame and the hero, orange only as emphasis.
+   Colours follow the Phoenix investor deck and fnx.co.il; the typeface stays Heebo because the brand face is licensed. ---------- */
+:root[data-theme="phoenix"] {
+  --navy: #111C3F; --navy-deep: #0E1632; --orange: #FF4E31; --peach: #FFE3D1; --indigo: #373D91;
+  --bg: #F5F6FA; --rail: #FFFFFF; --panel: #FFFFFF; --panel2: #F2F3F7; --panel3: #E6E9F0;
+  --line: #CFD2D9; --line-soft: #E4E7EE; --hi: rgb(255 255 255 / 0.9); --fg: #111C3F; --muted: #5E5E5E; --faint: #767676; --link: #373D91;
+  --accent: #FF4E31; --accent-2: #FF5A23; --accent-ink: #FFFFFF; --accent-soft: rgb(255 78 49 / 0.1); --accent-line: rgb(255 78 49 / 0.45);
+  --up: #0B7F56; --down: #C8102E; --warn: #8A5A00;
+  --s1: #111C3F; --s2: #FF4E31; --s3: #6F8DB9; --s4: #FFA285; --s5: #2E6BA8; --s6: #373D91; --s7: #A9C6E8; --s8: #808080; --s9: #FF7043; --s10: #1F3F77; --s11: #C3CFE1;
+  --aurora-1: transparent; --aurora-2: transparent; --grid: transparent;
+  --shadow: 0 1px 2px rgb(17 28 63 / 0.05), 0 14px 36px rgb(17 28 63 / 0.1); --glow: 0 0 0 1px var(--accent-line), 0 8px 24px rgb(255 78 49 / 0.16);
+  color-scheme: light;
+}
+:root[data-theme="phoenix"] body::before, :root[data-theme="phoenix"] body::after { display: none; }
+:where(:root[data-theme="phoenix"]) a { color: var(--link); }
+:root[data-theme="phoenix"] :is(.panel, .mcard, .card, .kpis) { background: var(--panel); border-radius: 20px; box-shadow: 0 1px 2px rgb(17 28 63 / 0.04), 0 10px 28px rgb(17 28 63 / 0.06); transition: box-shadow var(--mid) var(--ease), transform var(--mid) var(--ease); }
+:root[data-theme="phoenix"] :is(.mcard, .card):hover { transform: translateY(-3px); box-shadow: 0 1px 2px rgb(17 28 63 / 0.05), 0 18px 40px rgb(17 28 63 / 0.12); }
+:root[data-theme="phoenix"] :is(.panel, .mcard, .card, .kpis)::before { background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgb(255 227 209 / 0.55), transparent 62%); }
+:root[data-theme="phoenix"] .panel h2 { color: var(--navy); }
+:root[data-theme="phoenix"] .pagehead h1 { font-weight: 700; letter-spacing: -0.02em; }
+/* the KPI card of the deck: a grey bar under each figure, orange under the one in focus */
+:root[data-theme="phoenix"] .kpi { box-shadow: 1px 0 0 var(--line-soft), 0 1px 0 var(--line-soft), inset 0 -4px 0 #D9D9D9; transition: box-shadow var(--mid) var(--ease); }
+:root[data-theme="phoenix"] .kpi:hover { box-shadow: 1px 0 0 var(--line-soft), 0 1px 0 var(--line-soft), inset 0 -4px 0 var(--orange); }
+:root[data-theme="phoenix"] .kpi .v { font-weight: 500; letter-spacing: -0.03em; }
+/* frame: navy bar on top, white rail */
+:root[data-theme="phoenix"] .top { background: var(--navy); border-bottom: 0; backdrop-filter: none; }
+:root[data-theme="phoenix"] .top .wordmark { color: #FFFFFF; }
+:root[data-theme="phoenix"] .top .search input { background: #FFFFFF; border-color: transparent; border-radius: 999px; padding-inline: 20px; }
+:root[data-theme="phoenix"] .top .iconbtn { background: rgb(255 255 255 / 0.1); border-color: transparent; color: #FFFFFF; }
+:root[data-theme="phoenix"] .rail { background: #FFFFFF; backdrop-filter: none; }
+:root[data-theme="phoenix"] .rail a.item { color: var(--navy); font-weight: 500; }
+:root[data-theme="phoenix"] .rail a.item:hover { background: var(--panel2); }
+:root[data-theme="phoenix"] .rail a.item.active { background: var(--peach); box-shadow: none; font-weight: 700; }
+:root[data-theme="phoenix"] .rail a.item.active::after { content: ""; position: absolute; inset-inline: 32%; bottom: 3px; height: 3px; border-radius: 3px; background: var(--orange); animation: tab-in var(--mid) var(--spring) both; }
+/* pills */
+:root[data-theme="phoenix"] :is(.seg, .btn, .subnav, .search input) { border-radius: 999px; }
+:root[data-theme="phoenix"] .seg.wrap { border-radius: 22px; }
+:root[data-theme="phoenix"] .seg button { border-radius: 999px; }
+:root[data-theme="phoenix"] .seg button[aria-pressed="true"] { background: var(--orange); box-shadow: 0 6px 16px rgb(255 78 49 / 0.28); }
+:root[data-theme="phoenix"] .btn.primary { background: var(--orange); }
+:root[data-theme="phoenix"] .subnav { background: #FFFFFF; }
+:root[data-theme="phoenix"] .subnav a { border-radius: 999px; color: var(--navy); }
+:root[data-theme="phoenix"] .subnav a.active { background: var(--navy); color: #FFFFFF; box-shadow: 0 6px 16px rgb(17 28 63 / 0.22); }
+:root[data-theme="phoenix"] .subnav a.active .count { color: #C3CFE1; }
+:root[data-theme="phoenix"] .subnav a.active::after { box-shadow: none; }
+:root[data-theme="phoenix"] thead th { background: #F5F6FA; color: var(--navy); }
+:root[data-theme="phoenix"] tr.sec td { color: var(--navy); }
+:root[data-theme="phoenix"] .chip { background: #F0F1F3; border-color: transparent; color: var(--navy); }
+/* hero: a navy block, an orange line that cuts its foot, the 3D scene on a peach disc */
+:root[data-theme="phoenix"] .mast { padding: 44px 48px 56px; --fg: #FFFFFF; --muted: #C3CFE1; color: #FFFFFF; isolation: isolate; }
+:root[data-theme="phoenix"] .mast::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 28px;
+  background: linear-gradient(174deg, transparent calc(84% - 3px), var(--orange) calc(84% - 3px) 84%, var(--navy-deep) 84%), var(--navy); box-shadow: 0 24px 60px rgb(17 28 63 / 0.25); animation: rise var(--slow) var(--ease) both; }
+:root[data-theme="phoenix"] .mast h1 span { text-shadow: none; }
+:root[data-theme="phoenix"] .mast .mark { display: none; }
+:root[data-theme="phoenix"] .mast .search { --fg: #111C3F; --muted: #5E5E5E; color: var(--fg); }
+:root[data-theme="phoenix"] .mast .search input { background: #FFFFFF; border-color: transparent; }
+
+/* 3D icons: shown by the Phoenix look only */
+.i3d, .scene3d { display: none; }
+:root[data-theme="phoenix"] .rail a.item > svg:not(.i3d) { display: none; }
+:root[data-theme="phoenix"] .rail a.item svg.i3d { display: block; width: 36px; height: 36px; stroke: none; filter: none; overflow: visible; }
+:root[data-theme="phoenix"] .i3d { display: block; stroke: none; overflow: visible; }
+.i3d-shadow { fill: rgb(17 28 63 / 0.16); transform-origin: 50px 88px; transition: transform var(--mid) var(--ease), opacity var(--mid); }
+.i3d-body { transition: transform var(--mid) var(--spring); }
+a:hover > .i3d .i3d-body, .rail a.item.active .i3d-body { transform: translateY(-5px); }
+a:hover > .i3d .i3d-shadow, .rail a.item.active .i3d-shadow { transform: scale(0.8); opacity: 0.7; }
+:root[data-theme="phoenix"] .scene3d { display: block; position: relative; width: clamp(200px, 26vw, 320px); aspect-ratio: 1; animation: mark-in 1000ms var(--spring) 120ms both; }
+.scene3d::before { content: ""; position: absolute; inset: 4%; border-radius: 50%; background: var(--peach); }
+.scene3d span { position: absolute; width: 32%; animation: float3d 6s ease-in-out calc(var(--i) * -1.3s) infinite alternate; }
+.scene3d span .i3d { width: 100%; height: auto; }
+.scene3d span:nth-child(1) { width: 52%; left: 24%; top: 20%; z-index: 2; }
+.scene3d span:nth-child(2) { left: 2%; top: 48%; z-index: 3; }
+.scene3d span:nth-child(3) { left: 66%; top: 50%; z-index: 3; }
+.scene3d span:nth-child(4) { left: 62%; top: 4%; z-index: 1; }
+.scene3d span:nth-child(5) { left: 6%; top: 6%; z-index: 1; }
+@keyframes float3d { from { transform: translateY(5px); } to { transform: translateY(-7px); } }
+@media (max-width: 760px) {
+  :root[data-theme="phoenix"] .mast { padding: 26px 20px 40px; gap: 12px; }
+  :root[data-theme="phoenix"] .mast::before { border-radius: 22px; }
+  :root[data-theme="phoenix"] .scene3d { width: 128px; }
+  :root[data-theme="phoenix"] .rail { border-top-color: var(--line-soft); box-shadow: 0 -8px 24px rgb(17 28 63 / 0.08); }
+  :root[data-theme="phoenix"] .rail a.item svg.i3d { width: 30px; height: 30px; }
+}
+.mast h1 { white-space: nowrap; }
+@media (max-width: 760px) { :root[data-theme="phoenix"] .mast { padding-bottom: 64px; } :root[data-theme="phoenix"] .mast h1 { font-size: clamp(52px, 17vw, 76px); } }

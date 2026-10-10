@@ -1,20 +1,24 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-export type Theme = 'dark' | 'light';
-const Ctx = createContext<{ theme: Theme; toggle: () => void }>({ theme: 'dark', toggle: () => {} });
+export type Theme = 'phoenix' | 'dark' | 'light';
+/** Phoenix is the house look; the obsidian look and its light variant stay as choices. */
+export const THEMES: [Theme, string][] = [['phoenix', 'הפניקס'], ['dark', 'אובסידיאן'], ['light', 'בהיר']];
+const KEY = 'theme2'; // a new key, so a choice saved before the Phoenix look existed does not hide it
+const Ctx = createContext<{ theme: Theme; toggle: () => void; next: Theme }>({ theme: 'phoenix', toggle: () => {}, next: 'dark' });
+const after = (t: Theme): Theme => THEMES[(THEMES.findIndex(([x]) => x === t) + 1) % THEMES.length][0];
 
 function initial(): Theme {
-  try { const t = localStorage.getItem('theme'); if (t === 'dark' || t === 'light') return t; } catch { /* storage may be blocked */ }
-  return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  try { const t = localStorage.getItem(KEY); if (t === 'phoenix' || t === 'dark' || t === 'light') return t; } catch { /* storage may be blocked */ }
+  return 'phoenix';
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(initial);
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('theme', theme); } catch { /* ignore */ }
+    try { localStorage.setItem(KEY, theme); } catch { /* ignore */ }
   }, [theme]);
-  return <Ctx.Provider value={{ theme, toggle: () => setTheme((t) => (t === 'dark' ? 'light' : 'dark')) }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ theme, next: after(theme), toggle: () => setTheme(after) }}>{children}</Ctx.Provider>;
 }
 export const useTheme = () => useContext(Ctx);
 

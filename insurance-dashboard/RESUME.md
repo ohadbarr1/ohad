@@ -52,3 +52,7 @@
 
 ## מפת הצינור (כל הסקריפטים ב-`pipeline/`)
 `fetch_regulator.py` → `build_market.py`, `build_funds.py` · `fetch_maya.py`, `fetch_xbrl.py` → `build_kpi.py` (+ `verify_kpi_window.py`) · `build_ifrs.py` · `build_sop.py` · `build_savings.py` · `build_hist.py` · `build_series.py` · `build_search.py` · `build_company_index.py`. מפרט החילוץ: `EXTRACT_SPEC.md` (v1 עד v5).
+
+## עדכון 10.10.2026 (אחרי נקודת העצירה)
+- חוברת הנתונים: `pipeline/build_workbook.py` בונה `web/public/data/companies/<id>.json` לכל חברה מתוך `series/<id>.json` (להריץ אחרי `build_series.py`, ואז `build_company_index.py`). בפניקס הגיליונות נוספים לחוברת המקורית (`data/workbook_base/phoenix.json`) כמקור שלישי. כל תא מקושר לדוח ולעמוד שלו. Q4 = FY פחות 9M.
+- ערכות עיצוב: `phoenix` (ברירת מחדל), `dark` (אובסידיאן), `light`. מפתח localStorage: `theme2`. סגנונות הפניקס בסוף `web/src/styles.css`, אייקונים תלת ממדיים ב-`web/src/components/Icon3D.tsx`.

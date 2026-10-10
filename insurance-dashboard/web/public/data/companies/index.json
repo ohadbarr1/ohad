@@ -26,6 +26,15 @@
     "doc": "דוחות כספיים ביניים מאוחדים ל-30.6.2026",
     "url": "http://www.fnx.co.il/sites/docs/genery/DohotKaspiyim/doch_bituach_q_2_2026_isa_mungash.pdf",
     "pages": 167
+   },
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "X",
+    "name": "רצף מהדוחות, 2021 ואילך",
+    "doc": "מחולץ מהדוחות התקופתיים של הפניקס",
+    "url": null,
+    "pages": null
    }
   ],
   "docs": 116,
@@ -39,8 +48,18 @@
   "market_group": "הראל",
   "maya_id": 585,
   "yahoo": "HARL.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "Q2 2026",
+    "end": "2026-06-30",
+    "entity": "X",
+    "name": "רצף מהדוחות, 2021 ואילך",
+    "doc": "מחולץ מהדוחות התקופתיים של הראל",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 109,
   "has_price": true
  },
@@ -52,8 +71,18 @@
   "market_group": "מגדל",
   "maya_id": 1041,
   "yahoo": "MGDL.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "Q2 2026",
+    "end": "2026-06-30",
+    "entity": "X",
+    "name": "רצף מהדוחות, 2021 ואילך",
+    "doc": "מחולץ מהדוחות התקופתיים של מגדל",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 78,
   "has_price": true
  },
@@ -65,8 +94,18 @@
   "market_group": "כלל",
   "maya_id": 224,
   "yahoo": "CLIS.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "Q2 2026",
+    "end": "2026-06-30",
+    "entity": "X",
+    "name": "רצף מהדוחות, 2021 ואילך",
+    "doc": "מחולץ מהדוחות התקופתיים של כלל",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 101,
   "has_price": true
  },
@@ -78,8 +117,18 @@
   "market_group": "מנורה מבטחים",
   "maya_id": 566,
   "yahoo": "MMHD.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "Q2 2026",
+    "end": "2026-06-30",
+    "entity": "X",
+    "name": "רצף מהדוחות, 2021 ואילך",
+    "doc": "מחולץ מהדוחות התקופתיים של מנורה מבטחים",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 95,
   "has_price": true
  },
@@ -90,8 +139,18 @@
   "kind": "insurance_group",
   "market_group": "הכשרה",
   "maya_id": 1187,
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "Q2 2026",
+    "end": "2026-06-30",
+    "entity": "X",
+    "name": "רצף מהדוחות, 2021 ואילך",
+    "doc": "מחולץ מהדוחות התקופתיים של הכשרה",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 52,
   "has_price": false
  },
@@ -103,8 +162,18 @@
   "market_group": "איילון",
   "maya_id": 209,
   "yahoo": "AYAL.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "Q2 2026",
+    "end": "2026-06-30",
+    "entity": "X",
+    "name": "רצף מהדוחות, 2021 ואילך",
+    "doc": "מחולץ מהדוחות התקופתיים של איילון",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 69,
   "has_price": true
  },

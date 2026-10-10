@@ -1,19 +1,19 @@
 import type { CompanyData, CompanyMetric, CompanyPeriod } from './types';
 import { periodLabel } from './format';
 
-export interface Row { idx: number; m: CompanyMetric; values: Map<number, { v: number; page: number | null }> }
-export interface SheetView { code: string; entity: 'F' | 'I'; group: string; title: string; rows: Row[]; periods: CompanyPeriod[]; periodIdx: number[]; dims: string[] }
+export interface Row { idx: number; m: CompanyMetric; values: Map<number, { v: number; page: number | null; u?: number | null }> }
+export interface SheetView { code: string; entity: string; group: string; title: string; rows: Row[]; periods: CompanyPeriod[]; periodIdx: number[]; dims: string[] }
 
 /** Read-only index over the facts of one company. */
 export class CompanyStore {
-  readonly byMetric = new Map<number, Map<number, { v: number; page: number | null }>>();
+  readonly byMetric = new Map<number, Map<number, { v: number; page: number | null; u?: number | null }>>();
   readonly metricsBySheet = new Map<string, number[]>();
 
   constructor(readonly d: CompanyData) {
-    for (const [mi, pi, v, page] of d.facts) {
+    for (const [mi, pi, v, page, u] of d.facts) {
       let m = this.byMetric.get(mi);
       if (!m) { m = new Map(); this.byMetric.set(mi, m); }
-      m.set(pi, { v, page });
+      m.set(pi, { v, page, u });
     }
     d.metrics.forEach((m, i) => {
       const arr = this.metricsBySheet.get(m.sheet) ?? [];
@@ -61,10 +61,11 @@ export class CompanyStore {
     if (mi == null || pi < 0) return null;
     return this.byMetric.get(mi)?.get(pi)?.page ?? null;
   }
-  sourceUrl(entity: 'F' | 'I', page: number | null): string | null {
-    const s = this.d.sources.find((x) => x.entity === entity);
-    if (!s?.url) return null;
-    return page ? `${s.url}#page=${page}` : s.url;
+  /** The file a figure was read from: its own report when the fact names one, otherwise the single source document of the entity. */
+  sourceUrl(entity: string, page: number | null, u?: number | null): string | null {
+    const url = (u != null ? this.d.urls?.[u] : null) ?? this.d.sources.find((x) => x.entity === entity)?.url;
+    if (!url) return null;
+    return page ? `${url}#page=${page}` : url;
   }
 }
 

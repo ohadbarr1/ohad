@@ -79,8 +79,10 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const d = store.d;
   // the view lives in the URL: sheet, selected rows, period type, units, mode, column order
   const initSel = (sp.get('m') ?? '').split(',').filter(Boolean).map(Number).filter((i) => d.metrics[i]);
-  const initSheet = sp.get('sheet') ?? d.metrics[initSel[0]]?.sheet ?? 'F.D2_רווח_הפסד';
-  const [entity, setEntity] = useState<'F' | 'I'>(initSheet.startsWith('I.') ? 'I' : 'F');
+  const wanted = sp.get('sheet') ?? d.metrics[initSel[0]]?.sheet ?? 'F.D2_רווח_הפסד';
+  const initSheet = d.sheets.some((s) => s.code === wanted) ? wanted : (d.sheets.find((s) => s.group === 'income') ?? d.sheets[0])?.code ?? wanted;
+  const entities = useMemo(() => d.sources.filter((s) => d.sheets.some((x) => x.entity === s.entity)).map((s) => [s.entity, s.entity === 'F' ? `${s.name} (מאוחד)` : s.name] as [string, string]), [d]);
+  const [entity, setEntity] = useState<string>(initSheet.split('.')[0]);
   const [sheetCode, setSheetCode] = useState(initSheet);
   const [type, setType] = useState<string>(sp.get('t') ?? '');
   const [scale, setScale] = useState<Scale>((['k', 'm', 'b'] as Scale[]).find((x) => x === sp.get('u')) ?? 'm');
@@ -171,14 +173,14 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const unitLabel = mode === 'yoy' ? 'YoY %' : (SCALES.find((s) => s.id === scale)!.label);
 
   const toggle = (mi: number) => setSel((cur) => (cur.includes(mi) ? cur.filter((x) => x !== mi) : [...cur, mi]));
-  const open = (page: number | null) => store.sourceUrl(entity, page);
+  const open = (page: number | null, u?: number | null) => store.sourceUrl(entity, page, u);
 
   const explainText = explain != null ? notes.data?.[String(explain)] : null;
 
   return (
     <>
       <section className="controls">
-        <div className="field"><span>ישות מדווחת</span><Seg<'F' | 'I'> label="ישות" value={entity} onChange={(e) => { setEntity(e); const first = d.sheets.find((s) => s.entity === e && s.group === 'income'); if (first) { setSheetCode(first.code); setSel([]); } }} options={[['F', 'הפניקס פיננסים (מאוחד)'], ['I', 'הפניקס חברה לביטוח']]} /></div>
+        {entities.length > 1 && <div className="field"><span>מקור</span><Seg<string> label="מקור" value={entity} onChange={(e) => { setEntity(e); const first = d.sheets.find((s) => s.entity === e && s.group === 'income') ?? d.sheets.find((s) => s.entity === e); if (first) { setSheetCode(first.code); setSel([]); } }} options={entities} /></div>}
         <div className="field"><span>דוח</span><div className="seg wrap" role="group" aria-label="דוח">
           {optGroups.map(({ g, items }) => <button key={g} type="button" aria-pressed={sv?.group === g} onClick={() => { setSheetCode(items[0].code); setSel([]); }}>{d.groups[g]}</button>)}
         </div></div>
@@ -233,7 +235,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         </div>
       )}
 
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{sv ? `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF` : ''}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : entity === 'X' ? 'מיליוני ₪ · Q4 = FY פחות 9M · כל ערך מקושר לדוח שלו' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
@@ -241,8 +243,9 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
               {rows.map((r) => {
                 if (r.m.header) return <tr key={r.idx} className="sec"><td colSpan={colsDesc.length + 2}>{r.m.label}</td></tr>;
                 const on = sel.includes(r.idx), k = sel.indexOf(r.idx);
-                const page = colsDesc.map((pi) => r.values.get(pi)?.page).find((p) => p != null) ?? null;
-                const link = open(page ?? null);
+                const src = colsDesc.map((pi) => r.values.get(pi)).find((x) => x?.page != null);
+                const page = src?.page ?? null;
+                const link = open(page, src?.u);
                 return (
                   <tr key={r.idx}>
                     <td className="lbl"><div className="mrow">
@@ -251,7 +254,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                       <span>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       <button type="button" className="info" onClick={() => setExplain(explain === r.idx ? null : r.idx)} aria-label="הסבר">i</button>
                     </div></td>
-                    {colsDesc.map((pi) => <td key={pi}><span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}`}>{shown(r.idx, pi)}</span></td>)}
+                    {colsDesc.map((pi) => { const f = r.values.get(pi), href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`מקור: עמ׳ ${f?.page ?? ''}`}>{body}</a> : body}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td>
                   </tr>
                 );

@@ -23,15 +23,15 @@ export interface MarketData {
 }
 
 export interface CompanyPeriod { id: string; label: string; type: string; end: string; months: number }
-export interface CompanyMetric { entity: 'F' | 'I'; sheet: string; group: string; label: string; dim?: string; unit: 'k' | 'm' | 'nis' | 'pct'; header: boolean; order: number }
+export interface CompanyMetric { entity: string; sheet: string; group: string; label: string; dim?: string; unit: 'k' | 'm' | 'nis' | 'pct'; header: boolean; order: number }
 export interface CompanyData {
   company: string;
-  sources: { entity: 'F' | 'I'; name: string; doc: string; url: string | null; pages: number | null }[];
+  sources: { entity: string; name: string; doc: string; url: string | null; pages: number | null }[];
   groups: Record<string, string>;
-  sheets: { code: string; entity: 'F' | 'I'; title: string; pages: string; group: string }[];
+  sheets: { code: string; entity: string; title: string; pages: string; group: string }[];
   periods: CompanyPeriod[];
   metrics: CompanyMetric[];
-  facts: [number, number, number, number | null][]; // metricIdx, periodIdx, value, pdf page
+  facts: [number, number, number, number | null, (number | null)?][]; urls?: string[]; // metricIdx, periodIdx, value, pdf page
   stats: Record<string, unknown>;
 }
 

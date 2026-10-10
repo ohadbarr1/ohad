@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 import { Search } from './Search';
 import { Logo } from './Logo';
 import { Icon } from './Icon';
-import { useTheme } from '../lib/theme';
+import { THEMES, useTheme } from '../lib/theme';
+import { Icon3D } from './Icon3D';
 
 const NAV: [string, string, string][] = [
   ['/', 'home', 'בית'], ['/companies', 'companies', 'חברות'], ['/industry', 'compare', 'השוואה ענפית'],
@@ -11,7 +12,8 @@ const NAV: [string, string, string][] = [
 ];
 
 export function Layout() {
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, next } = useTheme();
+  const nextName = THEMES.find(([t]) => t === next)![1];
   const loc = useLocation();
   const section = loc.pathname.split('/').slice(0, 3).join('/');
   useEffect(() => { window.scrollTo(0, 0); }, [section]);
@@ -31,10 +33,10 @@ export function Layout() {
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox"><Logo size={36} /></NavLink>
         <nav aria-label="ראשי">
-          {NAV.map(([to, icon, label]) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `item${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} />{label}</NavLink>)}
+          {NAV.map(([to, icon, label]) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `item${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><Icon3D name={icon} />{label}</NavLink>)}
         </nav>
         <div className="foot">
-          <button className="iconbtn" type="button" onClick={toggle} aria-label={theme === 'dark' ? 'ערכה בהירה' : 'ערכה כהה'}><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>
+          <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : next === 'light' ? 'sun' : 'palette'} /></button>
         </div>
       </aside>
       <div className="main">
@@ -42,7 +44,7 @@ export function Layout() {
           <div className="top-in">
             <NavLink to="/" className="wordmark">fox<span>.</span></NavLink>
             <Search />
-            <button className="iconbtn" type="button" onClick={toggle} aria-label={theme === 'dark' ? 'ערכה בהירה' : 'ערכה כהה'}><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>
+            <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : next === 'light' ? 'sun' : 'palette'} /></button>
           </div>
         </header>
         <main className="page" key={section}><Outlet /></main>
