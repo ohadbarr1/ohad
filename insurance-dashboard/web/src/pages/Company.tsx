@@ -162,6 +162,9 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     return fmtCell(v, d.metrics[mi].unit, scale);
   };
 
+  // how far back a sheet goes, so the choice between the full latest statement and the long series is visible before opening it
+  const span = (code: string): string => { const ps = store.sheet(code)?.periods ?? []; if (!ps.length) return ''; const ys = ps.map((x) => x.end.slice(0, 4)).sort(); return ys[0] === ys[ys.length - 1] ? ` · ${ys[0]}` : ` · ${ys[0]} עד ${ys[ys.length - 1]}`; };
+  const longSheet = d.sheets.find((x) => x.entity === entity && x.code.startsWith('X.') && x.group === sv?.group) ?? d.sheets.find((x) => x.entity === entity && x.code.startsWith('X.'));
   const sheets = useMemo(() => d.sheets.filter((s) => s.entity === entity).sort((a, b) => Number(b.code.startsWith('X.')) - Number(a.code.startsWith('X.'))), [d, entity]);
   const curGroup = sheets.filter((x) => x.group === sv?.group);
   const optGroups = GROUP_ORDER.map((g) => ({ g, items: sheets.filter((s) => s.group === g) })).filter((x) => x.items.length);
@@ -200,7 +203,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         <div className="field"><span>דוח</span><div className="seg wrap" role="group" aria-label="דוח">
           {optGroups.map(({ g, items }) => <button key={g} type="button" aria-pressed={sv?.group === g} onClick={() => { setSheetCode(items[0].code); setSel([]); }}>{d.groups[g]}</button>)}
         </div></div>
-        {curGroup.length > 1 && <Field label="טבלה"><select value={sheetCode} onChange={(e) => { setSheetCode(e.target.value); setSel([]); }}>{curGroup.map((x) => <option key={x.code} value={x.code}>{sheetName(x.code)}</option>)}</select></Field>}
+        {curGroup.length > 1 && <Field label="טבלה"><select value={sheetCode} onChange={(e) => { setSheetCode(e.target.value); setSel([]); }}>{curGroup.map((x) => <option key={x.code} value={x.code}>{sheetName(x.code)}{span(x.code)}</option>)}</select></Field>}
         <div className="field"><span>תקופה</span><Seg<string> label="תקופה" value={curType} onChange={setType} options={types.map((t) => [t, periodLong(t)] as [string, string])} /></div>
         <Field label="יחידות"><select value={scale} onChange={(e) => setScale(e.target.value as Scale)} disabled={mode === 'yoy'}>{SCALES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></Field>
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
@@ -269,6 +272,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         </div>
       )}
 
+      {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
       <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו · שורות IFRS 17 מ-Q1\'24' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
