@@ -527,3 +527,7 @@ tr.sec.std td { background: var(--panel2); color: var(--accent); font-size: 13px
   .stdtabs button small { display: none; }
   .company-head-compact .sub { display: none; }
 }
+
+.charttools { display: flex; gap: 6px; justify-content: flex-end; }
+.charttools button { background: transparent; border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px 11px; font-size: 11.5px; color: var(--muted); cursor: pointer; transition: color var(--fast), border-color var(--fast); }
+.charttools button:hover { color: var(--fg); border-color: var(--accent-line); }

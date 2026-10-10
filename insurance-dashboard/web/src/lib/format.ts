@@ -42,7 +42,7 @@ export function periodLabel(type: string, end: string): string {
   return `${Number(end.slice(8, 10))} ${MN[m - 1]} '${y}`;
 }
 export function periodLong(type: string): string {
-  return type === 'FY' ? 'FY' : type === 'H' ? 'H' : type === '9M' ? '9M' : type === 'Q' ? 'Q' : 'תאריך מאזן';
+  return type === 'LTM' ? 'LTM' : type === 'FY' ? 'FY' : type === 'H' ? 'H' : type === '9M' ? '9M' : type === 'Q' ? 'Q' : 'תאריך מאזן';
 }
 
 /** Report periods ("2025Q3", "2025FY") newest first; the annual report sorts as the fourth quarter of its year, after Q3. */

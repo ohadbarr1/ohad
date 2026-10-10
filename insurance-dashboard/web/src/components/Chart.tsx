@@ -8,8 +8,12 @@ import { useTheme } from '../lib/theme';
 
 echarts.use([BarChart, LineChart, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 
-/** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens. */
-export function Chart({ build, height = 320, deps, label }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string }) {
+type Opt = { xAxis?: { data?: (string | number)[] }[]; series?: { name?: string; data?: (number | null | { value: number | null })[] }[] };
+function save(name: string, href: string) { const a = document.createElement('a'); a.href = href; a.download = name; a.click(); }
+
+/** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens.
+ *  With `exportName` the chart carries its own export: the picture as PNG and the plotted series as CSV. */
+export function Chart({ build, height = 320, deps, label, exportName }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string }) {
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
   const { theme } = useTheme();
@@ -29,5 +33,20 @@ export function Chart({ build, height = 320, deps, label }: { build: () => EChar
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, ...deps]);
 
-  return <div ref={el} style={{ width: '100%', height }} role="img" aria-label={label} />;
+  const png = () => { const c = chart.current; if (c) save(`${exportName}.png`, c.getDataURL({ pixelRatio: 2, backgroundColor: getComputedStyle(document.body).backgroundColor })); };
+  const csv = () => {
+    const o = chart.current?.getOption() as Opt | undefined;
+    if (!o) return;
+    const xs = o.xAxis?.[0]?.data ?? [], ss = o.series ?? [];
+    const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [['', ...ss.map((x) => x.name ?? '')], ...xs.map((x, i) => [x, ...ss.map((q) => { const v = q.data?.[i]; return v != null && typeof v === 'object' ? v.value : v; })])];
+    save(`${exportName}.csv`, URL.createObjectURL(new Blob(['\uFEFF' + rows.map((r) => r.map(cell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })));
+  };
+  const link = () => { void navigator.clipboard?.writeText(location.href); };
+  return (
+    <>
+      <div ref={el} style={{ width: '100%', height }} role="img" aria-label={label} />
+      {exportName && <div className="charttools"><button type="button" onClick={png}>PNG</button><button type="button" onClick={csv}>CSV</button><button type="button" onClick={link}>העתקת קישור</button></div>}
+    </>
+  );
 }

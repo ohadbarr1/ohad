@@ -106,9 +106,13 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const types = useMemo(() => {
     if (!sv) return [] as string[];
     const order = ['Q', 'H', 'FY', 'I'];  // nine-month columns are kept in the data only to derive the fourth quarter
-    return order.filter((t) => sv.periods.some((p) => p.type === t));
+    const have = order.filter((t) => sv.periods.some((p) => p.type === t));
+    return have.includes('Q') ? [...have.filter((t) => t !== 'I'), 'LTM', ...have.filter((t) => t === 'I')] : have;  // trailing twelve months: the last four quarters, summed
   }, [sv]);
   const curType = types.includes(type) ? type : types[0] ?? '';
+  const ltm = curType === 'LTM', baseType = ltm ? 'Q' : curType;
+  const qAt = useMemo(() => new Map(d.periods.map((x, i) => [x.type === 'Q' ? x.end : `-${i}`, i] as [string, number])), [d]);
+  const pl = (pi: number): string => (ltm ? `LTM ${store.plabel(pi)}` : store.plabel(pi));
 
   // A statement that changed accounting standard is read one structure at a time: IFRS 17 as reported from 2024, IFRS 4 as reported until 2024,
   // or only the lines that exist under both and so run through the break.
@@ -129,10 +133,23 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const hasStd = !!sv?.rows.some((r) => r.m.std);
   const hideOld = hasStd && stdTab === '17';
   const seen = (f: { old?: boolean } | undefined): boolean => !!f && !(hideOld && f.old);
-  const val = (mi: number | null, pi: number): number | null => { if (mi == null || pi < 0) return null; const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null; };
+  const raw = (mi: number | null, pi: number): number | null => { if (mi == null || pi < 0) return null; const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null; };
+  const val = (mi: number | null, pi: number): number | null => {
+    if (!ltm) return raw(mi, pi);
+    if (mi == null || pi < 0 || d.metrics[mi].unit === 'pct') return null;
+    const end = d.periods[pi].end;
+    let sum = 0;
+    for (let k = 0; k < 4; k++) {  // the quarter itself and the three before it; one missing quarter and there is no LTM figure
+      const qi = qAt.get(new Date(Date.UTC(+end.slice(0, 4), +end.slice(5, 7) - 3 * k, 0)).toISOString().slice(0, 10));
+      const v = qi == null ? null : raw(mi, qi);
+      if (v == null) return null;
+      sum += v;
+    }
+    return sum;
+  };
   const inTab = (idx: number) => !hasStd || tabRows[stdTab].has(idx);
-  const colsOf = (tab: '17' | '4' | 'c') => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType && sv.rows.some((r) => tabRows[tab].has(r.idx) && (() => { const f = r.values.get(pi); return !!f && !(tab === '17' && f.old); })())) : []);
-  const allCols = useMemo(() => (!sv ? [] : hasStd ? colsOf(stdTab) : sv.periodIdx.filter((pi) => d.periods[pi].type === curType)), [sv, d, curType, hasStd, stdTab, tabRows]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const colsOf = (tab: '17' | '4' | 'c') => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === baseType && sv.rows.some((r) => tabRows[tab].has(r.idx) && (() => { const f = r.values.get(pi); return !!f && !(tab === '17' && f.old); })())) : []);
+  const allCols = useMemo(() => (!sv ? [] : hasStd ? colsOf(stdTab) : sv.periodIdx.filter((pi) => d.periods[pi].type === baseType)), [sv, d, baseType, hasStd, stdTab, tabRows]);  // eslint-disable-line react-hooks/exhaustive-deps
   // the period window: kept as dates, so it survives a change of table or of period type
   const [range, setRange] = useState<[string | null, string | null]>([sp.get('f'), sp.get('e')]);
   const cols = useMemo(() => allCols.filter((pi) => { const e = d.periods[pi].end; return (!range[0] || e >= range[0]) && (!range[1] || e <= range[1]); }), [allCols, d, range]);
@@ -155,12 +172,12 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
       if (!inTab(r.idx)) continue;
       if (dim !== 'all' && (r.m.dim ?? '') !== dim) continue;
       if (needle && !`${r.m.label} ${r.m.dim ?? ''}`.toLowerCase().includes(needle)) continue;
-      if (!cols.some((pi) => seen(r.values.get(pi)))) continue;
+      if (!cols.some((pi) => (ltm ? val(r.idx, pi) != null : seen(r.values.get(pi))))) continue;
       out.push(...pending); pending = [];
       out.push(r);
     }
     return out;
-  }, [sv, dim, cols, needle, stdTab, hasStd]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sv, dim, cols, needle, stdTab, hasStd, ltm]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // reset the selection when the sheet changes, unless it came from a deep link
   useEffect(() => {
@@ -254,7 +271,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         <Field label="יחידות"><select value={scale} onChange={(e) => setScale(e.target.value as Scale)} disabled={mode === 'yoy'}>{SCALES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></Field>
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
         <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש ← ישן'], ['old', 'ישן ← חדש']]} /></div>
-        {nAll > 2 && <div className="field"><span>טווח תקופות: <b className="num">{store.plabel(allCols[loI])}</b> עד <b className="num">{store.plabel(allCols[hiI])}</b>{(range[0] || range[1]) && <button type="button" className="linkbtn" onClick={() => setRange([null, null])}>כל התקופות</button>}</span>
+        {nAll > 2 && <div className="field"><span>טווח תקופות: <b className="num">{pl(allCols[loI])}</b> עד <b className="num">{pl(allCols[hiI])}</b>{(range[0] || range[1]) && <button type="button" className="linkbtn" onClick={() => setRange([null, null])}>כל התקופות</button>}</span>
           <div className="range2" style={{ ['--lo' as string]: `${(loI / (nAll - 1)) * 100}%`, ['--hi' as string]: `${(hiI / (nAll - 1)) * 100}%` }}>
             <input type="range" min={0} max={nAll - 1} step={1} value={loI} onChange={(e) => setLo(Number(e.target.value))} aria-label="מתקופה" />
             <input type="range" min={0} max={nAll - 1} step={1} value={hiI} onChange={(e) => setHi(Number(e.target.value))} aria-label="עד תקופה" />
@@ -271,7 +288,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
       </>}>
         {series.length === 0 || cols.length === 0 ? <Empty title="סמנו שורה בטבלה כדי להציג אותה בגרף" /> : (
           <>
-            <Chart label="גרף שורות נבחרות" height={340} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth]} build={() => {
+            <Chart label="גרף שורות נבחרות" exportName={`${companyId}-${sheetName(sheetCode)}`} height={340} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth]} build={() => {
               const b = chartBase();
               // amounts on the main axis; percentages (ratio rows and growth lines) on the second one when both are drawn
               const isPct = (u: string) => mode === 'value' && u === 'pct';
@@ -296,7 +313,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
               return {
                 animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: second ? 56 : 14, top: 34, bottom: xs.length > 14 ? 44 : 30 },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-                xAxis: { type: 'category', data: xs.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12, rotate: xs.length > 14 ? 45 : 0 } },
+                xAxis: { type: 'category', data: xs.map((pi) => pl(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12, rotate: xs.length > 14 ? 45 : 0 } },
                 yAxis: [
                   { type: 'value', name: unit, nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${nf(v, 0)}${!hasAmt && mode === 'value' ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
                   ...(second ? [{ type: 'value', name: '%', nameTextStyle: { color: b.mu, fontSize: 11 }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}%` }, splitLine: { show: false } }] : []),
@@ -335,13 +352,13 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         {([['c', 'שורות רציפות', 'שורות שקיימות בשני התקנים; עד 2023 לפי IFRS 4'], ['17', 'IFRS 17', 'כפי שדווח, לרבות מספרי השוואה שהוצגו מחדש'], ['4', 'IFRS 4', 'כפי שדווח במקור']] as const).map(([k, name, note]) => {
           const cs = colsOf(k);
           if (!cs.length) return null;
-          return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{store.plabel(cs[0])} עד {store.plabel(cs[cs.length - 1])}</span><small>{note}</small></button>;
+          return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{pl(cs[0])} עד {pl(cs[cs.length - 1])}</span><small>{note}</small></button>;
         })}
       </div>}
       <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'נטוי = מחושב מהשנתי · אפור = IFRS 4 · כל ערך מקושר לעמוד המקור' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
-            <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
+            <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{pl(pi)}</th>)}<th>עמ׳</th></tr></thead>
             <tbody>
               {rows.map((r) => {
                 if (r.m.header) return <tr key={r.idx} className={`sec${r.m.std ? ' std' : ''}`}><td colSpan={colsDesc.length + 2}>{r.m.label}</td></tr>;
