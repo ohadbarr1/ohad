@@ -110,7 +110,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
 
   // A statement that changed accounting standard is read one structure at a time: IFRS 17 as reported from 2024, IFRS 4 as reported until 2024,
   // or only the lines that exist under both and so run through the break.
-  const [stdTab, setStdTab] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? '17');
+  const [stdTab, setStdTab] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? 'c');  // the page opens on the lines that run through the whole history
   const hasStd = !!sv?.rows.some((r) => r.m.std);
   const hideOld = hasStd && stdTab === '17';
   const seen = (f: { old?: boolean } | undefined): boolean => !!f && !(hideOld && f.old);
@@ -176,7 +176,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     if (oldestFirst) q.r = '1';
     if (showChart) q.g = '1';
     if (stack) q.k = '1';
-    if (hasStd && stdTab !== '17') q.s = stdTab;
+    if (hasStd && stdTab !== 'c') q.s = stdTab;
     if (range[0]) q.f = range[0];
     if (range[1]) q.e = range[1];
     setSp(q, { replace: true });
@@ -316,7 +316,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
 
       {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
       {hasStd && <div className="stdtabs" role="tablist" aria-label="תקן חשבונאי">
-        {([['17', 'IFRS 17', 'כפי שדווח, לרבות מספרי השוואה שהוצגו מחדש'], ['4', 'IFRS 4', 'כפי שדווח במקור'], ['c', 'שורות רציפות', 'שורות שקיימות בשני התקנים; עד 2023 לפי IFRS 4']] as const).map(([k, name, note]) => {
+        {([['c', 'שורות רציפות', 'שורות שקיימות בשני התקנים; עד 2023 לפי IFRS 4'], ['17', 'IFRS 17', 'כפי שדווח, לרבות מספרי השוואה שהוצגו מחדש'], ['4', 'IFRS 4', 'כפי שדווח במקור']] as const).map(([k, name, note]) => {
           const cs = colsOf(k);
           if (!cs.length) return null;
           return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{store.plabel(cs[0])} עד {store.plabel(cs[cs.length - 1])}</span><small>{note}</small></button>;
