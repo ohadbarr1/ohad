@@ -23,7 +23,7 @@ export interface MarketData {
 }
 
 export interface CompanyPeriod { id: string; label: string; type: string; end: string; months: number }
-export interface CompanyMetric { entity: string; sheet: string; group: string; label: string; dim?: string; unit: 'k' | 'm' | 'nis' | 'pct'; header: boolean; order: number }
+export interface CompanyMetric { entity: string; sheet: string; group: string; label: string; dim?: string; unit: 'k' | 'm' | 'nis' | 'pct'; header: boolean; order: number; total?: boolean; std?: boolean }
 export interface CompanyData {
   company: string;
   sources: { entity: string; name: string; doc: string; url: string | null; pages: number | null }[];

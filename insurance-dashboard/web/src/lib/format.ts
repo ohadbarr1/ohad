@@ -37,9 +37,10 @@ export function periodLabel(type: string, end: string): string {
   const y = end.slice(2, 4), m = Number(end.slice(5, 7));
   if (type === 'FY') return `FY'${y}`;
   if (type === 'H') return m === 6 ? `H1'${y}` : `6M'${y}`;
+  if (type === '9M') return `9M'${y}`;
   if (type === 'Q') return `Q${Math.ceil(m / 3)}'${y}`;
   return `${Number(end.slice(8, 10))} ${MN[m - 1]} '${y}`;
 }
 export function periodLong(type: string): string {
-  return type === 'FY' ? 'FY' : type === 'H' ? 'H1' : type === 'Q' ? 'Q' : 'תאריך מאזן';
+  return type === 'FY' ? 'FY' : type === 'H' ? 'H1' : type === '9M' ? '9M' : type === 'Q' ? 'Q' : 'תאריך מאזן';
 }

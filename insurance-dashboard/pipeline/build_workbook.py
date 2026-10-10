@@ -5,6 +5,7 @@ the reports (web/public/data/series/<id>.json, 2021 onward, quarterly and annual
 Every other company gets a workbook made of those extracted lines only. Each fact carries its own source file, because the
 figures come from many reports: facts are [metric, period, value, page, url index, 1 when the value is derived (Q4 = FY less nine months)] and `urls` is the list they index.
 """
+import csv
 import json
 import re
 from pathlib import Path
@@ -92,6 +93,69 @@ def name(m):
     return base + (f": {rest}" if rest else "")
 
 
+FILES = "https://mayafiles.tase.co.il/"
+PDF = {int(r["report_id"]): FILES + r["url"] for r in csv.DictReader(open(ROOT / "data" / "registry" / "documents.csv", encoding="utf-8")) if r["file_type"] == "pdf1"}
+# the primary statements copied in full (spec v6): statement -> (report group, sheet title)
+STATEMENTS = {"income": ("income", "רווח והפסד"), "oci": ("oci", "רווח כולל"), "balance": ("balance", "מאזן"), "cashflow": ("cashflow", "תזרים מזומנים")}
+STD_NOTE = {"IFRS 17": "IFRS 17 (מ-2024, לרבות מספרי השוואה שהוצגו מחדש)", "IFRS 4": "IFRS 4 (עד 2024)"}
+def norm(t):
+    """Row identity across reports. Wording drifts from report to report ("רווח (הפסד) לפני מיסים על ההכנסה", "רווח לפני מסים על הכנסה"),
+    so the key drops bracketed alternatives, note letters, digits, the definite article and word order, and unifies a few spellings."""
+    t = re.sub(r"\([^)]*\)", " ", t or "")
+    t = re.sub(r"[\"'״׳*().,:;\-–\d]", " ", t)
+    t = re.sub(r"סה\s*כ|סך\s+ה?כל", "סך", t)
+    for a, b in (("מיסים", "מסים"), ("פיננסיים", "פיננסים"), ("לשנה", "לתקופה"), ("השנה", "התקופה"), ("למניה", ""), ("בשח", "")):
+        t = t.replace(a, b)
+    return " ".join(sorted(w.lstrip("ה") for w in t.split() if len(w.lstrip("ה")) > 1 and w not in ("של", "ש", "ח", "בת", "בנות")))
+
+
+def statements(comp):
+    """Rows of each primary statement across all reports: {(statement, standard): (ordered row keys, row meta, cells)}.
+    A cell is taken from the report of its own period when there is one, otherwise from the nearest later report that prints it as a comparative."""
+    out = {}
+    folder = ROOT / "data" / "extracted_fs" / comp
+    files = sorted(folder.glob("*.json"), key=lambda f: (f.stem[:4], END[f.stem[4:]], f.stem[4:] == "FY")) if folder.exists() else []
+    for f in reversed(files):  # newest first: its row order is the backbone
+        d = json.loads(f.read_text(encoding="utf-8"))
+        own, url = f"{f.stem[:4]}-{END[f.stem[4:]]}", PDF.get(d.get("report_id_he"))
+        mult = 1000 if re.search(r"million|מיליוני", str(d.get("unit") or "")) else 1
+        for st in d["statements"]:
+            if st["statement"] not in STATEMENTS:
+                continue
+            order, meta, cells = out.setdefault((st["statement"], d.get("standard") or "IFRS 4"), ([], {}, {}))
+            section, seen, prev = "", {}, None
+            for r in st["rows"]:
+                lab = norm(r["label"]) or f"שורה ללא כותרת {r.get('page')}"
+                if r.get("header"):
+                    section = lab
+                occ = seen[(section, lab)] = seen.get((section, lab), 0) + 1
+                key = (section if not r.get("header") else "", lab, occ)
+                if r.get("header") and lab in ("ליום", ""):
+                    continue  # the date caption of the column block, not a section
+                if key not in meta:
+                    shown = re.sub(r"^\d+\S*\s+", "", " ".join(r["label"].split())).replace("לשנה", "לתקופה")  # a stray note reference; one row serves quarters and years
+                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total"))}
+                    order.insert(order.index(prev) + 1 if prev in order else 0, key)
+                prev = key
+                for c, v in zip(st["columns"], r.get("values") or []):
+                    if not isinstance(v, (int, float)):
+                        continue
+                    date, w = c["date"], c["window"]
+                    typ = "I" if w == "instant" else "FY" if w == "fy" else "Q" if w == "q" or date[5:7] == "03" else "H" if date[5:7] == "06" else "9M"
+                    cells.setdefault(key, {}).setdefault((typ, date), []).append(((date != own, own), v * mult, r.get("page"), url))
+    for (stmt, _), (order, meta, cells) in out.items():
+        for key, by in cells.items():
+            for pk in by:
+                by[pk] = min(by[pk], key=lambda c: c[0])[1:]
+            if stmt == "balance":
+                continue
+            for (typ, date), fy in list(by.items()):  # the fourth quarter is not printed: the year less nine months, flagged as derived
+                n9 = by.get(("9M", date[:4] + "-09-30"))
+                if typ == "FY" and n9 and ("Q", date) not in by:
+                    by[("Q", date)] = (round(fy[0] - n9[0], 3), fy[1], fy[2], 1)
+    return out
+
+
 registry = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
 names = {c["id"]: c["name_he"] for c in (registry if isinstance(registry, list) else registry.get("companies", []))}
 for sf in sorted((DATA / "series").glob("*.json")):
@@ -117,6 +181,38 @@ for sf in sorted((DATA / "series").glob("*.json")):
             pidx[pid] = len(d["periods"])
             d["periods"].append({"id": pid, "label": pid, "type": typ, "end": end, "months": {"FY": 12, "Q": 3, "I": 0}[typ]})
         return pidx[pid]
+
+    def pid(typ, end):
+        k = f"{typ}{end}"
+        if k not in pidx:
+            pidx[k] = len(d["periods"])
+            d["periods"].append({"id": k, "label": k, "type": typ, "end": end, "months": {"FY": 12, "Q": 3, "H": 6, "9M": 9, "I": 0}[typ]})
+        return pidx[k]
+
+    fs = statements(comp)
+    for stmt, (grp, title) in STATEMENTS.items():
+        parts = [(std, fs[(stmt, std)]) for std in ("IFRS 17", "IFRS 4") if (stmt, std) in fs]
+        if not parts:
+            continue
+        code = f"X.{title.replace(' ', '_')}"
+        d["sheets"].append({"code": code, "entity": "F", "title": title, "pages": "", "group": grp})
+        if not any(s["entity"] == "F" for s in d["sources"]):
+            d["sources"].append({"entity": "F", "name": ENTITY_NAMES["F"], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
+        n = 0
+        for std, (order, meta, cells) in parts:
+            if len(parts) > 1:
+                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": STD_NOTE[std], "unit": "k", "header": True, "order": n, "std": True})
+                n += 1
+            for key in order:
+                m, mi = meta[key], len(d["metrics"])
+                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": "nis" if "למניה" in m["label"] else "k", "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
+                n += 1
+                for (typ, date), c in cells.get(key, {}).items():
+                    v, page, u = c[0], c[1], c[2]
+                    if u and u not in uidx:
+                        uidx[u] = len(urls)
+                        urls.append(u)
+                    d["facts"].append([mi, pid(typ, date), v, page, uidx.get(u) if u else None] + ([1] if len(c) > 3 else []))
 
     by_g = {}
     for r in series["rows"]:

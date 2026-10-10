@@ -119,3 +119,32 @@ Output: `data/extracted_hist/<company>/<period>.json`, v1 envelope plus `"standa
 - Costs: `selling_and_marketing_expenses`, `general_and_administrative_expenses`, `commissions_expense`, `salaries_expense`, `total_expenses`, at group level and per segment where printed.
 - Flows where printed: `net_inflows`, `deposits`, `withdrawals`, `transfers_net` per activity.
 Windows: `q` and `ytd` in interim reports (Q1: `q` only), `fy` in annual reports; comparatives with their own date. Rules 1-12 of v1 apply. Check with `.venv/bin/python pipeline/verify_hist.py <company> <period>`.
+
+## Primary statements, in full (v6)
+
+Purpose: the reports page shows the consolidated primary statements line by line, every period since 2021. One file per report:
+`data/extracted_fs/<company>/<period>.json`. Only the **parent's consolidated** statements (in a Phoenix report: הפניקס פיננסים, not the insurance subsidiary and not the separate/solo statements).
+
+Statements, each copied **whole, row by row, in the printed order**: `balance` (דוח על המצב הכספי, both pages: assets, then equity and liabilities), `income` (דוח רווח והפסד), `oci` (דוח על הרווח הכולל; when income and comprehensive income are printed as one statement, record it once as `income` and include the comprehensive-income rows), `cashflow` (דוח על תזרימי המזומנים, including the appendices א', ב', ג' that reconcile operating cash flow and the non-cash items). Not the statement of changes in equity.
+
+```json
+{"company": "phoenix", "period": "2023Q2", "standard": "IFRS 4", "report_id_he": 1234567, "doc": "he", "unit": "NIS thousands",
+ "statements": [
+  {"statement": "income", "title": "דוחות מאוחדים על הרווח והפסד", "pages": [61],
+   "columns": [{"window": "ytd", "date": "2023-06-30"}, {"window": "ytd", "date": "2022-06-30"}, {"window": "q", "date": "2023-06-30"}, {"window": "q", "date": "2022-06-30"}, {"window": "fy", "date": "2022-12-31"}],
+   "rows": [
+    {"label": "פרמיות שהורווחו ברוטו", "values": [5012345, 4800123, 2512000, 2400111, 9700456], "page": 61},
+    {"label": "הכנסות", "header": true, "page": 61},
+    {"label": "סך הכל הכנסות", "total": true, "values": [..], "page": 61}
+   ]}],
+ "not_found": []}
+```
+
+Rules:
+1. Values **exactly as printed, in the unit printed** (normally NIS thousands; put the printed unit in `unit`). No conversion, no rounding, no arithmetic. A number in parentheses is negative. A dash or an empty cell is `null`.
+2. `columns` in the order you store the values. `window`: `instant` for balance-sheet dates; `q` three months; `ytd` six or nine months; `fy` a full year. `date` is the period end. Take the window and date from the column header, never from position alone. Record **every** column printed, including comparatives and the prior year-end.
+3. Every printed row is recorded, including sub-totals and totals (`"total": true`) and caption rows without numbers (`"header": true`). Keep the Hebrew label as printed, without the note reference (put a printed note number in `"note"`). Earnings-per-share rows: keep them, values as printed.
+4. `page` on every row is the 1-based PDF page where the row is printed. Every value must be visibly on that page.
+5. `standard`: "IFRS 17" when the statement has insurance revenue / insurance service result lines (reports from 2025), otherwise "IFRS 4".
+6. A statement that is an image with no text layer goes to `not_found` with the reason; do not reconstruct it.
+7. After writing: `.venv/bin/python pipeline/verify_fs.py <company> <period>`: it checks every value against its page and that the printed totals of the balance sheet agree (total assets = total equity and liabilities, per column). Fix what it reports by re-reading the page; never adjust a number to make a check pass.

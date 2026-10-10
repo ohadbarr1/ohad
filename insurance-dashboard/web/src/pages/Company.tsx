@@ -103,7 +103,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const sv = useMemo(() => store.sheet(sheetCode), [store, sheetCode]);
   const types = useMemo(() => {
     if (!sv) return [] as string[];
-    const order = ['H', 'Q', 'FY', 'I'];
+    const order = ['Q', 'H', '9M', 'FY', 'I'];
     return order.filter((t) => sv.periods.some((p) => p.type === t));
   }, [sv]);
   const curType = types.includes(type) ? type : types[0] ?? '';
@@ -115,13 +115,14 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const rows = useMemo(() => {
     if (!sv) return [];
     const out: typeof sv.rows = [];
-    let pendingHeader: (typeof sv.rows)[number] | null = null;
+    // a caption is shown only when a row follows it; the accounting-standard band survives the captions under it
+    let pending: typeof sv.rows = [];
     for (const r of sv.rows) {
-      if (r.m.header) { pendingHeader = r; continue; }
+      if (r.m.header) { pending = r.m.std ? [r] : [...pending.filter((x) => x.m.std), r]; continue; }
       if (dim !== 'all' && (r.m.dim ?? '') !== dim) continue;
       if (needle && !`${r.m.label} ${r.m.dim ?? ''}`.toLowerCase().includes(needle)) continue;
       if (!cols.some((pi) => r.values.has(pi))) continue;
-      if (pendingHeader) { out.push(pendingHeader); pendingHeader = null; }
+      out.push(...pending); pending = [];
       out.push(r);
     }
     return out;
@@ -279,13 +280,13 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
             <tbody>
               {rows.map((r) => {
-                if (r.m.header) return <tr key={r.idx} className="sec"><td colSpan={colsDesc.length + 2}>{r.m.label}</td></tr>;
+                if (r.m.header) return <tr key={r.idx} className={`sec${r.m.std ? ' std' : ''}`}><td colSpan={colsDesc.length + 2}>{r.m.label}</td></tr>;
                 const on = sel.includes(r.idx), k = sel.indexOf(r.idx);
                 const src = colsDesc.map((pi) => r.values.get(pi)).find((x) => x?.page != null);
                 const page = src?.page ?? null;
                 const link = open(page, src?.u);
                 return (
-                  <tr key={r.idx}>
+                  <tr key={r.idx} className={r.m.total ? 'tot' : undefined}>
                     <td className="lbl"><div className="mrow">
                       <input type="checkbox" checked={showChart && on} onChange={() => { if (!showChart) { setShowChart(true); setSel([r.idx]); } else toggle(r.idx); }} aria-label={`הצג בגרף: ${r.m.label}`} title="הצגה בגרף" />
                       {showChart && on && <span className="dot" style={{ background: pal[k % pal.length] }} />}
