@@ -554,3 +554,5 @@ tbody tr.on td { background: var(--accent-soft); }
 
 .narrow-only { display: none; }
 @media (max-width: 760px) { .narrow-only { display: block; margin-top: 3px; } }
+/* phone: only statement label cells take the wide first column; a table of company names keeps a narrow one */
+@media (max-width: 760px) { .panel table td:first-child:not(.lbl), .panel table th:first-child { min-width: 104px; max-width: 38vw; width: auto; } .thsort { min-width: 78px; } }

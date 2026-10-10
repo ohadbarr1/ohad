@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { useStored } from '../lib/local';
 import { shiftYear } from '../lib/company';
 import { nf, sn, byPeriodDesc } from '../lib/format';
-import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
+import { load, useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
+import { Chart } from '../components/Chart';
+import { foxOption } from '../lib/foxchart';
+import { palette } from '../lib/theme';
 import type { IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
 import { periodName } from './CompanyIfrs';
@@ -38,6 +41,61 @@ type Cell = { v: number; f?: IfrsFact; alt?: boolean; calc?: boolean; n?: number
 const NOTES = ['בסיס שונה מרוב החברות בעמודה (מפורט בריחוף)', 'חיים ובריאות יחד: החברה לא מדפיסה שורת קבוצה', 'נקרא מגרף בדוח או במצגת', 'נגזר: חיים ועוד בריאות, על אותו בסיס', 'כולל רווח עתידי בפוליסות חיסכון, שאינו CSM לפי התקן', 'ללא פוליסות חיסכון: הסכום שהודפס פחות עמודת פוליסות החיסכון באותה טבלה', 'נגזר מהנתונים שבטבלה'];
 const SUP = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷'];
 const B_ORDER = ['net', 'na', 'gross', 'reinsurance'];
+
+type SRow = { m: string; s: string; g: string; b: string; vals: Record<string, { v: number; std?: string }> };
+
+/** One measure of the matrix for every insurer, quarter by quarter since 2021: the question "who is gaining" answered in one chart. */
+function PeerTrend({ ids, cols, name, pick }: { ids: string[]; cols: Col[]; name: (id: string) => string; pick: string | null }) {
+  const [all, setAll] = useState<Record<string, SRow[]>>({});
+  const [k, setK] = useState<string>('');
+  const [lead, setLead] = useState('');
+  const [win, setWin] = useState<'q' | 'ltm'>('q');
+  useEffect(() => { ids.forEach((id) => load<{ rows: SRow[] }>(`series/${id}.json`).then((d) => setAll((cur) => ({ ...cur, [id]: d.rows })), () => {})); }, [ids.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (pick) setK(pick); }, [pick]);
+  const col = cols.find((c) => c.k === k) ?? cols[0];
+  if (!col) return null;
+  const quarters = (v: SRow['vals']) => Object.keys(v).filter((p) => !p.endsWith('FY'));
+  // a company's line for a reported measure: the group row, on the basis with the longest quarterly history
+  const line = (id: string, c: Col): SRow['vals'] | null => {
+    const rows = (all[id] ?? []).filter((r) => r.m === c.m && r.g === 'group' && r.s === 'group');
+    return rows.sort((a, b) => quarters(b.vals).length - quarters(a.vals).length || B_ORDER.indexOf(a.b) - B_ORDER.indexOf(b.b))[0]?.vals ?? null;
+  };
+  const flow = (c: Col) => !!c.m && !c.inst && !c.pctv;
+  const at = (id: string, c: Col, p: string): number | null => {
+    const v = line(id, c);
+    if (!v) return null;
+    if (win === 'q' || !flow(c)) return v[p]?.v ?? null;
+    let sum = 0;  // trailing twelve months: this quarter and the three before it
+    for (let i = 0, y = +p.slice(0, 4), q = +p.slice(5); i < 4; i++) { const x = v[`${y}Q${q}`]?.v; if (x == null) return null; sum += x; if (--q === 0) { q = 4; y--; } }
+    return sum;
+  };
+  const value = (id: string, p: string): number | null => {
+    if (!col.calc) return at(id, col, p);
+    const [a, b, how] = col.calc, x = at(id, COLS.find((c) => c.k === a)!, p), y = at(id, COLS.find((c) => c.k === b)!, p);
+    return x == null || !y ? null : how === 'pct' ? (Math.abs(x) / Math.abs(y)) * 100 * Math.sign(x) : x / y;
+  };
+  const periods = [...new Set(ids.flatMap((id) => (col.calc ? col.calc.slice(0, 2).map((x) => COLS.find((c) => c.k === x)!) : [col]).flatMap((c) => quarters(line(id, c) ?? {}))))].filter((p) => p >= '2021').sort();
+  const shown = periods.filter((p) => ids.some((id) => value(id, p) != null));
+  const firstNew = shown.findIndex((p) => ids.some((id) => (line(id, col.calc ? COLS.find((c) => c.k === col.calc![0])! : col) ?? {})[p]?.std === 'IFRS 17'));
+  const pal = palette(), pct = !!col.pctv || col.calc?.[2] === 'pct';
+  const lab = (p: string) => `Q${p.slice(5)}'${p.slice(2, 4)}`;
+  return (
+    <Panel title={`לאורך זמן: ${col.l}`} aside={<span>{pct ? '%' : col.calc ? '×' : 'מיליוני ש"ח'} · קבוצה · {win === 'ltm' && (flow(col) || col.calc) ? 'LTM' : 'רבעוני'} · כפי שדווח בכל תקופה</span>}>
+      <section className="controls">
+        <Field label="מדד"><select value={col.k} onChange={(e) => setK(e.target.value)}>{cols.map((c) => <option key={c.k} value={c.k}>{c.l}</option>)}</select></Field>
+        <Field label="מיקוד"><select value={lead} onChange={(e) => setLead(e.target.value)}><option value="">כל החברות שוות</option>{ids.map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>
+        {(flow(col) || col.calc) && <div className="field"><span>חלון</span><Seg<'q' | 'ltm'> label="חלון" value={win} onChange={setWin} options={[['q', 'רבעון'], ['ltm', 'LTM']]} /></div>}
+      </section>
+      {shown.length < 2 ? <Empty title="אין רצף רבעוני למדד הזה" /> : (
+        <Chart label={`עמיתים לאורך זמן: ${col.l}`} height={360} deps={[col.k, lead, win, Object.keys(all).length, shown.length]} build={() => foxOption({
+          x: shown.map(lab), unit: pct ? '%' : col.calc ? '×' : 'מיליוני ש"ח', legend: true, labels: false, scale: !!col.inst || pct, breakAt: firstNew > 0 ? firstNew : undefined, breakLabel: 'IFRS 17',
+          series: ids.map((id, i) => ({ name: name(id), kind: 'line' as const, color: pal[i % pal.length], pct, lead: lead === id, dim: !!lead && lead !== id, dec: pct ? 1 : col.calc ? 2 : 0, data: shown.map((p) => { const v = value(id, p); return v == null ? null : +v.toFixed(3); }) })),
+        })} />
+      )}
+      <div className="src">הקו המקווקו מסמן את המעבר ל-IFRS 17: לפניו המספרים כפי שדווחו לפי IFRS 4 (שורות IFRS 17 קיימות רק ממנו והלאה). Q4 מחושב כ-FY פחות 9M.</div>
+    </Panel>
+  );
+}
 
 /** Peer matrix: one row per insurer, reported group figures side by side, with derived ratios marked and a CSV export. */
 export function IndustryMatrix() {
@@ -182,6 +240,7 @@ export function IndustryMatrix() {
         </table></div>
         {used.size > 0 && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTES[m]}</li>)}</ol>}
       </Panel>
+      <PeerTrend ids={rows.map((r) => r.id)} cols={cols} name={name} pick={sort?.k ?? null} />
     </>
   );
 }
