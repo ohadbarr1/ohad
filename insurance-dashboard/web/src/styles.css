@@ -551,3 +551,6 @@ table.matrix tfoot td:first-child { text-align: start; }
 tbody tr.on td { background: var(--accent-soft); }
 
 @media (max-width: 760px) { td.lbl, .panel table td:first-child, .panel table th:first-child { min-width: 46vw; max-width: 46vw; width: 46vw; white-space: normal; } }
+
+.narrow-only { display: none; }
+@media (max-width: 760px) { .narrow-only { display: block; margin-top: 3px; } }

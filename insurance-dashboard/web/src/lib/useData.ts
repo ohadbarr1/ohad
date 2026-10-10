@@ -67,12 +67,14 @@ import type { PriceData as Px } from './types';
 export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string | null; notes: NonNullable<KpiData['notes']>; error: string | null } {
   const { data, error } = useKpiData();
   const ids = useMemo(() => (data ? Object.keys(data.companies) : []), [data]);
+  const reg = useRegistry();
   const [prices, setPrices] = useState<Record<string, Px>>({});
   useEffect(() => {
     let live = true;
-    ids.forEach((id) => load<Px>(`companies/${id}.price.json`).then((p) => live && setPrices((cur) => ({ ...cur, [id]: p })), () => {}));
+    // only companies that have a price file are asked for one
+    ids.filter((id) => reg.data?.find((c) => c.id === id)?.has_price).forEach((id) => load<Px>(`companies/${id}.price.json`).then((p) => live && setPrices((cur) => ({ ...cur, [id]: p })), () => {}));
     return () => { live = false; };
-  }, [ids]);
+  }, [ids, reg.data]);
   const kpis = useMemo(() => (data ? new Map(ids.map((id) => [id, new CompanyKpi(id, data.companies[id], prices[id] ?? null)])) : null), [data, ids, prices]);
   return { kpis, asof: data?.asof ?? null, notes: data?.notes ?? [], error };
 }

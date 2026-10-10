@@ -90,6 +90,9 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
     return { rb, buckets, segs, at: (g: string, bk: string) => own.find((f) => f.g === g && f.bk === bk) ?? null, pg: own[0] ?? null };
   }, [all, end, B]);
 
+  // the same measure printed twice for one date (before and after a dividend, two entities): each row then says which one it is, in the report's own words
+  const twice = useMemo(() => { const n = new Map<string, number>(); all.filter((f) => CAPITAL.test(f.m)).forEach((f) => { const k = `${f.m}|${f.s}|${f.d}`; n.set(k, (n.get(k) ?? 0) + 1); }); return new Set([...n].filter(([, c]) => c > 1).map(([k]) => k)); }, [all]);
+  const [openAll, setOpenAll] = useState(false);
   const capital = useMemo(() => all.filter((f) => CAPITAL.test(f.m)).sort((a, b) => b.d.localeCompare(a.d) || a.m.localeCompare(b.m) || (a.pg ?? 0) - (b.pg ?? 0)), [all]);
   const sens = useMemo(() => {
     const s = all.filter((f) => f.m.startsWith('sensitivity:') && f.d === end);
@@ -152,7 +155,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
               <thead><tr><th>שורה</th><th>ערך</th></tr></thead>
               <tbody>{capital.map((f, i) => (
                 <tr key={i}>
-                  <td className="lbl">{he(f.m)}<span className="dim">{/[\u0590-\u05ff]/.test(f.l) ? f.l : ''}{f.s !== f.g ? `${/[\u0590-\u05ff]/.test(f.l) ? ' · ' : ''}${segName(f.s)}` : ''}</span></td>
+                  <td className="lbl">{he(f.m)}<span className="dim">{[/[\u0590-\u05ff]/.test(f.l) || twice.has(`${f.m}|${f.s}|${f.d}`) ? f.l : '', f.s !== f.g ? segName(f.s) : '', twice.has(`${f.m}|${f.s}|${f.d}`) && f.n ? f.n : ''].filter(Boolean).join(' · ')}</span></td>
                   <td>{cell(f, f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className="dim num">{dateLabel(f.d)}</span></td>
                 </tr>
               ))}</tbody>
@@ -170,8 +173,8 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         </Panel>
       )}
 
-      <Panel title="כל הנתונים שחולצו מהדוח" aside={<span>{list.length} שורות</span>}>
-        <section className="controls">
+      <Panel title="כל הנתונים שחולצו מהדוח" aside={<><span>{list.length} שורות</span><button type="button" className="btn" aria-expanded={openAll} onClick={() => setOpenAll((v) => !v)}>{openAll ? 'סגירה' : 'הצגה'}</button></>}>
+        {openAll && <><section className="controls">
           <Field label="נושא"><select value={fam} onChange={(e) => setFam(e.target.value)}>{FAMILIES.map(([k, l, re]) => <option key={k} value={k}>{l} ({all.filter((f) => re.test(f.m)).length})</option>)}</select></Field>
           <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם שורה, מגזר" /></Field>
         </section>
@@ -182,7 +185,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
               <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{dateLabel(f.d)}</span></td>
               <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span><IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
-        </table></div>
+        </table></div></>}
       </Panel>
     </>
   );

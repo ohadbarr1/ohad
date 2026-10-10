@@ -149,8 +149,23 @@ def statements(comp):
         for key, by in cells.items():
             for pk in by:
                 by[pk] = min(by[pk], key=lambda c: c[0])[1:]
-            if stmt == "balance":
+        # A line printed as "הכנסות (הוצאות) אחרות" in one report and "הוצאות אחרות" in another is one line:
+        # the bracketed wording and the plain alternative are joined, under the newest wording.
+        for key in list(order):
+            m = re.match(r"^(\S+) \(([^)]+)\),? (.+)$", meta.get(key, {}).get("label", ""))
+            if not m or key not in meta:
                 continue
+            twin = (key[0], norm(f"{m.group(2)} {m.group(3)}"), key[2])
+            if twin == key or twin not in meta or meta[twin]["header"]:
+                continue
+            # where a later report reprints an earlier period under the new wording, the newest wording's figure stands
+            keep, drop = (key, twin) if order.index(key) < order.index(twin) else (twin, key)
+            cells[keep] = {**cells.pop(drop, {}), **cells.get(keep, {})}
+            order.remove(drop)
+            del meta[drop]
+        if stmt == "balance":
+            continue
+        for by in cells.values():
             for (typ, date), fy in list(by.items()):  # the fourth quarter is not printed: the year less nine months, flagged as derived
                 n9 = by.get(("9M", date[:4] + "-09-30"))
                 if typ == "FY" and n9 and ("Q", date) not in by:

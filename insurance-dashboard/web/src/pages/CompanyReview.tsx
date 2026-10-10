@@ -123,7 +123,7 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
                 <tr>
                   <td className="lbl">{multi(i) ? segName(r.f.s) : <>{he(r.f.m)}{r.f.g !== 'group' && <span className="muted"> · {segName(r.f.s)}</span>}</>}
                     {(r.f.b !== 'na' || r.W === 'ytd' && win === 'q' || r.at !== end || r.n > 1 || r.f.src === 'chart') && <span className="dim">{r.f.b !== 'na' && <span className="chip">{BASIS[r.f.b]}</span>}{r.W === 'ytd' && win === 'q' && <span className="chip est">YTD</span>}{r.at !== end && <span className="chip est">{r.at}</span>}{r.n > 1 && <span className="chip est" title="אותה שורה מופיעה בדוח בכמה ערכים; ראו לשונית IFRS 17">{r.n} ערכים</span>}{r.f.src === 'chart' && <span className="chip est">מגרף</span>}</span>}</td>
-                  <td><Val f={r.f} d={d} p={P} /></td>
+                  <td><Val f={r.f} d={d} p={P} /><div className="narrow-only"><Trend pts={r.trend} /></div></td>
                   <td><Val f={r.yoy} d={d} p={P} /><Delta a={r.f} b={r.yoy} /></td>
                   {!annual && <td><Val f={r.qoq} d={d} p={r.qoqIn} /><Delta a={r.f} b={r.qoq} /></td>}
                   <td className="wide-only"><Trend pts={r.trend} /></td>

@@ -17,6 +17,8 @@ export function Layout() {
   const loc = useLocation();
   const section = loc.pathname.split('/').slice(0, 3).join('/');
   useEffect(() => { window.scrollTo(0, 0); }, [section]);
+  // a row of tabs wider than the screen opens with the current tab in view
+  useEffect(() => { const id = requestAnimationFrame(() => document.querySelectorAll('.subnav a.active').forEach((a) => a.scrollIntoView({ inline: 'center', block: 'nearest' }))); return () => cancelAnimationFrame(id); }, [loc.pathname]);
   // spotlight: surfaces read the pointer position from --mx/--my
   useEffect(() => {
     const move = (e: PointerEvent) => {

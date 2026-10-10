@@ -56,30 +56,31 @@ function marketCards(m: Market, group: string): MetricCardProps[] {
     one('fee', 'fam:pension', 'דמי ניהול, פנסיה', 6, 2), one('fee', 'fam:gemel', 'דמי ניהול, גמל', 6, 2), one('ret', 'fam:pension', 'תשואה, פנסיה', 9)];
 }
 
-// Phoenix workbook labels. Replaced by the standard taxonomy once more companies are extracted.
-const FIN: { title: string; sheet: string; label: string; dim?: string; exact?: boolean; flow: boolean; color: number; tag?: string }[] = [
-  { title: 'רווח לבעלי המניות', sheet: 'F.D2_רווח_הפסד', label: 'בעלי המניות של החברה', exact: true, flow: true, color: 1 },
-  { title: 'רווח משירותי ביטוח', sheet: 'F.D2_רווח_הפסד', label: 'רווח משירותי ביטוח', exact: true, flow: true, color: 1, tag: 'IFRS 17' },
-  { title: 'רווח מהשקעות ומימון, נטו', sheet: 'F.D2_רווח_הפסד', label: 'רווח מהשקעות ומימון, נטו', exact: true, flow: true, color: 9 },
-  { title: 'הכנסות מדמי ניהול', sheet: 'F.D2_רווח_הפסד', label: 'הכנסות מדמי ניהול', exact: true, flow: true, color: 5 },
-  { title: 'הון לבעלי המניות', sheet: 'F.D1_מצב_כספי', label: 'סך הכל הון המיוחס לבעלי המניות של החברה', exact: true, flow: false, color: 7 },
-  { title: 'CSM, ביטוח חיים', sheet: 'F.N03_חיים_מאזן', label: 'מרווח השירות החוזי', dim: 'סך הכל', flow: false, color: 3, tag: 'IFRS 17' },
-  { title: 'CSM, ביטוח בריאות', sheet: 'F.N03_בריאות_מאזן', label: 'מרווח השירות החוזי', dim: 'סך הכל', flow: false, color: 3, tag: 'IFRS 17' },
+// Lines of the full statements (the quarterly history where it exists, otherwise the latest report). One period type per card: quarters first.
+const FIN: { title: string; sheets: string[]; label: string; dim?: string; exact?: boolean; flow: boolean; color: number; tag?: string }[] = [
+  { title: 'רווח לבעלי המניות', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'בעלי המניות של החברה', exact: true, flow: true, color: 1 },
+  { title: 'רווח משירותי ביטוח', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'רווח משירותי ביטוח', exact: true, flow: true, color: 1, tag: 'IFRS 17' },
+  { title: 'רווח מהשקעות ומימון, נטו', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'רווח מהשקעות ומימון, נטו', exact: true, flow: true, color: 9 },
+  { title: 'הכנסות מדמי ניהול', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'הכנסות מדמי ניהול', exact: true, flow: true, color: 5 },
+  { title: 'הון לבעלי המניות', sheets: ['X.מאזן', 'F.D1_מצב_כספי'], label: 'סך הכל הון המיוחס לבעלי המניות של החברה', exact: true, flow: false, color: 7 },
+  { title: 'CSM ברוטו, ביטוח חיים', sheets: ['F.N03_חיים_מאזן'], label: 'מרווח השירות החוזי', dim: 'סך הכל', flow: false, color: 3, tag: 'IFRS 17' },
+  { title: 'CSM ברוטו, ביטוח בריאות', sheets: ['F.N03_בריאות_מאזן'], label: 'מרווח השירות החוזי', dim: 'סך הכל', flow: false, color: 3, tag: 'IFRS 17' },
 ];
 function financialCards(store: CompanyStore): MetricCardProps[] {
   const out: MetricCardProps[] = [];
   for (const f of FIN) {
-    const mi = store.find(f.sheet, f.label, { exact: f.exact, dim: f.dim });
-    if (mi == null) continue;
+    const sheet = f.sheets.find((x) => store.find(x, f.label, { exact: f.exact, dim: f.dim }) != null);
+    const mi = sheet ? store.find(sheet, f.label, { exact: f.exact, dim: f.dim }) : null;
+    if (mi == null || !sheet) continue;
     const all = store.d.periods.map((p, i) => ({ p, i })).filter(({ i }) => store.val(mi, i) != null);
-    const type = f.flow ? (['H', 'FY', 'Q'].find((t) => all.filter((a) => a.p.type === t).length > 1) ?? 'H') : 'I';
-    const ps = all.filter((a) => a.p.type === type).sort((a, b) => a.p.end.localeCompare(b.p.end));
+    const type = f.flow ? (['Q', 'H', 'FY'].find((t) => all.filter((a) => a.p.type === t).length > 1) ?? 'H') : 'I';
+    const ps = all.filter((a) => a.p.type === type).sort((a, b) => a.p.end.localeCompare(b.p.end)).slice(-12);
     if (!ps.length) continue;
     const data = ps.map(({ i }) => +(store.val(mi, i)! / 1000).toFixed(1));
-    const now = data[data.length - 1], prev = data[data.length - 2];
+    const now = data[data.length - 1], yoy = type === 'Q' || type === 'I', prev = data[data.length - (yoy ? 5 : 2)];  // quarters and balance dates are compared with the same point a year earlier
     const page = store.page(mi, ps[ps.length - 1].i);
-    out.push({ title: f.title, tag: f.tag, unit: 'מיליוני ש"ח', value: nf(now, 0), delta: prev ? { text: pct(chg(now, prev), 1, true), tone: tone(chg(now, prev)) } : undefined,
-      x: ps.map(({ i }) => store.plabel(i)), series: [{ name: f.title, data }], color: f.color, dec: 0, to: `financials?sheet=${encodeURIComponent(f.sheet)}&m=${mi}`, foot: page ? `דוח כספי, עמ׳ ${page}` : undefined });
+    out.push({ title: f.title, tag: f.tag, unit: 'מיליוני ש"ח', value: nf(now, 0), delta: prev ? { text: `${pct(chg(now, prev), 1, true)}${yoy && data.length >= 5 ? ' YoY' : ''}`, tone: tone(chg(now, prev)) } : undefined,
+      x: ps.map(({ i }) => store.plabel(i)), series: [{ name: f.title, data }], color: f.color, dec: 0, to: `financials?sheet=${encodeURIComponent(sheet)}&m=${mi}${sheet.startsWith('X.') ? '&g=1' : ''}`, foot: page ? `דוח כספי, עמ׳ ${page}` : undefined });
   }
   return out;
 }
