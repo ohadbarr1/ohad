@@ -228,18 +228,20 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
               const hasAmt = mode === 'yoy' || series.some((s) => !isPct(s.m.unit));
               const second = mode === 'value' && hasAmt && series.some((s) => isPct(s.m.unit) || s.gvals);
               const pctAxis = second ? 1 : 0;
+              const has = cols.map((_, ci) => series.some((x) => x.vals[ci] != null || x.gvals?.[ci] != null));
+              const lo = Math.max(0, has.indexOf(true)), hi = has.lastIndexOf(true) + 1, xs = cols.slice(lo, hi);
               const out: Record<string, unknown>[] = [];
               series.forEach((s) => {
                 const t = kind[s.mi] ?? (isPct(s.m.unit) ? 'line' : 'bar'), color = pal[s.k % pal.length], pct = isPct(s.m.unit);
-                const data = s.vals.map((v) => (v == null ? null : +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3)));
+                const data = s.vals.slice(lo, hi).map((v) => (v == null ? null : +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3)));
                 out.push({ name: s.name, type: t, data, yAxisIndex: pct ? pctAxis : 0, stack: stack && t === 'bar' && !pct ? 'total' : undefined, barMaxWidth: 46, symbolSize: 6, itemStyle: { color }, lineStyle: { color, width: 2.5 },
-                  label: { show: !stack && series.length <= 2 && cols.length <= 14, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, mode === 'yoy' || pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1)) } });
-                if (s.gvals) out.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, type: 'line', data: s.gvals.map((v) => (v == null ? null : +v.toFixed(2))), yAxisIndex: pctAxis, symbolSize: 5, connectNulls: false, itemStyle: { color }, lineStyle: { color, width: 2, type: 'dashed' }, z: 5 });
+                  label: { show: !stack && series.length <= 2 && xs.length <= 14, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, mode === 'yoy' || pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1)) } });
+                if (s.gvals) out.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, type: 'line', data: s.gvals.slice(lo, hi).map((v) => (v == null ? null : +v.toFixed(2))), yAxisIndex: pctAxis, symbolSize: 5, connectNulls: false, itemStyle: { color }, lineStyle: { color, width: 2, type: 'dashed' }, z: 5 });
               });
               return {
-                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: second ? 56 : 14, top: 18, bottom: cols.length > 14 ? 44 : 30 },
+                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: second ? 56 : 14, top: 18, bottom: xs.length > 14 ? 44 : 30 },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-                xAxis: { type: 'category', data: cols.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12, rotate: cols.length > 14 ? 45 : 0 } },
+                xAxis: { type: 'category', data: xs.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12, rotate: xs.length > 14 ? 45 : 0 } },
                 yAxis: [
                   { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}${!hasAmt && mode === 'value' ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
                   ...(second ? [{ type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}%` }, splitLine: { show: false } }] : []),
@@ -274,7 +276,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
       )}
 
       {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו · שורות IFRS 17 מ-Q1\'24' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו · אפור = לפי IFRS 4 כפי שדווח · שורות IFRS 17 מ-Q1\'24' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
@@ -293,7 +295,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                       <span>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       <button type="button" className="info" onClick={() => setExplain(explain === r.idx ? null : r.idx)} aria-label="הסבר">i</button>
                     </div></td>
-                    {colsDesc.map((pi) => { const f = r.values.get(pi), href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={f?.der ? `מחושב: FY פחות 9M. מקור ה-FY: עמ׳ ${f.page ?? ''}` : `מקור: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
+                    {colsDesc.map((pi) => { const f = r.values.get(pi), href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.der ? 'מחושב: FY פחות 9M. מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td>
                   </tr>
                 );

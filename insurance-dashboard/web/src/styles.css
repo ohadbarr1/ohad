@@ -477,3 +477,4 @@ a:hover > .i3d .i3d-shadow, .rail a.item.active .i3d-shadow { transform: scale(0
 /* statements: totals read as totals, and the accounting-standard break is a band */
 tr.tot td { font-weight: 700; border-top: 1px solid var(--line); }
 tr.sec.std td { background: var(--panel2); color: var(--accent); font-size: 13px; padding-block: 10px; letter-spacing: 0.01em; }
+.num.old { color: var(--muted); }

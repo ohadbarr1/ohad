@@ -3,7 +3,7 @@
 Phoenix keeps the workbook built from its published spreadsheet (pipeline/extract_company_workbook.py); the lines extracted from
 the reports (web/public/data/series/<id>.json, 2021 onward, quarterly and annual) are added to it as further sheets.
 Every other company gets a workbook made of those extracted lines only. Each fact carries its own source file, because the
-figures come from many reports: facts are [metric, period, value, page, url index, 1 when the value is derived (Q4 = FY less nine months)] and `urls` is the list they index.
+figures come from many reports: facts are [metric, period, value, page, url index, flags: 1 = derived (Q4 = FY less nine months), 2 = taken from the IFRS 4 statement as originally reported] and `urls` is the list they index.
 """
 import csv
 import json
@@ -198,6 +198,29 @@ for sf in sorted((DATA / "series").glob("*.json")):
         d["sheets"].append({"code": code, "entity": "F", "title": title, "pages": "", "group": grp})
         if not any(s["entity"] == "F" for s in d["sources"]):
             d["sources"].append({"entity": "F", "name": ENTITY_NAMES["F"], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
+        if len(parts) == 2:
+            # a row that exists once under each standard with the same name (profit for the period, taxes, total assets, equity) is one line:
+            # the periods before the IFRS 17 comparatives are filled from the IFRS 4 statement as originally reported, and marked
+            (o17, m17, c17), (o4, m4, c4) = parts[0][1], parts[1][1]
+
+            def nth(order, meta):
+                """(name, ordinal among the rows of that name) -> row; and how many rows carry each name"""
+                seen, out = {}, {}
+                for k in order:
+                    if not meta[k]["header"]:
+                        seen[k[1]] = seen.get(k[1], 0) + 1
+                        out[(k[1], seen[k[1]])] = k
+                return out, seen
+
+            (new, n17), (old, n4) = nth(o17, m17), nth(o4, m4)
+            # the same name the same number of times in both statements; the bottom lines of the income statement by their first appearance
+            bottom = {norm(x) for x in ("רווח לתקופה", "בעלי המניות של החברה", "זכויות שאינן מקנות שליטה")} if stmt == "income" else set()
+            new = {k: v for k, v in new.items() if n17[k[0]] == n4.get(k[0]) or (k[0] in bottom and k[1] == 1 and k in old)}
+            for lab in new.keys() & old.keys():
+                have = c17.setdefault(new[lab], {})
+                for pk, c in c4.get(old[lab], {}).items():
+                    if pk not in have:
+                        have[pk] = (c[0], c[1], c[2], (c[3] if len(c) > 3 else 0) | 2)
         n = 0
         for std, (order, meta, cells) in parts:
             if len(parts) > 1:
@@ -212,7 +235,7 @@ for sf in sorted((DATA / "series").glob("*.json")):
                     if u and u not in uidx:
                         uidx[u] = len(urls)
                         urls.append(u)
-                    d["facts"].append([mi, pid(typ, date), v, page, uidx.get(u) if u else None] + ([1] if len(c) > 3 else []))
+                    d["facts"].append([mi, pid(typ, date), v, page, uidx.get(u) if u else None] + ([c[3]] if len(c) > 3 and c[3] else []))
 
     by_g = {}
     for r in series["rows"]:
