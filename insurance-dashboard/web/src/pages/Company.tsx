@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CompanyIfrs } from './CompanyIfrs';
 import { CompanyReview } from './CompanyReview';
 import { CompanySop } from './CompanySop';
@@ -72,10 +72,16 @@ export function CompanyFinancials() {
   if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
   if (!entry.has_financials) return <NoFinancials entry={entry} />;
   if (!store) return <Loading what="דוחות כספיים" />;
-  return <FinancialsInner store={store} companyId={entry.id} />;
+  return <FinancialsView store={store} companyId={entry.id} />;
 }
 
-function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId: string }) {
+/** A link pasted while the page is open changes the address from outside: the view is rebuilt from the address instead of overwriting it. */
+function FinancialsView(props: { store: CompanyStore; companyId: string }) {
+  const [gen, setGen] = useState(0);
+  return <FinancialsInner key={gen} {...props} onOutsideLink={() => setGen((g) => g + 1)} />;
+}
+
+function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanyStore; companyId: string; onOutsideLink: () => void }) {
   const [sp, setSp] = useSearchParams();
   const d = store.d;
   // the view lives in the URL: sheet, selected rows, period type, units, mode, column order
@@ -91,8 +97,9 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const [mode, setMode] = useState<'value' | 'yoy'>(sp.get('v') === 'yoy' ? 'yoy' : 'value');
   const [showChart, setShowChart] = useState(sp.get('g') === '1');
   const [stack, setStack] = useState(sp.get('k') === '1');
-  const [flip, setFlip] = useState<Record<number, boolean>>({});
-  const [growth, setGrowth] = useState<Record<number, 'yoy' | 'qoq' | undefined>>({});
+  const [flip, setFlip] = useState<Record<number, boolean>>(() => Object.fromEntries((sp.get('fl') ?? '').split(',').filter(Boolean).map((x) => [Number(x), true])));
+  const [growth, setGrowth] = useState<Record<number, 'yoy' | 'qoq' | undefined>>(() => Object.fromEntries((sp.get('gr') ?? '').split(',').filter(Boolean).map((x) => { const [i, g] = x.split(':'); return [Number(i), g === 'qoq' ? 'qoq' : 'yoy']; })));
+  const wrote = useRef<string | null>(null);
   const [q, setQ] = useState('');
   // units, display, column order, period window and row search sit behind one button on a phone, so the first screen shows figures
   const [more, setMore] = useState(() => window.matchMedia('(min-width: 761px)').matches);
@@ -190,6 +197,8 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   }, [rows]);
   useEffect(() => { setDim('all'); }, [sheetCode]);
   useEffect(() => {
+    // the address was changed from outside (a pasted link): rebuild from it, do not write over it
+    if (wrote.current != null && sp.toString() !== wrote.current) { onOutsideLink(); return; }
     const q: Record<string, string> = { sheet: sheetCode };
     if (sel.length) q.m = sel.join(',');
     if (curType) q.t = curType;
@@ -201,8 +210,13 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     if (hasStd && stdTab !== 'c') q.s = stdTab;
     if (range[0]) q.f = range[0];
     if (range[1]) q.e = range[1];
+    const fl = Object.keys(flip).filter((k) => flip[+k]), gr = Object.entries(growth).filter(([, g]) => g).map(([k, g]) => `${k}:${g}`);
+    if (fl.length) q.fl = fl.join(',');
+    if (gr.length) q.gr = gr.join(',');
+    wrote.current = new URLSearchParams(q).toString();
     setSp(q, { replace: true });
-  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, setSp]);
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, flip, growth, setSp]);
+  useEffect(() => { if (wrote.current != null && sp.toString() !== wrote.current) onOutsideLink(); }, [sp, onOutsideLink]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
   const cell = (mi: number, pi: number): number | null => {
@@ -299,7 +313,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                   dec: pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1, data: s.vals.map((v) => (v == null ? null : +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3))) });
                 if (s.gvals) fox.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, color, pct: true, kind: 'line', dashed: true, cap: 300, data: s.gvals.map((v) => (v == null ? null : +v.toFixed(2))) });
               });
-              const first17 = series.some((x) => x.olds.some(Boolean)) ? cols.findIndex((_, i) => !series.some((x) => x.olds[i])) : -1;
+              const lastOld = cols.reduce((at, _, i) => (series.some((x) => x.olds[i]) ? i : at), -1), first17 = lastOld >= 0 && lastOld < cols.length - 1 ? lastOld + 1 : -1;
               return foxOption({ x: cols.map((pi) => pl(pi)), series: fox, unit: SCALES.find((x) => x.id === scale)!.label, breakAt: first17 > 0 ? first17 : undefined, breakLabel: 'IFRS 17' });
             }} />
             <div className="legend">
@@ -308,7 +322,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                 return (
                   <div className="li" key={s.mi}>
                     <span className="dot" style={{ background: pal[s.k % pal.length] }} />
-                    <span>{flip[s.mi] ? '(−) ' : ''}{s.name}{s.total != null && <span className="muted"> (שינוי כולל: <span className="num">{sn(s.total, 1)}%</span>{s.cagr != null && <> · CAGR: <span className="num">{sn(s.cagr, 1)}%</span></>})</span>}</span>
+                    <span>{flip[s.mi] ? '(−) ' : ''}{s.name}{s.total != null && <span className="muted"> · שינוי כולל <bdi className="num">{sn(s.total, 1)}%</bdi>{s.cagr != null && <> · CAGR <bdi className="num">{sn(s.cagr, 1)}%</bdi></>}</span>}</span>
                     <button type="button" title="עמודות או קו" onClick={() => setKind((k) => ({ ...k, [s.mi]: t === 'bar' ? 'line' : 'bar' }))}>{t === 'bar' ? 'עמודות' : 'קו'}</button>
                     <button type="button" title="היפוך סימן, למשל כדי להציג הוצאות מתחת לאפס" aria-pressed={!!flip[s.mi]} onClick={() => setFlip((f) => ({ ...f, [s.mi]: !f[s.mi] }))}>±</button>
                     {mode === 'value' && <button type="button" title="קו שיעור צמיחה על אותו גרף, בציר אחוזים" onClick={() => setGrowth((g) => ({ ...g, [s.mi]: g[s.mi] === undefined ? 'yoy' : g[s.mi] === 'yoy' && curType !== 'FY' ? 'qoq' : undefined }))}>{s.g === 'yoy' ? 'קו YoY' : s.g === 'qoq' ? 'קו QoQ' : '+ קו צמיחה'}</button>}

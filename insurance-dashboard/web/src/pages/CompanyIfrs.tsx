@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { palette } from '../lib/theme';
-import { nf, byPeriodDesc } from '../lib/format';
+import { nf, byPeriodDesc, dateLabel } from '../lib/format';
 import { useIfrsData, useIfrsFacts } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BUCKET_HE, EFFECT_HE, METRIC_HE, SEGMENT_HE, TEXT_HE } from '../lib/labels';
@@ -153,7 +153,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
               <tbody>{capital.map((f, i) => (
                 <tr key={i}>
                   <td className="lbl">{he(f.m)}<span className="dim">{/[\u0590-\u05ff]/.test(f.l) ? f.l : ''}{f.s !== f.g ? `${/[\u0590-\u05ff]/.test(f.l) ? ' · ' : ''}${segName(f.s)}` : ''}</span></td>
-                  <td>{cell(f, f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className="dim num">{f.d}</span></td>
+                  <td>{cell(f, f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className="dim num">{dateLabel(f.d)}</span></td>
                 </tr>
               ))}</tbody>
             </table></div>
@@ -179,7 +179,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           <thead><tr><th>מדד</th><th>מגזר</th><th>בסיס</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{list.slice(0, 600).map((f, i) => (
             <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{[subLabel(f), f.bk ? bkName(f.bk) : ''].filter(Boolean).join(' · ')}{f.tr ? ` · ${f.tr}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
-              <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{f.d}</span></td>
+              <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{dateLabel(f.d)}</span></td>
               <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span><IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
         </table></div>

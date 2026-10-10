@@ -45,6 +45,12 @@ export function periodLong(type: string): string {
   return type === 'LTM' ? 'LTM' : type === 'FY' ? 'FY' : type === 'H' ? 'H' : type === '9M' ? '9M' : type === 'Q' ? 'Q' : 'תאריך מאזן';
 }
 
+/** A balance or period-end date the way the site names periods: a quarter end is Q4'25, any other date is 15.05.26. */
+export function dateLabel(d: string | null | undefined): string {
+  if (!d || d.length < 10) return d ?? '';
+  const q = { '03-31': 'Q1', '06-30': 'Q2', '09-30': 'Q3', '12-31': 'Q4' }[d.slice(5, 10)];
+  return q ? `${q}'${d.slice(2, 4)}` : `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(2, 4)}`;
+}
 /** Report periods ("2025Q3", "2025FY") newest first; the annual report sorts as the fourth quarter of its year, after Q3. */
 const periodKey = (p: string): string => `${p.slice(0, 4)}${p.endsWith('FY') ? 'Q4' : p.slice(4)}`;
 export const byPeriodDesc = (a: string, b: string): number => periodKey(b).localeCompare(periodKey(a));

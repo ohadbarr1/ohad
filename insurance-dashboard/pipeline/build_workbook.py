@@ -97,6 +97,7 @@ FILES = "https://mayafiles.tase.co.il/"
 PDF = {int(r["report_id"]): FILES + r["url"] for r in csv.DictReader(open(ROOT / "data" / "registry" / "documents.csv", encoding="utf-8")) if r["file_type"] == "pdf1"}
 # the primary statements copied in full (spec v6): statement -> (report group, sheet title)
 STATEMENTS = {"income": ("income", "רווח והפסד"), "oci": ("oci", "רווח כולל"), "balance": ("balance", "מאזן"), "cashflow": ("cashflow", "תזרים מזומנים")}
+SUBTOTAL = re.compile(r"^(סך|סה)|^רווח( \(הפסד\))?,? (לפני מי?סים|לתקופה|לשנה|משירותי ביטוח$|מהשקעות ומימון|נטו מביטוח)|^(סך הכל |סה.כ )?רווח( \(הפסד\))? כולל")
 STD_NOTE = {"IFRS 17": "IFRS 17 (מ-2024, לרבות מספרי השוואה שהוצגו מחדש)", "IFRS 4": "IFRS 4 (עד 2024)"}
 def norm(t):
     """Row identity across reports. Wording drifts from report to report ("רווח (הפסד) לפני מיסים על ההכנסה", "רווח לפני מסים על הכנסה"),
@@ -135,7 +136,7 @@ def statements(comp):
                     continue  # the date caption of the column block, not a section
                 if key not in meta:
                     shown = re.sub(r"^\d+\S*\s+", "", " ".join(r["label"].split())).replace("לשנה", "לתקופה")  # a stray note reference; one row serves quarters and years
-                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total"))}
+                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total")) or bool(SUBTOTAL.match(shown))}
                     order.insert(order.index(prev) + 1 if prev in order else 0, key)
                 prev = key
                 for c, v in zip(st["columns"], r.get("values") or []):

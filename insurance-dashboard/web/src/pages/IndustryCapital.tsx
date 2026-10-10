@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
-import { nf, byPeriodDesc } from '../lib/format';
+import { nf, byPeriodDesc, dateLabel } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { periodName } from './CompanyIfrs';
@@ -60,7 +60,7 @@ export function IndustryCapital() {
               {r.cells.map((c, i) => (
                 <td key={COLS[i].k}>{c.list.length === 0 ? <span className="muted">–</span> : (
                   <>{c.list.map((f, j) => <span key={j}>{j > 0 && <span className="muted"> · </span>}{url(f) && f.pg != null ? <a className="num" href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.l} · עמ׳ ${f.pg}`}>{show(f, COLS[i].pctv)}</a> : <span className="num" title={f.l}>{show(f, COLS[i].pctv)}</span>}</span>)}
-                    <span className="dim num">{c.date}{c.list[0].w === 'ytd' ? ' · YTD' : ''}</span></>
+                    <span className="dim num">{dateLabel(c.date)}{c.list[0].w === 'ytd' ? ' · YTD' : ''}</span></>
                 )}</td>
               ))}
             </tr>
