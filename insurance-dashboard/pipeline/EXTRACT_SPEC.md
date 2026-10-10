@@ -95,3 +95,15 @@ Scope: tables in the board report (and, where the report has none, the investor 
 4. **Nostro asset allocation** if printed as a table of the group's own (non-participating) investment portfolio by asset class: `metric: "nostro:<asset class as printed>"`, `segment: group`, `window: instant`, value in NIS millions and, if printed, a second fact `metric: "nostro_pct:<asset class>"` in percent.
 
 Before finishing run `.venv/bin/python pipeline/verify_sop.py <company> <period>`: every value must be printed on its cited page. Put what is not printed in `not_found` with the reason.
+
+## IFRS 4 history (v4): annual reports for 2024 and earlier
+
+Output: `data/extracted_hist/<company>/<period>.json`, same envelope and fact fields as v1, plus `"standard": "IFRS 4"` at the top level.
+These reports predate IFRS 17 as originally filed: there is no CSM, no insurance revenue and no insurance service result. Do not look for them and do not list them in not_found.
+Take what the report prints for the year and for the comparative year (own `date`), NIS millions:
+- Group: `profit_attributable`, `comprehensive_income_attributable`, `comprehensive_income_before_tax`, `profit_before_tax`, `equity_attributable`, `total_assets`, `dividend_declared`, `dividend_paid`, `roe_reported`, `aum_total`.
+- Per operating segment as the report defines them (life and long-term savings, health, general insurance, pension, provident, financial services, other; and their printed sub-segments): `comprehensive_income_before_tax`, `profit_before_tax`, `gross_premiums_earned`, `gross_written_premiums`, `management_fees`, `aum_pension`, `aum_gemel`.
+- General insurance by line: `combined_ratio`, `loss_ratio`, `gross_written_premiums`, `comprehensive_income_before_tax` with `segment: "pc:<line as printed>"`.
+- Life: `new_business_annualized_premiums`, `one_time_premium_new_business`, value of new business or embedded value figures if a table prints them (`embedded_value`, `value_of_new_business`).
+- Solvency of the insurer subsidiary (board report or the solvency section): `solvency_ratio_with_transitional`, `solvency_ratio_without_transitional`, `own_funds`, `scr`, `solvency_surplus`, `target_solvency_ratio`, each with its own date.
+Rules 1-12 of v1 apply. Check every value against the cited Hebrew page with `pipeline/verify_sop.py`-style discipline: run `.venv/bin/python pipeline/verify_hist.py <company> <period>` before finishing.

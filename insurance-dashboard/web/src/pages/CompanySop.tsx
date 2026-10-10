@@ -40,7 +40,10 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
     const at = mine.filter((f) => f.w === w && f.d === d);
     const lines = [...new Set(at.map((f) => f.s))];
     const metrics = [...new Set(at.map((f) => f.m))];
-    return { lines, rows: metrics.map((m) => ({ m, total: m.startsWith('sop_total'), cells: lines.map((s) => at.find((f) => f.m === m && f.s === s) ?? null) })) };
+    // a table whose rows each belong to one line (the filer put the line in the row name) reads better as a list than as a diagonal grid
+    const sparse = lines.length > 3 && at.length < metrics.length * lines.length * 0.35;
+    if (sparse) return { sparse, lines: ['ערך'], rows: at.map((f) => ({ m: f.m, total: f.m.startsWith('sop_total'), seg: f.s, cells: [f] as (SopFact | null)[] })) };
+    return { sparse, lines, rows: metrics.map((m) => ({ m, total: m.startsWith('sop_total'), seg: '', cells: lines.map((s) => at.find((f) => f.m === m && f.s === s) ?? null) })) };
   }, [mine, C]);
 
   if (data === undefined) return <Loading what="מקורות הרווח" />;
@@ -60,12 +63,12 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
       <Panel title={FAMILIES.find(([k]) => k === F)?.[1]} aside={<span>{colName(C.split('|')[0], C.split('|')[1])} · {table.rows.length} שורות</span>}>
         {table.rows.length === 0 ? <Empty title="אין נתונים לטבלה ולתקופה שנבחרו" /> : (
           <div className="scroll"><table>
-            <thead><tr><th>שורה</th>{table.lines.map((s) => <th key={s}>{lineName(s)}</th>)}</tr></thead>
-            <tbody>{table.rows.map((r) => (
-              <tr key={r.m} className={r.total ? 'tot' : ''}>
-                <td className="lbl">{rowName(r.m)}</td>
+            <thead><tr><th>שורה</th>{table.sparse && <th style={{ textAlign: 'start' }}>מגזר או ענף</th>}{table.lines.map((s) => <th key={s}>{table.sparse ? s : lineName(s)}</th>)}</tr></thead>
+            <tbody>{table.rows.map((r, i) => (
+              <tr key={r.m + r.seg + i} className={r.total ? 'tot' : ''}>
+                <td className="lbl">{rowName(r.m)}</td>{table.sparse && <td style={{ textAlign: 'start' }}>{lineName(r.seg)}</td>}
                 {r.cells.map((f, i) => <td key={i}>{!f ? <span className="muted">–</span> : (
-                  <>{url(f) && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.n ?? ''} · עמ׳ ${f.pg}`}>{nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0)}{isPct(f.m) ? '%' : ''}</a> : <span className="num">{nf(f.v, 1)}</span>}{f.src === 'chart' && <span className="chip est">מגרף</span>}</>
+                  <>{url(f) && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.n ?? ''} · עמ׳ ${f.pg}`}>{nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0)}{isPct(f.m) ? '%' : ''}</a> : <span className="num">{nf(f.v, 1)}</span>}{f.src === 'chart' && <span className="chip est">מגרף</span>}{f.src === 'image' && <span className="chip est" title="הטבלה בדוח היא תמונה; המספר נקרא ממנה ולא אומת מול טקסט">מתמונה</span>}</>
                 )}</td>)}
               </tr>
             ))}</tbody>

@@ -58,6 +58,7 @@ except duckdb.IOException:  # warehouse busy: the exported registry has the same
     import csv
     pdf = {int(r["report_id"]): r["url"] for r in csv.DictReader(open(ROOT / "data" / "registry" / "documents.csv", encoding="utf-8")) if r["file_type"] == "pdf1"}
 out, files = [], []
+MANIFEST = json.loads((ROOT / "data" / "work" / "manifest_quarters.json").read_text(encoding="utf-8")) if (ROOT / "data" / "work" / "manifest_quarters.json").exists() else {}
 PRES = json.loads((ROOT / "data" / "registry" / "presentations.json").read_text(encoding="utf-8"))
 for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
     d = json.loads(f.read_text(encoding="utf-8"))
@@ -78,6 +79,9 @@ for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
         if x.get("doc") == "pres":  # the page number refers to the investor presentation, not the report
             pu = pdf.get(PRES.get(f"{comp}_{period}"))
             row["u"], row["src"] = (FILES + pu if pu else None), row.get("src", "pres")
+        elif x.get("doc") == "en":  # cited on the English translation because the Hebrew page is an image
+            eu = pdf.get((MANIFEST.get(f"{comp}_{period}", {}).get("en") or {}).get("report_id"))
+            row["u"] = FILES + eu if eu else None
         if x.get("note"):
             row["n"] = " ".join(str(x["note"]).split())[:160]
         out.append(row)

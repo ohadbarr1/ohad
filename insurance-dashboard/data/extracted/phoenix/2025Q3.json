@@ -6299,6 +6299,34 @@
    "note": "NIS million (printed NIS 6.3-6.7 billion), general insurance gross premiums, 2028.",
    "value_low": 6300,
    "value_high": 6700
+  },
+  {
+   "metric": "csm_new_business",
+   "segment": "Investment policies",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-09-30",
+   "value": 462.0,
+   "doc": "he",
+   "page_he": 33,
+   "page_en": null,
+   "label": "עסק חדש (פוליסות השקעה)",
+   "source": "image",
+   "note": "Board report 6.3 chart 'התפתחות במרווח שירות חוזי (CSM) וברווחים עתידיים נוספים לתקופת הדוח' (NIS million as printed), read from the page image (he p33; the text layer has no chart labels). Waterfall bars left to right: 31/12/2024, השפעות כלכליות ריבית ואחר, עסק חדש, יתרות לפני שחרור, שחרור, 30/09/2025; opening and closing bars are split into 'חיים ובריאות' (dark) and 'פוליסות השקעה' (light; footnote 1: embedded value on Solvency methodology, not IFRS 17). Printed labels: opening 564 / 8,837 / 9,401; economic effects 318; new business 462 (inside the light segment) and 159 (outside, left of the bar) / 621; before release 10,340 (not split on the chart); release -761; closing 813 / 8,766 / 9,579. Mapping of the new-business labels: 462 sits in the investment-policy colour and 159 is the remainder of the 621 bar, 462+159=621. Opening, closing and group values agree with presentation slide 23 rows already in this file. Checks: 564+8,837=9,401; 9,401+318+621=10,340; 10,340-761=9,579; 813+8,766=9,579. Window is year to date (9 months). Basis na: chart does not say gross/net."
+  },
+  {
+   "metric": "csm_new_business",
+   "segment": "life_health_combined",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-09-30",
+   "value": 159.0,
+   "doc": "he",
+   "page_he": 33,
+   "page_en": null,
+   "label": "עסק חדש (חיים ובריאות)",
+   "source": "image",
+   "note": "Board report 6.3 chart 'התפתחות במרווח שירות חוזי (CSM) וברווחים עתידיים נוספים לתקופת הדוח' (NIS million as printed), read from the page image (he p33; the text layer has no chart labels). Waterfall bars left to right: 31/12/2024, השפעות כלכליות ריבית ואחר, עסק חדש, יתרות לפני שחרור, שחרור, 30/09/2025; opening and closing bars are split into 'חיים ובריאות' (dark) and 'פוליסות השקעה' (light; footnote 1: embedded value on Solvency methodology, not IFRS 17). Printed labels: opening 564 / 8,837 / 9,401; economic effects 318; new business 462 (inside the light segment) and 159 (outside, left of the bar) / 621; before release 10,340 (not split on the chart); release -761; closing 813 / 8,766 / 9,579. Mapping of the new-business labels: 462 sits in the investment-policy colour and 159 is the remainder of the 621 bar, 462+159=621. Opening, closing and group values agree with presentation slide 23 rows already in this file. Checks: 564+8,837=9,401; 9,401+318+621=10,340; 10,340-761=9,579; 813+8,766=9,579. Window is year to date (9 months). Basis na: chart does not say gross/net."
   }
  ],
  "not_found": [

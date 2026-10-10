@@ -5797,6 +5797,20 @@
    "label": "דיבידנד ... בשיעור שלא יפחת משיעור של 40% מהרווח הכולל של החברה הניתן לחלוקה",
    "source": "text",
    "note": "Percent. Policy updated 15 May 2025: quarterly dividend of at least 40% of distributable comprehensive income per annual audited statements; share buybacks not counted as dividends."
+  },
+  {
+   "metric": "csm_subtotal:balances before release",
+   "segment": "Investment policies",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 979.0,
+   "doc": "he",
+   "page_he": 37,
+   "page_en": null,
+   "label": "יתרות לפני שחרור",
+   "source": "image",
+   "note": "Board report 6.3 chart 'התפתחות במרווח שירות חוזי (CSM) וברווחים עתידיים נוספים לתקופת הדוח' (NIS million as printed), read from the page image (he p37; the text layer has no chart labels). Waterfall bars left to right: 31.12.24, השפעות כלכליות ריבית ואחר, עסק חדש, יתרות לפני שחרור, שחרור, 30.6.25; each total bar is split into 'חיים ובריאות (CSM)' (dark) and 'פוליסות השקעה (מעבר ל-CSM)' (light; footnote 1: embedded value on Solvency methodology, not IFRS 17). Printed labels: 31.12.24 771 / 8,837 / 9,608; economic effects 148; new business 424; before release 979 / 9,201 / 10,180; release -501; 30.6.25 943 / 8,736 / 9,679. Group, life+health and investment-policy opening/closing values agree with presentation slide 24 rows already in this file; this fact is the only one the image adds (investment policies before release, 979; the window is year to date, the presentation shows quarterly blocks for the same segment). The chart gives no investment-policy split of the movement bars (148, 424, -501), so none is recorded. Checks: 771+8,837=9,608; 979+9,201=10,180; 943+8,736=9,679; 9,608+148+424=10,180; 10,180-501=9,679. Basis na: chart does not say gross/net."
   }
  ],
  "not_found": [

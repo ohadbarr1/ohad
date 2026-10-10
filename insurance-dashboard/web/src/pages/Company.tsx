@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CompanyIfrs } from './CompanyIfrs';
 import { CompanyReview } from './CompanyReview';
 import { CompanySop } from './CompanySop';
+import { CompanyHist } from './CompanyHist';
 import { Link, NavLink, Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
@@ -49,6 +50,7 @@ export function CompanyLayout() {
         {entry.has_financials && <NavLink to="financials">דוחות</NavLink>}
         <NavLink to="profit">מקורות רווח וענפים</NavLink>
         <NavLink to="ifrs17">IFRS 17</NavLink>
+        <NavLink to="history">היסטוריה</NavLink>
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>
         <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
       </nav>
@@ -266,6 +268,11 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
 export function CompanyReviewTab() {
   const { entry } = useCtx();
   return <CompanyReview id={entry.id} docs={entry.docs} />;
+}
+
+export function CompanyHistTab() {
+  const { entry } = useCtx();
+  return <CompanyHist id={entry.id} docs={entry.docs} />;
 }
 
 export function CompanySopTab() {
