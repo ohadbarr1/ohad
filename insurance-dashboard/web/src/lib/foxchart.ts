@@ -68,9 +68,11 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
   const showLabels = spec.labels ?? (!spec.dense && !stacked && spec.series.length <= 2 && x.length <= 14);
   const legend = spec.legend ?? spec.series.length > 1;
   const rot = spec.rotate ?? (!spec.dense && x.length > 14 ? 45 : 0);
+  const texts: ((v: number | null) => string)[] = [];
   const series: Record<string, unknown>[] = spec.series.map((s) => {
     const kind = s.kind ?? (s.pct ? 'line' : 'bar'), dec = s.dec ?? (s.pct ? 1 : undefined);
     const text = (v: number | null) => (v == null ? '–' : `${s.cap && Math.abs(v) >= s.cap ? (v > 0 ? 'מעל ' : 'מתחת ל-') : ''}${fmtNum(v, dec)}${s.pct ? '%' : ''}`);
+    texts.push(text);
     return {
       name: s.name, type: kind, yAxisIndex: s.pct ? pctAxis : 0, stack: s.stack && !s.pct && (kind === 'bar' || s.area) ? 'total' : undefined,
       data: s.data.slice(lo, hi).map((v, i) => (v == null ? null : s.faded?.[lo + i] ? { value: v, itemStyle: { opacity: 0.5 } } : v)),
@@ -95,11 +97,12 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
     grid: { left: 8, right: second ? 8 : 14, top: legend ? 58 : 34, bottom: 6, containLabel: true },
     legend: legend ? { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11.5 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' } : undefined,
     tooltip: { trigger: 'axis', axisPointer: { type: allLines ? 'line' : 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
-      formatter: spec.total ? (ps: { axisValueLabel: string; marker: string; seriesName: string; value: number | null | { value: number } }[]) => {
+      // one tooltip everywhere: the period, each series with its figure, the sum where the parts add up, and the unit
+      formatter: (ps: { axisValueLabel: string; marker: string; seriesName: string; seriesIndex: number; value: number | null | { value: number } }[]) => {
         let sum = 0;
-        const rows = ps.map((q) => { const v = q.value != null && typeof q.value === 'object' ? q.value.value : q.value; if (v != null) sum += v; return v == null ? '' : `${q.marker} ${q.seriesName}: <b>${fmtNum(v)}</b><br>`; }).join('');
-        return `${ps[0]?.axisValueLabel ?? ''}<br>${rows}סך הכול: <b>${fmtNum(sum)}</b>`;
-      } : undefined },
+        const rows = ps.map((q) => { const v = q.value != null && typeof q.value === 'object' ? q.value.value : q.value; if (v == null) return ''; sum += v; return `${q.marker} ${q.seriesName}: <b>${texts[q.seriesIndex]?.(v) ?? fmtNum(v)}</b><br>`; }).join('');
+        return `<b>${ps[0]?.axisValueLabel ?? ''}</b><br>${rows}${spec.total ? `סך הכול: <b>${fmtNum(sum)}</b><br>` : ''}<span style="opacity:.65;font-size:11px">${amounts ? spec.unit : '%'}</span>`;
+      } },
     xAxis: { type: 'category', data: x, boundaryGap: !allLines, axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: spec.dense ? 11 : 12, rotate: rot, hideOverlap: true, interval: rot && !spec.dense ? 0 : undefined } },
     yAxis: [{ ...axis(amounts ? spec.unit : '%', !amounts, true), scale: !!spec.scale }, ...(second ? [axis('%', true, false)] : [])],
     series,

@@ -39,6 +39,8 @@ export function periodLabel(type: string, end: string): string {
   if (type === 'H') return m === 6 ? `H1'${y}` : m === 12 ? `H2'${y}` : `6M'${y}`;
   if (type === '9M') return `9M'${y}`;
   if (type === 'Q') return `Q${Math.ceil(m / 3)}'${y}`;
+  // a balance date at a quarter end is named like the quarter (Q2'26), the way every other period on the site is
+  if (m % 3 === 0 && Number(end.slice(8, 10)) >= 30) return `Q${m / 3}'${y}`;
   return `${Number(end.slice(8, 10))} ${MN[m - 1]} '${y}`;
 }
 export function periodLong(type: string): string {

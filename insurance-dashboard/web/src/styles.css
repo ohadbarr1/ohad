@@ -556,3 +556,14 @@ tbody tr.on td { background: var(--accent-soft); }
 @media (max-width: 760px) { .narrow-only { display: block; margin-top: 3px; } }
 /* phone: only statement label cells take the wide first column; a table of company names keeps a narrow one */
 @media (max-width: 760px) { .panel table td:first-child:not(.lbl), .panel table th:first-child { min-width: 104px; max-width: 38vw; width: auto; } .thsort { min-width: 78px; } }
+
+/* a change shown under its figure; a source remark as a small mark */
+.yoy { display: block; font-size: 11px; font-weight: 600; line-height: 1.2; }
+sup.mk { color: var(--accent); font-weight: 700; margin-inline-start: 2px; cursor: help; }
+
+.views { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.views .chip { padding: 0; overflow: hidden; }
+.views .chip button { background: none; border: 0; padding: 4px 9px; font: inherit; color: inherit; cursor: pointer; }
+.views .chip button:hover { color: var(--accent); }
+.views .chip button + button { padding-inline: 2px 8px; color: var(--faint); }
+.views input { min-width: 150px; }

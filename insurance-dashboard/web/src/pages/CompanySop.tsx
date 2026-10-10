@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, Field, Loading, Panel, Seg } from '../components/ui';
-import { nf, byPeriodDesc } from '../lib/format';
+import { nf, sn, byPeriodDesc } from '../lib/format';
+import { shiftYear } from '../lib/company';
 import { load } from '../lib/useData';
 import { he, periodName, segName } from './CompanyIfrs';
 
@@ -50,6 +51,15 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
   if (!data || !P) return <Empty title="מקורות הרווח של החברה טרם חולצו">{docs > 0 && <Link to="../filings">{docs} מסמכי מקור</Link>}</Empty>;
   const url = (f: SopFact) => (f.u !== undefined ? f.u : data[P].url);
   const isPct = (m: string) => /ratio|pct/.test(m);
+  // the same line in the year-earlier column of the same report: the change is shown under the figure (percent for amounts, points for rates)
+  const yoy = (f: SopFact) => {
+    if (f.w === 'instant' && !isPct(f.m)) return null;
+    const p = mine.find((x) => x.m === f.m && x.s === f.s && x.w === f.w && x.d === shiftYear(f.d, -1));
+    if (!p || (!isPct(f.m) && (p.v <= 0 || f.v <= 0))) return null;  // a rate of change from or to a loss says nothing
+    const ch = isPct(f.m) ? f.v - p.v : (f.v / p.v - 1) * 100;
+    return <span className={`yoy num ${ch >= 0 ? 'pos' : 'neg'}`} title={`מול ${nf(p.v, 1)} ב-${colName(p.w, p.d)}`}>{sn(ch, 1)}{isPct(f.m) ? ' נק׳' : '%'}</span>;
+  };
+  const marks = { img: mine.some((f) => f.src === 'image'), chart: mine.some((f) => f.src === 'chart') };
 
   return (
     <>
@@ -68,12 +78,13 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
               <tr key={r.m + r.seg + i} className={r.total ? 'tot' : ''}>
                 <td className="lbl">{rowName(r.m)}</td>{table.sparse && <td style={{ textAlign: 'start' }}>{lineName(r.seg)}</td>}
                 {r.cells.map((f, i) => <td key={i}>{!f ? <span className="muted">–</span> : (
-                  <>{url(f) && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.n ?? ''} · עמ׳ ${f.pg}`}>{nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0)}{isPct(f.m) ? '%' : ''}</a> : <span className="num">{nf(f.v, 1)}</span>}{f.src === 'chart' && <span className="chip est">מגרף</span>}{f.src === 'image' && <span className="chip est" title="הטבלה בדוח היא תמונה; המספר נקרא ממנה ולא אומת מול טקסט">מתמונה</span>}</>
+                  <>{url(f) && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.n ?? ''} · עמ׳ ${f.pg}`}>{nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0)}{isPct(f.m) ? '%' : ''}</a> : <span className="num">{nf(f.v, 1)}</span>}{f.src === 'chart' && <sup className="mk" title="נקרא מגרף בדוח">³</sup>}{f.src === 'image' && <sup className="mk" title="הטבלה בדוח היא תמונה; המספר נקרא ממנה ולא אומת מול טקסט">*</sup>}{yoy(f)}</>
                 )}</td>)}
               </tr>
             ))}</tbody>
           </table></div>
         )}
+        <div className="src">מתחת לכל מספר: YoY מול אותה עמודה בשנה הקודמת, מאותו דוח{marks.img && <> · <sup className="mk">*</sup> נקרא מטבלה שהיא תמונה בדוח, לא אומת מול טקסט</>}{marks.chart && <> · <sup className="mk">³</sup> נקרא מגרף</>}</div>
         {F === 'life' && <div className="src">"פוליסות הכוללות רכיב חיסכון" הן ביטוחי מנהלים (IFRS 17). חוזי השקעה הם פוליסות חיסכון טהורות (IFRS 9).</div>}
       </Panel>
       {data[P].missing.length > 0 && (

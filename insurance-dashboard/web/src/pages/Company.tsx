@@ -11,7 +11,7 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
-import { SCALES, fmtCell, nf, periodLong, scaleValue, sn, type Scale } from '../lib/format';
+import { SCALES, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
 import type { Market } from '../lib/market';
 import type { RegistryCompany } from '../lib/types';
@@ -270,6 +270,12 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
 
   const toggle = (mi: number) => setSel((cur) => (cur.includes(mi) ? cur.filter((x) => x !== mi) : [...cur, mi]));
   const fromReports = sheetCode.startsWith('X.');
+  const [showRe, setShowRe] = useState(false);
+  // named views of this company's statements (table, rows, chart set-up, period window), kept on this device
+  const [views, setViews] = useStored<{ n: string; q: string }[]>(`fin.views.${companyId}`, []);
+  const [viewName, setViewName] = useState('');
+  // restatements of the statement on screen, in the structure on screen
+  const restated = (d.restated ?? []).filter((r) => r[0] === sheetCode && (!hasStd || stdTab === 'c' || r[1] === (stdTab === '17' ? 'IFRS 17' : 'IFRS 4')) && (r[3] === baseType || (baseType === 'Q' && r[3] === 'I')));
   // a figure from the periodic reports links only to its own report; the entity's single source file would be the wrong document
   const open = (page: number | null, u?: number | null) => (fromReports && u == null ? null : store.sourceUrl(entity, page, u));
 
@@ -295,6 +301,11 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
             <input type="range" min={0} max={nAll - 1} step={1} value={loI} onChange={(e) => setLo(Number(e.target.value))} aria-label="מתקופה" />
             <input type="range" min={0} max={nAll - 1} step={1} value={hiI} onChange={(e) => setHi(Number(e.target.value))} aria-label="עד תקופה" />
           </div></div>}
+        <div className="field"><span>תצוגות שמורות</span><div className="views">
+          {views.map((v) => <span key={v.n} className="chip"><button type="button" onClick={() => setSp(Object.fromEntries(new URLSearchParams(v.q)))}>{v.n}</button><button type="button" aria-label={`מחיקת ${v.n}`} onClick={() => setViews(views.filter((x) => x.n !== v.n))}>×</button></span>)}
+          <input type="text" value={viewName} onChange={(e) => setViewName(e.target.value)} placeholder="שם לתצוגה הנוכחית" aria-label="שם לתצוגה" />
+          <button type="button" className="btn" disabled={!viewName.trim()} onClick={() => { setViews([...views.filter((x) => x.n !== viewName.trim()), { n: viewName.trim(), q: sp.toString() }]); setViewName(''); }}>שמירה</button>
+        </div></div>
         <Field label="חיפוש שורה"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="רווח, פרמיות, CSM" /></Field>
         {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
         </>}
@@ -382,6 +393,28 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
           </table>
         </div>
       </Panel>
+      {restated.length > 0 && (
+        <Panel title="הוצג מחדש" aside={<><span>{restated.length} מספרים שדוח מאוחר הדפיס אחרת</span><button type="button" className="btn" aria-expanded={showRe} onClick={() => setShowRe((v) => !v)}>{showRe ? 'סגירה' : 'הצגה'}</button></>}>
+          {showRe && <>
+            <div className="scroll"><table>
+              <thead><tr><th>שורה</th><th>תקופה</th><th>כפי שדווח לראשונה</th><th>בהדפסה האחרונה</th><th>שינוי</th><th>בדוח</th></tr></thead>
+              <tbody>{restated.map((r, i) => {
+                const [, , label, typ, end, a, pa, ua, b, pb, ub, by] = r;
+                const link = (u: number | null, pg: number | null) => (u != null && d.urls?.[u] ? `${d.urls[u]}${pg ? `#page=${pg}` : ''}` : null);
+                const cellOf = (v: number, u: number | null, pg: number | null) => { const h = link(u, pg), t = <span className="num">{fmtCell(v, 'k', scale)}</span>; return h ? <a className="cellsrc" href={h} target="_blank" rel="noreferrer" title={`עמ׳ ${pg ?? ''}`}>{t}</a> : t; };
+                const flip = Math.abs(a + b) < 0.5;
+                return (
+                  <tr key={i}><td className="lbl">{label}</td><td><span className="num">{periodLabel(typ, end)}</span></td><td>{cellOf(a, ua, pa)}</td><td>{cellOf(b, ub, pb)}</td>
+                    <td>{flip ? <span className="muted">היפוך סימן בהצגה</span> : <span className={`num ${b - a >= 0 ? 'pos' : 'neg'}`}>{sn(((b - a) / Math.abs(a)) * 100, 1)}%</span>}</td>
+                    <td><span className="num">{periodLabel(by.slice(5, 7) === '12' ? 'FY' : 'Q', by)}</span></td></tr>
+                );
+              })}</tbody>
+            </table></div>
+            <div className="src">הטבלאות למעלה מציגות כל תקופה כפי שדווחה בדוח שלה. כאן: מה השתנה כשדוח מאוחר הדפיס את אותה תקופה כמספר השוואה. נכללות רק שורות שזוהו כאותה שורה (אותו סימן ועד פי שניים, או היפוך סימן בלבד).</div>
+          </>}
+        </Panel>
+      )}
+
     </>
   );
 }

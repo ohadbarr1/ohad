@@ -145,9 +145,16 @@ def statements(comp):
                     date, w = c["date"], c["window"]
                     typ = "I" if w == "instant" else "FY" if w == "fy" else "Q" if w == "q" or date[5:7] == "03" else "H" if date[5:7] == "06" else "9M"
                     cells.setdefault(key, {}).setdefault((typ, date), []).append(((date != own, own), v * mult, r.get("page"), url))
-    for (stmt, _), (order, meta, cells) in out.items():
+    RESTATED[comp] = []
+    for (stmt, std), (order, meta, cells) in out.items():
         for key, by in cells.items():
             for pk in by:
+                # a period printed again by a later report with another figure: as first reported against the latest print.
+                # Kept only when the two are plausibly the same line (same sign and within a factor of two, or the sign alone flipped).
+                first, latest = min(by[pk], key=lambda c: c[0]), max(by[pk], key=lambda c: c[0][1])
+                a, b = first[1], latest[1]
+                if abs(a - b) > 1.5 and a and b and ((a * b > 0 and 0.5 <= b / a <= 2) or abs(a + b) < 0.5):
+                    RESTATED[comp].append([f"X.{STATEMENTS[stmt][1].replace(' ', '_')}", std, meta[key]["label"], pk[0], pk[1], a, first[2], first[3], b, latest[2], latest[3], latest[0][1]])
                 by[pk] = min(by[pk], key=lambda c: c[0])[1:]
         # A line printed as "הכנסות (הוצאות) אחרות" in one report and "הוצאות אחרות" in another is one line:
         # the bracketed wording and the plain alternative are joined, under the newest wording.
@@ -177,6 +184,7 @@ def statements(comp):
 
 
 ROWS = []
+RESTATED = {}
 registry = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
 names = {c["id"]: c["name_he"] for c in (registry if isinstance(registry, list) else registry.get("companies", []))}
 for sf in sorted((DATA / "series").glob("*.json")):
@@ -281,6 +289,14 @@ for sf in sorted((DATA / "series").glob("*.json")):
                     uidx[u] = len(urls)
                     urls.append(u)
                 d["facts"].append([mi, period(per, flow), c["v"] if pct else round(c["v"] * 1000, 3), c.get("pg"), uidx.get(u) if u else None] + ([1] if c.get("der") else []))
+    def uix(u):
+        if u and u not in uidx:
+            uidx[u] = len(urls)
+            urls.append(u)
+        return uidx.get(u) if u else None
+
+    # [sheet, standard, line, period type, period end, as first reported, page, url, as last printed, page, url, period end of the report that reprinted it]
+    d["restated"] = [[r[0], r[1], r[2], r[3], r[4], r[5], r[6], uix(r[7]), r[8], r[9], uix(r[10]), r[11]] for r in RESTATED.get(comp, []) if r[3] != "9M"]
     d["urls"] = urls
     # search index: every line of the sheets built from the reports, once per sheet and wording
     seen = set()

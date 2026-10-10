@@ -31,7 +31,9 @@ export interface CompanyData {
   sheets: { code: string; entity: string; title: string; pages: string; group: string }[];
   periods: CompanyPeriod[];
   metrics: CompanyMetric[];
-  facts: [number, number, number, number | null, (number | null)?, number?][]; urls?: string[]; // metricIdx, periodIdx, value, pdf page
+  facts: [number, number, number, number | null, (number | null)?, number?][]; urls?: string[];
+  /** figures a later report printed differently: [sheet, standard, line, period type, period end, first reported, page, url index, last printed, page, url index, end of the reprinting report] */
+  restated?: [string, string, string, string, string, number, number | null, number | null, number, number | null, number | null, string][]; // metricIdx, periodIdx, value, pdf page
   stats: Record<string, unknown>;
 }
 
