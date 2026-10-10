@@ -1,8 +1,9 @@
+import { foxPeers } from '../lib/foxchart';
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
-import { CHART_FONT, chartBase, palette } from '../lib/theme';
+import { palette } from '../lib/theme';
 import { nf, pct, sn } from '../lib/format';
 import type { Market, MetricKey, Win } from '../lib/market';
 import { useMarket } from '../lib/useData';
@@ -55,50 +56,28 @@ function Deck({ m }: { m: Market }) {
   const hasFlows = tab !== 'fam:insurance' && tab !== 'all';
   const ytdBase = decs[decs.length - 1];
 
-  const base = () => {
-    const b = chartBase();
-    return { b, common: { animationDuration: 650, animationEasing: 'cubicOut' as const, textStyle: { fontFamily: CHART_FONT, color: b.fg },
-      tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' as const }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } } } };
-  };
-  const xAxis = (b: ReturnType<typeof chartBase>, extra: (g: number) => string | null, wide = false) => { const rot = window.innerWidth < 760 || (!wide && names.length > 7); return {
-    type: 'category' as const, data: [...names.map(short), 'סך השוק'], axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } },
-    axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, hideOverlap: false, rotate: rot ? 50 : 0,  // half-width charts cannot fit thirteen names flat
-      formatter: (v: string, i: number) => { const e = extra(i < groups.length ? groups[i] : -1); return e ? (rot ? `${v}  \u200E${e}` : `${v}\n{${e.startsWith('+') ? 'u' : 'd'}|\u200E${e}}`) : v; },
-      rich: { u: { color: b.up, fontSize: 10.5, padding: [3, 0, 0, 0] }, d: { color: b.down, fontSize: 10.5, padding: [3, 0, 0, 0] } } },
-  }; };
-  const tone = (g: number, i: number, k: number, pal: string[], b: ReturnType<typeof chartBase>) => (g >= 0 && m.d.groups[g] === lead ? [0.45, 0.65, 0.85, 1][4 - pts.length + k] : 1) && (i >= 0 ? (g >= 0 && m.d.groups[g] === lead ? b.accent : pal[7]) : pal[7]);
-  const opacity = (k: number) => [0.4, 0.6, 0.8, 1][4 - pts.length + k];
-
+  // the companies of the deck, the one in focus, and (where it adds up) the market as a last column
+  const leadAt = groups.findIndex((g) => m.d.groups[g] === lead);
+  const strength = (k: number) => [0.4, 0.6, 0.8, 1][4 - pts.length + k];
   const trend = (key: MetricKey, dec: number, growth: boolean) => () => {
-    const { b, common } = base(), pal = palette();
     const val = (i: number, g: number) => { const v = m.value(key, i, 'm', tab, g); return v == null ? null : +v.toFixed(dec + 1); };
     const all = [...groups, -1];
-    return { ...common, grid: { left: 4, right: 4, top: 26, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-      xAxis: xAxis(b, (g) => { if (!growth || ytdBase == null) return null; const a = m.cell(ytdBase, tab, g).a, c = m.cell(pi, tab, g).a; return a > 0 ? `${sn((c / a - 1) * 100, 1)}%` : null; }, growth),
-      yAxis: [{ type: 'value', show: false }, { type: 'value', show: false }],
-      series: pts.map((i, k) => ({ name: plab(i), type: 'bar', barGap: '8%', barCategoryGap: '18%', yAxisIndex: 0,
-        data: all.map((g) => (g === -1 && key === 'assets' ? null : { value: val(i, g), itemStyle: { color: tone(g, i, k, pal, b), opacity: opacity(k), borderRadius: [2, 2, 0, 0] } })),
-        label: { show: k === pts.length - 1 && window.innerWidth >= 760, position: 'top', color: b.fg, fontSize: 10.5, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, dec)) }, itemStyle: { color: pal[7], opacity: opacity(k) } })),
-    };
+    const sub = !growth || ytdBase == null ? undefined : all.map((g) => { const a = m.cell(ytdBase, tab, g).a, c = m.cell(pi, tab, g).a; return a > 0 ? `${sn((c / a - 1) * 100, 1)}%` : null; });
+    return foxPeers({ cats: [...names.map(short), 'סך השוק'], sub, lead: leadAt, dec, pct: key !== 'assets',
+      series: pts.map((i, k) => ({ name: plab(i), strength: strength(k), data: all.map((g) => (g === -1 && key === 'assets' ? null : val(i, g))) })) });
   };
   const mix = () => {
-    const { b, common } = base(), pal = palette();
+    const pal = palette();
     const fams: [string, string, number][] = [['fam:pension', 'פנסיה', 4], ['fam:gemel', 'גמל', 7], ['fam:insurance', 'ביטוח: מנהלים וחיסכון', 0]];
-    return { ...common, grid: { left: 4, right: 4, top: 26, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-      tooltip: { ...common.tooltip, valueFormatter: (v: number) => `${nf(v, 0)}%` }, xAxis: xAxis(b, (g) => { const t = m.cell(pi, 'all', g).a; return t ? `+${nf(t / 1000, 0)}` : null; }),
-      yAxis: { type: 'value', max: 100, show: false },
-      series: fams.map(([s, name, c]) => ({ name, type: 'bar', stack: 'a', barCategoryGap: '30%', itemStyle: { color: pal[c], opacity: 0.9 },
-        data: [...groups, -1].map((g) => { const t = m.cell(pi, 'all', g).a; return t ? +(m.cell(pi, s, g).a / t * 100).toFixed(1) : null; }),
-        label: { show: window.innerWidth >= 760, color: '#fff', fontSize: 10, formatter: (p: { value: number }) => (p.value >= 9 ? `${nf(p.value, 0)}%` : '') } })) };
+    const all = [...groups, -1];
+    return foxPeers({ cats: [...names.map(short), 'סך השוק'], sub: all.map((g) => { const t = m.cell(pi, 'all', g).a; return t ? `+${nf(t / 1000, 0)}` : null; }), stack: true, pct: true, max: 100, dec: 0,
+      series: fams.map(([s, name, c]) => ({ name, color: pal[c], data: all.map((g) => { const t = m.cell(pi, 'all', g).a; return t ? +(m.cell(pi, s, g).a / t * 100).toFixed(1) : null; }) })) });
   };
   const flow = (key: MetricKey, wins: [Win, number, string][], dec = 1) => () => {
-    const { b, common } = base(), pal = palette();
-    return { ...common, grid: { left: 4, right: 4, top: 26, bottom: 4, containLabel: true }, legend: { top: 0, textStyle: { color: b.mu, fontSize: 11 }, itemWidth: 10, itemHeight: 10, icon: 'roundRect' },
-      xAxis: { ...xAxis(b, () => null), data: names.map(short) }, yAxis: { type: 'value', axisLabel: { color: b.mu, fontSize: 10, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
-      series: wins.map(([w, i, name], k) => ({ name, type: 'bar', barGap: '8%',
-        data: groups.map((g) => { const v = i >= 0 ? m.value(key, i, w, tab, g) : null; return v == null ? null : { value: +v.toFixed(dec + 1), itemStyle: { color: m.d.groups[g] === lead ? b.accent : v < 0 ? b.down : pal[k === wins.length - 1 ? 1 : 7], opacity: k === wins.length - 1 ? 1 : 0.55, borderRadius: v < 0 ? [0, 0, 2, 2] : [2, 2, 0, 0] } }; }),
-        itemStyle: { color: pal[k === wins.length - 1 ? 1 : 7], opacity: k === wins.length - 1 ? 1 : 0.55 },
-        label: { show: k === wins.length - 1 && window.innerWidth >= 760, position: 'top', color: b.fg, fontSize: 10.5, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, dec)) } })) };
+    const pal = palette();
+    return foxPeers({ cats: names.map(short), lead: leadAt, dec, axis: true, signed: true, pct: key === 'rate',
+      series: wins.map(([w, i, name], k) => ({ name, color: pal[k === wins.length - 1 ? 1 : 7], strength: k === wins.length - 1 ? 1 : 0.55,
+        data: groups.map((g) => { const v = i >= 0 ? m.value(key, i, w, tab, g) : null; return v == null ? null : +v.toFixed(dec + 1); }) })) });
   };
   const deps = [pi, tab, lead, n, m];
   const qLabel = `Q${mo / 3 || ''}`.replace('Q0', '') || 'רבעון';

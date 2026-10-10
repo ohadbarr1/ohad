@@ -1,5 +1,5 @@
 import type { EChartsCoreOption } from 'echarts/core';
-import { CHART_FONT, chartBase } from './theme';
+import { CHART_FONT, chartBase, palette } from './theme';
 import { nf } from './format';
 
 /* One chart engine for the site.
@@ -126,3 +126,71 @@ export function polish(option: EChartsCoreOption): EChartsCoreOption {
   });
   return option;
 }
+
+/* ---------- peers: one group of bars per company ---------- */
+export interface PeerSeries { name: string; data: (number | null)[]; color?: string; /** 0..1, earlier periods drawn lighter */ strength?: number }
+export interface PeerSpec {
+  cats: string[];
+  /** a short figure under each name (a growth rate, a total); a leading + or − sets its colour */
+  sub?: (string | null)[];
+  /** index of the company in focus: its bars take the accent colour */
+  lead?: number;
+  series: PeerSeries[];
+  dec?: number;
+  pct?: boolean;
+  /** stacked shares (a mix) instead of side-by-side bars */
+  stack?: boolean;
+  /** draw the value axis; without it the last series carries value labels */
+  axis?: boolean;
+  /** negative bars in the "down" colour */
+  signed?: boolean;
+  max?: number;
+}
+export function foxPeers(spec: PeerSpec): EChartsCoreOption {
+  const b = chartBase(), narrow = typeof window !== 'undefined' && window.innerWidth < 760;
+  const rot = spec.cats.length > 8, dec = spec.dec ?? 1, last = spec.series.length - 1;
+  const neutral = cssNeutral();
+  const text = (v: number | null) => (v == null ? '–' : `${fmtNum(v, dec)}${spec.pct ? '%' : ''}`);
+  if (narrow) {
+    // a phone cannot carry thirteen rotated names: companies run down the page, one bar each (the latest period), the figure at the end of the bar
+    const shown = spec.stack ? spec.series : spec.series.slice(-1);
+    return {
+      animationDuration: 650, animationEasing: 'cubicOut', textStyle: { fontFamily: CHART_FONT, color: b.fg },
+      grid: { left: 4, right: spec.stack ? 8 : 44, top: spec.stack ? 30 : 6, bottom: 2, containLabel: true },
+      legend: spec.stack ? { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11.5 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' } : undefined,
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: text },
+      yAxis: { type: 'category', inverse: true, data: spec.cats, axisTick: { show: false }, axisLine: { show: false },
+        axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, formatter: (v: string, i: number) => { const e = spec.sub?.[i]; return e ? `${v} {${e.startsWith('−') || e.startsWith('-') ? 'd' : 'u'}|${LRM}${e}}` : v; },
+          rich: { u: { color: b.up, fontSize: 10.5, padding: [0, 6, 0, 6] }, d: { color: b.down, fontSize: 10.5, padding: [0, 6, 0, 6] } } } },
+      xAxis: { type: 'value', show: false, max: spec.max },
+      series: shown.map((s) => ({
+        name: s.name, type: 'bar', stack: spec.stack ? 'mix' : undefined, barCategoryGap: '26%', itemStyle: { color: s.color ?? neutral },
+        data: s.data.map((v, i) => (v == null ? null : { value: v, itemStyle: { color: spec.stack ? s.color ?? neutral : i === spec.lead ? b.accent : spec.signed && v < 0 ? b.down : s.color ?? neutral, borderRadius: spec.stack ? 0 : 2 } })),
+        label: spec.stack ? { show: true, color: '#fff', fontSize: 10, formatter: (p: { value: number }) => (p.value >= 12 ? `${nf(p.value, 0)}%` : '') }
+          : { show: true, position: 'right', color: b.fg, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : text(p.value)) },
+      })),
+    };
+  }
+  return {
+    animationDuration: 650, animationEasing: 'cubicOut', textStyle: { fontFamily: CHART_FONT, color: b.fg },
+    grid: { left: 4, right: 4, top: spec.series.length > 1 ? 30 : 12, bottom: 4, containLabel: true },
+    legend: spec.series.length > 1 ? { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11.5 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' } : undefined,
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: text },
+    xAxis: { type: 'category', data: spec.cats, axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } },
+      axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, hideOverlap: false, rotate: rot ? 50 : 0,
+        formatter: (v: string, i: number) => { const e = spec.sub?.[i]; return e ? (rot ? `${v}  ${LRM}${e}` : `${v}\n{${e.startsWith('−') || e.startsWith('-') ? 'd' : 'u'}|${LRM}${e}}`) : v; },
+        rich: { u: { color: b.up, fontSize: 10.5, padding: [3, 0, 0, 0] }, d: { color: b.down, fontSize: 10.5, padding: [3, 0, 0, 0] } } } },
+    yAxis: { type: 'value', show: !!spec.axis, max: spec.max, axisLabel: { color: b.mu, fontSize: 10.5, formatter: (v: number) => `${fmtNum(v, 0)}${spec.pct ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
+    series: spec.series.map((s, k) => {
+      const base = s.color ?? neutral, op = s.strength ?? 1;
+      return {
+        name: s.name, type: 'bar', stack: spec.stack ? 'mix' : undefined, barGap: '8%', barCategoryGap: spec.stack ? '30%' : '18%', itemStyle: { color: base, opacity: spec.stack ? 0.92 : op },
+        data: s.data.map((v, i) => (v == null ? null : { value: v, itemStyle: { color: spec.stack ? base : i === spec.lead ? b.accent : spec.signed && v < 0 ? b.down : base, opacity: spec.stack ? 0.92 : op, borderRadius: spec.stack ? 0 : v < 0 ? [0, 0, 2, 2] : [2, 2, 0, 0] } })),
+        label: spec.stack
+          ? { show: !narrow, color: '#fff', fontSize: 10, formatter: (p: { value: number }) => (p.value >= 9 ? `${nf(p.value, 0)}%` : '') }
+          : { show: k === last && !narrow, position: 'top', color: b.fg, fontSize: 10.5, formatter: (p: { value: number | null }) => (p.value == null ? '' : fmtNum(p.value, dec)) },
+      };
+    }),
+  };
+}
+function cssNeutral(): string { return palette()[7]; }
