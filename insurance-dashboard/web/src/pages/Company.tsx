@@ -212,15 +212,19 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     const vals = cols.map((pi) => { const v = cell(mi, pi); return v == null ? null : v * sign; });
     // growth of the row itself, as printed: against the same period a year earlier, or against the previous column
     const g = mode === 'value' ? growth[mi] : undefined;
-    const gvals = !g ? null : cols.map((pi, ci) => { const v = val(mi, pi), pp = g === 'yoy' ? prior(pi) : ci > 0 ? cols[ci - 1] : -1, pv = pp >= 0 ? val(mi, pp) : null; return v != null && pv ? ((v - pv) / Math.abs(pv)) * 100 : null; });
+    // a rate against a base near zero says nothing: such points are left out, and the rest is held within ±300%
+    const mags = cols.map((pi) => val(mi, pi)).filter((x): x is number => x != null).map(Math.abs).sort((a, b) => a - b), floor = (mags[Math.floor(mags.length / 2)] ?? 0) * 0.1;
+    const gvals = !g ? null : cols.map((pi, ci) => { const v = val(mi, pi), pp = g === 'yoy' ? prior(pi) : ci > 0 ? cols[ci - 1] : -1, pv = pp >= 0 ? val(mi, pp) : null; if (v == null || !pv || Math.abs(pv) < floor) return null; return Math.max(-300, Math.min(300, ((v - pv) / Math.abs(pv)) * 100)); });
     const first = vals.findIndex((v) => v != null), lastI = vals.length - 1 - [...vals].reverse().findIndex((v) => v != null);
     let total: number | null = null, cagr: number | null = null;
-    if (mode === 'value' && first >= 0 && lastI > first && vals[first]) {
+    // change and CAGR are stated only between two positive figures; from a loss or to a loss they have no meaning
+    if (mode === 'value' && first >= 0 && lastI > first && vals[first]! > 0 && vals[lastI]! > 0) {
       total = (vals[lastI]! / vals[first]! - 1) * 100;
       const yrs = (Date.parse(d.periods[cols[lastI]].end) - Date.parse(d.periods[cols[first]].end)) / (365.25 * 864e5);
       if (yrs >= 1 && vals[first]! > 0 && vals[lastI]! > 0) cagr = (Math.pow(vals[lastI]! / vals[first]!, 1 / yrs) - 1) * 100;
     }
-    return { mi, m, k, vals, g, gvals, total, cagr, name: m.dim ? `${m.label.replace(/\s+\(.*?\)\s*$/, '')} · ${m.dim}` : m.label };
+    const olds = cols.map((pi) => !!store.byMetric.get(mi)?.get(pi)?.old && !hideOld);
+    return { mi, m, k, vals, g, gvals, olds, total, cagr, name: m.dim ? `${m.label.replace(/\s+\(.*?\)\s*$/, '')} · ${m.dim}` : m.label };
   });
 
   const pal = palette();
@@ -274,18 +278,23 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
               const out: Record<string, unknown>[] = [];
               series.forEach((s) => {
                 const t = kind[s.mi] ?? (isPct(s.m.unit) ? 'line' : 'bar'), color = pal[s.k % pal.length], pct = isPct(s.m.unit);
-                const data = s.vals.slice(lo, hi).map((v) => (v == null ? null : +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3)));
-                out.push({ name: s.name, type: t, data, yAxisIndex: pct ? pctAxis : 0, stack: stack && t === 'bar' && !pct ? 'total' : undefined, barMaxWidth: 46, symbolSize: 6, itemStyle: { color }, lineStyle: { color, width: 2.5 },
-                  label: { show: !stack && series.length <= 2 && xs.length <= 14, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, mode === 'yoy' || pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1)) } });
-                if (s.gvals) out.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, type: 'line', data: s.gvals.slice(lo, hi).map((v) => (v == null ? null : +v.toFixed(2))), yAxisIndex: pctAxis, symbolSize: 5, connectNulls: false, itemStyle: { color }, lineStyle: { color, width: 2, type: 'dashed' }, z: 5 });
+                const dec = mode === 'yoy' || pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1;
+                const data = s.vals.slice(lo, hi).map((v, i) => (v == null ? null : { value: +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3), itemStyle: s.olds[lo + i] ? { opacity: 0.5 } : undefined }));
+                out.push({ name: s.name, type: t, data, yAxisIndex: pct ? pctAxis : 0, stack: stack && t === 'bar' && !pct && !s.m.total ? 'total' : undefined, tooltip: { valueFormatter: (v: number | null) => (v == null ? '–' : `\u200E${nf(v, dec)}${mode === 'yoy' || pct ? '%' : ''}`) }, barMaxWidth: 46, symbolSize: 6, itemStyle: { color }, lineStyle: { color, width: 2.5 },
+                  label: { show: !stack && series.length <= 2 && xs.length <= 14, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, dec)) } });
+                if (s.gvals) out.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, type: 'line', data: s.gvals.slice(lo, hi).map((v) => (v == null ? null : +v.toFixed(2))), yAxisIndex: pctAxis, symbolSize: 5, connectNulls: false, tooltip: { valueFormatter: (v: number | null) => (v == null ? '–' : `\u200E${Math.abs(v) >= 300 ? (v > 0 ? 'מעל ' : 'מתחת ל-') : ''}${nf(v, 1)}%`) }, itemStyle: { color }, lineStyle: { color, width: 2, type: 'dashed' }, z: 5 });
               });
+              // the accounting-standard break: a line before the first IFRS 17 column, when the plotted rows carry IFRS 4 values
+              const brk = series.some((x) => x.olds.some(Boolean)) ? xs.findIndex((_, i) => !series.some((x) => x.olds[lo + i])) : -1;
+              if (brk > 0 && out[0]) out[0].markLine = { silent: true, symbol: 'none', lineStyle: { color: b.mu, type: 'dashed', width: 1 }, label: { formatter: 'IFRS 17', color: b.mu, fontSize: 11, position: 'insideEndTop' }, data: [{ xAxis: brk - 0.5 }] };
+              const unit = mode === 'yoy' || !hasAmt ? '%' : SCALES.find((x) => x.id === scale)!.label;
               return {
-                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: second ? 56 : 14, top: 18, bottom: xs.length > 14 ? 44 : 30 },
+                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: second ? 56 : 14, top: 34, bottom: xs.length > 14 ? 44 : 30 },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
                 xAxis: { type: 'category', data: xs.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12, rotate: xs.length > 14 ? 45 : 0 } },
                 yAxis: [
-                  { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}${!hasAmt && mode === 'value' ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
-                  ...(second ? [{ type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}%` }, splitLine: { show: false } }] : []),
+                  { type: 'value', name: unit, nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${nf(v, 0)}${!hasAmt && mode === 'value' ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+                  ...(second ? [{ type: 'value', name: '%', nameTextStyle: { color: b.mu, fontSize: 11 }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}%` }, splitLine: { show: false } }] : []),
                 ],
                 series: out,
               };

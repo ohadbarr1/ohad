@@ -124,8 +124,8 @@ export function CompanyOverview() {
   const { entry, store, market, storeError } = useCtx();
   const price = useCompanyPrice(entry.id, entry.has_price);
   const docs = useCompanyDocs(entry.id, entry.docs > 0);
-  if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
   const { kpis } = useKpis();
+  if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
   const k = kpis?.get(entry.id);
   const kc = k ? kpiCards(k) : [];
   const fin = store ? financialCards(store).filter((c) => c.tag === 'IFRS 17') : [];

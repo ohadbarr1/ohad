@@ -506,3 +506,11 @@ tr.sec.std td { background: var(--panel2); color: var(--accent); font-size: 13px
 .stdtabs button small { font-size: 11.5px; }
 .stdtabs button[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent), 0 6px 18px var(--accent-soft); }
 @media (max-width: 760px) { .stdtabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .stdtabs button { flex: none; } }
+
+/* phone: a statement scrolls with the page, never inside its own box; long labels hold to two lines */
+@media (max-width: 760px) {
+  .scroll { max-height: none !important; }
+  td.lbl, .panel table td:first-child { max-width: 56vw; }
+  td.lbl .mrow > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}
+@media (hover: none) { html { scroll-behavior: auto; } body::before { animation: none; } .page > .panel, .page > section, .page > .grid2 > *, .page > .grid21 > *, .page > .grid12 > * { animation: none; } }
