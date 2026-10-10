@@ -108,7 +108,27 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   }, [sv]);
   const curType = types.includes(type) ? type : types[0] ?? '';
 
-  const allCols = useMemo(() => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType) : []), [sv, d, curType]);
+  // A statement that changed accounting standard is read one structure at a time: IFRS 17 as reported from 2024, IFRS 4 as reported until 2024,
+  // or only the lines that exist under both and so run through the break.
+  const [stdTab, setStdTab] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? '17');
+  const hasStd = !!sv?.rows.some((r) => r.m.std);
+  const hideOld = hasStd && stdTab === '17';
+  const seen = (f: { old?: boolean } | undefined): boolean => !!f && !(hideOld && f.old);
+  const val = (mi: number | null, pi: number): number | null => { if (mi == null || pi < 0) return null; const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null; };
+  const tabRows = useMemo(() => {
+    const by: Record<'17' | '4' | 'c', Set<number>> = { 17: new Set(), 4: new Set(), c: new Set() };
+    let seg = -1;
+    for (const r of sv?.rows ?? []) {
+      if (r.m.std) { seg++; continue; }
+      if (r.m.header) continue;
+      if (seg === 0) { by['17'].add(r.idx); if ([...r.values.values()].some((f) => f.old)) by.c.add(r.idx); }
+      if (seg === 1) by['4'].add(r.idx);
+    }
+    return by;
+  }, [sv]);
+  const inTab = (idx: number) => !hasStd || tabRows[stdTab].has(idx);
+  const colsOf = (tab: '17' | '4' | 'c') => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType && sv.rows.some((r) => tabRows[tab].has(r.idx) && (() => { const f = r.values.get(pi); return !!f && !(tab === '17' && f.old); })())) : []);
+  const allCols = useMemo(() => (!sv ? [] : hasStd ? colsOf(stdTab) : sv.periodIdx.filter((pi) => d.periods[pi].type === curType)), [sv, d, curType, hasStd, stdTab, tabRows]);  // eslint-disable-line react-hooks/exhaustive-deps
   // the period window: kept as dates, so it survives a change of table or of period type
   const [range, setRange] = useState<[string | null, string | null]>([sp.get('f'), sp.get('e')]);
   const cols = useMemo(() => allCols.filter((pi) => { const e = d.periods[pi].end; return (!range[0] || e >= range[0]) && (!range[1] || e <= range[1]); }), [allCols, d, range]);
@@ -126,15 +146,17 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     // a caption is shown only when a row follows it; the accounting-standard band survives the captions under it
     let pending: typeof sv.rows = [];
     for (const r of sv.rows) {
-      if (r.m.header) { pending = r.m.std ? [r] : [...pending.filter((x) => x.m.std), r]; continue; }
+      if (r.m.std) { pending = []; continue; }  // the standard is chosen by the tabs above the table
+      if (r.m.header) { pending = [r]; continue; }
+      if (!inTab(r.idx)) continue;
       if (dim !== 'all' && (r.m.dim ?? '') !== dim) continue;
       if (needle && !`${r.m.label} ${r.m.dim ?? ''}`.toLowerCase().includes(needle)) continue;
-      if (!cols.some((pi) => r.values.has(pi))) continue;
+      if (!cols.some((pi) => seen(r.values.get(pi)))) continue;
       out.push(...pending); pending = [];
       out.push(r);
     }
     return out;
-  }, [sv, dim, cols, needle]);
+  }, [sv, dim, cols, needle, stdTab, hasStd]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // reset the selection when the sheet changes, unless it came from a deep link
   useEffect(() => {
@@ -154,16 +176,17 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     if (oldestFirst) q.r = '1';
     if (showChart) q.g = '1';
     if (stack) q.k = '1';
+    if (hasStd && stdTab !== '17') q.s = stdTab;
     if (range[0]) q.f = range[0];
     if (range[1]) q.e = range[1];
     setSp(q, { replace: true });
-  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, setSp]);
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, setSp]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
   const cell = (mi: number, pi: number): number | null => {
-    const m = d.metrics[mi], v = store.val(mi, pi);
+    const m = d.metrics[mi], v = val(mi, pi);
     if (mode === 'value') return v;
-    const pp = prior(pi), pv = pp >= 0 ? store.val(mi, pp) : null;
+    const pp = prior(pi), pv = pp >= 0 ? val(mi, pp) : null;
     return v != null && pv ? (v / pv - 1) * 100 : null;
     void m;
   };
@@ -187,7 +210,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     const vals = cols.map((pi) => { const v = cell(mi, pi); return v == null ? null : v * sign; });
     // growth of the row itself, as printed: against the same period a year earlier, or against the previous column
     const g = mode === 'value' ? growth[mi] : undefined;
-    const gvals = !g ? null : cols.map((pi, ci) => { const v = store.val(mi, pi), pp = g === 'yoy' ? prior(pi) : ci > 0 ? cols[ci - 1] : -1, pv = pp >= 0 ? store.val(mi, pp) : null; return v != null && pv ? ((v - pv) / Math.abs(pv)) * 100 : null; });
+    const gvals = !g ? null : cols.map((pi, ci) => { const v = val(mi, pi), pp = g === 'yoy' ? prior(pi) : ci > 0 ? cols[ci - 1] : -1, pv = pp >= 0 ? val(mi, pp) : null; return v != null && pv ? ((v - pv) / Math.abs(pv)) * 100 : null; });
     const first = vals.findIndex((v) => v != null), lastI = vals.length - 1 - [...vals].reverse().findIndex((v) => v != null);
     let total: number | null = null, cagr: number | null = null;
     if (mode === 'value' && first >= 0 && lastI > first && vals[first]) {
@@ -292,7 +315,14 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
       )}
 
       {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו · אפור = לפי IFRS 4 כפי שדווח · שורות IFRS 17 מ-Q1\'24' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      {hasStd && <div className="stdtabs" role="tablist" aria-label="תקן חשבונאי">
+        {([['17', 'IFRS 17', 'כפי שדווח, לרבות מספרי השוואה שהוצגו מחדש'], ['4', 'IFRS 4', 'כפי שדווח במקור'], ['c', 'שורות רציפות', 'שורות שקיימות בשני התקנים; עד 2023 לפי IFRS 4']] as const).map(([k, name, note]) => {
+          const cs = colsOf(k);
+          if (!cs.length) return null;
+          return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{store.plabel(cs[0])} עד {store.plabel(cs[cs.length - 1])}</span><small>{note}</small></button>;
+        })}
+      </div>}
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו · אפור = לפי IFRS 4 כפי שדווח' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
@@ -300,7 +330,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
               {rows.map((r) => {
                 if (r.m.header) return <tr key={r.idx} className={`sec${r.m.std ? ' std' : ''}`}><td colSpan={colsDesc.length + 2}>{r.m.label}</td></tr>;
                 const on = sel.includes(r.idx), k = sel.indexOf(r.idx);
-                const src = colsDesc.map((pi) => r.values.get(pi)).find((x) => x?.page != null);
+                const src = colsDesc.map((pi) => r.values.get(pi)).find((x) => seen(x) && x?.page != null);
                 const page = src?.page ?? null;
                 const link = open(page, src?.u);
                 return (
@@ -311,7 +341,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                       <span>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       <button type="button" className="info" onClick={() => setExplain(explain === r.idx ? null : r.idx)} aria-label="הסבר">i</button>
                     </div></td>
-                    {colsDesc.map((pi) => { const f = r.values.get(pi), href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.der ? 'מחושב: FY פחות 9M. מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
+                    {colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.der ? 'מחושב: FY פחות 9M. מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td>
                   </tr>
                 );

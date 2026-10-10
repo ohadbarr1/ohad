@@ -495,3 +495,14 @@ tr.sec.std td { background: var(--panel2); color: var(--accent); font-size: 13px
   .controls .seg::-webkit-scrollbar { display: none; }
   .range2 { min-width: min(320px, 82vw); }
 }
+
+/* a statement that changed accounting standard: one structure at a time, each tab says which periods it holds */
+.stdtabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.stdtabs button { display: grid; gap: 1px; text-align: start; padding: 10px 16px; border-radius: 16px; border: 1px solid var(--line-soft); background: var(--panel); color: var(--muted); cursor: pointer; transition: border-color var(--fast), box-shadow var(--mid), transform var(--fast); }
+.stdtabs button:hover { border-color: var(--accent-line); }
+.stdtabs button:active { transform: scale(0.98); }
+.stdtabs button b { color: var(--fg); font-size: 14.5px; }
+.stdtabs button .num { font-size: 13px; font-weight: 600; color: var(--fg); }
+.stdtabs button small { font-size: 11.5px; }
+.stdtabs button[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent), 0 6px 18px var(--accent-soft); }
+@media (max-width: 760px) { .stdtabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .stdtabs button { flex: none; } }
