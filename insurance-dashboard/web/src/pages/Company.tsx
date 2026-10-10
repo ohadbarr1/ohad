@@ -108,7 +108,15 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   }, [sv]);
   const curType = types.includes(type) ? type : types[0] ?? '';
 
-  const cols = useMemo(() => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType) : []), [sv, d, curType]);
+  const allCols = useMemo(() => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType) : []), [sv, d, curType]);
+  // the period window: kept as dates, so it survives a change of table or of period type
+  const [range, setRange] = useState<[string | null, string | null]>([sp.get('f'), sp.get('e')]);
+  const cols = useMemo(() => allCols.filter((pi) => { const e = d.periods[pi].end; return (!range[0] || e >= range[0]) && (!range[1] || e <= range[1]); }), [allCols, d, range]);
+  const nAll = allCols.length;
+  const loI = Math.max(0, range[0] ? allCols.findIndex((pi) => d.periods[pi].end >= range[0]!) : 0);
+  const hiI = range[1] ? Math.max(loI, allCols.reduce((a, pi, i) => (d.periods[pi].end <= range[1]! ? i : a), 0)) : nAll - 1;
+  const setLo = (i: number) => setRange(([, e]) => [i <= 0 ? null : d.periods[allCols[Math.min(i, hiI)]].end, e]);
+  const setHi = (i: number) => setRange(([f]) => [f, i >= nAll - 1 ? null : d.periods[allCols[Math.max(i, loI)]].end]);
   const colsDesc = useMemo(() => (oldestFirst ? cols : [...cols].reverse()), [cols, oldestFirst]);
 
   const needle = q.trim().toLowerCase();
@@ -146,8 +154,10 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     if (oldestFirst) q.r = '1';
     if (showChart) q.g = '1';
     if (stack) q.k = '1';
+    if (range[0]) q.f = range[0];
+    if (range[1]) q.e = range[1];
     setSp(q, { replace: true });
-  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, setSp]);
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, setSp]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
   const cell = (mi: number, pi: number): number | null => {
@@ -163,10 +173,11 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     return fmtCell(v, d.metrics[mi].unit, scale);
   };
 
+  const hasFull = entity === 'F' && d.sheets.some((s) => s.code === 'X.רווח_והפסד');
   // how far back a sheet goes, so the choice between the full latest statement and the long series is visible before opening it
   const span = (code: string): string => { const ps = store.sheet(code)?.periods ?? []; if (!ps.length) return ''; const ys = ps.map((x) => x.end.slice(0, 4)).sort(); return ys[0] === ys[ys.length - 1] ? ` · ${ys[0]}` : ` · ${ys[0]} עד ${ys[ys.length - 1]}`; };
   const longSheet = d.sheets.find((x) => x.entity === entity && x.code.startsWith('X.') && x.group === sv?.group) ?? d.sheets.find((x) => x.entity === entity && x.code.startsWith('X.'));
-  const sheets = useMemo(() => d.sheets.filter((s) => s.entity === entity).sort((a, b) => Number(b.code.startsWith('X.')) - Number(a.code.startsWith('X.'))), [d, entity]);
+  const sheets = useMemo(() => d.sheets.filter((s) => s.entity === entity && !(hasFull && (s.code.startsWith('X.תמצית') || /^F\.D[1235]_/.test(s.code)))).sort((a, b) => Number(b.code.startsWith('X.')) - Number(a.code.startsWith('X.'))), [d, entity, hasFull]);
   const curGroup = sheets.filter((x) => x.group === sv?.group);
   const optGroups = GROUP_ORDER.map((g) => ({ g, items: sheets.filter((s) => s.group === g) })).filter((x) => x.items.length);
 
@@ -210,6 +221,11 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
         <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש ← ישן'], ['old', 'ישן ← חדש']]} /></div>
         <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'מוצג' : 'הצגת גרף'}</button></div>
+        {nAll > 2 && <div className="field"><span>טווח תקופות: <b className="num">{store.plabel(allCols[loI])}</b> עד <b className="num">{store.plabel(allCols[hiI])}</b>{(range[0] || range[1]) && <button type="button" className="linkbtn" onClick={() => setRange([null, null])}>כל התקופות</button>}</span>
+          <div className="range2" style={{ ['--lo' as string]: `${(loI / (nAll - 1)) * 100}%`, ['--hi' as string]: `${(hiI / (nAll - 1)) * 100}%` }}>
+            <input type="range" min={0} max={nAll - 1} step={1} value={loI} onChange={(e) => setLo(Number(e.target.value))} aria-label="מתקופה" />
+            <input type="range" min={0} max={nAll - 1} step={1} value={hiI} onChange={(e) => setHi(Number(e.target.value))} aria-label="עד תקופה" />
+          </div></div>}
         <Field label="חיפוש שורה"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="רווח, פרמיות, CSM" /></Field>
         {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
       </section>

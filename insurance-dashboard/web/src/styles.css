@@ -478,3 +478,20 @@ a:hover > .i3d .i3d-shadow, .rail a.item.active .i3d-shadow { transform: scale(0
 tr.tot td { font-weight: 700; border-top: 1px solid var(--line); }
 tr.sec.std td { background: var(--panel2); color: var(--accent); font-size: 13px; padding-block: 10px; letter-spacing: 0.01em; }
 .num.old { color: var(--muted); }
+
+/* period window: two thumbs on one track. The track runs left to right in time, like every chart on the site */
+.range2 { position: relative; height: 34px; min-width: 240px; direction: ltr; }
+.range2::before { content: ""; position: absolute; inset-inline: 0; top: 15px; height: 4px; border-radius: 4px; background: linear-gradient(to right, var(--line) var(--lo), var(--accent) var(--lo) var(--hi), var(--line) var(--hi)); }
+.range2 input[type="range"] { position: absolute; inset: 0; width: 100%; height: 34px; margin: 0; padding: 0; background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none; border: 0; box-shadow: none; min-width: 0; }
+.range2 input[type="range"]::-webkit-slider-runnable-track { background: transparent; height: 34px; }
+.range2 input[type="range"]::-moz-range-track { background: transparent; }
+.range2 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; pointer-events: auto; width: 26px; height: 26px; margin-top: 4px; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); box-shadow: 0 2px 8px rgb(0 0 0 / 0.18); cursor: grab; }
+.range2 input[type="range"]::-moz-range-thumb { pointer-events: auto; width: 22px; height: 22px; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); cursor: grab; }
+.linkbtn { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; margin-inline-start: 10px; font-size: inherit; text-decoration: underline; text-underline-offset: 3px; }
+/* phone: the report pickers stay on one line and scroll sideways, so the table starts higher */
+@media (max-width: 760px) {
+  .controls .field { max-width: 100%; }
+  .controls .seg, .controls .seg.wrap { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; border-radius: 999px; }
+  .controls .seg::-webkit-scrollbar { display: none; }
+  .range2 { min-width: min(320px, 82vw); }
+}
