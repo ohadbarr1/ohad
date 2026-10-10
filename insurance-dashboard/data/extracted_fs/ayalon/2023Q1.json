@@ -1,0 +1,35 @@
+{
+ "company": "ayalon",
+ "period": "2023Q1",
+ "standard": "IFRS 4",
+ "report_id_he": 1524080,
+ "doc": "he",
+ "unit": "NIS thousands",
+ "statements": [],
+ "not_found": [
+  {
+   "statement": "balance",
+   "pages": [
+    39,
+    40
+   ],
+   "reason": "text layer of the whole Q1 2023 PDF has corrupted digits (0<->2 and 1<->3 swapped, no digit 8 anywhere, 8 printed as 5); values cannot be copied or verified from text"
+  },
+  {
+   "statement": "income",
+   "pages": [
+    41
+   ],
+   "reason": "text layer of the whole Q1 2023 PDF has corrupted digits (0<->2 and 1<->3 swapped, no digit 8 anywhere, 8 printed as 5); values cannot be copied or verified from text"
+  },
+  {
+   "statement": "cashflow",
+   "pages": [
+    44,
+    45,
+    46
+   ],
+   "reason": "text layer of the whole Q1 2023 PDF has corrupted digits (0<->2 and 1<->3 swapped, no digit 8 anywhere, 8 printed as 5); values cannot be copied or verified from text"
+  }
+ ]
+}

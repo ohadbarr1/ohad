@@ -108,7 +108,7 @@ def norm(t):
     for a, b in (("מיסים", "מסים"), ("פיננסיים", "פיננסים"), ("לשנה", "לתקופה"), ("השנה", "התקופה"), ("למניה", ""), ("בשח", "")):
         t = t.replace(a, b)
     key = " ".join(sorted(w.lstrip("ה") for w in t.split() if len(w.lstrip("ה")) > 1 and w not in ("של", "ש", "ח", "בת", "בנות")))
-    return {"רווח": "לתקופה רווח", "נקי רווח": "לתקופה רווח"}.get(key, key)  # the bottom line is printed as "רווח", "רווח נקי" or "רווח לתקופה"
+    return {"רווח": "לתקופה רווח", "נקי רווח": "לתקופה רווח", "לתקופה נקי רווח": "לתקופה רווח", "בעלים חברה": "בעלי חברה מניות"}.get(key, key)  # the bottom line is printed as "רווח", "רווח נקי" or "רווח לתקופה"
 
 
 def statements(comp):
@@ -243,7 +243,7 @@ for sf in sorted((DATA / "series").glob("*.json")):
 
             (new, n17), (old, n4) = nth(o17, m17), nth(o4, m4)
             # the same name the same number of times in both statements; the bottom lines of the income statement by their first appearance
-            bottom = {norm(x) for x in ("רווח לתקופה", "בעלי המניות של החברה", "זכויות שאינן מקנות שליטה")} if stmt == "income" else set()
+            bottom = {norm(x) for x in ("רווח לתקופה", "בעלי המניות של החברה", "זכויות שאינן מקנות שליטה", "סך הכל הכנסות", "סך הכל הוצאות")} if stmt == "income" else set()
             new = {k: v for k, v in new.items() if n17[k[0]] == n4.get(k[0]) or (k[0] in bottom and k[1] == 1 and k in old)}
             for lab in new.keys() & old.keys():
                 have = c17.setdefault(new[lab], {})
