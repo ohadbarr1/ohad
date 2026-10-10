@@ -235,7 +235,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         </div>
       )}
 
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : entity === 'X' ? 'מיליוני ₪ · Q4 = FY פחות 9M · כל ערך מקושר לדוח שלו' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : entity === 'X' ? 'מיליוני ₪ · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
@@ -254,7 +254,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                       <span>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       <button type="button" className="info" onClick={() => setExplain(explain === r.idx ? null : r.idx)} aria-label="הסבר">i</button>
                     </div></td>
-                    {colsDesc.map((pi) => { const f = r.values.get(pi), href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`מקור: עמ׳ ${f?.page ?? ''}`}>{body}</a> : body}</td>; })}
+                    {colsDesc.map((pi) => { const f = r.values.get(pi), href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={f?.der ? `מחושב: FY פחות 9M. מקור ה-FY: עמ׳ ${f.page ?? ''}` : `מקור: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td>
                   </tr>
                 );

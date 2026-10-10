@@ -7856,7 +7856,7 @@
    "value_high": 2100
   },
   {
-   "metric": "aum_total",
+   "metric": "aum_managed_for_insureds_and_members",
    "segment": "group",
    "basis": "na",
    "window": "instant",
@@ -7869,7 +7869,7 @@
    "page_en": 21
   },
   {
-   "metric": "aum_total",
+   "metric": "aum_managed_for_insureds_and_members",
    "segment": "group",
    "basis": "na",
    "window": "instant",

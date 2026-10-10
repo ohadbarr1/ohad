@@ -31,7 +31,7 @@ export interface CompanyData {
   sheets: { code: string; entity: string; title: string; pages: string; group: string }[];
   periods: CompanyPeriod[];
   metrics: CompanyMetric[];
-  facts: [number, number, number, number | null, (number | null)?][]; urls?: string[]; // metricIdx, periodIdx, value, pdf page
+  facts: [number, number, number, number | null, (number | null)?, number?][]; urls?: string[]; // metricIdx, periodIdx, value, pdf page
   stats: Record<string, unknown>;
 }
 

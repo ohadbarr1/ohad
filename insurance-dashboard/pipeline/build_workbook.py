@@ -3,7 +3,7 @@
 Phoenix keeps the workbook built from its published spreadsheet (pipeline/extract_company_workbook.py); the lines extracted from
 the reports (web/public/data/series/<id>.json, 2021 onward, quarterly and annual) are added to it as further sheets.
 Every other company gets a workbook made of those extracted lines only. Each fact carries its own source file, because the
-figures come from many reports: facts are [metric, period, value, page, url index] and `urls` is the list they index.
+figures come from many reports: facts are [metric, period, value, page, url index, 1 when the value is derived (Q4 = FY less nine months)] and `urls` is the list they index.
 """
 import json
 import re
@@ -136,7 +136,7 @@ for sf in sorted((DATA / "series").glob("*.json")):
                 if u and u not in uidx:
                     uidx[u] = len(urls)
                     urls.append(u)
-                d["facts"].append([mi, period(per, flow), c["v"], c.get("pg"), uidx.get(u) if u else None])
+                d["facts"].append([mi, period(per, flow), c["v"], c.get("pg"), uidx.get(u) if u else None] + ([1] if c.get("der") else []))
     d["urls"] = urls
     live_f.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(comp, len(d["sheets"]), "sheets,", len(d["metrics"]), "lines,", len(d["facts"]), "facts,", len(d["periods"]), "periods")

@@ -4657,7 +4657,7 @@
    "note": "Q2 2024"
   },
   {
-   "metric": "aum_total",
+   "metric": "aum_managed_for_insureds_and_members",
    "segment": "group",
    "basis": "na",
    "window": "instant",
@@ -4669,7 +4669,7 @@
    "note": "Bar chart 'managed assets', NIS billion converted to NIS m; legend 30.06.24 then 30.06.25 per bar pair; totals 353/413 equal the sums of components. Excludes nostro."
   },
   {
-   "metric": "aum_total",
+   "metric": "aum_managed_for_insureds_and_members",
    "segment": "group",
    "basis": "na",
    "window": "instant",

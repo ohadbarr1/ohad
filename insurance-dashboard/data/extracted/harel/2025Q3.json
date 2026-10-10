@@ -4085,7 +4085,7 @@
    "note": "Restated comparative."
   },
   {
-   "metric": "aum_total",
+   "metric": "aum_managed_for_insureds_and_members",
    "segment": "group",
    "basis": "na",
    "window": "instant",
@@ -4097,7 +4097,7 @@
    "note": "Bar chart 'managed assets', NIS billion converted to NIS m; 30.09.24 listed first in each pair, 30.09.25 value confirmed by presentation p24 (435 / 211 / 83)."
   },
   {
-   "metric": "aum_total",
+   "metric": "aum_managed_for_insureds_and_members",
    "segment": "group",
    "basis": "na",
    "window": "instant",

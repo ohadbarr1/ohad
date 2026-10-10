@@ -484,7 +484,8 @@
    "doc": "he",
    "label": "הקבוצה מנהלת נכון למועד הדוח כ-426 מיליארד ש\"ח",
    "source": "text",
-   "note": "approx. NIS 426 billion as printed in the board report; kept in NIS billion as printed (not NIS millions); 'as of the report date'"
+   "note": "approx. NIS 426 billion as printed in the board report; kept in NIS billion as printed (not NIS millions); 'as of the report date'",
+   "unit": "NIS billion"
   },
   {
    "metric": "comprehensive_income_before_tax",

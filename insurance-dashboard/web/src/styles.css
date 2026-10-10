@@ -472,3 +472,4 @@ a:hover > .i3d .i3d-shadow, .rail a.item.active .i3d-shadow { transform: scale(0
 }
 .mast h1 { white-space: nowrap; }
 @media (max-width: 760px) { :root[data-theme="phoenix"] .mast { padding-bottom: 64px; } :root[data-theme="phoenix"] .mast h1 { font-size: clamp(52px, 17vw, 76px); } }
+.num.der { font-style: italic; color: var(--muted); }
