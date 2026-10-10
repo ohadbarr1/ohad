@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { IncChip } from '../components/ui';
 import { nf, pct } from '../lib/format';
-import { useIfrsData, useIfrsFacts } from '../lib/useData';
+import { useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
 import { periodName } from './CompanyIfrs';
@@ -14,7 +14,7 @@ const yearBack = (iso: string) => `${Number(iso.slice(0, 4)) - 1}${iso.slice(4)}
 export function CompanyTear({ id }: { id: string }) {
   const { data: d } = useIfrsData();
   const P = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort().reverse()[0] ?? '', [d, id]);
-  const facts = useIfrsFacts(P || null);
+  const facts = useIfrsFactsOf(id, P || null);
   const items = useMemo(() => {
     if (!P || !facts.data) return [];
     const F = facts.data.filter((f) => f.c === id && !f.tr && !f.model && !f.bk);

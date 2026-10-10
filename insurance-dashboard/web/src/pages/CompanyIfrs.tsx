@@ -5,7 +5,7 @@ import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { palette } from '../lib/theme';
 import { nf, byPeriodDesc, dateLabel } from '../lib/format';
-import { useIfrsData, useIfrsFacts } from '../lib/useData';
+import { useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BUCKET_HE, EFFECT_HE, METRIC_HE, SEGMENT_HE, TEXT_HE } from '../lib/labels';
 import { BASIS, METRICS, SEGS, Src, WF, WINS, endOf, startOf, val } from './IndustryIfrs';
@@ -50,7 +50,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
   const [period, setPeriod] = useState('');
   const P = periods.includes(period) ? period : periods[0] ?? '';
-  const facts = useIfrsFacts(P || null);
+  const facts = useIfrsFactsOf(id, P || null);
   const all = useMemo(() => (facts.data ?? []).filter((f) => f.c === id), [facts.data, id]);
   const [basis, setBasis] = useState('');
   const [win, setWin] = useState<'q' | 'ytd'>('q');

@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { nf, pct, byPeriodDesc } from '../lib/format';
-import { useIfrsCompany, useIfrsData, useIfrsFacts } from '../lib/useData';
+import { useIfrsCompany, useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
 import { he, isPct, periodName, segName } from './CompanyIfrs';
@@ -62,7 +62,7 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
   const [win, setWin] = useState<'q' | 'ytd'>('q');
   const P = periods.includes(period) ? period : periods[0] ?? '';
   const PP = P && periods.includes(prevPeriod(P)) ? prevPeriod(P) : null;
-  const cur = useIfrsFacts(P || null), prev = useIfrsFacts(PP);
+  const cur = useIfrsFactsOf(id, P || null), prev = useIfrsFactsOf(id, PP);
   const hist = useIfrsCompany(id, periods);
   const annual = P.endsWith('FY'), end = P ? endOf(P) : '', pend = P ? endOf(prevPeriod(P)) : '';
 

@@ -81,6 +81,9 @@ export function useKpis(): { kpis: Map<string, CompanyKpi> | null; asof: string 
 
 export const useSavingsEcon = () => useLoad<import('./types').SavingsEcon>('savings_econ.json');
 
+/** Extracted facts of one company in one report: the per-company slice, a fraction of the industry file. */
+export const useIfrsFactsOf = (id: string, period: string | null) => useLoad<IfrsFact[]>(period ? `ifrs/${id}/${period}.json` : null);
+
 /** Extracted facts of one company across several reports, keyed by period. Periods that fail to load are left out. */
 export function useIfrsCompany(id: string, periods: string[]): Map<string, IfrsFact[]> {
   const [all, setAll] = useState<Map<string, IfrsFact[]>>(new Map());
@@ -88,7 +91,7 @@ export function useIfrsCompany(id: string, periods: string[]): Map<string, IfrsF
   useEffect(() => {
     let live = true;
     setAll(new Map());
-    periods.forEach((p) => load<IfrsFact[]>(`ifrs_${p}.json`).then((fs) => live && setAll((cur) => new Map(cur).set(p, fs.filter((f) => f.c === id))), () => {}));
+    periods.forEach((p) => load<IfrsFact[]>(`ifrs/${id}/${p}.json`).then((fs) => live && setAll((cur) => new Map(cur).set(p, fs)), () => {}));
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, key]);

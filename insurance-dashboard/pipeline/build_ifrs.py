@@ -137,5 +137,9 @@ DATA = ROOT / "web" / "public" / "data"
 for period in sorted({f["period"] for f in files}):
     rows = [{k: v for k, v in r.items() if k != "p"} for r in out if r["p"] == period]
     (DATA / f"ifrs_{period}.json").write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    # one slice per company and report, so a company page does not download the whole industry
+    for comp in {r["c"] for r in rows}:
+        (DATA / "ifrs" / comp).mkdir(parents=True, exist_ok=True)
+        (DATA / "ifrs" / comp / f"{period}.json").write_text(json.dumps([r for r in rows if r["c"] == comp], ensure_ascii=False), encoding="utf-8")
 (DATA / "ifrs.json").write_text(json.dumps({"unit": "NIS millions", "files": files}, ensure_ascii=False), encoding="utf-8")
 print(len(out), "facts from", len(files), "filings;", sum(1 for x in files if x["url"]), "with a source link")
