@@ -176,6 +176,7 @@ def statements(comp):
     return out
 
 
+ROWS = []
 registry = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
 names = {c["id"]: c["name_he"] for c in (registry if isinstance(registry, list) else registry.get("companies", []))}
 for sf in sorted((DATA / "series").glob("*.json")):
@@ -281,5 +282,14 @@ for sf in sorted((DATA / "series").glob("*.json")):
                     urls.append(u)
                 d["facts"].append([mi, period(per, flow), c["v"] if pct else round(c["v"] * 1000, 3), c.get("pg"), uidx.get(u) if u else None] + ([1] if c.get("der") else []))
     d["urls"] = urls
+    # search index: every line of the sheets built from the reports, once per sheet and wording
+    seen = set()
+    for i, m in enumerate(d["metrics"]):
+        if not m["header"] and m["sheet"].startswith("X.") and (m["sheet"], m["label"], m.get("dim")) not in seen:
+            seen.add((m["sheet"], m["label"], m.get("dim")))
+            ROWS.append([comp, m["sheet"], m["label"] + (f" · {m['dim']}" if m.get("dim") else ""), i])
     live_f.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(comp, len(d["sheets"]), "sheets,", len(d["metrics"]), "lines,", len(d["facts"]), "facts,", len(d["periods"]), "periods")
+(DATA / "search").mkdir(exist_ok=True)
+(DATA / "search" / "rows.json").write_text(json.dumps(ROWS, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+print(len(ROWS), "statement lines indexed for search")

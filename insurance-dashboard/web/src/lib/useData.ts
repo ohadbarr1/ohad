@@ -16,7 +16,7 @@ export function load<T>(path: string): Promise<T> {
 
 export interface Loaded<T> { data: T | null; error: string | null }
 
-function useLoad<T>(path: string | null): Loaded<T> {
+export function useLoad<T>(path: string | null): Loaded<T> {
   const [state, set] = useState<Loaded<T>>({ data: null, error: null });
   useEffect(() => {
     if (!path) { set({ data: null, error: null }); return; }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCompanyData, useMarketData, useRegistry } from '../lib/useData';
+import { useLoad, useMarketData, useRegistry } from '../lib/useData';
 import { sheetName } from '../lib/company';
 
 interface Item { kind: 'חברה' | 'פונקציה' | 'קבוצה' | 'קופה' | 'שורה בדוח'; label: string; meta: string; to: string }
@@ -21,25 +21,17 @@ const FUNCS: { code: string; label: string; keys: string[]; to: (id: string) => 
 function useIndex(enabled: boolean): Item[] {
   const market = useMarketData();
   const reg = useRegistry();
-  const phoenix = useCompanyData('phoenix', enabled);
+  const rows = useLoad<[string, string, string, number][]>(enabled ? 'search/rows.json' : null);
   return useMemo(() => {
     if (!enabled) return [];
     const out: Item[] = [];
     reg.data?.forEach((c) => out.push({ kind: 'חברה', label: `${c.name_he} (${c.name_en})`, meta: c.has_financials ? 'דוחות כספיים + שוק' : 'נתוני שוק', to: `/company/${c.id}` }));
     market.data?.groups.forEach((g) => out.push({ kind: 'קבוצה', label: g, meta: 'פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון', to: `/market/group/${encodeURIComponent(g)}` }));
     market.data?.funds.forEach((f) => out.push({ kind: 'קופה', label: f.name, meta: f.grp, to: `/market/funds?q=${encodeURIComponent(f.name)}` }));
-    if (phoenix.data) {
-      const seen = new Set<string>();
-      phoenix.data.metrics.forEach((m, i) => {
-        if (m.header || m.entity !== 'F') return;
-        const key = m.sheet + m.label;
-        if (seen.has(key)) return;
-        seen.add(key);
-        out.push({ kind: 'שורה בדוח', label: m.label, meta: 'הפניקס · ' + sheetName(m.sheet), to: `/company/phoenix/financials?sheet=${encodeURIComponent(m.sheet)}&m=${i}` });
-      });
-    }
+    const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
+    rows.data?.forEach(([c, sheet, label, i]) => out.push({ kind: 'שורה בדוח', label, meta: `${names.get(c) ?? c} · ${sheetName(sheet)}`, to: `/company/${c}/financials?sheet=${encodeURIComponent(sheet)}&m=${i}` }));
     return out;
-  }, [enabled, market.data, reg.data, phoenix.data]);
+  }, [enabled, market.data, reg.data, rows.data]);
 }
 
 export function Search({ big = false }: { big?: boolean }) {
