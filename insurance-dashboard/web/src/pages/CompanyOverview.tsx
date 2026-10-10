@@ -100,7 +100,6 @@ function kpiCards(k: CompanyKpi): MetricCardProps[] {
     card('oci', 'q', 'רווח כולל, QTD', 'מיליוני ש"ח', 3, 0),
     card('equity', 'q', 'הון לבעלי המניות', 'מיליוני ש"ח', 7, 0),
     card('roe', 'q', 'ROE, LTM', '%', 1, 1, 'נגזר'),
-    card('pb', 'q', 'מכפיל הון (P/B)', 'מכפיל', 2, 2, 'נגזר'),
     card('eps', 'q', 'רווח למניה, QTD', 'ש"ח', 4, 2),
     card('assets', 'q', 'סך הנכסים', 'מיליוני ש"ח', 9, 0),
   ];

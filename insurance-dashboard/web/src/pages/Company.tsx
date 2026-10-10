@@ -10,6 +10,7 @@ import { GroupPanel } from './Market';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
+import { useStored } from '../lib/local';
 import { SCALES, fmtCell, nf, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
 import type { Market } from '../lib/market';
@@ -124,7 +125,10 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
 
   // A statement that changed accounting standard is read one structure at a time: IFRS 17 as reported from 2024, IFRS 4 as reported until 2024,
   // or only the lines that exist under both and so run through the break.
-  const [stdPick, setStdTab] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? 'c');  // the page opens on the lines that run through the whole history
+  const [stdSaved, saveStd] = useStored<'17' | '4' | 'c'>('fin.std', '17');
+  // a link says which structure it shows; otherwise the reader's last choice, and for a first visit the full current statement
+  const [stdPick, pickStd] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? stdSaved);
+  const setStdTab = (t: '17' | '4' | 'c') => { pickStd(t); saveStd(t); };
   const tabRows = useMemo(() => {
     const by: Record<'17' | '4' | 'c', Set<number>> = { 17: new Set(), 4: new Set(), c: new Set() };
     let seg = -1;
@@ -207,7 +211,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
     if (oldestFirst) q.r = '1';
     if (showChart) q.g = '1';
     if (stack) q.k = '1';
-    if (hasStd && stdTab !== 'c') q.s = stdTab;
+    if (hasStd) q.s = stdTab;
     if (range[0]) q.f = range[0];
     if (range[1]) q.e = range[1];
     const fl = Object.keys(flip).filter((k) => flip[+k]), gr = Object.entries(growth).filter(([, g]) => g).map(([k, g]) => `${k}:${g}`);
@@ -344,7 +348,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
 
       {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
       {hasStd && <div className="stdtabs" role="tablist" aria-label="תקן חשבונאי">
-        {([['c', 'שורות רציפות', 'שורות שקיימות בשני התקנים; עד 2023 לפי IFRS 4'], ['17', 'IFRS 17', 'כפי שדווח, לרבות מספרי השוואה שהוצגו מחדש'], ['4', 'IFRS 4', 'כפי שדווח במקור']] as const).map(([k, name, note]) => {
+        {([['17', 'IFRS 17', 'הדוח המלא, לרבות מספרי השוואה שהוצגו מחדש'], ['c', 'שורות רציפות', 'שורות שקיימות בשני התקנים; עד 2023 לפי IFRS 4'], ['4', 'IFRS 4', 'הדוח המלא כפי שדווח במקור']] as const).map(([k, name, note]) => {
           const cs = colsOf(k);
           if (!cs.length) return null;
           return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{pl(cs[0])} עד {pl(cs[cs.length - 1])}</span><small>{note}</small></button>;

@@ -38,7 +38,7 @@ export function Layout() {
           {NAV.map(([to, icon, label]) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `item${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><Icon3D name={icon} />{label}</NavLink>)}
         </nav>
         <div className="foot">
-          <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : next === 'light' ? 'sun' : 'palette'} /></button>
+          <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
         </div>
       </aside>
       <div className="main">
@@ -46,7 +46,7 @@ export function Layout() {
           <div className="top-in">
             <NavLink to="/" className="wordmark">fox<span>.</span></NavLink>
             <Search />
-            <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : next === 'light' ? 'sun' : 'palette'} /></button>
+            <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
         <main className="page" key={section}><Outlet /></main>

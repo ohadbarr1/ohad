@@ -1,14 +1,14 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-export type Theme = 'phoenix' | 'dark' | 'light';
+export type Theme = 'phoenix' | 'dark';
 /** Phoenix is the house look; the obsidian look and its light variant stay as choices. */
-export const THEMES: [Theme, string][] = [['phoenix', 'הפניקס'], ['dark', 'אובסידיאן'], ['light', 'בהיר']];
+export const THEMES: [Theme, string][] = [['phoenix', 'הפניקס'], ['dark', 'אובסידיאן (כהה)']];
 const KEY = 'theme2'; // a new key, so a choice saved before the Phoenix look existed does not hide it
 const Ctx = createContext<{ theme: Theme; toggle: () => void; next: Theme }>({ theme: 'phoenix', toggle: () => {}, next: 'dark' });
 const after = (t: Theme): Theme => THEMES[(THEMES.findIndex(([x]) => x === t) + 1) % THEMES.length][0];
 
 function initial(): Theme {
-  try { const t = localStorage.getItem(KEY); if (t === 'phoenix' || t === 'dark' || t === 'light') return t; } catch { /* storage may be blocked */ }
+  try { const t = localStorage.getItem(KEY); if (t === 'phoenix' || t === 'dark') return t; } catch { /* storage may be blocked */ }
   return 'phoenix';
 }
 

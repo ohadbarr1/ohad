@@ -61,7 +61,7 @@ export function Compare() {
       <div className="src">{def.label} · {index ? 'אינדקס, תקופה ראשונה = 100' : UNIT[def.unit]}{def.derived && <> · <span className="chip est">נגזר</span></>}</div>
       <section className="controls">
         <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value)}>
-          {(['דוחות', 'יחסים', 'שוק ההון'] as const).map((g) => <optgroup key={g} label={g}>{KPI_DEFS.filter((d) => d.group === g).map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</optgroup>)}
+          {(['דוחות', 'יחסים'] as const).map((g) => <optgroup key={g} label={g}>{KPI_DEFS.filter((d) => d.group === g).map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</optgroup>)}
         </select></Field>
         {def.flow && <div className="field"><span>בסיס</span><Seg label="בסיס" value={basis} onChange={setBasis} options={BASIS} /></div>}
         <Field label="משנת"><select value={from} onChange={(e) => setFrom(Number(e.target.value))}>{[2019, 2020, 2021, 2022, 2023, 2024, 2025].map((y) => <option key={y}>{y}</option>)}</select></Field>
