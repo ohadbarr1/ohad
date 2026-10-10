@@ -154,6 +154,9 @@ def statements(comp):
                 n9 = by.get(("9M", date[:4] + "-09-30"))
                 if typ == "FY" and n9 and ("Q", date) not in by:
                     by[("Q", date)] = (round(fy[0] - n9[0], 3), fy[1], fy[2], 1)
+                h1 = by.get(("H", date[:4] + "-06-30"))
+                if typ == "FY" and h1 and ("H", date) not in by:  # the second half, likewise: the year less the first half
+                    by[("H", date)] = (round(fy[0] - h1[0], 3), fy[1], fy[2], 1)
     return out
 
 

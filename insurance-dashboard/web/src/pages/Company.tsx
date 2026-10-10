@@ -103,7 +103,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const sv = useMemo(() => store.sheet(sheetCode), [store, sheetCode]);
   const types = useMemo(() => {
     if (!sv) return [] as string[];
-    const order = ['Q', 'H', '9M', 'FY', 'I'];
+    const order = ['Q', 'H', 'FY', 'I'];  // nine-month columns are kept in the data only to derive the fourth quarter
     return order.filter((t) => sv.periods.some((p) => p.type === t));
   }, [sv]);
   const curType = types.includes(type) ? type : types[0] ?? '';
@@ -324,7 +324,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
           return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{store.plabel(cs[0])} עד {store.plabel(cs[cs.length - 1])}</span><small>{note}</small></button>;
         })}
       </div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו · אפור = לפי IFRS 4 כפי שדווח' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 או H2 מחושב מהדוח השנתי · כל ערך מקושר לדוח שלו · אפור = לפי IFRS 4 כפי שדווח' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
@@ -343,7 +343,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
                       <span>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       <button type="button" className="info" onClick={() => setExplain(explain === r.idx ? null : r.idx)} aria-label="הסבר">i</button>
                     </div></td>
-                    {colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.der ? 'מחושב: FY פחות 9M. מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
+                    {colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.der ? 'מחושב מהדוח השנתי (FY פחות התקופה המצטברת). מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td>
                   </tr>
                 );
