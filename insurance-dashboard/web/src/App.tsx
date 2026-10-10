@@ -3,7 +3,7 @@ import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { MarketLayout, MarketOverview, MarketRanking, MarketFunds, MarketGroup } from './pages/Market';
 import { Companies } from './pages/Companies';
-import { CompanyLayout, CompanyFinancials, CompanyIfrs17, CompanyReviewTab, CompanyHistTab, CompanySavings, CompanySopTab } from './pages/Company';
+import { CompanyLayout, CompanyFinancials, CompanyIfrs17, CompanyReviewTab, CompanySavings, CompanySopTab } from './pages/Company';
 import { CompanyOverview } from './pages/CompanyOverview';
 import { CompanyDocs } from './pages/CompanyDocs';
 import { Compare } from './pages/Compare';
@@ -36,7 +36,7 @@ export function App() {
           <Route path="financials" element={<CompanyFinancials />} />
           <Route path="profit" element={<CompanySopTab />} />
           <Route path="ifrs17" element={<CompanyIfrs17 />} />
-          <Route path="history" element={<CompanyHistTab />} />
+          <Route path="history" element={<Navigate to="../financials" replace />} />
           <Route path="savings" element={<CompanySavings />} />
           <Route path="filings" element={<CompanyDocs />} />
         </Route>

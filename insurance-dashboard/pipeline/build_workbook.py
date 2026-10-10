@@ -12,9 +12,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "web" / "public" / "data"
 END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "Q4": "12-31", "FY": "12-31"}
-GROUPS = {"group": ("income", "קבוצה"), "life": ("life", "חיים וחיסכון ארוך טווח"), "health": ("health", "בריאות"), "pc": ("general", "ביטוח כללי"),
-          "savings": ("pension", "פנסיה, גמל וניהול נכסים"), "investment_contracts": ("pension", "פוליסות חיסכון (חוזי השקעה)"),
-          "insurer": ("capital", "חברת הביטוח"), "other": ("other", "אחר")}
+# segment of the extraction -> (reporting entity, report group, sheet title). F = the parent, consolidated; I = the insurance company; P = pension and provident.
+GROUPS = {"group": ("F", "income", "תמצית מאוחדת"), "life": ("F", "life", "מגזר חיים וחיסכון ארוך טווח"), "health": ("F", "health", "מגזר בריאות"), "pc": ("F", "general", "מגזר ביטוח כללי"),
+          "investment_contracts": ("F", "pension", "פוליסות חיסכון (חוזי השקעה)"), "other": ("F", "other", "אחר"),
+          "insurer": ("I", "capital", "חברת הביטוח: הון וכושר פירעון"), "savings": ("P", "pension", "פנסיה, גמל וניהול נכסים")}
+ENTITY_NAMES = {"F": "חברת האם (מאוחד)", "I": "חברת הביטוח", "P": "פנסיה וגמל"}
 GROUP_LABELS = {"balance": "מאזן", "income": "רווח והפסד", "oci": "רווח כולל", "equity": "שינויים בהון", "cashflow": "תזרים מזומנים", "segments": "מגזרי פעילות",
                 "life": "ביטוח חיים וחיסכון ארוך טווח", "health": "ביטוח בריאות", "general": "ביטוח כללי", "pension": "פנסיה, גמל וחוזי השקעה", "capital": "הון ודרישות הון",
                 "insurance_services": "רווח משירותי ביטוח", "investments": "רווח מהשקעות ומימון", "instruments": "מכשירים פיננסיים", "other": "אחר"}
@@ -104,7 +106,6 @@ for sf in sorted((DATA / "series").glob("*.json")):
     base = json.loads(base_f.read_text(encoding="utf-8")) if base_f.exists() else None
     d = base or {"company": comp, "sources": [], "groups": {}, "sheets": [], "periods": [], "metrics": [], "facts": [], "stats": {}}
     d["groups"] = {**GROUP_LABELS, **d.get("groups", {})}
-    d["sources"] = d["sources"] + [{"entity": "X", "name": "רצף מהדוחות, 2021 ואילך", "doc": "מחולץ מהדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None}]
     urls, uidx = [], {}
     pidx = {p["id"]: i for i, p in enumerate(d["periods"])}
 
@@ -121,14 +122,17 @@ for sf in sorted((DATA / "series").glob("*.json")):
     for r in series["rows"]:
         by_g.setdefault(r["g"], []).append(r)
     for g, rows in by_g.items():
-        grp, title = GROUPS.get(g, ("other", g))
-        code = f"X.{title.replace(' ', '_')}"
-        d["sheets"].append({"code": code, "entity": "X", "title": f"{title}: רצף מהדוחות", "pages": "", "group": grp})
+        ent, grp, title = GROUPS.get(g, ("F", "other", g))
+        code = f"X.{title.replace(' ', '_')}"  # X marks a sheet built from the periodic reports, 2021 onward
+        d["sheets"].append({"code": code, "entity": ent, "title": title, "pages": "", "group": grp})
+        if not any(s["entity"] == ent for s in d["sources"]):
+            d["sources"].append({"entity": ent, "name": ENTITY_NAMES[ent], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
         for order, r in enumerate(rows):
             flow = not STOCK.match(r["m"])
             dim = " · ".join(x for x in ((r["s"].split(":", 1)[1].strip() if ":" in r["s"] else r["s"]) if r["s"] != r["g"] else "", BASIS.get(r["b"], "")) if x)
             mi = len(d["metrics"])
-            d["metrics"].append({"entity": "X", "sheet": code, "group": grp, "label": name(r["m"]), "dim": dim, "unit": "pct" if is_pct(r["m"]) else "m", "header": False, "order": order})
+            pct = is_pct(r["m"])
+            d["metrics"].append({"entity": ent, "sheet": code, "group": grp, "label": name(r["m"]), "dim": dim, "unit": "pct" if pct else "k", "header": False, "order": order})
             for per, c in r["vals"].items():
                 if per.endswith("FY") and not flow:
                     continue  # a balance at year-end is already the Q4 column
@@ -136,7 +140,7 @@ for sf in sorted((DATA / "series").glob("*.json")):
                 if u and u not in uidx:
                     uidx[u] = len(urls)
                     urls.append(u)
-                d["facts"].append([mi, period(per, flow), c["v"], c.get("pg"), uidx.get(u) if u else None] + ([1] if c.get("der") else []))
+                d["facts"].append([mi, period(per, flow), c["v"] if pct else round(c["v"] * 1000, 3), c.get("pg"), uidx.get(u) if u else None] + ([1] if c.get("der") else []))
     d["urls"] = urls
     live_f.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(comp, len(d["sheets"]), "sheets,", len(d["metrics"]), "lines,", len(d["facts"]), "facts,", len(d["periods"]), "periods")

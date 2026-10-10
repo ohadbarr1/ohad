@@ -47,8 +47,7 @@ export function CompanyLayout() {
       <nav className="subnav" aria-label="חברה">
         <NavLink to="." end>סקירה</NavLink>
         <NavLink to="review">סקירת דוח</NavLink>
-        <NavLink to="history">דוחות, רצף רבעוני</NavLink>
-        {entry.has_financials && <NavLink to="financials">חוברת הנתונים</NavLink>}
+        {entry.has_financials && <NavLink to="financials">דוחות כספיים</NavLink>}
         <NavLink to="profit">מקורות רווח וענפים</NavLink>
         <NavLink to="ifrs17">IFRS 17</NavLink>
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>
@@ -64,6 +63,7 @@ function NoFinancials({ entry }: { entry: RegistryCompany }) {
 }
 
 /* ---------- financials: the metric table that drives the chart ---------- */
+const ENTITIES: [string, string][] = [['F', 'חברת האם (מאוחד)'], ['I', 'חברת הביטוח'], ['P', 'פנסיה וגמל']];
 const GROUP_ORDER = ['income', 'balance', 'cashflow', 'oci', 'segments', 'life', 'health', 'general', 'pension', 'insurance_services', 'investments', 'instruments', 'capital', 'other'];
 
 export function CompanyFinancials() {
@@ -79,16 +79,20 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const d = store.d;
   // the view lives in the URL: sheet, selected rows, period type, units, mode, column order
   const initSel = (sp.get('m') ?? '').split(',').filter(Boolean).map(Number).filter((i) => d.metrics[i]);
-  // without a deep link the workbook opens on the continuous quarterly series (2021 onward), not on the latest report alone
+  // without a deep link the page opens on the parent's consolidated summary, quarterly from 2021
   const wanted = sp.get('sheet') ?? d.metrics[initSel[0]]?.sheet ?? '';
-  const initSheet = d.sheets.some((s) => s.code === wanted) ? wanted : (d.sheets.find((s) => s.entity === 'X' && s.group === 'income') ?? d.sheets.find((s) => s.group === 'income') ?? d.sheets[0])?.code ?? wanted;
-  const entities = useMemo(() => d.sources.filter((s) => d.sheets.some((x) => x.entity === s.entity)).map((s) => [s.entity, s.entity === 'F' ? `${s.name} (מאוחד)` : s.name] as [string, string]).sort((a, b) => Number(b[0] === 'X') - Number(a[0] === 'X')), [d]);
-  const [entity, setEntity] = useState<string>(initSheet.split('.')[0]);
+  const initSheet = d.sheets.some((s) => s.code === wanted) ? wanted : (d.sheets.find((s) => s.code.startsWith('X.') && s.entity === 'F' && s.group === 'income') ?? d.sheets.find((s) => s.group === 'income') ?? d.sheets[0])?.code ?? wanted;
+  const entities = useMemo(() => ENTITIES.filter(([e]) => d.sheets.some((x) => x.entity === e)), [d]);
+  const [entity, setEntity] = useState<string>(d.sheets.find((s) => s.code === initSheet)?.entity ?? 'F');
   const [sheetCode, setSheetCode] = useState(initSheet);
   const [type, setType] = useState<string>(sp.get('t') ?? '');
   const [scale, setScale] = useState<Scale>((['k', 'm', 'b'] as Scale[]).find((x) => x === sp.get('u')) ?? 'm');
   const [mode, setMode] = useState<'value' | 'yoy'>(sp.get('v') === 'yoy' ? 'yoy' : 'value');
   const [showChart, setShowChart] = useState(sp.get('g') === '1');
+  const [stack, setStack] = useState(sp.get('k') === '1');
+  const [flip, setFlip] = useState<Record<number, boolean>>({});
+  const [growth, setGrowth] = useState<Record<number, 'yoy' | 'qoq' | undefined>>({});
+  const [q, setQ] = useState('');
   const [oldestFirst, setOldestFirst] = useState(sp.get('r') === '1');
   const [dim, setDim] = useState('all');
   const [sel, setSel] = useState<number[]>(initSel);
@@ -107,6 +111,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
   const cols = useMemo(() => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === curType) : []), [sv, d, curType]);
   const colsDesc = useMemo(() => (oldestFirst ? cols : [...cols].reverse()), [cols, oldestFirst]);
 
+  const needle = q.trim().toLowerCase();
   const rows = useMemo(() => {
     if (!sv) return [];
     const out: typeof sv.rows = [];
@@ -114,12 +119,13 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     for (const r of sv.rows) {
       if (r.m.header) { pendingHeader = r; continue; }
       if (dim !== 'all' && (r.m.dim ?? '') !== dim) continue;
+      if (needle && !`${r.m.label} ${r.m.dim ?? ''}`.toLowerCase().includes(needle)) continue;
       if (!cols.some((pi) => r.values.has(pi))) continue;
       if (pendingHeader) { out.push(pendingHeader); pendingHeader = null; }
       out.push(r);
     }
     return out;
-  }, [sv, dim, cols]);
+  }, [sv, dim, cols, needle]);
 
   // reset the selection when the sheet changes, unless it came from a deep link
   useEffect(() => {
@@ -138,8 +144,9 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     if (mode !== 'value') q.v = mode;
     if (oldestFirst) q.r = '1';
     if (showChart) q.g = '1';
+    if (stack) q.k = '1';
     setSp(q, { replace: true });
-  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, setSp]);
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, setSp]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
   const cell = (mi: number, pi: number): number | null => {
@@ -155,13 +162,17 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
     return fmtCell(v, d.metrics[mi].unit, scale);
   };
 
-  const sheets = useMemo(() => d.sheets.filter((s) => s.entity === entity), [d, entity]);
+  const sheets = useMemo(() => d.sheets.filter((s) => s.entity === entity).sort((a, b) => Number(b.code.startsWith('X.')) - Number(a.code.startsWith('X.'))), [d, entity]);
   const curGroup = sheets.filter((x) => x.group === sv?.group);
   const optGroups = GROUP_ORDER.map((g) => ({ g, items: sheets.filter((s) => s.group === g) })).filter((x) => x.items.length);
 
   const series = sel.filter((i) => rows.some((r) => r.idx === i)).map((mi, k) => {
     const m = d.metrics[mi];
-    const vals = cols.map((pi) => cell(mi, pi));
+    const sign = flip[mi] ? -1 : 1;
+    const vals = cols.map((pi) => { const v = cell(mi, pi); return v == null ? null : v * sign; });
+    // growth of the row itself, as printed: against the same period a year earlier, or against the previous column
+    const g = mode === 'value' ? growth[mi] : undefined;
+    const gvals = !g ? null : cols.map((pi, ci) => { const v = store.val(mi, pi), pp = g === 'yoy' ? prior(pi) : ci > 0 ? cols[ci - 1] : -1, pv = pp >= 0 ? store.val(mi, pp) : null; return v != null && pv ? ((v - pv) / Math.abs(pv)) * 100 : null; });
     const first = vals.findIndex((v) => v != null), lastI = vals.length - 1 - [...vals].reverse().findIndex((v) => v != null);
     let total: number | null = null, cagr: number | null = null;
     if (mode === 'value' && first >= 0 && lastI > first && vals[first]) {
@@ -169,21 +180,23 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
       const yrs = (Date.parse(d.periods[cols[lastI]].end) - Date.parse(d.periods[cols[first]].end)) / (365.25 * 864e5);
       if (yrs >= 1 && vals[first]! > 0 && vals[lastI]! > 0) cagr = (Math.pow(vals[lastI]! / vals[first]!, 1 / yrs) - 1) * 100;
     }
-    return { mi, m, k, vals, total, cagr, name: m.dim ? `${m.label.replace(/\s+\(.*?\)\s*$/, '')} · ${m.dim}` : m.label };
+    return { mi, m, k, vals, g, gvals, total, cagr, name: m.dim ? `${m.label.replace(/\s+\(.*?\)\s*$/, '')} · ${m.dim}` : m.label };
   });
 
   const pal = palette();
   const unitLabel = mode === 'yoy' ? 'YoY %' : (SCALES.find((s) => s.id === scale)!.label);
 
   const toggle = (mi: number) => setSel((cur) => (cur.includes(mi) ? cur.filter((x) => x !== mi) : [...cur, mi]));
-  const open = (page: number | null, u?: number | null) => store.sourceUrl(entity, page, u);
+  const fromReports = sheetCode.startsWith('X.');
+  // a figure from the periodic reports links only to its own report; the entity's single source file would be the wrong document
+  const open = (page: number | null, u?: number | null) => (fromReports && u == null ? null : store.sourceUrl(entity, page, u));
 
   const explainText = explain != null ? notes.data?.[String(explain)] : null;
 
   return (
     <>
       <section className="controls">
-        {entities.length > 1 && <div className="field"><span>מקור</span><Seg<string> label="מקור" value={entity} onChange={(e) => { setEntity(e); const first = d.sheets.find((s) => s.entity === e && s.group === 'income') ?? d.sheets.find((s) => s.entity === e); if (first) { setSheetCode(first.code); setSel([]); } }} options={entities} /></div>}
+        {entities.length > 1 && <div className="field"><span>ישות מדווחת</span><Seg<string> label="ישות מדווחת" value={entity} onChange={(e) => { setEntity(e); const own = d.sheets.filter((s) => s.entity === e), first = own.find((s) => s.code.startsWith('X.') && s.group === 'income') ?? own.find((s) => s.code.startsWith('X.')) ?? own.find((s) => s.group === 'income') ?? own[0]; if (first) { setSheetCode(first.code); setSel([]); } }} options={entities} /></div>}
         <div className="field"><span>דוח</span><div className="seg wrap" role="group" aria-label="דוח">
           {optGroups.map(({ g, items }) => <button key={g} type="button" aria-pressed={sv?.group === g} onClick={() => { setSheetCode(items[0].code); setSel([]); }}>{d.groups[g]}</button>)}
         </div></div>
@@ -193,40 +206,57 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
         <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש ← ישן'], ['old', 'ישן ← חדש']]} /></div>
         <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'מוצג' : 'הצגת גרף'}</button></div>
+        <Field label="חיפוש שורה"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="רווח, פרמיות, CSM" /></Field>
         {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
       </section>
 
-      {showChart && <Panel title={series.length === 1 ? series[0].name : 'גרף'} aside={<><span>{unitLabel}</span><button type="button" className="btn" onClick={() => setShowChart(false)}>סגירת הגרף</button></>}>
-        {series.length === 0 || cols.length === 0 ? <Empty title="אין שורה נבחרת" /> : (
+      {showChart && <Panel title={series.length === 1 ? series[0].name : 'גרף'} aside={<>
+        <span>{unitLabel}</span>
+        <button type="button" className={`btn${stack ? ' primary' : ''}`} aria-pressed={stack} onClick={() => setStack((v) => !v)} title="עמודות נערמות זו על זו; ערכים שליליים נערמים מתחת לאפס">ערימה</button>
+        <button type="button" className="btn" onClick={() => setShowChart(false)}>סגירת הגרף</button>
+      </>}>
+        {series.length === 0 || cols.length === 0 ? <Empty title="סמנו שורה בטבלה כדי להציג אותה בגרף" /> : (
           <>
-            <Chart label="גרף שורות נבחרות" height={320} deps={[sel, cols, mode, scale, sheetCode, kind, series.length]} build={() => {
+            <Chart label="גרף שורות נבחרות" height={340} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth]} build={() => {
               const b = chartBase();
-              const secondary = mode === 'value' && series.some((s) => s.m.unit !== 'k') && series.some((s) => s.m.unit === 'k');
+              // amounts on the main axis; percentages (ratio rows and growth lines) on the second one when both are drawn
+              const isPct = (u: string) => mode === 'value' && u === 'pct';
+              const hasAmt = mode === 'yoy' || series.some((s) => !isPct(s.m.unit));
+              const second = mode === 'value' && hasAmt && series.some((s) => isPct(s.m.unit) || s.gvals);
+              const pctAxis = second ? 1 : 0;
+              const out: Record<string, unknown>[] = [];
+              series.forEach((s) => {
+                const t = kind[s.mi] ?? (isPct(s.m.unit) ? 'line' : 'bar'), color = pal[s.k % pal.length], pct = isPct(s.m.unit);
+                const data = s.vals.map((v) => (v == null ? null : +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3)));
+                out.push({ name: s.name, type: t, data, yAxisIndex: pct ? pctAxis : 0, stack: stack && t === 'bar' && !pct ? 'total' : undefined, barMaxWidth: 46, symbolSize: 6, itemStyle: { color }, lineStyle: { color, width: 2.5 },
+                  label: { show: !stack && series.length <= 2 && cols.length <= 14, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, mode === 'yoy' || pct || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1)) } });
+                if (s.gvals) out.push({ name: `${s.name} · ${s.g === 'yoy' ? 'YoY' : 'QoQ'} %`, type: 'line', data: s.gvals.map((v) => (v == null ? null : +v.toFixed(2))), yAxisIndex: pctAxis, symbolSize: 5, connectNulls: false, itemStyle: { color }, lineStyle: { color, width: 2, type: 'dashed' }, z: 5 });
+              });
               return {
-                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: secondary ? 56 : 14, top: 18, bottom: 30 },
+                animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 56, right: second ? 56 : 14, top: 18, bottom: cols.length > 14 ? 44 : 30 },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 } },
-                xAxis: { type: 'category', data: cols.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12 } },
+                xAxis: { type: 'category', data: cols.map((pi) => store.plabel(pi)), axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 12, rotate: cols.length > 14 ? 45 : 0 } },
                 yAxis: [
-                  { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
-                  ...(secondary ? [{ type: 'value', axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { show: false } }] : []),
+                  { type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}${!hasAmt && mode === 'value' ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+                  ...(second ? [{ type: 'value', axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `\u200E${v}%` }, splitLine: { show: false } }] : []),
                 ],
-                series: series.map((s) => {
-                  const t = kind[s.mi] ?? 'bar', color = pal[s.k % pal.length];
-                  const data = s.vals.map((v) => (v == null ? null : +(mode === 'yoy' ? v : scaleValue(v, s.m.unit, scale)).toFixed(3)));
-                  return { name: s.name, type: t, data, yAxisIndex: secondary && s.m.unit !== 'k' ? 1 : 0, barMaxWidth: 46, symbolSize: 7, itemStyle: { color }, lineStyle: { color, width: 2.5 },
-                    label: { show: series.length <= 3, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : nf(p.value, mode === 'yoy' || s.m.unit === 'nis' ? 1 : scale === 'k' ? 0 : 1)) } };
-                }),
+                series: out,
               };
             }} />
             <div className="legend">
-              {series.map((s) => (
-                <div className="li" key={s.mi}>
-                  <span className="dot" style={{ background: pal[s.k % pal.length] }} />
-                  <span>{s.name}{s.total != null && <span className="muted"> (שינוי כולל: <span className="num">{sn(s.total, 1)}%</span>{s.cagr != null && <> · CAGR: <span className="num">{sn(s.cagr, 1)}%</span></>})</span>}</span>
-                  <button type="button" title="החלפת סוג גרף" onClick={() => setKind((k) => ({ ...k, [s.mi]: (k[s.mi] ?? 'bar') === 'bar' ? 'line' : 'bar' }))}>{(kind[s.mi] ?? 'bar') === 'bar' ? 'עמודות' : 'קו'}</button>
-                  <button type="button" aria-label="הסר" onClick={() => toggle(s.mi)}>×</button>
-                </div>
-              ))}
+              {series.map((s) => {
+                const t = kind[s.mi] ?? (mode === 'value' && s.m.unit === 'pct' ? 'line' : 'bar');
+                return (
+                  <div className="li" key={s.mi}>
+                    <span className="dot" style={{ background: pal[s.k % pal.length] }} />
+                    <span>{flip[s.mi] ? '(−) ' : ''}{s.name}{s.total != null && <span className="muted"> (שינוי כולל: <span className="num">{sn(s.total, 1)}%</span>{s.cagr != null && <> · CAGR: <span className="num">{sn(s.cagr, 1)}%</span></>})</span>}</span>
+                    <button type="button" title="עמודות או קו" onClick={() => setKind((k) => ({ ...k, [s.mi]: t === 'bar' ? 'line' : 'bar' }))}>{t === 'bar' ? 'עמודות' : 'קו'}</button>
+                    <button type="button" title="היפוך סימן, למשל כדי להציג הוצאות מתחת לאפס" aria-pressed={!!flip[s.mi]} onClick={() => setFlip((f) => ({ ...f, [s.mi]: !f[s.mi] }))}>±</button>
+                    {mode === 'value' && <button type="button" title="קו שיעור צמיחה על אותו גרף, בציר אחוזים" onClick={() => setGrowth((g) => ({ ...g, [s.mi]: g[s.mi] === undefined ? 'yoy' : g[s.mi] === 'yoy' && curType !== 'FY' ? 'qoq' : undefined }))}>{s.g === 'yoy' ? 'קו YoY' : s.g === 'qoq' ? 'קו QoQ' : '+ קו צמיחה'}</button>}
+                    <button type="button" aria-label="הסר" onClick={() => toggle(s.mi)}>×</button>
+                  </div>
+                );
+              })}
             </div>
           </>
         )}
@@ -239,7 +269,7 @@ function FinancialsInner({ store, companyId }: { store: CompanyStore; companyId:
         </div>
       )}
 
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : entity === 'X' ? 'מיליוני ₪ · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'מהדוחות התקופתיים · נטוי = Q4 מחושב (FY פחות 9M) · כל ערך מקושר לדוח שלו · שורות IFRS 17 מ-Q1\'24' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table>
             <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{store.plabel(pi)}</th>)}<th>עמ׳</th></tr></thead>
