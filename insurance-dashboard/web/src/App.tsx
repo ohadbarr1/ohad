@@ -13,6 +13,7 @@ import { IndustryCapital } from './pages/IndustryCapital';
 import { IndustryEcon } from './pages/IndustryEcon';
 import { IndustryMatrix } from './pages/IndustryMatrix';
 import { IndustryLines } from './pages/IndustryLines';
+import { IndustrySectors } from './pages/IndustrySectors';
 import { ReportDay } from './pages/ReportDay';
 import { IndustryCsm } from './pages/IndustryCsm';
 import { DocSearch } from './pages/DocSearch';
@@ -46,9 +47,10 @@ export function App() {
         </Route>
         <Route path="compare" element={<Navigate to="/industry/headline" replace />} />
         <Route path="industry" element={<IndustryLayout />}>
-          <Route index element={<Navigate to="matrix" replace />} />
+          <Route index element={<Navigate to="sectors" replace />} />
           <Route path="savings" element={<IndustrySavings />} />
           <Route path="ifrs" element={<IndustryIfrs />} />
+          <Route path="sectors" element={<IndustrySectors />} />
           <Route path="matrix" element={<IndustryMatrix />} />
           <Route path="lines" element={<IndustryLines />} />
           <Route path="csm" element={<IndustryCsm />} />

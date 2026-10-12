@@ -7,7 +7,7 @@ export type Prov =
   /** an aggregate of the regulator's fund files: rebuilt from its tracks when the sheet opens */
   | { k: 'reg'; metric: MetricKey; pi: number; w: Win; set: string; g: number }
   /** a figure printed in a filed report */
-  | { k: 'report'; title: string; value: string; unit?: string; url: string | null; pg: number | null; doc?: string; period?: string; note?: string;
+  | { k: 'report'; title: string; value: string; unit?: string; url: string | null; pg: number | null; doc?: string; period?: string; note?: string; srcType?: string;
       der?: boolean; old?: boolean; turned?: boolean; restated?: { first: string; last: string; firstHref?: string; lastHref?: string; in: string } }
   /** a tagged figure of the electronic filing */
   | { k: 'xbrl'; title: string; value: string; unit?: string; company: string; period: string; rid: number | null; concept: string; status?: string; note?: string }
