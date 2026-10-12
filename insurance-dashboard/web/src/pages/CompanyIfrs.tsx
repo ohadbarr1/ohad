@@ -7,8 +7,11 @@ import { palette } from '../lib/theme';
 import { nf, byPeriodDesc, dateLabel } from '../lib/format';
 import { useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
-import { BUCKET_HE, EFFECT_HE, METRIC_HE, SEGMENT_HE, TEXT_HE } from '../lib/labels';
-import { BASIS, METRICS, SEGS, Src, WF, WINS, endOf, startOf, val } from './IndustryIfrs';
+import { BUCKET_HE, EFFECT_HE, METRIC_HE, TEXT_HE } from '../lib/labels';
+import { BASIS, METRICS, SEGS, Src, SegLabel, TR_HE, WF, WINS, Orig, capHe, endOf, heb, latin, lineHe, origOf, segName, startOf, val } from './IndustryIfrs';
+import '../styles/ifrs.css';
+
+export { segName };
 
 const HE: Record<string, string> = {
   ...METRIC_HE,
@@ -22,6 +25,15 @@ const HE: Record<string, string> = {
   reins_expense_csm_release: 'ביטוח משנה: שחרור CSM', reins_expense_ra_release: 'ביטוח משנה: שחרור RA', profit_before_tax: 'רווח לפני מס', profit_for_year: 'רווח לשנה', comprehensive_income_total: 'רווח כולל', comprehensive_income_attributable: 'רווח כולל לבעלי המניות',
   dividend_declared: 'דיבידנד שהוכרז', dividend_paid: 'דיבידנד ששולם', roe_reported: 'תשואה להון, כפי שדווחה', combined_ratio: 'Combined ratio',
   profit_attributable: 'רווח נקי לבעלי המניות', equity_attributable: 'הון לבעלי המניות', total_assets: 'סך נכסים', operating_profit_before_tax: 'רווח תפעולי לפני מס',
+  reinsurance_finance_result: 'תוצאות מימון ביטוח משנה', new_business_single_premiums: 'פרמיות חד פעמיות, עסק חדש', investment_contracts_liability: 'התחייבות בגין פוליסות חיסכון (חוזי השקעה)', total_assets_yield_linked: 'נכסים צמודי תשואה',
+  income_tax: 'מס הכנסה', income_tax_benefit: 'הטבת מס', capital_instruments_issued_redeemed: 'מכשירי הון שהונפקו ונפדו', own_funds_with_transitional_after_capital_actions: 'הון עצמי לעניין SCR, עם הוראות מעבר, אחרי פעולות הון',
+  shortfall_vs_board_target: 'חסר מול יעד הדירקטוריון', surplus_vs_board_target: 'עודף מעל יעד הדירקטוריון', aum_managed_for_insureds_and_members: 'נכסים מנוהלים עבור מבוטחים וחברים', loss_ratio: 'יחס נזקים', loss_recovery_component: 'רכיב השבת הפסד',
+  aum_investment_contracts: 'נכסים מנוהלים: פוליסות חיסכון (חוזי השקעה)', aum_mutual_funds: 'נכסים מנוהלים: קרנות נאמנות', aum_customer_portfolios: 'נכסים מנוהלים: תיקי לקוחות', text_csm_release_net: 'שחרור CSM, נטו (מהטקסט)', pres_csm_release_net: 'שחרור CSM, נטו (מהמצגת)', pres_ra_release_net: 'שחרור RA, נטו (מהמצגת)',
+  own_funds_after_capital_raise: 'הון עצמי לעניין SCR, אחרי גיוס הון', own_funds_with_transitional_after_capital_raise: 'הון עצמי לעניין SCR, עם הוראות מעבר, אחרי גיוס הון', solvency_surplus_without_transitional_after_capital_raise: 'עודף הון, ללא הוראות מעבר, אחרי גיוס הון', solvency_surplus_with_transitional_after_capital_raise: 'עודף הון, עם הוראות מעבר, אחרי גיוס הון',
+  investment_contracts_yield_component: 'פוליסות חיסכון (חוזי השקעה): רכיב תשואה', payments_investment_contracts: 'תשלומים בגין פוליסות חיסכון (חוזי השקעה)', investment_contracts_profit: 'רווח מפוליסות חיסכון (חוזי השקעה)', capital_actions_redemptions: 'פעולות הון: פדיונות', capital_actions_total: 'פעולות הון, סך הכול',
+  target_dividend_threshold_without_transitional: 'סף לחלוקת דיבידנד, ללא הוראות מעבר', target_solvency_ratio_min_stability_with_transitional: 'יעד יחס כושר פירעון מינימלי, יציבות, עם הוראות מעבר', target_solvency_ratio_min_without_transitional_after_dividend: 'יעד יחס כושר פירעון מינימלי, ללא הוראות מעבר, אחרי דיבידנד',
+  target_comprehensive_income: 'יעד רווח כולל', target_roe: 'יעד תשואה להון', capital_raise_effect: 'השפעת גיוס הון', capital_instruments_excess_over_quantitative_limits: 'מכשירי הון מעל המגבלה הכמותית', quantitative_limit_excess: 'חריגה מהמגבלה הכמותית',
+  note12_pl_effect_interest_rate_and_yield: 'ביאור 12: השפעה על הרווח, ריבית ותשואה', note12_csm_effect_interest_rate_and_yield: 'ביאור 12: השפעה על CSM, ריבית ותשואה', note13_csm_effect_discount_rate_change: 'ביאור 13: השפעה על CSM, שינוי בריבית ההיוון', note12_csm_effect_demographic_and_other: 'ביאור 12: השפעה על CSM, דמוגרפיה ואחר', note12_pl_effect_demographic_and_other: 'ביאור 12: השפעה על הרווח, דמוגרפיה ואחר',
   net_reinsurance_result: 'תוצאות ביטוח משנה, נטו', insurance_service_expense: 'הוצאות שירותי ביטוח', net_investment_and_finance_result: 'תוצאות השקעה ומימון, נטו',
 };
 const FAMILIES: [string, string, RegExp][] = [
@@ -33,15 +45,33 @@ const FAMILIES: [string, string, RegExp][] = [
 const CAPITAL = /^(own_funds|scr|mcr|solvency|surplus|target_.*(solvency|dividend|capital))/;
 export const isPct = (m: string) => /ratio|_pct|payout|confidence|discount_rate|roe_reported|threshold|target_solvency/.test(m);
 export const he = (m: string) => { const [k, rest] = m.split(/:(.*)/); return (HE[k] ?? k) + (rest ? `: ${TEXT_HE[rest] ?? rest}` : ''); };
-const HEB = /[\u0590-\u05FF]/;
-/** Secondary row label: keep when Hebrew, hide an English-only label once the metric has a Hebrew name. */
-const subLabel = (f: IfrsFact) => (HEB.test(f.l) || !HE[f.m.split(':')[0]] ? f.l : '');
+/** A sensitivity shock printed in English, rebuilt as Hebrew (risk, direction, size) when it is not in the label map. */
+const shockHe = (r: string) => {
+  const risk = /morbid|תחלוא/i.test(r) ? 'שיעור תחלואה' : /mortal|תמותה/i.test(r) ? 'שיעור תמותה' : /interest/i.test(r) ? 'שיעור ריבית' : /equity|share/i.test(r) ? 'מחיר מניות' : '';
+  const n = r.match(/(\d+(?:\.\d+)?)/);
+  if (!risk || !n) return '';
+  const up = /increase|\+|higher|rise/i.test(r), down = /decrease|reduc|-\d|−|lower|fall/i.test(r);
+  return `${risk}, ${up && !down ? 'עלייה' : down && !up ? 'ירידה' : 'שינוי'} של ${n[1]}${risk === 'שיעור ריבית' ? ' נקודות אחוז' : '%'}${/second/i.test(r) ? ' (עמודה שנייה)' : ''}`;
+};
+/** Metric name for display: an unmapped key or English tail never shows as text, only a Hebrew name with the original behind a "מקור" mark. */
+function MetricName({ m }: { m: string }) {
+  const [k, rest] = m.split(/:(.*)/);
+  if (!HE[k]) return <>שורה בדוח<Orig t={m} /></>;
+  const r = rest ? TEXT_HE[rest] ?? rest : '';
+  if (!rest || !latin(r)) return <>{he(m)}</>;
+  const h = k === 'sensitivity' ? shockHe(rest) : '';
+  return <>{HE[k]}{h ? `: ${h}` : ''}<Orig t={rest} /></>;
+}
+/** Secondary row label: the report's own Hebrew when it has it, otherwise a short Hebrew qualifier and the original text behind "מקור". */
+function SubLabel({ f, always }: { f: IfrsFact; always?: boolean }) {
+  if (heb(f.l)) return <>{f.l}</>;
+  const q = capHe(f) || lineHe(f);
+  return q || always ? <>{q}<Orig t={origOf(f)} /></> : <></>;
+}
+/** Effect on a target: set for a later year, or in force from a date. */
+const targetTag = (f: IfrsFact, end: string) => (f.d > end ? `יעד ל-${f.d.slice(0, 4)}` : `בתוקף ${dateLabel(f.d)}`);
 export const bkName = (b: string) => BUCKET_HE[b] ?? b;
 const fmt = (f: IfrsFact, v = f.v) => nf(v, isPct(f.m) || Math.abs(v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
-const SUB: [RegExp, string][] = [[/^pension(_funds)?$/i, 'פנסיה'], [/^(provident(_funds)?|gemel)$/i, 'גמל'], [/^pension_gemel$/i, 'פנסיה וגמל'], [/^pc_incl_overseas$/, 'כללי כולל חו"ל'], [/insurer_subsidiary|_insurance$| Insurance$/i, 'חברת הביטוח'],
-  [/^Life Insurance and Long-Term Savings$/, 'חיים וחיסכון'], [/^Health Insurance$/, 'בריאות'], [/^P&C Insurance$/, 'כללי'], [/^life\+health\+pc$/, 'חיים, בריאות וכללי'], [/^(life\+health|life_and_health|Life and Health Segments)$/, 'חיים ובריאות'],
-  [/^Long-Term Savings$/, 'חיסכון ארוך טווח'], [/^Life and Health Risks$/, 'סיכוני חיים ובריאות'], [/^financial_services$/, 'שירותים פיננסיים'], [/^credit(_cards)?$/i, 'אשראי'], [/^(Non-segmented|not_attributed)$/, 'לא מיוחס'], [/^Adjustments and offsets$/, 'התאמות וקיזוזים'], [/^insurance_companies_overseas$/, 'חברות ביטוח בחו"ל']];
-export const segName = (g: string) => SEGS.find(([k]) => k === g)?.[1] ?? SEGMENT_HE[g] ?? SUB.find(([re]) => re.test(g))?.[1] ?? (g === 'insurer' ? 'חברת הביטוח' : g === 'other' ? 'אחר' : g);
 export const periodName = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
 
 /** Everything extracted from one company's report: capital, CSM movement by segment, expected CSM release, sensitivities, and the full fact list. Every figure links to its page. */
@@ -56,6 +86,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const [win, setWin] = useState<'q' | 'ytd'>('q');
   const [fam, setFam] = useState('all');
   const [q, setQ] = useState('');
+  const [sb, setSb] = useState('net');
 
   const annual = P.endsWith('FY'), end = P ? endOf(P) : '', W = annual ? 'fy' : win;
   const csm = useMemo(() => all.filter((f) => f.m.startsWith('csm') && !f.tr && !f.model && !f.m.startsWith('csm_subtotal') && f.m !== 'csm_expected_release'), [all]);
@@ -90,16 +121,21 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
     return { rb, buckets, segs, at: (g: string, bk: string) => own.find((f) => f.g === g && f.bk === bk) ?? null, pg: own[0] ?? null };
   }, [all, end, B]);
 
-  // the same measure printed twice for one date (before and after a dividend, two entities): each row then says which one it is, in the report's own words
-  const twice = useMemo(() => { const n = new Map<string, number>(); all.filter((f) => CAPITAL.test(f.m)).forEach((f) => { const k = `${f.m}|${f.s}|${f.d}`; n.set(k, (n.get(k) ?? 0) + 1); }); return new Set([...n].filter(([, c]) => c > 1).map(([k]) => k)); }, [all]);
   const [openAll, setOpenAll] = useState(false);
   const capital = useMemo(() => all.filter((f) => CAPITAL.test(f.m)).sort((a, b) => b.d.localeCompare(a.d) || a.m.localeCompare(b.m) || (a.pg ?? 0) - (b.pg ?? 0)), [all]);
+  // 216 extracted sensitivity rows: one line per shock and segment, the effect on CSM, profit and equity side by side (annual reports only print them)
   const sens = useMemo(() => {
-    const s = all.filter((f) => f.m.startsWith('sensitivity:') && f.d === end);
-    const cols = [...new Set(s.map((f) => `${f.fx ?? ''}|${f.b}`))];
-    const rows = [...new Set(s.map((f) => `${f.m}|${f.s}`))];
-    return { cols, rows, at: (r: string, c: string) => s.find((f) => `${f.m}|${f.s}` === r && `${f.fx ?? ''}|${f.b}` === c) ?? null };
-  }, [all, end]);
+    const all2 = all.filter((f) => f.m.startsWith('sensitivity:') && f.d === end);
+    const bases = ['net', 'gross'].filter((b) => all2.some((f) => f.b === b || (b === 'net' && f.b === 'na')));
+    const B2 = bases.includes(sb) ? sb : bases[0] ?? 'net';
+    const rows = new Map<string, { m: string; s: string; k: Record<string, IfrsFact> }>();
+    all2.filter((f) => f.b === B2 || (B2 === 'net' && f.b === 'na')).forEach((f) => {
+      const key = `${f.m}|${f.s}`, r = rows.get(key) ?? { m: f.m, s: f.s, k: {} };
+      const k = /csm/i.test(f.fx ?? '') ? 'csm' : /profit.*equity|equity.*profit/i.test(f.fx ?? '') ? 'pe' : /equity/i.test(f.fx ?? '') ? 'eq' : /profit|income|loss/i.test(f.fx ?? '') ? 'pl' : 'x';
+      r.k[k] ??= f; rows.set(key, r);
+    });
+    return { bases, B: B2, rows: [...rows.values()] };
+  }, [all, end, sb]);
   const list = useMemo(() => {
     const re = FAMILIES.find(([k]) => k === fam)![2], t = q.trim().toLowerCase();
     return all.filter((f) => re.test(f.m) && (!t || `${he(f.m)} ${f.m} ${f.l} ${f.s}`.toLowerCase().includes(t))).sort((a, b) => a.m.localeCompare(b.m) || a.g.localeCompare(b.g) || b.d.localeCompare(a.d));
@@ -112,6 +148,13 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   if (!facts.data) return <Loading what="נתוני הדוח" />;
   const cell = (f: IfrsFact | null, v?: number) => (f ? <><span className={`num ${(v ?? val(f)) < 0 ? 'neg' : ''}`}>{fmt(f, v ?? val(f))}</span> <span className="dim"><Src f={f} d={d} p={P} /></span><IncChip f={f} /></> : <span className="muted">–</span>);
 
+  const fig = (f?: IfrsFact) => {
+    if (!f) return <span className="muted">–</span>;
+    const url = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === P)?.url, t = nf(f.v, Math.abs(f.v) < 100 ? 1 : 0), c = `num ${f.v < 0 ? 'neg' : ''}`;
+    return url && f.pg != null ? <a className={c} href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`עמ׳ ${f.pg}`}>{t}</a> : <span className={c}>{t}</span>;
+  };
+  const shock = (m: string) => { const rest = m.slice(m.indexOf(':') + 1), r = TEXT_HE[rest] ?? rest; return !latin(r) ? <>{r}</> : <>{shockHe(rest) || 'תרחיש'}<Orig t={rest} /></>; };
+
   return (
     <>
       <section className="controls">
@@ -121,7 +164,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         <span className="chip">{all.length} נתונים מהדוח · מיליוני ש"ח</span>
       </section>
 
-      <Panel title="תנועה ב-CSM לפי מגזר" aside={<><span className="chip">{BASIS[B] ?? B}</span><span className="chip">{annual ? 'FY' : win === 'q' ? 'QTD' : 'YTD'}</span><span>עד {end}</span></>}>
+      <Panel title="תנועה ב-CSM לפי מגזר" aside={<><span className="chip">{BASIS[B] ?? B}</span><span className="chip">{annual ? 'FY' : win === 'q' ? 'QTD' : 'YTD'}</span><span>עד {dateLabel(end)}</span></>}>
         {bridge.cols.length === 0 ? <Empty title="לא נמצאה תנועת CSM בדוח לבסיס ולחלון שנבחרו" /> : (
           <div className="scroll"><table>
             <thead><tr><th>שורה</th>{bridge.cols.map((g) => <th key={g}>{segName(g)}</th>)}</tr></thead>
@@ -155,8 +198,8 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
               <thead><tr><th>שורה</th><th>ערך</th></tr></thead>
               <tbody>{capital.map((f, i) => (
                 <tr key={i}>
-                  <td className="lbl">{he(f.m)}<span className="dim">{[/[\u0590-\u05ff]/.test(f.l) || twice.has(`${f.m}|${f.s}|${f.d}`) ? f.l : '', f.s !== f.g ? segName(f.s) : '', twice.has(`${f.m}|${f.s}|${f.d}`) && f.n ? f.n : ''].filter(Boolean).join(' · ')}</span></td>
-                  <td>{cell(f, f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className="dim num">{dateLabel(f.d)}</span></td>
+                  <td className="lbl"><MetricName m={f.m} /><span className="dim">{heb(f.l) ? f.l : capHe(f)}{!heb(f.l) && <Orig t={origOf(f)} />}{f.s !== f.g && <>{' · '}<SegLabel s={f.s} /></>}</span></td>
+                  <td>{cell(f, f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className={`chip ${f.m.startsWith('target_') && f.d > end ? 'est' : ''}`}>{f.m.startsWith('target_') ? targetTag(f, end) : dateLabel(f.d)}</span></td>
                 </tr>
               ))}</tbody>
             </table></div>
@@ -165,10 +208,14 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
       </div>
 
       {sens.rows.length > 0 && (
-        <Panel title="רגישויות" aside={<span>השפעה במיליוני ש"ח · {end}</span>}>
-          <div className="scroll"><table>
-            <thead><tr><th>תרחיש</th><th>מגזר</th>{sens.cols.map((c) => { const [fx, b] = c.split('|'); return <th key={c}>{EFFECT_HE[fx] ?? fx} · {BASIS[b] ?? b}</th>; })}</tr></thead>
-            <tbody>{sens.rows.map((r) => { const [m, s] = r.split('|'); return <tr key={r}><td className="lbl">{he(m).replace(/^[^:]*: /, '')}</td><td>{segName(s)}</td>{sens.cols.map((c) => <td key={c}>{cell(sens.at(r, c))}</td>)}</tr>; })}</tbody>
+        <Panel title="רגישויות" aside={<><span>השפעה במיליוני ש"ח, כפי שהודפס · {dateLabel(end)}</span>{sens.bases.length > 1 && <Seg label="בסיס" value={sens.B} onChange={setSb} options={sens.bases.map((b) => [b, BASIS[b] ?? b])} />}</>}>
+          <div className="scroll"><table className="sens">
+            <thead><tr><th>תרחיש</th><th>מגזר</th><th>השפעה על CSM</th><th>על הרווח</th><th>על ההון</th>{sens.rows.some((r) => r.k.x) && <th>אחר</th>}</tr></thead>
+            <tbody>{sens.rows.map((r) => (
+              <tr key={`${r.m}|${r.s}`}><td className="lbl">{shock(r.m)}</td><td><SegLabel s={r.s} /></td><td>{fig(r.k.csm)}</td>
+                {r.k.pe && !r.k.pl && !r.k.eq ? <td colSpan={2}>{fig(r.k.pe)}<span className="chip">רווח והון יחד</span></td> : <><td>{fig(r.k.pl)}</td><td>{fig(r.k.eq)}</td></>}
+                {sens.rows.some((x) => x.k.x) && <td>{r.k.x ? <>{fig(r.k.x)}<span className="chip">{EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'}</span></> : <span className="muted">–</span>}</td>}</tr>
+            ))}</tbody>
           </table></div>
         </Panel>
       )}
@@ -181,7 +228,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         <div className="scroll" style={{ maxHeight: 560 }}><table>
           <thead><tr><th>מדד</th><th>מגזר</th><th>בסיס</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{list.slice(0, 600).map((f, i) => (
-            <tr key={i}><td className="lbl">{he(f.m)}<span className="dim">{[subLabel(f), f.bk ? bkName(f.bk) : ''].filter(Boolean).join(' · ')}{f.tr ? ` · ${f.tr}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
+            <tr key={i}><td className="lbl"><MetricName m={f.m} /><span className="dim"><SubLabel f={f} always />{f.bk ? ` ${heb(f.l) || capHe(f) || lineHe(f) ? '· ' : ''}${bkName(f.bk)}` : ''}{f.tr ? ` · ${TR_HE[f.tr] ?? 'אחר'}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
               <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{dateLabel(f.d)}</span></td>
               <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span><IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>

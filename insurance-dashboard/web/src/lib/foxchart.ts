@@ -65,7 +65,9 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
   const amounts = spec.series.some((s) => !s.pct), rates = spec.series.some((s) => s.pct);
   const second = amounts && rates, pctAxis = second ? 1 : 0;
   const stacked = spec.series.some((s) => s.stack);
-  const showLabels = spec.labels ?? (!spec.dense && !stacked && spec.series.length <= 2 && x.length <= 14);
+  // value labels only where each mark has room for one: about 44 px a column
+  const room = typeof window === 'undefined' ? 14 : Math.floor(Math.min(window.innerWidth, 1280) / 44 / Math.max(1, spec.series.filter((q) => (q.kind ?? (q.pct ? 'line' : 'bar')) === 'bar').length));
+  const showLabels = spec.labels ?? (!spec.dense && !stacked && spec.series.length <= 2 && x.length <= Math.min(14, room));
   const legend = spec.legend ?? spec.series.length > 1;
   const rot = spec.rotate ?? (!spec.dense && x.length > 14 ? 45 : 0);
   const texts: ((v: number | null) => string)[] = [];
@@ -104,7 +106,8 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
         return `<b>${ps[0]?.axisValueLabel ?? ''}</b><br>${rows}${spec.total ? `סך הכול: <b>${fmtNum(sum)}</b><br>` : ''}<span style="opacity:.65;font-size:11px">${amounts ? spec.unit : '%'}</span>`;
       } },
     xAxis: { type: 'category', data: x, boundaryGap: !allLines, axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: spec.dense ? 11 : 12, rotate: rot, hideOverlap: true, interval: rot && !spec.dense ? 0 : undefined } },
-    yAxis: [{ ...axis(amounts ? spec.unit : '%', !amounts, true), scale: !!spec.scale }, ...(second ? [axis('%', true, false)] : [])],
+    // one line on its own is read for its shape: the axis follows the data instead of starting at zero
+    yAxis: [{ ...axis(amounts ? spec.unit : '%', !amounts, true), scale: !!spec.scale || (allLines && spec.series.length === 1) }, ...(second ? [axis('%', true, false)] : [])],
     series,
   };
 }

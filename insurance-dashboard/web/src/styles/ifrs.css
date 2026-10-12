@@ -1,0 +1,23 @@
+/* IFRS, capital and sources-of-profit pages */
+abbr.orig { font-size: 9.5px; font-weight: 500; line-height: 1; color: var(--faint); border: 1px solid var(--line-soft); border-radius: 4px; padding: 1px 4px; margin-inline-start: 5px; cursor: help; text-decoration: none; vertical-align: 1px; white-space: nowrap; }
+abbr.orig:hover { color: var(--fg); border-color: var(--accent-line); }
+.cv { white-space: nowrap; }
+.cv .chip { margin-inline-start: 4px; }
+table.sens td, table.sens th { white-space: nowrap; }
+table.sens td.lbl { white-space: normal; }
+table.sens td .chip { margin-inline-start: 6px; }
+
+/* sources of profit: segment and line as a tree */
+table.sop td.tl { padding-inline-start: calc(10px + var(--d, 0) * 18px); }
+table.sop tr.grp td { font-weight: 600; }
+table.sop tr.kid td.tl { font-weight: 400; }
+table.sop .tg { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-inline-end: 6px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); font-size: 13px; line-height: 1; cursor: pointer; }
+table.sop .tg:hover { color: var(--fg); border-color: var(--accent-line); }
+table.sop .tg.gap { visibility: hidden; }
+table.sop td .chg { display: block; font-size: 11px; font-weight: 600; line-height: 1.2; }
+table.sop th.sub { font-weight: 500; }
+ul.miss { padding-inline-start: 18px; margin: 0; }
+ul.miss li { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+@media (max-width: 640px) {
+  table.sop td.tl { padding-inline-start: calc(6px + var(--d, 0) * 12px); }
+}

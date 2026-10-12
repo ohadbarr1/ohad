@@ -567,3 +567,29 @@ sup.mk { color: var(--accent); font-weight: 700; margin-inline-start: 2px; curso
 .views .chip button:hover { color: var(--accent); }
 .views .chip button + button { padding-inline: 2px 8px; color: var(--faint); }
 .views input { min-width: 150px; }
+
+/* dense statement rows (a reader's choice, kept per device) */
+table.dense th, table.dense td { padding-block: 3px; font-size: 12.5px; line-height: 1.35; }
+table.dense tr.sec td { padding-top: 8px; }
+/* a caption that opens an explanation */
+.mrow .expl { cursor: help; text-decoration: underline dotted var(--faint); text-underline-offset: 3px; }
+/* phone: metric cards two to a row; controls at a size a thumb can hit; no entry animation where nothing is hovered */
+@media (max-width: 760px) {
+  .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .grid3 > .mcard.wide { grid-column: 1 / -1; }
+  .mcard .mval .v { font-size: 24px; }
+  .chip, .seg button, .btn, .subnav a, select, .iconbtn, .thsort, .charttools button, .stdtabs button { min-height: 36px; }
+  .chip { display: inline-flex; align-items: center; }
+}
+@media (hover: none) { .kpi, .mcard, .page { animation: none !important; } }
+
+/* compact statement view on a phone: caption, latest figure, YoY, QoQ; no sideways scrolling */
+@media (max-width: 760px) {
+  .panel table td.lbl + td + td, .panel table td.lbl + td + td + td { font-size: 12px; }
+}
+@media (max-width: 760px) {
+  table.compact { table-layout: fixed; width: 100%; }
+  table.compact th, table.compact td { padding-inline: 6px; }
+  .panel table.compact td.lbl, .panel table.compact th:first-child { width: 44%; min-width: 0; max-width: none; }
+  table.compact .mrow input { display: none; }
+}

@@ -6,6 +6,29 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf, byPeriodDesc, dateLabel } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
+import { SEGMENT_HE } from '../lib/labels';
+import '../styles/ifrs.css';
+
+const HEB = /[\u0590-\u05FF]/;
+/** Extractor text in English or a snake_case key: not page content, so it sits behind a "מקור" mark instead. */
+/** Hebrew text with at most a few Latin letters (an acronym), as opposed to an English note that happens to contain one Hebrew word. */
+export const heb = (s: string | null | undefined) => !!s && HEB.test(s) && (s.match(/[A-Za-z]/g) ?? []).length < 12;
+export const latin = (s: string | null | undefined) => !!s && !HEB.test(s) && /[A-Za-z]{3}/.test(s);
+export const Orig = ({ t }: { t: string }) => <abbr className="orig" title={t}>מקור</abbr>;
+/** Recurring qualifiers of a printed row, in Hebrew (capital measures: before or after capital actions, audit status). */
+const CAP_HE: [RegExp, string][] = [
+  [/after .*(equity|capital)|after_capital|pro_?forma/i, 'אחרי פעולות הון'], [/before .*(capital|equity)/i, 'לפני גיוס מכשירי הון'],
+  [/unreviewed|assessment|estimate/i, 'אומדן שלא נסקר'], [/unaudited/i, 'לא מבוקר'], [/(^|[^n])audited/i, 'מבוקר'], [/comparative/i, 'השוואתי'],
+];
+const LINE_HE: [RegExp, string][] = [
+  [/\bgross\b|ברוטו/i, 'ברוטו'], [/\bnet\b|retention|שייר/i, 'נטו'], [/reinsur|משנה/i, 'ביטוח משנה'], [/\btotal\b/i, 'סך הכול'], [/clos|end of the period|31\.12/i, 'יתרת סגירה'], [/opening/i, 'יתרת פתיחה'],
+];
+const phrase = (list: [RegExp, string][], s: string) => list.filter(([re]) => re.test(s)).map(([, h]) => h).join(', ');
+export const capHe = (f: IfrsFact) => phrase(CAP_HE, `${f.m} ${f.l} ${f.n ?? ''}`);
+export const lineHe = (f: IfrsFact) => phrase(LINE_HE, f.l);
+/** The row's own words as a tooltip text. */
+export const origOf = (f: IfrsFact) => [f.l, f.n].filter(Boolean).join(' · ');
+export const TR_HE: Record<string, string> = { fair_value: 'שווי הוגן', modified_retrospective: 'רטרוספקטיבית מותאמת', other_contracts: 'חוזים אחרים', post_transition: 'לאחר המעבר' };
 
 export const METRICS: [string, string][] = [
   ['csm_closing', 'CSM: יתרת סגירה'], ['csm_new_business', 'CSM: עסק חדש'], ['csm_release', 'CSM: שחרור לרווח'], ['csm_interest_accretion', 'CSM: צבירת ריבית'],
@@ -18,6 +41,12 @@ export const SEGS: [string, string][] = [['group', 'קבוצה'], ['life', 'חי
 export const WINS: [string, string][] = [['instant', 'יתרה'], ['q', 'QTD'], ['ytd', 'YTD'], ['fy', 'FY']];
 export const BASIS: Record<string, string> = { net: 'נטו', gross: 'ברוטו', reinsurance: 'ביטוח משנה', na: 'לא צוין' };
 export const val = (f: IfrsFact) => f.dv ?? f.v;
+const SUB: [RegExp, string][] = [[/^pension(_funds)?$/i, 'פנסיה'], [/^(provident(_funds)?|gemel)$/i, 'גמל'], [/^pension_gemel$/i, 'פנסיה וגמל'], [/^pc_incl_overseas$/, 'כללי כולל חו"ל'], [/insurer_subsidiary|_insurance$| Insurance$/i, 'חברת הביטוח'],
+  [/^Life Insurance and Long-Term Savings$/, 'חיים וחיסכון'], [/^Health Insurance$/, 'בריאות'], [/^P&C Insurance$/, 'כללי'], [/^life\+health\+pc$/, 'חיים, בריאות וכללי'], [/^(life\+health|life_and_health|Life and Health Segments)$/, 'חיים ובריאות'],
+  [/^Long-Term Savings$/, 'חיסכון ארוך טווח'], [/^Life and Health Risks$/, 'סיכוני חיים ובריאות'], [/^financial_services$/, 'שירותים פיננסיים'], [/^credit(_cards)?$/i, 'אשראי'], [/^(Non-segmented|not_attributed)$/, 'לא מיוחס'], [/^Adjustments and offsets$/, 'התאמות וקיזוזים'], [/^insurance_companies_overseas$/, 'חברות ביטוח בחו"ל']];
+export const segName = (g: string) => SEGS.find(([k]) => k === g)?.[1] ?? SEGMENT_HE[g] ?? SUB.find(([re]) => re.test(g))?.[1] ?? (g === 'insurer' ? 'חברת הביטוח' : g === 'other' ? 'אחר' : g);
+/** A segment as the filer wrote it, in Hebrew; an unmapped English or snake_case name shows only as a "מקור" mark. */
+export function SegLabel({ s }: { s: string }) { const x = segName(s); return latin(x) || /_/.test(x) ? <><span className="muted">לא מתורגם</span><Orig t={s} /></> : <>{x}</>; }
 const INSTANT = ['csm_closing', 'csm_opening', 'risk_adjustment', 'ra_closing', 'loss_component'];
 export const WF: [string, string, 1 | -1 | 0][] = [['csm_opening', 'פתיחה', 0], ['csm_new_business', 'עסק חדש', 1], ['csm_interest_accretion', 'ריבית', 1], ['csm_changes_in_estimates', 'שינויי אומדן', 1], ['csm_economic_interest_and_other_effects', 'ריבית והשפעות אחרות', 1], ['csm_experience_adjustments', 'סטיות ניסיון', 1], ['csm_fx_and_other', 'אחר', 1], ['csm_release', 'שחרור', -1], ['csm_closing', 'סגירה', 0]];
 export const endOf = (p: string) => `${p.slice(0, 4)}-${({ Q1: '03-31', Q2: '06-30', Q3: '09-30', FY: '12-31' } as Record<string, string>)[p.slice(4)]}`;
@@ -106,7 +135,7 @@ export function IndustryIfrs() {
           {have.length === 0 ? <Empty title="המדד לא נמצא בדוחות לתקופה ולמגזר שנבחרו" /> : (
             <div className="scroll"><table><tbody>{rows.map((r, i) => (
               <tr key={r.id} className={r.id === co ? 'lead' : ''} style={{ cursor: 'pointer' }} onClick={() => setCo(r.id)}>
-                <td><span className="num muted">{r.f ? i + 1 : ''}</span> <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link>{r.f && r.f.s !== r.f.g && <span className="dim">{r.f.s}</span>}</td>
+                <td><span className="num muted">{r.f ? i + 1 : ''}</span> <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link>{r.f && r.f.s !== r.f.g && <span className="dim"><SegLabel s={r.f.s} /></span>}</td>
                 <td style={{ width: '36%' }}>{r.f && <div className="bar"><i style={{ width: `${(Math.abs(val(r.f)) / max) * 100}%`, background: val(r.f) < 0 ? 'var(--down)' : pal[ids.indexOf(r.id) % pal.length] }} /></div>}</td>
                 <td><span className={`num ${r.f && val(r.f) < 0 ? 'neg' : ''}`}>{r.f ? nf(val(r.f), Math.abs(val(r.f)) < 100 ? 1 : 0) : 'לא דווח'}</span><IncChip f={r.f} /></td>
                 <td>{r.f && <span className={`chip ${r.f.b === basis ? '' : 'est'}`}>{BASIS[r.f.b] ?? r.f.b}</span>}{r.f?.src === 'chart' && <span className="chip est">מגרף</span>}{r.f?.sn === 1 && <span className="chip" title="הסימן הותאם כך שהגשר נסגר">סימן מנורמל</span>}</td>
@@ -143,7 +172,7 @@ export function IndustryIfrs() {
         <div className="scroll" style={{ maxHeight: 520 }}><table>
           <thead><tr><th>חברה</th><th>מגזר כפי שדווח</th><th>שורה בדוח</th><th>בסיס</th><th>גישת מעבר</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{detail.sort((a, b) => a.c.localeCompare(b.c) || a.s.localeCompare(b.s)).map((f, i) => (
-            <tr key={i}><td>{name(f.c)}</td><td>{f.s}</td><td className="lbl">{f.l}{f.n && <span className="dim clamp" title={f.n}>{f.n}</span>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ?? ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{dateLabel(f.d)}</span></td><td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)}</span><IncChip f={f} /></td><td><Src f={f} d={d} p={P} /></td></tr>
+            <tr key={i}><td>{name(f.c)}</td><td><SegLabel s={f.s} /></td><td className="lbl">{heb(f.l) ? <>{f.l}{f.n && heb(f.n) && <span className="dim clamp" title={f.n}>{f.n}</span>}</> : <>{lineHe(f) || label}<Orig t={origOf(f)} /></>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ? TR_HE[f.tr] ?? 'אחר' : ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{dateLabel(f.d)}</span></td><td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)}</span><IncChip f={f} /></td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
         </table></div>
       </Panel>

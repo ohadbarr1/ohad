@@ -12,6 +12,8 @@ import { IndustryIfrs } from './pages/IndustryIfrs';
 import { IndustryCapital } from './pages/IndustryCapital';
 import { IndustryEcon } from './pages/IndustryEcon';
 import { IndustryMatrix } from './pages/IndustryMatrix';
+import { IndustryLines } from './pages/IndustryLines';
+import { ReportDay } from './pages/ReportDay';
 import { DocSearch } from './pages/DocSearch';
 import { FundCard, FundMakers, Funds } from './pages/Funds';
 import { Dcf, Sotp, ValuationLayout } from './pages/Valuation';
@@ -34,6 +36,7 @@ export function App() {
           <Route index element={<CompanyOverview />} />
           <Route path="review" element={<CompanyReviewTab />} />
           <Route path="financials" element={<CompanyFinancials />} />
+          <Route path="report" element={<ReportDay />} />
           <Route path="profit" element={<CompanySopTab />} />
           <Route path="ifrs17" element={<CompanyIfrs17 />} />
           <Route path="history" element={<Navigate to="../financials" replace />} />
@@ -46,6 +49,7 @@ export function App() {
           <Route path="savings" element={<IndustrySavings />} />
           <Route path="ifrs" element={<IndustryIfrs />} />
           <Route path="matrix" element={<IndustryMatrix />} />
+          <Route path="lines" element={<IndustryLines />} />
           <Route path="econ" element={<IndustryEcon />} />
           <Route path="capital" element={<IndustryCapital />} />
           <Route path="headline" element={<Compare />} />

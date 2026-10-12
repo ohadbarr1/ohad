@@ -5,18 +5,20 @@ import { nf, byPeriodDesc, dateLabel } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { periodName } from './CompanyIfrs';
+import { endOf, lineHe } from './IndustryIfrs';
+import '../styles/ifrs.css';
 
 /** Column = one family of reported rows. Names differ between filers, so each is matched by pattern; `pctv` marks ratios. */
-const COLS: { k: string; l: string; re: RegExp; pctv?: boolean; flow?: boolean }[] = [
+const COLS: { k: string; l: string; re: RegExp; pctv?: boolean; flow?: boolean; tgt?: boolean }[] = [
   { k: 'r1', l: 'יחס כושר פירעון, עם הוראות מעבר', re: /^solvency_ratio_with_transitional$/, pctv: true },
   { k: 'r0', l: 'ללא הוראות מעבר', re: /^solvency_ratio_without_transitional$/, pctv: true },
-  { k: 'tg', l: 'יעד הדירקטוריון', re: /^target_solvency_ratio(_minimum|_with_transitional_minimum)?$/, pctv: true },
-  { k: 'th', l: 'סף לחלוקת דיבידנד', re: /^target_(solvency_ratio_dividend_threshold|dividend_threshold_solvency)/, pctv: true },
+  { k: 'tg', l: 'יעד הדירקטוריון', re: /^target_solvency_ratio(_board|_min(imum)?(_with(out)?_transitional)?|_with_transitional_minimum)?$/, pctv: true, tgt: true },
+  { k: 'th', l: 'סף לחלוקת דיבידנד', re: /^target_(solvency_ratio_dividend_threshold|dividend_threshold_solvency)/, pctv: true, tgt: true },
   { k: 'of', l: 'הון עצמי לעניין SCR', re: /^own_funds(_with_transitional)?$/ },
   { k: 'scr', l: 'SCR', re: /^scr(_with_transitional)?$/ },
   { k: 'su', l: 'עודף הון', re: /^solvency_surplus(_with_transitional)?$/ },
   { k: 'dv', l: 'דיבידנד שהוכרז', re: /^dividend_declared$/, flow: true },
-  { k: 'po', l: 'מדיניות חלוקה, % מהרווח', re: /^target_dividend_payout/, pctv: true },
+  { k: 'po', l: 'מדיניות חלוקה, % מהרווח', re: /^target_dividend_payout/, pctv: true, tgt: true },
 ];
 
 /** Capital and distribution capacity as each insurer reports it. Where a filer prints several values for one row, all are shown, each with its page. */
@@ -25,17 +27,21 @@ export function IndustryCapital() {
   const reg = useRegistry();
   const periods = useMemo(() => [...new Set((d?.files ?? []).map((f) => f.period))].sort(byPeriodDesc), [d]);
   const [period, setPeriod] = useState('');
-  const P = periods.includes(period) ? period : periods.find((p) => p.endsWith('FY')) ?? periods[0] ?? '';
+  const P = periods.includes(period) ? period : periods[0] ?? '';
   const facts = useIfrsFacts(P || null);
+  const end = P ? endOf(P) : '';
+  // per company and measure: the latest fact dated up to the chosen report, whichever report page printed it; targets also list what is set for a later year
   const rows = useMemo(() => {
     const F = facts.data ?? [];
+    const uniq = (l: IfrsFact[]) => { const seen = new Set<number>(); return l.filter((f) => !seen.has(f.v) && seen.add(f.v)); };
     return [...new Set(F.map((f) => f.c))].map((id) => ({ id, cells: COLS.map((col) => {
       const mine = F.filter((f) => f.c === id && col.re.test(f.m) && (!col.flow || f.w !== 'q'));
-      const date = mine.map((f) => f.d).sort().reverse()[0];
-      const seen = new Set<number>();
-      return { date, list: mine.filter((f) => f.d === date && !seen.has(f.v) && seen.add(f.v)).slice(0, 4) };
+      const past = mine.filter((f) => f.d <= end), date = past.map((f) => f.d).sort().reverse()[0];
+      const items = uniq(past.filter((f) => f.d === date)).slice(0, 4).map((f) => ({ f, tag: col.tgt ? `בתוקף ${dateLabel(f.d)}` : '', est: false }));
+      if (col.tgt) mine.filter((f) => f.d > end).sort((a, b) => a.d.localeCompare(b.d)).forEach((f) => { if (items.length < 5) items.push({ f, tag: `יעד ל-${f.d.slice(0, 4)}`, est: true }); });
+      return { date, items, tag: !col.tgt && date ? `${dateLabel(date)}${items[0]?.f.w === 'ytd' ? ' · YTD' : ''}` : '', stale: !!date && date !== end };
     }) }));
-  }, [facts.data]);
+  }, [facts.data, end]);
 
   if (error) return <ErrorBox what="נתוני הון" error={error} />;
   if (!d || !reg.data || (P && !facts.data && !facts.error)) return <Loading what="הון ודיבידנד" />;
@@ -58,9 +64,9 @@ export function IndustryCapital() {
             <tr key={r.id}>
               <td><Link to={`/company/${r.id}/ifrs17`}>{name(r.id)}</Link></td>
               {r.cells.map((c, i) => (
-                <td key={COLS[i].k}>{c.list.length === 0 ? <span className="muted">–</span> : (
-                  <>{c.list.map((f, j) => <span key={j}>{j > 0 && <span className="muted"> · </span>}{url(f) && f.pg != null ? <a className="num" href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.l} · עמ׳ ${f.pg}`}>{show(f, COLS[i].pctv)}</a> : <span className="num" title={f.l}>{show(f, COLS[i].pctv)}</span>}</span>)}
-                    <span className="dim num">{dateLabel(c.date)}{c.list[0].w === 'ytd' ? ' · YTD' : ''}</span></>
+                <td key={COLS[i].k}>{c.items.length === 0 ? <span className="muted">–</span> : (
+                  <>{c.items.map(({ f, tag, est }, j) => <span key={j} className="cv">{j > 0 && <span className="muted"> · </span>}{url(f) && f.pg != null ? <a className="num" href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${lineHe(f) || 'עמ׳'} · עמ׳ ${f.pg}`}>{show(f, COLS[i].pctv)}</a> : <span className="num">{show(f, COLS[i].pctv)}</span>}{tag && <span className={`chip ${est ? 'est' : ''}`}>{tag}</span>}</span>)}
+                    {c.tag && <span className={`chip ${c.stale ? 'est' : ''}`} title={c.stale ? `הערך האחרון בדוח ${periodName(P)} הוא מ-${c.tag}` : undefined}>{c.tag}</span>}</>
                 )}</td>
               ))}
             </tr>

@@ -3,7 +3,7 @@ import { CompanyIfrs } from './CompanyIfrs';
 import { CompanyReview } from './CompanyReview';
 import { CompanySop } from './CompanySop';
 import { CompanySeries } from './CompanySeries';
-import { Link, NavLink, Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { GroupPanel } from './Market';
@@ -11,7 +11,7 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
-import { SCALES, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
+import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
 import type { Market } from '../lib/market';
 import type { RegistryCompany } from '../lib/types';
@@ -27,11 +27,13 @@ export function CompanyLayout() {
   const reg = useRegistry();
   const entry = reg.data?.find((c) => c.id === id) ?? null;
   const { store, error: storeError } = useCompanyStore(id ?? null, !!entry?.has_financials);
-  const { market } = useMarket();
+  // the regulator's fund data serves the overview and the savings tab only
+  const loc = useLocation();
+  const { market } = useMarket(/\/(overview|savings)\/?$/.test(loc.pathname) || /\/company\/[^/]+\/?$/.test(loc.pathname));
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <Empty title="החברה לא נמצאה">בדוק את הכתובת או חפש בשורת החיפוש.</Empty>;
-  const latest = entry.filings[0]?.period;
+  const latest = entry.filings[0]?.end ? dateLabel(entry.filings[0].end) : entry.filings[0]?.period;  // the latest report, named like every other period
   return (
     <>
       <div className="pagehead">
@@ -48,10 +50,12 @@ export function CompanyLayout() {
       </div>
       <nav className="subnav" aria-label="חברה">
         <NavLink to="." end>סקירה</NavLink>
-        <NavLink to="review">סקירת דוח</NavLink>
+        {/* a fund house has no extracted statements, sources of profit or IFRS 17 disclosures: its tabs are the ones that have content */}
+        {entry.has_financials && <NavLink to="report">יום הדוח</NavLink>}
+        {entry.kind !== 'fund_house' && <NavLink to="review">סקירת דוח</NavLink>}
         {entry.has_financials && <NavLink to="financials">דוחות כספיים</NavLink>}
-        <NavLink to="profit">מקורות רווח וענפים</NavLink>
-        <NavLink to="ifrs17">IFRS 17</NavLink>
+        {entry.kind !== 'fund_house' && <NavLink to="profit">מקורות רווח וענפים</NavLink>}
+        {entry.kind !== 'fund_house' && <NavLink to="ifrs17">IFRS 17</NavLink>}
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>
         <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
       </nav>
@@ -97,6 +101,8 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   const [scale, setScale] = useState<Scale>((['k', 'm', 'b'] as Scale[]).find((x) => x === sp.get('u')) ?? 'm');
   const [mode, setMode] = useState<'value' | 'yoy'>(sp.get('v') === 'yoy' ? 'yoy' : 'value');
   const [showChart, setShowChart] = useState(sp.get('g') === '1');
+  // a phone opens on the latest period with its changes; the full run of periods is one tap away
+  const [compact, setCompact] = useState(() => sp.get('all') !== '1' && window.matchMedia('(max-width: 760px)').matches);
   const [stack, setStack] = useState(sp.get('k') === '1');
   const [flip, setFlip] = useState<Record<number, boolean>>(() => Object.fromEntries((sp.get('fl') ?? '').split(',').filter(Boolean).map((x) => [Number(x), true])));
   const [growth, setGrowth] = useState<Record<number, 'yoy' | 'qoq' | undefined>>(() => Object.fromEntries((sp.get('gr') ?? '').split(',').filter(Boolean).map((x) => { const [i, g] = x.split(':'); return [Number(i), g === 'qoq' ? 'qoq' : 'yoy']; })));
@@ -109,6 +115,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   const [sel, setSel] = useState<number[]>(initSel);
   const [kind, setKind] = useState<Record<number, 'bar' | 'line'>>({});
   const [explain, setExplain] = useState<number | null>(null);
+  const hasNotes = companyId === 'phoenix' && !sheetCode.startsWith('X.');  // line explanations exist for the Phoenix workbook sheets only
   const notes = useCompanyNotes(companyId, explain != null);
 
   const sv = useMemo(() => store.sheet(sheetCode), [store, sheetCode]);
@@ -125,7 +132,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
 
   // A statement that changed accounting standard is read one structure at a time: IFRS 17 as reported from 2024, IFRS 4 as reported until 2024,
   // or only the lines that exist under both and so run through the break.
-  const [stdSaved, saveStd] = useStored<'17' | '4' | 'c'>('fin.std', '17');
+  const [stdSaved, saveStd] = useStored<'17' | '4' | 'c'>(`fin.std.${companyId}`, '17');
   // a link says which structure it shows; otherwise the reader's last choice, and for a first visit the full current statement
   const [stdPick, pickStd] = useState<'17' | '4' | 'c'>((['17', '4', 'c'] as const).find((x) => x === sp.get('s')) ?? stdSaved);
   const setStdTab = (t: '17' | '4' | 'c') => { pickStd(t); saveStd(t); };
@@ -164,7 +171,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   const allCols = useMemo(() => (!sv ? [] : hasStd ? colsOf(stdTab) : sv.periodIdx.filter((pi) => d.periods[pi].type === baseType)), [sv, d, baseType, hasStd, stdTab, tabRows]);  // eslint-disable-line react-hooks/exhaustive-deps
   // the period window: kept as dates, so it survives a change of table or of period type
   const [range, setRange] = useState<[string | null, string | null]>([sp.get('f'), sp.get('e')]);
-  const cols = useMemo(() => allCols.filter((pi) => { const e = d.periods[pi].end; return (!range[0] || e >= range[0]) && (!range[1] || e <= range[1]); }), [allCols, d, range]);
+  const cols = useMemo(() => allCols.filter((pi) => { const e = d.periods[pi].end; return (!range[0] || e >= range[0]) && (!range[1] || e <= range[1]); }).filter((pi) => !ltm || (sv?.rows ?? []).some((r) => !r.m.header && inTab(r.idx) && val(r.idx, pi) != null)), [allCols, d, range, ltm, sv, stdTab]);  // eslint-disable-line react-hooks/exhaustive-deps
   const nAll = allCols.length;
   const loI = Math.max(0, range[0] ? allCols.findIndex((pi) => d.periods[pi].end >= range[0]!) : 0);
   const hiI = range[1] ? Math.max(loI, allCols.reduce((a, pi, i) => (d.periods[pi].end <= range[1]! ? i : a), 0)) : nAll - 1;
@@ -211,6 +218,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
     if (oldestFirst) q.r = '1';
     if (showChart) q.g = '1';
     if (stack) q.k = '1';
+    if (!compact) q.all = '1';
     if (hasStd) q.s = stdTab;
     if (range[0]) q.f = range[0];
     if (range[1]) q.e = range[1];
@@ -219,7 +227,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
     if (gr.length) q.gr = gr.join(',');
     wrote.current = new URLSearchParams(q).toString();
     setSp(q, { replace: true });
-  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, flip, growth, setSp]);
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, flip, growth, compact, setSp]);
   useEffect(() => { if (wrote.current != null && sp.toString() !== wrote.current) onOutsideLink(); }, [sp, onOutsideLink]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
@@ -271,6 +279,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   const toggle = (mi: number) => setSel((cur) => (cur.includes(mi) ? cur.filter((x) => x !== mi) : [...cur, mi]));
   const fromReports = sheetCode.startsWith('X.');
   const [showRe, setShowRe] = useState(false);
+  const [dense, setDense] = useStored<boolean>('fin.dense', false);
   // named views of this company's statements (table, rows, chart set-up, period window), kept on this device
   const [views, setViews] = useStored<{ n: string; q: string }[]>(`fin.views.${companyId}`, []);
   const [viewName, setViewName] = useState('');
@@ -278,6 +287,25 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   const restated = (d.restated ?? []).filter((r) => r[0] === sheetCode && (!hasStd || stdTab === 'c' || r[1] === (stdTab === '17' ? 'IFRS 17' : 'IFRS 4')) && (r[3] === baseType || (baseType === 'Q' && r[3] === 'I')));
   // a figure from the periodic reports links only to its own report; the entity's single source file would be the wrong document
   const open = (page: number | null, u?: number | null) => (fromReports && u == null ? null : store.sourceUrl(entity, page, u));
+
+  // compact view: the latest column, its change on the year-earlier period and, for quarters, on the previous quarter
+  const lastPi = cols.length ? cols[cols.length - 1] : null, qoqPi = !ltm && baseType === 'Q' && cols.length > 1 ? cols[cols.length - 2] : null;
+  const change = (now: number | null, then: number | null, unit: string) => {
+    if (now == null || then == null) return <span className="muted">–</span>;
+    if (unit === 'pct') return <span className={`num ${now - then >= 0 ? 'pos' : 'neg'}`}>{sn(now - then, 1)} נק׳</span>;
+    if (now <= 0 || then <= 0) return <span className="muted">–</span>;  // no rate of change from or to a loss
+    const c = (now / then - 1) * 100;
+    return <span className={`num ${c >= 0 ? 'pos' : 'neg'}`}>{Math.abs(c) >= 300 ? `×${nf(now / then, 1)}` : `${sn(c, 1)}%`}</span>;
+  };
+  const compactCells = (mi: number) => {
+    const pi = lastPi!, f0 = store.byMetric.get(mi)?.get(pi), f = seen(f0) ? f0 : undefined, v = val(mi, pi), pp = prior(pi), unit = d.metrics[mi].unit;
+    const href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{fmtCell(v, unit, scale)}</span>;
+    return <>
+      <td>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`מקור: עמ׳ ${f?.page ?? ''}`}>{body}</a> : body}</td>
+      <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit)}</td>
+      {qoqPi != null && <td>{change(v, val(mi, qoqPi), unit)}</td>}
+    </>;
+  };
 
   const explainText = explain != null ? notes.data?.[String(explain)] : null;
 
@@ -291,11 +319,12 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
         {curGroup.length > 1 && <Field label="טבלה"><select value={sheetCode} onChange={(e) => { setSheetCode(e.target.value); setSel([]); }}>{curGroup.map((x) => <option key={x.code} value={x.code}>{sheetName(x.code)}{span(x.code)}</option>)}</select></Field>}
         <div className="field"><span>תקופה</span><Seg<string> label="תקופה" value={curType} onChange={setType} options={types.map((t) => [t, periodLong(t)] as [string, string])} /></div>
         <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'מוצג' : 'הצגת גרף'}</button></div>
+        <div className="field"><span>עמודות</span><Seg<'c' | 'a'> label="עמודות" value={compact ? 'c' : 'a'} onChange={(v) => setCompact(v === 'c')} options={[['c', 'אחרונה ושינוי'], ['a', 'כל התקופות']]} /></div>
         <div className="field"><span>עוד</span><button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${range[0] || range[1] || q || mode === 'yoy' || dim !== 'all' ? ' •' : ''}`}</button></div>
         {more && <>
         <Field label="יחידות"><select value={scale} onChange={(e) => setScale(e.target.value as Scale)} disabled={mode === 'yoy'}>{SCALES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></Field>
         <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
-        <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש ← ישן'], ['old', 'ישן ← חדש']]} /></div>
+        <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש תחילה'], ['old', 'ישן תחילה']]} /></div>
         {nAll > 2 && <div className="field"><span>טווח תקופות: <b className="num">{pl(allCols[loI])}</b> עד <b className="num">{pl(allCols[hiI])}</b>{(range[0] || range[1]) && <button type="button" className="linkbtn" onClick={() => setRange([null, null])}>כל התקופות</button>}</span>
           <div className="range2" style={{ ['--lo' as string]: `${(loI / (nAll - 1)) * 100}%`, ['--hi' as string]: `${(hiI / (nAll - 1)) * 100}%` }}>
             <input type="range" min={0} max={nAll - 1} step={1} value={loI} onChange={(e) => setLo(Number(e.target.value))} aria-label="מתקופה" />
@@ -306,6 +335,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
           <input type="text" value={viewName} onChange={(e) => setViewName(e.target.value)} placeholder="שם לתצוגה הנוכחית" aria-label="שם לתצוגה" />
           <button type="button" className="btn" disabled={!viewName.trim()} onClick={() => { setViews([...views.filter((x) => x.n !== viewName.trim()), { n: viewName.trim(), q: sp.toString() }]); setViewName(''); }}>שמירה</button>
         </div></div>
+        <div className="field"><span>שורות</span><Seg<'n' | 'd'> label="צפיפות" value={dense ? 'd' : 'n'} onChange={(v) => setDense(v === 'd')} options={[['n', 'רגיל'], ['d', 'צפוף']]} /></div>
         <Field label="חיפוש שורה"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="רווח, פרמיות, CSM" /></Field>
         {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
         </>}
@@ -367,11 +397,11 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
       </div>}
       <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'נטוי = מחושב מהשנתי · אפור = IFRS 4 · כל ערך מקושר לעמוד המקור' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
-          <table>
-            <thead><tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{pl(pi)}</th>)}<th>עמ׳</th></tr></thead>
+          <table className={`${dense ? 'dense' : ''}${compact ? ' compact' : ''}`}>
+            <thead>{compact && lastPi != null ? <tr><th>שורה</th><th>{pl(lastPi)}</th><th>YoY</th>{qoqPi != null && <th>QoQ</th>}</tr> : <tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{pl(pi)}</th>)}<th>עמ׳</th></tr>}</thead>
             <tbody>
               {rows.map((r) => {
-                if (r.m.header) return <tr key={r.idx} className={`sec${r.m.std ? ' std' : ''}`}><td colSpan={colsDesc.length + 2}>{r.m.label}</td></tr>;
+                if (r.m.header) return <tr key={r.idx} className={`sec${r.m.std ? ' std' : ''}`}><td colSpan={compact ? 4 : colsDesc.length + 2}>{r.m.label}</td></tr>;
                 const on = sel.includes(r.idx), k = sel.indexOf(r.idx);
                 const src = colsDesc.map((pi) => r.values.get(pi)).find((x) => seen(x) && x?.page != null);
                 const page = src?.page ?? null;
@@ -381,11 +411,11 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
                     <td className="lbl"><div className="mrow">
                       <input type="checkbox" checked={showChart && on} onChange={() => { if (!showChart) { setShowChart(true); setSel([r.idx]); } else toggle(r.idx); }} aria-label={`הצג בגרף: ${r.m.label}`} title="הצגה בגרף" />
                       {showChart && on && <span className="dot" style={{ background: pal[k % pal.length] }} />}
-                      <span>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
-                      <button type="button" className="info" onClick={() => setExplain(explain === r.idx ? null : r.idx)} aria-label="הסבר">i</button>
+                      <span className={hasNotes ? 'expl' : undefined} title={r.m.label} onClick={hasNotes ? () => setExplain(explain === r.idx ? null : r.idx) : undefined}>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
+
                     </div></td>
-                    {colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.der ? 'מחושב מהדוח השנתי (FY פחות התקופה המצטברת). מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
-                    <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td>
+                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.turned ? 'הסימן הותאם להצגה בדוחות האחרונים. ' : ''}${f?.der ? 'מחושב מהדוח השנתי (FY פחות התקופה המצטברת). מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
+                    <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td></>}
                   </tr>
                 );
               })}
@@ -455,7 +485,7 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
   const chosen = parts.filter(({ i }) => defaultOn(i));
   const val = (mi: number, pi: number) => store.val(mi, pi);
   const last = dates[dates.length - 1], prevYear = dates.find((x) => x.p.end === shiftYear(last?.p.end ?? '', -1)), dec = dates.find((x) => x.p.end.endsWith('12-31') && x !== last);
-  const chg = (mi: number, base?: { i: number }) => { const a = base ? val(mi, base.i) : null, b = last ? val(mi, last.i) : null; return a && b != null ? (b / a - 1) * 100 : null; };
+  const chg = (mi: number, base?: { i: number }) => { const a = base ? val(mi, base.i) : null, b = last ? val(mi, last.i) : null; return a && b ? (b / a - 1) * 100 : null; };  // a line absent from either period has no change, it is not a fall to zero
   const tot = total?.i ?? null;
 
   if (!total || dates.length === 0) return <Empty title="אין נתוני CSM בקובץ זה" />;

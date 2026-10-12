@@ -1,16 +1,17 @@
 import { foxOption } from '../lib/foxchart';
 import { useEffect, useMemo, useState } from 'react';
-import { NavLink, Navigate, Outlet, useOutletContext, useParams, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Navigate, Outlet, useOutletContext, useParams, useNavigate } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Count } from '../components/Count';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
 import { chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
 import type { CompanyKpi } from '../lib/kpi';
-import { useKpis, useMarket, useRegistry } from '../lib/useData';
+import { useCompanyPrice, useKpis, useMarket, useRegistry } from '../lib/useData';
+import '../styles/market.css';
 import type { Market } from '../lib/market';
 
-interface Ctx { k: CompanyKpi; name: string; aum: number | null }
+interface Ctx { k: CompanyKpi; name: string; aum: number | null; px: number | null }
 const useV = () => useOutletContext<Ctx>();
 
 function useStored<T>(key: string, init: T): [T, (v: T) => void] {
@@ -27,28 +28,32 @@ function savingsAum(m: Market | null, group: string | null): number | null {
   return g < 0 ? null : (m.cell(m.LAST, 'fam:pension', g).a + m.cell(m.LAST, 'fam:gemel', g).a) / 1000;
 }
 
+const dmy = (d: string) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(2, 4)}`;
+
 export function ValuationLayout() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { kpis, error } = useKpis(true);
+  const { kpis, error } = useKpis();
   const reg = useRegistry();
   const { market } = useMarket();
+  // the price file of the company on screen only, and only for a company that has one
+  const price = useCompanyPrice(id ?? null, !!reg.data?.find((c) => c.id === id)?.has_price).data;
   if (error) return <ErrorBox what="נתוני החברות" error={error} />;
   if (!kpis || !reg.data) return <Loading what="הערכת שווי" />;
   const ids = [...kpis.keys()];
   if (!id || !kpis.has(id)) return <Navigate to={`/valuation/${ids.includes('phoenix') ? 'phoenix' : ids[0]}/dcf`} replace />;
   const entry = reg.data.find((c) => c.id === id)!;
   const k = kpis.get(id)!;
-  const px = k.lastPrice(), sh = k.lastShares();
+  const px = price ? price.last / 100 : null, sh = k.lastShares();
   return (
     <>
       <div className="pagehead">
         <div><h1>הערכת שווי · {entry.name_he}</h1>
-          <div className="sub">{px != null && <>קלט להערכה: מחיר סגירה אחרון במערכת <span className="num">{nf(px, 2)}</span> ש"ח</>}{px != null && sh != null && <> · שווי שוק <span className="num">{nf((px * sh) / 1e9, 1)}</span> מיליארד ש"ח <span className="chip est">נגזר</span></>}</div></div>
+          <div className="sub">{px != null && price && <span className="pxin">קלט להערכה: מחיר סגירה אחרון <span className="num">{nf(px, 2)}</span> ש"ח · <span className="num">{dmy(price.asof)}</span> · <span className="num">{price.ticker}</span></span>}{px == null && <>אין מחיר מוגדר לחברה זו: יחס המחיר להערכה אינו מחושב</>}{px != null && sh != null && <> · שווי שוק <span className="num">{nf((px * sh) / 1e9, 1)}</span> מיליארד ש"ח <span className="chip est">נגזר</span></>}</div></div>
         <Field label="חברה"><select value={id} onChange={(e) => nav(`/valuation/${e.target.value}/${location.hash.endsWith('sotp') ? 'sotp' : 'dcf'}`)}>{ids.map((x) => <option key={x} value={x}>{reg.data!.find((c) => c.id === x)?.name_he}</option>)}</select></Field>
       </div>
       <nav className="subnav" aria-label="מודל"><NavLink to="dcf">DCF להון</NavLink><NavLink to="sotp">סכום החלקים (SOTP)</NavLink></nav>
-      <Outlet context={{ k, name: entry.name_he, aum: savingsAum(market, entry.market_group) } satisfies Ctx} />
+      <Outlet context={{ k, name: entry.name_he, aum: savingsAum(market, entry.market_group), px } satisfies Ctx} />
     </>
   );
 }
@@ -72,12 +77,17 @@ function impliedKe(a: DcfIn, target: number): number | null {
 }
 
 export function Dcf() {
-  const { k } = useV();
+  const { k, px } = useV();
   const base = k.latest('profit', 'ltm'), eq = k.latest('equity'), roe = k.latest('roe');
-  const sh = k.lastShares(), px = k.lastPrice();
-  const init: DcfIn = { e0: Math.round(base?.v ?? 0), g: 5, years: 5, payout: 40, ke: 10, gt: 2.5 };
+  const sh = k.lastShares();
+  // defaults: base profit as reported, growth = ROE x retention held to 2-6%, payout 40% (the filings give no payout ratio), ke 10%, g 3%
+  const g0 = roe?.v != null ? Math.min(6, Math.max(2, Math.round(roe.v * 0.6 * 2) / 2)) : 5;
+  const init: DcfIn = { e0: Math.round(base?.v ?? 0), g: g0, years: 5, payout: 40, ke: 10, gt: 3 };
   const [a, setA] = useStored<DcfIn>(`fox.dcf.${k.id}`, init);
-  const set = (p: Partial<DcfIn>) => setA({ ...a, ...p });
+  // the result is a verdict only once the assumptions are the user's: edited, or confirmed with the button
+  const [okS, setOk] = useStored<{ ok: boolean }>(`fox.dcf.ok.${k.id}`, { ok: false });
+  const ok = okS.ok;
+  const set = (p: Partial<DcfIn>) => { setA({ ...a, ...p }); if (!ok) setOk({ ok: true }); };
   const r = useMemo(() => dcf(a), [a]);
   const mcap = px && sh ? (px * sh) / 1e6 : null;
   const perShare = sh ? (r.value * 1e6) / sh : null;
@@ -89,14 +99,14 @@ export function Dcf() {
   if (!base?.v) return <Empty title="אין רווח LTM לחברה זו" />;
   return (
     <div className="grid12">
-      <Panel title="הנחות" aside={<button type="button" className="btn" onClick={() => setA(init)}>איפוס</button>}>
+      <Panel title="הנחות" aside={<button type="button" className="btn" onClick={() => { setA(init); setOk({ ok: false }); }}>איפוס</button>}>
         <div className="assume">
           <h4>בסיס</h4>
           <label>רווח נקי בסיס<small>מיליוני ש"ח · ברירת מחדל: LTM עד {base.period}</small></label><Num value={a.e0} onChange={(v) => set({ e0: v })} step={10} />
           <h4>תחזית</h4>
-          <label>צמיחת רווח שנתית<small>%</small></label><Num value={a.g} onChange={(v) => set({ g: v })} step={0.5} />
+          <label>צמיחת רווח שנתית<small>% · ברירת מחדל: ROE LTM × 60%, בטווח 2% עד 6%</small></label><Num value={a.g} onChange={(v) => set({ g: v })} step={0.5} />
           <label>שנות תחזית</label><Num value={a.years} onChange={(v) => set({ years: Math.max(1, Math.min(15, Math.round(v) || 1)) })} />
-          <label>שיעור חלוקה<small>% מהרווח</small></label><Num value={a.payout} onChange={(v) => set({ payout: v })} step={5} />
+          <label>שיעור חלוקה<small>% מהרווח · ברירת מחדל, הדוחות אינם מציגים שיעור חלוקה</small></label><Num value={a.payout} onChange={(v) => set({ payout: v })} step={5} />
           <h4>היוון</h4>
           <label>מחיר ההון<small>%</small></label><Num value={a.ke} onChange={(v) => set({ ke: v })} step={0.25} />
           <label>צמיחה לטווח ארוך<small>%</small></label><Num value={a.gt} onChange={(v) => set({ gt: v })} step={0.25} />
@@ -105,9 +115,10 @@ export function Dcf() {
       </Panel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
         <Panel>
-          <div className="verdict">
-            <div><span className="lbl">שווי למניה <span className="chip est">אומדן</span></span><span className="big num"><Count value={perShare} dec={2} /></span> <span className="muted">ש"ח</span></div>
-            <div><span className="lbl">מול מחיר {px != null && <span className="num">{nf(px, 2)}</span>}</span><span className={`big num ${(upside ?? 0) >= 0 ? 'pos' : 'neg'}`}><Count value={upside} dec={1} suffix="%" signed /></span></div>
+          {!ok && <div className="illus"><b>המחשה בהנחות ברירת מחדל</b><span>ההנחות טרם נקבעו או אושרו. התוצאה מדגימה את המכניקה ואינה הערכת שווי.</span><button type="button" className="btn" onClick={() => setOk({ ok: true })}>אישור ההנחות</button></div>}
+          <div className={`verdict${ok ? '' : ' ghost'}`}>
+            <div><span className="lbl">{ok ? 'שווי למניה' : 'שווי למניה, המחשה'} <span className="chip est">{ok ? 'אומדן' : 'המחשה'}</span></span><span className="big num"><Count value={perShare} dec={2} /></span> <span className="muted">ש"ח</span></div>
+            {ok && <div><span className="lbl">מול מחיר {px != null && <span className="num">{nf(px, 2)}</span>}</span><span className={`big num ${(upside ?? 0) >= 0 ? 'pos' : 'neg'}`}><Count value={upside} dec={1} suffix="%" signed /></span></div>}
             <div><span className="lbl">שווי הון</span><span className="num" style={{ fontSize: 20, fontWeight: 600 }}><Count value={r.value} /></span> <span className="muted">מיליוני ש"ח</span></div>
           </div>
           <table><tbody>
@@ -133,7 +144,7 @@ export function Dcf() {
               <tbody>{kes.map((ke) => (
                 <tr key={ke}><td><span className="num">{nf(ke, 1)}%</span></td>{gts.map((gt) => {
                   const v = sh ? (dcf({ ...a, ke, gt }).value * 1e6) / sh : NaN, up = px ? v / px - 1 : 0, here = ke === a.ke && gt === a.gt;
-                  const bg = !Number.isFinite(v) ? undefined : `color-mix(in oklch, var(${up >= 0 ? '--up' : '--down'}) ${Math.min(42, Math.abs(up) * 60)}%, transparent)`;
+                  const bg = !ok || !Number.isFinite(v) ? undefined : `color-mix(in oklch, var(${up >= 0 ? '--up' : '--down'}) ${Math.min(42, Math.abs(up) * 60)}%, transparent)`;
                   return <td key={gt} className="heat" style={{ background: bg, outline: here ? '1px solid var(--fg)' : undefined, outlineOffset: -1 }}><span className="num">{Number.isFinite(v) ? nf(v, 1) : '–'}</span></td>;
                 })}</tr>
               ))}</tbody>
@@ -155,37 +166,41 @@ const BASIS: Record<Basis, { label: string; amount: string; mult: string; value:
 };
 
 export function Sotp() {
-  const { k, aum } = useV();
+  const { k, aum, px } = useV();
   const eq = k.latest('equity');
+  // only parts with a figure behind them: a part at zero is added by the user, with the segment profit read from the profit-sources tab
   const init: { parts: Part[]; adj: number } = { adj: 0, parts: [
     { name: 'ביטוח (חיים, בריאות, כללי)', basis: 'book', amount: Math.round(eq?.v ?? 0), mult: 1 },
-    { name: 'ניהול נכסים: פנסיה וגמל', basis: 'aum', amount: +(aum ?? 0).toFixed(1), mult: 1.5 },
-    { name: 'פעילויות אחרות', basis: 'profit', amount: 0, mult: 10 },
+    ...(aum ? [{ name: 'ניהול נכסים: פנסיה וגמל', basis: 'aum' as Basis, amount: +aum.toFixed(1), mult: 1.5 }] : []),
   ] };
-  const [s, setS] = useStored(`fox.sotp.${k.id}`, init);
+  const [s, setS0] = useStored(`fox.sotp.v2.${k.id}`, init);
+  const [okS, setOk] = useStored<{ ok: boolean }>(`fox.sotp.ok.${k.id}`, { ok: false });
+  const ok = okS.ok;
+  const setS = (n: typeof init) => { setS0(n); if (!ok) setOk({ ok: true }); };
   const setPart = (i: number, p: Partial<Part>) => setS({ ...s, parts: s.parts.map((x, j) => (j === i ? { ...x, ...p } : x)) });
   const vals = s.parts.map((p) => BASIS[p.basis].value(p)).map((v) => (Number.isFinite(v) ? v : 0));
   const total = vals.reduce((x, y) => x + y, 0) + (Number.isFinite(s.adj) ? s.adj : 0);
-  const sh = k.lastShares(), px = k.lastPrice(), mcap = px && sh ? (px * sh) / 1e6 : null;
-  const perShare = sh ? (total * 1e6) / sh : null, gap = mcap ? (mcap / total - 1) * 100 : null;
+  const sh = k.lastShares(), mcap = px && sh ? (px * sh) / 1e6 : null;
+  const perShare = sh ? (total * 1e6) / sh : null, gap = mcap && total ? (mcap / total - 1) * 100 : null;
   const pal = palette();
   return (
     <>
       <Panel>
-        <div className="verdict">
-          <div><span className="lbl">שווי למניה <span className="chip est">אומדן</span></span><span className="big num"><Count value={perShare} dec={2} /></span> <span className="muted">ש"ח</span></div>
-          <div><span className="lbl">שווי שוק מול סכום החלקים</span><span className={`big num ${(gap ?? 0) <= 0 ? 'pos' : 'neg'}`}><Count value={gap} dec={1} suffix="%" signed /></span></div>
-          <div><span className="lbl">סכום החלקים</span><span className="num" style={{ fontSize: 20, fontWeight: 600 }}><Count value={total} /></span> <span className="muted">מיליוני ש"ח{mcap != null && <> · שוק <span className="num">{nf(mcap, 0)}</span></>}</span></div>
+        {!ok && <div className="illus"><b>המחשה בהנחות ברירת מחדל</b><span>החלקים והמכפילים טרם נקבעו או אושרו. התוצאה מדגימה את המכניקה ואינה הערכת שווי.</span><button type="button" className="btn" onClick={() => setOk({ ok: true })}>אישור ההנחות</button></div>}
+        <div className={`verdict${ok ? '' : ' ghost'}`}>
+          <div><span className="lbl">{ok ? 'שווי למניה' : 'שווי למניה, המחשה'} <span className="chip est">{ok ? 'אומדן' : 'המחשה'}</span></span><span className="big num"><Count value={perShare} dec={2} /></span> <span className="muted">ש"ח</span></div>
+          {ok && <div><span className="lbl">שווי שוק מול סכום החלקים</span><span className={`big num ${(gap ?? 0) <= 0 ? 'pos' : 'neg'}`}><Count value={gap} dec={1} suffix="%" signed /></span></div>}
+          <div><span className="lbl">סכום החלקים</span><span className="num" style={{ fontSize: 20, fontWeight: 600 }}><Count value={total} /></span> <span className="muted">מיליוני ש"ח{ok && mcap != null && <> · שוק <span className="num">{nf(mcap, 0)}</span></>}</span></div>
         </div>
-        <Chart label="סכום החלקים" height={70} deps={[vals.join(), s.adj, mcap]} build={() => {
+        <Chart label="סכום החלקים" height={70} deps={[vals.join(), s.adj, mcap, ok]} build={() => {
           const b = chartBase();
           return { animationDuration: 500, grid: { left: 0, right: 0, top: 4, bottom: 4 }, tooltip: { trigger: 'item', backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: (v: number) => nf(v, 0) },
-            xAxis: { type: 'value', show: false, max: Math.max(total, mcap ?? 0) * 1.02 }, yAxis: { type: 'category', show: false, data: [''] },
+            xAxis: { type: 'value', show: false, max: Math.max(total, ok ? mcap ?? 0 : 0) * 1.02 }, yAxis: { type: 'category', show: false, data: [''] },
             series: [...s.parts.map((p, i) => ({ name: p.name, type: 'bar', stack: 'a', data: [Math.max(0, vals[i])], barWidth: 26, itemStyle: { color: pal[i % pal.length], borderRadius: 3 } })),
-              ...(mcap ? [{ name: 'שווי שוק', type: 'line', data: [], markLine: { symbol: 'none', silent: true, lineStyle: { color: b.fg, width: 1.5 }, label: { formatter: 'שווי שוק', color: b.mu, fontSize: 11 }, data: [{ xAxis: mcap }] } }] : [])] };
+              ...(ok && mcap ? [{ name: 'שווי שוק', type: 'line', data: [], markLine: { symbol: 'none', silent: true, lineStyle: { color: b.fg, width: 1.5 }, label: { formatter: 'שווי שוק', color: b.mu, fontSize: 11 }, data: [{ xAxis: mcap }] } }] : [])] };
         }} />
       </Panel>
-      <Panel title="חלקים" aside={<><button type="button" className="btn" onClick={() => setS({ ...s, parts: [...s.parts, { name: 'חלק חדש', basis: 'profit', amount: 0, mult: 10 }] })}>הוסף חלק</button><button type="button" className="btn" onClick={() => setS(init)}>איפוס</button></>}>
+      <Panel title="חלקים" aside={<><button type="button" className="btn" onClick={() => setS({ ...s, parts: [...s.parts, { name: 'חלק חדש', basis: 'profit', amount: 0, mult: 10 }] })}>הוסף חלק</button><button type="button" className="btn" onClick={() => { setS0(init); setOk({ ok: false }); }}>איפוס</button></>}>
         <div className="scroll"><table>
           <thead><tr><th>חלק</th><th>שיטה</th><th>בסיס</th><th>מכפיל</th><th>שווי, מיליוני ש"ח</th><th>% מהסכום</th><th /></tr></thead>
           <tbody>
@@ -195,7 +210,7 @@ export function Sotp() {
                 <td><select value={p.basis} onChange={(e) => setPart(i, { basis: e.target.value as Basis })}>{(Object.keys(BASIS) as Basis[]).map((b) => <option key={b} value={b}>{BASIS[b].label}</option>)}</select></td>
                 <td style={{ width: 130 }}><Num value={p.amount} onChange={(v) => setPart(i, { amount: v })} step={p.basis === 'aum' ? 1 : 10} /><span className="dim">{BASIS[p.basis].amount}</span></td>
                 <td style={{ width: 100 }}><Num value={p.mult} onChange={(v) => setPart(i, { mult: v })} step={0.1} /><span className="dim">{BASIS[p.basis].mult}</span></td>
-                <td><span className="num">{nf(vals[i], 0)}</span></td><td><span className="num muted">{total ? pct(vals[i] / total * 100, 0) : '–'}</span></td>
+                <td><span className="num">{p.amount ? nf(vals[i], 0) : '–'}</span></td><td><span className="num muted">{total && p.amount ? pct(vals[i] / total * 100, 0) : '–'}</span></td>
                 <td><button type="button" className="btn" aria-label="הסר" onClick={() => setS({ ...s, parts: s.parts.filter((_, j) => j !== i) })}>×</button></td>
               </tr>
             ))}
@@ -203,7 +218,7 @@ export function Sotp() {
             <tr className="tot"><td>סכום החלקים</td><td /><td /><td /><td><span className="num">{nf(total, 0)}</span></td><td /><td /></tr>
           </tbody>
         </table></div>
-        <div className="src">ברירות המחדל: הון הקבוצה מה-XBRL, נכסי פנסיה וגמל מרשות שוק ההון. הון הקבוצה כבר כולל את חברות הניהול, ולכן יש להפחית אותו כשמעריכים אותן בנפרד. רווחי המגזרים יוזנו אוטומטית אחרי חילוץ הדוחות.</div>
+        <div className="src">ברירות המחדל: הון הקבוצה מה-XBRL, נכסי פנסיה וגמל מרשות שוק ההון. הון הקבוצה כבר כולל את חברות הניהול, ולכן יש להפחית אותו כשמעריכים אותן בנפרד. רווחי המגזרים כפי שדווחו מופיעים בלשונית <Link to={`/company/${k.id}/profit`}>מקורות הרווח</Link> של החברה; אפשר להוסיף מהם חלק בשיטת רווח × מכפיל רווח.</div>
       </Panel>
     </>
   );

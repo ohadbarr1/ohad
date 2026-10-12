@@ -7,6 +7,7 @@ import { palette } from '../lib/theme';
 import { nf } from '../lib/format';
 import { KPI_BY_KEY, KPI_DEFS, periodLabelShort, type Basis } from '../lib/kpi';
 import { useKpis, useRegistry } from '../lib/useData';
+import '../styles/market.css';
 
 const BASIS: [Basis, string][] = [['q', 'QTD'], ['ltm', 'LTM'], ['fy', 'FY']];
 const fmt = (v: number | null, unit: string) => (v == null ? '–' : unit === '%' ? nf(v, 1) + '%' : unit === 'x' ? nf(v, 2) : unit === 'nis' ? nf(v, 2) : nf(v, 0));
@@ -24,6 +25,8 @@ export function Compare() {
   // one company in focus: its line at full strength, the rest stay as context
   const [lead, setLead] = useState<string>(sp.get('c') ?? '');
   const [index, setIndex] = useState(sp.get('i') === '1');
+  // everything but the metric and basis sits behind one button on a phone, so the first screen shows the chart
+  const [more, setMore] = useState(() => window.matchMedia('(min-width: 761px)').matches);
   const def = KPI_BY_KEY[metric];
   useEffect(() => {
     const q: Record<string, string> = { k: metric, b: basis, y: String(from) };
@@ -59,17 +62,22 @@ export function Compare() {
   return (
     <>
       <div className="src">{def.label} · {index ? 'אינדקס, תקופה ראשונה = 100' : UNIT[def.unit]}{def.derived && <> · <span className="chip est">נגזר</span></>}</div>
-      <section className="controls">
-        <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value)}>
-          {(['דוחות', 'יחסים'] as const).map((g) => <optgroup key={g} label={g}>{KPI_DEFS.filter((d) => d.group === g).map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</optgroup>)}
-        </select></Field>
-        {def.flow && <div className="field"><span>בסיס</span><Seg label="בסיס" value={basis} onChange={setBasis} options={BASIS} /></div>}
-        <Field label="משנת"><select value={from} onChange={(e) => setFrom(Number(e.target.value))}>{[2019, 2020, 2021, 2022, 2023, 2024, 2025].map((y) => <option key={y}>{y}</option>)}</select></Field>
-        <div className="field"><span>תצוגה</span><Seg<'v' | 'i'> label="תצוגה" value={index ? 'i' : 'v'} onChange={(v) => setIndex(v === 'i')} options={[['v', 'ערך'], ['i', 'אינדקס 100']]} /></div>
-        <Field label="מיקוד"><select value={lead} onChange={(e) => setLead(e.target.value)}><option value="">כל החברות שוות</option>{ids.filter((id) => !off.includes(id)).map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>
-        <div className="field"><span>חברות</span><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {ids.map((id) => <button key={id} type="button" className="chip" aria-pressed={!off.includes(id)} onClick={() => setOff((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]))}><i className="sw" style={{ background: color(id) }} />{name(id)}</button>)}
-        </div></div>
+      <section className="controls tight">
+        <div className="prim">
+          <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value)}>
+            {(['דוחות', 'יחסים'] as const).map((g) => <optgroup key={g} label={g}>{KPI_DEFS.filter((d) => d.group === g).map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</optgroup>)}
+          </select></Field>
+          {def.flow && <div className="field"><span>בסיס</span><Seg label="בסיס" value={basis} onChange={setBasis} options={BASIS} /></div>}
+          <div className="field more-btn"><span>עוד</span><button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${from !== 2022 || index || lead || off.length ? ' •' : ''}`}</button></div>
+        </div>
+        <div className={`extra${more ? '' : ' shut'}`}>
+          <Field label="משנת"><select value={from} onChange={(e) => setFrom(Number(e.target.value))}>{[2019, 2020, 2021, 2022, 2023, 2024, 2025].map((y) => <option key={y}>{y}</option>)}</select></Field>
+          <div className="field"><span>תצוגה</span><Seg<'v' | 'i'> label="תצוגה" value={index ? 'i' : 'v'} onChange={(v) => setIndex(v === 'i')} options={[['v', 'ערך'], ['i', 'אינדקס 100']]} /></div>
+          <Field label="מיקוד"><select value={lead} onChange={(e) => setLead(e.target.value)}><option value="">כל החברות שוות</option>{ids.filter((id) => !off.includes(id)).map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>
+          <div className="field"><span>חברות</span><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {ids.map((id) => <button key={id} type="button" className="chip" aria-pressed={!off.includes(id)} onClick={() => setOff((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]))}><i className="sw" style={{ background: color(id) }} />{name(id)}</button>)}
+          </div></div>
+        </div>
       </section>
 
       {on.length === 0 || data.periods.length === 0 ? <Empty title="אין נתונים לבחירה" /> : (

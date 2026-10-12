@@ -3,7 +3,7 @@
 Phoenix keeps the workbook built from its published spreadsheet (pipeline/extract_company_workbook.py); the lines extracted from
 the reports (web/public/data/series/<id>.json, 2021 onward, quarterly and annual) are added to it as further sheets.
 Every other company gets a workbook made of those extracted lines only. Each fact carries its own source file, because the
-figures come from many reports: facts are [metric, period, value, page, url index, flags: 1 = derived (Q4 = FY less nine months), 2 = taken from the IFRS 4 statement as originally reported] and `urls` is the list they index.
+figures come from many reports: facts are [metric, period, value, page, url index, flags: 1 = derived (Q4 = FY less nine months), 2 = taken from the IFRS 4 statement as originally reported, 4 = sign turned to the latest presentation] and `urls` is the list they index.
 """
 import csv
 import json
@@ -102,7 +102,9 @@ STD_NOTE = {"IFRS 17": "IFRS 17 (מ-2024, לרבות מספרי השוואה ש�
 def norm(t):
     """Row identity across reports. Wording drifts from report to report ("רווח (הפסד) לפני מיסים על ההכנסה", "רווח לפני מסים על הכנסה"),
     so the key drops bracketed alternatives, note letters, digits, the definite article and word order, and unifies a few spellings."""
-    t = re.sub(r"\([^)]*\)", " ", t or "")
+    t = re.sub(r"^\d+\S*\s+", "", (t or "").strip())  # a note reference that leaked into the start of a label
+    t = re.sub(r"\)([^()]*)\(", r"(\1)", t)  # brackets mirrored by the right-to-left text layer
+    t = re.sub(r"\([^)]*\)", " ", t)
     t = re.sub(r"[\"'״׳*().,:;\-–\d]", " ", t)
     t = re.sub(r"סה\s*כ|סך\s+ה?כל", "סך", t)
     for a, b in (("מיסים", "מסים"), ("פיננסיים", "פיננסים"), ("לשנה", "לתקופה"), ("השנה", "התקופה"), ("למניה", ""), ("בשח", "")):
@@ -125,9 +127,23 @@ def statements(comp):
             if st["statement"] not in STATEMENTS:
                 continue
             order, meta, cells = out.setdefault((st["statement"], d.get("standard") or "IFRS 4"), ([], {}, {}))
-            section, seen, prev = "", {}, None
+            section, seen, prev, per_share = "", {}, None, False
             for r in st["rows"]:
+                raw = " ".join((r.get("label") or "").split())
+                has = any(isinstance(v, (int, float)) for v in r.get("values") or [])
+                if not raw:
+                    if r.get("header") or not has:
+                        continue  # an empty caption or an empty line
+                    r = {**r, "label": "סך הכול", "total": True}  # a sum printed under its section with no caption of its own
+                    raw = r["label"]
+                # per-share lines are printed in NIS whatever the unit of the statement: from the first "למניה" caption to the end
+                # of the income statement (or to the comprehensive-income part, where one statement carries both)
                 lab = norm(r["label"]) or f"שורה ללא כותרת {r.get('page')}"
+                if "למניה" in raw:
+                    per_share = True
+                elif per_share and ("כולל" in raw or "מספר" in raw or any(k[1] == lab and not m["eps"] and not m["header"] for k, m in meta.items())
+                                    or any(isinstance(v, (int, float)) and abs(v) >= 5000 for v in r.get("values") or [])):
+                    per_share = False  # the statement went on to something else: comprehensive income, share counts, or a second block of the same lines
                 if r.get("header"):
                     section = lab
                 occ = seen[(section, lab)] = seen.get((section, lab), 0) + 1
@@ -135,8 +151,8 @@ def statements(comp):
                 if r.get("header") and lab in ("ליום", ""):
                     continue  # the date caption of the column block, not a section
                 if key not in meta:
-                    shown = re.sub(r"^\d+\S*\s+", "", " ".join(r["label"].split())).replace("לשנה", "לתקופה")  # a stray note reference; one row serves quarters and years
-                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total")) or bool(SUBTOTAL.match(shown))}
+                    shown = re.sub(r"\)([^()]*)\(", r"(\1)", re.sub(r"^\d+\S*\s+", "", " ".join(r["label"].split()))).replace("לשנה", "לתקופה").replace(" ,", ",")  # a stray note reference; one row serves quarters and years
+                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total")) or bool(SUBTOTAL.match(shown)), "eps": per_share and not r.get("header")}
                     order.insert(order.index(prev) + 1 if prev in order else 0, key)
                 prev = key
                 for c, v in zip(st["columns"], r.get("values") or []):
@@ -144,9 +160,10 @@ def statements(comp):
                         continue
                     date, w = c["date"], c["window"]
                     typ = "I" if w == "instant" else "FY" if w == "fy" else "Q" if w == "q" or date[5:7] == "03" else "H" if date[5:7] == "06" else "9M"
-                    cells.setdefault(key, {}).setdefault((typ, date), []).append(((date != own, own), v * mult, r.get("page"), url))
+                    cells.setdefault(key, {}).setdefault((typ, date), []).append(((date != own, own), v if per_share else v * mult, r.get("page"), url))
     RESTATED[comp] = []
     for (stmt, std), (order, meta, cells) in out.items():
+        turned, source, printed = {}, {}, {}
         for key, by in cells.items():
             for pk in by:
                 # a period printed again by a later report with another figure: as first reported against the latest print.
@@ -155,7 +172,20 @@ def statements(comp):
                 a, b = first[1], latest[1]
                 if abs(a - b) > 1.5 and a and b and ((a * b > 0 and 0.5 <= b / a <= 2) or abs(a + b) < 0.5):
                     RESTATED[comp].append([f"X.{STATEMENTS[stmt][1].replace(' ', '_')}", std, meta[key]["label"], pk[0], pk[1], a, first[2], first[3], b, latest[2], latest[3], latest[0][1]])
-                by[pk] = min(by[pk], key=lambda c: c[0])[1:]
+                # the opposite sign with (nearly) the same size: a change of presentation, not of substance. A restated comparative may differ a little.
+                mirror = [c for c in by[pk] if c[1] * first[1] < 0 and abs(abs(c[1]) - abs(first[1])) <= max(0.5, 0.05 * abs(first[1]))]
+                if mirror and abs(first[1]) > 1.5:
+                    # the first report that printed this period with the opposite sign: from that report on the line is presented the other way round
+                    turned.setdefault(key, []).append(min(c[0][1] for c in mirror))
+                source[(key, pk)] = first[0][1]
+                printed[(key, pk)] = by[pk]
+                by[pk] = first[1:]
+        # A line whose sign convention changed (interest paid shown positive, later in brackets) reads in the latest convention throughout:
+        # figures taken from reports before the change are turned, and flagged (4), so a series does not flip half way.
+        for key, when in turned.items():
+            for pk, c in cells.get(key, {}).items():
+                if source[(key, pk)] < min(when):
+                    cells[key][pk] = (-c[0], c[1], c[2], 4)
         # A line printed as "הכנסות (הוצאות) אחרות" in one report and "הוצאות אחרות" in another is one line:
         # the bracketed wording and the plain alternative are joined, under the newest wording.
         for key in list(order):
@@ -170,21 +200,93 @@ def statements(comp):
             cells[keep] = {**cells.pop(drop, {}), **cells.get(keep, {})}
             order.remove(drop)
             del meta[drop]
+        # A line the company renamed: the old name and the new name print the same figures wherever a later report repeats an earlier
+        # period, and each has periods the other lacks. They are one line, under the newest name.
+        # The same holds for two differently named lines that agree in three or more periods (a comparative reprinted under the new name).
+        for _ in range(3):  # a merge can bring two more lines into agreement: repeat until nothing is left
+            plain = [k for k in order if not meta[k]["header"] and not meta[k]["total"] and not meta[k].get("eps")]
+            for i, a in enumerate(plain):
+                for b in plain[i + 1:]:
+                    if a not in meta or b not in meta:
+                        continue
+                    ca, cb = cells.get(a, {}), cells.get(b, {})
+                    both = set(ca) & set(cb)
+                    renamed = len(both) >= 2 and set(ca) - set(cb) and set(cb) - set(ca)  # each name has periods of its own
+                    agree = all(abs(ca[p][0] - cb[p][0]) < 0.6 for p in both)
+                    # the same caption under two section captions (a statement printed in blocks, or a caption reworded) is one line unless the two
+                    # ever print different figures for one period, which is what marks a caption the statement really repeats
+                    same_name = a[1] == b[1] and agree and bool(ca) and bool(cb)
+                    if same_name or (((renamed and a[0] == b[0]) or len(both) >= 3) and agree and any(abs(ca[p][0]) > 0.6 for p in both)):
+                        cells[a] = {**cb, **ca}
+                        cells.pop(b, None)
+                        order.remove(b)
+                        del meta[b]
         if stmt == "balance":
             continue
-        for by in cells.values():
+        def same_print(key, pk, part):
+            """The annual figure as printed by the report the part-year figure came from, when that report prints both: a year from one report
+            less nine months from another mixes a restated figure with an unrestated one."""
+            rep_end = source.get((key, part))
+            c = next((c for c in printed.get((key, pk), []) if c[0][1] == rep_end), None)
+            flipped = key in turned and rep_end is not None and rep_end < min(turned[key])
+            return None if c is None else (-c[1] if flipped else c[1])
+
+        for key, by in cells.items():
             for (typ, date), fy in list(by.items()):  # the fourth quarter is not printed: the year less nine months, flagged as derived
-                n9 = by.get(("9M", date[:4] + "-09-30"))
+                p9, ph = ("9M", date[:4] + "-09-30"), ("H", date[:4] + "-06-30")
+                n9 = by.get(p9)
                 if typ == "FY" and n9 and ("Q", date) not in by:
-                    by[("Q", date)] = (round(fy[0] - n9[0], 3), fy[1], fy[2], 1)
-                h1 = by.get(("H", date[:4] + "-06-30"))
+                    year = same_print(key, (typ, date), p9)
+                    by[("Q", date)] = (round((fy[0] if year is None else year) - n9[0], 3), fy[1], fy[2], 1)
+                h1 = by.get(ph)
                 if typ == "FY" and h1 and ("H", date) not in by:  # the second half, likewise: the year less the first half
-                    by[("H", date)] = (round(fy[0] - h1[0], 3), fy[1], fy[2], 1)
+                    year = same_print(key, (typ, date), ph)
+                    by[("H", date)] = (round((fy[0] if year is None else year) - h1[0], 3), fy[1], fy[2], 1)
     return out
 
 
 ROWS = []
 RESTATED = {}
+# The lines every insurer prints under some wording: (key, name on screen, sheet, pattern over the caption with "סך הכל" / סה"כ reduced to "סך").
+# The first matching line of a sheet is taken: the IFRS 17 section comes first, and its common lines already run back through IFRS 4.
+ROLES = [
+    ("ins_rev", "הכנסות משירותי ביטוח", "X.רווח_והפסד", r"^הכנסות משירותי ביטוח"),
+    ("ins_exp", "הוצאות משירותי ביטוח", "X.רווח_והפסד", r"^הוצאות משירותי ביטוח"),
+    ("ins_res", "רווח משירותי ביטוח", "X.רווח_והפסד", r"^(רווח|תוצאות)( \(הפסד\))? משירותי ביטוח$"),
+    ("inv_fin", "רווח מהשקעות ומימון, נטו", "X.רווח_והפסד", r"^רווח( \(הפסד\))? מהשקעות ומימון,? ?נטו"),
+    ("gpe", "פרמיות שהורווחו ברוטו (IFRS 4)", "X.רווח_והפסד", r"^פרמיות שהורווחו ברוטו"),
+    ("npe", "פרמיות שהורווחו בשייר (IFRS 4)", "X.רווח_והפסד", r"^פרמיות שהורווחו בשייר"),
+    ("total_rev", "סך ההכנסות (IFRS 4)", "X.רווח_והפסד", r"^סך (כל )?ה?הכנסות$"),
+    ("claims_net", "תשלומים ושינוי בהתחייבויות, בשייר (IFRS 4)", "X.רווח_והפסד", r"^תשלומים ושינוי בהתחייבויות.*בשייר"),
+    ("commissions", "עמלות, שיווק ורכישה (IFRS 4)", "X.רווח_והפסד", r"^עמלות,? ?(ו)?הוצאות (שיווק|רכישה)"),
+    ("ga", "הנהלה וכלליות (IFRS 4)", "X.רווח_והפסד", r"^הוצאות הנהלה וכלליות"),
+    ("fees", "הכנסות מדמי ניהול", "X.רווח_והפסד", r"^הכנסות מדמי ניהול"),
+    ("opex", "הוצאות תפעוליות אחרות", "X.רווח_והפסד", r"^הוצאות תפעוליות אחרות"),
+    ("pbt", "רווח לפני מס", "X.רווח_והפסד", r"^רווח( \(הפסד\))? לפני מי?סים על ה?הכנסה"),
+    ("tax", "מסים על ההכנסה", "X.רווח_והפסד", r"^מי?סים על ה?הכנסה"),
+    ("np", "רווח לתקופה", "X.רווח_והפסד", r"^(רווח|הפסד)( נקי)?( \(הפסד\))?( נקי)? לתקופה$|^רווח נקי( \(הפסד\))?$"),
+    ("np_attr", "רווח לבעלי המניות", "X.רווח_והפסד", r"^בעלי(ם)? (ה)?(מניות )?של החברה|^בעלי המניות$"),
+    ("eps", "רווח בסיסי למניה (ש\"ח)", "X.רווח_והפסד", r"^רווח( נקי)?( \(הפסד\))? בסיסי( ומדולל)? למניה|^רווח מפעילויות נמשכות למניה|^רווח למניה רגילה|^בסיסי$"),
+    ("total_assets", "סך הנכסים", "X.מאזן", r"^סך (כל )?ה?נכסים$"),
+    ("equity_attr", "הון לבעלי המניות", "X.מאזן", r"^סך (כל )?ה?הון המיוחס לבעלי"),
+    ("total_equity", "סך ההון", "X.מאזן", r"^סך (כל )?ה?הון$"),
+    ("total_liab", "סך ההתחייבויות", "X.מאזן", r"^סך (כל )?ה?התחייבויות$"),
+    ("ins_liab", "התחייבויות בגין חוזי ביטוח", "X.מאזן", r"^התחייבויות בגין חוזי ביטוח$"),
+    ("intangibles", "נכסים בלתי מוחשיים", "X.מאזן", r"^נכסים בלתי מוחשיים"),
+    ("cash", "מזומנים ושווי מזומנים אחרים", "X.מאזן", r"^מזומנים ושווי מזומנים אחרים"),
+    ("cfo", "מזומנים נטו מפעילות שוטפת", "X.תזרים_מזומנים", r"מזומנים נטו.*(מ|ל)פעילות שוטפת"),
+    ("cfi", "מזומנים נטו מפעילות השקעה", "X.תזרים_מזומנים", r"מזומנים נטו.*(מ|ל)פעילות השקעה"),
+    ("cff", "מזומנים נטו מפעילות מימון", "X.תזרים_מזומנים", r"מזומנים נטו.*(מ|ל)פעילות מימון"),
+    ("div_paid", "דיבידנד ששולם", "X.תזרים_מזומנים", r"^דיבידנד (ששולם|לבעלי)"),
+]
+LINES = {"roles": [[k, n, sh] for k, n, sh, _ in ROLES], "periods": [], "urls": [], "data": {k: {} for k, *_ in ROLES}}
+_lp, _lu = {}, {}
+
+
+def caption(t):
+    t = re.sub(r"[\"'״׳*]", "", t)
+    return re.sub(r"\s+", " ", re.sub(r"סה\s*כ|סך\s+ה?כל", "סך", t)).strip()
+
 registry = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
 names = {c["id"]: c["name_he"] for c in (registry if isinstance(registry, list) else registry.get("companies", []))}
 for sf in sorted((DATA / "series").glob("*.json")):
@@ -257,7 +359,7 @@ for sf in sorted((DATA / "series").glob("*.json")):
                 n += 1
             for key in order:
                 m, mi = meta[key], len(d["metrics"])
-                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": "nis" if "למניה" in m["label"] else "k", "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
+                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": "nis" if m.get("eps") or "למניה" in m["label"] else "k", "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
                 n += 1
                 for (typ, date), c in cells.get(key, {}).items():
                     v, page, u = c[0], c[1], c[2]
@@ -304,8 +406,29 @@ for sf in sorted((DATA / "series").glob("*.json")):
         if not m["header"] and m["sheet"].startswith("X.") and (m["sheet"], m["label"], m.get("dim")) not in seen:
             seen.add((m["sheet"], m["label"], m.get("dim")))
             ROWS.append([comp, m["sheet"], m["label"] + (f" · {m['dim']}" if m.get("dim") else ""), i])
+    # the lines every insurer prints, picked by caption, for the cross-company chart
+    facts_of = {}
+    for x in d["facts"]:
+        facts_of.setdefault(x[0], []).append(x)
+    for key, _, sheet, pat in ROLES:
+        mi = next((i for i, m in enumerate(d["metrics"]) if m["sheet"] == sheet and not m["header"] and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4), None)
+        if mi is None:
+            continue
+        cells = []
+        for x in facts_of[mi]:
+            p = d["periods"][x[1]]
+            if p["type"] == "9M":
+                continue
+            pi = _lp.setdefault((p["type"], p["end"]), len(_lp))
+            u = d["urls"][x[4]] if len(x) > 4 and x[4] is not None else None
+            cells.append([pi, x[2], x[3], _lu.setdefault(u, len(_lu)) if u else None, x[5] if len(x) > 5 else 0])
+        LINES["data"][key][comp] = {"label": d["metrics"][mi]["label"], "unit": d["metrics"][mi]["unit"], "cells": cells}
     live_f.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(comp, len(d["sheets"]), "sheets,", len(d["metrics"]), "lines,", len(d["facts"]), "facts,", len(d["periods"]), "periods")
 (DATA / "search").mkdir(exist_ok=True)
 (DATA / "search" / "rows.json").write_text(json.dumps(ROWS, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 print(len(ROWS), "statement lines indexed for search")
+LINES["periods"] = [list(k) for k, _ in sorted(_lp.items(), key=lambda kv: kv[1])]
+LINES["urls"] = [u for u, _ in sorted(_lu.items(), key=lambda kv: kv[1])]
+(DATA / "lines.json").write_text(json.dumps(LINES, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+print("cross-company lines:", {k: len(v) for k, v in LINES["data"].items()})

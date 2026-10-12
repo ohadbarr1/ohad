@@ -61,7 +61,8 @@ export function Search({ big = false }: { big?: boolean }) {
     const score = (it: Item) => {
       const t = (it.label + ' ' + it.meta).toLowerCase();
       if (!words.every((w) => t.includes(w))) return -1;
-      return (it.label.toLowerCase().startsWith(s) ? 3 : 0) + (it.kind === 'חברה' ? 2 : it.kind === 'קבוצה' ? 1 : 0);
+      // a caption that starts with the query beats one that contains it, and a short caption (the line itself) beats a long one (a sub-line)
+      return (it.label.toLowerCase().startsWith(s) ? 3 : 0) + (it.kind === 'חברה' ? 2 : it.kind === 'קבוצה' ? 1 : 0) - Math.min(it.label.length, 200) / 400;
     };
     const found = index.map((it) => [score(it), it] as const).filter(([sc]) => sc >= 0).sort((a, b) => b[0] - a[0]).slice(0, 14).map(([, it]) => it);
     const companies = found.filter((it) => it.kind === 'חברה');

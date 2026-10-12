@@ -5,6 +5,7 @@ import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
 import { chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
+import '../styles/market.css';
 import { load, useFundCats, useFundHist, useFunds, useRegistry, type Fund, type FundCats, type FundHist } from '../lib/useData';
 
 const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
@@ -70,6 +71,8 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
   const prod = sp.get('prod') ?? 'השתלמות', track = sp.get('track') ?? 'כללי', per = (sp.get('per') as Per) ?? 'y12';
   const sel = useMemo(() => (sp.get('sel') ?? '').split(',').filter(Boolean), [sp]);
   const [closed, setClosed] = useState(false);
+  // search, the closed-fund switch and the ranking period sit behind one button on a phone, so the first screen shows figures
+  const [more, setMore] = useState(() => window.matchMedia('(min-width: 761px)').matches);
   const [q, setQ] = useState(sp.get('q') ?? '');
   const [win, setWin] = useState<Win>('60');
   const set = (patch: Record<string, string>) => { const next = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k))); setSp(next, { replace: true }); };
@@ -129,12 +132,17 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
     <>
       <div className="pagehead"><div><h1>{makersOnly ? 'יצרן מול השוק' : 'קופות ומסלולים'}</h1><div className="sub">{nf(all.length, 0)} מסלולים · {ym(asof)} · {data.source}</div></div></div>
       <Sub />
-      <section className="controls">
-        <Field label="מוצר"><select value={prod} onChange={(e) => set({ prod: e.target.value, track: '', sel: '' })}>{PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
-        {!makersOnly && <Field label="מסלול"><select value={T} onChange={(e) => set({ track: e.target.value, sel: '' })}><option value={ALL}>כל המסלולים ({tracks.reduce((u, [, c]) => u + c, 0)})</option>{tracks.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select></Field>}
-        <div className="field"><span>דירוג לפי</span><Seg label="תקופה" value={per} onChange={(v) => set({ per: v })} options={PERIODS} /></div>
-        {!makersOnly && <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם קופה או גוף" /></Field>}
-        <button type="button" className="chip" aria-pressed={closed} onClick={() => setClosed(!closed)}>כולל קופות ענפיות ומפעליות</button>
+      <section className="controls tight">
+        <div className="prim">
+          <Field label="מוצר"><select value={prod} onChange={(e) => set({ prod: e.target.value, track: '', sel: '' })}>{PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
+          {!makersOnly && <Field label="מסלול"><select value={T} onChange={(e) => set({ track: e.target.value, sel: '' })}><option value={ALL}>כל המסלולים ({tracks.reduce((u, [, c]) => u + c, 0)})</option>{tracks.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select></Field>}
+          <div className="field more-btn"><span>עוד</span><button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${per !== 'y12' || q || closed ? ' •' : ''}`}</button></div>
+        </div>
+        <div className={`extra${more ? '' : ' shut'}`}>
+          <div className="field"><span>דירוג לפי</span><Seg label="תקופה" value={per} onChange={(v) => set({ per: v })} options={PERIODS} /></div>
+          {!makersOnly && <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם קופה או גוף" /></Field>}
+          <button type="button" className="chip" aria-pressed={closed} onClick={() => setClosed(!closed)}>כולל קופות ענפיות ומפעליות</button>
+        </div>
       </section>
 
       {T === ALL && makers.names.length > 0 && (

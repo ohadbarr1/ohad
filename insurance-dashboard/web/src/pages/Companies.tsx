@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Panel, Seg } from '../components/ui';
 import { cls, nf, pct } from '../lib/format';
 import { useMarket, useRegistry } from '../lib/useData';
+import '../styles/market.css';
 
 export function Companies() {
   const reg = useRegistry();
   const { market: m } = useMarket();
   const [kind, setKind] = useState<'all' | 'insurance_group' | 'fund_house'>('all');
   const L = m?.LAST ?? 0;
-  const list = (reg.data ?? []).filter((c) => kind === 'all' || c.kind === kind);
+  const all = reg.data ?? [];
+  // a subsidiary shares its holding's market group and carries its id as a prefix (more_gemel under more): one entry for the holding, the subsidiary beneath it
+  const holdingOf = (c: (typeof all)[number]) => all.find((x) => x.id !== c.id && c.id.startsWith(`${x.id}_`) && x.market_group === c.market_group);
+  const list = all.filter((c) => !holdingOf(c) && (kind === 'all' || c.kind === kind));
   return (
     <>
       <div className="pagehead"><div><h1>חברות</h1><div className="sub">קבוצות ביטוח ובתי השקעות · נתוני שוק עד {m?.plabel(L)}</div></div>
@@ -20,16 +24,26 @@ export function Companies() {
           <tbody>{list.map((c) => {
             const g = m ? m.groupIndex(c.market_group ?? '') : -1;
             const v = (k: Parameters<NonNullable<typeof m>['value']>[0]) => (m && g >= 0 ? m.value(k, L, 'ltm', 'all', g) : null);
+            const subs = all.filter((x) => holdingOf(x)?.id === c.id);
             return (
-              <tr key={c.id}>
-                <td><Link to={`/company/${c.id}`}>{c.name_he}</Link> <span className="muted">{c.name_en}</span></td>
-                <td><span className="num">{v('assets') == null ? '–' : nf(v('assets')!, 1)}</span></td>
-                <td><span className="num">{pct(v('share'), 1)}</span></td>
-                <td><span className={`num ${cls(v('growth'))}`}>{pct(v('growth'), 1, true)}</span></td>
-                <td><span className={`num ${cls(v('organic'))}`}>{v('organic') == null ? '–' : nf(v('organic')!, 1)}</span></td>
-                <td><span className="num">{pct(v('fee'), 2)}</span></td>
-                <td><span className="num">{c.docs || '–'}</span></td>
-              </tr>
+              <Fragment key={c.id}>
+                <tr>
+                  <td><Link to={`/company/${c.id}`}>{c.name_he}</Link> <span className="muted">{c.name_en}</span></td>
+                  <td><span className="num">{v('assets') == null ? '–' : nf(v('assets')!, 1)}</span></td>
+                  <td><span className="num">{pct(v('share'), 1)}</span></td>
+                  <td><span className={`num ${cls(v('growth'))}`}>{pct(v('growth'), 1, true)}</span></td>
+                  <td><span className={`num ${cls(v('organic'))}`}>{v('organic') == null ? '–' : nf(v('organic')!, 1)}</span></td>
+                  <td><span className="num">{pct(v('fee'), 2)}</span></td>
+                  <td><span className="num">{c.docs || '–'}</span></td>
+                </tr>
+                {subs.map((x) => (
+                  <tr key={x.id} className="subrow">
+                    <td><Link to={`/company/${x.id}`}>{x.name_he}</Link><span className="dim">חברה בת, נכללת בנתוני {c.name_he}</span></td>
+                    <td colSpan={5} />
+                    <td><span className="num">{x.docs || '–'}</span></td>
+                  </tr>
+                ))}
+              </Fragment>
             );
           })}</tbody>
         </table></div>

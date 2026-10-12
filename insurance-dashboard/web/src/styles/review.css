@@ -1,0 +1,14 @@
+/* phone: label / report / YoY / QoQ in fixed narrow columns, no sideways scroll, every change keeps its sign */
+@media (max-width: 760px) {
+  .panel .scroll { overflow: visible; }
+  .panel table.review { table-layout: fixed; width: 100%; }
+  .panel table.review th, .panel table.review td { padding: 8px 3px; min-width: 0; width: auto; overflow-wrap: anywhere; white-space: normal; }
+  .panel table.review th:first-child, .panel table.review td:first-child { position: static; box-shadow: none; width: 31%; min-width: 0; max-width: none; }
+  .panel table.review th:not(:first-child), .panel table.review td:not(:first-child) { width: 23%; }
+  .panel table.review thead th { font-size: 10.5px; line-height: 1.25; white-space: normal; }
+  .panel table.review td:not(:first-child) { font-size: 12.5px; }
+  .panel table.review td .chg { display: block; margin: 0; font-size: 11px; text-align: start; white-space: nowrap; }
+  .panel table.review td .chip { display: block; width: fit-content; max-width: 100%; white-space: normal; padding: 1px 6px; font-size: 10.5px; margin-top: 2px; }
+  .panel table.review .num + .chip { margin-right: 0; }
+  .panel table.review .narrow-only svg.trend { width: 100%; max-width: 92px; height: 22px; }
+}

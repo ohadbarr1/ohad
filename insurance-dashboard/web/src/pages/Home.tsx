@@ -7,8 +7,9 @@ import { nf, pct } from '../lib/format';
 import { useDocsOf, useKpis, useMarket, useRegistry } from '../lib/useData';
 import { useStored, useWatchlist } from '../lib/local';
 import { Star } from '../components/Follow';
-import { useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 import { periodLabelShort } from '../lib/kpi';
+import '../styles/market.css';
 
 const KIND: Record<string, string> = { insurer: 'ביטוח', manager: 'בית השקעות', group: 'ביטוח' };
 
@@ -27,7 +28,9 @@ export function Home() {
   const TYPE: Record<string, string> = { annual: 'דוח שנתי', quarterly: 'דוח רבעוני', presentation: 'מצגת', solvency: 'כושר פירעון' };
   const L = m?.LAST ?? 0;
   const fam = (s: string) => (m ? m.cell(L, s, -1).a / 1000 : null);
-  const rows = (reg.data ?? []).map((c) => {
+  // a subsidiary (more_gemel under more) shares its holding's market group: it gets a sub-row, not a second company with the same figures
+  const holdingOf = (c: { id: string; market_group: string | null }) => (reg.data ?? []).find((x) => x.id !== c.id && c.id.startsWith(`${x.id}_`) && x.market_group === c.market_group);
+  const rows = (reg.data ?? []).filter((c) => !holdingOf(c)).map((c) => {
     const k = kpis?.get(c.id);
     const q = k?.latest('profit', 'q') ?? null;
     const prior = q && k ? k.series('profit', 'q').find((p) => p.period === `${Number(q.period.slice(0, 4)) - 1}${q.period.slice(4)}`)?.v ?? null : null;
@@ -80,7 +83,8 @@ export function Home() {
         <div className="scroll"><table className="rank">
           <thead><tr><th>חברה</th><th>דוח אחרון</th><th>רווח נקי, QTD</th><th>YoY</th><th>רווח נקי, LTM</th><th>הון</th><th>ROE, LTM <span className="chip est">נגזר</span></th><th>נכסים מנוהלים, מיליארד</th><th>מסמכים</th></tr></thead>
           <tbody>{rows.map(({ c, q, yoy, ltm, eq, roe, aum }) => (
-            <tr key={c.id}>
+            <Fragment key={c.id}>
+            <tr>
               <td><span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span></span></span></td>
               <td>{q ? <span className="num">{periodLabelShort(q.period)}</span> : <span className="muted">–</span>}</td>
               <td>{q?.v != null ? <span className={`num ${q.v < 0 ? 'neg' : ''}`}>{nf(q.v, 0)}</span> : <span className="muted">–</span>}</td>
@@ -91,6 +95,14 @@ export function Home() {
               <td>{aum != null ? <span className="num">{nf(aum, 0)}</span> : <span className="muted">–</span>}</td>
               <td>{c.docs > 0 ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : <span className="muted">–</span>}</td>
             </tr>
+            {(reg.data ?? []).filter((x) => holdingOf(x)?.id === c.id).map((x) => (
+              <tr key={x.id} className="subrow">
+                <td><Link to={`/company/${x.id}`}>{x.name_he}</Link><span className="dim">חברה בת, נכללת בנתוני {c.name_he}</span></td>
+                <td colSpan={7} />
+                <td>{x.docs > 0 ? <Link className="num" to={`/company/${x.id}/filings`}>{x.docs}</Link> : <span className="muted">–</span>}</td>
+              </tr>
+            ))}
+            </Fragment>
           ))}</tbody>
         </table></div>
       </section>

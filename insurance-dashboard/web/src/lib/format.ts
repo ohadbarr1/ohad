@@ -1,7 +1,8 @@
 export const MINUS = '−';
 
 export function nf(v: number, d = 1): string {
-  return v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }).replace('-', MINUS);
+  const t = v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  return /^-[0.]+$/.test(t) ? t.slice(1) : t.replace('-', MINUS);  // a figure that rounds to zero carries no sign
 }
 export function sn(v: number, d = 1): string { return (v > 0 ? '+' : '') + nf(v, d); }
 export function pct(v: number | null | undefined, d = 1, signed = false): string {

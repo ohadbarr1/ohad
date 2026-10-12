@@ -8,6 +8,7 @@ import { METRIC_BY_KEY, METRIC_DEFS, WIN_LABEL, type Market, type MetricKey, typ
 import { cls, nf, pct, sn } from '../lib/format';
 import { useMarket } from '../lib/useData';
 import type { Fund } from '../lib/types';
+import '../styles/market.css';
 
 function fmtMetric(key: MetricKey, v: number | null, signed = false): string {
   if (v == null || Number.isNaN(v)) return '–';
@@ -117,6 +118,14 @@ function RankingInner({ m }: { m: Market }) {
   const [win, setWin] = useState<Win>('ltm');
   const [copied, setCopied] = useState('העתק לאקסל');
   const def = METRIC_BY_KEY[metric];
+  // the month is a year and a month, not a list of every month on record
+  const years = useMemo(() => [...new Set(m.P.map((p) => Math.floor(p / 100)))].reverse(), [m]);
+  const py = Math.floor(m.P[pi] / 100);
+  const inYear = m.P.map((p, i) => ({ p, i })).filter((x) => Math.floor(x.p / 100) === py).reverse();
+  const pickYear = (y: number) => {
+    const of = m.P.map((p, i) => ({ p, i })).filter((x) => Math.floor(x.p / 100) === y);
+    setPi((of.find((x) => x.p % 100 === m.P[pi] % 100) ?? of[of.length - 1]).i);  // same month when the year has it, else its last month
+  };
   const mkt = m.value(metric, pi, win, set, -1);
   const data = useMemo(() => m.activeGroups(pi, set)
     .map((g) => ({ g: m.d.groups[g], v: m.value(metric, pi, win, set, g) }))
@@ -135,7 +144,10 @@ function RankingInner({ m }: { m: Market }) {
   return (
     <>
       <section className="controls">
-        <Field label="חודש"><select value={pi} onChange={(e) => setPi(+e.target.value)}>{m.P.map((_, i) => m.P.length - 1 - i).map((i) => <option key={i} value={i}>{m.plabel(i)}</option>)}</select></Field>
+        <div className="monthpick">
+          <Field label="שנה"><select value={py} onChange={(e) => pickYear(+e.target.value)}>{years.map((y) => <option key={y} value={y}>{y}</option>)}</select></Field>
+          <Field label="חודש"><select value={pi} onChange={(e) => setPi(+e.target.value)}>{inYear.map((x) => <option key={x.i} value={x.i}>{m.plabel(x.i).split(' ')[0]}</option>)}</select></Field>
+        </div>
         <Field label="מוצר"><select value={set} onChange={(e) => setSet(e.target.value)}>{m.sets.map((s) => <option key={s.id} value={s.id}>{s.sub ? '  ' : ''}{s.label}</option>)}</select></Field>
         <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value as MetricKey)}>{METRIC_DEFS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</select></Field>
         {def.win && <div className="field"><span>חלון</span><Seg<Win> label="חלון" value={win} onChange={setWin} options={[['m', 'חודש'], ['ytd', 'YTD'], ['ltm', 'LTM']]} /></div>}

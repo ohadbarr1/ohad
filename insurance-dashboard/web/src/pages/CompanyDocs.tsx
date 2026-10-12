@@ -16,16 +16,26 @@ export function CompanyDocs() {
   const { data, error } = useCompanyDocs(entry.id, entry.docs > 0);
   const ifrs = useIfrsData().data;
   const [lang, setLang] = useState<'all' | 'he' | 'en'>('all');
+  // one row per filed document: the same period, kind, length and language is one filing re-published, and a one-page file is a cover or notice, not a report
+  const docs = useMemo(() => {
+    const seen = new Set<string>();
+    return (data?.docs ?? []).filter((d) => {
+      const key = `${d.period}|${d.type}|${d.pages}|${d.en}`;
+      if (seen.has(key) || (d.pages != null && d.pages < 3)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [data]);
   const periods = useMemo(() => {
     const by = new Map<string, DocEntry[]>();
-    (data?.docs ?? []).filter((d) => lang === 'all' || (lang === 'en') === d.en).forEach((d) => by.set(d.period, [...(by.get(d.period) ?? []), d]));
+    docs.filter((d) => lang === 'all' || (lang === 'en') === d.en).forEach((d) => by.set(d.period, [...(by.get(d.period) ?? []), d]));
     const key = (p: string) => p.slice(0, 4) + (p.endsWith('FY') ? '4' : p.slice(5));
     return [...by.entries()].sort((a, b) => key(b[0]).localeCompare(key(a[0])));
-  }, [data, lang]);
+  }, [docs, lang]);
   if (!entry.docs) return <Empty title="אין מסמכים" />;
   if (error) return <ErrorBox what="רשימת המסמכים" error={error} />;
   if (!data) return <Loading what="מסמכים" />;
-  const all = data.docs;
+  const all = docs;
   return (<>
     {ifrs?.files.some((f) => f.company === entry.id) && <DocSearch company={entry.id} />}
     <Panel title={<>{nf(all.length, 0)} מסמכים · <span className="num">{nf(all.reduce((s, d) => s + (d.pages ?? 0), 0), 0)}</span> עמודים</>}
@@ -40,7 +50,7 @@ export function CompanyDocs() {
           return <tr key={p}><td><span className="num">{p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`}</span></td><td>{cell(['annual', 'quarterly'])}</td><td>{cell(['presentation'])}</td><td>{cell(['solvency'])}</td><td><span className="num">{first}</span></td></tr>;
         })}</tbody>
       </table></div>
-      <div className="src">המספר בכל תא: עמודים ב-PDF. {COLS.length} סוגי מסמך, מסווגים לפי כותרת הדיווח.</div>
+      <div className="src">המספר בכל תא: עמודים ב-PDF. {COLS.length} סוגי מסמך, מסווגים לפי כותרת הדיווח. ללא כפילויות וללא מסמכים של עמוד אחד.</div>
     </Panel>
   </>);
 }

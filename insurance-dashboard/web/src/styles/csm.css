@@ -1,0 +1,25 @@
+/* CSM economics and dividend capacity: only what the shared stylesheet does not already give. Numbers are left-to-right, so offsets are physical. */
+.csm-pg { display: block; font-size: 11px; color: var(--muted); }
+.csm-bridge td, .csm-series td, .csm-series th, .divcap td { vertical-align: top; }
+.csm-bridge tr.csm-gap td { border-top: 1px dashed var(--line); }
+.csm-bridge th.wfh, .csm-bridge td:last-child:has(.wf) { min-width: 150px; }
+.wf { position: relative; height: 12px; min-width: 130px; margin-top: 4px; direction: ltr; background: linear-gradient(var(--line-soft), var(--line-soft)) no-repeat 0 50% / 100% 1px; }
+.wf i { position: absolute; top: 1px; bottom: 1px; border-radius: 2px; background: var(--up); }
+.wf i.dn { background: var(--down); }
+.wf i.gp { background: repeating-linear-gradient(135deg, var(--warn) 0 3px, transparent 3px 6px); outline: 1px solid var(--warn); }
+.wf i.tk { width: 3px; top: 0; bottom: 0; background: var(--fg); border-radius: 1px; }
+.csm-series th .dim { font-weight: 400; }
+.divcap .dc-v { display: block; white-space: nowrap; }
+.divcap .dc-v + .dc-v { margin-top: 3px; }
+.divcap .dc-t { font-size: 11px; color: var(--muted); margin-left: 6px; white-space: normal; }
+.dc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; }
+.dc-grid > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dc-grid .l { font-size: 12px; color: var(--muted); }
+.dc-grid .v { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.dc-grid .s { font-size: 11.5px; color: var(--muted); }
+@media (max-width: 760px) {
+  .wf { min-width: 96px; }
+  .csm-bridge th.wfh, .csm-bridge td:last-child:has(.wf) { min-width: 108px; }
+  .dc-grid { grid-template-columns: 1fr 1fr; }
+  .dc-grid .v { font-size: 19px; }
+}

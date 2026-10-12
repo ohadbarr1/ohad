@@ -1,0 +1,33 @@
+/* controls: one row of primary fields on a phone, the rest behind an "אפשרויות" button; on a wide screen everything shows as before */
+.controls.tight .prim, .controls.tight .extra { display: contents; }
+.controls.tight .more-btn { display: none; }
+@media (max-width: 760px) {
+  .controls.tight { flex-direction: column; align-items: stretch; gap: 8px; }
+  .controls.tight .prim { display: flex; gap: 8px; align-items: flex-end; flex-wrap: nowrap; min-width: 0; }
+  .controls.tight .prim .field { flex: 1 1 0; min-width: 0; }
+  .controls.tight .prim .field:has(> button) { flex: none; }
+  .controls.tight .prim select { min-width: 0; width: 100%; text-overflow: ellipsis; }
+  .controls.tight .more-btn { display: inline-flex; }
+  .controls.tight .extra { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-end; }
+  .controls.tight .extra.shut { display: none; }
+  /* the controls row keeps its caption for the button only as a spacer */
+  .controls.tight .prim .field:has(> button) > span { visibility: hidden; }
+}
+
+/* month picker: year and month side by side, the latest months as quick steps */
+.monthpick { display: flex; gap: 8px; align-items: flex-end; }
+.monthpick select { min-width: 0; }
+
+/* valuation: a result built on defaults is a demonstration, not a verdict */
+.illus { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 8px 12px; margin-bottom: 12px; border-radius: 10px; border: 1px dashed color-mix(in oklch, var(--warn) 45%, transparent); background: color-mix(in oklch, var(--warn) 7%, transparent); color: var(--muted); font-size: 12.5px; }
+.illus b { color: var(--warn); font-weight: 700; }
+.illus .btn { margin-inline-start: auto; }
+.verdict.ghost .big { color: var(--muted); }
+
+/* the price input and where it comes from */
+.pxin { white-space: nowrap; }
+.pxin .src2 { color: var(--faint); font-size: 11.5px; }
+
+/* a holding company's subsidiary, listed under it */
+tr.subrow td { font-size: 12.5px; color: var(--muted); }
+tr.subrow td:first-child { padding-inline-start: 26px; }
