@@ -148,3 +148,28 @@ Rules:
 5. `standard`: "IFRS 17" when the statement has insurance revenue / insurance service result lines (reports from 2025), otherwise "IFRS 4".
 6. A statement that is an image with no text layer goes to `not_found` with the reason; do not reconstruct it.
 7. After writing: `.venv/bin/python pipeline/verify_fs.py <company> <period>`: it checks every value against its page and that the printed totals of the balance sheet agree (total assets = total equity and liabilities, per column). Fix what it reports by re-reading the page; never adjust a number to make a check pass.
+
+## Long-term savings sector comparison (v7): the managing companies' own reports
+
+Purpose: extend the deck "חיסכון ארוך טווח, השוואות ענפיות, Q2-2026" (transcribed in `pipeline/build_lts.py`, figures in `web/public/data/lts.json`) to every period. The deck is built from the reports of the **managing companies** (הפניקס פנסיה וגמל, הראל פנסיה וגמל, מגדל מקפת, כלל פנסיה וגמל, מנורה מבטחים פנסיה וגמל, מיטב גמל ופנסיה, אלטשולר שחם גמל ופנסיה, מור גמל ופנסיה, ילין לפידות ניהול קופות גמל, אנליסט קופות גמל), not from the listed parent, and for investment policies from the insurers. Use the managing company's own periodic report (financial statements + directors' report / דוח עסקי התאגיד) when it is publicly available (MAYA when the company reports there, otherwise the company's website). Use the parent's report only for what the managing company's report does not print, and say so in `source_entity`.
+
+Output: one file per report, `data/extracted_lts/<company>/<period>.json` (`period` = 2025FY, 2026Q2 ...):
+`{"company", "entity" (legal name of the reporting company), "period", "url" (the PDF), "doc_title", "unit", "facts": [...], "not_found": [...], "notes": [...]}`.
+Each fact: `{"metric", "segment", "window", "date", "value", "unit", "page", "label", "source_entity"?, "note"?}`.
+- `segment`: `pension_new` (קרנות פנסיה חדשות, מקיפה + כללית), `pension_veteran` (ותיקות), `pension` (when only a total is printed: say in `note` what it includes), `provident` (קופות גמל + קרנות השתלמות + גמל להשקעה ...; note what it includes), `investment_contracts` (חוזי השקעה / פוליסות חיסכון ללא רכיב ביטוחי), `total`.
+- `window`: `instant` (balance date) | `q` (three months) | `ytd` | `fy`. Take every window and every comparative column the table prints (prior-year quarter, prior-year YTD, prior full year), each as its own fact with its own `date` (period end).
+- `value` exactly as printed, in the printed unit (`unit` per fact when it differs from the file's). Nothing calculated, nothing annualised, no sign changes. `page` = 1-based PDF page. `label` = the exact Hebrew row label.
+
+Metrics (take all that are printed, per segment):
+- `aum` (נכסים מנוהלים / צבירה, end of period), `aum_average` if printed
+- `deposits` (דמי גמולים / הפקדות שוטפות; without transfers), `one_time_deposits` if separate
+- `transfers_in` (העברות צבירה אל הקרן/הקופה), `transfers_out` (העברות צבירה מהקרן/הקופה), `net_transfers`; `withdrawals` / `redemptions`
+- `transfers_between_tracks` if printed separately (and whether in/out include it)
+- `new_business_annualized_premiums` (דמי גמולים משונתים עבור מצטרפים חדשים / פרמיה משונתת עסק חדש)
+- `fee_rate_from_assets`, `fee_rate_from_deposits` (שיעור דמי ניהול ממוצע, percent as printed)
+- `management_fees` (הכנסות מדמי ניהול), split `management_fees_from_assets` / `management_fees_from_deposits` when printed
+- `selling_and_marketing_expenses` (עמלות, הוצאות שיווק ורכישה; note whether it includes amortisation of deferred acquisition costs, and take `dac_amortisation` separately if printed), `general_and_administrative_expenses`, `other_expenses`, `total_expenses`, `operating_profit`, `profit_before_tax`
+- `members` if printed
+- investment policies (insurers): `investment_contract_deposits` (תקבולים בגין חוזי השקעה / הפקדות לפוליסות חיסכון), `investment_contract_aum` (התחייבויות בגין חוזי השקעה תלויי תשואה), fees and expenses of that activity if printed.
+
+Rules: never invent or infer a figure; if a document or a table cannot be found, list it in `not_found` with what you tried. If a site demands a login or blocks access, stop that path and report it; do not work around it. Record each PDF's URL. Use your own uniquely named temp folder under `data/work/lts_<company>_<part>/` for downloads and page text. Do not edit any other file in the repo.
