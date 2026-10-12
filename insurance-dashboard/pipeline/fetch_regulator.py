@@ -70,17 +70,21 @@ def normalise_types(df, key):
 
 def main():
     RAW.mkdir(parents=True, exist_ok=True)
+    # what was fetched and when: every figure built from these files names its dataset, resource and fetch date
+    meta = {"fetched": pd.Timestamp.today().date().isoformat(), "resources": {}, "packages": DATASETS}
     for key, package in DATASETS.items():
         frames = []
         for r in resources(package):
             df = download(r["id"])
             df["_resource"] = r["name"]
+            meta["resources"].setdefault(key, []).append({"id": r["id"], "name": r["name"], "modified": r.get("last_modified")})
             print(f"{key}: {r['name']}: {len(df):,} rows")
             frames.append(df)
         out = pd.concat(frames, ignore_index=True)
         out = normalise_types(out, key)
         out.to_parquet(RAW / f"{key}.parquet", index=False)
         print(f"{key}: total {len(out):,} -> {RAW / (key + '.parquet')}")
+    (RAW / "_meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 if __name__ == "__main__":

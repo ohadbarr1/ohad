@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Chart } from './Chart';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf } from '../lib/format';
+import type { Prov } from '../lib/prov';
+import { Sourced } from './Source';
 
 export interface CardSeries { name: string; data: (number | null)[]; color?: number }
 export interface MetricCardProps {
@@ -20,12 +22,15 @@ export interface MetricCardProps {
   foot?: ReactNode;
   wide?: boolean;
   i?: number;
+  /** where the headline figure comes from: makes it open the source sheet */
+  src?: () => Prov;
+  href?: string | null;
 }
 
 const alpha = (rgb: string, a: number) => (rgb.startsWith('rgb(') ? rgb.replace('rgb(', 'rgba(').replace(')', `,${a})`) : rgb);
 
 /** One metric, one small chart, the latest period marked. The overview is a grid of these. */
-export function MetricCard({ title, tag, unit, value, delta, x, series, kind = 'bar', color = 0, dec = 1, to, foot, wide, i = 0 }: MetricCardProps) {
+export function MetricCard({ title, tag, unit, value, delta, x, series, kind = 'bar', color = 0, dec = 1, to, foot, wide, i = 0, src, href }: MetricCardProps) {
   const empty = !series.some((s) => s.data.some((v) => v != null));
   return (
     <section className={`mcard${wide ? ' wide' : ''}`} style={{ ['--i' as string]: i }}>
@@ -33,7 +38,7 @@ export function MetricCard({ title, tag, unit, value, delta, x, series, kind = '
         <h3>{tag && <span className={`tag${tag === 'נגזר' ? ' est' : ''}`}>{tag}</span>}{title}</h3>
         {to && <Link to={to} className="open" aria-label={`פתח: ${title}`}>⤢</Link>}
       </header>
-      <div className="mval"><span className="v num">{value}</span><span className="u">{unit}</span>{delta && <span className={`d num ${delta.tone ?? ''}`}>{delta.text}</span>}</div>
+      <div className="mval"><span className="v num">{src && value !== '–' ? <Sourced src={src} href={href}>{value}</Sourced> : value}</span><span className="u">{unit}</span>{delta && <span className={`d num ${delta.tone ?? ''}`}>{delta.text}</span>}</div>
       {empty ? <div className="mnone">אין נתון</div> : (
         <Chart label={title} height={150} deps={[x.length, x[x.length - 1], series.map((s) => s.data[s.data.length - 1]).join(), kind]} build={() => {
           const b = chartBase(), pal = palette();

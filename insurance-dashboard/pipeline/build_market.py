@@ -163,6 +163,37 @@ def fund_snapshot(d, latest):
     return out
 
 
+def write_components(d, groups, prod_keys, ds_of):
+    """The tracks behind every aggregate, at source precision: web/public/data/prov/reg/<group index>/<year>.json.
+    Loaded by the site only when a reader opens the source of a figure. Arrays are parallel: one row per track, one column per month."""
+    base = WEB_OUT.parent / "prov" / "reg"
+    fields = [("a", "TOTAL_ASSETS"), ("fee", "AVG_ANNUAL_MANAGEMENT_FEE"), ("y", "MONTHLY_YIELD"), ("prev", "prev_assets"),
+              ("dep", "DEPOSITS"), ("wd", "WITHDRAWLS"), ("tr", "INTERNAL_TRANSFERS")]
+    d = d.assign(year=d["REPORT_PERIOD"] // 100)
+    total = 0
+    for (g, year), part in d.groupby(["group", "year"]):
+        months = sorted(part["REPORT_PERIOD"].unique().tolist())
+        mi = {p: i for i, p in enumerate(months)}
+        funds, index = [], {}
+        out = {k: [] for k, _ in fields}
+        for r in part.sort_values(["family", "FUND_ID", "REPORT_PERIOD"]).itertuples(index=False):
+            key = (r.family, int(r.FUND_ID))
+            if key not in index:
+                index[key] = len(funds)
+                funds.append([ds_of[r.family], int(r.FUND_ID), " ".join(str(r.FUND_NAME).replace("1;", "&").split()), prod_keys.index(r.product), str(r.manager).strip()])
+                for k, _ in fields:
+                    out[k].append([None] * len(months))
+            for k, col in fields:
+                v = getattr(r, col)
+                out[k][index[key]][mi[r.REPORT_PERIOD]] = None if pd.isna(v) else round(float(v), 4)
+        folder = base / str(groups.index(g))
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"{year}.json").write_text(json.dumps({"group": g, "months": months, "funds": funds, **out}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        total += 1
+        # the components must add up to the aggregate the site shows
+    print(f"components: {total} group-year files -> {base}")
+
+
 def qa(raw_df, d, agg, latest):
     checks, notes = [], []
     # 1. assets reconcile: aggregate vs raw, per family and month
@@ -220,7 +251,16 @@ def main():
         rows.append([pidx[r.REPORT_PERIOD], prod_keys.index(r.product), gidx[r.group],
                      round(r.assets, 3), round(r.dep, 3), round(r.wd, 3), round(r.tr, 3), round(r.flow_assets, 3),
                      round(r.fee_num, 3), round(r.fee_den, 3), round(r.y_num, 3), round(r.y_den, 3), int(r.n)])
+    raw_meta = json.loads((RAW / "_meta.json").read_text(encoding="utf-8")) if (RAW / "_meta.json").exists() else {}
+    ds_of = {"gemel": "gemel", "pension": "pensia", "insurance": "insurance"}
+    managers = {}
+    for (g, fam), names in d.groupby(["group", "family"])["manager"].unique().items():
+        managers.setdefault(g, {})[ds_of[fam]] = sorted({" ".join(str(x).split()) for x in names})
+    write_components(d, groups, prod_keys, ds_of)
     meta = {
+        "fetched": raw_meta.get("fetched"), "resources": raw_meta.get("resources", {}), "packages": raw_meta.get("packages", {}), "managers": managers,
+        # funds of managers that were absorbed are shown under the successor for the whole history
+        "proforma": [{"from": "פסגות", "to": "אלטשולר שחם", "until": 202109}, {"from": "הלמן-אלדובי", "to": "הפניקס", "until": 202109}],
         "asof": latest, "generated": dt.date.today().isoformat(),
         "source": "הרשות לשוק ההון, ביטוח וחיסכון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il)",
         "units": "מיליוני ש\"ח (נכסים ותזרימים); אחוזים (תשואה, דמי ניהול)",

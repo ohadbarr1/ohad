@@ -11,7 +11,8 @@ export interface Fund {
 export interface QaCheck { name: string; ok: boolean; status?: 'pass' | 'review' | 'fail'; detail: string }
 
 export interface MarketData {
-  meta: { asof: number; generated: string; source: string; units: string; funds_latest: number };
+  meta: { asof: number; generated: string; source: string; units: string; funds_latest: number; fetched?: string | null; resources?: Record<string, { id: string; name: string; modified?: string | null }[]>; packages?: Record<string, string>;
+    managers?: Record<string, Record<string, string[]>>; proforma?: { from: string; to: string; until: number }[] };
   products: { key: string; label: string; family: Family }[];
   families: Record<Family, string>;
   groups: string[];

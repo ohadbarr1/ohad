@@ -111,7 +111,7 @@ for r, st, fo, fx in zip(cur.itertuples(index=False), cur["STOCK_MARKET_EXPOSURE
     mgr = next((x for x in (getattr(r, "MANAGING_CORPORATION", None), getattr(r, "PARENT_COMPANY_NAME", None)) if isinstance(x, str)), "")
     target = getattr(r, "TARGET_POPULATION", None)
     funds.append({"k": r.key, "fam": r.fam, "prod": r.prod, "track": r.track, "name": " ".join(str(r.FUND_NAME).replace("1;", "&").split()), "mgr": " ".join(mgr.split()),
-                  "grp": group_of(" ".join(str(r.FUND_NAME).split())), "assets": v(r.TOTAL_ASSETS, 1), "fee": v(r.AVG_ANNUAL_MANAGEMENT_FEE), "depfee": v(r.AVG_DEPOSIT_FEE),
+                  "grp": group_of(" ".join(mgr.split())), "assets": v(r.TOTAL_ASSETS, 1), "fee": v(r.AVG_ANNUAL_MANAGEMENT_FEE), "depfee": v(r.AVG_DEPOSIT_FEE),
                   "m1": v(r.MONTHLY_YIELD), "ytd": v(r.YEAR_TO_DATE_YIELD), "y12": v(y12.get(r.key, np.nan)), "y3": v(r.YIELD_TRAILING_3_YRS), "y5": v(r.YIELD_TRAILING_5_YRS),
                   "a3": v(r.AVG_ANNUAL_YIELD_TRAILING_3YRS), "a5": v(r.AVG_ANNUAL_YIELD_TRAILING_5YRS), "sd": v(r.STANDARD_DEVIATION), "sharpe": v(r.SHARPE_RATIO),
                   "st": v(st, 1), "fo": v(fo, 1), "fx": v(fx, 1), "n": months.get(r.key, 0), "top": int(cons["top"].get(r.key, 0)) if r.key in cons.index else None, "yrs": int(cons["yrs"].get(r.key, 0)) if r.key in cons.index else None,

@@ -5,6 +5,7 @@ import { Logo } from './Logo';
 import { Icon } from './Icon';
 import { THEMES, useTheme } from '../lib/theme';
 import { Icon3D } from './Icon3D';
+import { SourceProvider } from './Source';
 
 const NAV: [string, string, string][] = [
   ['/', 'home', 'בית'], ['/companies', 'companies', 'חברות'], ['/industry', 'compare', 'השוואה ענפית'],
@@ -31,6 +32,7 @@ export function Layout() {
     return () => window.removeEventListener('pointermove', move);
   }, []);
   return (
+    <SourceProvider>
     <div className="shell">
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox"><Logo size={36} /></NavLink>
@@ -52,5 +54,6 @@ export function Layout() {
         <main className="page" key={section}><Outlet /></main>
       </div>
     </div>
+    </SourceProvider>
   );
 }

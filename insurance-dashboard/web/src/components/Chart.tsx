@@ -14,17 +14,21 @@ function save(name: string, href: string) { const a = document.createElement('a'
 
 /** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens.
  *  With `exportName` the chart carries its own export: the picture as PNG and the plotted series as CSV. */
-export function Chart({ build, height = 320, deps, label, exportName: named }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string }) {
+export function Chart({ build, height = 320, deps, label, exportName: named, onPoint }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+  /** a click on a plotted point: lets a chart open the source of the figure it draws */
+  onPoint?: (seriesIndex: number, dataIndex: number, seriesName: string) => void }) {
   const exportName = named ?? (height >= 200 ? `fox-${label.replace(/[\s,]+/g, '-')}` : undefined);
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
   const { theme } = useTheme();
+  const point = useRef(onPoint); point.current = onPoint;
 
   useEffect(() => {
     if (!el.current) return;
     chart.current = echarts.init(el.current);
     const ro = new ResizeObserver(() => chart.current?.resize());
     ro.observe(el.current);
+    chart.current.on('click', (e) => { if (e.componentType === 'series' && e.seriesIndex != null) point.current?.(e.seriesIndex, e.dataIndex, e.seriesName ?? ''); });
     return () => { ro.disconnect(); chart.current?.dispose(); chart.current = null; };
   }, []);
 

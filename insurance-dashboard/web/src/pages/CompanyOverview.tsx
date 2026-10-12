@@ -46,11 +46,11 @@ function marketCards(m: Market, group: string): MetricCardProps[] {
     const data = pts.map((i) => { const v = m.value(key, i, w, set, g); return v == null ? null : +v.toFixed(3); });
     const now = data[data.length - 1], prev = data[data.length - 2];
     const d = now != null && prev != null ? (def.unit === '%' ? { text: `${sn(now - prev, dec)} נק׳`, tone: key === 'fee' ? undefined : tone(now - prev) } : { text: pct(chg(now, prev), 1, true), tone: tone(chg(now, prev)) }) : undefined;
-    return { title, unit: def.unit === '%' ? (def.win ? '%, LTM' : '%') : `מיליארד ש"ח${def.win ? ', LTM' : ''}`, value: now == null ? '–' : nf(now, dec), delta: key === 'assets' || ((key === 'share' || key === 'fee') && Math.abs(now! - prev!) >= 0.5 / 10 ** dec) ? d : undefined, x, series: [{ name: title, data }], color, dec, to };
+    return { title, unit: def.unit === '%' ? (def.win ? '%, LTM' : '%') : `מיליארד ש"ח${def.win ? ', LTM' : ''}`, value: now == null ? '–' : nf(now, dec), delta: key === 'assets' || ((key === 'share' || key === 'fee') && Math.abs(now! - prev!) >= 0.5 / 10 ** dec) ? d : undefined, x, src: now == null ? undefined : () => ({ k: 'reg', metric: key, pi: L, w, set, g }), series: [{ name: title, data }], color, dec, to };
   };
   const fams: [string, string][] = [['fam:pension', 'פנסיה'], ['fam:gemel', 'גמל והשתלמות'], ['fam:insurance', 'ביטוחי מנהלים ופוליסות חיסכון']];
   const stack: MetricCardProps = {
-    title: 'נכסים לפי מוצר', unit: 'מיליארד ש"ח', value: nf(m.value('assets', L, 'm', 'all', g) ?? 0, 1), x, kind: 'stack', to,
+    title: 'נכסים לפי מוצר', unit: 'מיליארד ש"ח', value: nf(m.value('assets', L, 'm', 'all', g) ?? 0, 1), x, kind: 'stack', to, src: () => ({ k: 'reg', metric: 'assets', pi: L, w: 'm', set: 'all', g }),
     series: fams.map(([s, name], i) => ({ name, color: [0, 2, 4][i], data: pts.map((pi) => +(m.cell(pi, s, g).a / 1000).toFixed(2)) })),
   };
   return [one('assets', 'all', 'נכסים מנוהלים', 0), stack, one('share', 'all', 'נתח שוק', 7), one('organic', 'all', 'צבירה אורגנית', 3), one('transfers', 'all', 'ניוד נטו', 4),
