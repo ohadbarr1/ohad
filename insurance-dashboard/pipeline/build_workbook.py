@@ -289,11 +289,11 @@ def caption(t):
 
 registry = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
 names = {c["id"]: c["name_he"] for c in (registry if isinstance(registry, list) else registry.get("companies", []))}
-for sf in sorted((DATA / "series").glob("*.json")):
-    comp = sf.stem
-    if comp == "index":
-        continue
-    series = json.loads(sf.read_text(encoding="utf-8"))
+# every company with extracted lines (the series of the insurers) or with full statements (insurers and fund houses)
+COMPANIES = sorted({f.stem for f in (DATA / "series").glob("*.json") if f.stem != "index"} | {p.name for p in (ROOT / "data" / "extracted_fs").iterdir() if p.is_dir() and any(p.glob("*.json"))})
+for comp in COMPANIES:
+    sf = DATA / "series" / f"{comp}.json"
+    series = json.loads(sf.read_text(encoding="utf-8")) if sf.exists() else {"rows": []}
     base_f = ROOT / "data" / "workbook_base" / f"{comp}.json"  # the spreadsheet-based workbook, kept aside so this script can be rerun
     live_f = DATA / "companies" / f"{comp}.json"
     if comp == "phoenix" and not base_f.exists() and live_f.exists():

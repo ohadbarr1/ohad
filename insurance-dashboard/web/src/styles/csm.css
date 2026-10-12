@@ -11,6 +11,7 @@
 .csm-series th .dim { font-weight: 400; }
 .divcap .dc-v { display: block; white-space: nowrap; }
 .divcap .dc-v + .dc-v { margin-top: 3px; }
+.divcap .dc-v .dim, .dc-grid .dim { white-space: normal; min-width: 190px; }
 .divcap .dc-t { font-size: 11px; color: var(--muted); margin-left: 6px; white-space: normal; }
 .dc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; }
 .dc-grid > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }

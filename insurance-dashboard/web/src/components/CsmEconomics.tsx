@@ -153,6 +153,8 @@ export function CsmEconomics({ id }: { id: string }) {
   const wlabel = W === 'fy' ? 'FY' : W === 'q' ? 'QTD' : 'YTD';
   const shown = series.filter((x) => MEASURES.some((m) => x.r[m.k] != null));
   const pal = palette();
+  // a column is a quarter (Q4'25), or a cumulative window named by its months (6M'26, FY'25)
+  const plabel = (k: string) => (span === 'q' ? periodName(k).replace('FY', 'Q4') : k.endsWith('FY') ? periodName(k) : `${monthsOf(endOf(k), 'ytd')}M'${k.slice(2, 4)}`);
 
   return (
     <>
@@ -195,13 +197,13 @@ export function CsmEconomics({ id }: { id: string }) {
           <>
             {shown.filter((x) => x.r.nbRel != null || x.r.relOpen != null).length > 1 && (
               <Chart label={`כלכלת CSM ${id}`} height={250} deps={[id, span, seg, pref, shown.length, rs.length]} build={() => foxOption({
-                x: shown.map((x) => periodName(x.k)), unit: '%', legend: true, labels: false, scale: true,
+                x: shown.map((x) => plabel(x.k)), unit: '%', legend: true, labels: false, scale: true,
                 series: [{ name: 'עסק חדש / שחרור', k: 'nbRel' as const, c: pal[0] }, { name: 'שחרור / CSM פתיחה, מנורמל לשנה', k: 'relOpen' as const, c: pal[2] }]
                   .map((s) => ({ name: s.name, kind: 'line' as const, pct: true, color: s.c, dec: 1, data: shown.map((x) => { const v = x.r[s.k]; return v == null ? null : +v.toFixed(2); }) })),
               })} />
             )}
             <div className="scroll"><table className="csm-series">
-              <thead><tr><th>מדד</th>{shown.map((x) => <th key={x.k}>{span === 'ytd' && !x.k.endsWith('FY') ? `${monthsOf(endOf(x.k), 'ytd')}M'${x.k.slice(2, 4)}` : periodName(x.k).replace('FY', span === 'q' ? 'Q4' : 'FY')}<Marks ms={tableMarks(x.b!, pref)} used={used2} /><span className="dim">{BASIS[x.b!.b]} · {SCOPE_HE[x.b!.scope]}</span></th>)}</tr></thead>
+              <thead><tr><th>מדד</th>{shown.map((x) => <th key={x.k}>{plabel(x.k)}<Marks ms={tableMarks(x.b!, pref)} used={used2} /><span className="dim">{BASIS[x.b!.b]} · {SCOPE_HE[x.b!.scope]}</span></th>)}</tr></thead>
               <tbody>{MEASURES.filter((m) => (m.k !== 'csmEq' || seg === 'all') && shown.some((x) => x.r[m.k] != null)).map((m) => (
                 <tr key={m.k}><td className="lbl">{m.l}{m.from && <span className="dim">נגזר: {m.from}</span>}</td>
                   {shown.map((x) => {

@@ -1,3 +1,4 @@
+import { CsmEconomics } from '../components/CsmEconomics';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CompanyIfrs } from './CompanyIfrs';
 import { CompanyReview } from './CompanyReview';
@@ -467,7 +468,7 @@ export function CompanySopTab() {
 
 export function CompanyIfrs17() {
   const { entry, store } = useCtx();
-  return <><CompanyIfrs id={entry.id} docs={entry.docs} />{store && <CsmExplorer store={store} />}</>;
+  return <><CompanyIfrs id={entry.id} docs={entry.docs} /><CsmEconomics id={entry.id} />{store && <CsmExplorer store={store} />}</>;
 }
 
 function CsmExplorer({ store }: { store: CompanyStore }) {

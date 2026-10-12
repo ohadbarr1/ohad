@@ -45,14 +45,17 @@ const CORE = ['nb', 'int', 'est', 'rel'];
 const PARTS: Record<ScopeId, string[]> = { group: ['group'], life_health: ['life_health'], lh: ['life', 'health'], life: ['life'], health: ['health'] };
 const usable = (f: RF) => f.m.startsWith('csm') && !f.tr && !f.model && !f.bk && !f.m.startsWith('csm_subtotal') && f.m !== 'csm_expected_release';
 const isQ1 = (end: string) => end.endsWith('03-31');
+/** The names a filer gives a whole segment. A sub-heading inside a segment (a product line, "long-term savings") is not the segment and is never read as one. */
+const ALIAS: Record<string, RegExp> = { group: /^group$/, life: /^(life|Life Insurance and Long-Term Savings)$/i, health: /^(health|Health Insurance)$/i, life_health: /^(life_health|life\+health|life_and_health|Life and Health Segments)$/i };
+const whole = (c: RF[], g: string) => (c.some((f) => f.s === g) ? c.filter((f) => f.s === g) : c.filter((f) => ALIAS[g]?.test(f.s)));
 
-/** One printed line of one segment: the row of the segment itself (or of its only sub-heading), the tied-out copy first; movements printed as several rows of one table are added. */
+/** One printed line of one segment: the row of the segment itself, the tied-out copy first; movements printed as several rows of one table are added. */
 function pickLine(F: RF[], g: string, b: string, m: string, d: string, w: Win | null): Line | null {
   // the first quarter is printed once: its quarter and year-to-date columns are the same figure
   const ws = w == null ? ['instant'] : isQ1(d) && w !== 'fy' ? [w, w === 'q' ? 'ytd' : 'q'] : [w];
   for (const win of ws) {
     const c = F.filter((f) => f.g === g && f.b === b && f.m === m && f.d === d && f.w === win);
-    const own = c.some((f) => f.s === g) ? c.filter((f) => f.s === g) : new Set(c.map((f) => f.s)).size === 1 ? c : [];
+    const own = whole(c, g);
     if (!own.length) continue;
     const rank = (f: RF) => Number(f.inc === 1) * 8 + Number(f.dv == null) * 4 + Number(f.src === 'chart' || f.src === 'text') * 2;
     const p = [...own].sort((x, y) => rank(x) - rank(y) || (x.pg ?? 0) - (y.pg ?? 0))[0];
@@ -92,7 +95,8 @@ export function bridge(all: RF[], end: string, w: Win, o: Opt = {}): Bridge | nu
     const has = (k: string) => steps.some((s) => s.k === k);
     const tier = close && has('nb') && has('rel') ? 3 : close && has('rel') ? 2 : close ? 1 : has('rel') ? 0.5 : 0;
     const score = tier * 10 + Number(!!open) + Number(has('int') || has('econ')) + Number(has('est'));
-    const gap = open && close && steps.length ? close.v - open.v - steps.reduce((t, s) => t + s.line.v, 0) : null;
+    // a difference is struck only against a table that carries at least new business and the release; a lone release is not a bridge
+    const gap = open && close && has('nb') && has('rel') ? close.v - open.v - steps.reduce((t, s) => t + s.line.v, 0) : null;
     return { tier, score, br: { end, w, scope, b, score, open, openPrev, close, steps, gap } as Bridge };
   };
   const lifeOnly = !F.some((f) => f.g === 'health') && !F.some((f) => f.g === 'group') && !F.some((f) => f.g === 'life_health');
@@ -133,7 +137,7 @@ export function quarter(rs: Reports, p: string, o: Opt = {}): Bridge | null {
   if (!tot || !sub || !tot.steps.length || inc(tot) || inc(sub) || CORE.some((k) => tot.steps.some((s) => s.k === k) && !sub.steps.some((s) => s.k === k))) return q ?? (tot ? { ...tot, w: 'q', open: null, openPrev: false, steps: [], gap: null } : null);
   const steps: Step[] = tot.steps.map((s) => { const x = sub.steps.find((t) => t.k === s.k); return { ...s, line: { v: s.line.v - (x?.line.v ?? 0), fs: [...s.line.fs, ...(x?.line.fs ?? [])], sum: s.line.sum, n: s.line.n } }; });
   const open = sub.close, close = tot.close;
-  const gap = open && close && steps.length ? close.v - open.v - steps.reduce((t, s) => t + s.line.v, 0) : null;
+  const gap = open && close && steps.some((s) => s.k === 'nb') && steps.some((s) => s.k === 'rel') ? close.v - open.v - steps.reduce((t, s) => t + s.line.v, 0) : null;
   return { end, w: 'q', scope: tot.scope, b: tot.b, score: tot.score, open, openPrev: true, close, steps, gap, der: true, cmp: tot.cmp || sub.cmp || undefined };
 }
 
@@ -172,7 +176,7 @@ export function runoff(all: RF[], end: string, pref = 'gross', only?: ScopeId): 
   for (const b of [pref, ...['gross', 'net', 'na'].filter((x) => x !== pref)]) {
     for (const scope of (only ? [only] : lifeOnly ? ['life'] : ['group', 'lh']) as ScopeId[]) {
       const at = (test: (bk: string) => boolean): Line | null => {
-        const ls = PARTS[scope].map((g) => { const c = F.filter((f) => f.g === g && f.b === b && test(f.bk!)); const own = c.some((f) => f.s === g) ? c.filter((f) => f.s === g) : new Set(c.map((f) => f.s)).size === 1 ? c : []; return own[0] ? { v: own[0].v, fs: [own[0]] } : null; });
+        const ls = PARTS[scope].map((g) => { const own = whole(F.filter((f) => f.g === g && f.b === b && test(f.bk!)), g); return own[0] ? { v: own[0].v, fs: [own[0]] } : null; });
         return ls.every(Boolean) ? { v: ls.reduce((t, l) => t + l!.v, 0), fs: ls.flatMap((l) => l!.fs), sum: ls.length > 1 || undefined } : null;
       };
       const cells = BK.map((re) => at((bk) => re.test(bk)));

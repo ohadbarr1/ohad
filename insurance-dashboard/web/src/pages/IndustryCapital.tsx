@@ -1,3 +1,4 @@
+import { DividendCapacity } from '../components/DividendCapacity';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
@@ -73,6 +74,7 @@ export function IndustryCapital() {
           ))}</tbody>
         </table></div>
       </Panel>
+      <DividendCapacity />
     </>
   );
 }

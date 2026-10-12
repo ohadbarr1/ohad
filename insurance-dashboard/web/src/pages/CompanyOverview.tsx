@@ -1,3 +1,4 @@
+import { DividendCapacity } from '../components/DividendCapacity';
 import { Link } from 'react-router-dom';
 import { MetricCard, type MetricCardProps } from '../components/MetricCard';
 import { ErrorBox, Panel } from '../components/ui';
@@ -153,6 +154,7 @@ export function CompanyOverview() {
         </section>
       )}
       {docs.data && <LatestDocs docs={docs.data.docs} />}
+      {entry.kind !== 'fund_house' && <DividendCapacity id={entry.id} />}
       <Panel title="הערות" aside={<><span>מעקב</span><Star id={entry.id} name={entry.name_he} /></>}><Notes id={entry.id} /></Panel>
     </>
   );

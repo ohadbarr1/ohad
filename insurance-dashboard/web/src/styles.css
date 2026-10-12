@@ -593,3 +593,12 @@ table.dense tr.sec td { padding-top: 8px; }
   .panel table.compact td.lbl, .panel table.compact th:first-child { width: 44%; min-width: 0; max-width: none; }
   table.compact .mrow input { display: none; }
 }
+/* phone: the overview's metric cards two to a row (a wide card keeps the full row) */
+@media (max-width: 760px) {
+  .mgrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px; }
+  .mgrid > .mcard.wide { grid-column: 1 / -1; }
+  .mgrid .mcard { padding: 11px 12px 8px; }
+  .mgrid .mcard h3 { font-size: 12.5px; }
+  .mgrid .mcard .mval .v { font-size: 22px; }
+  .mgrid .mcard .mval .d { font-size: 11px; }
+}

@@ -14,6 +14,7 @@ import { IndustryEcon } from './pages/IndustryEcon';
 import { IndustryMatrix } from './pages/IndustryMatrix';
 import { IndustryLines } from './pages/IndustryLines';
 import { ReportDay } from './pages/ReportDay';
+import { IndustryCsm } from './pages/IndustryCsm';
 import { DocSearch } from './pages/DocSearch';
 import { FundCard, FundMakers, Funds } from './pages/Funds';
 import { Dcf, Sotp, ValuationLayout } from './pages/Valuation';
@@ -50,6 +51,7 @@ export function App() {
           <Route path="ifrs" element={<IndustryIfrs />} />
           <Route path="matrix" element={<IndustryMatrix />} />
           <Route path="lines" element={<IndustryLines />} />
+          <Route path="csm" element={<IndustryCsm />} />
           <Route path="econ" element={<IndustryEcon />} />
           <Route path="capital" element={<IndustryCapital />} />
           <Route path="headline" element={<Compare />} />
