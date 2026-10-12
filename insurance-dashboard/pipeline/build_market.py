@@ -38,8 +38,9 @@ FAMILY_LABEL = {"pension": "פנסיה", "gemel": "גמל והשתלמות", "in
 # Managing corporation / insurer name prefix -> group. Order matters (first match wins).
 # Pro-forma: Psagot (49.8bn) and Helman-Aldubi (18.4bn) vanish in Oct-2021 while Altshuler Shaham (+49.8bn) and
 # Phoenix (+22.3bn) step up by the same amounts, so both are mapped to the successor for the whole history.
+# the army career savings fund is run by a Harel subsidiary (Harel FY'25 report, p14, p16; members' assets p116)
 GROUP_RULES = [
-    ("מיטב", "מיטב"), ("מור גמל", "מור"), ("הפניקס", "הפניקס"), ("אלטשולר", "אלטשולר שחם"), ("הראל", "הראל"),
+    ("מיטב", "מיטב"), ("קרן החסכון לצבא הקבע", "הראל"), ("מור גמל", "מור"), ("הפניקס", "הפניקס"), ("אלטשולר", "אלטשולר שחם"), ("הראל", "הראל"),
     ("אנליסט", "אנליסט"), ("כלל ", "כלל"), ("ילין", "ילין לפידות"), ("מנורה", "מנורה מבטחים"), ("מגדל", "מגדל"),
     ("אינפיניטי", "אינפיניטי"), ("גלובלנט", "גלובלנט"), ("איילון", "איילון"), ("פסגות", "אלטשולר שחם"), ("הלמן", "הפניקס"), ("הכשרה", "הכשרה"), ("ישיר", "ביטוח ישיר"), ("איי. די. איי", "ביטוח ישיר"),
 ]
