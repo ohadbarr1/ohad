@@ -296,8 +296,18 @@
   "market_group": "מיטב",
   "maya_id": 1064,
   "yahoo": "MTAV.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "F",
+    "name": "חברת האם (מאוחד)",
+    "doc": "הדוחות התקופתיים של מיטב",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 0,
   "has_price": true
  },
@@ -309,8 +319,18 @@
   "market_group": "אלטשולר שחם",
   "maya_id": 2367,
   "yahoo": "ALTF.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "F",
+    "name": "חברת האם (מאוחד)",
+    "doc": "הדוחות התקופתיים של אלטשולר שחם",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 22,
   "has_price": true
  },
@@ -322,8 +342,18 @@
   "market_group": "מור",
   "maya_id": 1692,
   "yahoo": "MRIN.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "F",
+    "name": "חברת האם (מאוחד)",
+    "doc": "הדוחות התקופתיים של מור",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 70,
   "has_price": true
  },
@@ -335,8 +365,18 @@
   "market_group": "אנליסט",
   "maya_id": 1008,
   "yahoo": "ANLT.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "F",
+    "name": "חברת האם (מאוחד)",
+    "doc": "הדוחות התקופתיים של אנליסט",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 32,
   "has_price": true
  },
@@ -349,8 +389,18 @@
   "maya_id": 1307,
   "yahoo": "ATRY.TA",
   "note_he": "דוחות ומניה של אטראו שוקי הון, המחזיקה בילין לפידות",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "F",
+    "name": "חברת האם (מאוחד)",
+    "doc": "הדוחות התקופתיים של ילין לפידות",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 31,
   "has_price": true
  },
@@ -397,8 +447,18 @@
   "market_group": null,
   "maya_id": 175,
   "yahoo": "IBI.TA",
-  "has_financials": false,
-  "filings": [],
+  "has_financials": true,
+  "filings": [
+   {
+    "period": "H1 2026",
+    "end": "2026-06-30",
+    "entity": "F",
+    "name": "חברת האם (מאוחד)",
+    "doc": "הדוחות התקופתיים של אי.בי.אי",
+    "url": null,
+    "pages": null
+   }
+  ],
   "docs": 46,
   "has_price": true
  }

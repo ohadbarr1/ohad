@@ -45,7 +45,7 @@ for st in d["statements"]:
         # the two printed grand totals must agree in every column
         lab = lambda r: re.sub(r"\s+", " ", re.sub(r"[\"'״׳]", "", r["label"])).strip()
         pre = r"^(סהכ|סך הכל|סך כל|סך)\s+(כל\s+)?(ה)?"
-        tots = [r for r in st["rows"] if r.get("values") and re.search(pre + r"(נכסים|הון וה?התחייבויות|התחייבויות וה?הון)$", lab(r))]
+        tots = [r for r in st["rows"] if r.get("values") and re.search(pre + r"(נכסים|הון( עצמי)? וה?התחייבויות|התחייבויות וה?הון( עצמי)?)$", lab(r))]
         if len(tots) >= 2:
             a, b = tots[0]["values"], tots[-1]["values"]
             print("    balance totals agree" if a == b else f"    BALANCE TOTALS DIFFER {a} vs {b}")

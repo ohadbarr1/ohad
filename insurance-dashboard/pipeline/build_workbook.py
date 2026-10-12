@@ -139,7 +139,7 @@ def statements(comp):
                 # per-share lines are printed in NIS whatever the unit of the statement: from the first "למניה" caption to the end
                 # of the income statement (or to the comprehensive-income part, where one statement carries both)
                 lab = norm(r["label"]) or f"שורה ללא כותרת {r.get('page')}"
-                if "למניה" in raw:
+                if "למניה" in raw and "מספר" not in raw:  # a count of shares "used for earnings per share" is not a per-share figure
                     per_share = True
                 elif per_share and ("כולל" in raw or "מספר" in raw or any(k[1] == lab and not m["eps"] and not m["header"] for k, m in meta.items())
                                     or any(isinstance(v, (int, float)) and abs(v) >= 5000 for v in r.get("values") or [])):
@@ -152,7 +152,7 @@ def statements(comp):
                     continue  # the date caption of the column block, not a section
                 if key not in meta:
                     shown = re.sub(r"\)([^()]*)\(", r"(\1)", re.sub(r"^\d+\S*\s+", "", " ".join(r["label"].split()))).replace("לשנה", "לתקופה").replace(" ,", ",")  # a stray note reference; one row serves quarters and years
-                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total")) or bool(SUBTOTAL.match(shown)), "eps": per_share and not r.get("header")}
+                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total")) or bool(SUBTOTAL.match(shown)), "eps": per_share and not r.get("header") and "מספר" not in raw}
                     order.insert(order.index(prev) + 1 if prev in order else 0, key)
                 prev = key
                 for c, v in zip(st["columns"], r.get("values") or []):
@@ -256,7 +256,8 @@ ROLES = [
     ("inv_fin", "רווח מהשקעות ומימון, נטו", "X.רווח_והפסד", r"^רווח( \(הפסד\))? מהשקעות ומימון,? ?נטו"),
     ("gpe", "פרמיות שהורווחו ברוטו (IFRS 4)", "X.רווח_והפסד", r"^פרמיות שהורווחו ברוטו"),
     ("npe", "פרמיות שהורווחו בשייר (IFRS 4)", "X.רווח_והפסד", r"^פרמיות שהורווחו בשייר"),
-    ("total_rev", "סך ההכנסות (IFRS 4)", "X.רווח_והפסד", r"^סך (כל )?ה?הכנסות$"),
+    ("total_rev", "סך ההכנסות (במבטחות: IFRS 4)", "X.רווח_והפסד", r"^סך (כל )?ה?הכנסות$"),
+    ("op_profit", "רווח תפעולי (בתי השקעות)", "X.רווח_והפסד", r"^רווח( \(הפסד\))? (תפעולי|מפעולות)"),
     ("claims_net", "תשלומים ושינוי בהתחייבויות, בשייר (IFRS 4)", "X.רווח_והפסד", r"^תשלומים ושינוי בהתחייבויות.*בשייר"),
     ("commissions", "עמלות, שיווק ורכישה (IFRS 4)", "X.רווח_והפסד", r"^עמלות,? ?(ו)?הוצאות (שיווק|רכישה)"),
     ("ga", "הנהלה וכלליות (IFRS 4)", "X.רווח_והפסד", r"^הוצאות הנהלה וכלליות"),
@@ -359,7 +360,7 @@ for comp in COMPANIES:
                 n += 1
             for key in order:
                 m, mi = meta[key], len(d["metrics"])
-                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": "nis" if m.get("eps") or "למניה" in m["label"] else "k", "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
+                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": "nis" if (m.get("eps") or "למניה" in m["label"]) and "מספר" not in m["label"] else "k", "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
                 n += 1
                 for (typ, date), c in cells.get(key, {}).items():
                     v, page, u = c[0], c[1], c[2]

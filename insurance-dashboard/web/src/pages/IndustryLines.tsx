@@ -28,7 +28,9 @@ export function IndustryLines() {
   const [view, setView] = useState<'v' | 'y'>(sp.get('v') === 'y' ? 'y' : 'v');
   const [lead, setLead] = useState(sp.get('c') ?? '');
   const [from, setFrom] = useState(Number(sp.get('y')) || 2020);
-  useEffect(() => { setSp({ l: role, t: pt, ...(view === 'y' ? { v: 'y' } : {}), ...(lead ? { c: lead } : {}), ...(from !== 2020 ? { y: String(from) } : {}) }, { replace: true }); }, [role, pt, view, lead, from, setSp]);
+  // insurers and fund houses are different businesses: one group at a time unless asked otherwise
+  const [who, setWho] = useState<'ins' | 'fund' | 'all'>((['ins', 'fund', 'all'] as const).find((x) => x === sp.get('g')) ?? 'ins');
+  useEffect(() => { setSp({ l: role, t: pt, ...(view === 'y' ? { v: 'y' } : {}), ...(lead ? { c: lead } : {}), ...(from !== 2020 ? { y: String(from) } : {}), ...(who !== 'ins' ? { g: who } : {}) }, { replace: true }); }, [role, pt, view, lead, from, who, setSp]);
 
   const def = d?.roles.find(([k]) => k === role) ?? d?.roles[0];
   const balance = def?.[2] === 'X.מאזן';
@@ -36,7 +38,8 @@ export function IndustryLines() {
   const model = useMemo(() => {
     if (!d || !def) return null;
     const lines = d.data[def[0]] ?? {};
-    const ids = Object.keys(lines);
+    const kind = (id: string) => reg.data?.find((c) => c.id === id)?.kind;
+    const ids = Object.keys(lines).filter((id) => who === 'all' || (who === 'fund') === (kind(id) === 'fund_house'));
     // period end -> cell, per company, for the period type on screen (balance sheets have dates only)
     const at = new Map(ids.map((id) => [id, new Map(lines[id].cells.filter((c) => d.periods[c[0]][0] === base).map((c) => [d.periods[c[0]][1], c]))]));
     const back = (end: string, k: number) => new Date(Date.UTC(+end.slice(0, 4), +end.slice(5, 7) - 3 * k, 0)).toISOString().slice(0, 10);
@@ -57,7 +60,7 @@ export function IndustryLines() {
     };
     const shown = ends.filter((e) => ids.some((id) => value(id, e) != null));
     return { lines, ids, at, shown, value };
-  }, [d, def, base, pt, view, from, balance]);
+  }, [d, def, base, pt, view, from, balance, who, reg.data]);
 
   if (error) return <ErrorBox what="שורות הדוחות" error={error} />;
   if (!d || !reg.data || !model || !def) return <Loading what="שורות הדוחות" />;
@@ -77,6 +80,7 @@ export function IndustryLines() {
     <>
       <section className="controls">
         <Field label="שורה"><select value={def[0]} onChange={(e) => setRole(e.target.value)}>{groups.map((g) => <optgroup key={g} label={SHEET[g] ?? g}>{d.roles.filter((r) => r[2] === g && Object.keys(d.data[r[0]] ?? {}).length > 0).map((r) => <option key={r[0]} value={r[0]}>{r[1]}</option>)}</optgroup>)}</select></Field>
+        <div className="field"><span>חברות</span><Seg<'ins' | 'fund' | 'all'> label="חברות" value={who} onChange={setWho} options={[['ins', 'מבטחות'], ['fund', 'בתי השקעות'], ['all', 'כולן']]} /></div>
         {!balance && <div className="field"><span>תקופה</span><Seg<PT> label="תקופה" value={pt} onChange={setPt} options={[['Q', 'Q'], ['H', 'H'], ['FY', 'FY'], ['LTM', 'LTM']]} /></div>}
         <div className="field"><span>תצוגה</span><Seg<'v' | 'y'> label="תצוגה" value={view} onChange={setView} options={[['v', 'ערך'], ['y', 'YoY %']]} /></div>
         <Field label="מיקוד"><select value={lead} onChange={(e) => setLead(e.target.value)}><option value="">כל החברות שוות</option>{model.ids.map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>
@@ -86,7 +90,7 @@ export function IndustryLines() {
       {model.shown.length < 2 ? <Empty title="אין רצף לשורה ולתקופה שנבחרו" /> : (
         <>
           <Panel title={def[1]} aside={<span>{unitLabel} · {SHEET[def[2]]} · כפי שדווח בכל תקופה</span>}>
-            <Chart label={`שורת דוח לכל החברות: ${def[1]}`} exportName={`fox-${def[0]}-${pt}`} height={380} deps={[def[0], pt, view, lead, from, model.shown.length]} build={() => foxOption({
+            <Chart label={`שורת דוח לכל החברות: ${def[1]}`} exportName={`fox-${def[0]}-${pt}`} height={380} deps={[def[0], pt, view, lead, from, who, model.shown.length]} build={() => foxOption({
               x: model.shown.map(lab), unit: unitLabel, legend: true, labels: false, scale: balance || view === 'y',
               breakAt: view === 'v' && anyOld && firstNew > 0 ? firstNew : undefined, breakLabel: 'IFRS 17',
               series: model.ids.map((id, i) => ({ name: name(id), kind: 'line' as const, color: pal[i % pal.length], pct: view === 'y', lead: lead === id, dim: !!lead && lead !== id, dec,
