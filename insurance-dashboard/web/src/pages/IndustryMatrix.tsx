@@ -8,6 +8,9 @@ import { load, useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import { Chart } from '../components/Chart';
 import { foxOption } from '../lib/foxchart';
 import { palette } from '../lib/theme';
+import { Sourced } from '../components/Source';
+import { useSource, type Prov } from '../lib/prov';
+import { mayaReport } from '../lib/sources';
 import type { IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
 import { periodName } from './CompanyIfrs';
@@ -36,13 +39,13 @@ const COLS: Col[] = [
   { k: 'divd', l: 'דיבידנד שהוכרז', m: 'dividend_declared' },
 ];
 const DEFAULT = ['np', 'ci', 'rev', 'isr', 'isrm', 'eq', 'roe', 'csm', 'nb', 'rel', 'nbr', 'cse'];
-type Cell = { v: number; f?: IfrsFact; alt?: boolean; calc?: boolean; n?: number; sum?: boolean; mixed?: boolean } | null;
+type Cell = { v: number; f?: IfrsFact; alt?: boolean; calc?: boolean; n?: number; sum?: boolean; mixed?: boolean; parts?: { f: IfrsFact; v: number }[] } | null;
 // remarks on a figure, as numbered notes under the table instead of a chip in every cell
 const NOTES = ['בסיס שונה מרוב החברות בעמודה (מפורט בריחוף)', 'חיים ובריאות יחד: החברה לא מדפיסה שורת קבוצה', 'נקרא מגרף בדוח או במצגת', 'נגזר: חיים ועוד בריאות, על אותו בסיס', 'כולל רווח עתידי בפוליסות חיסכון, שאינו CSM לפי התקן', 'ללא פוליסות חיסכון: הסכום שהודפס פחות עמודת פוליסות החיסכון באותה טבלה', 'נגזר מהנתונים שבטבלה'];
 const SUP = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷'];
 const B_ORDER = ['net', 'na', 'gross', 'reinsurance'];
 
-type SRow = { m: string; s: string; g: string; b: string; vals: Record<string, { v: number; std?: string }> };
+type SRow = { m: string; s: string; g: string; b: string; vals: Record<string, { v: number; std?: string; u?: string | null; pg?: number | null; cmp?: number }> };
 
 /** One measure of the matrix for every insurer, quarter by quarter since 2021: the question "who is gaining" answered in one chart. */
 function PeerTrend({ ids, cols, name, pick }: { ids: string[]; cols: Col[]; name: (id: string) => string; pick: string | null }) {
@@ -79,6 +82,28 @@ function PeerTrend({ ids, cols, name, pick }: { ids: string[]; cols: Col[]; name
   const firstNew = shown.findIndex((p) => ids.some((id) => (line(id, col.calc ? COLS.find((c) => c.k === col.calc![0])! : col) ?? {})[p]?.std === 'IFRS 17'));
   const pal = palette(), pct = !!col.pctv || col.calc?.[2] === 'pct';
   const lab = (p: string) => `Q${p.slice(5)}'${p.slice(2, 4)}`;
+  const { open } = useSource();
+  // the figure behind a point: the group line as printed in that quarter's report, the sum of four of them for LTM, or the ratio of two
+  const printedAt = (id: string, c: Col, p: string): Prov => {
+    const title = `${c.l} · ${name(id)} · ${lab(p)}`, e = line(id, c)?.[p];
+    if (!e) return { k: 'none', title, why: 'אין שורת קבוצה מודפסת לרבעון זה בדוח' };
+    return { k: 'report', title, value: nf(e.v, c.pctv ? 1 : Math.abs(e.v) < 100 ? 1 : 0), unit: c.pctv ? '%' : 'מיליוני ש"ח', url: e.u ?? null, pg: e.pg ?? null, doc: name(id), period: lab(p), note: [e.std, e.cmp ? 'עמודת ההשוואה בדוח מאוחר יותר (עשויה להיות מוצגת מחדש)' : ''].filter(Boolean).join(' · ') || undefined };
+  };
+  const pointProv = (id: string, c: Col, p: string): Prov => {
+    const title = `${c.l} · ${name(id)} · ${lab(p)}`;
+    if (c.calc) {
+      const [a, b, how] = c.calc, ca = COLS.find((x) => x.k === a)!, cb = COLS.find((x) => x.k === b)!, v = value(id, p);
+      if (v == null) return { k: 'none', title, why: 'חסר אחד מרכיבי היחס ברבעון זה' };
+      const sv = (cc: Col) => { const t = at(id, cc, p); return t == null ? '–' : nf(t, 0); };
+      return { k: 'calc', title, value: how === 'pct' ? nf(v, 1) : nf(v, 2), unit: how === 'pct' ? '%' : '×', formula: how === 'pct' ? `${ca.l} ÷ ${cb.l} × 100` : `${ca.l} ÷ ${cb.l}`, inputs: [{ label: ca.l, v: sv(ca), src: () => pointProv(id, ca, p) }, { label: cb.l, v: sv(cb), src: () => pointProv(id, cb, p) }] };
+    }
+    if (win === 'q' || !flow(c)) return printedAt(id, c, p);
+    const qs: string[] = [];
+    for (let i = 0, y = +p.slice(0, 4), q = +p.slice(5); i < 4; i++) { qs.unshift(`${y}Q${q}`); if (--q === 0) { q = 4; y--; } }
+    const v = at(id, c, p);
+    if (v == null) return { k: 'none', title: `${title} · LTM`, why: 'חסר רבעון באחד מארבעת הרבעונים האחרונים' };
+    return { k: 'calc', title: `${title} · LTM`, value: nf(v, Math.abs(v) < 100 ? 1 : 0), unit: 'מיליוני ש"ח', formula: 'LTM = סכום ארבעת הרבעונים האחרונים', inputs: qs.map((x) => ({ label: lab(x), v: nf(line(id, c)?.[x]?.v ?? 0, 0), src: () => printedAt(id, c, x) })) };
+  };
   return (
     <Panel title={`לאורך זמן: ${col.l}`} aside={<span>{pct ? '%' : col.calc ? '×' : 'מיליוני ש"ח'} · קבוצה · {win === 'ltm' && (flow(col) || col.calc) ? 'LTM' : 'רבעוני'} · כפי שדווח בכל תקופה</span>}>
       <section className="controls">
@@ -87,7 +112,7 @@ function PeerTrend({ ids, cols, name, pick }: { ids: string[]; cols: Col[]; name
         {(flow(col) || col.calc) && <div className="field"><span>חלון</span><Seg<'q' | 'ltm'> label="חלון" value={win} onChange={setWin} options={[['q', 'רבעון'], ['ltm', 'LTM']]} /></div>}
       </section>
       {shown.length < 2 ? <Empty title="אין רצף רבעוני למדד הזה" /> : (
-        <Chart label={`עמיתים לאורך זמן: ${col.l}`} height={360} deps={[col.k, lead, win, Object.keys(all).length, shown.length]} build={() => foxOption({
+        <Chart label={`עמיתים לאורך זמן: ${col.l}`} height={360} deps={[col.k, lead, win, Object.keys(all).length, shown.length]} onPoint={(si, di) => { const id = ids[si], p = shown[di]; if (id && p) open(pointProv(id, col, p)); }} build={() => foxOption({
           x: shown.map(lab), unit: pct ? '%' : col.calc ? '×' : 'מיליוני ש"ח', legend: true, labels: false, scale: !!col.inst || pct, breakAt: firstNew > 0 ? firstNew : undefined, breakLabel: 'IFRS 17',
           series: ids.map((id, i) => ({ name: name(id), kind: 'line' as const, color: pal[i % pal.length], pct, lead: lead === id, dim: !!lead && lead !== id, dec: pct ? 1 : col.calc ? 2 : 0, data: shown.map((p) => { const v = value(id, p); return v == null ? null : +v.toFixed(3); }) })),
         })} />
@@ -131,13 +156,13 @@ export function IndustryMatrix() {
           // no group or combined line: life and health are added when both are printed on one basis, and the cell is marked as derived
           const part = (g: string) => F.filter((f) => f.c === id && f.m === c.m && f.g === g && f.s === g && f.d === end && (c.inst ? f.w === 'instant' : f.w === W)).sort((a, b) => B_ORDER.indexOf(a.b) - B_ORDER.indexOf(b.b));
           const l = part('life'), h = c.m?.startsWith('csm') ? part('health').find((x) => l[0] && x.b === l[0].b) : undefined;
-          cells[c.k] = l[0] && h ? { v: c.k === 'rel' ? Math.abs(l[0].v) + Math.abs(h.v) : l[0].v + h.v, f: l[0], sum: true } : null;
+          cells[c.k] = l[0] && h ? { v: c.k === 'rel' ? Math.abs(l[0].v) + Math.abs(h.v) : l[0].v + h.v, f: l[0], sum: true, parts: [{ f: l[0], v: l[0].v }, { f: h, v: h.v }] } : null;
           return;
         }
         // one movement printed as several rows of the same tied-out table adds up
         const parts = !c.inst && p.f.dv != null ? F.filter((x) => x.c === id && x.m === p.f.m && x.s === p.f.s && x.b === p.f.b && x.w === p.f.w && x.d === p.f.d && x.dv != null && x.l !== p.f.l) : [];
         const v = (p.f.dv ?? p.f.v) + parts.reduce((t, x) => t + x.dv!, 0);
-        cells[c.k] = { v: c.k === 'rel' ? Math.abs(v) : v, f: p.f, alt: p.alt, n: parts.length + 1 };
+        cells[c.k] = { v: c.k === 'rel' ? Math.abs(v) : v, f: p.f, alt: p.alt, n: parts.length + 1, parts: parts.length ? [{ f: p.f, v: p.f.dv ?? p.f.v }, ...parts.map((x) => ({ f: x, v: x.dv! }))] : undefined };
       });
       COLS.filter((c) => c.calc).forEach((c) => {
         const [a, b, how] = c.calc!, x = cells[a], y = cells[b];
@@ -169,6 +194,33 @@ export function IndustryMatrix() {
     return c.calc || c.pctv ? x.v - y.v : y.v ? ((x.v - y.v) / Math.abs(y.v)) * 100 : null;
   };
   const fmt = (c: Col, v: number) => (view === 'v' ? show(c, v) : c.calc?.[2] === 'ratio' ? `${sn(v, 2)}×` : c.calc || c.pctv ? `${sn(v, 1)} נק׳` : `${sn(v, 1)}%`);
+  // where a cell comes from: the group line printed in the report (page and file), the sum of several printed lines, a ratio of two cells, or the change on the year-earlier column
+  const prevP = `${Number(P.slice(0, 4)) - 1}${P.slice(4)}`;
+  const factProv = (id: string, c: Col, f: IfrsFact, v: number, per: string, note?: string): Prov => {
+    const rid = d.files.find((x) => x.company === id && x.period === P)?.report_id;
+    return { k: 'report', title: `${c.l} · ${name(id)} · ${periodName(per)}`, value: show(c, v), unit: c.pctv ? '%' : 'מיליוני ש"ח', url: url(f) ?? (rid ? mayaReport(rid) : null), pg: f.pg, doc: name(id), period: `${periodName(per)} · ${BASIS[f.b] ?? f.b}`, note: [f.l, note, f.n].filter(Boolean).join(' · ') || undefined };
+  };
+  const cellProv = (id: string, cells: Record<string, Cell>, c: Col, per: string): Prov => {
+    const x = cells[c.k], title = `${c.l} · ${name(id)} · ${periodName(per)}`;
+    if (!x) return { k: 'none', title, why: 'אין שורת קבוצה מודפסת לתקופה זו בדוח' };
+    if (x.calc) {
+      const [a, b, how] = c.calc!, ca = COLS.find((q) => q.k === a)!, cb = COLS.find((q) => q.k === b)!;
+      return { k: 'calc', title, value: show(c, x.v), unit: how === 'pct' ? '%' : '×', formula: how === 'pct' ? `${ca.l} ÷ ${cb.l} × 100` : `${ca.l} ÷ ${cb.l}`,
+        inputs: [a, b].map((kk, j) => { const cc = j ? cb : ca; return { label: cc.l, v: cells[kk] ? show(cc, cells[kk]!.v) : '–', src: () => cellProv(id, cells, cc, per) }; }) };
+    }
+    if (x.parts && x.parts.length > 1) return { k: 'calc', title, value: show(c, x.v), unit: 'מיליוני ש"ח', formula: x.sum ? 'סכום חיים ובריאות, על אותו בסיס (אין שורת קבוצה מודפסת)' : 'סכום שורות של אותה תנועה בטבלה אחת',
+      inputs: x.parts.map((q) => ({ label: q.f.g === q.f.s ? ({ life: 'חיים', health: 'בריאות' } as Record<string, string>)[q.f.g] ?? q.f.l : q.f.l, v: show(c, q.v), src: () => factProv(id, c, q.f, q.v, per) })) };
+    return factProv(id, c, x.f!, x.v, per);
+  };
+  const medianProv = (c: Col, m: number): Prov => ({ k: 'calc', title: `חציון · ${c.l} · ${periodName(P)}`, value: fmt(c, m), formula: `חציון הערכים בטבלה (${view === 'v' ? 'ערך' : 'YoY'}), לפחות שלושה`,
+    inputs: rows.map((r) => ({ r, v: shown(r, c) })).filter((z): z is { r: typeof rows[number]; v: number } => z.v != null).sort((p, q) => p.v - q.v).map(({ r, v }) => ({ label: name(r.id), v: fmt(c, v), src: () => (view === 'v' ? cellProv(r.id, r.cells, c, P) : yoyProv(r.id, r.cells, c)) })) });
+  const yoyProv = (id: string, cells: Record<string, Cell>, c: Col): Prov => {
+    const x = cells[c.k], y = before.get(id)?.[c.k], v = shown({ id, cells }, c);
+    if (!x || !y || v == null) return { k: 'none', title: `${c.l} · ${name(id)}`, why: 'חסר ערך בתקופה או בעמודת ההשוואה בדוח' };
+    const pts = !!c.calc || !!c.pctv;
+    return { k: 'calc', title: `${c.l} · ${name(id)} · ${periodName(P)} מול ${periodName(prevP)}`, value: fmt(c, v), unit: pts && !c.calc?.[2] ? 'נק׳' : undefined, formula: pts ? `שינוי = ${periodName(P)} − ${periodName(prevP)}` : `שינוי = (${periodName(P)} − ${periodName(prevP)}) ÷ |${periodName(prevP)}| × 100`,
+      inputs: [{ label: periodName(P), v: show(c, x.v), src: () => cellProv(id, cells, c, P) }, { label: `${periodName(prevP)}, עמודת ההשוואה בדוח`, v: show(c, y.v), src: () => cellProv(id, before.get(id)!, c, prevP) }] };
+  };
   const sorted = (() => {
     const c = sort && cols.find((x) => x.k === sort.k);
     if (!c) return rows;
@@ -227,16 +279,17 @@ export function IndustryMatrix() {
                 const sup = ms.length ? <sup title={ms.map((m) => (m === 0 ? `${BASIS[x.f!.b]}; ${NOTES[0]}` : NOTES[m])).join(' · ')}>{ms.map((m) => SUP[m]).join('')}</sup> : null;
                 const tone = view === 'y' ? (v >= 0 ? 'pos' : 'neg') : v < 0 ? 'neg' : '';
                 const w = top.get(c.k) ? Math.round((Math.abs(v) / top.get(c.k)!) * 100) : 0;
-                const href = !x.calc && url(x.f!) && x.f!.pg != null ? `${url(x.f!)}#page=${x.f!.pg}` : null;
+                const href = view === 'v' && !x.calc && !x.parts && url(x.f!) && x.f!.pg != null ? `${url(x.f!)}#page=${x.f!.pg}` : null;
+                const face = <span className={`num ${tone}`} title={x.f && !x.calc ? `${x.f.l} · עמ׳ ${x.f.pg}` : undefined}>{fmt(c, v)}</span>;
                 return (
                   <td key={c.k} className="bar" style={{ ['--w' as string]: `${w}%` }}>
-                    {href ? <a className={`num ${tone}`} href={href} target="_blank" rel="noreferrer" title={`${x.f!.l} · עמ׳ ${x.f!.pg}`}>{fmt(c, v)}</a> : <span className={`num ${tone}`}>{fmt(c, v)}</span>}{sup}
+                    <Sourced src={() => (view === 'v' ? cellProv(r.id, r.cells, c, P) : yoyProv(r.id, r.cells, c))} href={href}>{face}</Sourced>{sup}
                   </td>
                 );
               })}
             </tr>
           ))}</tbody>
-          <tfoot><tr><td>חציון</td>{cols.map((c) => { const m = median(c); return <td key={c.k}>{m == null ? <span className="muted">–</span> : <span className="num">{fmt(c, m)}</span>}</td>; })}</tr></tfoot>
+          <tfoot><tr><td>חציון</td>{cols.map((c) => { const m = median(c); return <td key={c.k}>{m == null ? <span className="muted">–</span> : <Sourced src={() => medianProv(c, m)}><span className="num">{fmt(c, m)}</span></Sourced>}</td>; })}</tr></tfoot>
         </table></div>
         {used.size > 0 && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTES[m]}</li>)}</ol>}
       </Panel>

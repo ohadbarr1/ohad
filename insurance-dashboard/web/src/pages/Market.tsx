@@ -2,13 +2,16 @@ import { foxOption } from '../lib/foxchart';
 import { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
+import { Sourced } from '../components/Source';
+import { useSource, type Prov } from '../lib/prov';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg, copyText } from '../components/ui';
 import { CHART_FONT, chartBase, cssVar, palette } from '../lib/theme';
-import { METRIC_BY_KEY, METRIC_DEFS, WIN_LABEL, type Market, type MetricKey, type Win } from '../lib/market';
+import { METRIC_BY_KEY, METRIC_DEFS, WIN_LABEL, fundCell, fundRef, warmHist, type Market, type MetricKey, type Win } from '../lib/market';
 import { cls, nf, pct, sn } from '../lib/format';
 import { useMarket } from '../lib/useData';
 import type { Fund } from '../lib/types';
 import '../styles/market.css';
+import '../styles/prov-market.css';
 
 function fmtMetric(key: MetricKey, v: number | null, signed = false): string {
   if (v == null || Number.isNaN(v)) return '–';
@@ -18,6 +21,11 @@ function fmtMetric(key: MetricKey, v: number | null, signed = false): string {
 }
 const signedKey = (k: MetricKey) => k !== 'assets' && k !== 'share' && k !== 'fee';
 const toneOf = (k: MetricKey, v: number | null) => (signedKey(k) ? cls(v) : '');
+/** A regulator aggregate that opens its source. */
+function MV({ m, k, pi, w, set, g, v, signed = signedKey(k) }: { m: Market; k: MetricKey; pi: number; w: Win; set: string; g: number; v: number | null; signed?: boolean }) {
+  const t = <span className={`num ${toneOf(k, v)}`}>{fmtMetric(k, v, signed)}</span>;
+  return v == null || Number.isNaN(v) ? t : <Sourced src={() => m.explain(k, pi, w, set, g)}>{t}</Sourced>;
+}
 
 function useM() {
   const { market, error } = useMarket();
@@ -58,7 +66,7 @@ export function MarketOverview() {
   return <Gate>{(m) => <OverviewInner m={m} />}</Gate>;
 }
 function OverviewInner({ m }: { m: Market }) {
-  const L = m.LAST;
+  const L = m.LAST, { open } = useSource();
   const fams = ['pension', 'gemel', 'insurance'] as const;
   const tot = m.cell(L, 'all', -1).a, tot12 = m.cell(L - 12, 'all', -1).a;
   const fo = m.flows(L, 'ltm', 'fam:pension', -1), fg = m.flows(L, 'ltm', 'fam:gemel', -1);
@@ -69,39 +77,40 @@ function OverviewInner({ m }: { m: Market }) {
   return (
     <>
       <section className="kpis">
-        <Kpi label="סך נכסים" value={nf(tot / 1000, 0)} sub={`מיליארד ש"ח · ${m.plabel(L)}`} />
-        <Kpi label="שינוי YoY" value={pct((tot / tot12 - 1) * 100, 1, true)} tone="pos" sub="תשואה, צבירה והעברות תיקים" />
+        <Kpi label="סך נכסים" value={<Sourced src={() => m.explain('assets', L, 'm', 'all', -1)}>{nf(tot / 1000, 0)}</Sourced>} sub={`מיליארד ש"ח · ${m.plabel(L)}`} />
+        <Kpi label="שינוי YoY" value={<Sourced src={() => m.explain('growth', L, 'ltm', 'all', -1)}>{pct((tot / tot12 - 1) * 100, 1, true)}</Sourced>} tone="pos" sub="תשואה, צבירה והעברות תיקים" />
         {fams.map((f) => {
           const g = m.growth(L, 'ltm', 'fam:' + f, -1);
-          return <Kpi key={f} label={m.d.families[f]} value={nf(m.cell(L, 'fam:' + f, -1).a / 1000, 0)} sub={<>מיליארד ש"ח · <span className="num">{pct(g, 1, true)}</span> YoY</>} />;
+          return <Kpi key={f} label={m.d.families[f]} value={<Sourced src={() => m.explain('assets', L, 'm', 'fam:' + f, -1)}>{nf(m.cell(L, 'fam:' + f, -1).a / 1000, 0)}</Sourced>} sub={<>מיליארד ש"ח · <Sourced src={() => m.explain('growth', L, 'ltm', 'fam:' + f, -1)}><span className="num">{pct(g, 1, true)}</span></Sourced> YoY</>} />;
         })}
-        {fo && fg && <Kpi label="צבירה אורגנית, LTM (פנסיה וגמל)" value={sn((fo.org + fg.org) / 1000, 1)} sub={'מיליארד ש"ח, לפני העברות (ניוד)'} />}
+        {fo && fg && <Kpi label="צבירה אורגנית, LTM (פנסיה וגמל)" value={<Sourced src={() => ({ k: 'calc', title: `צבירה אורגנית LTM, פנסיה וגמל · ${m.plabel(L)}`, value: sn((fo.org + fg.org) / 1000, 1), unit: 'מיליארד ש"ח', formula: 'צבירה אורגנית של פנסיה ועוד צבירה אורגנית של גמל והשתלמות, LTM',
+          inputs: (['pension', 'gemel'] as const).map((f) => ({ label: m.d.families[f], v: sn((f === 'pension' ? fo : fg).org / 1000, 1), src: () => m.explain('organic', L, 'ltm', 'fam:' + f, -1) })) } as Prov)}>{sn((fo.org + fg.org) / 1000, 1)}</Sourced>} sub={'מיליארד ש"ח, לפני העברות (ניוד)'} />}
       </section>
       <div className="grid21">
         <Panel title='נכסים לפי משפחת מוצר (מיליארד ש"ח)'>
-          <Chart label="נכסים לפי משפחת מוצר" height={330} deps={[m]} build={() => {
+          <Chart label="נכסים לפי משפחת מוצר" height={330} deps={[m]} onPoint={(si, di) => { if (fams[si]) open(m.explain('assets', di, 'm', 'fam:' + fams[si], -1)); }} build={() => {
             const c = colors();
             return foxOption({ x: m.P.map((_, i) => m.plabel(i)), unit: 'מיליארד ש"ח', dense: true, full: true, total: true,
               series: fams.map((f, k) => ({ name: m.d.families[f], kind: 'line' as const, area: true, stack: true, color: c[k], dec: 0, data: m.P.map((_, i) => +(m.cell(i, 'fam:' + f, -1).a / 1000).toFixed(1)) })) });
             }} />
         </Panel>
         <Panel title='צבירה אורגנית LTM (מיליארד ש"ח)'>
-          <Chart label="צבירה אורגנית" height={330} deps={[m]} build={() => {
+          <Chart label="צבירה אורגנית" height={330} deps={[m]} onPoint={(si, di) => { const f = (['pension', 'gemel'] as const)[si]; if (f && m.flows(di, 'ltm', 'fam:' + f, -1)) open(m.explain('organic', di, 'ltm', 'fam:' + f, -1)); }} build={() => {
             const c = colors();
             return foxOption({ x: m.P.map((_, i) => m.plabel(i)), unit: 'מיליארד ש"ח', dense: true,
               series: (['pension', 'gemel'] as const).map((f, k) => ({ name: m.d.families[f], kind: 'line' as const, color: c[k], dec: 1, data: m.P.map((_, i) => { const x = m.flows(i, 'ltm', 'fam:' + f, -1); return x ? +(x.org / 1000).toFixed(1) : null; }) })) });
             }} />
-          <div className="src">פנסיה-נט אינו מפרסם הפקדות ומשיכות לפני אמצע 2016. ביטוח-נט אינו כולל תזרימים.</div>
+          <div className="fnote">פנסיה-נט אינו מפרסם הפקדות ומשיכות לפני אמצע 2016. ביטוח-נט אינו כולל תזרימים.</div>
         </Panel>
       </div>
       <Panel title={`לפי מוצר, ${m.plabel(L)}`}>
         <div className="scroll"><table>
           <thead><tr><th>מוצר</th>{cols.map((c) => <th key={c}>{METRIC_BY_KEY[c].short}{METRIC_BY_KEY[c].win && <><br />LTM</>}</th>)}</tr></thead>
           <tbody>{rows.map((r) => (
-            <tr key={r.id}><td>{r.p.label}</td>{cols.map((c) => { const v = m.value(c, L, 'ltm', r.id, -1); return <td key={c}><span className={`num ${toneOf(c, v)}`}>{fmtMetric(c, v, signedKey(c))}</span></td>; })}</tr>
+            <tr key={r.id}><td>{r.p.label}</td>{cols.map((c) => { const v = m.value(c, L, 'ltm', r.id, -1); return <td key={c}><MV m={m} k={c} pi={L} w="ltm" set={r.id} g={-1} v={v} /></td>; })}</tr>
           ))}</tbody>
         </table></div>
-        <div className="src">תשואה משוקללת בנכסים ומושפעת מהרכב המסלולים. שינוי בנכסים כולל תשואה, צבירה והעברות תיקים.</div>
+        <div className="fnote">תשואה משוקללת בנכסים ומושפעת מהרכב המסלולים. שינוי בנכסים כולל תשואה, צבירה והעברות תיקים.</div>
       </Panel>
     </>
   );
@@ -117,6 +126,7 @@ function RankingInner({ m }: { m: Market }) {
   const [metric, setMetric] = useState<MetricKey>('assets');
   const [win, setWin] = useState<Win>('ltm');
   const [copied, setCopied] = useState('העתק לאקסל');
+  const { open } = useSource();
   const def = METRIC_BY_KEY[metric];
   // the month is a year and a month, not a list of every month on record
   const years = useMemo(() => [...new Set(m.P.map((p) => Math.floor(p / 100)))].reverse(), [m]);
@@ -152,9 +162,9 @@ function RankingInner({ m }: { m: Market }) {
         <Field label="מדד"><select value={metric} onChange={(e) => setMetric(e.target.value as MetricKey)}>{METRIC_DEFS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</select></Field>
         {def.win && <div className="field"><span>חלון</span><Seg<Win> label="חלון" value={win} onChange={setWin} options={[['m', 'חודש'], ['ytd', 'YTD'], ['ltm', 'LTM']]} /></div>}
       </section>
-      <Panel title={`${def.label}${def.win ? ' · ' + WIN_LABEL[win] : ''} · ${m.plabel(pi)}`} aside={<>כלל השוק: <b className={`num ${toneOf(metric, mkt)}`}>{fmtMetric(metric, mkt, signedKey(metric))}</b>{def.unit === 'bn' && ' מיליארד ש"ח'}</>}>
+      <Panel title={`${def.label}${def.win ? ' · ' + WIN_LABEL[win] : ''} · ${m.plabel(pi)}`} aside={<>כלל השוק: <b><MV m={m} k={metric} pi={pi} w={win} set={set} g={-1} v={mkt} /></b>{def.unit === 'bn' && ' מיליארד ש"ח'}</>}>
         {data.length === 0 ? <Empty title="אין נתון זמין לבחירה זו">תזרימים מפורסמים לפנסיה וגמל בלבד, ופנסיה-נט מתחיל באמצע 2016.</Empty> : (
-          <Chart label="דירוג קבוצות" height={Math.max(260, data.length * 32 + 40)} deps={[m, data, mkt, metric]} build={() => {
+          <Chart label="דירוג קבוצות" height={Math.max(260, data.length * 32 + 40)} deps={[m, data, mkt, metric]} onPoint={(_s, di) => { const g = m.groupIndex(data[di]?.g ?? ''); if (g >= 0) open(m.explain(metric, pi, win, set, g)); }} build={() => {
             const b = chartBase();
             return {
               animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 112, right: 64, top: 12, bottom: 24 },
@@ -168,7 +178,7 @@ function RankingInner({ m }: { m: Market }) {
             };
           }} />
         )}
-        <div className="src">{['organic', 'transfers', 'netflow', 'rate'].includes(metric) && 'תזרימים כוללים פנסיה וגמל בלבד. ביטוח-נט אינו מפרסם תזרימים, ופנסיה-נט אינו מפרסם אותם לפני אמצע 2016. '}הקו המקווקו מציג את כלל השוק במוצר שנבחר.</div>
+        <div className="fnote">{['organic', 'transfers', 'netflow', 'rate'].includes(metric) && 'תזרימים כוללים פנסיה וגמל בלבד. ביטוח-נט אינו מפרסם תזרימים, ופנסיה-נט אינו מפרסם אותם לפני אמצע 2016. '}הקו המקווקו מציג את כלל השוק במוצר שנבחר.</div>
       </Panel>
       <Panel title="כל המדדים לפי קבוצה" aside={<button className="btn" type="button" onClick={copy}>{copied}</button>}>
         <div className="scroll"><table>
@@ -176,9 +186,9 @@ function RankingInner({ m }: { m: Market }) {
           <tbody>
             {groups.map((g) => (
               <tr key={g}><td><Link to={`/market/group/${encodeURIComponent(m.d.groups[g])}`}>{m.d.groups[g]}</Link></td>
-                {tableCols.map((c) => { const v = m.value(c, pi, win, set, g); return <td key={c}><span className={`num ${toneOf(c, v)}`}>{fmtMetric(c, v, signedKey(c))}</span></td>; })}</tr>
+                {tableCols.map((c) => { const v = m.value(c, pi, win, set, g); return <td key={c}><MV m={m} k={c} pi={pi} w={win} set={set} g={g} v={v} /></td>; })}</tr>
             ))}
-            <tr className="tot"><td>כלל השוק</td>{tableCols.map((c) => { const v = m.value(c, pi, win, set, -1); return <td key={c}><span className={`num ${toneOf(c, v)}`}>{fmtMetric(c, v, signedKey(c))}</span></td>; })}</tr>
+            <tr className="tot"><td>כלל השוק</td>{tableCols.map((c) => { const v = m.value(c, pi, win, set, -1); return <td key={c}><MV m={m} k={c} pi={pi} w={win} set={set} g={-1} v={v} /></td>; })}</tr>
           </tbody>
         </table></div>
       </Panel>
@@ -239,7 +249,7 @@ function FundsInner({ m }: { m: Market }) {
             <thead><tr>{FCOLS.map((c, ci) => <th key={c.k} className="sortable" style={ci === 0 ? { minWidth: 220 } : undefined} tabIndex={0} aria-sort={sort === c.k ? (dir > 0 ? 'ascending' : 'descending') : undefined}
               onClick={() => { if (sort === c.k) setDir(-dir); else { setSort(c.k); setDir(c.text ? 1 : -1); } }}>{c.label}{sort === c.k ? (dir > 0 ? ' ▲' : ' ▼') : ''}</th>)}</tr></thead>
             <tbody>{list.slice(0, 300).map((f) => (
-              <tr key={f.fam + f.id}>{FCOLS.map((c) => <td key={c.k}>{c.text ? c.fmt(f) : <span className={`num ${c.tone ? c.tone(f) : ''}`}>{c.fmt(f)}</span>}</td>)}</tr>
+              <tr key={f.fam + f.id} onPointerEnter={() => warmHist(fundRef(f))}>{FCOLS.map((c) => <td key={c.k}>{c.text ? c.fmt(f) : f[c.k] == null ? <span className="num">–</span> : <Sourced src={() => fundCell(m.d.meta.asof, f, c.k)!}><span className={`num ${c.tone ? c.tone(f) : ''}`}>{c.fmt(f)}</span></Sourced>}</td>)}</tr>
             ))}</tbody>
           </table>
         </div>
@@ -257,6 +267,7 @@ export function MarketGroup() {
 const CM: MetricKey[] = ['assets', 'share', 'organic', 'rate', 'fee', 'ret'];
 export function GroupPanel({ m, group, standalone = false }: { m: Market; group: string; standalone?: boolean }) {
   const nav = useNavigate();
+  const { open } = useSource();
   const [set, setSet] = useState('all');
   const [metric, setMetric] = useState<MetricKey>('assets');
   const gi = m.groupIndex(group);
@@ -281,7 +292,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
       <section className="controls"><Field label="מוצר"><select value={set} onChange={(e) => setSet(e.target.value)}>{m.sets.map((s) => <option key={s.id} value={s.id}>{s.sub ? '  ' : ''}{s.label}</option>)}</select></Field></section>
       <div className="grid21">
         <Panel title={def.label} aside={def.unit === 'bn' ? 'מיליארד ש"ח' : def.win ? 'LTM' : undefined}>
-          <Chart label="סדרה לאורך זמן" height={320} deps={[m, group, set, metric]} build={() => {
+          <Chart label="סדרה לאורך זמן" height={320} deps={[m, group, set, metric]} onPoint={(si, di) => { if ((si === 0 ? own : mkt)[di] != null) open(m.explain(metric, di, win, set, si === 0 ? gi : -1)); }} build={() => {
             const b = chartBase(), pct = def.unit === '%';
             return foxOption({ x: m.P.map((_, i) => m.plabel(i)), unit: pct ? '%' : def.unit === 'bn' ? 'מיליארד ש"ח' : '', dense: true, scale: !!def.ratio, legend: true, series: [
               { name: group, kind: 'line', lead: true, pct, color: b.accent, dec, data: own.map((v) => (v == null ? null : +v.toFixed(3))) },
@@ -292,17 +303,17 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
           <div className="scroll"><table>
             <thead><tr><th>מדד</th><th>{m.plabel(L)}</th><th>{m.plabel(L - 12)}</th><th>כלל השוק</th></tr></thead>
             <tbody>{rows.map((r) => (
-              <tr key={r.k} style={{ cursor: 'pointer', background: r.k === metric ? 'var(--accent-soft)' : undefined }} onClick={() => setMetric(r.k)}>
+              <tr key={r.k} style={{ cursor: 'pointer', background: r.k === metric ? 'var(--accent-soft)' : undefined }} onClick={(e) => { if (!(e.target as HTMLElement).closest('.src')) setMetric(r.k); }}>
                 <td>{METRIC_BY_KEY[r.k].short}{METRIC_BY_KEY[r.k].win && <span className="dim">LTM</span>}</td>
-                <td><span className="num">{fmtMetric(r.k, r.now)}</span></td><td><span className="num">{fmtMetric(r.k, r.prev)}</span></td><td><span className="num">{fmtMetric(r.k, r.mk)}</span></td>
+                <td><MV m={m} k={r.k} pi={L} w="ltm" set={set} g={gi} v={r.now} signed={false} /></td><td><MV m={m} k={r.k} pi={L - 12} w="ltm" set={set} g={gi} v={r.prev} signed={false} /></td><td><MV m={m} k={r.k} pi={L} w="ltm" set={set} g={-1} v={r.mk} signed={false} /></td>
               </tr>
             ))}</tbody>
           </table></div>
-          <div className="src">לחיצה על שורה מחליפה את הגרף. תזרימים כוללים פנסיה וגמל בלבד.</div>
+          <div className="fnote">לחיצה על שורה מחליפה את הגרף. תזרימים כוללים פנסיה וגמל בלבד.</div>
         </Panel>
       </div>
       <Panel title={`נכסים לפי מוצר (מיליארד ש"ח, דצמבר של כל שנה ו-${m.plabel(L)})`}>
-        <Chart label="נכסים לפי מוצר" height={280} deps={[m, group, set]} build={() => {
+        <Chart label="נכסים לפי מוצר" height={280} deps={[m, group, set]} onPoint={(si, di) => { const i = prodIdx[si]; if (i != null && pts[di] != null) open(m.explain('assets', pts[di], 'm', 'p:' + m.d.products[i].key, gi)); }} build={() => {
           const pal = palette();
           return foxOption({ x: pts.map((i) => (i === L ? m.plabel(i) : String(Math.floor(m.P[i] / 100)))), unit: 'מיליארד ש"ח', full: true, total: true, labels: false,
             series: prodIdx.map((i) => ({ name: m.d.products[i].label, kind: 'bar' as const, stack: true, color: pal[i % pal.length], dec: 1, data: pts.map((pi) => +(m.cell(pi, 'p:' + m.d.products[i].key, gi).a / 1000).toFixed(2)) })) });

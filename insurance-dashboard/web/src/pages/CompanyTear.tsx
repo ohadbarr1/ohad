@@ -6,6 +6,8 @@ import { useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
 import { periodName } from './CompanyIfrs';
+import { Sourced } from '../components/Source';
+import { calc, factPeriod, factUrl, ifrsProv } from './companyProv';
 
 const B_ORDER = ['net', 'na', 'gross', 'reinsurance'];
 const yearBack = (iso: string) => `${Number(iso.slice(0, 4)) - 1}${iso.slice(4)}`;
@@ -40,7 +42,7 @@ export function CompanyTear({ id }: { id: string }) {
   }, [facts.data, id, P]);
 
   if (!P || items.length === 0) return null;
-  const url = (f: IfrsFact) => (f.u !== undefined ? f.u : d?.files.find((x) => x.company === id && x.period === P)?.url);
+  const url = (f: IfrsFact) => (d ? factUrl(f, d, P) : null);
   const end = endOf(P);
   return (
     <section>
@@ -49,11 +51,14 @@ export function CompanyTear({ id }: { id: string }) {
         const f = x.f!, v = x.v ?? f.dv ?? f.v, pv = x.pf ? (x.v != null ? Math.abs(x.pf.dv ?? x.pf.v) : x.pf.dv ?? x.pf.v) : null;
         const ch = pv != null && pv !== 0 && pv > 0 === v > 0 && x.v == null ? (v / pv - 1) * 100 : null;
         const txt = x.p ? nf(v, 1) + '%' : nf(v, Math.abs(v) < 100 ? 1 : 0);
+        const unit = x.p ? '%' : 'מיליוני ש"ח', shown = (_g: IfrsFact, w: number) => (x.p ? nf(w, 1) + '%' : nf(w, Math.abs(w) < 100 ? 1 : 0));
+        const prov = () => ifrsProv(f, d!, P, { title: x.l, value: txt, unit, note: v !== f.v ? `${x.v != null ? 'סכום שורות של אותה טבלה, בערך מוחלט' : 'ערך השורה בפירוק הטבלה'} · בעמוד: ${shown(f, f.v)}` : undefined });
+        const chProv = () => calc(`${x.l} · YoY`, pct(ch!, 1, true), 'נוכחי ÷ קודם − 1', [[f, v], [x.pf!, pv!]].map(([g, w]) => ({ label: factPeriod(g as IfrsFact), v: shown(g as IfrsFact, w as number), src: () => ifrsProv(g as IfrsFact, d!, P, { title: x.l, value: shown(g as IfrsFact, w as number), unit }) })), '%');
         return (
           <div className="kpi" key={x.l}>
             <div className="l">{x.l}{f.b !== 'na' && ` · ${BASIS[f.b]}`}{f.g === 'life_health' && ' · חיים ובריאות'}</div>
-            <div className="v num">{url(f) && f.pg != null ? <a href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.l} · עמ׳ ${f.pg}`}>{txt}</a> : txt}<IncChip f={f} /></div>
-            <div className="s">{ch != null ? <span className={ch < 0 ? 'neg' : 'pos'}>{pct(ch, 1, true)} YoY</span> : f.d !== end ? <span className="num">{f.d}</span> : f.src === 'chart' ? 'מגרף' : ' '}</div>
+            <div className="v num"><Sourced src={prov} href={url(f) && f.pg != null ? `${url(f)}#page=${f.pg}` : null} title={f.pg != null ? `${f.l} · עמ׳ ${f.pg}` : undefined}>{txt}</Sourced><IncChip f={f} /></div>
+            <div className="s">{ch != null ? <Sourced src={chProv}><span className={ch < 0 ? 'neg' : 'pos'}>{pct(ch, 1, true)} YoY</span></Sourced> : f.d !== end ? <span className="num">{f.d}</span> : f.src === 'chart' ? 'מגרף' : ' '}</div>
           </div>
         );
       })}</div>

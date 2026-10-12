@@ -7,6 +7,8 @@ import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { periodName } from './CompanyIfrs';
 import { endOf, lineHe } from './IndustryIfrs';
+import { Sourced } from '../components/Source';
+import { factProv } from '../lib/csm';
 import '../styles/ifrs.css';
 
 /** Column = one family of reported rows. Names differ between filers, so each is matched by pattern; `pctv` marks ratios. */
@@ -66,7 +68,7 @@ export function IndustryCapital() {
               <td><Link to={`/company/${r.id}/ifrs17`}>{name(r.id)}</Link></td>
               {r.cells.map((c, i) => (
                 <td key={COLS[i].k}>{c.items.length === 0 ? <span className="muted">–</span> : (
-                  <>{c.items.map(({ f, tag, est }, j) => <span key={j} className="cv">{j > 0 && <span className="muted"> · </span>}{url(f) && f.pg != null ? <a className="num" href={`${url(f)}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${lineHe(f) || 'עמ׳'} · עמ׳ ${f.pg}`}>{show(f, COLS[i].pctv)}</a> : <span className="num">{show(f, COLS[i].pctv)}</span>}{tag && <span className={`chip ${est ? 'est' : ''}`}>{tag}</span>}</span>)}
+                  <>{c.items.map(({ f, tag, est }, j) => <span key={j} className="cv">{j > 0 && <span className="muted"> · </span>}<Sourced className="num" href={url(f) && f.pg != null ? `${url(f)}#page=${f.pg}` : null} title={`${lineHe(f) || 'עמ׳'} · עמ׳ ${f.pg ?? '–'}`} src={() => factProv({ ...f, rp: P }, d, `${COLS[i].l} · ${name(r.id)} · ${periodName(P)}`, show(f, COLS[i].pctv), COLS[i].pctv ? '%' : undefined)}>{show(f, COLS[i].pctv)}</Sourced>{tag && <span className={`chip ${est ? 'est' : ''}`}>{tag}</span>}</span>)}
                     {c.tag && <span className={`chip ${c.stale ? 'est' : ''}`} title={c.stale ? `הערך האחרון בדוח ${periodName(P)} הוא מ-${c.tag}` : undefined}>{c.tag}</span>}</>
                 )}</td>
               ))}

@@ -1,4 +1,7 @@
-import type { KpiData, PriceData } from './types';
+import type { KpiData, KpiFix, PriceData } from './types';
+import { nf } from './format';
+import type { Prov } from './prov';
+import { mayaReport } from './sources';
 
 export type Basis = 'q' | 'ltm' | 'fy';
 export interface KpiDef { key: string; label: string; unit: 'm' | 'nis' | '%' | 'x'; flow: boolean; derived?: boolean; group: 'דוחות' | 'יחסים' | 'שוק ההון' }
@@ -21,6 +24,32 @@ export const KPI_BY_KEY = Object.fromEntries(KPI_DEFS.map((d) => [d.key, d]));
 export interface Point { period: string; end: string; v: number | null }
 const qOf = (p: string) => (p.endsWith('FY') ? 4 : Number(p.slice(5)));
 const yOf = (p: string) => Number(p.slice(0, 4));
+export const KPI_CONCEPTS: Record<string, string> = {
+  profit: 'ProfitLossAttributableToOwnersOfParent', oci: 'ComprehensiveIncomeAttributableToOwnersOfParent', pretax: 'ProfitLossBeforeTax', revenue: 'Revenue',
+  cfo: 'CashFlowsFromUsedInOperatingActivities', eps: 'BasicEarningsLossPerShare', equity: 'EquityAttributableToOwnersOfParent', assets: 'Assets',
+};
+const NAMES: Record<string, string> = { phoenix: 'הפניקס', harel: 'הראל', migdal: 'מגדל', clal: 'כלל', menora: 'מנורה מבטחים', hachshara: 'הכשרה', ayalon: 'איילון', altshuler: 'אלטשולר שחם', more: 'מור', analyst: 'אנליסט', yelin: 'ילין לפידות', more_gemel: 'מור גמל ופנסיה', ibi: 'אי.בי.אי' };
+const STATUS: Record<string, string> = { verified: 'אומת מול הדוח', fy: 'שנתי', corrected: 'תוקן', unverified: 'לא אומת מול הדוח', withheld: 'הושמט', cumulative: 'מצטבר' };
+/** Period as shown on the site: Q2'26, FY'25. */
+export const periodTag = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `Q${p.slice(5)}'${p.slice(2, 4)}`);
+const none = (title: string, why: string): Prov => ({ k: 'none', title, why });
+const MUL = (v: number, d = 2) => `${nf(v, d)}x`;
+/** Last-twelve-months dividend per share, in agorot, by ex-date. */
+export function ttmDividend(p: PriceData): number {
+  const lo = `${Number(p.asof.slice(0, 4)) - 1}${p.asof.slice(4)}`;
+  return p.dividends.filter(([d]) => d > lo).reduce((s, [, v]) => s + v, 0);
+}
+export const priceProv = (p: PriceData, title = 'מחיר סגירה אחרון'): Prov => ({ k: 'price', title, value: `${nf(p.last / 100, 2)} ש"ח`, ticker: p.ticker, vendor: p.source, date: p.asof });
+export const dividendProv = (p: PriceData, title = 'דיבידנד למניה, LTM (לפי יום האקס)'): Prov => ({ k: 'price', title, value: `${nf(ttmDividend(p) / 100, 2)} ש"ח`, ticker: p.ticker, vendor: p.source, date: p.asof });
+/** Dividend yield = LTM dividend per share over the last close. The one price-based figure on the valuation page. */
+export function dividendYield(p: PriceData): number | null { const d = ttmDividend(p); return d > 0 && p.last > 0 ? (d / p.last) * 100 : null; }
+export function dividendYieldProv(p: PriceData): Prov {
+  const y = dividendYield(p);
+  if (y == null) return none('תשואת דיבידנד', 'לא חולק דיבידנד (לפי יום האקס) ב-12 החודשים שעד תאריך המחיר האחרון');
+  return { k: 'calc', title: 'תשואת דיבידנד', value: `${nf(y, 1)}%`, unit: '%', formula: 'תשואה = דיבידנד למניה LTM ÷ מחיר סגירה אחרון × 100',
+    inputs: [{ label: 'דיבידנד למניה, LTM', v: `${nf(ttmDividend(p) / 100, 2)} ש"ח`, src: () => dividendProv(p) }, { label: 'מחיר סגירה אחרון', v: `${nf(p.last / 100, 2)} ש"ח`, src: () => priceProv(p) }] };
+}
+
 export const periodLabelShort = (p: string) => (p.endsWith('FY') ? `Q4'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
 
 /** Quarterly, trailing-twelve-month and annual series for one company, built from the headline figures tagged in each periodic report. */
@@ -28,7 +57,13 @@ export class CompanyKpi {
   readonly quarters: { period: string; end: string; y: number; q: number }[];
   private raw: Record<string, (number | null)[]>;
   private idx = new Map<string, number>();
+  private rid: (number | null)[];
+  private fix: Record<string, KpiFix>;
+  private statusOf: string[];
   constructor(readonly id: string, d: KpiData['companies'][string], private price: PriceData | null) {
+    this.rid = d.rid ?? d.periods.map(() => null);
+    this.fix = d.fix ?? {};
+    this.statusOf = d.status ?? d.periods.map(() => 'unverified');
     this.quarters = d.periods.map((p, i) => ({ period: p, end: d.end[i], y: yOf(p), q: qOf(p) }));
     this.raw = d.values;
     d.periods.forEach((p, i) => this.idx.set(p, i));
@@ -91,4 +126,121 @@ export class CompanyKpi {
   }
   lastPrice(): number | null { return this.price ? this.price.last / 100 : null; }
   lastShares(): number | null { return this.shares(this.quarters.length - 1); }
+
+  /** MAYA report the period's figures were read from. */
+  reportId(period: string): number | null { const i = this.idx.get(period); return i == null ? null : this.rid[i]; }
+
+  /* ---------- provenance: every figure explained from the filings ---------- */
+  private cur(key: string, period: string): number | null { const i = this.idx.get(period); return i == null ? null : this.raw[key]?.[i] ?? null; }
+  private show(key: string, v: number): string { return key === 'eps' ? `${nf(v, 2)} ש"ח` : `${nf(v, 0)} אלפי ש"ח`; }
+  private title(key: string, period: string) { return `${KPI_BY_KEY[key]?.label ?? key}, ${periodTag(period)}`; }
+  private xbrl(key: string, period: string, note?: string, value?: number | null, status?: string): Prov {
+    const i = this.idx.get(period), v = value ?? this.cur(key, period);
+    if (i == null || v == null) return none(this.title(key, period), 'התקופה אינה בדוחות שנקראו או שהמושג אינו מתויג בה');
+    const st = status ?? (KPI_BY_KEY[key]?.flow ? this.statusOf[i] : this.statusOf[i] === 'fy' ? 'fy' : undefined);
+    return { k: 'xbrl', title: this.title(key, period), value: this.show(key, v), company: NAMES[this.id] ?? this.id, period: periodTag(period), rid: this.rid[i], concept: KPI_CONCEPTS[key], status: st ? STATUS[st] : undefined, note };
+  }
+  private report(key: string, period: string, f: { rid?: number | null; pg?: number | null }, note: string): Prov {
+    const i = this.idx.get(period), v = this.cur(key, period);
+    if (i == null || v == null) return none(this.title(key, period), 'אין ערך');
+    const rid = f.rid ?? this.rid[i];
+    return { k: 'report', title: this.title(key, period), value: this.show(key, v), url: rid ? mayaReport(rid) : null, pg: f.pg ?? null, doc: NAMES[this.id], period: periodTag(period), note };
+  }
+  /** A single quarter of a flow: the tag, the printed figure, the tagged year-to-date less the quarters before it, or FY less the first three quarters. */
+  private qProv(key: string, period: string): Prov {
+    const t = this.title(key, period);
+    if (period.endsWith('FY')) {
+      const y = yOf(period), v = this.quarter(key, y, 4);
+      if (v == null) return none(t, 'חסר אחד מהרבעונים הראשונים של השנה, ולכן Q4 אינו ניתן לחישוב');
+      const ps = [`${y}Q1`, `${y}Q2`, `${y}Q3`];
+      return { k: 'calc', title: t, value: this.show(key, v), formula: `Q4'${String(y).slice(2)} = FY'${String(y).slice(2)} − Q1 − Q2 − Q3`,
+        inputs: [{ label: `FY'${String(y).slice(2)}`, v: this.show(key, this.cur(key, period)!), src: () => this.xbrl(key, period) }, ...ps.map((p) => ({ label: periodTag(p), v: this.show(key, this.cur(key, p)!), src: () => this.qProv(key, p) }))] };
+    }
+    const f = this.fix[period];
+    if (f?.t === 'withheld') return none(t, 'המסנן אינו מבחין בין רבעון לתקופה מצטברת בדוח של חברה זו, והערך הושמט במקום להציג מספר שגוי');
+    if (f?.t === 'printed') return key === 'profit' ? this.report(key, period, f, 'הרבעון כפי שהודפס בדוח; התג ב-XBRL אינו תואם אף אחד מהמספרים המודפסים') : none(t, 'התג ב-XBRL אינו תואם את הדוח המודפס, ושורה זו אינה נקראה ממנו');
+    if (f?.t === 'diff') {
+      if (key === 'profit' && f.profit) return this.report(key, period, f.profit, 'הרבעון כפי שהודפס בדוח; ב-XBRL התג מצטבר');
+      const v = this.cur(key, period);
+      if (v == null) return none(t, f.gap ? 'התג מצטבר ואחד הרבעונים הקודמים אינו נקי, ולכן ההפרש אינו ניתן לחישוב' : 'אין ערך');
+      const prior = f.from ?? [], ytd = key === 'profit' && f.raw != null ? f.raw : v + prior.reduce((s, p) => s + (this.cur(key, p) ?? 0), 0);
+      return { k: 'calc', title: t, value: this.show(key, v), formula: `רבעון = תג מצטבר (${prior.length ? `Q1–Q${prior.length}` : ''} עד ${periodTag(period)}) − הרבעונים הקודמים`,
+        inputs: [{ label: `תג מצטבר, ${periodTag(period)}`, v: this.show(key, ytd), src: () => this.xbrl(key, period, 'מתויג כתקופה מצטברת, לא כרבעון בודד', ytd, 'cumulative') }, ...prior.map((p) => ({ label: periodTag(p), v: this.show(key, this.cur(key, p) ?? 0), src: () => this.qProv(key, p) }))] };
+    }
+    return this.xbrl(key, period);
+  }
+  private ltmProv(key: string, i: number): Prov {
+    const t = this.quarters[i], title = `${KPI_BY_KEY[key].label}, LTM עד ${periodTag(t.period)}`, v = this.ltm(key, i);
+    if (v == null) return none(title, 'חסר רבעון באחד מארבעת הרבעונים האחרונים');
+    const ps = [0, 1, 2, 3].map((k) => this.quarters[i - k].period).reverse();
+    return { k: 'calc', title, value: this.show(key, v), formula: 'LTM = סכום ארבעת הרבעונים האחרונים', inputs: ps.map((p) => ({ label: periodTag(p), v: this.show(key, this.quarter(key, yOf(p), qOf(p)) ?? 0), src: () => this.qProv(key, p) })) };
+  }
+  /** Shares implied by the latest annual profit / basic EPS at or before quarter i. */
+  sharesProv(i = this.quarters.length - 1): Prov {
+    for (let k = i; k >= 0; k--) {
+      const t = this.quarters[k];
+      if (t.q !== 4) continue;
+      const sh = this.shares(i);
+      if (sh == null) break;
+      return { k: 'calc', title: `מניות, אומדן לפי FY'${String(t.y).slice(2)}`, value: `${nf(sh / 1e6, 1)} מיליון`, formula: 'מניות = רווח FY לבעלי המניות × 1,000 ÷ רווח למניה בסיסי', est: true,
+        inputs: [{ label: 'רווח FY', v: this.show('profit', this.cur('profit', t.period)!), src: () => this.xbrl('profit', t.period) }, { label: 'רווח למניה, FY', v: this.show('eps', this.cur('eps', t.period)!), src: () => this.xbrl('eps', t.period) }] };
+    }
+    return none('מניות', 'אין רווח למניה שנתי לחברה זו, ולכן מספר המניות אינו ניתן לגזירה');
+  }
+  private priceDate(end: string): string | null { if (!this.price) return null; let d: string | null = null; for (let i = 0; i < this.price.dates.length && this.price.dates[i] <= end; i++) d = this.price.dates[i]; return d; }
+  /** Market value at a price: `px` in NIS and its provenance. */
+  private mcapProv(i: number, px: number | null, pxSrc: () => Prov, label: string): Prov {
+    const sh = this.shares(i);
+    if (px == null || sh == null) return none('שווי שוק', px == null ? 'אין קובץ מחיר לחברה' : 'מספר המניות אינו ניתן לגזירה');
+    return { k: 'calc', title: 'שווי שוק', value: `${nf((px * sh) / 1e6, 0)} מיליוני ש"ח`, formula: 'שווי שוק = מחיר × מניות', est: true,
+      inputs: [{ label, v: `${nf(px, 2)} ש"ח`, src: pxSrc }, { label: 'מניות', v: `${nf(sh / 1e6, 1)} מיליון`, src: () => this.sharesProv(i) }] };
+  }
+  /** Market value at the latest close of `p` (valuation page). */
+  marketCapNow(p: PriceData): Prov { return this.mcapProv(this.quarters.length - 1, p.last / 100, () => priceProv(p), 'מחיר סגירה אחרון'); }
+  /** P/B or P/E (LTM) at the latest close of `p`, on the latest period's figures. */
+  multipleNow(key: 'pb' | 'pe', p: PriceData): Prov {
+    const i = this.quarters.length - 1, pe = key === 'pe', per = this.quarters[i].period;
+    const px = p.last / 100, sh = this.shares(i), den = pe ? this.ltm('profit', i) : this.at('equity', this.quarters[i].y, this.quarters[i].q);
+    const title = pe ? 'מכפיל רווח (P/E), LTM' : 'מכפיל הון (P/B)';
+    if (sh == null || !den || (pe && den <= 0)) return none(title, !den || den <= 0 ? 'אין רווח LTM חיובי' : 'מספר המניות אינו ניתן לגזירה');
+    const mc = (px * sh) / 1e6, v = mc / (den / 1000);
+    return { k: 'calc', title, value: MUL(v), formula: pe ? 'P/E = שווי שוק ÷ רווח נקי LTM' : 'P/B = שווי שוק ÷ הון לבעלי המניות', est: true,
+      inputs: [{ label: 'שווי שוק', v: `${nf(mc, 0)} מיליוני ש"ח`, src: () => this.marketCapNow(p) }, pe ? { label: `רווח LTM, ${periodTag(per)}`, v: `${nf(den / 1000, 0)} מיליוני ש"ח`, src: () => this.ltmProv('profit', i) } : { label: `הון, ${periodTag(per)}`, v: `${nf(den / 1000, 0)} מיליוני ש"ח`, src: () => this.xbrl('equity', per) }] };
+  }
+  /** Where a headline figure comes from. Reported values open the filing; derived ones show the formula and open their components. */
+  explain(key: string, basis: Basis, period: string): Prov {
+    const i = this.idx.get(period), def = KPI_BY_KEY[key];
+    if (!def) return none(key, 'מדד לא מוכר');
+    if (i == null) return none(`${def.label}, ${periodTag(period)}`, 'התקופה אינה בדוחות שנקראו');
+    const t = this.quarters[i], tag = periodTag(period), v = this.value(key, i, basis);
+    const title = `${def.label}, ${key === 'roe' ? `LTM עד ${tag}` : tag}`;
+    switch (key) {
+      case 'roe': {
+        const j = this.quarters[i - 4];
+        if (v == null || !j) return none(title, 'חסר רווח LTM או הון לפני שנה');
+        const p0 = j.period;
+        return { k: 'calc', title, value: `${nf(v, 1)}%`, unit: '%', formula: 'ROE = רווח נקי LTM ÷ ממוצע (הון סוף תקופה, הון לפני שנה) × 100',
+          inputs: [{ label: 'רווח נקי LTM', v: this.show('profit', this.ltm('profit', i)!), src: () => this.ltmProv('profit', i) }, { label: `הון, ${tag}`, v: this.show('equity', this.cur('equity', period)!), src: () => this.xbrl('equity', period) }, { label: `הון, ${periodTag(p0)}`, v: this.show('equity', this.cur('equity', p0)!), src: () => this.xbrl('equity', p0) }] };
+      }
+      case 'leverage': {
+        if (v == null) return none(title, 'חסר סך נכסים או הון');
+        return { k: 'calc', title, value: MUL(v), formula: 'נכסים להון = סך הנכסים ÷ הון לבעלי המניות',
+          inputs: [{ label: 'סך הנכסים', v: this.show('assets', this.cur('assets', period)!), src: () => this.xbrl('assets', period) }, { label: 'הון', v: this.show('equity', this.cur('equity', period)!), src: () => this.xbrl('equity', period) }] };
+      }
+      case 'mcap': {
+        const d = this.priceDate(t.end), px = this.priceAt(t.end);
+        return this.mcapProv(i, px, () => (d && this.price ? { k: 'price', title: `מחיר סגירה ל-${tag}`, value: `${nf(px!, 2)} ש"ח`, ticker: this.price.ticker, vendor: this.price.source, date: d } : none('מחיר', 'אין מחיר')), `מחיר סגירה בסוף ${tag}`);
+      }
+      case 'pb': case 'pe': {
+        const mc = this.value('mcap', i, basis);
+        const den = key === 'pb' ? this.at('equity', t.y, t.q) : this.ltm('profit', i);
+        if (v == null || mc == null || den == null) return none(title, key === 'pe' ? 'אין רווח LTM חיובי או מחיר' : 'אין מחיר או הון');
+        return { k: 'calc', title, value: MUL(v), formula: key === 'pe' ? 'P/E = שווי שוק ÷ רווח נקי LTM' : 'P/B = שווי שוק ÷ הון לבעלי המניות', est: true,
+          inputs: [{ label: 'שווי שוק', v: `${nf(mc, 0)} מיליוני ש"ח`, src: () => this.explain('mcap', basis, period) }, key === 'pe' ? { label: 'רווח LTM', v: this.show('profit', den), src: () => this.ltmProv('profit', i) } : { label: 'הון', v: this.show('equity', den), src: () => this.xbrl('equity', period) }] };
+      }
+    }
+    if (!def.flow) return this.xbrl(key, period);
+    if (basis === 'fy') return period.endsWith('FY') ? this.xbrl(key, period) : none(title, 'הבסיס השנתי קיים לתקופות FY בלבד');
+    return basis === 'ltm' ? this.ltmProv(key, i) : this.qProv(key, period);
+  }
 }

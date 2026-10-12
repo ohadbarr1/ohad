@@ -4,6 +4,9 @@ import { Empty, Field, Loading, Panel, Seg } from '../components/ui';
 import { nf } from '../lib/format';
 import { load } from '../lib/useData';
 import { BASIS } from './IndustryIfrs';
+import { Sourced } from '../components/Source';
+import { fileOf, report } from './companyProv';
+import type { Prov } from '../lib/prov';
 import { he, isPct, segName } from './CompanyIfrs';
 
 interface Cell { v: number; pg?: number; u?: string; std: string; cmp?: number; der?: number; src?: string }
@@ -13,6 +16,13 @@ const lineName = (s: string) => { const [head, rest] = s.split(/:(.*)/); return 
 const G_ORDER = ['group', 'life', 'health', 'pc', 'savings', 'investment_contracts', 'insurer', 'other'];
 
 /** Every reported line, quarter by quarter since 2022, across the change of accounting standard. Each figure is the one printed for that quarter and opens its page. */
+/** a figure of the quarterly run: the page of the report it was printed in; Q4 is derived from the year and nine months */
+function cellProv(r: Row, p: string, c: Cell, txt: string): Prov {
+  const note = [c.der ? 'נגזר: שנתי פחות תשעה חודשים; העמוד הוא עמוד ה-FY' : '', c.cmp ? 'מספר השוואה מדוח מאוחר יותר' : '', c.src === 'chart' ? 'נקרא מגרף' : c.src === 'text' ? 'נקרא מטקסט הדוח' : ''].filter(Boolean).join(' · ');
+  return report({ title: `${he(r.m)}${r.s !== r.g ? ` · ${lineName(r.s)}` : ''}${r.b !== 'na' ? ` · ${BASIS[r.b] ?? r.b}` : ''}`, value: txt, unit: isPct(r.m) ? '%' : 'מיליוני ש"ח', url: c.u ?? null, pg: c.pg ?? null, doc: c.u ? fileOf(c.u) : undefined,
+    period: p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : label(p), der: !!c.der, old: c.std === 'IFRS 4', note: note || undefined });
+}
+
 export function CompanySeries({ id, docs }: { id: string; docs: number }) {
   const [data, setData] = useState<{ periods: string[]; rows: Row[] } | null | undefined>(undefined);
   useEffect(() => { setData(undefined); load<{ periods: string[]; rows: Row[] }>(`series/${id}.json`).then(setData, () => setData(null)); }, [id]);
@@ -50,9 +60,8 @@ export function CompanySeries({ id, docs }: { id: string; docs: number }) {
                 <td className="lbl">{he(r.m)}{r.s !== r.g && <span className="muted"> · {lineName(r.s)}</span>}{r.b !== 'na' && <span className="dim">{BASIS[r.b] ?? r.b}</span>}</td>
                 {periods.map((p) => { const c = r.vals[p]; const txt = c ? nf(c.v, isPct(r.m) || Math.abs(c.v) < 100 ? 1 : 0) + (isPct(r.m) ? '%' : '') : '';
                   const tip = c ? [c.std, c.der ? 'נגזר: שנתי פחות תשעה חודשים' : '', c.cmp ? 'מספר השוואה מדוח מאוחר יותר' : '', c.src ? `מקור: ${c.src}` : '', c.pg ? `עמ׳ ${c.pg}` : ''].filter(Boolean).join(' · ') : '';
-                  return <td key={p} className={`${p === firstOld ? 'brk' : ''} ${c?.std === 'IFRS 4' ? 'old' : ''}`}>{!c ? <span className="muted">·</span> : c.u && c.pg != null && !c.der
-                    ? <a className={`num ${c.v < 0 ? 'neg' : ''} ${c.cmp ? 'cmp' : ''}`} href={`${c.u}#page=${c.pg}`} target="_blank" rel="noreferrer" title={tip}>{txt}</a>
-                    : <span className={`num ${c.v < 0 ? 'neg' : ''} ${c.der ? 'der' : ''}`} title={tip}>{txt}</span>}</td>; })}
+                  const num = <span className={`num ${c?.v != null && c.v < 0 ? 'neg' : ''} ${c?.der ? 'der' : ''} ${c?.cmp ? 'cmp' : ''}`} title={tip}>{txt}</span>;
+                  return <td key={p} className={`${p === firstOld ? 'brk' : ''} ${c?.std === 'IFRS 4' ? 'old' : ''}`}>{!c ? <span className="muted">·</span> : <Sourced src={() => cellProv(r, p, c, txt)} href={c.u && c.pg != null ? `${c.u}#page=${c.pg}` : null} title={tip || undefined}>{num}</Sourced>}</td>; })}
               </tr>
             ))}</tbody>
           </table></div>

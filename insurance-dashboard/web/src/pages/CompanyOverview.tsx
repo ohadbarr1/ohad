@@ -7,7 +7,9 @@ import type { CompanyStore } from '../lib/company';
 import type { Market, MetricKey, Win } from '../lib/market';
 import { METRIC_BY_KEY } from '../lib/market';
 import { useCompanyDocs, useCompanyPrice, useKpis } from '../lib/useData';
-import { periodLabelShort, type CompanyKpi } from '../lib/kpi';
+import { dividendProv, periodLabelShort, type CompanyKpi } from '../lib/kpi';
+import { mayaReport } from '../lib/sources';
+import { printed } from './companyProv';
 import type { DocEntry, PriceData } from '../lib/types';
 import { DOC_TYPE, useCtx } from './Company';
 
@@ -27,7 +29,7 @@ function priceCards(p: PriceData): MetricCardProps[] {
     x, series: [{ name: 'סגירה שבועית', data: close }], kind: 'area', color: 2, dec: 2, foot: `${p.ticker} · ${p.source} · ${p.asof}`,
   }];
   if (years.length) cards.push({
-    title: 'דיבידנד למניה', unit: 'ש"ח, LTM', value: nf(ttm / 100, 2), delta: ttm ? { text: `תשואה ${pct(ttm / p.last * 100, 1)}` } : undefined,
+    title: 'דיבידנד למניה', unit: 'ש"ח, LTM', value: nf(ttm / 100, 2), src: ttm ? () => dividendProv(p) : undefined,
     x: years.map((y) => `'${y.slice(2)}`), series: [{ name: 'דיבידנד, FY', data: years.map((y) => +((byYear.get(y) ?? 0) / 100).toFixed(2)) }], color: 5, dec: 2, foot: `${p.source} · לפי יום האקס`,
   });
   return cards;
@@ -79,9 +81,12 @@ function financialCards(store: CompanyStore): MetricCardProps[] {
     if (!ps.length) continue;
     const data = ps.map(({ i }) => +(store.val(mi, i)! / 1000).toFixed(1));
     const now = data[data.length - 1], yoy = type === 'Q' || type === 'I', prev = data[data.length - (yoy ? 5 : 2)];  // quarters and balance dates are compared with the same point a year earlier
-    const page = store.page(mi, ps[ps.length - 1].i);
+    const last = ps[ps.length - 1].i, page = store.page(mi, last);
+    const entity = store.d.sheets.find((x) => x.code === sheet)?.entity ?? '', fact = store.byMetric.get(mi)?.get(last);
+    const href = fact ? store.sourceUrl(entity, page, fact.u) : null;
     out.push({ title: f.title, tag: f.tag, unit: 'מיליוני ש"ח', value: nf(now, 0), delta: prev ? { text: `${pct(chg(now, prev), 1, true)}${yoy && data.length >= 5 ? ' YoY' : ''}`, tone: tone(chg(now, prev)) } : undefined,
-      x: ps.map(({ i }) => store.plabel(i)), series: [{ name: f.title, data }], color: f.color, dec: 0, to: `financials?sheet=${encodeURIComponent(sheet)}&m=${mi}${sheet.startsWith('X.') ? '&g=1' : ''}`, foot: page ? `דוח כספי, עמ׳ ${page}` : undefined });
+      x: ps.map(({ i }) => store.plabel(i)), series: [{ name: f.title, data }], color: f.color, dec: 0, to: `financials?sheet=${encodeURIComponent(sheet)}&m=${mi}${sheet.startsWith('X.') ? '&g=1' : ''}`, foot: page ? `דוח כספי, עמ׳ ${page}` : undefined,
+      src: () => printed(store, mi, last, { value: nf(now, 0), unit: 'מיליוני ש"ח', entity, title: f.title }), href });
   }
   return out;
 }
@@ -90,10 +95,11 @@ function kpiCards(k: CompanyKpi): MetricCardProps[] {
   const from = 2019;
   const card = (key: string, basis: 'q' | 'ltm', title: string, unit: string, color: number, dec: number, tag?: string): MetricCardProps => {
     const s = k.series(key, basis).filter((p) => Number(p.period.slice(0, 4)) >= from && p.v != null);
-    const now = s[s.length - 1]?.v ?? null, prev = s[s.length - 5]?.v ?? null;
+    const last = s[s.length - 1], now = last?.v ?? null, prev = s[s.length - 5]?.v ?? null;
     const isRatio = unit === '%' || unit === 'מכפיל';
     const d = now != null && prev != null ? (isRatio ? { text: `${sn(now - prev, dec)} YoY`, tone: tone(now - prev) } : prev > 0 ? { text: pct(chg(now, prev), 1, true) + ' YoY', tone: tone(chg(now, prev)) } : undefined) : undefined;
-    return { title, tag, unit, value: now == null ? '–' : nf(now, dec), delta: d, x: s.map((p) => periodLabelShort(p.period)), series: [{ name: title, data: s.map((p) => +p.v!.toFixed(3)) }], color, dec, kind: isRatio ? 'area' : 'bar', to: `/industry/headline?k=${key}&b=${basis}`, foot: 'XBRL, דוחות תקופתיים' };
+    return { title, tag, unit, value: now == null ? '–' : nf(now, dec), delta: d, x: s.map((p) => periodLabelShort(p.period)), series: [{ name: title, data: s.map((p) => +p.v!.toFixed(3)) }], color, dec, kind: isRatio ? 'area' : 'bar', to: `/industry/headline?k=${key}&b=${basis}`, foot: 'XBRL, דוחות תקופתיים',
+      src: last ? () => k.explain(key, basis, last.period) : undefined, href: last && k.explain(key, basis, last.period).k === 'xbrl' && k.reportId(last.period) ? mayaReport(k.reportId(last.period)!) : null };
   };
   return [
     card('profit', 'q', 'רווח נקי לבעלי המניות, QTD', 'מיליוני ש"ח', 0, 0),

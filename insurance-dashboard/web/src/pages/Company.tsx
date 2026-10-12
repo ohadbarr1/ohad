@@ -15,6 +15,10 @@ import { useStored } from '../lib/local';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
 import type { Market } from '../lib/market';
+import { useSource, type Prov } from '../lib/prov';
+import { Sourced } from '../components/Source';
+import { calc, printed, report, docOf } from './companyProv';
+import '../styles/prov-company.css';
 import type { RegistryCompany } from '../lib/types';
 
 export interface Ctx { entry: RegistryCompany; store: CompanyStore | null; storeError: string | null; market: Market | null }
@@ -71,6 +75,9 @@ function NoFinancials({ entry }: { entry: RegistryCompany }) {
 
 /* ---------- financials: the metric table that drives the chart ---------- */
 const ENTITIES: [string, string][] = [['F', 'חברת האם (מאוחד)'], ['I', 'חברת הביטוח'], ['P', 'פנסיה וגמל']];
+/** the address parameters the statements page writes itself; any other (the source sheet's `src`) is left as it is */
+const OWN = new Set(['sheet', 'm', 't', 'u', 'v', 'r', 'g', 'k', 'all', 's', 'f', 'e', 'fl', 'gr']);
+const ownOf = (sp: URLSearchParams) => { const n = new URLSearchParams(); sp.forEach((v, k) => { if (OWN.has(k)) n.append(k, v); }); return n.toString(); };
 const GROUP_ORDER = ['income', 'balance', 'cashflow', 'oci', 'segments', 'life', 'health', 'general', 'pension', 'insurance_services', 'investments', 'instruments', 'capital', 'other'];
 
 export function CompanyFinancials() {
@@ -154,18 +161,22 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   const hideOld = hasStd && stdTab === '17';
   const seen = (f: { old?: boolean } | undefined): boolean => !!f && !(hideOld && f.old);
   const raw = (mi: number | null, pi: number): number | null => { if (mi == null || pi < 0) return null; const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null; };
+  /** the quarter itself and the three before it; one missing quarter and there is no LTM figure */
+  const ltmQs = (mi: number, pi: number): number[] | null => {
+    if (d.metrics[mi].unit === 'pct') return null;
+    const end = d.periods[pi].end, out: number[] = [];
+    for (let k = 0; k < 4; k++) {
+      const qi = qAt.get(new Date(Date.UTC(+end.slice(0, 4), +end.slice(5, 7) - 3 * k, 0)).toISOString().slice(0, 10));
+      if (qi == null || raw(mi, qi) == null) return null;
+      out.push(qi);
+    }
+    return out;
+  };
   const val = (mi: number | null, pi: number): number | null => {
     if (!ltm) return raw(mi, pi);
-    if (mi == null || pi < 0 || d.metrics[mi].unit === 'pct') return null;
-    const end = d.periods[pi].end;
-    let sum = 0;
-    for (let k = 0; k < 4; k++) {  // the quarter itself and the three before it; one missing quarter and there is no LTM figure
-      const qi = qAt.get(new Date(Date.UTC(+end.slice(0, 4), +end.slice(5, 7) - 3 * k, 0)).toISOString().slice(0, 10));
-      const v = qi == null ? null : raw(mi, qi);
-      if (v == null) return null;
-      sum += v;
-    }
-    return sum;
+    if (mi == null || pi < 0) return null;
+    const qs = ltmQs(mi, pi);
+    return qs ? qs.reduce((t, qi) => t + raw(mi, qi)!, 0) : null;
   };
   const inTab = (idx: number) => !hasStd || tabRows[stdTab].has(idx);
   const colsOf = (tab: '17' | '4' | 'c') => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === baseType && sv.rows.some((r) => tabRows[tab].has(r.idx) && (() => { const f = r.values.get(pi); return !!f && !(tab === '17' && f.old); })())) : []);
@@ -210,7 +221,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   useEffect(() => { setDim('all'); }, [sheetCode]);
   useEffect(() => {
     // the address was changed from outside (a pasted link): rebuild from it, do not write over it
-    if (wrote.current != null && sp.toString() !== wrote.current) { onOutsideLink(); return; }
+    if (wrote.current != null && ownOf(sp) !== wrote.current) { onOutsideLink(); return; }
     const q: Record<string, string> = { sheet: sheetCode };
     if (sel.length) q.m = sel.join(',');
     if (curType) q.t = curType;
@@ -227,9 +238,10 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
     if (fl.length) q.fl = fl.join(',');
     if (gr.length) q.gr = gr.join(',');
     wrote.current = new URLSearchParams(q).toString();
-    setSp(q, { replace: true });
+    // parameters this page does not own (the source sheet's `src`) survive the rewrite
+    setSp((prev) => { const n = new URLSearchParams(q); prev.forEach((v, k) => { if (!OWN.has(k)) n.set(k, v); }); return n; }, { replace: true });
   }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, flip, growth, compact, setSp]);
-  useEffect(() => { if (wrote.current != null && sp.toString() !== wrote.current) onOutsideLink(); }, [sp, onOutsideLink]);
+  useEffect(() => { if (wrote.current != null && ownOf(sp) !== wrote.current) onOutsideLink(); }, [sp, onOutsideLink]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
   const cell = (mi: number, pi: number): number | null => {
@@ -289,23 +301,63 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   // a figure from the periodic reports links only to its own report; the entity's single source file would be the wrong document
   const open = (page: number | null, u?: number | null) => (fromReports && u == null ? null : store.sourceUrl(entity, page, u));
 
+  /* where a figure on the table comes from: printed ones open the report page, computed ones (LTM, YoY, changes) list what they are computed from */
+  const { open: openSrc } = useSource();
+  const unitTxt = (mi: number) => { const u = d.metrics[mi].unit; return u === 'pct' ? '%' : u === 'nis' ? 'ש"ח' : SCALES.find((x) => x.id === scale)!.label; };
+  const titleOf = (mi: number) => { const m = d.metrics[mi]; return m.dim ? `${m.label} · ${m.dim}` : m.label; };
+  const fmtAt = (mi: number, v: number | null) => fmtCell(v, d.metrics[mi].unit, scale);
+  const printedAt = (mi: number, pi: number): Prov => printed(store, mi, pi, { value: fmtAt(mi, store.byMetric.get(mi)?.get(pi)?.v ?? null), unit: unitTxt(mi), entity, ownOnly: fromReports });
+  /** the figure as the table shows it in value mode: printed, or the sum of four printed quarters */
+  const valProv = (mi: number, pi: number): Prov => {
+    if (!ltm) return printedAt(mi, pi);
+    const qs = ltmQs(mi, pi) ?? [];
+    return calc(`${titleOf(mi)} · ${pl(pi)}`, fmtAt(mi, val(mi, pi)), `LTM = ${qs.map((qi) => store.plabel(qi)).join(' + ')}`, qs.map((qi) => ({ label: store.plabel(qi), v: fmtAt(mi, raw(mi, qi)), src: () => printedAt(mi, qi) })), unitTxt(mi));
+  };
+  /** change of a row between two columns: % (or points for a rate), each side opens its own source */
+  const changeProv = (mi: number, pi: number, pj: number, kind: string, text: string): Prov => {
+    const rate = d.metrics[mi].unit === 'pct';
+    return calc(`${titleOf(mi)} · ${kind} ${pl(pi)}`, text, rate ? `${pl(pi)} − ${pl(pj)} (נק׳)` : `${pl(pi)} ÷ ${pl(pj)} − 1`,
+      [pi, pj].map((x) => ({ label: pl(x), v: fmtAt(mi, val(mi, x)), src: () => valProv(mi, x) })), rate ? 'נק׳' : '%');
+  };
+  const cellProv = (mi: number, pi: number): Prov => (mode === 'value' ? valProv(mi, pi) : changeProv(mi, pi, prior(pi), 'YoY', shown(mi, pi)));
+  const pdfHref = (mi: number, pi: number) => { const f = store.byMetric.get(mi)?.get(pi); return !ltm && mode === 'value' && f && seen(f) ? open(f.page, f.u) : null; };
+
   // compact view: the latest column, its change on the year-earlier period and, for quarters, on the previous quarter
   const lastPi = cols.length ? cols[cols.length - 1] : null, qoqPi = !ltm && baseType === 'Q' && cols.length > 1 ? cols[cols.length - 2] : null;
-  const change = (now: number | null, then: number | null, unit: string) => {
+  const change = (now: number | null, then: number | null, unit: string, mi: number, pi: number, pj: number, kind: string) => {
     if (now == null || then == null) return <span className="muted">–</span>;
-    if (unit === 'pct') return <span className={`num ${now - then >= 0 ? 'pos' : 'neg'}`}>{sn(now - then, 1)} נק׳</span>;
+    if (unit === 'pct') { const t = `${sn(now - then, 1)} נק׳`; return <Sourced src={() => changeProv(mi, pi, pj, kind, t)}><span className={`num ${now - then >= 0 ? 'pos' : 'neg'}`}>{t}</span></Sourced>; }
     if (now <= 0 || then <= 0) return <span className="muted">–</span>;  // no rate of change from or to a loss
-    const c = (now / then - 1) * 100;
-    return <span className={`num ${c >= 0 ? 'pos' : 'neg'}`}>{Math.abs(c) >= 300 ? `×${nf(now / then, 1)}` : `${sn(c, 1)}%`}</span>;
+    const c = (now / then - 1) * 100, t = Math.abs(c) >= 300 ? `×${nf(now / then, 1)}` : `${sn(c, 1)}%`;
+    return <Sourced src={() => changeProv(mi, pi, pj, kind, t)}><span className={`num ${c >= 0 ? 'pos' : 'neg'}`}>{t}</span></Sourced>;
   };
   const compactCells = (mi: number) => {
     const pi = lastPi!, f0 = store.byMetric.get(mi)?.get(pi), f = seen(f0) ? f0 : undefined, v = val(mi, pi), pp = prior(pi), unit = d.metrics[mi].unit;
-    const href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{fmtCell(v, unit, scale)}</span>;
+    const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{fmtCell(v, unit, scale)}</span>;
     return <>
-      <td>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`מקור: עמ׳ ${f?.page ?? ''}`}>{body}</a> : body}</td>
-      <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit)}</td>
-      {qoqPi != null && <td>{change(v, val(mi, qoqPi), unit)}</td>}
+      <td>{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? open(f.page, f.u) : null}>{body}</Sourced>}</td>
+      <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit, mi, pi, pp, 'YoY')}</td>
+      {qoqPi != null && <td>{change(v, val(mi, qoqPi), unit, mi, pi, qoqPi, 'QoQ')}</td>}
     </>;
+  };
+
+  // a click on a plotted point opens the source of that figure: series are drawn in the order of `series`, a growth line right after its row
+  const onPoint = (si: number, di: number) => {
+    const plot = series.flatMap((x) => (x.gvals ? [{ x, g: false }, { x, g: true }] : [{ x, g: false }]));
+    const lo = Math.max(0, cols.findIndex((_, i) => series.some((x) => x.vals[i] != null || x.gvals?.[i] != null)));
+    const e = plot[si], ci = lo + di, pi = cols[ci];
+    if (!e || pi == null) return;
+    const { mi, name, gvals, g } = e.x;
+    if (e.g && gvals && g) {
+      const pj = g === 'yoy' ? prior(pi) : ci > 0 ? cols[ci - 1] : -1, t = gvals[ci];
+      if (t == null || pj < 0) return;
+      openSrc(calc(`${titleOf(mi)} · ${g === 'yoy' ? 'YoY' : 'QoQ'} ${pl(pi)}`, `${sn(t, 1)}%`, `(${pl(pi)} − ${pl(pj)}) ÷ |${pl(pj)}|`,
+        [pi, pj].map((x) => ({ label: pl(x), v: fmtAt(mi, val(mi, x)), src: () => valProv(mi, x) })), '%', 'שיעור מוצג בתחום ±300%'));
+      return;
+    }
+    if (e.x.vals[ci] == null) return;
+    if (flip[mi]) openSrc(calc(name, `${mode === 'yoy' ? '' : '−'}${shown(mi, pi)}`, 'היפוך סימן (±) של השורה', [{ label: pl(pi), v: shown(mi, pi), src: () => cellProv(mi, pi) }], unitLabel));
+    else openSrc(cellProv(mi, pi));
   };
 
   const explainText = explain != null ? notes.data?.[String(explain)] : null;
@@ -334,7 +386,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
         <div className="field"><span>תצוגות שמורות</span><div className="views">
           {views.map((v) => <span key={v.n} className="chip"><button type="button" onClick={() => setSp(Object.fromEntries(new URLSearchParams(v.q)))}>{v.n}</button><button type="button" aria-label={`מחיקת ${v.n}`} onClick={() => setViews(views.filter((x) => x.n !== v.n))}>×</button></span>)}
           <input type="text" value={viewName} onChange={(e) => setViewName(e.target.value)} placeholder="שם לתצוגה הנוכחית" aria-label="שם לתצוגה" />
-          <button type="button" className="btn" disabled={!viewName.trim()} onClick={() => { setViews([...views.filter((x) => x.n !== viewName.trim()), { n: viewName.trim(), q: sp.toString() }]); setViewName(''); }}>שמירה</button>
+          <button type="button" className="btn" disabled={!viewName.trim()} onClick={() => { setViews([...views.filter((x) => x.n !== viewName.trim()), { n: viewName.trim(), q: ownOf(sp) }]); setViewName(''); }}>שמירה</button>
         </div></div>
         <div className="field"><span>שורות</span><Seg<'n' | 'd'> label="צפיפות" value={dense ? 'd' : 'n'} onChange={(v) => setDense(v === 'd')} options={[['n', 'רגיל'], ['d', 'צפוף']]} /></div>
         <Field label="חיפוש שורה"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="רווח, פרמיות, CSM" /></Field>
@@ -349,7 +401,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
       </>}>
         {series.length === 0 || cols.length === 0 ? <Empty title="סמנו שורה בטבלה כדי להציג אותה בגרף" /> : (
           <>
-            <Chart label="גרף שורות נבחרות" exportName={`${companyId}-${sheetName(sheetCode)}`} height={340} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth]} build={() => {
+            <Chart label="גרף שורות נבחרות" exportName={`${companyId}-${sheetName(sheetCode)}`} height={340} onPoint={onPoint} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth]} build={() => {
               // rows as printed become series; a rate row or a growth line goes to the percent axis; IFRS 4 figures are drawn lighter and the break is marked
               const isPct = (u: string) => mode === 'yoy' || u === 'pct';
               const fox: FoxSeries[] = [];
@@ -415,7 +467,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
                       <span className={hasNotes ? 'expl' : undefined} title={r.m.label} onClick={hasNotes ? () => setExplain(explain === r.idx ? null : r.idx) : undefined}>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
 
                     </div></td>
-                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, href = f?.u != null ? open(f.page, f.u) : null, body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{shown(r.idx, pi)}</span>; return <td key={pi}>{href ? <a href={href} target="_blank" rel="noreferrer" className="cellsrc" title={`${f?.old ? 'לפי IFRS 4, כפי שדווח במקור. ' : ''}${f?.turned ? 'הסימן הותאם להצגה בדוחות האחרונים. ' : ''}${f?.der ? 'מחושב מהדוח השנתי (FY פחות התקופה המצטברת). מקור ה-FY' : 'מקור'}: עמ׳ ${f?.page ?? ''}`}>{body}</a> : f?.der ? <span title="מחושב: FY פחות 9M">{body}</span> : body}</td>; })}
+                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : undefined}>{txt}</span>; return <td key={pi}>{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td></>}
                   </tr>
                 );
@@ -432,12 +484,17 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
               <tbody>{restated.map((r, i) => {
                 const [, , label, typ, end, a, pa, ua, b, pb, ub, by] = r;
                 const link = (u: number | null, pg: number | null) => (u != null && d.urls?.[u] ? `${d.urls[u]}${pg ? `#page=${pg}` : ''}` : null);
-                const cellOf = (v: number, u: number | null, pg: number | null) => { const h = link(u, pg), t = <span className="num">{fmtCell(v, 'k', scale)}</span>; return h ? <a className="cellsrc" href={h} target="_blank" rel="noreferrer" title={`עמ׳ ${pg ?? ''}`}>{t}</a> : t; };
-                const flip = Math.abs(a + b) < 0.5;
+                const per = periodLabel(typ, end), inRep = periodLabel(by.slice(5, 7) === '12' ? 'FY' : 'Q', by), rate = /למניה/.test(label) ? 'nis' : 'k';
+                const fv = (v: number) => fmtCell(v, rate, scale), unit = rate === 'nis' ? 'ש"ח' : SCALES.find((x) => x.id === scale)!.label;
+                const fact = (v: number, u: number | null, pg: number | null, what: string): Prov => report({ title: label, value: fv(v), unit, url: u != null ? d.urls?.[u] ?? null : null, pg, doc: docOf(store, entity, u != null ? d.urls?.[u] ?? null : null), period: per,
+                  note: what, restated: { first: fv(a), last: fv(b), firstHref: link(ua, pa) ?? undefined, lastHref: link(ub, pb) ?? undefined, in: inRep } });
+                const cellOf = (v: number, u: number | null, pg: number | null, what: string) => <Sourced src={() => fact(v, u, pg, what)} href={link(u, pg)}><span className="num">{fv(v)}</span></Sourced>;
+                const flip = Math.abs(a + b) < 0.5, chg = `${sn(((b - a) / Math.abs(a)) * 100, 1)}%`;
+                const diff = () => calc(`${label} · ${per} · שינוי בין הדפסות`, chg, 'בהדפסה האחרונה − כפי שדווח לראשונה, ÷ |כפי שדווח לראשונה|', [{ label: 'כפי שדווח לראשונה', v: fv(a), src: () => fact(a, ua, pa, 'כפי שדווח לראשונה') }, { label: `בהדפסה האחרונה (${inRep})`, v: fv(b), src: () => fact(b, ub, pb, `כפי שהודפס בדוח ${inRep}`) }], '%');
                 return (
-                  <tr key={i}><td className="lbl">{label}</td><td><span className="num">{periodLabel(typ, end)}</span></td><td>{cellOf(a, ua, pa)}</td><td>{cellOf(b, ub, pb)}</td>
-                    <td>{flip ? <span className="muted">היפוך סימן בהצגה</span> : <span className={`num ${b - a >= 0 ? 'pos' : 'neg'}`}>{sn(((b - a) / Math.abs(a)) * 100, 1)}%</span>}</td>
-                    <td><span className="num">{periodLabel(by.slice(5, 7) === '12' ? 'FY' : 'Q', by)}</span></td></tr>
+                  <tr key={i}><td className="lbl">{label}</td><td><span className="num">{per}</span></td><td>{cellOf(a, ua, pa, 'כפי שדווח לראשונה')}</td><td>{cellOf(b, ub, pb, `כפי שהודפס בדוח ${inRep}`)}</td>
+                    <td>{flip ? <span className="muted">היפוך סימן בהצגה</span> : <Sourced src={diff}><span className={`num ${b - a >= 0 ? 'pos' : 'neg'}`}>{chg}</span></Sourced>}</td>
+                    <td><span className="num">{inRep}</span></td></tr>
                 );
               })}</tbody>
             </table></div>
@@ -488,6 +545,21 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
   const last = dates[dates.length - 1], prevYear = dates.find((x) => x.p.end === shiftYear(last?.p.end ?? '', -1)), dec = dates.find((x) => x.p.end.endsWith('12-31') && x !== last);
   const chg = (mi: number, base?: { i: number }) => { const a = base ? val(mi, base.i) : null, b = last ? val(mi, last.i) : null; return a && b ? (b / a - 1) * 100 : null; };  // a line absent from either period has no change, it is not a fall to zero
   const tot = total?.i ?? null;
+  const { open: openSrc } = useSource();
+  const mm = (mi: number, pi: number) => { const v = val(mi, pi); return v == null ? '–' : nf(v / 1000, 1); };
+  const pr = (mi: number, pi: number): Prov => printed(store, mi, pi, { value: mm(mi, pi), unit: 'מיליוני ש"ח', entity: 'F' });
+  const chgProv = (mi: number, base: { i: number; p: unknown } | undefined, text: string): Prov => calc(`${d.metrics[mi].label} · ${shortDim(d.metrics[mi].dim ?? '')} · שינוי`, text, `${store.plabel(last.i)} ÷ ${store.plabel(base!.i)} − 1`,
+    [last.i, base!.i].map((x) => ({ label: store.plabel(x), v: mm(mi, x), src: () => pr(mi, x) })), '%');
+  const onPoint = (si: number, di: number) => {
+    const c = chosen[si], x = dates[di];
+    if (!c || !x || val(c.i, x.i) == null) return;
+    if (mode === 'val' || tot == null) { openSrc(pr(c.i, x.i)); return; }
+    const t = val(tot, x.i), v = val(c.i, x.i)!;
+    openSrc(t ? calc(`${shortDim(c.m.dim ?? '')} · ${store.plabel(x.i)} · % מסך ה-CSM`, `${nf(v / t * 100, 1)}%`, 'קבוצת תיק ÷ סך ה-CSM',
+      [{ label: shortDim(c.m.dim ?? ''), v: mm(c.i, x.i), src: () => pr(c.i, x.i) }, { label: 'סך הכל', v: mm(tot, x.i), src: () => pr(tot, x.i) }], '%') : pr(c.i, x.i));
+  };
+  const chgCell = (mi: number, base?: { i: number; p: unknown }) => { const c = chg(mi, base); return c == null ? '–' : <Sourced src={() => chgProv(mi, base, `${sn(c, 1)}%`)}>{`${sn(c, 1)}%`}</Sourced>; };
+  const valCell = (mi: number, pi: number) => (val(mi, pi) ? <Sourced src={() => pr(mi, pi)}>{mm(mi, pi)}</Sourced> : '–');
 
   if (!total || dates.length === 0) return <Empty title="אין נתוני CSM בקובץ זה" />;
   return (
@@ -498,7 +570,7 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
       </section>
       <div className="grid2">
         <Panel title="יתרת CSM לפי קבוצת תיק" aside={<span>{mode === 'val' ? 'מיליוני ש"ח' : '% מהסה"כ'}</span>}>
-          <Chart label="CSM לפי קבוצת תיק" height={340} deps={[seg, on, mode, store]} build={() => {
+          <Chart label="CSM לפי קבוצת תיק" height={340} onPoint={onPoint} deps={[seg, on, mode, store]} build={() => {
             const b = chartBase();
             return {
               animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 50, right: 14, top: 40, bottom: 30 },
@@ -523,14 +595,14 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
               {parts.map(({ i, m }) => (
                 <tr key={i}>
                   <td className="lbl"><label className="mrow"><input type="checkbox" checked={defaultOn(i)} onChange={(e) => setOn((o) => ({ ...o, [i]: e.target.checked }))} /><span className="dot" style={{ background: pal[parts.findIndex((x) => x.i === i) % pal.length] }} /><span>{shortDim(m.dim ?? '')}</span></label></td>
-                  {dates.map((x) => <td key={x.i}><span className="num">{val(i, x.i) == null ? '–' : val(i, x.i) === 0 ? '–' : nf(val(i, x.i)! / 1000, 1)}</span></td>)}
-                  <td><span className={`num ${(chg(i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chg(i, dec) == null ? '–' : `${sn(chg(i, dec)!, 1)}%`}</span></td>
-                  <td><span className={`num ${(chg(i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chg(i, prevYear) == null ? '–' : `${sn(chg(i, prevYear)!, 1)}%`}</span></td>
+                  {dates.map((x) => <td key={x.i}><span className="num">{valCell(i, x.i)}</span></td>)}
+                  <td><span className={`num ${(chg(i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(i, dec)}</span></td>
+                  <td><span className={`num ${(chg(i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(i, prevYear)}</span></td>
                 </tr>
               ))}
-              <tr className="tot"><td>סה"כ</td>{dates.map((x) => <td key={x.i}><span className="num">{nf((val(total.i, x.i) ?? 0) / 1000, 1)}</span></td>)}
-                <td><span className={`num ${(chg(total.i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chg(total.i, dec) == null ? '–' : `${sn(chg(total.i, dec)!, 1)}%`}</span></td>
-                <td><span className={`num ${(chg(total.i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chg(total.i, prevYear) == null ? '–' : `${sn(chg(total.i, prevYear)!, 1)}%`}</span></td></tr>
+              <tr className="tot"><td>סה"כ</td>{dates.map((x) => <td key={x.i}><span className="num">{val(total.i, x.i) == null ? '0.0' : <Sourced src={() => pr(total.i, x.i)}>{mm(total.i, x.i)}</Sourced>}</span></td>)}
+                <td><span className={`num ${(chg(total.i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(total.i, dec)}</span></td>
+                <td><span className={`num ${(chg(total.i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(total.i, prevYear)}</span></td></tr>
             </tbody>
           </table></div>
         </Panel>

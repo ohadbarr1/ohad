@@ -8,6 +8,9 @@ import { byPeriodDesc, cls, dateLabel, nf, pct, periodLabel } from '../lib/forma
 import { chartBase, palette } from '../lib/theme';
 import { useCompanyDocs, useCompanyStore, useIfrsData, useIfrsFactsOf, useRegistry } from '../lib/useData';
 import type { DocEntry, IfrsFact } from '../lib/types';
+import { Sourced } from '../components/Source';
+import { useSource, type Prov } from '../lib/prov';
+import { bareUrl, calc, docOf, factPeriod, report } from './companyProv';
 import '../styles/reportday.css';
 
 const PL = 'X.רווח_והפסד', BS = 'X.מאזן', OCI = 'X.רווח_כולל';
@@ -22,7 +25,9 @@ const repName = (p: string): string => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}`
 
 type Unit = 'k' | 'm' | 'nis' | 'pct';
 /** One printed (or derived) figure with the page it opens. Statement figures are NIS thousands, extracted IFRS facts NIS millions. */
-export interface Fig { v: number; unit: Unit; href: string | null; page: number | null; der?: boolean; std?: '17' | '4'; late?: string; tip?: string }
+export interface Fig { v: number; unit: Unit; href: string | null; page: number | null; der?: boolean; std?: '17' | '4'; late?: string; tip?: string;
+  /** bare address and name of the document, the period the figure covers when it is not the column's, and what a computed figure is made of */
+  url?: string | null; doc?: string; period?: string; calc?: { formula: string; parts: { label: string; fig: Fig }[] } }
 
 /** Labels differ between filers in brackets, stray spaces and "(הפסד)": compare without them. */
 export const clean = (s: string): string => s.replace(/\(ביאור[^)]*\)/g, ' ').replace(/[()*:]/g, ' ').replace(/\s+,/g, ',').replace(/\s+/g, ' ').trim();
@@ -74,7 +79,7 @@ export function figAt(store: CompanyStore, rows: Line[], type: string, end: stri
   if (pi < 0) return null;
   for (const l of rows) {
     const f = store.byMetric.get(l.mi)?.get(pi);
-    if (f) return { v: f.v, unit: l.unit as Unit, href: store.sourceUrl('F', f.page, f.u), page: f.page, der: f.der, std: f.old ? '4' : l.std, late: late?.(f.u), tip: f.der ? 'נגזר מהנתונים המצטברים (Q4 = FY פחות 9M)' : undefined };
+    if (f) { const url = bareUrl(store, 'F', f.u); return { v: f.v, unit: l.unit as Unit, href: store.sourceUrl('F', f.page, f.u), page: f.page, der: f.der, std: f.old ? '4' : l.std, late: late?.(f.u), tip: f.der ? 'נגזר מהנתונים המצטברים (Q4 = FY פחות 9M)' : undefined, url, doc: docOf(store, 'F', url) }; }
   }
   return null;
 }
@@ -83,7 +88,9 @@ export function ltmAt(store: CompanyStore, rows: Line[], end: string): Fig | nul
   if (end.endsWith('12-31')) { const fy = figAt(store, rows, 'FY', end); if (fy) return fy; }
   const ends = [0, -1, -2, -3].map((k) => qShift(end, k)), qs = ends.map((e) => figAt(store, rows, 'Q', e));
   if (qs.some((q) => !q) || new Set(qs.map((q) => q!.std)).size > 1) return null;
-  return { v: qs.reduce((s, q) => s + q!.v, 0), unit: qs[0]!.unit, href: qs[0]!.href, page: qs[0]!.page, der: true, std: qs[0]!.std, tip: `נגזר: ${ends.reverse().map((e) => periodLabel('Q', e)).join(' + ')}` };
+  const parts = ends.map((e, i) => ({ label: periodLabel('Q', e), fig: qs[i]! }));
+  return { v: qs.reduce((s, q) => s + q!.v, 0), unit: qs[0]!.unit, href: qs[0]!.href, page: qs[0]!.page, der: true, std: qs[0]!.std, tip: `נגזר: ${ends.reverse().map((e) => periodLabel('Q', e)).join(' + ')}`,
+    calc: { formula: `LTM = ${parts.map((x) => x.label).join(' + ')}`, parts } };
 }
 
 export interface HeadRow { key: string; label: string; note?: [string, string]; chips?: string[]; fact?: IfrsFact; cur: Fig | null; yoy: Fig | null; qoq: Fig | null; ltm: Fig | null; ltmPrev: Fig | null }
@@ -131,7 +138,7 @@ export function restatedBy(store: CompanyStore, end: string): Restated[] {
   const unitOf = new Map(store.d.metrics.map((m) => [`${m.sheet}|${m.label}`, m.unit] as [string, string]));
   return (store.d.restated ?? []).filter((r) => r[11] === end).map(([sheet, std, line, type, pe, v0, p0, u0, v1, p1, u1]) => {
     const unit = (unitOf.get(`${sheet}|${line}`) ?? (/למניה/.test(line) ? 'nis' : 'k')) as Unit;
-    const fig = (v: number, page: number | null, u: number | null): Fig => ({ v, unit, href: store.sourceUrl('F', page, u), page });
+    const fig = (v: number, page: number | null, u: number | null): Fig => { const url = u != null ? store.d.urls?.[u] ?? null : null; return { v, unit, href: store.sourceUrl('F', page, u), page, url, doc: docOf(store, 'F', url) }; };
     return { sheet, std, line, period: periodLabel(type, pe), unit, first: fig(v0, p0, u0), last: fig(v1, p1, u1), d: v1 - v0, big: v0 === 0 || Math.abs(v1 - v0) / Math.abs(v0) >= 0.02 };
   }).sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
 }
@@ -144,13 +151,13 @@ export function reportsOf(store: CompanyStore): string[] {
 }
 
 /* ---------- extracted IFRS 17 facts: CSM and solvency, only as the report prints them ---------- */
-interface Pool { fs: IfrsFact[]; url: string | null }
+interface Pool { fs: IfrsFact[]; url: string | null; name?: string }
 function ifrsAt(pools: Pool[], pred: (f: IfrsFact) => boolean, d: string, unit: Unit): { fig: Fig; f: IfrsFact; n: number } | null {
   for (const p of pools) {
     const hits = p.fs.filter((f) => pred(f) && f.w === 'instant' && f.d === d);
     if (!hits.length) continue;
     const f = hits[0], url = f.u !== undefined ? f.u : p.url;
-    return { fig: { v: f.v, unit, href: url && f.pg != null ? `${url}#page=${f.pg}` : null, page: f.pg }, f, n: new Set(hits.map((x) => x.v)).size };
+    return { fig: { v: f.v, unit, href: url && f.pg != null ? `${url}#page=${f.pg}` : null, page: f.pg, url: url ?? null, doc: f.u !== undefined ? `מצגת ${p.name ?? ''}`.trim() : p.name ? `דוח ${p.name}` : undefined, period: factPeriod(f), tip: f.src === 'chart' ? 'נקרא מגרף' : f.src === 'text' ? 'נקרא מטקסט הדוח' : undefined }, f, n: new Set(hits.map((x) => x.v)).size };
   }
   return null;
 }
@@ -181,28 +188,41 @@ const fmt = (v: number, unit: Unit): string => nf(scaled(v, unit), unit === 'nis
 /** signed, without a "−0.0" */
 const signed = (x: number, d = 1): string => { const r = Number(x.toFixed(d)) || 0; return (r > 0 ? '+' : '') + nf(r, d); };
 
-function V({ f, className = '' }: { f: Fig | null; className?: string }) {
+const unitTxt = (u: Unit): string => (u === 'pct' ? '%' : u === 'nis' ? 'ש"ח' : 'מיליוני ש"ח');
+/** Where a figure of the table comes from: a printed one opens its page; a trailing twelve months lists its four quarters. */
+function figProv(f: Fig, title: string, period: string, note?: string): Prov {
+  const value = fmt(f.v, f.unit);
+  if (f.calc) return calc(`${title} · ${period}`, value, f.calc.formula, f.calc.parts.map((x) => ({ label: x.label, v: fmt(x.fig.v, x.fig.unit), src: () => figProv(x.fig, title, x.label) })), unitTxt(f.unit));
+  return report({ title, value, unit: unitTxt(f.unit), url: f.url ?? null, pg: f.page, doc: f.doc, period: f.period ?? period, der: f.der, old: f.std === '4',
+    note: [note, f.late ? `כפי שהודפס מחדש בדוח ${f.late}` : '', f.tip && !f.der ? f.tip : ''].filter(Boolean).join(' · ') || undefined });
+}
+
+function V({ f, t, p, note, className = '' }: { f: Fig | null; t: string; p: string; note?: string; className?: string }) {
   if (!f) return <span className="muted">–</span>;
   const c = `num ${f.der ? 'der' : ''} ${f.v < 0 ? 'neg' : ''} ${className}`;
   const tip = [f.tip, f.std === '4' ? 'IFRS 4' : '', f.page != null ? `עמ׳ ${f.page}` : ''].filter(Boolean).join(' · ');
-  return f.href ? <a className={c} href={f.href} target="_blank" rel="noreferrer" title={tip}>{fmt(f.v, f.unit)}</a> : <span className={c} title={tip}>{fmt(f.v, f.unit)}</span>;
+  return <Sourced src={() => figProv(f, t, p, note)} href={f.calc ? null : f.href} title={tip || undefined}><span className={c}>{fmt(f.v, f.unit)}</span></Sourced>;
 }
 /** A percent only between two positive figures; otherwise the difference in the row's unit. Never a percent from or to a loss, never across standards. */
-function Delta({ a, b }: { a: Fig | null; b: Fig | null }) {
+function Delta({ a, b, t, la, lb }: { a: Fig | null; b: Fig | null; t: string; la: string; lb: string }) {
   if (!a || !b) return null;
   if (a.std && b.std && a.std !== b.std) return <span className="rd-d muted" title="הנתונים נמדדו לפי תקנים שונים (IFRS 17 מול IFRS 4) ואינם בני השוואה">תקן שונה</span>;
-  if (a.unit === 'pct') { const x = a.v - b.v; return <span className={`rd-d num ${cls(Number(x.toFixed(1)) || null)}`}>{signed(x)} נק׳</span>; }
-  if (a.v > 0 && b.v > 0) {
+  let txt: string, cl: string, title: string | undefined, formula: string, u: string = '%';
+  if (a.unit === 'pct') { const x = a.v - b.v; txt = `${signed(x)} נק׳`; cl = cls(Number(x.toFixed(1)) || null); formula = `${la} − ${lb} (נק׳)`; u = 'נק׳'; }
+  else if (a.v > 0 && b.v > 0) {
     const x = (a.v / b.v - 1) * 100;
     // beyond a tripling a percentage stops informing: show the multiple
-    return <span className={`rd-d num ${cls(Number(x.toFixed(1)) || null)}`}>{x > 300 ? `×${nf(a.v / b.v, 1)}` : pct(Number(x.toFixed(1)) || 0, 1, true)}</span>;
+    txt = x > 300 ? `×${nf(a.v / b.v, 1)}` : pct(Number(x.toFixed(1)) || 0, 1, true); cl = cls(Number(x.toFixed(1)) || null); formula = `${la} ÷ ${lb} − 1`;
+  } else {
+    const x = scaled(a.v - b.v, a.unit), dec = a.unit === 'nis' ? 2 : 1;
+    txt = `${signed(x, dec)}${a.unit === 'nis' ? '' : ' מ׳'}`; cl = cls(Number(x.toFixed(dec)) || null); title = a.unit === 'nis' ? 'הפרש בש"ח' : 'הפרש במיליוני ש"ח: אחד הנתונים אינו חיובי'; formula = `${la} − ${lb}`; u = unitTxt(a.unit);
   }
-  const x = scaled(a.v - b.v, a.unit), dec = a.unit === 'nis' ? 2 : 1;
-  return <span className={`rd-d num ${cls(Number(x.toFixed(dec)) || null)}`} title={a.unit === 'nis' ? 'הפרש בש"ח' : 'הפרש במיליוני ש"ח: אחד הנתונים אינו חיובי'}>{signed(x, dec)}{a.unit === 'nis' ? '' : ' מ׳'}</span>;
+  const src = () => calc(`${t} · ${la} מול ${lb}`, txt, formula, [[a, la], [b, lb]].map(([f, l]) => ({ label: l as string, v: fmt((f as Fig).v, (f as Fig).unit), src: () => figProv(f as Fig, t, l as string) })), u);
+  return <Sourced src={src}><span className={`rd-d num ${cl}`} title={title}>{txt}</span></Sourced>;
 }
 /** A comparison cell: the change, and under it the figure it is measured against (for LTM, the trailing figure itself). */
-function Cell({ h, base, a, b, main }: { h: string; base: Fig | null; a: Fig | null; b: Fig | null; main?: boolean }) {
-  return <div className={`rd-c ${main ? 'rd-main' : ''}`} role="cell" data-h={h}>{base ? <><Delta a={a} b={b} /><span className="rd-base"><V f={base} /></span></> : <span className="muted">–</span>}</div>;
+function Cell({ h, base, a, b, main, t, la, lb, bp }: { h: string; base: Fig | null; a: Fig | null; b: Fig | null; main?: boolean; t: string; la: string; lb: string; bp: string }) {
+  return <div className={`rd-c ${main ? 'rd-main' : ''}`} role="cell" data-h={h}>{base ? <><Delta a={a} b={b} t={t} la={la} lb={lb} /><span className="rd-base"><V f={base} t={t} p={bp} /></span></> : <span className="muted">–</span>}</div>;
 }
 
 /** Report day: what one report printed, against a year earlier and the previous quarter, and what it restated in earlier periods. Every figure opens its page. */
@@ -216,6 +236,7 @@ export function ReportDay() {
   const ifrs = useIfrsData();
   const [win, setWin] = useState<'q' | 'ytd' | ''>('');
   const [thr, setThr] = useState<'big' | 'all'>('big');
+  const { open: openSrc } = useSource();
 
   const reports = useMemo(() => (store ? reportsOf(store) : []), [store]);
   const P = reports.includes(sp.get('p') ?? '') ? (sp.get('p') as string) : reports[0] ?? '';
@@ -244,7 +265,7 @@ export function ReportDay() {
   const curF = useIfrsFactsOf(id, files.some((f) => f.period === P) ? P : null), prevF = useIfrsFactsOf(id, files.some((f) => f.period === PP) ? PP : null);
   const extra = useMemo(() => {
     if (!curF.data) return [];
-    const pool = (fs: IfrsFact[], p: string): Pool => ({ fs: fs.filter((f) => f.c === id && !f.tr && !f.model && !f.bk), url: files.find((f) => f.period === p)?.url ?? null });
+    const pool = (fs: IfrsFact[], p: string): Pool => ({ fs: fs.filter((f) => f.c === id && !f.tr && !f.model && !f.bk), url: files.find((f) => f.period === p)?.url ?? null, name: repName(p) });
     return ifrsRows(pool(curF.data, P), prevF.data ? pool(prevF.data, PP) : null, end);
   }, [curF.data, prevF.data, files, id, P, PP, end]);
 
@@ -257,9 +278,11 @@ export function ReportDay() {
   if (!P) return <Empty title="אין דוחות רבעוניים בנתוני החברה" />;
 
   const rows = [...head.rows, ...extra];
-  const yoyL = periodLabel(T, shiftYear(end, -1)), qoqL = repName(keyOf(qShift(end, -1))).replace('FY', 'Q4');
+  const curL = periodLabel(T, end), yoyL = periodLabel(T, shiftYear(end, -1)), qoqL = repName(keyOf(qShift(end, -1))).replace('FY', 'Q4');
   const bySheet = [...new Set(rest.map((r) => r.sheet))].map((s) => ({ s, title: store.d.sheets.find((x) => x.code === s)?.title ?? s, all: rest.filter((r) => r.sheet === s).length, big: rest.filter((r) => r.sheet === s && r.big).length }));
   const nBig = rest.filter((r) => r.big).length, shown = thr === 'big' ? rest.filter((r) => r.big) : rest;
+  const restDiff = (r: Restated, txt: string, formula: string, u: string): Prov => calc(`${r.line} · ${r.period} · הוצג מחדש`, txt, formula,
+    [{ label: 'כפי שדווח אז', v: fmt(r.first.v, r.unit), src: () => figProv(r.first, r.line, r.period, 'כפי שדווח אז') }, { label: `כפי שהוצג מחדש (${repName(P)})`, v: fmt(r.last.v, r.unit), src: () => figProv(r.last, r.line, r.period, `כפי שהוצג מחדש בדוח ${repName(P)}`) }], u);
   const pick = (p: string) => { const n = new URLSearchParams(sp); n.set('p', p); setSp(n, { replace: true }); };
 
   // twelve quarters ending at the reported one, which is drawn in the accent colour; lighter marks are derived (Q4) or IFRS 4 figures
@@ -303,10 +326,10 @@ export function ReportDay() {
                 <div className="rd-l" role="rowheader">{r.label}
                   {(r.note || r.chips?.length || r.cur?.late || r.fact) && <span className="rd-chips">{r.chips?.map((c) => <span key={c} className="chip est">{c}</span>)}{r.note && <span className="chip est" title={r.note[1]}>{r.note[0]}</span>}{r.cur?.late && <span className="chip est" title={`הנתון כפי שהודפס מחדש בדוח ${r.cur.late}; הנתון המקורי בלוח "הוצג מחדש" של אותו דוח`}>לפי {r.cur.late}</span>}<IncChip f={r.fact} /></span>}
                 </div>
-                <div className="rd-c rd-cur" role="cell"><V f={r.cur} /></div>
-                <Cell h={`YoY · ${yoyL}`} base={r.yoy} a={r.cur} b={r.yoy} />
-                <Cell h={`QoQ · ${qoqL}`} base={r.qoq} a={r.cur} b={r.qoq} />
-                <Cell h="LTM · YoY" base={r.ltm} a={r.ltm} b={r.ltmPrev} main />
+                <div className="rd-c rd-cur" role="cell"><V f={r.cur} t={r.label} p={curL} /></div>
+                <Cell h={`YoY · ${yoyL}`} base={r.yoy} a={r.cur} b={r.yoy} t={r.label} la={r.cur?.period ?? curL} lb={r.yoy?.period ?? yoyL} bp={yoyL} />
+                <Cell h={`QoQ · ${qoqL}`} base={r.qoq} a={r.cur} b={r.qoq} t={r.label} la={r.cur?.period ?? curL} lb={r.qoq?.period ?? qoqL} bp={qoqL} />
+                <Cell h="LTM · YoY" base={r.ltm} a={r.ltm} b={r.ltmPrev} main t={r.label} la={`LTM ${periodLabel('Q', end)}`} lb={`LTM ${periodLabel('Q', shiftYear(end, -1))}`} bp={`LTM ${periodLabel('Q', end)}`} />
               </div>
             ))}
           </div>
@@ -324,8 +347,8 @@ export function ReportDay() {
                 {list.length === 0 ? <span className="muted">–</span> : list.map((m) => (
                   <div className="rd-mv" key={m.label}>
                     <span className="rd-ml">{m.label}</span>
-                    <span className={`rd-md num ${cls(m.d)}`}>{signed(m.d / 1e3)}</span>
-                    <span className="rd-mb"><V f={m.cur} /> <span className="muted">מול</span> <V f={m.prev} /></span>
+                    <span className={`rd-md num ${cls(m.d)}`}><Sourced src={() => calc(`${m.label} · ${curL} מול ${yoyL}`, signed(m.d / 1e3), `${curL} − ${yoyL}`, [[m.cur, curL], [m.prev, yoyL]].map(([f, l]) => ({ label: l as string, v: fmt((f as Fig).v, (f as Fig).unit), src: () => figProv(f as Fig, m.label, l as string) })), 'מיליוני ש"ח')}>{signed(m.d / 1e3)}</Sourced></span>
+                    <span className="rd-mb"><V f={m.cur} t={m.label} p={curL} /> <span className="muted">מול</span> <V f={m.prev} t={m.label} p={yoyL} /></span>
                   </div>
                 ))}
               </div>
@@ -347,9 +370,9 @@ export function ReportDay() {
                 <tbody>{shown.map((r, i) => (
                   <tr key={`${r.sheet}|${r.std}|${r.line}|${r.period}|${i}`}>
                     <td className="lbl">{r.line}<span className="dim"><span className="num">{r.period}</span> · {store.d.sheets.find((x) => x.code === r.sheet)?.title ?? r.sheet} · {r.std}</span></td>
-                    <td><V f={r.first} /></td>
-                    <td><V f={r.last} /></td>
-                    <td><span className={`num ${cls(r.d)}`}>{signed(scaled(r.d, r.unit), r.unit === 'nis' ? 2 : 1)}</span>{r.first.v > 0 && r.last.v > 0 && <span className={`chg num ${cls(r.d)}`}>{pct(Number(((r.last.v / r.first.v - 1) * 100).toFixed(1)) || 0, 1, true)}</span>}</td>
+                    <td><V f={r.first} t={r.line} p={r.period} note="כפי שדווח אז" /></td>
+                    <td><V f={r.last} t={r.line} p={r.period} note={`כפי שהוצג מחדש בדוח ${repName(P)}`} /></td>
+                    <td><Sourced src={() => restDiff(r, signed(scaled(r.d, r.unit), r.unit === 'nis' ? 2 : 1), 'הוצג מחדש − כפי שדווח אז', unitTxt(r.unit))}><span className={`num ${cls(r.d)}`}>{signed(scaled(r.d, r.unit), r.unit === 'nis' ? 2 : 1)}</span></Sourced>{r.first.v > 0 && r.last.v > 0 && <Sourced src={() => restDiff(r, pct(Number(((r.last.v / r.first.v - 1) * 100).toFixed(1)) || 0, 1, true), 'הוצג מחדש ÷ כפי שדווח אז − 1', '%')}><span className={`chg num ${cls(r.d)}`}>{pct(Number(((r.last.v / r.first.v - 1) * 100).toFixed(1)) || 0, 1, true)}</span></Sourced>}</td>
                   </tr>
                 ))}</tbody>
               </table></div>
@@ -359,7 +382,7 @@ export function ReportDay() {
       </section>
 
       <Panel title="רווח נקי ורווח משירותי ביטוח · 12 רבעונים" aside={<span className="chip">הרבעון המדווח מודגש · בהיר: נגזר (Q4) או IFRS 4</span>}>
-        <Chart build={build} height={250} deps={[id, P, store]} label={`רווח נקי ורווח משירותי ביטוח, 12 רבעונים עד ${periodLabel('Q', end)}`} exportName={`fox-${id}-${P}-report-day`} />
+        <Chart build={build} height={250} onPoint={(si, di) => { const f = (si === 0 ? netQ : isrQ)[di]; if (f) openSrc(figProv(f, si === 0 ? ROLES[4].label : ROLES[1].label, periodLabel('Q', qEnds[di]))); }} deps={[id, P, store]} label={`רווח נקי ורווח משירותי ביטוח, 12 רבעונים עד ${periodLabel('Q', end)}`} exportName={`fox-${id}-${P}-report-day`} />
       </Panel>
     </div>
   );

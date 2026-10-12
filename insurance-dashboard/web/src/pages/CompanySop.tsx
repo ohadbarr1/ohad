@@ -7,11 +7,14 @@ import { shiftYear } from '../lib/company';
 import { load } from '../lib/useData';
 import { he, segName } from './CompanyIfrs';
 import { BASIS, Orig, endOf } from './IndustryIfrs';
+import { Sourced } from '../components/Source';
+import { calc, repName, report } from './companyProv';
+import type { Prov } from '../lib/prov';
 import '../styles/ifrs.css';
 
 interface SopFact { f: string; m: string; s: string; w: string; d: string; v: number; pg: number | null; b: string; u?: string | null; src?: string; n?: string }
 type SopData = Record<string, { url: string | null; facts: SopFact[]; missing: string[] }>;
-interface Cell { f: SopFact; url: string | null }
+interface Cell { f: SopFact; url: string | null; p: string }
 interface Row { key: string; path: string[]; total: boolean; cur?: Cell; yoy?: Cell; qoq?: Cell }
 interface Node { key: string; label: string; depth: number; row?: Row; kids: Node[] }
 const FAMILIES: [string, string][] = [['sop', 'מקורות הרווח'], ['pc', 'כללי, לפי ענף'], ['health', 'בריאות, לפי ענף'], ['life', 'חיים וחיסכון, לפי מוצר'], ['nostro', 'נוסטרו'], ['other', 'אחר']];
@@ -84,7 +87,7 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
     const map = new Map<string, Row>();
     const bases = new Map<string, Set<string>>();
     mine.forEach((f) => bases.set(`${f.m}|${f.s}`, (bases.get(`${f.m}|${f.s}`) ?? new Set()).add(f.b)));
-    const cell = (f: SopFact, p: string): Cell => ({ f, url: f.u !== undefined ? f.u : data[p]?.url ?? null });
+    const cell = (f: SopFact, p: string): Cell => ({ f, url: f.u !== undefined ? f.u : data[p]?.url ?? null, p });
     const slot = (f: SopFact) => {
       const key = `${f.m}|${f.s}|${f.b}`;
       if (!map.has(key)) map.set(key, { key, ...pathOf(f, (bases.get(`${f.m}|${f.s}`)?.size ?? 1) > 1) });
@@ -127,14 +130,20 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
   const isOpen = (k: string) => exp[`${F}${k}`] ?? rows.length <= 14;
   const allOpen = groups.length > 0 && groups.every((k) => exp[k] ?? rows.length <= 14);
 
-  const fig = (c?: Cell) => !c ? <span className="muted">–</span> : (
-    <>{c.url && c.f.pg != null ? <a className={`num ${c.f.v < 0 ? 'neg' : ''}`} href={`${c.url}#page=${c.f.pg}`} target="_blank" rel="noreferrer" title={`${BASIS[c.f.b] ?? ''} עמ׳ ${c.f.pg}`.trim()}>{nf(c.f.v, isPct(c.f.m) || Math.abs(c.f.v) < 100 ? 1 : 0)}{isPct(c.f.m) ? '%' : ''}</a> : <span className="num">{nf(c.f.v, 1)}</span>}{mark(c.f) && <sup className="mk" title="הטבלה או הגרף בדוח הם תמונה; המספר נקרא ממנה ולא אומת מול טקסט">*</sup>}</>
+  const txtOf = (f: SopFact) => nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
+  const provOf = (c: Cell, r: Row): Prov => report({ title: r.path.join(' · '), value: txtOf(c.f), unit: isPct(c.f.m) ? '%' : 'מיליוני ש"ח', url: c.url, pg: c.f.pg, doc: `${c.f.u !== undefined ? 'מצגת' : 'דוח'} ${repName(c.p)}`, period: winLabel(c.f.w, c.f.d),
+    note: [BASIS[c.f.b] && c.f.b !== 'na' ? BASIS[c.f.b] : '', mark(c.f) ? 'נקרא מטבלה או מגרף שהם תמונה בדוח, לא אומת מול טקסט' : ''].filter(Boolean).join(' · ') || undefined });
+  const fig = (c: Cell | undefined, r: Row) => !c ? <span className="muted">–</span> : (
+    <><Sourced src={() => provOf(c, r)} href={c.url && c.f.pg != null ? `${c.url}#page=${c.f.pg}` : null} title={`${BASIS[c.f.b] ?? ''} עמ׳ ${c.f.pg ?? ''}`.trim()}><span className={`num ${c.f.v < 0 ? 'neg' : ''}`}>{txtOf(c.f)}</span></Sourced>{mark(c.f) && <sup className="mk" title="הטבלה או הגרף בדוח הם תמונה; המספר נקרא ממנה ולא אומת מול טקסט">*</sup>}</>
   );
   // derived: percent for amounts, points for rates; a line absent from either period shows no change at all
-  const chg = (a?: Cell, b?: Cell) => {
+  const chg = (a: Cell | undefined, b: Cell | undefined, r: Row) => {
     if (!a || !b) return null;
     const rate = isPct(a.f.m), abs = !rate && (b.f.v <= 0 || a.f.v <= 0), x = rate || abs ? a.f.v - b.f.v : (a.f.v / b.f.v - 1) * 100;
-    return <span className={`chg num ${x >= 0 ? 'pos' : 'neg'}`} title={`נגזר מהמספרים שהודפסו: ${abs ? 'הפרש במיליוני ש"ח' : rate ? 'הפרש בנקודות' : 'שינוי באחוזים'}`}>{sn(x, rate || !abs ? 1 : 0)}{rate ? ' נק׳' : abs ? '' : '%'}</span>;
+    const t = `${sn(x, rate || !abs ? 1 : 0)}${rate ? ' נק׳' : abs ? '' : '%'}`;
+    const src = () => calc(`${r.path.join(' · ')} · שינוי`, t, rate ? 'נוכחי − קודם (נק׳)' : abs ? 'נוכחי − קודם (אחד הצדדים הפסד)' : 'נוכחי ÷ קודם − 1',
+      [a, b].map((c) => ({ label: winLabel(c.f.w, c.f.d), v: txtOf(c.f), src: () => provOf(c, r) })), rate ? 'נק׳' : abs ? 'מיליוני ש"ח' : '%');
+    return <Sourced src={src}><span className={`chg num ${x >= 0 ? 'pos' : 'neg'}`} title={`נגזר מהמספרים שהודפסו: ${abs ? 'הפרש במיליוני ש"ח' : rate ? 'הפרש בנקודות' : 'שינוי באחוזים'}`}>{t}</span></Sourced>;
   };
   const line = (n: Node): JSX.Element[] => {
     const r = n.row, open = isOpen(n.key), kids = n.kids.length > 0;
@@ -143,9 +152,9 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
         <td className="lbl tl" style={{ '--d': n.depth } as CSSProperties}>
           {kids ? <button type="button" className="tg" aria-expanded={open} aria-label={`${open ? 'סגירת' : 'פתיחת'} ${n.label}`} onClick={() => setExp((e) => ({ ...e, [`${F}${n.key}`]: !open }))}>{open ? '−' : '+'}</button> : n.depth > 0 && <span className="tg gap" />}{n.label}
         </td>
-        <td>{r ? fig(r.cur) : null}</td>
-        {hasYoy && <td>{r ? <>{fig(r.yoy)}{chg(r.cur, r.yoy)}</> : null}</td>}
-        {hasQoq && <td>{r ? <>{fig(r.qoq)}{chg(r.cur, r.qoq)}</> : null}</td>}
+        <td>{r ? fig(r.cur, r) : null}</td>
+        {hasYoy && <td>{r ? <>{fig(r.yoy, r)}{chg(r.cur, r.yoy, r)}</> : null}</td>}
+        {hasQoq && <td>{r ? <>{fig(r.qoq, r)}{chg(r.cur, r.qoq, r)}</> : null}</td>}
       </tr>,
       ...(kids && open ? n.kids.flatMap(line) : []),
     ];

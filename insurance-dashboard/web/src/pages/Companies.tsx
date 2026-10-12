@@ -1,6 +1,9 @@
 import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Panel, Seg } from '../components/ui';
+import { Sourced } from '../components/Source';
+import type { MetricKey } from '../lib/market';
+import type { Prov } from '../lib/prov';
 import { cls, nf, pct } from '../lib/format';
 import { useMarket, useRegistry } from '../lib/useData';
 import '../styles/market.css';
@@ -24,23 +27,31 @@ export function Companies() {
           <tbody>{list.map((c) => {
             const g = m ? m.groupIndex(c.market_group ?? '') : -1;
             const v = (k: Parameters<NonNullable<typeof m>['value']>[0]) => (m && g >= 0 ? m.value(k, L, 'ltm', 'all', g) : null);
+            const regP = (metric: MetricKey): Prov => ({ k: 'reg', metric, pi: L, w: 'ltm', set: 'all', g });
+            const growthP = (): Prov => {
+              const b = L - 12, a1 = m ? m.cell(L, 'all', g).a / 1000 : 0, a0 = m && b >= 0 ? m.cell(b, 'all', g).a / 1000 : 0, title = `שינוי נכסים YoY · ${c.name_he} · ${m?.plabel(L)}`;
+              if (!m || b < 0 || !(a0 > 0)) return { k: 'none', title, why: 'אין נכסי הקבוצה לפני 12 חודשים' };
+              return { k: 'calc', title, value: pct(v('growth'), 1, true), formula: 'נכסים בחודש האחרון ÷ נכסים 12 חודשים קודם, פחות 1', inputs: [
+                { label: m.plabel(L), v: nf(a1, 1), src: () => ({ k: 'reg', metric: 'assets', pi: L, w: 'm', set: 'all', g }) }, { label: m.plabel(b), v: nf(a0, 1), src: () => ({ k: 'reg', metric: 'assets', pi: b, w: 'm', set: 'all', g }) }] };
+            };
+            const num = (metric: MetricKey, text: string, cn = '') => (v(metric) == null ? <span className="num">{text}</span> : <Sourced className={`num ${cn}`} src={() => (metric === 'growth' ? growthP() : regP(metric))}>{text}</Sourced>);
             const subs = all.filter((x) => holdingOf(x)?.id === c.id);
             return (
               <Fragment key={c.id}>
                 <tr>
                   <td><Link to={`/company/${c.id}`}>{c.name_he}</Link> <span className="muted">{c.name_en}</span></td>
-                  <td><span className="num">{v('assets') == null ? '–' : nf(v('assets')!, 1)}</span></td>
-                  <td><span className="num">{pct(v('share'), 1)}</span></td>
-                  <td><span className={`num ${cls(v('growth'))}`}>{pct(v('growth'), 1, true)}</span></td>
-                  <td><span className={`num ${cls(v('organic'))}`}>{v('organic') == null ? '–' : nf(v('organic')!, 1)}</span></td>
-                  <td><span className="num">{pct(v('fee'), 2)}</span></td>
-                  <td><span className="num">{c.docs || '–'}</span></td>
+                  <td>{num('assets', v('assets') == null ? '–' : nf(v('assets')!, 1))}</td>
+                  <td>{num('share', pct(v('share'), 1))}</td>
+                  <td>{num('growth', pct(v('growth'), 1, true), cls(v('growth')))}</td>
+                  <td>{num('organic', v('organic') == null ? '–' : nf(v('organic')!, 1), cls(v('organic')))}</td>
+                  <td>{num('fee', pct(v('fee'), 2))}</td>
+                  <td>{c.docs ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : <span className="num">–</span>}</td>
                 </tr>
                 {subs.map((x) => (
                   <tr key={x.id} className="subrow">
                     <td><Link to={`/company/${x.id}`}>{x.name_he}</Link><span className="dim">חברה בת, נכללת בנתוני {c.name_he}</span></td>
                     <td colSpan={5} />
-                    <td><span className="num">{x.docs || '–'}</span></td>
+                    <td>{x.docs ? <Link className="num" to={`/company/${x.id}/filings`}>{x.docs}</Link> : <span className="num">–</span>}</td>
                   </tr>
                 ))}
               </Fragment>

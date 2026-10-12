@@ -47,7 +47,9 @@ export interface RegistryCompany {
 export interface DocEntry { id: number; date: string; type: 'annual' | 'quarterly' | 'presentation' | 'solvency'; period: string; title: string; pages: number | null; kb: number | null; en: boolean; url: string }
 export interface DocsData { source: string; docs: DocEntry[] }
 export interface PriceData { ticker: string; source: string; unit: 'agorot'; asof: string; last: number; dates: string[]; close: number[]; dividends: [string, number][] }
-export interface KpiData { asof: string; source: string; notes?: { company: string; corrected: string[]; withheld: string[] }[]; companies: Record<string, { periods: string[]; end: string[]; values: Record<string, (number | null)[]> }> }
+/** One correction made to a tagged value: `printed` = the printed quarter replaces the tag, `diff` = year-to-date tag less the earlier quarters (`profit` set when the printed quarter was used for profit), `withheld` = left empty. `raw` = tagged profit before the change, NIS thousands. */
+export interface KpiFix { t: 'printed' | 'diff' | 'withheld'; raw?: number | null; rid?: number | null; pg?: number | null; from?: string[]; gap?: boolean; profit?: { t: 'printed'; rid?: number | null; pg?: number | null } }
+export interface KpiData { asof: string; source: string; concepts?: Record<string, string>; notes?: { company: string; corrected: string[]; withheld: string[] }[]; companies: Record<string, { periods: string[]; end: string[]; status?: string[]; values: Record<string, (number | null)[]>; rid?: (number | null)[]; fix?: Record<string, KpiFix> }> }
 export interface IfrsFact { c: string; m: string; dv?: number; sn?: number; s: string; g: string; b: string; w: string; d: string; v: number; pg: number | null; l: string; n?: string; src?: string; model?: string; tr?: string; bk?: string; fx?: string; u?: string | null; inc?: number; cl?: number; v0?: number }
 export interface IfrsData { unit: string; files: { company: string; period: string; report_id: number; url: string | null; facts: number }[] }
 

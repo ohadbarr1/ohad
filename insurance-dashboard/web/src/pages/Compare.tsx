@@ -1,7 +1,11 @@
 import { foxOption } from '../lib/foxchart';
+import { keepSrc } from '../lib/prov';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
+import { Sourced } from '../components/Source';
+import { useSource, type Prov } from '../lib/prov';
+import { rankProv } from '../lib/csm';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { palette } from '../lib/theme';
 import { nf } from '../lib/format';
@@ -15,6 +19,7 @@ const UNIT: Record<string, string> = { m: 'מיליוני ש"ח', nis: 'ש"ח', 
 
 /** One reported KPI across companies and periods. */
 export function Compare() {
+  const { open } = useSource();
   const { kpis, notes, error } = useKpis();
   const reg = useRegistry();
   const [sp, setSp] = useSearchParams();
@@ -33,7 +38,7 @@ export function Compare() {
     if (off.length) q.x = off.join(',');
     if (index) q.i = '1';
     if (lead) q.c = lead;
-    setSp(q, { replace: true });
+    setSp(keepSrc(q), { replace: true });
   }, [metric, basis, from, off, index, lead, setSp]);
 
   const ids = useMemo(() => (kpis ? [...kpis.keys()] : []), [kpis]);
@@ -58,6 +63,15 @@ export function Compare() {
   const lab = (p: string) => (basis === 'fy' ? p.slice(0, 4) : periodLabelShort(p));
   const idx = (id: string, p: string) => { const base = data.periods.map((x) => data.cell(id, x)).find((v) => v != null); const v = data.cell(id, p); return v == null || !base ? null : (v / base) * 100; };
   const shown = (id: string, p: string) => (index ? idx(id, p) : data.cell(id, p));
+  // every cell opens the filing behind it: the tagged figure, or the formula with its tagged inputs
+  const raw = (id: string, p: string): Prov => kpis.get(id)!.explain(metric, basis, p);
+  const shownProv = (id: string, p: string): Prov => {
+    if (!index) return raw(id, p);
+    const p0 = data.periods.find((x) => data.cell(id, x) != null), v = idx(id, p), title = `${def.label} · ${name(id)} · אינדקס, ${lab(p)}`;
+    if (v == null || !p0) return { k: 'none', title, why: 'אין ערך בסיס חיובי לאינדקס' };
+    return { k: 'calc', title, value: nf(v, 0), formula: 'הערך בתקופה ÷ הערך בתקופה הראשונה של הסדרה × 100',
+      inputs: [{ label: lab(p), v: fmt(data.cell(id, p), def.unit), src: () => raw(id, p) }, { label: lab(p0), v: fmt(data.cell(id, p0), def.unit), src: () => raw(id, p0) }] };
+  };
 
   return (
     <>
@@ -85,13 +99,13 @@ export function Compare() {
           <Panel title={def.label} aside={<span>{lab(data.periods[0])} עד {lab(last)}</span>}>
             <Chart label={def.label} height={380} deps={[metric, basis, from, on.join(), index, kpis, lead]} build={() => foxOption({ x: data.periods.map(lab), unit: index ? 'אינדקס, תקופה ראשונה = 100' : UNIT[def.unit], scale: true, legend: false, labels: false,
               series: on.map((id) => ({ name: name(id), kind: 'line' as const, color: color(id), lead: lead === id, dim: !!lead && lead !== id, dec: index ? 0 : undefined,
-                pct: !index && /%/.test(UNIT[def.unit] ?? ''), data: data.periods.map((p) => { const v = shown(id, p); return v == null ? null : +v.toFixed(3); }) })) })} />
+                pct: !index && /%/.test(UNIT[def.unit] ?? ''), data: data.periods.map((p) => { const v = shown(id, p); return v == null ? null : +v.toFixed(3); }) })) })} onPoint={(si, di) => { const id = on[si], p = data.periods[di]; if (id && p && shown(id, p) != null) open(shownProv(id, p)); }} />
           </Panel>
           <Panel title={`דירוג, ${lab(last)}`} aside={<span>{UNIT[def.unit]}</span>}>
             <table><tbody>{rank.map((r, i) => (
-              <tr key={r.id} className={lead === r.id ? 'on' : undefined} onClick={() => setLead(lead === r.id ? '' : r.id)} style={{ cursor: 'pointer' }} title="מיקוד בגרף"><td><span className="num muted">{i + 1}</span> <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link></td>
+              <tr key={r.id} className={lead === r.id ? 'on' : undefined} onClick={(e) => { if (!(e.target as Element).closest('a.src, button.src')) setLead(lead === r.id ? '' : r.id); }} style={{ cursor: 'pointer' }} title="מיקוד בגרף"><td><Sourced className="num muted" src={() => rankProv(`דירוג ${def.label} · ${lab(last)}`, i + 1, rank.map((q) => ({ label: name(q.id), v: fmt(q.v, def.unit), src: () => raw(q.id, last) })))}>{i + 1}</Sourced> <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link></td>
                 <td style={{ width: '45%' }}><div className="bar"><i style={{ width: `${(Math.abs(r.v!) / max) * 100}%`, background: r.v! < 0 ? 'var(--down)' : color(r.id) }} /></div></td>
-                <td><span className={`num ${r.v! < 0 ? 'neg' : ''}`}>{fmt(r.v, def.unit)}</span></td></tr>
+                <td><Sourced className={`num ${r.v! < 0 ? 'neg' : ''}`} src={() => raw(r.id, last)}>{fmt(r.v, def.unit)}</Sourced></td></tr>
             ))}</tbody></table>
           </Panel>
         </div>
@@ -102,7 +116,7 @@ export function Compare() {
           <thead><tr><th>חברה</th>{[...data.periods].reverse().map((p) => <th key={p}>{lab(p)}</th>)}</tr></thead>
           <tbody>{on.map((id) => (
             <tr key={id}><td><span className="dot" style={{ background: color(id), marginInlineEnd: 8 }} /><Link to={`/company/${id}`}>{name(id)}</Link></td>
-              {[...data.periods].reverse().map((p) => { const v = shown(id, p); return <td key={p}><span className={`num ${v != null && v < 0 ? 'neg' : ''}`}>{index ? (v == null ? '–' : nf(v, 0)) : fmt(v, def.unit)}</span></td>; })}</tr>
+              {[...data.periods].reverse().map((p) => { const v = shown(id, p); const txt = index ? (v == null ? '–' : nf(v, 0)) : fmt(v, def.unit); return <td key={p}>{v == null ? <span className="num">–</span> : <Sourced className={`num ${v < 0 ? 'neg' : ''}`} src={() => shownProv(id, p)}>{txt}</Sourced>}</td>; })}</tr>
           ))}</tbody>
         </table></div>
         <div className="src">עד 2024: כפי שדווח במקור לפי IFRS 4, לא הוצג מחדש. מ-2025: IFRS 17.</div>

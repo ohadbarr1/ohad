@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, Loading, Panel } from './ui';
+import { Sourced } from './Source';
+import type { Prov } from '../lib/prov';
 import { nf, byPeriodDesc, dateLabel } from '../lib/format';
 import { load, useIfrsData, useRegistry } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 import { METRIC_HE } from '../lib/labels';
-import { endOf, hrefOf, periodName, prevQuarter, tag } from '../lib/csm';
+import { endOf, factProv, hrefOf, periodName, prevQuarter, tag } from '../lib/csm';
 import type { Reports, RF } from '../lib/csm';
 import '../styles/csm.css';
 
@@ -104,28 +106,36 @@ export function capacity(rs: Reports, lastP: string): Capacity {
 
 const pctText = (v: number) => `${nf(v, Number.isInteger(v) ? 0 : 1)}%`;
 const amtText = (v: number) => nf(v, Math.abs(v) < 100 && !Number.isInteger(v) ? 1 : 0);
-function Val({ v, d, pct }: { v: V; d: IfrsData; pct: boolean }) {
+const fp = (f: RF, d: IfrsData, title: string, pct = false): Prov => factProv(f, d, title, pct ? pctText(f.v) : amtText(f.v), pct ? '%' : undefined);
+function Val({ v, d, pct, t }: { v: V; d: IfrsData; pct: boolean; t: string }) {
   const h = hrefOf(v.f, d), text = pct ? pctText(v.f.v) : amtText(v.f.v);
-  return <span className="dc-v">{h ? <a className={`num ${v.f.v < 0 ? 'neg' : ''}`} href={h} target="_blank" rel="noreferrer" title={`${v.f.l} · ${periodName(v.f.rp)} עמ׳ ${v.f.pg}`}>{text}</a> : <span className="num" title={v.f.l}>{text}</span>}{v.tags.length > 0 && <span className="dc-t">{v.tags.join(' · ')}</span>}</span>;
+  return <span className="dc-v"><Sourced className={`num ${v.f.v < 0 ? 'neg' : ''}`} href={h} title={`${v.f.l} · ${periodName(v.f.rp)} עמ׳ ${v.f.pg ?? '–'}`} src={() => fp(v.f, d, `${t} · ${dateLabel(v.f.d)}`, pct)}>{text}</Sourced>{v.tags.length > 0 && <span className="dc-t">{v.tags.join(' · ')}</span>}</span>;
 }
-function Vals({ vs, d, pct }: { vs: V[]; d: IfrsData; pct: boolean }) {
-  return vs.length === 0 ? <span className="muted">–</span> : <>{vs.map((v, i) => <Val key={i} v={v} d={d} pct={pct} />)}</>;
+function Vals({ vs, d, pct, t }: { vs: V[]; d: IfrsData; pct: boolean; t: string }) {
+  return vs.length === 0 ? <span className="muted">–</span> : <>{vs.map((v, i) => <Val key={i} v={v} d={d} pct={pct} t={t} />)}</>;
 }
-/** The derived surplus: the figure, the word "נגזר", and a page link for each of its three sources. */
-function Der({ x, d }: { x: Derived; d: IfrsData }) {
-  const src = (f: RF, l: string) => { const h = hrefOf(f, d); return h ? <a className="num" href={h} target="_blank" rel="noreferrer" title={f.l}>{l}</a> : <span className="num">{l}</span>; };
+/** The derived surplus: the figure, the word "נגזר", and a source for each of its three inputs. */
+function Der({ x, d, t }: { x: Derived; d: IfrsData; t: string }) {
+  const src = (f: RF, l: string, pct: boolean, what: string) => { const h = hrefOf(f, d); return <Sourced className="num" href={h} title={f.l} src={() => fp(f, d, `${what} · ${t}`, pct)}>{l}</Sourced>; };
+  const title = `עודף מעל ${x.thresh ? 'סף החלוקה' : 'היעד'} · ${t} · ${dateLabel(x.own.d)}`, val = amtText(Math.round(x.v));
+  const prov = (): Prov => ({ k: 'calc', title, value: val, unit: 'מיליוני ש"ח', formula: `הון עצמי לעניין SCR פחות ${x.thresh ? 'סף לחלוקה' : 'יעד'} כפול SCR · ${TB_HE[x.basis] || 'בסיס כפי שהודפס'}`, note: 'לפני פעולות הון שלאחר תאריך החישוב',
+    inputs: [{ label: 'הון עצמי לעניין SCR', v: amtText(x.own.v), src: () => fp(x.own, d, `הון עצמי לעניין SCR · ${t}`) }, { label: x.thresh ? 'סף לחלוקה, %' : 'יעד, %', v: pctText(x.target.v), src: () => fp(x.target, d, `${x.thresh ? 'סף לחלוקה' : 'יעד'} · ${t}`, true) }, { label: 'SCR', v: amtText(x.scr.v), src: () => fp(x.scr, d, `SCR · ${t}`) }] });
   return (
-    <span className="dc-v"><span className={`num der ${x.v < 0 ? 'neg' : ''}`}>{amtText(Math.round(x.v))}</span> <span className="chip est">נגזר</span>
-      <span className="dim">{x.ent && `${x.ent} · `}הון עצמי לעניין SCR {src(x.own, amtText(x.own.v))} פחות {x.thresh ? 'סף לחלוקה' : 'יעד'} {src(x.target, pctText(x.target.v))} כפול SCR {src(x.scr, amtText(x.scr.v))} · {TB_HE[x.basis]}</span></span>
+    <span className="dc-v"><Sourced className={`num der ${x.v < 0 ? 'neg' : ''}`} src={prov}>{val}</Sourced> <span className="chip est">נגזר</span>
+      <span className="dim">{x.ent && `${x.ent} · `}הון עצמי לעניין SCR {src(x.own, amtText(x.own.v), false, 'הון עצמי לעניין SCR')} פחות {x.thresh ? 'סף לחלוקה' : 'יעד'} {src(x.target, pctText(x.target.v), true, x.thresh ? 'סף לחלוקה' : 'יעד')} כפול SCR {src(x.scr, amtText(x.scr.v), false, 'SCR')} · {TB_HE[x.basis]}</span></span>
   );
 }
-function DivCell({ x, d, compact }: { x: Div; d: IfrsData; compact?: boolean }) {
+/** One quarter of dividend: the printed column, or the cumulative column less the one before it. */
+const divProv = (x: NonNullable<Div>, d: IfrsData, title: string): Prov => (x.der
+  ? { k: 'calc', title, value: amtText(x.v), unit: 'מיליוני ש"ח', formula: 'מצטבר פחות המצטבר שלפניו (Q4 = FY פחות 9M; Q1 שלא הודפס = 6M פחות Q2)', inputs: x.fs.map((f, i) => ({ label: `${i ? 'פחות: ' : ''}${f.l} · ${periodName(f.rp)}`.slice(0, 80), v: amtText(Math.abs(f.v)), src: () => factProv(f, d, title, amtText(Math.abs(f.v))) })) }
+  : factProv(x.fs[0], d, title, amtText(x.v)));
+function DivCell({ x, d, compact, t }: { x: Div; d: IfrsData; compact?: boolean; t: string }) {
   if (!x) return <span className="muted">–</span>;
-  const hs = x.fs.map((f) => [hrefOf(f, d), f] as const);
-  // in a one-line list a derived quarter is the figure alone, linked to the cumulative column it starts from; the table spells out both sources
-  if (x.der && compact) { const t = `נגזר: ${amtText(Math.abs(x.fs[0].v))} פחות ${amtText(Math.abs(x.fs[1].v))}`; return hs[0][0] ? <a className="num der" href={hs[0][0]} target="_blank" rel="noreferrer" title={t}>{amtText(x.v)}</a> : <span className="num der" title={t}>{amtText(x.v)}</span>; }
-  if (!x.der) return hs[0][0] ? <a className="num" href={hs[0][0]} target="_blank" rel="noreferrer" title={`${hs[0][1].l} · ${periodName(hs[0][1].rp)} עמ׳ ${hs[0][1].pg}`}>{amtText(x.v)}</a> : <span className="num">{amtText(x.v)}</span>;
-  return <><span className="num der" title="נגזר: מצטבר פחות המצטבר שלפניו">{amtText(x.v)}</span>{hs.map(([h, f], i) => (h ? <a key={i} className="num csm-pg" href={h} target="_blank" rel="noreferrer" title={f.l}>{i === 0 ? '' : 'פחות '}{amtText(Math.abs(f.v))} · עמ׳ {f.pg}</a> : null))}</>;
+  const hs = x.fs.map((f) => [hrefOf(f, d), f] as const), title = t;
+  if (!x.der) return <Sourced className="num" href={hs[0][0]} title={`${hs[0][1].l} · ${periodName(hs[0][1].rp)} עמ׳ ${hs[0][1].pg}`} src={() => divProv(x, d, title)}>{amtText(x.v)}</Sourced>;
+  const tip = `נגזר: ${amtText(Math.abs(x.fs[0].v))} פחות ${amtText(Math.abs(x.fs[1].v))}`;
+  if (compact) return <Sourced className="num der" title={tip} src={() => divProv(x, d, title)}>{amtText(x.v)}</Sourced>;
+  return <><Sourced className="num der" title="נגזר: מצטבר פחות המצטבר שלפניו" src={() => divProv(x, d, title)}>{amtText(x.v)}</Sourced>{hs.map(([h, f], i) => (h ? <a key={i} className="num csm-pg" href={h} target="_blank" rel="noreferrer" title={f.l}>{i === 0 ? '' : 'פחות '}{amtText(Math.abs(f.v))} · עמ׳ {f.pg}</a> : null))}</>;
 }
 const ltm = (xs: Div[]) => (xs.every(Boolean) ? xs.reduce((t, x) => t + x!.v, 0) : null);
 const qName = (p: string) => periodName(p).replace('FY', 'Q4');
@@ -169,11 +179,12 @@ export function DividendCapacity({ id }: { id?: string }) {
   // the date quoted for a company: the newest one with a ratio without the transitional measures, i.e. a full solvency report rather than an interim estimate
   const full = (cap: Capacity) => cap.dates.find((x) => cap.ratio(x, 'wo').length > 0) ?? cap.dates[0] ?? '';
   const later = (cap: Capacity, D: string): V[] => cap.dates.filter((x) => x > D).flatMap((x) => cap.ratio(x, 'w').map((v) => ({ ...v, tags: [...v.tags, dateLabel(x)] })));
-  const surplus = (cap: Capacity, D: string) => { const p = cap.over(D), der = cap.derived(D); return p.length === 0 && der.length === 0 ? <span className="muted">–</span> : <>{p.length > 0 && <Vals vs={p} d={d} pct={false} />}{der.map((x, i) => <Der key={i} x={x} d={d} />)}</>; };
+  const surplus = (cap: Capacity, D: string, who: string) => { const p = cap.over(D), der = cap.derived(D); return p.length === 0 && der.length === 0 ? <span className="muted">–</span> : <>{p.length > 0 && <Vals vs={p} d={d} pct={false} t={`עודף מעל היעד · ${who}`} />}{der.map((x, i) => <Der key={i} x={x} d={d} t={who} />)}</>; };
   // the newest solvency date for which a surplus over the target is printed or can be derived; it may be older than the date of the ratios, and then says so
   const overDate = (cap: Capacity) => cap.dates.find((x) => cap.over(x).length > 0 || cap.derived(x).length > 0) ?? '';
-  const quartersLine = (cap: Capacity, xs: Div[]) => <span className="dim">{cap.quarters.map((p, i) => <span key={p}>{i > 0 && ' · '}{qName(p)} <DivCell x={xs[i]} d={d} compact /></span>)}</span>;
-  const ltmCell = (cap: Capacity, xs: Div[]) => { const t = ltm(xs); return <>{t == null ? <span className="muted">–</span> : <span className="num der" title="נגזר: סכום ארבעת הרבעונים">{amtText(t)}</span>}{quartersLine(cap, xs)}</>; };
+  const quartersLine = (cap: Capacity, xs: Div[], who: string, kind: string) => <span className="dim">{cap.quarters.map((p, i) => <span key={p}>{i > 0 && ' · '}{qName(p)} <DivCell x={xs[i]} d={d} compact t={`דיבידנד ${kind} · ${who} · ${qName(p)}`} /></span>)}</span>;
+  const ltmSum = (cap: Capacity, xs: Div[], who: string, kind: string) => { const t = ltm(xs); return t == null ? <span className="muted">–</span> : <Sourced className="num der" title="נגזר: סכום ארבעת הרבעונים" src={() => ({ k: 'calc', title: `דיבידנד ${kind}, LTM · ${who} · ${qName(lastP)}`, value: amtText(t), unit: 'מיליוני ש"ח', formula: 'סכום ארבעת הרבעונים האחרונים, לבעלי המניות', inputs: cap.quarters.map((p, i) => ({ label: qName(p), v: amtText(xs[i]!.v), src: () => divProv(xs[i]!, d, `דיבידנד ${kind} · ${who} · ${qName(p)}`) })) }) as Prov}>{amtText(t)}</Sourced>; };
+  const ltmCell = (cap: Capacity, xs: Div[], who: string, kind: string) => <>{ltmSum(cap, xs, who, kind)}{quartersLine(cap, xs, who, kind)}</>;
 
   if (!id) {
     return (
@@ -183,14 +194,14 @@ export function DividendCapacity({ id }: { id?: string }) {
           <tbody>{caps.map(({ id: c, cap }) => { const D = full(cap); return (
             <tr key={c}>
               <td><Link to={`/company/${c}/ifrs17`}>{name(c)}</Link>{D && <span className="dim num">{dateLabel(D)}</span>}</td>
-              <td><Vals vs={[...cap.ratio(D, 'w'), ...later(cap, D)]} d={d} pct /></td>
-              <td><Vals vs={cap.ratio(D, 'wo')} d={d} pct /></td>
-              <td><Vals vs={cap.target} d={d} pct /></td>
-              <td><Vals vs={cap.thresh} d={d} pct /></td>
-              <td>{surplus(cap, overDate(cap))}{overDate(cap) && overDate(cap) !== D && <span className="dim num">{dateLabel(overDate(cap))}</span>}</td>
-              <td>{ltmCell(cap, cap.declared)}</td>
-              <td>{ltmCell(cap, cap.paid)}</td>
-              <td>{cap.policy.length === 0 ? <span className="muted">–</span> : cap.policy.map((v, i) => <Val key={i} v={v} d={d} pct={isPct(v.f.m)} />)}</td>
+              <td><Vals vs={[...cap.ratio(D, 'w'), ...later(cap, D)]} d={d} pct t={`יחס כושר פירעון, עם הוראות מעבר · ${name(c)}`} /></td>
+              <td><Vals vs={cap.ratio(D, 'wo')} d={d} pct t={`יחס כושר פירעון, ללא הוראות מעבר · ${name(c)}`} /></td>
+              <td><Vals vs={cap.target} d={d} pct t={`יעד הדירקטוריון · ${name(c)}`} /></td>
+              <td><Vals vs={cap.thresh} d={d} pct t={`סף לחלוקת דיבידנד · ${name(c)}`} /></td>
+              <td>{surplus(cap, overDate(cap), name(c))}{overDate(cap) && overDate(cap) !== D && <span className="dim num">{dateLabel(overDate(cap))}</span>}</td>
+              <td>{ltmCell(cap, cap.declared, name(c), 'שהוכרז')}</td>
+              <td>{ltmCell(cap, cap.paid, name(c), 'ששולם')}</td>
+              <td>{cap.policy.length === 0 ? <span className="muted">–</span> : cap.policy.map((v, i) => <Val key={i} v={v} d={d} pct={isPct(v.f.m)} t={`מדיניות חלוקה · ${name(c)}`} />)}</td>
             </tr>
           ); })}</tbody>
         </table></div>
@@ -200,7 +211,8 @@ export function DividendCapacity({ id }: { id?: string }) {
   }
 
   const cap = caps[0].cap, D = full(cap), cols = cap.dates.slice(0, 4);
-  const head = (l: string, vs: V[], pct: boolean) => <div><span className="l">{l}</span><span className="v">{vs[0] ? <Val v={{ f: vs[0].f, tags: [] }} d={d} pct={pct} /> : <span className="muted">–</span>}</span>{vs[0] && <span className="s">{[...vs[0].tags, dateLabel(vs[0].f.d)].filter((x, i, a) => a.indexOf(x) === i).join(' · ')}</span>}</div>;
+  const who = name(caps[0].id);
+  const head = (l: string, vs: V[], pct: boolean) => <div><span className="l">{l}</span><span className="v">{vs[0] ? <Val v={{ f: vs[0].f, tags: [] }} d={d} pct={pct} t={`${l} · ${who}`} /> : <span className="muted">–</span>}</span>{vs[0] && <span className="s">{[...vs[0].tags, dateLabel(vs[0].f.d)].filter((x, i, a) => a.indexOf(x) === i).join(' · ')}</span>}</div>;
   const D1 = overDate(cap), over0 = D1 ? cap.over(D1) : [], der0 = D1 ? cap.derived(D1) : [];
   return (
     <Panel title="כושר חלוקה" aside={<span>מיליוני ש"ח · חברת הביטוח, כפי שדווח · מספר נטוי נגזר</span>}>
@@ -208,34 +220,34 @@ export function DividendCapacity({ id }: { id?: string }) {
         {head('יחס כושר פירעון, עם הוראות מעבר', cap.ratio(D, 'w'), true)}
         {head('ללא הוראות מעבר', cap.ratio(D, 'wo'), true)}
         {head('יעד הדירקטוריון', cap.target, true)}
-        <div><span className="l">עודף מעל היעד</span>{over0[0] ? <><span className="v"><Val v={{ f: over0[0].f, tags: [] }} d={d} pct={false} /></span><span className="s">{[...over0[0].tags, dateLabel(D1)].join(' · ')}</span></> : der0[0] ? <>{der0.map((x, i) => <Der key={i} x={x} d={d} />)}<span className="s num">{dateLabel(D1)}</span></> : <span className="v muted">–</span>}</div>
-        <div><span className="l">דיבידנד שהוכרז, LTM</span><span className="v">{ltm(cap.declared) == null ? <span className="muted">–</span> : <span className="num der">{amtText(ltm(cap.declared)!)}</span>}</span><span className="s">נגזר: סכום ארבעת הרבעונים עד {qName(lastP)}</span></div>
-        <div><span className="l">דיבידנד ששולם, LTM</span><span className="v">{ltm(cap.paid) == null ? <span className="muted">–</span> : <span className="num der">{amtText(ltm(cap.paid)!)}</span>}</span><span className="s">נגזר: סכום ארבעת הרבעונים עד {qName(lastP)}</span></div>
+        <div><span className="l">עודף מעל היעד</span>{over0[0] ? <><span className="v"><Val v={{ f: over0[0].f, tags: [] }} d={d} pct={false} t={`עודף מעל היעד · ${who}`} /></span><span className="s">{[...over0[0].tags, dateLabel(D1)].join(' · ')}</span></> : der0[0] ? <>{der0.map((x, i) => <Der key={i} x={x} d={d} t={who} />)}<span className="s num">{dateLabel(D1)}</span></> : <span className="v muted">–</span>}</div>
+        <div><span className="l">דיבידנד שהוכרז, LTM</span><span className="v">{ltmSum(cap, cap.declared, who, 'שהוכרז')}</span><span className="s">נגזר: סכום ארבעת הרבעונים עד {qName(lastP)}</span></div>
+        <div><span className="l">דיבידנד ששולם, LTM</span><span className="v">{ltmSum(cap, cap.paid, who, 'ששולם')}</span><span className="s">נגזר: סכום ארבעת הרבעונים עד {qName(lastP)}</span></div>
       </div>
       {cols.length > 0 && (
         <div className="scroll"><table className="divcap">
           <thead><tr><th>כושר פירעון</th>{cols.map((x) => <th key={x}><span className="num">{dateLabel(x)}</span></th>)}</tr></thead>
           <tbody>
-            <tr><td className="lbl">יחס כושר פירעון, עם הוראות מעבר</td>{cols.map((x) => <td key={x}><Vals vs={cap.ratio(x, 'w')} d={d} pct /></td>)}</tr>
-            <tr><td className="lbl">יחס כושר פירעון, ללא הוראות מעבר</td>{cols.map((x) => <td key={x}><Vals vs={cap.ratio(x, 'wo')} d={d} pct /></td>)}</tr>
-            <tr><td className="lbl">עודף מעל היעד</td>{cols.map((x) => <td key={x}>{surplus(cap, x)}</td>)}</tr>
+            <tr><td className="lbl">יחס כושר פירעון, עם הוראות מעבר</td>{cols.map((x) => <td key={x}><Vals vs={cap.ratio(x, 'w')} d={d} pct t={`יחס כושר פירעון, עם הוראות מעבר · ${who}`} /></td>)}</tr>
+            <tr><td className="lbl">יחס כושר פירעון, ללא הוראות מעבר</td>{cols.map((x) => <td key={x}><Vals vs={cap.ratio(x, 'wo')} d={d} pct t={`יחס כושר פירעון, ללא הוראות מעבר · ${who}`} /></td>)}</tr>
+            <tr><td className="lbl">עודף מעל היעד</td>{cols.map((x) => <td key={x}>{surplus(cap, x, who)}</td>)}</tr>
           </tbody>
         </table></div>
       )}
       <div className="scroll"><table className="divcap">
         <thead><tr><th>יעדים ומדיניות, כפי שהודפסו</th><th>ערך</th></tr></thead>
         <tbody>
-          <tr><td className="lbl">יעד הדירקטוריון ליחס כושר פירעון</td><td><Vals vs={cap.target} d={d} pct /></td></tr>
-          <tr><td className="lbl">סף לחלוקת דיבידנד</td><td><Vals vs={cap.thresh} d={d} pct /></td></tr>
-          <tr><td className="lbl">מדיניות חלוקה</td><td>{cap.policy.length === 0 ? <span className="muted">–</span> : cap.policy.map((v, i) => <Val key={i} v={v} d={d} pct={isPct(v.f.m)} />)}</td></tr>
-          <tr><td className="lbl">דיבידנד שהוכרז לאחר תאריך המאזן</td><td><Vals vs={cap.after} d={d} pct={false} /></td></tr>
+          <tr><td className="lbl">יעד הדירקטוריון ליחס כושר פירעון</td><td><Vals vs={cap.target} d={d} pct t={`יעד הדירקטוריון · ${who}`} /></td></tr>
+          <tr><td className="lbl">סף לחלוקת דיבידנד</td><td><Vals vs={cap.thresh} d={d} pct t={`סף לחלוקת דיבידנד · ${who}`} /></td></tr>
+          <tr><td className="lbl">מדיניות חלוקה</td><td>{cap.policy.length === 0 ? <span className="muted">–</span> : cap.policy.map((v, i) => <Val key={i} v={v} d={d} pct={isPct(v.f.m)} t={`מדיניות חלוקה · ${who}`} />)}</td></tr>
+          <tr><td className="lbl">דיבידנד שהוכרז לאחר תאריך המאזן</td><td><Vals vs={cap.after} d={d} pct={false} t={`דיבידנד לאחר תאריך המאזן · ${who}`} /></td></tr>
         </tbody>
       </table></div>
       <div className="scroll"><table className="divcap">
         <thead><tr><th>דיבידנד לבעלי המניות</th>{cap.quarters.map((p) => <th key={p}><span className="num">{qName(p)}</span></th>)}<th>LTM<span className="dim">נגזר</span></th></tr></thead>
         <tbody>
           {([['שהוכרז', cap.declared], ['ששולם', cap.paid]] as [string, Div[]][]).map(([l, xs]) => (
-            <tr key={l}><td className="lbl">{l}</td>{xs.map((x, i) => <td key={i}><DivCell x={x} d={d} /></td>)}<td>{ltm(xs) == null ? <span className="muted">–</span> : <span className="num der">{amtText(ltm(xs)!)}</span>}</td></tr>
+            <tr key={l}><td className="lbl">{l}</td>{xs.map((x, i) => <td key={i}><DivCell x={x} d={d} t={`דיבידנד ${l} · ${who} · ${qName(cap.quarters[i])}`} /></td>)}<td>{ltmSum(cap, xs, who, l)}</td></tr>
           ))}
         </tbody>
       </table></div>

@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Chart } from './Chart';
+import { Sourced } from './Source';
+import { useSource } from '../lib/prov';
 import { Empty, ErrorBox, Loading, Panel, Seg } from './ui';
 import { foxOption } from '../lib/foxchart';
 import { palette } from '../lib/theme';
 import { nf, byPeriodDesc } from '../lib/format';
 import { useIfrsCompany, useIfrsData } from '../lib/useData';
 import type { IfrsData } from '../lib/types';
+import type { Prov } from '../lib/prov';
 import { TEXT_HE } from '../lib/labels';
-import { BASIS, SCOPE_HE, STEPS, basesAt, best, bridge, endOf, equityAt, factsOf, hrefOf, monthsOf, periodName, quarter, ratios, tag } from '../lib/csm';
+import { BASIS, SCOPE_HE, STEPS, basesAt, best, bridge, endOf, equityAt, factsOf, gapProv, hrefOf, lineProv, monthsOf, periodName, quarter, ratioProv, ratios, tag } from '../lib/csm';
 import type { Bridge, Line, Ratios, Reports, RF, ScopeId, Win } from '../lib/csm';
 import '../styles/csm.css';
 
@@ -79,14 +82,16 @@ export function Notes({ used }: { used: Set<number> }) {
   return used.size === 0 ? null : <ol className="fnotes">{[...used].sort((a, b) => a - b).map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTES[m]}</li>)}</ol>;
 }
 /** A printed figure, linked to its page. A sum of several printed rows links the first and lists the other pages after it. */
-export function Fig({ line, d, text, tone = '' }: { line: Line; d: IfrsData; text: string; tone?: string }) {
+export function Fig({ line, d, text, tone = '', title = 'CSM', src }: { line: Line; d: IfrsData; text: string; tone?: string; title?: string; src?: () => Prov }) {
   const seen = new Map<string, RF>();
   line.fs.forEach((f) => { const h = hrefOf(f, d); if (h && !seen.has(h)) seen.set(h, f); });
   const [first, ...rest] = [...seen];
-  const title = line.fs.map((f) => `${f.l} · ${periodName(f.rp)} עמ׳ ${f.pg ?? '–'}`).join('\n');
+  const tip = line.fs.map((f) => `${f.l} · ${periodName(f.rp)} עמ׳ ${f.pg ?? '–'}`).join('\n');
+  // a single printed row stays a real link to its page; a sum or a difference opens its inputs
+  const href = line.fs.length === 1 && !line.sum && !line.diff ? first?.[0] ?? null : null;
   return (
     <>
-      {first ? <a className={`num ${tone}`} href={first[0]} target="_blank" rel="noreferrer" title={title}>{text}</a> : <span className={`num ${tone}`} title={title}>{text}</span>}
+      <Sourced className={`num ${tone}`} src={src ?? (() => lineProv(line, d, title, text))} href={href} title={tip}>{text}</Sourced>
       {rest.map(([h, f]) => <a key={h} className="num csm-pg" href={h} target="_blank" rel="noreferrer" title={f.l}>עמ׳ {f.pg}</a>)}
     </>
   );
@@ -96,6 +101,7 @@ const KEYS = STEPS.map(([k]) => k);
 
 /** The CSM of one company: the movement table of the chosen report as a waterfall, by segment where printed, and the ratios quarter by quarter. */
 export function CsmEconomics({ id }: { id: string }) {
+  const { open } = useSource();
   const { data: d, error } = useIfrsData();
   const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
   const all = useIfrsCompany(id, periods);
@@ -169,18 +175,18 @@ export function CsmEconomics({ id }: { id: string }) {
           <div className="scroll"><table className="csm-bridge">
             <thead><tr><th>שורה</th>{cols.map((b, i) => <th key={b.scope}>{SCOPE_HE[b.scope]}{i === 0 && <Marks ms={tableMarks(b, pref)} used={used} />}</th>)}{levels && <th className="wfh">מפל · {SCOPE_HE[tot.scope]}</th>}</tr></thead>
             <tbody>
-              <tr className="lead"><td className="lbl">פתיחה</td>{cols.map((b) => <td key={b.scope}>{b.open ? <><Fig line={b.open} d={d} text={showAmt(b.open.v)} /><Marks ms={[...lineMarks(b.open), ...(b.openPrev ? [8] : [])]} used={used} /></> : <span className="muted">–</span>}</td>)}{levels && <td>{tick(tot.open!.v)}</td>}</tr>
+              <tr className="lead"><td className="lbl">פתיחה</td>{cols.map((b) => <td key={b.scope}>{b.open ? <><Fig line={b.open} d={d} title={`CSM פתיחה · ${SCOPE_HE[b.scope]} · ${periodName(P)}`} text={showAmt(b.open.v)} /><Marks ms={[...lineMarks(b.open), ...(b.openPrev ? [8] : [])]} used={used} /></> : <span className="muted">–</span>}</td>)}{levels && <td>{tick(tot.open!.v)}</td>}</tr>
               {rows.map((r) => (
                 <tr key={r.k}><td className="lbl">{r.label}</td>
-                  {cols.map((b) => { const l = lineOf(b, r.k); return <td key={b.scope}>{l ? <><Fig line={l} d={d} text={(l.v > 0 ? '+' : '') + showAmt(l.v)} tone={l.v < 0 ? 'neg' : ''} /><Marks ms={lineMarks(l)} used={used} /></> : <span className="muted">–</span>}</td>; })}
+                  {cols.map((b) => { const l = lineOf(b, r.k); return <td key={b.scope}>{l ? <><Fig line={l} d={d} title={`${r.label} · ${SCOPE_HE[b.scope]} · ${periodName(P)}`} text={(l.v > 0 ? '+' : '') + showAmt(l.v)} tone={l.v < 0 ? 'neg' : ''} /><Marks ms={lineMarks(l)} used={used} /></> : <span className="muted">–</span>}</td>; })}
                   {levels && <td>{levels.at.has(r.k) ? bar(levels.at.get(r.k)![0], levels.at.get(r.k)![1], levels.at.get(r.k)![1] < levels.at.get(r.k)![0] ? 'dn' : '') : null}</td>}
                 </tr>
               ))}
               <tr className="csm-gap"><td className="lbl">הפרש לא מוסבר<span className="dim">נגזר: סגירה פחות פתיחה פחות השורות שמעל · שורות שהדוח לא מדפיס או שלא חולצו</span></td>
-                {cols.map((b) => <td key={b.scope}>{b.gap == null ? <span className="muted">–</span> : <span className={`num der ${Math.abs(b.gap) > 2 ? 'neg' : ''}`}>{(b.gap > 0 ? '+' : '') + showAmt(Math.round(b.gap * 10) / 10 || 0)}</span>}</td>)}
+                {cols.map((b) => <td key={b.scope}>{b.gap == null ? <span className="muted">–</span> : <Sourced className={`num der ${Math.abs(b.gap) > 2 ? 'neg' : ''}`} src={() => gapProv(b, d, `הפרש לא מוסבר · ${SCOPE_HE[b.scope]} · ${periodName(P)}`, showAmt(Math.round(b.gap! * 10) / 10 || 0))}>{(b.gap > 0 ? '+' : '') + showAmt(Math.round(b.gap * 10) / 10 || 0)}</Sourced>}</td>)}
                 {levels && <td>{tot.gap != null && Math.abs(tot.gap) > 2 ? bar(levels.run, tot.close!.v, 'gp') : null}</td>}
               </tr>
-              <tr className="lead"><td className="lbl">סגירה</td>{cols.map((b) => <td key={b.scope}>{b.close ? <><Fig line={b.close} d={d} text={showAmt(b.close.v)} /><Marks ms={lineMarks(b.close)} used={used} /></> : <span className="muted">–</span>}</td>)}{levels && <td>{tick(tot.close!.v)}</td>}</tr>
+              <tr className="lead"><td className="lbl">סגירה</td>{cols.map((b) => <td key={b.scope}>{b.close ? <><Fig line={b.close} d={d} title={`CSM סגירה · ${SCOPE_HE[b.scope]} · ${periodName(P)}`} text={showAmt(b.close.v)} /><Marks ms={lineMarks(b.close)} used={used} /></> : <span className="muted">–</span>}</td>)}{levels && <td>{tick(tot.close!.v)}</td>}</tr>
             </tbody>
           </table></div>
         )}
@@ -200,7 +206,7 @@ export function CsmEconomics({ id }: { id: string }) {
                 x: shown.map((x) => plabel(x.k)), unit: '%', legend: true, labels: false, scale: true,
                 series: [{ name: 'עסק חדש / שחרור', k: 'nbRel' as const, c: pal[0] }, { name: 'שחרור / CSM פתיחה, מנורמל לשנה', k: 'relOpen' as const, c: pal[2] }]
                   .map((s) => ({ name: s.name, kind: 'line' as const, pct: true, color: s.c, dec: 1, data: shown.map((x) => { const v = x.r[s.k]; return v == null ? null : +v.toFixed(2); }) })),
-              })} />
+              })} onPoint={(si, di) => { const x = shown[di], k = (['nbRel', 'relOpen'] as const)[si]; const v = x?.r[k]; if (v != null) open(ratioProv(k, x.b, x.eq, d, `${MEASURES.find((m) => m.k === k)!.l} · ${plabel(x.k)}`, showMeasure('pct', v))); }} />
             )}
             <div className="scroll"><table className="csm-series">
               <thead><tr><th>מדד</th>{shown.map((x) => <th key={x.k}>{plabel(x.k)}<Marks ms={tableMarks(x.b!, pref)} used={used2} /><span className="dim">{BASIS[x.b!.b]} · {SCOPE_HE[x.b!.scope]}</span></th>)}</tr></thead>
@@ -210,11 +216,12 @@ export function CsmEconomics({ id }: { id: string }) {
                     const v = x.r[m.k];
                     if (v == null) return <td key={x.k}><span className="muted">–</span></td>;
                     const l = m.kind === 'amt' ? lineOf(x.b, m.k) : null;
-                    return <td key={x.k}>{l && !x.b!.der ? <Fig line={l} d={d} text={showMeasure(m.kind, v)} /> : <span className={`num ${m.kind === 'amt' && !x.b!.der ? '' : 'der'}`}>{showMeasure(m.kind, v)}</span>}<Marks ms={l ? lineMarks(l) : m.kind === 'amt' ? [] : ratioMarks(x.b, m.k, x.r)} used={used2} /></td>;
+                    const ttl = `${m.l} · ${plabel(x.k)}`, txt = showMeasure(m.kind, v);
+                    return <td key={x.k}>{l ? <Fig line={l} d={d} title={ttl} text={txt} /> : m.kind === 'amt' ? <span className="num">{txt}</span> : <Sourced className="num der" src={() => ratioProv(m.k, x.b, x.eq, d, ttl, txt)}>{txt}</Sourced>}<Marks ms={l ? lineMarks(l) : m.kind === 'amt' ? [] : ratioMarks(x.b, m.k, x.r)} used={used2} /></td>;
                   })}
                 </tr>
               ))}
-              {seg === 'all' && shown.some((x) => x.eq) && <tr><td className="lbl">הון לבעלי המניות</td>{shown.map((x) => <td key={x.k}>{x.eq ? <Fig line={{ v: x.eq.v, fs: [x.eq] }} d={d} text={showAmt(x.eq.v)} /> : <span className="muted">–</span>}</td>)}</tr>}
+              {seg === 'all' && shown.some((x) => x.eq) && <tr><td className="lbl">הון לבעלי המניות</td>{shown.map((x) => <td key={x.k}>{x.eq ? <Fig line={{ v: x.eq.v, fs: [x.eq] }} d={d} title={`הון לבעלי המניות · ${plabel(x.k)}`} text={showAmt(x.eq.v)} /> : <span className="muted">–</span>}</td>)}</tr>}
               </tbody>
             </table></div>
             <Notes used={used2} />

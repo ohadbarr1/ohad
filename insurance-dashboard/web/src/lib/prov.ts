@@ -117,3 +117,6 @@ export async function liveCheck(resources: Record<string, RegResource[]>, ts: Tr
   })));
   return out;
 }
+
+/** For pages that mirror their state in the address: writes their own parameters and keeps an open source sheet open. */
+export const keepSrc = (own: Record<string, string>) => (prev: URLSearchParams): Record<string, string> => { const s = prev.get('src'); return s ? { ...own, src: s } : own; };

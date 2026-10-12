@@ -1,0 +1,5 @@
+/* Company pages: a sourced figure keeps its own colour and weight; the dotted rule alone marks it as followable. */
+.kpi .v .src { font-weight: inherit; }
+.rd-base .src, .rd-mb .src { color: inherit; }
+.rd-c .src, .rd-md .src { font: inherit; }
+table .src .num, table .src .chg { text-decoration: inherit; }

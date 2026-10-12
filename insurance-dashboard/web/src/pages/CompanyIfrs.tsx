@@ -9,6 +9,9 @@ import { useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BUCKET_HE, EFFECT_HE, METRIC_HE, TEXT_HE } from '../lib/labels';
 import { BASIS, METRICS, SEGS, Src, SegLabel, TR_HE, WF, WINS, Orig, capHe, endOf, heb, latin, lineHe, origOf, segName, startOf, val } from './IndustryIfrs';
+import { Sourced } from '../components/Source';
+import { useSource, type Prov } from '../lib/prov';
+import { calc, factUrl, ifrsProv } from './companyProv';
 import '../styles/ifrs.css';
 
 export { segName };
@@ -87,6 +90,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const [fam, setFam] = useState('all');
   const [q, setQ] = useState('');
   const [sb, setSb] = useState('net');
+  const { open: openSrc } = useSource();
 
   const annual = P.endsWith('FY'), end = P ? endOf(P) : '', W = annual ? 'fy' : win;
   const csm = useMemo(() => all.filter((f) => f.m.startsWith('csm') && !f.tr && !f.model && !f.m.startsWith('csm_subtotal') && f.m !== 'csm_expected_release'), [all]);
@@ -146,13 +150,32 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   if (!P) return <Empty title="הדוחות של החברה טרם חולצו">{docs > 0 && <Link to="../filings">{docs} מסמכי מקור</Link>}</Empty>;
   if (facts.error) return <ErrorBox what="נתוני הדוח" error={facts.error} />;
   if (!facts.data) return <Loading what="נתוני הדוח" />;
-  const cell = (f: IfrsFact | null, v?: number) => (f ? <><span className={`num ${(v ?? val(f)) < 0 ? 'neg' : ''}`}>{fmt(f, v ?? val(f))}</span> <span className="dim"><Src f={f} d={d} p={P} /></span><IncChip f={f} /></> : <span className="muted">–</span>);
+  /* every figure opens the page it was printed on; the bridge's own arithmetic (the gap to closing, sums of buckets) lists its inputs */
+  const unit = (f: IfrsFact) => (isPct(f.m) ? '%' : 'מיליוני ש"ח');
+  const prov = (f: IfrsFact, title: string, v = f.v): Prov => ifrsProv(f, d, P, { title, value: fmt(f, v), unit: unit(f), note: v !== f.v ? `ערך בפירוק התנועה · בעמוד: ${fmt(f)}` : undefined });
+  const link = (f: IfrsFact) => { const url = factUrl(f, d, P); return url && f.pg != null ? `${url}#page=${f.pg}` : null; };
+  const num = (f: IfrsFact, title: string, v = f.v, cls = '') => <Sourced src={() => prov(f, title, v)} href={link(f)} title={f.pg != null ? `עמ׳ ${f.pg}` : undefined}><span className={`num ${v < 0 ? 'neg' : ''} ${cls}`}>{fmt(f, v)}</span></Sourced>;
+  const cell = (f: IfrsFact | null, title: string, v?: number) => (f ? <>{num(f, title, v ?? val(f))} <span className="dim"><Src f={f} d={d} p={P} /></span><IncChip f={f} /></> : <span className="muted">–</span>);
 
-  const fig = (f?: IfrsFact) => {
+  const fig = (f: IfrsFact | undefined, title: string) => {
     if (!f) return <span className="muted">–</span>;
-    const url = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === P)?.url, t = nf(f.v, Math.abs(f.v) < 100 ? 1 : 0), c = `num ${f.v < 0 ? 'neg' : ''}`;
-    return url && f.pg != null ? <a className={c} href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`עמ׳ ${f.pg}`}>{t}</a> : <span className={c}>{t}</span>;
+    const t = nf(f.v, Math.abs(f.v) < 100 ? 1 : 0);
+    return <Sourced src={() => ifrsProv(f, d, P, { title, value: t, unit: 'מיליוני ש"ח' })} href={link(f)} title={f.pg != null ? `עמ׳ ${f.pg}` : undefined}><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{t}</span></Sourced>;
   };
+  const gapProv = (i: number, g: number): Prov => {
+    const ins = bridge.rows.flatMap((r) => { const f = r.cells[i]; return f ? [{ label: r.label, v: nf(r.sign === 0 ? val(f) : bridge.step(f, r.sign), 0), src: () => prov(f, `${r.label} · ${segName(bridge.cols[i])}`, r.sign === 0 ? val(f) : bridge.step(f, r.sign)) }] : []; });
+    return calc(`פער לסגירה · ${segName(bridge.cols[i])}`, nf(Math.round(g) || 0, 0), 'סגירה − פתיחה − סכום התנועות', ins, 'מיליוני ש"ח');
+  };
+  const bucketSum = (g: string): Prov => {
+    const fs = runoff.buckets.flatMap((bk) => { const f = runoff.at(g, bk); return f ? [{ bk, f }] : []; });
+    return calc(`שחרור CSM צפוי · ${segName(g)} · סה"כ`, nf(fs.reduce((t, x) => t + x.f.v, 0), 0), 'סכום טווחי הזמן', fs.map(({ bk, f }) => ({ label: bkName(bk), v: nf(f.v, 0), src: () => prov(f, `שחרור CSM צפוי · ${segName(g)} · ${bkName(bk)}`) })), 'מיליוני ש"ח');
+  };
+  const onRunoff = (si: number, di: number) => {
+    const g = runoff.segs[si], bk = runoff.buckets[di], f = g && bk != null ? runoff.at(g, bk) : null;
+    if (g && f) openSrc(prov(f, `שחרור CSM צפוי · ${segName(g)} · ${bkName(bk)}`));
+  };
+  const shockTxt = (m: string) => { const rest = m.slice(m.indexOf(':') + 1), r = TEXT_HE[rest] ?? rest; return !latin(r) ? r : shockHe(rest) || 'תרחיש'; };
+  const sensTitle = (r: { m: string; s: string }, eff: string) => `רגישות: ${shockTxt(r.m)} · ${segName(r.s)} · ${eff}`;
   const shock = (m: string) => { const rest = m.slice(m.indexOf(':') + 1), r = TEXT_HE[rest] ?? rest; return !latin(r) ? <>{r}</> : <>{shockHe(rest) || 'תרחיש'}<Orig t={rest} /></>; };
 
   return (
@@ -169,8 +192,8 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           <div className="scroll"><table>
             <thead><tr><th>שורה</th>{bridge.cols.map((g) => <th key={g}>{segName(g)}</th>)}</tr></thead>
             <tbody>
-              {bridge.rows.map((r) => <tr key={r.m} className={r.sign === 0 ? 'lead' : ''}><td className="lbl">{r.label}</td>{r.cells.map((f, i) => <td key={i}>{cell(f, f && r.sign !== 0 ? bridge.step(f, r.sign) : undefined)}{f?.n === 'sum' && <span className="chip est" title="סכום של כמה שורות באותה טבלה">{f.l}</span>}</td>)}</tr>)}
-              <tr><td className="lbl muted">פער לסגירה</td>{bridge.gap.map((g, i) => <td key={i}><span className={`num ${g != null && Math.abs(g) > 2 ? 'neg' : 'muted'}`}>{g == null ? '–' : nf(Math.round(g) || 0, 0)}</span></td>)}</tr>
+              {bridge.rows.map((r) => <tr key={r.m} className={r.sign === 0 ? 'lead' : ''}><td className="lbl">{r.label}</td>{r.cells.map((f, i) => <td key={i}>{cell(f, `${r.label} · ${segName(bridge.cols[i])}`, f && r.sign !== 0 ? bridge.step(f, r.sign) : undefined)}{f?.n === 'sum' && <span className="chip est" title="סכום של כמה שורות באותה טבלה">{f.l}</span>}</td>)}</tr>)}
+              <tr><td className="lbl muted">פער לסגירה</td>{bridge.gap.map((g, i) => <td key={i}><span className={`num ${g != null && Math.abs(g) > 2 ? 'neg' : 'muted'}`}>{g == null ? '–' : <Sourced src={() => gapProv(i, g)}>{nf(Math.round(g) || 0, 0)}</Sourced>}</span></td>)}</tr>
             </tbody>
           </table></div>
         )}
@@ -180,14 +203,14 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         <Panel title="שחרור CSM צפוי לרווח" aside={runoff.buckets.length > 0 && <><span className="chip">{BASIS[runoff.rb] ?? runoff.rb}</span>{runoff.pg && <Src f={runoff.pg} d={d} p={P} />}</>}>
           {runoff.buckets.length === 0 ? <Empty title={annual ? 'לוח השחרור לא נמצא בדוח' : 'לוח השחרור מתפרסם בדוח השנתי'} /> : (
             <>
-              <Chart label="שחרור CSM צפוי לפי שנים" height={280} deps={[id, P, runoff.rb, runoff.buckets.length]} build={() => {
+              <Chart label="שחרור CSM צפוי לפי שנים" height={280} onPoint={onRunoff} deps={[id, P, runoff.rb, runoff.buckets.length]} build={() => {
                 const pal = palette();
                 return foxOption({ x: runoff.buckets.map(bkName), unit: 'מיליוני ש"ח', full: true, total: true, rotate: 30, labels: false,
                   series: runoff.segs.map((g, i) => ({ name: segName(g), kind: 'bar' as const, stack: true, color: pal[i % pal.length], dec: 0, data: runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null) })) });
             }} />
               <div className="scroll"><table>
                 <thead><tr><th>מגזר</th>{runoff.buckets.map((bk) => <th key={bk}>{bkName(bk)}</th>)}<th>סה"כ</th></tr></thead>
-                <tbody>{runoff.segs.map((g) => { const vs = runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null); return <tr key={g}><td>{segName(g)}</td>{vs.map((v, i) => <td key={i}><span className="num">{v == null ? '–' : nf(v, 0)}</span></td>)}<td><span className="num">{nf(vs.reduce((t: number, v) => t + (v ?? 0), 0), 0)}</span></td></tr>; })}</tbody>
+                <tbody>{runoff.segs.map((g) => { const vs = runoff.buckets.map((bk) => runoff.at(g, bk)?.v ?? null); return <tr key={g}><td>{segName(g)}</td>{vs.map((v, i) => { const f = runoff.at(g, runoff.buckets[i]); return <td key={i}><span className="num">{v == null || !f ? '–' : num(f, `שחרור CSM צפוי · ${segName(g)} · ${bkName(runoff.buckets[i])}`, f.v)}</span></td>; })}<td><span className="num">{vs.some((v) => v != null) ? <Sourced src={() => bucketSum(g)}>{nf(vs.reduce((t: number, v) => t + (v ?? 0), 0), 0)}</Sourced> : nf(0, 0)}</span></td></tr>; })}</tbody>
               </table></div>
             </>
           )}
@@ -199,7 +222,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
               <tbody>{capital.map((f, i) => (
                 <tr key={i}>
                   <td className="lbl"><MetricName m={f.m} /><span className="dim">{heb(f.l) ? f.l : capHe(f)}{!heb(f.l) && <Orig t={origOf(f)} />}{f.s !== f.g && <>{' · '}<SegLabel s={f.s} /></>}</span></td>
-                  <td>{cell(f, f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className={`chip ${f.m.startsWith('target_') && f.d > end ? 'est' : ''}`}>{f.m.startsWith('target_') ? targetTag(f, end) : dateLabel(f.d)}</span></td>
+                  <td>{cell(f, he(f.m), f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className={`chip ${f.m.startsWith('target_') && f.d > end ? 'est' : ''}`}>{f.m.startsWith('target_') ? targetTag(f, end) : dateLabel(f.d)}</span></td>
                 </tr>
               ))}</tbody>
             </table></div>
@@ -212,9 +235,9 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           <div className="scroll"><table className="sens">
             <thead><tr><th>תרחיש</th><th>מגזר</th><th>השפעה על CSM</th><th>על הרווח</th><th>על ההון</th>{sens.rows.some((r) => r.k.x) && <th>אחר</th>}</tr></thead>
             <tbody>{sens.rows.map((r) => (
-              <tr key={`${r.m}|${r.s}`}><td className="lbl">{shock(r.m)}</td><td><SegLabel s={r.s} /></td><td>{fig(r.k.csm)}</td>
-                {r.k.pe && !r.k.pl && !r.k.eq ? <td colSpan={2}>{fig(r.k.pe)}<span className="chip">רווח והון יחד</span></td> : <><td>{fig(r.k.pl)}</td><td>{fig(r.k.eq)}</td></>}
-                {sens.rows.some((x) => x.k.x) && <td>{r.k.x ? <>{fig(r.k.x)}<span className="chip">{EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'}</span></> : <span className="muted">–</span>}</td>}</tr>
+              <tr key={`${r.m}|${r.s}`}><td className="lbl">{shock(r.m)}</td><td><SegLabel s={r.s} /></td><td>{fig(r.k.csm, sensTitle(r, 'השפעה על CSM'))}</td>
+                {r.k.pe && !r.k.pl && !r.k.eq ? <td colSpan={2}>{fig(r.k.pe, sensTitle(r, 'השפעה על הרווח וההון'))}<span className="chip">רווח והון יחד</span></td> : <><td>{fig(r.k.pl, sensTitle(r, 'השפעה על הרווח'))}</td><td>{fig(r.k.eq, sensTitle(r, 'השפעה על ההון'))}</td></>}
+                {sens.rows.some((x) => x.k.x) && <td>{r.k.x ? <>{fig(r.k.x, sensTitle(r, EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'))}<span className="chip">{EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'}</span></> : <span className="muted">–</span>}</td>}</tr>
             ))}</tbody>
           </table></div>
         </Panel>
@@ -230,7 +253,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           <tbody>{list.slice(0, 600).map((f, i) => (
             <tr key={i}><td className="lbl"><MetricName m={f.m} /><span className="dim"><SubLabel f={f} always />{f.bk ? ` ${heb(f.l) || capHe(f) || lineHe(f) ? '· ' : ''}${bkName(f.bk)}` : ''}{f.tr ? ` · ${TR_HE[f.tr] ?? 'אחר'}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
               <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{dateLabel(f.d)}</span></td>
-              <td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{fmt(f)}</span><IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
+              <td>{num(f, heb(f.l) ? `${he(f.m)} · ${f.l}` : he(f.m))}<IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
         </table></div></>}
       </Panel>

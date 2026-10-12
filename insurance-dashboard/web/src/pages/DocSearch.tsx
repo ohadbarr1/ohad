@@ -1,6 +1,7 @@
 import { byPeriodDesc } from '../lib/format';
 import { useEffect, useMemo, useState } from 'react';
 import { Empty, Field, Panel } from '../components/ui';
+import { Sourced } from '../components/Source';
 import { useRegistry } from '../lib/useData';
 import { periodName } from './CompanyIfrs';
 
@@ -61,7 +62,7 @@ export function DocSearch({ company }: { company?: string }) {
         <div className="scroll" style={{ maxHeight: 640 }}><table>
           <thead><tr><th>מקור</th><th>הקשר</th></tr></thead>
           <tbody>{hits.map((h, i) => (
-            <tr key={i}><td style={{ whiteSpace: 'nowrap' }}><a href={`${h.url}#page=${h.page}`} target="_blank" rel="noreferrer">{!company && `${name(h.company)} · `}{periodName(h.period)} · <span className="num">עמ׳ {h.page}</span></a></td>
+            <tr key={i}><td style={{ whiteSpace: 'nowrap' }}><Sourced href={`${h.url}#page=${h.page}`} src={() => ({ k: 'report', title: `${name(h.company)} · ${periodName(h.period)}`, value: h.match, url: h.url, pg: h.page, doc: 'דוח כספי', period: periodName(h.period), note: `${h.before}${h.match}${h.after}`.trim() })}>{!company && `${name(h.company)} · `}{periodName(h.period)} · <span className="num">עמ׳ {h.page}</span></Sourced></td>
               <td className="lbl" style={{ whiteSpace: 'normal' }}><span className="muted">{h.before}</span><b>{h.match}</b><span className="muted">{h.after}</span></td></tr>
           ))}</tbody>
         </table></div>

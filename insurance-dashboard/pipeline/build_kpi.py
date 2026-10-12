@@ -1,6 +1,9 @@
 """Headline figures per company and period for the site, from the XBRL facts.
 
 python3 pipeline/build_kpi.py -> web/public/data/kpi.json
+Money is NIS thousands, EPS is NIS. Provenance: per company `rid` (MAYA report id the tagged figures were read from, parallel to `periods`),
+top-level `concepts` (XBRL concept per key) and `fix` (per period, how a value differs from the tag: `printed` = the printed quarter replaces it,
+`diff` = year-to-date tag less the earlier quarters, `withheld` = left empty; `raw` = the tagged profit before the change, NIS thousands).
 Money is NIS thousands, EPS is NIS. Flows are stored per quarter (Q1-Q3) and per full year (FY);
 a filer that tags a cumulative interim period is differenced back to the single quarter.
 """
@@ -71,15 +74,21 @@ for comp, per_ in windows.items():
             truth[(comp, p)] = {"q": h["q"], "ytd": h["ytd"]}  # same report as the tag; an extracted later report may carry a restated comparative
 
 manual = json.loads((ROOT / "data" / "registry" / "kpi_verified.json").read_text(encoding="utf-8"))
-site, notes = {}, []
+site, notes, fix = {}, [], {}
+printed = {}  # (company, period) -> where the printed quarter was read: report id, page
+for c_, per_ in windows.items():
+    for p_, h in per_.items():
+        printed[(c_, p_)] = {"rid": h.get("report_id"), "pg": h.get("page")}
 for comp, per in out.items():
     order = sorted(per, key=lambda p: (per[p]["end"], p))
     status = {}
+    fix.setdefault(comp, {})
     for p in order:
         if p.endswith("FY"):
             status[p] = "fy"
             continue
         if (comp, p) in wrong:
+            fix.setdefault(comp, {})[p] = {"t": "printed", "raw": per[p]["vals"].get("profit"), **printed.get((comp, p), {})}
             for key in FLOWS:
                 per[p]["vals"][key] = wrong[(comp, p)] if key == "profit" else None
             status[p] = "corrected"
@@ -96,6 +105,7 @@ for comp, per in out.items():
     for p in order:
         if status[p] == "cumulative":
             y, q = int(p[:4]), int(p[5])
+            fix[comp][p] = {"t": "diff", "raw": per[p]["vals"].get("profit"), "from": [f"{y}Q{k}" for k in range(1, q)]}
             prior = [f"{y}Q{k}" for k in range(1, q)]
             ok = all(status.get(k) in ("verified", "corrected") or (k.endswith("Q1")) for k in prior)
             for key in FLOWS:
@@ -104,15 +114,20 @@ for comp, per in out.items():
                 per[p]["vals"][key] = cur - sum(prev) if ok and cur is not None and all(x is not None for x in prev) else None
             if truth.get((comp, p), {}).get("q") is not None:  # the quarter's profit is printed: use it rather than a difference
                 per[p]["vals"]["profit"] = truth[(comp, p)]["q"]
+                fix[comp][p]["profit"] = {"t": "printed", **printed.get((comp, p), {})}
+            if not ok:
+                fix[comp][p]["gap"] = True  # an earlier quarter is not clean: flows other than profit are left empty
             status[p] = "corrected"
         elif status[p] == "unverified" and cumulative_filer and not p.endswith("Q1"):
             for key in FLOWS:  # cannot tell quarter from year to date without the report: leave a gap rather than a wrong number
                 per[p]["vals"][key] = None
+            fix[comp][p] = {"t": "withheld"}
             status[p] = "withheld"
     if cumulative_filer:
         notes.append({"company": comp, "corrected": [p for p in order if status[p] == "corrected"], "withheld": [p for p in order if status[p] == "withheld"]})
     site[comp] = {"periods": order, "end": [per[p]["end"] for p in order], "status": [status[p] for p in order],
-                  "values": {k: [per[p]["vals"].get(k) for p in order] for k in CONCEPTS}}
+                  "values": {k: [per[p]["vals"].get(k) for p in order] for k in CONCEPTS},
+                  "rid": [per[p]["rid"] for p in order], "fix": {p: v for p, v in fix[comp].items() if status.get(p) in ("corrected", "withheld")}}
     print(comp, len(order), {s: list(status.values()).count(s) for s in set(status.values())})
 (ROOT / "web" / "public" / "data" / "kpi.json").write_text(json.dumps(
-    {"asof": str(date.today()), "source": "XBRL attached to periodic reports, MAYA", "notes": notes, "companies": site}), encoding="utf-8")
+    {"asof": str(date.today()), "source": "XBRL attached to periodic reports, MAYA", "concepts": CONCEPTS, "notes": notes, "companies": site}), encoding="utf-8")

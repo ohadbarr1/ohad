@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { keepSrc } from '../lib/prov';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
+import { Sourced } from '../components/Source';
+import { useSource, type Prov } from '../lib/prov';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { foxOption } from '../lib/foxchart';
 import { nf, periodLabel, sn } from '../lib/format';
@@ -20,6 +23,7 @@ type PT = 'Q' | 'H' | 'FY' | 'LTM';
 /** One line of the statements for every insurer, over time: the comparison the statements pages cannot make one company at a time.
     Each company's line is its own printed line (the caption it uses is shown), each figure links to its page. */
 export function IndustryLines() {
+  const { open } = useSource();
   const { data: d, error } = useLoad<Lines>('lines.json');
   const reg = useRegistry();
   const [sp, setSp] = useSearchParams();
@@ -30,7 +34,7 @@ export function IndustryLines() {
   const [from, setFrom] = useState(Number(sp.get('y')) || 2020);
   // insurers and fund houses are different businesses: one group at a time unless asked otherwise
   const [who, setWho] = useState<'ins' | 'fund' | 'all'>((['ins', 'fund', 'all'] as const).find((x) => x === sp.get('g')) ?? 'ins');
-  useEffect(() => { setSp({ l: role, t: pt, ...(view === 'y' ? { v: 'y' } : {}), ...(lead ? { c: lead } : {}), ...(from !== 2020 ? { y: String(from) } : {}), ...(who !== 'ins' ? { g: who } : {}) }, { replace: true }); }, [role, pt, view, lead, from, who, setSp]);
+  useEffect(() => { setSp(keepSrc({ l: role, t: pt, ...(view === 'y' ? { v: 'y' } : {}), ...(lead ? { c: lead } : {}), ...(from !== 2020 ? { y: String(from) } : {}), ...(who !== 'ins' ? { g: who } : {}) }), { replace: true }); }, [role, pt, view, lead, from, who, setSp]);
 
   const def = d?.roles.find(([k]) => k === role) ?? d?.roles[0];
   const balance = def?.[2] === 'X.מאזן';
@@ -59,7 +63,7 @@ export function IndustryLines() {
       return p != null && p > 0 && v > 0 ? (v / p - 1) * 100 : null;  // a rate of change only between two positive figures
     };
     const shown = ends.filter((e) => ids.some((id) => value(id, e) != null));
-    return { lines, ids, at, shown, value };
+    return { lines, ids, at, shown, value, raw, amount, back, prior };
   }, [d, def, base, pt, view, from, balance, who, reg.data]);
 
   if (error) return <ErrorBox what="שורות הדוחות" error={error} />;
@@ -75,6 +79,27 @@ export function IndustryLines() {
   const anyOld = model.shown.some((e) => model.ids.some((id) => (model.at.get(id)?.get(e)?.[4] ?? 0) & 2));
   const unitLabel = view === 'y' ? '% YoY' : unit === 'nis' ? 'ש"ח למניה' : 'מיליוני ש"ח';
   const groups = [...new Set(d.roles.map((r) => r[2]))];
+  const uLabel = unit === 'nis' ? 'ש"ח למניה' : unit === 'pct' ? '%' : 'מיליוני ש"ח';
+  // one printed cell (Q4 / H2 derived from the annual report is flagged), a four-quarter sum, or a year-on-year change of two such figures
+  const abs = (v: number) => nf(unit === 'k' ? v / 1000 : v, unit === 'nis' ? 2 : 0);
+  const printed = (id: string, e: string, per: string): Prov => {
+    const c = model.at.get(id)?.get(e), line = model.lines[id].label, title = `${def[1]} · ${name(id)} · ${per}`;
+    if (!c) return { k: 'none', title, why: 'אין נתון לתקופה בדוח שחולץ' };
+    return { k: 'report', title, value: abs(c[1]), unit: uLabel, url: c[3] != null ? d.urls[c[3]] : null, pg: c[2], doc: 'דוח כספי', period: per, note: `שורה בדוח: ${line}`, der: c[4] & 1 ? true : undefined, old: c[4] & 2 ? true : undefined, turned: c[4] & 4 ? true : undefined };
+  };
+  const amountProv = (id: string, e: string): Prov => {
+    const per = lab(e), v = model.amount(id, e), title = `${def[1]} · ${name(id)} · ${per}`;
+    if (v == null) return { k: 'none', title, why: 'אין נתון לתקופה בדוח שחולץ' };
+    if (pt !== 'LTM' || balance) return printed(id, e, per);
+    const ends = [0, 1, 2, 3].map((k) => model.back(e, k));
+    return { k: 'calc', title, value: abs(v), unit: uLabel, formula: 'סכום ארבעת הרבעונים האחרונים', inputs: ends.map((x) => ({ label: periodLabel(base, x), v: abs(model.raw(id, x) ?? 0), src: () => printed(id, x, periodLabel(base, x)) })) };
+  };
+  const valueProv = (id: string, e: string): Prov => {
+    if (view === 'v') return amountProv(id, e);
+    const per = lab(e), v = model.value(id, e), pe = model.prior(e), a = model.amount(id, e), b = model.amount(id, pe), title = `${def[1]} · ${name(id)} · YoY, ${per}`;
+    if (v == null) return { k: 'none', title, why: 'שינוי באחוזים מחושב רק בין שני ערכים חיוביים' };
+    return { k: 'calc', title, value: text(v), unit: '%', formula: 'הערך בתקופה ÷ הערך באותה תקופה בשנה הקודמת, פחות 1', inputs: [{ label: per, v: a == null ? '–' : abs(a), src: () => amountProv(id, e) }, { label: lab(pe), v: b == null ? '–' : abs(b), src: () => amountProv(id, pe) }] };
+  };
 
   return (
     <>
@@ -95,7 +120,7 @@ export function IndustryLines() {
               breakAt: view === 'v' && anyOld && firstNew > 0 ? firstNew : undefined, breakLabel: 'IFRS 17',
               series: model.ids.map((id, i) => ({ name: name(id), kind: 'line' as const, color: pal[i % pal.length], pct: view === 'y', lead: lead === id, dim: !!lead && lead !== id, dec,
                 data: model.shown.map((e) => { const v = model.value(id, e); return v == null ? null : +scaled(v).toFixed(3); }) })),
-            })} />
+            })} onPoint={(si, di) => { const id = model.ids[si], e = model.shown[di]; if (id && e) open(valueProv(id, e)); }} />
             {anyOld && <div className="src">הקו המקווקו: המעבר ל-IFRS 17. לפניו כל חברה לפי IFRS 4 כפי שדווח במקור, ולכן שורות שהגדרתן השתנתה בתקן אינן בנות השוואה משני צדיו.</div>}
           </Panel>
           <Panel title="טבלה" aside={<span>{unitLabel} · כל מספר מקושר לעמוד בדוח</span>}>
@@ -109,7 +134,7 @@ export function IndustryLines() {
                     if (v == null) return <td key={e}><span className="muted">–</span></td>;
                     const cls = `num${view === 'y' ? (v >= 0 ? ' pos' : ' neg') : v < 0 ? ' neg' : ''}${c && c[4] & 1 ? ' der' : ''}${c && c[4] & 2 ? ' old' : ''}`;
                     const href = view === 'v' && pt !== 'LTM' && c && c[3] != null ? `${d.urls[c[3]]}${c[2] ? `#page=${c[2]}` : ''}` : null;
-                    return <td key={e}>{href ? <a className="cellsrc" href={href} target="_blank" rel="noreferrer" title={`${model.lines[id].label} · עמ׳ ${c?.[2] ?? ''}`}><span className={cls}>{text(v)}</span></a> : <span className={cls}>{text(v)}</span>}</td>;
+                    return <td key={e}><Sourced className={cls} href={href} src={() => valueProv(id, e)} title={`${model.lines[id].label}${c?.[2] ? ` · עמ׳ ${c[2]}` : ''}`}>{text(v)}</Sourced></td>;
                   })}
                 </tr>
               ))}</tbody>

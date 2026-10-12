@@ -1,4 +1,6 @@
 import type { IfrsData, IfrsFact } from './types';
+import type { Prov } from './prov';
+import { nf } from './format';
 
 /* The CSM lens shared by the industry page and the company component: one movement table ("bridge") per company, date and window,
    read from the facts of a single report, and the ratios built on it. Nothing here estimates: a line is either printed, or a sum or
@@ -8,7 +10,7 @@ import type { IfrsData, IfrsFact } from './types';
 export type RF = IfrsFact & { rp: string };
 export type Win = 'q' | 'ytd' | 'fy';
 export type ScopeId = 'group' | 'life_health' | 'lh' | 'life' | 'health';
-export interface Line { v: number; fs: RF[]; /** life plus health, added here */ sum?: boolean; /** rows of one table added up */ n?: number }
+export interface Line { v: number; fs: RF[]; /** life plus health, added here */ sum?: boolean; /** rows of one table added up */ n?: number; /** a quarter built as one cumulative table less the one before it */ diff?: { a: Line; b: Line } }
 export interface Step { k: string; m: string; label: string; line: Line }
 export interface Bridge {
   end: string; w: Win; scope: ScopeId; b: string; /** how complete the table is; used to choose between candidates */ score: number;
@@ -135,7 +137,7 @@ export function quarter(rs: Reports, p: string, o: Opt = {}): Bridge | null {
   // a table that still carries the savings-policy column is never netted against another: the difference would mix what is CSM with what is not
   const inc = (b: Bridge) => factsOf(b).some((f) => f.inc === 1);
   if (!tot || !sub || !tot.steps.length || inc(tot) || inc(sub) || CORE.some((k) => tot.steps.some((s) => s.k === k) && !sub.steps.some((s) => s.k === k))) return q ?? (tot ? { ...tot, w: 'q', open: null, openPrev: false, steps: [], gap: null } : null);
-  const steps: Step[] = tot.steps.map((s) => { const x = sub.steps.find((t) => t.k === s.k); return { ...s, line: { v: s.line.v - (x?.line.v ?? 0), fs: [...s.line.fs, ...(x?.line.fs ?? [])], sum: s.line.sum, n: s.line.n } }; });
+  const steps: Step[] = tot.steps.map((s) => { const x = sub.steps.find((t) => t.k === s.k); return { ...s, line: { v: s.line.v - (x?.line.v ?? 0), fs: [...s.line.fs, ...(x?.line.fs ?? [])], sum: s.line.sum, n: s.line.n, diff: x ? { a: s.line, b: x.line } : undefined } }; });
   const open = sub.close, close = tot.close;
   const gap = open && close && steps.some((s) => s.k === 'nb') && steps.some((s) => s.k === 'rel') ? close.v - open.v - steps.reduce((t, s) => t + s.line.v, 0) : null;
   return { end, w: 'q', scope: tot.scope, b: tot.b, score: tot.score, open, openPrev: true, close, steps, gap, der: true, cmp: tot.cmp || sub.cmp || undefined };
@@ -185,3 +187,54 @@ export function runoff(all: RF[], end: string, pref = 'gross', only?: ScopeId): 
   }
   return null;
 }
+
+/* ---------- provenance: what the source sheet shows for a figure of the CSM lens ---------- */
+const MM = 'מיליוני ש"ח';
+const amt = (v: number) => nf(v, Math.abs(v) < 100 ? 1 : 0);
+export const lineAt = lineOf;
+function lineOf(b: Bridge | null, k: string): Line | null { return !b ? null : k === 'close' ? b.close : k === 'open' ? b.open : b.steps.find((s) => s.k === k)?.line ?? null; }
+
+/** A figure printed in a filed report: the row as the filer wrote it, its document, period and page. */
+export function factProv(f: RF, d: IfrsData, title: string, text?: string, unit: string = MM): Prov {
+  const u = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === f.rp)?.url ?? null;
+  const notes = [f.l, f.src === 'chart' || f.src === 'text' ? 'נקרא מגרף או מטקסט' : '', f.inc === 1 ? 'כולל רווח עתידי בפוליסות חיסכון' : '', f.cl === 1 ? 'ללא פוליסות חיסכון: הסכום פחות עמודת פוליסות החיסכון' : ''].filter(Boolean);
+  return { k: 'report', title, value: text ?? amt(f.dv ?? f.v), unit, url: u ?? null, pg: f.pg, doc: f.u !== undefined ? 'מצגת' : 'דוח כספי', period: periodName(f.rp), note: notes.join(' · '),
+    turned: (f.dv != null && f.dv !== f.v) || f.sn === 1 || undefined };
+}
+/** A line of a movement table: one printed row, a sum of printed rows, or a difference of two cumulative tables. */
+export function lineProv(l: Line, d: IfrsData, title: string, text?: string): Prov {
+  const value = text ?? amt(l.v);
+  if (l.diff) return { k: 'calc', title, value, unit: MM, formula: 'טבלה מצטברת פחות הטבלה המצטברת שלפניה (Q4 = FY פחות 9M)', inputs: [
+    { label: 'מצטבר נוכחי', v: amt(l.diff.a.v), src: () => lineProv(l.diff!.a, d, `${title}, מצטבר נוכחי`) }, { label: 'פחות: מצטבר קודם', v: amt(l.diff.b.v), src: () => lineProv(l.diff!.b, d, `${title}, מצטבר קודם`) }] };
+  if (l.fs.length === 1 && !l.sum) return factProv(l.fs[0], d, title, text);
+  return { k: 'calc', title, value, unit: MM, formula: l.sum ? 'חיים ועוד בריאות, על אותו בסיס' : 'סכום שורות מודפסות באותה טבלה', inputs: l.fs.map((f) => ({ label: `${f.s} · ${f.l}`.slice(0, 80), v: amt(f.dv ?? f.v), src: () => factProv(f, d, title) })) };
+}
+const ratioDef: Record<string, [string, string[], boolean?]> = {
+  nbRel: ['עסק חדש ÷ שחרור × 100', ['nb', 'rel']],
+  csmEq: ['יתרת CSM ÷ הון לבעלי המניות', ['close', 'eq']],
+  relOpen: ['שחרור ÷ CSM פתיחה × 12 ÷ חודשי החלון', ['rel', 'open']],
+  intOpen: ['צבירת ריבית ÷ CSM פתיחה × 100, לחלון', ['int', 'open']],
+  estOpen: ['שינויי אומדן ÷ CSM פתיחה × 100, לחלון', ['est', 'open']],
+  chg: ['יתרת סגירה ÷ יתרת פתיחה, פחות 1', ['close', 'open']],
+};
+/** A ratio computed on the site from the printed lines of a movement table. */
+export function ratioProv(k: string, b: Bridge | null, eq: RF | null, d: IfrsData, title: string, text: string): Prov {
+  const def = ratioDef[k];
+  if (!def || !b) return { k: 'none', title, why: 'אין טבלת תנועה ממנה אפשר לחשב את היחס' };
+  const key = (x: string) => (x === 'est' && b.steps.every((s) => s.k !== 'est') && b.steps.some((s) => s.k === 'econ') ? 'econ' : x);
+  const names: Record<string, string> = { nb: 'CSM עסק חדש', rel: 'שחרור CSM', close: 'יתרת סגירה', open: 'יתרת פתיחה', int: 'צבירת ריבית', est: 'שינויי אומדן', econ: 'ריבית והשפעות כלכליות (שורה אחת)', eq: 'הון לבעלי המניות' };
+  const inputs = def[1].map(key).map((x) => {
+    if (x === 'eq') return eq ? { label: names.eq, v: amt(eq.v), src: () => factProv(eq, d, names.eq) } : { label: names.eq, v: '–' };
+    const l = lineOf(b, x);
+    return l ? { label: names[x], v: amt(x === 'rel' ? Math.abs(l.v) : l.v), src: () => lineProv(l, d, names[x], amt(x === 'rel' ? Math.abs(l.v) : l.v)) } : { label: names[x], v: '–' };
+  });
+  return { k: 'calc', title, value: text, formula: def[0], inputs };
+}
+/** The unexplained difference of a movement table: closing less opening less every printed movement. */
+export function gapProv(b: Bridge, d: IfrsData, title: string, text: string): Prov {
+  const ins = [b.close && { label: 'סגירה', l: b.close }, b.open && { label: 'פחות: פתיחה', l: b.open }, ...b.steps.map((s) => ({ label: `פחות: ${s.label}`, l: s.line }))].filter(Boolean) as { label: string; l: Line }[];
+  return { k: 'calc', title, value: text, unit: MM, formula: 'סגירה פחות פתיחה פחות כל שורות התנועה שהודפסו', inputs: ins.map((x) => ({ label: x.label, v: amt(x.l.v), src: () => lineProv(x.l, d, x.label) })) };
+}
+export interface Entry { label: string; v: string; src?: () => Prov }
+export const rankProv = (title: string, rank: number, items: Entry[]): Prov => ({ k: 'calc', title, value: String(rank), unit: `מתוך ${items.length}`, formula: 'מיקום הערך בין החברות, ממיון הערכים שבטבלה', inputs: items });
+export const medianProv = (title: string, value: string, items: Entry[], unit?: string): Prov => ({ k: 'calc', title, value, unit, formula: 'חציון הערכים של החברות: האמצעי, או ממוצע שני האמצעיים', inputs: items });

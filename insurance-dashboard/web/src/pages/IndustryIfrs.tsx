@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { keepSrc } from '../lib/prov';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
+import { Sourced } from '../components/Source';
+import { useSource, type Prov } from '../lib/prov';
+import { factProv, hrefOf, periodName, rankProv, type RF } from '../lib/csm';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { nf, byPeriodDesc, dateLabel } from '../lib/format';
@@ -63,6 +67,7 @@ export function Src({ f, d, p }: { f: IfrsFact; d: IfrsData; p: string }) {
 
 /** Reported IFRS 17 figures side by side, each with its basis and source page. */
 export function IndustryIfrs() {
+  const { open } = useSource();
   const { data: d, error } = useIfrsData();
   const reg = useRegistry();
   const [sp, setSp] = useSearchParams();
@@ -74,7 +79,7 @@ export function IndustryIfrs() {
   const [basis, setBasis] = useState(sp.get('b') ?? 'net');
   const [co, setCo] = useState(sp.get('c') ?? 'harel');
   const P = periods.includes(period) ? period : periods[0] ?? '';
-  useEffect(() => { if (P) setSp({ p: P, m: metric, s: seg, w: win, b: basis, c: co }, { replace: true }); }, [P, metric, seg, win, basis, co, setSp]);
+  useEffect(() => { if (P) setSp(keepSrc({ p: P, m: metric, s: seg, w: win, b: basis, c: co }), { replace: true }); }, [P, metric, seg, win, basis, co, setSp]);
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
 
   const facts = useIfrsFacts(P || null);
@@ -109,6 +114,11 @@ export function IndustryIfrs() {
     }).filter((x) => x.f);
   }, [cur, co, seg, P, wfWin, end, basis]);
 
+  const tagged = (f: IfrsFact): RF => ({ ...f, rp: P });
+  const prov = (f: IfrsFact, title: string, text?: string): Prov => (d ? factProv(tagged(f), d, title, text) : { k: 'none', title, why: 'הנתונים טרם נטענו' });
+  const href = (f: IfrsFact) => (d ? hrefOf(tagged(f), d) : null);
+  /** a reported figure that opens its source row; a real link to the page when the report has a URL */
+  const Num = ({ f, title, text, cls = '' }: { f: IfrsFact; title: string; text: string; cls?: string }) => <Sourced className={`num ${cls}`} src={() => prov(f, title, text)} href={href(f)}>{text}</Sourced>;
   if (error) return <ErrorBox what="נתוני IFRS 17" error={error} />;
   if (!d || !reg.data || (P && !facts.data && !facts.error)) return <Loading what="IFRS 17" />;
   if (!P) return <Empty title="אין דוחות מחולצים" />;
@@ -134,10 +144,10 @@ export function IndustryIfrs() {
         <Panel title={`${label} · ${SEGS.find(([k]) => k === seg)?.[1]}`} aside={<span>מיליוני ש"ח · כפי שדווח</span>}>
           {have.length === 0 ? <Empty title="המדד לא נמצא בדוחות לתקופה ולמגזר שנבחרו" /> : (
             <div className="scroll"><table><tbody>{rows.map((r, i) => (
-              <tr key={r.id} className={r.id === co ? 'lead' : ''} style={{ cursor: 'pointer' }} onClick={() => setCo(r.id)}>
-                <td><span className="num muted">{r.f ? i + 1 : ''}</span> <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link>{r.f && r.f.s !== r.f.g && <span className="dim"><SegLabel s={r.f.s} /></span>}</td>
+              <tr key={r.id} className={r.id === co ? 'lead' : ''} style={{ cursor: 'pointer' }} onClick={(e) => { if ((e.target as Element).closest('a.src, button.src')) return; setCo(r.id); }}>
+                <td>{r.f && <Sourced className="num muted" src={() => rankProv(`דירוג ${label} · ${SEGS.find(([k]) => k === seg)?.[1]} · ${periodName(P)}`, i + 1, have.map((q) => ({ label: name(q.id), v: nf(val(q.f!), Math.abs(val(q.f!)) < 100 ? 1 : 0), src: () => prov(q.f!, `${label} · ${name(q.id)}`) })))}>{i + 1}</Sourced>} <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link>{r.f && r.f.s !== r.f.g && <span className="dim"><SegLabel s={r.f.s} /></span>}</td>
                 <td style={{ width: '36%' }}>{r.f && <div className="bar"><i style={{ width: `${(Math.abs(val(r.f)) / max) * 100}%`, background: val(r.f) < 0 ? 'var(--down)' : pal[ids.indexOf(r.id) % pal.length] }} /></div>}</td>
-                <td><span className={`num ${r.f && val(r.f) < 0 ? 'neg' : ''}`}>{r.f ? nf(val(r.f), Math.abs(val(r.f)) < 100 ? 1 : 0) : 'לא דווח'}</span><IncChip f={r.f} /></td>
+                <td>{r.f ? <Num f={r.f} cls={val(r.f) < 0 ? 'neg' : ''} title={`${label} · ${name(r.id)} · ${periodName(P)}`} text={nf(val(r.f), Math.abs(val(r.f)) < 100 ? 1 : 0)} /> : <span className="num">לא דווח</span>}<IncChip f={r.f} /></td>
                 <td>{r.f && <span className={`chip ${r.f.b === basis ? '' : 'est'}`}>{BASIS[r.f.b] ?? r.f.b}</span>}{r.f?.src === 'chart' && <span className="chip est">מגרף</span>}{r.f?.sn === 1 && <span className="chip" title="הסימן הותאם כך שהגשר נסגר">סימן מנורמל</span>}</td>
                 <td>{r.f && <Src f={r.f} d={d} p={P} />}</td>
               </tr>
@@ -162,9 +172,9 @@ export function IndustryIfrs() {
                   { type: 'bar', stack: 'w', data: tot, itemStyle: { color: b.accent, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => nf(p.value, 0) } },
                   { type: 'bar', stack: 'w', data: up, itemStyle: { color: b.up, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `+${nf(p.value, 0)}` } },
                   { type: 'bar', stack: 'w', data: down, itemStyle: { color: b.down, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `−${nf(p.value, 0)}` } }] };
-            }} />
+            }} onPoint={(_, di) => { const pts = [o, ...steps, c], x = pts[di]; if (x?.f) open(prov(x.f, `${x.label} · ${name(co)} · ${periodName(P)}`, nf(x.sign === 0 ? val(x.f) : x.f.dv != null ? x.f.dv : x.sign === -1 ? -Math.abs(x.f.v) : x.f.v, 0))); }} />
           )}
-          {o && c && steps.length > 0 && (() => { const sum = val(o.f!) + steps.reduce((t, x) => t + (x.f!.dv != null ? x.f!.dv : x.sign === -1 ? -Math.abs(x.f!.v) : x.f!.v), 0), gap = val(c.f!) - sum; return <div className="src">{wfWin === 'q' ? 'QTD' : wfWin === 'fy' ? 'FY' : 'YTD'} · בסיס: {BASIS[c.f!.b]} · פער בין הרכיבים לסגירה: <span className="num">{nf(gap, 0)}</span>{Math.abs(gap) > 2 && ' (שורות שלא חולצו או בסיס מעורב)'}</div>; })()}
+          {o && c && steps.length > 0 && (() => { const sum = val(o.f!) + steps.reduce((t, x) => t + (x.f!.dv != null ? x.f!.dv : x.sign === -1 ? -Math.abs(x.f!.v) : x.f!.v), 0), gap = val(c.f!) - sum; return <div className="src">{wfWin === 'q' ? 'QTD' : wfWin === 'fy' ? 'FY' : 'YTD'} · בסיס: {BASIS[c.f!.b]} · פער בין הרכיבים לסגירה: <Sourced className="num" src={() => ({ k: 'calc', title: `פער בין הרכיבים לסגירה · ${name(co)} · ${periodName(P)}`, value: nf(gap, 0), unit: 'מיליוני ש"ח', formula: 'סגירה פחות פתיחה פחות שורות התנועה', inputs: [{ label: 'סגירה', v: nf(val(c.f!), 0), src: () => prov(c.f!, `סגירה · ${name(co)}`) }, { label: 'פחות: פתיחה', v: nf(val(o.f!), 0), src: () => prov(o.f!, `פתיחה · ${name(co)}`) }, ...steps.map((x) => ({ label: `פחות: ${x.label}`, v: nf(x.f!.dv != null ? x.f!.dv : x.sign === -1 ? -Math.abs(x.f!.v) : x.f!.v, 0), src: () => prov(x.f!, `${x.label} · ${name(co)}`) }))] }) as Prov}>{nf(gap, 0)}</Sourced>{Math.abs(gap) > 2 && ' (שורות שלא חולצו או בסיס מעורב)'}</div>; })()}
         </Panel>
       </div>
 
@@ -172,7 +182,7 @@ export function IndustryIfrs() {
         <div className="scroll" style={{ maxHeight: 520 }}><table>
           <thead><tr><th>חברה</th><th>מגזר כפי שדווח</th><th>שורה בדוח</th><th>בסיס</th><th>גישת מעבר</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
           <tbody>{detail.sort((a, b) => a.c.localeCompare(b.c) || a.s.localeCompare(b.s)).map((f, i) => (
-            <tr key={i}><td>{name(f.c)}</td><td><SegLabel s={f.s} /></td><td className="lbl">{heb(f.l) ? <>{f.l}{f.n && heb(f.n) && <span className="dim clamp" title={f.n}>{f.n}</span>}</> : <>{lineHe(f) || label}<Orig t={origOf(f)} /></>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ? TR_HE[f.tr] ?? 'אחר' : ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{dateLabel(f.d)}</span></td><td><span className={`num ${f.v < 0 ? 'neg' : ''}`}>{nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)}</span><IncChip f={f} /></td><td><Src f={f} d={d} p={P} /></td></tr>
+            <tr key={i}><td>{name(f.c)}</td><td><SegLabel s={f.s} /></td><td className="lbl">{heb(f.l) ? <>{f.l}{f.n && heb(f.n) && <span className="dim clamp" title={f.n}>{f.n}</span>}</> : <>{lineHe(f) || label}<Orig t={origOf(f)} /></>}</td><td>{BASIS[f.b] ?? f.b}</td><td>{f.tr ? TR_HE[f.tr] ?? 'אחר' : ''}</td><td>{WINS.find(([k]) => k === f.w)?.[1]}</td><td><span className="num">{dateLabel(f.d)}</span></td><td><Num f={f} cls={f.v < 0 ? 'neg' : ''} title={`${f.l} · ${name(f.c)} · ${periodName(P)}`} text={nf(f.v, Math.abs(f.v) < 100 ? 1 : 0)} /><IncChip f={f} /></td><td><Src f={f} d={d} p={P} /></td></tr>
           ))}</tbody>
         </table></div>
       </Panel>

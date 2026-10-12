@@ -6,12 +6,16 @@ import { Count } from '../components/Count';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
 import { chartBase, palette } from '../lib/theme';
 import { nf, pct } from '../lib/format';
-import type { CompanyKpi } from '../lib/kpi';
+import { dividendYield, dividendYieldProv, periodTag, priceProv, type CompanyKpi } from '../lib/kpi';
+import type { PriceData } from '../lib/types';
+import { Sourced } from '../components/Source';
+import type { Prov } from '../lib/prov';
+import '../styles/prov-kpi.css';
 import { useCompanyPrice, useKpis, useMarket, useRegistry } from '../lib/useData';
 import '../styles/market.css';
 import type { Market } from '../lib/market';
 
-interface Ctx { k: CompanyKpi; name: string; aum: number | null; px: number | null }
+interface Ctx { k: CompanyKpi; name: string; aum: number | null; px: number | null; price: PriceData | null }
 const useV = () => useOutletContext<Ctx>();
 
 function useStored<T>(key: string, init: T): [T, (v: T) => void] {
@@ -49,12 +53,32 @@ export function ValuationLayout() {
     <>
       <div className="pagehead">
         <div><h1>הערכת שווי · {entry.name_he}</h1>
-          <div className="sub">{px != null && price && <span className="pxin">קלט להערכה: מחיר סגירה אחרון <span className="num">{nf(px, 2)}</span> ש"ח · <span className="num">{dmy(price.asof)}</span> · <span className="num">{price.ticker}</span></span>}{px == null && <>אין מחיר מוגדר לחברה זו: יחס המחיר להערכה אינו מחושב</>}{px != null && sh != null && <> · שווי שוק <span className="num">{nf((px * sh) / 1e9, 1)}</span> מיליארד ש"ח <span className="chip est">נגזר</span></>}</div></div>
+          <div className="sub">{px != null && price && <span className="pxin">קלט להערכה: <Sourced src={() => priceProv(price)}>מחיר סגירה אחרון <span className="num">{nf(px, 2)}</span> ש"ח</Sourced> · <span className="num">{dmy(price.asof)}</span> · <span className="num">{price.ticker}</span></span>}{px == null && <>אין מחיר מוגדר לחברה זו: יחס המחיר להערכה אינו מחושב</>}{px != null && price && sh != null && <> · <Sourced src={() => k.marketCapNow(price)}>שווי שוק <span className="num">{nf((px * sh) / 1e9, 1)}</span> מיליארד ש"ח</Sourced> <span className="chip est">נגזר</span></>}</div></div>
         <Field label="חברה"><select value={id} onChange={(e) => nav(`/valuation/${e.target.value}/${location.hash.endsWith('sotp') ? 'sotp' : 'dcf'}`)}>{ids.map((x) => <option key={x} value={x}>{reg.data!.find((c) => c.id === x)?.name_he}</option>)}</select></Field>
       </div>
+      {price && <MarketStrip k={k} price={price} />}
       <nav className="subnav" aria-label="מודל"><NavLink to="dcf">DCF להון</NavLink><NavLink to="sotp">סכום החלקים (SOTP)</NavLink></nav>
-      <Outlet context={{ k, name: entry.name_he, aum: savingsAum(market, entry.market_group), px } satisfies Ctx} />
+      <Outlet context={{ k, name: entry.name_he, aum: savingsAum(market, entry.market_group), px, price: price ?? null } satisfies Ctx} />
     </>
+  );
+}
+
+/** The price-based figures of the company, the only place they live: market value, multiples and dividend yield, each opening its inputs. */
+function MarketStrip({ k, price }: { k: CompanyKpi; price: PriceData }) {
+  const roe = k.latest('roe'), sh = k.lastShares(), mc = sh ? (price.last / 100 * sh) / 1e6 : null, y = dividendYield(price);
+  const pb = k.multipleNow('pb', price), pe = k.multipleNow('pe', price);
+  const item = (label: string, p: Prov, text: string | null, unit?: string) => (
+    <div><span className="l">{label}</span><span className="v num">{text == null || p.k === 'none' ? (p.k === 'none' && text != null ? <Sourced src={() => p}>–</Sourced> : '–') : <Sourced src={() => p}>{text}</Sourced>}{unit && text != null && <small>{unit}</small>}</span></div>
+  );
+  const mult = (p: Prov) => (p.k === 'calc' ? p.value : null);
+  return (
+    <section className="vstrip" aria-label="נתוני שוק">
+      {item('שווי שוק', k.marketCapNow(price), mc == null ? null : nf(mc / 1000, 1), 'מיליארד ש"ח')}
+      {item('P/B', pb, mult(pb))}
+      {item('P/E, LTM', pe, mult(pe))}
+      {item('תשואת דיבידנד, LTM', dividendYieldProv(price), y == null ? null : `${nf(y, 1)}%`)}
+      {roe && item(`ROE, LTM`, k.explain('roe', 'q', roe.period), `${nf(roe.v!, 1)}%`)}
+    </section>
   );
 }
 
@@ -77,7 +101,7 @@ function impliedKe(a: DcfIn, target: number): number | null {
 }
 
 export function Dcf() {
-  const { k, px } = useV();
+  const { k, px, price } = useV();
   const base = k.latest('profit', 'ltm'), eq = k.latest('equity'), roe = k.latest('roe');
   const sh = k.lastShares();
   // defaults: base profit as reported, growth = ROE x retention held to 2-6%, payout 40% (the filings give no payout ratio), ke 10%, g 3%
@@ -97,12 +121,29 @@ export function Dcf() {
   const kes = [-2, -1, 0, 1, 2].map((d) => a.ke + d), gts = [-1, -0.5, 0, 0.5, 1].map((d) => a.gt + d);
   const pal = palette();
   if (!base?.v) return <Empty title="אין רווח LTM לחברה זו" />;
+  const mil = (v: number) => `${nf(v, 0)} מיליוני ש"ח`;
+  // the model's outputs are estimates from the user's assumptions; the filings and the price enter as inputs with their own sources
+  const eqProv = (): Prov => ({ k: 'calc', title: 'שווי הון, DCF', value: mil(r.value), unit: 'מיליוני ש"ח', est: true, formula: 'שווי הון = ערך נוכחי של החלוקות + ערך נוכחי של ערך הסיום',
+    inputs: [{ label: 'רווח בסיס (ההנחה שלך; ברירת מחדל LTM)', v: mil(a.e0), src: a.e0 === Math.round(base.v ?? 0) ? () => k.explain('profit', 'ltm', base.period) : undefined }, { label: 'צמיחת רווח שנתית (ההנחה שלך)', v: `${nf(a.g, 1)}%` }, { label: `שנות תחזית (ההנחה שלך)`, v: String(a.years) },
+      { label: 'שיעור חלוקה (ההנחה שלך)', v: `${nf(a.payout, 0)}%` }, { label: 'מחיר ההון (ההנחה שלך)', v: `${nf(a.ke, 2)}%` }, { label: 'צמיחה לטווח ארוך (ההנחה שלך)', v: `${nf(a.gt, 2)}%` },
+      { label: 'ערך נוכחי של החלוקות', v: mil(r.sum) }, { label: 'ערך נוכחי של ערך הסיום', v: mil(r.pvTv) }] });
+  const perShareProv = (): Prov => perShare == null ? { k: 'none', title: 'שווי למניה', why: 'מספר המניות אינו ניתן לגזירה' } : { k: 'calc', title: 'שווי למניה, DCF', value: `${nf(perShare, 2)} ש"ח`, unit: 'ש"ח', est: true, formula: 'שווי למניה = שווי הון ÷ מניות',
+    inputs: [{ label: 'שווי הון, DCF', v: mil(r.value), src: eqProv }, { label: 'מניות', v: `${nf(sh! / 1e6, 1)} מיליון`, src: () => k.sharesProv() }] };
+  const upsideProv = (): Prov => upside == null || !price ? { k: 'none', title: 'פער מהמחיר', why: 'אין מחיר או שווי למניה' } : { k: 'calc', title: 'שווי למניה מול מחיר', value: `${nf(upside, 1)}%`, unit: '%', est: true, formula: 'פער = שווי למניה ÷ מחיר סגירה אחרון − 1',
+    inputs: [{ label: 'שווי למניה, DCF', v: `${nf(perShare!, 2)} ש"ח`, src: perShareProv }, { label: 'מחיר סגירה אחרון', v: `${nf(px!, 2)} ש"ח`, src: () => priceProv(price) }] };
+  const roeSrc = roe?.v != null ? () => k.explain('roe', 'q', roe.period) : undefined;
+  const justProv = (): Prov => ({ k: 'calc', title: 'מכפיל הון מוצדק', value: nf(jpb!, 2), est: true, formula: 'P/B מוצדק = (ROE − g) ÷ (ke − g)',
+    inputs: [{ label: 'ROE, LTM', v: `${nf(roe!.v!, 1)}%`, src: roeSrc }, { label: 'מחיר ההון (ההנחה שלך)', v: `${nf(a.ke, 2)}%` }, { label: 'צמיחה לטווח ארוך (ההנחה שלך)', v: `${nf(a.gt, 2)}%` }] });
+  const impliedProv = (): Prov => ({ k: 'calc', title: 'מחיר הון משתמע ממחיר השוק', value: `${nf(ik!, 1)}%`, unit: '%', est: true, formula: 'ke שבו שווי ה-DCF שווה לשווי השוק (פתרון נומרי, שאר ההנחות שלך)',
+    inputs: [{ label: 'שווי שוק', v: mil(mcap!), src: price ? () => k.marketCapNow(price) : undefined }, { label: 'שווי הון, DCF בשיעור זה', v: mil(mcap!), src: eqProv }] });
+  const impliedPbProv = (): Prov => ({ k: 'calc', title: 'מכפיל הון משתמע מהמודל', value: nf(r.value / eq!.v!, 2), est: true, formula: 'שווי הון DCF ÷ הון לבעלי המניות',
+    inputs: [{ label: 'שווי הון, DCF', v: mil(r.value), src: eqProv }, { label: `הון, ${periodTag(eq!.period)}`, v: mil(eq!.v!), src: () => k.explain('equity', 'q', eq!.period) }] });
   return (
     <div className="grid12">
       <Panel title="הנחות" aside={<button type="button" className="btn" onClick={() => { setA(init); setOk({ ok: false }); }}>איפוס</button>}>
         <div className="assume">
           <h4>בסיס</h4>
-          <label>רווח נקי בסיס<small>מיליוני ש"ח · ברירת מחדל: LTM עד {base.period}</small></label><Num value={a.e0} onChange={(v) => set({ e0: v })} step={10} />
+          <label>רווח נקי בסיס<small>מיליוני ש"ח · ברירת מחדל: <Sourced src={() => k.explain('profit', 'ltm', base.period)}>LTM עד {periodTag(base.period)}</Sourced></small></label><Num value={a.e0} onChange={(v) => set({ e0: v })} step={10} />
           <h4>תחזית</h4>
           <label>צמיחת רווח שנתית<small>% · ברירת מחדל: ROE LTM × 60%, בטווח 2% עד 6%</small></label><Num value={a.g} onChange={(v) => set({ g: v })} step={0.5} />
           <label>שנות תחזית</label><Num value={a.years} onChange={(v) => set({ years: Math.max(1, Math.min(15, Math.round(v) || 1)) })} />
@@ -117,16 +158,16 @@ export function Dcf() {
         <Panel>
           {!ok && <div className="illus"><b>המחשה בהנחות ברירת מחדל</b><span>ההנחות טרם נקבעו או אושרו. התוצאה מדגימה את המכניקה ואינה הערכת שווי.</span><button type="button" className="btn" onClick={() => setOk({ ok: true })}>אישור ההנחות</button></div>}
           <div className={`verdict${ok ? '' : ' ghost'}`}>
-            <div><span className="lbl">{ok ? 'שווי למניה' : 'שווי למניה, המחשה'} <span className="chip est">{ok ? 'אומדן' : 'המחשה'}</span></span><span className="big num"><Count value={perShare} dec={2} /></span> <span className="muted">ש"ח</span></div>
-            {ok && <div><span className="lbl">מול מחיר {px != null && <span className="num">{nf(px, 2)}</span>}</span><span className={`big num ${(upside ?? 0) >= 0 ? 'pos' : 'neg'}`}><Count value={upside} dec={1} suffix="%" signed /></span></div>}
-            <div><span className="lbl">שווי הון</span><span className="num" style={{ fontSize: 20, fontWeight: 600 }}><Count value={r.value} /></span> <span className="muted">מיליוני ש"ח</span></div>
+            <div><span className="lbl">{ok ? 'שווי למניה' : 'שווי למניה, המחשה'} <span className="chip est">{ok ? 'אומדן' : 'המחשה'}</span></span><span className="big num"><Sourced src={perShareProv}><Count value={perShare} dec={2} /></Sourced></span> <span className="muted">ש"ח</span></div>
+            {ok && <div><span className="lbl">מול מחיר {px != null && price && <Sourced src={() => priceProv(price)}><span className="num">{nf(px, 2)}</span></Sourced>}</span><span className={`big num ${(upside ?? 0) >= 0 ? 'pos' : 'neg'}`}><Sourced src={upsideProv}><Count value={upside} dec={1} suffix="%" signed /></Sourced></span></div>}
+            <div><span className="lbl">שווי הון</span><span className="num" style={{ fontSize: 20, fontWeight: 600 }}><Sourced src={eqProv}><Count value={r.value} /></Sourced></span> <span className="muted">מיליוני ש"ח</span></div>
           </div>
           <table><tbody>
             <tr><td>ערך נוכחי של חלוקות, {a.years} שנים</td><td><span className="num">{nf(r.sum, 0)}</span></td><td><span className="num muted">{pct(r.sum / r.value * 100, 0)}</span></td></tr>
             <tr><td>ערך נוכחי של ערך הסיום</td><td><span className="num">{nf(r.pvTv, 0)}</span></td><td><span className="num muted">{pct(r.pvTv / r.value * 100, 0)}</span></td></tr>
-            <tr><td>מכפיל הון משתמע מהמודל</td><td><span className="num">{eq?.v ? nf(r.value / eq.v, 2) : '–'}</span></td><td /></tr>
-            <tr><td>מכפיל הון מוצדק: <bdi dir="ltr">(ROE − g) / (ke − g)</bdi><span className="dim">ROE {roe?.v != null ? pct(roe.v, 1) : '–'}, LTM</span></td><td><span className="num">{jpb == null ? '–' : nf(jpb, 2)}</span></td><td /></tr>
-            <tr><td>מחיר הון משתמע ממחיר השוק</td><td><span className="num">{ik == null ? '–' : pct(ik, 1)}</span></td><td /></tr>
+            <tr><td>מכפיל הון משתמע מהמודל</td><td>{eq?.v ? <Sourced src={impliedPbProv}><span className="num">{nf(r.value / eq.v, 2)}</span></Sourced> : <span className="num">–</span>}</td><td /></tr>
+            <tr><td>מכפיל הון מוצדק: <bdi dir="ltr">(ROE − g) / (ke − g)</bdi><span className="dim">ROE {roe?.v != null ? <Sourced src={roeSrc!}>{pct(roe.v, 1)}</Sourced> : '–'}, LTM</span></td><td>{jpb == null ? <span className="num">–</span> : <Sourced src={justProv}><span className="num">{nf(jpb, 2)}</span></Sourced>}</td><td /></tr>
+            <tr><td>מחיר הון משתמע ממחיר השוק</td><td>{ik == null ? <span className="num">–</span> : <Sourced src={impliedProv}><span className="num">{pct(ik, 1)}</span></Sourced>}</td><td /></tr>
           </tbody></table>
         </Panel>
         <div className="grid2">
@@ -166,7 +207,7 @@ const BASIS: Record<Basis, { label: string; amount: string; mult: string; value:
 };
 
 export function Sotp() {
-  const { k, aum, px } = useV();
+  const { k, aum, px, price } = useV();
   const eq = k.latest('equity');
   // only parts with a figure behind them: a part at zero is added by the user, with the segment profit read from the profit-sources tab
   const init: { parts: Part[]; adj: number } = { adj: 0, parts: [
@@ -183,14 +224,22 @@ export function Sotp() {
   const sh = k.lastShares(), mcap = px && sh ? (px * sh) / 1e6 : null;
   const perShare = sh ? (total * 1e6) / sh : null, gap = mcap && total ? (mcap / total - 1) * 100 : null;
   const pal = palette();
+  const mil = (v: number) => `${nf(v, 0)} מיליוני ש"ח`;
+  const totalProv = (): Prov => ({ k: 'calc', title: 'סכום החלקים', value: mil(total), unit: 'מיליוני ש"ח', est: true, formula: 'סכום החלקים = Σ (בסיס × מכפיל) + התאמות חברת האם',
+    inputs: [...s.parts.map((p, i) => ({ label: `${p.name} (${BASIS[p.basis].mult} ${nf(p.mult, 2)}, ההנחה שלך)`, v: mil(vals[i]), src: p.basis === 'book' && eq?.v != null && p.amount === Math.round(eq.v) ? () => k.explain('equity', 'q', eq.period) : undefined })), { label: 'התאמות חברת האם (ההנחה שלך)', v: mil(Number.isFinite(s.adj) ? s.adj : 0) }] });
+  const perShareProv = (): Prov => perShare == null ? { k: 'none', title: 'שווי למניה', why: 'מספר המניות אינו ניתן לגזירה' } : { k: 'calc', title: 'שווי למניה, SOTP', value: `${nf(perShare, 2)} ש"ח`, unit: 'ש"ח', est: true, formula: 'שווי למניה = סכום החלקים ÷ מניות',
+    inputs: [{ label: 'סכום החלקים', v: mil(total), src: totalProv }, { label: 'מניות', v: `${nf(sh! / 1e6, 1)} מיליון`, src: () => k.sharesProv() }] };
+  const mcapProv = (): Prov => (price ? k.marketCapNow(price) : { k: 'none', title: 'שווי שוק', why: 'אין מחיר לחברה' });
+  const gapProv = (): Prov => gap == null ? { k: 'none', title: 'שווי שוק מול סכום החלקים', why: 'אין מחיר או סכום' } : { k: 'calc', title: 'שווי שוק מול סכום החלקים', value: `${nf(gap, 1)}%`, unit: '%', est: true, formula: 'פער = שווי שוק ÷ סכום החלקים − 1',
+    inputs: [{ label: 'שווי שוק', v: mil(mcap!), src: mcapProv }, { label: 'סכום החלקים', v: mil(total), src: totalProv }] };
   return (
     <>
       <Panel>
         {!ok && <div className="illus"><b>המחשה בהנחות ברירת מחדל</b><span>החלקים והמכפילים טרם נקבעו או אושרו. התוצאה מדגימה את המכניקה ואינה הערכת שווי.</span><button type="button" className="btn" onClick={() => setOk({ ok: true })}>אישור ההנחות</button></div>}
         <div className={`verdict${ok ? '' : ' ghost'}`}>
-          <div><span className="lbl">{ok ? 'שווי למניה' : 'שווי למניה, המחשה'} <span className="chip est">{ok ? 'אומדן' : 'המחשה'}</span></span><span className="big num"><Count value={perShare} dec={2} /></span> <span className="muted">ש"ח</span></div>
-          {ok && <div><span className="lbl">שווי שוק מול סכום החלקים</span><span className={`big num ${(gap ?? 0) <= 0 ? 'pos' : 'neg'}`}><Count value={gap} dec={1} suffix="%" signed /></span></div>}
-          <div><span className="lbl">סכום החלקים</span><span className="num" style={{ fontSize: 20, fontWeight: 600 }}><Count value={total} /></span> <span className="muted">מיליוני ש"ח{ok && mcap != null && <> · שוק <span className="num">{nf(mcap, 0)}</span></>}</span></div>
+          <div><span className="lbl">{ok ? 'שווי למניה' : 'שווי למניה, המחשה'} <span className="chip est">{ok ? 'אומדן' : 'המחשה'}</span></span><span className="big num"><Sourced src={perShareProv}><Count value={perShare} dec={2} /></Sourced></span> <span className="muted">ש"ח</span></div>
+          {ok && <div><span className="lbl">שווי שוק מול סכום החלקים</span><span className={`big num ${(gap ?? 0) <= 0 ? 'pos' : 'neg'}`}><Sourced src={gapProv}><Count value={gap} dec={1} suffix="%" signed /></Sourced></span></div>}
+          <div><span className="lbl">סכום החלקים</span><span className="num" style={{ fontSize: 20, fontWeight: 600 }}><Sourced src={totalProv}><Count value={total} /></Sourced></span> <span className="muted">מיליוני ש"ח{ok && mcap != null && <> · שוק <Sourced src={mcapProv}><span className="num">{nf(mcap, 0)}</span></Sourced></>}</span></div>
         </div>
         <Chart label="סכום החלקים" height={70} deps={[vals.join(), s.adj, mcap, ok]} build={() => {
           const b = chartBase();

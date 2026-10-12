@@ -6,6 +6,8 @@ import { useIfrsCompany, useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
 import { he, isPct, periodName, segName } from './CompanyIfrs';
+import { Sourced } from '../components/Source';
+import { calc, factPeriod, factUrl, ifrsProv } from './companyProv';
 import '../styles/review.css';
 
 const SECTIONS: [string, string[]][] = [
@@ -23,24 +25,31 @@ const prevPeriod = (p: string) => ({ Q1: `${Number(p.slice(0, 4)) - 1}FY`, Q2: `
 const textFirst = (a: IfrsFact, b: IfrsFact) => Number(a.src === 'chart') - Number(b.src === 'chart');
 const yearBack = (iso: string) => `${Number(iso.slice(0, 4)) - 1}${iso.slice(4)}`;
 
+const unitOf = (f: IfrsFact) => (isPct(f.m) ? '%' : 'מיליוני ש"ח');
+const txtOf = (f: IfrsFact) => nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
+const titleOf = (f: IfrsFact) => `${he(f.m)}${f.g !== 'group' ? ` · ${segName(f.s)}` : ''}`;
+const provOf = (f: IfrsFact, d: IfrsData, p: string) => ifrsProv(f, d, p, { title: titleOf(f), value: txtOf(f), unit: unitOf(f) });
+
 function Val({ f, d, p }: { f: IfrsFact | null; d: IfrsData; p: string }) {
   if (!f) return <span className="muted">–</span>;
-  const url = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === p)?.url;
-  const txt = nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
-  const v = url && f.pg != null ? <a className={`num ${f.v < 0 ? 'neg' : ''}`} href={`${url}#page=${f.pg}`} target="_blank" rel="noreferrer" title={`${f.u !== undefined ? 'מצגת, ' : ''}עמ׳ ${f.pg}`}>{txt}</a> : <span className={`num ${f.v < 0 ? 'neg' : ''}`}>{txt}</span>;
-  return <>{v}<IncChip f={f} /></>;
+  const url = factUrl(f, d, p), txt = txtOf(f);
+  const body = <span className={`num ${f.v < 0 ? 'neg' : ''}`}>{txt}</span>;
+  return <><Sourced src={() => provOf(f, d, p)} href={url && f.pg != null ? `${url}#page=${f.pg}` : null} title={`${f.u !== undefined ? 'מצגת, ' : ''}${f.pg != null ? `עמ׳ ${f.pg}` : 'מקור הנתון'}`}>{body}</Sourced><IncChip f={f} /></>;
 }
-function Delta({ a, b }: { a: IfrsFact | null; b: IfrsFact | null }) {
+/** change between two printed figures: both sides open their own page */
+function Delta({ a, b, d, pa, pb }: { a: IfrsFact | null; b: IfrsFact | null; d: IfrsData; pa: string; pb: string }) {
   if (!a || !b) return null;
-  let txt: string, x: number;
-  if (isPct(a.m)) { x = a.v - b.v; txt = `${x > 0 ? '+' : ''}${nf(x, 1)} נק׳`; }
-  else if (b.v === 0 || (a.v < 0) !== (b.v < 0)) { x = a.v - b.v; txt = `${x > 0 ? '+' : ''}${nf(x, 0)}`; }
+  let txt: string, x: number, formula: string;
+  if (isPct(a.m)) { x = a.v - b.v; txt = `${x > 0 ? '+' : ''}${nf(x, 1)} נק׳`; formula = 'נוכחי − קודם (נק׳)'; }
+  else if (b.v === 0 || (a.v < 0) !== (b.v < 0)) { x = a.v - b.v; txt = `${x > 0 ? '+' : ''}${nf(x, 0)}`; formula = 'נוכחי − קודם'; }
   else {
     x = (a.v / b.v - 1) * 100 * (b.v < 0 ? -1 : 1);
     // beyond a tripling a percentage stops informing: show the multiple
     txt = Math.abs(x) > 300 && b.v > 0 ? `×${nf(a.v / b.v, 1)}` : pct(x, 1, true);
+    formula = 'נוכחי ÷ קודם − 1';
   }
-  return <span className={`chg num ${x < 0 ? 'neg' : x > 0 ? 'pos' : 'muted'}`}>{txt}</span>;
+  const src = () => calc(`${titleOf(a)} · שינוי`, txt, formula, [[a, pa], [b, pb]].map(([f, p]) => ({ label: factPeriod(f as IfrsFact), v: txtOf(f as IfrsFact), src: () => provOf(f as IfrsFact, d, p as string) })), txt.includes('%') ? '%' : unitOf(a));
+  return <Sourced src={src}><span className={`chg num ${x < 0 ? 'neg' : x > 0 ? 'pos' : 'muted'}`}>{txt}</span></Sourced>;
 }
 
 /** Reported values of one row across the extracted reports, oldest first, the latest marked. */
@@ -130,8 +139,8 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
                   <td className="lbl">{multi(i) ? segName(r.f.s) : <>{he(r.f.m)}{r.f.g !== 'group' && <span className="muted"> · {segName(r.f.s)}</span>}</>}
                     {(r.f.b !== 'na' || s.main.get(r.f.m) !== 'na' || r.W === 'ytd' && win === 'q' || r.at !== end || r.n > 1 || r.f.src === 'chart') && <span className="dim">{(r.f.b !== 'na' || s.main.get(r.f.m) !== 'na') && <span className={`chip ${r.f.b === s.main.get(r.f.m) ? '' : 'est'}`} title={r.f.b === s.main.get(r.f.m) ? undefined : `בסיס שונה מרוב השורות בבלוק (${BASIS[s.main.get(r.f.m) ?? 'na']}); הסימן כפי שהודפס`}>{BASIS[r.f.b]}</span>}{r.W === 'ytd' && win === 'q' && <span className="chip est">YTD</span>}{r.at !== end && <span className="chip est" title="המדד פורסם לתאריך שונה מתקופת הדוח">נכון ל־<span className="num">{dateLabel(r.at)}</span></span>}{r.n > 1 && <span className="chip est" title="אותה שורה מופיעה בדוח בכמה ערכים; ראו לשונית IFRS 17">{r.n} ערכים</span>}{r.f.src === 'chart' && <span className="chip est">מגרף</span>}</span>}</td>
                   <td><Val f={r.f} d={d} p={P} /><div className="narrow-only"><Trend pts={r.trend} /></div></td>
-                  <td><Val f={r.yoy} d={d} p={P} /><Delta a={r.f} b={r.yoy} /></td>
-                  {!annual && <td><Val f={r.qoq} d={d} p={r.qoqIn} /><Delta a={r.f} b={r.qoq} /></td>}
+                  <td><Val f={r.yoy} d={d} p={P} /><Delta a={r.f} b={r.yoy} d={d} pa={P} pb={P} /></td>
+                  {!annual && <td><Val f={r.qoq} d={d} p={r.qoqIn} /><Delta a={r.f} b={r.qoq} d={d} pa={P} pb={r.qoqIn} /></td>}
                   <td className="wide-only"><Trend pts={r.trend} /></td>
                 </tr>
               </Fragment>
