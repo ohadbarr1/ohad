@@ -116,23 +116,27 @@ function Bars({ title, metric, set, cos: every, dec = 0, pct, unit, g, agg, b, s
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: (v: number | null) => (v == null ? '–' : fmt(v)) },
       xAxis: { type: 'category', inverse: true, data: list, axisTick: { show: false }, axisLine: { lineStyle: { color: cb.ln } },
         axisLabel: { interval: 0, color: cb.fg, fontSize: 12, lineHeight: 16,
-          formatter: (c: string) => { const gr = growth(c), s = sub ? lts.v(sub, c, inst(b)) : null; return `${c === focus ? '{f|' : '{n|'}${lts.name(c)}}${gr == null ? '' : `\n{${gr >= 0 ? 'u' : 'd'}|${sign(gr)}}`}${s == null ? '' : `\n{s|נכס ${nf(s, 0)}}`}`; },
-          rich: { n: { color: cb.fg, fontSize: 12 }, f: { color: cb.accent, fontSize: 12, fontWeight: 700 }, u: { color: cb.up, fontSize: 11, fontWeight: 600 }, d: { color: cb.down, fontSize: 11, fontWeight: 600 }, s: { color: cb.mu, fontSize: 10.5 } } } },
+          formatter: (c: string) => { const gr = growth(c), s = sub ? lts.v(sub, c, inst(b)) : null; return `${lts.mark(metric, c) ? '{w|' : c === focus ? '{f|' : '{n|'}${lts.name(c)}${lts.mark(metric, c) ? ' *' : ''}}${gr == null ? '' : `\n{${gr >= 0 ? 'u' : 'd'}|${sign(gr)}}`}${s == null ? '' : `\n{s|נכס ${nf(s, 0)}}`}`; },
+          rich: { n: { color: cb.fg, fontSize: 12 }, f: { color: cb.accent, fontSize: 12, fontWeight: 700 }, w: { color: cssColor('--warn'), fontSize: 12, fontWeight: 800 }, u: { color: cb.up, fontSize: 11, fontWeight: 600 }, d: { color: cb.down, fontSize: 11, fontWeight: 600 }, s: { color: cb.mu, fontSize: 10.5 } } } },
       yAxis: { type: 'value', show: false },
       series: ps.map((p, i) => ({
         name: periodLabel(p), type: 'bar', barGap: '8%', barCategoryGap: '22%', itemStyle: { color: t[i], borderRadius: [2, 2, 0, 0] },
-        data: list.map((c) => { const v = lts.v(metric, c, p); return v == null ? null : { value: v, label: { position: v < 0 ? 'bottom' : 'top' }, itemStyle: c === focus ? { borderColor: cb.accent, borderWidth: 1.5 } : undefined }; }),
-        label: { show: true, color: cb.fg, fontSize: 10.5, formatter: (x: { value: number }) => fmt(x.value) },
+        data: list.map((c) => { const v = lts.v(metric, c, p); return v == null ? null : { value: v, label: { position: v < 0 ? 'bottom' : 'top' }, itemStyle: lts.mark(metric, c) ? { borderColor: cssColor('--warn'), borderWidth: 2, borderType: 'dashed', opacity: 0.72 } : c === focus ? { borderColor: cb.accent, borderWidth: 1.5 } : undefined }; }),
+        label: { show: true, color: cb.fg, fontSize: 10.5, formatter: (x: { value: number }) => ltr(fmt(x.value)) },
       })),
     };
   };
   const hit = (list: string[]) => (si: number, di: number) => open(provOf(lts, title, metric, list[di], ps[si], unit, dec));
   const w = cats.length * (ps.length * (pct && dec >= 2 ? 36 : 24) + 22);
+  const marks = [...new Set(cats.map((c) => lts.mark(metric, c)).filter(Boolean))] as string[];
   return (
+    <>
     <div className="sx-row">
       <div className="sx-scroll"><div style={{ minWidth: w }}><Chart label={title} height={height} deps={[baseKey(b), focus, metric, view]} build={build(cats, false)} onPoint={hit(cats)} /></div></div>
       {agg === 'own' && ps.some((p) => lts.v(metric, 'all', p) != null) && <div className="sx-agg"><Chart label={`${title}, ${lts.name('all')}`} height={height} deps={[baseKey(b), metric, view]} build={build(['all'], true)} onPoint={hit(['all'])} exportName="" /></div>}
     </div>
+    {marks.map((t) => <p key={t} className="sx-mark"><b>*</b> {t}</p>)}
+    </>
   );
 }
 

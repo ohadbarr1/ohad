@@ -226,13 +226,19 @@ SEG_HE = {"pension": "פנסיה", "pension_new": "פנסיה חדשה", "pensio
 TERMS = [("[IFRS 4 basis, not comparable with 2024 onward unless stated] ", "[בסיס IFRS 4] "),
          ("liabilities for yield-dependent investment contracts at the balance date", "התחייבויות בגין חוזי השקעה תלויי תשואה ליום המאזן"),
          ("liabilities for yield-dependent investment contracts", "התחייבויות בגין חוזי השקעה תלויי תשואה"),
-         ("(year to date)", "(מצטבר)"), ("receipts for investment contracts", "תקבולים בגין חוזי השקעה"), ("three months", "שלושה חודשים"),
+         ("(year to date)", "(מצטבר)"), (", as printed", ", כפי שהודפס"), ("(latest annual report that prints it)", "(הדוח השנתי האחרון שמדפיס זאת)"),
+         ("as printed", "כפי שהודפס"), ("receipts for investment contracts", "תקבולים בגין חוזי השקעה"), ("three months", "שלושה חודשים"),
          ("ic.dep", "הפקדות"), ("ic.fees", "דמי ניהול"), ("ic.", ""),
          ("sum of the printed assets at the balance date", "סכום הנכסים המודפסים ליום המאזן"), ("fees collected from deposits", "דמי ניהול שנגבו מהפקדות"),
          ("fees collected from assets", "דמי ניהול שנגבו מנכסים"), ("management fee income", "הכנסות מדמי ניהול"), ("average assets", "נכסים ממוצעים"),
          ("printed for the three months", "כפי שהודפס לשלושת החודשים"), ("printed for", "כפי שהודפס לתקופה"), ("deposits", "הפקדות"),
          ("tr_in", "ניוד פנימה"), ("tr_out", "ניוד החוצה"), ("fees", "דמי ניהול"), ("sm", "מכירה ושיווק"), ("ga", "הנהלה וכלליות"),
          ("nb", "פרמיה משונתת"), ("dep", "הפקדות"), (" x ", " × ")]
+
+
+# Figures a reader must not compare at face value: the chart marks the company and prints the reason under it.
+MARKS = {"meitav": {"metrics": ["pen.op", "pen.op_m", "pen.ga_fees", "pen.ga_aum", "gem.op", "gem.op_m", "gem.ga_fees", "gem.ga_aum", "am.op", "am.op_m"],
+                    "text": "מיטב: לפני דמי ניהול לחברה בעלת השליטה (201 מיליוני ש\"ח ב-FY'24, 208 ב-FY'25), שדרכם נרשמת רוב התקורה. לא בר השוואה כמות שהוא לחברות שמציגות הנהלה וכלליות מלאות."}}
 
 
 def formula_he(t):
@@ -419,7 +425,7 @@ def main():
         print("CHECK", b)
     added, diffs = reports()
     print(f"from the reports: {added} figures")
-    out = {"source": "דוחות החברות המנהלות וחברות הביטוח", "companies": CO, "notes": {}, "facts": facts}
+    out = {"source": "דוחות החברות המנהלות וחברות הביטוח", "companies": CO, "notes": {}, "marks": MARKS, "facts": facts}
     dest = ROOT / "web" / "public" / "data" / "lts.json"
     dest.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{len(facts)} figures, {len({f[0] for f in facts})} metrics, {len(bad)} inconsistencies -> {dest} ({dest.stat().st_size // 1024} KB)")

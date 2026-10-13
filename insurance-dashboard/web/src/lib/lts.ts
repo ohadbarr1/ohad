@@ -1,5 +1,5 @@
 /** Long-term savings sector comparison: figures keyed metric x company x period, each with the slide or report it was read from. */
-export interface LtsData { source: string; companies: Record<string, string>; notes: Record<string, string>; facts: [string, string, string, number, number][] }
+export interface LtsData { source: string; companies: Record<string, string>; notes: Record<string, string>; marks?: Record<string, { metrics: string[]; text: string }>; facts: [string, string, string, number, number][] }
 
 /** The report a chart is measured on: a year and a quarter. Every period a chart shows is derived from it. */
 export interface Base { y: number; q: number }
@@ -67,6 +67,8 @@ export class Lts {
   slide(metric: string, c: string, p: string): number | null { return this.m.get(`${metric}|${c}|${p}`)?.[1] ?? null; }
   /** companies with figures built from their own reports */
   reported(): string[] { return [...new Set(this.d.facts.filter((f) => f[4] === 0).map((f) => f[1]))]; }
+  /** the reason a company's figure for this metric is not comparable as it stands, if there is one */
+  mark(metric: string, c: string): string | null { const m = this.d.marks?.[c]; return m && m.metrics.includes(metric) ? m.text : null; }
   name(c: string): string { return this.d.companies[c] ?? c; }
   has(metric: string, p: string): boolean { return this.byMetric.get(metric)?.has(p) ?? false; }
   /** reports on which a chart can be measured: those whose own period carries the metric */
