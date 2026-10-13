@@ -1,7 +1,7 @@
 {"company":"direct",
 "facts":[
 {"metric":"ic.aum","period":"2022-12","value":67.143,"formula":"[IFRS 4 basis, not comparable with 2024 onward unless stated] liabilities for yield-dependent investment contracts at the balance date, as printed","parts":[{"file":"2023FY","metric":"investment_contract_aum","segment":"investment_contracts","window":"instant","date":"2022-12-31","value":67143,"unit":"NIS thousands","page":234,"label":"התחייבויות בגין חוזי השקעה תלויי תשואה"}]},
-{"metric":"ic.aum","period":"2023-12","value":70.424,"formula":"[IFRS 4 basis, not comparable with 2024 onward unless stated] liabilities for yield-dependent investment contracts at the balance date, as printed (the IFRS 17 opening balance of 1.1.2024 is 292.529: basis break)","parts":[{"file":"2023FY","metric":"investment_contract_aum","segment":"investment_contracts","window":"instant","date":"2023-12-31","value":70424,"unit":"NIS thousands","page":234,"label":"התחייבויות בגין חוזי השקעה תלויי תשואה"}]},
+{"metric":"ic.aum","period":"2023-12","value":292.529,"formula":"[IFRS 17 basis] liabilities for yield-dependent investment contracts: opening balance at 1.1.2024 (= 31.12.2023 restated) as printed in the first IFRS 17 annual report; replaces the IFRS 4 balance of 31.12.2023 (70.424 NIS m): basis break","parts":[{"file":"2025FY","metric":"investment_contract_aum","segment":"investment_contracts","window":"instant","date":"2023-12-31","value":292529,"unit":"NIS thousands","page":119,"label":"התחייבויות בגין חוזי השקעה תלויי תשואה","basis":"IFRS17"}],"basis":"IFRS17"},
 {"metric":"ic.aum","period":"2024-03","value":297.715,"formula":"liabilities for yield-dependent investment contracts at the balance date, as printed","parts":[{"file":"2025Q1","metric":"investment_contract_aum","segment":"investment_contracts","window":"instant","date":"2024-03-31","value":297715,"unit":"NIS thousands","page":27,"label":"התחייבויות בגין חוזי השקעה תלויי תשואה"}]},
 {"metric":"ic.aum","period":"2024-06","value":297.27,"formula":"liabilities for yield-dependent investment contracts at the balance date, as printed","parts":[{"file":"2025Q2","metric":"investment_contract_aum","segment":"investment_contracts","window":"instant","date":"2024-06-30","value":297270,"unit":"NIS thousands","page":34,"label":"התחייבויות בגין חוזי השקעה תלויי תשואה"}]},
 {"metric":"ic.aum","period":"2024-09","value":299.299,"formula":"liabilities for yield-dependent investment contracts at the balance date, as printed","parts":[{"file":"2025Q3","metric":"investment_contract_aum","segment":"investment_contracts","window":"instant","date":"2024-09-30","value":299299,"unit":"NIS thousands","page":34,"label":"התחייבויות בגין חוזי השקעה תלויי תשואה"}]},
@@ -60,8 +60,6 @@
 {"metric":"ic.fees","period":"Q2-2026","value":0.859,"formula":"ic.fees printed for the three months Q2-2026","parts":[{"file":"2026Q2","metric":"management_fees","segment":"investment_contracts","window":"q","date":"2026-06-30","value":859,"unit":"NIS thousands","page":58,"label":"דמי ניהול קבועים בגין חוזי השקעה"}]}
 ],
 "anchors":[
-{"metric":"ic.aum","period":"2022-12","deck":67.143,"ours":67.0,"ours_exact":67.143,"ok":false},
-{"metric":"ic.aum","period":"2023-12","deck":70.424,"ours":70.0,"ours_exact":70.424,"ok":false},
 {"metric":"ic.aum","period":"2024-03","deck":297.715,"ours":298.0,"ours_exact":297.715,"ok":false},
 {"metric":"ic.aum","period":"2024-06","deck":297.27,"ours":297.0,"ours_exact":297.27,"ok":false},
 {"metric":"ic.aum","period":"2024-09","deck":299.299,"ours":299.0,"ours_exact":299.299,"ok":false},

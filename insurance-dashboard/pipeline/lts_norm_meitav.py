@@ -49,19 +49,14 @@ def build():
          "fees_a = active+inactive plus pension recipients populations of the collected-from-assets rows."},
         {"series": "pen.fees / sm / ga ; gem.fees / sm / ga", "key": "all", "rule": "operating-segments note: pension segment (new funds) and "
          "provident segment, rows 'הכנסות מדמי ניהול', 'עמלות, הוצאות שיווק והוצאות רכישה אחרות', 'הוצאות הנהלה וכלליות'. The "
-         "management fee Meitav pays to its controlling company (management_fees_to_controlling_company) is a separate expense line, "
-         "not part of S&M or G&A, and is not deducted (the shared method defines op = fees - sm - ga)."},
+         "management fee Meitav pays to its controlling company (management_fees_to_controlling_company) is a separate expense line "
+         "and is not part of S&M or G&A (see the note on pen.ga / gem.ga)."},
     ]
 
     def flow(name, metric, segs, scale, extra=fund_table):
         c = M.collect(F, lambda x: x["metric"] == metric and x["segment"] in segs and x["window"] != "instant" and extra(x), scale,
                       magnitude=name.split(".")[1] in ("tr_in", "tr_out"))
         return M.choose_base(c, name, notes)
-
-    def add(a, b):
-        both = lambda x, y: {k: M.V(x[k].value + y[k].value, x[k].parts + y[k].parts) for k in x if k in y}
-        return {"first": both(a["first"], b["first"]), "annual": both(a["annual"], b["annual"]), "q": both(a["q"], b["q"]),
-                "all": {k: both(a["all"][k], b["all"][k]) for k in a["all"] if k in b["all"]}}
 
     def bal(name, segs):
         c = M.collect(F, lambda x: x["metric"] == "aum" and x["segment"] in segs and x["window"] == "instant"
@@ -78,8 +73,7 @@ def build():
         "fees_d": flow("pen.fees_d", "management_fees_from_deposits", PEN, 1e6),
         "fees": flow("pen.fees", "management_fees", ("pension",), 1e6, seg_note),
         "sm": flow("pen.sm", "selling_and_marketing_expenses", ("pension",), 1e6, seg_note),
-        "ga": add(flow("pen.ga", "general_and_administrative_expenses", ("pension",), 1e6, seg_note),
-                 flow("pen.ga (parent)", "management_fees_to_controlling_company", ("pension",), 1e6, seg_note)),
+        "ga": flow("pen.ga", "general_and_administrative_expenses", ("pension",), 1e6, seg_note),  # parent fee excluded (user decision)
     }
     gem = {
         "aum": bal("gem.aum", GEM),
@@ -88,15 +82,18 @@ def build():
         "dep": flow("gem.dep", "deposits", GEM, 1e9),
         "fees": flow("gem.fees", "management_fees", ("provident",), 1e6, seg_note),
         "sm": flow("gem.sm", "selling_and_marketing_expenses", ("provident",), 1e6, seg_note),
-        "ga": add(flow("gem.ga", "general_and_administrative_expenses", ("provident",), 1e6, seg_note),
-                 flow("gem.ga (parent)", "management_fees_to_controlling_company", ("provident",), 1e6, seg_note)),
+        "ga": flow("gem.ga", "general_and_administrative_expenses", ("provident",), 1e6, seg_note),  # parent fee excluded (user decision)
     }
     notes += [
-        {"series": "pen.ga / gem.ga", "key": "all", "rule": "ga = 'הוצאות הנהלה וכלליות' + 'דמי ניהול לחברה בעלת שליטה' (management fee to the controlling "
-         "company, Meitav Investment House), both rows of the same segment note. Meitav prints the parent fee as its own expense line; "
-         "the deck's G&A contains it (pension FY2025 op 65 = 186.0 - 31.4 - 3.6 - 85.9; ga_fees 48 = (3.6 + 85.9) / 186.0), while the "
-         "deck's S&M does not (sm_fees 17 = 31.4 / 186.0). Same for the provident segment (FY2025 op 149 = 610.7 - 322.5 - 16.3 - 122.5). "
-         "Without the parent fee 19 anchors are lost. Printed profit before tax is not used."},
+        {"series": "pen.ga / gem.ga", "key": "all", "rule": "USER DECISION: the line 'דמי ניהול לחברה בעלת שליטה' (management fee to the controlling company, "
+         "Meitav Investment House; metric management_fees_to_controlling_company) is an intra-group transfer and is NOT deducted in the deck metric "
+         "'operating profit' (= fees - sm - ga), in either segment and in every period. Until now the mapping added it to G&A (the deck's G&A contained it); "
+         "it now enters neither G&A nor S&M, so ga = 'הוצאות הנהלה וכלליות' only. Amounts excluded (NIS m, from the operating-segments note; "
+         "pension / provident / total): FY2023 77.359 / 129.074 / 206.433; FY2024 81.741 / 119.732 / 201.473; FY2025 85.883 / 122.468 / 208.351; "
+         "H1-2026 40.830 / 61.550 / 102.380 (quarters: Q1-2026 20.398 / 30.078; Q2-2026 20.432 / 31.472). The deck's own G&A-based figures (e.g. pension FY2025 "
+         "op 65 = 186.0 - 31.4 - 3.6 - 85.9; ga_fees 48 = (3.6 + 85.9) / 186.0; provident FY2025 op 149 = 610.7 - 322.5 - 16.3 - 122.5) do deduct the fee, "
+         "so the anchors that depend on pen.ga / gem.ga (ga, op, ga_fees, ga_aum, op_m, and the sector rates built from them) now differ from the deck by design. "
+         "Printed profit before tax is not used."},
         {"series": "pen.fees / gem.fees", "key": "all", "rule": "fees = 'הכנסות מדמי ניהול מקופות גמל ומקרנות פנסיה, נטו' only. The separate segment-note line "
          "'הכנסות (החזרי הכנסות) דמי ניהול בגין תביעות משפטיות' (pension FY2024 -2.000; provident FY2023 -2.918, FY2025 +203.235, H1-2026 +1.473) "
          "is not added. The deck's pension FY2024 figures (op 46, gross_m 0.275, op_m 0.097, ga_fees 55) need fees of 151.406 = 153.406 - 2.000, "

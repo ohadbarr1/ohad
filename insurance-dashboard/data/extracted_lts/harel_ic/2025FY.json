@@ -399,6 +399,19 @@
    "label": "יתרה ליום 31 בדצמבר 2025",
    "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
    "note": "closing balance of investment-contract liabilities, total column of the roll-forward in note 17 (not-yield-dependent 89, yield-dependent 23025)"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 19122,
+   "unit": "NIS million",
+   "page": 210,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "basis": "IFRS17",
+   "note": "opening balance at 1.1.2024 under IFRS 17 (= 31.12.2023 restated); same balance-sheet line and printed figure as the fact dated 2024-01-01 of this file"
   }
  ],
  "not_found": [

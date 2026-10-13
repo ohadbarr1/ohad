@@ -18,8 +18,12 @@ report that prints it. A printed three-month figure that differs from the year-t
 
 BASIS: Israeli insurers adopted IFRS 17 on 1.1.2025 and restated 2024. Figures of 2024 and later are taken from the reports of 2025
 and later (a 2024 period from the 2025 report that prints it as a comparative); the 2024 reports (IFRS 4) are not used for them.
-Figures of 2023 and earlier exist on IFRS 4 only and are labelled so in `formula`. Where the IFRS 4 balance of Dec-23 equals the
-IFRS 17 opening balance of 1.1.2024 the formula says so (no break at the basis change).
+Figures of 2022 and earlier exist on IFRS 4 only and are labelled so in `formula`. The one exception is ic.aum of 2023-12: the
+first IFRS 17 annual report (2025FY) prints the opening balance at 1.1.2024 (= 31.12.2023 restated) on the balance-sheet line
+used for the later balances, recorded as a raw fact dated 2023-12-31 with `"basis": "IFRS17"`; that balance replaces the IFRS 4
+one (the output fact carries `"basis": "IFRS17"` and the IFRS 4 figure in its formula). It equals the IFRS 4 balance for Phoenix,
+Hachshara, Migdal, Harel and Menora (pure investment contracts) and differs for Clal, Ayalon and Direct (savings components of
+policies separated and measured as investment contracts under IFRS 17). The Mar/Jun/Sep-23 balances stay IFRS 4 (unmarked).
 Every value is a sum of printed facts (`parts`); extracted facts are never changed."""
 import json
 
@@ -44,10 +48,25 @@ def collect(F, metric):
     def where(x):
         if x["metric"] != metric or x["segment"] != SEG:
             return False
+        if x.get("basis") == "IFRS17":
+            return False  # the IFRS 17 opening balance has its own path (opening17)
         if x["window"] == "instant":
             return x["date"][5:] in QEND  # not the 1 Jan 2024 opening balance
         return True
     return M.collect(F, where, SCALE)
+
+
+def opening17(F):
+    """IFRS 17 opening balance at 1.1.2024 (= 31.12.2023 restated), the raw fact dated 2023-12-31 with basis IFRS17. -> V or None."""
+    c = M.collect(F, lambda x: x["metric"] == METRICS["aum"] and x["segment"] == SEG and x["window"] == "instant"
+                  and x["date"] == "2023-12-31" and x.get("basis") == "IFRS17", SCALE)
+    per_file = c.get("2023-12")
+    if not per_file:
+        return None
+    v = per_file[sorted(per_file, key=M.file_end)[0]]
+    for p in v.parts:
+        p["basis"] = "IFRS17"
+    return v
 
 
 def unit_m(v):
@@ -159,20 +178,25 @@ def build(key):
 
     # ---- ic.aum: liabilities for yield-dependent investment contracts, each quarter end ----
     bal = pick(collect(F, METRICS["aum"]), "ic.aum", notes)
-    opening = {x["file"]: x["value"] * M.UNIT[x["unit"]] / SCALE for x in F
-               if x["metric"] == METRICS["aum"] and x["segment"] == SEG and x["date"] == "2024-01-01" and x["value"] is not None}
-    open17 = next(iter(opening.values()), None)
-    for d in sorted(bal):
-        v = bal[d]
+    op17 = opening17(F)
+    for d in sorted(set(bal) | ({"2023-12"} if op17 else set())):
         y = int(d[:4])
+        if d == "2023-12" and op17 is not None:
+            ifrs4 = bal.get(d)
+            txt = ("[IFRS 17 basis] liabilities for yield-dependent investment contracts: opening balance at 1.1.2024 (= 31.12.2023 restated) "
+                   "as printed in the first IFRS 17 annual report")
+            if ifrs4 is not None:
+                same = abs(ifrs4.value - op17.value) <= 2 * max(unit_m(ifrs4), unit_m(op17))
+                txt += (f"; equals the IFRS 4 balance of 31.12.2023 ({ifrs4.value:.3f}), so no break" if same else
+                        f"; replaces the IFRS 4 balance of 31.12.2023 ({ifrs4.value:.3f} NIS m): basis break")
+            f = M.fact("ic.aum", d, op17.value, txt, op17.parts)
+            f["basis"] = "IFRS17"
+            facts.append(f)
+            continue
+        v = bal[d]
         txt = "liabilities for yield-dependent investment contracts at the balance date, as printed"
         if y < 2024:
             txt = basis_tag(y) + txt
-            if d == "2023-12" and open17 is not None:
-                if abs(v.value - open17) <= 2 * unit_m(v):
-                    txt = "[IFRS 4 basis; equals the IFRS 17 opening balance of 1.1.2024, so no break] " + txt.split("] ", 1)[1]
-                else:
-                    txt += f" (the IFRS 17 opening balance of 1.1.2024 is {open17:.3f}: basis break)"
         facts.append(M.fact("ic.aum", d, v.value, txt, v.parts))
 
     # ---- ic.dep and ic.fees on every window ----

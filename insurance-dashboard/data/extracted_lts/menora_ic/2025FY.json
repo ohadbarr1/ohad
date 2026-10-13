@@ -232,6 +232,19 @@
    "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה",
    "source_entity": "מנורה מבטחים החזקות בע\"מ",
    "note": "Balance sheet, liabilities for investment contracts that are not yield-dependent (extra, not the AUM figure)"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 4836939,
+   "unit": "NIS thousand",
+   "page": 205,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "basis": "IFRS17",
+   "note": "opening balance at 1.1.2024 under IFRS 17 (= 31.12.2023 restated); same balance-sheet line and printed figure as the fact dated 2024-01-01 of this file"
   }
  ],
  "not_found": [

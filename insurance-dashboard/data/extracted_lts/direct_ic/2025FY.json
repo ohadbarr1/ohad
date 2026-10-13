@@ -148,6 +148,18 @@
    "page": 154,
    "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
    "note": "Column \"as previously reported\" (pre-IFRS 17) in the IFRS 17 transition note; investment contracts only, before the separation of the savings component of insurance contracts."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 292529,
+   "unit": "NIS thousands",
+   "page": 119,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "basis": "IFRS17",
+   "note": "opening balance at 1.1.2024 under IFRS 17 (= 31.12.2023 restated); same balance-sheet line and printed figure as the fact dated 2024-01-01 of this file"
   }
  ],
  "not_found": [

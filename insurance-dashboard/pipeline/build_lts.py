@@ -223,7 +223,12 @@ SEG_HE = {"pension": "פנסיה", "pension_new": "פנסיה חדשה", "pensio
           "veteran_pension": "ותיקה", "study_fund": "קרנות השתלמות", "investment_provident": "גמל להשקעה", "child_savings": "חיסכון לילד",
           "personal_provident": "קופות גמל אישיות", "provident_savings_compensation": "גמל לחיסכון ואישיות לפיצויים",
           "other_provident_funds": "קופות אחרות", "other_funds": "קופות אחרות"}
-TERMS = [("sum of the printed assets at the balance date", "סכום הנכסים המודפסים ליום המאזן"), ("fees collected from deposits", "דמי ניהול שנגבו מהפקדות"),
+TERMS = [("[IFRS 4 basis, not comparable with 2024 onward unless stated] ", "[בסיס IFRS 4] "),
+         ("liabilities for yield-dependent investment contracts at the balance date", "התחייבויות בגין חוזי השקעה תלויי תשואה ליום המאזן"),
+         ("liabilities for yield-dependent investment contracts", "התחייבויות בגין חוזי השקעה תלויי תשואה"),
+         ("(year to date)", "(מצטבר)"), ("receipts for investment contracts", "תקבולים בגין חוזי השקעה"), ("three months", "שלושה חודשים"),
+         ("ic.dep", "הפקדות"), ("ic.fees", "דמי ניהול"), ("ic.", ""),
+         ("sum of the printed assets at the balance date", "סכום הנכסים המודפסים ליום המאזן"), ("fees collected from deposits", "דמי ניהול שנגבו מהפקדות"),
          ("fees collected from assets", "דמי ניהול שנגבו מנכסים"), ("management fee income", "הכנסות מדמי ניהול"), ("average assets", "נכסים ממוצעים"),
          ("printed for the three months", "כפי שהודפס לשלושת החודשים"), ("printed for", "כפי שהודפס לתקופה"), ("deposits", "הפקדות"),
          ("tr_in", "ניוד פנימה"), ("tr_out", "ניוד החוצה"), ("fees", "דמי ניהול"), ("sm", "מכירה ושיווק"), ("ga", "הנהלה וכלליות"),
@@ -233,6 +238,10 @@ TERMS = [("sum of the printed assets at the balance date", "סכום הנכסי�
 def formula_he(t):
     """The method's formula in the site's language: the same terms, word for word."""
     import re
+    if t.startswith("[IFRS 17 basis]"):
+        brk = re.search(r"replaces the IFRS 4 balance of 31\.12\.2023 \(([\d.,]+)", t)
+        return "התחייבויות בגין חוזי השקעה תלויי תשואה: יתרת פתיחה ל-1.1.2024 לפי IFRS 17, כפי שהודפסה בדוח השנתי הראשון לפי התקן" + (
+            f"; מחליפה את יתרת IFRS 4 ל-31.12.2023 ({brk.group(1)} מיליוני ש\"ח), שאינה בת השוואה" if brk else "; זהה ליתרה לפי IFRS 4")
     for en, he in TERMS:
         t = re.sub(rf"(?<![A-Za-z_]){re.escape(en)}(?![A-Za-z_])", he, t) if en.strip().isidentifier() else t.replace(en, he)
     t = re.sub(r"\b(Q[1-4]|H1|9M)-(20)(\d\d)\b", r"\1'\3", t)
@@ -248,18 +257,21 @@ def part_label(q):
 
 
 IC_ONLY = {"hachshara", "ayalon", "direct"}
+BREAK = set()  # insurers whose IFRS 17 opening balance at 1.1.2024 differs from the IFRS 4 balance at 31.12.2023
 
 
 def basis_break(metric, c, period):
-    """Investment-contract liabilities up to 31.12.2023 are printed under IFRS 4 and are not comparable with the IFRS 17 balances
-    that follow (the sector total steps from 79.8 to 88.0 NIS bn in one quarter; Direct from 70 to 298 NIS mn, its IFRS 17 opening
-    balance being 292.5). They are left out, with every rate of an investment-policy-only company whose average assets would
-    span the break. For the groups the policies are a small part of managed assets and their rates are kept."""
+    """Investment-contract liabilities of Clal, Ayalon and Direct up to 2023 were printed under IFRS 4 on a different scope
+    (Direct: 70 NIS mn against an IFRS 17 opening balance of 292.5; Clal 9,975 against 13,151). For those insurers only the
+    restated balance at 31.12.2023 is kept, earlier balances are left out, and so is every rate of an investment-policy-only
+    company whose average assets would reach back before it. The other insurers print the same figure on both bases."""
     year = int(period[:4]) if period[4:5] == "-" and period[:4].isdigit() else int(period[-4:])
+    if c not in BREAK and c != "all":
+        return False
     if metric == "ic.aum":
-        return year <= 2023
+        return year <= 2022 or (year == 2023 and period != "2023-12")
     if c in IC_ONLY and metric in ("am.rev_rate", "am.gross_m", "am.op_m", "am.aum", "am.mix.ic", "am.mix.pen", "am.mix.gem"):
-        return year <= 2023 or period in ("FY2024", "Q1-2024", "H1-2024", "9M-2024")
+        return year <= 2022 or (year == 2023 and period != "2023-12")
     return False
 
 
@@ -274,6 +286,10 @@ def reports():
     prov_dir = ROOT / "web" / "public" / "data" / "lts_prov"
     prov_dir.mkdir(parents=True, exist_ok=True)
     store = {}
+    for f in sorted((ROOT / "data" / "lts_norm").glob("ic_*.json")):
+        d = json.loads(f.read_text(encoding="utf-8"))
+        if any(r["metric"] == "ic.aum" and r["period"] == "2023-12" and r.get("basis") == "IFRS17" and "basis break" in r.get("formula", "") for r in d["facts"]):
+            BREAK.add(d["company"])
     for f in sorted((ROOT / "data" / "lts_norm").glob("*.json")):
         d = json.loads(f.read_text(encoding="utf-8"))
         c = d["company"]

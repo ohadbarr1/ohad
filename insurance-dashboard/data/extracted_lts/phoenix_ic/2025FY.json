@@ -225,6 +225,18 @@
    "page": 336,
    "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה (*)",
    "note": "balance-sheet liabilities for non-yield-dependent investment contracts; per the footnote it includes contracts for managing guaranteed-return provident funds; not the deck's investment-policy AUM"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 23787779,
+   "unit": "NIS thousands",
+   "page": 336,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "basis": "IFRS17",
+   "note": "opening balance at 1.1.2024 under IFRS 17 (= 31.12.2023 restated); same balance-sheet line and printed figure as the fact dated 2024-01-01 of this file"
   }
  ],
  "not_found": [
