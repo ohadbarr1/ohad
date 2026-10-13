@@ -15,7 +15,18 @@ export const inst = (b: Base, k = 0) => (k === 0 ? `${b.y}-${MM[b.q - 1]}` : `${
 export const ytd = (b: Base, back = 0) => `${YTD[b.q - 1]}${b.y - back}`;
 export const quarter = (b: Base, back = 0) => { const n = b.y * 4 + (b.q - 1) - back; return `Q${(n % 4) + 1}-${Math.floor(n / 4)}`; };
 
-export type PeriodSet = 'inst3' | 'inst4' | 'flow3' | 'same3' | 'annual3' | 'q6';
+export type PeriodSet = 'inst3' | 'inst4' | 'flow3' | 'same3' | 'annual3' | 'q6' | 'q5' | 'qyoy' | 'iq5' | 'iyoy';
+/** How a chart reads time: full years and the year to date, the last quarters in a row, or the same quarter year over year. */
+export type View = 'y' | 'q' | 'yoy';
+export const VIEWS: [View, string][] = [['y', 'שנים ומצטבר'], ['q', 'רבעונים ברצף'], ['yoy', 'רבעון מול רבעון']];
+const INSTANT = new Set<PeriodSet>(['inst3', 'inst4']);
+/** the period set a chart shows under a view: balances stay balances, flows become single quarters */
+export function viewSet(set: PeriodSet, view: View): PeriodSet {
+  if (view === 'y' || set === 'q6') return set;
+  if (INSTANT.has(set)) return view === 'q' ? 'iq5' : 'iyoy';
+  return view === 'q' ? 'q5' : 'qyoy';
+}
+const instBack = (b: Base, k: number) => { const n = b.y * 4 + (b.q - 1) - k; return `${Math.floor(n / 4)}-${MM[n % 4]}`; };
 export function periodsOf(set: PeriodSet, b: Base): string[] {
   switch (set) {
     case 'inst3': return b.q === 4 ? [inst(b, 2), inst(b, 1), inst(b)] : [inst(b, 2), inst(b, 1), inst(b)];
@@ -25,6 +36,10 @@ export function periodsOf(set: PeriodSet, b: Base): string[] {
     case 'same3': return [ytd(b, 2), ytd(b, 1), ytd(b)];
     case 'annual3': { const f = b.q === 4 ? b.y : b.y - 1; return [`FY${f - 2}`, `FY${f - 1}`, `FY${f}`]; }
     case 'q6': return [5, 4, 3, 2, 1, 0].map((k) => quarter(b, k));
+    case 'q5': return [4, 3, 2, 1, 0].map((k) => quarter(b, k));
+    case 'qyoy': return [8, 4, 0].map((k) => quarter(b, k));
+    case 'iq5': return [4, 3, 2, 1, 0].map((k) => instBack(b, k));
+    case 'iyoy': return [8, 4, 0].map((k) => instBack(b, k));
   }
 }
 export function periodLabel(p: string): string {

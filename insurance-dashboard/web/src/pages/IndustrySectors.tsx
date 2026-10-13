@@ -4,7 +4,7 @@ import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { ErrorBox, Field, Loading } from '../components/ui';
 import { nf } from '../lib/format';
-import { baseKey, baseLabel, inst, Lts, parseBase, periodLabel, periodsOf, quarter, ytd, type Base, type LtsData, type PeriodSet } from '../lib/lts';
+import { baseKey, baseLabel, inst, Lts, parseBase, periodLabel, periodsOf, quarter, viewSet, VIEWS, ytd, type Base, type LtsData, type PeriodSet, type View } from '../lib/lts';
 import { keepSrc, useSource, type Prov } from '../lib/prov';
 import { CHART_FONT, chartBase, cssColor } from '../lib/theme';
 import { useLoad } from '../lib/useData';
@@ -15,8 +15,10 @@ const GEM = [...PEN, 'yelin', 'analyst'];
 const AM = [...GEM, 'hachshara', 'ayalon', 'direct'];
 const IC = ['phoenix', 'hachshara', 'migdal', 'harel', 'clal', 'ayalon', 'menora', 'direct'];
 
-interface Ctx { lts: Lts; focus: string; all: string | null }
+interface Ctx { lts: Lts; focus: string; all: string | null; view: View }
 const C = createContext<Ctx>(null as unknown as Ctx);
+/** the view chosen on one card; charts inside read it */
+const V = createContext<View>('y');
 const alpha = (rgb: string, a: number) => (rgb.startsWith('rgb(') ? rgb.replace('rgb(', 'rgba(').replace(')', `,${a})`) : rgb);
 const ltr = (t: string) => `\u202A${t}\u202C`;
 const sign = (v: number, dec = 1) => ltr(`${v > 0 ? '+' : v < 0 ? '−' : ''}${nf(Math.abs(v), dec)}%`);
@@ -34,7 +36,7 @@ function provOf(lts: Lts, title: string, metric: string, c: string, p: string, u
           // a component with no report behind it is another figure of this page (a company inside a sector total)
           src: file ? () => ({ k: 'report', title: label, value: nf(val, Math.abs(val) < 100 ? 2 : 0), unit: u, url, pg, doc: `${file.startsWith('ic:') ? 'דוח חברת הביטוח' : pr.entity ?? lts.name(c)}, ${file.replace('ic:', '')}`, period: date, srcType: file.startsWith('ic:') ? 'דוח חברת הביטוח' : 'דוח החברה המנהלת' }) as Prov : undefined }; }) };
   }
-  return { k: 'report', title: `${title} · ${lts.name(c)}`, value: nf(v, dec), unit, url: null, pg: s, doc: lts.d.source, period: periodLabel(p), srcType: 'מצגת השוואות ענפיות (שקף)', note: lts.d.notes[metric] };
+  return { k: 'none', title: `${title} · ${lts.name(c)} · ${periodLabel(p)}`, why: 'לנתון זה לא נרשם מקור.' };
 }
 
 /** Charts are many and each owns a canvas: one is built only when its card comes near the screen. */
@@ -54,8 +56,12 @@ function Lazy({ height, children }: { height: number; children: () => ReactNode 
 function Card({ title, unit, metric, current, height = 300, children }: { title: string; unit: string; metric: string; current: (b: Base) => string; height?: number; children: (b: Base) => ReactNode }) {
   const { lts, all } = useContext(C);
   const bases = useMemo(() => lts.bases(metric, current), [lts, metric, current]);
+  const { view: allView } = useContext(C);
   const [own, setOwn] = useState<string | null>(null);
+  const [ownView, setOwnView] = useState<View | null>(null);
   useEffect(() => setOwn(null), [all]);
+  useEffect(() => setOwnView(null), [allView]);
+  const view = ownView ?? allView;
   if (!bases.length) return null;
   const keys = bases.map(baseKey), pick = own && keys.includes(own) ? own : all && keys.includes(all) ? all : keys[0];
   const b = parseBase(pick);
@@ -66,10 +72,11 @@ function Card({ title, unit, metric, current, height = 300, children }: { title:
         <div className="aside">
           <span>{unit}</span>
           {all && !keys.includes(all) && <span className="chip">אין נתון ל-{baseLabel(parseBase(all))}</span>}
+          <select aria-label={`${title}: תצוגת זמן`} value={view} onChange={(e) => setOwnView(e.target.value as View)}>{VIEWS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>
           <select aria-label={`${title}: על בסיס דוח`} value={pick} onChange={(e) => setOwn(e.target.value)}>{bases.map((x) => <option key={baseKey(x)} value={baseKey(x)}>{baseLabel(x)}</option>)}</select>
         </div>
       </div>
-      <Lazy height={height}>{() => children(b)}</Lazy>
+      <V.Provider value={view}><Lazy height={height}>{() => children(b)}</Lazy></V.Provider>
     </section>
   );
 }
@@ -77,6 +84,7 @@ function Card({ title, unit, metric, current, height = 300, children }: { title:
 function tones(n: number): string[] {
   const b = chartBase(), navy = cssColor('--sx-navy'), hi = cssColor('--sx-hi');
   const set = [navy, alpha(navy, 0.62), alpha(b.mu, 0.5), hi];
+  if (n >= 5) return [navy, alpha(navy, 0.7), alpha(navy, 0.42), alpha(b.mu, 0.5), hi];
   return n >= 4 ? set : n === 3 ? [navy, alpha(b.mu, 0.5), hi] : n === 2 ? [alpha(b.mu, 0.5), hi] : [hi];
 }
 
@@ -85,7 +93,9 @@ interface BarsProps { title: string; metric: string; set: PeriodSet; cos: string
 function Bars({ title, metric, set, cos: every, dec = 0, pct, unit, g, agg, b, sub, height = 300 }: BarsProps) {
   const { lts, focus } = useContext(C);
   const { open } = useSource();
-  const ps = periodsOf(set, b).filter((p) => lts.has(metric, p));
+  const view = useContext(V);
+  const ps = periodsOf(viewSet(set, view), b).filter((p) => lts.has(metric, p));
+  if (view !== 'y' && g) g = 'last';
   // only companies with a figure in one of the periods shown: a period built from the reports covers the companies extracted so far
   const cos = every.filter((c) => ps.some((p) => lts.v(metric, c, p) != null));
   const cats = agg === 'in' && ps.some((p) => lts.v(metric, 'all', p) != null) ? [...cos, 'all'] : cos;
@@ -120,8 +130,8 @@ function Bars({ title, metric, set, cos: every, dec = 0, pct, unit, g, agg, b, s
   const w = cats.length * (ps.length * (pct && dec >= 2 ? 36 : 24) + 22);
   return (
     <div className="sx-row">
-      <div className="sx-scroll"><div style={{ minWidth: w }}><Chart label={title} height={height} deps={[baseKey(b), focus, metric]} build={build(cats, false)} onPoint={hit(cats)} /></div></div>
-      {agg === 'own' && <div className="sx-agg"><Chart label={`${title}, ${lts.name('all')}`} height={height} deps={[baseKey(b), metric]} build={build(['all'], true)} onPoint={hit(['all'])} exportName="" /></div>}
+      <div className="sx-scroll"><div style={{ minWidth: w }}><Chart label={title} height={height} deps={[baseKey(b), focus, metric, view]} build={build(cats, false)} onPoint={hit(cats)} /></div></div>
+      {agg === 'own' && ps.some((p) => lts.v(metric, 'all', p) != null) && <div className="sx-agg"><Chart label={`${title}, ${lts.name('all')}`} height={height} deps={[baseKey(b), metric, view]} build={build(['all'], true)} onPoint={hit(['all'])} exportName="" /></div>}
     </div>
   );
 }
@@ -130,7 +140,7 @@ function Bars({ title, metric, set, cos: every, dec = 0, pct, unit, g, agg, b, s
 function Donuts({ title, share, total, set, cos, b, unit, dec = 0 }: { title: string; share: string; total: string; set: PeriodSet; cos: string[]; b: Base; unit: string; dec?: number }) {
   const { lts, focus } = useContext(C);
   const { open } = useSource();
-  const ps = periodsOf(set, b).filter((p) => lts.has(share, p));
+  const ps = periodsOf(viewSet(set, useContext(V)), b).filter((p) => lts.has(share, p)).slice(-3);
   return (
     <div className="sx-donuts">{ps.map((p) => (
       <div key={p}>
@@ -216,11 +226,12 @@ function Mix({ b }: { b: Base }) {
         label: { show: true, position: 'inside', fontSize: 10.5, color: i === 0 ? '#fff' : cb.fg, formatter: (x: { data: { pc: number; value: number } }) => (x.data.pc < 100 && x.data.value > 0 ? `${x.data.pc}%` : '') } })),
     };
   };
+  const cos = AM.filter((c) => lts.v('am.aum', c, p) != null);
   const hit = (list: string[]) => (si: number, di: number) => open(provOf(lts, `תמהיל נכסים, ${parts[si][1]}`, parts[si][0], list[di], p, '%', 0));
   return (
     <div className="sx-row">
-      <div className="sx-scroll"><div style={{ minWidth: AM.length * 58 }}><Chart label="תמהיל נכסים מנוהלים" height={320} deps={[p, focus]} build={build(AM, false)} onPoint={hit(AM)} /></div></div>
-      <div className="sx-agg"><Chart label="תמהיל נכסים מנוהלים, סך הענף" height={320} deps={[p]} build={build(['all'], true)} onPoint={hit(['all'])} exportName="" /></div>
+      <div className="sx-scroll"><div style={{ minWidth: cos.length * 58 }}><Chart label="תמהיל נכסים מנוהלים" height={320} deps={[p, focus]} build={build(cos, false)} onPoint={hit(cos)} /></div></div>
+      {lts.v('am.aum', 'all', p) != null && <div className="sx-agg"><Chart label="תמהיל נכסים מנוהלים, סך הענף" height={320} deps={[p]} build={build(['all'], true)} onPoint={hit(['all'])} exportName="" /></div>}
     </div>
   );
 }
@@ -336,22 +347,24 @@ export function IndustrySectors() {
   const [sp, setSp] = useSearchParams();
   const [focus, setFocus] = useState(sp.get('c') ?? 'phoenix');
   const [all, setAll] = useState<string | null>(sp.get('p'));
+  const [view, setView] = useState<View>((sp.get('v') as View) || 'y');
   const lts = useMemo(() => (data ? new Lts(data) : null), [data]);
   useEffect(() => {
     if (!lts) return;
     lts.reported().forEach((c) => { void fetch(`${import.meta.env.BASE_URL}data/lts_prov/${c}.json`).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) lts.prov[c] = j; }).catch(() => {}); });
   }, [lts]);
-  useEffect(() => { setSp(keepSrc({ ...(focus !== 'phoenix' ? { c: focus } : {}), ...(all ? { p: all } : {}) }), { replace: true }); }, [focus, all, setSp]);
+  useEffect(() => { setSp(keepSrc({ ...(focus !== 'phoenix' ? { c: focus } : {}), ...(all ? { p: all } : {}), ...(view !== 'y' ? { v: view } : {}) }), { replace: true }); }, [focus, all, view, setSp]);
   if (error) return <ErrorBox what="השוואת ענפים" error={error} />;
   if (!lts) return <Loading what="השוואת ענפים" />;
   const bases = lts.bases('am.aum', cur.inst).concat(lts.bases('pen.out_rate', cur.q)).map(baseKey).filter((k, i, a) => a.indexOf(k) === i).sort().reverse();
   const go = (id: string) => document.getElementById(`sx-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return (
-    <C.Provider value={{ lts, focus, all }}>
+    <C.Provider value={{ lts, focus, all, view }}>
       <div className="sx">
         <div className="sx-bar">
           <Field label="חברה במוקד"><select value={focus} onChange={(e) => setFocus(e.target.value)}>{AM.map((c) => <option key={c} value={c}>{lts.name(c)}</option>)}</select></Field>
           <Field label="על בסיס דוח, לכל הגרפים"><select value={all ?? ''} onChange={(e) => setAll(e.target.value || null)}><option value="">האחרון בכל גרף</option>{bases.map((k) => <option key={k} value={k}>{baseLabel(parseBase(k))}</option>)}</select></Field>
+          <Field label="תצוגת זמן, לכל הגרפים"><select value={view} onChange={(e) => setView(e.target.value as View)}>{VIEWS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></Field>
           <nav aria-label="פרקים">{SECTIONS.map(([id, name]) => <button key={id} type="button" className="chip" onClick={() => go(id)}>{name}</button>)}</nav>
         </div>
 

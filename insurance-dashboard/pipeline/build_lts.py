@@ -251,8 +251,10 @@ def reports():
     """Figures built from the managing companies' own reports (pipeline/lts_norm_<company>.py, method in pipeline/LTS_METHOD.md).
     A deck figure is never replaced: where both exist the deck stands and the difference is listed. Report-based rows carry slide 0
     and their printed components go to web/public/data/lts_prov/<company>.json, read when a figure's source is opened."""
+    # the deck is a check, never a source: its figures are set aside here and only compared with what the reports give
     deck = {(m, c, p): v for m, c, p, v, _ in facts}
-    diffs, added = [], 0
+    facts.clear()
+    diffs, added, seen = [], 0, set()
     prov_dir = ROOT / "web" / "public" / "data" / "lts_prov"
     prov_dir.mkdir(parents=True, exist_ok=True)
     store = {}
@@ -282,16 +284,25 @@ def reports():
                     parts.append(list(t))
                 ids.append(index[t])
             pf[f"{r['metric']}|{r['period']}"] = [formula_he(r.get("formula", "")), ids]
+            if key in seen:
+                continue
+            seen.add(key)
             if key in deck:
                 # the deck prints rounded figures: a difference counts only beyond half a unit of its last printed digit
                 dv = deck[key]
                 digits = len(str(dv).split(".")[1]) if "." in str(dv) else 0
                 if abs(v - dv) > 0.5 * 10 ** -digits + 1e-9:
                     diffs.append([r["metric"], c, r["period"], dv, round(v, 4)])
-                continue
             facts.append([r["metric"], c, r["period"], round(v, 4), 0])
             added += 1
     added += aggregates(store)
+    have = {(m, c, p) for m, c, p, _, _ in facts}
+    missing = sorted(k for k in deck if k not in have and not k[0].endswith(".g"))
+    (ROOT / "data" / "lts_deck_check.json").write_text(json.dumps({"deck": DECK, "note": "validation only: none of these figures reaches the site",
+        "differ_beyond_rounding": diffs, "in_deck_not_built_from_reports": missing}, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"deck check: {len(deck)} deck figures, {len(missing)} not built from the reports, {len(diffs)} differ beyond rounding")
+    if "all" in store:
+        store["all"]["entity"] = "סכום החברות בענף"
     for c, st in store.items():
         (prov_dir / f"{c}.json").write_text(json.dumps({"entity": st["entity"], "urls": st["urls"], "parts": st["parts"], "facts": st["facts"]}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return added, diffs
@@ -375,8 +386,8 @@ def main():
     for b in bad:
         print("CHECK", b)
     added, diffs = reports()
-    print(f"from the reports: {added} figures added, {len(diffs)} differ from the deck beyond its rounding")
-    out = {"source": DECK, "companies": CO, "notes": NOTES, "diffs": diffs, "facts": facts}
+    print(f"from the reports: {added} figures")
+    out = {"source": "דוחות החברות המנהלות וחברות הביטוח", "companies": CO, "notes": {}, "facts": facts}
     dest = ROOT / "web" / "public" / "data" / "lts.json"
     dest.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{len(facts)} figures, {len({f[0] for f in facts})} metrics, {len(bad)} inconsistencies -> {dest} ({dest.stat().st_size // 1024} KB)")
