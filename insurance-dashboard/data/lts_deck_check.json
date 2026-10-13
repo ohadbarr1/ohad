@@ -234,13 +234,6 @@
    0.3473
   ],
   [
-   "am.rev_rate",
-   "direct",
-   "FY2024",
-   0.92,
-   1.4549
-  ],
-  [
    "am.fees",
    "meitav",
    "FY2024",
@@ -763,7 +756,52 @@
   [
    "am.aum",
    "all",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "all",
    "2026-06"
+  ],
+  [
+   "am.aum",
+   "ayalon",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "clal",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "direct",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "hachshara",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "harel",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "menora",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "migdal",
+   "2023-12"
+  ],
+  [
+   "am.aum",
+   "phoenix",
+   "2023-12"
   ],
   [
    "am.aum",
@@ -1028,7 +1066,37 @@
   [
    "am.mix.gem",
    "all",
+   "2023-12"
+  ],
+  [
+   "am.mix.gem",
+   "all",
    "2026-06"
+  ],
+  [
+   "am.mix.gem",
+   "clal",
+   "2023-12"
+  ],
+  [
+   "am.mix.gem",
+   "harel",
+   "2023-12"
+  ],
+  [
+   "am.mix.gem",
+   "menora",
+   "2023-12"
+  ],
+  [
+   "am.mix.gem",
+   "migdal",
+   "2023-12"
+  ],
+  [
+   "am.mix.gem",
+   "phoenix",
+   "2023-12"
   ],
   [
    "am.mix.gem",
@@ -1038,7 +1106,57 @@
   [
    "am.mix.ic",
    "all",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "all",
    "2026-06"
+  ],
+  [
+   "am.mix.ic",
+   "ayalon",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "clal",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "direct",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "hachshara",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "harel",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "menora",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "migdal",
+   "2023-12"
+  ],
+  [
+   "am.mix.ic",
+   "phoenix",
+   "2023-12"
+  ],
+  [
+   "am.mix.pen",
+   "all",
+   "2023-12"
   ],
   [
    "am.mix.pen",
@@ -1046,6 +1164,31 @@
    "2026-06"
   ],
   [
+   "am.mix.pen",
+   "clal",
+   "2023-12"
+  ],
+  [
+   "am.mix.pen",
+   "harel",
+   "2023-12"
+  ],
+  [
+   "am.mix.pen",
+   "menora",
+   "2023-12"
+  ],
+  [
+   "am.mix.pen",
+   "migdal",
+   "2023-12"
+  ],
+  [
+   "am.mix.pen",
+   "phoenix",
+   "2023-12"
+  ],
+  [
    "am.op",
    "ayalon",
    "FY2024"
@@ -1299,6 +1442,21 @@
    "am.op_m",
    "yelin",
    "H1-2026"
+  ],
+  [
+   "am.rev_rate",
+   "ayalon",
+   "FY2024"
+  ],
+  [
+   "am.rev_rate",
+   "direct",
+   "FY2024"
+  ],
+  [
+   "am.rev_rate",
+   "hachshara",
+   "FY2024"
   ],
   [
    "am.rev_rate",
@@ -1929,6 +2087,11 @@
    "gem.tr_out",
    "yelin",
    "Q2-2026"
+  ],
+  [
+   "ic.aum",
+   "all",
+   "2023-12"
   ],
   [
    "ic.aum.share",

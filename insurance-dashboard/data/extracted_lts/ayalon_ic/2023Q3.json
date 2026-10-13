@@ -1,0 +1,41 @@
+{
+ "company": "ayalon",
+ "entity": "איילון חברה לביטוח בע\"מ",
+ "period": "2023Q3",
+ "url": "https://mayafiles.tase.co.il/rpdf/1559001-1560000/P1559385-00.pdf",
+ "doc_title": "דוח רבעון 3 לשנת 2023",
+ "unit": "NIS thousand",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-09-30",
+   "value": 131073,
+   "unit": "NIS thousand",
+   "page": 74,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis. Total column of the life-insurance results table by policy type of the segment note; credited directly to insurance reserves, not premiums. Read from the 2023 report itself (equals the 2023 comparative printed in the 2024 report)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-09-30",
+   "value": 57195,
+   "unit": "NIS thousand",
+   "page": 75,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis. Total column of the life-insurance results table by policy type of the segment note; credited directly to insurance reserves, not premiums. Read from the 2023 report itself (equals the 2023 comparative printed in the 2024 report)."
+  }
+ ],
+ "not_found": [
+  "management_fees of the investment-contract activity for the interim windows: not printed. The IFRS 4 interim report prints management-fee income per segment only; investment contracts are not a segment or column (searched every page of the Hebrew report for \"דמי ניהול\" and \"חוזי השקעה\"; the only investment-contract lines are receipts and \"תשלומים ושינוי בהתחייבויות בגין חוזי השקעה\"). The investment-contract fee line appears only in the annual note on management-fee income.",
+  "investment_contract_aum (liabilities for yield-dependent investment contracts) at the quarter end: not printed. The balance sheet and notes print only the combined line \"התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה\" (insurance and investment contracts together); the split appears only in the annual notes.",
+  "selling/acquisition and general and administrative expenses and profit of the investment-contract activity: not printed."
+ ],
+ "notes": [
+  "Reporting document: דוח רבעון 3 לשנת 2023 (איילון חברה לביטוח בע\"מ); IFRS 4 basis; amounts as printed in NIS thousand. Page = 1-based PDF page.",
+  "Only the 2023 columns of the receipts table were recorded (the 2022 comparative columns are outside the 2023 gap and were not extracted)."
+ ]
+}

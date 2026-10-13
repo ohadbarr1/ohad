@@ -666,7 +666,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הוצאות הנהלה וכלליות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "general_and_administrative_expenses",
@@ -677,7 +677,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הוצאות הנהלה וכלליות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "general_and_administrative_expenses",
@@ -688,7 +688,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הוצאות הנהלה וכלליות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "income_tax",
@@ -743,7 +743,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הכנסות מדמי ניהול מקרנות פנסיה, נטו",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "management_fees",
@@ -754,7 +754,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הכנסות מדמי ניהול מקופות גמל, נטו",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "management_fees_from_assets",
@@ -1730,7 +1730,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הוצאות אחרות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "other_expenses",
@@ -1741,7 +1741,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הוצאות אחרות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "other_expenses",
@@ -1752,7 +1752,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "הוצאות אחרות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "other_income",
@@ -1829,7 +1829,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "עמלות, הוצאות שיווק והוצאות רכישה אחרות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "selling_and_marketing_expenses",
@@ -1840,7 +1840,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "עמלות, הוצאות שיווק והוצאות רכישה אחרות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "selling_and_marketing_expenses",
@@ -1851,7 +1851,7 @@
    "unit": "NIS thousands",
    "page": 129,
    "label": "עמלות, הוצאות שיווק והוצאות רכישה אחרות",
-   "note": "operating segments note (12 months) (consolidated)"
+   "note": "operating segments note (12 months) (consolidated); AS PRINTED under the heading \"year ended 31.12.2023\" (page 129), but the value equals the 9M-2024 column (2024Q3 report p.58 / 2025Q3 report p.54); the 2023 annual report p.109 prints a different figure for 2023. Printing inconsistency of the filed report (the total-income, total-expenses and profit rows of the same block are FY2023). Not a reading error; kept as printed and excluded in lts_norm_phoenix.bad."
   },
   {
    "metric": "total_expenses",
@@ -7171,6 +7171,7 @@
   "selling_and_marketing_expenses = עמלות, הוצאות שיווק והוצאות רכישה אחרות; per the commissions note it is net of acquisition commissions deferred in the year and includes amortisation of deferred acquisition costs (FY2025: acquisition expenses 234,326 equal the DAC amortisation line of note 5). Fund-table amounts in NIS thousands; narrative amounts in NIS millions as printed (approximate, כ).",
   "2023 comparative columns are included. The 2023 transfers_out total (16,596,786) differs from the sum of its fund columns (16,595,786) by 1,000 as printed.",
   "In the 31.12.2024 comparative table the withdrawals row is printed in parentheses, so values are negative as printed (the same 2024 figures are positive in the 2025 interim reports).",
-  "The segment note of this report prints FY2025 total_income 1,074,561 and total_expenses 900,759 (other_income 2,701, gains credited to guaranteed-return track members 98,781), whereas the income statement of the same report and the 2026 reports print 1,073,607 and 899,805 (1,747 and 97,827); both are kept as printed in their source."
+  "The segment note of this report prints FY2025 total_income 1,074,561 and total_expenses 900,759 (other_income 2,701, gains credited to guaranteed-return track members 98,781), whereas the income statement of the same report and the 2026 reports print 1,073,607 and 899,805 (1,747 and 97,827); both are kept as printed in their source.",
+  "Re-read page 129 (image and text layer): the segment note block headed \"לשנה שהסתיימה ביום 31 בדצמבר 2023\" prints in the rows management fees, commissions/selling and marketing, G&A and other expenses the 9M-2024 column (pension fees 263,256, provident 331,030; S&M 145,906 / 160,529; G&A 81,883 / 90,844; other expenses 13,112 / 9,994), while its total-income, total-expenses and profit-before-tax rows are the FY2023 figures (pension 323,674 / 310,966 / 12,708). The 2023 and 2024 annual reports print pension fees 312,047, provident 421,831 for FY2023. The facts are therefore exactly as printed; each carries a note and the pipeline excludes them (11 facts: 11 noted)."
  ]
 }

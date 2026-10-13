@@ -247,6 +247,22 @@ def part_label(q):
     return " · ".join(x for x in [q.get("label") or "", who if who and who not in (q.get("label") or "") else "", pop if pop and pop != q.get("label") else ""] if x)
 
 
+IC_ONLY = {"hachshara", "ayalon", "direct"}
+
+
+def basis_break(metric, c, period):
+    """Investment-contract liabilities up to 31.12.2023 are printed under IFRS 4 and are not comparable with the IFRS 17 balances
+    that follow (the sector total steps from 79.8 to 88.0 NIS bn in one quarter; Direct from 70 to 298 NIS mn, its IFRS 17 opening
+    balance being 292.5). They are left out, with every rate of an investment-policy-only company whose average assets would
+    span the break. For the groups the policies are a small part of managed assets and their rates are kept."""
+    year = int(period[:4]) if period[4:5] == "-" and period[:4].isdigit() else int(period[-4:])
+    if metric == "ic.aum":
+        return year <= 2023
+    if c in IC_ONLY and metric in ("am.rev_rate", "am.gross_m", "am.op_m", "am.aum", "am.mix.ic", "am.mix.pen", "am.mix.gem"):
+        return year <= 2023 or period in ("FY2024", "Q1-2024", "H1-2024", "9M-2024")
+    return False
+
+
 def reports():
     """Figures built from the managing companies' own reports (pipeline/lts_norm_<company>.py, method in pipeline/LTS_METHOD.md).
     A deck figure is never replaced: where both exist the deck stands and the difference is listed. Report-based rows carry slide 0
@@ -284,7 +300,7 @@ def reports():
                     parts.append(list(t))
                 ids.append(index[t])
             pf[f"{r['metric']}|{r['period']}"] = [formula_he(r.get("formula", "")), ids]
-            if key in seen:
+            if key in seen or basis_break(*key):
                 continue
             seen.add(key)
             if key in deck:
