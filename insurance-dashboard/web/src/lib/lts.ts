@@ -34,7 +34,11 @@ export function periodLabel(p: string): string {
   return `${w}'${y.slice(2)}`;
 }
 
+/** The printed components of the report-based figures of one company: loaded in the background, read when a source is opened. */
+export interface LtsProv { entity?: string; urls: Record<string, string | null>; parts: [string, number | null, string, number, string, string, string][]; facts: Record<string, [string, number[]]> }
+
 export class Lts {
+  prov: Record<string, LtsProv> = {};
   private m = new Map<string, [number, number]>();
   private byMetric = new Map<string, Set<string>>();
   constructor(readonly d: LtsData) {
@@ -46,6 +50,8 @@ export class Lts {
   }
   v(metric: string, c: string, p: string): number | null { return this.m.get(`${metric}|${c}|${p}`)?.[0] ?? null; }
   slide(metric: string, c: string, p: string): number | null { return this.m.get(`${metric}|${c}|${p}`)?.[1] ?? null; }
+  /** companies with figures built from their own reports */
+  reported(): string[] { return [...new Set(this.d.facts.filter((f) => f[4] === 0).map((f) => f[1]))]; }
   name(c: string): string { return this.d.companies[c] ?? c; }
   has(metric: string, p: string): boolean { return this.byMetric.get(metric)?.has(p) ?? false; }
   /** reports on which a chart can be measured: those whose own period carries the metric */

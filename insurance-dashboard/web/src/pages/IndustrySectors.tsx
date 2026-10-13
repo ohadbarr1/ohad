@@ -24,6 +24,15 @@ const sign = (v: number, dec = 1) => ltr(`${v > 0 ? '+' : v < 0 ? '−' : ''}${n
 function provOf(lts: Lts, title: string, metric: string, c: string, p: string, unit: string, dec: number): Prov {
   const v = lts.v(metric, c, p), s = lts.slide(metric, c, p);
   if (v == null) return { k: 'none', title: `${title} · ${lts.name(c)} · ${periodLabel(p)}`, why: 'אין נתון לתקופה זו.' };
+  if (s === 0) {
+    // built from the managing company's own report: the formula, and every printed figure it uses with its page
+    const pr = lts.prov[c], f = pr?.facts[`${metric}|${p}`];
+    if (!pr || !f) return { k: 'none', title: `${title} · ${lts.name(c)} · ${periodLabel(p)}`, why: 'מקור: דוחות החברה המנהלת. פירוט הרכיבים עדיין נטען, נסו שוב.' };
+    return { k: 'calc', title: `${title} · ${lts.name(c)} · ${periodLabel(p)}`, value: nf(v, dec), unit, formula: f[0], note: `${pr.entity ?? 'דוחות החברה המנהלת'}. ${lts.d.notes[metric] ?? ''}`.trim(),
+      inputs: f[1].slice(0, 40).map((i) => { const [file, pg, label, val, u, date, win] = pr.parts[i], url = pr.urls[file] ?? null;
+        return { label: `${label} · ${date}${win && win !== 'instant' ? ` · ${win}` : ''}`, v: `${nf(val, Math.abs(val) < 100 ? 2 : 0)} ${u.replace('NIS thousands', 'אלפי ש"ח').replace('NIS thousand', 'אלפי ש"ח').replace('NIS millions', 'מיליוני ש"ח')}`,
+          src: () => ({ k: 'report', title: label, value: nf(val, Math.abs(val) < 100 ? 2 : 0), unit: u, url, pg, doc: `${pr.entity ?? lts.name(c)}, דוח ${file}`, period: date, srcType: 'דוח החברה המנהלת' }) as Prov }; }) };
+  }
   return { k: 'report', title: `${title} · ${lts.name(c)}`, value: nf(v, dec), unit, url: null, pg: s, doc: lts.d.source, period: periodLabel(p), srcType: 'מצגת השוואות ענפיות (שקף)', note: lts.d.notes[metric] };
 }
 
@@ -72,10 +81,12 @@ function tones(n: number): string[] {
 
 interface BarsProps { title: string; metric: string; set: PeriodSet; cos: string[]; dec?: number; pct?: boolean; unit: string; g?: [number, number] | 'last'; agg?: 'own' | 'in'; b: Base; sub?: string; height?: number }
 /** Companies side by side, one bar per period. The change between two of the periods is printed under each name. */
-function Bars({ title, metric, set, cos, dec = 0, pct, unit, g, agg, b, sub, height = 300 }: BarsProps) {
+function Bars({ title, metric, set, cos: every, dec = 0, pct, unit, g, agg, b, sub, height = 300 }: BarsProps) {
   const { lts, focus } = useContext(C);
   const { open } = useSource();
   const ps = periodsOf(set, b).filter((p) => lts.has(metric, p));
+  // only companies with a figure in one of the periods shown: a period built from the reports covers the companies extracted so far
+  const cos = every.filter((c) => ps.some((p) => lts.v(metric, c, p) != null));
   const cats = agg === 'in' && ps.some((p) => lts.v(metric, 'all', p) != null) ? [...cos, 'all'] : cos;
   const fmt = (v: number) => `${nf(v, dec)}${pct ? '%' : ''}`;
   const pair = g === 'last' ? [ps.length - 1, ps.length - 2] : g ? [g[0], g[1]] : null;
@@ -138,10 +149,11 @@ function Donuts({ title, share, total, set, cos, b, unit, dec = 0 }: { title: st
 }
 
 /** Transfers in above the line, transfers out below it, the net under each name. */
-function Flows({ title, fam, period, cos, b }: { title: string; fam: 'pen' | 'gem'; period: string; cos: string[]; b: Base }) {
+function Flows({ title, fam, period, cos: every, b }: { title: string; fam: 'pen' | 'gem'; period: string; cos: string[]; b: Base }) {
   const { lts, focus } = useContext(C);
   const { open } = useSource();
   const keys = [`${fam}.tr_in`, `${fam}.tr_out`];
+  const cos = every.filter((c) => lts.v(keys[0], c, period) != null || lts.v(keys[1], c, period) != null);
   if (!lts.has(keys[0], period)) return <div className="sx-none">{periodLabel(period)}: אין נתון</div>;
   return (
     <div className="sx-flow">
@@ -260,7 +272,7 @@ function Summary() {
   const { lts, focus, all } = useContext(C);
   const b = parseBase(all ?? '2026Q2');
   type Item = [string, string, string, string, number, string?];  // label, metric, company, period, decimals, suffix
-  const rank = (metric: string, cos: string[], p: string) => { const v = lts.v(metric, focus, p); return v == null ? null : cos.filter((c) => (lts.v(metric, c, p) ?? -Infinity) > v).length + 1; };
+  const rank = (metric: string, cos: string[], p: string) => { const v = lts.v(metric, focus, p); return v == null || cos.some((c) => lts.v(metric, c, p) == null) ? null : cos.filter((c) => lts.v(metric, c, p)! > v).length + 1; };
   const fy = `FY${b.q === 4 ? b.y : b.y - 1}`;
   const blocks: [string, Item[], (number | null)?][] = [
     ['ניהול נכסים', [['נכס מנוהל, מיליארדי ש"ח', 'am.aum', focus, inst(b), 0], ['שינוי מתחילת השנה', 'am.aum.g', focus, inst(b), 1, '%'], [`הכנסות מדמי ניהול, ${periodLabel(fy)}`, 'am.fees', focus, fy, 0], [`שינוי ברווח התפעולי, ${periodLabel(fy)}`, 'am.op.g', focus, fy, 1, '%']], rank('am.aum', AM, inst(b))],
@@ -324,6 +336,10 @@ export function IndustrySectors() {
   const [focus, setFocus] = useState(sp.get('c') ?? 'phoenix');
   const [all, setAll] = useState<string | null>(sp.get('p'));
   const lts = useMemo(() => (data ? new Lts(data) : null), [data]);
+  useEffect(() => {
+    if (!lts) return;
+    lts.reported().forEach((c) => { void fetch(`${import.meta.env.BASE_URL}data/lts_prov/${c}.json`).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) lts.prov[c] = j; }).catch(() => {}); });
+  }, [lts]);
   useEffect(() => { setSp(keepSrc({ ...(focus !== 'phoenix' ? { c: focus } : {}), ...(all ? { p: all } : {}) }), { replace: true }); }, [focus, all, setSp]);
   if (error) return <ErrorBox what="השוואת ענפים" error={error} />;
   if (!lts) return <Loading what="השוואת ענפים" />;

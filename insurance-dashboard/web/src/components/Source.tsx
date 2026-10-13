@@ -111,7 +111,7 @@ function PlainSheet({ p }: { p: Exclude<Prov, { k: 'reg' | 'fund' }> }) {
       <dl className="srcfacts">
         <dt>סוג מקור</dt><dd>{p.srcType ?? 'דוח כספי שפורסם במאיה'}</dd>
         {p.doc && <><dt>מסמך</dt><dd>{p.doc}</dd></>}
-        <dt>{p.srcType ? 'שקף' : 'עמוד'}</dt><dd className="num">{p.pg ?? 'לא סומן'}</dd>
+        <dt>{p.srcType?.startsWith('מצגת') ? 'שקף' : 'עמוד'}</dt><dd className="num">{p.pg ?? 'לא סומן'}</dd>
       </dl>
       {p.url ? <a className="srcgo" href={pdfPage(p.url, p.pg)} target="_blank" rel="noreferrer">פתיחת הדוח{p.pg ? `, עמ׳ ${p.pg}` : ''}</a> : !p.srcType && <p className="muted">אין קישור למסמך.</p>}
       {p.der && <p className="srcnote"><span className="chip est">נגזר</span> לא הודפס בדוח: חושב מהפרש בין תקופות מצטברות של אותו דוח (Q4 = FY פחות 9M, H2 = FY פחות H1).</p>}

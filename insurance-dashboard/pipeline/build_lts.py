@@ -215,11 +215,88 @@ def check():
     return bad
 
 
+SEG_HE = {"pension": "פנסיה", "pension_new": "פנסיה חדשה", "pension_new_general": "פנסיה חדשה כללית", "pension_new_comprehensive": "פנסיה חדשה מקיפה",
+          "pension_veteran": "פנסיה ותיקה", "provident": "גמל", "provident_gemel": "קופות גמל", "provident_study_fund": "קרנות השתלמות",
+          "provident_investment": "גמל להשקעה", "provident_child_savings": "חיסכון לילד", "provident_central_severance": "מרכזית לפיצויים",
+          "provident_central_annuity": "מרכזית לקצבה", "other": "אחר", "total": "סך הכול",
+          "general": "כללית", "comprehensive": "מקיפה", "general_new_pension": "כללית", "comprehensive_new_pension": "מקיפה", "veteran": "ותיקה",
+          "veteran_pension": "ותיקה", "study_fund": "קרנות השתלמות", "investment_provident": "גמל להשקעה", "child_savings": "חיסכון לילד",
+          "personal_provident": "קופות גמל אישיות", "provident_savings_compensation": "גמל לחיסכון ואישיות לפיצויים",
+          "other_provident_funds": "קופות אחרות", "other_funds": "קופות אחרות"}
+TERMS = [("sum of the printed assets at the balance date", "סכום הנכסים המודפסים ליום המאזן"), ("fees collected from deposits", "דמי ניהול שנגבו מהפקדות"),
+         ("fees collected from assets", "דמי ניהול שנגבו מנכסים"), ("management fee income", "הכנסות מדמי ניהול"), ("average assets", "נכסים ממוצעים"),
+         ("printed for the three months", "כפי שהודפס לשלושת החודשים"), ("printed for", "כפי שהודפס לתקופה"), ("deposits", "הפקדות"),
+         ("tr_in", "ניוד פנימה"), ("tr_out", "ניוד החוצה"), ("fees", "דמי ניהול"), ("sm", "מכירה ושיווק"), ("ga", "הנהלה וכלליות"),
+         ("nb", "פרמיה משונתת"), ("dep", "הפקדות"), (" x ", " × ")]
+
+
+def formula_he(t):
+    """The method's formula in the site's language: the same terms, word for word."""
+    import re
+    for en, he in TERMS:
+        t = re.sub(rf"(?<![A-Za-z_]){re.escape(en)}(?![A-Za-z_])", he, t) if en.strip().isidentifier() else t.replace(en, he)
+    t = re.sub(r"\b(Q[1-4]|H1|9M)-(20)(\d\d)\b", r"\1'\3", t)
+    return re.sub(r"\bFY20(\d\d)\b", r"FY'\1", t)
+
+
+def part_label(q):
+    c = q.get("component") or ""
+    who = c if any("\u0590" <= ch <= "\u05ff" for ch in c) else SEG_HE.get(c) or SEG_HE.get(q.get("segment") or "", "")
+    pop = q.get("population") or ""
+    pop = pop if any("\u0590" <= ch <= "\u05ff" for ch in pop) else ""
+    return " · ".join(x for x in [q.get("label") or "", who if who and who not in (q.get("label") or "") else "", pop if pop and pop != q.get("label") else ""] if x)
+
+
+def reports():
+    """Figures built from the managing companies' own reports (pipeline/lts_norm_<company>.py, method in pipeline/LTS_METHOD.md).
+    A deck figure is never replaced: where both exist the deck stands and the difference is listed. Report-based rows carry slide 0
+    and their printed components go to web/public/data/lts_prov/<company>.json, read when a figure's source is opened."""
+    deck = {(m, c, p): v for m, c, p, v, _ in facts}
+    diffs, added = [], 0
+    prov_dir = ROOT / "web" / "public" / "data" / "lts_prov"
+    prov_dir.mkdir(parents=True, exist_ok=True)
+    for f in sorted((ROOT / "data" / "lts_norm").glob("*.json")):
+        d = json.loads(f.read_text(encoding="utf-8"))
+        c = d["company"]
+        if c not in CO:
+            continue
+        urls = {}
+        for x in sorted((ROOT / "data" / "extracted_lts" / c).glob("*.json")):
+            urls[x.stem] = json.loads(x.read_text(encoding="utf-8")).get("url")
+        parts, index, pf = [], {}, {}
+        for r in d["facts"]:
+            v = r.get("value")
+            if v is None:
+                continue
+            key = (r["metric"], c, r["period"])
+            ids = []
+            for q in r.get("parts", []):
+                t = (q.get("file"), q.get("page"), part_label(q), q.get("value"), q.get("unit"), q.get("date"), q.get("window"))
+                if t not in index:
+                    index[t] = len(parts)
+                    parts.append(list(t))
+                ids.append(index[t])
+            pf[f"{r['metric']}|{r['period']}"] = [formula_he(r.get("formula", "")), ids]
+            if key in deck:
+                # the deck prints rounded figures: a difference counts only beyond half a unit of its last printed digit
+                dv = deck[key]
+                digits = len(str(dv).split(".")[1]) if "." in str(dv) else 0
+                if abs(v - dv) > 0.5 * 10 ** -digits + 1e-9:
+                    diffs.append([r["metric"], c, r["period"], dv, round(v, 4)])
+                continue
+            facts.append([r["metric"], c, r["period"], round(v, 4), 0])
+            added += 1
+        (prov_dir / f"{c}.json").write_text(json.dumps({"entity": d.get("entity"), "urls": urls, "parts": parts, "facts": pf}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return added, diffs
+
+
 def main():
     bad = check()
     for b in bad:
         print("CHECK", b)
-    out = {"source": DECK, "companies": CO, "notes": NOTES, "facts": facts}
+    added, diffs = reports()
+    print(f"from the reports: {added} figures added, {len(diffs)} differ from the deck beyond its rounding")
+    out = {"source": DECK, "companies": CO, "notes": NOTES, "diffs": diffs, "facts": facts}
     dest = ROOT / "web" / "public" / "data" / "lts.json"
     dest.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{len(facts)} figures, {len({f[0] for f in facts})} metrics, {len(bad)} inconsistencies -> {dest} ({dest.stat().st_size // 1024} KB)")
