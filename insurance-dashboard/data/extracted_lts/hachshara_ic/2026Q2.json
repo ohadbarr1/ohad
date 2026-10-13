@@ -1,0 +1,367 @@
+{
+ "company": "hachshara",
+ "entity": "הכשרה חברה לביטוח בע\"מ",
+ "period": "2026Q2",
+ "url": "https://mayafiles.tase.co.il/rpdf/1766001-1767000/P1766421-00.pdf",
+ "doc_title": "דוח רבעון 2/חצי שנתי לשנת 2026",
+ "unit": "NIS thousand",
+ "facts": [
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 119893,
+   "unit": "NIS thousand",
+   "page": 43,
+   "label": "הכנסות מדמי ניהול",
+   "note": "Column 'חוזי השקעה' of the supplementary data for the life and long-term savings segment."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 90274,
+   "unit": "NIS thousand",
+   "page": 43,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "Operating expenses of the investment-contract activity as one line ('other operating expenses'); not split into acquisition / G&A."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 29619,
+   "unit": "NIS thousand",
+   "page": 43,
+   "label": "רווח כולל לפני מסים על הכנסה",
+   "note": "Column 'חוזי השקעה'."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 90979,
+   "unit": "NIS thousand",
+   "page": 44,
+   "label": "הכנסות מדמי ניהול",
+   "note": "Column 'חוזי השקעה' of the supplementary data for the life and long-term savings segment."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 78964,
+   "unit": "NIS thousand",
+   "page": 44,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "Operating expenses of the investment-contract activity as one line ('other operating expenses'); not split into acquisition / G&A."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 12015,
+   "unit": "NIS thousand",
+   "page": 44,
+   "label": "רווח כולל לפני מסים על הכנסה",
+   "note": "Column 'חוזי השקעה'."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 61830,
+   "unit": "NIS thousand",
+   "page": 45,
+   "label": "הכנסות מדמי ניהול",
+   "note": "Column 'חוזי השקעה' of the supplementary data for the life and long-term savings segment."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 46806,
+   "unit": "NIS thousand",
+   "page": 45,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "Operating expenses of the investment-contract activity as one line ('other operating expenses'); not split into acquisition / G&A."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 15024,
+   "unit": "NIS thousand",
+   "page": 45,
+   "label": "רווח כולל לפני מסים על הכנסה",
+   "note": "Column 'חוזי השקעה'."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 47006,
+   "unit": "NIS thousand",
+   "page": 46,
+   "label": "הכנסות מדמי ניהול",
+   "note": "Column 'חוזי השקעה' of the supplementary data for the life and long-term savings segment."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 39777,
+   "unit": "NIS thousand",
+   "page": 46,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "Operating expenses of the investment-contract activity as one line ('other operating expenses'); not split into acquisition / G&A."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 7229,
+   "unit": "NIS thousand",
+   "page": 46,
+   "label": "רווח כולל לפני מסים על הכנסה",
+   "note": "Column 'חוזי השקעה'."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 202257,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "הכנסות מדמי ניהול",
+   "note": "Column 'חוזי השקעה' of the supplementary data for the life and long-term savings segment."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 166068,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "Operating expenses of the investment-contract activity as one line ('other operating expenses'); not split into acquisition / G&A."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 36189,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "רווח כולל לפני מסים על הכנסה",
+   "note": "Column 'חוזי השקעה'."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 6185661,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים בגין חוזי השקעה"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 42786,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Annualised receipts for new business in investment contracts ('תקבולים משונתים'). "
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 6053221,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 1057298,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים בגין חוזי השקעה"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 8730,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Annualised receipts for new business in investment contracts ('תקבולים משונתים'). "
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 1066028,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 1190270,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים בגין חוזי השקעה"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 16661,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Annualised receipts for new business in investment contracts ('תקבולים משונתים'). "
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 1149222,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 2674788,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים בגין חוזי השקעה"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 24497,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Annualised receipts for new business in investment contracts ('תקבולים משונתים'). "
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 2699285,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 2479430,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים בגין חוזי השקעה"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 34850,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Annualised receipts for new business in investment contracts ('תקבולים משונתים'). "
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 2398224,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 26777115,
+   "unit": "NIS thousand",
+   "page": 25,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "Balance-sheet liability for yield-dependent investment contracts."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-06-30",
+   "value": 23322252,
+   "unit": "NIS thousand",
+   "page": 25,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "Balance-sheet liability for yield-dependent investment contracts."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 29082913,
+   "unit": "NIS thousand",
+   "page": 25,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "Balance-sheet liability for yield-dependent investment contracts."
+  }
+ ],
+ "not_found": [
+  "Selling / acquisition expenses and general and administrative expenses of the investment-contract activity are not printed separately; only the single line 'הוצאות תפעוליות אחרות' (reported as other_expenses)."
+ ],
+ "notes": []
+}

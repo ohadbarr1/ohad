@@ -1,0 +1,270 @@
+{
+ "company": "direct",
+ "entity": "איי.די.איי. חברה לביטוח בע\"מ",
+ "period": "2026Q2",
+ "url": "https://mayafiles.tase.co.il/rpdf/1764001-1765000/P1764684-00.pdf",
+ "doc_title": "דוח רבעון 2/חצי שנתי לשנת 2026",
+ "unit": "NIS thousands",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 142727,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 28520,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 83259,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2888,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 32783,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 8621,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 19194,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 687,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 91818,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 15352,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 72679,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 859,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 52034,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 13315,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 25631,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 1368,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 160114,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 27051,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 118704,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 1664,
+   "unit": "NIS thousands",
+   "page": 58,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Additional data for investment contracts (note on life insurance and long-term savings segment)."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 486682,
+   "unit": "NIS thousands",
+   "page": 34,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Balance sheet line; yield-dependent liabilities (all savings components, measured as investment contracts under IFRS 17)."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-06-30",
+   "value": 328856,
+   "unit": "NIS thousands",
+   "page": 34,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Balance sheet line; yield-dependent liabilities (all savings components, measured as investment contracts under IFRS 17)."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 387039,
+   "unit": "NIS thousands",
+   "page": 34,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "IFRS 17 basis (savings component of policies separated and measured as investment contracts). Balance sheet line; yield-dependent liabilities (all savings components, measured as investment contracts under IFRS 17)."
+  }
+ ],
+ "not_found": [
+  "Acquisition / selling expenses, general and administrative expenses, and profit for the investment-contract activity: not printed. IDI reports one segment \"life insurance and long-term savings\" (no investment-contract split of expenses or profit), so no such facts are given."
+ ],
+ "notes": [
+  "Source entity: IDI Insurance Company Ltd (MAYA reporter id 1608, security 1129501), the insurer itself, not the Direct Insurance Financial Investments holding (MAYA 1089, bond issuer only). Reported in NIS thousands.",
+  "Report ID 1764684 published on MAYA."
+ ]
+}

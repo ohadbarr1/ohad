@@ -1,0 +1,53 @@
+{
+ "company": "phoenix_ic",
+ "entity": "הפניקס אחזקות בע\"מ",
+ "period": "2024Q1",
+ "url": "https://mayafiles.tase.co.il/rpdf/1595001-1596000/P1595204-00.pdf",
+ "doc_title": "הפניקס אחזקות בע\"מ - דוחות כספיים ביניים מאוחדים ליום 31 במרס 2024",
+ "unit": "NIS thousands",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 1470937,
+   "unit": "NIS thousands",
+   "page": 83,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-03-31",
+   "value": 1197370,
+   "unit": "NIS thousands",
+   "page": 84,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 5241397,
+   "unit": "NIS thousands",
+   "page": 85,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  }
+ ],
+ "not_found": [
+  "investment-contract liabilities (yield-dependent) at the balance dates: the IFRS 4 interim report prints only combined 'insurance and investment contracts' liabilities",
+  "management fees of the investment-contract activity (no breakdown in the interim report)",
+  "selling/acquisition and general & administrative expenses and profit of the investment-contract activity"
+ ],
+ "notes": [
+  "Source entity is the listed parent's consolidated report; the investment-policy activity sits in הפניקס חברה לביטוח בע\"מ, whose own standalone report was not used.",
+  "Amounts in NIS thousands as printed; nothing calculated. Section 5.2 of the directors' report presents receipts only as an image chart, so the notes to the financial statements were used.",
+  "IFRS 4 report; receipts are the only investment-contract figure printed in the notes."
+ ]
+}

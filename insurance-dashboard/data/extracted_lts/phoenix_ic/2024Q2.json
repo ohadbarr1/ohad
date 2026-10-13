@@ -1,0 +1,75 @@
+{
+ "company": "phoenix_ic",
+ "entity": "הפניקס פיננסים בע\"מ",
+ "period": "2024Q2",
+ "url": "https://mayafiles.tase.co.il/rpdf/1612001-1613000/P1612784-00.pdf",
+ "doc_title": "הפניקס פיננסים בע\"מ - דוחות כספיים ביניים מאוחדים ליום 30 ביוני 2024 (גרסה מתוקנת - תיקון טעות סופר בנתוני רווח למניה)",
+ "unit": "NIS thousands",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-06-30",
+   "value": 1938327,
+   "unit": "NIS thousands",
+   "page": 101,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-06-30",
+   "value": 1309549,
+   "unit": "NIS thousands",
+   "page": 102,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-06-30",
+   "value": 3409264,
+   "unit": "NIS thousands",
+   "page": 99,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-06-30",
+   "value": 2506919,
+   "unit": "NIS thousands",
+   "page": 100,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 5241397,
+   "unit": "NIS thousands",
+   "page": 103,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  }
+ ],
+ "not_found": [
+  "investment-contract liabilities (yield-dependent) at the balance dates: the IFRS 4 interim report prints only combined 'insurance and investment contracts' liabilities",
+  "management fees of the investment-contract activity (no breakdown in the interim report)",
+  "selling/acquisition and general & administrative expenses and profit of the investment-contract activity"
+ ],
+ "notes": [
+  "Source entity is the listed parent's consolidated report; the investment-policy activity sits in הפניקס חברה לביטוח בע\"מ, whose own standalone report was not used.",
+  "Amounts in NIS thousands as printed; nothing calculated. Section 5.2 of the directors' report presents receipts only as an image chart, so the notes to the financial statements were used.",
+  "IFRS 4 report; two Hebrew versions of the Q2-2024 report exist on MAYA (1612628 and the corrected 1612784, correction of the earnings-per-share figure only); the corrected one was used."
+ ]
+}

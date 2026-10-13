@@ -255,15 +255,20 @@ def reports():
     diffs, added = [], 0
     prov_dir = ROOT / "web" / "public" / "data" / "lts_prov"
     prov_dir.mkdir(parents=True, exist_ok=True)
+    store = {}
     for f in sorted((ROOT / "data" / "lts_norm").glob("*.json")):
         d = json.loads(f.read_text(encoding="utf-8"))
         c = d["company"]
         if c not in CO:
             continue
-        urls = {}
-        for x in sorted((ROOT / "data" / "extracted_lts" / c).glob("*.json")):
-            urls[x.stem] = json.loads(x.read_text(encoding="utf-8")).get("url")
-        parts, index, pf = [], {}, {}
+        ic = f.stem.startswith("ic_")
+        st = store.setdefault(c, {"entity": None, "urls": {}, "parts": [], "index": {}, "facts": {}})
+        if not ic:
+            st["entity"] = d.get("entity")
+        tag = "ic:" if ic else ""
+        for x in sorted((ROOT / "data" / "extracted_lts" / (c + "_ic" if ic else c)).glob("*.json")):
+            st["urls"][tag + x.stem] = json.loads(x.read_text(encoding="utf-8")).get("url")
+        parts, index, pf = st["parts"], st["index"], st["facts"]
         for r in d["facts"]:
             v = r.get("value")
             if v is None:
@@ -271,7 +276,7 @@ def reports():
             key = (r["metric"], c, r["period"])
             ids = []
             for q in r.get("parts", []):
-                t = (q.get("file"), q.get("page"), part_label(q), q.get("value"), q.get("unit"), q.get("date"), q.get("window"))
+                t = (tag + str(q.get("file")), q.get("page"), part_label(q), q.get("value"), q.get("unit"), q.get("date"), q.get("window"))
                 if t not in index:
                     index[t] = len(parts)
                     parts.append(list(t))
@@ -286,8 +291,83 @@ def reports():
                 continue
             facts.append([r["metric"], c, r["period"], round(v, 4), 0])
             added += 1
-        (prov_dir / f"{c}.json").write_text(json.dumps({"entity": d.get("entity"), "urls": urls, "parts": parts, "facts": pf}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    added += aggregates(store)
+    for c, st in store.items():
+        (prov_dir / f"{c}.json").write_text(json.dumps({"entity": st["entity"], "urls": st["urls"], "parts": st["parts"], "facts": st["facts"]}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return added, diffs
+
+
+SUMS = {"pen": ["aum", "tr_in", "tr_out", "tr_net", "nb", "fees", "sm", "ga", "op"], "gem": ["aum", "tr_in", "tr_out", "tr_net", "dep", "fees", "sm", "ga", "op"]}
+SHARES = {"pen.aum.share": ("pen.aum", PEN), "gem.aum.share": ("gem.aum", GEM), "pen.nb.share": ("pen.nb", PEN), "gem.dep.share": ("gem.dep", GEM)}
+
+
+def aggregates(store):
+    """Sector totals, shares and the three-product view for periods the deck does not print, built only when every company
+    of the deck's set has a figure for the period. The components of a total are its companies' own figures."""
+    by = {(m, c, p): v for m, c, p, v, _ in facts}
+    n = 0
+    al = store.setdefault("all", {"entity": "סכום החברות שבמצגת", "urls": {}, "parts": [], "index": {}, "facts": {}})
+
+    def add(metric, c, p, v, formula, inputs):
+        nonlocal n
+        if (metric, c, p) in by or v is None:
+            return
+        by[(metric, c, p)] = v
+        facts.append([metric, c, p, round(v, 4), 0])
+        n += 1
+        st = store.setdefault(c, {"entity": None, "urls": {}, "parts": [], "index": {}, "facts": {}})
+        ids = []
+        for label, val, unit in inputs:
+            t = ("", None, label, val, unit, p, "")
+            if t not in st["index"]:
+                st["index"][t] = len(st["parts"])
+                st["parts"].append(list(t))
+            ids.append(st["index"][t])
+        st["facts"][f"{metric}|{p}"] = [formula, ids]
+
+    periods = sorted({p for _, _, p in by})
+    for fam, cos in (("pen", PEN), ("gem", GEM)):
+        for m in SUMS[fam]:
+            for p in periods:
+                vals = [by.get((f"{fam}.{m}", c, p)) for c in cos]
+                if all(v is not None for v in vals):
+                    unit = "מיליוני ש\"ח" if m in ("fees", "sm", "ga", "op") else "מיליארדי ש\"ח"
+                    add(f"{fam}.{m}", "all", p, sum(vals), f"סכום {len(cos)} החברות", [(CO[c], round(v, 3), unit) for c, v in zip(cos, vals)])
+        for m, den in (("sm_fees", "sm"), ("ga_fees", "ga")):
+            for p in periods:
+                a, f = by.get((f"{fam}.{den}", "all", p)), by.get((f"{fam}.fees", "all", p))
+                if a is not None and f:
+                    add(f"{fam}.{m}", "all", p, a / f * 100, "סך ההוצאה של החברות / סך דמי הניהול, %", [("הוצאה, כל החברות", round(a, 2), "מיליוני ש\"ח"), ("דמי ניהול, כל החברות", round(f, 2), "מיליוני ש\"ח")])
+    for p in periods:
+        vals = [by.get(("ic.aum", c, p)) for c in IC]
+        if all(v is not None for v in vals):
+            add("ic.aum", "all", p, sum(vals), f"סכום {len(IC)} המבטחות", [(CO[c], round(v, 1), "מיליוני ש\"ח") for c, v in zip(IC, vals)])
+        vals = [by.get(("ic.dep", c, p)) for c in IC]
+        if all(v is not None for v in vals):
+            add("ic.dep", "all", p, sum(vals), f"סכום {len(IC)} המבטחות", [(CO[c], round(v, 1), "מיליוני ש\"ח") for c, v in zip(IC, vals)])
+    for share, (base, cos) in SHARES.items():
+        for p in periods:
+            tot = by.get((base, "all", p))
+            for c in cos:
+                v = by.get((base, c, p))
+                if v is not None and tot:
+                    add(share, c, p, v / tot * 100, "נתון החברה / סך החברות, %", [(CO[c], round(v, 3), ""), ("סך החברות", round(tot, 3), "")])
+    # the three products together: a company's managed assets and their mix, at balance dates
+    for p in [x for x in periods if len(x) == 7 and x[4] == "-"]:
+        tot_parts = []
+        for c in AM + ["all"]:
+            comp = [("pen.aum", 1, c in PEN or c == "all"), ("gem.aum", 1, c in GEM or c == "all"), ("ic.aum", 0.001, c in IC or c == "all")]
+            vals = [(m, by.get((m, c, p)), k) for m, k, has in comp if has]
+            if not vals or any(v is None for _, v, _ in vals):
+                continue
+            total = sum(v * k for _, v, k in vals)
+            add("am.aum", c, p, total, "פנסיה + גמל + חוזי השקעה", [(m, round(v * k, 3), "מיליארדי ש\"ח") for m, v, k in vals])
+            if (("am.mix.pen", c, p) not in by) and total > 0:
+                for key, m in (("am.mix.pen", "pen.aum"), ("am.mix.gem", "gem.aum"), ("am.mix.ic", "ic.aum")):
+                    hit = next((v * k for mm, v, k in vals if mm == m), None)
+                    if hit is not None:
+                        add(key, c, p, hit / total * 100, "נכסי המוצר / סך הנכסים המנוהלים, %", [(m, round(hit, 3), "מיליארדי ש\"ח"), ("סך הנכסים", round(total, 3), "מיליארדי ש\"ח")])
+    return n
 
 
 def main():

@@ -1,0 +1,89 @@
+{
+ "company": "migdal_ic",
+ "entity": "מגדל חברה לביטוח בע\"מ",
+ "period": "2024Q3",
+ "url": "https://mayafiles.tase.co.il/rpdf/1628001-1629000/P1628022-00.pdf",
+ "doc_title": "דוח רבעון 3 לשנת 2024",
+ "documents": [
+  {
+   "role": "full_report",
+   "title": "דוח רבעון 3 לשנת 2024",
+   "url": "https://mayafiles.tase.co.il/rpdf/1628001-1629000/P1628022-00.pdf",
+   "maya_report_id": 1628022,
+   "pages": 166,
+   "note": "Periodic/interim report of the listed parent מגדל אחזקות ביטוח ופיננסים בע\"מ on MAYA; the insurer (מגדל חברה לביטוח בע\"מ) is a consolidated subsidiary and its investment-contract activity is shown in the long-term-savings segment notes of this report"
+  }
+ ],
+ "unit": "NIS thousand (אלפי ש\"ח)",
+ "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-09-30",
+   "value": 2298385,
+   "unit": "NIS thousand",
+   "page": 77,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-09-30",
+   "value": 818255,
+   "unit": "NIS thousand",
+   "page": 78,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-09-30",
+   "value": 829007,
+   "unit": "NIS thousand",
+   "page": 79,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-09-30",
+   "value": 366695,
+   "unit": "NIS thousand",
+   "page": 80,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 1455486,
+   "unit": "NIS thousand",
+   "page": 81,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  }
+ ],
+ "not_found": [
+  "investment_contract_aum (liabilities for yield-dependent investment contracts) at the balance dates: not printed in this interim report; investment contracts are aggregated with insurance contracts in the balance sheet (תלויי תשואה / שאינם תלויי תשואה) and the interim notes do not split them out",
+  "management_fees, other_expenses, profit_before_tax of the investment-contract activity: not printed in this interim report (the investment-contract fee line appears only in the annual note on management-fee income; the interim segment note covers life insurance only)"
+ ],
+ "notes": [
+  "IFRS 4 basis (before the IFRS 17 adoption of 1 January 2025). Values in NIS thousand as printed. Receipts = \"תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח\", total column of note 5 table \"נתונים נוספים לגבי ביטוח חיים\".",
+  "The directors' report also prints the one-time investment-contract receipts combined with one-time insurance premiums (not separable), so only the note figure is used."
+ ]
+}

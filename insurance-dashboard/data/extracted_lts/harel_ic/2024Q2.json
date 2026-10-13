@@ -1,0 +1,82 @@
+{
+ "company": "harel_ic",
+ "entity": "הראל חברה לביטוח בע\"מ (נתוני חוזי השקעה כפי שמודפסים בדוח המאוחד של הראל השקעות בביטוח ושירותים פיננסים בע\"מ)",
+ "period": "2024Q2",
+ "url": "https://mayafiles.tase.co.il/rpdf/1614001-1615000/P1614539-00.pdf",
+ "doc_title": "דוח רבעון 2/חצי שנתי לשנת 2024",
+ "unit": "NIS million",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-06-30",
+   "value": 2173,
+   "unit": "NIS million",
+   "page": 77,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column of the results-by-policy-type table of the life insurance and long-term savings segment; in this column the amount sits entirely in the yield-dependent policies (משנת 2004 תלוי תשואה)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-06-30",
+   "value": 1126,
+   "unit": "NIS million",
+   "page": 77,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column of the results-by-policy-type table of the life insurance and long-term savings segment; in this column the amount sits entirely in the yield-dependent policies (משנת 2004 תלוי תשואה)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-06-30",
+   "value": 1350,
+   "unit": "NIS million",
+   "page": 78,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column of the results-by-policy-type table of the life insurance and long-term savings segment; in this column the amount sits entirely in the yield-dependent policies (משנת 2004 תלוי תשואה)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-06-30",
+   "value": 694,
+   "unit": "NIS million",
+   "page": 78,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column of the results-by-policy-type table of the life insurance and long-term savings segment; in this column the amount sits entirely in the yield-dependent policies (משנת 2004 תלוי תשואה)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 2865,
+   "unit": "NIS million",
+   "page": 79,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column of the results-by-policy-type table of the life insurance and long-term savings segment; in this column the amount sits entirely in the yield-dependent policies (משנת 2004 תלוי תשואה)"
+  }
+ ],
+ "not_found": [
+  "investment_contract_aum at interim dates: the 2024 interim reports (IFRS 4) print only the combined line \"התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה\" (insurance and investment contracts together); the split appears only in the annual report (31.12.2024 / 31.12.2023) and, for 31.3 / 30.6 / 30.9.2024, as restated comparatives in the 2025 interim reports (see harel_ic/2025Q1, 2025Q2, 2025Q3).",
+  "management_fees, other_expenses, operating_profit, profit_before_tax of investment contracts: not printed in this IFRS 4-era report. The directors report states that the life segment profit excludes the results of investment contracts, \"presented within asset management\", but no separate figures for them are printed. Restated 2024 figures (IFRS 17 basis) are printed as comparatives in the 2025 reports (see harel_ic/2025Q1..2025FY).",
+  "selling / acquisition expenses and general and administrative expenses for investment contracts: not printed (single line \"הוצאות תפעוליות אחרות\" from 2025 on).",
+  "new_business_annualized_premiums and one_time_deposits of investment contracts: not printed in the interim report (printed only in annual reports; the 2024 interim values appear as restated comparatives in the 2025 interim reports)"
+ ],
+ "notes": [
+  "Source: the consolidated report of the listed parent הראל השקעות בביטוח ושירותים פיננסים בע\"מ (Hebrew original, MAYA, the report indexed in web/public/data/companies/harel.docs.json). Harel Insurance (הראל חברה לביטוח) is its insurer subsidiary; the investment-contract figures are printed in the parent report in the note on operating segments (life insurance and long-term savings) and in the balance sheet / insurance notes. The insurer's stand-alone report was not used. Amounts in NIS million as printed.",
+  "Page = 1-based PDF page of the downloaded MAYA PDF. A \"-\" printed in a cell is stored as 0; parentheses are negative.",
+  "investment_contract_deposits = \"תקבולים בגין חוזי השקעה\" (receipts credited directly to investment-contract reserves; not included in premiums). investment_contract_aum = liabilities for yield-dependent investment contracts (the figure the deck calls assets under management); the not-yield-dependent liabilities are small and kept as a separate metric.",
+  "IFRS 4 report; each page prints a six-month block followed by a three-month block (windows ytd and q)."
+ ]
+}

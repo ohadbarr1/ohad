@@ -1,0 +1,171 @@
+{
+ "company": "direct",
+ "entity": "איי.די.איי. חברה לביטוח בע\"מ",
+ "period": "2023FY",
+ "url": "https://mayafiles.tase.co.il/rpdf/1581001-1582000/P1581531-00.pdf",
+ "doc_title": "דוח תקופתי ושנתי לשנת 2023",
+ "unit": "NIS thousands",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 51889,
+   "unit": "NIS thousands",
+   "page": 188,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (per policy-type results table, life & long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 19132,
+   "unit": "NIS thousands",
+   "page": 188,
+   "label": "פרמיה משונתת בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Annualised premium, new business, investment contracts."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 15708,
+   "unit": "NIS thousands",
+   "page": 188,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). "
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 46255,
+   "unit": "NIS thousands",
+   "page": 189,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (per policy-type results table, life & long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 24721,
+   "unit": "NIS thousands",
+   "page": 189,
+   "label": "פרמיה משונתת בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Annualised premium, new business, investment contracts."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 30023,
+   "unit": "NIS thousands",
+   "page": 189,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). "
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 51875,
+   "unit": "NIS thousands",
+   "page": 190,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (per policy-type results table, life & long-term savings segment)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 6013,
+   "unit": "NIS thousands",
+   "page": 190,
+   "label": "פרמיה משונתת בגין חוזי השקעה - עסק חדש",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Annualised premium, new business, investment contracts."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 36982,
+   "unit": "NIS thousands",
+   "page": 190,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). "
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 70424,
+   "unit": "NIS thousands",
+   "page": 234,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Investment contracts only; maturity table (also note 16 p.175)."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 67143,
+   "unit": "NIS thousands",
+   "page": 234,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Investment contracts only; maturity table (also note 16 p.175)."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 480,
+   "unit": "NIS thousands",
+   "page": 213,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Note 27 fee income; fixed management fees on investment contracts."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 419,
+   "unit": "NIS thousands",
+   "page": 213,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Note 27 fee income; fixed management fees on investment contracts."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 289,
+   "unit": "NIS thousands",
+   "page": 213,
+   "label": "דמי ניהול קבועים בגין חוזי השקעה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Note 27 fee income; fixed management fees on investment contracts."
+  }
+ ],
+ "not_found": [
+  "Acquisition / selling expenses, general and administrative expenses, and profit for the investment-contract activity: not printed. IDI reports one segment \"life insurance and long-term savings\" (no investment-contract split of expenses or profit), so no such facts are given."
+ ],
+ "notes": [
+  "Source entity: IDI Insurance Company Ltd (MAYA reporter id 1608, security 1129501), the insurer itself, not the Direct Insurance Financial Investments holding (MAYA 1089, bond issuer only). Reported in NIS thousands.",
+  "Report ID 1581531 published on MAYA."
+ ]
+}

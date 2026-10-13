@@ -1,0 +1,147 @@
+{
+ "company": "menora_ic",
+ "entity": "מנורה מבטחים ביטוח בע\"מ",
+ "period": "2023FY",
+ "url": "https://mayafiles.tase.co.il/rpdf/1583001-1584000/P1583623-00.pdf",
+ "doc_title": "דוח תקופתי ושנתי לשנת 2023",
+ "documents": [
+  {
+   "role": "full_report",
+   "title": "דוח תקופתי ושנתי לשנת 2023",
+   "url": "https://mayafiles.tase.co.il/rpdf/1583001-1584000/P1583623-00.pdf",
+   "maya_report_id": 1583623,
+   "pages": 551,
+   "note": "Periodic/interim report of the listed parent מנורה מבטחים החזקות בע\"מ on MAYA; the insurer (מנורה מבטחים ביטוח בע\"מ) is a consolidated subsidiary and its investment-contract activity is shown in the long-term-savings segment notes of this report"
+  }
+ ],
+ "unit": "NIS thousand (אלפי ש\"ח)",
+ "source_entity": "מנורה מבטחים החזקות בע\"מ",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 580050,
+   "unit": "NIS thousand",
+   "page": 321,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 814059,
+   "unit": "NIS thousand",
+   "page": 322,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 776689,
+   "unit": "NIS thousand",
+   "page": 323,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 4874450,
+   "unit": "NIS thousand",
+   "page": 308,
+   "label": "חוזי השקעה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Note on liabilities for insurance and investment contracts that are yield-dependent; row \"חוזי השקעה\" within life insurance and long-term savings, gross"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 4836939,
+   "unit": "NIS thousand",
+   "page": 308,
+   "label": "חוזי השקעה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Note on liabilities for insurance and investment contracts that are yield-dependent; row \"חוזי השקעה\" within life insurance and long-term savings, gross"
+  },
+  {
+   "metric": "investment_contract_liabilities_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 4992631,
+   "unit": "NIS thousand",
+   "page": 307,
+   "label": "חוזי השקעה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Note on liabilities that are not yield-dependent; row \"חוזי השקעה\", gross (extra, not the AUM figure)"
+  },
+  {
+   "metric": "investment_contract_liabilities_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 5065602,
+   "unit": "NIS thousand",
+   "page": 307,
+   "label": "חוזי השקעה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Note on liabilities that are not yield-dependent; row \"חוזי השקעה\", gross (extra, not the AUM figure)"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 45743,
+   "unit": "NIS thousand",
+   "page": 353,
+   "label": "דמי ניהול בגין חוזי השקעה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Note on management-fee income (annual report only)"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 43144,
+   "unit": "NIS thousand",
+   "page": 353,
+   "label": "דמי ניהול בגין חוזי השקעה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Note on management-fee income (annual report only)"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 40083,
+   "unit": "NIS thousand",
+   "page": 353,
+   "label": "דמי ניהול בגין חוזי השקעה",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Note on management-fee income (annual report only)"
+  }
+ ],
+ "not_found": [
+  "other_expenses / profit_before_tax of the investment-contract activity: not printed on the IFRS 4 basis (no separate investment-contract result)"
+ ],
+ "notes": [
+  "IFRS 4 basis. NIS thousand as printed. Liabilities: note 16 (not yield-dependent) and note 17 (yield-dependent), row \"חוזי השקעה\", gross columns, at 31.12.2022 and 31.12.2023."
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "company": "ayalon",
+ "entity": "איילון חברה לביטוח בע\"מ",
+ "period": "2024Q1",
+ "url": "https://mayafiles.tase.co.il/rpdf/1593001-1594000/P1593787-00.pdf",
+ "doc_title": "דוח רבעון 1 לשנת 2024",
+ "unit": "NIS thousand",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 48401,
+   "unit": "NIS thousand",
+   "page": 57,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "column": "סה\"כ (= תלוי תשואה, פוליסות הכוללות מרכיב חסכון משנת 2004)",
+   "note": "IFRS 4 report (before the adoption of IFRS 17 in 2025). Receipts credited directly to insurance reserves; in this report they sit in the yield-dependent column of policies sold from 2004. The 2025 reports print restated IFRS 17 comparatives for the same periods, which differ."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-03-31",
+   "value": 26102,
+   "unit": "NIS thousand",
+   "page": 57,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "column": "סה\"כ (= תלוי תשואה, פוליסות הכוללות מרכיב חסכון משנת 2004)",
+   "note": "IFRS 4 report (before the adoption of IFRS 17 in 2025). Receipts credited directly to insurance reserves; in this report they sit in the yield-dependent column of policies sold from 2004. The 2025 reports print restated IFRS 17 comparatives for the same periods, which differ."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 178992,
+   "unit": "NIS thousand",
+   "page": 58,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "column": "סה\"כ (= תלוי תשואה, פוליסות הכוללות מרכיב חסכון משנת 2004)",
+   "note": "IFRS 4 report (before the adoption of IFRS 17 in 2025). Receipts credited directly to insurance reserves; in this report they sit in the yield-dependent column of policies sold from 2004. The 2025 reports print restated IFRS 17 comparatives for the same periods, which differ."
+  }
+ ],
+ "not_found": [
+  "management_fees of investment contracts for the interim periods: not printed in this IFRS 4 interim report (the fee-income breakdown 'דמי ניהול בגין חוזי השקעה' appears only in the annual report).",
+  "selling / acquisition expenses, general and administrative expenses, operating profit and profit before tax of investment contracts: not printed (IFRS 4: the activity is not presented as a segment; the table prints only 'מרווח פיננסי כולל דמי ניהול' for the whole yield-dependent column of life policies, which is not investment-contract specific).",
+  "investment_contract_aum (liabilities for yield-dependent investment contracts): not separately printed in the interim report; the balance sheet and notes print only the combined 'התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה'. Restated IFRS 17 comparatives for 31 Mar / 30 Jun / 30 Sep 2024 are printed in the 2025 reports (see 2025Q1-2025Q3).",
+  "new business, one-time receipts, transfers in / out of investment contracts: not printed in this interim report."
+ ],
+ "notes": [
+  "Source: the insurer's own consolidated report on MAYA (איילון חברה לביטוח בע\"מ). Amounts in NIS thousand as printed.",
+  "Page = 1-based PDF page of the MAYA PDF.",
+  "IFRS 4 report: investment contracts are not presented as a segment. The receipts figure is the row 'תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח' in the segment-note table 'נתונים נוספים על אודות מגזר ביטוח חיים וחיסכון ארוך טווח'; the total column equals the yield-dependent column (policies from 2004). Windows: q = three months, ytd = six / nine months, fy = full year. Figures differ from the IFRS 17 restated comparatives printed in the 2025 reports (for example Q1-24: 48,401 here, 47,371 restated)."
+ ]
+}

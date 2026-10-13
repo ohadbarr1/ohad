@@ -1,0 +1,226 @@
+{
+ "company": "hachshara",
+ "entity": "הכשרה חברה לביטוח בע\"מ",
+ "period": "2024Q2",
+ "url": "https://mayafiles.tase.co.il/rpdf/1614001-1615000/P1614115-00.pdf",
+ "doc_title": "דוח רבעון 2/חצי שנתי לשנת 2024",
+ "unit": "NIS thousand",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-06-30",
+   "value": 2485653,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Receipts on investment contracts credited directly to insurance reserves."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-06-30",
+   "value": 73806,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "מזה דמי ניהול בגין חוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. "
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-06-30",
+   "value": 5289,
+   "unit": "NIS thousand",
+   "page": 47,
+   "label": "מזה רווח כולל מחוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Comprehensive profit of investment contracts as printed in the segment table (the segment table is before tax)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-06-30",
+   "value": 636562,
+   "unit": "NIS thousand",
+   "page": 48,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Receipts on investment contracts credited directly to insurance reserves."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-06-30",
+   "value": 66607,
+   "unit": "NIS thousand",
+   "page": 48,
+   "label": "מזה דמי ניהול בגין חוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. "
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-06-30",
+   "value": 1933,
+   "unit": "NIS thousand",
+   "page": 48,
+   "label": "מזה רווח כולל מחוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Comprehensive profit of investment contracts as printed in the segment table (the segment table is before tax)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-06-30",
+   "value": 1208261,
+   "unit": "NIS thousand",
+   "page": 49,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Receipts on investment contracts credited directly to insurance reserves."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-06-30",
+   "value": 38227,
+   "unit": "NIS thousand",
+   "page": 49,
+   "label": "מזה דמי ניהול בגין חוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. "
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-06-30",
+   "value": 3446,
+   "unit": "NIS thousand",
+   "page": 49,
+   "label": "מזה רווח כולל מחוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Comprehensive profit of investment contracts as printed in the segment table (the segment table is before tax)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-06-30",
+   "value": 381880,
+   "unit": "NIS thousand",
+   "page": 50,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Receipts on investment contracts credited directly to insurance reserves."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-06-30",
+   "value": 33179,
+   "unit": "NIS thousand",
+   "page": 50,
+   "label": "מזה דמי ניהול בגין חוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. "
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-06-30",
+   "value": 981,
+   "unit": "NIS thousand",
+   "page": 50,
+   "label": "מזה רווח כולל מחוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Comprehensive profit of investment contracts as printed in the segment table (the segment table is before tax)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 2352117,
+   "unit": "NIS thousand",
+   "page": 51,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Receipts on investment contracts credited directly to insurance reserves."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 133051,
+   "unit": "NIS thousand",
+   "page": 51,
+   "label": "מזה דמי ניהול בין חוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Label as printed ('בין')."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 6085,
+   "unit": "NIS thousand",
+   "page": 51,
+   "label": "מזה רווח כולל מחוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Comprehensive profit of investment contracts as printed in the segment table (the segment table is before tax)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 12645,
+   "unit": "NIS thousand",
+   "page": 51,
+   "label": "פרמיה משונתת בגין חוזי השקעה - עסק חדש",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. "
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 2316905,
+   "unit": "NIS thousand",
+   "page": 51,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. "
+  },
+  {
+   "metric": "transfers_in",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 100389,
+   "unit": "NIS thousand",
+   "page": 51,
+   "label": "העברות לחברה בגין חוזי ביטוח וחוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Printed under the yield-dependent policies column; the label covers insurance and investment contracts."
+  },
+  {
+   "metric": "transfers_out",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 217656,
+   "unit": "NIS thousand",
+   "page": 51,
+   "label": "העברות מהחברה בגין חוזי ביטוח וחוזי השקעה",
+   "note": "Supplementary data for the life and long-term savings segment (IFRS 4 basis, before IFRS 17 adoption); investment-contract column. Printed under the yield-dependent policies column; the label covers insurance and investment contracts."
+  }
+ ],
+ "not_found": [
+  "investment_contract_aum (התחייבויות בגין חוזי השקעה תלויי תשואה): the quarterly IFRS 4 balance sheet prints only the combined line 'התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה' (insurance + investment contracts); the investment-contract component is split out only in the annual report (note 15ב). Investor presentations of the period (checked: H1-2024, Q3-2024, FY2024 decks) do not print it either.",
+  "Expenses (selling, acquisition, G&A, other operating) of the investment-contract activity: not printed in this IFRS 4 report; only receipts, management fees and comprehensive profit are printed for investment contracts."
+ ],
+ "notes": [
+  "IFRS 4 basis. Combined yield-dependent liabilities (insurance + investment contracts) in the balance sheet (page 23): 30.6.2024 23,150,132; 30.6.2023 20,282,569; 31.12.2023 20,883,685 NIS thousand (not used as a fact)."
+ ]
+}

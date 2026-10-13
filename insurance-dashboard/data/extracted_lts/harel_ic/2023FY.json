@@ -1,0 +1,201 @@
+{
+ "company": "harel_ic",
+ "entity": "הראל חברה לביטוח בע\"מ (נתוני חוזי השקעה כפי שמודפסים בדוח המאוחד של הראל השקעות בביטוח ושירותים פיננסים בע\"מ)",
+ "period": "2023FY",
+ "url": "https://mayafiles.tase.co.il/rpdf/1583001-1584000/P1583589-00.pdf",
+ "doc_title": "דוח תקופתי ושנתי לשנת 2023",
+ "unit": "NIS million",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 2865,
+   "unit": "NIS million",
+   "page": 297,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column of the results-by-policy-type table of the life insurance and long-term savings segment; in this column the amount sits entirely in the yield-dependent policies (משנת 2004 תלוי תשואה)"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 51,
+   "unit": "NIS million",
+   "page": 297,
+   "label": "פרמיה משונתת בגין חוזי השקעה – עסק חדש",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column; footnote 4: increases in existing policies are not part of new business"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 2601,
+   "unit": "NIS million",
+   "page": 297,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 3936,
+   "unit": "NIS million",
+   "page": 298,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column of the results-by-policy-type table of the life insurance and long-term savings segment; in this column the amount sits entirely in the yield-dependent policies (משנת 2004 תלוי תשואה)"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 45,
+   "unit": "NIS million",
+   "page": 298,
+   "label": "פרמיה משונתת בגין חוזי השקעה – עסק חדש",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column; footnote 4: increases in existing policies are not part of new business"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 3674,
+   "unit": "NIS million",
+   "page": 298,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 3939,
+   "unit": "NIS million",
+   "page": 299,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column; yield-dependent column prints 3925, the rest in the other columns"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 53,
+   "unit": "NIS million",
+   "page": 299,
+   "label": "פרמיה משונתת בגין חוזי השקעה – עסק חדש",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column; footnote 4: increases in existing policies are not part of new business"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 3704,
+   "unit": "NIS million",
+   "page": 299,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 19122,
+   "unit": "NIS million",
+   "page": 295,
+   "label": "התחייבויות בגין חוזי השקעה (עמודת תלוי תשואה)",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "investment-contract liabilities, column \"תלוי תשואה\" of משנת 2004 policies"
+  },
+  {
+   "metric": "investment_contract_liabilities_not_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 143,
+   "unit": "NIS million",
+   "page": 295,
+   "label": "התחייבויות בגין חוזי השקעה (עמודת שאינו תלוי תשואה)",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "column \"שאינו תלוי תשואה\""
+  },
+  {
+   "metric": "investment_contract_liabilities_total",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 19265,
+   "unit": "NIS million",
+   "page": 295,
+   "label": "התחייבויות בגין חוזי השקעה (סה\"כ)",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column = yield-dependent + not yield-dependent"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 19126,
+   "unit": "NIS million",
+   "page": 296,
+   "label": "התחייבויות בגין חוזי השקעה (עמודת תלוי תשואה)",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "investment-contract liabilities, column \"תלוי תשואה\" of משנת 2004 policies"
+  },
+  {
+   "metric": "investment_contract_liabilities_not_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 168,
+   "unit": "NIS million",
+   "page": 296,
+   "label": "התחייבויות בגין חוזי השקעה (עמודת שאינו תלוי תשואה)",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "column \"שאינו תלוי תשואה\""
+  },
+  {
+   "metric": "investment_contract_liabilities_total",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 19294,
+   "unit": "NIS million",
+   "page": 296,
+   "label": "התחייבויות בגין חוזי השקעה (סה\"כ)",
+   "source_entity": "הראל השקעות בביטוח ושירותים פיננסים בע\"מ (דוח מאוחד)",
+   "note": "סה\"כ column = yield-dependent + not yield-dependent"
+  }
+ ],
+ "not_found": [
+  "management_fees, other_expenses, operating_profit, profit_before_tax of investment contracts: not printed in this IFRS 4-era report. The directors report states that the life segment profit excludes the results of investment contracts, \"presented within asset management\", but no separate figures for them are printed. Restated 2024 figures (IFRS 17 basis) are printed as comparatives in the 2025 reports (see harel_ic/2025Q1..2025FY).",
+  "selling / acquisition expenses and general and administrative expenses for investment contracts: not printed (single line \"הוצאות תפעוליות אחרות\" from 2025 on).",
+  "quarterly (three-month) receipts: not printed in the 2023 annual report"
+ ],
+ "notes": [
+  "Source: the consolidated report of the listed parent הראל השקעות בביטוח ושירותים פיננסים בע\"מ (Hebrew original, MAYA, the report indexed in web/public/data/companies/harel.docs.json). Harel Insurance (הראל חברה לביטוח) is its insurer subsidiary; the investment-contract figures are printed in the parent report in the note on operating segments (life insurance and long-term savings) and in the balance sheet / insurance notes. The insurer's stand-alone report was not used. Amounts in NIS million as printed.",
+  "Page = 1-based PDF page of the downloaded MAYA PDF. A \"-\" printed in a cell is stored as 0; parentheses are negative.",
+  "investment_contract_deposits = \"תקבולים בגין חוזי השקעה\" (receipts credited directly to investment-contract reserves; not included in premiums). investment_contract_aum = liabilities for yield-dependent investment contracts (the figure the deck calls assets under management); the not-yield-dependent liabilities are small and kept as a separate metric.",
+  "IFRS 4 report (before the adoption of IFRS 17). Receipts for 2023, 2022 and 2021 come from the three annual result tables of note 19 (life insurance and long-term savings segment); liabilities from the two exposure tables (31.12.2023 and 31.12.2022). Quarterly figures are not printed in an annual report except where noted."
+ ]
+}

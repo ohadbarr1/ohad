@@ -1,0 +1,117 @@
+{
+ "company": "clal",
+ "entity": "כלל החזקות עסקי ביטוח בע\"מ",
+ "period": "2024Q3",
+ "url": "https://mayafiles.tase.co.il/rpdf/1630001-1631000/P1630271-00.pdf",
+ "doc_title": "דוח רבעון 3 לשנת 2024",
+ "unit": "NIS millions",
+ "source_entity": "כלל חברה לביטוח בע\"מ (consolidated report of the listed parent, Clal Insurance Enterprises Holdings; the investment-contract activity is a column of the long-term savings segment)",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-09-30",
+   "value": 249,
+   "unit": "NIS millions",
+   "page": 109,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note on additional data, life insurance and long-term savings segment).",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-09-30",
+   "value": 201,
+   "unit": "NIS millions",
+   "page": 110,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note on additional data, life insurance and long-term savings segment).",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-09-30",
+   "value": 590,
+   "unit": "NIS millions",
+   "page": 109,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note on additional data, life insurance and long-term savings segment).",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-09-30",
+   "value": 933,
+   "unit": "NIS millions",
+   "page": 109,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note on additional data, life insurance and long-term savings segment).",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 1081,
+   "unit": "NIS millions",
+   "page": 110,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note on additional data, life insurance and long-term savings segment).",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  },
+  {
+   "metric": "yield_dependent_insurance_and_investment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-09-30",
+   "value": 94556,
+   "unit": "NIS millions",
+   "page": 76,
+   "label": "התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Printed line combines yield-dependent insurance contracts and investment contracts; investment contracts alone are not printed in this interim report. The pre-IFRS 17 investment-contract-only balances for 31.3.24 / 30.6.24 / 30.9.24 appear in the IFRS 17 transition notes of the 2025 interim reports.",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  },
+  {
+   "metric": "yield_dependent_insurance_and_investment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-09-30",
+   "value": 90897,
+   "unit": "NIS millions",
+   "page": 76,
+   "label": "התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Printed line combines yield-dependent insurance contracts and investment contracts; investment contracts alone are not printed in this interim report. The pre-IFRS 17 investment-contract-only balances for 31.3.24 / 30.6.24 / 30.9.24 appear in the IFRS 17 transition notes of the 2025 interim reports.",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  },
+  {
+   "metric": "yield_dependent_insurance_and_investment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 91665,
+   "unit": "NIS millions",
+   "page": 76,
+   "label": "התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Printed line combines yield-dependent insurance contracts and investment contracts; investment contracts alone are not printed in this interim report. The pre-IFRS 17 investment-contract-only balances for 31.3.24 / 30.6.24 / 30.9.24 appear in the IFRS 17 transition notes of the 2025 interim reports.",
+   "source_entity": "כלל החזקות עסקי ביטוח בע\"מ"
+  }
+ ],
+ "not_found": [
+  "Management fees, expenses and profit for investment contracts: not printed separately (IFRS 4 segment note has gemel, pension and life insurance only).",
+  "Acquisition/selling expenses and general and administrative expenses for investment contracts: not printed.",
+  "Liabilities for yield-dependent investment contracts alone are not printed in this interim report; only the combined insurance + investment line (metric yield_dependent_insurance_and_investment_liabilities).",
+  "New-business and one-time investment-contract receipts: not printed in this interim report."
+ ],
+ "notes": [
+  "Reporting entity: Clal Insurance Enterprises Holdings Ltd (כלל החזקות עסקי ביטוח), consolidated; the investment-contract activity of Clal Insurance (כלל חברה לביטוח) is reported inside it. Amounts in NIS millions. No standalone insurer report was used.",
+  "MAYA report id 1630271."
+ ]
+}

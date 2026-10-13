@@ -1,0 +1,86 @@
+{
+ "company": "direct",
+ "entity": "איי.די.איי. חברה לביטוח בע\"מ",
+ "period": "2024Q1",
+ "url": "https://mayafiles.tase.co.il/rpdf/1594001-1595000/P1594775-00.pdf",
+ "doc_title": "דוח רבעון 1 לשנת 2024",
+ "unit": "NIS thousands",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 12898,
+   "unit": "NIS thousands",
+   "page": 42,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note 3, additional data, life & long-term savings segment)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-03-31",
+   "value": 13002,
+   "unit": "NIS thousands",
+   "page": 42,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note 3, additional data, life & long-term savings segment)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 51889,
+   "unit": "NIS thousands",
+   "page": 43,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Receipts credited directly to insurance reserves (note 3, additional data, life & long-term savings segment)."
+  },
+  {
+   "metric": "yield_dependent_insurance_and_investment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-03-31",
+   "value": 297715,
+   "unit": "NIS thousands",
+   "page": 26,
+   "label": "התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Printed line combines yield-dependent insurance contracts and investment contracts; investment contracts alone are not printed in this interim report. Under IFRS 17 (2025 reports) the same line is labelled investment contracts."
+  },
+  {
+   "metric": "yield_dependent_insurance_and_investment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-03-31",
+   "value": 293070,
+   "unit": "NIS thousands",
+   "page": 26,
+   "label": "התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Printed line combines yield-dependent insurance contracts and investment contracts; investment contracts alone are not printed in this interim report. Under IFRS 17 (2025 reports) the same line is labelled investment contracts."
+  },
+  {
+   "metric": "yield_dependent_insurance_and_investment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 292529,
+   "unit": "NIS thousands",
+   "page": 26,
+   "label": "התחייבויות בגין חוזי ביטוח וחוזי השקעה תלויי תשואה",
+   "note": "IFRS 4 basis (report predates IFRS 17 adoption on 1.1.2025). Printed line combines yield-dependent insurance contracts and investment contracts; investment contracts alone are not printed in this interim report. Under IFRS 17 (2025 reports) the same line is labelled investment contracts."
+  }
+ ],
+ "not_found": [
+  "Acquisition / selling expenses, general and administrative expenses, and profit for the investment-contract activity: not printed. IDI reports one segment \"life insurance and long-term savings\" (no investment-contract split of expenses or profit), so no such facts are given.",
+  "Liabilities for yield-dependent investment contracts alone are not printed in this interim report (IFRS 4 basis); only the combined insurance + investment contracts line is, given as yield_dependent_insurance_and_investment_liabilities. Restated IFRS 4 investment-contract-only balances for 30.6.24 and 30.9.24 appear in the 2025Q2 / 2025Q3 reports.",
+  "Fixed management fees on investment contracts alone are not printed in this interim report (the \"דמי ניהול קבועים\" row covers all savings policies).",
+  "New-business and one-time premiums for investment contracts: not printed in this interim report."
+ ],
+ "notes": [
+  "Source entity: IDI Insurance Company Ltd (MAYA reporter id 1608, security 1129501), the insurer itself, not the Direct Insurance Financial Investments holding (MAYA 1089, bond issuer only). Reported in NIS thousands.",
+  "Report ID 1594775 published on MAYA."
+ ]
+}

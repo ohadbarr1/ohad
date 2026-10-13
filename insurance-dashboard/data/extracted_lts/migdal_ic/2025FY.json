@@ -1,0 +1,246 @@
+{
+ "company": "migdal_ic",
+ "entity": "מגדל חברה לביטוח בע\"מ",
+ "period": "2025FY",
+ "url": "https://mayafiles.tase.co.il/rpdf/1730001-1731000/P1730567-00.pdf",
+ "doc_title": "דוח תקופתי ושנתי לשנת 2025",
+ "documents": [
+  {
+   "role": "full_report",
+   "title": "דוח תקופתי ושנתי לשנת 2025",
+   "url": "https://mayafiles.tase.co.il/rpdf/1730001-1731000/P1730567-00.pdf",
+   "maya_report_id": 1730567,
+   "pages": 516,
+   "note": "Periodic/interim report of the listed parent מגדל אחזקות ביטוח ופיננסים בע\"מ on MAYA; the insurer (מגדל חברה לביטוח בע\"מ) is a consolidated subsidiary and its investment-contract activity is shown in the long-term-savings segment notes of this report"
+  }
+ ],
+ "unit": "NIS million (מיליוני ש\"ח)",
+ "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+ "facts": [
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 90,
+   "unit": "NIS million",
+   "page": 197,
+   "label": "הכנסות מדמי ניהול",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "IC column of the segment table (long-term savings: life | investment contracts | pension | provident)"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 84,
+   "unit": "NIS million",
+   "page": 197,
+   "label": "הוצאות תפעוליות אחרות",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "IC column; single operating-expense line (acquisition/commissions and general and administrative are not split in this table); sign as printed"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 26,
+   "unit": "NIS million",
+   "page": 197,
+   "label": "רווח (הפסד) לפני מיסים על הכנסה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "IC column of the segment table"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 64,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "הכנסות מדמי ניהול",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "IC column of the segment table (long-term savings: life | investment contracts | pension | provident)"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 53,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "הוצאות תפעוליות אחרות",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "IC column; single operating-expense line (acquisition/commissions and general and administrative are not split in this table); sign as printed"
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 22,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "רווח (הפסד) לפני מסים על הכנסה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "IC column of the segment table"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 3209,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "תקבולים בגין חוזי השקעה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Table \"מידע נוסף בגין חוזי השקעה\"; receipts are credited directly to the liability and are not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 4782,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "תקבולים בגין חוזי השקעה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Table \"מידע נוסף בגין חוזי השקעה\"; receipts are credited directly to the liability and are not premiums"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 59,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Table \"מידע נוסף בגין חוזי השקעה\"; receipts are credited directly to the liability and are not premiums; annualised new business receipts"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 66,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Table \"מידע נוסף בגין חוזי השקעה\"; receipts are credited directly to the liability and are not premiums; annualised new business receipts"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 3045,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Table \"מידע נוסף בגין חוזי השקעה\"; receipts are credited directly to the liability and are not premiums"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 4573,
+   "unit": "NIS million",
+   "page": 198,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Table \"מידע נוסף בגין חוזי השקעה\"; receipts are credited directly to the liability and are not premiums"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-01-01",
+   "value": 5194,
+   "unit": "NIS million",
+   "page": 147,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Balance sheet, liabilities for investment contracts that are yield-dependent; opening balance at 1 January 2024 (IFRS 17 transition date)"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 7584,
+   "unit": "NIS million",
+   "page": 147,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Balance sheet, liabilities for investment contracts that are yield-dependent"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 12174,
+   "unit": "NIS million",
+   "page": 147,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Balance sheet, liabilities for investment contracts that are yield-dependent"
+  },
+  {
+   "metric": "investment_contract_liabilities_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-01-01",
+   "value": 416,
+   "unit": "NIS million",
+   "page": 147,
+   "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Balance sheet, liabilities for investment contracts that are not yield-dependent (extra, not the AUM figure); opening balance at 1 January 2024 (IFRS 17 transition date)"
+  },
+  {
+   "metric": "investment_contract_liabilities_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 763,
+   "unit": "NIS million",
+   "page": 147,
+   "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Balance sheet, liabilities for investment contracts that are not yield-dependent (extra, not the AUM figure)"
+  },
+  {
+   "metric": "investment_contract_liabilities_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 701,
+   "unit": "NIS million",
+   "page": 147,
+   "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה",
+   "source_entity": "מגדל אחזקות ביטוח ופיננסים בע\"מ",
+   "note": "Balance sheet, liabilities for investment contracts that are not yield-dependent (extra, not the AUM figure)"
+  }
+ ],
+ "not_found": [
+  "aum_average / management fee rate / expenses split (acquisition vs G&A) for investment contracts: the segment table prints one line \"הוצאות תפעוליות אחרות\" for the investment-contract column; no separate acquisition or G&A split is printed for this activity"
+ ],
+ "notes": [
+  "Values in NIS million as printed (the IFRS 17 notes of the listed parent are in NIS million). Columns of the long-term-savings segment table: total | life insurance | investment contracts | pension | provident; the investment-contract column is used.",
+  "The insurer (מגדל חברה לביטוח) is consolidated in מגדל אחזקות ביטוח ופיננסים; the segment note is at group level, and investment contracts are sold only by the insurer.",
+  "Quarter-end liabilities for yield-dependent investment contracts are taken from the interim balance sheet at every date it prints (current date, same date a year earlier, last year-end).",
+  "The directors' report footnote (p.88 of the PDF) rounds investment-contract receipts to NIS 4,784 million (2025) and 3,208 million (2024); the table in note 4 (p.198) prints 4,782 and 3,209; the table figures are used."
+ ]
+}

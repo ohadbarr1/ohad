@@ -1,0 +1,316 @@
+{
+ "company": "phoenix_ic",
+ "entity": "הפניקס פיננסים בע\"מ",
+ "period": "2025Q1",
+ "url": "https://mayafiles.tase.co.il/rpdf/1668001-1669000/P1668034-00.pdf",
+ "doc_title": "הפניקס פיננסים בע\"מ - דוחות כספיים ביניים מאוחדים ליום 31 במרס 2025",
+ "unit": "NIS thousands",
+ "facts": [
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 213776,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "הכנסות מדמי ניהול",
+   "note": "management fees of the investment-contract (yield-dependent) segment; IFRS 17 basis"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 49794,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "הכנסות מדמי ניהול",
+   "note": "management fees of the investment-contract (yield-dependent) segment; IFRS 17 basis"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 70837,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "הכנסות מדמי ניהול",
+   "note": "management fees of the investment-contract (yield-dependent) segment; IFRS 17 basis"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 173123,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "other operating expenses of the investment-contract segment as one line; the table does not split selling/acquisition from general & administrative"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 37048,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "other operating expenses of the investment-contract segment as one line; the table does not split selling/acquisition from general & administrative"
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 52911,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "other operating expenses of the investment-contract segment as one line; the table does not split selling/acquisition from general & administrative"
+  },
+  {
+   "metric": "operating_profit",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 40653,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "רווח (הפסד) לתקופה",
+   "note": "segment result as printed ('profit for the period'); the table does not state whether it is before or after tax"
+  },
+  {
+   "metric": "operating_profit",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 12746,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "רווח (הפסד) לתקופה",
+   "note": "segment result as printed ('profit for the period'); the table does not state whether it is before or after tax"
+  },
+  {
+   "metric": "operating_profit",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 17926,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "רווח (הפסד) לתקופה",
+   "note": "segment result as printed ('profit for the period'); the table does not state whether it is before or after tax"
+  },
+  {
+   "metric": "investment_contract_segment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 32957985,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "סך כל התחייבויות המגזר",
+   "note": "segment liabilities of the investment-contract segment at the balance date (period end of each column); can differ from the balance-sheet line in comparatives that were reclassified"
+  },
+  {
+   "metric": "investment_contract_segment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-03-31",
+   "value": 25689443,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "סך כל התחייבויות המגזר",
+   "note": "segment liabilities of the investment-contract segment at the balance date (period end of each column); can differ from the balance-sheet line in comparatives that were reclassified"
+  },
+  {
+   "metric": "investment_contract_segment_liabilities",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 35868423,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "סך כל התחייבויות המגזר",
+   "note": "segment liabilities of the investment-contract segment at the balance date (period end of each column); can differ from the balance-sheet line in comparatives that were reclassified"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 9740419,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "total receipts into investment contracts (credited directly to liabilities, not premiums); includes recurring and one-time"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 1464058,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "total receipts into investment contracts (credited directly to liabilities, not premiums); includes recurring and one-time"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 3705380,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "total receipts into investment contracts (credited directly to liabilities, not premiums); includes recurring and one-time"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 51835,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "annualised receipts, new business"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 9112,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "annualised receipts, new business"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 20568,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים משונתים בגין חוזי השקעה - עסק חדש",
+   "note": "annualised receipts, new business"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 9530253,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "of which one-time receipts"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 1412618,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "of which one-time receipts"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 3647937,
+   "unit": "NIS thousands",
+   "page": 149,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "of which one-time receipts"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 32751129,
+   "unit": "NIS thousands",
+   "page": 69,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "balance-sheet liabilities for yield-dependent investment contracts = the assets-under-management figure of the deck"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-03-31",
+   "value": 25545662,
+   "unit": "NIS thousands",
+   "page": 69,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "balance-sheet liabilities for yield-dependent investment contracts = the assets-under-management figure of the deck"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 35622956,
+   "unit": "NIS thousands",
+   "page": 69,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "balance-sheet liabilities for yield-dependent investment contracts = the assets-under-management figure of the deck"
+  },
+  {
+   "metric": "investment_contract_aum_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 1101836,
+   "unit": "NIS thousands",
+   "page": 69,
+   "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה (*)",
+   "note": "balance-sheet liabilities for non-yield-dependent investment contracts; per the footnote it includes contracts for managing guaranteed-return provident funds; not the deck's investment-policy AUM"
+  },
+  {
+   "metric": "investment_contract_aum_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2024-03-31",
+   "value": 1064689,
+   "unit": "NIS thousands",
+   "page": 69,
+   "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה (*)",
+   "note": "balance-sheet liabilities for non-yield-dependent investment contracts; per the footnote it includes contracts for managing guaranteed-return provident funds; not the deck's investment-policy AUM"
+  },
+  {
+   "metric": "investment_contract_aum_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 1103686,
+   "unit": "NIS thousands",
+   "page": 69,
+   "label": "התחייבויות בגין חוזי השקעה שאינם תלויי תשואה (*)",
+   "note": "balance-sheet liabilities for non-yield-dependent investment contracts; per the footnote it includes contracts for managing guaranteed-return provident funds; not the deck's investment-policy AUM"
+  }
+ ],
+ "not_found": [
+  "selling/acquisition expenses and general & administrative expenses of the investment-contract segment separately (only 'other operating expenses' as one line)"
+ ],
+ "notes": [
+  "Source entity is the listed parent's consolidated report; the investment-policy activity sits in הפניקס חברה לביטוח בע\"מ, whose own standalone report was not used.",
+  "Amounts in NIS thousands as printed; nothing calculated. Section 5.2 of the directors' report presents receipts only as an image chart, so the notes to the financial statements were used.",
+  "IFRS 17 basis. Management fees, other operating expenses and profit are the investment-contract segment table in note 3 ('נתונים נוספים לגבי חוזי השקעה').",
+  "investment_contract_aum is the balance-sheet liability for yield-dependent investment contracts; the segment-liabilities line in the note can differ in comparatives that were reclassified."
+ ]
+}

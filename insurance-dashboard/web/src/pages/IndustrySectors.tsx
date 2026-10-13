@@ -31,7 +31,8 @@ function provOf(lts: Lts, title: string, metric: string, c: string, p: string, u
     return { k: 'calc', title: `${title} · ${lts.name(c)} · ${periodLabel(p)}`, value: nf(v, dec), unit, formula: f[0], note: `${pr.entity ?? 'דוחות החברה המנהלת'}. ${lts.d.notes[metric] ?? ''}`.trim(),
       inputs: f[1].slice(0, 40).map((i) => { const [file, pg, label, val, u, date, win] = pr.parts[i], url = pr.urls[file] ?? null;
         return { label: `${label} · ${date}${win && win !== 'instant' ? ` · ${win}` : ''}`, v: `${nf(val, Math.abs(val) < 100 ? 2 : 0)} ${u.replace('NIS thousands', 'אלפי ש"ח').replace('NIS thousand', 'אלפי ש"ח').replace('NIS millions', 'מיליוני ש"ח')}`,
-          src: () => ({ k: 'report', title: label, value: nf(val, Math.abs(val) < 100 ? 2 : 0), unit: u, url, pg, doc: `${pr.entity ?? lts.name(c)}, דוח ${file}`, period: date, srcType: 'דוח החברה המנהלת' }) as Prov }; }) };
+          // a component with no report behind it is another figure of this page (a company inside a sector total)
+          src: file ? () => ({ k: 'report', title: label, value: nf(val, Math.abs(val) < 100 ? 2 : 0), unit: u, url, pg, doc: `${file.startsWith('ic:') ? 'דוח חברת הביטוח' : pr.entity ?? lts.name(c)}, ${file.replace('ic:', '')}`, period: date, srcType: file.startsWith('ic:') ? 'דוח חברת הביטוח' : 'דוח החברה המנהלת' }) as Prov : undefined }; }) };
   }
   return { k: 'report', title: `${title} · ${lts.name(c)}`, value: nf(v, dec), unit, url: null, pg: s, doc: lts.d.source, period: periodLabel(p), srcType: 'מצגת השוואות ענפיות (שקף)', note: lts.d.notes[metric] };
 }

@@ -1,0 +1,88 @@
+{
+ "company": "menora_ic",
+ "entity": "מנורה מבטחים ביטוח בע\"מ",
+ "period": "2024Q2",
+ "url": "https://mayafiles.tase.co.il/rpdf/1614001-1615000/P1614238-00.pdf",
+ "doc_title": "דוח רבעון 2/חצי שנתי לשנת 2024",
+ "documents": [
+  {
+   "role": "full_report",
+   "title": "דוח רבעון 2/חצי שנתי לשנת 2024",
+   "url": "https://mayafiles.tase.co.il/rpdf/1614001-1615000/P1614238-00.pdf",
+   "maya_report_id": 1614238,
+   "pages": 179,
+   "note": "Periodic/interim report of the listed parent מנורה מבטחים החזקות בע\"מ on MAYA; the insurer (מנורה מבטחים ביטוח בע\"מ) is a consolidated subsidiary and its investment-contract activity is shown in the long-term-savings segment notes of this report"
+  }
+ ],
+ "unit": "NIS thousand (אלפי ש\"ח)",
+ "source_entity": "מנורה מבטחים החזקות בע\"מ",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2024-06-30",
+   "value": 487138,
+   "unit": "NIS thousand",
+   "page": 98,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "ytd",
+   "date": "2023-06-30",
+   "value": 243142,
+   "unit": "NIS thousand",
+   "page": 99,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2024-06-30",
+   "value": 250471,
+   "unit": "NIS thousand",
+   "page": 100,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2023-06-30",
+   "value": 120142,
+   "unit": "NIS thousand",
+   "page": 101,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 580050,
+   "unit": "NIS thousand",
+   "page": 102,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "source_entity": "מנורה מבטחים החזקות בע\"מ",
+   "note": "Total column of the life-insurance results table by policy type (IFRS 4 basis); credited directly to insurance reserves, not premiums"
+  }
+ ],
+ "not_found": [
+  "investment_contract_aum at the balance dates: not printed in this interim report (the interim notes show insurance and investment contracts together; the investment-contract split appears only in the annual notes on liabilities)",
+  "management_fees, other_expenses, profit_before_tax of the investment-contract activity: not printed in this interim report (investment-contract fee income appears only in the annual note on management-fee income)"
+ ],
+ "notes": [
+  "IFRS 4 basis (before the IFRS 17 adoption of 1 January 2025). NIS thousand as printed. Receipts = \"תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח\", total column of note 19 table \"פירוט התוצאות לפי סוגי פוליסות\"."
+ ]
+}

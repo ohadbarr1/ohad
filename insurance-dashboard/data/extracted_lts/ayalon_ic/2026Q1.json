@@ -1,0 +1,252 @@
+{
+ "company": "ayalon",
+ "entity": "איילון חברה לביטוח בע\"מ",
+ "period": "2026Q1",
+ "url": "https://mayafiles.tase.co.il/rpdf/1743001-1744000/P1743839-00.pdf",
+ "doc_title": "דוח רבעון 1 לשנת 2026",
+ "unit": "NIS thousand",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 1660141,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 30934,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 1538137,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 129605,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 4842,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 100751,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 1326340,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים בגין חוזי השקעה",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 13370,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים משונתים בגין חוזי השקעה – עסק חדש",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 1143595,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "תקבולים חד פעמיים בגין חוזי השקעה",
+   "note": "Note 'מידע נוסף בגין חוזי השקעה' (receipts credited to investment contracts; not part of premiums)."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2026-03-31",
+   "value": 3939147,
+   "unit": "NIS thousand",
+   "page": 46,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "Balance sheet line 'התחייבויות בגין חוזי השקעה תלויי תשואה' (IFRS 17 presentation; investment contracts are measured at fair value and all are yield-dependent)."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 1062009,
+   "unit": "NIS thousand",
+   "page": 46,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "Balance sheet line 'התחייבויות בגין חוזי השקעה תלויי תשואה' (IFRS 17 presentation; investment contracts are measured at fair value and all are yield-dependent)."
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 2683225,
+   "unit": "NIS thousand",
+   "page": 46,
+   "label": "התחייבויות בגין חוזי השקעה תלויי תשואה",
+   "note": "Balance sheet line 'התחייבויות בגין חוזי השקעה תלויי תשואה' (IFRS 17 presentation; investment contracts are measured at fair value and all are yield-dependent)."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 6452,
+   "unit": "NIS thousand",
+   "page": 74,
+   "label": "הכנסות מדמי ניהול",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 5412,
+   "unit": "NIS thousand",
+   "page": 74,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used. 'הוצאות תפעוליות אחרות' of the investment-contracts column is the only expense line printed for this activity; it is not split into selling / acquisition and general and administrative expenses."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 1040,
+   "unit": "NIS thousand",
+   "page": 74,
+   "label": "סך כל הרווח הכולל לפני מסים על הכנסה",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used. Profit before tax of the investment-contracts column (fees less other operating expenses); no operating-profit line is printed for the activity."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 1979,
+   "unit": "NIS thousand",
+   "page": 75,
+   "label": "הכנסות מדמי ניהול",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 704,
+   "unit": "NIS thousand",
+   "page": 75,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used. 'הוצאות תפעוליות אחרות' of the investment-contracts column is the only expense line printed for this activity; it is not split into selling / acquisition and general and administrative expenses."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 1275,
+   "unit": "NIS thousand",
+   "page": 75,
+   "label": "סך כל הרווח הכולל לפני מסים על הכנסה",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used. Profit before tax of the investment-contracts column (fees less other operating expenses); no operating-profit line is printed for the activity."
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 12258,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "הכנסות מדמי ניהול",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used."
+  },
+  {
+   "metric": "other_expenses",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 9116,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "הוצאות תפעוליות אחרות",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used. 'הוצאות תפעוליות אחרות' of the investment-contracts column is the only expense line printed for this activity; it is not split into selling / acquisition and general and administrative expenses."
+  },
+  {
+   "metric": "profit_before_tax",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 3142,
+   "unit": "NIS thousand",
+   "page": 76,
+   "label": "סך כל הרווח הכולל לפני מסים על הכנסה",
+   "note": "IFRS 17 basis. Column 'חוזי השקעה' of the segment table 'life insurance and long-term savings' (note on additional information by main portfolio groups); the other columns (life insurance; from 2026 also provident/גמל) are not used. Profit before tax of the investment-contracts column (fees less other operating expenses); no operating-profit line is printed for the activity."
+  }
+ ],
+ "not_found": [
+  "selling / acquisition expenses and general and administrative expenses for investment contracts: not printed separately; only the single line 'הוצאות תפעוליות אחרות' is printed (stored as other_expenses).",
+  "operating profit of the activity: not printed (profit before tax is stored).",
+  "transfers in / out and redemptions of investment contracts: not printed in this interim report."
+ ],
+ "notes": [
+  "Source: the insurer's own consolidated report on MAYA (איילון חברה לביטוח בע\"מ); no parent report was used. Amounts in NIS thousand as printed; parentheses = negative.",
+  "Page = 1-based PDF page of the MAYA PDF (page text files data/work/ayalon_<period>/ use the same numbering).",
+  "investment_contract_deposits = 'תקבולים בגין חוזי השקעה' (receipts of investment contracts, not included in premiums); investment_contract_aum = liabilities for yield-dependent investment contracts (the figure the deck calls assets under management). Windows: in Q1 reports the three-month figure is window q (= year to date); in Q2 / Q3 reports q = three months and ytd = six / nine months; fy = full year.",
+  "The Q1-2025 comparative of new business (4,842) and one-time receipts (100,751) printed here differs from what the Q1-2025 report printed (5,095 / 113,021); both are stored as printed in their own report. Total receipts (129,605) are identical."
+ ]
+}

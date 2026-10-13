@@ -1,0 +1,194 @@
+{
+ "company": "phoenix_ic",
+ "entity": "הפניקס אחזקות בע\"מ",
+ "period": "2023FY",
+ "url": "https://mayafiles.tase.co.il/rpdf/1582001-1583000/P1582330-00.pdf",
+ "doc_title": "הפניקס אחזקות בע\"מ - דוח תקופתי לשנת 2023",
+ "unit": "NIS thousands",
+ "facts": [
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 5241397,
+   "unit": "NIS thousands",
+   "page": 422,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 7335455,
+   "unit": "NIS thousands",
+   "page": 423,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "investment_contract_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 7757707,
+   "unit": "NIS thousands",
+   "page": 424,
+   "label": "תקבולים בגין חוזי השקעה שנזקפו ישירות לעתודות ביטוח",
+   "note": "receipts into investment contracts credited directly to insurance reserves (not premiums); life-insurance-and-savings segment table, total column; IFRS 4 basis (before the IFRS 17 restatement)"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 29271,
+   "unit": "NIS thousands",
+   "page": 422,
+   "label": "פרמיה משונתת בגין חוזי השקעה – עסק חדש",
+   "note": "annualised premium on new business, investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 5029344,
+   "unit": "NIS thousands",
+   "page": 422,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "note": "one-time premium on investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 30464,
+   "unit": "NIS thousands",
+   "page": 423,
+   "label": "פרמיה משונתת בגין חוזי השקעה – עסק חדש",
+   "note": "annualised premium on new business, investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 7090856,
+   "unit": "NIS thousands",
+   "page": 423,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "note": "one-time premium on investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "new_business_annualized_premiums",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 51552,
+   "unit": "NIS thousands",
+   "page": 424,
+   "label": "פרמיה משונתת בגין חוזי השקעה – עסק חדש",
+   "note": "annualised premium on new business, investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "one_time_deposits",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 7511084,
+   "unit": "NIS thousands",
+   "page": 424,
+   "label": "פרמיה חד פעמית בגין חוזי השקעה",
+   "note": "one-time premium on investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 20815236,
+   "unit": "NIS thousands",
+   "page": 407,
+   "label": "חוזי השקעה",
+   "note": "note 18, liabilities for yield-dependent insurance and investment contracts, row 'חוזי השקעה' under life insurance and savings (gross = net of reinsurance); IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "investment_contract_aum",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 23787779,
+   "unit": "NIS thousands",
+   "page": 407,
+   "label": "חוזי השקעה",
+   "note": "note 18, liabilities for yield-dependent insurance and investment contracts, row 'חוזי השקעה' under life insurance and savings (gross = net of reinsurance); IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "investment_contract_aum_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 1016001,
+   "unit": "NIS thousands",
+   "page": 406,
+   "label": "חוזי השקעה הכלולים במגזר פנסיה וגמל",
+   "note": "note 17, non-yield-dependent investment contracts included in the pension and provident segment (guaranteed-return provident funds); not the deck's investment-policy AUM; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "investment_contract_aum_non_yield_dependent",
+   "segment": "investment_contracts",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 1063093,
+   "unit": "NIS thousands",
+   "page": 406,
+   "label": "חוזי השקעה הכלולים במגזר פנסיה וגמל",
+   "note": "note 17, non-yield-dependent investment contracts included in the pension and provident segment (guaranteed-return provident funds); not the deck's investment-policy AUM; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 88085,
+   "unit": "NIS thousands",
+   "page": 464,
+   "label": "דמי ניהול בגין חוזי השקעה",
+   "note": "note on management-fee income, composition: fees on investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 139858,
+   "unit": "NIS thousands",
+   "page": 464,
+   "label": "דמי ניהול בגין חוזי השקעה",
+   "note": "note on management-fee income, composition: fees on investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  },
+  {
+   "metric": "management_fees",
+   "segment": "investment_contracts",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 168076,
+   "unit": "NIS thousands",
+   "page": 464,
+   "label": "דמי ניהול בגין חוזי השקעה",
+   "note": "note on management-fee income, composition: fees on investment contracts; IFRS 4 basis (the group adopted IFRS 17 from 1.1.2025; restated 2024 comparatives are in the 2025 files)"
+  }
+ ],
+ "not_found": [
+  "selling/acquisition and general & administrative expenses and profit of the investment-contract activity (not printed separately)"
+ ],
+ "notes": [
+  "Source entity is the listed parent's consolidated report; the investment-policy activity sits in הפניקס חברה לביטוח בע\"מ, whose own standalone report was not used.",
+  "Amounts in NIS thousands as printed; nothing calculated. Section 5.2 of the directors' report presents receipts only as an image chart, so the notes to the financial statements were used.",
+  "IFRS 4 annual report of הפניקס אחזקות בע\"מ (renamed הפניקס פיננסים בע\"מ in 2024); 2022 and 2021 are the comparative tables printed in the report."
+ ]
+}
