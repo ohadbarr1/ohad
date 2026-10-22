@@ -1,0 +1,21 @@
+/* bottom sheet and context bar (phone) */
+.sheetwrap { position: fixed; inset: 0; z-index: 90; background: oklch(0 0 0 / 0.42); display: flex; align-items: flex-end; animation: pop var(--fast) ease-out; }
+.sheet { width: 100%; max-height: 86dvh; background: var(--panel); border-radius: var(--r-3) var(--r-3) 0 0; box-shadow: var(--shadow); display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--mid) var(--ease); }
+@keyframes sheet-up { from { transform: translateY(24px); } }
+.sheet-hd { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 16px 10px; border-bottom: 1px solid var(--line-soft); }
+.sheet-hd b { font-size: var(--t-4); }
+.sheet-hd .grip { position: absolute; top: 6px; inset-inline: 0; margin: auto; width: 36px; height: 4px; border-radius: 2px; background: var(--line); }
+.sheet-body { overflow: auto; padding: 14px 16px 22px; display: flex; flex-direction: column; gap: 14px; }
+.sheet-body .field { width: 100%; }
+.sheet-body .field > span:first-child { font-size: var(--t-2); color: var(--muted); }
+.sheet-body select, .sheet-body input[type="search"], .sheet-body input[type="text"] { width: 100%; }
+.sheet-body .seg { flex-wrap: wrap; border-radius: var(--r-3); }
+.ctxbar { position: sticky; top: calc(58px + env(safe-area-inset-top, 0px)); z-index: 15; margin-inline: -14px; padding: 6px 14px; background: var(--bg); border-bottom: 1px solid var(--line-soft); }
+.ctxbar-in { width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--panel); color: var(--fg); cursor: pointer; text-align: start; }
+.ctxbar-txt { font-weight: 500; font-size: var(--t-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ctxbar-go { flex: none; font-size: var(--t-2); color: var(--accent-text); font-weight: 700; }
+/* desktop statements toolbar: one row, the rest behind "אפשרויות" */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.toolbar select { min-width: 220px; }
+.toolbar .rng { font-size: var(--t-2); color: var(--muted); }
+.controls.opts { padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: var(--r-3); background: var(--panel); }

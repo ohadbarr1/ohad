@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FundsHead } from '../components/FundsNav';
 import { ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { Sourced } from '../components/Source';
 import { fundCell, fundRef, listP, warmHist } from '../lib/market';
@@ -44,7 +45,7 @@ export function Managers() {
   const asof = `${String(data.meta.asof).slice(4)}/${String(data.meta.asof).slice(2, 4)}`;
   return (
     <>
-      <div className="pagehead"><div><h1>מנהלים וקופות</h1><div className="sub"><S src={() => listP('חברות מנהלות', nf(rows.length, 0), undefined, 'ספירת החברות המנהלות שיש להן מסלולים בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{rows.length}</span></S> חברות מנהלות · <S src={() => listP('סך נכסים, החברות המנהלות', nf(total, 0), 'מיליארד ש"ח', 'סכום הנכסים של כל החברות המנהלות בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{nf(total, 0)}</span></S> מיליארד ש"ח · <span className="num">{asof}</span></div></div></div>
+      <FundsHead sub={<>מנהלים · <S src={() => listP('חברות מנהלות', nf(rows.length, 0), undefined, 'ספירת החברות המנהלות שיש להן מסלולים בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{rows.length}</span></S> חברות מנהלות · <S src={() => listP('סך נכסים, החברות המנהלות', nf(total, 0), 'מיליארד ש"ח', 'סכום הנכסים של כל החברות המנהלות בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{nf(total, 0)}</span></S> מיליארד ש"ח · <span className="num">{asof}</span></>} />
       <section className="controls">
         <div className="field"><span>מוצר</span><Seg<Fam> label="מוצר" value={fam} onChange={setFam} options={[['all', 'הכול'], ['pension', 'פנסיה'], ['gemel', 'גמל והשתלמות'], ['insurance', 'ביטוח: מנהלים וחיסכון']]} /></div>
         <Field label="קבוצה"><select value={grp} onChange={(e) => setGrp(e.target.value)}><option value="all">כל הקבוצות</option>{groups.map((g) => <option key={g}>{g}</option>)}</select></Field>

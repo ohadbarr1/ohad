@@ -153,8 +153,8 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
           {kids ? <button type="button" className="tg" aria-expanded={open} aria-label={`${open ? 'סגירת' : 'פתיחת'} ${n.label}`} onClick={() => setExp((e) => ({ ...e, [`${F}${n.key}`]: !open }))}>{open ? '−' : '+'}</button> : n.depth > 0 && <span className="tg gap" />}{n.label}
         </td>
         <td>{r ? fig(r.cur, r) : null}</td>
-        {hasYoy && <td>{r ? <>{fig(r.yoy, r)}{chg(r.cur, r.yoy, r)}</> : null}</td>}
-        {hasQoq && <td>{r ? <>{fig(r.qoq, r)}{chg(r.cur, r.qoq, r)}</> : null}</td>}
+        {hasYoy && <td>{r ? <span className="pair"><span className="vs">{fig(r.yoy, r)}</span>{chg(r.cur, r.yoy, r)}</span> : null}</td>}
+        {hasQoq && <td>{r ? <span className="pair"><span className="vs">{fig(r.qoq, r)}</span>{chg(r.cur, r.qoq, r)}</span> : null}</td>}
       </tr>,
       ...(kids && open ? n.kids.flatMap(line) : []),
     ];

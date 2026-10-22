@@ -1,6 +1,7 @@
 import { foxOption } from '../lib/foxchart';
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { Link, NavLink, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { FundsHead, FundsNav } from '../components/FundsNav';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { countP, dsOf, expP, flowP, fundP, listP, monthIn, monthsBack, retP, seedHist, warmHist, y12P, type TrackRef } from '../lib/market';
@@ -95,17 +96,6 @@ const catReturn = (c: FundCats[string] | undefined, per: Per, asof: number) => {
   return !s || s.months < n ? null : per === 'a3' || per === 'a5' ? s.ann : s.ret;
 };
 
-function Sub() {
-  return (
-    <nav className="subnav" aria-label="קופות ושוק">
-      <NavLink to="/funds" end>מסלולים</NavLink>
-      <NavLink to="/funds/makers">יצרן מול השוק</NavLink>
-      <NavLink to="/market/overview">שוק</NavLink>
-      <NavLink to="/market/ranking">דירוג חברות</NavLink>
-      <NavLink to="/managers">מנהלים</NavLink>
-    </nav>
-  );
-}
 
 function Growth({ periods, lines, deps, onPoint }: { periods: number[]; lines: { name: string; data: (number | null)[]; dash?: boolean }[]; deps: unknown[]; onPoint?: (si: number, di: number) => void }) {
   return (
@@ -195,8 +185,7 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
 
   return (
     <>
-      <div className="pagehead"><div><h1>{makersOnly ? 'יצרן מול השוק' : 'קופות ומסלולים'}</h1><div className="sub"><Sourced src={() => countP('מסלולים פעילים', all.length, 'המסלולים שפורסמו בחודש האחרון בגמל-נט, פנסיה-נט וביטוח-נט')}><span className="num">{nf(all.length, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</div></div></div>
-      <Sub />
+      <FundsHead sub={<>{makersOnly ? 'יצרן מול השוק' : 'מסלולים'} · <Sourced src={() => countP('מסלולים פעילים', all.length, 'המסלולים שפורסמו בחודש האחרון בגמל-נט, פנסיה-נט וביטוח-נט')}><span className="num">{nf(all.length, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} />
       <section className="controls tight">
         <div className="prim">
           <Field label="מוצר"><select value={prod} onChange={(e) => set({ prod: e.target.value, track: '', sel: '' })}>{PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
@@ -330,7 +319,7 @@ export function FundCard() {
   return (
     <>
       <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span>{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span></div></div></div>
-      <Sub />
+      <FundsNav />
       <section className="kpis">
         <Kpi label="LTM" value={f.y12 == null ? '–' : SRC(() => perSrc(f, 'y12', asof), pct(f.y12, 1, true))} tone={f.y12 == null ? undefined : f.y12 < 0 ? 'neg' : 'pos'} sub={rankOf('y12') ? <RK k="y12" /> : ' '} />
         <Kpi label="3Y, שנתי" value={f.a3 == null ? '–' : SRC(() => perSrc(f, 'a3', asof), pct(f.a3, 1, true))} sub={rankOf('a3') ? <RK k="a3" /> : ' '} />

@@ -1,6 +1,7 @@
 import { foxOption } from '../lib/foxchart';
 import { useMemo, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { FundsHead } from '../components/FundsNav';
+import { Link, Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { useSource, type Prov } from '../lib/prov';
@@ -41,20 +42,7 @@ function Gate({ children }: { children: (m: Market) => JSX.Element }) {
 export function MarketLayout() {
   return (
     <>
-      <div className="pagehead">
-        <div>
-          <h1>שוק החיסכון הפנסיוני</h1>
-          <div className="sub">פנסיה, גמל והשתלמות, ביטוחי מנהלים ופוליסות חיסכון · נתוני הרשות לשוק ההון · מיליארדי ש"ח</div>
-        </div>
-      </div>
-      <nav className="subnav" aria-label="שוק">
-        <NavLink to="/funds">מסלולים</NavLink>
-        <NavLink to="/funds/makers">יצרן מול השוק</NavLink>
-        <NavLink to="overview">סקירה</NavLink>
-        <NavLink to="ranking">דירוג חברות</NavLink>
-        <NavLink to="funds">קופות</NavLink>
-        <NavLink to="/managers">מנהלים</NavLink>
-      </nav>
+      <FundsHead sub={<>פנסיה, גמל והשתלמות, ביטוחי מנהלים ופוליסות חיסכון · נתוני הרשות לשוק ההון</>} />
       <Outlet />
     </>
   );

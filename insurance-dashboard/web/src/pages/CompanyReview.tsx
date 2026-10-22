@@ -139,8 +139,8 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
                   <td className="lbl">{multi(i) ? segName(r.f.s) : <>{he(r.f.m)}{r.f.g !== 'group' && <span className="muted"> · {segName(r.f.s)}</span>}</>}
                     {(r.f.b !== 'na' || s.main.get(r.f.m) !== 'na' || r.W === 'ytd' && win === 'q' || r.at !== end || r.n > 1 || r.f.src === 'chart') && <span className="dim">{(r.f.b !== 'na' || s.main.get(r.f.m) !== 'na') && <span className={`chip ${r.f.b === s.main.get(r.f.m) ? '' : 'est'}`} title={r.f.b === s.main.get(r.f.m) ? undefined : `בסיס שונה מרוב השורות בבלוק (${BASIS[s.main.get(r.f.m) ?? 'na']}); הסימן כפי שהודפס`}>{BASIS[r.f.b]}</span>}{r.W === 'ytd' && win === 'q' && <span className="chip est">YTD</span>}{r.at !== end && <span className="chip est" title="המדד פורסם לתאריך שונה מתקופת הדוח">נכון ל־<span className="num">{dateLabel(r.at)}</span></span>}{r.n > 1 && <span className="chip est" title="אותה שורה מופיעה בדוח בכמה ערכים; ראו לשונית IFRS 17">{r.n} ערכים</span>}{r.f.src === 'chart' && <span className="chip est">מגרף</span>}</span>}</td>
                   <td><Val f={r.f} d={d} p={P} /><div className="narrow-only"><Trend pts={r.trend} /></div></td>
-                  <td><Val f={r.yoy} d={d} p={P} /><Delta a={r.f} b={r.yoy} d={d} pa={P} pb={P} /></td>
-                  {!annual && <td><Val f={r.qoq} d={d} p={r.qoqIn} /><Delta a={r.f} b={r.qoq} d={d} pa={P} pb={r.qoqIn} /></td>}
+                  <td><span className="pair"><span className="vs"><Val f={r.yoy} d={d} p={P} /></span><Delta a={r.f} b={r.yoy} d={d} pa={P} pb={P} /></span></td>
+                  {!annual && <td><span className="pair"><span className="vs"><Val f={r.qoq} d={d} p={r.qoqIn} /></span><Delta a={r.f} b={r.qoq} d={d} pa={P} pb={r.qoqIn} /></span></td>}
                   <td className="wide-only"><Trend pts={r.trend} /></td>
                 </tr>
               </Fragment>
