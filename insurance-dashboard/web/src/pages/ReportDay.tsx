@@ -33,7 +33,8 @@ export interface Fig { v: number; unit: Unit; href: string | null; page: number 
 
 /** Labels differ between filers in brackets, stray spaces and "(הפסד)": compare without them. */
 export const clean = (s: string): string => s.replace(/\(ביאור[^)]*\)/g, ' ').replace(/[()*:]/g, ' ').replace(/\s+,/g, ',').replace(/\s+/g, ' ').trim();
-const ATTR = /^ל?בעלי(?:ם| ה?מניות) של החברה$/;
+/** "to the company's shareholders", in the wordings the filers print: בעלי המניות של החברה, לבעלים של החברה, בעלים של חברת האם, בעלי מניות של החברה האם */
+const ATTR = /^ל?בעלי(?:ם| ה?מניות) של (?:ה?חברה(?: ה?אם)?|חברת ה?אם)$/;
 
 interface Line { mi: number; label: string; raw: string; std: '17' | '4'; total: boolean; unit: string; attr: 'net' | 'comp' | null; below: boolean }
 /** Value rows of a statement in print order, each tagged with its standard section. An "attributable to shareholders" row belongs to the total above it
@@ -45,6 +46,8 @@ export function linesOf(store: CompanyStore, sheet: string): Line[] {
     const m = store.d.metrics[mi], label = clean(m.label);
     if (m.std) { seg++; lastTotal = ''; below = false; continue; }
     if (/כולל|מיוחס|למניה/.test(label) || ATTR.test(label)) below = true;
+    // a heading "רווח נקי לתקופה מיוחס ל:" / "רווח כולל מיוחס ל:" / "ייחוס הרווח הכולל:" says which total the attribution rows under it split
+    if (m.header && /מיוחס|ייחוס/.test(label) && /רווח|הפסד/.test(label)) lastTotal = label;
     if (m.header) continue;
     out.push({ mi, label, raw: m.label, std: seg > 0 ? '4' : '17', total: !!m.total, unit: m.unit, attr: ATTR.test(label) ? (lastTotal.includes('כולל') ? 'comp' : 'net') : null, below });
     if (m.total && /רווח|הפסד/.test(label)) lastTotal = label;
@@ -67,10 +70,10 @@ export const ROLES: Role[] = [
 ];
 
 export interface Resolved { role: Role; rows: Line[]; alt: boolean }
-export function resolve(store: CompanyStore, role: Role): Resolved {
+export function resolve(store: CompanyStore, role: Role, forceAlt = false): Resolved {
   const all = role.sheets.flatMap((s) => linesOf(store, s));
   const pick = (f: (l: Line) => boolean) => [...all.filter((l) => l.std === '17' && f(l)), ...all.filter((l) => l.std === '4' && f(l))];
-  const rows = pick((l) => (role.attr ? l.attr === role.attr : role.re!.test(l.label)));
+  const rows = forceAlt ? [] : pick((l) => (role.attr ? l.attr === role.attr : role.re!.test(l.label)));
   return rows.length || !role.alt ? { role, rows, alt: false } : { role, rows: pick((l) => role.alt!.test(l.label)), alt: true };
 }
 
@@ -100,8 +103,11 @@ export interface HeadRow { key: string; label: string; note?: [string, string]; 
 export function headline(store: CompanyStore, end: string, win: 'q' | 'ytd', late?: Late): { rows: HeadRow[]; missing: string[] } {
   const T = win === 'q' ? 'Q' : YTD[end.slice(5)], rows: HeadRow[] = [], missing: string[] = [];
   for (const role of ROLES) {
-    const r = resolve(store, role), t = role.flow ? T : 'I';
-    const cur = figAt(store, r.rows, t, end, late);
+    let r = resolve(store, role);
+    const t = role.flow ? T : 'I';
+    let cur = figAt(store, r.rows, t, end, late);
+    // attribution rows printed in earlier reports only (the filer stopped printing them): the bottom line of this report, named on the row
+    if (!cur && !r.alt && role.alt) { const a = resolve(store, role, true); const c = figAt(store, a.rows, t, end, late); if (c) { r = a; cur = c; } }
     if (!cur) { missing.push(role.label); continue; }
     rows.push({
       key: role.key, label: role.label, note: r.alt ? [role.altChip ?? '', role.altNote ?? ''] : undefined, cur,
