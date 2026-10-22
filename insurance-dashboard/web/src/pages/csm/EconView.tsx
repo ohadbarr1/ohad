@@ -67,12 +67,19 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
   const cols = (k: MK) => keys.map((key, i) => ({ key, i })).filter(({ i }) => ids.some((id) => point(id, i, k) != null));
   // an industry line adds up one constant set of insurers: those present in every period it shows. When no two insurers are present
   // throughout, the set is the latest period's and the line keeps only the periods where all of them are present.
+  // the set: the insurers present in each of the last n periods. A broad set comes first (four insurers, else three, else two), then the
+  // longest run of periods it covers: an industry line of two insurers over three years says less than one of five over a year.
+  const constSet = (lists: string[][]): string[] => {
+    for (const min of [4, 3, 2]) {
+      let best: string[] = [];
+      for (let n = 2; n <= lists.length; n++) { const S = ids.filter((id) => lists.slice(-n).every((l) => l.includes(id))); if (S.length >= min) best = S; }
+      if (best.length) return best;
+    }
+    return lists.length === 1 && lists[0].length >= 2 ? ids.filter((id) => lists[0].includes(id)) : [];
+  };
   const setOf = (k: MK): string[] => {
     if (!IND_FORMULA[k]) return [];
-    const as = cols(k).map(({ i }) => indsOf(k)[i][k as 'nbRel']).filter((a): a is Agg2 => !!a);
-    if (!as.length) return [];
-    const S = ids.filter((id) => as.every((a) => a.num.parts.some((x) => x.id === id)));
-    return S.length >= 2 ? S : as[as.length - 1].num.parts.map((x) => x.id);
+    return constSet(cols(k).map(({ i }) => indsOf(k)[i][k as 'nbRel']).filter((a): a is Agg2 => !!a).map((a) => a.num.parts.map((x) => x.id)));
   };
   const sets = new Map(CHARTS.map((c) => [c.k, setOf(c.k)] as const));
   if (!sets.has(tk)) sets.set(tk, setOf(tk));
@@ -108,12 +115,11 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
   // industry new business against release: the two flows that decide whether the stock grows
   const nbrel0 = keys.map((key, i) => ({ key, i, nb: inds[i].steps.get('nb') ?? null, rel: inds[i].steps.get('rel') ?? null })).filter((x) => x.nb && x.rel);
   const inBoth = (x: (typeof nbrel0)[number]) => x.nb!.parts.map((p) => p.id).filter((id) => x.rel!.parts.some((q) => q.id === id));
-  const nbSet0 = ids.filter((id) => nbrel0.every((x) => inBoth(x).includes(id)));
-  const nbSet = nbSet0.length >= 2 || !nbrel0.length ? nbSet0 : inBoth(nbrel0[nbrel0.length - 1]);
+  const nbSet = constSet(nbrel0.map(inBoth));
   const nbrel = nbrel0.map((x) => ({ ...x, nb: keep(x.nb!, nbSet), rel: keep(x.rel!, nbSet), n: nbSet.length })).filter((x) => nbSet.length >= 2 && x.nb && x.rel);
 
   const SetStrip = ({ S, what }: { S: string[]; what: string }) => S.length < 2 ? <div className="src">{what}: אין שתי חברות עם נתון בכל התקופות</div> : (
-    <div className="csm-set" aria-label={`${what}: החברות בסכום`}><span className="dim">{what} · {S.length} מתוך {ids.length}, קבוע בכל התקופות:</span>{ids.map((id) => <span key={id} className={`csm-chip${S.includes(id) ? '' : ' off'}`} title={S.includes(id) ? 'בסכום' : 'חסר באחת התקופות'}><Dot id={id} />{name(id)}</span>)}</div>);
+    <div className="csm-set" aria-label={`${what}: החברות בסכום`}><span className="dim">{what} · {S.length} מתוך {ids.length}, אותן חברות בכל נקודה:</span>{ids.map((id) => <span key={id} className={`csm-chip${S.includes(id) ? '' : ' off'}`} title={S.includes(id) ? 'בסכום' : 'חסר באחת התקופות המוצגות'}><Dot id={id} />{name(id)}</span>)}</div>);
   const controls = (
     <section className="controls">
       <div className="field"><span>חלון</span><Seg<'q' | 'ytd'> label="חלון" value={span} onChange={setSpan} options={[['q', 'רבעון'], ['ytd', 'מצטבר']]} /></div>

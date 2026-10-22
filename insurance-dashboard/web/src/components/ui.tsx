@@ -52,6 +52,6 @@ export function copyText(text: string, done: (ok: boolean) => void) {
 /** Marks a CSM figure whose table total also contains the (non-CSM) future profit of pure savings policies. */
 export function IncChip({ f }: { f: { inc?: number; cl?: number; v0?: number; m: string } | null | undefined }) {
   if (!f || !f.m.startsWith('csm')) return null;
-  if (f.cl === 1) return <> <span className="chip est" title={`נגזר: הסכום שהודפס (${f.v0?.toLocaleString()}) פחות עמודת פוליסות החיסכון באותה טבלה, שאינה CSM לפי התקן`}>ללא פוליסות חיסכון</span></>;
-  return f.inc === 1 ? <> <span className="chip est" title="הסכום בטבלת החברה כולל רווח עתידי בפוליסות חיסכון, שאינו CSM לפי התקן">כולל פוליסות חיסכון</span></> : null;
+  if (f.cl === 1) return <> <span className="chip est" title={`נגזר: הסכום שהודפס (${f.v0?.toLocaleString()}) פחות שורת פוליסות ההשקעה (חוזי השקעה, IFRS 9) באותה טבלה: רווח עתידי נוסף, שאינו CSM לפי התקן`}>ללא פוליסות השקעה</span></>;
+  return f.inc === 1 ? <> <span className="chip est" title="הסכום בטבלת החברה כולל את שורת פוליסות ההשקעה (חוזי השקעה, IFRS 9): רווח עתידי נוסף, שאינו CSM לפי התקן">כולל פוליסות השקעה</span></> : null;
 }
