@@ -21,6 +21,7 @@ import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 const NAV: [string, string, string, string | null][] = [
   ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'ענף', 'ענף'],
   ['/valuation', 'value', 'שווי', 'שווי'], ['/funds', 'market', 'קופות ושוק', 'קופות'],
+  ['/data', 'data', 'נתונים ואיכות', null],
 ];
 
 export function Layout() {

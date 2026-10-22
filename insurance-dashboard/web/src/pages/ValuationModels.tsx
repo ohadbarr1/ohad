@@ -115,7 +115,7 @@ export function ValuationCsm() {
               <label>הון לבעלי המניות<small>{mkt.eqPeriod ? periodTag(mkt.eqPeriod) : ''}</small></label><Fig v={mkt.eq} text={(x) => nf(x, 0)} src={mkt.eqProv} className="ro" />
               <label>הון + CSM אחרי מס</label><Sourced className="num ro" src={adjProv}>{nf(cm.adj, 0)}</Sourced>
             </div>
-            {csm.inc && <div className="src"><span className="chip est">כולל פוליסות חיסכון</span> היתרה בטבלת החברה כוללת רווח עתידי בפוליסות חיסכון, שאינו CSM לפי התקן</div>}
+            {csm.label !== 'נטו · קבוצה' && <div className="src"><span className="chip est">{csm.label}</span> בסיס היתרה לפי הדוח</div>}
             {mismatch && <div className="src"><span className="chip est">תאריכים שונים</span> CSM לפי {periodTag(csm.p)}, הון לפי {periodTag(mkt.eqPeriod!)}</div>}
           </Panel>
           <div className="vcol">

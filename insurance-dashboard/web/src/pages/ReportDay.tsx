@@ -380,6 +380,7 @@ export function ReportDay() {
 
       <section id="rd-restated">
         <Panel title={<>הוצג מחדש בדוח <span className="num">{repName(P)}</span></>} aside={rest.length > 0 && <>
+          <Link className="chip" to={`/restatements?season=${P}&co=${id}`}>תיקונים בדוח זה</Link><Link className="chip" to={`/restatements?season=${P}`}>הצגות מחדש בענף · {repName(P)}</Link>
           {bySheet.map((x) => <span key={x.s} className="chip">{x.title} <span className="num">{thr === 'big' ? x.big : x.all}</span></span>)}
           <Seg label="סף מהותיות" value={thr} onChange={setThr} options={[['big', `2% ומעלה (${nBig})`], ['all', `הכול (${rest.length})`]]} />
         </>}>

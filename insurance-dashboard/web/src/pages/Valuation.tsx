@@ -1,10 +1,12 @@
+import { idColor } from '../lib/identity';
+import { NotFound } from './NotFound';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
 import { DensityToggle } from '../components/MacroDensity';
-import { chartBase, palette } from '../lib/theme';
+import { chartBase } from '../lib/theme';
 import { nf, pubLabel, type Unit } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
 import { periodTag, type CompanyKpi } from '../lib/kpi';
@@ -68,6 +70,7 @@ export function ValuationLayout() {
   if (error) return <ErrorBox what="נתוני החברות" error={error} />;
   if (!kpis || !reg.data) return <Loading what="הערכת שווי" />;
   const ids = reg.data.filter((c) => kpis.get(c.id)?.latest('equity')).map((c) => c.id);
+  if (id && !kpis.has(id) && !ids.includes(id)) return <NotFound />;
   if (!id || !kpis.has(id)) return <Navigate to={`/valuation/${ids.includes('phoenix') ? 'phoenix' : ids[0]}`} replace />;
   const entry = reg.data.find((c) => c.id === id)!;
   const k = kpis.get(id)!;
@@ -136,11 +139,10 @@ export function usePeers(): PeerRow[] {
     insurers.filter((x) => reg.find((c) => c.id === x)?.has_price).forEach((x) => load<TasePrice>(`companies/${x}.price.json`).then((p) => live && setPrices((c) => ({ ...c, [x]: p })), () => {}));
     return () => { live = false; };
   }, [insurers, reg]);
-  const pal = palette();
   return useMemo(() => insurers.map((x) => {
     const k = kpis.get(x)!, m = x === id ? mkt : marketOf(k, prices[x] ?? null, null), c = csm.get(x) ?? null;
     const jpb = fin(m.roe) && fin(ke) ? justifiedPb(m.roe, ke, a.g) : null, ike = fin(m.pb) && fin(m.roe) ? impliedKe(m.pb, m.roe, a.g) : null;
-    return { id: x, name: reg.find((r) => r.id === x)?.name_he ?? x, color: pal[reg.findIndex((r) => r.id === x) % pal.length], mkt: m, jpb, ike, csm: c, cm: csmMultiples(m.eq, c?.close.v ?? null, a.tax, m.mcap) };
+    return { id: x, name: reg.find((r) => r.id === x)?.name_he ?? x, color: idColor(x), mkt: m, jpb, ike, csm: c, cm: csmMultiples(m.eq, c?.close.v ?? null, a.tax, m.mcap) };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [insurers, kpis, prices, csm, id, mkt, ke, a.g, a.tax, reg]);
 }
@@ -186,7 +188,7 @@ export function PeerTable({ rows, focus }: { rows: PeerRow[]; focus: string }) {
       <DataTable className="peer-t" caption="עמיתים: מכפילים והערכת שווי" rows={rows} rowKey={(r) => r.id} rowClass={(r) => (r.id === focus ? 'focus' : undefined)} totalLabel="חציון"
         export={{ name: 'fox_valuation_peers', title: 'הערכת שווי · עמיתים', note: `הנחות: ke ${fin(ke) ? nf(ke, 2) : '–'}%, g ${nf(a.g, 2)}%, מס ${nf(a.tax, 2)}% · שווי שוק: TASE · הון ו-ROE: XBRL · CSM: הדוח הכספי (IFRS 17) · אומדנים, לא המלצה` }}
         columns={[
-          { key: 'name', head: 'חברה', value: (r) => r.name, cell: (r) => <><span className="dot" style={{ background: r.color }} /><Link to={`/valuation/${r.id}`}>{r.name}</Link>{r.csm?.inc && <span className="chip est" title="יתרת ה-CSM בטבלת החברה כוללת רווח עתידי בפוליסות חיסכון">כולל פוליסות חיסכון</span>}{r.csm?.b.scope === 'life' && <span className="chip est" title="בדוח שחולץ יתרת ה-CSM מודפסת למגזר חיים בלבד">CSM חיים בלבד</span>}</> },
+          { key: 'name', head: 'חברה', value: (r) => r.name, cell: (r) => <><span className="dot" style={{ background: r.color }} /><Link to={`/valuation/${r.id}`}>{r.name}</Link>{r.csm && r.csm.label !== 'נטו · קבוצה' && <span className="chip est">{r.csm.label}</span>}{r.csm?.b.scope === 'life' && <span className="chip est" title="בדוח שחולץ יתרת ה-CSM מודפסת למגזר חיים בלבד">CSM חיים בלבד</span>}</> },
           ...COLS.map((c): Column<PeerRow> => ({ key: c.k, head: <>{c.l}{c.unit && <span className="dim">{c.unit} ש"ח</span>}</>, label: c.l + (c.unit ? ` (${c.unit} ש"ח)` : ''), value: c.get, unit: c.u, d: c.d, src: (r) => cellProv(r, c.k), total: 'median' })),
         ]} />
       <div className="src">P/B מוצדק ו-ke משתמע: לפי ההנחות שלמעלה · CSM: יתרת סגירה בדוח האחרון שחולץ, נטו מביטוח משנה כשמודפס · הון לבעלי המניות; CSM כולל חלק המיעוט בחברות הבנות · אומדנים להשוואה, לא המלצה</div>

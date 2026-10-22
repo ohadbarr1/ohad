@@ -1,4 +1,5 @@
 const P: Record<string, string> = {
+  data: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
   home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10',
   companies: 'M4 21V5l8-2v18M12 9l8 2v10M8 8v0M8 12v0M8 16v0M16 14v0M16 18v0M2 21h20',
   compare: 'M5 20V10M10 20V4M15 20v-7M20 20V8',
