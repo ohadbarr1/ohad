@@ -1,5 +1,5 @@
 import { CsmEconomics } from '../components/CsmEconomics';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { CompanyIfrs } from './CompanyIfrs';
 import { CompanyReview } from './CompanyReview';
 import { CompanySop } from './CompanySop';
@@ -663,9 +663,10 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
 }
 
 /* ---------- savings (market data for the company group) ---------- */
+const LensForGroup = lazy(async () => ({ default: (await import('./SavingsLens')).LensForGroup }));
 export function CompanySavings() {
   const { entry, market } = useCtx();
   if (!entry.market_group) return <Empty title="אין שיוך לנתוני שוק" />;
   if (!market) return <Loading what="נתוני שוק" />;
-  return <GroupPanel m={market} group={entry.market_group} />;
+  return <><Suspense fallback={null}><LensForGroup group={entry.market_group} /></Suspense><GroupPanel m={market} group={entry.market_group} /></>;
 }
