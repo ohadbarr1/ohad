@@ -1,14 +1,55 @@
 export const MINUS = '−';
 
+/* ---- one formatter for every figure on the site (lane 2H) ----
+   fmt(value, unit, opts) is the only place a number becomes text. The helpers below (nf, sn, pct, fmtCell) are thin aliases kept
+   for the pages that call them. Units:
+     n       a plain number, 1 decimal                       12.3
+     int     a count, no decimals                            1,251
+     m       NIS millions: 1 decimal under 100, else none   87.4 · 1,203
+     bn      NIS billions, 1 decimal                         412.6
+     k       NIS thousands as stored, rescaled by opts.scale (statements)
+     nis     NIS per share, 2 decimals                       4.27
+     shares  a share count, never rescaled                   251,330,120
+     pct     percent, 1 decimal                              14.2%
+     pp      percentage points, signed                       +1.3 נק׳
+     x       a multiple, 2 decimals                          1.42×
+   opts: d (decimals), signed (+ on positives), dash (shown for null, default "–"), scale (unit "k" only), bare (no suffix). */
+export type Unit = 'n' | 'int' | 'm' | 'bn' | 'k' | 'nis' | 'shares' | 'pct' | 'pp' | 'x';
+export interface FmtOpts { d?: number; signed?: boolean; dash?: string; scale?: Scale; bare?: boolean }
+
+/** Decimals a unit shows by default. */
+export function decimals(v: number, unit: Unit, scale: Scale = 'k'): number {
+  switch (unit) {
+    case 'int': case 'shares': return 0;
+    case 'm': return Math.abs(v) < 100 ? 1 : 0;
+    case 'k': return scale === 'k' ? 0 : scale === 'm' ? 1 : 2;
+    case 'nis': case 'x': return 2;
+    default: return 1;
+  }
+}
+
+export function fmt(v: number | null | undefined, unit: Unit = 'n', o: FmtOpts = {}): string {
+  if (v == null || Number.isNaN(v) || !Number.isFinite(v)) return o.dash ?? '–';
+  const x = unit === 'k' ? scaleValue(v, 'k', o.scale ?? 'k') : v;
+  const d = o.d ?? decimals(x, unit, o.scale);
+  const body = (o.signed || unit === 'pp') ? sn(x, d) : nf(x, d);
+  if (o.bare) return body;
+  return unit === 'pct' ? `${body}%` : unit === 'pp' ? `${body} נק׳` : unit === 'x' ? `${body}×` : body;
+}
+
+/** The xlsx number format closest to how a unit is shown on screen. */
+export function xlsxFmt(unit: Unit | undefined, d?: number): 'n0' | 'n1' | 'n2' | 'pct1' {
+  if (unit === 'pct') return 'pct1';
+  const k = d ?? (unit === 'int' || unit === 'shares' || unit === 'm' ? 0 : unit === 'nis' || unit === 'x' ? 2 : 1);
+  return k <= 0 ? 'n0' : k === 1 ? 'n1' : 'n2';
+}
+
 export function nf(v: number, d = 1): string {
   const t = v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   return /^-[0.]+$/.test(t) ? t.slice(1) : t.replace('-', MINUS);  // a figure that rounds to zero carries no sign
 }
-export function sn(v: number, d = 1): string { return (v > 0 ? '+' : '') + nf(v, d); }
-export function pct(v: number | null | undefined, d = 1, signed = false): string {
-  if (v == null || Number.isNaN(v)) return '–';
-  return (signed ? sn(v, d) : nf(v, d)) + '%';
-}
+export function sn(v: number, d = 1): string { return (v > 0 && Number(v.toFixed(d)) !== 0 ? '+' : '') + nf(v, d); }
+export function pct(v: number | null | undefined, d = 1, signed = false): string { return fmt(v, 'pct', { d, signed }); }
 export function cls(v: number | null | undefined): string { return v == null ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
 
 const MN = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
@@ -33,13 +74,9 @@ export function scaleValue(v: number, unit: string, scale: Scale): number {
   return v / SCALES.find((s) => s.id === scale)!.div;
 }
 export function fmtCell(v: number | null | undefined, unit: string, scale: Scale): string {
-  if (v == null) return '–';
-  const x = scaleValue(v, unit, scale);
-  if (unit === 'nis') return nf(x, 2);
-  if (unit === 'shares') return nf(x, 0);  // a count of shares: never rescaled, no currency
-  if (unit === 'pct') return nf(x, 1) + '%';
-  const d = scale === 'k' ? 0 : scale === 'm' ? 1 : 2;
-  return nf(x, d);
+  // statement units: 'k' NIS thousands (rescaled), 'nis' per share, 'shares' a count, 'pct' a ratio
+  if (unit === 'nis' || unit === 'shares' || unit === 'pct' || unit === 'k') return fmt(v, unit, { scale });
+  return fmt(v, 'n', { d: decimals(0, 'k', scale) });  // any other unit is never rescaled; its decimals follow the chosen scale
 }
 
 export function periodLabel(type: string, end: string): string {
