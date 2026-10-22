@@ -7,6 +7,7 @@ import { liveCheck, loadTracks, parseRegKey, recompute, regKey, SourceCtx, useSo
 import { ckanQuery, ckanResourcePage, DS_LABEL, mayaReport, pdfPage, resourceOf, type RegDs } from '../lib/sources';
 import { useMarket } from '../lib/useData';
 import { Recon } from './Recon';
+import { captured } from '../lib/exportProv';
 import '../styles/prov.css';
 
 type Reg = Extract<Prov, { k: 'reg' }>;
@@ -39,6 +40,7 @@ export function SourceProvider({ children }: { children: ReactNode }) {
   const marketRef = useRef<Market | null>(null); marketRef.current = market;
 
   const open = useCallback((p: Prov) => {
+    if (captured(p)) return;  // an export is collecting the sources of a chart
     setStack((s) => [...s, p]);
     setSp((q) => { const n = new URLSearchParams(q); if (!n.get('src')) n.set('src', p.k === 'reg' && marketRef.current ? regKey(p, marketRef.current) : '1'); return n; }, { replace: false });
   }, [setSp]);

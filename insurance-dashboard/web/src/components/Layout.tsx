@@ -14,6 +14,7 @@ import '../lib/density';
 import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
+import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 
 // [route, icon, label, label on the phone's bottom bar]; valuation is reached from a company's tabs on a phone, so the bar keeps four places
 const NAV: [string, string, string, string | null][] = [
@@ -53,6 +54,7 @@ export function Layout() {
           <div className="top-in">
             <NavLink to="/" className="wordmark">fox<span>.</span></NavLink>
             <Search />
+            <ChartBookLink />
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>

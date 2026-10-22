@@ -1,0 +1,66 @@
+/* === chart book (lane G) === */
+/* the chart toolbar's book action: the one call to action among the export buttons */
+.charttools { flex-wrap: wrap; }
+.charttools .tobook { color: var(--accent-text); border-color: var(--accent-line); font-weight: 600; }
+.charttools .tobook:hover { background: var(--accent-soft); }
+.charttools a.booked { display: inline-flex; align-items: center; border: 1px solid transparent; border-radius: var(--r-1); padding: 3px 11px; font-size: 11.5px; color: var(--accent-text); background: var(--accent-soft); font-weight: 600; text-decoration: none; }
+@media (max-width: 760px) { .charttools a.booked { min-height: 36px; } }
+
+/* header link to the book (Layout) */
+.booklink { position: relative; text-decoration: none; }
+/* the theme button leaves the header on desktop (it sits in the rail); the book stays in the header on every width */
+.top .iconbtn.booklink { display: grid; place-items: center; flex: none; color: inherit; }
+:root:not([data-theme="dark"]) .top .iconbtn.booklink { color: #FFFFFF; }
+.booklink svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.booklink .count { position: absolute; top: -4px; inset-inline-end: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center; }
+
+.book { display: flex; flex-direction: column; gap: 18px; }
+.book-head { min-width: 0; flex: 1 1 320px; }
+.book-title { width: 100%; max-width: 640px; font: inherit; font-size: var(--t-7); font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; color: var(--fg); background: transparent; border: 1px solid transparent; border-radius: var(--r-2); padding: 2px 6px; margin-inline-start: -7px; }
+.book-title:hover { border-color: var(--line-soft); }
+.book-title:focus { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
+.book-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn.ghost { background: transparent; color: var(--muted); }
+.book-starts { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin-top: 8px; }
+
+.book-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr)); gap: 16px; counter-reset: none; }
+.book-card { gap: 10px; transition: box-shadow var(--fast), opacity var(--fast); }
+.book-card.dragging { opacity: 0.45; }
+.book-card:focus-within { box-shadow: var(--glow); }
+.book-card-hd { display: flex; align-items: center; gap: 8px; }
+.book-n { flex: none; width: 26px; height: 26px; border-radius: var(--r-2); display: grid !important; line-height: 1; place-items: center; background: var(--panel2); color: var(--muted); font-size: 12px; font-weight: 700; cursor: grab; user-select: none; }
+.book-n:active { cursor: grabbing; }
+.book-card-title { flex: 1; min-width: 0; font: inherit; font-size: var(--t-4); font-weight: 700; color: var(--fg); background: transparent; border: 1px solid transparent; border-radius: var(--r-2); padding: 3px 6px; text-overflow: ellipsis; }
+.book-card-title:hover { border-color: var(--line-soft); }
+.book-card-title:focus { outline: none; border-color: var(--accent-line); }
+.book-tools { display: flex; gap: 4px; flex: none; }
+.book-tools .iconbtn { width: 30px; height: 30px; font-size: 15px; line-height: 1; }
+.book-tools .iconbtn:disabled { opacity: 0.35; cursor: default; }
+.book-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--muted); font-size: 12.5px; padding-inline-start: 34px; margin-top: -6px; }
+.book-meta span + span::before { content: ""; }
+.book-open { margin-inline-start: auto; color: var(--link); }
+.book-note { width: 100%; resize: vertical; min-height: 34px; font: inherit; font-size: 13px; font-style: italic; color: var(--fg); background: transparent; border: 1px dashed var(--line); border-radius: var(--r-2); padding: 6px 9px; }
+.book-note:focus { outline: none; border-style: solid; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
+.book-src { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 12px; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--line-soft); padding-top: 8px; }
+.book-src .k { font-weight: 700; color: var(--fg); }
+.book-src a { color: var(--link); }
+.book-src .calc { font-style: italic; }
+.book-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; }
+.book-foot > .muted { margin-inline-end: auto; }
+.chip.warn { color: var(--accent-text); background: var(--accent-soft); border-color: var(--accent-line); }
+
+@media (max-width: 760px) {
+  .book-title { font-size: var(--t-6); }
+  .book-actions { width: 100%; }
+  .book-actions .btn.primary { flex: 1; }
+  .book-card { padding: 14px; }
+  .book-meta { padding-inline-start: 0; margin-top: 0; }
+  .book-tools .iconbtn { width: 36px; height: 36px; }
+}
+@media print { .book-actions, .book-tools, .book-foot .chip, .book-note:placeholder-shown { display: none !important; } .book-grid { display: block; } .book-card { break-inside: avoid; margin-bottom: 12pt; } }
+/* company header: the workbook beside the valuation link */
+.company-head .head-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.company-head .valchip.wb { font: inherit; font-size: var(--t-1); font-weight: 600; cursor: pointer; border-color: var(--line); background: var(--panel); color: var(--fg); }
+.company-head .valchip.wb:hover:not(:disabled) { border-color: var(--accent-line); color: var(--accent-text); }
+.company-head .valchip.wb:disabled { cursor: progress; color: var(--muted); }
+/* === end lane G === */

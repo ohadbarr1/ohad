@@ -56,7 +56,10 @@ export function CompanyLayout() {
             {market && entry.market_group && <span className="chip mkt">שוק: {market.plabel(market.LAST)}</span>}
           </div>
         </div>
-        <Link className="chip valchip" to={`/valuation/${entry.id}/dcf`}>הערכת שווי</Link>
+        <div className="head-acts">
+          <CompanyWorkbook id={entry.id} />
+          <Link className="chip valchip" to={`/valuation/${entry.id}/dcf`}>הערכת שווי</Link>
+        </div>
       </div>
       {/* four places: the latest report, the statements (with review, sources of profit and IFRS 17 beneath), long-term savings, documents */}
       <nav className="subnav" aria-label="חברה">
@@ -80,6 +83,17 @@ export function CompanyLayout() {
       <Outlet context={{ entry, store, storeError, market } satisfies Ctx} />
     </>
   );
+}
+
+/** "הורד את חוברת החברה": every statement, KPI, IFRS 17 fact, source of profit and savings metric in one workbook, each value with its page (lane G) */
+function CompanyWorkbook({ id }: { id: string }) {
+  const [state, setState] = useState<string | null>(null);
+  const run = async () => {
+    setState('מכין…');
+    try { const { exportCompany } = await import('../lib/exportCompany'); await exportCompany(id, (s) => setState(`${s}…`)); setState(null); }
+    catch { setState('שגיאה'); setTimeout(() => setState(null), 2000); }
+  };
+  return <button type="button" className="chip valchip wb" onClick={() => void run()} disabled={!!state} title="חוברת Excel: כל הדוחות, נתוני המפתח, IFRS 17, מקורות רווח וחיסכון, עם מקור לכל ערך">{state ?? 'חוברת Excel'}</button>;
 }
 
 function NoFinancials({ entry }: { entry: RegistryCompany }) {
