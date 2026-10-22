@@ -1,5 +1,5 @@
 {
- "built": "2026-10-22T22:36:20+03:00",
+ "built": "2026-10-22T23:57:06+03:00",
  "checks": [
   {
    "id": "workbook",
@@ -120,6 +120,14 @@
    "n": 1,
    "fail": 0,
    "note": "lens.json matches a rebuild; 784 quarter rows; 0 formula misses"
+  },
+  {
+   "id": "schemas",
+   "ok": true,
+   "level": "fail",
+   "n": 1628,
+   "fail": 0,
+   "note": "1628 files under contract, 0 failing; 29 contracts; 552 files without a contract"
   }
  ]
 }
