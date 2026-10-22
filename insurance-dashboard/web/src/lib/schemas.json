@@ -1,0 +1,1926 @@
+{
+ "$comment": "fox data contracts (lane 2H, ws6 W6-15). One file, read by web/src/lib/schema.ts (dev: full check of every fetched file; production: a sampled check that turns a renamed key into a friendly error) and by pipeline/check_schemas.py (the `schemas` check of pipeline/gate.py, full check of every built file). Keywords: type, enum, pattern, properties, required, additionalProperties, items, prefixItems, minItems, $ref. `files` maps a path under web/public/data to a schema; the first matching pattern wins (* = any characters except /).",
+ "files": [
+  {
+   "pattern": "companies/index.json",
+   "schema": "registry"
+  },
+  {
+   "pattern": "companies/*.docs.json",
+   "schema": "docs"
+  },
+  {
+   "pattern": "companies/*.price.json",
+   "schema": "price"
+  },
+  {
+   "pattern": "companies/*.notes.json",
+   "schema": "notes"
+  },
+  {
+   "pattern": "companies/*.json",
+   "schema": "workbook"
+  },
+  {
+   "pattern": "peers/registry.json",
+   "schema": "peersRegistry"
+  },
+  {
+   "pattern": "peers/m/*.json",
+   "schema": "peersMetric"
+  },
+  {
+   "pattern": "lens.json",
+   "schema": "lens"
+  },
+  {
+   "pattern": "kpi.json",
+   "schema": "kpi"
+  },
+  {
+   "pattern": "market.json",
+   "schema": "market"
+  },
+  {
+   "pattern": "csm/facts.json",
+   "schema": "csmFacts"
+  },
+  {
+   "pattern": "csm/capital.json",
+   "schema": "csmCapital"
+  },
+  {
+   "pattern": "csm/rates.json",
+   "schema": "csmRows"
+  },
+  {
+   "pattern": "csm/sens.json",
+   "schema": "csmRows"
+  },
+  {
+   "pattern": "search/entities.json",
+   "schema": "searchEntities"
+  },
+  {
+   "pattern": "search/docs.json",
+   "schema": "searchDocs"
+  },
+  {
+   "pattern": "ifrs.json",
+   "schema": "ifrsIndex"
+  },
+  {
+   "pattern": "ifrs_*.json",
+   "schema": "ifrsFacts"
+  },
+  {
+   "pattern": "ifrs/*/*.json",
+   "schema": "ifrsFacts"
+  },
+  {
+   "pattern": "macro/macro.json",
+   "schema": "macro"
+  },
+  {
+   "pattern": "calendar.json",
+   "schema": "calendar"
+  },
+  {
+   "pattern": "funds.json",
+   "schema": "funds"
+  },
+  {
+   "pattern": "funds/cat.json",
+   "schema": "fundCats"
+  },
+  {
+   "pattern": "funds/*.json",
+   "schema": "fundHist"
+  },
+  {
+   "pattern": "series/index.json",
+   "schema": "rangeIndex"
+  },
+  {
+   "pattern": "series/*.json",
+   "schema": "series"
+  },
+  {
+   "pattern": "sop/index.json",
+   "schema": "sopIndex"
+  },
+  {
+   "pattern": "sop/*.json",
+   "schema": "sop"
+  },
+  {
+   "pattern": "filings_latest.json",
+   "schema": "filingsLatest"
+  },
+  {
+   "pattern": "qa.json",
+   "schema": "qa"
+  },
+  {
+   "pattern": "coverage.json",
+   "schema": "coverage"
+  }
+ ],
+ "$defs": {
+  "period": {
+   "type": "string",
+   "pattern": "^\\d{4}(Q[1-4]|FY|H[12])$"
+  },
+  "date": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}"
+  },
+  "month": {
+   "type": "integer"
+  },
+  "num": {
+   "type": [
+    "number",
+    "null"
+   ]
+  },
+  "nums": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/num"
+   }
+  },
+  "doc": {
+   "type": "object",
+   "required": [
+    "id",
+    "date",
+    "type",
+    "period",
+    "url"
+   ],
+   "properties": {
+    "id": {
+     "type": "integer"
+    },
+    "date": {
+     "$ref": "#/$defs/date"
+    },
+    "type": {
+     "enum": [
+      "annual",
+      "quarterly",
+      "presentation",
+      "solvency"
+     ]
+    },
+    "period": {
+     "$ref": "#/$defs/period"
+    },
+    "title": {
+     "type": "string"
+    },
+    "pages": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "en": {
+     "type": "boolean"
+    },
+    "url": {
+     "type": "string"
+    }
+   }
+  },
+  "registry": {
+   "type": "array",
+   "minItems": 17,
+   "items": {
+    "type": "object",
+    "required": [
+     "id",
+     "name_he",
+     "kind",
+     "market_group",
+     "has_financials",
+     "docs",
+     "has_price"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "pattern": "^[a-z_]+$"
+     },
+     "name_he": {
+      "type": "string"
+     },
+     "name_en": {
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "insurance_group",
+       "fund_house"
+      ]
+     },
+     "market_group": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "maya_id": {
+      "type": "integer"
+     },
+     "has_financials": {
+      "type": "boolean"
+     },
+     "docs": {
+      "type": "integer"
+     },
+     "has_price": {
+      "type": "boolean"
+     },
+     "filings": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "period",
+        "url"
+       ],
+       "properties": {
+        "url": {
+         "type": [
+          "string",
+          "null"
+         ]
+        },
+        "pages": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "docs": {
+   "type": "object",
+   "required": [
+    "docs"
+   ],
+   "properties": {
+    "source": {
+     "type": "string"
+    },
+    "docs": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/doc"
+     }
+    }
+   }
+  },
+  "price": {
+   "type": "object",
+   "required": [
+    "ticker",
+    "source",
+    "fetched",
+    "asof",
+    "last",
+    "dates",
+    "close"
+   ],
+   "properties": {
+    "ticker": {
+     "type": "string"
+    },
+    "source": {
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    },
+    "fetched": {
+     "$ref": "#/$defs/date"
+    },
+    "asof": {
+     "$ref": "#/$defs/date"
+    },
+    "unit": {
+     "enum": [
+      "agorot",
+      "nis"
+     ]
+    },
+    "last": {
+     "type": "number"
+    },
+    "mcap": {
+     "$ref": "#/$defs/num"
+    },
+    "shares": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "dates": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/date"
+     }
+    },
+    "close": {
+     "$ref": "#/$defs/nums"
+    },
+    "dividends": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "$ref": "#/$defs/date"
+       },
+       {
+        "type": "number"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "notes": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "workbook": {
+   "type": "object",
+   "required": [
+    "company",
+    "sheets",
+    "periods",
+    "metrics",
+    "facts"
+   ],
+   "properties": {
+    "company": {
+     "type": "string"
+    },
+    "sources": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "url"
+      ],
+      "properties": {
+       "url": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "groups": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "sheets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "code",
+       "title",
+       "group"
+      ],
+      "properties": {
+       "code": {
+        "type": "string"
+       },
+       "title": {
+        "type": "string"
+       },
+       "group": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "periods": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "type",
+       "end"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "type": {
+        "enum": [
+         "I",
+         "Q",
+         "H",
+         "9M",
+         "FY"
+        ]
+       },
+       "end": {
+        "$ref": "#/$defs/date"
+       },
+       "months": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "metrics": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "sheet",
+       "label",
+       "unit",
+       "header"
+      ],
+      "properties": {
+       "sheet": {
+        "type": "string"
+       },
+       "label": {
+        "type": "string"
+       },
+       "dim": {
+        "type": "string"
+       },
+       "unit": {
+        "enum": [
+         "k",
+         "m",
+         "nis",
+         "pct",
+         "shares"
+        ]
+       },
+       "header": {
+        "type": "boolean"
+       },
+       "order": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "facts": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 4,
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       },
+       {
+        "type": "number"
+       },
+       {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       {
+        "type": "integer"
+       }
+      ]
+     }
+    },
+    "restated": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 12
+     }
+    },
+    "urls": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "peersRegistry": {
+   "type": "object",
+   "required": [
+    "asof",
+    "entities",
+    "sets",
+    "metrics",
+    "src"
+   ],
+   "properties": {
+    "asof": {
+     "type": "string"
+    },
+    "entities": {
+     "type": "array",
+     "minItems": 17,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "n",
+       "k"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "n": {
+        "type": "string"
+       },
+       "k": {
+        "enum": [
+         "ins",
+         "fund"
+        ]
+       },
+       "mg": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "sets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "n",
+       "ids"
+      ],
+      "properties": {
+       "ids": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "groups": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       }
+      ]
+     }
+    },
+    "src": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "metrics": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "l",
+       "g",
+       "src",
+       "u",
+       "f"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "l": {
+        "type": "string"
+       },
+       "g": {
+        "type": "string"
+       },
+       "src": {
+        "type": "string"
+       },
+       "u": {
+        "type": "string"
+       },
+       "f": {
+        "type": "string"
+       },
+       "n": {
+        "type": "integer"
+       },
+       "r": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "peersMetric": {
+   "type": "object",
+   "required": [
+    "e"
+   ],
+   "properties": {
+    "u": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "e": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "c"
+      ],
+      "properties": {
+       "c": {
+        "type": "array"
+       },
+       "l": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   }
+  },
+  "lens": {
+   "type": "object",
+   "required": [
+    "meta",
+    "groups",
+    "segs",
+    "months",
+    "series"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "asof",
+      "generated",
+      "source_reg"
+     ],
+     "properties": {
+      "asof": {
+       "$ref": "#/$defs/month"
+      },
+      "generated": {
+       "$ref": "#/$defs/date"
+      },
+      "source_reg": {
+       "type": "string"
+      },
+      "last_rep": {
+       "type": "string"
+      }
+     }
+    },
+    "groups": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "name",
+       "id"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "id": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "segs": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "label",
+       "set"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "set": {
+        "type": "string"
+       },
+       "rep": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "months": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/month"
+     }
+    },
+    "series": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "a"
+      ],
+      "properties": {
+       "a": {
+        "$ref": "#/$defs/nums"
+       },
+       "org": {
+        "$ref": "#/$defs/nums"
+       },
+       "tr": {
+        "$ref": "#/$defs/nums"
+       },
+       "fee": {
+        "$ref": "#/$defs/nums"
+       }
+      }
+     }
+    }
+   }
+  },
+  "kpi": {
+   "type": "object",
+   "required": [
+    "asof",
+    "source",
+    "concepts",
+    "companies"
+   ],
+   "properties": {
+    "asof": {
+     "$ref": "#/$defs/date"
+    },
+    "source": {
+     "type": "string"
+    },
+    "concepts": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "notes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "company"
+      ]
+     }
+    },
+    "companies": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "periods",
+       "end",
+       "status",
+       "values"
+      ],
+      "properties": {
+       "periods": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/period"
+        }
+       },
+       "end": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/date"
+        }
+       },
+       "status": {
+        "type": "array",
+        "items": {
+         "enum": [
+          "fy",
+          "verified",
+          "unverified",
+          "corrected",
+          "withheld"
+         ]
+        }
+       },
+       "values": {
+        "type": "object",
+        "additionalProperties": {
+         "$ref": "#/$defs/nums"
+        }
+       },
+       "rid": {
+        "type": "array",
+        "items": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "market": {
+   "type": "object",
+   "required": [
+    "meta",
+    "products",
+    "groups",
+    "periods",
+    "cols",
+    "rows",
+    "funds"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "fetched",
+      "asof",
+      "source"
+     ],
+     "properties": {
+      "fetched": {
+       "type": "string"
+      },
+      "asof": {
+       "$ref": "#/$defs/month"
+      },
+      "source": {
+       "type": "string"
+      },
+      "resources": {
+       "type": "object"
+      }
+     }
+    },
+    "products": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "key",
+       "label",
+       "family"
+      ],
+      "properties": {
+       "key": {
+        "type": "string"
+       },
+       "label": {
+        "type": "string"
+       },
+       "family": {
+        "enum": [
+         "pension",
+         "gemel",
+         "insurance"
+        ]
+       }
+      }
+     }
+    },
+    "groups": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string"
+     }
+    },
+    "periods": {
+     "type": "array",
+     "minItems": 13,
+     "items": {
+      "$ref": "#/$defs/month"
+     }
+    },
+    "cols": {
+     "type": "array",
+     "prefixItems": [
+      {
+       "enum": [
+        "p"
+       ]
+      },
+      {
+       "enum": [
+        "prod"
+       ]
+      },
+      {
+       "enum": [
+        "grp"
+       ]
+      },
+      {
+       "enum": [
+        "assets"
+       ]
+      }
+     ]
+    },
+    "rows": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "array",
+      "minItems": 4,
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       },
+       {
+        "type": "number"
+       }
+      ],
+      "items": {
+       "$ref": "#/$defs/num"
+      }
+     }
+    },
+    "funds": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "fam",
+       "prod",
+       "name",
+       "grp",
+       "mgr"
+      ],
+      "properties": {
+       "id": {
+        "type": "integer"
+       },
+       "fam": {
+        "enum": [
+         "pension",
+         "gemel",
+         "insurance"
+        ]
+       },
+       "name": {
+        "type": "string"
+       },
+       "grp": {
+        "type": "string"
+       },
+       "mgr": {
+        "type": "string"
+       },
+       "assets": {
+        "$ref": "#/$defs/num"
+       },
+       "fee": {
+        "$ref": "#/$defs/num"
+       }
+      }
+     }
+    }
+   }
+  },
+  "csmFact": {
+   "type": "object",
+   "required": [
+    "c",
+    "m",
+    "d",
+    "v"
+   ],
+   "properties": {
+    "c": {
+     "type": "string"
+    },
+    "m": {
+     "type": "string"
+    },
+    "s": {
+     "type": "string"
+    },
+    "g": {
+     "type": "string"
+    },
+    "b": {
+     "type": "string"
+    },
+    "w": {
+     "type": "string"
+    },
+    "d": {
+     "$ref": "#/$defs/date"
+    },
+    "v": {
+     "type": "number"
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    }
+   }
+  },
+  "ifrsFile": {
+   "type": "object",
+   "required": [
+    "company",
+    "period",
+    "url",
+    "facts"
+   ],
+   "properties": {
+    "company": {
+     "type": "string"
+    },
+    "period": {
+     "$ref": "#/$defs/period"
+    },
+    "report_id": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "url": {
+     "type": "string"
+    },
+    "facts": {
+     "type": "integer"
+    }
+   }
+  },
+  "csmFacts": {
+   "type": "object",
+   "required": [
+    "built",
+    "files",
+    "reports"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/ifrsFile"
+     }
+    },
+    "reports": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/csmFact"
+      }
+     }
+    }
+   }
+  },
+  "csmCapital": {
+   "type": "object",
+   "required": [
+    "built",
+    "companies"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "companies": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "object",
+        "required": [
+         "v"
+        ],
+        "properties": {
+         "v": {
+          "type": "number"
+         },
+         "pg": {
+          "type": [
+           "integer",
+           "null"
+          ]
+         },
+         "u": {
+          "type": [
+           "string",
+           "null"
+          ]
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "csmRows": {
+   "type": "object",
+   "required": [
+    "built",
+    "rows"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "rp",
+       "d"
+      ],
+      "properties": {
+       "c": {
+        "type": "string"
+       },
+       "rp": {
+        "$ref": "#/$defs/period"
+       },
+       "d": {
+        "$ref": "#/$defs/date"
+       }
+      }
+     }
+    }
+   }
+  },
+  "searchEntities": {
+   "type": "object",
+   "required": [
+    "asof",
+    "groups",
+    "funds"
+   ],
+   "properties": {
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "groups": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "funds": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "searchDocs": {
+   "type": "object",
+   "required": [
+    "v",
+    "built",
+    "cols",
+    "docs"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "built": {
+     "type": "string"
+    },
+    "pages": {
+     "type": "integer"
+    },
+    "cols": {
+     "type": "array",
+     "prefixItems": [
+      {
+       "enum": [
+        "id"
+       ]
+      }
+     ]
+    },
+    "docs": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 2
+     }
+    }
+   }
+  },
+  "ifrsIndex": {
+   "type": "object",
+   "required": [
+    "files"
+   ],
+   "properties": {
+    "unit": {
+     "type": "string"
+    },
+    "files": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/ifrsFile"
+     }
+    }
+   }
+  },
+  "ifrsFacts": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/csmFact"
+   }
+  },
+  "macroSeries": {
+   "type": "object",
+   "required": [
+    "label",
+    "unit",
+    "source",
+    "url",
+    "retrieved"
+   ],
+   "properties": {
+    "label": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "source": {
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    },
+    "retrieved": {
+     "type": "string"
+    },
+    "stale": {
+     "type": "boolean"
+    }
+   }
+  },
+  "macro": {
+   "type": "object",
+   "required": [
+    "generated",
+    "series"
+   ],
+   "properties": {
+    "generated": {
+     "type": "string"
+    },
+    "series": {
+     "type": "object",
+     "required": [
+      "rate",
+      "cpi"
+     ],
+     "additionalProperties": {
+      "$ref": "#/$defs/macroSeries"
+     }
+    }
+   }
+  },
+  "calendar": {
+   "type": "object",
+   "required": [
+    "built",
+    "companies"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "basis": {
+     "type": "string"
+    },
+    "companies": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "last",
+       "next"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "last": {
+        "type": "object",
+        "required": [
+         "period",
+         "date"
+        ],
+        "properties": {
+         "period": {
+          "$ref": "#/$defs/period"
+         },
+         "date": {
+          "$ref": "#/$defs/date"
+         }
+        }
+       },
+       "next": {
+        "type": "object",
+        "required": [
+         "period",
+         "end"
+        ],
+        "properties": {
+         "period": {
+          "$ref": "#/$defs/period"
+         },
+         "end": {
+          "$ref": "#/$defs/date"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "funds": {
+   "type": "object",
+   "required": [
+    "asof",
+    "source",
+    "funds"
+   ],
+   "properties": {
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "source": {
+     "type": "string"
+    },
+    "funds": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "k",
+       "fam",
+       "prod",
+       "track",
+       "name",
+       "mgr",
+       "grp",
+       "id"
+      ],
+      "properties": {
+       "k": {
+        "type": "string"
+       },
+       "id": {
+        "type": "integer"
+       },
+       "name": {
+        "type": "string"
+       },
+       "assets": {
+        "$ref": "#/$defs/num"
+       },
+       "fee": {
+        "$ref": "#/$defs/num"
+       },
+       "y12": {
+        "$ref": "#/$defs/num"
+       },
+       "closed": {
+        "type": "boolean"
+       }
+      }
+     }
+    }
+   }
+  },
+  "filingsLatest": {
+   "type": "object",
+   "required": [
+    "docs"
+   ],
+   "properties": {
+    "docs": {
+     "type": "array",
+     "items": {
+      "allOf": [
+       {
+        "$ref": "#/$defs/doc"
+       }
+      ],
+      "type": "object",
+      "required": [
+       "company"
+      ],
+      "properties": {
+       "company": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   }
+  },
+  "qa": {
+   "type": "object",
+   "required": [
+    "built",
+    "checks"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "checks": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "ok",
+       "level",
+       "n",
+       "fail",
+       "note"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "ok": {
+        "type": "boolean"
+       },
+       "level": {
+        "enum": [
+         "fail",
+         "warn"
+        ]
+       },
+       "n": {
+        "type": "integer"
+       },
+       "fail": {
+        "type": "integer"
+       },
+       "note": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   }
+  },
+  "coverage": {
+   "type": "object",
+   "required": [
+    "built",
+    "layers",
+    "companies",
+    "cells",
+    "sources"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "layers": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "label",
+       "cadence"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "label": {
+        "type": "string"
+       },
+       "cadence": {
+        "enum": [
+         "daily",
+         "monthly",
+         "quarterly",
+         "annual",
+         "event"
+        ]
+       }
+      }
+     }
+    },
+    "companies": {
+     "type": "array",
+     "minItems": 17,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "kind"
+      ]
+     }
+    },
+    "cells": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "required": [
+        "s"
+       ],
+       "properties": {
+        "s": {
+         "enum": [
+          "fresh",
+          "stale",
+          "missing",
+          "na"
+         ]
+        },
+        "last": {
+         "type": [
+          "string",
+          "null"
+         ]
+        },
+        "n": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "sources": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "label",
+       "cadence",
+       "sla_days",
+       "url"
+      ],
+      "properties": {
+       "sla_days": {
+        "type": "integer"
+       },
+       "asof": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "checked": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "fundHist": {
+   "type": "object",
+   "required": [
+    "p",
+    "y"
+   ],
+   "properties": {
+    "p": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/month"
+     }
+    },
+    "y": {
+     "$ref": "#/$defs/nums"
+    },
+    "a": {
+     "$ref": "#/$defs/nums"
+    },
+    "fee": {
+     "$ref": "#/$defs/nums"
+    },
+    "st": {
+     "$ref": "#/$defs/nums"
+    },
+    "fo": {
+     "$ref": "#/$defs/nums"
+    },
+    "fx": {
+     "$ref": "#/$defs/nums"
+    },
+    "dep": {
+     "$ref": "#/$defs/nums"
+    },
+    "wd": {
+     "$ref": "#/$defs/nums"
+    },
+    "tr": {
+     "$ref": "#/$defs/nums"
+    }
+   }
+  },
+  "fundCats": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "p",
+     "y",
+     "n"
+    ],
+    "properties": {
+     "p": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/month"
+      }
+     },
+     "y": {
+      "$ref": "#/$defs/nums"
+     },
+     "n": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     }
+    }
+   }
+  },
+  "rangeIndex": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "rows",
+     "from",
+     "to"
+    ],
+    "properties": {
+     "rows": {
+      "type": "integer"
+     },
+     "from": {
+      "$ref": "#/$defs/period"
+     },
+     "to": {
+      "$ref": "#/$defs/period"
+     }
+    }
+   }
+  },
+  "series": {
+   "type": "object",
+   "required": [
+    "periods",
+    "rows"
+   ],
+   "properties": {
+    "periods": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/period"
+     }
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "m",
+       "s",
+       "g",
+       "b",
+       "vals"
+      ],
+      "properties": {
+       "m": {
+        "type": "string"
+       },
+       "vals": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "v",
+          "std"
+         ],
+         "properties": {
+          "v": {
+           "type": "number"
+          },
+          "pg": {
+           "type": [
+            "integer",
+            "null"
+           ]
+          },
+          "u": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "std": {
+           "enum": [
+            "IFRS 4",
+            "IFRS 17"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "sopIndex": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": {
+     "type": "integer"
+    }
+   }
+  },
+  "sop": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "url",
+     "facts",
+     "missing"
+    ],
+    "properties": {
+     "url": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "facts": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "m",
+        "d",
+        "v"
+       ],
+       "properties": {
+        "m": {
+         "type": "string"
+        },
+        "d": {
+         "$ref": "#/$defs/date"
+        },
+        "v": {
+         "type": "number"
+        },
+        "pg": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        }
+       }
+      }
+     },
+     "missing": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  }
+ }
+}
