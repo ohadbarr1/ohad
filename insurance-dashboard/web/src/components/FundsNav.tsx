@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 /** One section for the regulator's fund data: one title, one row of tabs, on every page of it. */
 export function FundsNav() {
   return (
-    <nav className="subnav" aria-label="קופות ושוק">
+    <nav className="subnav" aria-label="קופות">
       <NavLink to="/funds" end>מסלולים</NavLink>
       <NavLink to="/funds/makers">יצרן מול השוק</NavLink>
       <NavLink to="/managers">מנהלים</NavLink>
@@ -16,7 +16,7 @@ export function FundsNav() {
 export function FundsHead({ sub }: { sub?: ReactNode }) {
   return (
     <>
-      <div className="pagehead"><div><h1>קופות ושוק</h1>{sub && <div className="sub">{sub}</div>}</div></div>
+      <div className="pagehead"><div><h1>קופות</h1>{sub && <div className="sub">{sub}</div>}</div></div>
       <FundsNav />
     </>
   );

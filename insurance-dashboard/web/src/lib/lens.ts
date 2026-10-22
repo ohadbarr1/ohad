@@ -1,6 +1,6 @@
 import type { Prov } from './prov';
 import type { MetricKey, Win } from './market';
-import { nf, sn } from './format';
+import { nf, pubLabel, sn } from './format';
 import { useLoad } from './useData';
 
 /** lens.json (pipeline/build_lens.py): the regulator's months joined to the managers' quarterly P&L. */
@@ -86,7 +86,7 @@ export class LensSrc {
     const pre = r.s === 'ins' ? 'ic' : r.s;
     if (pre === 'pg') return { k: 'calc', title, value: v == null ? '–' : nf(v, dec), unit, formula: 'מגזר הפנסיה ועוד מגזר הגמל, מהדוח',
       inputs: (['pen', 'gem'] as const).map((p) => ({ label: SEG_LONG[p], v: '', src: () => ltsProv(rp.c, `${p}.${metric}`, key, title.replace(SEG_LONG.pg, SEG_LONG[p]), unit) })) };
-    return ltsProv(rp.c, `${pre}.${metric}`, key, title, unit, metric === 'aum' && pre === 'ic' ? 'הדוח מדפיס במיליוני ש"ח; מוצג כאן במיליארדים' : undefined);
+    return ltsProv(rp.c, `${pre}.${metric}`, key, title, unit, metric === 'aum' && pre === 'ic' ? 'הדוח מדפיס במיליוני ש"ח; מוצג כאן במיליארדים' : undefined, v == null ? '–' : nf(v, dec));
   }
   fyReg(r: LensRow): Prov {
     return { k: 'calc', title: `תשואת דמי ניהול על נכסי הרשות · ${this.name(r.g)} · ${SEG_LONG[r.s]} · ${ql(r.q)}`, value: pc(r.fy_reg, 3), unit: 'שנתי',
@@ -161,15 +161,15 @@ export function warmRep(c: string | undefined | null) {
   fetch(`${import.meta.env.BASE_URL}data/lts_prov/${c}.json`).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) provCache.set(c, j); }).catch(() => {}).finally(() => pend.delete(c));
 }
 const unitHe = (u: string) => u.replace('NIS thousands', 'אלפי ש"ח').replace('NIS thousand', 'אלפי ש"ח').replace('NIS millions', 'מיליוני ש"ח').replace('NIS billions', 'מיליארדי ש"ח');
-function ltsProv(c: string, metric: string, period: string, title: string, unit: string, note?: string): Prov {
+const WIN_HE: Record<string, string> = { q: 'רבעון', ytd: 'YTD', fy: 'FY', h1: 'H1', instant: '' };
+function ltsProv(c: string, metric: string, period: string, title: string, unit: string, note?: string, value?: string): Prov {
   const pr = provCache.get(c), f = pr?.facts[`${metric}|${period}`];
   if (!pr) { warmRep(c); return { k: 'none', title, why: 'פירוט הרכיבים מהדוח נטען כעת. נסו שוב בעוד רגע.' }; }
   if (!f) return { k: 'none', title, why: 'לנתון זה לא נרשמו רכיבים מודפסים.' };
   const parts = f[1].map((i) => pr.parts[i]);
-  const total = parts.length === 1 ? parts[0][3] : null;
-  return { k: 'calc', title, value: total != null ? nf(total, Math.abs(total) < 100 ? 2 : 0) : '', unit, formula: f[0].replace(/\bthe\s+/g, ''), note: [pr.entity ?? 'דוחות החברה המנהלת', note].filter(Boolean).join(' · '),
-    inputs: parts.slice(0, 40).map(([file, pg, label, val, u, date, win]) => ({ label: `${label} · ${date}${win && win !== 'instant' ? ` · ${win}` : ''}`, v: `${nf(val, Math.abs(val) < 100 ? 2 : 0)} ${unitHe(u)}`,
-      src: file ? () => ({ k: 'report', title: label, value: nf(val, Math.abs(val) < 100 ? 2 : 0), unit: unitHe(u), url: pr.urls[file] ?? null, pg, doc: `${file.startsWith('ic:') ? 'דוח חברת הביטוח' : pr.entity ?? 'דוח החברה המנהלת'}, ${file.replace('ic:', '')}`, period: date, srcType: file.startsWith('ic:') ? 'דוח חברת הביטוח' : 'דוח החברה המנהלת' }) as Prov : undefined })) };
+  return { k: 'calc', title, value: value ?? '', unit, formula: f[0].replace(/\bthe\s+/g, ''), note: [pr.entity ?? 'דוחות החברה המנהלת', note].filter(Boolean).join(' · '),
+    inputs: parts.slice(0, 40).map(([file, pg, label, val, u, date, win]) => ({ label: `${label} · ${pubLabel(date)}${win && WIN_HE[win] !== '' ? ` · ${WIN_HE[win] ?? win}` : ''}`, v: `${nf(val, Math.abs(val) < 100 ? 2 : 0)} ${unitHe(u)}`,
+      src: file ? () => ({ k: 'report', title: label, value: nf(val, Math.abs(val) < 100 ? 2 : 0), unit: unitHe(u), url: pr.urls[file] ?? null, pg, doc: `${file.startsWith('ic:') ? 'דוח חברת הביטוח' : pr.entity ?? 'דוח החברה המנהלת'}, ${file.replace('ic:', '')}`, period: pubLabel(date), srcType: file.startsWith('ic:') ? 'דוח חברת הביטוח' : 'דוח החברה המנהלת' }) as Prov : undefined })) };
 }
 
 /* ---------- rank history ---------- */

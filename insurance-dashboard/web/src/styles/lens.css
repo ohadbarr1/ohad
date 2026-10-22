@@ -44,3 +44,4 @@ table.drill td:first-child { min-width: 64px; }
 .rating .band i.on { background: var(--accent); }
 .rating table td { padding: 6px 8px; }
 @media (max-width: 760px) { .rating { grid-template-columns: 1fr; } .heat-m { font-size: 10.5px; } .heat-m th, .heat-m td { min-width: 24px; padding: 3px 1px; } }
+.fund-mgr { display: block; }

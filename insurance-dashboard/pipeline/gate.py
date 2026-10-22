@@ -20,6 +20,8 @@ Checks
                  web/public/data/ifrs/<company>/<period>.json must be exactly the company's rows of ifrs_<period>.json.
   balance        on every balance sheet built from the reports, total assets = total equity and liabilities at every date, within the
                  rounding of figures printed in NIS millions (NIS 2m) or 0.05%: fail above 1% (a line read wrongly), warn between.
+  lens           web/public/data/lens.json equals a rebuild from market.json + lts.json (pipeline/build_lens.py --check), and every
+                 derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
 """
@@ -311,6 +313,12 @@ def balance(wbs):
         add("balance_round", False, n, warn, f"off by more than rounding but under 1%: {note}", level="warn")
 
 
+def lens():
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_lens.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("lens", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
+
+
 def main():
     t0 = dt.datetime.now()
     if "--baseline" in sys.argv:  # accept today's value-on-page misses as known (after reviewing them)
@@ -326,6 +334,7 @@ def main():
     ifrs_pages()
     balance(wbs)
     cross_layer()
+    lens()
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     failed = [c["id"] for c in checks if not c["ok"] and c["level"] == "fail"]
