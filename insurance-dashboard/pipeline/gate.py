@@ -18,6 +18,8 @@ Checks
   ifrs_page      every fact of web/public/data/ifrs_*.json with a page is printed on that page, where the page text exists under
                  data/work (same matching as pipeline/verify_fs.py); facts whose page text is missing are counted, not failed.
                  web/public/data/ifrs/<company>/<period>.json must be exactly the company's rows of ifrs_<period>.json.
+  balance        on every balance sheet built from the reports, total assets = total equity and liabilities at every date, within the
+                 rounding of figures printed in NIS millions (NIS 2m) or 0.05%: fail above 1% (a line read wrongly), warn between.
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
 """
@@ -269,6 +271,46 @@ def cross_layer():
         + (f"; {'; '.join(notes[:4])}" if notes else "") + (f"; not comparable: {', '.join(skipped)}" if skipped else ""))
 
 
+A_RE = re.compile(r"^סך (כל )?ה?נכסים$")
+LE_RE = re.compile(r"^סך (כל )?ה?(הון וה?התחייבויות|התחייבויות וה?הון)$")
+
+
+def balance(wbs):
+    """Total assets against total equity and liabilities, each assets row paired with the equity-and-liabilities row of its own block."""
+    n = warn = bad = 0
+    worst = []
+    for comp, d in wbs.items():
+        ms = [(i, m) for i, m in enumerate(d["metrics"]) if m.get("sheet") == "X.מאזן" and not m.get("header")]
+        cap = lambda m: re.sub(r"\s+", " ", re.sub(r"[\"'״׳*,]", "", re.sub(r"סה\s*כ|סך\s+ה?כל", "סך", m["label"]))).strip()
+        assets = [i for i, m in ms if A_RE.match(cap(m))]
+        les = [i for i, m in ms if LE_RE.match(cap(m))]
+        val = collections.defaultdict(dict)
+        for f in d["facts"]:
+            val[f[0]][f[1]] = f[2]
+        for a in assets:
+            le = min((x for x in les if x > a), default=None)
+            if le is None:
+                continue
+            for pi, va in val[a].items():
+                vl = val[le].get(pi)
+                if vl is None or not va:
+                    continue
+                n += 1
+                diff = abs(va - vl)
+                if diff > max(2000, 0.0005 * abs(va)):
+                    rel = diff / abs(va)
+                    if rel > 0.01:
+                        bad += 1
+                    else:
+                        warn += 1
+                    worst.append((rel, comp, d["periods"][pi]["id"], va, vl))
+    worst.sort(reverse=True)
+    note = "; ".join(f"{c} {p}: {a:,.0f} vs {l:,.0f}" for _, c, p, a, l in worst[:4])
+    add("balance", bad == 0, n, bad, f"A = L+E at every balance date; >1% off: {bad}" + (f" ({note})" if bad else ""))
+    if warn:
+        add("balance_round", False, n, warn, f"off by more than rounding but under 1%: {note}", level="warn")
+
+
 def main():
     t0 = dt.datetime.now()
     if "--baseline" in sys.argv:  # accept today's value-on-page misses as known (after reviewing them)
@@ -282,6 +324,7 @@ def main():
     additivity(wbs)
     units_labels(wbs)
     ifrs_pages()
+    balance(wbs)
     cross_layer()
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")

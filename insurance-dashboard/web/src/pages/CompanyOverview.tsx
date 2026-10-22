@@ -106,6 +106,7 @@ function LatestDocs({ docs }: { docs: DocEntry[] }) {
 
 import { CompanyTear } from './CompanyTear';
 import { Notes, Star } from '../components/Follow';
+import { FundHouseStrip } from '../components/FundHouseStrip';
 
 export function CompanyOverview() {
   const { entry, store, market, storeError } = useCtx();
@@ -118,7 +119,8 @@ export function CompanyOverview() {
   const mk = market && entry.market_group ? marketCards(market, entry.market_group) : [];
   return (
     <>
-      <CompanyTear id={entry.id} />
+      {entry.kind === 'fund_house' && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}
+      {entry.kind !== 'fund_house' && <CompanyTear id={entry.id} />}
       {kc.length > 0 && (
         <section>
           <h2 className="band">דוחות<span className="muted">{k ? `${periodLabelShort(k.quarters[0].period)} עד ${periodLabelShort(k.quarters[k.quarters.length - 1].period)}` : ''}</span></h2>

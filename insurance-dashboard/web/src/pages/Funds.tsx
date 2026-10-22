@@ -128,7 +128,8 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
   const { open: openSrc } = useSource();
   const set = (patch: Record<string, string>) => { const next = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k))); setSp(next, { replace: true }); };
 
-  const all = data?.funds ?? [];
+  // a track with no assets is not ranked; a Sharpe ratio over a series with no volatility (personally managed tracks report sd 0) says nothing
+  const all = useMemo(() => (data?.funds ?? []).filter((f) => f.assets !== 0).map((f) => (f.sd != null && f.sd > 0 ? f : { ...f, sharpe: null })), [data]);
   const tracks = useMemo(() => { const m = new Map<string, number>(); all.filter((f) => f.prod === prod).forEach((f) => m.set(f.track, (m.get(f.track) ?? 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [all, prod]);
   const ALL = 'all';
   const T = makersOnly || track === ALL || tracks.some(([t]) => t === track) ? (makersOnly ? ALL : track) : tracks[0]?.[0] ?? '';
@@ -295,7 +296,7 @@ export function FundCard() {
   const cat = f && cats ? cats[catKey(f)] : undefined;
   const company = useRegistry().data?.find((c) => f && c.market_group === f.grp);
   // ranked against the tracks open to everyone, as in the table
-  const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed)) : []), [data, f]);
+  const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed) && x.assets !== 0) : []), [data, f]);
   const years = useMemo(() => {
     if (!h) return [];
     const by = (s: { p: number[]; y: (number | null)[] }) => { const m = new Map<number, { r: number[]; p: number[] }>(); s.p.forEach((p, i) => { const r = s.y[i], y = Math.floor(p / 100); if (r != null) { const e = m.get(y) ?? { r: [], p: [] }; e.r.push(r); e.p.push(p); m.set(y, e); } }); return m; };

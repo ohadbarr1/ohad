@@ -60,13 +60,16 @@ export class CompanyKpi {
   private rid: (number | null)[];
   private fix: Record<string, KpiFix>;
   private statusOf: string[];
+  private canon: NonNullable<KpiData['companies'][string]['canon']>;
   constructor(readonly id: string, d: KpiData['companies'][string], private price: PriceData | null) {
     this.rid = d.rid ?? d.periods.map(() => null);
     this.fix = d.fix ?? {};
     this.statusOf = d.status ?? d.periods.map(() => 'unverified');
     this.quarters = d.periods.map((p, i) => ({ period: p, end: d.end[i], y: yOf(p), q: qOf(p) }));
-    this.raw = d.values;
     d.periods.forEach((p, i) => this.idx.set(p, i));
+    // one value per figure: where the printed statement and the tag differ by rounding, the printed figure is the one on screen
+    this.canon = d.canon ?? {};
+    this.raw = Object.fromEntries(Object.entries(d.values).map(([k, arr]) => [k, arr.map((v, i) => this.canon[k]?.[d.periods[i]]?.[0] ?? v)]));
   }
   private at(key: string, y: number, q: number): number | null {
     const i = this.idx.get(q === 4 ? `${y}FY` : `${y}Q${q}`);
@@ -135,6 +138,8 @@ export class CompanyKpi {
   private show(key: string, v: number): string { return key === 'eps' ? `${nf(v, 2)} ש"ח` : `${nf(v, 0)} אלפי ש"ח`; }
   private title(key: string, period: string) { return `${KPI_BY_KEY[key]?.label ?? key}, ${periodTag(period)}`; }
   private xbrl(key: string, period: string, note?: string, value?: number | null, status?: string): Prov {
+    const cn = value == null ? this.canon[key]?.[period] : undefined;
+    if (cn) return this.report(key, period, { rid: cn[2], pg: cn[3] }, `כפי שהודפס בדוח. בתג ה-XBRL: ${this.show(key, cn[1])} (הפרש עיגול)`);
     const i = this.idx.get(period), v = value ?? this.cur(key, period);
     if (i == null || v == null) return none(this.title(key, period), 'התקופה אינה בדוחות שנקראו או שהמושג אינו מתויג בה');
     const st = status ?? (KPI_BY_KEY[key]?.flow ? this.statusOf[i] : this.statusOf[i] === 'fy' ? 'fy' : undefined);

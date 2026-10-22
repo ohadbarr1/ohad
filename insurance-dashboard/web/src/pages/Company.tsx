@@ -4,7 +4,7 @@ import { CompanyIfrs } from './CompanyIfrs';
 import { CompanyReview } from './CompanyReview';
 import { CompanySop } from './CompanySop';
 import { CompanySeries } from './CompanySeries';
-import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, NavLink, Outlet, useLocation, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { GroupPanel } from './Market';
@@ -549,6 +549,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
 /* ---------- IFRS 17: CSM by portfolio group ---------- */
 export function CompanyReviewTab() {
   const { entry } = useCtx();
+  if (entry.kind === 'fund_house') return <Navigate to=".." replace />;  // a fund house has no IFRS 17 review: its tabs are the ones with content
   return <CompanyReview id={entry.id} docs={entry.docs} />;
 }
 
@@ -559,11 +560,13 @@ export function CompanyHistTab() {
 
 export function CompanySopTab() {
   const { entry } = useCtx();
+  if (entry.kind === 'fund_house') return <Navigate to=".." replace />;
   return <CompanySop id={entry.id} docs={entry.docs} />;
 }
 
 export function CompanyIfrs17() {
   const { entry, store } = useCtx();
+  if (entry.kind === 'fund_house') return <Navigate to=".." replace />;
   return <><CompanyIfrs id={entry.id} docs={entry.docs} /><CsmEconomics id={entry.id} />{store && <CsmExplorer store={store} />}</>;
 }
 

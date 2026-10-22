@@ -561,8 +561,12 @@ for comp in COMPANIES:
     for x in d["facts"]:
         facts_of.setdefault(x[0], []).append(x)
     for key, _, sheet, pat in ROLES:
-        mi = next((i for i, m in enumerate(d["metrics"]) if m["sheet"] == sheet and not m["header"] and m["unit"] != "shares" and (key != "eps" or m["unit"] == "nis")
-                   and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4), None)
+        # among the rows whose caption matches, the one that runs to the latest period (a caption renamed in later reports leaves its old
+        # row with history only); a tie goes to the first in the statement (the IFRS 17 section, the line before its breakdown)
+        cand = [i for i, m in enumerate(d["metrics"]) if m["sheet"] == sheet and not m["header"] and m["unit"] != "shares" and (key != "eps" or m["unit"] == "nis")
+                and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4]
+        cand = [i for i in cand if not (key == "div_paid" and "שאינן מקנות" in d["metrics"][i]["label"])]  # the dividend to minorities is another line
+        mi = max(cand, key=lambda i: (max(d["periods"][x[1]]["end"] for x in facts_of[i]), -i)) if cand else None
         if mi is None:
             continue
         d["metrics"][mi]["role"] = key  # the statements page links this row to the same line of every company
