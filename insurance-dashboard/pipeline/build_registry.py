@@ -220,7 +220,8 @@ for (m, seg), comps in sorted(by_key.items()):
             else:
                 ch.cell(comp, p, v, c.get("pg"), c.get("u"), fl, meta=meta)
     topic = "seg" if seg != "group" else next((t for t, keys in TOPIC_IFRS.items() if any(m.startswith(x) or x in m for x in keys)), "pl")
-    note = "סכום כפי שהודפס בטבלת הקבוצה; כל חברה על הבסיס שהיא מדפיסה" + (f" (רוב החברות: {bases.most_common(1)[0][0]})" if len(bases) > 1 else "")
+    BH = {"na": "ללא פיצול בסיס", "net": "בשייר", "gross": "ברוטו", "reinsurance": "ביטוח משנה"}
+    note = "סכום כפי שהודפס בטבלת הקבוצה; כל חברה על הבסיס שהיא מדפיסה" + (f" (רוב החברות: {BH.get(bases.most_common(1)[0][0], bases.most_common(1)[0][0])})" if len(bases) > 1 else "")
     add(f"ifrs:{m}" + ("" if seg == "group" else f"@{seg}"), label + SEG_HE[seg], topic, "ifrs", "pct" if RATE.search(m) else "m", kind, ch, note=note, std="17" if m.startswith(("csm_", "insurance_", "rev_", "risk_adj", "reins_")) else None)
 
 # ---------------------------------------------------------------- fs: lines.json

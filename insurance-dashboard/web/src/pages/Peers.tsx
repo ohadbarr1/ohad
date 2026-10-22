@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { ContextBar, Sheet } from '../components/Sheet';
-import { Empty, ErrorBox, Loading, Seg } from '../components/ui';
+import { BreakChip, Empty, ErrorBox, Loading, Seg } from '../components/ui';
 import { foxOption } from '../lib/foxchart';
 import { pubLabel } from '../lib/format';
 import { idColor, idCss } from '../lib/identity';
@@ -133,7 +133,7 @@ export function Peers() {
             <button type="button" className={`btn${panel === 'set' ? ' primary' : ''}`} aria-expanded={panel === 'set'} onClick={() => setPanel(panel === 'set' ? '' : 'set')}>עריכה</button>
           </div>
         </div>
-        <div className="field"><span>תדירות</span><Seg<Freq> label="תדירות" value={st.f} onChange={(f) => set({ f, p: '', o: null })} options={FREQS} /></div>
+        {st.v !== 'deck' && <><div className="field"><span>תדירות</span><Seg<Freq> label="תדירות" value={st.f} onChange={(f) => set({ f, p: '', o: null })} options={FREQS} /></div>
         <label className="field"><span>עד</span>
           <select value={st.p} onChange={(e) => set({ p: e.target.value })}>
             <option value="">האחרון{pend ? ` · ${plab(st.f, pend)}` : ''}</option>
@@ -141,10 +141,10 @@ export function Peers() {
           </select>
         </label>
         {st.v === 'table' && <div className="field"><span>תקופות</span><Seg<string> label="תקופות לכל מדד" value={String(st.n)} onChange={(n) => set({ n: Number(n), o: null })} options={[['1', '1'], ['3', '3'], ['5', '5'], ['8', '8']]} /></div>}
-        {st.v === 'series' && <div className="field"><span>טווח</span><Seg<string> label="טווח הסדרה" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={[['8', '8'], ['12', '12'], ['20', '20'], ['40', '40']]} /></div>}
+        {st.v === 'series' && <div className="field"><span>טווח</span><Seg<string> label="טווח הסדרה" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={[['8', '8'], ['12', '12'], ['20', '20'], ['40', '40']]} /></div>}</>}
         <div className="field"><span>תצוגה</span><Seg<View> label="תצוגה" value={st.v} onChange={(v) => set({ v })} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
       </div>
-      <div className="pr-row">
+      {st.v !== 'deck' && <div className="pr-row">
         <button type="button" className={`btn${panel === 'add' ? ' primary' : ''}`} aria-expanded={panel === 'add'} onClick={() => setPanel(panel === 'add' ? '' : 'add')}>+ מדד</button>
         <button type="button" className={`btn${panel === 'fx' ? ' primary' : ''}`} aria-expanded={panel === 'fx'} onClick={() => setPanel(panel === 'fx' ? '' : 'fx')}>+ נוסחה</button>
         <button type="button" className={`btn${panel === 'views' ? ' primary' : ''}`} aria-expanded={panel === 'views'} onClick={() => setPanel(panel === 'views' ? '' : 'views')}>תבניות ותצוגות</button>
@@ -153,7 +153,7 @@ export function Peers() {
         <span className="pr-sp" />
         <button type="button" className="btn" onClick={() => void exportXlsx(book, cols, ents, st, periods, setName)}>Excel</button>
         <button type="button" className="btn" onClick={() => exportCsv(book, cols, ents, st, periods)}>CSV</button>
-      </div>
+      </div>}
     </>
   );
   const panels = (
@@ -172,7 +172,13 @@ export function Peers() {
       {phone ? (
         <>
           <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</ContextBar>
-          <Sheet open={sheet} onClose={() => setSheet(false)} title="טבלת עמיתים">{controls}{panels}</Sheet>
+          <Sheet open={sheet} onClose={() => setSheet(false)} title="טבלת עמיתים">{controls}{panels}
+            {st.v !== 'deck' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
+              <div key={i} className="pr-ci"><span>{c.name}</span>
+                <select aria-label={`תצוגת ${c.name}`} value={c.tr} onChange={(e) => { const n = [...st.c]; n[i] = withTr(c, e.target.value as Tr); set({ c: n }); }}>{(Object.keys(TR_HE) as Tr[]).map((t) => <option key={t} value={t}>{TR_HE[t]}</option>)}</select>
+                <button type="button" className="btn" aria-label={`הסרת ${c.name}`} onClick={() => set({ c: st.c.filter((_, j) => j !== i), o: null, pin: -1, k: 0 })}>×</button>
+              </div>))}</div>}
+          </Sheet>
         </>
       ) : <section className="controls pr-controls">{controls}</section>}
       {!phone && panels}
@@ -253,7 +259,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
       <div className="scroll pr-scroll"><table className="matrix pr-table">
         <thead>
           <tr><th rowSpan={periods.length > 1 ? 2 : 1} className="pr-ent">חברה</th>{order.map(head)}</tr>
-          {periods.length > 1 && <tr>{sub.map(({ ci, pi, p }) => <th key={`${ci}|${pi}`} className={`pr-per${brkAt.has(`${ci}|${pi}`) ? ' brk' : ''}${pi === 0 ? ' g0' : ''}`} aria-sort={st.o?.c === ci && st.o.i === pi ? (st.o.d === 1 ? 'descending' : 'ascending') : 'none'}><button type="button" className="thsort" onClick={() => press(ci, pi)}>{plab(st.f, p)}<i>{st.o?.c === ci && st.o.i === pi ? (st.o.d === 1 ? '▼' : '▲') : ''}</i></button></th>)}</tr>}
+          {periods.length > 1 && <tr>{sub.map(({ ci, pi, p }) => <th key={`${ci}|${pi}`} className={`pr-per${brkAt.has(`${ci}|${pi}`) ? ' brk' : ''}${pi === 0 ? ' g0' : ''}`} aria-sort={st.o?.c === ci && st.o.i === pi ? (st.o.d === 1 ? 'descending' : 'ascending') : 'none'}><button type="button" className="thsort" onClick={() => press(ci, pi)}>{plab(st.f, p).replace('LTM ', '')}<i>{st.o?.c === ci && st.o.i === pi ? (st.o.d === 1 ? '▼' : '▲') : ''}</i></button></th>)}</tr>}
         </thead>
         <tbody>{sorted.map((e, ri) => (
           <tr key={e} className={st.hl === e ? 'lead' : undefined}>
@@ -265,7 +271,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
               const rg = range.get(`${ci}|${pi}`), heat = rg && rg[1] > rg[0] ? (x.v - rg[0]) / (rg[1] - rg[0]) : null;
               const tone = c.tr !== 'v' ? (x.v > 0 ? ' pos' : x.v < 0 ? ' neg' : '') : x.v < 0 ? ' neg' : '';
               return (
-                <td key={`${ci}|${pi}`} className={`${cls}${heat != null ? ' heat' : ''}`} style={heat != null ? { ['--h' as string]: `${Math.round(6 + heat * 30)}%` } : undefined}>
+                <td key={`${ci}|${pi}`} className={`${cls}${heat != null ? ' heat' : ''}`} style={heat != null ? { ['--h' as string]: `${Math.round(4 + heat * 24)}%` } : undefined}>
                   <Sourced className={`num${tone}${x.fl & F_OLD ? ' old' : ''}${x.fl & F_RE ? ' re' : ''}`} href={c.tr === 'v' ? x.href : null} src={x.prov}>{fmtCol(c, x.v)}</Sourced>
                   {ms.length > 0 && <sup title={ms.map((m) => NOTE[m]).join(' · ')}>{ms.map((m) => SUP[m]).join('')}</sup>}
                 </td>
@@ -291,6 +297,10 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
 
 function ColHead({ book, col, ci, n, st, set, span, brk, pinned }: { book: Book; col: Col; ci: number; n: number; st: St; set: (p: Partial<St>) => void; span: number; brk: string | null; pinned: boolean }) {
   const ref = useRef<HTMLDetailsElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  // the menu floats above the table (fixed), so the table's scroll box never clips it
+  const place = () => { const d = ref.current; if (!d?.open) { setPos(null); return; } const r = d.querySelector('summary')!.getBoundingClientRect(); setPos({ top: r.bottom + 4, left: Math.max(8, Math.min(innerWidth - 308, r.right - 300)) }); };
+  useEffect(() => { if (!pos) return; const off = (e: Event) => { if (ref.current?.contains(e.target as Node)) return; ref.current?.removeAttribute('open'); setPos(null); }; addEventListener('scroll', off, true); addEventListener('pointerdown', off); return () => { removeEventListener('scroll', off, true); removeEventListener('pointerdown', off); }; }, [pos]);
   const def = col.mid ? book.byId.get(col.mid) : undefined;
   const close = () => ref.current?.removeAttribute('open');
   const move = (d: number) => { const c = [...st.c], j = ci + d; if (j < 0 || j >= n) return; [c[ci], c[j]] = [c[j], c[ci]]; set({ c, o: null, pin: st.pin === ci ? j : st.pin === j ? ci : st.pin }); };
@@ -298,7 +308,7 @@ function ColHead({ book, col, ci, n, st, set, span, brk, pinned }: { book: Book;
   const label = (
     <span className="pr-hl">
       <b>{col.name}</b>
-      <span className="pr-hu">{col.tr !== 'v' && <em>{TR_HE[col.tr]} · </em>}{shownUnit(col)}{col.expr ? ' · ƒ נוסחה' : def ? ` · ${book.reg.src[def.src] ?? def.src}${def.src === 'lts' ? ', מחושב' : ''}` : ''}{brk && <span className="chip est pr-bc" title="שבר בהגדרת הסדרה אצל הרגולטור בטווח שבטבלה">שבר · <span className="num">{brk}</span></span>}</span>
+      <span className="pr-hu">{col.tr !== 'v' && <em>{TR_HE[col.tr]} · </em>}{shownUnit(col)}{col.expr ? ' · ƒ נוסחה' : def ? ` · ${book.reg.src[def.src] ?? def.src}${def.src === 'lts' ? ', מחושב' : ''}` : ''}{brk && <span className="pr-bc"><BreakChip b={{ label: brk, note: 'שבר בהגדרת הסדרה אצל הרגולטור בטווח שבטבלה' }} /></span>}</span>
     </span>
   );
   const sortable = span === 1;
@@ -306,9 +316,9 @@ function ColHead({ book, col, ci, n, st, set, span, brk, pinned }: { book: Book;
     <th colSpan={span} className={`pr-col${pinned ? ' pin' : ''}`} aria-sort={sortable && st.o?.c === ci ? (st.o.d === 1 ? 'descending' : 'ascending') : undefined}>
       <div className="pr-colin">
         {sortable ? <button type="button" className="thsort" onClick={() => set({ o: st.o?.c !== ci ? { c: ci, i: 0, d: 1 } : st.o.d === 1 ? { c: ci, i: 0, d: -1 } : null })}>{label}<i>{st.o?.c === ci ? (st.o.d === 1 ? '▼' : '▲') : ''}</i></button> : label}
-        <details ref={ref} className="pr-menu">
+        <details ref={ref} className="pr-menu" onToggle={place}>
           <summary aria-label={`עמודה: ${col.name}`}>⋯</summary>
-          <div className="pr-pop" role="menu">
+          <div className="pr-pop" role="menu" style={pos ? { position: 'fixed', top: pos.top, left: pos.left, right: 'auto', width: 300 } : undefined}>
             {col.err && <p className="err">{col.err}</p>}
             {col.expr && <p className="mono">{col.expr}</p>}
             {def?.nt != null && <p className="muted">{book.reg.notes[def.nt]}</p>}
@@ -359,7 +369,7 @@ function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; 
       <section className="panel pr-panel">
         <div className="hd"><h2>טבלה</h2><div className="aside"><span>{shownUnit(col)} · כל מספר מקושר למקור</span></div></div>
         <div className="scroll pr-scroll"><table className="pr-table pr-series">
-          <thead><tr><th className="pr-ent">חברה</th>{[...shown].reverse().map((p, j) => <th key={p} className={brkAt > 0 && shown.length - 1 - j === brkAt ? 'brk' : undefined}>{plab(st.f, p)}</th>)}</tr></thead>
+          <thead><tr><th className="pr-ent">חברה</th>{[...shown].reverse().map((p, j) => <th key={p} className={brkAt > 0 && shown.length - 1 - j === brkAt ? 'brk' : undefined}>{plab(st.f, p).replace('LTM ', '')}</th>)}</tr></thead>
           <tbody>{ents.map((e, i) => (
             <tr key={e} className={st.hl === e ? 'lead' : undefined}>
               <td className="pr-ent"><i className="pdot" style={{ background: idCss(e) }} /><Link to={`/company/${e}`}>{book.short(e)}</Link></td>

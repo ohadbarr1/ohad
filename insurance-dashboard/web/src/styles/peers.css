@@ -85,7 +85,11 @@ table.pr-table tfoot td.pr-ent { position: sticky; inset-inline-start: 0; backgr
 .pr-card dl > div:last-child { border-bottom: 0; }
 .pr-card dt { color: var(--muted); font-size: 12.5px; }
 .pr-card dd { margin: 0; font-weight: 600; }
-.pr-sheet-note { color: var(--muted); }
+.pr-collist { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+.pr-collist h3 { margin: 0; font-size: var(--t-3); }
+.pr-ci { display: flex; gap: 8px; align-items: center; }
+.pr-ci span { flex: 1; font-size: 13px; }
+.pr-ci select { max-width: 130px; }
 @media (max-width: 760px) {
   .pr-row { gap: 8px; }
   .pr-tpl { width: 100%; }
