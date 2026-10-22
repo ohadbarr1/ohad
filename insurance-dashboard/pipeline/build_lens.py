@@ -32,6 +32,7 @@ Definitions (one each, also printed on the page through the source sheet of ever
              the months published so far, trapezoid) x 3 / 12; op = nowcast fees - (S&M + G&A) of the last reported quarter
 """
 import datetime as dt
+from math import fsum  # exact float sums: identical on every Python version
 import json
 import sys
 from pathlib import Path
@@ -161,8 +162,8 @@ def build():
         ms = [A(g, s, x) for x in (o, m1, m2, e)]
         avg = (ms[0] / 2 + ms[1] + ms[2] + ms[3] / 2) / 3 if all(v is not None for v in ms) else None
         fl = [flows(g, s, x) for x in (m1, m2, e)]
-        org = sum(x[0] for x in fl) if all(fl) else None
-        tr = sum(x[1] for x in fl) if all(fl) else None
+        org = fsum(x[0] for x in fl) if all(fl) else None
+        tr = fsum(x[1] for x in fl) if all(fl) else None
         return {"e": e, "m": [r(v, 1) for v in ms], "avg": r(avg, 1), "aE": r(ms[3], 1), "aO": r(ms[0], 1),
                 "org": r(org, 1), "tr": r(tr, 1), "posted": r(fee(g, s, e), 4)}
 
@@ -226,11 +227,11 @@ def build():
                 ms = [A(g, s, x) for x in [no] + elapsed]
                 if any(v is None for v in ms):
                     continue
-                avg = (ms[0] / 2 + sum(ms[1:-1]) + ms[-1] / 2) / k
+                avg = (ms[0] / 2 + fsum(ms[1:-1]) + ms[-1] / 2) / k
                 fl = [flows(g, s, x) for x in elapsed]
                 base = next((x for x in rows if x["g"] == g and x["s"] == s and x["q"] == qkey(*last_rep)), None)
-                nr = {"g": g, "s": s, "m": [r(v, 1) for v in ms], "avg": r(avg, 1), "org": r(sum(x[0] for x in fl), 1) if all(fl) else None,
-                      "tr": r(sum(x[1] for x in fl), 1) if all(fl) else None, "baseAvg": base["reg"]["avg"] if base else None}
+                nr = {"g": g, "s": s, "m": [r(v, 1) for v in ms], "avg": r(avg, 1), "org": r(fsum(x[0] for x in fl), 1) if all(fl) else None,
+                      "tr": r(fsum(x[1] for x in fl), 1) if all(fl) else None, "baseAvg": base["reg"]["avg"] if base else None}
                 if c and base and base.get("fy_reg") is not None and base.get("rep"):
                     fees = base["fy_reg"] / 100 * avg * 3 / 12
                     nr["fy"] = base["fy_reg"]
@@ -298,7 +299,15 @@ if __name__ == "__main__":
     if "--check" in sys.argv:
         disk = json.loads(OUT.read_text(encoding="utf8"))
         d["meta"]["generated"] = disk["meta"]["generated"]
-        same = json.dumps(disk, sort_keys=True) == json.dumps(d, sort_keys=True)
+        def eq(a, b):  # floats within 1e-9: Python 3.12's sum() rounds differently from 3.9 in the last bit
+            if isinstance(a, float) or isinstance(b, float):
+                return isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(a - b) <= 1e-9 * max(1.0, abs(a), abs(b))
+            if isinstance(a, dict):
+                return isinstance(b, dict) and a.keys() == b.keys() and all(eq(a[k], b[k]) for k in a)
+            if isinstance(a, list):
+                return isinstance(b, list) and len(a) == len(b) and all(eq(x, y) for x, y in zip(a, b))
+            return a == b
+        same = eq(disk, json.loads(json.dumps(d)))
         print(f"lens.json {'matches' if same else 'DIFFERS from'} a rebuild; {len(d['rows'])} quarter rows; {len(bad)} formula misses")
         for b in bad[:20]:
             print("  ", b)
