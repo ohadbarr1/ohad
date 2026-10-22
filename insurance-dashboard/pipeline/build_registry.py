@@ -282,9 +282,11 @@ for key, (label, topic, kind, unit) in XL.items():
             scale = 1000 if unit == "m" else 1
             if p in canon:  # the printed figure, where it and the tag differ by rounding
                 cv = canon[p]
-                ch.cell(comp, p2, cv[0] / scale, cv[3], f"https://maya.tase.co.il/he/reports/{cv[2]}", 0)
+                ch.cell(comp, p2, cv[0] / scale, cv[3], f"https://maya.tase.co.il/he/reports/{cv[2]}", 2 if KIND.get(comp) == "ins" and int(p[:4]) < 2025 else 0)
                 continue
             fl = 32 if st == "corrected" or fix.get(p, {}).get("t") == "diff" else 0
+            if KIND.get(comp) == "ins" and int(p[:4]) < 2025:
+                fl |= 2  # insurers tagged these periods under IFRS 4, as originally reported
             ch.cell(comp, p2, v / scale, None, None, fl, aux=rid)
     add(f"xbrl:{key}", label + " (XBRL)", topic, "xbrl", unit, kind, ch, note=f"מושג XBRL: {kpi['concepts'].get(key, key)}")
 
