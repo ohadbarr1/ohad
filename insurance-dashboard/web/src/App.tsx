@@ -30,10 +30,6 @@ const Compare = page(mCompare, 'Compare');
 const mIndustry = () => import('./pages/Industry');
 const IndustryLayout = page(mIndustry, 'IndustryLayout');
 const IndustrySavings = page(mIndustry, 'IndustrySavings');
-const mIndustryIfrs = () => import('./pages/IndustryIfrs');
-const IndustryIfrs = page(mIndustryIfrs, 'IndustryIfrs');
-const mIndustryCapital = () => import('./pages/IndustryCapital');
-const IndustryCapital = page(mIndustryCapital, 'IndustryCapital');
 const mIndustryEcon = () => import('./pages/IndustryEcon');
 const IndustryEcon = page(mIndustryEcon, 'IndustryEcon');
 const mIndustryMatrix = () => import('./pages/IndustryMatrix');
@@ -63,6 +59,8 @@ const NotFound = page(mNotFound, 'NotFound');
 
 /** the report day is the company home now: an old link keeps its report (?p=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`..${loc.search}`} replace />; }
+/** the IFRS 17 and capital tabs are views of the CSM ledger now: an old link keeps its pickers */
+function CsmRedirect({ view }: { view: string }) { const loc = useLocation(); return <Navigate to={`/industry/csm?view=${view}${loc.search ? `&${loc.search.slice(1)}` : ''}`} replace />; }
 
 export function App() {
   return (
@@ -92,13 +90,13 @@ export function App() {
         <Route path="industry" element={<IndustryLayout />}>
           <Route index element={<Navigate to="sectors" replace />} />
           <Route path="savings" element={<IndustrySavings />} />
-          <Route path="ifrs" element={<IndustryIfrs />} />
+          <Route path="ifrs" element={<CsmRedirect view="facts" />} />
           <Route path="sectors" element={<IndustrySectors />} />
           <Route path="matrix" element={<IndustryMatrix />} />
           <Route path="lines" element={<IndustryLines />} />
           <Route path="csm" element={<IndustryCsm />} />
           <Route path="econ" element={<IndustryEcon />} />
-          <Route path="capital" element={<IndustryCapital />} />
+          <Route path="capital" element={<CsmRedirect view="capital" />} />
           <Route path="headline" element={<Compare />} />
           <Route path="search" element={<DocSearch />} />
         </Route>

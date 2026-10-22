@@ -85,6 +85,40 @@ def port_he(label):
     return None
 
 
+INSURERS = ["ayalon", "clal", "hachshara", "harel", "menora", "migdal", "phoenix"]
+CAP_GROUP = ["equity_attributable", "profit_attributable", "comprehensive_income_attributable", "dividend_paid", "dividend_declared"]
+SOLV = {"solvency_ratio_with_transitional": "sr_w", "solvency_ratio_without_transitional": "sr_wo"}
+# subsidiaries reported beside the main insurer: another entity, never merged into its line
+OTHER_ENTITY = re.compile(r"shomera|wesure|wishor|ווישור|שומרה|without_transitional$", re.I)
+
+
+def capital():
+    """Per insurer: group equity, profit and dividends by period, and the main insurer's solvency ratio by date."""
+    out = {}
+    for c in INSURERS:
+        f = DATA / "series" / f"{c}.json"
+        if not f.exists():
+            continue
+        rows = json.loads(f.read_text(encoding="utf-8"))["rows"]
+        co = {}
+        for r in rows:
+            if r["m"] in CAP_GROUP and r["s"] == "group" and r["b"] == "na":
+                co[r["m"]] = {p: {k: x[k] for k in ("v", "pg", "u", "std", "der", "cmp") if k in x} for p, x in r["vals"].items()}
+        for m, key in SOLV.items():
+            cands = [r for r in rows if r["m"] == m and r["b"] == "na" and not OTHER_ENTITY.search(r["s"]) and r.get("g") in ("insurer", "group")]
+            # the main insurer's line: insurer rows before a group row; the longest first; a later period never overwrites one already read
+            cands.sort(key=lambda r: (r.get("g") != "insurer", -len(r["vals"])))
+            line = {}
+            for r in cands:
+                for p, x in r["vals"].items():
+                    d = p[:4] + ("FY" if p.endswith(("Q4", "FY")) else p[4:])
+                    if d not in line:
+                        line[d] = {**{k: x[k] for k in ("v", "pg", "u", "std", "cmp") if k in x}, "s": r["s"]}
+            co[key] = line
+        out[c] = co
+    return out
+
+
 def main():
     index = json.loads((DATA / "ifrs.json").read_text(encoding="utf-8"))
     url = {(f["company"], f["period"]): f["url"] for f in index["files"]}
@@ -130,6 +164,7 @@ def main():
     dump = lambda name, obj: (OUT / name).write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     dump("facts.json", {**stamp, "files": index["files"], "reports": reports})
     dump("sens.json", {**stamp, "rows": sens})
+    dump("capital.json", {**stamp, "source": "דוחות כספיים של החברות, MAYA (סדרה רבעונית רציפה, build_series.py)", "companies": capital()})
     dump("rates.json", {**stamp, "rows": sorted(uniq, key=lambda r: (r["c"], r["d"], r["orig"], r["t"]))})
     print(f"facts {sum(len(v) for v in reports.values())} in {len(reports)} reports · sensitivities {len(sens)} · discount rates {len(uniq)}")
 

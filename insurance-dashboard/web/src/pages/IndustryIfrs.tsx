@@ -82,7 +82,7 @@ export function IndustryIfrs() {
   const [basis, setBasis] = useState(sp.get('b') ?? 'net');
   const [co, setCo] = useState(sp.get('c') ?? 'harel');
   const P = periods.includes(period) ? period : periods[0] ?? '';
-  useEffect(() => { if (P) setSp(keepSrc({ p: P, m: metric, s: seg, w: win, b: basis, c: co }), { replace: true }); }, [P, metric, seg, win, basis, co, setSp]);
+  useEffect(() => { if (P) setSp(keepSrc({ view: 'facts', p: P, m: metric, s: seg, w: win, b: basis, c: co }), { replace: true }); }, [P, metric, seg, win, basis, co, setSp]);
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
 
   const facts = useIfrsFacts(P || null);
