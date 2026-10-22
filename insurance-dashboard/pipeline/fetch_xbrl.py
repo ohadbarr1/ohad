@@ -44,7 +44,7 @@ def main():
         concept varchar, context varchar, start_date date, end_date date, value double, unit varchar, decimals varchar,
         primary key (report_id, concept, context))""")
     todo = con.execute("""select report_id, company, period, doc_type, url from documents
-        where file_type='xbrl' and doc_type in ('annual','quarterly') and company<>'idi' order by company, publish_date""").fetchall()
+        where file_type='xbrl' and doc_type in ('annual','quarterly') order by company, publish_date""").fetchall()
     RAW.mkdir(parents=True, exist_ok=True)
     n = 0
     for rid, comp, per, dt, url in todo:

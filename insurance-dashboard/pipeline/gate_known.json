@@ -1,0 +1,30 @@
+{
+ "ifrs_page": [
+  "clal 2025Q3 p68 dividend_declared 100 [he]",
+  "clal 2025Q3 p94 pension_gemel_profit_before_ta 46 [he]",
+  "clal 2025Q3 p94 pension_gemel_profit_before_ta 53 [he]",
+  "clal 2025Q3 p96 comprehensive_income_before_ta 36 [he]",
+  "clal 2025Q3 p96 comprehensive_income_before_ta 40 [he]",
+  "clal 2025Q3 p96 comprehensive_income_before_ta 53 [he]",
+  "clal 2025Q3 p98 comprehensive_income_before_ta 44 [he]",
+  "clal 2025Q3 p98 comprehensive_income_before_ta 49 [he]",
+  "hachshara 2025FY p83 csm_closing 213.123 [he_1732795]",
+  "hachshara 2025FY p83 csm_new_business 11.98 [he_1732795]",
+  "hachshara 2025FY p83 csm_opening 263.07 [he_1732795]",
+  "hachshara 2025FY p83 csm_other:אירועים מיוחדים 24.484 [he_1732795]",
+  "hachshara 2025FY p83 csm_other:השפעות כלכליות ריבית -66.637 [he_1732795]",
+  "hachshara 2025FY p83 csm_release -19.774 [he_1732795]",
+  "hachshara 2026Q2 p12 csm_closing 200.288 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_closing 257.262 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_new_business 4.14 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_opening 213.123 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_opening 263.304 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_other:אירועים מיוחדים 27.763 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_other:אירועים מיוחדים 51.228 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_other:השפעות כלכליות ריבית -40.009 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_other:השפעות כלכליות ריבית -50.949 [he_1766421]",
+  "hachshara 2026Q2 p12 csm_release -10.461 [he_1766421]",
+  "phoenix 2025Q3 p33 csm_new_business 462.0 [he]",
+  "phoenix 2025Q3 p33 future_profit_new_business 159.0 [he]"
+ ]
+}

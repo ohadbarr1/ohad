@@ -232,12 +232,72 @@ def qa(raw_df, d, agg, latest):
     return checks, notes
 
 
+BREAK_SHARE, BREAK_SIGMA, BREAK_REL, BREAK_MIN_GROUPS, BREAK_MIN_ASSETS, BREAK_MIN_HISTORY, BREAK_MARKET = 0.8, 3.0, 0.4, 3, 100.0, 24, 0.2
+
+
+def _shifts(a, key):
+    """{(key value, month): (groups that jumped, groups eligible, assets that jumped, assets eligible)} for the fee series of a[key]."""
+    a = a.groupby([key, "group", "REPORT_PERIOD"], as_index=False)[["fee_num", "fee_den"]].sum()
+    a = a[a["fee_den"] > 0].copy()
+    a["fee"] = a["fee_num"] / a["fee_den"]
+    a["m"] = a["REPORT_PERIOD"].map(month_index)
+    out = {}
+    for (k, _), s in a.sort_values("m").groupby([key, "group"]):
+        s = s.set_index("m")
+        prev = s["fee"].reindex(s.index - 1).to_numpy()
+        dlt = s["fee"].to_numpy() - prev
+        ok = np.flatnonzero(~np.isnan(dlt))
+        if len(ok) < BREAK_MIN_HISTORY:
+            continue
+        for i in ok:
+            w = float(s["fee_den"].iloc[i])
+            if w < BREAK_MIN_ASSETS:
+                continue
+            others = dlt[ok[ok != i]]
+            sd = float(np.std(others)) if len(others) > 2 else np.inf
+            jump = abs(dlt[i]) > BREAK_SIGMA * sd or (prev[i] > 0 and abs(dlt[i]) / prev[i] > BREAK_REL)
+            o = out.setdefault((k, int(s["REPORT_PERIOD"].iloc[i])), [0, 0, 0.0, 0.0])
+            o[0] += jump; o[1] += 1; o[2] += w * jump; o[3] += w
+    return out
+
+
+def level_shifts(agg):
+    """Level shifts in the regulator's management-fee series. A month in which at least 80% of the groups of a product family (by count,
+    or by assets) move their asset-weighted fee at once, each by more than three standard deviations of its own monthly changes or by
+    more than 40% of its level, is a break in the series: a year-on-year comparison across it compares two different things.
+    The values are left as published; the break is recorded so the site can annotate the series and suppress YoY across it.
+    Groups count when they hold at least NIS 100m and 24 months of history; at least three groups must be eligible, and the family's
+    market-wide fee must move by more than 20% (a fee cap that trims every group a little, as in 01/2014, is economics, not a break).
+    `products` lists the products of the family that break in the same month on their own (where the shift comes from)."""
+    fam = {p[0]: p[2] for p in PRODUCTS}
+    a = agg.assign(family=agg["product"].map(fam))
+    by_fam, by_prod = _shifts(a, "family"), _shifts(a, "product")
+
+    def hit(o):
+        return o[1] >= BREAK_MIN_GROUPS and (o[0] / o[1] >= BREAK_SHARE or o[2] / o[3] >= BREAK_SHARE)
+    out = []
+    for (family, per), o in sorted(by_fam.items()):
+        if not hit(o):
+            continue
+        part = a[a["family"] == family].groupby("REPORT_PERIOD")[["fee_num", "fee_den"]].sum()
+        mk = part["fee_num"] / part["fee_den"]
+        before = mk.get((per // 100 - 1) * 100 + 12 if per % 100 == 1 else per - 1)
+        if before is None or pd.isna(before) or before <= 0 or abs(mk[per] / before - 1) <= BREAK_MARKET:
+            continue
+        prods = [k for (k, pp), po in sorted(by_prod.items()) if pp == per and fam.get(k) == family and hit(po)]
+        out.append({"family": family, "metric": "fee", "from": str(per), "note": "שבר בסדרת דמי הניהול: רוב הקבוצות זזו באותו חודש",
+                    "groups": int(o[0]), "of": int(o[1]), "assets_share": round(float(o[2] / o[3]), 3), "products": prods,
+                    "market": [round(float(before), 3), round(float(mk[per]), 3)]})
+    return out
+
+
 def main():
     df = add_prev_assets(load())
     latest = int(df["REPORT_PERIOD"].max())
     d, agg = aggregate(df)
     snap = fund_snapshot(d, latest)
     checks, notes = qa(df, d, agg, latest)
+    breaks = level_shifts(agg)
 
     periods = sorted(agg["REPORT_PERIOD"].unique().tolist())
     pidx = {p: i for i, p in enumerate(periods)}
@@ -271,6 +331,8 @@ def main():
         "meta": meta, "products": [{"key": p[0], "label": p[1], "family": p[2]} for p in PRODUCTS], "families": FAMILY_LABEL,
         "groups": groups, "periods": periods, "cols": cols, "rows": rows, "funds": snap,
         "qa": {"checks": checks, "notes": notes},
+        # level shifts in the regulator's fee series: [{family, metric: "fee", from: YYYYMM, note, groups, of, assets_share, products, market: [before, after] %}]
+        "breaks": breaks,
     }
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     WEB_OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -280,6 +342,8 @@ def main():
         print(("PASS " if c["ok"] else "REVIEW " if c.get("status") == "review" else "FAIL ") + c["name"] + " | " + c["detail"])
     for n in notes:
         print("NOTE", n)
+    for b in breaks:
+        print("BREAK", b)
 
 
 if __name__ == "__main__":

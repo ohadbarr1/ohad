@@ -5,6 +5,7 @@ assets, deposits, withdrawals, transfers and the fee and return weights. Exit 1 
 import json
 import sys
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,9 +18,11 @@ def main():
     periods, groups = m["periods"], m["groups"]
     got = defaultdict(lambda: [0.0] * 8)  # assets, dep, wd, tr, fee_num, fee_den, y_num, y_den
     tracks = 0
-    for gi, _ in enumerate(groups):
-        for f in sorted((DATA / "prov" / "reg" / str(gi)).glob("*.json")):
-            c = json.loads(f.read_text(encoding="utf-8"))
+    files = [(gi, f) for gi, _ in enumerate(groups) for f in sorted((DATA / "prov" / "reg" / str(gi)).glob("*.json"))]
+    with ThreadPoolExecutor(32) as pool:  # a network drive answers one file at a time slowly: read them in parallel
+        loaded = list(pool.map(lambda x: (x[0], json.loads(x[1].read_text(encoding="utf-8"))), files))
+    for gi, c in loaded:
+        if True:
             for i, fu in enumerate(c["funds"]):
                 for k, p in enumerate(c["months"]):
                     a = c["a"][i][k]

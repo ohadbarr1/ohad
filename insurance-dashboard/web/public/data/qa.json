@@ -1,0 +1,109 @@
+{
+ "built": "2026-10-22T18:24:30+03:00",
+ "checks": [
+  {
+   "id": "workbook",
+   "ok": true,
+   "level": "fail",
+   "n": 13,
+   "fail": 0,
+   "note": "yelin: 203 lines, 0 problems"
+  },
+  {
+   "id": "prov",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "15,823 aggregates, 178,065 track-months, 0 differences, 0 component cells with no aggregate"
+  },
+  {
+   "id": "additivity",
+   "ok": true,
+   "level": "fail",
+   "n": 2868,
+   "fail": 0,
+   "note": "same-report misses (IFRS 17, 2024+): none"
+  },
+  {
+   "id": "additivity_vintage",
+   "ok": false,
+   "level": "warn",
+   "n": 2868,
+   "fail": 166,
+   "note": "misses across reports (restated between reports; full vintage model is Phase 3): ayalon 47/338, clal 14/459, hachshara 16/311, harel 37/439, menora 30/454, migdal 3/356, phoenix 19/511"
+  },
+  {
+   "id": "additivity_funds",
+   "ok": false,
+   "level": "warn",
+   "n": 1592,
+   "fail": 113,
+   "note": "fund houses, 2024+: 0 same-report misses, 113 across reports"
+  },
+  {
+   "id": "units",
+   "ok": true,
+   "level": "fail",
+   "n": 1112,
+   "fail": 0,
+   "note": "0 per-share values outside [0.01, 500], 0 share-count lines not tagged shares"
+  },
+  {
+   "id": "latin",
+   "ok": true,
+   "level": "fail",
+   "n": 12815,
+   "fail": 0,
+   "note": "labels with 3+ consecutive Latin words"
+  },
+  {
+   "id": "placeholder",
+   "ok": true,
+   "level": "fail",
+   "n": 12815,
+   "fail": 0,
+   "note": "placeholder captions"
+  },
+  {
+   "id": "derived",
+   "ok": true,
+   "level": "fail",
+   "n": 16681,
+   "fail": 0,
+   "note": "derived Q4/H2 figures on non-flow lines"
+  },
+  {
+   "id": "ifrs_slices",
+   "ok": true,
+   "level": "fail",
+   "n": 42,
+   "fail": 0,
+   "note": "web/public/data/ifrs/<company>/<period>.json equal to the company's rows of ifrs_<period>.json"
+  },
+  {
+   "id": "ifrs_page",
+   "ok": true,
+   "level": "fail",
+   "n": 16366,
+   "fail": 0,
+   "note": "16340/16366 on the cited page; 0 new misses; 0 facts without page text (not checked)"
+  },
+  {
+   "id": "ifrs_page_known",
+   "ok": false,
+   "level": "warn",
+   "n": 16366,
+   "fail": 26,
+   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'hachshara': 16, 'clal': 8, 'phoenix': 2}"
+  },
+  {
+   "id": "cross_layer",
+   "ok": true,
+   "level": "fail",
+   "n": 16,
+   "fail": 0,
+   "note": "Q2'26 attributable profit and equity, XBRL = statements; not comparable: ayalon:equity"
+  }
+ ]
+}

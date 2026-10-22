@@ -3,11 +3,19 @@
 Phoenix keeps the workbook built from its published spreadsheet (pipeline/extract_company_workbook.py); the lines extracted from
 the reports (web/public/data/series/<id>.json, 2021 onward, quarterly and annual) are added to it as further sheets.
 Every other company gets a workbook made of those extracted lines only. Each fact carries its own source file, because the
-figures come from many reports: facts are [metric, period, value, page, url index, flags: 1 = derived (Q4 = FY less nine months), 2 = taken from the IFRS 4 statement as originally reported, 4 = sign turned to the latest presentation] and `urls` is the list they index.
+figures come from many reports: facts are [metric, period, value, page, url index, flags] and `urls` is the list they index. Flags are a bitmask:
+1 = derived (Q4 = FY less nine months, H2 = FY less H1; only on flow lines), 2 = taken from the IFRS 4 statement as originally reported,
+4 = sign turned to the latest presentation, 8 = the latest print of a period that a later report restated: the value differs from the first
+print by more than rounding (`restated` keeps both, with their pages).
+A period printed by several reports takes its figure from the LATEST report that prints it (one vintage per row, so quarters add up to the
+half-year and nine months), unless the two prints are not plausibly the same line (opposite sign or more than a factor of two apart),
+when the first print stands. Units: "k" = NIS thousands, "nis" = NIS per share, "shares" = number of shares (never rescaled), "pct" = %.
 """
+import collections
 import csv
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -61,6 +69,8 @@ EXTRA = {
     "insurance_finance_rate_effect": "מימון ביטוח: השפעת שינויי ריבית", "insurance_finance_rate_effects": "מימון ביטוח: השפעת שינויי ריבית", "csm_economic_interest_and_other_effects": "CSM: ריבית והשפעות כלכליות אחרות",
     "total_investment_gains_recognized_in_income_statement": "סך רווחי השקעות שנזקפו לרווח והפסד", "investment_gains_assets_held_against_insurance_and_yield_dependent": "רווחי השקעות מנכסים כנגד חוזי ביטוח וחוזים תלויי תשואה",
     "shortfall_vs_board_target": "גירעון מול יעד הדירקטוריון",
+    "financial_margin_incl_management_fees": "מרווח פיננסי כולל דמי ניהול", "net_written_premiums": "פרמיות בשייר",
+    "capital_shortfall_vs_target": "גירעון הון מול היעד", "solvency_deficit_vs_target": "גירעון כושר פירעון מול היעד", "solvency_gap_to_target": "פער כושר פירעון מול היעד",
 }
 STEMS = [("solvency_ratio", "יחס כושר פירעון"), ("solvency_surplus", "עודף הון"), ("capital_surplus", "עודף הון"), ("excess_capital", "עודף הון"), ("surplus", "עודף הון"), ("own_funds", "הון עצמי לעניין SCR"), ("scr", "הון נדרש (SCR)"),
          ("capital_raise", "גיוס הון"), ("capital_issuance", "גיוס הון"), ("capital_raising", "גיוס הון")]
@@ -83,6 +93,56 @@ def spell(k):
     return None
 
 
+# Hebrew for the English captions the extractor kept after a metric key ("csm_other:<caption>"): the wording of the Hebrew IFRS 17 notes
+# (insurance finance: Phoenix FY'25 p567, Menora FY'25 p380, Clal FY'25 p427; revenue: Clal FY'25 p425; CSM movement: Phoenix FY'25 p536, p548)
+NOTE_HE = {
+    "Note 21E effect of revision of estimates": "השפעת עדכון אומדנים (ביאור 21ה)",
+    "Actual vs. expected financial spread, including modified assumptions": "מרווח פיננסי וצפי מול בפועל, לרבות שינוי הנחות",
+    "Balance of assets as of December 31": "יתרת נכסים ליום 31 בדצמבר",
+    "Balance of liabilities as of December 31": "יתרת התחייבויות ליום 31 בדצמבר",
+    "Changes in recoveries of losses for groups of onerous underlying insurance contracts adjusting the CSM": "שינויים בהשבות של הפסדים בגין קבוצות של חוזי ביטוח בסיס מכבידים המתאמים את מרווח השירות החוזי",
+    "Changes in reinsurance CSM": "שינויים במרווח השירות החוזי של ביטוח משנה",
+    "time value (interest accretion) and other financial variables": "ערך הזמן (צבירת ריבית) ומשתנים פיננסיים אחרים",
+    "Change in liabilities arising from changes in fair value of underlying items of VFA contracts": "שינוי בהתחייבויות בגין חוזי ביטוח הנובע משינויים בשווי ההוגן של פריטי הבסיס של חוזי VFA",
+    "Change in liabilities from changes in fair value of underlying items of VFA contracts": "שינוי בהתחייבויות בגין חוזי ביטוח הנובע משינויים בשווי ההוגן של פריטי הבסיס של חוזי VFA",
+    "Effect of difference between current-rate and original-rate discounting of changes in FCF charged to CSM": "השפעת הפער בין היוון בריבית שוטפת להיוון בריבית מקורית של השינויים ב-FCF שנזקפו ל-CSM",
+    "Effect of difference between current and original discount rate on changes in FCF carried to CSM": "השפעת הפער בין היוון בריבית שוטפת להיוון בריבית מקורית של השינויים ב-FCF שנזקפו ל-CSM",
+    "Effects of changes in interest rates and other financial assumptions": "השפעות שינויים בשיעורי הריבית והנחות פיננסיות אחרות",
+    "Effects of changes in interest rates and other financial assumptions (including inflation)": "השפעות שינויים בשיעורי הריבית והנחות פיננסיות אחרות, לרבות הנחות אינפלציה",
+    "Effects of the risk mitigation option for VFA contracts": "ההשפעות של אופציית צמצום הסיכון בגין חוזי VFA",
+    "Exchange rate differences and other, net": "הפרשי שער ואחר, נטו",
+    "Interest accrued": "ריבית שנצברה",
+    "VAT rate update": "עדכון שיעור המע\"מ",
+    "Experience adjustments arising from premiums paid": "תיאומים בהתאם לניסיון הנובעים מפרמיות ששולמו",
+    "Experience adjustments arising from premiums received": "תיאומים בהתאם לניסיון הנובעים מפרמיות שהתקבלו",
+    "Experience adjustments from premiums received in the period relating to current or past service": "תיאומים בהתאם לניסיון הנובעים מפרמיות שהתקבלו בתקופה בגין שירות שוטף או שירותי עבר",
+    "Total contracts for which the PAA was not applied": "סך הכל חוזים שלגביהם לא יושמה גישת הקצאת הפרמיה (PAA)",
+    "income (loss) from investments and finance, net": "רווח (הפסד) מהשקעות ומימון, נטו",
+}
+# segment captions as the Hebrew reports name the operating segments and their sub-segments
+SEG_PART = {
+    "Life Insurance and Long-Term Savings": "ביטוח חיים וחיסכון ארוך טווח", "Long-Term Savings": "חיסכון ארוך טווח", "Life Insurance": "ביטוח חיים",
+    "Health Insurance": "ביטוח בריאות", "P&C Insurance": "ביטוח כללי", "Life and Health Risks": "סיכוני חיים ובריאות",
+    "Policies with a non-yield-dependent savings component": "פוליסות הכוללות מרכיב חיסכון שאינו תלוי תשואה",
+    "Policies with a yield-dependent savings component": "פוליסות הכוללות מרכיב חיסכון תלוי תשואה",
+    "Policies without a savings component": "פוליסות ללא מרכיב חיסכון", "Investment contracts": "חוזי השקעה", "investment contracts": "חוזי השקעה",
+    "Pension": "פנסיה", "Provident": "גמל", "LTC": "סיעודי", "Collective": "קולקטיב", "Individual": "פרט", "collective (incl. dental)": "קולקטיב (כולל שיניים)",
+    "individual": "פרט", "Medical expenses and disabilities": "הוצאות רפואיות ונכויות", "Compulsory Motor": "רכב חובה", "Motor Property": "רכב רכוש",
+    "Other": "אחר", "Run-off": "תיק בהרצה (Run-off)", "Growth": "תיק בצמיחה (Growth)", "Life": "חיים", "Health": "בריאות",
+    "Investment policies": "פוליסות חיסכון (חוזי השקעה)", "life_health_combined": "חיים ובריאות, יחד",
+}
+SEG_HE = {
+    "Health Insurance - LTC - Collective": "ביטוח בריאות: סיעודי קולקטיב", "Health Insurance - LTC - Individual": "ביטוח בריאות: סיעודי פרט",
+    "Other (critical illness, foreign workers, travel, personal accidents)": "אחר (מחלות קשות, עובדים זרים, נסיעות לחו\"ל, תאונות אישיות)",
+    "Adjustments and offsets": "התאמות וקיזוזים", "HMO long-term-care funds operation and others": "תפעול קרנות סיעוד של קופות חולים ואחר",
+    "Other (non-segmented)": "לא מיוחס למגזרי פעילות", "group (including nostro)": "הקבוצה (כולל נוסטרו)",
+    "group (policyholders and planholders)": "הקבוצה (מבוטחים ועמיתים)", "non-controlling interests": "זכויות שאינן מקנות שליטה",
+    "remaining operating segments": "יתר מגזרי הפעילות", "Pension and Provident": "פנסיה וגמל", "Pension and Provident Subsegments": "פנסיה וגמל (תתי מגזרים)",
+    "other general insurance (liability and other property)": "ביטוח כללי אחר (חבויות ורכוש אחר)", "Motor": "רכב", "motor property": "רכב רכוש",
+    "pc_motor_property": "רכב רכוש", "pc_ayalon_motor_property": "רכב רכוש (איילון)", "pc_wesure_motor_property": "רכב רכוש (WeSure)",
+    "Menora Insurance": "מנורה ביטוח", "Shomera Insurance": "שומרה ביטוח", "Phoenix Insurance": "הפניקס ביטוח",
+}
+
 BASIS = {"net": "נטו", "gross": "ברוטו", "reinsurance": "ביטוח משנה"}
 is_pct = lambda m: bool(re.search(r"ratio|_pct|payout|confidence|discount_rate|roe_reported|threshold", m))
 
@@ -90,7 +150,19 @@ is_pct = lambda m: bool(re.search(r"ratio|_pct|payout|confidence|discount_rate|r
 def name(m):
     k, _, rest = m.partition(":")
     base = he.get(k) or EXTRA.get(k) or spell(k) or k.replace("_", " ")
-    return base + (f": {rest}" if rest else "")
+    rest = rest.strip()
+    return base + (f": {NOTE_HE.get(rest, rest)}" if rest else "")
+
+
+def seg_he(s):
+    """Hebrew name of a segment / sub-segment caption the extractor stored in English; an unknown one is kept as is (the gate flags it)."""
+    s = s.strip()
+    if s in SEG_HE or s in SEG_PART:
+        return SEG_HE.get(s) or SEG_PART[s]
+    parts = [x.strip() for x in s.split(" - ")]
+    if len(parts) > 1 and all(x in SEG_PART for x in parts):
+        return ": ".join(SEG_PART[x] for x in parts)
+    return s
 
 
 FILES = "https://mayafiles.tase.co.il/"
@@ -106,31 +178,70 @@ def norm(t):
     t = re.sub(r"\)([^()]*)\(", r"(\1)", t)  # brackets mirrored by the right-to-left text layer
     t = re.sub(r"\([^)]*\)", " ", t)
     t = re.sub(r"[\"'״׳*().,:;\-–\d]", " ", t)
-    t = re.sub(r"סה\s*כ|סך\s+ה?כל", "סך", t)
-    for a, b in (("מיסים", "מסים"), ("פיננסיים", "פיננסים"), ("לשנה", "לתקופה"), ("השנה", "התקופה"), ("למניה", ""), ("בשח", "")):
+    t = re.sub(r"סה\s*כ|סך\s+ה?כו?ל", "סך", t)
+    for a, b in (("הכול", "הכל"), ("עלייה", "עליה"), ("מיסים", "מסים"), ("פיננסיים", "פיננסים"), ("לשנה", "לתקופה"), ("השנה", "התקופה"), ("למניה", ""), ("בשח", "")):
         t = t.replace(a, b)
     key = " ".join(sorted(w.lstrip("ה") for w in t.split() if len(w.lstrip("ה")) > 1 and w not in ("של", "ש", "ח", "בת", "בנות")))
     return {"רווח": "לתקופה רווח", "נקי רווח": "לתקופה רווח", "לתקופה נקי רווח": "לתקופה רווח", "בעלים חברה": "בעלי חברה מניות"}.get(key, key)  # the bottom line is printed as "רווח", "רווח נקי" or "רווח לתקופה"
 
 
+POOL = ThreadPoolExecutor(32)  # files on a network drive: read in parallel
+# share counts: "מספר המניות ששימשו לחישוב הרווח למניה", "הממוצע המשוקלל של מספר המניות", or a bare "בסיסי" / "מדולל" under such a caption
+SHARES = re.compile(r"מספר ה?מניות|ממוצע ה?משוקלל|הממוצע המשוקלל")
+BARE_SHARES = re.compile(r"^(בסיסי|מדולל|בסיסי ומדולל|בדילול מלא)$")
+# lines that are not flows: no fourth quarter or second half is derived for them (a balance, a count, a ratio, a per-share figure)
+NONFLOW = re.compile(r"לתחילת|לסוף|^יתרת|יתרה ל|מספר ה?מניות|משוקלל|למניה|שיעור|יחס |באחוזים|%|באלפים")
+PLACEHOLDER = re.compile(r"ללא (תווית|כותרת)")  # the extractor's caption for a printed line it could not read a caption for
+BIDI = re.compile(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]")
+PLACEHOLDERS = collections.Counter()
+
+
+def page_caption(comp, stem, doc, page, values):
+    """The caption printed on the same line as the figures, read from the page text (data/work/<company>_<period>/<doc>/pNNN.txt).
+    Returns None when the page text is missing or the line cannot be told apart (the row is then dropped), "" when the page prints the
+    figures with no caption at all (an unlabeled sum), or the caption."""
+    f = ROOT / "data" / "work" / f"{comp}_{stem}" / (doc or "he") / f"p{int(page or 0):03d}.txt"
+    want = [abs(int(round(v))) for v in values if isinstance(v, (int, float))]
+    if not page or not want or not f.exists():
+        return None
+    caps = set()
+    for line in BIDI.sub("", f.read_text(encoding="utf-8")).splitlines():
+        nums = [int(x.replace(",", "")) for x in re.findall(r"\d[\d,]*\d|\d", line)]
+        if not any(nums[i:i + len(want)] in (want, want[::-1]) for i in range(len(nums) - len(want) + 1)):  # some text layers run the columns backwards
+            continue
+        t = re.sub(r"[()]*-?\d[\d,.]*[()]*", " ", line)
+        t = re.sub(r"\)([^()]*)\(", r"(\1)", " ".join(t.split())).strip(" -")
+        caps.add(t if re.search(r"[א-ת]", t) else "")
+    if "" in caps:
+        return ""
+    return caps.pop() if len(caps) == 1 else None
+
+
 def statements(comp):
     """Rows of each primary statement across all reports: {(statement, standard): (ordered row keys, row meta, cells)}.
-    A cell is taken from the report of its own period when there is one, otherwise from the nearest later report that prints it as a comparative."""
+    A cell is taken from the latest report that prints its period (flag 8 where that print restates the first one beyond rounding), unless the
+    two prints are not plausibly the same line, when the first print stands. Q4 / H2 are derived only on flow lines, from one report's figures."""
     out = {}
     folder = ROOT / "data" / "extracted_fs" / comp
     files = sorted(folder.glob("*.json"), key=lambda f: (f.stem[:4], END[f.stem[4:]], f.stem[4:] == "FY")) if folder.exists() else []
-    for f in reversed(files):  # newest first: its row order is the backbone
-        d = json.loads(f.read_text(encoding="utf-8"))
+    docs = list(POOL.map(lambda f: json.loads(f.read_text(encoding="utf-8")), files))
+    for f, d in reversed(list(zip(files, docs))):  # newest first: its row order is the backbone
         own, url = f"{f.stem[:4]}-{END[f.stem[4:]]}", PDF.get(d.get("report_id_he"))
         mult = 1000 if re.search(r"million|מיליוני", str(d.get("unit") or "")) else 1
         for st in d["statements"]:
             if st["statement"] not in STATEMENTS:
                 continue
             order, meta, cells = out.setdefault((st["statement"], d.get("standard") or "IFRS 4"), ([], {}, {}))
-            section, seen, prev, per_share = "", {}, None, False
+            section, seen, prev, per_share, share_hdr = "", {}, None, False, None
             for r in st["rows"]:
                 raw = " ".join((r.get("label") or "").split())
                 has = any(isinstance(v, (int, float)) for v in r.get("values") or [])
+                if PLACEHOLDER.search(raw):
+                    cap = page_caption(comp, f.stem, d.get("doc"), r.get("page"), r.get("values") or [])
+                    PLACEHOLDERS[(comp, "dropped" if cap is None else "sum" if cap == "" else "caption")] += 1
+                    if cap is None:
+                        continue  # no page text to read the caption from: the row is left out rather than shown without one
+                    r, raw = {**r, "label": cap}, cap
                 if not raw:
                     if r.get("header") or not has:
                         continue  # an empty caption or an empty line
@@ -146,21 +257,29 @@ def statements(comp):
                     per_share = False  # the statement went on to something else: comprehensive income, share counts, or a second block of the same lines
                 if r.get("header"):
                     section = lab
+                    share_hdr = raw if SHARES.search(raw) else None
+                shares = not r.get("header") and bool(SHARES.search(raw) or (share_hdr and BARE_SHARES.match(raw)))
                 occ = seen[(section, lab)] = seen.get((section, lab), 0) + 1
                 key = (section if not r.get("header") else "", lab, occ)
                 if r.get("header") and lab in ("ליום", ""):
                     continue  # the date caption of the column block, not a section
                 if key not in meta:
                     shown = re.sub(r"\)([^()]*)\(", r"(\1)", re.sub(r"^\d+\S*\s+", "", " ".join(r["label"].split()))).replace("לשנה", "לתקופה").replace(" ,", ",")  # a stray note reference; one row serves quarters and years
-                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total")) or bool(SUBTOTAL.match(shown)), "eps": per_share and not r.get("header") and "מספר" not in raw}
+                    meta[key] = {"label": shown, "header": bool(r.get("header")), "total": bool(r.get("total")) or bool(SUBTOTAL.match(shown)),
+                                 "eps": per_share and not r.get("header") and "מספר" not in raw and not shares, "shares": shares}
                     order.insert(order.index(prev) + 1 if prev in order else 0, key)
                 prev = key
+                # a share count is stored in shares: printed in thousands when the caption says so ("באלפים") or, as the statements of a
+                # company with tens of millions of shares print it, when the figure is below a million; never scaled by the money unit
+                big = max([abs(v) for v in r.get("values") or [] if isinstance(v, (int, float))] or [0])
+                scale = 1000 if "באלפים" in raw or "באלפים" in (share_hdr or "") or big < 1e6 else 1
                 for c, v in zip(st["columns"], r.get("values") or []):
                     if not isinstance(v, (int, float)):
                         continue
                     date, w = c["date"], c["window"]
                     typ = "I" if w == "instant" else "FY" if w == "fy" else "Q" if w == "q" or date[5:7] == "03" else "H" if date[5:7] == "06" else "9M"
-                    cells.setdefault(key, {}).setdefault((typ, date), []).append(((date != own, own), v if per_share else v * mult, r.get("page"), url))
+                    val, step = (v * scale, scale) if shares else (v, 0.01) if per_share else (v * mult, mult)
+                    cells.setdefault(key, {}).setdefault((typ, date), []).append(((date != own, own), val, r.get("page"), url, step))
     RESTATED[comp] = []
     for (stmt, std), (order, meta, cells) in out.items():
         turned, source, printed = {}, {}, {}
@@ -170,6 +289,8 @@ def statements(comp):
                 # Kept only when the two are plausibly the same line (same sign and within a factor of two, or the sign alone flipped).
                 first, latest = min(by[pk], key=lambda c: c[0]), max(by[pk], key=lambda c: c[0][1])
                 a, b = first[1], latest[1]
+                tol = 0.5 * (first[4] + latest[4]) + 0.5 * min(first[4], latest[4])  # rounding of the two prints (thousands, millions, agorot)
+                same = bool(a and b and ((a * b > 0 and 0.5 <= b / a <= 2) or abs(a + b) <= tol))
                 if abs(a - b) > 1.5 and a and b and ((a * b > 0 and 0.5 <= b / a <= 2) or abs(a + b) < 0.5):
                     RESTATED[comp].append([f"X.{STATEMENTS[stmt][1].replace(' ', '_')}", std, meta[key]["label"], pk[0], pk[1], a, first[2], first[3], b, latest[2], latest[3], latest[0][1]])
                 # the opposite sign with (nearly) the same size: a change of presentation, not of substance. A restated comparative may differ a little.
@@ -177,15 +298,19 @@ def statements(comp):
                 if mirror and abs(first[1]) > 1.5:
                     # the first report that printed this period with the opposite sign: from that report on the line is presented the other way round
                     turned.setdefault(key, []).append(min(c[0][1] for c in mirror))
-                source[(key, pk)] = first[0][1]
+                # the cell shows the latest print (one vintage across the row) when it is plausibly the same line; otherwise the first stands.
+                # Flag 8: the latest print differs from the first by more than rounding (a pure change of sign is a presentation, flag 4).
+                pick = latest if (same or abs(a - b) <= tol) else first
+                restated = pick is latest and abs(a - b) > tol and abs(a + b) > tol
+                source[(key, pk)] = pick[0][1]
                 printed[(key, pk)] = by[pk]
-                by[pk] = first[1:]
+                by[pk] = (pick[1], pick[2], pick[3], 8 if restated else 0)
         # A line whose sign convention changed (interest paid shown positive, later in brackets) reads in the latest convention throughout:
         # figures taken from reports before the change are turned, and flagged (4), so a series does not flip half way.
         for key, when in turned.items():
             for pk, c in cells.get(key, {}).items():
                 if source[(key, pk)] < min(when):
-                    cells[key][pk] = (-c[0], c[1], c[2], 4)
+                    cells[key][pk] = (-c[0], c[1], c[2], (c[3] if len(c) > 3 else 0) | 4)
         # A line printed as "הכנסות (הוצאות) אחרות" in one report and "הוצאות אחרות" in another is one line:
         # the bracketed wording and the plain alternative are joined, under the newest wording.
         for key in list(order):
@@ -204,7 +329,7 @@ def statements(comp):
         # period, and each has periods the other lacks. They are one line, under the newest name.
         # The same holds for two differently named lines that agree in three or more periods (a comparative reprinted under the new name).
         for _ in range(3):  # a merge can bring two more lines into agreement: repeat until nothing is left
-            plain = [k for k in order if not meta[k]["header"] and not meta[k]["total"] and not meta[k].get("eps")]
+            plain = [k for k in order if not meta[k]["header"] and not meta[k]["total"] and not meta[k].get("eps") and not meta[k].get("shares")]
             for i, a in enumerate(plain):
                 for b in plain[i + 1:]:
                     if a not in meta or b not in meta:
@@ -221,6 +346,21 @@ def statements(comp):
                         cells.pop(b, None)
                         order.remove(b)
                         del meta[b]
+            # a total printed under a section the company renamed ("סה"כ הכנסות" under "הכנסות" until 2022, under "הכנסות ורווחים" after):
+            # the same caption, periods that barely overlap and agree where they do, is one line. Totals that share most periods (the two
+            # attribution blocks, profit and comprehensive income) stay apart.
+            tots = [k for k in order if meta[k]["total"] and not meta[k]["header"]]
+            for i, a in enumerate(tots):
+                for b in tots[i + 1:]:
+                    if a not in meta or b not in meta or a[1] != b[1] or a[0] == b[0]:
+                        continue
+                    ca, cb = cells.get(a, {}), cells.get(b, {})
+                    both = set(ca) & set(cb)
+                    if min(len(ca), len(cb)) >= 4 and len(both) <= 0.25 * min(len(ca), len(cb)) and all(abs(ca[p][0] - cb[p][0]) < 0.6 for p in both):
+                        keep, drop = (a, b) if max(e for _, e in ca) >= max(e for _, e in cb) else (b, a)  # under the newer section
+                        cells[keep] = {**cells.pop(drop, {}), **cells.get(keep, {})}
+                        order.remove(drop)
+                        del meta[drop]
         if stmt == "balance":
             continue
         def same_print(key, pk, part):
@@ -229,19 +369,22 @@ def statements(comp):
             rep_end = source.get((key, part))
             c = next((c for c in printed.get((key, pk), []) if c[0][1] == rep_end), None)
             flipped = key in turned and rep_end is not None and rep_end < min(turned[key])
-            return None if c is None else (-c[1] if flipped else c[1])
+            return None if c is None else ((-c[1] if flipped else c[1]), c[2], c[3])
 
         for key, by in cells.items():
+            m = meta.get(key, {})
+            if m.get("header") or m.get("eps") or m.get("shares") or NONFLOW.search(m.get("label", "")) or NONFLOW.search(key[0]):
+                continue  # not a flow: a year less nine months means nothing for an opening balance, a share count or a per-share figure
             for (typ, date), fy in list(by.items()):  # the fourth quarter is not printed: the year less nine months, flagged as derived
                 p9, ph = ("9M", date[:4] + "-09-30"), ("H", date[:4] + "-06-30")
                 n9 = by.get(p9)
                 if typ == "FY" and n9 and ("Q", date) not in by:
-                    year = same_print(key, (typ, date), p9)
-                    by[("Q", date)] = (round((fy[0] if year is None else year) - n9[0], 3), fy[1], fy[2], 1)
+                    year = same_print(key, (typ, date), p9) or (fy[0], fy[1], fy[2])  # the year as printed by the nine months' own report
+                    by[("Q", date)] = (round(year[0] - n9[0], 3), year[1], year[2], 1)
                 h1 = by.get(ph)
                 if typ == "FY" and h1 and ("H", date) not in by:  # the second half, likewise: the year less the first half
-                    year = same_print(key, (typ, date), ph)
-                    by[("H", date)] = (round((fy[0] if year is None else year) - h1[0], 3), fy[1], fy[2], 1)
+                    year = same_print(key, (typ, date), ph) or (fy[0], fy[1], fy[2])
+                    by[("H", date)] = (round(year[0] - h1[0], 3), year[1], year[2], 1)
     return out
 
 
@@ -286,7 +429,7 @@ _lp, _lu = {}, {}
 
 def caption(t):
     t = re.sub(r"[\"'״׳*]", "", t)
-    return re.sub(r"\s+", " ", re.sub(r"סה\s*כ|סך\s+ה?כל", "סך", t)).strip()
+    return re.sub(r"\s+", " ", re.sub(r"סה\s*כ|סך\s+ה?כו?ל", "סך", t)).strip()
 
 registry = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
 names = {c["id"]: c["name_he"] for c in (registry if isinstance(registry, list) else registry.get("companies", []))}
@@ -302,6 +445,9 @@ for comp in COMPANIES:
     base = json.loads(base_f.read_text(encoding="utf-8")) if base_f.exists() else None
     d = base or {"company": comp, "sources": [], "groups": {}, "sheets": [], "periods": [], "metrics": [], "facts": [], "stats": {}}
     d["groups"] = {**GROUP_LABELS, **d.get("groups", {})}
+    for m in d["metrics"]:  # the published spreadsheet tags a sum the report prints without a caption, and describes it: keep the description
+        if m["label"].startswith("[ללא כותרת בדוח]"):
+            m["label"], m["total"] = m["label"][len("[ללא כותרת בדוח]"):].strip(), True
     urls, uidx = [], {}
     pidx = {p["id"]: i for i, p in enumerate(d["periods"])}
 
@@ -360,7 +506,8 @@ for comp in COMPANIES:
                 n += 1
             for key in order:
                 m, mi = meta[key], len(d["metrics"])
-                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": "nis" if (m.get("eps") or "למניה" in m["label"]) and "מספר" not in m["label"] else "k", "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
+                unit = "shares" if m.get("shares") else "nis" if (m.get("eps") or "למניה" in m["label"]) and "מספר" not in m["label"] else "k"
+                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": unit, "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
                 n += 1
                 for (typ, date), c in cells.get(key, {}).items():
                     v, page, u = c[0], c[1], c[2]
@@ -380,13 +527,15 @@ for comp in COMPANIES:
             d["sources"].append({"entity": ent, "name": ENTITY_NAMES[ent], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
         for order, r in enumerate(rows):
             flow = not STOCK.match(r["m"])
-            dim = " · ".join(x for x in ((r["s"].split(":", 1)[1].strip() if ":" in r["s"] else r["s"]) if r["s"] != r["g"] else "", BASIS.get(r["b"], "")) if x)
+            dim = " · ".join(x for x in (seg_he(r["s"].split(":", 1)[1].strip() if ":" in r["s"] else r["s"]) if r["s"] != r["g"] else "", BASIS.get(r["b"], "")) if x)
             mi = len(d["metrics"])
             pct = is_pct(r["m"])
             d["metrics"].append({"entity": ent, "sheet": code, "group": grp, "label": name(r["m"]), "dim": dim, "unit": "pct" if pct else "k", "header": False, "order": order})
             for per, c in r["vals"].items():
                 if per.endswith("FY") and not flow:
                     continue  # a balance at year-end is already the Q4 column
+                if c.get("der") and (pct or not flow):
+                    continue  # a ratio or a balance has no "year less nine months"
                 u = c.get("u")
                 if u and u not in uidx:
                     uidx[u] = len(urls)
@@ -412,7 +561,8 @@ for comp in COMPANIES:
     for x in d["facts"]:
         facts_of.setdefault(x[0], []).append(x)
     for key, _, sheet, pat in ROLES:
-        mi = next((i for i, m in enumerate(d["metrics"]) if m["sheet"] == sheet and not m["header"] and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4), None)
+        mi = next((i for i, m in enumerate(d["metrics"]) if m["sheet"] == sheet and not m["header"] and m["unit"] != "shares" and (key != "eps" or m["unit"] == "nis")
+                   and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4), None)
         if mi is None:
             continue
         cells = []
@@ -429,6 +579,7 @@ for comp in COMPANIES:
 (DATA / "search").mkdir(exist_ok=True)
 (DATA / "search" / "rows.json").write_text(json.dumps(ROWS, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 print(len(ROWS), "statement lines indexed for search")
+print("unlabeled rows (caption read from the page / printed sum without caption / dropped, no page text):", dict(PLACEHOLDERS))
 LINES["periods"] = [list(k) for k, _ in sorted(_lp.items(), key=lambda kv: kv[1])]
 LINES["urls"] = [u for u, _ in sorted(_lu.items(), key=lambda kv: kv[1])]
 (DATA / "lines.json").write_text(json.dumps(LINES, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
