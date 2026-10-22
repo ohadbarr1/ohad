@@ -11,7 +11,9 @@ function save(name: string, href: string) { const a = document.createElement('a'
 
 /** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens.
  *  With `exportName` the chart carries its own export: the picture as PNG and the plotted series as CSV. */
-export function Chart({ build, height = 320, deps, label, exportName: named, onPoint }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+export function Chart({ build, height = 320, deps, label, exportName: named, onPoint, source }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+  /** the source line printed under the exported picture ("דוח Q2'26, עמ׳ 75"); without it the picture points to the page on fox */
+  source?: string;
   /** a click on a plotted point: lets a chart open the source of the figure it draws */
   onPoint?: (seriesIndex: number, dataIndex: number, seriesName: string) => void }) {
   const exportName = named ?? (height >= 200 ? `fox-${label.replace(/[\s,]+/g, '-')}` : undefined);
@@ -43,7 +45,23 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, theme, ...deps]);
 
-  const png = () => { const c = chart.current; if (c) save(`${exportName}.png`, c.getDataURL({ pixelRatio: 2, backgroundColor: getComputedStyle(document.body).backgroundColor })); };
+  // the picture carries its title and its source, so it can go straight into a deck
+  const png = async () => {
+    const c = chart.current; if (!c) return;
+    const cs = getComputedStyle(document.body), bg = cs.backgroundColor, fg = cs.color, mu = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || fg;
+    const img = new Image(); img.src = c.getDataURL({ pixelRatio: 2, backgroundColor: bg }); await img.decode();
+    const pad = 36, head = 84, foot = 60, cv = document.createElement('canvas');
+    cv.width = img.width + pad * 2; cv.height = img.height + head + foot;
+    const x = cv.getContext('2d'); if (!x) return;
+    x.fillStyle = bg; x.fillRect(0, 0, cv.width, cv.height);
+    x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = fg; x.font = '700 30px Heebo, Arial, sans-serif';
+    x.fillText(label, cv.width - pad, 52);
+    x.drawImage(img, pad, head);
+    x.font = '400 21px Heebo, Arial, sans-serif'; x.fillStyle = mu;
+    x.fillText(`מקור: ${source ?? 'הדוחות של החברות ונתוני רשות שוק ההון, כל מספר מקושר לעמוד המקור'} · ${location.host}${location.pathname}`, cv.width - pad, cv.height - 24);
+    x.direction = 'ltr'; x.textAlign = 'left'; x.font = '700 24px Heebo, Arial, sans-serif'; x.fillStyle = fg; x.fillText('fox.', pad, cv.height - 24);
+    save(`${exportName}.png`, cv.toDataURL('image/png'));
+  };
   const csv = () => {
     const o = chart.current?.getOption() as Opt | undefined;
     if (!o) return;
@@ -56,7 +74,7 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
   return (
     <>
       <div ref={el} style={{ width: '100%', height }} role="img" aria-label={label} />
-      {exportName && <div className="charttools"><button type="button" onClick={png}>PNG</button><button type="button" onClick={csv}>CSV</button><button type="button" onClick={link}>העתקת קישור</button></div>}
+      {exportName && <div className="charttools"><button type="button" onClick={() => void png()}>PNG</button><button type="button" onClick={csv}>CSV</button><button type="button" onClick={link}>העתקת קישור</button></div>}
     </>
   );
 }

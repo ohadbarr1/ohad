@@ -11,6 +11,7 @@ PY=/usr/bin/python3  # the .venv on the synced drive takes minutes to import; th
 
 cd "$ROOT"
 "$PY" pipeline/build_web_index.py
+"$PY" pipeline/build_calendar.py
 "$PY" pipeline/gate.py || { echo "data gate failed: not deploying"; exit 1; }
 
 cd "$ROOT/web"

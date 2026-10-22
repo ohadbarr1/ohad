@@ -50,7 +50,7 @@ export function Home() {
       <h1 className="sr-only">fox · ביטוח, פנסיה וגמל</h1>
       {filings.length > 0 && (
         <section className="panel">
-          <div className="hd"><h2>דיווחים אחרונים</h2><div className="aside">{seen && filings.some((f) => f.date > seen) && <span className="chip loaded"><span className="num">{filings.filter((f) => f.date > seen).length}</span> חדשים מאז הביקור הקודם</span>}<span>MAYA · עברית</span></div></div>
+          <div className="hd"><h2>דיווחים אחרונים</h2><div className="aside">{seen && filings.some((f) => f.date > seen) && <span className="chip loaded"><span className="num">{filings.filter((f) => f.date > seen).length}</span> חדשים מאז הביקור הקודם</span>}<span>MAYA · עברית</span><Link to="/calendar">לוח דיווחים</Link></div></div>
           <div className="scroll"><table>
             <tbody>{filings.map((f) => (
               <tr key={f.id}>

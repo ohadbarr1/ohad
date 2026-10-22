@@ -565,6 +565,7 @@ for comp in COMPANIES:
                    and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4), None)
         if mi is None:
             continue
+        d["metrics"][mi]["role"] = key  # the statements page links this row to the same line of every company
         cells = []
         for x in facts_of[mi]:
             p = d["periods"][x[1]]

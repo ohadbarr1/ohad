@@ -27,6 +27,9 @@ const CAP_HE: [RegExp, string][] = [
 const LINE_HE: [RegExp, string][] = [
   [/\bgross\b|ברוטו/i, 'ברוטו'], [/\bnet\b|retention|שייר/i, 'נטו'], [/reinsur|משנה/i, 'ביטוח משנה'], [/\btotal\b/i, 'סך הכול'], [/clos|end of the period|31\.12/i, 'יתרת סגירה'], [/opening/i, 'יתרת פתיחה'],
 ];
+/** "Other" movements of the CSM bridge, by the filer's own caption (English in the extract): a Hebrew name on the chart, the caption in the source */
+const OTHER_HE: [RegExp, string][] = [[/reinsur/i, 'שינויים בביטוח משנה'], [/exchange|currency|fx\b/i, 'הפרשי שער'], [/acqui|business combination/i, 'רכישות'], [/dispos|transfer|sale/i, 'העברות ומכירות'], [/experience/i, 'התאמות ניסיון'], [/discount|interest|financ/i, 'השפעות מימון']];
+const otherHe = (caption: string) => OTHER_HE.find(([re]) => re.test(caption))?.[1] ?? 'תנועות אחרות';
 const phrase = (list: [RegExp, string][], s: string) => list.filter(([re]) => re.test(s)).map(([, h]) => h).join(', ');
 export const capHe = (f: IfrsFact) => phrase(CAP_HE, `${f.m} ${f.l} ${f.n ?? ''}`);
 export const lineHe = (f: IfrsFact) => phrase(LINE_HE, f.l);
@@ -105,7 +108,7 @@ export function IndustryIfrs() {
     const own = cur.filter((f) => f.c === co && f.g === seg);
     const mine = own.some((f) => f.m.startsWith('csm')) || seg !== 'group' ? own : cur.filter((f) => f.c === co && f.g === 'life_health');
     const open = startOf(P || '2026Q2', wfWin);
-    const extra: [string, string, 1 | -1 | 0][] = [...new Set(mine.filter((f) => f.m.startsWith('csm_other:') && !f.m.startsWith('csm_other:Balance')).map((f) => f.m))].map((m) => [m, m.slice(10, 34), 1]);
+    const extra: [string, string, 1 | -1 | 0][] = [...new Set(mine.filter((f) => f.m.startsWith('csm_other:') && !f.m.startsWith('csm_other:Balance')).map((f) => f.m))].map((m) => [m, otherHe(m.slice(10)), 1]);
     return [...WF.slice(0, -2), ...extra, ...WF.slice(-2)].map(([m, label, sign]) => {
       const c = mine.filter((f) => f.m === m && (m === 'csm_opening' ? f.d === open : m === 'csm_closing' ? f.d === end : f.w === wfWin && f.d === end));
       const tied = c.filter((x) => x.dv != null);

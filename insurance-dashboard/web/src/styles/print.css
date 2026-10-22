@@ -1,0 +1,23 @@
+/* print and "save as PDF": a white A4 page with the figures, their headers and a source line; nothing interactive */
+@page { size: A4; margin: 14mm 12mm 16mm; }
+@media print {
+  :root, :root[data-theme="dark"] {
+    --bg: #FFFFFF; --panel: #FFFFFF; --panel2: #F3F4F7; --panel3: #E8EAF0; --line: #C9CDD6; --line-soft: #DDE0E6; --fg: #111C3F; --muted: #3F4656; --faint: #5B6273;
+    --accent: #D4451F; --accent-text: #B5361A; --up: #0B7F56; --down: #B00D28; color-scheme: light;
+  }
+  html, body { background: #FFFFFF !important; font-size: 10.5pt; }
+  .rail, .top, .skip, .subnav, .toolbar, .controls, .ctxbar, .charttools, .sheetwrap, .srcwrap, .star, button.chip, .btn, .info, .twist, .valchip, .notes, .views, select, input { display: none !important; }
+  .shell { display: block; }
+  .page { max-width: none; padding: 0; gap: 10pt; }
+  .panel, .mcard, .kpis, .card { border: 1px solid var(--line-soft); break-inside: avoid; box-shadow: none; }
+  .scroll { overflow: visible !important; max-height: none !important; }
+  table { font-size: 9pt; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  .scroll table th:first-child, .scroll table td:first-child { position: static; }
+  a { color: inherit; text-decoration: none; }
+  a.src, button.src, a.num { text-decoration: none !important; }
+  .pagehead h1 { font-size: 18pt; }
+  .print-foot { display: block !important; position: fixed; bottom: 0; inset-inline: 0; font-size: 8pt; color: #5B6273; border-top: 1px solid #DDE0E6; padding-top: 3pt; }
+}
+.print-foot { display: none; }

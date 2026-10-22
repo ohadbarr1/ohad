@@ -118,6 +118,12 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
   // search, the closed-fund switch and the ranking period sit behind one button on a phone, so the first screen shows figures
   const [more, setMore] = useState(() => window.matchMedia('(min-width: 761px)').matches);
   const [q, setQ] = useState(sp.get('q') ?? '');
+  // numeric screens: they hide rows, the rank stays the rank within the whole category
+  const num = (k: string) => { const v = sp.get(k); return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null; };
+  const [feeMax, setFeeMax] = useState<number | null>(num('fmax'));
+  const [sharpeMin, setSharpeMin] = useState<number | null>(num('smin'));
+  const [assetsMin, setAssetsMin] = useState<number | null>(num('amin'));
+  const screened = (f: Fund) => (feeMax == null || (f.fee != null && f.fee <= feeMax)) && (sharpeMin == null || (f.sharpe != null && f.sharpe >= sharpeMin)) && (assetsMin == null || (f.assets != null && f.assets >= assetsMin));
   const [win, setWin] = useState<Win>('60');
   const { open: openSrc } = useSource();
   const set = (patch: Record<string, string>) => { const next = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k))); setSp(next, { replace: true }); };
@@ -134,10 +140,10 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
       const shown = all.filter((f) => f.prod === prod && f.track === tr && (closed || !f.closed));  // the rank is among the tracks on screen
       const ranked = shown.filter((f) => f[per] != null).sort((a, b) => b[per]! - a[per]!);
       const rank = new Map(ranked.map((f, i) => [f.k, i + 1]));
-      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => !t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)).map((f) => ({ f, rank: rank.get(f.k) ?? null }));
+      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => (!t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)) && screened(f)).map((f) => ({ f, rank: rank.get(f.k) ?? null }));
       return { tr, list, n: ranked.length, assets: shown.reduce((u, f) => u + (f.assets ?? 0), 0), cat: cats?.[`${prod} | ${tr}`] };
     }).filter((g) => g.list.length).sort((x, y) => y.assets - x.assets);
-  }, [all, tracks, T, prod, per, closed, q, cats]);
+  }, [all, tracks, T, prod, per, closed, q, cats, feeMax, sharpeMin, assetsMin]);  // eslint-disable-line react-hooks/exhaustive-deps
   const rows = { n: groups.reduce((u, g) => u + g.n, 0) };
   // the highlighted manufacturer may arrive as a company id (from search or a company page) or as the group name
   const regs = useRegistry().data;
@@ -195,6 +201,11 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
         <div className={`extra${more ? '' : ' shut'}`}>
           <div className="field"><span>דירוג לפי</span><Seg label="תקופה" value={per} onChange={(v) => set({ per: v })} options={PERIODS} /></div>
           {!makersOnly && <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם קופה או גוף" /></Field>}
+          {!makersOnly && <div className="field screen"><span>סינון{(feeMax ?? sharpeMin ?? assetsMin) != null && <button type="button" className="linkbtn" onClick={() => { setFeeMax(null); setSharpeMin(null); setAssetsMin(null); }}>ניקוי</button>}</span><div className="screen-in">
+            <label>דמי ניהול עד <input type="number" inputMode="decimal" step="0.05" min="0" value={feeMax ?? ''} onChange={(e) => setFeeMax(e.target.value === '' ? null : Number(e.target.value))} aria-label="דמי ניהול מקסימליים, אחוז" />%</label>
+            <label>שארפ מ- <input type="number" inputMode="decimal" step="0.1" value={sharpeMin ?? ''} onChange={(e) => setSharpeMin(e.target.value === '' ? null : Number(e.target.value))} aria-label="שארפ מינימלי" /></label>
+            <label>נכסים מ- <input type="number" inputMode="numeric" step="100" min="0" value={assetsMin ?? ''} onChange={(e) => setAssetsMin(e.target.value === '' ? null : Number(e.target.value))} aria-label="נכסים מינימליים, מיליוני ש&quot;ח" />מ׳ ש"ח</label>
+          </div></div>}
           <button type="button" className="chip" aria-pressed={closed} onClick={() => setClosed(!closed)}>כולל קופות ענפיות ומפעליות</button>
         </div>
       </section>

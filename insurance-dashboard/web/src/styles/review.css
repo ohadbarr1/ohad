@@ -23,3 +23,8 @@
   .pair .vs::before { content: "מול "; }
   .pair .vs .num { color: var(--muted); }
 }
+
+/* a statement row that every company prints: a quiet link to the same line across peers, shown on hover (always on touch screens) */
+a.peers { margin-inline-start: auto; flex: none; font-size: var(--t-1); color: var(--link); opacity: 0; transition: opacity var(--fast); white-space: nowrap; padding-inline-start: 8px; }
+tr:hover a.peers, a.peers:focus-visible { opacity: 1; }
+@media (hover: none), (max-width: 760px) { a.peers { display: none; } }

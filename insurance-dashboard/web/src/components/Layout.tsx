@@ -8,8 +8,11 @@ import { SourceProvider } from './Source';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Loading } from './ui';
 import { Suspense } from 'react';
+import { ShortcutsHelp, useKeyboard } from './Keyboard';
+import '../styles/sheet.css';
 import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
+import { pubLabel } from '../lib/format';
 
 // [route, icon, label, label on the phone's bottom bar]; valuation is reached from a company's tabs on a phone, so the bar keeps four places
 const NAV: [string, string, string, string | null][] = [
@@ -24,6 +27,7 @@ export function Layout() {
   const section = loc.pathname.split('/').slice(0, 3).join('/');
   useEffect(() => { window.scrollTo(0, 0); }, [section]);
   const reg = useRegistry();
+  const { help, setHelp } = useKeyboard(toggle);
   useEffect(() => {
     const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
     document.title = titleFor(loc.pathname, (id) => names.get(id)) ?? 'העמוד לא נמצא · fox';
@@ -32,6 +36,7 @@ export function Layout() {
   useEffect(() => { const id = requestAnimationFrame(() => document.querySelectorAll('.subnav a.active').forEach((a) => a.scrollIntoView({ inline: 'center', block: 'nearest' }))); return () => cancelAnimationFrame(id); }, [loc.pathname]);
   return (
     <SourceProvider>
+    <a className="skip" href="#main">דילוג לתוכן</a>
     <div className="shell">
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox"><Logo size={36} /></NavLink>
@@ -50,9 +55,11 @@ export function Layout() {
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
-        <main className="page" key={section}><ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary></main>
+        <main className="page" id="main" tabIndex={-1} key={section}><ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary></main>
       </div>
     </div>
+    {help && <ShortcutsHelp onClose={() => setHelp(false)} />}
+    <div className="print-foot">fox · {location.host}{loc.pathname} · כל מספר מקושר לעמוד המקור בדוח · הודפס {pubLabel(new Date().toISOString())}</div>
     </SourceProvider>
   );
 }

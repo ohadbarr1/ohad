@@ -89,16 +89,16 @@ export function CompanyFinancials() {
   if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
   if (!entry.has_financials) return <NoFinancials entry={entry} />;
   if (!store) return <Loading what="דוחות כספיים" />;
-  return <FinancialsView store={store} companyId={entry.id} />;
+  return <FinancialsView store={store} companyId={entry.id} fund={entry.kind === 'fund_house'} />;
 }
 
 /** A link pasted while the page is open changes the address from outside: the view is rebuilt from the address instead of overwriting it. */
-function FinancialsView(props: { store: CompanyStore; companyId: string }) {
+function FinancialsView(props: { store: CompanyStore; companyId: string; fund: boolean }) {
   const [gen, setGen] = useState(0);
   return <FinancialsInner key={gen} {...props} onOutsideLink={() => setGen((g) => g + 1)} />;
 }
 
-function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanyStore; companyId: string; onOutsideLink: () => void }) {
+function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: CompanyStore; companyId: string; fund: boolean; onOutsideLink: () => void }) {
   const [sp, setSp] = useSearchParams();
   const d = store.d;
   // the view lives in the URL: sheet, selected rows, period type, units, mode, column order
@@ -324,6 +324,31 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
       [pi, pj].map((x) => ({ label: pl(x), v: fmtAt(mi, val(mi, x)), src: () => valProv(mi, x) })), rate ? 'נק׳' : '%');
   };
   const cellProv = (mi: number, pi: number): Prov => (mode === 'value' ? valProv(mi, pi) : changeProv(mi, pi, prior(pi), 'YoY', shown(mi, pi)));
+  // the table as a workbook: figures as numbers in the unit on screen, periods oldest first, every printed figure linked to its PDF page
+  const exportXlsx = async () => {
+    const { downloadXlsx } = await import('../lib/xlsx');
+    const per = [...cols].sort((a, b) => d.periods[a].end.localeCompare(d.periods[b].end));
+    const unitTxtAll = mode === 'yoy' ? 'YoY %' : SCALES.find((x) => x.id === scale)!.label;
+    const title = `${sheetName(sheetCode)}${hasStd ? ` · ${stdTab === '17' ? 'IFRS 17' : stdTab === '4' ? 'IFRS 4' : 'שורות רציפות'}` : ''}`;
+    const body = rows.map((r) => {
+      if (r.m.header) return [{ v: r.m.label, bold: true }];
+      const u = r.m.unit, dec = mode === 'yoy' ? 'pct1' as const : u === 'nis' ? 'n2' as const : u === 'pct' ? 'pct1' as const : u === 'shares' ? 'n0' as const : scale === 'k' ? 'n0' as const : 'n1' as const;
+      return [{ v: r.m.label + (r.m.dim ? ` · ${r.m.dim}` : ''), bold: !!r.m.total }, ...per.map((pi) => {
+        const v = cell(r.idx, pi), f = store.byMetric.get(r.idx)?.get(pi);
+        const x = v == null ? null : mode === 'yoy' ? +v.toFixed(2) : +scaleValue(v, u, scale).toFixed(4);
+        return { v: x, fmt: dec, bold: !!r.m.total, italic: !!f?.der, link: x == null ? undefined : pdfHref(r.idx, pi) ?? undefined };
+      })];
+    });
+    const sheet = { name: sheetName(sheetCode), widths: [52, ...per.map(() => 13)], freeze: { rows: 3, cols: 1 },
+      rows: [[{ v: `${store.d.company} · ${title}`, bold: true }], [`יחידה: ${unitTxtAll}`, ...per.map(() => '')], [{ v: 'שורה', bold: true }, ...per.map((pi) => ({ v: pl(pi), bold: true }))], ...body] };
+    const about = { name: 'מקור', widths: [28, 90], rows: [
+      [{ v: 'מקור', bold: true }, 'דוחות כספיים של החברה (MAYA). כל מספר מודפס בגיליון הראשון מקושר לעמוד שלו ב-PDF.'],
+      ['כתובת באתר', location.href], ['נוצר', new Date().toLocaleString('he-IL')], ['יחידה', unitTxtAll],
+      ['נטוי', 'מחושב: Q4 = FY פחות 9M, H2 = FY פחות H1'], ['תקופות', `${pl(per[0])} עד ${pl(per[per.length - 1])}`],
+      ['הוצג מחדש', 'ערך שדוח מאוחר הדפיס אחרת מוצג כפי שהודפס בדוח המאוחר ביותר'], ['fox', 'fox-research-il.web.app'],
+    ] };
+    downloadXlsx(`fox-${companyId}-${sheetName(sheetCode)}`.replace(/\s+/g, '-'), [sheet, about]);
+  };
   const pdfHref = (mi: number, pi: number) => { const f = store.byMetric.get(mi)?.get(pi); return !ltm && mode === 'value' && f && seen(f) ? open(f.page, f.u) : null; };
 
   // compact view: the latest column, its change on the year-earlier period and, for quarters, on the previous quarter
@@ -461,7 +486,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
       )}
 
       {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? `נטוי = מחושב מהשנתי · אפור = IFRS 4${restated.length ? ` · נקודה = הוצג מחדש (${restated.length})` : ''} · כל ערך מקושר לעמוד המקור` : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<><span>{!sv ? '' : fromReports ? `נטוי = מחושב מהשנתי · אפור = IFRS 4${restated.length ? ` · נקודה = הוצג מחדש (${restated.length})` : ''} · כל ערך מקושר לעמוד המקור` : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>{sv && rows.length > 0 && <button type="button" className="btn" onClick={() => void exportXlsx()} title="גיליון Excel: המספרים כמספרים, כל מספר מודפס מקושר לעמוד שלו">Excel</button>}</>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table className={`${dense ? 'dense' : ''}${compact ? ' compact' : ''}`}>
             <thead>{compact && lastPi != null ? <tr><th>שורה</th><th>{pl(lastPi)}</th><th>YoY</th>{qoqPi != null && <th>QoQ</th>}</tr> : <tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{pl(pi)}</th>)}<th>עמ׳</th></tr>}</thead>
@@ -478,6 +503,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
                       <input type="checkbox" checked={showChart && on} onChange={() => { if (!showChart) { setShowChart(true); setSel([r.idx]); } else toggle(r.idx); }} aria-label={`הצג בגרף: ${r.m.label}`} title="הצגה בגרף" />
                       {showChart && on && <span className="dot" style={{ background: pal[k % pal.length] }} />}
                       <span className={hasNotes ? 'expl' : undefined} title={r.m.label} onClick={hasNotes ? () => setExplain(explain === r.idx ? null : r.idx) : undefined}>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
+                      {r.m.role && <Link className="peers" to={`/industry/lines?l=${r.m.role}&c=${companyId}&g=${fund ? 'fund' : 'ins'}`} title="אותה שורה בכל החברות, לאורך זמן">מול עמיתים</Link>}
 
                     </div></td>
                     {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi}>{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}</td>; })}

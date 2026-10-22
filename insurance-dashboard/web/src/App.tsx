@@ -58,6 +58,8 @@ const Sotp = page(mValuation, 'Sotp');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
 const mManagers = () => import('./pages/Managers');
 const Managers = page(mManagers, 'Managers');
+const mCalendar = () => import('./pages/Calendar');
+const Calendar = page(mCalendar, 'Calendar');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -103,6 +105,7 @@ export function App() {
         <Route path="funds/makers" element={<FundMakers />} />
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
+        <Route path="calendar" element={<Calendar />} />
         <Route path="valuation" element={<ValuationLayout />} />
         <Route path="valuation/:id" element={<ValuationLayout />}>
           <Route index element={<Navigate to="dcf" replace />} />

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useLoad, useRegistry } from '../lib/useData';
 import { sheetName } from '../lib/company';
 
-interface Item { kind: 'חברה' | 'פונקציה' | 'קבוצה' | 'קופה' | 'שורה בדוח'; label: string; meta: string; to: string }
+interface Item { kind: 'אחרונים' | 'חברה' | 'פונקציה' | 'קבוצה' | 'קופה' | 'שורה בדוח'; label: string; meta: string; to: string }
 
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
 const FUNCS: { code: string; label: string; keys: string[]; to: (id: string) => string }[] = [
@@ -45,6 +45,11 @@ export function Search({ big = false }: { big?: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   const nav = useNavigate();
   const index = useIndex(open || q.length > 0);
+  // with nothing typed: the pages visited last, and the codes that open a screen of any company
+  const recent = useMemo<Item[]>(() => {
+    if (!open || q.trim()) return [];
+    try { return (JSON.parse(localStorage.getItem('fox:recent') ?? '[]') as { p: string; t: string }[]).slice(0, 6).map((r) => ({ kind: 'אחרונים', label: r.t, meta: '', to: r.p })); } catch { return []; }
+  }, [open, q]);
 
   const reg = useRegistry();
   const hits = useMemo(() => {
@@ -90,37 +95,41 @@ export function Search({ big = false }: { big?: boolean }) {
   }, [big]);
 
   const go = (it: Item) => { setOpen(false); setQ(''); nav(it.to); };
-  const kinds: Item['kind'][] = ['חברה', 'פונקציה', 'קבוצה', 'קופה', 'שורה בדוח'];
+  const kinds: Item['kind'][] = ['אחרונים', 'חברה', 'פונקציה', 'קבוצה', 'קופה', 'שורה בדוח'];
+  const shown = q.trim().length >= 2 ? hits : recent;
+  const optId = (i: number) => `sr-opt-${i}`;
 
   return (
     <div className={`search ${big ? 'big' : ''}`} ref={box}>
       <input ref={input}
         type="search" value={q} placeholder="חברה, קופה, או חברה + פונקציה: הראל csm" aria-label="חיפוש"
+        role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
         onKeyDown={(e) => {
-          if (e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => Math.min(h + 1, hits.length - 1)); }
+          if (e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => Math.min(h + 1, shown.length - 1)); }
           if (e.key === 'ArrowUp') { e.preventDefault(); setHl((h) => Math.max(h - 1, 0)); }
-          if (e.key === 'Enter' && hits[hl]) go(hits[hl]);
+          if (e.key === 'Enter' && shown[hl]) go(shown[hl]);
           if (e.key === 'Escape') { setOpen(false); input.current?.blur(); }
         }}
       />
       {!big && !q && <span className="hint"><kbd>/</kbd></span>}
-      {open && q.trim().length >= 2 && (
-        <div className="results" role="listbox">
-          {hits.length === 0 && <div className="muted" style={{ padding: 10 }}>{index.length ? 'לא נמצאו תוצאות' : 'טוען אינדקס…'}</div>}
+      {open && (q.trim().length >= 2 || !q.trim()) && (
+        <div className="results" role="listbox" id="search-results" aria-label="תוצאות חיפוש">
+          {q.trim().length >= 2 && hits.length === 0 && <div className="muted" style={{ padding: 10 }}>{index.length ? 'לא נמצאו תוצאות' : 'טוען אינדקס…'}</div>}
           {kinds.map((k) => {
-            const items = hits.filter((h) => h.kind === k);
+            const items = shown.filter((h) => h.kind === k);
             return items.length ? (
-              <div key={k}>
+              <div key={k} role="group" aria-label={k}>
                 <h4>{k}</h4>
                 {items.map((it) => (
-                  <Link key={it.to + it.label} to={it.to} className={hits[hl] === it ? 'on' : ''} onClick={() => { setOpen(false); setQ(''); }}>
+                  <Link key={it.to + it.label} to={it.to} id={optId(shown.indexOf(it))} role="option" aria-selected={shown[hl] === it} className={shown[hl] === it ? 'on' : ''} onClick={() => { setOpen(false); setQ(''); }}>
                     <span>{it.label}</span><span className="meta">{it.meta}</span>
                   </Link>
                 ))}
               </div>
             ) : null;
           })}
+          {!q.trim() && <div className="codes"><h4>קודים · לכל חברה</h4><div>{FUNCS.map((f) => <span key={f.code} className="chip" title={f.label}><b className="num">{f.code}</b> {f.label}</span>)}</div><div className="muted" style={{ padding: '4px 8px 6px', fontSize: 'var(--t-1)' }}>לדוגמה: <bdi>הראל CSM</bdi> · <bdi>כלל FA</bdi> · מקש <kbd>?</kbd> לכל הקיצורים</div></div>}
         </div>
       )}
     </div>

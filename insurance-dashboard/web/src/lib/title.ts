@@ -23,6 +23,7 @@ export function titleFor(path: string, name: (id: string) => string | undefined)
     case 'industry': return INDUSTRY_TAB[p[1] ?? 'sectors'] ? t(INDUSTRY_TAB[p[1] ?? 'sectors'], 'השוואה ענפית') : null;
     case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'קופות') : p[1] ? t('מסלול', 'קופות') : t('מסלולים', 'קופות');
     case 'managers': return t('מנהלים', 'קופות');
+    case 'calendar': return t('לוח דיווחים');
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;
     case 'valuation': return p[1] ? t(name(p[1]) ?? p[1], p[2] === 'sotp' ? 'סכום החלקים' : 'הערכת שווי') : t('הערכת שווי');
     default: return null;

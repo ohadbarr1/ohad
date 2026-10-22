@@ -32,3 +32,6 @@
 /* a holding company's subsidiary, listed under it */
 tr.subrow td { font-size: 12.5px; color: var(--muted); }
 tr.subrow td:first-child { padding-inline-start: 26px; }
+.field.screen .screen-in { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.field.screen label { display: inline-flex; gap: 5px; align-items: center; color: var(--muted); font-size: var(--t-2); white-space: nowrap; }
+.field.screen input[type="number"] { width: 76px; min-width: 0; padding: 6px 8px; }

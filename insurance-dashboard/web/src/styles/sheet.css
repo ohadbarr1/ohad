@@ -19,3 +19,11 @@
 .toolbar select { min-width: 220px; }
 .toolbar .rng { font-size: var(--t-2); color: var(--muted); }
 .controls.opts { padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: var(--r-3); background: var(--panel); }
+.sheetwrap.center { align-items: center; justify-content: center; padding: 16px; }
+.sheet.dialog { max-width: 520px; border-radius: var(--r-3); }
+table.keys td { text-align: start; white-space: normal; padding: 7px 8px; }
+table.keys td:first-child { width: 120px; white-space: nowrap; }
+.skip { position: absolute; inset-inline-start: 8px; top: -60px; z-index: 200; padding: 8px 14px; border-radius: var(--r-2); background: var(--sel-bg); color: var(--sel-fg); font-weight: 700; }
+.skip:focus { top: 8px; text-decoration: none; }
+main:focus { outline: none; }
+.results .codes > div:first-of-type { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 8px 6px; }
