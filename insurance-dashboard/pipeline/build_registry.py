@@ -167,11 +167,21 @@ for per in sorted({f["period"] for f in ifrs_meta["files"]}):
         cur = slot.get(k)
         if cur is None or (own and not cur["own"]) or (own == cur["own"] and per > cur["from"]):
             slot[k] = cell
+MERGED = []
 for (c, m, g, b), cells in fx.items():
     key = (m, g)
     row = by_key.get(key, {}).get(c)
     if row is not None and row["b"] != b:
-        continue
+        # one line printed without a stated basis in some reports and with one in others (Harel: insurance revenue "na" in the quarterly
+        # reports, "gross" in the annual): the same line, so the periods the record lacks are filled, unless a period both carry disagrees
+        if "na" not in (row["b"], b):
+            continue
+        both = [k for k in cells if k in row["vals"] and cells[k]["own"]]  # a comparative column may be restated: not a conflict of basis
+        if any(abs(cells[k]["v"] - row["vals"][k]["v"]) > max(0.5, abs(row["vals"][k]["v"]) * 1e-3) for k in both):
+            continue
+        if not any(k not in row["vals"] for k in cells):
+            continue
+        MERGED.append((c, m, g, row["b"], b, sorted(k for k in cells if k not in row["vals"])))
     inst = all(x["inst"] for x in cells.values())
     if row is None:
         others = [k2 for k2 in fx if k2[0] == c and k2[1] == m and k2[2] == g]
@@ -186,6 +196,10 @@ for (c, m, g, b), cells in fx.items():
         vals[k] = {"v": round(x["v"], 3), "pg": x["pg"], "u": x["u"], "std": "IFRS 17", **({"cmp": 1} if not x["own"] else {}), **({"src": x["src"]} if x.get("src") else {})}
     row["vals"] = dict(sorted(vals.items()))
 
+print("basis merged (na <-> stated):", len(MERGED))
+for x in MERGED:
+    if x[1].startswith(("insurance_", "csm_closing")):
+        print("  ", x)
 # a filer that prints CSM for life and for health but no group line: the group figure is their sum, on one basis (flag 1, parts kept)
 summed = defaultdict(dict)
 for (m, seg), comps in list(by_key.items()):
