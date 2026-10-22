@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, Field, Loading, Panel, Seg } from '../components/ui';
-import { nf } from '../lib/format';
+import { fmt } from '../lib/format';
+import { DataTable, type Column } from '../components/DataTable';
 import { load } from '../lib/useData';
 import { BASIS } from './IndustryIfrs';
 import { Sourced } from '../components/Source';
@@ -53,18 +54,18 @@ export function CompanySeries({ id, docs }: { id: string; docs: number }) {
       </section>
       <Panel title={`${segName(G)} · ${view === 'q' ? 'רבעון בודד' : 'שנתי'}`} aside={<span>{mine.length} שורות · {periods.length ? `${label(periods[periods.length - 1])} עד ${label(periods[0])}` : ''}</span>}>
         {mine.length === 0 ? <Empty title="אין שורות בסינון הזה" /> : (
-          <div className="scroll" style={{ maxHeight: 680 }}><table className="series">
-            <thead><tr><th>שורה</th>{periods.map((p) => <th key={p} className={p === firstOld ? 'brk' : ''}>{label(p)}{p === firstOld && <span className="dim">IFRS 4</span>}</th>)}</tr></thead>
-            <tbody>{mine.slice(0, 250).map((r, i) => (
-              <tr key={i}>
-                <td className="lbl">{he(r.m)}{r.s !== r.g && <span className="muted"> · {lineName(r.s)}</span>}{r.b !== 'na' && <span className="dim">{BASIS[r.b] ?? r.b}</span>}</td>
-                {periods.map((p) => { const c = r.vals[p]; const txt = c ? nf(c.v, isPct(r.m) || Math.abs(c.v) < 100 ? 1 : 0) + (isPct(r.m) ? '%' : '') : '';
-                  const tip = c ? [c.std, c.der ? 'נגזר: שנתי פחות תשעה חודשים' : '', c.cmp ? 'מספר השוואה מדוח מאוחר יותר' : '', c.src ? `מקור: ${c.src}` : '', c.pg ? `עמ׳ ${c.pg}` : ''].filter(Boolean).join(' · ') : '';
-                  const num = <span className={`num ${c?.v != null && c.v < 0 ? 'neg' : ''} ${c?.der ? 'der' : ''} ${c?.cmp ? 'cmp' : ''}`} title={tip}>{txt}</span>;
-                  return <td key={p} className={`${p === firstOld ? 'brk' : ''} ${c?.std === 'IFRS 4' ? 'old' : ''}`}>{!c ? <span className="muted">·</span> : <Sourced src={() => cellProv(r, p, c, txt)} href={c.u && c.pg != null ? `${c.u}#page=${c.pg}` : null} title={tip || undefined}>{num}</Sourced>}</td>; })}
-              </tr>
-            ))}</tbody>
-          </table></div>
+          <DataTable className="series" caption="רצף הדוחות" maxHeight={680} rows={mine.slice(0, 250)} rowKey={(r) => `${r.m}|${r.s}|${r.b}`} export={{ name: `fox-${id}-series-${G}-${view}`, title: `רצף הדוחות · ${segName(G)}`, note: 'מיליוני ש"ח, כפי שדווח · Q4 נגזר מהשנתי פחות תשעה חודשים' }} columns={[
+            { key: 'l', head: 'שורה', value: (r) => he(r.m), tdClass: () => 'lbl', text: (r) => `${he(r.m)}${r.s !== r.g ? ` · ${lineName(r.s)}` : ''}${r.b !== 'na' ? ` · ${BASIS[r.b] ?? r.b}` : ''}`,
+              cell: (r) => <>{he(r.m)}{r.s !== r.g && <span className="muted"> · {lineName(r.s)}</span>}{r.b !== 'na' && <span className="dim">{BASIS[r.b] ?? r.b}</span>}</> },
+            ...periods.map((p): Column<Row> => ({
+              key: p, head: <>{label(p)}{p === firstOld && <span className="dim">IFRS 4</span>}</>, label: p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : label(p), className: p === firstOld ? 'brk' : undefined,
+              value: (r) => r.vals[p]?.v, unit: 'm', tdClass: (r) => (r.vals[p]?.std === 'IFRS 4' ? 'old' : undefined),
+              cell: (r) => { const c = r.vals[p]; if (!c) return <span className="muted">·</span>;
+                const txt = fmt(c.v, isPct(r.m) ? 'pct' : 'm');
+                const tip = [c.std, c.der ? 'נגזר: שנתי פחות תשעה חודשים' : '', c.cmp ? 'מספר השוואה מדוח מאוחר יותר' : '', c.src ? `מקור: ${c.src}` : '', c.pg ? `עמ׳ ${c.pg}` : ''].filter(Boolean).join(' · ');
+                return <Sourced src={() => cellProv(r, p, c, txt)} href={c.u && c.pg != null ? `${c.u}#page=${c.pg}` : null} title={tip || undefined}><span className={`num ${c.v < 0 ? 'neg' : ''} ${c.der ? 'der' : ''} ${c.cmp ? 'cmp' : ''}`} title={tip}>{txt}</span></Sourced>; },
+            })),
+          ]} />
         )}
         <div className="src">נטוי: Q4 נגזר (שנתי פחות תשעה חודשים). אפור: מספר השוואה מדוח מאוחר יותר, עשוי להיות מוצג מחדש. רקע כהה: דווח תחת IFRS 4, לא בר-השוואה לעמודות ה-IFRS 17. ריחוף על מספר מציג את המקור.</div>
       </Panel>

@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FundsHead } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
 import { ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
@@ -6,7 +6,8 @@ import { Sourced } from '../components/Source';
 import { fundCell, fundRef, listP, warmHist } from '../lib/market';
 import type { Prov } from '../lib/prov';
 import '../styles/prov-market.css';
-import { cls, nf, pct, sn } from '../lib/format';
+import { cls, fmt, nf, pct, sn } from '../lib/format';
+import { DataTable } from '../components/DataTable';
 import { useMarketData } from '../lib/useData';
 import type { Family, Fund } from '../lib/types';
 
@@ -49,35 +50,31 @@ export function Managers() {
         <Field label="קבוצה"><select value={grp} onChange={(e) => setGrp(e.target.value)}><option value="all">כל הקבוצות</option>{groups.map((g) => <option key={g}>{g}</option>)}</select></Field>
       </section>
       <Panel aside={<span>דמי ניהול ותשואות משוקללים בנכסים · צבירה וניוד: LTM, מיליארדי ש"ח</span>}>
-        <div className="scroll"><table>
-          <thead><tr><th>חברה מנהלת</th><th>נכסים, מיליארד</th><th /><th>מסלולים</th><th>דמי ניהול מצבירה</th><th>מהפקדה</th><th>תשואה, LTM</th><th>5Y, שנתי</th><th>צבירה נטו</th><th>ניוד נטו</th></tr></thead>
-          <tbody>{rows.map((r) => (
-            <Fragment key={r.mgr}>
-              <tr style={{ cursor: 'pointer' }} className={open === r.mgr ? 'lead' : ''} onPointerEnter={() => r.list.slice(0, 40).forEach((f) => warmHist(fundRef(f)))} onClick={(e) => stop(e, () => setOpen(open === r.mgr ? null : r.mgr))}>
-                <td>{r.mgr}<span className="fund-mgr"><MgrChip grp={r.grp} /></span></td>
-                <td><S src={() => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של מסלולי החברה, חלקי 1,000 (מיליוני ש"ח למיליארדי ש"ח)', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1))}><span className="num">{nf(r.assets, 1)}</span></S></td>
-                <td style={{ width: 120 }}><div className="bar"><i style={{ width: `${(r.assets / max) * 100}%` }} /></div></td>
-                <td><S src={() => agg(r, 'assets', 'מסלולים', 'ספירת מסלולי החברה בחודש האחרון', nf(r.list.length, 0), undefined, (f) => nf(f.assets!, 1))}><span className="num">{r.list.length}</span></S></td>
-                <td>{r.fee == null ? '–' : <S src={() => agg(r, 'fee', 'דמי ניהול מצבירה', 'AVG_ANNUAL_MANAGEMENT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם דמי ניהול', pct(r.fee, 2), undefined, (f) => pct(f.fee, 2), true)}><span className="num">{pct(r.fee, 2)}</span></S>}</td>
-                <td>{r.dep == null ? '–' : <S src={() => agg(r, 'depfee', 'דמי ניהול מהפקדה', 'AVG_DEPOSIT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.dep, 2), undefined, (f) => pct(f.depfee, 2), true)}><span className="num">{pct(r.dep, 2)}</span></S>}</td>
-                <td>{r.y12 == null ? '–' : <S src={() => agg(r, 'y12', 'תשואה LTM', 'תשואת LTM של כל מסלול, משוקללת ב-TOTAL_ASSETS', pct(r.y12, 1), undefined, (f) => pct(f.y12, 1), true)}><span className={`num ${cls(r.y12)}`}>{pct(r.y12, 1)}</span></S>}</td>
-                <td>{r.a5 == null ? '–' : <S src={() => agg(r, 'a5', 'תשואה שנתית ממוצעת, 5 שנים', 'AVG_ANNUAL_YIELD_TRAILING_5YRS משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.a5, 1), undefined, (f) => pct(f.a5, 1), true)}><span className="num">{pct(r.a5, 1)}</span></S>}</td>
-                <td>{r.net == null ? '–' : <S src={() => agg(r, 'net12', 'צבירה נטו, LTM', 'סכום צבירה אורגנית LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.net!, 2), 'מיליארד ש"ח', (f) => sn(f.net12!, 1))}><span className={`num ${cls(r.net)}`}>{nf(r.net, 2)}</span></S>}</td>
-                <td>{r.tr == null ? '–' : <S src={() => agg(r, 'tr12', 'ניוד נטו, LTM', 'סכום העברות נטו LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.tr!, 2), 'מיליארד ש"ח', (f) => sn(f.tr12!, 1))}><span className={`num ${cls(r.tr)}`}>{nf(r.tr, 2)}</span></S>}</td>
-              </tr>
-              {open === r.mgr && [...r.list].sort((a, b) => (b.assets ?? 0) - (a.assets ?? 0)).map((f) => (
-                <tr key={f.id} className="sec">
-                  <td style={{ paddingInlineStart: 26, fontWeight: 400, color: 'var(--fg)' }}>{f.name}</td>
-                  <td>{f.assets == null ? '–' : <S src={() => fundCell(A, f, 'assets')!}><span className="num">{nf(f.assets / 1000, 2)}</span></S>}</td><td />
-                  <td>{f.stock == null ? '' : <S src={() => fundCell(A, f, 'stock')!}><span className="num muted">{`מניות ${nf(f.stock, 0)}%`}</span></S>}</td>
-                  <td>{f.fee == null ? '–' : <S src={() => fundCell(A, f, 'fee')!}><span className="num">{pct(f.fee, 2)}</span></S>}</td><td>{f.depfee == null ? '–' : <S src={() => fundCell(A, f, 'depfee')!}><span className="num">{pct(f.depfee, 2)}</span></S>}</td>
-                  <td onPointerEnter={() => warmHist(fundRef(f))}>{f.y12 == null ? '–' : <S src={() => fundCell(A, f, 'y12')!}><span className={`num ${cls(f.y12)}`}>{pct(f.y12, 1)}</span></S>}</td><td>{f.a5 == null ? '–' : <S src={() => fundCell(A, f, 'a5')!}><span className="num">{pct(f.a5, 1)}</span></S>}</td>
-                  <td onPointerEnter={() => warmHist(fundRef(f))}>{f.net12 == null ? '–' : <S src={() => fundCell(A, f, 'net12')!}><span className={`num ${cls(f.net12)}`}>{nf(f.net12 / 1000, 2)}</span></S>}</td><td onPointerEnter={() => warmHist(fundRef(f))}>{f.tr12 == null ? '–' : <S src={() => fundCell(A, f, 'tr12')!}><span className={`num ${cls(f.tr12)}`}>{nf(f.tr12 / 1000, 2)}</span></S>}</td>
-                </tr>
-              ))}
-            </Fragment>
-          ))}</tbody>
-        </table></div>
+        <DataTable caption="חברות מנהלות" rows={rows} rowKey={(r) => r.mgr} export={{ name: `fox-managers-${data.meta.asof}`, title: 'חברות מנהלות', note: `רשות שוק ההון · ${asof} · נכסים, צבירה וניוד: מיליארדי ש"ח` }}
+          rowClass={(r) => (open === r.mgr ? 'lead' : undefined)}
+          rowProps={(r) => ({ style: { cursor: 'pointer' }, onPointerEnter: () => r.list.slice(0, 40).forEach((f) => warmHist(fundRef(f))), onClick: (e) => stop(e, () => setOpen(open === r.mgr ? null : r.mgr)) })}
+          after={(r) => open === r.mgr && byAssets(r.list).map((f) => (
+            <tr key={f.id} className="sec">
+              <td style={{ paddingInlineStart: 26, fontWeight: 400, color: 'var(--fg)' }}>{f.name}</td>
+              <td>{f.assets == null ? '–' : <S src={() => fundCell(A, f, 'assets')!}><span className="num">{fmt(f.assets / 1000, 'n', { d: 2 })}</span></S>}</td><td />
+              <td>{f.stock == null ? '' : <S src={() => fundCell(A, f, 'stock')!}><span className="num muted">{`מניות ${fmt(f.stock, 'int')}%`}</span></S>}</td>
+              <td>{f.fee == null ? '–' : <S src={() => fundCell(A, f, 'fee')!}><span className="num">{fmt(f.fee, 'pct', { d: 2 })}</span></S>}</td><td>{f.depfee == null ? '–' : <S src={() => fundCell(A, f, 'depfee')!}><span className="num">{fmt(f.depfee, 'pct', { d: 2 })}</span></S>}</td>
+              <td onPointerEnter={() => warmHist(fundRef(f))}>{f.y12 == null ? '–' : <S src={() => fundCell(A, f, 'y12')!}><span className={`num ${cls(f.y12)}`}>{fmt(f.y12, 'pct')}</span></S>}</td><td>{f.a5 == null ? '–' : <S src={() => fundCell(A, f, 'a5')!}><span className="num">{fmt(f.a5, 'pct')}</span></S>}</td>
+              <td onPointerEnter={() => warmHist(fundRef(f))}>{f.net12 == null ? '–' : <S src={() => fundCell(A, f, 'net12')!}><span className={`num ${cls(f.net12)}`}>{fmt(f.net12 / 1000, 'n', { d: 2 })}</span></S>}</td><td onPointerEnter={() => warmHist(fundRef(f))}>{f.tr12 == null ? '–' : <S src={() => fundCell(A, f, 'tr12')!}><span className={`num ${cls(f.tr12)}`}>{fmt(f.tr12 / 1000, 'n', { d: 2 })}</span></S>}</td>
+            </tr>
+          ))}
+          columns={[
+            { key: 'mgr', head: 'חברה מנהלת', value: (r) => r.mgr, cell: (r) => <>{r.mgr}<span className="fund-mgr"><MgrChip grp={r.grp} /></span></> },
+            { key: 'assets', head: 'נכסים, מיליארד', value: (r) => r.assets, d: 1, src: (r) => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של מסלולי החברה, חלקי 1,000 (מיליוני ש"ח למיליארדי ש"ח)', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) },
+            { key: 'bar', head: '', width: 120, noExport: true, cell: (r) => <div className="bar"><i style={{ width: `${(r.assets / max) * 100}%` }} /></div> },
+            { key: 'n', head: 'מסלולים', value: (r) => r.list.length, unit: 'int', src: (r) => agg(r, 'assets', 'מסלולים', 'ספירת מסלולי החברה בחודש האחרון', nf(r.list.length, 0), undefined, (f) => nf(f.assets!, 1)) },
+            { key: 'fee', head: 'דמי ניהול מצבירה', value: (r) => r.fee, unit: 'pct', d: 2, src: (r) => agg(r, 'fee', 'דמי ניהול מצבירה', 'AVG_ANNUAL_MANAGEMENT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם דמי ניהול', pct(r.fee, 2), undefined, (f) => pct(f.fee, 2), true) },
+            { key: 'dep', head: 'מהפקדה', value: (r) => r.dep, unit: 'pct', d: 2, src: (r) => agg(r, 'depfee', 'דמי ניהול מהפקדה', 'AVG_DEPOSIT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.dep, 2), undefined, (f) => pct(f.depfee, 2), true) },
+            { key: 'y12', head: 'תשואה, LTM', value: (r) => r.y12, unit: 'pct', tone: true, src: (r) => agg(r, 'y12', 'תשואה LTM', 'תשואת LTM של כל מסלול, משוקללת ב-TOTAL_ASSETS', pct(r.y12, 1), undefined, (f) => pct(f.y12, 1), true) },
+            { key: 'a5', head: '5Y, שנתי', value: (r) => r.a5, unit: 'pct', src: (r) => agg(r, 'a5', 'תשואה שנתית ממוצעת, 5 שנים', 'AVG_ANNUAL_YIELD_TRAILING_5YRS משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.a5, 1), undefined, (f) => pct(f.a5, 1), true) },
+            { key: 'net', head: 'צבירה נטו', value: (r) => r.net, d: 2, tone: true, src: (r) => agg(r, 'net12', 'צבירה נטו, LTM', 'סכום צבירה אורגנית LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.net!, 2), 'מיליארד ש"ח', (f) => sn(f.net12!, 1)) },
+            { key: 'tr', head: 'ניוד נטו', value: (r) => r.tr, d: 2, tone: true, src: (r) => agg(r, 'tr12', 'ניוד נטו, LTM', 'סכום העברות נטו LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.tr!, 2), 'מיליארד ש"ח', (f) => sn(f.tr12!, 1)) },
+          ]} />
         <div className="fnote">מקור: רשות שוק ההון, גמל-נט, פנסיה-נט וביטוח-נט. למסלולי הביטוח (ביטוחי מנהלים ופוליסות חיסכון) אין נתוני צבירה.</div>
       </Panel>
     </>

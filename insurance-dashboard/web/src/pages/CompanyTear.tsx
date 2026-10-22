@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { IncChip } from '../components/ui';
-import { dateLabel, nf, pct } from '../lib/format';
+import { dateLabel, fmt, pct } from '../lib/format';
 import { useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BASIS, endOf } from './IndustryIfrs';
@@ -50,8 +50,8 @@ export function CompanyTear({ id }: { id: string }) {
       <div className="kpis">{items.map((x) => {
         const f = x.f!, v = x.v ?? f.dv ?? f.v, pv = x.pf ? (x.v != null ? Math.abs(x.pf.dv ?? x.pf.v) : x.pf.dv ?? x.pf.v) : null;
         const ch = pv != null && pv !== 0 && pv > 0 === v > 0 && x.v == null ? (v / pv - 1) * 100 : null;
-        const txt = x.p ? nf(v, 1) + '%' : nf(v, Math.abs(v) < 100 ? 1 : 0);
-        const unit = x.p ? '%' : 'מיליוני ש"ח', shown = (_g: IfrsFact, w: number) => (x.p ? nf(w, 1) + '%' : nf(w, Math.abs(w) < 100 ? 1 : 0));
+        const txt = fmt(v, x.p ? 'pct' : 'm');
+        const unit = x.p ? '%' : 'מיליוני ש"ח', shown = (_g: IfrsFact, w: number) => fmt(w, x.p ? 'pct' : 'm');
         const prov = () => ifrsProv(f, d!, P, { title: x.l, value: txt, unit, note: v !== f.v ? `${x.v != null ? 'סכום שורות של אותה טבלה, בערך מוחלט' : 'ערך השורה בפירוק הטבלה'} · בעמוד: ${shown(f, f.v)}` : undefined });
         const chProv = () => calc(`${x.l} · YoY`, pct(ch!, 1, true), 'נוכחי ÷ קודם − 1', [[f, v], [x.pf!, pv!]].map(([g, w]) => ({ label: factPeriod(g as IfrsFact), v: shown(g as IfrsFact, w as number), src: () => ifrsProv(g as IfrsFact, d!, P, { title: x.l, value: shown(g as IfrsFact, w as number), unit }) })), '%');
         return (

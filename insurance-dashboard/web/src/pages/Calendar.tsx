@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ErrorBox, Loading, Panel } from '../components/ui';
 import { Sourced } from '../components/Source';
+import { DataTable } from '../components/DataTable';
 import { pubLabel } from '../lib/format';
 import { mayaReport } from '../lib/sources';
 import { useLoad } from '../lib/useData';
@@ -28,23 +29,19 @@ export function Calendar() {
     <>
       <div className="pagehead"><div><h1>לוח דיווחים</h1><div className="sub">הדוח הבא של כל חברה · אומדן מהרקורד של החברה עצמה · <a href="/data/calendar.ics" download>הוספה ליומן (ICS)</a></div></div></div>
       <Panel title="הדוח הבא" aside={<span>{data.basis}</span>}>
-        <div className="scroll"><table>
-          <thead><tr><th>חברה</th><th>דוח אחרון</th><th>פורסם</th><th>הדוח הבא</th><th>צפוי</th><th>חלון</th><th>עוד</th></tr></thead>
-          <tbody>{active.map((c) => {
+        <DataTable caption="הדוח הבא של כל חברה" rows={active} rowKey={(c) => c.id} export={{ name: 'fox-calendar', title: 'לוח דיווחים', note: data.basis }} columns={[
+          { key: 'co', head: 'חברה', value: (c) => c.name, cell: (c) => <Link to={`/company/${c.id}`}>{c.name}</Link> },
+          { key: 'last', head: 'דוח אחרון', value: (c) => c.last.period, text: (c) => pl(c.last.period), cell: (c) => <a className="num" href={mayaReport(c.last.rid)} target="_blank" rel="noreferrer">{pl(c.last.period)}</a> },
+          { key: 'pub', head: 'פורסם', value: (c) => c.last.date, text: (c) => pubLabel(c.last.date), cell: (c) => <span className="num">{pubLabel(c.last.date)}</span> },
+          { key: 'next', head: 'הדוח הבא', value: (c) => c.next.period, text: (c) => pl(c.next.period), cell: (c) => <span className="num">{pl(c.next.period)}</span> },
+          { key: 'exp', head: 'צפוי', value: (c) => c.next.expected, text: (c) => pubLabel(c.next.expected), firstDir: 'asc',
+            cell: (c) => <>{c.next.expected ? <Sourced src={() => prov(c)}><span className="num">{pubLabel(c.next.expected)}</span></Sourced> : '–'} <span className="chip est">אומדן</span></> },
+          { key: 'win', head: 'חלון', cell: (c) => (c.next.lo && c.next.hi ? <span className="num muted">{pubLabel(c.next.lo)} – {pubLabel(c.next.hi)}</span> : '–') },
+          { key: 'left', head: 'עוד', value: (c) => (c.next.expected ? days(c.next.expected, today) : null), firstDir: 'asc', cell: (c) => {
             const n = c.next, left = n.expected ? days(n.expected, today) : null, late = !!n.hi && today > n.hi;
-            return (
-              <tr key={c.id}>
-                <td><Link to={`/company/${c.id}`}>{c.name}</Link></td>
-                <td><a className="num" href={mayaReport(c.last.rid)} target="_blank" rel="noreferrer">{pl(c.last.period)}</a></td>
-                <td><span className="num">{pubLabel(c.last.date)}</span></td>
-                <td><span className="num">{pl(n.period)}</span></td>
-                <td>{n.expected ? <Sourced src={() => prov(c)}><span className="num">{pubLabel(n.expected)}</span></Sourced> : '–'} <span className="chip est">אומדן</span></td>
-                <td>{n.lo && n.hi ? <span className="num muted">{pubLabel(n.lo)} – {pubLabel(n.hi)}</span> : '–'}</td>
-                <td>{late ? <span className="chip est">באיחור לעומת הרקורד</span> : left != null ? <span className="num">{left > 0 ? `${left} ימים` : left === 0 ? 'היום' : 'עבר'}</span> : '–'}</td>
-              </tr>
-            );
-          })}</tbody>
-        </table></div>
+            return late ? <span className="chip est">באיחור לעומת הרקורד</span> : left != null ? <span className="num">{left > 0 ? `${left} ימים` : left === 0 ? 'היום' : 'עבר'}</span> : '–';
+          } },
+        ]} />
         {idle.length > 0 && <div className="src">ללא דוח תקופתי בשנה האחרונה: {idle.map((c) => `${c.name} (אחרון ${pl(c.last.period)})`).join(' · ')}</div>}
       </Panel>
     </>

@@ -8,15 +8,15 @@ import { useSource } from '../lib/prov';
 import { BreakChip, Empty, Field, Panel } from '../components/ui';
 import { chartBase, palette } from '../lib/theme';
 import { METRIC_BY_KEY, type Market, type MetricKey, type Win } from '../lib/market';
-import { cls, nf, sn } from '../lib/format';
+import { cls, fmt } from '../lib/format';
+import { DataTable } from '../components/DataTable';
 import '../styles/market.css';
 import '../styles/prov-market.css';
 
 function fmtMetric(key: MetricKey, v: number | null, signed = false): string {
   if (v == null || Number.isNaN(v)) return '–';
   const def = METRIC_BY_KEY[key];
-  const d = def.dec ?? (def.unit === '%' ? 1 : Math.abs(v) < 10 ? 2 : 1);
-  return (signed ? sn(v, d) : nf(v, d)) + (def.unit === '%' ? '%' : '');
+  return fmt(v, def.unit === '%' ? 'pct' : 'n', { d: def.dec ?? (def.unit === '%' ? 1 : Math.abs(v) < 10 ? 2 : 1), signed });
 }
 const signedKey = (k: MetricKey) => k !== 'assets' && k !== 'share' && k !== 'fee';
 const toneOf = (k: MetricKey, v: number | null) => (signedKey(k) ? cls(v) : '');
@@ -64,15 +64,14 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
             }} />
         </Panel>
         <Panel title={`מדדים, ${m.plabel(L)}`}>
-          <div className="scroll"><table>
-            <thead><tr><th>מדד</th><th>{m.plabel(L)}</th><th>{m.plabel(L - 12)}</th><th>כלל השוק</th></tr></thead>
-            <tbody>{rows.map((r) => (
-              <tr key={r.k} style={{ cursor: 'pointer', background: r.k === metric ? 'var(--accent-soft)' : undefined }} onClick={(e) => { if (!(e.target as HTMLElement).closest('.src')) setMetric(r.k); }}>
-                <td>{METRIC_BY_KEY[r.k].short}{METRIC_BY_KEY[r.k].win && <span className="dim">LTM</span>} <BreakChip b={m.breakOf(r.k, set, L - 12, L)} /></td>
-                <td><MV m={m} k={r.k} pi={L} w="ltm" set={set} g={gi} v={r.now} signed={false} /></td><td><MV m={m} k={r.k} pi={L - 12} w="ltm" set={set} g={gi} v={r.prev} signed={false} /></td><td><MV m={m} k={r.k} pi={L} w="ltm" set={set} g={-1} v={r.mk} signed={false} /></td>
-              </tr>
-            ))}</tbody>
-          </table></div>
+          <DataTable caption={`מדדים, ${m.plabel(L)}`} rows={rows} rowKey={(r) => r.k} rowClass={(r) => (r.k === metric ? 'on' : undefined)}
+            rowProps={(r) => ({ style: { cursor: 'pointer' }, onClick: (e) => { if (!(e.target as HTMLElement).closest('.src')) setMetric(r.k); } })}
+            columns={[
+              { key: 'k', head: 'מדד', text: (r) => METRIC_BY_KEY[r.k].short, cell: (r) => <>{METRIC_BY_KEY[r.k].short}{METRIC_BY_KEY[r.k].win && <span className="dim">LTM</span>} <BreakChip b={m.breakOf(r.k, set, L - 12, L)} /></> },
+              { key: 'now', head: m.plabel(L), text: (r) => fmtMetric(r.k, r.now), cell: (r) => <MV m={m} k={r.k} pi={L} w="ltm" set={set} g={gi} v={r.now} signed={false} /> },
+              { key: 'prev', head: m.plabel(L - 12), text: (r) => fmtMetric(r.k, r.prev), cell: (r) => <MV m={m} k={r.k} pi={L - 12} w="ltm" set={set} g={gi} v={r.prev} signed={false} /> },
+              { key: 'mk', head: 'כלל השוק', text: (r) => fmtMetric(r.k, r.mk), cell: (r) => <MV m={m} k={r.k} pi={L} w="ltm" set={set} g={-1} v={r.mk} signed={false} /> },
+            ]} />
           <div className="fnote">לחיצה על שורה מחליפה את הגרף. תזרימים כוללים פנסיה וגמל בלבד.</div>
         </Panel>
       </div>
