@@ -1,5 +1,6 @@
 /** Identity colours: one fixed hue per company, the same on every chart, legend, table dot and chip (ws4 Appendix A §Identity).
- *  Insurers sit in a warm-to-neutral family, fund houses in a cool one. The dark theme raises lightness by 0.15.
+ *  Insurers sit in a warm-to-neutral family, fund houses in a cool one. On the dark theme insurers take their own validated steps (DARK);
+ *  fund houses raise lightness by 0.15.
  *  The company in focus keeps its colour (focus is an ember outline + weight, never a colour swap). */
 const L_C_H: Record<string, [number, number, number, number?]> = {
   // insurers
@@ -9,14 +10,24 @@ const L_C_H: Record<string, [number, number, number, number?]> = {
   meitav: [0.50, 0.15, 265], altshuler: [0.58, 0.15, 150], more: [0.55, 0.13, 215], analyst: [0.52, 0.12, 320], yelin: [0.60, 0.13, 110],
   infinity: [0.55, 0.10, 230], globalnet: [0.60, 0.06, 60], ibi: [0.48, 0.12, 285], more_gemel: [0.55, 0.13, 215, 0.6],
 };
+/** The insurers on the dark surface: their own steps, not the light ones raised, so the pairs that share a chart stay apart. Validated with the
+ *  dataviz palette validator (OKLab ΔE×100, Machado 2009 CVD, surface #1d1a17): lightness band, chroma floor and 3:1 contrast pass; in registry
+ *  order every adjacent pair is ≥ 8 under protan/deutan and ≥ 15 for normal vision; Phoenix–Harel 13.3 / 16.5 and Migdal–Ayalon 8.7 / 17.4
+ *  (were 5.2 / 5.2 and 8.2 / 9.8). Phoenix–Menora stays below 8 under deutan (orange against gold cannot separate inside the band): 16.5 normal,
+ *  and every chart carries a legend and hover labels. */
+const DARK: Record<string, [number, number, number]> = {
+  phoenix: [0.66, 0.18, 45], harel: [0.56, 0.22, 8], migdal: [0.60, 0.22, 286], clal: [0.56, 0.12, 236], menora: [0.56, 0.12, 95],
+  hachshara: [0.66, 0.13, 165], ayalon: [0.66, 0.20, 331],
+};
 /** ids used by other sources for the same company */
 const ALIAS: Record<string, string> = { direct: 'idi' };
 const dark = () => typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark';
 
 /** The colour as CSS (oklch), for inline styles: `style={{ background: idCss('harel') }}`. Unknown ids get the neutral token. */
 export function idCss(id: string, theme: 'phoenix' | 'dark' = dark() ? 'dark' : 'phoenix'): string {
-  const v = L_C_H[ALIAS[id] ?? id];
+  const k = ALIAS[id] ?? id, v = L_C_H[k];
   if (!v) return 'var(--neutral)';
+  if (theme === 'dark' && DARK[k]) { const [l, c, h] = DARK[k]; return `oklch(${l.toFixed(3)} ${c} ${h})`; }
   const [l, c, h, a] = v, L = Math.min(0.9, theme === 'dark' ? l + 0.15 : l);
   return `oklch(${L.toFixed(3)} ${c} ${h}${a != null ? ` / ${a}` : ''})`;
 }
