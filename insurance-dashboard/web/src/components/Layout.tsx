@@ -6,6 +6,9 @@ import { Icon } from './Icon';
 import { THEMES, useTheme } from '../lib/theme';
 import { Icon3D } from './Icon3D';
 import { SourceProvider } from './Source';
+import { ErrorBoundary } from './ErrorBoundary';
+import { Loading } from './ui';
+import { Suspense } from 'react';
 import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
 
@@ -58,7 +61,7 @@ export function Layout() {
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
-        <main className="page" key={section}><Outlet /></main>
+        <main className="page" key={section}><ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary></main>
       </div>
     </div>
     </SourceProvider>

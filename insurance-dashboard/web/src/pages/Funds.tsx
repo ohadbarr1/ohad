@@ -219,7 +219,7 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
                 <tr key={g.tr}>
                   <td><Link className="name" to={`/funds?prod=${encodeURIComponent(prod)}&track=${encodeURIComponent(g.tr)}`}>{g.tr}</Link> <span className="muted num">{g.n}</span></td>
                   {makers.names.map((n) => { const x = makers.cell(g, n); const q4 = x && g.n >= 4 ? (x.rank! <= Math.ceil(g.n / 4) ? 'pos' : x.rank! > g.n - Math.floor(g.n / 4) ? 'neg' : '') : '';
-                    return <td key={n} className={`${n === maker ? 'on' : ''} ${q4 ? 'q-' + q4 : ''}`}>{x ? <Sourced className="num" href={`#/funds/${x.f.k}`} title={`${x.f.name} · ${pct(x.f[per]!, 1, true)} · מקום ${x.rank} מתוך ${g.n}`} src={() => rankSrc(x.f, per, asof, x.rank!, g.n)}>{x.rank}</Sourced> : <span className="muted">·</span>}</td>; })}
+                    return <td key={n} className={`${n === maker ? 'on' : ''} ${q4 ? 'q-' + q4 : ''}`}>{x ? <Sourced className="num" href={`/funds/${x.f.k}`} title={`${x.f.name} · ${pct(x.f[per]!, 1, true)} · מקום ${x.rank} מתוך ${g.n}`} src={() => rankSrc(x.f, per, asof, x.rank!, g.n)}>{x.rank}</Sourced> : <span className="muted">·</span>}</td>; })}
                 </tr>
               ))}
               <tr className="tot"><td>רבע עליון</td>{makers.score.map((sc, i) => <td key={i} className={makers.names[i] === maker ? 'on' : ''}>{sc.n ? <Sourced src={() => listP(`רבע עליון · ${makers.names[i]}`, `${sc.top}/${sc.n}`, undefined, 'בכמה מהמסלולים שבהם ליצרן מסלול מדורג, והקטגוריה כוללת 4 מדורגים לפחות, מקומו ברבע העליון: מקום ≤ ⌈n÷4⌉',

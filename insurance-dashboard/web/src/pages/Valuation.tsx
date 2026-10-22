@@ -54,7 +54,7 @@ export function ValuationLayout() {
       <div className="pagehead">
         <div><h1>הערכת שווי · {entry.name_he}</h1>
           <div className="sub">{px != null && price && <span className="pxin">קלט להערכה: <Sourced src={() => priceProv(price)}>מחיר סגירה אחרון <span className="num">{nf(px, 2)}</span> ש"ח</Sourced> · <span className="num">{dmy(price.asof)}</span> · <span className="num">{price.ticker}</span></span>}{px == null && <>אין מחיר מוגדר לחברה זו: יחס המחיר להערכה אינו מחושב</>}{px != null && price && sh != null && <> · <Sourced src={() => k.marketCapNow(price)}>שווי שוק <span className="num">{nf((px * sh) / 1e9, 1)}</span> מיליארד ש"ח</Sourced> <span className="chip est">נגזר</span></>}</div></div>
-        <Field label="חברה"><select value={id} onChange={(e) => nav(`/valuation/${e.target.value}/${location.hash.endsWith('sotp') ? 'sotp' : 'dcf'}`)}>{ids.map((x) => <option key={x} value={x}>{reg.data!.find((c) => c.id === x)?.name_he}</option>)}</select></Field>
+        <Field label="חברה"><select value={id} onChange={(e) => nav(`/valuation/${e.target.value}/${location.pathname.endsWith('sotp') ? 'sotp' : 'dcf'}`)}>{ids.map((x) => <option key={x} value={x}>{reg.data!.find((c) => c.id === x)?.name_he}</option>)}</select></Field>
       </div>
       {price && <MarketStrip k={k} price={price} />}
       <nav className="subnav" aria-label="מודל"><NavLink to="dcf">DCF להון</NavLink><NavLink to="sotp">סכום החלקים (SOTP)</NavLink></nav>

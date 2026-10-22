@@ -1,5 +1,5 @@
 // Route check: every route rendered in headless Chrome at phone and desktop width; fails on what a reader must never see.
-// usage: node --experimental-websocket scripts/route-check.mjs <base url, e.g. http://localhost:4173> [--json out.json]
+// usage: node --experimental-websocket scripts/route-check.mjs <base url, e.g. http://localhost:4173> [--json out.json] [--hash]
 // Fails (exit 1) on: the page scrolling sideways at 390 px, an ISO date (2026-08-27) in the text, a route without its own title,
 // a valid route landing on the not-found page. Reports, without failing: Latin runs of 3+ words, first-figure position, transfer size.
 import { spawn } from 'node:child_process';
@@ -8,7 +8,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2);
-const BASE = (args.find((a) => !a.startsWith('--')) ?? 'http://localhost:4173').replace(/\/$/, '') + '/#';
+// clean URLs; --hash for a build that still routes through the fragment
+const BASE = (args.find((a) => !a.startsWith('--')) ?? 'http://localhost:4173').replace(/\/$/, '') + (args.includes('--hash') ? '/#' : '');
 const JSON_OUT = args.includes('--json') ? args[args.indexOf('--json') + 1] : null;
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const ROUTES = [

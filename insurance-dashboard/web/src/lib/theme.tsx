@@ -17,6 +17,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try { localStorage.setItem(KEY, theme); } catch { /* ignore */ }
+    const meta = document.querySelector('meta[name="theme-color"]');
+    // Phoenix has a navy top bar; the dark look shows its page ground (as rgb: browsers do not all read oklch here)
+    requestAnimationFrame(() => meta?.setAttribute('content', theme === 'phoenix' ? '#111C3F' : cssColor('--bg')));
   }, [theme]);
   return <Ctx.Provider value={{ theme, next: after(theme), toggle: () => setTheme(after) }}>{children}</Ctx.Provider>;
 }

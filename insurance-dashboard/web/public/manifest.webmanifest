@@ -1,0 +1,17 @@
+{
+  "name": "fox · ביטוח, פנסיה וגמל",
+  "short_name": "fox",
+  "description": "דוחות כספיים, IFRS 17 ונתוני הרשות של מבטחות ומנהלי חיסכון ארוך טווח בישראל, כל מספר עם עמוד המקור",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F4F5F9",
+  "theme_color": "#111C3F",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

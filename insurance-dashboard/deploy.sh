@@ -24,7 +24,7 @@ have=$(find "$OUT/data" "$OUT"/*.svg -type f | wc -l | tr -d ' ')
 [[ -s "$OUT/index.html" && -n "$(ls "$OUT/assets"/index-*.js 2>/dev/null)" && "$have" -ge "$want" ]] || { echo "incomplete build ($have of $want data files): not deploying"; exit 1; }
 
 # the assembled site, served locally, checked route by route before anything is uploaded
-(cd "$OUT" && exec python3 -m http.server 4173 --bind 127.0.0.1 >/dev/null 2>&1) & SRV=$!
+node scripts/serve.mjs "$OUT" 4173 >/dev/null 2>&1 & SRV=$!
 trap 'kill $SRV 2>/dev/null || true' EXIT
 sleep 1
 node --experimental-websocket scripts/route-check.mjs http://127.0.0.1:4173 2>/dev/null || { echo "route check failed: not deploying"; exit 1; }

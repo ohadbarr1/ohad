@@ -7,7 +7,7 @@ const cache = new Map<string, Promise<unknown>>();
 export function load<T>(path: string): Promise<T> {
   if (!cache.has(path)) {
     cache.set(path, fetch(`${BASE}data/${path}`).then((r) => {
-      if (!r.ok) throw new Error(`${path}: ${r.status}`);
+      if (!r.ok || (r.headers.get('content-type') ?? '').includes('text/html')) throw new Error(`${path}: ${r.ok ? 404 : r.status}`);
       return r.json();
     }));
   }
