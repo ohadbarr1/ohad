@@ -14,7 +14,8 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 createServer(async (req, res) => {
   const path = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(/^(\.\.[/\\])+/, '');
   let file = join(dir, path);
-  try { if ((await stat(file)).isDirectory()) file = join(file, 'index.html'); } catch { file = join(dir, 'index.html'); }
+  // a directory without its own index.html (e.g. /data, a route and the data folder) falls back to the app, as on Firebase Hosting
+  try { if ((await stat(file)).isDirectory()) { file = join(file, 'index.html'); await stat(file).catch(() => { file = join(dir, 'index.html'); }); } } catch { file = join(dir, 'index.html'); }
   try { const body = await readFile(file); res.writeHead(200, { ...HEADERS, 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' }); res.end(body); }
   catch { res.writeHead(404); res.end(); }
 }).listen(+port, '127.0.0.1', () => console.log(`serving ${dir} on http://127.0.0.1:${port}`));

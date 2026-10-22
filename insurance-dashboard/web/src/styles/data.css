@@ -1,0 +1,31 @@
+/* /data (lane 2H): coverage matrix, gate results, freshness, open files, citation generator */
+.dq .kpis .kpi .s .chip { margin-inline-start: 4px; }
+.cov td:not(:first-child), .cov th:not(:first-child) { text-align: center; }
+table.dt.cov th:not(:first-child) .dt-sort { text-align: center; }
+.cov td { padding-block: 6px; }
+.cv { display: inline-flex; align-items: center; justify-content: center; min-width: 58px; height: 24px; padding: 0 6px; border-radius: var(--r-1); font-size: var(--t-1); font-weight: 600; border: 1px solid transparent; }
+.cv.fresh { color: var(--up); background: color-mix(in oklch, var(--up) 7%, transparent); }
+.cv.stale { color: var(--warn); background: color-mix(in oklch, var(--warn) 12%, transparent); border-color: color-mix(in oklch, var(--warn) 34%, transparent); }
+.cv.missing { color: var(--down); background: color-mix(in oklch, var(--down) 8%, transparent); border: 1px dashed color-mix(in oklch, var(--down) 45%, transparent); }
+.cv.na { color: var(--faint); background: none; font-weight: 400; }
+.cov-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: var(--t-1); color: var(--muted); }
+.cov-legend .cv { min-width: 0; height: 20px; }
+.cov .co small { display: block; color: var(--faint); font-size: var(--t-1); font-weight: 400; }
+.dq .note { font-size: var(--t-1); color: var(--muted); white-space: normal; max-width: 52ch; text-align: start; display: inline-block; }
+.dq td.notecell { text-align: start; white-space: normal; min-width: 220px; }
+.dq .mono { font-family: var(--font-mono); font-size: var(--t-1); }
+.dq .chips { display: inline-flex; flex-wrap: wrap; gap: 4px; justify-content: flex-start; }
+.licence { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel2); }
+.licence b { font-size: var(--t-3); }
+.licence a { font-size: var(--t-2); }
+.cite { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 14px; align-items: end; }
+.cite .field { min-width: 0; }
+.cite .field input, .cite .field select { width: 100%; min-width: 0; }
+.cite-out { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.cite-out output { display: block; padding: 12px 14px; border-radius: var(--r-2); border: 1px solid var(--accent-line); background: var(--accent-soft); font-size: var(--t-3); line-height: 1.6; overflow-wrap: anywhere; user-select: all; }
+.cite-out .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+@media (max-width: 760px) { .cv { min-width: 50px; } .dq td.notecell { min-width: 180px; } }
+.dq-stack { display: flex; flex-direction: column; gap: inherit; }
+.dq { gap: 22px; }
+.dq td:first-child { min-width: 190px; }
+.dq .chip.bad { color: var(--down); border-color: color-mix(in oklch, var(--down) 35%, transparent); background: color-mix(in oklch, var(--down) 8%, transparent); }
