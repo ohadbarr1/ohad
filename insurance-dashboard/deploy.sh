@@ -22,7 +22,7 @@ rm -rf "$OUT" "$OUT-app"; mkdir -p "$OUT"
 NOPUBLIC=1 npx vite build --outDir "$OUT-app" --emptyOutDir | tail -1
 cp -R "$OUT-app/." "$OUT/"
 want=$(find public -type f ! -name ".*" | wc -l | tr -d ' ')
-have=$(find "$OUT/data" "$OUT"/*.svg -type f | wc -l | tr -d ' ')
+have=$(find "$OUT" -type f ! -path "$OUT/assets/*" ! -name index.html ! -name ".*" | wc -l | tr -d ' ')  # everything copied from public/: data, icons, manifest, service worker
 [[ -s "$OUT/index.html" && -n "$(ls "$OUT/assets"/index-*.js 2>/dev/null)" && "$have" -ge "$want" ]] || { echo "incomplete build ($have of $want data files): not deploying"; exit 1; }
 
 # the assembled site, served locally, checked route by route before anything is uploaded

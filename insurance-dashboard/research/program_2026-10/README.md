@@ -1,5 +1,7 @@
 # fox · Enterprise Upgrade Program (22 Oct 2026)
 
+> **Status (22 Oct 2026, evening):** Phase 0 and Phase 1 built and verified locally (`deploy.sh --check-only`: gate 14/14 with 3 known warnings, 64/64 route checks at 390 and 1440). Not deployed, not pushed. Working copy: `~/code/ohad`. Deferred from Phase 1: saved peer sets (to 2B), roster-change flag on YoY (W5-14), per-route OG previews (Phase 2). Corrections to §3 RC1 from the data work: the Jan '26 ביטוח-נט fee jump is a January step in 1990-2003 policies, not a regulator definition change; the 13.1% additivity figure was mostly balances and counts tested as flows (flow lines: 4.4%, all across reports).
+
 Synthesis of a seven-workstream consulting review of https://fox-research-il.web.app/ (strategy, desktop UX, mobile UX, visual design, data integrity, engineering, analyst workflows). Workstream reports: `ws1-strategy.md` … `ws7-features.md` in this folder (182 findings, 39 radical moves, 84 quick wins). Brief: `00_brief.md`. Prior QA audits: `../top_tier_audit_3.md` (12 Oct 2026). Tags: [V] verified live/in source by a workstream, [T] second-hand, [J] judgment. All effort and token figures below are **estimates**.
 
 ## 1. Bottom line
