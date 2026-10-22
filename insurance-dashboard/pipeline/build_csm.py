@@ -10,10 +10,13 @@ Nothing is estimated here: a shock whose direction the report does not state kee
 """
 import json
 import re
+import sys
 from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import csm_resolve  # noqa: E402
 DATA = ROOT / "web" / "public" / "data"
 OUT = DATA / "csm"
 
@@ -162,7 +165,17 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     stamp = {"built": date.today().isoformat(), "source": "דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד"}
     dump = lambda name, obj: (OUT / name).write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    dump("facts.json", {**stamp, "files": index["files"], "reports": reports})
+    # "the CSM" of every company and balance date by the one rule (csm_resolve.py = web/src/lib/csmResolve.ts), so the ledger's closing
+    # balances, the peer table and the valuation pages can be checked against one list: [value, basis · scope, report, flags]
+    resolved = {}
+    for c in sorted({x["c"] for F in reports.values() for x in F}):
+        rs = [(p, [x for x in F if x["c"] == c]) for p, F in reports.items()]
+        dates = sorted({x["d"][:10] for _, F in rs for x in F if x["m"] in ("csm_closing", "csm_opening") and x["d"][5:10] in ("03-31", "06-30", "09-30", "12-31")})
+        for d in dates:
+            r = csm_resolve.resolve(rs, csm_resolve.own_period(d), d)
+            if r:
+                resolved.setdefault(c, {})[d] = [r["v"], r["label"], r["rp"], r["flags"]]
+    dump("facts.json", {**stamp, "files": index["files"], "reports": reports, "resolved": resolved})
     dump("sens.json", {**stamp, "rows": sens})
     dump("capital.json", {**stamp, "source": "דוחות כספיים של החברות, MAYA (סדרה רבעונית רציפה, build_series.py)", "companies": capital()})
     dump("rates.json", {**stamp, "rows": sorted(uniq, key=lambda r: (r["c"], r["d"], r["orig"], r["t"]))})

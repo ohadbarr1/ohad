@@ -1,5 +1,5 @@
 {
- "built": "2026-10-23T00:16:58+03:00",
+ "built": "2026-10-23T00:18:28+03:00",
  "checks": [
   {
    "id": "workbook",
@@ -109,9 +109,9 @@
    "id": "cross_layer",
    "ok": true,
    "level": "fail",
-   "n": 17,
+   "n": 18,
    "fail": 0,
-   "note": "Q2'26 attributable profit and equity, XBRL = statements"
+   "note": "Q2'26 attributable profit and equity, XBRL = statements; not comparable: yelin:profit"
   },
   {
    "id": "lens",

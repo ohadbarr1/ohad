@@ -11,17 +11,18 @@ const INDUSTRY_TAB: Record<string, string> = {
 const VALUATION_TAB: Record<string, string> = { '': 'P/B מוצדק', ri: 'הכנסה שיורית', csm: 'הון ו-CSM', sotp: 'סכום החלקים', dcf: 'DCF' };
 const MARKET_TAB: Record<string, string> = { overview: 'סקירת שוק', ranking: 'דירוג חברות', funds: 'קופות' };
 
-export function titleFor(path: string, name: (id: string) => string | undefined): string | null {
+/** `name` returns undefined while the company list loads and null for an id that is not on it (the page does not exist). */
+export function titleFor(path: string, name: (id: string) => string | null | undefined): string | null {
   const p = path.replace(/\/+$/, '').split('/').slice(1).map(decodeURIComponent);
   const t = (...parts: (string | undefined)[]) => [...parts.filter(Boolean), 'fox'].join(' · ');
   switch (p[0] ?? '') {
     case '': return 'fox · ביטוח, פנסיה וגמל';
     case 'companies': return t('חברות');
     case 'company': {
-      if (!((p[2] ?? '') in COMPANY_TAB)) return null;
+      if (!((p[2] ?? '') in COMPANY_TAB) || name(p[1]) === null) return null;
       return t(name(p[1]) ?? p[1], COMPANY_TAB[p[2] ?? '']);
     }
-    case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'השוואה ענפית') : null;
+    case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'ענף') : null;
     case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'קופות') : p[1] ? t('מסלול', 'קופות') : t('מסלולים', 'קופות');
     case 'managers': return t('מנהלים', 'קופות');
     case 'calendar': return t('לוח דיווחים');
@@ -32,7 +33,7 @@ export function titleFor(path: string, name: (id: string) => string | undefined)
     case 'search': return t('חיפוש');
     case 'doc': return p[1] ? t('קורא מסמכים') : null;
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;
-    case 'valuation': return p[1] ? (((p[2] ?? '') in VALUATION_TAB) ? t(VALUATION_TAB[p[2] ?? ''], name(p[1]) ?? p[1], 'הערכת שווי') : null) : t('הערכת שווי');
+    case 'valuation': return p[1] ? (((p[2] ?? '') in VALUATION_TAB) && name(p[1]) !== null ? t(VALUATION_TAB[p[2] ?? ''], name(p[1]) ?? p[1], 'הערכת שווי') : null) : t('הערכת שווי');
     default: return null;
   }
 }

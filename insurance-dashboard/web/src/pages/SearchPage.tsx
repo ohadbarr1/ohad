@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Empty, ErrorBox, Seg } from '../components/ui';
 import { Sheet } from '../components/Sheet';
 import { sheetName } from '../lib/company';
-import { findTerms } from '../lib/hebrew';
+import { expandSynonyms, findTerms } from '../lib/hebrew';
 import { DOC_TYPE_HE, loadCorpus, pageText, readerHref, rememberQuery, searchText, snippet, yearOf, type Corpus, type DocType, type FtHit, type FtQuery } from '../lib/search';
 import { buildPool, docLabel, parse, periodText, rank, type Pool } from '../lib/searchOmni';
 import { pubLabel } from '../lib/format';
@@ -88,7 +88,10 @@ export function TextResults({ q, company: fixedCo, compact = false }: { q: strin
   useEffect(() => { loadCorpus().then(setCorpus, () => setErr('אינדקס החיפוש לא נטען')); }, []);
   const names = useMemo(() => (reg.data ? buildPool(reg.data, [], [], []).names : null), [reg.data]);
   const parsed = useMemo(() => (names ? parse(q, names) : null), [q, names]);
-  const text = parsed ? (parsed.company || parsed.period || parsed.type ? parsed.rest.join(' ') : q) : '';
+  // the words left after the company, period and kind of document, with the filers' Hebrew for a loan word (סולבנסי → כושר פירעון).
+  // "solvency" alone also searches the words: the solvency reports stopped as separate filings, the ratio is in every report since.
+  const rest = parsed ? (parsed.company || parsed.period || parsed.type ? parsed.rest.join(' ') : q) : '';
+  const text = expandSynonyms(rest.trim() ? rest : parsed?.type === 'solvency' ? 'כושר פירעון' : '');
   useEffect(() => {
     if (!parsed) return;
     setRes(null); setErr('');
@@ -99,7 +102,8 @@ export function TextResults({ q, company: fixedCo, compact = false }: { q: strin
   }, [text, parsed]);
 
   const co = fixedCo ?? sp.get('co') ?? parsed?.company?.id ?? '';
-  const type = (sp.get('type') ?? parsed?.type ?? '') as DocType | '';
+  const type = (sp.get('type') ?? (parsed?.type === 'solvency' && !parsed.rest.length ? '' : parsed?.type) ?? '') as DocType | '';
+  const docType = (sp.get('type') ?? parsed?.type ?? '') as DocType | '';
   const year = sp.get('y') ?? '';
   const period = parsed?.period ?? '';
   const lang = sp.get('lang') ?? '';
@@ -131,9 +135,26 @@ export function TextResults({ q, company: fixedCo, compact = false }: { q: strin
   const regIdx = (id: string) => Math.max(0, reg.data?.findIndex((c) => c.id === id) ?? 0);
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
 
+  // documents by name: a company, a period or a kind of document in the query lists the filings themselves, newest first
+  const docs = useMemo(() => {
+    if (!corpus || !parsed || !(co || parsed.period || parsed.type)) return [];
+    return corpus.docs.filter((d) => (!co || d.company === co) && (!docType || d.type === docType) && (!period || d.period === period) && (!year || String(yearOf(d.period)) === year) && (!lang || (lang === 'en') === d.en))
+      .sort((a, b) => b.date.localeCompare(a.date) || Number(a.en) - Number(b.en));
+  }, [corpus, parsed, co, docType, period, year, lang]);
+  const [nd, setNd] = useState(8);
+  const docList = docs.length > 0 && (
+    <section className="sp-docs" aria-label="מסמכים">
+      <h3>מסמכים{co && !fixedCo ? ` · ${name(co)}` : ''}{docType ? ` · ${DOC_TYPE_HE[docType]}` : ''}{period ? ` · ${periodText(period)}` : ''}<span className="num">{docs.length}</span></h3>
+      <ul>{docs.slice(0, nd).map((d) => (
+        <li key={d.id}><span className="dot" style={{ background: `var(--s${(regIdx(d.company) % 11) + 1})` }} aria-hidden="true" /><Link to={`/doc/${d.id}`}>{docLabel(d, name)}</Link>
+          <span className="m">פורסם <span className="num">{pubLabel(d.date)}</span> · <span className="num">{d.pages}</span> עמ׳{d.empty ? ' · סרוק, ללא טקסט' : ''}</span></li>))}</ul>
+      {docs.length > nd && <button type="button" className="btn" onClick={() => setNd(nd + 16)}>עוד מסמכים ({docs.length - nd})</button>}
+    </section>
+  );
+
   if (err) return <ErrorBox what="החיפוש" error={err} />;
-  if (!text.trim()) return parsed?.company && (parsed.type || parsed.period) ? null : <Empty title="הקלידו מילה או ביטוי" />;
-  if (!res || !corpus) return <div className="sp-note">מחפש ב-<span className="num">{corpus ? corpus.pages.toLocaleString() : '…'}</span> עמודים…</div>;
+  if (!text.trim()) return docList || <Empty title="הקלידו מילה או ביטוי" />;
+  if (!res || !corpus) return <>{docList}<div className="sp-note">מחפש ב-<span className="num">{corpus ? corpus.pages.toLocaleString() : '…'}</span> עמודים…</div></>;
 
   const facets = (
     <div className="sp-facets">
@@ -146,6 +167,7 @@ export function TextResults({ q, company: fixedCo, compact = false }: { q: strin
   const active = [co && !fixedCo && name(co), type && DOC_TYPE_HE[type], year, period && periodText(period), lang && (lang === 'en' ? 'English' : 'עברית')].filter(Boolean);
   return (
     <>
+      {docList}
       <div className="sp-row">
       <div className="sp-stats" role="status">
         <span className="num">{hits.length.toLocaleString()}</span> עמודים · <span className="num">{groups.length.toLocaleString()}</span> מסמכים

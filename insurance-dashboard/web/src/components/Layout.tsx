@@ -16,10 +16,11 @@ import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 
-// [route, icon, label, label on the phone's bottom bar]; valuation is reached from a company's tabs on a phone, so the bar keeps four places
+// [route, icon, label, label on the phone's bottom bar: the same word, shortened]. Four places on the phone too: search lives in the top bar
+// on every screen, so the fourth place goes to valuation, which no other control on a phone reaches.
 const NAV: [string, string, string, string | null][] = [
-  ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'השוואה ענפית', 'ענף'],
-  ['/valuation', 'value', 'שווי', null], ['/funds', 'market', 'קופות ושוק', 'קופות'],
+  ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'ענף', 'ענף'],
+  ['/valuation', 'value', 'שווי', 'שווי'], ['/funds', 'market', 'קופות ושוק', 'קופות'],
 ];
 
 export function Layout() {
@@ -32,7 +33,8 @@ export function Layout() {
   const { help, setHelp } = useKeyboard(toggle);
   useEffect(() => {
     const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
-    document.title = titleFor(loc.pathname, (id) => names.get(id)) ?? 'העמוד לא נמצא · fox';
+    // while the list loads a name is unknown (undefined); once it has loaded, an id that is not on it is a page that does not exist (null)
+    document.title = titleFor(loc.pathname, (id) => (reg.data ? names.get(id) ?? null : undefined)) ?? 'העמוד לא נמצא · fox';
   }, [loc.pathname, reg.data]);
   // a row of tabs wider than the screen opens with the current tab in view
   useEffect(() => { const id = requestAnimationFrame(() => document.querySelectorAll('.subnav a.active').forEach((a) => a.scrollIntoView({ inline: 'center', block: 'nearest' }))); return () => cancelAnimationFrame(id); }, [loc.pathname]);

@@ -4,8 +4,8 @@ import '../styles/prov-kpi.css';
 export function IndustryLayout() {
   return (
     <>
-      <div className="pagehead"><div><h1>השוואה ענפית</h1></div></div>
-      <nav className="subnav" aria-label="השוואה ענפית">
+      <div className="pagehead"><div><h1>ענף</h1></div></div>
+      <nav className="subnav" aria-label="ענף">
         <NavLink to="peers">טבלת עמיתים</NavLink>
         <NavLink to="csm">IFRS 17 · CSM · הון</NavLink>
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>

@@ -3,7 +3,8 @@ import type { PriceData, IfrsFact, IfrsData } from './types';
 import type { Prov } from './prov';
 import { nf, pubLabel } from './format';
 import { periodTag, type CompanyKpi } from './kpi';
-import { best, endOf, lineProv, tag, SCOPE_HE, BASIS, type Bridge, type Line } from './csm';
+import { endOf, tag, type Bridge, type Line, type Reports } from './csm';
+import { csmProv, resolveCsmAt, type CsmClose } from './csmResolve';
 import { load } from './useData';
 
 /* The valuation engine: market inputs (the one place a price enters the site), the shared assumptions, and the models that read
@@ -121,27 +122,35 @@ export function residualIncome(a: RiIn): { rows: RiRow[]; sumPv: number; tv: num
   return { rows, sumPv: sum, tv, pvTv, value: a.b0 + sum + pvTv };
 }
 
-/* ---------- CSM of the latest extracted report ---------- */
-export interface CsmOf { p: string; end: string; close: Line; b: Bridge; prov: (title: string) => Prov; inc: boolean; label: string }
-/** Closing CSM of each company in its latest extracted report (net of reinsurance where printed). */
+/* ---------- CSM: the one rule (csmResolve), at the latest date it resolves ---------- */
+export interface CsmOf { p: string; end: string; close: Line; b: Bridge; prov: (title: string) => Prov; inc: boolean; label: string; cs: CsmClose }
+interface FactsFile { files: IfrsData['files']; reports: Record<string, IfrsFact[]> }
+const QKEY = (p: string) => `${p.slice(0, 4)}${p.endsWith('FY') ? 'Q4' : p.slice(4)}`;
+/** Closing CSM of each company at its latest report date: net of reinsurance, group level, never savings-policy future profit; the fallback
+    (life plus health, gross) is labelled. The same figure the peer table, the CSM ledger and the company page show for that date. */
 export function useCsm(ids: string[], d: IfrsData | null): Map<string, CsmOf | null> {
   const [m, setM] = useState<Map<string, CsmOf | null>>(new Map());
   const key = ids.join();
   useEffect(() => {
-    if (!d) return;
+    if (!d || !ids.length) return;
     let live = true;
-    ids.forEach((id) => {
-      const ps = d.files.filter((f) => f.company === id).map((f) => f.period).sort((a, b) => `${a.slice(0, 4)}${a.endsWith('FY') ? 'Q4' : a.slice(4)}`.localeCompare(`${b.slice(0, 4)}${b.endsWith('FY') ? 'Q4' : b.slice(4)}`));
-      const p = ps[ps.length - 1];
-      if (!p) { setM((c) => new Map(c).set(id, null)); return; }
-      load<IfrsFact[]>(`ifrs/${id}/${p}.json`).then((fs) => {
-        if (!live) return;
-        const F = tag(fs.filter((f) => f.c === id), p), end = endOf(p);
-        const b = best([{ p, F }], p, end, p.endsWith('FY') ? 'fy' : p.endsWith('Q1') ? 'q' : 'ytd', { pref: 'net' });
-        const close = b?.close;
-        setM((c) => new Map(c).set(id, b && close ? { p, end, close, b, inc: close.fs.some((f) => f.inc === 1), label: `${BASIS[b.b] ?? b.b} · ${SCOPE_HE[b.scope]}`, prov: (title: string) => lineProv(close, d, title) } : null));
-      }, () => live && setM((c) => new Map(c).set(id, null)));
-    });
+    load<FactsFile>('csm/facts.json').then((f) => {
+      if (!live) return;
+      const periods = Object.keys(f.reports).sort((a, b) => QKEY(a).localeCompare(QKEY(b)));
+      const out = new Map<string, CsmOf | null>();
+      ids.forEach((id) => {
+        const rs: Reports = periods.map((p) => ({ p, F: tag(f.reports[p].filter((x) => x.c === id), p) })).filter((r) => r.F.length);
+        const own = d.files.filter((x) => x.company === id).map((x) => x.period).sort((a, b) => QKEY(a).localeCompare(QKEY(b)));
+        // the latest report date that resolves; a report that prints no CSM for its own date falls back to the one before
+        const p = [...own].reverse().find((q) => resolveCsmAt(rs, q));
+        const cs = p ? resolveCsmAt(rs, p) : null;
+        if (!p || !cs) { out.set(id, null); return; }
+        const end = endOf(p), w = p.endsWith('FY') ? 'fy' : p.endsWith('Q1') ? 'q' : 'ytd';
+        const b: Bridge = { end, w, scope: cs.scope, b: cs.b, score: 10, open: null, openPrev: false, close: cs.line, steps: [], gap: null };
+        out.set(id, { p, end, close: { ...cs.line, v: cs.v }, b, cs, inc: false, label: cs.label, prov: (title: string) => csmProv(cs, d, title) });
+      });
+      setM(out);
+    }, () => live && setM(new Map(ids.map((id) => [id, null]))));
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, d]);

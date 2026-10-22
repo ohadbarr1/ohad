@@ -11,7 +11,7 @@ import { usePhone } from '../../lib/useMedia';
 import { nf, sn } from '../../lib/format';
 import { BASIS, SCOPE_HE, STEPS, gapProv, hrefOf, lineProv, medianProv, monthsOf, endOf, periodName, ratioProv, rankProv } from '../../lib/csm';
 import type { Bridge, Line, Win } from '../../lib/csm';
-import { INSURERS, agg2Prov, aggProv, amt, at, closeProv, industry, likeForLike, type Agg, type Agg2, type At, type Ledger } from '../../lib/csmData';
+import { INSURERS, agg2Prov, aggProv, amt, at, closeSrc, industry, likeForLike, type Agg, type Agg2, type At, type Industry, type Ledger } from '../../lib/csmData';
 import { useParam } from './params';
 
 type MK = (typeof MEASURES)[number]['k'];
@@ -21,6 +21,12 @@ const yearBefore = (p: string) => `${Number(p.slice(0, 4)) - 1}${p.slice(4)}`;
 /** rows a single filer adds under its own name, folded into one */
 const extra = (b: Bridge): Line | null => { const xs = b.steps.filter((s) => !KEYS.includes(s.k)); return xs.length ? { v: xs.reduce((t, s) => t + s.line.v, 0), fs: xs.flatMap((s) => s.line.fs), n: xs.length > 1 ? xs.length : xs[0].line.n } : null; };
 export const Dot = ({ id }: { id: string }) => <i className="iddot" style={{ background: idCss(id) }} aria-hidden="true" />;
+
+/** n/N beside an industry figure that adds up fewer insurers than the column's set: each cell names its own members in its source sheet. */
+function SetMark({ a, of }: { a: Agg | Agg2 | null; of: number }) {
+  const n = !a ? 0 : 'parts' in a ? a.parts.length : a.num.parts.length;
+  return n && n < of ? <sup className="mk" title={`סכום ${n} מתוך ${of} החברות: השאר אינן מדפיסות את שני הרכיבים`}>{n}/{of}</sup> : null;
+}
 
 /** The roll-forward of the CSM, industry and insurer by insurer, for one report and window; the ratios built on it. */
 export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => string }) {
@@ -41,7 +47,12 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
   const rows = useMemo(() => ids.map((id) => at(byCo.get(id)!, id, P, W, pref)), [byCo, ids, P, W, pref]);
   const before = useMemo(() => new Map(ids.map((id) => [id, at(byCo.get(id)!, id, yearBefore(P), W, pref)])), [byCo, ids, P, W, pref]);
   const ind = useMemo(() => industry(rows, pref, d, name, when), [rows, pref, d, name, when]);
+  const indAll = ind;
+  // the headline row adds up one set of insurers: those that print every component of every card (balance, new business, release, equity)
+  const kpiIds = useMemo(() => rows.filter((r) => ind.members.includes(r.id) && r.b?.close && r.eq && r.b.steps.some((s) => s.k === 'nb') && r.b.steps.some((s) => s.k === 'rel')).map((r) => r.id), [rows, ind]);
+  const indK = useMemo(() => industry(rows, pref, d, name, when, false, kpiIds), [rows, pref, d, name, when, kpiIds]);
   const indPrev = useMemo(() => industry([...before.values()], pref, d, name, periodName(yearBefore(P))), [before, pref, d, name, P]);
+  const indKPrev = useMemo(() => industry([...before.values()], pref, d, name, periodName(yearBefore(P)), false, kpiIds), [before, pref, d, name, P, kpiIds]);
   // the roll-forward column and the waterfall: only insurers whose own table rolls forward, so the industry column adds up like a company's
   const full = useMemo(() => industry(rows, pref, d, name, when, true), [rows, pref, d, name, when]);
 
@@ -57,7 +68,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
     const part = of != null && a.parts.length < of;
     return <><Sourced className={`num der ${a.v < 0 ? 'neg' : ''}`} src={() => aggProv(a, `${title} · ענף · ${when}`, name)}>{(signed && a.v > 0 ? '+' : '') + showAmt(a.v)}</Sourced>{part && <sup className="mk" title={`סכום ${a.parts.length} מתוך ${of} החברות: השורה לא מודפסת בשאר`}>{a.parts.length}/{of}</sup>}</>;
   };
-  const indRatio = (k: MK): { a: Agg2 | Agg | null; prov: () => Prov; v: number | null } => {
+  const indRatio = (k: MK, ind: Industry = indAll): { a: Agg2 | Agg | null; prov: () => Prov; v: number | null } => {
     const nm = MEASURES.find((x) => x.k === k)!.l, t = `${nm} · ענף · ${when}`;
     const r2 = (a: Agg2 | null, f: string, n: string, dn: string, kind: 'pct' | 'x') => ({ a, v: a?.v ?? null, prov: () => agg2Prov(a!, t, f, name, showMeasure(kind, a!.v), n, dn) });
     switch (k) {
@@ -79,7 +90,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
     const x = r.r[k], title = `${mName(k)} · ${name(r.id)} · ${periodName(per)}`;
     if (x == null) return { k: 'none', title, why: 'הדוח לא מדפיס את השורות שמהן מחושב המדד' };
     const txt = showMeasure(kind, x), l = kind === 'amt' ? lineOf(r.b, k) : null;
-    if (l) return k === 'close' ? closeProv(l, r.re, d, title, txt) : lineProv({ ...l, v: Math.abs(l.v) }, d, title, txt);
+    if (l) return k === 'close' ? closeSrc(r, l, d, title, txt) : lineProv({ ...l, v: Math.abs(l.v) }, d, title, txt);
     return kind === 'amt' ? { k: 'none', title, why: 'השורה לא נמצאה בטבלה' } : ratioProv(k, r.b, r.eq, d, title, txt);
   };
   const shown = (r: At, k: MK, kind: string): number | null => {
@@ -136,7 +147,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
     const x = extra(b); if (x) { pts.push({ l: 'אחר', v: x.v }); src.push(() => lineProv(x, d, `שורות נוספות · ${name(F)} · ${when}`)); }
     const rel = b.steps.find((s) => s.k === 'rel'); if (rel) { pts.push({ l: 'שחרור', v: rel.line.v }); src.push(() => lineProv(rel.line, d, `שחרור · ${name(F)} · ${when}`)); }
     if (b.gap != null && Math.abs(b.gap) > 2) { pts.push({ l: 'לא מוסבר', v: b.gap }); src.push(() => gapProv(b, d, `הפרש לא מוסבר · ${name(F)} · ${when}`, amt(b.gap!))); }
-    pts.push({ l: 'סגירה', v: b.close.v, total: true }); src.push(() => closeProv(b.close!, r!.re, d, `CSM סגירה · ${name(F)} · ${when}`));
+    pts.push({ l: 'סגירה', v: b.close.v, total: true }); src.push(() => closeSrc(r!, b.close!, d, `CSM סגירה · ${name(F)} · ${when}`));
     return { pts, src };
   }, [F, full, rows, d, name, when]);
   const fallOf = (b: Bridge): FallPt[] => {
@@ -176,8 +187,8 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
     </section>
   );
   const kpi = (l: string, v: ReactNode, s?: ReactNode) => <div className="kpi"><div className="l">{l}</div><div className="v">{v}</div>{s && <div className="s">{s}</div>}</div>;
-  const ik = (k: MK, kind: 'amt' | 'pct' | 'x') => { const x = indRatio(k); return x.v == null ? <span className="muted">–</span> : <Sourced className="num der" src={x.prov}>{showMeasure(kind, x.v)}</Sourced>; };
-  const lfl = likeForLike(ind.close, indPrev.close), chgInd = lfl?.v ?? null;
+  const ik = (k: MK, kind: 'amt' | 'pct' | 'x') => { const x = indRatio(k, indK); return x.v == null ? <span className="muted">–</span> : <Sourced className="num der" src={x.prov}>{showMeasure(kind, x.v)}</Sourced>; };
+  const lfl = likeForLike(indK.close, indKPrev.close), chgInd = lfl?.v ?? null;
   const membersTxt = `${ind.members.length} מתוך ${ids.length} חברות · ${BASIS[pref]}`;
   const outTxt = ind.out.length ? `מחוץ לסכום: ${ind.out.map((o) => `${name(o.id)} (${o.why})`).join(' · ')}` : '';
 
@@ -197,7 +208,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
         {stepKeys.includes('rel') && <tr><td className="lbl">שחרור לרווח</td>{withInd && <td className="indcol">{indCell(full.steps.get('rel') ?? null, 'שחרור לרווח', true, full.members.length)}</td>}{cols.map((r) => { const l = lineOf(r.b, 'rel'); return <td key={r.id}>{l ? <><Fig line={l} d={d} title={`שחרור לרווח · ${name(r.id)} · ${when}`} text={showAmt(l.v)} tone="neg" /><Marks ms={lineMarks(l)} used={used2} /></> : <span className="muted">–</span>}</td>; })}</tr>}
         <tr className="csm-gap"><td className="lbl">הפרש לא מוסבר<span className="dim">נגזר: סגירה פחות פתיחה פחות השורות שמעל</span></td>{withInd && <td className="indcol">{indCell(full.gap, 'הפרש לא מוסבר', true)}</td>}
           {cols.map((r) => <td key={r.id}>{r.b!.gap == null ? <span className="muted">–</span> : <Sourced className={`num der ${Math.abs(r.b!.gap) > 2 ? 'neg' : ''}`} src={() => gapProv(r.b!, d, `הפרש לא מוסבר · ${name(r.id)} · ${when}`, showAmt(Math.round(r.b!.gap! * 10) / 10 || 0))}>{(r.b!.gap > 0 ? '+' : '') + showAmt(Math.round(r.b!.gap * 10) / 10 || 0)}</Sourced>}</td>)}</tr>
-        <tr className="lead"><td className="lbl">סגירה</td>{withInd && <td className="indcol">{indCell(full.close, 'CSM סגירה', false, full.members.length)}</td>}{cols.map((r) => <td key={r.id}>{r.b!.close ? <><Fig line={r.b!.close} d={d} title={`CSM סגירה · ${name(r.id)} · ${when}`} text={showAmt(r.b!.close.v)} src={() => closeProv(r.b!.close!, r.re, d, `CSM סגירה · ${name(r.id)} · ${when}`, showAmt(r.b!.close!.v))} /><Marks ms={[...lineMarks(r.b!.close), ...(r.re ? [12] : [])]} used={used2} /></> : <span className="muted">–</span>}</td>)}</tr>
+        <tr className="lead"><td className="lbl">סגירה</td>{withInd && <td className="indcol">{indCell(full.close, 'CSM סגירה', false, full.members.length)}</td>}{cols.map((r) => <td key={r.id}>{r.b!.close ? <><Fig line={r.b!.close} d={d} title={`CSM סגירה · ${name(r.id)} · ${when}`} text={showAmt(r.b!.close.v)} src={() => closeSrc(r, r.b!.close!, d, `CSM סגירה · ${name(r.id)} · ${when}`, showAmt(r.b!.close!.v))} /><Marks ms={[...lineMarks(r.b!.close), ...(r.re ? [12] : [])]} used={used2} /></> : <span className="muted">–</span>}</td>)}</tr>
         <tr><td className="lbl">הון לבעלי המניות</td>{withInd && <td className="indcol">{indCell(full.eq, 'הון לבעלי המניות')}</td>}{cols.map((r) => <td key={r.id}>{r.eq ? <Fig line={{ v: r.eq.v, fs: [r.eq] }} d={d} title={`הון לבעלי המניות · ${name(r.id)}`} text={showAmt(r.eq.v)} /> : <span className="muted">–</span>}</td>)}</tr>
       </tbody>
     </table></div>
@@ -209,7 +220,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
       <article key={r.id} className="csmcard">
         <header><Dot id={r.id} /><Link to={`/company/${r.id}/ifrs17`}>{name(r.id)}</Link><span className="dim">{BASIS[b.b]} · {SCOPE_HE[b.scope]}</span></header>
         <div className="csmcard-k">
-          <div><span className="l">יתרת CSM</span><span className="v">{b.close ? <Fig line={b.close} d={d} title={`CSM סגירה · ${name(r.id)} · ${when}`} text={showAmt(b.close.v)} src={() => closeProv(b.close!, r.re, d, `CSM סגירה · ${name(r.id)} · ${when}`, showAmt(b.close!.v))} /> : '–'}</span>{r.re && <span className="redot" title="הוצג מחדש בדוח מאוחר" />}</div>
+          <div><span className="l">יתרת CSM</span><span className="v">{b.close ? <Fig line={b.close} d={d} title={`CSM סגירה · ${name(r.id)} · ${when}`} text={showAmt(b.close.v)} src={() => closeSrc(r, b.close!, d, `CSM סגירה · ${name(r.id)} · ${when}`, showAmt(b.close!.v))} /> : '–'}</span>{r.re && <span className="redot" title="הוצג מחדש בדוח מאוחר" />}</div>
           <div><span className="l">שינוי בחלון</span><span className="v">{chg == null ? <span className="muted">–</span> : <Sourced className={`num der ${chg < 0 ? 'neg' : 'pos'}`} src={() => ratioProv('chg', b, r.eq, d, `שינוי ביתרה · ${name(r.id)} · ${when}`, `${nf(chg, 1)}%`)}>{sn(chg, 1)}%</Sourced>}</span></div>
           <div><span className="l">עסק חדש / שחרור</span><span className="v">{r.r.nbRel == null ? <span className="muted">–</span> : <Sourced className="num der" src={() => ratioProv('nbRel', b, r.eq, d, `עסק חדש / שחרור · ${name(r.id)} · ${when}`, `${nf(r.r.nbRel!, 1)}%`)}>{nf(r.r.nbRel, 0)}%</Sourced>}</span></div>
         </div>
@@ -241,7 +252,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
           </tr>
         ))}</tbody>
         <tfoot>
-          <tr className="indrow"><td>ענף<span className="dim">{membersTxt}</span></td>{MEASURES.map((c) => { const x = indShown(c.k, c.kind); return <td key={c.k}>{x == null ? <span className="muted">–</span> : <Sourced className="num der" src={view === 'v' ? indRatio(c.k).prov : () => ({ k: 'calc', title: `${c.l} · ענף · YoY`, value: fmt(c.kind, x), formula: 'הערך הענפי בדוח הנוכחי מול אותה תקופה בשנה הקודמת', inputs: [{ label: when, v: showMeasure(c.kind, indRatio(c.k).v!), src: indRatio(c.k).prov }] })}>{fmt(c.kind, x)}</Sourced>}</td>; })}</tr>
+          <tr className="indrow"><td>ענף<span className="dim">{membersTxt}</span></td>{MEASURES.map((c) => { const x = indShown(c.k, c.kind); return <td key={c.k}>{x == null ? <span className="muted">–</span> : <Sourced className="num der" src={view === 'v' ? indRatio(c.k).prov : () => ({ k: 'calc', title: `${c.l} · ענף · YoY`, value: fmt(c.kind, x), formula: 'הערך הענפי בדוח הנוכחי מול אותה תקופה בשנה הקודמת', inputs: [{ label: when, v: showMeasure(c.kind, indRatio(c.k).v!), src: indRatio(c.k).prov }] })}>{fmt(c.kind, x)}</Sourced>}{x != null && <SetMark a={indRatio(c.k).a} of={ind.members.length} />}</td>; })}</tr>
           <tr><td>חציון</td>{MEASURES.map((c) => { const x = median(c.k, c.kind); return <td key={c.k}>{x == null ? <span className="muted">–</span> : <Sourced className="num" src={() => medianProv(`${c.l} · חציון · ${when}`, fmt(c.kind, x), rows.map((q) => ({ q, v: shown(q, c.k, c.kind) })).filter((e) => e.v != null).sort((a, b) => a.v! - b.v!).map((e) => ({ label: name(e.q.id), v: fmt(c.kind, e.v!), src: () => cellProv(e.q, c.k, c.kind) })))}>{fmt(c.kind, x)}</Sourced>}</td>; })}</tr>
         </tfoot>
       </table></div>
@@ -257,13 +268,13 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
       {phone ? <><ContextBar onOpen={() => setCtl(true)}>{when} · {wlabel} · {BASIS[pref]}{view === 'y' ? ' · YoY' : ''}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="ספר ה-CSM">{controls}</Sheet></> : controls}
 
       <section className="kpis csm-kpis" aria-label="CSM ענפי">
-        {kpi('יתרת CSM, ענף', ind.close ? <Sourced className="num der" src={() => aggProv(ind.close!, `יתרת CSM · ענף · ${when}`, name)}>{nf(ind.close.v / 1000, 1)}</Sourced> : '–', <>מיליארדי ש"ח{chgInd != null && <> · <Sourced className={`num der ${chgInd < 0 ? 'neg' : 'pos'}`} src={() => ({ k: 'calc', title: `יתרת CSM ענפית · YoY · ${when}`, value: `${sn(chgInd, 1)}%`, formula: `Σ יתרה ÷ Σ יתרה באותו תאריך שנה קודם, פחות 1 · ${lfl!.now.parts.length} החברות שבשני התאריכים`, inputs: [{ label: when, v: amt(lfl!.now.v), src: () => aggProv(lfl!.now, 'יתרת CSM · ענף', name) }, { label: periodName(yearBefore(P)), v: amt(lfl!.then.v), src: () => aggProv(lfl!.then, 'יתרת CSM · ענף', name) }] })}>{sn(chgInd, 1)}%</Sourced> YoY</>}</>)}
+        {kpi('יתרת CSM, ענף', indK.close ? <Sourced className="num der" src={() => aggProv(indK.close!, `יתרת CSM · ענף · ${when}`, name)}>{nf(indK.close.v / 1000, 1)}</Sourced> : '–', <>מיליארדי ש"ח{chgInd != null && <> · <Sourced className={`num der ${chgInd < 0 ? 'neg' : 'pos'}`} src={() => ({ k: 'calc', title: `יתרת CSM ענפית · YoY · ${when}`, value: `${sn(chgInd, 1)}%`, formula: `Σ יתרה ÷ Σ יתרה באותו תאריך שנה קודם, פחות 1 · ${lfl!.now.parts.length} החברות שבשני התאריכים`, inputs: [{ label: when, v: amt(lfl!.now.v), src: () => aggProv(lfl!.now, 'יתרת CSM · ענף', name) }, { label: periodName(yearBefore(P)), v: amt(lfl!.then.v), src: () => aggProv(lfl!.then, 'יתרת CSM · ענף', name) }] })}>{sn(chgInd, 1)}%</Sourced> YoY</>}</>)}
         {kpi(`עסק חדש, ${wlabel}`, ik('nb', 'amt'), 'מיליוני ש"ח')}
         {kpi(`שחרור לרווח, ${wlabel}`, ik('rel', 'amt'), 'מיליוני ש"ח')}
         {kpi('עסק חדש / שחרור', ik('nbRel', 'pct'), 'מעל 100%: היתרה נבנית')}
         {kpi('CSM / הון', ik('csmEq', 'x'), 'יתרה ÷ הון לבעלי המניות')}
       </section>
-      <div className="src csm-members">{membersTxt}{outTxt && ` · ${outTxt}`}</div>
+      <div className="csm-set" aria-label="החברות בשורת הענף"><span className="dim">{kpiIds.length} מתוך {ids.length} · {BASIS[pref]}:</span>{ids.map((id) => <span key={id} className={`csm-chip${kpiIds.includes(id) ? '' : ' off'}`} title={kpiIds.includes(id) ? 'בסכום' : (ind.out.find((o) => o.id === id)?.why ?? 'חסר רכיב: עסק חדש, שחרור או הון')}><Dot id={id} />{name(id)}</span>)}</div>
 
       {phone ? (
         <Panel title="גשר CSM" aside={<span>{when} · {wlabel} · מיליוני ש"ח</span>}>

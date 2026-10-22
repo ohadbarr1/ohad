@@ -197,7 +197,7 @@ function lineOf(b: Bridge | null, k: string): Line | null { return !b ? null : k
 /** A figure printed in a filed report: the row as the filer wrote it, its document, period and page. */
 export function factProv(f: RF, d: IfrsData, title: string, text?: string, unit: string = MM): Prov {
   const u = f.u !== undefined ? f.u : d.files.find((x) => x.company === f.c && x.period === f.rp)?.url ?? null;
-  const notes = [f.l, f.src === 'chart' || f.src === 'text' ? 'נקרא מגרף או מטקסט' : '', f.inc === 1 ? 'כולל רווח עתידי בפוליסות חיסכון' : '', f.cl === 1 ? 'ללא פוליסות חיסכון: הסכום פחות עמודת פוליסות החיסכון' : ''].filter(Boolean);
+  const notes = [f.l, f.src === 'chart' || f.src === 'text' ? 'נקרא מגרף או מטקסט' : '', f.inc === 1 ? 'כולל שורת פוליסות השקעה (רווח עתידי נוסף, לא CSM)' : '', f.cl === 1 ? 'ללא פוליסות השקעה: הסכום שהודפס פחות שורת פוליסות ההשקעה' : ''].filter(Boolean);
   return { k: 'report', title, value: text ?? amt(f.dv ?? f.v), unit, url: u ?? null, pg: f.pg, doc: f.u !== undefined ? 'מצגת' : 'דוח כספי', period: periodName(f.rp), note: notes.join(' · '),
     turned: (f.dv != null && f.dv !== f.v) || f.sn === 1 || undefined };
 }

@@ -95,3 +95,16 @@ export function findTerms(text: string, qs: string[]): [number, number][] {
   }
   return out;
 }
+
+/** Words a reader types for what the filings print under another name: a loan word or an English term is searched as the filers' Hebrew
+ *  (סולבנסי → כושר פירעון). Applied to the text query only; the omnibox reads the same words as a kind of document. */
+const SYN: [RegExp, string][] = [
+  [/(^|\s)(סולבנסי|solvency|סולבנצי)(?=\s|$)/gi, '$1כושר פירעון'],
+  [/(^|\s)(presentation|deck)(?=\s|$)/gi, '$1מצגת'],
+  [/(^|\s)(dividend|דיווידנד)(?=\s|$)/gi, '$1דיבידנד'],
+  [/(^|\s)(scr)(?=\s|$)/gi, '$1הון נדרש'],
+  [/(^|\s)(ifrs ?17)(?=\s|$)/gi, '$1IFRS 17'],
+];
+export function expandSynonyms(q: string): string {
+  return SYN.reduce((t, [re, to]) => t.replace(re, to), q);
+}

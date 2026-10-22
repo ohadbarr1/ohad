@@ -89,3 +89,8 @@ tr.indrow td .dim { font-weight: 400; }
 .csm-sens tr > :first-child, .csm-series tr > :first-child, .csm-bridge tr > :first-child { position: sticky; right: 0; z-index: 1; background: var(--panel); }
 .csm-series tr.indrow > :first-child { background: var(--panel2); }
 @media (max-width: 760px) { .csm-sens td.lbl, .csm-series td.lbl, .csm-bridge td.lbl { min-width: 120px; max-width: 150px; white-space: normal; } }
+/* the set of insurers an industry figure adds up: in the sum, or out with the reason on hover */
+.csm-set { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: -6px 0 14px; font-size: var(--t-2); color: var(--muted); }
+.csm-chip { display: inline-flex; align-items: center; gap: 0; color: var(--fg); white-space: nowrap; }
+.csm-chip.off { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.csm-chip.off .iddot { opacity: .35; }

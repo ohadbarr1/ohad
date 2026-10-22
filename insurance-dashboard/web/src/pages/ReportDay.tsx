@@ -6,8 +6,10 @@ import { CompanyStore, shiftYear } from '../lib/company';
 import { foxOption } from '../lib/foxchart';
 import { byPeriodDesc, cls, dateLabel, nf, pct, periodLabel, pubLabel } from '../lib/format';
 import { chartBase, palette } from '../lib/theme';
-import { useCompanyDocs, useCompanyStore, useIfrsData, useIfrsFactsOf, useRegistry } from '../lib/useData';
-import type { DocEntry, IfrsFact } from '../lib/types';
+import { useCompanyDocs, useCompanyStore, useIfrsData, useIfrsFactsOf, useLoad, useRegistry } from '../lib/useData';
+import type { DocEntry, IfrsData, IfrsFact } from '../lib/types';
+import { tag, type Reports, type RF } from '../lib/csm';
+import { CSM_BASIS_HE, resolveCsm, type CsmClose } from '../lib/csmResolve';
 import { Sourced } from '../components/Source';
 import { useSource, type Prov } from '../lib/prov';
 import { bareUrl, calc, docOf, factPeriod, report } from './companyProv';
@@ -31,7 +33,8 @@ export interface Fig { v: number; unit: Unit; href: string | null; page: number 
 
 /** Labels differ between filers in brackets, stray spaces and "(הפסד)": compare without them. */
 export const clean = (s: string): string => s.replace(/\(ביאור[^)]*\)/g, ' ').replace(/[()*:]/g, ' ').replace(/\s+,/g, ',').replace(/\s+/g, ' ').trim();
-const ATTR = /^ל?בעלי(?:ם| ה?מניות) של החברה$/;
+/** "to the company's shareholders", in the wordings the filers print: בעלי המניות של החברה, לבעלים של החברה, בעלים של חברת האם, בעלי מניות של החברה האם */
+const ATTR = /^ל?בעלי(?:ם| ה?מניות) של (?:ה?חברה(?: ה?אם)?|חברת ה?אם)$/;
 
 interface Line { mi: number; label: string; raw: string; std: '17' | '4'; total: boolean; unit: string; attr: 'net' | 'comp' | null; below: boolean }
 /** Value rows of a statement in print order, each tagged with its standard section. An "attributable to shareholders" row belongs to the total above it
@@ -43,6 +46,8 @@ export function linesOf(store: CompanyStore, sheet: string): Line[] {
     const m = store.d.metrics[mi], label = clean(m.label);
     if (m.std) { seg++; lastTotal = ''; below = false; continue; }
     if (/כולל|מיוחס|למניה/.test(label) || ATTR.test(label)) below = true;
+    // a heading "רווח נקי לתקופה מיוחס ל:" / "רווח כולל מיוחס ל:" / "ייחוס הרווח הכולל:" says which total the attribution rows under it split
+    if (m.header && /מיוחס|ייחוס/.test(label) && /רווח|הפסד/.test(label)) lastTotal = label;
     if (m.header) continue;
     out.push({ mi, label, raw: m.label, std: seg > 0 ? '4' : '17', total: !!m.total, unit: m.unit, attr: ATTR.test(label) ? (lastTotal.includes('כולל') ? 'comp' : 'net') : null, below });
     if (m.total && /רווח|הפסד/.test(label)) lastTotal = label;
@@ -59,16 +64,16 @@ export const ROLES: Role[] = [
   { key: 'inv', label: 'רווח מהשקעות ומימון, נטו', sheets: [PL], flow: true, re: /^רווח(?: הפסד)? מהשקעות ומימון, ?נטו$/ },
   { key: 'pbt', label: 'רווח לפני מס', sheets: [PL], flow: true, re: /^(?:רווח|הפסד)(?: הפסד)? לפני מסים על ה?הכנסה$/ },
   { key: 'net', label: 'רווח נקי לבעלי המניות', sheets: [PL], flow: true, attr: 'net', alt: /^(?:רווח|הפסד)(?: הפסד)?(?: נקי(?: לתקופה)?| לתקופה)$/, altChip: 'שורת רווח לתקופה', altNote: 'אין בדוח שורת ייחוס לבעלי המניות; מוצגת שורת הרווח לתקופה' },
-  { key: 'comp', label: 'רווח כולל לבעלי המניות', sheets: [OCI, PL], flow: true, attr: 'comp', alt: /^(?:סך ה?כל |סה['"׳״]{1,2}כ )?ה?רווח(?: ה?הפסד)? ה?כולל(?: לתקופה)?$/, altChip: 'שורת סך הרווח הכולל', altNote: 'אין בדוח שורת ייחוס לבעלי המניות; מוצגת שורת סך הרווח הכולל' },
+  { key: 'comp', label: 'רווח כולל לבעלי המניות', sheets: [OCI, PL], flow: true, attr: 'comp', alt: /^(?:סך(?: ה?כל)? |סה['"׳״]{1,2}כ )?ה?רווח(?: ה?הפסד)? ה?כולל(?: לתקופה)?$/, altChip: 'שורת סך הרווח הכולל', altNote: 'אין בדוח שורת ייחוס לבעלי המניות; מוצגת שורת סך הרווח הכולל' },
   { key: 'eq', label: 'הון לבעלי המניות', sheets: [BS], flow: false, re: /^סך(?: ה?כל)? ה?הון המיוחס לבעלי(?:ם| ה?מניות) של החברה$/ },
   { key: 'assets', label: 'סך הנכסים', sheets: [BS], flow: false, re: /^(?:סך ה?כל|סה['"׳״]{1,2}כ) ה?נכסים$/ },
 ];
 
 export interface Resolved { role: Role; rows: Line[]; alt: boolean }
-export function resolve(store: CompanyStore, role: Role): Resolved {
+export function resolve(store: CompanyStore, role: Role, forceAlt = false): Resolved {
   const all = role.sheets.flatMap((s) => linesOf(store, s));
   const pick = (f: (l: Line) => boolean) => [...all.filter((l) => l.std === '17' && f(l)), ...all.filter((l) => l.std === '4' && f(l))];
-  const rows = pick((l) => (role.attr ? l.attr === role.attr : role.re!.test(l.label)));
+  const rows = forceAlt ? [] : pick((l) => (role.attr ? l.attr === role.attr : role.re!.test(l.label)));
   return rows.length || !role.alt ? { role, rows, alt: false } : { role, rows: pick((l) => role.alt!.test(l.label)), alt: true };
 }
 
@@ -98,8 +103,11 @@ export interface HeadRow { key: string; label: string; note?: [string, string]; 
 export function headline(store: CompanyStore, end: string, win: 'q' | 'ytd', late?: Late): { rows: HeadRow[]; missing: string[] } {
   const T = win === 'q' ? 'Q' : YTD[end.slice(5)], rows: HeadRow[] = [], missing: string[] = [];
   for (const role of ROLES) {
-    const r = resolve(store, role), t = role.flow ? T : 'I';
-    const cur = figAt(store, r.rows, t, end, late);
+    let r = resolve(store, role);
+    const t = role.flow ? T : 'I';
+    let cur = figAt(store, r.rows, t, end, late);
+    // attribution rows printed in earlier reports only (the filer stopped printing them): the bottom line of this report, named on the row
+    if (!cur && !r.alt && role.alt) { const a = resolve(store, role, true); const c = figAt(store, a.rows, t, end, late); if (c) { r = a; cur = c; } }
     if (!cur) { missing.push(role.label); continue; }
     rows.push({
       key: role.key, label: role.label, note: r.alt ? [role.altChip ?? '', role.altNote ?? ''] : undefined, cur,
@@ -163,14 +171,24 @@ function ifrsAt(pools: Pool[], pred: (f: IfrsFact) => boolean, d: string, unit: 
 }
 /** A comparative is used only when the report gives one value for it. */
 const one = (x: ReturnType<typeof ifrsAt>): Fig | null => (x && x.n === 1 ? x.fig : null);
-export function ifrsRows(cur: Pool, prev: Pool | null, end: string): HeadRow[] {
+/** A resolved CSM balance (csmResolve) as a figure of the table: the printed row, or life plus health added. */
+function csmFig(c: CsmClose | null, files: IfrsData['files']): Fig | null {
+  if (!c) return null;
+  const one = (f: RF): Fig => {
+    const url = f.u !== undefined ? f.u : files.find((x) => x.company === f.c && x.period === f.rp)?.url ?? null;
+    return { v: Math.abs(f.dv ?? f.v), unit: 'm', href: url && f.pg != null ? `${url}#page=${f.pg}` : null, page: f.pg, url, doc: f.u !== undefined ? `מצגת ${repName(f.rp)}` : `דוח ${repName(f.rp)}`, period: factPeriod(f),
+      tip: [c.label, f.src === 'chart' ? 'נקרא מגרף' : f.src === 'text' ? 'נקרא מטקסט הדוח' : '', f.cl === 1 ? 'הסכום שהודפס פחות שורת פוליסות ההשקעה' : ''].filter(Boolean).join(' · ') };
+  };
+  if (!c.line.sum) return { ...one(c.line.fs[0]), v: c.v, der: !!(c.flags & 1) };
+  return { v: c.v, unit: 'm', href: null, page: null, der: true, tip: c.label, calc: { formula: `חיים ועוד בריאות, ${CSM_BASIS_HE[c.b]}`, parts: c.line.fs.map((f) => ({ label: f.g === 'life' ? 'חיים וחיסכון' : 'בריאות', fig: one(f) })) } };
+}
+export function ifrsRows(cur: Pool, prev: Pool | null, end: string, rs: Reports | null, files: IfrsData['files']): HeadRow[] {
   const rows: HeadRow[] = [], both = prev ? [cur, prev] : [cur];
-  // CSM of the whole group, net of reinsurance when the report gives it; segment figures are never added up here
-  const basis = ['net', 'gross', 'na'].find((b) => cur.fs.some((f) => f.m === 'csm_closing' && f.g === 'group' && f.b === b && f.w === 'instant' && f.d === end));
-  if (basis) {
-    const is = (f: IfrsFact) => f.m === 'csm_closing' && f.g === 'group' && f.b === basis, c = ifrsAt([cur], is, end, 'm')!;
-    rows.push({ key: 'csm', label: 'CSM, יתרת סגירה', chips: [basis === 'net' ? 'נטו' : basis === 'gross' ? 'ברוטו' : '', c.n > 1 ? `${c.n} ערכים` : ''].filter(Boolean), fact: c.f, cur: c.fig,
-      yoy: c.n > 1 ? null : one(ifrsAt([cur], is, shiftYear(end, -1), 'm')), qoq: c.n > 1 ? null : one(ifrsAt(both, is, qShift(end, -1), 'm')), ltm: null, ltmPrev: null });
+  // CSM: the one rule every page uses (net of reinsurance, group level, never savings-policy future profit; fallbacks labelled)
+  const c = rs ? resolveCsm(rs, end) : null;
+  if (c) {
+    rows.push({ key: 'csm', label: 'CSM, יתרת סגירה', chips: [c.label], fact: c.line.fs.length === 1 ? c.line.fs[0] : undefined, cur: csmFig(c, files),
+      yoy: csmFig(resolveCsm(rs!, shiftYear(end, -1)), files), qoq: csmFig(resolveCsm(rs!, qShift(end, -1)), files), ltm: null, ltmPrev: null });
   }
   // solvency is published with a lag: the latest date the report gives, named on the row
   const M = 'solvency_ratio_with_transitional', at = cur.fs.filter((f) => f.m === M && f.w === 'instant' && f.d <= end).map((f) => f.d).sort().pop();
@@ -262,12 +280,14 @@ export function ReportDay() {
 
   const files = useMemo(() => (ifrs.data?.files ?? []).filter((f) => f.company === id), [ifrs.data, id]);
   const PP = P ? keyOf(qShift(end, -1)) : '';
+  const ledger = useLoad<{ files: IfrsData['files']; reports: Record<string, IfrsFact[]> }>(files.length ? 'csm/facts.json' : null);
   const curF = useIfrsFactsOf(id, files.some((f) => f.period === P) ? P : null), prevF = useIfrsFactsOf(id, files.some((f) => f.period === PP) ? PP : null);
   const extra = useMemo(() => {
     if (!curF.data) return [];
     const pool = (fs: IfrsFact[], p: string): Pool => ({ fs: fs.filter((f) => f.c === id && !f.tr && !f.model && !f.bk), url: files.find((f) => f.period === p)?.url ?? null, name: repName(p) });
-    return ifrsRows(pool(curF.data, P), prevF.data ? pool(prevF.data, PP) : null, end);
-  }, [curF.data, prevF.data, files, id, P, PP, end]);
+    const rs: Reports | null = ledger.data ? Object.keys(ledger.data.reports).map((p) => ({ p, F: tag(ledger.data!.reports[p].filter((f) => f.c === id), p) })).filter((r) => r.F.length) : null;
+    return ifrsRows(pool(curF.data, P), prevF.data ? pool(prevF.data, PP) : null, end, rs, ledger.data?.files ?? files);
+  }, [curF.data, prevF.data, files, id, P, PP, end, ledger.data]);
 
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
