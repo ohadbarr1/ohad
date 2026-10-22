@@ -7,6 +7,7 @@ import { loadCorpus, mergeRanges, pageText, readerHref, searchText, type Corpus,
 import { docLabel } from '../lib/searchOmni';
 import { mayaReport, pdfPage } from '../lib/sources';
 import { useRegistry } from '../lib/useData';
+import { usePhone } from '../lib/useMedia';
 import { LayoutText } from './SearchPage';
 import '../styles/search.css';
 
@@ -51,7 +52,10 @@ export function Reader() {
   const [facts, setFacts] = useState<Facts | null | undefined>(undefined);
   const [matchPages, setMatchPages] = useState<number[] | null>(null);
   const [focus, setFocus] = useState<Fact | null>(null);
-  const [wrap, setWrap] = useState(false);
+  // a phone wraps lines by default: the laid-out page is wider than the screen and would clip; the toggle restores the layout
+  const phone = usePhone();
+  const [wrapPick, setWrap] = useState<boolean | null>(null);
+  const wrap = wrapPick ?? phone;
   const [view, setView] = useState<'text' | 'pdf'>(readView);
   const [pdfErr, setPdfErr] = useState('');
   const pickView = (v: 'text' | 'pdf') => { setView(v); setPdfErr(''); try { localStorage.setItem(VIEW, v); } catch { /* storage may be blocked */ } };
