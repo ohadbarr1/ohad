@@ -5,6 +5,7 @@ import type { Prov } from './prov';
 import { nf, byPeriodDesc } from './format';
 import { BASIS, best, bridge, endOf, equityAt, factProv, hrefOf, lineProv, monthsOf, periodName, quarter, ratios, tag } from './csm';
 import type { Bridge, Line, Ratios, Reports, RF, Win } from './csm';
+import { resolveCsmAt, csmProv, type CsmClose } from './csmResolve';
 
 /* Data of the IFRS 17 · CSM · capital ledger: the files build_csm.py and build_boi_curve.py write, and the industry arithmetic on them.
    Industry figures are sums of the insurers that print the inputs on the same basis; every one lists its members in its source sheet. */
@@ -33,7 +34,7 @@ export function useLedger(): { data: Ledger | null; error: string | null } {
 }
 
 /* ---------- one company at one date ---------- */
-export interface At { id: string; b: Bridge | null; r: Ratios; eq: RF | null; re: Restated | null }
+export interface At { id: string; b: Bridge | null; r: Ratios; eq: RF | null; re: Restated | null; /** the one CSM balance of the date (csmResolve), on the net view */ cs: CsmClose | null }
 /** The restatement of a closing balance: first printed in one report, reprinted with another figure in a later one. */
 export interface Restated { first: RF; last: RF }
 
@@ -54,15 +55,33 @@ export function restatedOf(rs: Reports, b: Bridge | null): Restated | null {
   return Math.abs(v(first) - v(last)) > 0.5 ? { first, last } : null;
 }
 
+/** On the net view the table follows the one CSM rule (csmResolve): the movement table printed on the resolved scope and basis, and its
+    closing is the resolved balance, so the ledger, the peer table, the company page and the valuation show one figure. A date with a
+    balance but no movement table on that basis keeps the balance alone; the gross view reads the fullest gross table as printed. */
+function onRule(get: (o: { pref?: string; scope?: Bridge['scope']; basis?: string }) => Bridge | null, rs: Reports, p: string, w: Win, pref: string): { b: Bridge | null; cs: CsmClose | null } {
+  if (pref !== 'net') return { b: get({ pref }), cs: null };
+  const cs = resolveCsmAt(rs, p);
+  if (!cs) return { b: get({ pref }), cs: null };
+  const t = get({ scope: cs.scope, basis: cs.b });
+  if (!t) return { cs, b: { end: endOf(p), w, scope: cs.scope, b: cs.b, score: 10, open: null, openPrev: false, close: cs.line, steps: [], gap: null, cmp: !cs.own || undefined } };
+  const same = t.close && Math.abs(t.close.v - cs.v) < 0.5 && t.close.fs[0] === cs.line.fs[0];
+  if (same) return { b: t, cs };
+  const gap = t.gap != null && t.open ? cs.v - t.open.v - t.steps.reduce((s, x) => s + x.line.v, 0) : null;
+  return { cs, b: { ...t, close: cs.line, gap } };
+}
 export function at(rs: Reports, id: string, p: string, w: Win, pref: string): At {
-  const b = best(rs, p, endOf(p), w, { pref }), eq = equityFor(rs, p);
-  return { id, b, eq, r: ratios(b, eq?.v ?? null), re: restatedOf(rs, b) };
+  const { b, cs } = onRule((o) => best(rs, p, endOf(p), w, o), rs, p, w, pref), eq = equityFor(rs, p);
+  return { id, b, eq, cs, r: ratios(b, eq?.v ?? null), re: restatedOf(rs, b) };
 }
 /** One quarter (the fourth = FY less 9M), or the cumulative window of the year. */
 export function atQ(rs: Reports, id: string, k: string, span: 'q' | 'ytd', pref: string): At {
-  const b = span === 'q' ? quarter(rs, k, { pref }) : best(rs, k, endOf(k), k.endsWith('FY') ? 'fy' : 'ytd', { pref });
+  const { b, cs } = onRule((o) => (span === 'q' ? quarter(rs, k, o) : best(rs, k, endOf(k), k.endsWith('FY') ? 'fy' : 'ytd', o)), rs, k, span === 'q' ? 'q' : k.endsWith('FY') ? 'fy' : 'ytd', pref);
   const eq = equityFor(rs, k);
-  return { id, b, eq, r: ratios(b, eq?.v ?? null), re: restatedOf(rs, b) };
+  return { id, b, eq, cs, r: ratios(b, eq?.v ?? null), re: restatedOf(rs, b) };
+}
+/** The source of a closing balance on the ledger: the resolved CSM (with its basis and scope) on the net view. */
+export function closeSrc(r: At, l: Line, d: IfrsData, title: string, text?: string): Prov {
+  return r.cs && l === r.b?.close ? csmProv(r.cs, d, title) : closeProv(l, r.re, d, title, text);
 }
 
 /** Quarter keys from the first comparative year to the newest report. */
@@ -110,9 +129,9 @@ const sum = (parts: Part[]): Agg | null => (parts.length ? { v: parts.reduce((t,
 
 /** The industry table: the insurers whose table is on the basis asked for, added line by line. Companies on another basis are left out and named.
     With `full`, only insurers whose table carries opening, closing, new business and release, so the column rolls forward like a company's. */
-export function industry(rows: At[], pref: string, d: IfrsData, name: (id: string) => string, when: string, full = false): Industry {
+export function industry(rows: At[], pref: string, d: IfrsData, name: (id: string) => string, when: string, full = false, only?: string[]): Industry {
   const has = (r: At, k: string) => r.b!.steps.some((s) => s.k === k);
-  const live = rows.filter((r) => r.b?.close);
+  const live = rows.filter((r) => r.b?.close && (!only || only.includes(r.id)));
   const onBasis = live.filter((r) => r.b!.b === pref);
   const members = full ? onBasis.filter((r) => r.b!.open && has(r, 'nb') && has(r, 'rel')) : onBasis;
   const out = [...rows.filter((r) => !r.b?.close).map((r) => ({ id: r.id, why: 'אין טבלת תנועה' })), ...live.filter((r) => r.b!.b !== pref).map((r) => ({ id: r.id, why: `בסיס ${BASIS[r.b!.b] ?? r.b!.b}` })),

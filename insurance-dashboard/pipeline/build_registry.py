@@ -15,11 +15,14 @@ or regulator month index (reg). Periods: 2026Q2 (quarter flow or quarter-end bal
 """
 import json
 import re
+import sys
 from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import csm_resolve  # noqa: E402
 END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "FY": "12-31"}
 DATA = ROOT / "web" / "public" / "data"
 OUT = DATA / "peers"
@@ -140,12 +143,16 @@ for comp, rows in series.items():
 ifrs_meta = json.loads((DATA / "ifrs.json").read_text(encoding="utf-8"))
 furl = {(f["company"], f["period"]): f.get("url") for f in ifrs_meta["files"]}
 fx = defaultdict(dict)  # (company, metric, segment, basis) -> period -> cell
+ifrs_reports = defaultdict(list)  # company -> [(period, facts)]: the CSM resolver reads every report of a company
 for per in sorted({f["period"] for f in ifrs_meta["files"]}):
     path = DATA / f"ifrs_{per}.json"
     if not path.exists():
         continue
     end = f"{per[:4]}-{END[per[4:]]}"
-    for x in json.loads(path.read_text(encoding="utf-8")):
+    facts_per = json.loads(path.read_text(encoding="utf-8"))
+    for c in {x["c"] for x in facts_per}:
+        ifrs_reports[c].append((per, [x for x in facts_per if x["c"] == c]))
+    for x in facts_per:
         if x.get("tr") or x.get("model") or x.get("bk") or x.get("dv") is not None or x["s"] != x["g"] or x["g"] not in SEG_HE or ":" in x["m"]:
             continue
         w, d = x["w"], x["d"]
@@ -195,6 +202,27 @@ for (m, seg), comps in list(by_key.items()):
                 vals[p] = {"v": round(a["v"] + b["v"], 3), "std": a.get("std"), "parts": [("חיים וחיסכון", a), ("בריאות", b)], "der": 1}
         if vals and (not gr or len(vals) > len(gr["vals"])):
             comps[comp] = {"m": m, "s": "life+health", "g": "group", "b": lr["b"], "vals": dict(sorted(vals.items())), **({"w": "i"} if lr.get("w") == "i" or (gr and gr.get("w") == "i") else {})}
+# the CSM balance follows the one rule every page uses (csm_resolve.py, mirrored in web/src/lib/csmResolve.ts): net of reinsurance,
+# group level, never the savings-policy future profit; fallbacks labelled per cell (aux) and flagged.
+CSM_DATES = sorted({x["d"][:10] for rs in ifrs_reports.values() for _, F in rs for x in F if x["m"] in ("csm_closing", "csm_opening") and x["d"][5:10] in ("03-31", "06-30", "09-30", "12-31")})
+csm_rows = {}
+for comp, rs in ifrs_reports.items():
+    vals = {}
+    for d in CSM_DATES:
+        r = csm_resolve.resolve(rs, csm_resolve.own_period(d), d)
+        if not r:
+            continue
+        x0 = r["fs"][0]
+        cell = {"v": r["v"], "std": "IFRS 17", "lab": r["label"], "b": r["b"], "fl": r["flags"]}
+        if r["sum"]:
+            cell["parts"] = [(("חיים וחיסכון" if f["g"] == "life" else "בריאות"), {"v": abs(f["dv"] if f.get("dv") is not None else f["v"]), "pg": f.get("pg"), "u": f.get("u") or furl.get((comp, r["rp"]))}) for f in r["fs"]]
+        else:
+            cell.update({"pg": x0.get("pg"), "u": x0.get("u") or furl.get((comp, r["rp"]))})
+        vals[qof(d)] = cell
+    if vals:
+        last = vals[max(vals, key=pkey)]
+        csm_rows[comp] = {"m": "csm_closing", "s": "group", "g": "group", "b": last["b"], "lab": last["lab"], "vals": vals, "w": "i", "resolved": 1}
+by_key[("csm_closing", "group")] = csm_rows
 for (m, seg), comps in sorted(by_key.items()):
     if len(comps) < 3 or (seg != "group" and not m.startswith(("csm_", "insurance_", "comprehensive_income_before_tax", "gross_premiums", "losses_on", "risk_adj", "net_reinsurance"))):
         continue
@@ -207,9 +235,17 @@ for (m, seg), comps in sorted(by_key.items()):
     bases = Counter(r["b"] for r in comps.values())
     for comp, r in comps.items():
         meta = {"b": r["b"]} if r["b"] != "na" else None
+        if r.get("resolved"):
+            meta = {"b": r["b"], "l": f"CSM: {r['lab']}"}
         for p, c in r["vals"].items():
             if kind == "s" and p.endswith("FY"):
                 continue  # a balance at the year end is the Q4 figure
+            if r.get("resolved"):  # flags and basis label from the resolver; the label travels in aux so each cell can print its basis
+                if c.get("parts"):
+                    ch.cell(comp, p, c["v"], None, None, c["fl"], aux=c["lab"], parts=[[lab, x["v"], x.get("pg"), ch.url(x.get("u"))] for lab, x in c["parts"]])
+                else:
+                    ch.cell(comp, p, c["v"], c.get("pg"), c.get("u"), c["fl"], aux=c["lab"], meta=meta)
+                continue
             fl = (1 if c.get("der") else 0) | (2 if c.get("std") == "IFRS 4" else 0) | (16 if c.get("src") else 0) | (64 if c.get("cmp") else 0)
             v = c["v"]
             if m in TURN and v < 0:  # a release printed as a reduction of the CSM in the roll-forward: shown as the amount released (flag 4)
@@ -222,6 +258,8 @@ for (m, seg), comps in sorted(by_key.items()):
     topic = "seg" if seg != "group" else next((t for t, keys in TOPIC_IFRS.items() if any(m.startswith(x) or x in m for x in keys)), "pl")
     BH = {"na": "ללא פיצול בסיס", "net": "בשייר", "gross": "ברוטו", "reinsurance": "ביטוח משנה"}
     note = "סכום כפי שהודפס בטבלת הקבוצה; כל חברה על הבסיס שהיא מדפיסה" + (f" (רוב החברות: {BH.get(bases.most_common(1)[0][0], bases.most_common(1)[0][0])})" if len(bases) > 1 else "")
+    if (m, seg) == ("csm_closing", "group"):
+        note = "CSM נטו מביטוח משנה ברמת הקבוצה, ללא רווח עתידי בפוליסות השקעה; חלופה (חיים + בריאות, ברוטו) מסומנת בכל תא"
     add(f"ifrs:{m}" + ("" if seg == "group" else f"@{seg}"), label + SEG_HE[seg], topic, "ifrs", "pct" if RATE.search(m) else "m", kind, ch, note=note, std="17" if m.startswith(("csm_", "insurance_", "rev_", "risk_adj", "reins_")) else None)
 
 # ---------------------------------------------------------------- fs: lines.json

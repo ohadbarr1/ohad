@@ -6,8 +6,10 @@ import { CompanyStore, shiftYear } from '../lib/company';
 import { foxOption } from '../lib/foxchart';
 import { byPeriodDesc, cls, dateLabel, nf, pct, periodLabel, pubLabel } from '../lib/format';
 import { chartBase, palette } from '../lib/theme';
-import { useCompanyDocs, useCompanyStore, useIfrsData, useIfrsFactsOf, useRegistry } from '../lib/useData';
-import type { DocEntry, IfrsFact } from '../lib/types';
+import { useCompanyDocs, useCompanyStore, useIfrsData, useIfrsFactsOf, useLoad, useRegistry } from '../lib/useData';
+import type { DocEntry, IfrsData, IfrsFact } from '../lib/types';
+import { tag, type Reports, type RF } from '../lib/csm';
+import { CSM_BASIS_HE, resolveCsm, type CsmClose } from '../lib/csmResolve';
 import { Sourced } from '../components/Source';
 import { useSource, type Prov } from '../lib/prov';
 import { bareUrl, calc, docOf, factPeriod, report } from './companyProv';
@@ -163,14 +165,24 @@ function ifrsAt(pools: Pool[], pred: (f: IfrsFact) => boolean, d: string, unit: 
 }
 /** A comparative is used only when the report gives one value for it. */
 const one = (x: ReturnType<typeof ifrsAt>): Fig | null => (x && x.n === 1 ? x.fig : null);
-export function ifrsRows(cur: Pool, prev: Pool | null, end: string): HeadRow[] {
+/** A resolved CSM balance (csmResolve) as a figure of the table: the printed row, or life plus health added. */
+function csmFig(c: CsmClose | null, files: IfrsData['files']): Fig | null {
+  if (!c) return null;
+  const one = (f: RF): Fig => {
+    const url = f.u !== undefined ? f.u : files.find((x) => x.company === f.c && x.period === f.rp)?.url ?? null;
+    return { v: Math.abs(f.dv ?? f.v), unit: 'm', href: url && f.pg != null ? `${url}#page=${f.pg}` : null, page: f.pg, url, doc: f.u !== undefined ? `מצגת ${repName(f.rp)}` : `דוח ${repName(f.rp)}`, period: factPeriod(f),
+      tip: [c.label, f.src === 'chart' ? 'נקרא מגרף' : f.src === 'text' ? 'נקרא מטקסט הדוח' : '', f.cl === 1 ? 'הסכום שהודפס פחות שורת פוליסות ההשקעה' : ''].filter(Boolean).join(' · ') };
+  };
+  if (!c.line.sum) return { ...one(c.line.fs[0]), v: c.v, der: !!(c.flags & 1) };
+  return { v: c.v, unit: 'm', href: null, page: null, der: true, tip: c.label, calc: { formula: `חיים ועוד בריאות, ${CSM_BASIS_HE[c.b]}`, parts: c.line.fs.map((f) => ({ label: f.g === 'life' ? 'חיים וחיסכון' : 'בריאות', fig: one(f) })) } };
+}
+export function ifrsRows(cur: Pool, prev: Pool | null, end: string, rs: Reports | null, files: IfrsData['files']): HeadRow[] {
   const rows: HeadRow[] = [], both = prev ? [cur, prev] : [cur];
-  // CSM of the whole group, net of reinsurance when the report gives it; segment figures are never added up here
-  const basis = ['net', 'gross', 'na'].find((b) => cur.fs.some((f) => f.m === 'csm_closing' && f.g === 'group' && f.b === b && f.w === 'instant' && f.d === end));
-  if (basis) {
-    const is = (f: IfrsFact) => f.m === 'csm_closing' && f.g === 'group' && f.b === basis, c = ifrsAt([cur], is, end, 'm')!;
-    rows.push({ key: 'csm', label: 'CSM, יתרת סגירה', chips: [basis === 'net' ? 'נטו' : basis === 'gross' ? 'ברוטו' : '', c.n > 1 ? `${c.n} ערכים` : ''].filter(Boolean), fact: c.f, cur: c.fig,
-      yoy: c.n > 1 ? null : one(ifrsAt([cur], is, shiftYear(end, -1), 'm')), qoq: c.n > 1 ? null : one(ifrsAt(both, is, qShift(end, -1), 'm')), ltm: null, ltmPrev: null });
+  // CSM: the one rule every page uses (net of reinsurance, group level, never savings-policy future profit; fallbacks labelled)
+  const c = rs ? resolveCsm(rs, end) : null;
+  if (c) {
+    rows.push({ key: 'csm', label: 'CSM, יתרת סגירה', chips: [c.label], fact: c.line.fs.length === 1 ? c.line.fs[0] : undefined, cur: csmFig(c, files),
+      yoy: csmFig(resolveCsm(rs!, shiftYear(end, -1)), files), qoq: csmFig(resolveCsm(rs!, qShift(end, -1)), files), ltm: null, ltmPrev: null });
   }
   // solvency is published with a lag: the latest date the report gives, named on the row
   const M = 'solvency_ratio_with_transitional', at = cur.fs.filter((f) => f.m === M && f.w === 'instant' && f.d <= end).map((f) => f.d).sort().pop();
@@ -262,12 +274,14 @@ export function ReportDay() {
 
   const files = useMemo(() => (ifrs.data?.files ?? []).filter((f) => f.company === id), [ifrs.data, id]);
   const PP = P ? keyOf(qShift(end, -1)) : '';
+  const ledger = useLoad<{ files: IfrsData['files']; reports: Record<string, IfrsFact[]> }>(files.length ? 'csm/facts.json' : null);
   const curF = useIfrsFactsOf(id, files.some((f) => f.period === P) ? P : null), prevF = useIfrsFactsOf(id, files.some((f) => f.period === PP) ? PP : null);
   const extra = useMemo(() => {
     if (!curF.data) return [];
     const pool = (fs: IfrsFact[], p: string): Pool => ({ fs: fs.filter((f) => f.c === id && !f.tr && !f.model && !f.bk), url: files.find((f) => f.period === p)?.url ?? null, name: repName(p) });
-    return ifrsRows(pool(curF.data, P), prevF.data ? pool(prevF.data, PP) : null, end);
-  }, [curF.data, prevF.data, files, id, P, PP, end]);
+    const rs: Reports | null = ledger.data ? Object.keys(ledger.data.reports).map((p) => ({ p, F: tag(ledger.data!.reports[p].filter((f) => f.c === id), p) })).filter((r) => r.F.length) : null;
+    return ifrsRows(pool(curF.data, P), prevF.data ? pool(prevF.data, PP) : null, end, rs, ledger.data?.files ?? files);
+  }, [curF.data, prevF.data, files, id, P, PP, end, ledger.data]);
 
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;

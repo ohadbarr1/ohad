@@ -14,7 +14,7 @@ import { usePhone } from '../../lib/useMedia';
 import { nf } from '../../lib/format';
 import { BASIS, BUCKETS, BUCKET_END, SCOPE_HE, lineProv, periodName, ratioProv, runoff, endOf } from '../../lib/csm';
 import type { Runoff } from '../../lib/csm';
-import { INSURERS, agg2Prov, aggProv, atQ, closeProv, industry, qLabel, quarterKeys, type At, type Industry, type Ledger } from '../../lib/csmData';
+import { INSURERS, agg2Prov, aggProv, atQ, closeSrc, industry, qLabel, quarterKeys, type Agg, type Agg2, type At, type Industry, type Ledger } from '../../lib/csmData';
 import { Dot } from './LedgerView';
 import { useParam } from './params';
 
@@ -64,15 +64,29 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
   // a line of amounts keeps one basis: points on another basis than the company's latest are left out
   const lastBasis = (id: string, k: MK) => [...gridOf(k).get(id)!].reverse().find((x) => x.r[k] != null)?.b?.b;
   const point = (id: string, i: number, k: MK): number | null => { const x = gridOf(k).get(id)![i], m = MEASURES.find((q) => q.k === k)!; return m.kind === 'amt' && x.b?.b !== lastBasis(id, k) ? null : x.r[k]; };
-  const indVal = (I: Industry, k: MK) => (k === 'close' || k === 'nb' || k === 'rel' ? null : (I[k as 'nbRel'])?.v ?? null);
   const cols = (k: MK) => keys.map((key, i) => ({ key, i })).filter(({ i }) => ids.some((id) => point(id, i, k) != null));
+  // an industry line adds up one constant set of insurers: those present in every period it shows. When no two insurers are present
+  // throughout, the set is the latest period's and the line keeps only the periods where all of them are present.
+  const setOf = (k: MK): string[] => {
+    if (!IND_FORMULA[k]) return [];
+    const as = cols(k).map(({ i }) => indsOf(k)[i][k as 'nbRel']).filter((a): a is Agg2 => !!a);
+    if (!as.length) return [];
+    const S = ids.filter((id) => as.every((a) => a.num.parts.some((x) => x.id === id)));
+    return S.length >= 2 ? S : as[as.length - 1].num.parts.map((x) => x.id);
+  };
+  const sets = new Map(CHARTS.map((c) => [c.k, setOf(c.k)] as const));
+  if (!sets.has(tk)) sets.set(tk, setOf(tk));
+  const keep = (g: Agg, S: string[]): Agg | null => { const parts = g.parts.filter((x) => S.includes(x.id)); return parts.length === S.length ? { v: parts.reduce((t, x) => t + x.v, 0), parts } : null; };
+  const restrict = (a: Agg2 | null, S: string[]): Agg2 | null => { if (!a || S.length < 2) return null; const num = keep(a.num, S), den = keep(a.den, S); return num && den && den.v ? { v: (num.v / den.v) * a.scale, num, den, scale: a.scale } : null; };
+  const indAgg = (I: Industry, k: MK) => (k === 'close' || k === 'nb' || k === 'rel' ? null : restrict(I[k as 'nbRel'], sets.get(k) ?? []));
+  const indVal = (I: Industry, k: MK) => indAgg(I, k)?.v ?? null;
   const provOf = (id: string, i: number, k: MK): Prov => {
     const x = gridOf(k).get(id)![i], m = MEASURES.find((q) => q.k === k)!, v = x.r[k], title = `${m.l} · ${name(id)} · ${qLabel(keys[i], span)}`;
     if (v == null) return { k: 'none', title, why: 'הדוח לא מדפיס את השורות' };
     const txt = showMeasure(m.kind, v), l = m.kind === 'amt' ? lineOf(x.b, k) : null;
-    return l ? (k === 'close' ? closeProv(l, x.re, d, title, txt) : lineProv({ ...l, v: Math.abs(l.v) }, d, title, txt)) : ratioProv(k, x.b, x.eq, d, title, txt);
+    return l ? (k === 'close' ? closeSrc(x, l, d, title, txt) : lineProv({ ...l, v: Math.abs(l.v) }, d, title, txt)) : ratioProv(k, x.b, x.eq, d, title, txt);
   };
-  const indProv = (i: number, k: MK): Prov => { const I = indsOf(k)[i], a = I[k as 'nbRel']!, f = IND_FORMULA[k]!, m = MEASURES.find((q) => q.k === k)!; return agg2Prov(a, `${m.l} · ענף · ${qLabel(keys[i], span)}`, f[0], name, showMeasure(m.kind, a.v), f[1], f[2]); };
+  const indProv = (i: number, k: MK): Prov => { const I = indsOf(k)[i], a = indAgg(I, k)!, f = IND_FORMULA[k]!, m = MEASURES.find((q) => q.k === k)!; return agg2Prov(a, `${m.l} · ענף · ${qLabel(keys[i], span)}`, f[0], name, showMeasure(m.kind, a.v), f[1], f[2]); };
 
   const build = (k: MK, withInd: boolean) => (): EChartsCoreOption => {
     const m = MEASURES.find((q) => q.k === k)!, cs = cols(k), b = chartBase();
@@ -92,8 +106,14 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
   const onPoint = (k: MK, withInd: boolean) => (si: number, di: number) => { const c = cols(k)[di]; if (!c) return; if (withInd && si === ids.length) { if (indVal(indsOf(k)[c.i], k) != null) open(indProv(c.i, k)); return; } const id = ids[si]; if (id && point(id, c.i, k) != null) open(provOf(id, c.i, k)); };
 
   // industry new business against release: the two flows that decide whether the stock grows
-  const nbrel = keys.map((key, i) => ({ key, i, nb: inds[i].steps.get('nb') ?? null, rel: inds[i].steps.get('rel') ?? null, n: inds[i].members.length })).filter((x) => x.nb && x.rel);
+  const nbrel0 = keys.map((key, i) => ({ key, i, nb: inds[i].steps.get('nb') ?? null, rel: inds[i].steps.get('rel') ?? null })).filter((x) => x.nb && x.rel);
+  const inBoth = (x: (typeof nbrel0)[number]) => x.nb!.parts.map((p) => p.id).filter((id) => x.rel!.parts.some((q) => q.id === id));
+  const nbSet0 = ids.filter((id) => nbrel0.every((x) => inBoth(x).includes(id)));
+  const nbSet = nbSet0.length >= 2 || !nbrel0.length ? nbSet0 : inBoth(nbrel0[nbrel0.length - 1]);
+  const nbrel = nbrel0.map((x) => ({ ...x, nb: keep(x.nb!, nbSet), rel: keep(x.rel!, nbSet), n: nbSet.length })).filter((x) => nbSet.length >= 2 && x.nb && x.rel);
 
+  const SetStrip = ({ S, what }: { S: string[]; what: string }) => S.length < 2 ? <div className="src">{what}: אין שתי חברות עם נתון בכל התקופות</div> : (
+    <div className="csm-set" aria-label={`${what}: החברות בסכום`}><span className="dim">{what} · {S.length} מתוך {ids.length}, קבוע בכל התקופות:</span>{ids.map((id) => <span key={id} className={`csm-chip${S.includes(id) ? '' : ' off'}`} title={S.includes(id) ? 'בסכום' : 'חסר באחת התקופות'}><Dot id={id} />{name(id)}</span>)}</div>);
   const controls = (
     <section className="controls">
       <div className="field"><span>חלון</span><Seg<'q' | 'ytd'> label="חלון" value={span} onChange={setSpan} options={[['q', 'רבעון'], ['ytd', 'מצטבר']]} /></div>
@@ -122,8 +142,7 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
             {nbrel.length < 2 ? <Empty title="אין רצף" /> : <Chart label="עסק חדש מול שחרור CSM, ענף" height={260} deps={[span, pref, nbrel.length]} build={() => foxOption({ x: nbrel.map((x) => qLabel(x.key, span)), unit: 'מיליוני ש"ח', legend: true, labels: false, full: true,
               series: [{ name: 'עסק חדש', kind: 'bar', color: chartBase().up, data: nbrel.map((x) => +x.nb!.v.toFixed(1)) }, { name: 'שחרור לרווח', kind: 'bar', color: chartBase().down, data: nbrel.map((x) => +Math.abs(x.rel!.v).toFixed(1)) }] })}
               onPoint={(si, di) => { const x = nbrel[di]; if (!x) return; const a = si === 0 ? x.nb! : x.rel!; open(aggProv(si === 0 ? a : { ...a, v: Math.abs(a.v) }, `${si === 0 ? 'עסק חדש' : 'שחרור'} · ענף · ${qLabel(x.key, span)}`, name)); }} />}
-            <div className="src">סכום החברות על בסיס {BASIS[pref]} בכל רבעון; מספר החברות בכל עמודה בגיליון המקור.</div>
-          </Panel>
+            <SetStrip S={nbSet} what={`ענף, ${BASIS[pref]}`} /></Panel>
           <div className="csm-grid">
             {CHARTS.map((c) => {
               const m = MEASURES.find((q) => q.k === c.k)!, cs = cols(c.k);
@@ -131,6 +150,7 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
                 <Panel key={c.k} title={c.t} aside={<span>{m.kind === 'amt' ? 'מיליוני ש"ח' : m.kind === 'x' ? '×' : '%'}{m.from ? ' · נגזר' : ''}</span>}>
                   {cs.length < 2 ? <Empty title="אין רצף" /> : <Chart label={`${c.t} · CSM`} height={phone ? 250 : 270} deps={[c.k, span, pref, lead, cs.length, byCo.size]} build={build(c.k, c.ind)} onPoint={onPoint(c.k, c.ind)} />}
                   {m.from && <div className="src">{m.from}{c.ind ? '. ענף: יחס הסכומים' : ''}</div>}
+                  {c.ind && cs.length >= 2 && <SetStrip S={sets.get(c.k) ?? []} what="ענף" />}
                 </Panel>
               );
             })}
@@ -148,7 +168,7 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
                   return <td key={i}>{l ? <Fig line={tk === 'rel' ? { ...l, v: Math.abs(l.v) } : l} d={d} title={`${tm.l} · ${name(id)}`} text={txt} src={() => provOf(id, i, tk)} /> : <Sourced className="num der" src={() => provOf(id, i, tk)}>{txt}</Sourced>}<Marks ms={[...(x.b?.der ? [10] : []), ...(x.b?.cmp ? [11] : []), ...(tk === 'close' && x.re ? [12] : []), ...(x.b && x.b.b !== pref ? [0] : [])]} used={used} /></td>; })}
               </tr>
             ))}
-            {IND_FORMULA[tk] && <tr className="indrow"><td>ענף</td>{tcols.map(({ i }) => { const v = indVal(indsOf(tk)[i], tk); return <td key={i}>{v == null ? <span className="muted">–</span> : <Sourced className="num der" src={() => indProv(i, tk)}>{showMeasure(tm.kind, v)}</Sourced>}</td>; })}</tr>}
+            {IND_FORMULA[tk] && <tr className="indrow"><td>ענף<span className="dim">{(sets.get(tk) ?? []).length} חברות קבועות</span></td>{tcols.map(({ i }) => { const v = indVal(indsOf(tk)[i], tk); return <td key={i}>{v == null ? <span className="muted">–</span> : <Sourced className="num der" src={() => indProv(i, tk)}>{showMeasure(tm.kind, v)}</Sourced>}</td>; })}</tr>}
             </tbody>
           </table></div>}
           <Notes used={used} />
