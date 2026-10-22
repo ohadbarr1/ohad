@@ -21,6 +21,8 @@ export interface MarketData {
   rows: number[][];
   funds: Fund[];
   qa: { checks: QaCheck[]; notes: string[] };
+  /** months where the regulator changed how a series is defined (e.g. management fees in ביטוח-נט, 01/26): a comparison across one is not a change */
+  breaks?: { family: Family; metric: string; from: string | number; note: string }[];
 }
 
 export interface CompanyPeriod { id: string; label: string; type: string; end: string; months: number }

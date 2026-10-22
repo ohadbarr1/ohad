@@ -227,7 +227,7 @@ function Mix({ b }: { b: Base }) {
       yAxis: { type: 'value', show: false },
       series: parts.map(([m, name], i) => ({ name, type: 'bar', stack: 'a', barWidth: '64%', itemStyle: { color: cols[i] },
         data: list.map((c) => { const pc = lts.v(m, c, p), a = lts.v('am.aum', c, p); return pc == null || a == null ? null : { value: +(a * pc / 100).toFixed(2), pc }; }),
-        label: { show: true, position: 'inside', fontSize: 10.5, color: i === 0 ? '#fff' : cb.fg, formatter: (x: { data: { pc: number; value: number } }) => (x.data.pc < 100 && x.data.value > 0 ? `${x.data.pc}%` : '') } })),
+        label: { show: true, position: 'inside', fontSize: 10.5, color: i === 0 ? '#fff' : cb.fg, formatter: (x: { data: { pc: number; value: number } }) => (x.data.pc < 100 && x.data.value > 0 ? `${nf(x.data.pc, x.data.pc >= 10 ? 0 : 1)}%` : '') } })),
     };
   };
   const cos = AM.filter((c) => lts.v('am.aum', c, p) != null);

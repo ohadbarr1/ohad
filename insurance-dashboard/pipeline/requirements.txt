@@ -1,0 +1,12 @@
+# pipeline dependencies, pinned to the versions the owner's .venv runs (22 Oct 2026)
+beautifulsoup4==4.15.0
+duckdb==1.5.6
+lxml==6.1.3
+numpy==2.4.6
+openpyxl==3.1.5
+pandas==3.0.6
+pdfplumber==0.11.10
+pyarrow==25.0.1
+requests==2.34.2
+# price input for the valuation pages only (fetch_prices.py)
+yfinance==1.7.0

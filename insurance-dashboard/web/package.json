@@ -8,7 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "deploy": "npm run build && firebase deploy --only hosting"
+    "deploy": "cd .. && ./deploy.sh",
+    "check": "cd .. && ./deploy.sh --check-only",
+    "routes": "node --experimental-websocket scripts/route-check.mjs"
   },
   "dependencies": {
     "echarts": "^5.5.1",

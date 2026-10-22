@@ -31,6 +31,11 @@ export function Kpi({ label, value, sub, tone }: { label: string; value: ReactNo
   );
 }
 
+/** A break in a regulator series inside the period a figure compares (most groups moved in the same month): the comparison spans it. */
+export function BreakChip({ b }: { b: { label: string; note: string } | null | undefined }) {
+  return b ? <span className="chip est" title={`${b.note} · ${b.label}`}>שבר בסדרה · <span className="num">{b.label}</span></span> : null;
+}
+
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return <div className="empty"><b>{title}</b>{children && <p>{children}</p>}</div>;
 }

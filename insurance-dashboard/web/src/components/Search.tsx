@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useLoad, useMarketData, useRegistry } from '../lib/useData';
+import { useLoad, useRegistry } from '../lib/useData';
 import { sheetName } from '../lib/company';
 
 interface Item { kind: 'חברה' | 'פונקציה' | 'קבוצה' | 'קופה' | 'שורה בדוח'; label: string; meta: string; to: string }
@@ -18,20 +18,23 @@ const FUNCS: { code: string; label: string; keys: string[]; to: (id: string) => 
   { code: 'SOTP', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
 ];
 
+/** Names the search needs from the regulator data, in a file a fraction of market.json: the shell loads it only when the search opens. */
+interface Entities { groups: string[]; funds: [string, string][] }
+
 function useIndex(enabled: boolean): Item[] {
-  const market = useMarketData();
+  const ent = useLoad<Entities>(enabled ? 'search/entities.json' : null);
   const reg = useRegistry();
   const rows = useLoad<[string, string, string, number][]>(enabled ? 'search/rows.json' : null);
   return useMemo(() => {
     if (!enabled) return [];
     const out: Item[] = [];
     reg.data?.forEach((c) => out.push({ kind: 'חברה', label: `${c.name_he} (${c.name_en})`, meta: c.has_financials ? 'דוחות כספיים + שוק' : 'נתוני שוק', to: `/company/${c.id}` }));
-    market.data?.groups.forEach((g) => out.push({ kind: 'קבוצה', label: g, meta: 'פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון', to: `/market/group/${encodeURIComponent(g)}` }));
-    market.data?.funds.forEach((f) => out.push({ kind: 'קופה', label: f.name, meta: f.grp, to: `/market/funds?q=${encodeURIComponent(f.name)}` }));
+    ent.data?.groups.forEach((g) => out.push({ kind: 'קבוצה', label: g, meta: 'פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון', to: `/market/group/${encodeURIComponent(g)}` }));
+    ent.data?.funds.forEach(([name, grp]) => out.push({ kind: 'קופה', label: name, meta: grp, to: `/market/funds?q=${encodeURIComponent(name)}` }));
     const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
     rows.data?.forEach(([c, sheet, label, i]) => out.push({ kind: 'שורה בדוח', label, meta: `${names.get(c) ?? c} · ${sheetName(sheet)}`, to: `/company/${c}/financials?sheet=${encodeURIComponent(sheet)}&m=${i}` }));
     return out;
-  }, [enabled, market.data, reg.data, rows.data]);
+  }, [enabled, ent.data, reg.data, rows.data]);
 }
 
 export function Search({ big = false }: { big?: boolean }) {

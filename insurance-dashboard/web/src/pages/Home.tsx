@@ -5,8 +5,9 @@ import { Logo } from '../components/Logo';
 import { Count } from '../components/Count';
 import { Sourced } from '../components/Source';
 import type { Prov } from '../lib/prov';
-import { nf, pct } from '../lib/format';
-import { useDocsOf, useKpis, useMarket, useRegistry } from '../lib/useData';
+import { nf, pct, pubLabel } from '../lib/format';
+import { useKpis, useLoad, useMarket, useRegistry } from '../lib/useData';
+import type { DocEntry } from '../lib/types';
 import { useStored, useWatchlist } from '../lib/local';
 import { Star } from '../components/Follow';
 import { Fragment, useEffect, useMemo } from 'react';
@@ -25,8 +26,8 @@ export function Home() {
   const [seen, setSeen] = useStored<string>('seen', '');
   const today = new Date().toISOString().slice(0, 10);
   useEffect(() => () => setSeen(today), [setSeen, today]);
-  const withDocs = useMemo(() => (reg.data ?? []).filter((c) => c.docs > 0).map((c) => c.id), [reg.data]);
-  const filings = useDocsOf(withDocs).filter((x) => !x.en).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id).slice(0, 10);
+  const latest = useLoad<{ docs: (DocEntry & { company: string })[] }>('filings_latest.json');
+  const filings = useMemo(() => (latest.data?.docs ?? []).filter((x) => !x.en).slice(0, 10), [latest.data]);
   const TYPE: Record<string, string> = { annual: 'דוח שנתי', quarterly: 'דוח רבעוני', presentation: 'מצגת', solvency: 'כושר פירעון' };
   const L = m?.LAST ?? 0;
   const fam = (s: string) => (m ? m.cell(L, s, -1).a / 1000 : null);
@@ -80,7 +81,7 @@ export function Home() {
                 <td><Link to={`/company/${f.company}/review`}>{reg.data?.find((c) => c.id === f.company)?.name_he ?? f.company}</Link>{seen && f.date > seen && <span className="chip loaded" style={{ marginInlineStart: 8 }}>חדש</span>}</td>
                 <td style={{ textAlign: 'start' }}><a href={f.url} target="_blank" rel="noreferrer">{TYPE[f.type] ?? f.type}</a> <span className="muted">{f.period.endsWith('FY') ? `FY'${f.period.slice(2, 4)}` : `${f.period.slice(4)}'${f.period.slice(2, 4)}`}</span></td>
                 <td>{f.pages != null && <Sourced className="num muted" src={() => ({ k: 'report', title: `מספר עמודים · ${TYPE[f.type] ?? f.type}`, value: String(f.pages), unit: 'עמודים', url: f.url, pg: null, doc: TYPE[f.type] ?? f.type, period: f.period.endsWith('FY') ? `FY'${f.period.slice(2, 4)}` : `${f.period.slice(4)}'${f.period.slice(2, 4)}` })}>{f.pages} עמ׳</Sourced>}</td>
-                <td><span className="num">{f.date}</span></td>
+                <td><span className="num">{pubLabel(f.date)}</span></td>
               </tr>
             ))}</tbody>
           </table></div>

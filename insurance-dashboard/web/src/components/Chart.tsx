@@ -1,13 +1,10 @@
-import { useEffect, useRef } from 'react';
-import * as echarts from 'echarts/core';
-import { BarChart, LineChart, PieChart } from 'echarts/charts';
-import { GridComponent, LegendComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
-import type { EChartsCoreOption } from 'echarts/core';
+import { useEffect, useRef, useState } from 'react';
+import type { ECharts, EChartsCoreOption } from 'echarts/core';
 import { useTheme } from '../lib/theme';
 import { polish } from '../lib/foxchart';
 
-echarts.use([BarChart, LineChart, PieChart, TitleComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
+// the library (≈150 KB compressed) arrives with the first chart a page draws, not with the shell
+const lib = () => import('../lib/echarts');
 
 type Opt = { xAxis?: { data?: (string | number)[] }[]; series?: { name?: string; data?: (number | null | { value: number | null })[] }[] };
 function save(name: string, href: string) { const a = document.createElement('a'); a.href = href; a.download = name; a.click(); }
@@ -19,25 +16,32 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
   onPoint?: (seriesIndex: number, dataIndex: number, seriesName: string) => void }) {
   const exportName = named ?? (height >= 200 ? `fox-${label.replace(/[\s,]+/g, '-')}` : undefined);
   const el = useRef<HTMLDivElement>(null);
-  const chart = useRef<echarts.ECharts | null>(null);
+  const chart = useRef<ECharts | null>(null);
+  const [ready, setReady] = useState(false);
   const { theme } = useTheme();
   const point = useRef(onPoint); point.current = onPoint;
 
   useEffect(() => {
-    if (!el.current) return;
-    chart.current = echarts.init(el.current);
-    const ro = new ResizeObserver(() => chart.current?.resize());
-    ro.observe(el.current);
-    chart.current.on('click', (e) => { if (e.componentType === 'series' && e.seriesIndex != null) point.current?.(e.seriesIndex, e.dataIndex, e.seriesName ?? ''); });
-    return () => { ro.disconnect(); chart.current?.dispose(); chart.current = null; };
+    let live = true, ro: ResizeObserver | null = null;
+    void lib().then(({ echarts }) => {
+      if (!live || !el.current) return;
+      const c = echarts.init(el.current);
+      chart.current = c;
+      ro = new ResizeObserver(() => c.resize());
+      ro.observe(el.current);
+      c.on('click', (e) => { if (e.componentType === 'series' && e.seriesIndex != null) point.current?.(e.seriesIndex, e.dataIndex, e.seriesName ?? ''); });
+      setReady(true);
+    });
+    return () => { live = false; ro?.disconnect(); chart.current?.dispose(); chart.current = null; };
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     // wait one frame so the new theme's CSS variables are applied before we read them
     const id = requestAnimationFrame(() => chart.current?.setOption(polish(build()), true));
     return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, ...deps]);
+  }, [ready, theme, ...deps]);
 
   const png = () => { const c = chart.current; if (c) save(`${exportName}.png`, c.getDataURL({ pixelRatio: 2, backgroundColor: getComputedStyle(document.body).backgroundColor })); };
   const csv = () => {

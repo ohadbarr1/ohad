@@ -41,7 +41,7 @@ export function Managers() {
   const S = Sourced;
   const stop = (e: React.MouseEvent, fn: () => void) => { if (!(e.target as HTMLElement).closest('.src')) fn(); };
   const co = (g: string) => reg.data?.find((c) => c.market_group === g)?.id;
-  const asof = `${String(data.meta.asof).slice(4)}/${String(data.meta.asof).slice(0, 4)}`;
+  const asof = `${String(data.meta.asof).slice(4)}/${String(data.meta.asof).slice(2, 4)}`;
   return (
     <>
       <div className="pagehead"><div><h1>מנהלים וקופות</h1><div className="sub"><S src={() => listP('חברות מנהלות', nf(rows.length, 0), undefined, 'ספירת החברות המנהלות שיש להן מסלולים בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{rows.length}</span></S> חברות מנהלות · <S src={() => listP('סך נכסים, החברות המנהלות', nf(total, 0), 'מיליארד ש"ח', 'סכום הנכסים של כל החברות המנהלות בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{nf(total, 0)}</span></S> מיליארד ש"ח · <span className="num">{asof}</span></div></div></div>

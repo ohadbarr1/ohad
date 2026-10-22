@@ -74,7 +74,7 @@ kbd { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--li
 .wordmark { font-weight: 800; font-size: 19px; letter-spacing: -0.03em; color: var(--fg); direction: ltr; }
 .wordmark:hover { text-decoration: none; }
 .wordmark span { color: var(--accent); }
-.page { width: 100%; max-width: 1440px; margin-inline: auto; padding: 26px 26px 80px; display: flex; flex-direction: column; gap: 22px; animation: page-in var(--slow) var(--ease) both; }
+.page { width: 100%; max-width: 1440px; margin-inline: auto; padding: 26px 26px 80px; display: flex; flex-direction: column; gap: 22px; }
 @keyframes page-in { from { opacity: 0; transform: translateY(14px); filter: blur(6px); } }
 
 /* page head and tabs */
@@ -122,7 +122,7 @@ kbd { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--li
 .grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 @media (max-width: 980px) { .grid2, .grid21, .grid12 { grid-template-columns: minmax(0, 1fr); } }
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; }
-.kpi { position: relative; padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; box-shadow: 1px 0 0 var(--line-soft), 0 1px 0 var(--line-soft); animation: rise var(--slow) var(--ease) both; }
+.kpi { position: relative; padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; box-shadow: 1px 0 0 var(--line-soft), 0 1px 0 var(--line-soft); }
 .kpi:nth-child(2) { animation-delay: 50ms; } .kpi:nth-child(3) { animation-delay: 100ms; } .kpi:nth-child(4) { animation-delay: 150ms; } .kpi:nth-child(5) { animation-delay: 200ms; } .kpi:nth-child(6) { animation-delay: 250ms; } .kpi:nth-child(7) { animation-delay: 300ms; } .kpi:nth-child(8) { animation-delay: 350ms; }
 .kpi .l { font-size: 12.5px; color: var(--muted); font-weight: 500; } .kpi .v { font-size: 34px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.15; } .kpi .s { font-size: 12px; color: var(--muted); }
 .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
@@ -212,14 +212,13 @@ table.rank td { padding-block: 11px; } table.rank td:first-child { font-size: 15
 a.card:hover { border-color: var(--accent-line); text-decoration: none; transform: translateY(-3px); box-shadow: var(--glow); }
 .card h3 { margin: 0; font-size: 16px; font-weight: 700; } .card .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .card .big { font-size: 22px; font-weight: 800; }
-.stagger > * { animation: rise var(--slow) var(--ease) both; animation-delay: calc(var(--i, 0) * 45ms); }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
 
 /* overview: single-metric cards */
 h2.band { margin: 6px 2px 12px; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: var(--fg); display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
 h2.band .muted { font-size: 12.5px; font-weight: 400; letter-spacing: 0; color: var(--muted); }
 .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
-.mcard { padding: 15px 17px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; transition: border-color var(--fast), transform var(--mid) var(--spring), box-shadow var(--mid); animation: rise var(--slow) var(--ease) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.mcard { padding: 15px 17px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; transition: border-color var(--fast), transform var(--mid) var(--spring), box-shadow var(--mid); }
 .mcard:hover { border-color: var(--line); transform: translateY(-3px); box-shadow: 0 1px 0 var(--hi) inset, 0 22px 50px oklch(0 0 0 / 0.3); }
 .mcard.wide { grid-column: span 2; }
 @media (max-width: 620px) { .mcard.wide { grid-column: auto; } }
@@ -473,6 +472,7 @@ a:hover > .i3d .i3d-shadow, .rail a.item.active .i3d-shadow { transform: scale(0
 .mast h1 { white-space: nowrap; }
 @media (max-width: 760px) { :root[data-theme="phoenix"] .mast { padding-bottom: 64px; } :root[data-theme="phoenix"] .mast h1 { font-size: clamp(52px, 17vw, 76px); } }
 .num.der { font-style: italic; color: var(--muted); }
+.num.re::after { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-inline-start: 4px; vertical-align: 0.45em; }
 
 /* statements: totals read as totals, and the accounting-standard break is a band */
 tr.tot td { font-weight: 700; border-top: 1px solid var(--line); }

@@ -1,6 +1,6 @@
 /* phone: label / report / YoY / QoQ in fixed narrow columns, no sideways scroll, every change keeps its sign */
 @media (max-width: 760px) {
-  .panel .scroll { overflow: visible; }
+  .panel .scroll:has(> table.review) { overflow: visible; }
   .panel table.review { table-layout: fixed; width: 100%; }
   .panel table.review th, .panel table.review td { padding: 8px 3px; min-width: 0; width: auto; overflow-wrap: anywhere; white-space: normal; }
   .panel table.review th:first-child, .panel table.review td:first-child { position: static; box-shadow: none; width: 31%; min-width: 0; max-width: none; }

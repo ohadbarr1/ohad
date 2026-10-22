@@ -1,0 +1,51 @@
+# fox: every push and pull request is typechecked, gated on the data checks, built, and checked route by route.
+# A pull request gets a Firebase preview channel when the FIREBASE_SERVICE_ACCOUNT secret is set; nothing here deploys the live site.
+name: fox-ci
+on:
+  push:
+    paths: ['insurance-dashboard/**', '.github/workflows/fox-ci.yml']
+  pull_request:
+    paths: ['insurance-dashboard/**', '.github/workflows/fox-ci.yml']
+defaults:
+  run:
+    working-directory: insurance-dashboard
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: insurance-dashboard/web/package-lock.json }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Python dependencies
+        run: pip install -r pipeline/requirements.txt
+      - name: Data gate (page-text checks are skipped where the page texts are not in git)
+        run: python pipeline/gate.py
+      - name: Install
+        working-directory: insurance-dashboard/web
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck and build
+        working-directory: insurance-dashboard/web
+        run: npx tsc --noEmit && npx vite build
+      - name: Route check (390 and 1440 px)
+        working-directory: insurance-dashboard/web
+        env: { CHROME: /usr/bin/google-chrome }
+        run: |
+          (cd dist && python3 -m http.server 4173 --bind 127.0.0.1 >/dev/null 2>&1 &)
+          sleep 1
+          node scripts/route-check.mjs http://127.0.0.1:4173 --json route-check.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: route-check, path: insurance-dashboard/web/route-check.json, if-no-files-found: ignore }
+      - name: Preview channel
+        if: github.event_name == 'pull_request' && env.FIREBASE_SERVICE_ACCOUNT != ''
+        env: { FIREBASE_SERVICE_ACCOUNT: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' }
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: fox-research-il
+          entryPoint: insurance-dashboard/web
+          expires: 7d

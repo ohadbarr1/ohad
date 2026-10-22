@@ -167,7 +167,7 @@ export function IndustryIfrs() {
               return { animationDuration: 650, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 4, right: 4, top: 22, bottom: 4, containLabel: true },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, formatter: (ps: { dataIndex: number }[]) => `${pts[ps[0].dataIndex].l}: <b>${nf(pts[ps[0].dataIndex].v, 0)}</b>` },
                 xAxis: { type: 'category', data: pts.map((p) => p.l), axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10.5, interval: 0, rotate: 30 } },
-                yAxis: { type: 'value', scale: true, axisLabel: { color: b.mu, fontSize: 10, formatter: (v: number) => `\u200E${v}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
+                yAxis: { type: 'value', scale: true, axisLabel: { color: b.mu, fontSize: 10, formatter: (v: number) => `\u200E${nf(v, 0)}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
                 series: [{ type: 'bar', stack: 'w', data: baseArr, itemStyle: { color: 'transparent' }, silent: true },
                   { type: 'bar', stack: 'w', data: tot, itemStyle: { color: b.accent, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => nf(p.value, 0) } },
                   { type: 'bar', stack: 'w', data: up, itemStyle: { color: b.up, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `+${nf(p.value, 0)}` } },

@@ -50,9 +50,20 @@ export class Market {
 
   groupIndex(name: string): number { return this.d.groups.indexOf(name); }
   productSetId(key: string): string { return 'p:' + key; }
-  plabel(pi: number): string {
-    const MN = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
-    return `${MN[this.P[pi] % 100 - 1]} ${Math.floor(this.P[pi] / 100)}`;
+  /** A month of regulator data, the way the site names it: 08/26. */
+  plabel(pi: number): string { return `${String(this.P[pi] % 100).padStart(2, '0')}/${String(Math.floor(this.P[pi] / 100)).slice(2)}`; }
+
+  /** Definition changes at the regulator that touch a metric of this selection: [{ index of the first month, its label, the note }]. */
+  breaksFor(key: MetricKey, s: string): { pi: number; label: string; note: string }[] {
+    const set = this.setMap[s];
+    if (!set) return [];
+    return (this.d.breaks ?? []).filter((b) => (b.metric === key || (key === 'fee' && /fee/.test(b.metric))) && [...set.has].some((i) => this.d.products[i].family === b.family))
+      .map((b) => ({ pi: this.P.indexOf(Number(b.from)), note: b.note })).filter((b) => b.pi >= 0).map((b) => ({ ...b, label: this.plabel(b.pi) }));
+  }
+  /** The definition change that lies between two months, if any: a change across it is not reported as a change. */
+  breakOf(key: MetricKey, s: string, pi: number, pj: number): { pi: number; label: string; note: string } | null {
+    const lo = Math.min(pi, pj), hi = Math.max(pi, pj);
+    return this.breaksFor(key, s).find((b) => lo < b.pi && b.pi <= hi) ?? null;
   }
 
   cell(pi: number, setId: string, g: number): Cell {
@@ -144,7 +155,7 @@ export const dsOf = (fam: string): RegDs => (fam === 'gemel' ? 'gemel' : fam ===
 export const trackKey = (ds: RegDs, id: number) => (ds === 'gemel' ? 'g' : ds === 'pensia' ? 'p' : 'i') + id;
 export const addMonths = (p: number, d: number) => { const t = Math.floor(p / 100) * 12 + (p % 100 - 1) + d; return Math.floor(t / 12) * 100 + (t % 12) + 1; };
 export const monthsBack = (p: number, n: number) => Array.from({ length: n }, (_, i) => addMonths(p, i - n + 1));
-export const ymLabel = (p: number) => `${String(p % 100).padStart(2, '0')}/${Math.floor(p / 100)}`;
+export const ymLabel = (p: number) => `${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`;
 
 export interface TrackHist { p: number[]; y: (number | null)[]; a: (number | null)[]; fee: (number | null)[]; dep?: (number | null)[]; wd?: (number | null)[]; tr?: (number | null)[] }
 const histCache = new Map<string, TrackHist>(), pending = new Set<string>();

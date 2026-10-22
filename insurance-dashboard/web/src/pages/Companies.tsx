@@ -23,11 +23,12 @@ export function Companies() {
         <Seg label="סוג" value={kind} onChange={setKind} options={[['all', 'הכול'], ['insurance_group', 'קבוצות ביטוח'], ['fund_house', 'בתי השקעות']]} /></div>
       <Panel>
         <div className="scroll"><table>
-          <thead><tr><th>חברה</th><th>נכסים (מיליארד ש"ח)</th><th>נתח שוק</th><th>שינוי YoY</th><th>צבירה אורגנית, LTM</th><th>דמי ניהול</th><th>מסמכים</th></tr></thead>
+          <thead><tr><th>חברה</th><th>נכסים (מיליארד ש"ח)</th><th>נתח שוק</th><th>שינוי YoY</th><th>צבירה אורגנית, LTM</th><th>דמי ניהול, פנסיה</th><th>דמי ניהול, גמל</th><th>מסמכים</th></tr></thead>
           <tbody>{list.map((c) => {
             const g = m ? m.groupIndex(c.market_group ?? '') : -1;
             const v = (k: Parameters<NonNullable<typeof m>['value']>[0]) => (m && g >= 0 ? m.value(k, L, 'ltm', 'all', g) : null);
-            const regP = (metric: MetricKey): Prov => ({ k: 'reg', metric, pi: L, w: 'ltm', set: 'all', g });
+            const regP = (metric: MetricKey, set = 'all'): Prov => ({ k: 'reg', metric, pi: L, w: 'ltm', set, g });
+            const fee = (set: string) => { const x = m && g >= 0 ? m.value('fee', L, 'm', set, g) : null; return x == null ? <span className="num">–</span> : <Sourced className="num" src={() => regP('fee', set)}>{pct(x, 2)}</Sourced>; };
             const growthP = (): Prov => {
               const b = L - 12, a1 = m ? m.cell(L, 'all', g).a / 1000 : 0, a0 = m && b >= 0 ? m.cell(b, 'all', g).a / 1000 : 0, title = `שינוי נכסים YoY · ${c.name_he} · ${m?.plabel(L)}`;
               if (!m || b < 0 || !(a0 > 0)) return { k: 'none', title, why: 'אין נכסי הקבוצה לפני 12 חודשים' };
@@ -44,13 +45,14 @@ export function Companies() {
                   <td>{num('share', pct(v('share'), 1))}</td>
                   <td>{num('growth', pct(v('growth'), 1, true), cls(v('growth')))}</td>
                   <td>{num('organic', v('organic') == null ? '–' : nf(v('organic')!, 1), cls(v('organic')))}</td>
-                  <td>{num('fee', pct(v('fee'), 2))}</td>
+                  <td>{fee('fam:pension')}</td>
+                  <td>{fee('fam:gemel')}</td>
                   <td>{c.docs ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : <span className="num">–</span>}</td>
                 </tr>
                 {subs.map((x) => (
                   <tr key={x.id} className="subrow">
                     <td><Link to={`/company/${x.id}`}>{x.name_he}</Link><span className="dim">חברה בת, נכללת בנתוני {c.name_he}</span></td>
-                    <td colSpan={5} />
+                    <td colSpan={6} />
                     <td>{x.docs ? <Link className="num" to={`/company/${x.id}/filings`}>{x.docs}</Link> : <span className="num">–</span>}</td>
                   </tr>
                 ))}

@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet, useNavigate, useParams, useSearchParams } from '
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { useSource, type Prov } from '../lib/prov';
-import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg, copyText } from '../components/ui';
+import { BreakChip, Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg, copyText } from '../components/ui';
 import { CHART_FONT, chartBase, cssVar, palette } from '../lib/theme';
 import { METRIC_BY_KEY, METRIC_DEFS, WIN_LABEL, fundCell, fundRef, warmHist, type Market, type MetricKey, type Win } from '../lib/market';
 import { cls, nf, pct, sn } from '../lib/format';
@@ -291,7 +291,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
         <Field label="קבוצה"><select value={group} onChange={(e) => nav(`/market/group/${encodeURIComponent(e.target.value)}`)}>{gopts.map((g) => <option key={g}>{g}</option>)}</select></Field></div>}
       <section className="controls"><Field label="מוצר"><select value={set} onChange={(e) => setSet(e.target.value)}>{m.sets.map((s) => <option key={s.id} value={s.id}>{s.sub ? '  ' : ''}{s.label}</option>)}</select></Field></section>
       <div className="grid21">
-        <Panel title={def.label} aside={def.unit === 'bn' ? 'מיליארד ש"ח' : def.win ? 'LTM' : undefined}>
+        <Panel title={def.label} aside={<>{def.unit === 'bn' ? 'מיליארד ש"ח' : def.win ? 'LTM' : null} <BreakChip b={m.breaksFor(metric, set)[0]} /></>}>
           <Chart label="סדרה לאורך זמן" height={320} deps={[m, group, set, metric]} onPoint={(si, di) => { if ((si === 0 ? own : mkt)[di] != null) open(m.explain(metric, di, win, set, si === 0 ? gi : -1)); }} build={() => {
             const b = chartBase(), pct = def.unit === '%';
             return foxOption({ x: m.P.map((_, i) => m.plabel(i)), unit: pct ? '%' : def.unit === 'bn' ? 'מיליארד ש"ח' : '', dense: true, scale: !!def.ratio, legend: true, series: [
@@ -304,7 +304,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
             <thead><tr><th>מדד</th><th>{m.plabel(L)}</th><th>{m.plabel(L - 12)}</th><th>כלל השוק</th></tr></thead>
             <tbody>{rows.map((r) => (
               <tr key={r.k} style={{ cursor: 'pointer', background: r.k === metric ? 'var(--accent-soft)' : undefined }} onClick={(e) => { if (!(e.target as HTMLElement).closest('.src')) setMetric(r.k); }}>
-                <td>{METRIC_BY_KEY[r.k].short}{METRIC_BY_KEY[r.k].win && <span className="dim">LTM</span>}</td>
+                <td>{METRIC_BY_KEY[r.k].short}{METRIC_BY_KEY[r.k].win && <span className="dim">LTM</span>} <BreakChip b={m.breakOf(r.k, set, L - 12, L)} /></td>
                 <td><MV m={m} k={r.k} pi={L} w="ltm" set={set} g={gi} v={r.now} signed={false} /></td><td><MV m={m} k={r.k} pi={L - 12} w="ltm" set={set} g={gi} v={r.prev} signed={false} /></td><td><MV m={m} k={r.k} pi={L} w="ltm" set={set} g={-1} v={r.mk} signed={false} /></td>
               </tr>
             ))}</tbody>

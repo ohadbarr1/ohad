@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { nf } from '../lib/format';
+import { nf, pubLabel } from '../lib/format';
 import { METRIC_BY_KEY, WIN_LABEL, type Market } from '../lib/market';
 import { liveCheck, loadTracks, parseRegKey, recompute, regKey, SourceCtx, useSource, type LiveResult, type Prov, type RegCol, type Track } from '../lib/prov';
 import { ckanQuery, ckanResourcePage, DS_LABEL, mayaReport, pdfPage, resourceOf, type RegDs } from '../lib/sources';
@@ -10,9 +10,21 @@ import '../styles/prov.css';
 
 type Reg = Extract<Prov, { k: 'reg' }>;
 
-/** A number that opens its source. With `href` it is also a real link: Cmd/Ctrl-click goes straight to the document. */
-export function Sourced({ src, href, children, className = '', title }: { src: () => Prov; href?: string | null; children: ReactNode; className?: string; title?: string }) {
+/** The plain text of a node tree, for deciding how it is laid out. */
+function textOf(n: ReactNode): string {
+  if (n == null || typeof n === 'boolean') return '';
+  if (typeof n === 'string' || typeof n === 'number') return String(n);
+  if (Array.isArray(n)) return n.map(textOf).join('');
+  if (typeof n === 'object' && 'props' in n) return textOf((n as { props: { children?: ReactNode } }).props.children);
+  return '';
+}
+
+/** A number that opens its source. With `href` it is also a real link: Cmd/Ctrl-click goes straight to the document.
+ *  A figure with no Hebrew in it ("−5.5% YoY", "177.0%") is isolated left-to-right, so in a right-to-left line its sign stays in front. */
+export function Sourced({ src, href, children, className: given = '', title }: { src: () => Prov; href?: string | null; children: ReactNode; className?: string; title?: string }) {
   const { open } = useSource();
+  const t = textOf(children);
+  const className = !/\bnum\b/.test(given) && /\d/.test(t) && !/[\u0590-\u05FF]/.test(t) ? `${given} num`.trim() : given;
   if (href) return <a className={`src ${className}`} href={href} target="_blank" rel="noreferrer" title={title ?? 'מקור הנתון'} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); open(src()); }}>{children}</a>;
   return <button type="button" className={`src ${className}`} title={title ?? 'מקור הנתון'} onClick={() => open(src())}>{children}</button>;
 }
@@ -145,8 +157,8 @@ function PlainSheet({ p }: { p: Exclude<Prov, { k: 'reg' | 'fund' }> }) {
   );
   if (p.k === 'price') return (
     <>
-      <Head title={p.title} value={p.value} sub={`${p.ticker} · ${p.date}`} />
-      <dl className="srcfacts"><dt>סוג מקור</dt><dd>נתוני מסחר</dd><dt>ספק</dt><dd>{p.vendor}</dd><dt>נכון ל</dt><dd className="num">{p.date}</dd></dl>
+      <Head title={p.title} value={p.value} sub={`${p.ticker} · ${pubLabel(p.date)}`} />
+      <dl className="srcfacts"><dt>סוג מקור</dt><dd>נתוני מסחר</dd><dt>ספק</dt><dd>{p.vendor}</dd><dt>נכון ל</dt><dd className="num">{pubLabel(p.date)}</dd></dl>
     </>
   );
   return <><Head title={p.title} value="–" /><p className="srcnote">{p.why}</p></>;

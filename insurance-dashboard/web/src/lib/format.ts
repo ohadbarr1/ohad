@@ -12,7 +12,14 @@ export function pct(v: number | null | undefined, d = 1, signed = false): string
 export function cls(v: number | null | undefined): string { return v == null ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
 
 const MN = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
-export function monthLabel(yyyymm: number): string { return `${MN[yyyymm % 100 - 1]} ${Math.floor(yyyymm / 100)}`; }
+/** A month of regulator data: 08/26. */
+export function monthLabel(yyyymm: number): string { return `${String(yyyymm % 100).padStart(2, '0')}/${String(Math.floor(yyyymm / 100)).slice(2)}`; }
+/** The day a document was published or a price was taken: 27.08.26. Never an ISO date on screen. */
+export function pubLabel(d: string | null | undefined): string {
+  if (!d) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d);
+  return m ? `${m[3]}.${m[2]}.${m[1].slice(2)}` : d;
+}
 
 /** Units for company statements. Source values are NIS thousands unless the metric says otherwise. */
 export type Scale = 'k' | 'm' | 'b';
@@ -29,6 +36,7 @@ export function fmtCell(v: number | null | undefined, unit: string, scale: Scale
   if (v == null) return '–';
   const x = scaleValue(v, unit, scale);
   if (unit === 'nis') return nf(x, 2);
+  if (unit === 'shares') return nf(x, 0);  // a count of shares: never rescaled, no currency
   if (unit === 'pct') return nf(x, 1) + '%';
   const d = scale === 'k' ? 0 : scale === 'm' ? 1 : 2;
   return nf(x, d);

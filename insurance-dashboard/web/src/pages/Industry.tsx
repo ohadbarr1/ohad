@@ -3,7 +3,7 @@ import { keepSrc } from '../lib/prov';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
-import { ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
+import { BreakChip, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { palette } from '../lib/theme';
 import { nf, pct, sn } from '../lib/format';
 import type { Market, MetricKey, Win } from '../lib/market';
@@ -120,7 +120,7 @@ function Deck({ m }: { m: Market }) {
         <Panel title={`${tabLabel}: נתח שוק`} aside={<span>% מנכסי הענף</span>}><Chart label="נתח שוק" height={270} deps={deps} build={trend('share', 1, false)} onPoint={trendPt('share')} /></Panel>
         {tab === 'all'
           ? <Panel title="תמהיל הנכס המנוהל" aside={<span>% · מתחת לשם: סך הנכסים, מיליארדי ש"ח</span>}><Chart label="תמהיל" height={270} deps={deps} build={mix} onPoint={mixPt} /></Panel>
-          : <Panel title={`${tabLabel}: שיעור דמי ניהול מנכסים`} aside={<span>%, משוקלל בנכסים</span>}><Chart label="דמי ניהול" height={270} deps={deps} build={trend('fee', 2, false)} onPoint={trendPt('fee')} /></Panel>}
+          : <Panel title={`${tabLabel}: שיעור דמי ניהול מנכסים`} aside={<><span>%, משוקלל בנכסים</span> <BreakChip b={m.breaksFor('fee', tab)[0]} /></>}><Chart label="דמי ניהול" height={270} deps={deps} build={trend('fee', 2, false)} onPoint={trendPt('fee')} /></Panel>}
       </div>
       {hasFlows && (
         <>

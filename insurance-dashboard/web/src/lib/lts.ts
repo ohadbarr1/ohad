@@ -43,7 +43,7 @@ export function periodsOf(set: PeriodSet, b: Base): string[] {
   }
 }
 export function periodLabel(p: string): string {
-  if (/^\d{4}-\d{2}$/.test(p)) return `${Number(p.slice(5))}.${p.slice(0, 4)}`;
+  if (/^\d{4}-\d{2}$/.test(p)) { const m = Number(p.slice(5)); return m % 3 === 0 ? `Q${m / 3}'${p.slice(2, 4)}` : `${p.slice(5)}/${p.slice(2, 4)}`; }
   if (p.startsWith('FY')) return `FY'${p.slice(4)}`;
   const [w, y] = p.split('-');
   return `${w}'${y.slice(2)}`;

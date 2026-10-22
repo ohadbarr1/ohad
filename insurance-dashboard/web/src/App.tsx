@@ -20,6 +20,7 @@ import { DocSearch } from './pages/DocSearch';
 import { FundCard, FundMakers, Funds } from './pages/Funds';
 import { Dcf, Sotp, ValuationLayout } from './pages/Valuation';
 import { Managers } from './pages/Managers';
+import { NotFound } from './pages/NotFound';
 
 export function App() {
   return (
@@ -69,7 +70,7 @@ export function App() {
           <Route path="dcf" element={<Dcf />} />
           <Route path="sotp" element={<Sotp />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

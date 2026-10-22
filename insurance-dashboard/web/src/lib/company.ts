@@ -1,19 +1,19 @@
 import type { CompanyData, CompanyMetric, CompanyPeriod } from './types';
 import { periodLabel } from './format';
 
-export interface Row { idx: number; m: CompanyMetric; values: Map<number, { v: number; page: number | null; u?: number | null; der?: boolean; old?: boolean; turned?: boolean }> }
+export interface Row { idx: number; m: CompanyMetric; values: Map<number, { v: number; page: number | null; u?: number | null; der?: boolean; old?: boolean; turned?: boolean; re?: boolean }> }
 export interface SheetView { code: string; entity: string; group: string; title: string; rows: Row[]; periods: CompanyPeriod[]; periodIdx: number[]; dims: string[] }
 
 /** Read-only index over the facts of one company. */
 export class CompanyStore {
-  readonly byMetric = new Map<number, Map<number, { v: number; page: number | null; u?: number | null; der?: boolean; old?: boolean; turned?: boolean }>>();
+  readonly byMetric = new Map<number, Map<number, { v: number; page: number | null; u?: number | null; der?: boolean; old?: boolean; turned?: boolean; re?: boolean }>>();
   readonly metricsBySheet = new Map<string, number[]>();
 
   constructor(readonly d: CompanyData) {
     for (const [mi, pi, v, page, u, flag] of d.facts) {
       let m = this.byMetric.get(mi);
       if (!m) { m = new Map(); this.byMetric.set(mi, m); }
-      m.set(pi, flag ? { v, page, u, der: !!(flag & 1), old: !!(flag & 2), turned: !!(flag & 4) } : { v, page, u });
+      m.set(pi, flag ? { v, page, u, der: !!(flag & 1), old: !!(flag & 2), turned: !!(flag & 4), re: !!(flag & 8) } : { v, page, u });  // 8: the restated figure of a later report
     }
     d.metrics.forEach((m, i) => {
       const arr = this.metricsBySheet.get(m.sheet) ?? [];

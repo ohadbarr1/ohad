@@ -6,6 +6,8 @@ import { Icon } from './Icon';
 import { THEMES, useTheme } from '../lib/theme';
 import { Icon3D } from './Icon3D';
 import { SourceProvider } from './Source';
+import { useRegistry } from '../lib/useData';
+import { titleFor } from '../lib/title';
 
 const NAV: [string, string, string][] = [
   ['/', 'home', 'בית'], ['/companies', 'companies', 'חברות'], ['/industry', 'compare', 'השוואה ענפית'],
@@ -18,6 +20,11 @@ export function Layout() {
   const loc = useLocation();
   const section = loc.pathname.split('/').slice(0, 3).join('/');
   useEffect(() => { window.scrollTo(0, 0); }, [section]);
+  const reg = useRegistry();
+  useEffect(() => {
+    const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
+    document.title = titleFor(loc.pathname, (id) => names.get(id)) ?? 'העמוד לא נמצא · fox';
+  }, [loc.pathname, reg.data]);
   // a row of tabs wider than the screen opens with the current tab in view
   useEffect(() => { const id = requestAnimationFrame(() => document.querySelectorAll('.subnav a.active').forEach((a) => a.scrollIntoView({ inline: 'center', block: 'nearest' }))); return () => cancelAnimationFrame(id); }, [loc.pathname]);
   // spotlight: surfaces read the pointer position from --mx/--my

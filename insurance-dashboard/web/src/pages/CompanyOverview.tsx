@@ -2,39 +2,19 @@ import { DividendCapacity } from '../components/DividendCapacity';
 import { Link } from 'react-router-dom';
 import { MetricCard, type MetricCardProps } from '../components/MetricCard';
 import { ErrorBox, Panel } from '../components/ui';
-import { nf, pct, sn } from '../lib/format';
+import { nf, pct, pubLabel, sn } from '../lib/format';
 import type { CompanyStore } from '../lib/company';
 import type { Market, MetricKey, Win } from '../lib/market';
 import { METRIC_BY_KEY } from '../lib/market';
-import { useCompanyDocs, useCompanyPrice, useKpis } from '../lib/useData';
-import { dividendProv, periodLabelShort, type CompanyKpi } from '../lib/kpi';
+import { useCompanyDocs, useKpis } from '../lib/useData';
+import { periodLabelShort, type CompanyKpi } from '../lib/kpi';
 import { mayaReport } from '../lib/sources';
 import { printed } from './companyProv';
-import type { DocEntry, PriceData } from '../lib/types';
+import type { DocEntry } from '../lib/types';
 import { DOC_TYPE, useCtx } from './Company';
 
 const tone = (v: number | null | undefined) => (v == null || v === 0 ? undefined : v > 0 ? ('pos' as const) : ('neg' as const));
 const chg = (a: number | null | undefined, b: number | null | undefined) => (a != null && b ? (a / b - 1) * 100 : null);
-
-function priceCards(p: PriceData): MetricCardProps[] {
-  const from = p.dates.findIndex((d) => d >= '2019-01-01');
-  const x = p.dates.slice(from).map((d) => d.slice(0, 4)), close = p.close.slice(from).map((v) => +(v / 100).toFixed(2));
-  const yearAgo = p.close[Math.max(0, p.close.length - 53)];
-  const byYear = new Map<string, number>();
-  p.dividends.forEach(([d, v]) => { if (d >= '2019-01-01') byYear.set(d.slice(0, 4), (byYear.get(d.slice(0, 4)) ?? 0) + v); });
-  const years = [...byYear.keys()].sort();
-  const ttm = p.dividends.filter(([d]) => d > shiftIso(p.asof, -1)).reduce((s, [, v]) => s + v, 0);
-  const cards: MetricCardProps[] = [{
-    title: 'מחיר מניה', unit: 'ש"ח', value: nf(p.last / 100, 2), delta: { text: pct(chg(p.last, yearAgo), 1, true) + ' YoY', tone: tone(chg(p.last, yearAgo)) },
-    x, series: [{ name: 'סגירה שבועית', data: close }], kind: 'area', color: 2, dec: 2, foot: `${p.ticker} · ${p.source} · ${p.asof}`,
-  }];
-  if (years.length) cards.push({
-    title: 'דיבידנד למניה', unit: 'ש"ח, LTM', value: nf(ttm / 100, 2), src: ttm ? () => dividendProv(p) : undefined,
-    x: years.map((y) => `'${y.slice(2)}`), series: [{ name: 'דיבידנד, FY', data: years.map((y) => +((byYear.get(y) ?? 0) / 100).toFixed(2)) }], color: 5, dec: 2, foot: `${p.source} · לפי יום האקס`,
-  });
-  return cards;
-}
-function shiftIso(iso: string, years: number) { return `${Number(iso.slice(0, 4)) + years}${iso.slice(4)}`; }
 
 function marketCards(m: Market, group: string): MetricCardProps[] {
   const g = m.groupIndex(group);
@@ -117,7 +97,7 @@ function LatestDocs({ docs }: { docs: DocEntry[] }) {
     <Panel title="דיווחים אחרונים" aside={<Link to="filings">כל המסמכים</Link>}>
       <div className="scroll"><table>
         <tbody>{docs.slice(0, 7).map((d) => (
-          <tr key={d.url}><td><a href={d.url} target="_blank" rel="noreferrer">{d.title}</a></td><td>{DOC_TYPE[d.type]}</td><td><span className="num">{d.period}</span></td><td><span className="num">{d.pages ?? '–'}</span> עמ׳</td><td><span className="num">{d.date}</span></td></tr>
+          <tr key={d.url}><td><a href={d.url} target="_blank" rel="noreferrer" title={d.title}>{DOC_TYPE[d.type]}</a>{d.en && <span className="chip" style={{ marginInlineStart: 6 }}>EN</span>}</td><td><span className="num">{d.period.endsWith('FY') ? `FY'${d.period.slice(2, 4)}` : `${d.period.slice(4)}'${d.period.slice(2, 4)}`}</span></td><td><span className="num">{d.pages ?? '–'}</span> עמ׳</td><td><span className="num">{pubLabel(d.date)}</span></td></tr>
         ))}</tbody>
       </table></div>
     </Panel>
@@ -129,22 +109,20 @@ import { Notes, Star } from '../components/Follow';
 
 export function CompanyOverview() {
   const { entry, store, market, storeError } = useCtx();
-  const price = useCompanyPrice(entry.id, entry.has_price);
   const docs = useCompanyDocs(entry.id, entry.docs > 0);
   const { kpis } = useKpis();
   if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
   const k = kpis?.get(entry.id);
   const kc = k ? kpiCards(k) : [];
   const fin = store ? financialCards(store).filter((c) => c.tag === 'IFRS 17') : [];
-  const px = price.data ? priceCards(price.data).slice(1) : [];  // dividends only: no price display
   const mk = market && entry.market_group ? marketCards(market, entry.market_group) : [];
   return (
     <>
       <CompanyTear id={entry.id} />
-      {(kc.length > 0 || px.length > 0) && (
+      {kc.length > 0 && (
         <section>
           <h2 className="band">דוחות<span className="muted">{k ? `${periodLabelShort(k.quarters[0].period)} עד ${periodLabelShort(k.quarters[k.quarters.length - 1].period)}` : ''}</span></h2>
-          <div className="mgrid stagger">{[...kc, ...px].map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
+          <div className="mgrid stagger">{kc.map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
         </section>
       )}
       {fin.length > 0 && (

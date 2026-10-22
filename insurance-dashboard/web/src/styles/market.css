@@ -26,6 +26,7 @@
 
 /* the price input and where it comes from */
 .pxin { white-space: nowrap; }
+@media (max-width: 760px) { .pxin { white-space: normal; } }
 .pxin .src2 { color: var(--faint); font-size: 11.5px; }
 
 /* a holding company's subsidiary, listed under it */

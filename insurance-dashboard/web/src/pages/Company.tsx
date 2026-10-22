@@ -333,7 +333,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
   };
   const compactCells = (mi: number) => {
     const pi = lastPi!, f0 = store.byMetric.get(mi)?.get(pi), f = seen(f0) ? f0 : undefined, v = val(mi, pi), pp = prior(pi), unit = d.metrics[mi].unit;
-    const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`}>{fmtCell(v, unit, scale)}</span>;
+    const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{fmtCell(v, unit, scale)}</span>;
     return <>
       <td>{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? open(f.page, f.u) : null}>{body}</Sourced>}</td>
       <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit, mi, pi, pp, 'YoY')}</td>
@@ -448,7 +448,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
           return <button key={k} type="button" role="tab" aria-selected={stdTab === k} onClick={() => { setStdTab(k); setRange([null, null]); setSel([]); }}><b>{name}</b><span className="num">{pl(cs[0])} עד {pl(cs[cs.length - 1])}</span><small>{note}</small></button>;
         })}
       </div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? 'נטוי = מחושב מהשנתי · אפור = IFRS 4 · כל ערך מקושר לעמוד המקור' : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<span>{!sv ? '' : fromReports ? `נטוי = מחושב מהשנתי · אפור = IFRS 4${restated.length ? ` · נקודה = הוצג מחדש (${restated.length})` : ''} · כל ערך מקושר לעמוד המקור` : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table className={`${dense ? 'dense' : ''}${compact ? ' compact' : ''}`}>
             <thead>{compact && lastPi != null ? <tr><th>שורה</th><th>{pl(lastPi)}</th><th>YoY</th>{qoqPi != null && <th>QoQ</th>}</tr> : <tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{pl(pi)}</th>)}<th>עמ׳</th></tr>}</thead>
@@ -467,7 +467,7 @@ function FinancialsInner({ store, companyId, onOutsideLink }: { store: CompanySt
                       <span className={hasNotes ? 'expl' : undefined} title={r.m.label} onClick={hasNotes ? () => setExplain(explain === r.idx ? null : r.idx) : undefined}>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
 
                     </div></td>
-                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : undefined}>{txt}</span>; return <td key={pi}>{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}</td>; })}
+                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi}>{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td></>}
                   </tr>
                 );
