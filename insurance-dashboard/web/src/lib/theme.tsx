@@ -2,26 +2,25 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 export type Theme = 'phoenix' | 'dark';
 /** Phoenix is the house look; the obsidian look and its light variant stay as choices. */
-export const THEMES: [Theme, string][] = [['phoenix', 'הפניקס'], ['dark', 'אובסידיאן (כהה)']];
+export const THEMES: [Theme, string][] = [['phoenix', 'בהיר'], ['dark', 'כהה']];
 const KEY = 'theme2'; // a new key, so a choice saved before the Phoenix look existed does not hide it
 const Ctx = createContext<{ theme: Theme; toggle: () => void; next: Theme }>({ theme: 'phoenix', toggle: () => {}, next: 'dark' });
 const after = (t: Theme): Theme => THEMES[(THEMES.findIndex(([x]) => x === t) + 1) % THEMES.length][0];
 
 function initial(): Theme {
   try { const t = localStorage.getItem(KEY); if (t === 'phoenix' || t === 'dark') return t; } catch { /* storage may be blocked */ }
-  return 'phoenix';
+  return typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'phoenix';
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(initial);
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem(KEY, theme); } catch { /* ignore */ }
     const meta = document.querySelector('meta[name="theme-color"]');
     // Phoenix has a navy top bar; the dark look shows its page ground (as rgb: browsers do not all read oklch here)
     requestAnimationFrame(() => meta?.setAttribute('content', theme === 'phoenix' ? '#111C3F' : cssColor('--bg')));
   }, [theme]);
-  return <Ctx.Provider value={{ theme, next: after(theme), toggle: () => setTheme(after) }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ theme, next: after(theme), toggle: () => setTheme((t) => { const n = after(t); try { localStorage.setItem(KEY, n); } catch { /* ignore */ } return n; }) }}>{children}</Ctx.Provider>;
 }
 export const useTheme = () => useContext(Ctx);
 

@@ -1,5 +1,5 @@
 /* IFRS, capital and sources-of-profit pages */
-abbr.orig { font-size: 9.5px; font-weight: 500; line-height: 1; color: var(--faint); border: 1px solid var(--line-soft); border-radius: 4px; padding: 1px 4px; margin-inline-start: 5px; cursor: help; text-decoration: none; vertical-align: 1px; white-space: nowrap; }
+abbr.orig { font-size: var(--t-1); font-weight: 500; line-height: 1; color: var(--faint); border: 1px solid var(--line-soft); border-radius: 4px; padding: 1px 4px; margin-inline-start: 5px; cursor: help; text-decoration: none; vertical-align: 1px; white-space: nowrap; }
 abbr.orig:hover { color: var(--fg); border-color: var(--accent-line); }
 .cv { white-space: nowrap; }
 .cv .chip { margin-inline-start: 4px; }

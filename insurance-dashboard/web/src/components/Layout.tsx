@@ -4,7 +4,6 @@ import { Search } from './Search';
 import { Logo } from './Logo';
 import { Icon } from './Icon';
 import { THEMES, useTheme } from '../lib/theme';
-import { Icon3D } from './Icon3D';
 import { SourceProvider } from './Source';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Loading } from './ui';
@@ -30,24 +29,13 @@ export function Layout() {
   }, [loc.pathname, reg.data]);
   // a row of tabs wider than the screen opens with the current tab in view
   useEffect(() => { const id = requestAnimationFrame(() => document.querySelectorAll('.subnav a.active').forEach((a) => a.scrollIntoView({ inline: 'center', block: 'nearest' }))); return () => cancelAnimationFrame(id); }, [loc.pathname]);
-  // spotlight: surfaces read the pointer position from --mx/--my
-  useEffect(() => {
-    const move = (e: PointerEvent) => {
-      const t = (e.target as Element | null)?.closest?.('.panel, .mcard, .card, .kpis') as HTMLElement | null;
-      if (!t) return;
-      const r = t.getBoundingClientRect();
-      t.style.setProperty('--mx', `${e.clientX - r.left}px`); t.style.setProperty('--my', `${e.clientY - r.top}px`);
-    };
-    window.addEventListener('pointermove', move, { passive: true });
-    return () => window.removeEventListener('pointermove', move);
-  }, []);
   return (
     <SourceProvider>
     <div className="shell">
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox"><Logo size={36} /></NavLink>
         <nav aria-label="ראשי">
-          {NAV.map(([to, icon, label]) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `item${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><Icon3D name={icon} />{label}</NavLink>)}
+          {NAV.map(([to, icon, label]) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `item${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} />{label}</NavLink>)}
         </nav>
         <div className="foot">
           <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>

@@ -1,5 +1,5 @@
 import type { EChartsCoreOption } from 'echarts/core';
-import { CHART_FONT, chartBase, palette } from './theme';
+import { CHART_FONT, chartBase, cssColor } from './theme';
 import { nf } from './format';
 
 /* One chart engine for the site.
@@ -199,4 +199,4 @@ export function foxPeers(spec: PeerSpec): EChartsCoreOption {
     }),
   };
 }
-function cssNeutral(): string { return palette()[7]; }
+function cssNeutral(): string { return cssColor('--neutral'); }

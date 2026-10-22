@@ -1,8 +1,8 @@
 /* Sector comparison: a long page of slide-sized cards. Two fixed tones carry time (older, latest); the accent marks the company in focus. */
-:root, :root[data-theme="dark"] { --sx-navy: oklch(0.62 0.07 255); --sx-hi: oklch(0.8 0.13 175); }
-:root[data-theme="phoenix"], :root[data-theme="light"] { --sx-navy: #111C3F; --sx-hi: #2FBFA6; }
+:root { --sx-navy: #111C3F; --sx-hi: var(--s4); }
+:root[data-theme="dark"] { --sx-navy: oklch(0.62 0.07 255); }
 .sx { display: flex; flex-direction: column; gap: 14px; }
-.sx-bar { position: sticky; top: 56px; z-index: 15; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; padding: 10px 12px; background: color-mix(in oklch, var(--bg) 88%, transparent); backdrop-filter: blur(14px); border: 1px solid var(--line-soft); border-radius: 12px; }
+.sx-bar { position: sticky; top: 56px; z-index: 15; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line-soft); border-radius: 12px; }
 .sx-bar nav { display: flex; gap: 6px; flex-wrap: wrap; margin-inline-start: auto; }
 .sx-bar nav .chip { min-height: 34px; }
 .sx h2.band { scroll-margin-top: 150px; margin-top: 18px; }
@@ -21,9 +21,9 @@
 .sx-table th, .sx-table td { padding: 6px 8px; border-bottom: 1px solid var(--line-soft); text-align: center; white-space: nowrap; }
 .sx-table th:first-child, .sx-table td:first-child { text-align: start; font-weight: 600; }
 .sx-table th { color: var(--muted); font-weight: 500; font-size: 11.5px; }
-.sx-table .on { color: var(--accent); font-weight: 700; }
+.sx-table .on { color: var(--accent-text); font-weight: 700; }
 .sx-table .agg { background: color-mix(in oklch, var(--sx-hi) 12%, transparent); font-weight: 600; }
-.sx-table tr.on td { color: var(--accent); font-weight: 700; }
+.sx-table tr.on td { color: var(--accent-text); font-weight: 700; }
 .sx-table tr.tot td { border-top: 2px solid var(--fg); font-weight: 700; }
 .sx-ic td.num { text-align: end; }
 .sx-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
@@ -31,7 +31,7 @@
 .sx-sum dl { margin: 0; display: grid; gap: 8px; }
 .sx-sum dl div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 7px; }
 .sx-sum dt { font-size: 12px; color: var(--muted); }
-.sx-sum dd { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.sx-sum dd { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
 @media (max-width: 1100px) { .sx-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
   .sx-bar { top: 52px; padding: 8px; }
@@ -50,4 +50,4 @@
 .sx .scroll { overflow-x: auto; }
 
 .sx-mark { margin: 8px 0 0; padding: 8px 12px; border: 1px dashed var(--warn); border-radius: 8px; background: color-mix(in oklch, var(--warn) 10%, transparent); font-size: 12.5px; line-height: 1.5; }
-.sx-mark b { color: var(--warn); font-weight: 800; }
+.sx-mark b { color: var(--warn); font-weight: 700; }

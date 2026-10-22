@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <script>
-      try { var t = localStorage.getItem('theme2'); document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'phoenix'); } catch (e) { document.documentElement.setAttribute('data-theme', 'phoenix'); }
+      try { var t = localStorage.getItem('theme2'); if (t !== 'dark' && t !== 'phoenix') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'phoenix'; document.documentElement.setAttribute('data-theme', t); } catch (e) { document.documentElement.setAttribute('data-theme', 'phoenix'); }
     </script>
     <title>fox</title>
     <meta name="theme-color" content="#111C3F" />
@@ -19,9 +19,6 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-180.png" />
     <link rel="icon" type="image/svg+xml" href="/fox.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" />
   </head>
   <body>
     <div id="root"></div>

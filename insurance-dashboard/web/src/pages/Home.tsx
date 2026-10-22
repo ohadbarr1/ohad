@@ -1,7 +1,4 @@
-import { Scene3D } from '../components/Icon3D';
 import { Link } from 'react-router-dom';
-import { Search } from '../components/Search';
-import { Logo } from '../components/Logo';
 import { Count } from '../components/Count';
 import { Sourced } from '../components/Source';
 import type { Prov } from '../lib/prov';
@@ -50,31 +47,10 @@ export function Home() {
   };
   return (
     <>
-      <header className="mast">
-        <div>
-          <h1>fox<span>.</span></h1>
-          <p className="tagline">ביטוח, פנסיה וגמל. מהדוח, עם עמוד המקור.</p>
-          <Search big />
-        </div>
-        <div className="mark"><Logo size={170} animated /></div>
-        <Scene3D />
-      </header>
-
-      {m && (
-        <section className="kpis">
-          {([['סך נכסים מנוהלים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['ביטוחי מנהלים ופוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
-            <div className="kpi" key={s}>
-              <div className="l">{label}</div>
-              <div className="v num"><Sourced src={() => ({ k: 'reg', metric: 'assets', pi: L, w: 'm', set: s, g: -1 })}><Count value={fam(s)} /></Sourced></div>
-              <div className="s">מיליארד ש"ח · <Sourced className={`num ${(m.growth(L, 'ltm', s, -1) ?? 0) >= 0 ? 'pos' : 'neg'}`} src={() => growthProv(label, s)}>{pct(m.growth(L, 'ltm', s, -1), 1, true)}</Sourced> YoY · {m.plabel(L)}</div>
-            </div>
-          ))}
-        </section>
-      )}
-
+      <h1 className="sr-only">fox · ביטוח, פנסיה וגמל</h1>
       {filings.length > 0 && (
         <section className="panel">
-          <div className="hd"><h2>דיווחים אחרונים</h2><div className="aside"><span>MAYA · עברית</span></div></div>
+          <div className="hd"><h2>דיווחים אחרונים</h2><div className="aside">{seen && filings.some((f) => f.date > seen) && <span className="chip loaded"><span className="num">{filings.filter((f) => f.date > seen).length}</span> חדשים מאז הביקור הקודם</span>}<span>MAYA · עברית</span></div></div>
           <div className="scroll"><table>
             <tbody>{filings.map((f) => (
               <tr key={f.id}>
@@ -85,6 +61,18 @@ export function Home() {
               </tr>
             ))}</tbody>
           </table></div>
+        </section>
+      )}
+
+      {m && (
+        <section className="kpis">
+          {([['סך נכסים מנוהלים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['ביטוחי מנהלים ופוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
+            <div className="kpi" key={s}>
+              <div className="l">{label}</div>
+              <div className="v num"><Sourced src={() => ({ k: 'reg', metric: 'assets', pi: L, w: 'm', set: s, g: -1 })}><Count value={fam(s)} /></Sourced></div>
+              <div className="s">מיליארד ש"ח · <Sourced className={`num ${(m.growth(L, 'ltm', s, -1) ?? 0) >= 0 ? 'pos' : 'neg'}`} src={() => growthProv(label, s)}>{pct(m.growth(L, 'ltm', s, -1), 1, true)}</Sourced> YoY · {m.plabel(L)}</div>
+            </div>
+          ))}
         </section>
       )}
 

@@ -3,6 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { ThemeProvider } from './lib/theme';
+import '@fontsource/heebo/hebrew-400.css';
+import '@fontsource/heebo/hebrew-500.css';
+import '@fontsource/heebo/hebrew-700.css';
+import '@fontsource/heebo/latin-400.css';
+import '@fontsource/heebo/latin-500.css';
+import '@fontsource/heebo/latin-700.css';
 import './styles.css';
 
 // the installed app and return visits: shell and last data from the service worker (production builds only)

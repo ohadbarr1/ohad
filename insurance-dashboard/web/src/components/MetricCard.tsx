@@ -44,21 +44,20 @@ export function MetricCard({ title, tag, unit, value, delta, x, series, kind = '
           const b = chartBase(), pal = palette();
           const step = Math.max(1, Math.ceil(x.length / 7));
           return {
-            animationDuration: 800, animationEasing: 'cubicOut', animationDelay: (idx: number) => idx * 12, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 4, right: 4, top: 8, bottom: 2, containLabel: true },
+            animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 4, right: 4, top: 8, bottom: 2, containLabel: true },
             tooltip: { trigger: 'axis', axisPointer: { type: kind === 'area' ? 'line' : 'shadow' }, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, confine: true,
               valueFormatter: (v: number | null) => (v == null ? '–' : nf(v, dec)) },
             xAxis: { type: 'category', data: x, boundaryGap: kind !== 'area', axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false },
               axisLabel: { color: b.mu, fontSize: 10, interval: kind === 'area' ? (i: number) => i > 0 && x[i] !== x[i - 1] : (i: number) => (x.length - 1 - i) % step === 0, hideOverlap: true } },
             yAxis: { type: 'value', scale: kind === 'area', splitNumber: 3, axisLabel: { color: b.mu, fontSize: 10 }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
             series: series.map((s, i) => {
-              // one series: ember bars fading to nothing, the latest period at full strength; several: the categorical palette
+              // one series: flat bars in the neutral ink, the latest period in ember; several: the categorical palette in its fixed order
               const single = series.length === 1, c = single ? b.accent : pal[(s.color ?? color + i) % pal.length];
-              const fade = (top: number, bottom: number) => ({ type: 'linear' as const, x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: alpha(c, top) }, { offset: 1, color: alpha(c, bottom) }] });
               const last = s.data.reduce((at, v, k) => (v != null ? k : at), -1);
-              if (kind === 'area') return { name: s.name, type: 'line', data: s.data, symbol: 'none', smooth: 0.25, lineStyle: { color: c, width: 2, shadowColor: alpha(c, 0.6), shadowBlur: 10 }, itemStyle: { color: c }, areaStyle: { color: fade(0.32, 0) } };
+              if (kind === 'area') return { name: s.name, type: 'line', data: s.data, symbol: 'none', lineStyle: { color: c, width: 2 }, itemStyle: { color: c }, areaStyle: { color: alpha(c, 0.1) } };
               return { name: s.name, type: 'bar', stack: kind === 'stack' ? 'a' : undefined, barCategoryGap: '24%',
-                data: single ? s.data.map((v, k) => (k === last ? { value: v, itemStyle: { color: fade(1, 0.55), shadowColor: alpha(c, 0.55), shadowBlur: 14 } } : v)) : s.data,
-                itemStyle: { color: single ? fade(0.62, 0.14) : c, opacity: single ? 1 : 0.92, borderRadius: kind === 'stack' ? 0 : [3, 3, 0, 0] } };
+                data: single ? s.data.map((v, k) => (k === last ? { value: v, itemStyle: { color: c } } : v)) : s.data,
+                itemStyle: { color: single ? alpha(b.mu, 0.42) : c, opacity: single ? 1 : 0.92, borderRadius: kind === 'stack' ? 0 : [2, 2, 0, 0] } };
             }),
           };
         }} />

@@ -14,7 +14,7 @@
 .recon-n dd { margin: 1px 0 0; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .recon-n div:last-child { text-align: end; }
 .recon-n a { color: inherit; text-decoration: underline dotted color-mix(in oklch, currentColor 38%, transparent); text-underline-offset: 4px; display: inline-block; padding: 3px 0; }
-.recon-n a:hover { color: var(--accent); text-decoration-style: solid; }
+.recon-n a:hover { color: var(--accent-text); text-decoration-style: solid; }
 .recon-x { display: flex; flex-direction: column; gap: 1px; color: var(--muted); font-size: 11.5px; line-height: 1.5; overflow-wrap: anywhere; }
 .recon-x a { color: var(--fg); text-decoration: underline dotted color-mix(in oklch, currentColor 38%, transparent); text-underline-offset: 3px; }
-.recon-x a:hover { color: var(--accent); }
+.recon-x a:hover { color: var(--accent-text); }

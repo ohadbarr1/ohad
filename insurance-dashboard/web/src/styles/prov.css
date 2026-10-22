@@ -1,6 +1,8 @@
 /* A number that opens its source: reads as a figure, a dotted rule says it can be followed. */
-a.src, button.src { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-decoration: underline dotted color-mix(in oklch, currentColor 38%, transparent); text-underline-offset: 4px; text-decoration-thickness: 1px; border-radius: 3px; letter-spacing: inherit; }
-a.src:hover, button.src:hover { color: var(--accent); text-decoration-color: var(--accent); text-decoration-style: solid; }
+a.src, button.src { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-decoration: none; text-underline-offset: 4px; text-decoration-thickness: 1px; border-radius: 3px; letter-spacing: inherit; }
+tr:hover :is(a.src, button.src) { text-decoration: underline dotted color-mix(in oklch, currentColor 45%, transparent); }
+@media (hover: none) { a.src, button.src { text-decoration: underline dotted color-mix(in oklch, currentColor 38%, transparent); } }
+a.src:hover, button.src:hover { color: var(--accent-text); text-decoration: underline solid var(--accent) 1px; }
 a.src:focus-visible, button.src:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 2px; }
 td .src, .mval .src { font-variant-numeric: tabular-nums; }
 
