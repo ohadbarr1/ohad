@@ -1,17 +1,13 @@
 import { lazy, type ComponentType } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 
 /** A page loaded the first time its route is visited: each route group is its own file, so the shell carries no page it does not show. */
 const page = <M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M) => lazy(async () => ({ default: (await load())[name] as ComponentType }));
 const mHome = () => import('./pages/Home');
 const Home = page(mHome, 'Home');
-const mMarket = () => import('./pages/Market');
-const MarketLayout = page(mMarket, 'MarketLayout');
-const MarketOverview = page(mMarket, 'MarketOverview');
-const MarketRanking = page(mMarket, 'MarketRanking');
-const MarketFunds = page(mMarket, 'MarketFunds');
-const MarketGroup = page(mMarket, 'MarketGroup');
+const mLens = () => import('./pages/SavingsLens');
+const SavingsLens = page(mLens, 'SavingsLens');
 const mCompanies = () => import('./pages/Companies');
 const Companies = page(mCompanies, 'Companies');
 const mCompany = () => import('./pages/Company');
@@ -29,13 +25,10 @@ const mCompare = () => import('./pages/Compare');
 const Compare = page(mCompare, 'Compare');
 const mIndustry = () => import('./pages/Industry');
 const IndustryLayout = page(mIndustry, 'IndustryLayout');
-const IndustrySavings = page(mIndustry, 'IndustrySavings');
 const mIndustryIfrs = () => import('./pages/IndustryIfrs');
 const IndustryIfrs = page(mIndustryIfrs, 'IndustryIfrs');
 const mIndustryCapital = () => import('./pages/IndustryCapital');
 const IndustryCapital = page(mIndustryCapital, 'IndustryCapital');
-const mIndustryEcon = () => import('./pages/IndustryEcon');
-const IndustryEcon = page(mIndustryEcon, 'IndustryEcon');
 const mIndustryMatrix = () => import('./pages/IndustryMatrix');
 const IndustryMatrix = page(mIndustryMatrix, 'IndustryMatrix');
 const mIndustryLines = () => import('./pages/IndustryLines');
@@ -61,6 +54,16 @@ const Calendar = page(mCalendar, 'Calendar');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
+/** /market/* and /industry/econ became views of the Savings Lens: an old link lands on the same figures */
+function LensRedirect({ to, view }: { to?: 'funds'; view?: string }) {
+  const loc = useLocation(), { name } = useParams();
+  const q = new URLSearchParams(loc.search);
+  if (to === 'funds') return <Navigate to={`/funds${loc.search}`} replace />;
+  if (view) q.set('v', view);
+  if (name) q.set('g', name);
+  const qs = q.toString();
+  return <Navigate to={`/industry/savings${qs ? '?' + qs : ''}`} replace />;
+}
 /** the report day is the company home now: an old link keeps its report (?p=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`..${loc.search}`} replace />; }
 
@@ -69,12 +72,12 @@ export function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="market" element={<MarketLayout />}>
-          <Route index element={<Navigate to="overview" replace />} />
-          <Route path="overview" element={<MarketOverview />} />
-          <Route path="ranking" element={<MarketRanking />} />
-          <Route path="funds" element={<MarketFunds />} />
-          <Route path="group/:name" element={<MarketGroup />} />
+        <Route path="market">
+          <Route index element={<LensRedirect view="market" />} />
+          <Route path="overview" element={<LensRedirect view="market" />} />
+          <Route path="ranking" element={<LensRedirect view="rank" />} />
+          <Route path="funds" element={<LensRedirect to="funds" />} />
+          <Route path="group/:name" element={<LensRedirect />} />
         </Route>
         <Route path="companies" element={<Companies />} />
         <Route path="company/:id" element={<CompanyLayout />}>
@@ -91,13 +94,13 @@ export function App() {
         <Route path="compare" element={<Navigate to="/industry/headline" replace />} />
         <Route path="industry" element={<IndustryLayout />}>
           <Route index element={<Navigate to="sectors" replace />} />
-          <Route path="savings" element={<IndustrySavings />} />
+          <Route path="savings" element={<SavingsLens />} />
           <Route path="ifrs" element={<IndustryIfrs />} />
           <Route path="sectors" element={<IndustrySectors />} />
           <Route path="matrix" element={<IndustryMatrix />} />
           <Route path="lines" element={<IndustryLines />} />
           <Route path="csm" element={<IndustryCsm />} />
-          <Route path="econ" element={<IndustryEcon />} />
+          <Route path="econ" element={<LensRedirect view="econ" />} />
           <Route path="capital" element={<IndustryCapital />} />
           <Route path="headline" element={<Compare />} />
           <Route path="search" element={<DocSearch />} />

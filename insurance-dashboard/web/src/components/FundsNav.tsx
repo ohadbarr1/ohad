@@ -7,9 +7,8 @@ export function FundsNav() {
     <nav className="subnav" aria-label="קופות ושוק">
       <NavLink to="/funds" end>מסלולים</NavLink>
       <NavLink to="/funds/makers">יצרן מול השוק</NavLink>
-      <NavLink to="/market/overview">שוק</NavLink>
-      <NavLink to="/market/ranking">דירוג קבוצות</NavLink>
       <NavLink to="/managers">מנהלים</NavLink>
+      <NavLink to="/industry/savings">עדשת חיסכון</NavLink>
     </nav>
   );
 }
