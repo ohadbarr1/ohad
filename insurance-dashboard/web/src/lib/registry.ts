@@ -148,6 +148,7 @@ export class Book {
   }
   private sum(m: MetricDef, title: string, formula: string, parts: [string, Val][]): Val {
     if (parts.some(([, x]) => x.v == null)) return none(title, `חסר רכיב: ${parts.filter(([, x]) => x.v == null).map(([l]) => l).join(', ')}`);
+    if (mixed(parts)) return none(title, 'הרכיבים חוצים את המעבר מ-IFRS 4 ל-IFRS 17: סכום של שני תקנים אינו מוצג');
     const v = parts.reduce((s, [, x]) => s + x.v!, 0);
     const fl = parts.reduce((s, [, x]) => s | x.fl, 0) | F_DER;
     return { v, fl, prov: () => ({ k: 'calc', title, value: fmtV(m.u, v), unit: this.unit(m), formula, inputs: parts.map(([l, x]) => ({ label: l, v: fmtV(m.u, x.v!), src: x.prov })) }) };
@@ -168,6 +169,7 @@ export class Book {
     return none(title, 'אין נתון לרבעון זה');
   }
   private diff(m: MetricDef, title: string, formula: string, parts: [string, Val][]): Val {
+    if (mixed(parts)) return none(title, 'הרכיבים חוצים את המעבר מ-IFRS 4 ל-IFRS 17');
     const v = parts[0][1].v! - parts.slice(1).reduce((s, [, x]) => s + x.v!, 0), fl = parts.reduce((s, [, x]) => s | x.fl, 0) | F_DER;
     return { v, fl, prov: () => ({ k: 'calc', title, value: fmtV(m.u, v), unit: this.unit(m), formula, inputs: parts.map(([l, x]) => ({ label: l, v: fmtV(m.u, x.v!), src: x.prov })) }) };
   }
@@ -213,6 +215,8 @@ export class Book {
     return br ? `${br.nt} · ${br.m}` : null;
   }
 }
+/** some parts reported under IFRS 4 and some under IFRS 17 */
+const mixed = (parts: [string, Val][]) => { const o = parts.filter(([, x]) => x.fl & F_OLD).length; return o > 0 && o < parts.length; };
 function ltsKey(m: MetricDef, p: string): string {
   const y = p.slice(0, 4);
   if (p.endsWith('FY')) return `FY${y}`;

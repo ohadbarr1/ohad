@@ -209,7 +209,9 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
   })();
   const press = (ci: number, pi: number) => set({ o: st.o?.c !== ci || st.o.i !== pi ? { c: ci, i: pi, d: 1 } : st.o.d === 1 ? { c: ci, i: pi, d: -1 } : null });
   const used = new Set<number>();
+  let anyRe = false;
   const marks = (ci: number, e: string, x: Val): number[] => {
+    if (x.fl & F_RE) anyRe = true;
     const c = cols[ci], m: number[] = [];
     if (c.tr === 'v' && !c.expr && st.f !== 'LTM' && x.fl & F_DER && book.byId.get(c.mid ?? '')?.src !== 'lts') m.push(1);
     if (x.fl & F_OLD) m.push(2);
@@ -290,7 +292,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
           ))}
         </tfoot>
       </table></div>
-      {(used.size > 0 || [...brkAt].length > 0) && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTE[m]}</li>)}{brkAt.size > 0 && <li><span className="pr-brk" /> מעבר ל-IFRS 17: משמאל לקו המספרים כפי שדווחו לפי IFRS 4</li>}<li><span className="num re" /> הוצג מחדש</li></ol>}
+      {(used.size > 0 || brkAt.size > 0 || anyRe) && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTE[m]}</li>)}{brkAt.size > 0 && <li><span className="pr-brk" /> מעבר ל-IFRS 17: משמאל לקו המספרים כפי שדווחו לפי IFRS 4</li>}{anyRe && <li><span className="num re" /> הוצג מחדש</li>}</ol>}
     </section>
   );
 }
