@@ -27,6 +27,8 @@ export function titleFor(path: string, name: (id: string) => string | undefined)
     case 'calendar': return t('לוח דיווחים');
     case 'book': return t('ספר הגרפים');
     case 'data': return p[1] ? null : t('נתונים ואיכות');
+    case 'restatements': return p[1] ? null : t('הצגות מחדש', 'השוואה ענפית');
+    case 'presentations': return p[1] ? null : t('מצגות משקיעים');
     case 'search': return t('חיפוש');
     case 'doc': return p[1] ? t('קורא מסמכים') : null;
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;

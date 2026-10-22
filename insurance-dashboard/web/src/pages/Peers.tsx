@@ -11,10 +11,12 @@ import { useStored } from '../lib/local';
 import { mayaReport } from '../lib/sources';
 import { usePhone } from '../lib/useMedia';
 import { useSource, type Prov } from '../lib/prov';
-import { back, F_CHART, F_DER, F_FIXED, F_OLD, F_RE, FREQS, fmtV, plab, pord, UNIT_HE, usePeerRegistry, useBook, warmLts, type Book, type Freq, type MetricDef, type PeerSet, type Registry, type Unit, type Val } from '../lib/registry';
+import { back, F_CHART, F_DER, F_FIXED, F_OLD, F_RE, FREQS, fmtV, plab, pord, UNIT_HE, usePeerRegistry, useBook, warmLts, yearAgo, type Book, type Freq, type MetricDef, type PeerSet, type Registry, type Unit, type Val } from '../lib/registry';
 import { cellVal, colLabel, fmtCol, formulaTok, parseCol, resolver, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
 import { ALIASES, autoAlias, ExprError, parse } from '../lib/seriesExpr';
+import { fundRoster, monthOf, rosterDiff, rosterText, useRosterFile } from '../lib/roster';
 import '../styles/peers.css';
+import '../styles/restate.css';
 
 const Deck = lazy(() => import('./IndustrySectors').then((m) => ({ default: m.IndustrySectors })));
 
@@ -23,8 +25,9 @@ interface St { s: string; e: string[] | null; f: Freq; p: string; n: number; v: 
 interface SavedView { id: string; n: string; q: string }
 const KEYS = ['s', 'e', 'f', 'p', 'n', 'v', 'k', 'c', 'o', 'h', 'pin', 'hl', 'w', 't'];
 const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'table' as View, w: 12 };
-const NOTE: Record<number, string> = { 1: 'נגזר מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM); הנוסחה במקור', 2: 'לפי IFRS 4, כפי שדווח במקור', 3: 'נקרא מגרף או מטקסט בדוח', 4: 'בסיס שונה מרוב החברות בעמודה', 5: 'תג XBRL שתוקן מול הדוח המודפס' };
-const SUP = ['', '¹', '²', '³', '⁴', '⁵'];
+const NOTE: Record<number, string> = { 1: 'נגזר מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM); הנוסחה במקור', 2: 'לפי IFRS 4, כפי שדווח במקור', 3: 'נקרא מגרף או מטקסט בדוח', 4: 'בסיס שונה מרוב החברות בעמודה', 5: 'תג XBRL שתוקן מול הדוח המודפס',
+  6: 'הרכב השתנה: החברות שיש להן נתון שונות בין התקופה לשנה שלפניה, ולכן הנתח אינו בר השוואה כמות שהוא', 7: 'כולל קופות חדשות במאגר הרגולטור: חלק מהשינוי הוא קופות שנכנסו לקבוצה, לא כסף שנכנס' };
+const SUP = ['', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷'];
 
 function readSt(sp: URLSearchParams): St {
   const f = FREQS.map(([x]) => x).find((x) => x === sp.get('f')) ?? DEF.f;
@@ -210,7 +213,36 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
   const press = (ci: number, pi: number) => set({ o: st.o?.c !== ci || st.o.i !== pi ? { c: ci, i: pi, d: 1 } : st.o.d === 1 ? { c: ci, i: pi, d: -1 } : null });
   const used = new Set<number>();
   let anyRe = false;
-  const marks = (ci: number, e: string, x: Val): number[] => {
+  // roster (W5-14): a share against a peer set whose members changed from a year earlier; a regulator change that includes fund ids new to the files
+  const needFiles = cols.some((c) => c.mid?.startsWith('reg:') && (c.tr === 'y' || c.tr === 'q'));
+  const { data: rf } = useRosterFile(needFiles);
+  const detail = new Map<string, string>(), rosterLines = new Map<string, string>();
+  const shareRoster = new Map<string, ReturnType<typeof rosterDiff>>();
+  const shareDiff = (ci: number, pi: number) => {
+    const k = `${ci}|${pi}`;
+    if (!shareRoster.has(k)) {
+      const yb = yearAgo(st.f, periods[pi]);
+      shareRoster.set(k, rosterDiff(ents.filter((e) => V(ci, pi, e).v != null), ents.filter((e) => cellVal(book, cols[ci], e, st.f, yb, ents).v != null)));
+    }
+    return shareRoster.get(k) ?? null;
+  };
+  const rosterMarks = (ci: number, pi: number, e: string, m: number[]) => {
+    const c = cols[ci], p = periods[pi];
+    if (c.tr === 's') {
+      const d = shareDiff(ci, pi);
+      if (d) { m.push(6); const t = `${colLabel(c)} · ${plab(st.f, p)} מול ${plab(st.f, yearAgo(st.f, p))}: ${rosterText(d, book.name)}`; detail.set(`${ci}|${pi}|${e}`, t); rosterLines.set(t, t); }
+    } else if (rf && c.mid?.startsWith('reg:') && (c.tr === 'y' || c.tr === 'q')) {
+      const w = c.tr === 'y' || st.f === 'FY' ? 12 : st.f === 'H' ? null : 3;
+      const g = book.ent.get(e)?.mg;
+      const fr = w && g ? fundRoster(rf, g, c.mid.split('@')[1] ?? 'all', monthOf(p), w) : null;
+      if (fr) {
+        m.push(7);
+        const lfl = fr.lfl != null && c.mid.startsWith('reg:assets@') ? ` · בבסיס זהה (אומדן): ${fr.lfl > 0 ? '+' : ''}${fr.lfl.toFixed(1)}%` : '';
+        detail.set(`${ci}|${pi}|${e}`, `${book.name(e)}: ${fr.fresh ? 'התחילה לדווח בתקופה' : `${fr.nIn} קופות חדשות, ${fmtV('m', fr.inA)} מיליוני ש"ח ב-${String(fr.m1 % 100).padStart(2, '0')}/${String(fr.m1).slice(2, 4)}`}${fr.names.length ? ` (${fr.names.slice(0, 3).join(', ')}${fr.names.length > 3 ? '…' : ''})` : ''}${lfl}`);
+      }
+    }
+  };
+  const marks = (ci: number, e: string, x: Val, pi = 0): number[] => {
     if (x.fl & F_RE) anyRe = true;
     const c = cols[ci], m: number[] = [];
     if (c.tr === 'v' && !c.expr && st.f !== 'LTM' && x.fl & F_DER && book.byId.get(c.mid ?? '')?.src !== 'lts') m.push(1);
@@ -218,13 +250,26 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
     if (x.fl & F_CHART) m.push(3);
     if (c.mid && usual[ci] && book.meta(c.mid, e)?.b && book.meta(c.mid, e)?.b !== usual[ci]) m.push(4);
     if (x.fl & F_FIXED) m.push(5);
+    rosterMarks(ci, pi, e, m);
     return m;
   };
   const stats = (ci: number, pi: number) => { const xs = ents.map((e) => [e, V(ci, pi, e)] as [string, Val]).filter(([, x]) => x.v != null); return xs; };
+  /** members of a median / average against the same column a year earlier: a change of members moves the aggregate by itself */
+  const aggRoster = (ci: number, pi: number, kind: 'med' | 'avg') => {
+    if (cols[ci].tr !== 'v') return null;
+    const yb = yearAgo(st.f, periods[pi]), now = stats(ci, pi).map(([e]) => e);
+    const before = ents.map((e) => [e, cellVal(book, cols[ci], e, st.f, yb, ents)] as [string, Val]).filter(([, x]) => x.v != null);
+    const d = rosterDiff(now, before.map(([e]) => e));
+    if (!d) return null;
+    const f = kind === 'med' ? median : (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
+    const same = new Set(d.same), a = stats(ci, pi).filter(([e]) => same.has(e)).map(([, x]) => x.v!), b = before.filter(([e]) => same.has(e)).map(([, x]) => x.v!);
+    const lfl = a.length >= (kind === 'med' ? 3 : 2) ? `על בסיס זהה (${a.length}): ${fmtCol(cols[ci], f(a))} מול ${fmtCol(cols[ci], f(b))}` : 'על בסיס זהה: פחות מדי חברות';
+    return `הרכב השתנה מול ${plab(st.f, yb)}: ${rosterText(d, book.name)} · ${lfl}`;
+  };
   const statProv = (ci: number, pi: number, kind: 'med' | 'avg', v: number): Prov => {
     const c = cols[ci], xs = stats(ci, pi).sort((a, b) => a[1].v! - b[1].v!);
     return { k: 'calc', title: `${kind === 'med' ? 'חציון' : 'ממוצע'} · ${colLabel(c)} · ${plab(st.f, periods[pi])}`, value: fmtCol(c, v),
-      formula: kind === 'med' ? `חציון ${xs.length} החברות בקבוצה שיש להן נתון` : `ממוצע פשוט של ${xs.length} החברות בקבוצה שיש להן נתון`,
+      formula: kind === 'med' ? `חציון ${xs.length} החברות בקבוצה שיש להן נתון` : `ממוצע פשוט של ${xs.length} החברות בקבוצה שיש להן נתון`, note: aggRoster(ci, pi, kind) ?? undefined,
       inputs: xs.map(([e, x]) => ({ label: book.name(e), v: fmtCol(c, x.v!), src: x.prov })) };
   };
   const range = new Map<string, [number, number]>();
@@ -269,13 +314,13 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
             {sub.map(({ ci, pi }) => {
               const x = V(ci, pi, e), c = cols[ci], cls = `${pi === 0 ? 'g0' : ''}${brkAt.has(`${ci}|${pi}`) ? ' brk' : ''}${st.pin === ci ? ' pin' : ''}`;
               if (x.v == null) return <td key={`${ci}|${pi}`} className={cls}><span className="muted" title={x.why}>–</span></td>;
-              const ms = marks(ci, e, x); ms.forEach((m) => used.add(m));
+              const ms = marks(ci, e, x, pi); ms.forEach((m) => used.add(m));
               const rg = range.get(`${ci}|${pi}`), heat = rg && rg[1] > rg[0] ? (x.v - rg[0]) / (rg[1] - rg[0]) : null;
               const tone = c.tr !== 'v' ? (x.v > 0 ? ' pos' : x.v < 0 ? ' neg' : '') : x.v < 0 ? ' neg' : '';
               return (
                 <td key={`${ci}|${pi}`} className={`${cls}${heat != null ? ' heat' : ''}`} style={heat != null ? { ['--h' as string]: `${Math.round(4 + heat * 24)}%` } : undefined}>
                   <Sourced className={`num${tone}${x.fl & F_OLD ? ' old' : ''}${x.fl & F_RE ? ' re' : ''}`} href={c.tr === 'v' ? x.href : null} src={x.prov}>{fmtCol(c, x.v)}</Sourced>
-                  {ms.length > 0 && <sup title={ms.map((m) => NOTE[m]).join(' · ')}>{ms.map((m) => SUP[m]).join('')}</sup>}
+                  {ms.length > 0 && <sup title={[...ms.map((m) => NOTE[m]), detail.get(`${ci}|${pi}|${e}`)].filter(Boolean).join(' · ')}>{ms.map((m) => SUP[m]).join('')}</sup>}
                 </td>
               );
             })}
@@ -287,12 +332,13 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
               const xs = stats(ci, pi).map(([, x]) => x.v!);
               if (xs.length < (kind === 'med' ? 3 : 2)) return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><span className="muted">–</span></td>;
               const v = kind === 'med' ? median(xs) : xs.reduce((s, x) => s + x, 0) / xs.length;
-              return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><Sourced src={() => statProv(ci, pi, kind, v)}><span className="num">{fmtCol(cols[ci], v)}</span></Sourced></td>;
+              const ro = aggRoster(ci, pi, kind);
+              return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><Sourced src={() => statProv(ci, pi, kind, v)}><span className="num">{fmtCol(cols[ci], v)}</span></Sourced>{ro && <span className="chip est pr-roster" title={ro} aria-label={ro}>הרכב השתנה</span>}</td>;
             })}</tr>
           ))}
         </tfoot>
       </table></div>
-      {(used.size > 0 || brkAt.size > 0 || anyRe) && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTE[m]}</li>)}{brkAt.size > 0 && <li><span className="pr-brk" /> מעבר ל-IFRS 17: משמאל לקו המספרים כפי שדווחו לפי IFRS 4</li>}{anyRe && <li><span className="num re" /> הוצג מחדש</li>}</ol>}
+      {(used.size > 0 || brkAt.size > 0 || anyRe) && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTE[m]}{m === 6 && rosterLines.size > 0 && <> · {[...rosterLines.keys()].slice(0, 4).join(' · ')}</>}</li>)}{brkAt.size > 0 && <li><span className="pr-brk" /> מעבר ל-IFRS 17: משמאל לקו המספרים כפי שדווחו לפי IFRS 4</li>}{anyRe && <li><span className="num re" /> הוצג מחדש</li>}</ol>}
     </section>
   );
 }
