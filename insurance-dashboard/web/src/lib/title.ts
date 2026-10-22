@@ -6,7 +6,7 @@ const COMPANY_TAB: Record<string, string> = {
 };
 const INDUSTRY_TAB: Record<string, string> = {
   sectors: 'השוואת ענפים', lines: 'שורות דוח', csm: 'כלכלת CSM', ifrs: 'IFRS 17 · CSM', capital: 'הון ודיבידנד',
-  econ: 'רווחיות פנסיה וגמל', savings: 'נכסים מנוהלים', headline: 'לאורך זמן', search: 'חיפוש בדוחות', matrix: 'מטריצת עמיתים',
+  econ: 'רווחיות פנסיה וגמל', savings: 'עדשת חיסכון', headline: 'לאורך זמן', search: 'חיפוש בדוחות', matrix: 'מטריצת עמיתים',
 };
 const MARKET_TAB: Record<string, string> = { overview: 'סקירת שוק', ranking: 'דירוג חברות', funds: 'קופות' };
 

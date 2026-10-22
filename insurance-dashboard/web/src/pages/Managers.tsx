@@ -1,13 +1,13 @@
 import { Fragment, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
+import { MgrChip } from '../components/MgrChip';
 import { ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { Sourced } from '../components/Source';
 import { fundCell, fundRef, listP, warmHist } from '../lib/market';
 import type { Prov } from '../lib/prov';
 import '../styles/prov-market.css';
 import { cls, nf, pct, sn } from '../lib/format';
-import { useMarketData, useRegistry } from '../lib/useData';
+import { useMarketData } from '../lib/useData';
 import type { Family, Fund } from '../lib/types';
 
 type Fam = 'all' | Family;
@@ -17,7 +17,6 @@ const sum = (fs: Fund[], k: keyof Fund) => fs.reduce((s, f) => s + ((f[k] as num
 /** Managing companies and their funds, from the regulator's latest monthly snapshot. */
 export function Managers() {
   const { data, error } = useMarketData();
-  const reg = useRegistry();
   const [fam, setFam] = useState<Fam>('all');
   const [grp, setGrp] = useState('all');
   const [open, setOpen] = useState<string | null>(null);
@@ -41,7 +40,6 @@ export function Managers() {
       byAssets(r.list).filter((f) => f[k] != null).map((f) => ({ label: weighted ? `${f.name} · נכסים ${f.assets == null ? '–' : nf(f.assets, 0)}` : f.name, v: fmt(f), src: () => fundCell(A, f, k)! })));
   const S = Sourced;
   const stop = (e: React.MouseEvent, fn: () => void) => { if (!(e.target as HTMLElement).closest('.src')) fn(); };
-  const co = (g: string) => reg.data?.find((c) => c.market_group === g)?.id;
   const asof = `${String(data.meta.asof).slice(4)}/${String(data.meta.asof).slice(2, 4)}`;
   return (
     <>
@@ -56,7 +54,7 @@ export function Managers() {
           <tbody>{rows.map((r) => (
             <Fragment key={r.mgr}>
               <tr style={{ cursor: 'pointer' }} className={open === r.mgr ? 'lead' : ''} onPointerEnter={() => r.list.slice(0, 40).forEach((f) => warmHist(fundRef(f)))} onClick={(e) => stop(e, () => setOpen(open === r.mgr ? null : r.mgr))}>
-                <td>{r.mgr}<span className="dim">{co(r.grp) ? <Link to={`/company/${co(r.grp)}`} onClick={(e) => e.stopPropagation()}>{r.grp}</Link> : r.grp}</span></td>
+                <td>{r.mgr}<span className="fund-mgr"><MgrChip grp={r.grp} /></span></td>
                 <td><S src={() => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של מסלולי החברה, חלקי 1,000 (מיליוני ש"ח למיליארדי ש"ח)', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1))}><span className="num">{nf(r.assets, 1)}</span></S></td>
                 <td style={{ width: 120 }}><div className="bar"><i style={{ width: `${(r.assets / max) * 100}%` }} /></div></td>
                 <td><S src={() => agg(r, 'assets', 'מסלולים', 'ספירת מסלולי החברה בחודש האחרון', nf(r.list.length, 0), undefined, (f) => nf(f.assets!, 1))}><span className="num">{r.list.length}</span></S></td>

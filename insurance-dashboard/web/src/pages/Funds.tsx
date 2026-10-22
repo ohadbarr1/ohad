@@ -2,13 +2,16 @@ import { foxOption } from '../lib/foxchart';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { FundsHead, FundsNav } from '../components/FundsNav';
+import { MgrChip } from '../components/MgrChip';
+import { CRISES, CRISIS_FORMULA, RATING_NOTE, crisis, ddText, rate, ratingProv, type Rating } from '../lib/rating';
+import '../styles/lens.css';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { countP, dsOf, expP, flowP, fundP, listP, monthIn, monthsBack, retP, seedHist, warmHist, y12P, type TrackRef } from '../lib/market';
 import { useSource, type Prov } from '../lib/prov';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
 import { chartBase, palette } from '../lib/theme';
-import { nf, pct, sn } from '../lib/format';
+import { nf, pct, pubLabel, sn } from '../lib/format';
 import '../styles/market.css';
 import '../styles/prov-market.css';
 import { load, useFundCats, useFundHist, useFunds, useRegistry, type Fund, type FundCats, type FundHist } from '../lib/useData';
@@ -40,6 +43,9 @@ const rankSrc = (f: Fund, per: Per, asof: number, rank: number, n: number): Prov
 const topSrc = (f: Fund): Prov => ({ k: 'calc', title: `רבע עליון · ${f.name}`, value: `${f.top}/${f.yrs}`,
   formula: 'בכמה מהשנים הקלנדריות המלאות מתוך חמש האחרונות תשואת המסלול (ריבית דריבית על 12 תשואות חודשיות) הייתה ברבע העליון של הקטגוריה: מקום ≤ ⌈n÷4⌉, בקטגוריה של 4 מסלולים לפחות',
   inputs: [{ label: 'שנים ברבע העליון', v: nf(f.top ?? 0, 0) }, { label: 'שנים שנבדקו', v: nf(f.yrs ?? 0, 0) }], note: 'מחושב מתשואות כל חברי הקטגוריה היום, בבניית הנתונים' });
+/** the source of a rating component's value */
+const compSrc = (f: Fund, c: 'sharpe' | 'ret' | 'cons' | 'fee', asof: number): (() => Prov) | undefined =>
+  c === 'sharpe' ? () => plain(f, asof, 'sharpe') : c === 'fee' ? () => plain(f, asof, 'fee') : c === 'cons' ? (f.yrs ? () => topSrc(f) : undefined) : () => perSrc(f, f.a5 != null ? 'a5' : 'a3', asof);
 /** A category average over its last n months: asset-weighted monthly returns of today's members, compounded. */
 const CAT_F = 'ממוצע משוקלל נכסים של תשואות חברי הקטגוריה בכל חודש (MONTHLY_YIELD), ובריבית דריבית על חודשי התקופה';
 const catSrc = (title: string, c: FundCats[string], n: number, value: string, formula = CAT_F): Prov => {
@@ -112,7 +118,9 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
   const { data, error } = useFunds();
   const cats = useFundCats().data;
   const [sp, setSp] = useSearchParams();
-  const prod = sp.get('prod') ?? 'השתלמות', track = sp.get('track') ?? 'כללי', per = (sp.get('per') as Per) ?? 'y12';
+  // a search arriving from elsewhere (the palette, an old /market/funds?q= link) opens the product and track of the first match
+  const hit = !sp.get('prod') && sp.get('q') ? data?.funds.find((f) => f.name.includes(sp.get('q')!.trim())) : undefined;
+  const prod = sp.get('prod') ?? hit?.prod ?? 'השתלמות', track = sp.get('track') ?? hit?.track ?? 'כללי', per = (sp.get('per') as Per) ?? 'y12';
   const sel = useMemo(() => (sp.get('sel') ?? '').split(',').filter(Boolean), [sp]);
   const [closed, setClosed] = useState(false);
   // search, the closed-fund switch and the ranking period sit behind one button on a phone, so the first screen shows figures
@@ -141,7 +149,7 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
       const shown = all.filter((f) => f.prod === prod && f.track === tr && (closed || !f.closed));  // the rank is among the tracks on screen
       const ranked = shown.filter((f) => f[per] != null).sort((a, b) => b[per]! - a[per]!);
       const rank = new Map(ranked.map((f, i) => [f.k, i + 1]));
-      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => (!t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)) && screened(f)).map((f) => ({ f, rank: rank.get(f.k) ?? null }));
+      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => (!t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)) && screened(f)).map((f) => ({ f, rank: rank.get(f.k) ?? null, r: rate(f, shown) }));
       return { tr, list, n: ranked.length, assets: shown.reduce((u, f) => u + (f.assets ?? 0), 0), cat: cats?.[`${prod} | ${tr}`] };
     }).filter((g) => g.list.length).sort((x, y) => y.assets - x.assets);
   }, [all, tracks, T, prod, per, closed, q, cats, feeMax, sharpeMin, assetsMin]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -234,7 +242,7 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
       {!makersOnly && <Panel title={`${prod} · ${T === ALL ? 'כל המסלולים' : T}`} aside={<>{T === ALL && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.tr))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}<span><Sourced src={() => countP('מסלולים מדורגים', rows.n, 'המסלולים בטבלה שיש להם תשואה בתקופה שנבחרה')}>{rows.n}</Sourced> מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}{T === ALL && <span>שורת קבוצה: ממוצע המסלול, משוקלל נכסים</span>}<span>סמן עד 6 להשוואה</span></>}>
         {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
           <div className="scroll" style={{ maxHeight: 640 }}><table className="rank">
-            <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th></tr></thead>
+            <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th><th className="wide-only" title={RATING_NOTE}>דירוג fox</th></tr></thead>
             <tbody>
               {groups.map((g) => (
                 <Fragment key={g.tr}>
@@ -242,14 +250,14 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
                     <tr className="sec grp" onClick={(e) => { if ((e.target as Element).closest('a.src, button.src')) return; setOpen(open.includes(g.tr) ? open.filter((x) => x !== g.tr) : [...open, g.tr]); }} aria-expanded={open.includes(g.tr)}>
                       <td><button type="button" className="twist" aria-label={open.includes(g.tr) ? `כווץ את ${g.tr}` : `פתח את ${g.tr}`}>{open.includes(g.tr) ? '▾' : '◂'}</button>{g.tr} <span className="muted" style={{ fontWeight: 400 }}>· <CatCount g={g} /></span></td>
                       <td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><CatP g={g} k={k} /></td>)}<td></td>
-                      <td className="wide-only"><AssetsOf g={g} /></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td>
+                      <td className="wide-only"><AssetsOf g={g} /></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td>
                     </tr>
                   )}
-                  {g.cat && T !== ALL && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><CatP g={g} k={k} /></td>)}<td></td><td className="wide-only"><AssetsOf g={g} /></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
-              {(T !== ALL || open.includes(g.tr)) && g.list.map(({ f, rank }) => (
+                  {g.cat && T !== ALL && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><CatP g={g} k={k} /></td>)}<td></td><td className="wide-only"><AssetsOf g={g} /></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
+              {(T !== ALL || open.includes(g.tr)) && g.list.map(({ f, rank, r: rt }) => (
                 <tr key={f.k} onPointerEnter={() => warmHist(ref(f))}>
                   <td><span style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}><input type="checkbox" checked={sel.includes(f.k)} onChange={() => toggle(f.k)} aria-label={`השווה את ${f.name}`} style={{ marginTop: 4, accentColor: 'var(--accent)' }} />
-                    <span><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link>{f.closed && <span className="chip" style={{ marginInlineStart: 6 }}>סגורה</span>}<span className="dim">{f.grp}</span></span></span></td>
+                    <span><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link>{f.closed && <span className="chip" style={{ marginInlineStart: 6 }}>סגורה</span>}<span className="fund-mgr"><MgrChip grp={f.grp} mgr={f.mgr} short /></span></span></span></td>
                   <td>{rank == null ? <span className="num muted">–</span> : <Sourced src={() => rankSrc(f, per, asof, rank, g.n)}><span className="num muted">{rank}</span></Sourced>}</td>
                   {PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}>{f[k] == null ? <P v={null} /> : <Sourced src={() => perSrc(f, k, asof)}><P v={f[k]} /></Sourced>}</td>)}
                   <td>{f.fee == null ? <span className="muted">–</span> : <Sourced src={() => plain(f, asof, 'fee')}><span className="num">{nf(f.fee, 2)}%</span></Sourced>}</td>
@@ -257,6 +265,7 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
                   <td className="wide-only">{f.sharpe == null ? <span className="num">–</span> : <Sourced src={() => plain(f, asof, 'sharpe')}><span className="num">{nf(f.sharpe, 2)}</span></Sourced>}</td>
                   <td className="wide-only">{f.st == null ? <span className="num">–</span> : <Sourced src={() => expSrc(f, asof, 'st')}><span className="num">{`${nf(f.st, 0)}%`}</span></Sourced>}</td>
                   <td className="wide-only">{f.yrs ? <Sourced src={() => topSrc(f)}><span className={`num ${f.top! * 2 > f.yrs ? 'pos' : ''}`}>{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>}</td>
+                  <td className="wide-only">{rt.score == null ? <span className="muted" title={rt.why}>–</span> : <Sourced src={() => ratingProv(f, rt, (c) => compSrc(f, c, asof))}><span className="num">{nf(rt.score, 0)}</span></Sourced>}</td>
                 </tr>
               ))}
                 </Fragment>
@@ -330,7 +339,7 @@ export function FundCard() {
 
   return (
     <>
-      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span>{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span></div></div></div>
+      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span></div></div></div>
       <FundsNav />
       <section className="kpis">
         <Kpi label="LTM" value={f.y12 == null ? '–' : SRC(() => perSrc(f, 'y12', asof), pct(f.y12, 1, true))} tone={f.y12 == null ? undefined : f.y12 < 0 ? 'neg' : 'pos'} sub={rankOf('y12') ? <RK k="y12" /> : ' '} />
@@ -368,6 +377,24 @@ export function FundCard() {
       </div>
 
       <div className="grid2">
+        <Panel title="משברים" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
+          <div className="scroll"><table>
+            <thead><tr><th>אירוע</th><th>ירידה</th><th>ממוצע {f.track}</th><th>התאוששות</th><th className="wide-only">התאוששות, ממוצע</th></tr></thead>
+            <tbody>{CRISES.map((c) => { const me = crisis(h, c.base, c.to), ct = cat ? crisis(cat, c.base, c.to) : null;
+              const cp = (x: typeof me, who: string, own: boolean): Prov => ({ k: 'calc', title: `${c.label} · ${who}`, value: ddText(x), formula: `${CRISIS_FORMULA}. בסיס: סוף ${ym(c.base)}; חלון השפל: עד ${ym(c.to)}`,
+                inputs: [{ label: 'שפל', v: x ? ym(x.trough) : '–' }, { label: 'חודשים להתאוששות', v: x?.rec == null ? 'טרם' : nf(x.rec, 0) }, ...(x ? x.months.map((p) => own ? monthIn(R0, 'y', p, h.y[h.p.indexOf(p)]) : { label: `ממוצע הקטגוריה · ${ym(p)}`, v: cat && cat.p.includes(p) ? sn(cat.y[cat.p.indexOf(p)], 2) + '%' : '–' }) : [])] });
+              return <tr key={c.key}><td>{c.label}<span className="dim num">{ym(c.base)} → {ym(c.to)}</span></td>
+                <td>{me == null ? <span className="muted" title="אין תשואות לכל חודשי החלון">–</span> : <Sourced src={() => cp(me, f.name, true)}><span className={`num ${me.dd < 0 ? 'neg' : ''}`}>{ddText(me)}</span></Sourced>}</td>
+                <td>{ct == null ? <span className="muted">–</span> : <Sourced src={() => cp(ct, `ממוצע ${f.track}`, false)}><span className={`num ${ct.dd < 0 ? 'neg' : ''}`}>{ddText(ct)}</span></Sourced>}</td>
+                <td><span className="num">{me == null ? '–' : me.rec == null ? 'טרם' : me.rec}</span></td><td className="wide-only"><span className="num muted">{ct == null ? '–' : ct.rec == null ? 'טרם' : ct.rec}</span></td></tr>; })}</tbody>
+          </table></div>
+          <div className="fnote">ירידה: מסוף חודש הבסיס עד השפל בחלון. התאוששות: מספר החודשים מהשפל עד חזרה לרמת הבסיס.</div>
+        </Panel>
+        <RatingPanel f={f} peers={peers} asof={asof} />
+      </div>
+      <Heatmap h={h} f={R0} />
+
+      <div className="grid2">
         <Panel title="חשיפות" aside={<span>% מהנכסים · 10 שנים</span>}>
           <Chart label="חשיפות" height={260} deps={[k, h.p.length]} onPoint={(si, di) => { const key = (['st', 'fo', 'fx'] as const)[si], ser = [h.st, h.fo, h.fx][si]; if (!key || !ser) return; const pv = last(ser)[di], a = last(h.a)[di], p = last(h.p)[di]; if (pv != null) open(expP(R0, p, EXP[key][0], EXP[key][1], pv, a ?? null)); }} build={() => {
             const pal = palette();
@@ -375,19 +402,22 @@ export function FundCard() {
               series: ([['מניות', h.st], ['חו"ל', h.fo], ['מט"ח', h.fx]] as [string, (number | null)[]][]).map(([name, data], i) => ({ name, data: last(data), kind: 'line' as const, pct: true, color: pal[i] })) });
             }} />
         </Panel>
-        <Panel title="נכסים ודמי ניהול" aside={<span>מיליוני ש"ח · 10 שנים</span>}>
-          <Chart label="נכסים" height={260} deps={[k, h.p.length]} onPoint={(si, di) => { const p = last(h.p)[di], v = (si === 0 ? last(h.a) : last(h.fee))[di]; if (v != null) open(si === 0 ? fundP(R0, p, 'TOTAL_ASSETS', 'נכסים', nf(v, 1), 'מיליוני ש"ח') : fundP(R0, p, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(v, 2) + '%')); }} build={() => {
+        <Panel title="נכסים ודמי ניהול" aside={<span>10 שנים · שני צירים נפרדים</span>}>
+          <Chart label="נכסים" height={190} deps={[k, h.p.length]} onPoint={(_si, di) => { const p = last(h.p)[di], v = last(h.a)[di]; if (v != null) open(fundP(R0, p, 'TOTAL_ASSETS', 'נכסים', nf(v, 1), 'מיליוני ש"ח')); }} build={() => {
             const b = chartBase();
-            return foxOption({ x: last(h.p).map(ym), unit: 'מיליוני ש"ח', dense: true, full: true, series: [
-              { name: 'נכסים', data: last(h.a), kind: 'bar', color: b.mu, opacity: 0.45, dec: 0 },
-              { name: 'דמי ניהול מצבירה', data: last(h.fee), kind: 'line', pct: true, color: b.accent, dec: 2 }] });
+            return foxOption({ x: last(h.p).map(ym), unit: 'נכסים, מיליוני ש"ח', dense: true, full: true, legend: false, series: [{ name: 'נכסים', data: last(h.a), kind: 'bar', color: b.mu, opacity: 0.45, dec: 0 }] });
+            }} />
+          <Chart label="דמי ניהול מצבירה" height={140} deps={[k, h.p.length]} onPoint={(_si, di) => { const p = last(h.p)[di], v = last(h.fee)[di]; if (v != null) open(fundP(R0, p, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(v, 2) + '%')); }} build={() => {
+            const b = chartBase(), o = foxOption({ x: last(h.p).map(ym), unit: '%', dense: true, full: true, scale: true, legend: false, series: [{ name: 'דמי ניהול מצבירה', data: last(h.fee), kind: 'line', pct: true, color: b.accent, dec: 2 }] });
+            ((o as { yAxis: { axisLabel: { formatter: unknown }; name?: string }[] }).yAxis).forEach((y) => { y.axisLabel.formatter = (v: number) => `${nf(v, 2)}%`; y.name = 'דמי ניהול מצבירה, %'; });
+            return o;
             }} />
         </Panel>
       </div>
       <Panel title="פרטי המסלול" aside={<span>כפי שמדווח לרשות שוק ההון</span>}>
         <div className="scroll"><table>
           <tbody>
-            {([['מספר ברשות', String(f.id)], ['סיווג', f.cls], ['התמחות', [f.spec, f.sub].filter(Boolean).join(' · ') || null], ['אוכלוסיית יעד', f.target], ['מועד הקמה', f.since ? f.since.slice(0, 10) : null], ['גוף מנהל', f.mgr], ['תאגיד שולט', f.ctrl],
+            {([['מספר ברשות', String(f.id)], ['סיווג', f.cls], ['התמחות', [f.spec, f.sub].filter(Boolean).join(' · ') || null], ['אוכלוסיית יעד', f.target], ['מועד הקמה', f.since ? pubLabel(f.since) : null], ['גוף מנהל', f.mgr], ['תאגיד שולט', f.ctrl],
               ['נכסים נזילים', f.liq == null ? null : `${nf(f.liq, 1)}%`, () => fundP(R0, asof, 'LIQUID_ASSETS_PERCENT', 'נכסים נזילים', `${nf(f.liq!, 1)}%`)],
               ['חשיפה למניות', f.st == null ? null : `${nf(f.st, 1)}%`, () => expSrc(f, asof, 'st')], ['חשיפה לחו"ל', f.fo == null ? null : `${nf(f.fo, 1)}%`, () => expSrc(f, asof, 'fo')], ['חשיפה למט"ח', f.fx == null ? null : `${nf(f.fx, 1)}%`, () => expSrc(f, asof, 'fx')],
               ['היסטוריה', `${f.n} חודשים, מ-${ym(h.p[0])}`, () => countP(`חודשי היסטוריה · ${f.name}`, f.n, 'החודשים שבהם פורסמה תשואה חודשית למסלול')]] as [string, string | null, (() => Prov)?][]).filter(([, x]) => x).map(([l, x, src]) => <tr key={l}><td className="muted">{l}</td><td style={{ textAlign: 'start' }}>{src ? <Sourced src={src}>{x}</Sourced> : x}</td></tr>)}
@@ -405,6 +435,46 @@ export function FundCard() {
         </Panel>
       )}
     </>
+  );
+}
+
+/** fox's rating of the track in its category: the score, its band and every component, each opening its calculation. */
+function RatingPanel({ f, peers, asof }: { f: Fund; peers: Fund[]; asof: number }) {
+  const r: Rating = rate(f, peers);
+  return (
+    <Panel title="דירוג fox" aside={<span className="chip" title={RATING_NOTE}>שיטת fox · לא המלצה</span>}>
+      {r.score == null ? <Empty title="לא דורג">{r.why}</Empty> : (
+        <div className="rating">
+          <div><Sourced src={() => ratingProv(f, r, (c) => compSrc(f, c, asof))}><span className="score num">{nf(r.score, 0)}</span></Sourced><div className="band" aria-label={`דרגה ${r.band} מתוך 5`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= r.band! ? 'on' : ''} />)}</div><div className="dim">מתוך 100 · {f.prod} · {f.track} · <span className="num">{peers.length}</span> מסלולים</div></div>
+          <div className="scroll"><table>
+            <thead><tr><th>רכיב</th><th className="wide-only">משקל</th><th>ערך</th><th>אחוזון</th></tr></thead>
+            <tbody>{r.parts.map((x) => { const sv = compSrc(f, x.c.key, asof); return <tr key={x.c.key}><td>{x.c.label}</td><td className="wide-only"><span className="num muted">{x.c.w}</span></td>
+              <td>{x.v == null ? '–' : sv ? <Sourced src={sv}><span className="num">{x.c.show(x.v)}</span></Sourced> : <span className="num">{x.c.show(x.v)}</span>}</td>
+              <td>{x.p == null ? <span className="muted" title="פחות מ-5 מסלולים עם נתון">–</span> : <Sourced src={() => ({ k: 'calc', title: `אחוזון · ${x.c.label} · ${f.name}`, value: nf(x.p!, 0), formula: '100 × (גרועים + חצי מהשווים) ÷ (n − 1)', inputs: [{ label: 'ערך המסלול', v: x.c.show(x.v!), src: sv }, { label: 'n', v: nf(x.n, 0) }, { label: 'גרועים', v: nf(x.worse, 0) }, { label: 'שווים', v: nf(x.ties, 0) }] })}><span className="num">{nf(x.p, 0)}</span></Sourced>}</td></tr>; })}</tbody>
+          </table></div>
+        </div>
+      )}
+      <div className="fnote">{RATING_NOTE} הנוסחה המלאה בפתיחת הציון.</div>
+    </Panel>
+  );
+}
+
+/** monthly returns, year by year: each cell opens its published figure */
+function Heatmap({ h, f }: { h: FundHist; f: TrackRef }) {
+  const years = [...new Set(h.p.map((p) => Math.floor(p / 100)))].sort((a, b) => b - a).slice(0, 10);
+  const at = new Map(h.p.map((p, i) => [p, h.y[i]]));
+  const max = Math.max(1, ...h.y.slice(-120).filter((x): x is number => x != null).map(Math.abs));
+  const bg = (v: number) => `color-mix(in oklch, var(${v >= 0 ? '--up' : '--down'}) ${Math.round(8 + 55 * Math.min(1, Math.abs(v) / max))}%, transparent)`;
+  return (
+    <Panel title="תשואות חודשיות" aside={<span>% · 10 שנים · שנה: ריבית דריבית</span>}>
+      <div className="scroll"><table className="heat-m">
+        <thead><tr><th /> {Array.from({ length: 12 }, (_, i) => <th key={i}>{String(i + 1).padStart(2, '0')}</th>)}<th>שנה</th></tr></thead>
+        <tbody>{years.map((y) => { const ms = Array.from({ length: 12 }, (_, i) => y * 100 + i + 1), vals = ms.map((p) => at.get(p) ?? null), have = ms.filter((_p, i) => vals[i] != null);
+          const tot = have.length ? (have.reduce((t, p) => t * (1 + at.get(p)! / 100), 1) - 1) * 100 : null;
+          return <tr key={y}><td className="y num">{y}</td>{ms.map((p, i) => { const v = vals[i]; return <td key={p} className="c" style={v == null ? undefined : { background: bg(v) }}>{v == null ? '' : <Sourced src={() => fundP(f, p, 'MONTHLY_YIELD', 'תשואה חודשית', pc(v))}><span className="num">{nf(v, 1)}</span></Sourced>}</td>; })}
+            <td className="c tot">{tot == null ? '' : <Sourced src={() => retP(f, have, pc(tot), `תשואה ${y}`)}><span className={`num ${tot < 0 ? 'neg' : ''}`}>{nf(tot, 1)}</span></Sourced>}</td></tr>; })}</tbody>
+      </table></div>
+    </Panel>
   );
 }
 

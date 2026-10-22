@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { keepSrc } from '../lib/prov';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
 import { Sourced } from '../components/Source';
@@ -65,7 +64,8 @@ export function IndustryEcon() {
   const P = periods.some((p) => p.k === period) ? period : periods[0]?.k ?? '';
   const A = ACTS.some(([k]) => k === act) ? act : 'provident';
   const M = METRICS.find(([k]) => k === metric) ?? METRICS[0];
-  useEffect(() => { if (P) setSp(keepSrc({ p: P, a: A, m: M[0] }), { replace: true }); }, [P, A, M, setSp]);
+  // merged into the page's query: inside the Savings Lens the view (?v=econ) stays
+  useEffect(() => { if (P) setSp((prev) => { const n = new URLSearchParams(prev); n.set('p', P); n.set('a', A); n.set('m', M[0]); return n; }, { replace: true }); }, [P, A, M, setSp]);
 
   const cur = useMemo(() => (d?.rows ?? []).filter((r) => r.pk === P && r.a === A), [d, P, A]);
   const cell = useMemo(() => new Map(cur.map((r) => [`${r.c}|${r.m}`, r])), [cur]);
