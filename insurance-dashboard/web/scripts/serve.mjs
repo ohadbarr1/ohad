@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 const HEADERS = Object.fromEntries((JSON.parse(readFileSync(new URL('../firebase.json', import.meta.url))).hosting.headers.find((h) => h.source === '**')?.headers ?? []).map((h) => [h.key, h.value]));
 
 const [dir = 'dist', port = '4173'] = process.argv.slice(2);
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml',
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml',
   '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.txt': 'text/plain', '.ics': 'text/calendar; charset=utf-8' };
 createServer(async (req, res) => {
   const path = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(/^(\.\.[/\\])+/, '');

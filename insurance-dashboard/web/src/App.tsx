@@ -31,7 +31,11 @@ const FromSectors = page(mPeersRedirect, 'FromSectors');
 const mIndustryCsm = () => import('./pages/IndustryCsm');
 const IndustryCsm = page(mIndustryCsm, 'IndustryCsm');
 const mDocSearch = () => import('./pages/DocSearch');
-const DocSearch = page(mDocSearch, 'DocSearch');
+const DocSearchRedirect = page(mDocSearch, 'DocSearchRedirect');
+const mSearchPage = () => import('./pages/SearchPage');
+const SearchPage = page(mSearchPage, 'SearchPage');
+const mReader = () => import('./pages/Reader');
+const Reader = page(mReader, 'Reader');
 const mFunds = () => import('./pages/Funds');
 const FundCard = page(mFunds, 'FundCard');
 const FundMakers = page(mFunds, 'FundMakers');
@@ -103,13 +107,15 @@ export function App() {
           <Route path="econ" element={<LensRedirect view="econ" />} />
           <Route path="capital" element={<CsmRedirect view="capital" />} />
           <Route path="headline" element={<FromHeadline />} />
-          <Route path="search" element={<DocSearch />} />
+          <Route path="search" element={<DocSearchRedirect />} />
         </Route>
         <Route path="funds" element={<Funds />} />
         <Route path="funds/makers" element={<FundMakers />} />
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
         <Route path="calendar" element={<Calendar />} />
+        <Route path="search" element={<SearchPage />} />
+        <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
         <Route path="valuation/:id" element={<ValuationLayout />}>
           <Route index element={<ValuationPb />} />

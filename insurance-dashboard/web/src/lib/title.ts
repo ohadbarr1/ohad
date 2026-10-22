@@ -25,6 +25,8 @@ export function titleFor(path: string, name: (id: string) => string | undefined)
     case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'קופות') : p[1] ? t('מסלול', 'קופות') : t('מסלולים', 'קופות');
     case 'managers': return t('מנהלים', 'קופות');
     case 'calendar': return t('לוח דיווחים');
+    case 'search': return t('חיפוש');
+    case 'doc': return p[1] ? t('קורא מסמכים') : null;
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;
     case 'valuation': return p[1] ? (((p[2] ?? '') in VALUATION_TAB) ? t(VALUATION_TAB[p[2] ?? ''], name(p[1]) ?? p[1], 'הערכת שווי') : null) : t('הערכת שווי');
     default: return null;

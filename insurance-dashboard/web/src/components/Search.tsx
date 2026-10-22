@@ -1,41 +1,59 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLoad, useRegistry } from '../lib/useData';
 import { sheetName } from '../lib/company';
-
-interface Item { kind: 'אחרונים' | 'חברה' | 'פונקציה' | 'קבוצה' | 'קופה' | 'שורה בדוח'; label: string; meta: string; to: string }
-
-/** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
-const FUNCS: { code: string; label: string; keys: string[]; to: (id: string) => string }[] = [
-  { code: 'ER', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'דוח', 'yoy', 'qoq'], to: (id) => `/company/${id}/review` },
-  { code: 'RANK', label: 'מול השוק, לפי מסלול', keys: ['rank', 'דירוג', 'מסלולים', 'יצרן', 'תשואות'], to: (id) => `/funds/makers?mk=${id}` },
-  { code: 'SOP', label: 'מקורות רווח וענפים', keys: ['sop', 'מקורות', 'ענפים', 'נוסטרו', 'combined', 'lob'], to: (id) => `/company/${id}/profit` },
-  { code: 'CSM', label: 'IFRS 17 · CSM', keys: ['csm', 'ifrs', '17', 'ra', 'רגישויות', 'הון', 'solvency'], to: (id) => `/company/${id}/ifrs17` },
-  { code: 'FA', label: 'דוחות לאורך זמן', keys: ['fa', 'דוחות', 'financials'], to: (id) => `/company/${id}/financials` },
-  { code: 'LTS', label: 'חיסכון ארוך טווח', keys: ['lts', 'חיסכון', 'פנסיה', 'גמל', 'aum'], to: (id) => `/company/${id}/savings` },
-  { code: 'DOC', label: 'מסמכים וחיפוש בדוחות', keys: ['doc', 'docs', 'מסמכים', 'חיפוש', 'filings'], to: (id) => `/company/${id}/filings` },
-  { code: 'DCF', label: 'הערכת שווי, DCF', keys: ['dcf', 'שווי', 'valuation'], to: (id) => `/valuation/${id}/dcf` },
-  { code: 'SOTP', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
-];
+import { usePhone } from '../lib/useMedia';
+import { loadCorpus, recentQueries, readerHref, rememberQuery, searchText, type Corpus } from '../lib/search';
+import { buildPool, docLabel, FUNCS, parse, rank, type Item, type Kind } from '../lib/searchOmni';
+import '../styles/search.css';
 
 /** Names the search needs from the regulator data, in a file a fraction of market.json: the shell loads it only when the search opens. */
 interface Entities { groups: string[]; funds: [string, string][] }
 
-function useIndex(enabled: boolean): Item[] {
+/** The entity and line pool, loaded the first time the search opens. */
+function usePool(enabled: boolean) {
   const ent = useLoad<Entities>(enabled ? 'search/entities.json' : null);
   const reg = useRegistry();
   const rows = useLoad<[string, string, string, number][]>(enabled ? 'search/rows.json' : null);
-  return useMemo(() => {
-    if (!enabled) return [];
-    const out: Item[] = [];
-    reg.data?.forEach((c) => out.push({ kind: 'חברה', label: `${c.name_he} (${c.name_en})`, meta: c.has_financials ? 'דוחות כספיים + שוק' : 'נתוני שוק', to: `/company/${c.id}` }));
-    ent.data?.groups.forEach((g) => out.push({ kind: 'קבוצה', label: g, meta: 'פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון', to: `/market/group/${encodeURIComponent(g)}` }));
-    ent.data?.funds.forEach(([name, grp]) => out.push({ kind: 'קופה', label: name, meta: grp, to: `/market/funds?q=${encodeURIComponent(name)}` }));
-    const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
-    rows.data?.forEach(([c, sheet, label, i]) => out.push({ kind: 'שורה בדוח', label, meta: `${names.get(c) ?? c} · ${sheetName(sheet)}`, to: `/company/${c}/financials?sheet=${encodeURIComponent(sheet)}&m=${i}` }));
-    return out;
-  }, [enabled, ent.data, reg.data, rows.data]);
+  const [corpus, setCorpus] = useState<Corpus | null>(null);
+  useEffect(() => { if (enabled && !corpus) loadCorpus().then(setCorpus, () => {}); }, [enabled, corpus]);
+  const pool = useMemo(() => (enabled && reg.data ? buildPool(reg.data, ent.data?.groups ?? [], ent.data?.funds ?? [], rows.data ?? []) : null), [enabled, reg.data, ent.data, rows.data]);
+  return { pool, corpus, ready: !!(pool && ent.data && rows.data) };
 }
+
+/** Pages of the filings that carry the words, after the company / period / kind the query names. Debounced; one shard per word. */
+function useFullText(q: string, pool: ReturnType<typeof usePool>['pool'], corpus: Corpus | null): { q: string; items: Item[]; total: number | null; busy: boolean } {
+  const [st, setSt] = useState<{ q: string; items: Item[]; total: number | null }>({ q: '', items: [], total: null });
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const s = q.trim();
+    if (!pool || !corpus || s.length < 2) { setSt({ q: s, items: [], total: null }); return; }
+    const p = parse(s, pool.names);
+    const text = p.rest.join(' ');
+    if (!p.rest.some((w) => w.length >= 3 || /^\d/.test(w))) { setSt({ q: s, items: [], total: null }); return; }
+    let live = true;
+    setBusy(true);
+    const id = setTimeout(() => {
+      searchText(text).then((r) => {
+        if (!live) return;
+        const name = (id: string) => pool.reg.find((c) => c.id === id)?.name_he ?? id;
+        const hits = r.mode === 'and' ? r.hits.filter((h) => (!p.company || h.doc.company === p.company.id) && (!p.period || h.doc.period === p.period) && (!p.type || h.doc.type === p.type)) : [];
+        // the best page of each company first: four companies say more than four pages of one report
+        const seen = new Set<string>(), top = hits.filter((h) => !seen.has(h.doc.company) && !!seen.add(h.doc.company)).slice(0, 4);
+        setSt({ q: s, total: hits.length, items: top.map((h, i) => ({ kind: 'מסמך' as Kind, label: docLabel(h.doc, name), meta: `עמ׳ ${h.page}`, to: readerHref(h.doc.id, h.page, text), score: 10 - i })) });
+        setBusy(false);
+      }, () => { if (live) { setBusy(false); setSt({ q: s, items: [], total: 0 }); } });
+    }, 220);
+    return () => { live = false; clearTimeout(id); };
+  }, [q, pool, corpus]);
+  return { ...st, busy };
+}
+
+const ORDER: Kind[] = ['חיפושים', 'אחרונים', 'חברה', 'פונקציה', 'קופה', 'שורה בדוח', 'מסמך'];
+/** a company with a screen code ("הראל csm"): the screen leads */
+const orderFor = (list: Item[]): Kind[] => (list.some((x) => x.kind === 'פונקציה' && x.score >= 90) ? ['פונקציה', ...ORDER.filter((k) => k !== 'פונקציה')] : ORDER);
+const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
 
 export function Search({ big = false }: { big?: boolean }) {
   const [q, setQ] = useState('');
@@ -44,94 +62,123 @@ export function Search({ big = false }: { big?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const nav = useNavigate();
-  const index = useIndex(open || q.length > 0);
-  // with nothing typed: the pages visited last, and the codes that open a screen of any company
-  const recent = useMemo<Item[]>(() => {
-    if (!open || q.trim()) return [];
-    try { return (JSON.parse(localStorage.getItem('fox:recent') ?? '[]') as { p: string; t: string }[]).slice(0, 6).map((r) => ({ kind: 'אחרונים', label: r.t, meta: '', to: r.p })); } catch { return []; }
-  }, [open, q]);
+  const phone = usePhone();
+  const full = phone && open && !big;
+  const { pool, corpus, ready } = usePool(open || q.length > 0);
+  const s = q.trim();
 
-  const reg = useRegistry();
+  // with nothing typed: the searches and pages of last time, and the codes that open a screen of any company
+  const recent = useMemo<Item[]>(() => {
+    if (!open || s) return [];
+    const qs = recentQueries().slice(0, 4).map<Item>((r) => ({ kind: 'חיפושים', label: r, meta: '', to: `/search?q=${encodeURIComponent(r)}`, score: 0 }));
+    let ps: Item[] = [];
+    try { ps = (JSON.parse(localStorage.getItem('fox:recent') ?? '[]') as { p: string; t: string }[]).slice(0, 5).map((r) => ({ kind: 'אחרונים', label: r.t, meta: '', to: r.p, score: 0 })); } catch { /* storage may be blocked */ }
+    return [...qs, ...ps];
+  }, [open, s]);
+
+  const ranked = useMemo(() => (pool && s.length >= 2 ? rank(s, pool, sheetName, corpus) : []), [s, pool, corpus]);
+  const ft = useFullText(s, pool, corpus);
+  const all: Item = { kind: 'מסמך', label: `חיפוש בכל הדוחות: ${s}`, meta: ft.total != null ? `${ft.total.toLocaleString()} עמ׳` : ft.busy ? '…' : '', to: `/search?q=${encodeURIComponent(s)}`, score: -1 };
   const hits = useMemo(() => {
-    const s = q.trim().toLowerCase();
     if (s.length < 2) return [];
-    const words = s.split(/\s+/);
-    // a company name followed by a function code or word opens that screen directly
-    const funcs: Item[] = [];
-    (reg.data ?? []).forEach((c) => {
-      const names = `${c.name_he} ${c.name_en} ${c.id}`.toLowerCase();
-      const own = words.filter((w) => names.includes(w)), rest = words.filter((w) => !names.includes(w));
-      if (!own.length) return;
-      FUNCS.filter((f) => rest.every((w) => f.keys.some((k) => k.startsWith(w)) || f.code.toLowerCase().startsWith(w))).slice(0, rest.length ? 3 : 7)
-        .forEach((f) => funcs.push({ kind: 'פונקציה', label: `${c.name_he} · ${f.label}`, meta: f.code, to: f.to(c.id) }));
-    });
-    if (funcs.length && words.length > 1) return funcs.slice(0, 10);
-    const score = (it: Item) => {
-      const t = (it.label + ' ' + it.meta).toLowerCase();
-      if (!words.every((w) => t.includes(w))) return -1;
-      // a caption that starts with the query beats one that contains it, and a short caption (the line itself) beats a long one (a sub-line)
-      return (it.label.toLowerCase().startsWith(s) ? 3 : 0) + (it.kind === 'חברה' ? 2 : it.kind === 'קבוצה' ? 1 : 0) - Math.min(it.label.length, 200) / 400;
-    };
-    const found = index.map((it) => [score(it), it] as const).filter(([sc]) => sc >= 0).sort((a, b) => b[0] - a[0]).slice(0, 14).map(([, it]) => it);
-    const companies = found.filter((it) => it.kind === 'חברה');
-    return [...companies, ...(companies.length === 1 ? funcs.slice(0, 7) : []), ...found.filter((it) => it.kind !== 'חברה')];
-  }, [q, index, reg.data]);
+    const docs = ranked.filter((x) => x.kind === 'מסמך');
+    const out = ranked.filter((x) => x.kind !== 'מסמך');
+    return [...out, ...docs, ...(ft.q === s ? ft.items : []), all];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ranked, ft, s]);
+  const shown = useMemo(() => {
+    const list = s.length >= 2 ? hits : recent;
+    return orderFor(list).flatMap((k) => list.filter((h) => h.kind === k));
+  }, [hits, recent, s]);
+  const order = useMemo(() => orderFor(shown), [shown]);
 
   useEffect(() => {
-    const close = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const close = (e: MouseEvent) => { if (!full && !box.current?.contains(e.target as Node)) setOpen(false); };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
-  }, []);
+  }, [full]);
   useEffect(() => setHl(0), [q]);
   useEffect(() => {
     if (big) return;
     const key = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       const typing = t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA';
-      if ((e.key === '/' && !typing) || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); input.current?.focus(); input.current?.select(); }
+      if ((e.key === '/' && !typing) || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); setOpen(true); input.current?.focus(); input.current?.select(); }
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [big]);
+  // the phone's full-screen search: Back closes it
+  useEffect(() => {
+    if (!full) return;
+    history.pushState({ ...(history.state ?? {}), search: true }, '');
+    const pop = () => setOpen(false);
+    addEventListener('popstate', pop);
+    document.body.style.overflow = 'hidden';
+    return () => { removeEventListener('popstate', pop); document.body.style.overflow = ''; if (history.state?.search) history.back(); };
+  }, [full]);
 
-  const go = (it: Item) => { setOpen(false); setQ(''); nav(it.to); };
-  const kinds: Item['kind'][] = ['אחרונים', 'חברה', 'פונקציה', 'קבוצה', 'קופה', 'שורה בדוח'];
-  const shown = q.trim().length >= 2 ? hits : recent;
+  const go = (it: Item) => {
+    if (s.length >= 2) rememberQuery(s);
+    setOpen(false); setQ(''); input.current?.blur();
+    // leave the full-screen layer's history entry before moving on
+    if (full && history.state?.search) { history.back(); setTimeout(() => nav(it.to), 0); } else nav(it.to);
+  };
   const optId = (i: number) => `sr-opt-${i}`;
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => Math.min(h + 1, shown.length - 1)); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setHl((h) => Math.max(h - 1, 0)); }
+    if (e.key === 'Enter') { e.preventDefault(); if (shown[hl]) go(shown[hl]); else if (s.length >= 2) go(all); }
+    if (e.key === 'Escape') { setOpen(false); input.current?.blur(); }
+  };
 
+  const field = (auto: boolean) => (
+    <input ref={input} autoFocus={auto}
+      type="search" value={q} placeholder={phone ? 'חיפוש: חברה, שורה, מילה בדוחות' : 'חברה, קופה, שורה בדוח או מילה בדוחות · הראל csm'} aria-label="חיפוש"
+      role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
+      enterKeyHint="search" autoComplete="off" spellCheck={false}
+      onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKey}
+    />
+  );
+  const list = open && (s.length >= 2 || !s) && (
+    <div className="results omni" role="listbox" id="search-results" aria-label="תוצאות חיפוש">
+      {s.length >= 2 && !ready && <div className="muted omni-empty">טוען אינדקס…</div>}
+      {order.map((k) => {
+        const items = shown.filter((h) => h.kind === k);
+        return items.length ? (
+          <div key={k} role="group" aria-label={HEAD[k]}>
+            <h4>{HEAD[k]}</h4>
+            {items.map((it) => {
+              const i = shown.indexOf(it);
+              return (
+                <Link key={it.to + it.label} to={it.to} id={optId(i)} role="option" aria-selected={hl === i} className={hl === i ? 'on' : ''} onMouseEnter={() => setHl(i)}
+                  onClick={(e) => { e.preventDefault(); go(it); }}>
+                  <span className="lbl">{it.score === -1 ? <><span className="muted">חיפוש בכל הדוחות: </span><bdi>{s}</bdi></> : it.label}{it.sub && <span className="sub">{it.sub}</span>}</span><span className="meta num">{it.meta}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ) : null;
+      })}
+      {!s && <div className="codes"><h4>קודים · לכל חברה</h4><div>{FUNCS.map((f) => <span key={f.code} className="chip" title={f.label}><b className="num">{f.code}</b> {f.label}</span>)}</div><div className="muted omni-tip">לדוגמה: <bdi>הראל CSM</bdi> · <bdi>כלל מצגת Q2'26</bdi> · <bdi>רכיב הפסד</bdi> · <bdi>17,717</bdi>{!phone && <> · מקש <kbd>?</kbd> לכל הקיצורים</>}</div></div>}
+    </div>
+  );
+
+  if (full) return (
+    <div className="search">
+      <input type="search" value={q} placeholder="חיפוש" aria-label="חיפוש" readOnly onFocus={() => setOpen(true)} />
+      {createPortal(
+        <div className="omni-full" role="dialog" aria-modal="true" aria-label="חיפוש">
+          <div className="omni-bar">{field(true)}<button type="button" className="btn" onClick={() => history.back()}>ביטול</button></div>
+          {list}
+        </div>, document.body)}
+    </div>
+  );
   return (
     <div className={`search ${big ? 'big' : ''}`} ref={box}>
-      <input ref={input}
-        type="search" value={q} placeholder="חברה, קופה, או חברה + פונקציה: הראל csm" aria-label="חיפוש"
-        role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
-        onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => Math.min(h + 1, shown.length - 1)); }
-          if (e.key === 'ArrowUp') { e.preventDefault(); setHl((h) => Math.max(h - 1, 0)); }
-          if (e.key === 'Enter' && shown[hl]) go(shown[hl]);
-          if (e.key === 'Escape') { setOpen(false); input.current?.blur(); }
-        }}
-      />
+      {field(false)}
       {!big && !q && <span className="hint"><kbd>/</kbd></span>}
-      {open && (q.trim().length >= 2 || !q.trim()) && (
-        <div className="results" role="listbox" id="search-results" aria-label="תוצאות חיפוש">
-          {q.trim().length >= 2 && hits.length === 0 && <div className="muted" style={{ padding: 10 }}>{index.length ? 'לא נמצאו תוצאות' : 'טוען אינדקס…'}</div>}
-          {kinds.map((k) => {
-            const items = shown.filter((h) => h.kind === k);
-            return items.length ? (
-              <div key={k} role="group" aria-label={k}>
-                <h4>{k}</h4>
-                {items.map((it) => (
-                  <Link key={it.to + it.label} to={it.to} id={optId(shown.indexOf(it))} role="option" aria-selected={shown[hl] === it} className={shown[hl] === it ? 'on' : ''} onClick={() => { setOpen(false); setQ(''); }}>
-                    <span>{it.label}</span><span className="meta">{it.meta}</span>
-                  </Link>
-                ))}
-              </div>
-            ) : null;
-          })}
-          {!q.trim() && <div className="codes"><h4>קודים · לכל חברה</h4><div>{FUNCS.map((f) => <span key={f.code} className="chip" title={f.label}><b className="num">{f.code}</b> {f.label}</span>)}</div><div className="muted" style={{ padding: '4px 8px 6px', fontSize: 'var(--t-1)' }}>לדוגמה: <bdi>הראל CSM</bdi> · <bdi>כלל FA</bdi> · מקש <kbd>?</kbd> לכל הקיצורים</div></div>}
-        </div>
-      )}
+      {list}
     </div>
   );
 }
