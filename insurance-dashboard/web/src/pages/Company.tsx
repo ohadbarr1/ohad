@@ -42,6 +42,8 @@ export function CompanyLayout() {
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <Empty title="החברה לא נמצאה">בדוק את הכתובת או חפש בשורת החיפוש.</Empty>;
   const latest = entry.filings[0]?.end ? dateLabel(entry.filings[0].end) : entry.filings[0]?.period;  // the latest report, named like every other period
+  const inStatements = /\/(financials|review|profit|ifrs17)\/?$/.test(loc.pathname);
+  const pNow = new URLSearchParams(loc.search).get('p'), keepP = pNow ? `?p=${pNow}` : '';  // the report travels with the reader between the statement tabs
   return (
     <>
       <div className="pagehead company-head">
@@ -56,18 +58,25 @@ export function CompanyLayout() {
         </div>
         <Link className="chip valchip" to={`/valuation/${entry.id}/dcf`}>הערכת שווי</Link>
       </div>
+      {/* four places: the latest report, the statements (with review, sources of profit and IFRS 17 beneath), long-term savings, documents */}
       <nav className="subnav" aria-label="חברה">
-        <NavLink to="." end>סקירה</NavLink>
-        {/* a fund house has no extracted statements, sources of profit or IFRS 17 disclosures: its tabs are the ones that have content */}
-        {entry.has_financials && <NavLink to="report">יום הדוח</NavLink>}
-        {entry.kind !== 'fund_house' && <NavLink to="review">סקירת דוח</NavLink>}
-        {entry.has_financials && <NavLink to="financials">דוחות כספיים</NavLink>}
-        {entry.kind !== 'fund_house' && <NavLink to="profit">מקורות רווח וענפים</NavLink>}
-        {entry.kind !== 'fund_house' && <NavLink to="ifrs17">IFRS 17</NavLink>}
+        <NavLink to="." end>{entry.has_financials ? 'הדוח האחרון' : 'סקירה'}</NavLink>
+        {(entry.has_financials || entry.kind !== 'fund_house') && <NavLink to="financials" className={() => `wide-tab${inStatements ? ' active' : ''}`}>דוחות</NavLink>}
+        {/* on a phone the statement tabs sit in this one strip, so there is no second row above the figures */}
+        {entry.has_financials && <NavLink to={`financials${keepP}`} className="phone-only">דוחות כספיים</NavLink>}
+        {entry.kind !== 'fund_house' && <><NavLink to={`review${keepP}`} className="phone-only">סקירת דוח</NavLink><NavLink to={`profit${keepP}`} className="phone-only">מקורות רווח</NavLink><NavLink to={`ifrs17${keepP}`} className="phone-only">IFRS 17</NavLink></>}
         <NavLink to="savings">חיסכון ארוך טווח</NavLink>
         <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
         <NavLink to={`/valuation/${entry.id}/dcf`} className="phone-only">שווי</NavLink>
       </nav>
+      {inStatements && entry.kind !== 'fund_house' && (
+        <nav className="subnav sub2" aria-label="דוחות">
+          {entry.has_financials && <NavLink to={`financials${keepP}`}>דוחות כספיים</NavLink>}
+          <NavLink to={`review${keepP}`}>סקירת דוח</NavLink>
+          <NavLink to={`profit${keepP}`}>מקורות רווח וענפים</NavLink>
+          <NavLink to={`ifrs17${keepP}`}>IFRS 17</NavLink>
+        </nav>
+      )}
       <Outlet context={{ entry, store, storeError, market } satisfies Ctx} />
     </>
   );

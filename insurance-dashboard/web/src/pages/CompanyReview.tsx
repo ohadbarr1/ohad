@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from 'react';
+import { usePeriodParam } from '../lib/period';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { nf, pct, byPeriodDesc, dateLabel } from '../lib/format';
@@ -70,7 +71,7 @@ function Trend({ pts }: { pts: { p: string; v: number }[] }) {
 export function CompanyReview({ id, docs }: { id: string; docs: number }) {
   const { data: d, error } = useIfrsData();
   const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
-  const [period, setPeriod] = useState('');
+  const [period, setPeriod] = usePeriodParam();
   const [win, setWin] = useState<'q' | 'ytd'>('q');
   const P = periods.includes(period) ? period : periods[0] ?? '';
   const PP = P && periods.includes(prevPeriod(P)) ? prevPeriod(P) : null;

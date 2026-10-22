@@ -25,12 +25,14 @@ export interface MetricCardProps {
   /** where the headline figure comes from: makes it open the source sheet */
   src?: () => Prov;
   href?: string | null;
+  /** chart height; the ledger's chart pane draws the same card larger */
+  height?: number;
 }
 
 const alpha = (rgb: string, a: number) => (rgb.startsWith('rgb(') ? rgb.replace('rgb(', 'rgba(').replace(')', `,${a})`) : rgb);
 
 /** One metric, one small chart, the latest period marked. The overview is a grid of these. */
-export function MetricCard({ title, tag, unit, value, delta, x, series, kind = 'bar', color = 0, dec = 1, to, foot, wide, i = 0, src, href }: MetricCardProps) {
+export function MetricCard({ title, tag, unit, value, delta, x, series, kind = 'bar', color = 0, dec = 1, to, foot, wide, i = 0, src, href, height = 150 }: MetricCardProps) {
   const empty = !series.some((s) => s.data.some((v) => v != null));
   return (
     <section className={`mcard${wide ? ' wide' : ''}`} style={{ ['--i' as string]: i }}>
@@ -40,7 +42,7 @@ export function MetricCard({ title, tag, unit, value, delta, x, series, kind = '
       </header>
       <div className="mval"><span className="v num">{src && value !== '–' ? <Sourced src={src} href={href}>{value}</Sourced> : value}</span><span className="u">{unit}</span>{delta && <span className={`d num ${delta.tone ?? ''}`}>{delta.text}</span>}</div>
       {empty ? <div className="mnone">אין נתון</div> : (
-        <Chart label={title} height={150} deps={[x.length, x[x.length - 1], series.map((s) => s.data[s.data.length - 1]).join(), kind]} build={() => {
+        <Chart label={title} height={height} deps={[height, x.length, x[x.length - 1], series.map((s) => s.data[s.data.length - 1]).join(), kind]} build={() => {
           const b = chartBase(), pal = palette();
           const step = Math.max(1, Math.ceil(x.length / 7));
           return {

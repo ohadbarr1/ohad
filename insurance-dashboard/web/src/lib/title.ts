@@ -1,7 +1,7 @@
 /** The browser-tab title of every route: what the page is, then the company or section, then the site.
  *  One place, so history, bookmarks, tab strips and screen-reader page announcements can tell pages apart. */
 const COMPANY_TAB: Record<string, string> = {
-  '': 'סקירה', review: 'סקירת דוח', financials: 'דוחות כספיים', report: 'יום הדוח', profit: 'מקורות רווח וענפים',
+  '': 'הדוח האחרון', review: 'סקירת דוח', financials: 'דוחות כספיים', report: 'יום הדוח', profit: 'מקורות רווח וענפים',
   ifrs17: 'IFRS 17', savings: 'חיסכון ארוך טווח', filings: 'מסמכים',
 };
 const INDUSTRY_TAB: Record<string, string> = {

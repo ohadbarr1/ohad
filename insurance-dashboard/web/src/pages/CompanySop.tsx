@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { usePeriodParam } from '../lib/period';
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, Loading, Panel, Seg } from '../components/ui';
@@ -61,7 +62,11 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
   const [data, setData] = useState<SopData | null | undefined>(undefined);
   useEffect(() => { setData(undefined); load<SopData>(`sop/${id}.json`).then(setData, () => setData(null)); }, [id]);
   const periods = useMemo(() => Object.keys(data ?? {}).sort(byPeriodDesc), [data]);
-  const [sel, setSel] = useState('');
+  // the report comes from the address (shared with the other tabs); the window is this tab's own choice
+  const [pp, setPp] = usePeriodParam();
+  const [win, setWinSel] = useState('');
+  const sel = pp && win ? `${pp}|${win}` : '';
+  const setSel = (v: string) => { const [a, b] = v.split('|'); setPp(a); setWinSel(b ?? ''); };
   const [fam, setFam] = useState('sop');
   const [exp, setExp] = useState<Record<string, boolean>>({});
 
@@ -71,7 +76,8 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
     const ws = (p.endsWith('FY') ? ['fy', 'q'] : p.endsWith('Q1') ? ['q'] : ['q', 'ytd']).filter(has);
     return (ws.length ? ws : ['instant'].filter(has)).map((w) => [`${p}|${w}`, winLabel(w, e)] as [string, string]);
   }), [periods, data]);
-  const S = opts.some(([k]) => k === sel) ? sel : opts[0]?.[0] ?? '';
+  // the report from the address, in the window chosen here or the first this report prints (an annual report opens on FY)
+  const S = (win && opts.some(([k]) => k === sel) ? sel : opts.find(([k]) => pp && k.startsWith(`${pp}|`))?.[0]) ?? opts[0]?.[0] ?? '';
   const [P, w0] = S.split('|');
   const end = P ? endOf(P) : '';
   const facts = data?.[P]?.facts ?? [];

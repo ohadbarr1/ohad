@@ -1,4 +1,5 @@
 import { foxOption } from '../lib/foxchart';
+import { usePeriodParam } from '../lib/period';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chart } from '../components/Chart';
@@ -81,7 +82,7 @@ export const periodName = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)
 export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const { data: d, error } = useIfrsData();
   const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
-  const [period, setPeriod] = useState('');
+  const [period, setPeriod] = usePeriodParam();
   const P = periods.includes(period) ? period : periods[0] ?? '';
   const facts = useIfrsFactsOf(id, P || null);
   const all = useMemo(() => (facts.data ?? []).filter((f) => f.c === id), [facts.data, id]);

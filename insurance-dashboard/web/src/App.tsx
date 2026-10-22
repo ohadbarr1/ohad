@@ -1,5 +1,5 @@
 import { lazy, type ComponentType } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
 
 /** A page loaded the first time its route is visited: each route group is its own file, so the shell carries no page it does not show. */
@@ -42,8 +42,6 @@ const mIndustryLines = () => import('./pages/IndustryLines');
 const IndustryLines = page(mIndustryLines, 'IndustryLines');
 const mIndustrySectors = () => import('./pages/IndustrySectors');
 const IndustrySectors = page(mIndustrySectors, 'IndustrySectors');
-const mReportDay = () => import('./pages/ReportDay');
-const ReportDay = page(mReportDay, 'ReportDay');
 const mIndustryCsm = () => import('./pages/IndustryCsm');
 const IndustryCsm = page(mIndustryCsm, 'IndustryCsm');
 const mDocSearch = () => import('./pages/DocSearch');
@@ -63,6 +61,9 @@ const Calendar = page(mCalendar, 'Calendar');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
+/** the report day is the company home now: an old link keeps its report (?p=) */
+function ReportRedirect() { const loc = useLocation(); return <Navigate to={`..${loc.search}`} replace />; }
+
 export function App() {
   return (
     <Routes>
@@ -80,7 +81,7 @@ export function App() {
           <Route index element={<CompanyOverview />} />
           <Route path="review" element={<CompanyReviewTab />} />
           <Route path="financials" element={<CompanyFinancials />} />
-          <Route path="report" element={<ReportDay />} />
+          <Route path="report" element={<ReportRedirect />} />
           <Route path="profit" element={<CompanySopTab />} />
           <Route path="ifrs17" element={<CompanyIfrs17 />} />
           <Route path="history" element={<Navigate to="../financials" replace />} />

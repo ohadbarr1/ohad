@@ -4,7 +4,7 @@ import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { CompanyStore, shiftYear } from '../lib/company';
 import { foxOption } from '../lib/foxchart';
-import { byPeriodDesc, cls, dateLabel, nf, pct, periodLabel } from '../lib/format';
+import { byPeriodDesc, cls, dateLabel, nf, pct, periodLabel, pubLabel } from '../lib/format';
 import { chartBase, palette } from '../lib/theme';
 import { useCompanyDocs, useCompanyStore, useIfrsData, useIfrsFactsOf, useRegistry } from '../lib/useData';
 import type { DocEntry, IfrsFact } from '../lib/types';
@@ -306,7 +306,7 @@ export function ReportDay() {
         <div className="rd-title">
           <h2>{entry.name_he} · <span className="num">{repName(P)}</span></h2>
           <div className="rd-meta">
-            {doc ? <span>פורסם <span className="num">{`${doc.date.slice(8, 10)}.${doc.date.slice(5, 7)}.${doc.date.slice(0, 4)}`}</span></span> : <span className="muted">תאריך הפרסום לא נמצא ברשימת המסמכים</span>}
+            {doc ? <span>פורסם <span className="num">{pubLabel(doc.date)}</span></span> : <span className="muted">תאריך הפרסום לא נמצא ברשימת המסמכים</span>}
             {doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}
             {rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש{nBig > 0 && <>, <span className="num">{nBig}</span> מהם ב-2% ומעלה</>}</a>}
           </div>

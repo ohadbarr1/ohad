@@ -1,6 +1,6 @@
 import { DividendCapacity } from '../components/DividendCapacity';
 import { Link } from 'react-router-dom';
-import { MetricCard, type MetricCardProps } from '../components/MetricCard';
+import type { MetricCardProps } from '../components/MetricCard';
 import { ErrorBox, Panel } from '../components/ui';
 import { nf, pct, pubLabel, sn } from '../lib/format';
 import type { CompanyStore } from '../lib/company';
@@ -107,6 +107,8 @@ function LatestDocs({ docs }: { docs: DocEntry[] }) {
 import { CompanyTear } from './CompanyTear';
 import { Notes, Star } from '../components/Follow';
 import { FundHouseStrip } from '../components/FundHouseStrip';
+import { KpiLedger, type LedgerGroup } from '../components/KpiLedger';
+import { ReportDay } from './ReportDay';
 
 export function CompanyOverview() {
   const { entry, store, market, storeError } = useCtx();
@@ -117,30 +119,22 @@ export function CompanyOverview() {
   const kc = k ? kpiCards(k) : [];
   const fin = store ? financialCards(store).filter((c) => c.tag === 'IFRS 17') : [];
   const mk = market && entry.market_group ? marketCards(market, entry.market_group) : [];
+  const groups: LedgerGroup[] = [
+    { title: 'רווחיות והון', note: 'XBRL, דוחות תקופתיים', cards: kc },
+    { title: 'IFRS 17', note: store?.d.sources[0]?.doc, cards: fin },
+    ...(market ? [{ title: 'חיסכון ארוך טווח', note: <>רשות שוק ההון · <span className="num">{market.plabel(market.LAST)}</span> · <Link to={`/funds/makers?mk=${encodeURIComponent(entry.market_group ?? '')}`}>מול השוק, לפי מסלול</Link></>, cards: mk }] : []),
+  ];
   return (
     <>
+      {entry.has_financials && <ReportDay />}
       {entry.kind === 'fund_house' && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}
-      {entry.kind !== 'fund_house' && <CompanyTear id={entry.id} />}
-      {kc.length > 0 && (
-        <section>
-          <h2 className="band">דוחות<span className="muted">{k ? `${periodLabelShort(k.quarters[0].period)} עד ${periodLabelShort(k.quarters[k.quarters.length - 1].period)}` : ''}</span></h2>
-          <div className="mgrid stagger">{kc.map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
-        </section>
-      )}
-      {fin.length > 0 && (
-        <section>
-          <h2 className="band">IFRS 17<span className="muted">{store?.d.sources[0]?.doc}</span></h2>
-          <div className="mgrid stagger">{fin.map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
-        </section>
-      )}
-      {mk.length > 0 && market && (
-        <section>
-          <h2 className="band">חיסכון ארוך טווח<span className="muted">רשות שוק ההון · דצמבר של כל שנה ו-{market.plabel(market.LAST)} · <Link to={`/funds/makers?mk=${encodeURIComponent(entry.market_group ?? '')}`}>החברה מול השוק, לפי מסלול</Link> · <Link to={`/funds?q=${encodeURIComponent(entry.market_group ?? '')}`}>המסלולים של החברה</Link></span></h2>
-          <div className="mgrid stagger">{mk.map((c, i) => <MetricCard key={c.title} {...c} i={i} />)}</div>
-        </section>
-      )}
-      {docs.data && <LatestDocs docs={docs.data.docs} />}
+      {!entry.has_financials && entry.kind !== 'fund_house' && <CompanyTear id={entry.id} />}
+      <section>
+        <h2 className="band">פרופיל<span className="muted">{k ? `${periodLabelShort(k.quarters[0].period)} עד ${periodLabelShort(k.quarters[k.quarters.length - 1].period)}` : ''} · לחיצה על שורה מציגה אותה בגרף</span></h2>
+        <KpiLedger groups={groups} />
+      </section>
       {entry.kind !== 'fund_house' && <DividendCapacity id={entry.id} />}
+      {docs.data && <LatestDocs docs={docs.data.docs} />}
       <Panel title="הערות" aside={<><span>מעקב</span><Star id={entry.id} name={entry.name_he} /></>}><Notes id={entry.id} /></Panel>
     </>
   );

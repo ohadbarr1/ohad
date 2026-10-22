@@ -513,3 +513,8 @@ table.dense tr.sec td { padding-top: 8px; }
 /* the rail's labels: full on a wide screen, short on the phone's bottom bar */
 .rail a.item .lbl-p { display: none; }
 @media (max-width: 760px) { .rail a.item .lbl-w { display: none; } .rail a.item .lbl-p { display: inline; } .rail a.item.wide-item { display: none; } }
+/* the second row of tabs (under "דוחות"): quieter than the first, the current one underlined */
+.subnav.sub2 { margin-top: -12px; background: transparent; border: 0; padding: 0 2px; gap: 4px; }
+.subnav.sub2 a { padding: 5px 10px; font-size: var(--t-2); border-radius: 0; }
+.subnav.sub2 a.active { background: transparent; color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+@media (max-width: 760px) { .subnav .wide-tab, .subnav.sub2 { display: none; } }
