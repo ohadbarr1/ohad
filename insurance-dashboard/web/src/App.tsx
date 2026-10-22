@@ -21,20 +21,19 @@ const mCompanyOverview = () => import('./pages/CompanyOverview');
 const CompanyOverview = page(mCompanyOverview, 'CompanyOverview');
 const mCompanyDocs = () => import('./pages/CompanyDocs');
 const CompanyDocs = page(mCompanyDocs, 'CompanyDocs');
-const mCompare = () => import('./pages/Compare');
-const Compare = page(mCompare, 'Compare');
 const mIndustry = () => import('./pages/Industry');
 const IndustryLayout = page(mIndustry, 'IndustryLayout');
 const mIndustryIfrs = () => import('./pages/IndustryIfrs');
 const IndustryIfrs = page(mIndustryIfrs, 'IndustryIfrs');
 const mIndustryCapital = () => import('./pages/IndustryCapital');
 const IndustryCapital = page(mIndustryCapital, 'IndustryCapital');
-const mIndustryMatrix = () => import('./pages/IndustryMatrix');
-const IndustryMatrix = page(mIndustryMatrix, 'IndustryMatrix');
-const mIndustryLines = () => import('./pages/IndustryLines');
-const IndustryLines = page(mIndustryLines, 'IndustryLines');
-const mIndustrySectors = () => import('./pages/IndustrySectors');
-const IndustrySectors = page(mIndustrySectors, 'IndustrySectors');
+const mPeers = () => import('./pages/Peers');
+const Peers = page(mPeers, 'Peers');
+const mPeersRedirect = () => import('./pages/PeersRedirect');
+const FromMatrix = page(mPeersRedirect, 'FromMatrix');
+const FromLines = page(mPeersRedirect, 'FromLines');
+const FromHeadline = page(mPeersRedirect, 'FromHeadline');
+const FromSectors = page(mPeersRedirect, 'FromSectors');
 const mIndustryCsm = () => import('./pages/IndustryCsm');
 const IndustryCsm = page(mIndustryCsm, 'IndustryCsm');
 const mDocSearch = () => import('./pages/DocSearch');
@@ -91,18 +90,19 @@ export function App() {
           <Route path="savings" element={<CompanySavings />} />
           <Route path="filings" element={<CompanyDocs />} />
         </Route>
-        <Route path="compare" element={<Navigate to="/industry/headline" replace />} />
+        <Route path="compare" element={<FromHeadline />} />
         <Route path="industry" element={<IndustryLayout />}>
-          <Route index element={<Navigate to="sectors" replace />} />
+          <Route index element={<Navigate to="peers" replace />} />
+          <Route path="peers" element={<Peers />} />
           <Route path="savings" element={<SavingsLens />} />
           <Route path="ifrs" element={<IndustryIfrs />} />
-          <Route path="sectors" element={<IndustrySectors />} />
-          <Route path="matrix" element={<IndustryMatrix />} />
-          <Route path="lines" element={<IndustryLines />} />
+          <Route path="sectors" element={<FromSectors />} />
+          <Route path="matrix" element={<FromMatrix />} />
+          <Route path="lines" element={<FromLines />} />
           <Route path="csm" element={<IndustryCsm />} />
           <Route path="econ" element={<LensRedirect view="econ" />} />
           <Route path="capital" element={<IndustryCapital />} />
-          <Route path="headline" element={<Compare />} />
+          <Route path="headline" element={<FromHeadline />} />
           <Route path="search" element={<DocSearch />} />
         </Route>
         <Route path="funds" element={<Funds />} />

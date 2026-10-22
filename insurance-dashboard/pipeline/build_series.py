@@ -7,6 +7,7 @@ the three-month column of the interim report, or a balance at the quarter end. S
      over the original IFRS 4 figure, so the IFRS 17 series reaches back to 2024
   3. for Q4 only: the annual figure less the nine-month figure (flag `der`), when both come from sources 1 or 2
 `std` records the standard the figure was reported under, so the screen can draw the IFRS 4 / IFRS 17 break.
+A row whose figures are all balances carries `w: "i"` (instant), so consumers never add it up across quarters.
 """
 import csv
 import json
@@ -115,7 +116,11 @@ for comp in companies:
                 vals[per[:4] + "FY"] = vals.get(per, {})
         vals = {p: v for p, v in vals.items() if v and p >= "2021"}
         if len(vals) >= 2:
-            rows.append({"m": m, "s": s, "g": std_segment(s), "b": b, "vals": dict(sorted(vals.items()))})
+            row = {"m": m, "s": s, "g": std_segment(s), "b": b, "vals": dict(sorted(vals.items()))}
+            # a balance (every figure is a quarter-end position): never summed into H, FY or LTM
+            if all(set(sl) == {"bal"} for sl in pers.values()):
+                row["w"] = "i"
+            rows.append(row)
     rows.sort(key=lambda r: (r["g"] != "group", r["g"], -len(r["vals"]), r["m"]))
     periods = sorted({p for r in rows for p in r["vals"]})
     (OUT / f"{comp}.json").write_text(json.dumps({"periods": periods, "rows": rows}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

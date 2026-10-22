@@ -5,7 +5,7 @@ import { Sourced } from '../components/Source';
 import { ErrorBox, Field, Loading } from '../components/ui';
 import { nf } from '../lib/format';
 import { baseKey, baseLabel, inst, Lts, parseBase, periodLabel, periodsOf, quarter, viewSet, VIEWS, ytd, type Base, type LtsData, type PeriodSet, type View } from '../lib/lts';
-import { keepSrc, useSource, type Prov } from '../lib/prov';
+import { useSource, type Prov } from '../lib/prov';
 import { CHART_FONT, chartBase, cssColor } from '../lib/theme';
 import { useLoad } from '../lib/useData';
 import '../styles/sectors.css';
@@ -349,15 +349,18 @@ function Family({ fam, cos, name }: { fam: 'pen' | 'gem'; cos: string[]; name: s
 export function IndustrySectors() {
   const { data, error } = useLoad<LtsData>('lts.json');
   const [sp, setSp] = useSearchParams();
-  const [focus, setFocus] = useState(sp.get('c') ?? 'phoenix');
-  const [all, setAll] = useState<string | null>(sp.get('p'));
-  const [view, setView] = useState<View>((sp.get('v') as View) || 'y');
+  // the deck lives inside the peer page: its own keys (dc, dp, dv) so the table's state in the address is left alone
+  const [focus, setFocus] = useState(sp.get('dc') ?? 'phoenix');
+  const [all, setAll] = useState<string | null>(sp.get('dp'));
+  const [view, setView] = useState<View>((sp.get('dv') as View) || 'y');
   const lts = useMemo(() => (data ? new Lts(data) : null), [data]);
   useEffect(() => {
     if (!lts) return;
     lts.reported().forEach((c) => { void fetch(`${import.meta.env.BASE_URL}data/lts_prov/${c}.json`).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) lts.prov[c] = j; }).catch(() => {}); });
   }, [lts]);
-  useEffect(() => { setSp(keepSrc({ ...(focus !== 'phoenix' ? { c: focus } : {}), ...(all ? { p: all } : {}), ...(view !== 'y' ? { v: view } : {}) }), { replace: true }); }, [focus, all, view, setSp]);
+  useEffect(() => {
+    setSp((prev) => { const n = new URLSearchParams(prev); n.delete('dc'); n.delete('dp'); n.delete('dv'); if (focus !== 'phoenix') n.set('dc', focus); if (all) n.set('dp', all); if (view !== 'y') n.set('dv', view); return n; }, { replace: true });
+  }, [focus, all, view, setSp]);
   if (error) return <ErrorBox what="השוואת ענפים" error={error} />;
   if (!lts) return <Loading what="השוואת ענפים" />;
   const bases = lts.bases('am.aum', cur.inst).concat(lts.bases('pen.out_rate', cur.q)).map(baseKey).filter((k, i, a) => a.indexOf(k) === i).sort().reverse();

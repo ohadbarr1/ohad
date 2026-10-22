@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 const SHORTCUTS: [string, string][] = [
   ['/', 'חיפוש: חברה, קופה, שורה בדוח, או חברה + קוד (הראל CSM)'], ['g h', 'דף הבית'], ['g c', 'חברות'], ['g i', 'השוואה ענפית'], ['g f', 'קופות ושוק'],
-  ['g v', 'הערכת שווי'], ['t', 'החלפת ערכת עיצוב'], ['← → ↑ ↓', 'מעבר בין מספרים בטבלה (אחרי Tab אל הטבלה)'], ['Enter', 'פתיחת המקור של המספר'], ['?', 'רשימה זו'],
+  ['g v', 'הערכת שווי'], ['t', 'החלפת ערכת עיצוב'], ['1–7', 'טבלת עמיתים: תבניות'], ['8 9 0', 'טבלת עמיתים: תצוגות שמורות'], ['← → ↑ ↓', 'מעבר בין מספרים בטבלה (אחרי Tab אל הטבלה)'], ['Enter', 'פתיחת המקור של המספר'], ['?', 'רשימה זו'],
 ];
 
 const typing = (t: EventTarget | null) => { const e = t as HTMLElement | null; return !!e && (e.tagName === 'INPUT' || e.tagName === 'SELECT' || e.tagName === 'TEXTAREA' || e.isContentEditable); };
