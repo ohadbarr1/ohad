@@ -16,7 +16,7 @@ const ROUTES = [
   '/', '/companies', '/company/phoenix', '/company/phoenix/report', '/company/phoenix/review', '/company/phoenix/financials', '/company/phoenix/profit',
   '/company/phoenix/ifrs17', '/company/phoenix/savings', '/company/phoenix/filings', '/company/harel/financials', '/company/altshuler', '/company/altshuler/savings',
   '/industry/sectors', '/industry/lines', '/industry/csm', '/industry/ifrs', '/industry/capital', '/industry/econ', '/industry/savings', '/industry/headline',
-  '/industry/search', '/industry/matrix', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/calendar',
+  '/industry/search', '/industry/matrix', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?t=reg&n=5', '/compare', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/calendar',
 ];
 const SIZES = [[390, 844, true], [1440, 900, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

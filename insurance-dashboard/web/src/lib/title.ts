@@ -5,7 +5,7 @@ const COMPANY_TAB: Record<string, string> = {
   ifrs17: 'IFRS 17', savings: 'חיסכון ארוך טווח', filings: 'מסמכים',
 };
 const INDUSTRY_TAB: Record<string, string> = {
-  sectors: 'השוואת ענפים', lines: 'שורות דוח', csm: 'כלכלת CSM', ifrs: 'IFRS 17 · CSM', capital: 'הון ודיבידנד',
+  peers: 'טבלת עמיתים', sectors: 'השוואת ענפים', lines: 'שורות דוח', csm: 'כלכלת CSM', ifrs: 'IFRS 17 · CSM', capital: 'הון ודיבידנד',
   econ: 'רווחיות פנסיה וגמל', savings: 'נכסים מנוהלים', headline: 'לאורך זמן', search: 'חיפוש בדוחות', matrix: 'מטריצת עמיתים',
 };
 const MARKET_TAB: Record<string, string> = { overview: 'סקירת שוק', ranking: 'דירוג חברות', funds: 'קופות' };
@@ -20,7 +20,7 @@ export function titleFor(path: string, name: (id: string) => string | undefined)
       if (!((p[2] ?? '') in COMPANY_TAB)) return null;
       return t(name(p[1]) ?? p[1], COMPANY_TAB[p[2] ?? '']);
     }
-    case 'industry': return INDUSTRY_TAB[p[1] ?? 'sectors'] ? t(INDUSTRY_TAB[p[1] ?? 'sectors'], 'השוואה ענפית') : null;
+    case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'השוואה ענפית') : null;
     case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'קופות') : p[1] ? t('מסלול', 'קופות') : t('מסלולים', 'קופות');
     case 'managers': return t('מנהלים', 'קופות');
     case 'calendar': return t('לוח דיווחים');

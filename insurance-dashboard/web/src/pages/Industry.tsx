@@ -17,15 +17,9 @@ export function IndustryLayout() {
     <>
       <div className="pagehead"><div><h1>השוואה ענפית</h1></div></div>
       <nav className="subnav" aria-label="השוואה ענפית">
-        <NavLink to="sectors">השוואת ענפים</NavLink>
-        <NavLink to="lines">שורות דוח</NavLink>
-        <NavLink to="csm">כלכלת CSM</NavLink>
-        <NavLink to="ifrs">IFRS 17 · CSM</NavLink>
-        <NavLink to="capital">הון ודיבידנד</NavLink>
-        <NavLink to="econ">רווחיות פנסיה וגמל</NavLink>
-        <NavLink to="savings">נכסים מנוהלים</NavLink>
-        <NavLink to="headline">לאורך זמן</NavLink>
-        <NavLink to="search">חיפוש בדוחות</NavLink>
+        <NavLink to="peers">טבלת עמיתים</NavLink>
+        <NavLink to="csm">IFRS 17 · CSM · הון</NavLink>
+        <NavLink to="savings">חיסכון ארוך טווח</NavLink>
       </nav>
       <Outlet />
     </>
