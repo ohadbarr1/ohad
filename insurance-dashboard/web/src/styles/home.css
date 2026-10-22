@@ -1,0 +1,51 @@
+/* Home: the feed and the macro inputs beside the company table; one column on a phone, two from 1600 px (terminal mode) */
+.home-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
+.home-side, .home-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+html[data-density="compact"] .home-grid, html[data-density="compact"] .home-side, html[data-density="compact"] .home-main { gap: 14px; }
+@media (min-width: 1600px) {
+  .home-grid { grid-template-columns: minmax(0, 1fr) minmax(400px, 30%); grid-template-areas: "main side"; }
+  .home-main { grid-area: main; } .home-side { grid-area: side; position: sticky; top: 16px; }
+}
+
+/* filings as a feed: company, document, pages, date on one line */
+.feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.feed li { display: grid; grid-template-columns: minmax(84px, max-content) auto minmax(0, 1fr) auto auto; align-items: baseline; gap: 4px 10px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-3); }
+.feed li:last-child { border-bottom: 0; }
+.feed .co { color: var(--fg); font-weight: 500; }
+.feed .chip { grid-column: 2; }
+.feed li:not(:has(.chip)) .fdoc { grid-column: 2 / 4; }
+.feed .fdoc { color: var(--muted); }
+.feed .pg, .feed .dt { font-size: var(--t-2); }
+html[data-density="compact"] .feed li { padding: 4px 0; font-size: var(--t-2); }
+@media (max-width: 760px) {
+  .feed li { grid-template-columns: minmax(0, 1fr) auto; }
+  .feed .chip { grid-column: auto; justify-self: start; }
+  .feed .fdoc, .feed li:not(:has(.chip)) .fdoc { grid-column: 1; }
+  .feed .pg { display: none; }
+}
+
+/* macro tiles */
+.macro-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 0; margin: 0 -4px; }
+.macro-tiles.skeleton { min-height: 160px; }
+.macro .mt { padding: 8px 4px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; border-bottom: 1px solid var(--line-soft); }
+.macro .mt .l { font-size: var(--t-2); color: var(--muted); font-weight: 500; }
+.macro .mt .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.macro .mt .v { font-size: var(--t-6); font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+.macro .mt .s { font-size: var(--t-1); color: var(--muted); line-height: 1.5; }
+.macro .spark { color: var(--accent); opacity: 0.8; flex: none; }
+@media (min-width: 1600px) { .home-side .macro-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .macro-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .macro .spark { width: 64px; } .macro .mt .v { font-size: var(--t-5); } }
+
+/* the company table: two column sets on a phone and laptop, both from 1600 px */
+.cos-ctl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.cos-ctl .unit { font-size: var(--t-2); margin-inline-start: auto; }
+.cos-t.v-fin .c-mkt, .cos-t.v-mkt .c-fin { display: none; }
+@media (min-width: 1600px) {
+  .cos-t.v-fin .c-mkt, .cos-t.v-mkt .c-fin { display: table-cell; }
+  .cos-ctl .view-seg { display: none; }
+  .cos-t th.c-mkt:first-of-type, .cos-t .c-mkt { background: color-mix(in oklch, var(--panel2) 40%, transparent); }
+}
+.coname { display: flex; align-items: center; gap: 6px; }
+@media (max-width: 760px) { .cos-ctl .unit { margin-inline-start: 0; width: 100%; } }
+@media (max-width: 760px) { .feed li:nth-child(n+6) { display: none; } }
+@media (min-width: 1600px) { .cos-t td:first-child { white-space: nowrap; } .cos-t td:first-child .dim { display: inline; margin-inline-start: 6px; } }

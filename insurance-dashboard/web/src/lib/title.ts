@@ -8,6 +8,7 @@ const INDUSTRY_TAB: Record<string, string> = {
   peers: 'טבלת עמיתים', sectors: 'השוואת ענפים', lines: 'שורות דוח', csm: 'IFRS 17 · CSM · הון', ifrs: 'IFRS 17 · CSM · הון', capital: 'IFRS 17 · CSM · הון',
   econ: 'רווחיות פנסיה וגמל', savings: 'עדשת חיסכון', headline: 'לאורך זמן', search: 'חיפוש בדוחות', matrix: 'מטריצת עמיתים',
 };
+const VALUATION_TAB: Record<string, string> = { '': 'P/B מוצדק', ri: 'הכנסה שיורית', csm: 'הון ו-CSM', sotp: 'סכום החלקים', dcf: 'DCF' };
 const MARKET_TAB: Record<string, string> = { overview: 'סקירת שוק', ranking: 'דירוג חברות', funds: 'קופות' };
 
 export function titleFor(path: string, name: (id: string) => string | undefined): string | null {
@@ -25,7 +26,7 @@ export function titleFor(path: string, name: (id: string) => string | undefined)
     case 'managers': return t('מנהלים', 'קופות');
     case 'calendar': return t('לוח דיווחים');
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;
-    case 'valuation': return p[1] ? t(name(p[1]) ?? p[1], p[2] === 'sotp' ? 'סכום החלקים' : 'הערכת שווי') : t('הערכת שווי');
+    case 'valuation': return p[1] ? (((p[2] ?? '') in VALUATION_TAB) ? t(VALUATION_TAB[p[2] ?? ''], name(p[1]) ?? p[1], 'הערכת שווי') : null) : t('הערכת שווי');
     default: return null;
   }
 }

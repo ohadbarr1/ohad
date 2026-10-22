@@ -1,0 +1,21 @@
+/* Density modes (ws4 R6): comfortable 34 px rows at --t-3, compact 26 px rows at --t-2. Set on <html data-density>. */
+html[data-density="compact"] { --row-pad-y: 4px; --row-pad-x: 10px; }
+html[data-density="compact"] th, html[data-density="compact"] td { padding: 4px 10px; line-height: 1.35; }
+html[data-density="compact"] tbody td { font-size: var(--t-2); }
+html[data-density="compact"] .panel { padding: 12px 16px; gap: 10px; }
+html[data-density="compact"] .page { gap: 14px; padding-top: 18px; }
+html[data-density="compact"] .kpi { padding: 12px 16px 10px; }
+html[data-density="compact"] .kpi .v { font-size: var(--t-6); }
+html[data-density="compact"] .vstrip { margin: 0 0 8px; padding: 6px 0; }
+
+/* Terminal mode (ws2 RM-5): from 1600 px a page that opts in (a .wide-page root) drops the 1440 cap and uses the width */
+.wide-page { display: flex; flex-direction: column; gap: inherit; min-width: 0; }
+@media (min-width: 1600px) {
+  .page:has(> .wide-page) { max-width: min(100%, 2400px); padding-inline: 32px; }
+}
+
+/* the density switch */
+.density { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); }
+.density button { border: 0; background: none; color: var(--muted); font: inherit; font-size: var(--t-1); padding: 3px 8px; border-radius: var(--r-1); cursor: pointer; min-height: 28px; }
+.density button[aria-pressed="true"] { background: var(--panel2); color: var(--fg); font-weight: 600; }
+@media (max-width: 760px) { .density { display: none; } }

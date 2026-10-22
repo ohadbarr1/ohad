@@ -10,13 +10,14 @@ import { Loading } from './ui';
 import { Suspense } from 'react';
 import { ShortcutsHelp, useKeyboard } from './Keyboard';
 import '../styles/sheet.css';
+import '../lib/density';
 import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 
 // [route, icon, label, label on the phone's bottom bar]; valuation is reached from a company's tabs on a phone, so the bar keeps four places
 const NAV: [string, string, string, string | null][] = [
-  ['/', 'home', 'בית', 'בית'], ['/companies', 'companies', 'חברות', 'חברות'], ['/industry', 'compare', 'השוואה ענפית', 'ענף'],
+  ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'השוואה ענפית', 'ענף'],
   ['/valuation', 'value', 'שווי', null], ['/funds', 'market', 'קופות ושוק', 'קופות'],
 ];
 
@@ -41,7 +42,7 @@ export function Layout() {
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox"><Logo size={36} /></NavLink>
         <nav aria-label="ראשי">
-          {NAV.map(([to, icon, label, short]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${short ? '' : ' wide-item'}${isActive || (to === '/companies' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
+          {NAV.map(([to, icon, label, short]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${short ? '' : ' wide-item'}${isActive || (to === '/' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
         </nav>
         <div className="foot">
           <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
