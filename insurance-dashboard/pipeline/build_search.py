@@ -137,7 +137,7 @@ def main():
         en = 0 if any("֐" <= ch <= "׿" for ch in title) else 1
         m = man[r["report_id"]]
         docs.append([int(r["report_id"]), r["company"], r["doc_type"], r["period"], r["publish_date"][:10], m["pages"], en, title,
-                     r["url"], m["empty"]])
+                     r["url"], m["empty"], int(r["size_kb"] or 0)])
     N = sum(d[5] for d in docs)
     print(len(docs), "documents,", N, "pages", flush=True)
 
@@ -208,7 +208,7 @@ def main():
     meta = {"v": 1, "built": date.today().isoformat(), "pages": N, "docs": len(docs), "shards": S, "block": BLOCK, "stop": stop}
     (FT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (SEARCH / "docs.json").write_text(json.dumps({"v": 1, "built": meta["built"], "source": "MAYA", "files": FILES, "pages": N, "block": BLOCK,
-                                                  "cols": ["id", "company", "type", "period", "date", "pages", "en", "title", "url", "empty"],
+                                                  "cols": ["id", "company", "type", "period", "date", "pages", "en", "title", "url", "empty", "kb"],
                                                   "docs": docs}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{S} shards, {total / 1e6:.1f} MB gzip; shard median {sizes[len(sizes) // 2] / 1e3:.0f} KB, p95 {sizes[int(len(sizes) * .95)] / 1e3:.0f} KB, max {sizes[-1] / 1e3:.0f} KB; {time.time() - t0:.0f}s")
 

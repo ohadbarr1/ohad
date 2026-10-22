@@ -16,7 +16,7 @@ const ROUTES = [
   '/', '/companies', '/company/phoenix', '/company/phoenix/report', '/company/phoenix/review', '/company/phoenix/financials', '/company/phoenix/profit',
   '/company/phoenix/ifrs17', '/company/phoenix/savings', '/company/phoenix/filings', '/company/harel/financials', '/company/altshuler', '/company/altshuler/savings',
   '/industry/sectors', '/industry/lines', '/industry/csm', '/industry/ifrs', '/industry/capital', '/industry/econ', '/industry/savings', '/industry/headline',
-  '/industry/search', '/industry/matrix', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/calendar',
+  '/industry/search', '/industry/matrix', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/calendar', '/search?q=%D7%A8%D7%9B%D7%99%D7%91%20%D7%94%D7%A4%D7%A1%D7%93', '/doc/1765739?page=32&q=%D7%93%D7%99%D7%91%D7%99%D7%93%D7%A0%D7%93',
 ];
 const SIZES = [[390, 844, true], [1440, 900, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

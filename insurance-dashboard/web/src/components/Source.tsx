@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { readerHref, ridOf } from '../lib/search';
 import { nf, pubLabel } from '../lib/format';
 import { METRIC_BY_KEY, WIN_LABEL, type Market } from '../lib/market';
 import { liveCheck, loadTracks, parseRegKey, recompute, regKey, SourceCtx, useSource, type LiveResult, type Prov, type RegCol, type Track } from '../lib/prov';
@@ -126,6 +127,7 @@ function PlainSheet({ p }: { p: Exclude<Prov, { k: 'reg' | 'fund' }> }) {
         <dt>{p.srcType?.startsWith('מצגת') ? 'שקף' : 'עמוד'}</dt><dd className="num">{p.pg ?? 'לא סומן'}</dd>
       </dl>
       {p.url ? <a className="srcgo" href={pdfPage(p.url, p.pg)} target="_blank" rel="noreferrer">פתיחת הדוח{p.pg ? `, עמ׳ ${p.pg}` : ''}</a> : !p.srcType && <p className="muted">אין קישור למסמך.</p>}
+      {ridOf(p.url) && <Link className="srcgo alt" to={readerHref(ridOf(p.url)!, p.pg)}>פתח בקורא{p.pg ? `, עמ׳ ${p.pg}` : ''}</Link>}
       {p.der && <p className="srcnote"><span className="chip est">נגזר</span> לא הודפס בדוח: חושב מהפרש בין תקופות מצטברות של אותו דוח (Q4 = FY פחות 9M, H2 = FY פחות H1).</p>}
       {p.old && <p className="srcnote"><span className="chip est">IFRS 4</span> נתון לפי התקן הקודם, מוצג בשורה שנמשכת בין התקנים.</p>}
       {p.turned && <p className="srcnote"><span className="chip est">סימן</span> הסימן הותאם להצגה בדוח העדכני.</p>}
