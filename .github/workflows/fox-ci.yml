@@ -1,4 +1,5 @@
-# fox: every push and pull request is typechecked, gated on the data checks, built, and checked route by route.
+# fox: every push and pull request is typechecked, gated on the data checks (incl. the data contracts), built, checked route by route,
+# and run through the Playwright visual smoke and axe accessibility checks (installed Google Chrome, no browser download).
 # A pull request gets a Firebase preview channel when the FIREBASE_SERVICE_ACCOUNT secret is set; nothing here deploys the live site.
 name: fox-ci
 on:
@@ -39,6 +40,13 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: route-check, path: insurance-dashboard/web/route-check.json, if-no-files-found: ignore }
+      - name: Visual smoke and accessibility (Playwright + axe, 14 routes x 390/1440 x both themes)
+        working-directory: insurance-dashboard/web
+        env: { CI: 'true' }
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: playwright-report, path: insurance-dashboard/web/playwright-report, if-no-files-found: ignore }
       - name: Preview channel
         if: github.event_name == 'pull_request' && env.FIREBASE_SERVICE_ACCOUNT != ''
         env: { FIREBASE_SERVICE_ACCOUNT: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' }
