@@ -12,8 +12,6 @@ const MarketOverview = page(mMarket, 'MarketOverview');
 const MarketRanking = page(mMarket, 'MarketRanking');
 const MarketFunds = page(mMarket, 'MarketFunds');
 const MarketGroup = page(mMarket, 'MarketGroup');
-const mCompanies = () => import('./pages/Companies');
-const Companies = page(mCompanies, 'Companies');
 const mCompany = () => import('./pages/Company');
 const CompanyLayout = page(mCompany, 'CompanyLayout');
 const CompanyFinancials = page(mCompany, 'CompanyFinancials');
@@ -51,9 +49,13 @@ const FundCard = page(mFunds, 'FundCard');
 const FundMakers = page(mFunds, 'FundMakers');
 const Funds = page(mFunds, 'Funds');
 const mValuation = () => import('./pages/Valuation');
-const Dcf = page(mValuation, 'Dcf');
-const Sotp = page(mValuation, 'Sotp');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
+const ValuationPb = page(mValuation, 'ValuationPb');
+const mValuationModels = () => import('./pages/ValuationModels');
+const ValuationRi = page(mValuationModels, 'ValuationRi');
+const ValuationCsm = page(mValuationModels, 'ValuationCsm');
+const Sotp = page(mValuationModels, 'Sotp');
+const Dcf = page(mValuationModels, 'Dcf');
 const mManagers = () => import('./pages/Managers');
 const Managers = page(mManagers, 'Managers');
 const mCalendar = () => import('./pages/Calendar');
@@ -76,7 +78,7 @@ export function App() {
           <Route path="funds" element={<MarketFunds />} />
           <Route path="group/:name" element={<MarketGroup />} />
         </Route>
-        <Route path="companies" element={<Companies />} />
+        <Route path="companies" element={<Navigate to="/" replace />} />
         <Route path="company/:id" element={<CompanyLayout />}>
           <Route index element={<CompanyOverview />} />
           <Route path="review" element={<CompanyReviewTab />} />
@@ -109,9 +111,11 @@ export function App() {
         <Route path="calendar" element={<Calendar />} />
         <Route path="valuation" element={<ValuationLayout />} />
         <Route path="valuation/:id" element={<ValuationLayout />}>
-          <Route index element={<Navigate to="dcf" replace />} />
-          <Route path="dcf" element={<Dcf />} />
+          <Route index element={<ValuationPb />} />
+          <Route path="ri" element={<ValuationRi />} />
+          <Route path="csm" element={<ValuationCsm />} />
           <Route path="sotp" element={<Sotp />} />
+          <Route path="dcf" element={<Dcf />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

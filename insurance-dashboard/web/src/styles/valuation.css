@@ -1,0 +1,96 @@
+/* Valuation: one market-input strip, one assumptions row, the models below; terminal mode from 1600 px */
+.valuation .pagehead { align-items: flex-end; }
+.vhead-tools { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+
+/* market inputs: the only price on the site, labelled as an input */
+.vinputs { display: flex; flex-wrap: wrap; gap: 10px 28px; padding: 12px 0; border-block: 1px solid var(--line-soft); align-items: flex-end; }
+.vinputs > div { display: flex; flex-direction: column; gap: 3px; min-width: 92px; }
+.vinputs .l { font-size: var(--t-1); color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.vinputs .v { font-size: var(--t-5); font-weight: 600; display: flex; align-items: baseline; gap: 4px; }
+.vinputs .v small, .pxfield small { font-size: var(--t-1); font-weight: 400; color: var(--muted); }
+.vinputs .s { font-size: var(--t-1); color: var(--muted); }
+.pxfield .in { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pxfield input { width: 110px; min-width: 0; font-size: var(--t-4); font-weight: 600; }
+.srcdot { font-size: var(--t-1); color: var(--muted); }
+.btn.mini { padding: 2px 8px; min-height: 26px; font-size: var(--t-1); }
+
+/* shared assumptions */
+.vassume { padding: 12px 18px; }
+.vassume summary { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; cursor: pointer; list-style: none; }
+.vassume summary::-webkit-details-marker { display: none; }
+.vassume summary h2 { margin: 0; font-size: var(--t-4); }
+.vassume summary::after { content: '▾'; color: var(--muted); margin-inline-start: auto; font-size: var(--t-2); }
+.vassume[open] summary::after { content: '▴'; }
+.vassume summary .muted { font-size: var(--t-2); }
+.vassume[open] summary { margin-bottom: 10px; }
+.vas-grid { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+.vas-grid label { display: flex; flex-direction: column; gap: 3px; font-size: var(--t-2); color: var(--fg); }
+.vas-grid label small { color: var(--faint); font-size: var(--t-1); }
+.vas-grid input { width: 96px; min-width: 0; }
+.vas-grid .in { display: flex; align-items: center; gap: 6px; }
+.vas-grid .ke { display: flex; flex-direction: column; gap: 2px; padding: 4px 14px; border-inline: 1px solid var(--line-soft); }
+.vas-grid .ke span:first-child { font-size: var(--t-2); color: var(--muted); }
+.vas-grid .ke .big { font-size: var(--t-5); font-weight: 700; }
+
+.valuation .subnav a.adv { color: var(--muted); }
+.illus.adv { border-style: solid; border-color: var(--line); background: var(--panel2); }
+.illus.adv b { color: var(--muted); }
+
+/* models */
+.vgrid .vcol { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.assume .in { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.assume .in input { width: 96px; min-width: 0; }
+.assume .ro { justify-self: end; font-weight: 600; }
+.verdict .mid { font-size: var(--t-6); font-weight: 700; display: block; }
+.formula { font-size: var(--t-2); color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sens-t td.heat.here { outline: 1.5px solid var(--fg); outline-offset: -2px; font-weight: 700; }
+.sens-t th, .sens-t td { text-align: center; }
+.sens-t td:first-child, .sens-t th:first-child { text-align: start; }
+.ri-t td:not(:first-child) { width: 90px; }
+
+/* ROE history: twelve thin bars, each opening its source */
+.roehist { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.roehist .l { font-size: var(--t-1); color: var(--muted); }
+.roehist .bars { display: flex; align-items: flex-end; gap: 3px; height: 48px; direction: ltr; }
+.roehist .bar { flex: 1; height: 100%; display: flex; align-items: flex-end; padding: 0; border: 0; background: none; cursor: pointer; }
+.roehist .bar i { display: block; width: 100%; background: var(--accent); opacity: 0.55; border-radius: 2px 2px 0 0; }
+.roehist .bar:last-child i { opacity: 1; }
+.roehist .axis { display: flex; justify-content: space-between; font-size: var(--t-1); color: var(--muted); direction: ltr; }
+
+/* peers */
+.vpeers { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+.peer-t tr.focus td { background: color-mix(in oklch, var(--accent) 7%, transparent); font-weight: 600; }
+.peer-t td:first-child { white-space: nowrap; }
+.peer-t td:first-child .chip { margin-inline-start: 6px; }
+.peer-t th .dim, .sotp-t .dim { display: block; font-weight: 400; }
+.peers .dot, .sotp-t .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 8px; vertical-align: middle; }
+.sotp-t td.amt { width: 140px; } .sotp-t td.mlt { width: 100px; }
+.sotp-t input[type="number"] { width: 100%; min-width: 0; }
+.sotp-t input[type="text"] { min-width: 120px; width: calc(100% - 18px); }
+
+/* terminal mode: assumptions beside the result, peers beside the scatter */
+@media (min-width: 1600px) {
+  .valuation .vgrid { grid-template-columns: minmax(340px, 400px) minmax(0, 1fr); }
+  .vpeers { grid-template-columns: minmax(380px, 34%) minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .vinputs { gap: 10px 18px; }
+  .vinputs > div { min-width: calc(50% - 10px); }
+  .vinputs .pxfield { min-width: 100%; }
+  .vas-grid label, .vas-grid .ke { flex: 1 1 calc(50% - 18px); }
+  .vas-grid .ke { border: 0; padding: 0; }
+  .vas-grid input { width: 100%; }
+  .sotp-t td.amt, .sotp-t td.mlt { min-width: 92px; }
+}
+.vas-sum bdi { margin-inline-start: 10px; } .vas-sum b { color: var(--fg); font-weight: 600; }
+.roehist .bars button.src.bar { display: flex; flex: 1 1 0; min-width: 0; height: 100%; align-items: flex-end; padding: 0; margin: 0; border: 0; background: none; border-radius: 0; }
+.vas-sum bdi { white-space: nowrap; }
+@media (max-width: 760px) {
+  .valuation .pagehead .sub { display: none; }
+  .valuation .pagehead { gap: 10px; }
+  .vinputs > div { min-width: calc(33% - 12px); }
+  .vinputs .v { font-size: var(--t-4); }
+  .vassume { padding: 10px 13px; }
+  .vassume summary::after { margin-inline-start: 0; }
+}
+.roehist .bars button.src.bar { flex-direction: column; justify-content: flex-end; align-items: stretch; }
