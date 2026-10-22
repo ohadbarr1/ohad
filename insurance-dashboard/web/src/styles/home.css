@@ -48,3 +48,4 @@ html[data-density="compact"] .feed li { padding: 4px 0; font-size: var(--t-2); }
 .coname { display: flex; align-items: center; gap: 6px; }
 @media (max-width: 760px) { .cos-ctl .unit { margin-inline-start: 0; width: 100%; } }
 @media (max-width: 760px) { .feed li:nth-child(n+6) { display: none; } }
+@media (min-width: 1600px) { .cos-t td:first-child { white-space: nowrap; } .cos-t td:first-child .dim { display: inline; margin-inline-start: 6px; } }

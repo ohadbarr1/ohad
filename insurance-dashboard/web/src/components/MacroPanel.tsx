@@ -6,6 +6,14 @@ import { palette } from '../lib/theme';
 import { nf, pubLabel } from '../lib/format';
 import { back3, deltaProv, mLabel, seriesProv, useCurve, useMacro, type MonthSeries } from '../lib/macro';
 import type { Prov } from '../lib/prov';
+import type { EChartsCoreOption } from 'echarts/core';
+
+/** yields sit in a 2-point band: the axis prints one decimal so its labels do not repeat */
+function withPctAxis(o: EChartsCoreOption): EChartsCoreOption {
+  const y = (o as { yAxis?: unknown }).yAxis;
+  (Array.isArray(y) ? y : y ? [y] : []).forEach((a: { axisLabel?: Record<string, unknown> }) => { a.axisLabel = { ...(a.axisLabel ?? {}), formatter: (v: number) => `${nf(v, 1)}%` }; });
+  return o;
+}
 import '../styles/home.css';
 
 /** A thin line of the last months, drawn inline: no chart engine for a sparkline. */
@@ -68,12 +76,12 @@ export function MacroPanel({ compact = false }: { compact?: boolean }) {
         ))}
       </div>
       {curve && cm >= 0 && !compact && (
-        <Chart label="עקום אפס ממשלתי" height={210} deps={[curve.months[cm]]} source={`בנק ישראל · ZCM · ${curve.basis === 'monthly average' ? 'ממוצע חודשי' : curve.basis}`} build={() => foxOption({
+        <Chart label="עקום אפס ממשלתי" height={210} deps={[curve.months[cm]]} source={`בנק ישראל · ZCM · ${curve.basis === 'monthly average' ? 'ממוצע חודשי' : curve.basis}`} build={() => withPctAxis(foxOption({
           x: curve.tenors.map((t) => `${t}Y`), unit: '%', scale: true, labels: false, full: true, series: [
             { name: `נומינלי ${mLabel(curve.months[cm])}`, kind: 'line', color: pal[0], pct: true, dec: 2, data: curve.tenors.map((t) => curve.nominal[String(t)]?.[cm] ?? null) },
             { name: `ריאלי ${mLabel(curve.months[cm])}`, kind: 'line', color: pal[1], pct: true, dec: 2, data: curve.tenors.map((t) => curve.real[String(t)]?.[cm] ?? null) },
             ...(cy >= 0 ? [{ name: `נומינלי ${mLabel(curve.months[cy])}`, kind: 'line' as const, color: pal[0], dashed: true, dim: true, pct: true, dec: 2, data: curve.tenors.map((t) => curve.nominal[String(t)]?.[cy] ?? null) }] : []),
-          ] })} />
+          ] }))} />
       )}
     </section>
   );

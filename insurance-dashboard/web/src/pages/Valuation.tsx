@@ -222,8 +222,11 @@ export function PbScatter({ rows, focus }: { rows: PeerRow[]; focus: string }) {
     <Panel title="ROE מול P/B" aside={<span>קו: P/B מוצדק ב-ke <span className="num">{fin(ke) ? pctS(ke, 1) : '–'}</span>, g <span className="num">{pctS(a.g, 1)}</span></span>}>
       <Chart label="ROE מול P/B, עמיתים" height={300} deps={[pts.map((r) => `${r.id}${r.mkt.pb}`).join(), ke, a.g, focus]} source="P/B: שווי שוק (TASE) ÷ הון (XBRL) · ROE: LTM, XBRL" build={() => {
         const b = chartBase();
+        // a label that would sit on a neighbour's goes below its point
+        const pos = new Map<string, string>();
+        [...pts].sort((x, y) => x.mkt.roe! - y.mkt.roe!).forEach((r, i, arr) => { const near = arr.slice(0, i).some((q) => pos.get(q.id) === 'top' && Math.abs(q.mkt.roe! - r.mkt.roe!) < 2.5 && Math.abs(q.mkt.pb! - r.mkt.pb!) < 0.35); pos.set(r.id, near ? 'bottom' : 'top'); });
         return {
-          grid: { left: 44, right: 16, top: 24, bottom: 36 },
+          grid: { left: 44, right: 16, top: 36, bottom: 36 },
           tooltip: { trigger: 'item', formatter: (p: { seriesName: string; value: [number, number] }) => `${p.seriesName}<br/>ROE ${nf(p.value[0], 1)}% · P/B ${nf(p.value[1], 2)}` },
           xAxis: { type: 'value', name: 'ROE, LTM (%)', nameLocation: 'middle', nameGap: 24, min: lo, max: hi, axisLine: { lineStyle: { color: b.ln } }, splitLine: { show: false }, axisLabel: { color: b.mu } },
           yAxis: { type: 'value', name: 'P/B', min: 0, axisLabel: { color: b.mu }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
@@ -231,7 +234,7 @@ export function PbScatter({ rows, focus }: { rows: PeerRow[]; focus: string }) {
             ...(fin(ke) && ke > a.g ? [{ name: 'P/B מוצדק', type: 'line', silent: true, symbol: 'none', lineStyle: { color: b.mu, type: 'dashed', width: 1 }, data: [lo, hi].map((x) => [x, Math.max(0, (x - a.g) / (ke - a.g))]), tooltip: { show: false } }] : []),
             // drawn as one-point lines with markers: the shared chart bundle carries line and bar only
             ...pts.map((r) => ({ name: r.name, type: 'line', showSymbol: true, symbol: 'circle', lineStyle: { opacity: 0 }, symbolSize: r.id === focus ? 16 : 11, itemStyle: { color: r.color, borderColor: r.id === focus ? b.fg : 'transparent', borderWidth: 1.5 },
-              label: { show: true, formatter: r.name, position: 'top', color: b.fg, fontSize: 11 }, data: [[r.mkt.roe!, r.mkt.pb!]] })),
+              label: { show: true, formatter: r.name, position: pos.get(r.id) ?? 'top', color: b.fg, fontSize: 11 }, data: [[r.mkt.roe!, r.mkt.pb!]] })),
           ],
         };
       }} />
