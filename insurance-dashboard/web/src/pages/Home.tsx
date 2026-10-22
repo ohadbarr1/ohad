@@ -9,7 +9,8 @@ import { useKpis, useLoad, useMarket, useRegistry } from '../lib/useData';
 import type { DocEntry } from '../lib/types';
 import { useStored, useWatchlist } from '../lib/local';
 import { Star } from '../components/Follow';
-import { Fragment, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { DataTable } from '../components/DataTable';
 import { periodLabelShort, periodTag } from '../lib/kpi';
 import { MacroPanel } from '../components/MacroPanel';
 import { DensityToggle } from '../components/MacroDensity';
@@ -58,6 +59,7 @@ export function Home() {
       { label: m!.plabel(b), v: nf(m!.value('assets', b, 'm', s, g) ?? 0, 1), src: () => ({ k: 'reg', metric: 'assets', pi: b, w: 'm', set: s, g }) }] };
   };
   const dash = <span className="muted">–</span>;
+  const regV = (g: number, metric: MetricKey, set = 'all', w: 'ltm' | 'm' = 'ltm') => (m && g >= 0 ? m.value(metric, L, w, set, g) : null);
   const regCell = (g: number, metric: MetricKey, fmt: (v: number) => string, set = 'all', w: 'ltm' | 'm' = 'ltm', tone = false) => {
     const v = m && g >= 0 ? m.value(metric, L, w, set, g) : null;
     if (v == null) return dash;
@@ -107,41 +109,31 @@ export function Home() {
               <span className="view-seg"><Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק ודמי ניהול']]} /></span>
               <span className="muted unit">{view === 'fin' ? 'מיליוני ש"ח, מהדוח האחרון' : `רשות שוק ההון · ${m?.plabel(L) ?? ''}`}</span>
             </div>
-            <div className="scroll"><table className={`rank cos-t v-${view}`}>
-              <thead><tr>
-                <th>חברה</th>
-                <th className="c-fin">דוח אחרון</th><th className="c-fin">רווח נקי, QTD</th><th className="c-fin">YoY</th><th className="c-fin">רווח נקי, LTM</th><th className="c-fin">הון</th><th className="c-fin">ROE, LTM <span className="chip est">נגזר</span></th>
-                <th className="c-mkt">נכסים, מיליארד</th><th className="c-mkt">נתח שוק</th><th className="c-mkt">נכסים YoY</th><th className="c-mkt">צבירה אורגנית, LTM</th><th className="c-mkt">דמי ניהול, פנסיה</th><th className="c-mkt">דמי ניהול, גמל</th>
-                <th>מסמכים</th>
-              </tr></thead>
-              <tbody>{rows.map(({ c, k, g, qprior, q, yoy, ltm, eq, roe }) => (
-                <Fragment key={c.id}>
-                <tr>
-                  <td><span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span></span></span></td>
-                  <td className="c-fin">{q ? <span className="num">{periodLabelShort(q.period)}</span> : dash}</td>
-                  <td className="c-fin">{q?.v != null ? <Sourced className={`num ${q.v < 0 ? 'neg' : ''}`} src={() => k!.explain('profit', 'q', q.period)}>{nf(q.v, 0)}</Sourced> : dash}</td>
-                  <td className="c-fin">{yoy != null ? <Sourced className={`num ${yoy < 0 ? 'neg' : 'pos'}`} src={() => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] } as Prov; }}>{pct(yoy, 1, true)}</Sourced> : dash}</td>
-                  <td className="c-fin">{ltm?.v != null ? <Sourced className="num" src={() => k!.explain('profit', 'ltm', ltm.period)}>{nf(ltm.v, 0)}</Sourced> : dash}</td>
-                  <td className="c-fin">{eq?.v != null ? <Sourced className="num" src={() => k!.explain('equity', 'ltm', eq.period)}>{nf(eq.v, 0)}</Sourced> : dash}</td>
-                  <td className="c-fin">{roe?.v != null ? <Sourced className="num" src={() => k!.explain('roe', 'ltm', roe.period)}>{pct(roe.v, 1)}</Sourced> : dash}</td>
-                  <td className="c-mkt">{regCell(g, 'assets', (v) => nf(v, 1))}</td>
-                  <td className="c-mkt">{regCell(g, 'share', (v) => pct(v, 1))}</td>
-                  <td className="c-mkt">{regCell(g, 'growth', (v) => pct(v, 1, true), 'all', 'ltm', true)}</td>
-                  <td className="c-mkt">{regCell(g, 'organic', (v) => nf(v, 1), 'all', 'ltm', true)}</td>
-                  <td className="c-mkt">{regCell(g, 'fee', (v) => pct(v, 2), 'fam:pension', 'm')}</td>
-                  <td className="c-mkt">{regCell(g, 'fee', (v) => pct(v, 2), 'fam:gemel', 'm')}</td>
-                  <td>{c.docs > 0 ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : dash}</td>
+            <DataTable className={`rank cos-t v-${view}`} caption="חברות" rows={rows} rowKey={(r) => r.c.id}
+              export={{ name: `fox-companies-${view}`, title: view === 'fin' ? 'חברות · דוחות' : 'חברות · שוק ודמי ניהול', note: view === 'fin' ? 'מיליוני ש"ח · XBRL של הדוחות התקופתיים' : `רשות שוק ההון · ${m?.plabel(L) ?? ''}` }}
+              after={({ c }) => all.filter((x) => holdingOf(x)?.id === c.id).map((x) => (
+                <tr key={x.id} className="subrow">
+                  <td><Link to={`/company/${x.id}`}>{x.name_he}</Link><span className="dim">חברה בת, נכללת בנתוני {c.name_he}</span></td>
+                  <td className="c-fin" colSpan={6} /><td className="c-mkt" colSpan={6} />
+                  <td>{x.docs > 0 ? <Link className="num" to={`/company/${x.id}/filings`}>{x.docs}</Link> : dash}</td>
                 </tr>
-                {all.filter((x) => holdingOf(x)?.id === c.id).map((x) => (
-                  <tr key={x.id} className="subrow">
-                    <td><Link to={`/company/${x.id}`}>{x.name_he}</Link><span className="dim">חברה בת, נכללת בנתוני {c.name_he}</span></td>
-                    <td className="c-fin" colSpan={6} /><td className="c-mkt" colSpan={6} />
-                    <td>{x.docs > 0 ? <Link className="num" to={`/company/${x.id}/filings`}>{x.docs}</Link> : dash}</td>
-                  </tr>
-                ))}
-                </Fragment>
-              ))}</tbody>
-            </table></div>
+              ))}
+              columns={[
+                { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span></span></span> },
+                { key: 'per', head: 'דוח אחרון', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.period, text: ({ q }) => (q ? periodLabelShort(q.period) : ''), cell: ({ q }) => (q ? <span className="num">{periodLabelShort(q.period)}</span> : dash) },
+                { key: 'q', head: 'רווח נקי, QTD', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.v, unit: 'int', tone: 'neg', src: ({ k, q }) => k!.explain('profit', 'q', q!.period) },
+                { key: 'yoy', head: 'YoY', className: 'c-fin', noExport: view !== 'fin', value: ({ yoy }) => yoy, unit: 'pct', signed: true, tone: true, src: ({ c, k, q, qprior, yoy }) => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] }; } },
+                { key: 'ltm', head: 'רווח נקי, LTM', className: 'c-fin', noExport: view !== 'fin', value: ({ ltm }) => ltm?.v, unit: 'int', src: ({ k, ltm }) => k!.explain('profit', 'ltm', ltm!.period) },
+                { key: 'eq', head: 'הון', className: 'c-fin', noExport: view !== 'fin', value: ({ eq }) => eq?.v, unit: 'int', src: ({ k, eq }) => k!.explain('equity', 'ltm', eq!.period) },
+                { key: 'roe', head: <>ROE, LTM <span className="chip est">נגזר</span></>, label: 'ROE, LTM (נגזר)', className: 'c-fin', noExport: view !== 'fin', value: ({ roe }) => roe?.v, unit: 'pct', src: ({ k, roe }) => k!.explain('roe', 'ltm', roe!.period) },
+                { key: 'aum', head: 'נכסים, מיליארד', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'assets'), cell: ({ g }) => regCell(g, 'assets', (v) => nf(v, 1)) },
+                { key: 'share', head: 'נתח שוק', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'share'), cell: ({ g }) => regCell(g, 'share', (v) => pct(v, 1)) },
+                { key: 'growth', head: 'נכסים YoY', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'growth'), cell: ({ g }) => regCell(g, 'growth', (v) => pct(v, 1, true), 'all', 'ltm', true) },
+                { key: 'organic', head: 'צבירה אורגנית, LTM', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'organic'), cell: ({ g }) => regCell(g, 'organic', (v) => nf(v, 1), 'all', 'ltm', true) },
+                { key: 'feep', head: 'דמי ניהול, פנסיה', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'fee', 'fam:pension', 'm'), cell: ({ g }) => regCell(g, 'fee', (v) => pct(v, 2), 'fam:pension', 'm') },
+                { key: 'feeg', head: 'דמי ניהול, גמל', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'fee', 'fam:gemel', 'm'), cell: ({ g }) => regCell(g, 'fee', (v) => pct(v, 2), 'fam:gemel', 'm') },
+                { key: 'docs', head: 'מסמכים', value: ({ c }) => c.docs || null, cell: ({ c }) => (c.docs > 0 ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : dash) },
+              ]} />
             <div className="src">רווח, הון ו-ROE: XBRL של הדוחות התקופתיים · נכסים, צבירה ודמי ניהול: רשות שוק ההון (פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון; צבירה: פנסיה וגמל)</div>
           </section>
         </div>

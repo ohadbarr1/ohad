@@ -9,7 +9,8 @@ export function load<T>(path: string): Promise<T> {
     cache.set(path, fetch(`${BASE}data/${path}`).then((r) => {
       if (!r.ok || (r.headers.get('content-type') ?? '').includes('text/html')) throw new Error(`${path}: ${r.ok ? 404 : r.status}`);
       return r.json();
-    }));
+    // every file is checked against its data contract (lib/schemas.json) as it arrives: a mismatch is an error message, not a broken page
+    }).then((d) => import('./schema').then((m) => m.checked(path, d), () => d)));
   }
   return cache.get(path) as Promise<T>;
 }

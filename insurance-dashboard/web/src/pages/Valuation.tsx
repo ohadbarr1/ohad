@@ -5,7 +5,8 @@ import { Sourced } from '../components/Source';
 import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
 import { DensityToggle } from '../components/MacroDensity';
 import { chartBase, palette } from '../lib/theme';
-import { nf, pubLabel } from '../lib/format';
+import { nf, pubLabel, type Unit } from '../lib/format';
+import { DataTable, type Column } from '../components/DataTable';
 import { periodTag, type CompanyKpi } from '../lib/kpi';
 import type { Prov } from '../lib/prov';
 import type { RegistryCompany } from '../lib/types';
@@ -145,23 +146,21 @@ export function usePeers(): PeerRow[] {
 }
 
 type ColK = 'mcap' | 'eq' | 'pb' | 'roe' | 'jpb' | 'ike' | 'pe' | 'csm' | 'pec' | 'icm';
-const COLS: { k: ColK; l: string; unit?: string; get: (r: PeerRow) => number | null; fmt: (v: number) => string }[] = [
-  { k: 'mcap', l: 'שווי שוק', unit: 'מיליארד', get: (r) => (fin(r.mkt.mcap) ? r.mkt.mcap / 1000 : null), fmt: (v) => nf(v, 1) },
-  { k: 'eq', l: 'הון', unit: 'מיליארד', get: (r) => (fin(r.mkt.eq) ? r.mkt.eq / 1000 : null), fmt: (v) => nf(v, 1) },
-  { k: 'pb', l: 'P/B', get: (r) => r.mkt.pb, fmt: (v) => nf(v, 2) },
-  { k: 'roe', l: 'ROE, LTM', get: (r) => r.mkt.roe, fmt: (v) => pctS(v) },
-  { k: 'jpb', l: 'P/B מוצדק', get: (r) => r.jpb, fmt: (v) => nf(v, 2) },
-  { k: 'ike', l: 'ke משתמע', get: (r) => r.ike, fmt: (v) => pctS(v) },
-  { k: 'pe', l: 'P/E, LTM', get: (r) => r.mkt.pe, fmt: (v) => nf(v, 1) },
-  { k: 'csm', l: 'CSM אחרי מס', unit: 'מיליארד', get: (r) => (r.cm ? r.cm.csmNet / 1000 : null), fmt: (v) => nf(v, 1) },
-  { k: 'pec', l: 'שוק ÷ (הון+CSM)', get: (r) => r.cm?.pec ?? null, fmt: (v) => nf(v, 2) },
-  { k: 'icm', l: 'מכפיל CSM משתמע', get: (r) => r.cm?.implied ?? null, fmt: (v) => nf(v, 2) },
+const COLS: { k: ColK; l: string; unit?: string; u: Unit; d: number; get: (r: PeerRow) => number | null }[] = [
+  { k: 'mcap', l: 'שווי שוק', unit: 'מיליארד', get: (r) => (fin(r.mkt.mcap) ? r.mkt.mcap / 1000 : null), u: 'n', d: 1 },
+  { k: 'eq', l: 'הון', unit: 'מיליארד', get: (r) => (fin(r.mkt.eq) ? r.mkt.eq / 1000 : null), u: 'n', d: 1 },
+  { k: 'pb', l: 'P/B', get: (r) => r.mkt.pb, u: 'n', d: 2 },
+  { k: 'roe', l: 'ROE, LTM', get: (r) => r.mkt.roe, u: 'pct', d: 1 },
+  { k: 'jpb', l: 'P/B מוצדק', get: (r) => r.jpb, u: 'n', d: 2 },
+  { k: 'ike', l: 'ke משתמע', get: (r) => r.ike, u: 'pct', d: 1 },
+  { k: 'pe', l: 'P/E, LTM', get: (r) => r.mkt.pe, u: 'n', d: 1 },
+  { k: 'csm', l: 'CSM אחרי מס', unit: 'מיליארד', get: (r) => (r.cm ? r.cm.csmNet / 1000 : null), u: 'n', d: 1 },
+  { k: 'pec', l: 'שוק ÷ (הון+CSM)', get: (r) => r.cm?.pec ?? null, u: 'n', d: 2 },
+  { k: 'icm', l: 'מכפיל CSM משתמע', get: (r) => r.cm?.implied ?? null, u: 'n', d: 2 },
 ];
-const median = (v: number[]) => { const s = [...v].sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; };
 
 export function PeerTable({ rows, focus }: { rows: PeerRow[]; focus: string }) {
   const { a, ke, rf } = useV();
-  const [sort, setSort] = useState<{ k: ColK; d: 1 | -1 } | null>(null);
   const cellProv = (r: PeerRow, k: ColK): Prov => {
     const g = a.g, tax = a.tax;
     switch (k) {
@@ -182,31 +181,14 @@ export function PeerTable({ rows, focus }: { rows: PeerRow[]; focus: string }) {
         inputs: [{ label: 'שווי שוק', v: mil(r.mkt.mcap!), src: r.mkt.mcapProv }, { label: 'הון', v: mil(r.mkt.eq!), src: r.mkt.eqProv }, { label: 'CSM אחרי מס', v: mil(r.cm!.csmNet), src: () => cellProv(r, 'csm') }] };
     }
   };
-  const shown = sort ? [...rows].sort((x, y) => { const c = COLS.find((q) => q.k === sort.k)!, vx = c.get(x), vy = c.get(y); return vx == null ? 1 : vy == null ? -1 : (vx - vy) * sort.d; }) : rows;
-  const exportX = async () => {
-    const { downloadXlsx } = await import('../lib/xlsx');
-    downloadXlsx('fox_valuation_peers', [{ name: 'עמיתים', freeze: { rows: 1, cols: 1 }, widths: [18, ...COLS.map(() => 14)], rows: [
-      ['חברה', ...COLS.map((c) => c.l + (c.unit ? ` (${c.unit} ש"ח)` : ''))],
-      ...shown.map((r) => [r.name, ...COLS.map((c) => { const v = c.get(r); return v == null ? null : { v: +v.toFixed(4), fmt: c.k === 'roe' || c.k === 'ike' ? 'n1' as const : 'n2' as const }; })]),
-      [],
-      [`הנחות: ke ${fin(ke) ? nf(ke, 2) : '–'}%, g ${nf(a.g, 2)}%, מס ${nf(a.tax, 2)}% · שווי שוק: TASE · הון ו-ROE: XBRL · CSM: הדוח הכספי (IFRS 17) · אומדנים, לא המלצה`],
-    ] }]);
-  };
-  const meds = COLS.map((c) => median(rows.map(c.get).filter(fin)));
   return (
-    <Panel title="עמיתים" className="peers" aside={<><span>ביטוח · שווי שוק מהבורסה, הון ו-CSM מהדוח האחרון</span><button type="button" className="btn" onClick={() => void exportX()}>Excel</button></>}>
-      <div className="scroll"><table className="peer-t">
-        <thead><tr><th>חברה</th>{COLS.map((c) => <th key={c.k} className="sortable" aria-sort={sort?.k === c.k ? (sort.d === 1 ? 'ascending' : 'descending') : undefined} onClick={() => setSort(sort?.k === c.k ? (sort.d === -1 ? { k: c.k, d: 1 } : null) : { k: c.k, d: -1 })}>{c.l}{c.unit && <span className="dim">{c.unit} ש"ח</span>}</th>)}</tr></thead>
-        <tbody>
-          {shown.map((r) => (
-            <tr key={r.id} className={r.id === focus ? 'focus' : undefined}>
-              <td><span className="dot" style={{ background: r.color }} /><Link to={`/valuation/${r.id}`}>{r.name}</Link>{r.csm?.inc && <span className="chip est" title="יתרת ה-CSM בטבלת החברה כוללת רווח עתידי בפוליסות חיסכון">כולל פוליסות חיסכון</span>}{r.csm?.b.scope === 'life' && <span className="chip est" title="בדוח שחולץ יתרת ה-CSM מודפסת למגזר חיים בלבד">CSM חיים בלבד</span>}</td>
-              {COLS.map((c) => <td key={c.k}><Fig v={c.get(r)} text={c.fmt} src={() => cellProv(r, c.k)} /></td>)}
-            </tr>
-          ))}
-          <tr className="tot"><td>חציון</td>{COLS.map((c, i) => <td key={c.k}>{meds[i] == null ? <Dash /> : <span className="num">{c.fmt(meds[i]!)}</span>}</td>)}</tr>
-        </tbody>
-      </table></div>
+    <Panel title="עמיתים" className="peers" aside={<span>ביטוח · שווי שוק מהבורסה, הון ו-CSM מהדוח האחרון</span>}>
+      <DataTable className="peer-t" caption="עמיתים: מכפילים והערכת שווי" rows={rows} rowKey={(r) => r.id} rowClass={(r) => (r.id === focus ? 'focus' : undefined)} totalLabel="חציון"
+        export={{ name: 'fox_valuation_peers', title: 'הערכת שווי · עמיתים', note: `הנחות: ke ${fin(ke) ? nf(ke, 2) : '–'}%, g ${nf(a.g, 2)}%, מס ${nf(a.tax, 2)}% · שווי שוק: TASE · הון ו-ROE: XBRL · CSM: הדוח הכספי (IFRS 17) · אומדנים, לא המלצה` }}
+        columns={[
+          { key: 'name', head: 'חברה', value: (r) => r.name, cell: (r) => <><span className="dot" style={{ background: r.color }} /><Link to={`/valuation/${r.id}`}>{r.name}</Link>{r.csm?.inc && <span className="chip est" title="יתרת ה-CSM בטבלת החברה כוללת רווח עתידי בפוליסות חיסכון">כולל פוליסות חיסכון</span>}{r.csm?.b.scope === 'life' && <span className="chip est" title="בדוח שחולץ יתרת ה-CSM מודפסת למגזר חיים בלבד">CSM חיים בלבד</span>}</> },
+          ...COLS.map((c): Column<PeerRow> => ({ key: c.k, head: <>{c.l}{c.unit && <span className="dim">{c.unit} ש"ח</span>}</>, label: c.l + (c.unit ? ` (${c.unit} ש"ח)` : ''), value: c.get, unit: c.u, d: c.d, src: (r) => cellProv(r, c.k), total: 'median' })),
+        ]} />
       <div className="src">P/B מוצדק ו-ke משתמע: לפי ההנחות שלמעלה · CSM: יתרת סגירה בדוח האחרון שחולץ, נטו מביטוח משנה כשמודפס · הון לבעלי המניות; CSM כולל חלק המיעוט בחברות הבנות · אומדנים להשוואה, לא המלצה</div>
     </Panel>
   );
@@ -289,7 +271,7 @@ export function ValuationPb() {
           </Panel>
           {roes.length > 0 && kes.length > 0 && (
             <Panel title="רגישות: P/B מוצדק" aside={<span>ROE × ke · {fin(mkt.pb) && <>מסומן: מעל ומתחת ל-P/B בשוק (<span className="num">{nf(mkt.pb, 2)}</span>)</>}</span>}>
-              <div className="scroll"><table className="sens-t">
+              <div className="scroll" tabIndex={0} role="region" aria-label="טבלת רגישות"><table className="sens-t">
                 <thead><tr><th>ROE \ ke</th>{kes.map((x) => <th key={x}><span className="num">{nf(x, 1)}%</span></th>)}</tr></thead>
                 <tbody>{roes.map((r) => (
                   <tr key={r}><td><span className="num">{nf(r, 1)}%</span></td>{kes.map((x) => {

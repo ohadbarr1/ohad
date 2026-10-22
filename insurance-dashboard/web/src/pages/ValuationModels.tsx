@@ -290,7 +290,7 @@ export function Dcf() {
               { name: 'ערך נוכחי', kind: 'line', color: pal[1], dec: 0, data: r.rows.map((q) => +q.pv.toFixed(0)) }] })} />
           </Panel>
           <Panel title="רגישות: שווי הון" aside={<span>מיליארד ש"ח · ke × g</span>}>
-            <div className="scroll"><table className="sens-t">
+            <div className="scroll" tabIndex={0} role="region" aria-label="טבלת רגישות"><table className="sens-t">
               <thead><tr><th>ke \ g</th>{gts.map((g) => <th key={g}><span className="num">{nf(g, 1)}%</span></th>)}</tr></thead>
               <tbody>{kes.map((kk) => (
                 <tr key={kk}><td><span className="num">{nf(kk, 1)}%</span></td>{gts.map((gt) => { const v = dcf({ ...x, ke: kk, gt }).value; return <td key={gt} className={`heat${kk === x.ke && gt === x.gt ? ' here' : ''}`}><span className="num">{Number.isFinite(v) ? nf(v / 1000, 1) : '–'}</span></td>; })}</tr>

@@ -13,6 +13,7 @@ import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
+import { DataTable, type Column } from '../components/DataTable';
 import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
 import type { Market } from '../lib/market';
 import { useSource, type Prov } from '../lib/prov';
@@ -541,25 +542,25 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
       {restated.length > 0 && (
         <Panel title="הוצג מחדש" aside={<><span>{restated.length} מספרים שדוח מאוחר הדפיס אחרת</span><button type="button" className="btn" aria-expanded={showRe} onClick={() => setShowRe((v) => !v)}>{showRe ? 'סגירה' : 'הצגה'}</button></>}>
           {showRe && <>
-            <div className="scroll"><table>
-              <thead><tr><th>שורה</th><th>תקופה</th><th>כפי שדווח לראשונה</th><th>בהדפסה האחרונה</th><th>שינוי</th><th>בדוח</th></tr></thead>
-              <tbody>{restated.map((r, i) => {
+            <DataTable caption="הוצג מחדש" rows={restated.map((r, i) => {
                 const [, , label, typ, end, a, pa, ua, b, pb, ub, by] = r;
                 const link = (u: number | null, pg: number | null) => (u != null && d.urls?.[u] ? `${d.urls[u]}${pg ? `#page=${pg}` : ''}` : null);
                 const per = periodLabel(typ, end), inRep = periodLabel(by.slice(5, 7) === '12' ? 'FY' : 'Q', by), rate = /למניה/.test(label) ? 'nis' : 'k';
                 const fv = (v: number) => fmtCell(v, rate, scale), unit = rate === 'nis' ? 'ש"ח' : SCALES.find((x) => x.id === scale)!.label;
                 const fact = (v: number, u: number | null, pg: number | null, what: string): Prov => report({ title: label, value: fv(v), unit, url: u != null ? d.urls?.[u] ?? null : null, pg, doc: docOf(store, entity, u != null ? d.urls?.[u] ?? null : null), period: per,
                   note: what, restated: { first: fv(a), last: fv(b), firstHref: link(ua, pa) ?? undefined, lastHref: link(ub, pb) ?? undefined, in: inRep } });
-                const cellOf = (v: number, u: number | null, pg: number | null, what: string) => <Sourced src={() => fact(v, u, pg, what)} href={link(u, pg)}><span className="num">{fv(v)}</span></Sourced>;
-                const flip = Math.abs(a + b) < 0.5, chg = `${sn(((b - a) / Math.abs(a)) * 100, 1)}%`;
-                const diff = () => calc(`${label} · ${per} · שינוי בין הדפסות`, chg, 'בהדפסה האחרונה − כפי שדווח לראשונה, ÷ |כפי שדווח לראשונה|', [{ label: 'כפי שדווח לראשונה', v: fv(a), src: () => fact(a, ua, pa, 'כפי שדווח לראשונה') }, { label: `בהדפסה האחרונה (${inRep})`, v: fv(b), src: () => fact(b, ub, pb, `כפי שהודפס בדוח ${inRep}`) }], '%');
-                return (
-                  <tr key={i}><td className="lbl">{label}</td><td><span className="num">{per}</span></td><td>{cellOf(a, ua, pa, 'כפי שדווח לראשונה')}</td><td>{cellOf(b, ub, pb, `כפי שהודפס בדוח ${inRep}`)}</td>
-                    <td>{flip ? <span className="muted">היפוך סימן בהצגה</span> : <Sourced src={diff}><span className={`num ${b - a >= 0 ? 'pos' : 'neg'}`}>{chg}</span></Sourced>}</td>
-                    <td><span className="num">{inRep}</span></td></tr>
-                );
-              })}</tbody>
-            </table></div>
+                const flip = Math.abs(a + b) < 0.5, chg = ((b - a) / Math.abs(a)) * 100, chgT = `${sn(chg, 1)}%`;
+                const diff = () => calc(`${label} · ${per} · שינוי בין הדפסות`, chgT, 'בהדפסה האחרונה − כפי שדווח לראשונה, ÷ |כפי שדווח לראשונה|', [{ label: 'כפי שדווח לראשונה', v: fv(a), src: () => fact(a, ua, pa, 'כפי שדווח לראשונה') }, { label: `בהדפסה האחרונה (${inRep})`, v: fv(b), src: () => fact(b, ub, pb, `כפי שהודפס בדוח ${inRep}`) }], '%');
+                return { i, label, end, per, inRep, by, a, b, fv, flip, chg, chgT, diff, first: () => fact(a, ua, pa, 'כפי שדווח לראשונה'), last: () => fact(b, ub, pb, `כפי שהודפס בדוח ${inRep}`), hrefA: link(ua, pa), hrefB: link(ub, pb), scaled: (v: number) => scaleValue(v, rate, scale) };
+              })} rowKey={(r) => String(r.i)} export={{ name: `fox-${companyId}-restated`, title: 'הוצג מחדש', note: `כפי שדווח לראשונה מול ההדפסה האחרונה · ${SCALES.find((x) => x.id === scale)!.label}` }}
+              columns={[
+                { key: 'l', head: 'שורה', value: (r) => r.label, tdClass: () => 'lbl' },
+                { key: 'p', head: 'תקופה', value: (r) => r.end, text: (r) => r.per, cell: (r) => <span className="num">{r.per}</span> },
+                { key: 'a', head: 'כפי שדווח לראשונה', value: (r) => r.scaled(r.a), cell: (r) => <Sourced src={r.first} href={r.hrefA}><span className="num">{r.fv(r.a)}</span></Sourced> },
+                { key: 'b', head: 'בהדפסה האחרונה', value: (r) => r.scaled(r.b), cell: (r) => <Sourced src={r.last} href={r.hrefB}><span className="num">{r.fv(r.b)}</span></Sourced> },
+                { key: 'c', head: 'שינוי', value: (r) => (r.flip ? null : r.chg), unit: 'pct', cell: (r) => (r.flip ? <span className="muted">היפוך סימן בהצגה</span> : <Sourced src={r.diff}><span className={`num ${r.b - r.a >= 0 ? 'pos' : 'neg'}`}>{r.chgT}</span></Sourced>) },
+                { key: 'in', head: 'בדוח', value: (r) => r.by, text: (r) => r.inRep, cell: (r) => <span className="num">{r.inRep}</span> },
+              ]} />
             <div className="src">הטבלאות למעלה מציגות כל תקופה כפי שדווחה בדוח שלה. כאן: מה השתנה כשדוח מאוחר הדפיס את אותה תקופה כמספר השוואה. נכללות רק שורות שזוהו כאותה שורה (אותו סימן ועד פי שניים, או היפוך סימן בלבד).</div>
           </>}
         </Panel>
@@ -654,22 +655,16 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
           <div className="src">ביאור 3, מגזרי פעילות · חוזי ביטוח ישירים · <Link to={`../financials?sheet=${encodeURIComponent(seg)}`}>טבלה מלאה</Link></div>
         </Panel>
         <Panel title="קבוצות תיק">
-          <div className="scroll"><table>
-            <thead><tr><th>קבוצה</th>{dates.map((x) => <th key={x.i}>{store.plabel(x.i)}</th>)}<th>מול {dec ? store.plabel(dec.i) : ''}</th><th>מול {prevYear ? store.plabel(prevYear.i) : ''}</th></tr></thead>
-            <tbody>
-              {parts.map(({ i, m }) => (
-                <tr key={i}>
-                  <td className="lbl"><label className="mrow"><input type="checkbox" checked={defaultOn(i)} onChange={(e) => setOn((o) => ({ ...o, [i]: e.target.checked }))} /><span className="dot" style={{ background: pal[parts.findIndex((x) => x.i === i) % pal.length] }} /><span>{shortDim(m.dim ?? '')}</span></label></td>
-                  {dates.map((x) => <td key={x.i}><span className="num">{valCell(i, x.i)}</span></td>)}
-                  <td><span className={`num ${(chg(i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(i, dec)}</span></td>
-                  <td><span className={`num ${(chg(i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(i, prevYear)}</span></td>
-                </tr>
-              ))}
-              <tr className="tot"><td>סה"כ</td>{dates.map((x) => <td key={x.i}><span className="num">{val(total.i, x.i) == null ? '0.0' : <Sourced src={() => pr(total.i, x.i)}>{mm(total.i, x.i)}</Sourced>}</span></td>)}
-                <td><span className={`num ${(chg(total.i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(total.i, dec)}</span></td>
-                <td><span className={`num ${(chg(total.i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(total.i, prevYear)}</span></td></tr>
-            </tbody>
-          </table></div>
+          <DataTable caption="קבוצות תיק" rows={parts} rowKey={(x) => String(x.i)} export={{ name: `fox-csm-${seg.includes('חיים') ? 'life' : 'health'}`, title: 'יתרת CSM לפי קבוצת תיק', note: 'מיליוני ש"ח · ביאור מגזרי פעילות' }}
+            foot={<tr className="tot"><td>סה"כ</td>{dates.map((x) => <td key={x.i}><span className="num">{val(total.i, x.i) == null ? '0.0' : <Sourced src={() => pr(total.i, x.i)}>{mm(total.i, x.i)}</Sourced>}</span></td>)}
+              <td><span className={`num ${(chg(total.i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(total.i, dec)}</span></td>
+              <td><span className={`num ${(chg(total.i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(total.i, prevYear)}</span></td></tr>}
+            columns={[
+              { key: 'g', head: 'קבוצה', value: ({ m }) => shortDim(m.dim ?? ''), tdClass: () => 'lbl', cell: ({ i, m }) => <label className="mrow"><input type="checkbox" checked={defaultOn(i)} onChange={(e) => setOn((o) => ({ ...o, [i]: e.target.checked }))} /><span className="dot" style={{ background: pal[parts.findIndex((x) => x.i === i) % pal.length] }} /><span>{shortDim(m.dim ?? '')}</span></label> },
+              ...dates.map((x): Column<(typeof parts)[number]> => ({ key: `d${x.i}`, head: store.plabel(x.i), value: ({ i }) => { const v = val(i, x.i); return v ? v / 1000 : null; }, d: 1, cell: ({ i }) => <span className="num">{valCell(i, x.i)}</span> })),
+              { key: 'dec', head: `מול ${dec ? store.plabel(dec.i) : ''}`, value: ({ i }) => chg(i, dec), unit: 'pct', cell: ({ i }) => <span className={`num ${(chg(i, dec) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(i, dec)}</span> },
+              { key: 'yoy', head: `מול ${prevYear ? store.plabel(prevYear.i) : ''}`, value: ({ i }) => chg(i, prevYear), unit: 'pct', cell: ({ i }) => <span className={`num ${(chg(i, prevYear) ?? 0) >= 0 ? 'pos' : 'neg'}`}>{chgCell(i, prevYear)}</span> },
+            ]} />
         </Panel>
       </div>
     </>

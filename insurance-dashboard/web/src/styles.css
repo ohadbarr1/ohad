@@ -520,3 +520,9 @@ table.dense tr.sec td { padding-top: 8px; }
 @media (max-width: 760px) { .subnav .wide-tab, .subnav.sub2 { display: none; } }
 /* Panel header controls never push the page wider than the phone. */
 @media (max-width: 760px) { .panel .hd { flex-wrap: wrap; } .panel .hd .aside { min-width: 0; max-width: 100%; } .panel .hd .aside .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; } }
+/* === lane H === */
+/* WCAG 2.1 AA (axe): the "up" green as text on a tinted background (chips, highlighted rows) is 4.1:1 in the light theme; a darker shade reads 5:1 */
+:root:not([data-theme="dark"]) :is(.chip.pass, .chip.loaded, tr.lead .pos, tr.on .pos, tr.focus .pos) { color: #08704d; }
+/* a link inside a line of footnote text is told apart by more than its colour */
+div.src > a, .fnote a { text-decoration: underline; text-decoration-color: color-mix(in oklch, currentColor 45%, transparent); text-underline-offset: 2px; }
+/* === end lane H === */

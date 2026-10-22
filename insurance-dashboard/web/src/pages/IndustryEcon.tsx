@@ -5,7 +5,8 @@ import { Sourced } from '../components/Source';
 import type { Prov } from '../lib/prov';
 import { rankProv } from '../lib/csm';
 import { palette } from '../lib/theme';
-import { nf } from '../lib/format';
+import { fmt as fmtN } from '../lib/format';
+import { DataTable, type Column } from '../components/DataTable';
 import { useRegistry, useSavingsEcon } from '../lib/useData';
 import type { SavingsRow } from '../lib/types';
 import { pdfPage } from '../lib/sources';
@@ -22,7 +23,7 @@ const KIND: Record<string, string> = { cibt: 'כולל לפני מס', op: 'רו
 const LIMIT: Record<string, string> = { no_split: 'ללא פיצול שיווק / הנה"כ', combined_only: 'מגזר משולב בלבד', no_pension: 'אין פנסיה', ic_main: 'בעיקר פוליסות חיסכון', entity_costs: 'הוצאות ברמת החברה' };
 const COSTS = ['sm', 'ga', 'sm_pct', 'ga_pct'];
 const periodLabel = (k: string) => (k.endsWith('FY') ? `FY'${k.slice(2, 4)}` : `${k.slice(4)}'${k.slice(2, 4)}`);
-const fmt = (v: number, u: 'm' | 'p') => (u === 'p' ? `${nf(v, 1)}%` : nf(v, Math.abs(v) < 100 ? 1 : 0));
+const fmt = (v: number, u: 'm' | 'p') => fmtN(v, u === 'p' ? 'pct' : 'm');
 
 /** Which of a company's disclosure limits explain an empty cell for this activity and metric. */
 function why(limits: string[], a: Act, m: string): string[] {
@@ -117,21 +118,21 @@ export function IndustryEcon() {
 
       <Panel title={`${actLabel} · ${periodLabel(P)}`} aside={<span>מיליוני ש"ח · יחסים באחוזים</span>}>
         {inView.length === 0 ? <Empty title="לא דווח" /> : (
-          <div className="scroll"><table>
-            <thead><tr><th>חברה</th>{cols.map(([k, l, u]) => <th key={k}>{l}{u === 'p' && <> <span className="chip est">נגזר</span></>}</th>)}<th>גילוי</th></tr></thead>
-            <tbody>{inView.map((id) => (
-              <tr key={id}>
-                <td><Link to={`/company/${id}`}>{name(id)}</Link></td>
-                {cols.map(([k, , u]) => {
+          <DataTable caption={`${actLabel} · ${periodLabel(P)}`} rows={inView} rowKey={(id) => id} export={{ name: `fox-savings-econ-${A}-${P}`, title: `כלכלת החיסכון · ${actLabel} · ${periodLabel(P)}`, note: 'מיליוני ש"ח · יחסים באחוזים (נגזר) · כל ערך מעמוד בדוח הכספי' }}
+            columns={[
+              { key: 'co', head: 'חברה', value: (id) => name(id), cell: (id) => <Link to={`/company/${id}`}>{name(id)}</Link> },
+              ...cols.map(([k, l, u]): Column<string> => ({
+                key: k, head: <>{l}{u === 'p' && <> <span className="chip est">נגזר</span></>}</>, label: l + (u === 'p' ? ' (נגזר)' : ''), unit: u === 'p' ? 'pct' : 'm',
+                value: (id) => cell.get(`${id}|${k}`)?.v, tdProps: (id) => { const r = cell.get(`${id}|${k}`); return r ? { title: `${r.l} · עמ׳ ${r.pg ?? '–'}` } : {}; },
+                cell: (id) => {
                   const r = cell.get(`${id}|${k}`);
-                  if (!r) return <td key={k}><span className="muted">–</span></td>;
-                  const v = <Sourced className={`num ${r.v < 0 ? 'neg' : ''}`} href={!r.der && r.url ? pdfPage(r.url, r.pg) : null} src={() => econProv(r, name(id))}>{fmt(r.v, u)}</Sourced>;
-                  return <td key={k} title={`${r.l} · עמ׳ ${r.pg ?? '–'}`}>{v}{k === 'profit' && r.kind && KIND[r.kind] && <span className="dim">{KIND[r.kind]}</span>}{r.pg != null && <span className="dim num">עמ׳ {r.pg}</span>}</td>;
-                })}
-                <td>{[...(d.limits[id] ?? []).map((l) => LIMIT[l]), ...(cur.some((r) => r.c === id && r.ent) ? ['כלל החברה'] : [])].map((l) => <span key={l} className="chip">{l}</span>)}</td>
-              </tr>
-            ))}</tbody>
-          </table></div>
+                  if (!r) return <span className="muted">–</span>;
+                  return <><Sourced className={`num ${r.v < 0 ? 'neg' : ''}`} href={!r.der && r.url ? pdfPage(r.url, r.pg) : null} src={() => econProv(r, name(id))}>{fmt(r.v, u)}</Sourced>{k === 'profit' && r.kind && KIND[r.kind] && <span className="dim">{KIND[r.kind]}</span>}{r.pg != null && <span className="dim num">עמ׳ {r.pg}</span>}</>;
+                },
+              })),
+              { key: 'disc', head: 'גילוי', text: (id) => [...(d.limits[id] ?? []).map((l) => LIMIT[l]), ...(cur.some((r) => r.c === id && r.ent) ? ['כלל החברה'] : [])].join(' · '),
+                cell: (id) => [...(d.limits[id] ?? []).map((l) => LIMIT[l]), ...(cur.some((r) => r.c === id && r.ent) ? ['כלל החברה'] : [])].map((l) => <span key={l} className="chip">{l}</span>) },
+            ]} />
         )}
       </Panel>
     </>

@@ -12,6 +12,7 @@ import { useSource, type Prov } from '../lib/prov';
 import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
 import { chartBase, palette } from '../lib/theme';
 import { nf, pct, pubLabel, sn } from '../lib/format';
+import { DataTable, type Column } from '../components/DataTable';
 import '../styles/market.css';
 import '../styles/prov-market.css';
 import { load, useFundCats, useFundHist, useFunds, useRegistry, type Fund, type FundCats, type FundHist } from '../lib/useData';
@@ -54,6 +55,7 @@ const catSrc = (title: string, c: FundCats[string], n: number, value: string, fo
     inputs: c.p.slice(-k).map((p, i) => ({ label: `ממוצע הקטגוריה · ${ym(p)} · ${c.n[c.n.length - k + i]} מסלולים`, v: sn(c.y[c.y.length - k + i], 2) + '%' })), note: 'חברי הקטגוריה כפי שהם בחודש האחרון' };
 };
 type Stats = NonNullable<ReturnType<typeof stats>>;
+type CmpRow = { f: Fund; nn: number; s: Stats | null };
 const STAT_F = { ann: '(1 + תשואה מצטברת) בחזקת 12 ÷ מספר החודשים, פחות 1', vol: 'סטיית תקן של התשואות החודשיות כפול שורש 12', dd: 'הירידה הגדולה ביותר ממדד התשואה המצטברת, משיאו לשפל שאחריו', best: 'התשואה החודשית הגבוהה בחלון', worst: 'התשואה החודשית הנמוכה בחלון' };
 /** A statistic of a track over its last n monthly returns, with the months behind it. */
 function statSrc(f: TrackRef, h: FundHist, n: number, kind: 'ret' | 'ann' | 'vol' | 'dd' | 'best' | 'worst' | 'months', s: Stats): Prov {
@@ -279,12 +281,17 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
         <Panel title="השוואה" aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} /><button type="button" className="chip" onClick={() => set({ sel: '' })}>נקה</button></>}>
           <Growth periods={axis} deps={[sel.join(), win, Object.keys(hist).length]} lines={[...picked.map((f) => ({ name: f.name, data: rebased(axis, hist[f.k]) })), ...(cat ? [{ name: 'ממוצע המסלול', data: rebased(axis, cat), dash: true }] : [])]}
             onPoint={(si, di) => { if (di < 1) return; if (si < picked.length) { const v = rebased(axis, hist[picked[si].k])[di]; if (v != null) openSrc(idxSrc(picked[si].name, axis, di, v, ref(picked[si]))); } else if (cat) { const v = rebased(axis, cat)[di]; if (v != null) openSrc(idxSrc(`ממוצע ${T}`, axis, di, v, undefined, cat)); } }} />
-          <div className="scroll"><table>
-            <thead><tr><th>מסלול</th><th>תשואה בחלון</th><th>שנתי</th><th>תנודתיות, שנתי</th><th>ירידה מרבית</th><th>חודש טוב</th><th>חודש גרוע</th><th>דמי ניהול</th><th>חודשים</th></tr></thead>
-            <tbody>{picked.map((f) => { const nn = Math.max(1, axis.length - 1), s = stats(hist[f.k].y, nn), SS = (kind: Parameters<typeof statSrc>[3], child: React.ReactNode) => (s ? <Sourced src={() => statSrc(ref(f), hist[f.k], nn, kind, s)}>{child}</Sourced> : child); return (
-              <tr key={f.k}><td><Link to={`/funds/${f.k}`}>{f.name}</Link></td><td>{SS('ret', <P v={s?.ret} />)}</td><td>{SS('ann', <P v={s?.ann} />)}</td><td>{SS('vol', <span className="num">{s ? `${nf(s.vol, 1)}%` : '–'}</span>)}</td><td>{SS('dd', <P v={s?.dd} />)}</td><td>{SS('best', <P v={s?.best} />)}</td><td>{SS('worst', <P v={s?.worst} />)}</td><td>{f.fee == null ? <span className="num">–</span> : <Sourced src={() => plain(f, asof, 'fee')}><span className="num">{`${nf(f.fee, 2)}%`}</span></Sourced>}</td><td>{SS('months', <span className="num muted">{s?.months ?? '–'}</span>)}</td></tr>
-            ); })}</tbody>
-          </table></div>
+          <DataTable caption="השוואת מסלולים" rows={picked.map((f) => { const nn = Math.max(1, axis.length - 1); return { f, nn, s: stats(hist[f.k].y, nn) }; })} rowKey={(r) => r.f.k}
+            export={{ name: `fox-funds-compare-${win}`, title: 'השוואת מסלולים', note: `${ym(axis[0])} עד ${ym(axis[axis.length - 1])} · נגזר מהתשואות החודשיות שפורסמו (רשות שוק ההון)` }}
+            columns={[
+              { key: 'f', head: 'מסלול', value: (r) => r.f.name, cell: (r) => <Link to={`/funds/${r.f.k}`}>{r.f.name}</Link> },
+              ...(([['ret', 'תשואה בחלון'], ['ann', 'שנתי'], ['vol', 'תנודתיות, שנתי'], ['dd', 'ירידה מרבית'], ['best', 'חודש טוב'], ['worst', 'חודש גרוע']] as const).map(([kind, head]): Column<CmpRow> => ({
+                key: kind, head, value: (r) => r.s?.[kind], unit: 'pct', signed: kind !== 'vol', tone: kind !== 'vol',
+                src: (r) => (r.s ? statSrc(ref(r.f), hist[r.f.k], r.nn, kind, r.s) : null),
+              }))),
+              { key: 'fee', head: 'דמי ניהול', value: (r) => r.f.fee, unit: 'pct', d: 2, src: (r) => plain(r.f, asof, 'fee') },
+              { key: 'months', head: 'חודשים', value: (r) => r.s?.months, unit: 'int', src: (r) => (r.s ? statSrc(ref(r.f), hist[r.f.k], r.nn, 'months', r.s) : null) },
+            ]} />
           <div className="fnote">תשואה, תנודתיות וירידה מרבית מחושבות מהתשואות החודשיות שפורסמו. החלון מתחיל במועד שבו לכל המסלולים שנבחרו יש נתונים.</div>
         </Panel>
       )}
@@ -326,11 +333,14 @@ export function FundCard() {
   /** "מקום 3 מתוך 40" as a figure that opens its calculation */
   const RK = ({ k }: { k: Per }) => { const t = rankOf(k); if (!t) return <>{' '}</>; const [a, b] = t.split(' מתוך ').map(Number); return <>מקום <Sourced src={() => rankSrc(f, k, asof, a, b)}>{t}</Sourced></>; };
   const SRC = (src: () => Prov, child: React.ReactNode) => <Sourced src={src}>{child}</Sourced>;
+  const catYear = (r: (typeof years)[number]): Prov => catSrc(`תשואה ${r.y}, ממוצע ${f.track}`, { p: r.cps, y: r.cps.map((p) => cat!.y[cat!.p.indexOf(p)]), n: r.cps.map((p) => cat!.n[cat!.p.indexOf(p)]) }, r.cps.length, pc(r.cat));
   const catRows = cat ? { p: cat.p.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), y: cat.y.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), n: cat.n.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1) } : null;
   const SS = (kind: 'ret' | 'ann' | 'vol' | 'dd' | 'best' | 'worst', child: React.ReactNode, cs_?: boolean) => {
     const st = cs_ ? cs : s; if (!st) return child;
     return <Sourced src={() => (cs_ ? catStatSrc(`ממוצע ${f.track}`, catRows!, n, kind, st) : statSrc(R0, h, n, kind, st))}>{child}</Sourced>;
   };
+  const crisisP = (c: (typeof CRISES)[number], x: ReturnType<typeof crisis>, who: string, own: boolean): Prov => ({ k: 'calc', title: `${c.label} · ${who}`, value: ddText(x), formula: `${CRISIS_FORMULA}. בסיס: סוף ${ym(c.base)}; חלון השפל: עד ${ym(c.to)}`,
+    inputs: [{ label: 'שפל', v: x ? ym(x.trough) : '–' }, { label: 'חודשים להתאוששות', v: x?.rec == null ? 'טרם' : nf(x.rec, 0) }, ...(x ? x.months.map((p) => own ? monthIn(R0, 'y', p, h.y[h.p.indexOf(p)]) : { label: `ממוצע הקטגוריה · ${ym(p)}`, v: cat && cat.p.includes(p) ? sn(cat.y[cat.p.indexOf(p)], 2) + '%' : '–' }) : [])] });
   const expo = (k: keyof typeof EXP, v: number | null | undefined) => (v == null ? '–' : <Sourced src={() => expSrc(f, asof, k)}>{`${nf(v, 0)}%`}</Sourced>);
   const last = <T,>(xs: T[]) => xs.slice(-121);
   const net = h.dep ? [h.dep, h.wd!, h.tr!].reduce((t, xs, i) => t + (i === 1 ? -1 : 1) * xs.slice(-12).reduce((u: number, x) => u + (x ?? 0), 0), 0) : 0;
@@ -365,29 +375,28 @@ export function FundCard() {
           </table></div>
         </Panel>
         <Panel title="לפי שנה" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
-          <div className="scroll" style={{ maxHeight: 470 }}><table>
-            <thead><tr><th>שנה</th><th>המסלול</th><th>ממוצע המסלולים</th><th>פער</th></tr></thead>
-            <tbody>{years.map((r) => <tr key={r.y}><td><span className="num">{r.y}</span>{r.n < 12 && <span className="dim">{r.n} חודשים</span>}</td>
-              <td>{r.me == null ? <P v={null} /> : SRC(() => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`), <P v={r.me} />)}</td>
-              <td>{r.cat == null || !cat ? <P v={null} /> : SRC(() => catSrc(`תשואה ${r.y}, ממוצע ${f.track}`, { p: r.cps, y: r.cps.map((p) => cat.y[cat.p.indexOf(p)]), n: r.cps.map((p) => cat.n[cat.p.indexOf(p)]) }, r.cps.length, pc(r.cat)), <P v={r.cat} />)}</td>
-              <td>{r.me != null && r.cat != null && cat ? SRC(() => ({ k: 'calc', title: `פער ${r.y} · ${f.name}`, value: pc(r.me! - r.cat!), formula: 'תשואת המסלול בשנה פחות תשואת ממוצע המסלולים באותה שנה',
-                inputs: [{ label: 'המסלול', v: pc(r.me), src: () => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`) }, { label: `ממוצע ${f.track}`, v: pc(r.cat), src: () => catSrc(`תשואה ${r.y}, ממוצע ${f.track}`, { p: r.cps, y: r.cps.map((p) => cat.y[cat.p.indexOf(p)]), n: r.cps.map((p) => cat.n[cat.p.indexOf(p)]) }, r.cps.length, pc(r.cat)) }] }), <P v={r.me - r.cat} />) : <P v={null} />}</td></tr>)}</tbody>
-          </table></div>
+          <DataTable caption="תשואה לפי שנה" maxHeight={470} rows={years} rowKey={(r) => String(r.y)} export={{ name: `fox-fund-${f.k}-years`, title: `תשואה לפי שנה · ${f.name}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }} columns={[
+            { key: 'y', head: 'שנה', value: (r) => r.y, cell: (r) => <><span className="num">{r.y}</span>{r.n < 12 && <span className="dim">{r.n} חודשים</span>}</> },
+            { key: 'me', head: 'המסלול', value: (r) => r.me, unit: 'pct', signed: true, tone: true, src: (r) => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`) },
+            { key: 'cat', head: 'ממוצע המסלולים', value: (r) => (cat ? r.cat : null), unit: 'pct', signed: true, tone: true, src: (r) => catYear(r) },
+            { key: 'gap', head: 'פער', value: (r) => (r.me != null && r.cat != null && cat ? r.me - r.cat : null), unit: 'pct', signed: true, tone: true,
+              src: (r) => ({ k: 'calc', title: `פער ${r.y} · ${f.name}`, value: pc(r.me! - r.cat!), formula: 'תשואת המסלול בשנה פחות תשואת ממוצע המסלולים באותה שנה',
+                inputs: [{ label: 'המסלול', v: pc(r.me), src: () => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`) }, { label: `ממוצע ${f.track}`, v: pc(r.cat), src: () => catYear(r) }] }) },
+          ]} />
         </Panel>
       </div>
 
       <div className="grid2">
         <Panel title="משברים" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
-          <div className="scroll"><table>
-            <thead><tr><th>אירוע</th><th>ירידה</th><th>ממוצע {f.track}</th><th>התאוששות</th><th className="wide-only">התאוששות, ממוצע</th></tr></thead>
-            <tbody>{CRISES.map((c) => { const me = crisis(h, c.base, c.to), ct = cat ? crisis(cat, c.base, c.to) : null;
-              const cp = (x: typeof me, who: string, own: boolean): Prov => ({ k: 'calc', title: `${c.label} · ${who}`, value: ddText(x), formula: `${CRISIS_FORMULA}. בסיס: סוף ${ym(c.base)}; חלון השפל: עד ${ym(c.to)}`,
-                inputs: [{ label: 'שפל', v: x ? ym(x.trough) : '–' }, { label: 'חודשים להתאוששות', v: x?.rec == null ? 'טרם' : nf(x.rec, 0) }, ...(x ? x.months.map((p) => own ? monthIn(R0, 'y', p, h.y[h.p.indexOf(p)]) : { label: `ממוצע הקטגוריה · ${ym(p)}`, v: cat && cat.p.includes(p) ? sn(cat.y[cat.p.indexOf(p)], 2) + '%' : '–' }) : [])] });
-              return <tr key={c.key}><td>{c.label}<span className="dim num">{ym(c.base)} → {ym(c.to)}</span></td>
-                <td>{me == null ? <span className="muted" title="אין תשואות לכל חודשי החלון">–</span> : <Sourced src={() => cp(me, f.name, true)}><span className={`num ${me.dd < 0 ? 'neg' : ''}`}>{ddText(me)}</span></Sourced>}</td>
-                <td>{ct == null ? <span className="muted">–</span> : <Sourced src={() => cp(ct, `ממוצע ${f.track}`, false)}><span className={`num ${ct.dd < 0 ? 'neg' : ''}`}>{ddText(ct)}</span></Sourced>}</td>
-                <td><span className="num">{me == null ? '–' : me.rec == null ? 'טרם' : me.rec}</span></td><td className="wide-only"><span className="num muted">{ct == null ? '–' : ct.rec == null ? 'טרם' : ct.rec}</span></td></tr>; })}</tbody>
-          </table></div>
+          <DataTable caption="משברים" rows={CRISES.map((c) => ({ c, me: crisis(h, c.base, c.to), ct: cat ? crisis(cat, c.base, c.to) : null }))} rowKey={(r) => r.c.key}
+            export={{ name: `fox-fund-${f.k}-crises`, title: `משברים · ${f.name}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }}
+            columns={[
+              { key: 'c', head: 'אירוע', value: (r) => r.c.base, text: (r) => `${r.c.label} ${ym(r.c.base)}–${ym(r.c.to)}`, firstDir: 'asc', cell: (r) => <>{r.c.label}<span className="dim num">{ym(r.c.base)} → {ym(r.c.to)}</span></> },
+              { key: 'me', head: 'ירידה', value: (r) => r.me?.dd, text: (r) => ddText(r.me), cell: (r) => (r.me == null ? <span className="muted" title="אין תשואות לכל חודשי החלון">–</span> : <Sourced src={() => crisisP(r.c, r.me, f.name, true)}><span className={`num ${r.me.dd < 0 ? 'neg' : ''}`}>{ddText(r.me)}</span></Sourced>) },
+              { key: 'ct', head: `ממוצע ${f.track}`, value: (r) => r.ct?.dd, text: (r) => ddText(r.ct), cell: (r) => (r.ct == null ? <span className="muted">–</span> : <Sourced src={() => crisisP(r.c, r.ct, `ממוצע ${f.track}`, false)}><span className={`num ${r.ct.dd < 0 ? 'neg' : ''}`}>{ddText(r.ct)}</span></Sourced>) },
+              { key: 'rec', head: 'התאוששות', value: (r) => r.me?.rec, text: (r) => (r.me == null ? '' : r.me.rec == null ? 'טרם' : String(r.me.rec)), firstDir: 'asc', cell: (r) => <span className="num">{r.me == null ? '–' : r.me.rec == null ? 'טרם' : r.me.rec}</span> },
+              { key: 'crec', head: 'התאוששות, ממוצע', className: 'wide-only', value: (r) => r.ct?.rec, text: (r) => (r.ct == null ? '' : r.ct.rec == null ? 'טרם' : String(r.ct.rec)), firstDir: 'asc', cell: (r) => <span className="num muted">{r.ct == null ? '–' : r.ct.rec == null ? 'טרם' : r.ct.rec}</span> },
+            ]} />
           <div className="fnote">ירידה: מסוף חודש הבסיס עד השפל בחלון. התאוששות: מספר החודשים מהשפל עד חזרה לרמת הבסיס.</div>
         </Panel>
         <RatingPanel f={f} peers={peers} asof={asof} />
@@ -445,7 +454,7 @@ function RatingPanel({ f, peers, asof }: { f: Fund; peers: Fund[]; asof: number 
     <Panel title="דירוג fox" aside={<span className="chip" title={RATING_NOTE}>שיטת fox · לא המלצה</span>}>
       {r.score == null ? <Empty title="לא דורג">{r.why}</Empty> : (
         <div className="rating">
-          <div><Sourced src={() => ratingProv(f, r, (c) => compSrc(f, c, asof))}><span className="score num">{nf(r.score, 0)}</span></Sourced><div className="band" aria-label={`דרגה ${r.band} מתוך 5`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= r.band! ? 'on' : ''} />)}</div><div className="dim">מתוך 100 · {f.prod} · {f.track} · <span className="num">{peers.length}</span> מסלולים</div></div>
+          <div><Sourced src={() => ratingProv(f, r, (c) => compSrc(f, c, asof))}><span className="score num">{nf(r.score, 0)}</span></Sourced><div className="band" role="img" aria-label={`דרגה ${r.band} מתוך 5`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= r.band! ? 'on' : ''} />)}</div><div className="dim">מתוך 100 · {f.prod} · {f.track} · <span className="num">{peers.length}</span> מסלולים</div></div>
           <div className="scroll"><table>
             <thead><tr><th>רכיב</th><th className="wide-only">משקל</th><th>ערך</th><th>אחוזון</th></tr></thead>
             <tbody>{r.parts.map((x) => { const sv = compSrc(f, x.c.key, asof); return <tr key={x.c.key}><td>{x.c.label}</td><td className="wide-only"><span className="num muted">{x.c.w}</span></td>

@@ -54,6 +54,8 @@ const mCalendar = () => import('./pages/Calendar');
 const Calendar = page(mCalendar, 'Calendar');
 const mChartBook = () => import('./pages/ChartBook');
 const ChartBook = page(mChartBook, 'ChartBook');
+const mDataPage = () => import('./pages/DataPage');
+const DataPage = page(mDataPage, 'DataPage');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -117,6 +119,7 @@ export function App() {
         <Route path="managers" element={<Managers />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="book" element={<ChartBook />} />
+        <Route path="data" element={<DataPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

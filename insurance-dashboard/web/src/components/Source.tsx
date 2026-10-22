@@ -8,6 +8,7 @@ import { ckanQuery, ckanResourcePage, DS_LABEL, mayaReport, pdfPage, resourceOf,
 import { useMarket } from '../lib/useData';
 import { Recon } from './Recon';
 import { captured } from '../lib/exportProv';
+import { citeHref } from '../lib/cite';
 import '../styles/prov.css';
 
 type Reg = Extract<Prov, { k: 'reg' }>;
@@ -130,6 +131,7 @@ function PlainSheet({ p }: { p: Exclude<Prov, { k: 'reg' | 'fund' }> }) {
       </dl>
       {p.url ? <a className="srcgo" href={pdfPage(p.url, p.pg)} target="_blank" rel="noreferrer">פתיחת הדוח{p.pg ? `, עמ׳ ${p.pg}` : ''}</a> : !p.srcType && <p className="muted">אין קישור למסמך.</p>}
       {ridOf(p.url) && <Link className="srcgo alt" to={readerHref(ridOf(p.url)!, p.pg)}>פתח בקורא{p.pg ? `, עמ׳ ${p.pg}` : ''}</Link>}
+      <Link className="srcgo alt" to={citeHref(undefined, p.title)}>ציטוט</Link>
       {p.der && <p className="srcnote"><span className="chip est">נגזר</span> לא הודפס בדוח: חושב מהפרש בין תקופות מצטברות של אותו דוח (Q4 = FY פחות 9M, H2 = FY פחות H1).</p>}
       {p.old && <p className="srcnote"><span className="chip est">IFRS 4</span> נתון לפי התקן הקודם, מוצג בשורה שנמשכת בין התקנים.</p>}
       {p.turned && <p className="srcnote"><span className="chip est">סימן</span> הסימן הותאם להצגה בדוח העדכני.</p>}

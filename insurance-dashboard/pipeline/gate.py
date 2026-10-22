@@ -24,6 +24,8 @@ Checks
                  derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
+  schemas        every built JSON with a data contract (web/src/lib/schemas.json) matches it: pipeline/check_schemas.py, the same
+                 contracts the site checks as each file arrives (lane 2H).
 """
 import collections
 import datetime as dt
@@ -43,6 +45,7 @@ CACHE = Path(os.environ.get("FOX_CACHE", Path.home() / ".cache" / "fox")) / "pag
 POOL = ThreadPoolExecutor(48)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_additivity  # noqa: E402
+import check_schemas  # noqa: E402
 
 LATIN = re.compile(r"[A-Za-z][A-Za-z'\-]*(?:[\s,/&()\-]+[A-Za-z][A-Za-z'\-]*){2,}")
 PROPER = ("S&P Global Ratings",)  # a proper name is not untranslated text
@@ -319,6 +322,11 @@ def lens():
     add("lens", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
 
 
+def schemas():
+    n, bad, summary = check_schemas.run(quiet=True)
+    add("schemas", not bad, n, len(bad), summary + (f"; e.g. {bad[0][0]}: {bad[0][2][0]}" if bad else ""))
+
+
 def main():
     t0 = dt.datetime.now()
     if "--baseline" in sys.argv:  # accept today's value-on-page misses as known (after reviewing them)
@@ -335,6 +343,7 @@ def main():
     balance(wbs)
     cross_layer()
     lens()
+    schemas()
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     failed = [c["id"] for c in checks if not c["ok"] and c["level"] == "fail"]

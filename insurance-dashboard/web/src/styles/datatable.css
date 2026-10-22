@@ -1,0 +1,26 @@
+/* DataTable (lane 2H): only what the global table rules in styles.css do not already give (sticky header, sticky first column,
+   numeric alignment, density). */
+table.dt thead th { padding: 0; }
+table.dt thead th:not(:has(> .dt-sort)) { padding: 9px 12px; }
+.dt-sort { all: unset; box-sizing: border-box; position: relative; display: block; width: 100%; padding: 9px 12px; cursor: pointer; font: inherit; color: inherit; text-align: end; }
+table.dt th:first-child .dt-sort { text-align: start; }
+.dt-sort:hover { color: var(--fg); }
+.dt-h { display: block; min-width: 0; }
+.dt-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--r-1); }
+.dt-sort.on { color: var(--fg); }
+/* the arrow sits in the cell's end padding, so a sortable header is exactly as wide as a plain one */
+.dt-arr { position: absolute; inset-inline-end: 1px; bottom: 10px; font-size: 8px; line-height: 1; color: var(--accent-text); opacity: 0; transition: opacity var(--fast); pointer-events: none; }
+table.dt th:first-child .dt-arr { inset-inline-end: auto; inset-inline-start: 1px; }
+.dt-sort.on .dt-arr { opacity: 1; }
+.dt-sort:hover .dt-arr, .dt-sort:focus-visible .dt-arr { opacity: 0.55; }
+.dt-sort.on:hover .dt-arr { opacity: 1; }
+table.dt th[aria-sort="ascending"], table.dt th[aria-sort="descending"] { box-shadow: inset 0 -2px 0 var(--accent), 0 1px 0 var(--line) !important; }
+html[data-density="compact"] table.dt thead th { padding: 0; }
+html[data-density="compact"] .dt-sort, html[data-density="compact"] table.dt thead th:not(:has(> .dt-sort)) { padding: 4px 10px; }
+html[data-density="compact"] .dt-arr { bottom: 5px; }
+@media (max-width: 760px) { .dt-sort { padding: 9px 9px; } table.dt thead th:not(:has(> .dt-sort)) { padding: 9px 9px; } }
+table.dt tfoot tr.tot td { font-weight: 700; border-top: 1px solid var(--line); border-bottom: 0; background: var(--panel); }
+table.dt tr.dt-empty td { text-align: center; color: var(--muted); padding: 22px; }
+.dt-export { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 6px; font-size: var(--t-1); }
+.dt-export .chip { min-height: 24px; }
+@media print { .dt-export, .dt-arr { display: none; } }

@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { palette } from '../lib/theme';
-import { nf, byPeriodDesc, dateLabel } from '../lib/format';
+import { nf, byPeriodDesc, dateLabel, fmt as fmtN } from '../lib/format';
+import { DataTable } from '../components/DataTable';
 import { useIfrsData, useIfrsFactsOf } from '../lib/useData';
 import type { IfrsFact } from '../lib/types';
 import { BUCKET_HE, EFFECT_HE, METRIC_HE, TEXT_HE } from '../lib/labels';
@@ -75,7 +76,8 @@ function SubLabel({ f, always }: { f: IfrsFact; always?: boolean }) {
 /** Effect on a target: set for a later year, or in force from a date. */
 const targetTag = (f: IfrsFact, end: string) => (f.d > end ? `יעד ל-${f.d.slice(0, 4)}` : `בתוקף ${dateLabel(f.d)}`);
 export const bkName = (b: string) => BUCKET_HE[b] ?? b;
-const fmt = (f: IfrsFact, v = f.v) => nf(v, isPct(f.m) || Math.abs(v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
+const fmt = (f: IfrsFact, v = f.v) => fmtN(v, isPct(f.m) ? 'pct' : 'm');
+type SensRow = { m: string; s: string; k: Record<string, IfrsFact> };
 export const periodName = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
 
 /** Everything extracted from one company's report: capital, CSM movement by segment, expected CSM release, sensitivities, and the full fact list. Every figure links to its page. */
@@ -133,7 +135,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
     const all2 = all.filter((f) => f.m.startsWith('sensitivity:') && f.d === end);
     const bases = ['net', 'gross'].filter((b) => all2.some((f) => f.b === b || (b === 'net' && f.b === 'na')));
     const B2 = bases.includes(sb) ? sb : bases[0] ?? 'net';
-    const rows = new Map<string, { m: string; s: string; k: Record<string, IfrsFact> }>();
+    const rows = new Map<string, SensRow>();
     all2.filter((f) => f.b === B2 || (B2 === 'net' && f.b === 'na')).forEach((f) => {
       const key = `${f.m}|${f.s}`, r = rows.get(key) ?? { m: f.m, s: f.s, k: {} };
       const k = /csm/i.test(f.fx ?? '') ? 'csm' : /profit.*equity|equity.*profit/i.test(f.fx ?? '') ? 'pe' : /equity/i.test(f.fx ?? '') ? 'eq' : /profit|income|loss/i.test(f.fx ?? '') ? 'pl' : 'x';
@@ -218,29 +220,24 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         </Panel>
         <Panel title="הון, כושר פירעון ודיבידנד" aside={<span>{capital.length} שורות</span>}>
           {capital.length === 0 ? <Empty title="לא נמצאו נתוני הון בדוח" /> : (
-            <div className="scroll" style={{ maxHeight: 420 }}><table>
-              <thead><tr><th>שורה</th><th>ערך</th></tr></thead>
-              <tbody>{capital.map((f, i) => (
-                <tr key={i}>
-                  <td className="lbl"><MetricName m={f.m} /><span className="dim">{heb(f.l) ? f.l : capHe(f)}{!heb(f.l) && <Orig t={origOf(f)} />}{f.s !== f.g && <>{' · '}<SegLabel s={f.s} /></>}</span></td>
-                  <td>{cell(f, he(f.m), f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className={`chip ${f.m.startsWith('target_') && f.d > end ? 'est' : ''}`}>{f.m.startsWith('target_') ? targetTag(f, end) : dateLabel(f.d)}</span></td>
-                </tr>
-              ))}</tbody>
-            </table></div>
+            <DataTable caption="הון, כושר פירעון ודיבידנד" maxHeight={420} rows={capital} rowKey={(f, i) => `${f.m}|${f.s}|${f.d}|${i}`} export={{ name: `fox-${id}-${P}-capital`, title: `הון וכושר פירעון · ${periodName(P)}`, note: 'כפי שהודפס בדוח, עם עמוד המקור' }} columns={[
+              { key: 'm', head: 'שורה', value: (f) => he(f.m), tdClass: () => 'lbl', cell: (f) => <><MetricName m={f.m} /><span className="dim">{heb(f.l) ? f.l : capHe(f)}{!heb(f.l) && <Orig t={origOf(f)} />}{f.s !== f.g && <>{' · '}<SegLabel s={f.s} /></>}</span></> },
+              { key: 'v', head: 'ערך', value: (f) => f.v, cell: (f) => <>{cell(f, he(f.m), f.v)}{f.src === 'text' && <span className="chip est">מטקסט</span>}<span className={`chip ${f.m.startsWith('target_') && f.d > end ? 'est' : ''}`}>{f.m.startsWith('target_') ? targetTag(f, end) : dateLabel(f.d)}</span></> },
+            ]} />
           )}
         </Panel>
       </div>
 
       {sens.rows.length > 0 && (
         <Panel title="רגישויות" aside={<><span>השפעה במיליוני ש"ח, כפי שהודפס · {dateLabel(end)}</span>{sens.bases.length > 1 && <Seg label="בסיס" value={sens.B} onChange={setSb} options={sens.bases.map((b) => [b, BASIS[b] ?? b])} />}</>}>
-          <div className="scroll"><table className="sens">
-            <thead><tr><th>תרחיש</th><th>מגזר</th><th>השפעה על CSM</th><th>על הרווח</th><th>על ההון</th>{sens.rows.some((r) => r.k.x) && <th>אחר</th>}</tr></thead>
-            <tbody>{sens.rows.map((r) => (
-              <tr key={`${r.m}|${r.s}`}><td className="lbl">{shock(r.m)}</td><td><SegLabel s={r.s} /></td><td>{fig(r.k.csm, sensTitle(r, 'השפעה על CSM'))}</td>
-                {r.k.pe && !r.k.pl && !r.k.eq ? <td colSpan={2}>{fig(r.k.pe, sensTitle(r, 'השפעה על הרווח וההון'))}<span className="chip">רווח והון יחד</span></td> : <><td>{fig(r.k.pl, sensTitle(r, 'השפעה על הרווח'))}</td><td>{fig(r.k.eq, sensTitle(r, 'השפעה על ההון'))}</td></>}
-                {sens.rows.some((x) => x.k.x) && <td>{r.k.x ? <>{fig(r.k.x, sensTitle(r, EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'))}<span className="chip">{EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'}</span></> : <span className="muted">–</span>}</td>}</tr>
-            ))}</tbody>
-          </table></div>
+          <DataTable className="sens" caption="רגישויות" rows={sens.rows} rowKey={(r) => `${r.m}|${r.s}`} export={{ name: `fox-${id}-${P}-sensitivities`, title: `רגישויות · ${periodName(P)}`, note: `השפעה במיליוני ש"ח, כפי שהודפס · ${BASIS[sens.B] ?? sens.B}` }} columns={[
+            { key: 'm', head: 'תרחיש', value: (r) => shockTxt(r.m), tdClass: () => 'lbl', cell: (r) => shock(r.m) },
+            { key: 's', head: 'מגזר', value: (r) => segName(r.s), cell: (r) => <SegLabel s={r.s} /> },
+            { key: 'csm', head: 'השפעה על CSM', value: (r) => r.k.csm?.v, cell: (r) => fig(r.k.csm, sensTitle(r, 'השפעה על CSM')) },
+            { key: 'pl', head: 'על הרווח', value: (r) => r.k.pl?.v ?? r.k.pe?.v, cell: (r) => (r.k.pe && !r.k.pl && !r.k.eq ? <>{fig(r.k.pe, sensTitle(r, 'השפעה על הרווח וההון'))}<span className="chip">רווח והון יחד</span></> : fig(r.k.pl, sensTitle(r, 'השפעה על הרווח'))) },
+            { key: 'eq', head: 'על ההון', value: (r) => r.k.eq?.v ?? r.k.pe?.v, cell: (r) => (r.k.pe && !r.k.pl && !r.k.eq ? <span className="muted">רווח והון יחד</span> : fig(r.k.eq, sensTitle(r, 'השפעה על ההון'))) },
+            ...(sens.rows.some((x) => x.k.x) ? [{ key: 'x', head: 'אחר', value: (r: SensRow) => r.k.x?.v, cell: (r: SensRow) => (r.k.x ? <>{fig(r.k.x, sensTitle(r, EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'))}<span className="chip">{EFFECT_HE[r.k.x.fx ?? ''] ?? 'אחר'}</span></> : <span className="muted">–</span>) }] : []),
+          ]} />
         </Panel>
       )}
 
@@ -249,14 +246,15 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
           <Field label="נושא"><select value={fam} onChange={(e) => setFam(e.target.value)}>{FAMILIES.map(([k, l, re]) => <option key={k} value={k}>{l} ({all.filter((f) => re.test(f.m)).length})</option>)}</select></Field>
           <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם שורה, מגזר" /></Field>
         </section>
-        <div className="scroll" style={{ maxHeight: 560 }}><table>
-          <thead><tr><th>מדד</th><th>מגזר</th><th>בסיס</th><th>חלון</th><th>תאריך</th><th>ערך</th><th>מקור</th></tr></thead>
-          <tbody>{list.slice(0, 600).map((f, i) => (
-            <tr key={i}><td className="lbl"><MetricName m={f.m} /><span className="dim"><SubLabel f={f} always />{f.bk ? ` ${heb(f.l) || capHe(f) || lineHe(f) ? '· ' : ''}${bkName(f.bk)}` : ''}{f.tr ? ` · ${TR_HE[f.tr] ?? 'אחר'}` : ''}{f.model ? ` · ${f.model}` : ''}</span></td><td>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</td>
-              <td><span className="chip">{BASIS[f.b] ?? f.b}</span></td><td>{WINS.find(([k]) => k === f.w)?.[1] ?? f.w}</td><td><span className="num">{dateLabel(f.d)}</span></td>
-              <td>{num(f, heb(f.l) ? `${he(f.m)} · ${f.l}` : he(f.m))}<IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</td><td><Src f={f} d={d} p={P} /></td></tr>
-          ))}</tbody>
-        </table></div></>}
+        <DataTable caption="כל הנתונים שחולצו מהדוח" maxHeight={560} rows={list.slice(0, 600)} rowKey={(f, i) => `${f.m}|${f.s}|${f.b}|${f.w}|${f.d}|${i}`} export={{ name: `fox-${id}-${P}-facts`, title: `נתונים שחולצו · ${periodName(P)}`, note: 'מיליוני ש"ח, כפי שהודפס · עד 600 שורות' }} columns={[
+          { key: 'm', head: 'מדד', value: (f) => he(f.m), tdClass: () => 'lbl', cell: (f) => <><MetricName m={f.m} /><span className="dim"><SubLabel f={f} always />{f.bk ? ` ${heb(f.l) || capHe(f) || lineHe(f) ? '· ' : ''}${bkName(f.bk)}` : ''}{f.tr ? ` · ${TR_HE[f.tr] ?? 'אחר'}` : ''}{f.model ? ` · ${f.model}` : ''}</span></> },
+          { key: 'g', head: 'מגזר', value: (f) => segName(f.g), cell: (f) => <>{segName(f.g)}{f.s !== f.g && <span className="dim">{segName(f.s)}</span>}</> },
+          { key: 'b', head: 'בסיס', value: (f) => BASIS[f.b] ?? f.b, cell: (f) => <span className="chip">{BASIS[f.b] ?? f.b}</span> },
+          { key: 'w', head: 'חלון', value: (f) => WINS.find(([k]) => k === f.w)?.[1] ?? f.w },
+          { key: 'd', head: 'תאריך', value: (f) => f.d, text: (f) => dateLabel(f.d), cell: (f) => <span className="num">{dateLabel(f.d)}</span> },
+          { key: 'v', head: 'ערך', value: (f) => f.v, cell: (f) => <>{num(f, heb(f.l) ? `${he(f.m)} · ${f.l}` : he(f.m))}<IncChip f={f} />{f.src && f.src !== 'table' && <span className="chip est">{f.src === 'chart' ? 'מגרף' : 'מטקסט'}</span>}</> },
+          { key: 'src', head: 'מקור', value: (f) => f.pg ?? null, cell: (f) => <Src f={f} d={d} p={P} /> },
+        ]} /></>}
       </Panel>
     </>
   );

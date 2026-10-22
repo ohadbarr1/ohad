@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "deploy": "cd .. && ./deploy.sh",
     "check": "cd .. && ./deploy.sh --check-only",
-    "routes": "node --experimental-websocket scripts/route-check.mjs"
+    "routes": "node --experimental-websocket scripts/route-check.mjs",
+    "test:e2e": "playwright test",
+    "test:schemas": "python3 ../pipeline/check_schemas.py"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",
@@ -22,6 +24,8 @@
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
+    "@playwright/test": "^1.56.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
