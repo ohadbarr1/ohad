@@ -10,21 +10,22 @@ export type Kind = 'אחרונים' | 'חיפושים' | 'חברה' | 'פונק�
 export interface Item { kind: Kind; label: string; meta: string; to: string; score: number; sub?: string }
 
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
-export const FUNCS: { code: string; label: string; keys: string[]; to: (id: string) => string }[] = [
-  { code: 'ER', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'yoy', 'qoq'], to: (id) => `/company/${id}/review` },
-  { code: 'RANK', label: 'מול השוק, לפי מסלול', keys: ['rank', 'דירוג', 'מסלולים', 'יצרן', 'תשואות'], to: (id) => `/funds/makers?mk=${id}` },
-  { code: 'SOP', label: 'מקורות רווח וענפים', keys: ['sop', 'מקורות', 'ענפים', 'נוסטרו', 'combined', 'lob'], to: (id) => `/company/${id}/profit` },
-  { code: 'CSM', label: 'IFRS 17 · CSM', keys: ['csm', 'ifrs', 'ra', 'רגישויות', 'solvency'], to: (id) => `/company/${id}/ifrs17` },
-  { code: 'FA', label: 'דוחות לאורך זמן', keys: ['fa', 'דוחות', 'financials'], to: (id) => `/company/${id}/financials` },
-  { code: 'LTS', label: 'חיסכון ארוך טווח', keys: ['lts', 'חיסכון', 'פנסיה', 'גמל', 'aum'], to: (id) => `/company/${id}/savings` },
-  { code: 'DOC', label: 'מסמכים', keys: ['doc', 'docs', 'מסמכים', 'filings'], to: (id) => `/company/${id}/filings` },
-  { code: 'DCF', label: 'הערכת שווי, DCF', keys: ['dcf', 'שווי', 'valuation'], to: (id) => `/valuation/${id}/dcf` },
-  { code: 'SOTP', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
+export const FUNCS: { code: string; badge: string; label: string; keys: string[]; to: (id: string) => string }[] = [
+  { code: 'ER', badge: 'סקירה', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'yoy', 'qoq'], to: (id) => `/company/${id}/review` },
+  { code: 'RANK', badge: 'דירוג', label: 'מול השוק, לפי מסלול', keys: ['rank', 'דירוג', 'מסלולים', 'יצרן', 'תשואות'], to: (id) => `/funds/makers?mk=${id}` },
+  { code: 'SOP', badge: 'מקורות רווח', label: 'מקורות רווח וענפים', keys: ['sop', 'מקורות', 'ענפים', 'נוסטרו', 'combined', 'lob'], to: (id) => `/company/${id}/profit` },
+  { code: 'CSM', badge: 'CSM', label: 'IFRS 17 · CSM', keys: ['csm', 'ifrs', 'ra', 'רגישויות', 'solvency', 'סולבנסי', 'כושר', 'פירעון'], to: (id) => `/company/${id}/ifrs17` },
+  { code: 'FA', badge: 'דוחות', label: 'דוחות לאורך זמן', keys: ['fa', 'דוחות', 'financials'], to: (id) => `/company/${id}/financials` },
+  { code: 'LTS', badge: 'חיסכון', label: 'חיסכון ארוך טווח', keys: ['lts', 'חיסכון', 'פנסיה', 'גמל', 'aum'], to: (id) => `/company/${id}/savings` },
+  { code: 'DOC', badge: 'מסמכים', label: 'מסמכים', keys: ['doc', 'docs', 'מסמכים', 'filings'], to: (id) => `/company/${id}/filings` },
+  { code: 'VAL', badge: 'שווי', label: 'הערכת שווי, P/B מוצדק', keys: ['val', 'valuation', 'שווי', 'הערכת', 'pb', 'p/b', 'מכפיל'], to: (id) => `/valuation/${id}` },
+  { code: 'DCF', badge: 'DCF', label: 'הערכת שווי, DCF', keys: ['dcf'], to: (id) => `/valuation/${id}/dcf` },
+  { code: 'SOTP', badge: 'SOTP', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
 ];
 /** other names a reader types for a company */
-const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
+const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
-  ['presentation', ['מצגת', 'מצגות', 'presentation', 'deck']], ['solvency', ['סולבנסי', 'פירעון', 'solvency', 'כושר']],
+  ['presentation', ['מצגת', 'מצגות', 'presentation', 'deck', 'מצגת משקיעים']], ['solvency', ['סולבנסי', 'סולבנצי', 'פירעון', 'solvency', 'כושר', 'sii', 'סולבנסי2']],
   ['annual', ['שנתי', 'תקופתי', 'annual']], ['quarterly', ['רבעוני', 'רבעון', 'quarterly']],
 ];
 
@@ -108,7 +109,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   if (p.company) {
     const c = p.company, rest = p.rest;
     FUNCS.filter((f) => rest.length === 0 || rest.every((w) => f.keys.some((k) => k.startsWith(w)) || f.code.toLowerCase().startsWith(w)))
-      .slice(0, rest.length ? 4 : 9).forEach((f, i) => out.push({ kind: 'פונקציה', label: `${c.name_he} · ${f.label}`, meta: f.code, to: f.to(c.id) + (p.period && /\/company\//.test(f.to(c.id)) ? `?p=${p.period}` : ''), score: (rest.length ? 95 : 50) - i }));
+      .slice(0, rest.length ? 4 : 9).forEach((f, i) => out.push({ kind: 'פונקציה', label: `${c.name_he} · ${f.label}`, meta: f.badge, to: f.to(c.id) + (p.period && /\/company\//.test(f.to(c.id)) ? `?p=${p.period}` : ''), score: (rest.length ? 95 : 50) - i }));
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {
