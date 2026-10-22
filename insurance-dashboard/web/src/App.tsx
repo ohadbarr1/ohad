@@ -52,6 +52,10 @@ const mManagers = () => import('./pages/Managers');
 const Managers = page(mManagers, 'Managers');
 const mCalendar = () => import('./pages/Calendar');
 const Calendar = page(mCalendar, 'Calendar');
+const mRestatements = () => import('./pages/Restatements');
+const Restatements = page(mRestatements, 'Restatements');
+const mPresentations = () => import('./pages/Presentations');
+const Presentations = page(mPresentations, 'Presentations');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -114,6 +118,8 @@ export function App() {
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
         <Route path="calendar" element={<Calendar />} />
+        <Route path="restatements" element={<Restatements />} />
+        <Route path="presentations" element={<Presentations />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
