@@ -6,11 +6,12 @@ import { Sourced } from '../components/Source';
 import { useSource, type Prov } from '../lib/prov';
 import { factProv, hrefOf, periodName, rankProv, type RF } from '../lib/csm';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
-import { CHART_FONT, chartBase, palette } from '../lib/theme';
+import { CHART_FONT, chartBase } from '../lib/theme';
 import { nf, byPeriodDesc, dateLabel } from '../lib/format';
 import { useIfrsData, useIfrsFacts, useRegistry } from '../lib/useData';
 import type { IfrsData, IfrsFact } from '../lib/types';
 import { SEGMENT_HE } from '../lib/labels';
+import { idCss } from '../lib/identity';
 import '../styles/ifrs.css';
 
 const HEB = /[\u0590-\u05FF]/;
@@ -82,7 +83,7 @@ export function IndustryIfrs() {
   const [basis, setBasis] = useState(sp.get('b') ?? 'net');
   const [co, setCo] = useState(sp.get('c') ?? 'harel');
   const P = periods.includes(period) ? period : periods[0] ?? '';
-  useEffect(() => { if (P) setSp(keepSrc({ p: P, m: metric, s: seg, w: win, b: basis, c: co }), { replace: true }); }, [P, metric, seg, win, basis, co, setSp]);
+  useEffect(() => { if (P) setSp(keepSrc({ view: 'facts', p: P, m: metric, s: seg, w: win, b: basis, c: co }), { replace: true }); }, [P, metric, seg, win, basis, co, setSp]);
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
 
   const facts = useIfrsFacts(P || null);
@@ -125,7 +126,6 @@ export function IndustryIfrs() {
   if (error) return <ErrorBox what="נתוני IFRS 17" error={error} />;
   if (!d || !reg.data || (P && !facts.data && !facts.error)) return <Loading what="IFRS 17" />;
   if (!P) return <Empty title="אין דוחות מחולצים" />;
-  const pal = palette();
   const ids = [...new Set(cur.map((f) => f.c))];
   const detail = (facts.data ?? []).filter((f) => f.m === metric && (f.g === seg || seg === 'group')).filter((f) => W == null || f.w === W).filter((f) => (metric === 'csm_opening' ? true : f.d === end));
   const label = METRICS.find(([k]) => k === metric)?.[1] ?? metric;
@@ -149,7 +149,7 @@ export function IndustryIfrs() {
             <div className="scroll"><table><tbody>{rows.map((r, i) => (
               <tr key={r.id} className={r.id === co ? 'lead' : ''} style={{ cursor: 'pointer' }} onClick={(e) => { if ((e.target as Element).closest('a.src, button.src')) return; setCo(r.id); }}>
                 <td>{r.f && <Sourced className="num muted" src={() => rankProv(`דירוג ${label} · ${SEGS.find(([k]) => k === seg)?.[1]} · ${periodName(P)}`, i + 1, have.map((q) => ({ label: name(q.id), v: nf(val(q.f!), Math.abs(val(q.f!)) < 100 ? 1 : 0), src: () => prov(q.f!, `${label} · ${name(q.id)}`) })))}>{i + 1}</Sourced>} <Link to={`/company/${r.id}`} onClick={(e) => e.stopPropagation()}>{name(r.id)}</Link>{r.f && r.f.s !== r.f.g && <span className="dim"><SegLabel s={r.f.s} /></span>}</td>
-                <td style={{ width: '36%' }}>{r.f && <div className="bar"><i style={{ width: `${(Math.abs(val(r.f)) / max) * 100}%`, background: val(r.f) < 0 ? 'var(--down)' : pal[ids.indexOf(r.id) % pal.length] }} /></div>}</td>
+                <td className="ifbar" style={{ width: '36%' }}>{r.f && <div className="bar"><i style={{ width: `${(Math.abs(val(r.f)) / max) * 100}%`, background: val(r.f) < 0 ? 'var(--down)' : idCss(r.id) }} /></div>}</td>
                 <td>{r.f ? <Num f={r.f} cls={val(r.f) < 0 ? 'neg' : ''} title={`${label} · ${name(r.id)} · ${periodName(P)}`} text={nf(val(r.f), Math.abs(val(r.f)) < 100 ? 1 : 0)} /> : <span className="num">לא דווח</span>}<IncChip f={r.f} /></td>
                 <td>{r.f && <span className={`chip ${r.f.b === basis ? '' : 'est'}`}>{BASIS[r.f.b] ?? r.f.b}</span>}{r.f?.src === 'chart' && <span className="chip est">מגרף</span>}{r.f?.sn === 1 && <span className="chip" title="הסימן הותאם כך שהגשר נסגר">סימן מנורמל</span>}</td>
                 <td>{r.f && <Src f={r.f} d={d} p={P} />}</td>
@@ -172,9 +172,9 @@ export function IndustryIfrs() {
                 xAxis: { type: 'category', data: pts.map((p) => p.l), axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 10.5, interval: 0, rotate: 30 } },
                 yAxis: { type: 'value', scale: true, axisLabel: { color: b.mu, fontSize: 10, formatter: (v: number) => `\u200E${nf(v, 0)}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
                 series: [{ type: 'bar', stack: 'w', data: baseArr, itemStyle: { color: 'transparent' }, silent: true },
-                  { type: 'bar', stack: 'w', data: tot, itemStyle: { color: b.accent, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => nf(p.value, 0) } },
-                  { type: 'bar', stack: 'w', data: up, itemStyle: { color: b.up, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `+${nf(p.value, 0)}` } },
-                  { type: 'bar', stack: 'w', data: down, itemStyle: { color: b.down, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `−${nf(p.value, 0)}` } }] };
+                  { type: 'bar', stack: 'w', data: tot, itemStyle: { color: b.accent, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `\u200E${nf(p.value, 0)}` } },
+                  { type: 'bar', stack: 'w', data: up, itemStyle: { color: b.up, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `\u200E+${nf(p.value, 0)}` } },
+                  { type: 'bar', stack: 'w', data: down, itemStyle: { color: b.down, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `\u200E−${nf(p.value, 0)}` } }] };
             }} onPoint={(_, di) => { const pts = [o, ...steps, c], x = pts[di]; if (x?.f) open(prov(x.f, `${x.label} · ${name(co)} · ${periodName(P)}`, nf(x.sign === 0 ? val(x.f) : x.f.dv != null ? x.f.dv : x.sign === -1 ? -Math.abs(x.f.v) : x.f.v, 0))); }} />
           )}
           {o && c && steps.length > 0 && (() => { const sum = val(o.f!) + steps.reduce((t, x) => t + (x.f!.dv != null ? x.f!.dv : x.sign === -1 ? -Math.abs(x.f!.v) : x.f!.v), 0), gap = val(c.f!) - sum; return <div className="src">{wfWin === 'q' ? 'QTD' : wfWin === 'fy' ? 'FY' : 'YTD'} · בסיס: {BASIS[c.f!.b]} · פער בין הרכיבים לסגירה: <Sourced className="num" src={() => ({ k: 'calc', title: `פער בין הרכיבים לסגירה · ${name(co)} · ${periodName(P)}`, value: nf(gap, 0), unit: 'מיליוני ש"ח', formula: 'סגירה פחות פתיחה פחות שורות התנועה', inputs: [{ label: 'סגירה', v: nf(val(c.f!), 0), src: () => prov(c.f!, `סגירה · ${name(co)}`) }, { label: 'פחות: פתיחה', v: nf(val(o.f!), 0), src: () => prov(o.f!, `פתיחה · ${name(co)}`) }, ...steps.map((x) => ({ label: `פחות: ${x.label}`, v: nf(x.f!.dv != null ? x.f!.dv : x.sign === -1 ? -Math.abs(x.f!.v) : x.f!.v, 0), src: () => prov(x.f!, `${x.label} · ${name(co)}`) }))] }) as Prov}>{nf(gap, 0)}</Sourced>{Math.abs(gap) > 2 && ' (שורות שלא חולצו או בסיס מעורב)'}</div>; })()}

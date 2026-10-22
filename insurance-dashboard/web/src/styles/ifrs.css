@@ -21,3 +21,4 @@ ul.miss li { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
 @media (max-width: 640px) {
   table.sop td.tl { padding-inline-start: calc(6px + var(--d, 0) * 12px); }
 }
+@media (max-width: 760px) { td.ifbar { display: none; } }

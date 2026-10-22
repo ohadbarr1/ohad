@@ -9,6 +9,7 @@ import type { IfrsData, IfrsFact } from '../lib/types';
 import { METRIC_HE } from '../lib/labels';
 import { endOf, factProv, hrefOf, periodName, prevQuarter, tag } from '../lib/csm';
 import type { Reports, RF } from '../lib/csm';
+import type { Ledger } from '../lib/csmData';
 import '../styles/csm.css';
 
 /* Dividend capacity as the reports print it: solvency with and without the transitional measures, the board's target and dividend threshold,
@@ -104,6 +105,7 @@ export function capacity(rs: Reports, lastP: string): Capacity {
   return { dates, ratio, target, thresh, over, derived, quarters, declared: div('dividend_declared'), paid: div('dividend_paid'), after, policy };
 }
 
+const ORDER = ['phoenix', 'harel', 'migdal', 'clal', 'menora', 'ayalon', 'hachshara'];
 const pctText = (v: number) => `${nf(v, Number.isInteger(v) ? 0 : 1)}%`;
 const amtText = (v: number) => nf(v, Math.abs(v) < 100 && !Number.isInteger(v) ? 1 : 0);
 const fp = (f: RF, d: IfrsData, title: string, pct = false): Prov => factProv(f, d, title, pct ? pctText(f.v) : amtText(f.v), pct ? '%' : undefined);
@@ -141,9 +143,10 @@ const ltm = (xs: Div[]) => (xs.every(Boolean) ? xs.reduce((t, x) => t + x!.v, 0)
 const qName = (p: string) => periodName(p).replace('FY', 'Q4');
 
 /** Reports of the companies asked for: the per-company slices for one insurer, the industry files for all of them. */
-function useCapacityData(id: string | undefined, d: IfrsData | null): { byCo: Map<string, Reports>; done: boolean; lastP: string } {
+function useCapacityData(id: string | undefined, d: IfrsData | null, ledger?: Ledger): { byCo: Map<string, Reports>; done: boolean; lastP: string } {
   const [all, setAll] = useState<Map<string, IfrsFact[]>>(new Map());
-  const periods = useMemo(() => [...new Set((d?.files ?? []).filter((f) => !id || f.company === id).map((f) => f.period))].sort(byPeriodDesc), [d, id]);
+  // with the ledger in hand (the industry page) nothing is fetched here
+  const periods = useMemo(() => (ledger ? [] : [...new Set((d?.files ?? []).filter((f) => !id || f.company === id).map((f) => f.period))].sort(byPeriodDesc)), [d, id, ledger]);
   const key = `${id ?? ''}|${periods.join()}`;
   useEffect(() => {
     let live = true;
@@ -162,17 +165,19 @@ function useCapacityData(id: string | undefined, d: IfrsData | null): { byCo: Ma
     return m;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all, key]);
+  if (ledger) return { byCo: ledger.byCo, done: true, lastP: ledger.periods[0] ?? '' };
   return { byCo, done: periods.length > 0 && all.size === periods.length, lastP: periods[0] ?? '' };
 }
 
 /** Dividend capacity of one insurer, or of all of them side by side when no company is given. Reported figures and one derived line; no forecast. */
-export function DividendCapacity({ id }: { id?: string }) {
-  const { data: d, error } = useIfrsData();
+export function DividendCapacity({ id, ledger }: { id?: string; /** the industry page's facts, already loaded */ ledger?: Ledger }) {
+  const { data: d0, error } = useIfrsData();
   const reg = useRegistry();
-  const { byCo, done, lastP } = useCapacityData(id, d);
-  const caps = useMemo(() => [...byCo.keys()].sort().map((c) => ({ id: c, cap: capacity(byCo.get(c)!, lastP) })), [byCo, lastP]);
+  const d = ledger?.d ?? d0;
+  const { byCo, done, lastP } = useCapacityData(id, d, ledger);
+  const caps = useMemo(() => [...byCo.keys()].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b) || a.localeCompare(b)).map((c) => ({ id: c, cap: capacity(byCo.get(c)!, lastP) })), [byCo, lastP]);
 
-  if (error) return <ErrorBox what="נתוני הון ודיבידנד" error={error} />;
+  if (error && !ledger) return <ErrorBox what="נתוני הון ודיבידנד" error={error} />;
   if (!d || (lastP && !done)) return <Loading what="כושר חלוקה" />;
   if (!lastP || caps.length === 0) return <Empty title="הדוחות טרם חולצו" />;
   const name = (c: string) => reg.data?.find((x) => x.id === c)?.name_he ?? c;

@@ -23,10 +23,6 @@ const mCompanyDocs = () => import('./pages/CompanyDocs');
 const CompanyDocs = page(mCompanyDocs, 'CompanyDocs');
 const mIndustry = () => import('./pages/Industry');
 const IndustryLayout = page(mIndustry, 'IndustryLayout');
-const mIndustryIfrs = () => import('./pages/IndustryIfrs');
-const IndustryIfrs = page(mIndustryIfrs, 'IndustryIfrs');
-const mIndustryCapital = () => import('./pages/IndustryCapital');
-const IndustryCapital = page(mIndustryCapital, 'IndustryCapital');
 const mPeers = () => import('./pages/Peers');
 const Peers = page(mPeers, 'Peers');
 const mPeersRedirect = () => import('./pages/PeersRedirect');
@@ -65,6 +61,8 @@ function LensRedirect({ to, view }: { to?: 'funds'; view?: string }) {
 }
 /** the report day is the company home now: an old link keeps its report (?p=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`..${loc.search}`} replace />; }
+/** the IFRS 17 and capital tabs are views of the CSM ledger now: an old link keeps its pickers */
+function CsmRedirect({ view }: { view: string }) { const loc = useLocation(); return <Navigate to={`/industry/csm?view=${view}${loc.search ? `&${loc.search.slice(1)}` : ''}`} replace />; }
 
 export function App() {
   return (
@@ -95,13 +93,13 @@ export function App() {
           <Route index element={<Navigate to="peers" replace />} />
           <Route path="peers" element={<Peers />} />
           <Route path="savings" element={<SavingsLens />} />
-          <Route path="ifrs" element={<IndustryIfrs />} />
+          <Route path="ifrs" element={<CsmRedirect view="facts" />} />
           <Route path="sectors" element={<FromSectors />} />
           <Route path="matrix" element={<FromMatrix />} />
           <Route path="lines" element={<FromLines />} />
           <Route path="csm" element={<IndustryCsm />} />
           <Route path="econ" element={<LensRedirect view="econ" />} />
-          <Route path="capital" element={<IndustryCapital />} />
+          <Route path="capital" element={<CsmRedirect view="capital" />} />
           <Route path="headline" element={<FromHeadline />} />
           <Route path="search" element={<DocSearch />} />
         </Route>

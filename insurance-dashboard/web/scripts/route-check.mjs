@@ -15,7 +15,7 @@ const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/M
 const ROUTES = [
   '/', '/companies', '/company/phoenix', '/company/phoenix/report', '/company/phoenix/review', '/company/phoenix/financials', '/company/phoenix/profit',
   '/company/phoenix/ifrs17', '/company/phoenix/savings', '/company/phoenix/filings', '/company/harel/financials', '/company/altshuler', '/company/altshuler/savings',
-  '/industry/sectors', '/industry/lines', '/industry/csm', '/industry/ifrs', '/industry/capital', '/industry/econ', '/industry/savings', '/industry/headline',
+  '/industry/sectors', '/industry/lines', '/industry/csm', '/industry/csm?view=econ', '/industry/csm?view=sens', '/industry/csm?view=capital', '/industry/csm?view=curve', '/industry/csm?view=facts', '/industry/ifrs', '/industry/capital', '/industry/econ', '/industry/savings', '/industry/headline',
   '/industry/search', '/industry/matrix', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?t=reg&n=5', '/compare', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/calendar',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];

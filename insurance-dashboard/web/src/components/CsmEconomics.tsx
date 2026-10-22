@@ -40,8 +40,9 @@ export const NOTES = [
   'ריבית והשפעות כלכליות מודפסות בשורה אחת, והיא מוצגת כאן',
   'נגזר: טבלה מצטברת פחות הטבלה המצטברת שלפניה (Q4 = FY פחות 9M)',
   'מדוח מאוחר יותר, שהדפיס את התקופה כעמודת השוואה',
+  'הוצג מחדש: דוח מאוחר הדפיס יתרה אחרת לאותו תאריך; הנתון הראשון והמאוחר בגיליון המקור',
 ];
-export const SUP = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹', '¹⁰', '¹¹', '¹²'];
+export const SUP = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹', '¹⁰', '¹¹', '¹²', '¹³'];
 export const showAmt = (v: number) => nf(v, Math.abs(v) < 100 ? 1 : 0);
 export const showMeasure = (kind: 'amt' | 'pct' | 'x', v: number) => (kind === 'amt' ? showAmt(v) : kind === 'x' ? `${nf(v, 2)}×` : `${nf(v, 1)}%`);
 /** Notes that belong to the table as a whole: its basis, its scope, how it was assembled. */

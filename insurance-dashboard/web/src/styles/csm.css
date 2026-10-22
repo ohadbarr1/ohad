@@ -24,3 +24,68 @@
   .dc-grid { grid-template-columns: 1fr 1fr; }
   .dc-grid .v { font-size: 19px; }
 }
+
+/* ---------- the IFRS 17 · CSM · capital ledger (/industry/csm) ---------- */
+.csmpage { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.csmpage > .panel, .csmpage > .kpis { margin: 0; }
+.csm-views { display: flex; gap: 2px; padding: 0 0 0; border-bottom: 1px solid var(--line-soft); overflow-x: auto; scrollbar-width: none; }
+.csm-views::-webkit-scrollbar { display: none; }
+.csm-views a { flex: none; padding: 8px 12px 9px; color: var(--muted); font-weight: 500; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color var(--fast), border-color var(--fast); }
+.csm-views a:hover { color: var(--fg); text-decoration: none; }
+.csm-views a[aria-current="page"] { color: var(--fg); font-weight: 700; border-bottom-color: var(--accent); }
+.iddot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; vertical-align: 1px; flex: none; }
+.csm-kpis .kpi .v { font-size: var(--t-6); }
+.csm-members { margin-top: -8px; }
+.csm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.csm-grid > .panel { margin: 0; min-width: 0; }
+.csm-bridge th button.thsel, .csm-sens th button.thsel { display: inline-flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; white-space: nowrap; }
+.csm-bridge th button.thsel:hover, .csm-sens th button.thsel:hover { color: var(--accent-text); }
+.csm-bridge th.on, .csm-sens th button.thsel.on { box-shadow: inset 0 -2px 0 var(--accent); }
+.csm-bridge .indcol { background: var(--panel2); }
+.csm-bridge td sup.mk, .csm-sens td sup.mk { color: var(--accent-text); font-weight: 700; margin-inline-start: 2px; cursor: help; font-size: 10px; }
+.csm-fallhd { display: flex; gap: 10px; align-items: baseline; margin: 14px 0 2px; }
+.csm-fallhd .dim { display: inline; }
+tr.indrow td { font-weight: 600; background: var(--panel2); }
+tr.indrow td .dim { font-weight: 400; }
+.csm-sens tr.odd td { color: var(--muted); }
+.redot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 6px; vertical-align: 2px; }
+/* phone cards */
+.csmcards { display: grid; gap: 10px; }
+.csmcard { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--panel); min-width: 0; }
+.csmcard.ind { background: var(--panel2); margin-bottom: 10px; }
+.csmcard header { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.csmcard header a { font-weight: 700; color: var(--fg); }
+.csmcard header .dim { display: inline; margin-inline-start: auto; }
+.csmcard-k { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.csmcard-k > div { display: flex; flex-direction: column; min-width: 0; }
+.csmcard-k .l { font-size: var(--t-1); color: var(--muted); }
+.csmcard-k .v { font-size: var(--t-5); font-weight: 700; letter-spacing: -0.01em; }
+.csmcard-go { align-self: flex-start; }
+.minifall { display: grid; gap: 3px; }
+.mf-row { display: grid; grid-template-columns: 84px minmax(0, 1fr) 64px; align-items: center; gap: 8px; font-size: var(--t-1); }
+.mf-l { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mf-v { text-align: left; color: var(--muted); }
+.mf-track { position: relative; height: 10px; direction: ltr; background: linear-gradient(var(--line-soft), var(--line-soft)) no-repeat 0 50% / 100% 1px; }
+.mf-track i { position: absolute; top: 1px; bottom: 1px; border-radius: 2px; }
+.mf-track i.up { background: var(--up); }
+.mf-track i.dn { background: var(--down); }
+.mf-track i.tk { width: 3px; top: -1px; bottom: -1px; background: var(--fg); }
+.csm-dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin: 12px 0 0; }
+.csm-dl div { display: flex; flex-direction: column; }
+.csm-dl dt { font-size: var(--t-1); color: var(--muted); }
+.csm-dl dd { margin: 0; font-weight: 700; }
+@media (max-width: 980px) { .csm-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .csm-kpis .kpi .v { font-size: var(--t-5); }
+  .csm-views a { padding: 9px 11px 10px; }
+}
+/* dividend capacity, industry table: each tag on its own short line under its figure */
+.divcap td { min-width: 112px; }
+.divcap td:first-child { min-width: 90px; }
+.divcap .dc-v .dc-t { display: block; margin: 1px 0 0; font-size: 10.5px; line-height: 1.35; }
+.divcap .dc-v { white-space: normal; }
+.divcap .dc-v .num { white-space: nowrap; }
+/* wide peer tables keep their row label in view while the insurers scroll under it */
+.csm-sens tr > :first-child, .csm-series tr > :first-child, .csm-bridge tr > :first-child { position: sticky; right: 0; z-index: 1; background: var(--panel); }
+.csm-series tr.indrow > :first-child { background: var(--panel2); }
+@media (max-width: 760px) { .csm-sens td.lbl, .csm-series td.lbl, .csm-bridge td.lbl { min-width: 120px; max-width: 150px; white-space: normal; } }
