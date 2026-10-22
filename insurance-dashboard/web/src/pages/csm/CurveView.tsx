@@ -45,7 +45,7 @@ export function CurveView({ name }: { L: Ledger; name: (id: string) => string })
   const rates = R.data?.rows ?? [];
   const dates = useMemo(() => [...new Set(rates.map((r) => r.d))].sort().reverse(), [rates]);
   const [ye, setYe] = useParam('ye', dates[0] ?? '', dates);
-  const qEnds = useMemo(() => (cv ? cv.months.filter((m) => /-(03|06|09|12)$/.test(m)).slice(-6) : []), [cv]);
+  const qEnds = useMemo(() => (cv ? cv.months.filter((m) => /-(03|06|09|12)$/.test(m)).slice(phone ? -4 : -6) : []), [cv, phone]);
 
   if (C.error) return <ErrorBox what="עקום בנק ישראל" error={C.error} />;
   if (!cv) return <Loading what="עקום הריבית" />;

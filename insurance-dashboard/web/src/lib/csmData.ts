@@ -81,6 +81,21 @@ export function closeProv(l: Line, re: Restated | null, d: IfrsData, title: stri
   return { ...p, restated: { first: `${amt(re.first.dv ?? re.first.v)} · ${periodName(re.first.rp)}`, last: `${amt(re.last.dv ?? re.last.v)} · ${periodName(re.last.rp)}`, firstHref: hrefOf(re.first, d) ?? undefined, lastHref: hrefOf(re.last, d) ?? undefined, in: periodName(re.last.rp) } };
 }
 
+/** The closing CSM printed for a date on one basis, from any report (newest first): the group line, else life and health together, else life plus health added. */
+export function closingAt(rs: Reports, date: string, basis: string): { l: Line; scope: string } | null {
+  for (const r of [...rs].reverse()) {
+    // the closing balance of the date, or the opening balance a later report prints for the same date
+    const one = (g: string) => r.F.filter((f) => (f.m === 'csm_closing' || f.m === 'csm_opening') && f.d === date && f.b === basis && f.g === g && f.s === g && !f.tr && !f.model).sort((a, b) => Number(a.m !== 'csm_closing') - Number(b.m !== 'csm_closing') || (a.pg ?? 0) - (b.pg ?? 0))[0];
+    const g = one('group'); if (g) return { l: { v: g.dv ?? g.v, fs: [g] }, scope: 'קבוצה' };
+    const lh = one('life_health'); if (lh) return { l: { v: lh.dv ?? lh.v, fs: [lh] }, scope: 'חיים ובריאות' };
+    const li = one('life'), he = one('health');
+    if (li && he) return { l: { v: (li.dv ?? li.v) + (he.dv ?? he.v), fs: [li, he], sum: true }, scope: 'חיים ועוד בריאות' };
+    // a filer that prints CSM for life only (no health or group table at all)
+    if (li && !r.F.some((f) => f.m.startsWith('csm') && (f.g === 'health' || f.g === 'group' || f.g === 'life_health'))) return { l: { v: li.dv ?? li.v, fs: [li] }, scope: 'חיים וחיסכון' };
+  }
+  return null;
+}
+
 /* ---------- the industry ---------- */
 type Part = { id: string; v: number; src: () => Prov };
 export interface Agg { v: number; parts: Part[] }

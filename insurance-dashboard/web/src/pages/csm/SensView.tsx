@@ -8,9 +8,9 @@ import { ContextBar, Sheet } from '../../components/Sheet';
 import { CHART_FONT, chartBase } from '../../lib/theme';
 import { usePhone } from '../../lib/useMedia';
 import { nf, sn, dateLabel } from '../../lib/format';
-import { BASIS, factProv, periodName } from '../../lib/csm';
+import { BASIS, factProv, lineProv, periodName } from '../../lib/csm';
 import type { RF } from '../../lib/csm';
-import { INSURERS, MM, amt, at, shockHe, useSens, type Ledger, type SensRow } from '../../lib/csmData';
+import { INSURERS, MM, amt, at, closingAt, shockHe, useSens, type Ledger, type SensRow } from '../../lib/csmData';
 import { Dot } from './LedgerView';
 import { useParam } from './params';
 
@@ -34,7 +34,7 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
   const ids = INSURERS.filter((id) => rows.some((r) => r.c === id));
   const rp = rows[0]?.rp ?? '';
   // the denominators: closing CSM and shareholders' equity at the same balance date, from the same report
-  const base = useMemo(() => new Map(ids.map((id) => { const rs = L.byCo.get(id); const a = rs && rp ? at(rs, id, rp, 'fy', basis) : null; return [id, { csm: a?.b?.close ?? null, eq: a?.eq ?? null }]; })), [L, ids, rp, basis]);
+  const base = useMemo(() => new Map(ids.map((id) => { const rs = L.byCo.get(id); const c = rs && rows[0] ? closingAt(rs, rows[0].d, basis) : null, a = rs && rp ? at(rs, id, rp, 'fy', basis) : null; return [id, { csm: c?.l ?? null, scope: c?.scope ?? '', eq: a?.eq ?? null }]; })), [L, ids, rp, basis, rows]);
 
   const shocks = useMemo(() => {
     const m = new Map<string, SensRow>();
@@ -56,12 +56,13 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
     return p.k === 'report' ? { ...p, note: [r.l, r.seg === 'group' ? 'קבוצה' : 'חיים ובריאות', `בסיס: ${BASIS[r.b] ?? r.b}`, r.eff === 'pe' ? 'רווח והון בשורה אחת' : '', r.tax === 'after' ? 'אחרי מס' : r.eff !== 'csm' ? 'לא צוין לפני או אחרי מס' : ''].filter(Boolean).join(' · ') } : p;
   };
   const denom = (id: string) => (unit === 'csm' ? base.get(id)?.csm?.v ?? null : unit === 'eq' ? base.get(id)?.eq?.v ?? null : null);
-  const shown = (r: SensRow): number | null => { if (unit === 'v') return r.v; const dd = denom(r.c); return dd ? (r.v / dd) * 100 : null; };
+  // a relative figure keeps one basis: an effect printed on another basis than the balance is not divided by it
+  const shown = (r: SensRow): number | null => { if (unit === 'v') return r.v; if (unit === 'csm' && r.b !== basis && r.b !== 'na') return null; const dd = denom(r.c); return dd ? (r.v / dd) * 100 : null; };
   const text = (v: number) => (unit === 'v' ? (v > 0 ? '+' : '') + amt(v) : `${sn(v, 2)}%`);
   const prov = (r: SensRow): Prov => {
     if (unit === 'v') return printed(r);
     const b = base.get(r.c)!, v = shown(r)!, dl = unit === 'csm' ? 'יתרת CSM' : 'הון לבעלי המניות';
-    const dsrc = unit === 'csm' ? () => factProv(b.csm!.fs[0], L.d, `${dl} · ${name(r.c)}`) : () => factProv(b.eq!, L.d, `${dl} · ${name(r.c)}`);
+    const dsrc = unit === 'csm' ? () => lineProv(b.csm!, L.d, `${dl} · ${BASIS[basis]} · ${b.scope} · ${name(r.c)}`) : () => factProv(b.eq!, L.d, `${dl} · ${name(r.c)}`);
     return { k: 'calc', title: `${title(r)} · % מ${dl}`, value: `${sn(v, 2)}%`, formula: `ההשפעה המודפסת ÷ ${dl} לאותו תאריך × 100`, inputs: [{ label: 'השפעה, כפי שהודפסה', v: amt(r.v), src: () => printed(r) }, { label: dl, v: amt(unit === 'csm' ? b.csm!.v : b.eq!.v), src: dsrc }] };
   };
   const Cell = ({ r }: { r: SensRow | null }) => {
@@ -104,7 +105,7 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
             ))}
           </tbody>
           <tfoot><tr><td>עמוד בדוח</td>{pages.map(({ id, r }) => <td key={id}>{r?.u && r.pg != null ? <a className="num" href={`${r.u}#page=${r.pg}`} target="_blank" rel="noreferrer">עמ׳ {r.pg}</a> : '–'}</td>)}</tr>
-            {unit !== 'v' && <tr><td>{unit === 'csm' ? 'יתרת CSM' : 'הון לבעלי המניות'}</td>{ids.map((id) => { const b = base.get(id)!, f = unit === 'csm' ? b.csm?.fs[0] : b.eq; const v = unit === 'csm' ? b.csm?.v : b.eq?.v; return <td key={id}>{f && v != null ? <Sourced className="num" src={() => factProv(f, L.d, `${unit === 'csm' ? 'יתרת CSM' : 'הון לבעלי המניות'} · ${name(id)}`)}>{amt(v)}</Sourced> : '–'}</td>; })}</tr>}
+            {unit !== 'v' && <tr><td>{unit === 'csm' ? `יתרת CSM, ${BASIS[basis]}` : 'הון לבעלי המניות'}</td>{ids.map((id) => { const b = base.get(id)!, v = unit === 'csm' ? b.csm?.v : b.eq?.v; return <td key={id}>{v != null ? <><Sourced className="num" src={() => (unit === 'csm' ? lineProv(b.csm!, L.d, `יתרת CSM · ${BASIS[basis]} · ${b.scope} · ${name(id)}`) : factProv(b.eq!, L.d, `הון לבעלי המניות · ${name(id)}`))}>{amt(v)}</Sourced>{unit === 'csm' && <span className="dim">{b.scope}</span>}</> : <span className="muted" title="לא הודפסה יתרה על הבסיס הזה">–</span>}</td>; })}</tr>}
           </tfoot>
         </table></div>
         <div className="src">כל חברה מגדירה את התרחיש בעצמה (ריבית חסרת סיכון או עקום ההיוון כולו; מניות לפי חשיפה); השוו כיוון וגודל, לא שקל מול שקל. ריבית ומניות: קבוצה; תחלואה ותמותה: מגזרי חיים ובריאות. סימונים: ל = בסיס לא צוין, נ/ב = בסיס אחר מהנבחר, ± = רווח והון בשורה אחת, * = לא צוין לפני או אחרי מס. {MM} אלא אם צוין אחרת.</div>

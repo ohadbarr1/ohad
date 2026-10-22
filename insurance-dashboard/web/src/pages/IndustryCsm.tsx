@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ErrorBox, Loading } from '../components/ui';
 import { useRegistry } from '../lib/useData';
@@ -23,9 +24,12 @@ export function IndustryCsm() {
   const reg = useRegistry();
   const { data: L, error } = useLedger();
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
+  // on a phone the tab row scrolls: the view in force is brought into it
+  const nav = useRef<HTMLElement>(null);
+  useEffect(() => { const el = nav.current, a = el?.querySelector<HTMLElement>('[aria-current="page"]'); if (el && a && el.scrollWidth > el.clientWidth) { const r = a.getBoundingClientRect(), n = el.getBoundingClientRect(); el.scrollLeft += (r.left + r.width / 2) - (n.left + n.width / 2); } }, [view]);
   return (
     <div className="csmpage">
-      <nav className="csm-views" aria-label="IFRS 17 · CSM · הון">
+      <nav ref={nav} className="csm-views" aria-label="IFRS 17 · CSM · הון">
         {CSM_VIEWS.map(([k, l]) => <Link key={k} to={k === 'ledger' ? '?' : `?view=${k}`} replace aria-current={k === view ? 'page' : undefined}>{l}</Link>)}
       </nav>
       {view === 'facts' ? <IndustryIfrs />
