@@ -271,7 +271,7 @@ export function ValuationPb() {
           </Panel>
           {roes.length > 0 && kes.length > 0 && (
             <Panel title="רגישות: P/B מוצדק" aside={<span>ROE × ke · {fin(mkt.pb) && <>מסומן: מעל ומתחת ל-P/B בשוק (<span className="num">{nf(mkt.pb, 2)}</span>)</>}</span>}>
-              <div className="scroll"><table className="sens-t">
+              <div className="scroll" tabIndex={0} role="region" aria-label="טבלת רגישות"><table className="sens-t">
                 <thead><tr><th>ROE \ ke</th>{kes.map((x) => <th key={x}><span className="num">{nf(x, 1)}%</span></th>)}</tr></thead>
                 <tbody>{roes.map((r) => (
                   <tr key={r}><td><span className="num">{nf(r, 1)}%</span></td>{kes.map((x) => {

@@ -454,7 +454,7 @@ function RatingPanel({ f, peers, asof }: { f: Fund; peers: Fund[]; asof: number 
     <Panel title="דירוג fox" aside={<span className="chip" title={RATING_NOTE}>שיטת fox · לא המלצה</span>}>
       {r.score == null ? <Empty title="לא דורג">{r.why}</Empty> : (
         <div className="rating">
-          <div><Sourced src={() => ratingProv(f, r, (c) => compSrc(f, c, asof))}><span className="score num">{nf(r.score, 0)}</span></Sourced><div className="band" aria-label={`דרגה ${r.band} מתוך 5`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= r.band! ? 'on' : ''} />)}</div><div className="dim">מתוך 100 · {f.prod} · {f.track} · <span className="num">{peers.length}</span> מסלולים</div></div>
+          <div><Sourced src={() => ratingProv(f, r, (c) => compSrc(f, c, asof))}><span className="score num">{nf(r.score, 0)}</span></Sourced><div className="band" role="img" aria-label={`דרגה ${r.band} מתוך 5`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= r.band! ? 'on' : ''} />)}</div><div className="dim">מתוך 100 · {f.prod} · {f.track} · <span className="num">{peers.length}</span> מסלולים</div></div>
           <div className="scroll"><table>
             <thead><tr><th>רכיב</th><th className="wide-only">משקל</th><th>ערך</th><th>אחוזון</th></tr></thead>
             <tbody>{r.parts.map((x) => { const sv = compSrc(f, x.c.key, asof); return <tr key={x.c.key}><td>{x.c.label}</td><td className="wide-only"><span className="num muted">{x.c.w}</span></td>
