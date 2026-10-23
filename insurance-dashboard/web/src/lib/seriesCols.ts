@@ -118,11 +118,15 @@ export function cellVal(book: Book, c: Col, ent: string, freq: Freq, p: string, 
 }
 
 /* ---------- templates: named views with hotkeys ---------- */
+/** ROE at an annual rate on every frequency (net profit × 4 on a quarter, × 2 on a half): the profitability template's column and the ready formula are one */
+export const ROE_NAME = 'ROE, בקצב שנתי', ROE_EXPR = 'ann(np) / avg(eq, yago(eq)) * 100';
+/** the profitability column before it was annualised (a quarter's profit over equity read as 7% against a 28% ROE): old links open the annual rate */
+export const ROE_OLD_TOK = formulaTok('רווח נקי להון ממוצע', 'pct', 'np / avg(eq, yago(eq)) * 100');
 export interface Template { id: string; key: string; n: string; s: string; f: Freq; n2?: number; c: string[] }
 export const TEMPLATES: Template[] = [
   { id: 'prof', key: '1', n: 'רווחיות', s: 'ins', f: 'LTM', c: ['ifrs:profit_attributable', 'ifrs:comprehensive_income_before_tax', 'ifrs:insurance_revenue', 'ifrs:insurance_service_result',
-    formulaTok('מרווח שירותי ביטוח', 'pct', 'isr / rev * 100'), formulaTok('רווח נקי להון ממוצע', 'pct', 'np / avg(eq, yago(eq)) * 100'), 'ifrs:equity_attributable', 'y!ifrs:equity_attributable'] },
-  { id: 'csm', key: '2', n: 'IFRS 17 · CSM', s: 'ins', f: 'FY', c: ['ifrs:csm_closing', 'y!ifrs:csm_closing', formulaTok('CSM / הון', 'x', 'csm / eq'), 'ifrs:csm_closing@life', 'ifrs:csm_closing@health',
+    formulaTok('מרווח שירותי ביטוח', 'pct', 'isr / rev * 100'), formulaTok(ROE_NAME, 'pct', ROE_EXPR), 'ifrs:equity_attributable', 'y!ifrs:equity_attributable'] },
+  { id: 'csm', key: '2', n: 'IFRS 17 · CSM', s: 'ins', f: 'Q', c: ['ifrs:csm_closing', 'y!ifrs:csm_closing', formulaTok('CSM / הון', 'x', 'csm / eq'), 'ifrs:csm_closing@life', 'ifrs:csm_closing@health',
     'ifrs:csm_new_business@life', 'ifrs:csm_new_business@health', 'ifrs:csm_release@life', formulaTok('עסק חדש / שחרור, חיים', 'pct', 'ifrs_csm_new_business__life / ifrs_csm_release__life * 100'), 'ifrs:risk_adjustment'] },
   { id: 'lts', key: '3', n: 'חיסכון', s: 'lts', f: 'Q', c: ['lts:am.aum', 'y!lts:am.aum', 'lts:pen.aum.share', 'lts:gem.aum.share', 'lts:pen.tr_net', 'lts:gem.tr_net', 'lts:am.fees', 'lts:am.rev_rate'] },
   { id: 'cap', key: '4', n: 'הון', s: 'ins', f: 'Q', c: ['ifrs:equity_attributable', 'y!ifrs:equity_attributable', 'ifrs:total_assets', formulaTok('נכסים להון', 'x', 'ta / eq'),

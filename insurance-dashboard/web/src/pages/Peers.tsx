@@ -13,7 +13,7 @@ import { mayaReport } from '../lib/sources';
 import { usePhone } from '../lib/useMedia';
 import { useSource, type Prov } from '../lib/prov';
 import { back, F_CHART, F_DER, F_FIXED, F_OLD, F_RE, FREQS, fmtV, plab, pord, UNIT_HE, usePeerRegistry, useBook, warmLts, yearAgo, type Book, type Freq, type MetricDef, type PeerSet, type Registry, type Unit, type Val } from '../lib/registry';
-import { cellVal, colLabel, fmtCol, formulaTok, lexOf, parseCol, resolver, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
+import { cellVal, colLabel, fmtCol, formulaTok, lexOf, parseCol, resolver, ROE_EXPR, ROE_NAME, ROE_OLD_TOK, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
 import { ALIASES, autoAlias, codeOf, ExprError, FUNCS, parse, toCode } from '../lib/seriesExpr';
 import { fundRoster, monthOf, rosterDiff, rosterText, useRosterFile } from '../lib/roster';
 import '../styles/peers.css';
@@ -37,7 +37,7 @@ function readSt(sp: URLSearchParams): St {
   return {
     s: sp.get('s') ?? DEF.s, e: sp.get('e') ? sp.get('e')!.split(',').filter(Boolean) : null, f, p: sp.get('p') ?? '',
     n: Math.min(12, Math.max(1, Number(sp.get('n')) || DEF.n)), v: (['table', 'series', 'deck'] as View[]).find((x) => x === sp.get('v')) ?? DEF.v,
-    k: Number(sp.get('k')) || 0, c: sp.getAll('c'), o: o ? { c: +o[1], i: +o[2], d: +o[3] as 1 | -1 } : null, h: sp.get('h') === '1',
+    k: Number(sp.get('k')) || 0, c: sp.getAll('c').map((t) => (t.replace(/^[a-z]!/, '') === ROE_OLD_TOK ? t.replace(ROE_OLD_TOK, formulaTok(ROE_NAME, 'pct', ROE_EXPR)) : t)), o: o ? { c: +o[1], i: +o[2], d: +o[3] as 1 | -1 } : null, h: sp.get('h') === '1',
     pin: sp.has('pin') ? Number(sp.get('pin')) : -1, hl: sp.get('hl') ?? '', w: Number(sp.get('w')) || DEF.w,
   };
 }
@@ -67,6 +67,8 @@ export function Peers() {
   const [sp, setSp] = useSearchParams();
   const st = useMemo(() => readSt(sp), [sp]);
   const set = (patch: Partial<St>) => setSp((prev) => writeSt(prev, { ...readSt(prev), ...patch }), { replace: true });
+  // the series opens on quarters, 20 of them (five years): from an LTM table the same tap switches the frequency (job: 7 insurers × a line × 5 years)
+  const toView = (v: View, extra: Partial<St> = {}) => set(v === 'series' && st.f === 'LTM' ? { v, f: 'Q', p: '', o: null, ...extra } : { v, ...extra });
   const [mySets, setMySets] = useStored<PeerSet[]>('peers.sets', []);
   const [views, setViews] = useStored<SavedView[]>('peers.views', []);
   const phone = usePhone();
@@ -146,8 +148,8 @@ export function Peers() {
           </select>
         </label>
         {st.v === 'table' && <div className="field"><span>תקופות</span><Seg<string> label="תקופות לכל מדד" value={String(st.n)} onChange={(n) => set({ n: Number(n), o: null })} options={[['1', '1'], ['3', '3'], ['5', '5'], ['8', '8']]} /></div>}
-        {st.v === 'series' && <div className="field"><span>טווח</span><Seg<string> label="טווח הסדרה" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={[['8', '8'], ['12', '12'], ['20', '20'], ['40', '40']]} /></div>}</>}
-        <div className="field"><span>תצוגה</span><Seg<View> label="תצוגה" value={st.v} onChange={(v) => set({ v })} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
+        {st.v === 'series' && <div className="field"><span>טווח</span><Seg<string> label="טווח הסדרה" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={st.f === 'Q' ? [['8', '2 שנים'], ['12', '3 שנים'], ['20', '5 שנים'], ['40', '10 שנים']] : [['8', '8'], ['12', '12'], ['20', '20'], ['40', '40']]} /></div>}</>}
+        <div className="field"><span>תצוגה</span><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
       </div>
       {st.v !== 'deck' && <div className="pr-row">
         <button type="button" className={`btn${panel === 'add' ? ' primary' : ''}`} aria-expanded={panel === 'add'} onClick={() => setPanel(panel === 'add' ? '' : 'add')}>+ מדד</button>
@@ -163,7 +165,7 @@ export function Peers() {
   );
   const panels = (
     <>
-      {panel === 'add' && <Picker reg={reg} ents={ents} onAdd={(id) => set({ c: [...st.c, id] })} onClose={() => setPanel('')} />}
+      {panel === 'add' && <Picker reg={reg} ents={ents} freq={st.f} p={pend} onAdd={(id) => set({ c: [...st.c, id] })} onClose={() => setPanel('')} />}
       {panel === 'fx' && <FormulaEditor book={book} ents={ents} freq={st.f} p={pend} onAdd={(tok) => { set({ c: [...st.c, tok] }); setPanel(''); setSheet(false); }} />}
       {panel === 'set' && <SetEditor reg={reg} ents={ents} onChange={(ids) => set({ e: ids })} onSave={(n) => { const id = `u${Date.now().toString(36)}`; setMySets([...mySets, { id, n, ids: ents }]); set({ s: id, e: null }); }}
         own={allSets.find((x) => x.id === st.s && x.own) ?? null} onDelete={(id) => { setMySets(mySets.filter((x) => x.id !== id)); set({ s: DEF.s, e: null }); }} />}
@@ -178,7 +180,7 @@ export function Peers() {
         <>
           <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</ContextBar>
           {/* table or series without opening the sheet: one tap */}
-          {st.v !== 'deck' && <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => set({ v })} options={[['table', 'טבלה'], ['series', 'סדרה']]} /></div>}
+          {st.v !== 'deck' && <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה']]} /></div>}
           <Sheet open={sheet} onClose={() => setSheet(false)} title="טבלת עמיתים">{controls}{panels}
             {st.v !== 'deck' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
               <div key={i} className="pr-ci"><span>{c.name}</span>
@@ -382,7 +384,7 @@ function ColHead({ book, col, ci, n, st, set, span, brk, pinned, miss, total }: 
             {col.expr && <p><bdi>{col.he ?? col.expr}</bdi>{col.he && col.he !== col.expr && <span className="mono muted" dir="ltr"> · {col.expr}</span>}</p>}
             {def?.nt != null && <p className="muted">{book.reg.notes[def.nt]}</p>}
             <div className="pr-trs">{(['v', 'y', 'q', 's', 'c'] as Tr[]).map((t) => <button key={t} type="button" className="chip" aria-pressed={col.tr === t} onClick={() => { const c = [...st.c]; c[ci] = withTr(col, t); set({ c }); close(); }}>{TR_HE[t]}</button>)}</div>
-            <button type="button" onClick={() => { set({ v: 'series', k: ci }); close(); }}>סדרה לאורך זמן</button>
+            <button type="button" onClick={() => { set({ v: 'series', k: ci, ...(st.f === 'LTM' ? { f: 'Q' as Freq, p: '', o: null } : {}) }); close(); }}>סדרה לאורך זמן</button>
             <button type="button" onClick={() => { set({ pin: pinned ? -1 : ci }); close(); }}>{pinned ? 'ביטול הצמדה' : 'הצמדה לצד שם החברה'}</button>
             <button type="button" onClick={() => { move(-1); close(); }} disabled={ci === 0}>הזזה ימינה</button>
             <button type="button" onClick={() => { move(1); close(); }} disabled={ci === n - 1}>הזזה שמאלה</button>
@@ -465,7 +467,7 @@ function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; 
 }
 
 /* ---------- metric picker ---------- */
-function Picker({ reg, ents, onAdd, onClose }: { reg: Registry; ents: string[]; onAdd: (id: string) => void; onClose: () => void }) {
+function Picker({ reg, ents, freq, p, onAdd, onClose }: { reg: Registry; ents: string[]; freq: Freq; p: string; onAdd: (id: string) => void; onClose: () => void }) {
   const [q, setQ] = useState('');
   const [g, setG] = useState('');
   const [added, setAdded] = useState<string[]>([]);
@@ -473,7 +475,12 @@ function Picker({ reg, ents, onAdd, onClose }: { reg: Registry; ents: string[]; 
   const mine = new Set(ents.map((e) => idx.get(e)));
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const list = reg.metrics.filter((m) => (!g || m.g === g) && words.every((w) => `${m.l} ${m.id} ${reg.src[m.src]}`.toLowerCase().includes(w)));
-  const cover = (m: MetricDef) => m.e.filter((i) => mine.has(i)).length;
+  const any = (m: MetricDef) => m.e.filter((i) => mine.has(i)).length;
+  // coverage at the table's frequency and period (the figure a new column would show), read from the metric files of the rows on screen
+  const [more, setMore] = useState(60);
+  const shown = list.slice(0, more);
+  const { book: cb } = useBook(reg, useMemo(() => shown.filter((m) => any(m) > 0).map((m) => m.id), [shown.map((m) => m.id).join('|')]));  // eslint-disable-line react-hooks/exhaustive-deps
+  const cover = (m: MetricDef): number | null => (!any(m) ? 0 : !cb || !p || !cb.files.has(m.f) ? null : ents.filter((e) => cellVal(cb, parseCol(m.id, cb), e, freq, p, ents).v != null).length);
   return (
     <section className="panel pr-picker" aria-label="הוספת מדד">
       <div className="pr-row">
@@ -481,11 +488,13 @@ function Picker({ reg, ents, onAdd, onClose }: { reg: Registry; ents: string[]; 
         <button type="button" className="btn" onClick={onClose}>סגירה</button>
       </div>
       <div className="pr-groups" role="group" aria-label="נושא"><button type="button" className="chip" aria-pressed={!g} onClick={() => setG('')}>הכול</button>{reg.groups.map(([k, n]) => <button key={k} type="button" className="chip" aria-pressed={g === k} onClick={() => setG(k)}>{n}</button>)}</div>
-      <ul className="pr-list">{list.slice(0, 120).map((m) => { const n = cover(m); return (
-        <li key={m.id}><button type="button" disabled={n === 0} onClick={() => { onAdd(m.id); setAdded([...added, m.id]); }} aria-pressed={added.includes(m.id)}>
-          <span className="l">{m.l}</span><span className="m">{reg.src[m.src]} · {UNIT_HE[m.u]} · {m.k === 'f' ? 'מצטבר' : m.k === 's' ? 'נקודתי' : 'יחס'} · {pl(m.r[0])}–{pl(m.r[1])}</span><span className={`c num${n < ents.length ? ' part' : ''}`}>{n}/{ents.length}</span>
+      <div className="src pr-pk-at">כיסוי: חברות עם נתון ב-<span className="num">{p ? plab(freq, p) : freq}</span></div>
+      <ul className="pr-list">{shown.map((m) => { const n = cover(m), a = any(m); return (
+        <li key={m.id}><button type="button" disabled={a === 0} onClick={() => { onAdd(m.id); setAdded([...added, m.id]); }} aria-pressed={added.includes(m.id)}
+          title={n === 0 && a > 0 ? `אין נתון ב-${p ? plab(freq, p) : freq}; יש נתון בתקופות אחרות (${a}/${ents.length})` : undefined}>
+          <span className="l">{m.l}</span><span className="m">{reg.src[m.src]} · {UNIT_HE[m.u]} · {m.k === 'f' ? 'מצטבר' : m.k === 's' ? 'נקודתי' : 'יחס'} · {pl(m.r[0])}–{pl(m.r[1])}</span><span className={`c num${n == null || n < ents.length ? ' part' : ''}`}>{n == null ? '…' : `${n}/${ents.length}`}</span>
         </button></li>); })}</ul>
-      {list.length > 120 && <div className="src">{list.length - 120} נוספים: צמצמו בחיפוש</div>}
+      {list.length > more && <button type="button" className="btn pr-more" onClick={() => setMore(more + 60)}>עוד <span className="num">{Math.min(60, list.length - more)}</span> מתוך <span className="num">{list.length - more}</span></button>}
     </section>
   );
 }
@@ -494,7 +503,7 @@ const pl = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice
 /* ---------- formula editor ---------- */
 /** ready formulas, one tap each: the ratios analysts build first. Codes resolve through the registry; the Hebrew form is what the column shows. */
 const PRESETS: { n: string; u: Unit; e: string; d: string }[] = [
-  { n: 'תשואה להון (ROE)', u: 'pct', e: 'ann(np) / avg(eq, yago(eq)) * 100', d: 'רווח נקי בקצב שנתי ÷ הון ממוצע (פתיחה וסגירה)' },
+  { n: ROE_NAME, u: 'pct', e: ROE_EXPR, d: 'רווח נקי בקצב שנתי (רבעון × 4, חצי שנה × 2) ÷ הון ממוצע (פתיחה וסגירה)' },
   { n: 'CSM להון', u: 'x', e: 'csm / eq', d: 'יתרת CSM ÷ הון לבעלי המניות' },
   { n: 'דמי ניהול לנכסים', u: 'pct', e: 'ann(fee) / avg(aum, yago(aum)) * 100', d: 'דמי ניהול בקצב שנתי ÷ נכסים מנוהלים ממוצעים' },
   { n: 'יחס הוצאות ביטוח', u: 'pct', e: 'abs(fs_ins_exp) / fs_ins_rev * 100', d: 'הוצאות שירותי ביטוח ÷ הכנסות שירותי ביטוח' },
