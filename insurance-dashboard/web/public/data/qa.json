@@ -1,5 +1,5 @@
 {
- "built": "2026-10-23T09:14:34+03:00",
+ "built": "2026-10-23T11:11:46+03:00",
  "checks": [
   {
    "id": "workbook",
@@ -7,7 +7,7 @@
    "level": "fail",
    "n": 13,
    "fail": 0,
-   "note": "yelin: 203 lines, 0 problems"
+   "note": "yelin: 87 lines, 0 problems"
   },
   {
    "id": "prov",
@@ -37,15 +37,15 @@
    "id": "additivity_funds",
    "ok": false,
    "level": "warn",
-   "n": 1592,
-   "fail": 113,
-   "note": "fund houses, 2024+: 0 same-report misses, 113 across reports"
+   "n": 1629,
+   "fail": 124,
+   "note": "fund houses, 2024+: 0 same-report misses, 124 across reports"
   },
   {
    "id": "units",
    "ok": true,
    "level": "fail",
-   "n": 1112,
+   "n": 1096,
    "fail": 0,
    "note": "0 per-share values outside [0.01, 500], 0 share-count lines not tagged shares"
   },
@@ -53,7 +53,7 @@
    "id": "latin",
    "ok": true,
    "level": "fail",
-   "n": 12815,
+   "n": 12668,
    "fail": 0,
    "note": "labels with 3+ consecutive Latin words"
   },
@@ -61,7 +61,7 @@
    "id": "placeholder",
    "ok": true,
    "level": "fail",
-   "n": 12815,
+   "n": 12668,
    "fail": 0,
    "note": "placeholder captions"
   },
@@ -69,7 +69,7 @@
    "id": "derived",
    "ok": true,
    "level": "fail",
-   "n": 16681,
+   "n": 16554,
    "fail": 0,
    "note": "derived Q4/H2 figures on non-flow lines"
   },
@@ -101,7 +101,7 @@
    "id": "balance",
    "ok": true,
    "level": "fail",
-   "n": 248,
+   "n": 240,
    "fail": 0,
    "note": "A = L+E at every balance date; >1% off: 0"
   },
@@ -111,7 +111,7 @@
    "level": "fail",
    "n": 18,
    "fail": 0,
-   "note": "Q2'26 attributable profit and equity, XBRL = statements; not comparable: yelin:profit"
+   "note": "Q2'26 attributable profit and equity, XBRL = statements"
   },
   {
    "id": "lens",
@@ -122,12 +122,36 @@
    "note": "lens.json matches a rebuild; 784 quarter rows; 0 formula misses"
   },
   {
+   "id": "consistency",
+   "ok": true,
+   "level": "fail",
+   "n": 25248,
+   "fail": 0,
+   "note": "21895 equal within rounding, 3039 labelled basis differences (alt 14, filer 436, restated 1108, std 1481), last 8 quarters"
+  },
+  {
+   "id": "fund_roles",
+   "ok": true,
+   "level": "fail",
+   "n": 40,
+   "fail": 0,
+   "note": "fund houses, last 4 quarters: attributable profit and comprehensive income on the company page = XBRL"
+  },
+  {
+   "id": "consistency_old",
+   "ok": false,
+   "level": "warn",
+   "n": 25248,
+   "fail": 314,
+   "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
+  },
+  {
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 1629,
+   "n": 1637,
    "fail": 0,
-   "note": "1629 files under contract, 0 failing; 29 contracts; 555 files without a contract"
+   "note": "1637 files under contract, 0 failing; 31 contracts; 555 files without a contract"
   }
  ]
 }

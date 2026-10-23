@@ -80,10 +80,15 @@ export class CompanyKpi {
   /** Flow for a single quarter. Q4 is the annual figure less the first three quarters. */
   quarter(key: string, y: number, q: number): number | null {
     if (q < 4) return this.at(key, y, q);
+    // FY less the nine months as printed, where the tag series would land a rounding away from the statements (canon_kpi.py)
+    const c4 = this.canon[key]?.[`${y}Q4`];
+    if (c4) return c4[0];
     const fy = this.at(key, y, 4), a = this.at(key, y, 1), b = this.at(key, y, 2), c = this.at(key, y, 3);
     return fy == null || a == null || b == null || c == null ? null : fy - a - b - c;
   }
   private ltm(key: string, i: number): number | null {
+    // at a year end the annual figure as printed, as on the company page and the peer table
+    if (this.quarters[i]?.q === 4 && this.raw[key]?.[i] != null) return this.raw[key][i];
     let s = 0;
     for (let k = 0; k < 4; k++) { const t = this.quarters[i - k]; if (!t) return null; const v = this.quarter(key, t.y, t.q); if (v == null) return null; s += v; }
     return s;
@@ -141,7 +146,7 @@ export class CompanyKpi {
   private title(key: string, period: string) { return `${KPI_BY_KEY[key]?.label ?? key}, ${periodTag(period)}`; }
   private xbrl(key: string, period: string, note?: string, value?: number | null, status?: string): Prov {
     const cn = value == null ? this.canon[key]?.[period] : undefined;
-    if (cn) return this.report(key, period, { rid: cn[2], pg: cn[3] }, `כפי שהודפס בדוח. בתג ה-XBRL: ${this.show(key, cn[1])} (הפרש עיגול)`);
+    if (cn) return this.report(key, period, { rid: cn[2], pg: cn[3] }, cn[1] === 0 ? 'כפי שהודפס בדוח. התג ב-XBRL ריק (0)' : `כפי שהודפס בדוח. בתג ה-XBRL: ${this.show(key, cn[1])} (הפרש עיגול)`);
     const i = this.idx.get(period), v = value ?? this.cur(key, period);
     if (i == null || v == null) return none(this.title(key, period), 'התקופה אינה בדוחות שנקראו או שהמושג אינו מתויג בה');
     const st = status ?? (KPI_BY_KEY[key]?.flow ? this.statusOf[i] : this.statusOf[i] === 'fy' ? 'fy' : undefined);
@@ -159,6 +164,13 @@ export class CompanyKpi {
     if (period.endsWith('FY')) {
       const y = yOf(period), v = this.quarter(key, y, 4);
       if (v == null) return none(t, 'חסר אחד מהרבעונים הראשונים של השנה, ולכן Q4 אינו ניתן לחישוב');
+      const c4 = this.canon[key]?.[`${y}Q4`], yy = String(y).slice(2);
+      if (c4) {
+        const n9 = this.cur(key, period)! - c4[0];
+        return { k: 'calc', title: t, value: this.show(key, v), formula: `Q4'${yy} = FY'${yy} − 9M'${yy} (כפי שהודפסו)`,
+          inputs: [{ label: `FY'${yy}`, v: this.show(key, this.cur(key, period)!), src: () => this.xbrl(key, period) },
+            { label: `9M'${yy}`, v: this.show(key, n9), src: () => ({ k: 'report', title: `${KPI_BY_KEY[key]?.label ?? key}, 9M'${yy}`, value: this.show(key, n9), url: c4[2] ? mayaReport(c4[2]) : null, pg: c4[3], doc: this.filer?.name ?? NAMES[this.id], period: `9M'${yy}`, note: 'תשעת החודשים כפי שהודפסו בדוח הרבעון השלישי' }) }] };
+      }
       const ps = [`${y}Q1`, `${y}Q2`, `${y}Q3`];
       return { k: 'calc', title: t, value: this.show(key, v), formula: `Q4'${String(y).slice(2)} = FY'${String(y).slice(2)} − Q1 − Q2 − Q3`,
         inputs: [{ label: `FY'${String(y).slice(2)}`, v: this.show(key, this.cur(key, period)!), src: () => this.xbrl(key, period) }, ...ps.map((p) => ({ label: periodTag(p), v: this.show(key, this.cur(key, p)!), src: () => this.qProv(key, p) }))] };
@@ -179,6 +191,7 @@ export class CompanyKpi {
   private ltmProv(key: string, i: number): Prov {
     const t = this.quarters[i], title = `${KPI_BY_KEY[key].label}, LTM עד ${periodTag(t.period)}`, v = this.ltm(key, i);
     if (v == null) return none(title, 'חסר רבעון באחד מארבעת הרבעונים האחרונים');
+    if (t.q === 4 && this.raw[key]?.[i] != null) return this.xbrl(key, t.period, 'LTM בסוף שנה = הנתון השנתי');
     const ps = [0, 1, 2, 3].map((k) => this.quarters[i - k].period).reverse();
     return { k: 'calc', title, value: this.show(key, v), formula: 'LTM = סכום ארבעת הרבעונים האחרונים', inputs: ps.map((p) => ({ label: periodTag(p), v: this.show(key, this.quarter(key, yOf(p), qOf(p)) ?? 0), src: () => this.qProv(key, p) })) };
   }

@@ -226,6 +226,8 @@ def statements(comp):
     files = sorted(folder.glob("*.json"), key=lambda f: (f.stem[:4], END[f.stem[4:]], f.stem[4:] == "FY")) if folder.exists() else []
     docs = list(POOL.map(lambda f: json.loads(f.read_text(encoding="utf-8")), files))
     for f, d in reversed(list(zip(files, docs))):  # newest first: its row order is the backbone
+        if d.get("report_id_he") in OTHER_ENTITY.get(comp, ()):
+            continue
         own, url = f"{f.stem[:4]}-{END[f.stem[4:]]}", PDF.get(d.get("report_id_he"))
         mult = 1000 if re.search(r"million|מיליוני", str(d.get("unit") or "")) else 1
         for st in d["statements"]:
@@ -367,7 +369,13 @@ def statements(comp):
             """The annual figure as printed by the report the part-year figure came from, when that report prints both: a year from one report
             less nine months from another mixes a restated figure with an unrestated one."""
             rep_end = source.get((key, part))
-            c = next((c for c in printed.get((key, pk), []) if c[0][1] == rep_end), None)
+            prints = printed.get((key, pk), [])
+            c = next((c for c in prints if c[0][1] == rep_end), None)
+            if c is None and rep_end is not None:
+                # the part's report does not print the year (a nine months' report never does): the year as first printed after it, so a
+                # restatement printed later (a comparative column of the next year's report) is not netted against the unrestated part
+                later = [c for c in prints if c[0][1] >= rep_end]
+                c = min(later, key=lambda c: c[0][1]) if later else None
             flipped = key in turned and rep_end is not None and rep_end < min(turned[key])
             return None if c is None else ((-c[1] if flipped else c[1]), c[2], c[3])
 
@@ -388,6 +396,11 @@ def statements(comp):
     return out
 
 
+# Filings whose extracted statements belong to another entity than the company page shows: Yelin Lapidot's four 2023 filings are listed
+# under Atrao Capital Markets, and the statements read from them are Atrao's own (page 18 of report 1559780 is headed "אטראו שוקי הון בע"מ";
+# fee income "הכנסות מעמלות", pretax about NIS 18m a quarter against Yelin's 50m+). Yelin's own 2023 figures come from the 2024 reports'
+# comparative columns. Found by pipeline/check_consistency.py (company page and statements disagreed for Q4'23 pretax).
+OTHER_ENTITY = {"yelin": {1525737, 1545177, 1559780, 1583350}}
 ROWS = []
 RESTATED = {}
 # The lines every insurer prints under some wording: (key, name on screen, sheet, pattern over the caption with "סך הכל" / סה"כ reduced to "סך").

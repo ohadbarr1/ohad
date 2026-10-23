@@ -340,6 +340,12 @@ for key, (label, topic, kind, unit) in XL.items():
             if KIND.get(comp) == "ins" and int(p[:4]) < 2025:
                 fl |= 2  # insurers tagged these periods under IFRS 4, as originally reported
             ch.cell(comp, p2, v / scale, None, None, fl, aux=rid)
+        if kind == "f":  # Q4 as the statements derive it, FY less the printed nine months, where the tag series lands a rounding away (canon_kpi.py)
+            for p, cv in canon.items():
+                if p.endswith("Q4") and f"{p[:4]}FY" in d["periods"]:
+                    fy = canon.get(f"{p[:4]}FY", [vals[d["periods"].index(f"{p[:4]}FY")]])[0]
+                    ch.cell(comp, p, cv[0] / scale, None, None, 1, aux=None, parts=[[f"FY'{p[2:4]}", fy / scale, None, None],
+                                                                                    [f"פחות 9M'{p[2:4]}", (cv[0] - fy) / scale, cv[3], ch.url(f"https://maya.tase.co.il/he/reports/{cv[2]}" if cv[2] else None)]])
     add(f"xbrl:{key}", label + " (XBRL)", topic, "xbrl", unit, kind, ch, note=f"מושג XBRL: {kpi['concepts'].get(key, key)}")
 
 # ---------------------------------------------------------------- lts: lts.json

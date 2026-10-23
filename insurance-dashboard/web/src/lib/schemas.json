@@ -46,8 +46,12 @@
    "schema": "market"
   },
   {
-   "pattern": "csm/facts.json",
+   "pattern": "csm/facts/*.json",
    "schema": "csmFacts"
+  },
+  {
+   "pattern": "csm/summary.json",
+   "schema": "csmSummary"
   },
   {
    "pattern": "csm/capital.json",
@@ -128,6 +132,10 @@
   {
    "pattern": "coverage.json",
    "schema": "coverage"
+  },
+  {
+   "pattern": "consistency.json",
+   "schema": "consistency"
   }
  ],
  "$defs": {
@@ -1138,8 +1146,10 @@
    "type": "object",
    "required": [
     "built",
+    "company",
     "files",
-    "reports"
+    "reports",
+    "resolved"
    ],
    "properties": {
     "built": {
@@ -1158,6 +1168,30 @@
       "items": {
        "$ref": "#/$defs/csmFact"
       }
+     }
+    },
+    "company": {
+     "type": "string"
+    },
+    "resolved": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "$ref": "#/$defs/num"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "number"
+       }
+      ],
+      "minItems": 4
      }
     }
    }
@@ -1921,6 +1955,320 @@
       "type": "array",
       "items": {
        "type": "string"
+      }
+     }
+    }
+   }
+  },
+  "csmSummary": {
+   "type": "object",
+   "required": [
+    "built",
+    "companies",
+    "periods",
+    "files",
+    "resolved"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "companies": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "periods": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "company",
+       "period"
+      ],
+      "properties": {
+       "company": {
+        "type": "string"
+       },
+       "period": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "resolved": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "prefixItems": [
+        {
+         "$ref": "#/$defs/num"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        }
+       ],
+       "minItems": 4
+      }
+     }
+    }
+   }
+  },
+  "consistency": {
+   "type": "object",
+   "required": [
+    "built",
+    "pairs",
+    "passed",
+    "surfaces",
+    "exceptions",
+    "conflicts",
+    "older",
+    "fund_roles"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "window": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "pairs": {
+     "type": "number"
+    },
+    "passed": {
+     "type": "number"
+    },
+    "surfaces": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "metrics": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "by_pair": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "number"
+       }
+      ]
+     }
+    },
+    "exceptions": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "n",
+       "rows"
+      ],
+      "properties": {
+       "n": {
+        "type": "number"
+       },
+       "reason": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "rows": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "entity",
+          "metric",
+          "period",
+          "a",
+          "va",
+          "b",
+          "vb"
+         ],
+         "properties": {
+          "entity": {
+           "type": "string"
+          },
+          "metric": {
+           "type": "string"
+          },
+          "period": {
+           "type": "string"
+          },
+          "a": {
+           "type": "string"
+          },
+          "va": {
+           "type": "number"
+          },
+          "b": {
+           "type": "string"
+          },
+          "vb": {
+           "type": "number"
+          },
+          "diff": {
+           "type": "number"
+          },
+          "reason": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "conflicts": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "entity",
+       "metric",
+       "period",
+       "a",
+       "va",
+       "b",
+       "vb"
+      ],
+      "properties": {
+       "entity": {
+        "type": "string"
+       },
+       "metric": {
+        "type": "string"
+       },
+       "period": {
+        "type": "string"
+       },
+       "a": {
+        "type": "string"
+       },
+       "va": {
+        "type": "number"
+       },
+       "b": {
+        "type": "string"
+       },
+       "vb": {
+        "type": "number"
+       },
+       "diff": {
+        "type": "number"
+       },
+       "reason": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "older": {
+     "type": "number"
+    },
+    "stale_allow": {
+     "type": "array"
+    },
+    "notes": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "fund_roles": {
+     "type": "object",
+     "required": [
+      "n",
+      "bad",
+      "rows"
+     ],
+     "properties": {
+      "n": {
+       "type": "number"
+      },
+      "bad": {
+       "type": "number"
+      },
+      "rows": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "entity",
+         "metric",
+         "period",
+         "xbrl",
+         "page",
+         "ok"
+        ],
+        "properties": {
+         "entity": {
+          "type": "string"
+         },
+         "metric": {
+          "type": "string"
+         },
+         "period": {
+          "type": "string"
+         },
+         "xbrl": {
+          "type": "number"
+         },
+         "page": {
+          "type": "number"
+         },
+         "row": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "alt": {
+          "type": "boolean"
+         },
+         "ok": {
+          "type": "boolean"
+         },
+         "basis": {
+          "type": [
+           "string",
+           "null"
+          ]
+         }
+        }
+       }
       }
      }
     }

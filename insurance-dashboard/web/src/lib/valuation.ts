@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { PriceData, IfrsFact, IfrsData } from './types';
+import type { PriceData, IfrsData } from './types';
 import type { Prov } from './prov';
 import { nf, pubLabel } from './format';
 import { periodTag, type CompanyKpi } from './kpi';
 import { endOf, tag, type Bridge, type Line, type Reports } from './csm';
 import { csmProv, resolveCsmAt, type CsmClose } from './csmResolve';
 import { load } from './useData';
+import { csmFactsPath, type FactsFile } from './csmData';
 
 /* The valuation engine: market inputs (the one place a price enters the site), the shared assumptions, and the models that read
    insurers the way they are priced: justified P/B, residual income, price to equity plus after-tax CSM. Every output is an estimate
@@ -124,33 +125,29 @@ export function residualIncome(a: RiIn): { rows: RiRow[]; sumPv: number; tv: num
 
 /* ---------- CSM: the one rule (csmResolve), at the latest date it resolves ---------- */
 export interface CsmOf { p: string; end: string; close: Line; b: Bridge; prov: (title: string) => Prov; inc: boolean; label: string; cs: CsmClose }
-interface FactsFile { files: IfrsData['files']; reports: Record<string, IfrsFact[]> }
 const QKEY = (p: string) => `${p.slice(0, 4)}${p.endsWith('FY') ? 'Q4' : p.slice(4)}`;
 /** Closing CSM of each company at its latest report date: net of reinsurance, group level, never savings-policy future profit; the fallback
-    (life plus health, gross) is labelled. The same figure the peer table, the CSM ledger and the company page show for that date. */
+    (life plus health, gross) is labelled. The same figure the peer table, the CSM ledger and the company page show for that date.
+    Each company's own CSM file (csm/facts/<id>.json) is read, not the whole industry. */
 export function useCsm(ids: string[], d: IfrsData | null): Map<string, CsmOf | null> {
   const [m, setM] = useState<Map<string, CsmOf | null>>(new Map());
   const key = ids.join();
   useEffect(() => {
     if (!d || !ids.length) return;
     let live = true;
-    load<FactsFile>('csm/facts.json').then((f) => {
-      if (!live) return;
-      const periods = Object.keys(f.reports).sort((a, b) => QKEY(a).localeCompare(QKEY(b)));
-      const out = new Map<string, CsmOf | null>();
-      ids.forEach((id) => {
-        const rs: Reports = periods.map((p) => ({ p, F: tag(f.reports[p].filter((x) => x.c === id), p) })).filter((r) => r.F.length);
-        const own = d.files.filter((x) => x.company === id).map((x) => x.period).sort((a, b) => QKEY(a).localeCompare(QKEY(b)));
-        // the latest report date that resolves; a report that prints no CSM for its own date falls back to the one before
-        const p = [...own].reverse().find((q) => resolveCsmAt(rs, q));
-        const cs = p ? resolveCsmAt(rs, p) : null;
-        if (!p || !cs) { out.set(id, null); return; }
-        const end = endOf(p), w = p.endsWith('FY') ? 'fy' : p.endsWith('Q1') ? 'q' : 'ytd';
-        const b: Bridge = { end, w, scope: cs.scope, b: cs.b, score: 10, open: null, openPrev: false, close: cs.line, steps: [], gap: null };
-        out.set(id, { p, end, close: { ...cs.line, v: cs.v }, b, cs, inc: false, label: cs.label, prov: (title: string) => csmProv(cs, d, title) });
-      });
-      setM(out);
-    }, () => live && setM(new Map(ids.map((id) => [id, null]))));
+    const one = (id: string, f: FactsFile | null): CsmOf | null => {
+      if (!f) return null;
+      const rs: Reports = Object.keys(f.reports).sort((a, b) => QKEY(a).localeCompare(QKEY(b))).map((p) => ({ p, F: tag(f.reports[p].filter((x) => x.c === id), p) })).filter((r) => r.F.length);
+      const own = d.files.filter((x) => x.company === id).map((x) => x.period).sort((a, b) => QKEY(a).localeCompare(QKEY(b)));
+      // the latest report date that resolves; a report that prints no CSM for its own date falls back to the one before
+      const p = [...own].reverse().find((q) => resolveCsmAt(rs, q));
+      const cs = p ? resolveCsmAt(rs, p) : null;
+      if (!p || !cs) return null;
+      const end = endOf(p), w = p.endsWith('FY') ? 'fy' : p.endsWith('Q1') ? 'q' : 'ytd';
+      const b: Bridge = { end, w, scope: cs.scope, b: cs.b, score: 10, open: null, openPrev: false, close: cs.line, steps: [], gap: null };
+      return { p, end, close: { ...cs.line, v: cs.v }, b, cs, inc: false, label: cs.label, prov: (title: string) => csmProv(cs, d, title) };
+    };
+    Promise.all(ids.map((id) => load<FactsFile>(csmFactsPath(id)).catch(() => null))).then((fs) => live && setM(new Map(ids.map((id, i) => [id, one(id, fs[i])]))));
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, d]);
