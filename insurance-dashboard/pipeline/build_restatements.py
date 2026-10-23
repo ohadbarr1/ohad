@@ -3,8 +3,9 @@
 Output: web/public/data/restatements.json
 
 Inputs are the site's own published outputs, so the log never disagrees with the company pages:
-  companies/<id>.json   `restated` of every statements workbook (build_workbook.py): the first print and the latest print of a
-                        period on the primary statements (balance sheet, P&L, comprehensive income, cash flows), each with its page
+  facts/<id>.json       the fact table with vintage (build_facts.py): every print of every cell of the primary statements (balance
+                        sheet, P&L, comprehensive income, cash flows) with its report and page; the pair is the first print against
+                        the latest print of the cell (docs/FACTS.md, migration step 2: formerly the workbooks' `restated` lists)
   ifrs_<period>.json    IFRS 17 note facts per report (build_ifrs.py): the same fact (company, metric, segment, basis, window, date)
                         printed by two reports with two values; a fact counts only where each report prints it once, from a table
   search/docs.json      the document registry: MAYA report id -> type, period, publication date (the reader opens /doc/<id>?page=N)
@@ -38,7 +39,7 @@ INSURERS = ["phoenix", "harel", "migdal", "clal", "menora", "ayalon", "hachshara
 Q_OF = {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "FY"}
 REPORTS = ["2025Q1", "2025Q2", "2025Q3", "2025FY", "2026Q1", "2026Q2"]  # ifrs_<period>.json, oldest first
 RATIO = re.compile(r"ratio|_pct|roe|payout|yield|rate")
-PROFIT = ["סך הכל רווח נקי", "רווח לתקופה", "רווח נקי", "רווח נקי (הפסד)", "רווח (הפסד) לתקופה", "רווח (הפסד) נקי", "רווח לשנה", "רווח (הפסד) לשנה", "רווח (הפסד) לתקופה המיוחס לבעלי המניות של החברה"]
+PROFIT = ["סך הכל רווח נקי", "רווח לתקופה", "רווח נקי", "רווח נקי (הפסד)", "רווח (הפסד) לתקופה", "רווח (הפסד) נקי", "רווח לשנה", "רווח (הפסד) לשנה", "רווח (הפסד) לתקופה המיוחס לבעלי המניות של החברה", "הפסד נקי לתקופה"]
 BASIS_HE = {"net": "בשייר", "gross": "ברוטו", "reinsurance": "ביטוח משנה"}
 
 
@@ -80,6 +81,38 @@ def rid_of(url):
     return int(m.group(1)) if m else None
 
 
+def statement_pairs(F):
+    """The restatement pairs of one company's fact table (facts/<id>.json, docs/FACTS.md migration step 2), on the primary statements:
+    per cell, the first print (the period's own report, else the earliest that printed it) against the latest print, both as printed
+    (a print turned to the latest sign convention, flag 4, is turned back), kept when the two are plausibly the same line (same sign and
+    within a factor of two, or the sign alone flipped) and differ by more than 1.5 (the rule build_workbook.py applies). Derived figures are
+    not prints; the IFRS 4 prints an IFRS 17 line carries for its early years (flag 2) are its IFRS 4 line's, counted there.
+    Yields (sheet, standard, line, unit, period type, period end, v0, report 0, page 0, v1, report 1, page 1, season of report 1, flag 8)."""
+    L, R, V = F["lines"], F["rows"], F["vint"]
+    sk = lambda t: (V["per"][t][:4], V["per"][t][4:].replace("FY", "Q4"))
+    start = 0
+    for li, n in enumerate(L["n"]):
+        sheet = F["sheets"][L["sh"][li]]
+        rr, start = range(start, start + n), start + n
+        if sheet not in STMT:
+            continue
+        cells = collections.defaultdict(list)
+        for k in rr:
+            if not (R["f"][k] & 1 or (L["std"][li] == "17" and R["f"][k] & 2)):
+                cells[R["p"][k]].append(k)
+        for p, ks in cells.items():
+            pt, pe = F["periods"][p]
+            if pt == "9M" or len(ks) < 2:
+                continue
+            raw = lambda k: -R["v"][k] if R["f"][k] & 4 else R["v"][k]
+            first = min(ks, key=lambda k: (bool(R["f"][k] & 128), sk(R["t"][k])))
+            last = max(ks, key=lambda k: sk(R["t"][k]))
+            a, b = raw(first), raw(last)
+            if abs(a - b) > 1.5 and a and b and ((a * b > 0 and 0.5 <= b / a <= 2) or abs(a + b) < 0.5):
+                yield (sheet, "IFRS " + (L["std"][li] or "4"), L["label"][li], L["u"][li], pt, pe, a, V["rid"][R["t"][first]], R["pg"][first],
+                       b, V["rid"][R["t"][last]], R["pg"][last], V["per"][R["t"][last]], any(R["f"][k] & 24 == 24 for k in ks))
+
+
 def build():
     docs_file = json.loads((DATA / "search" / "docs.json").read_text(encoding="utf-8"))
     docs = {r[0]: r for r in docs_file["docs"]}
@@ -88,37 +121,21 @@ def build():
     kind = {c["id"]: ("ins" if c["kind"] == "insurance_group" else "fund") for c in index}
     rows, seen_docs, qa = [], set(), collections.Counter()
 
-    # ---------- the primary statements: the workbooks' first-vs-latest pairs ----------
+    # ---------- the primary statements: first print vs latest print of every cell of the fact table ----------
     for c in index:
-        f = DATA / "companies" / f"{c['id']}.json"
+        f = DATA / "facts" / f"{c['id']}.json"
         if not f.exists():
             continue
-        d = json.loads(f.read_text(encoding="utf-8"))
-        urls = d.get("urls") or []
-        unit_of = {(m["sheet"], m["label"]): m["unit"] for m in d["metrics"]}
-        # flag 8 on the latest cell: the workbook's own judgement that the period was restated
-        mi_of = collections.defaultdict(list)
-        for i, m in enumerate(d["metrics"]):
-            mi_of[(m["sheet"], m["label"])].append(i)
-        pi_of = {(p["type"], p["end"]): i for i, p in enumerate(d["periods"])}
-        flags = {(x[0], x[1]): (x[5] if len(x) > 5 else 0) for x in d["facts"]}
-        for r in d.get("restated") or []:
-            sheet, std, line, pt, pe, v0, p0, u0, v1, p1, u1, own = r
-            if pt == "9M" or sheet not in STMT:
-                continue
-            unit = unit_of.get((sheet, line), "nis" if "למניה" in line else "k")
+        for sheet, std, line, unit, pt, pe, v0, d0, p0, v1, d1, p1, season, flag8 in statement_pairs(json.loads(f.read_text(encoding="utf-8"))):
             qa["pairs"] += 1
             if abs(v1 - v0) <= tol(v0, v1, unit):
                 qa["rounding"] += 1
                 continue
             sign = abs(v0 + v1) <= tol(v0, v1, unit)
-            d0, d1 = rid_of(urls[u0] if u0 is not None else None), rid_of(urls[u1] if u1 is not None else None)
             seen_docs.update(x for x in (d0, d1) if x)
-            season = season_of(own)
             if d1 in docs and docs[d1][3] != season:
                 qa["season_vs_doc"] += 1
-            pi = pi_of.get((pt, pe))
-            if not sign and pi is not None and any(flags.get((mi, pi), 0) & 8 for mi in mi_of.get((sheet, line), [])):
+            if not sign and flag8:
                 qa["flag8"] += 1
             rows.append([c["id"], STMT[sheet], line, "", pt, pe, unit, v0, d0, p0, v1, d1, p1, season, 1 if sign else 0, std])
 
@@ -167,7 +184,11 @@ def build():
 
     # one figure, one row: a line printed twice in a statement, or repeated by the next statement (net profit opens the comprehensive
     # income statement and the cash-flow statement), is the same restatement; it is kept under the first statement that prints it
+    # (of two prints of one figure, the widest pair stands: the earliest first print, then the latest re-print)
     prio = {"pl": 0, "bs": 1, "oci": 2, "eq": 3, "cf": 4, "n17": 5}
+    sk = lambda s: (s[:4], s[4:].replace("FY", "Q4")) if s else ("9999", "")
+    rows.sort(key=lambda r: sk(r[13]), reverse=True)
+    rows.sort(key=lambda r: sk(docs[r[8]][3] if r[8] in docs else None))
     rows.sort(key=lambda r: prio[r[1]])
     keep, seen = [], set()
     for r in rows:

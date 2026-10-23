@@ -10,11 +10,19 @@ print by more than rounding (`restated` keeps both, with their pages).
 A period printed by several reports takes its figure from the LATEST report that prints it (one vintage per row, so quarters add up to the
 half-year and nine months), unless the two prints are not plausibly the same line (opposite sign or more than a factor of two apart),
 when the first print stands. Units: "k" = NIS thousands, "nis" = NIS per share, "shares" = number of shares (never rescaled), "pct" = %.
+
+merge() is the extraction merge and writes nothing: it keeps every print of every cell beside the one it picks, and pipeline/build_facts.py
+builds the fact table from it and writes companies/<id>.json, search/rows.json and lines.json FROM the table (docs/FACTS.md, step 1).
+`python3 pipeline/build_workbook.py` runs that whole build (the same as `python3 pipeline/build_facts.py`).
 """
 import collections
 import csv
 import json
+import os
+import queue
 import re
+import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -196,7 +204,109 @@ BIDI = re.compile(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]")
 PLACEHOLDERS = collections.Counter()
 
 
+# ---- what the fact table needs from the merge (pipeline/build_facts.py): every print of every cell, kept beside the one picked ----
+# cell tuple: (value, page, url, flags[, prints | derivation]); prints = ((report period end, value, page, url, step, plausible[, 4 if turned]), ...)
+CAPS = {}  # (company, statement, standard, row key) -> every caption the row was printed under (and the captions of rows joined into it)
+META = {}  # company -> {metric index: ("st", statement, standard, row key) | ("se", m, s, g, b)}
+XFACTS = {}  # company -> {fact index: prints | ("D", op, year, part) | ("S", period, series cell) | None}
+
+
+def _prints(prints, pick):
+    """Every print of one cell, oldest report first: (report period end, value, page, url, step, plausible). A print is plausible when it can
+    be the same line as the picked one: the rule applied between the first and the latest print (same sign and within a factor of two, a
+    pure change of sign, or equal within the rounding of the two prints)."""
+    b, sb = pick[1], pick[4]
+    out = []
+    for c in sorted(prints, key=lambda c: (c[0][1], c[2] or 0)):
+        a, sa = c[1], c[4]
+        tol = 0.5 * (sa + sb) + 0.5 * min(sa, sb)
+        ok = abs(a - b) <= tol or bool(a and b and ((a * b > 0 and 0.5 <= b / a <= 2) or abs(a + b) <= tol))
+        out.append((c[0][1], a, c[2], c[3], c[4], ok))
+    return tuple(out)
+
+
+def _join(cells, keep, drop):
+    """Before two rows are joined: where both print a period, the kept row's cell stands and the dropped row's prints join its list, so a
+    period first printed under the old wording keeps that first print."""
+    a, b = cells.get(keep, {}), cells.get(drop, {})
+    for pk in set(a) & set(b):
+        ca, cb = a[pk], b[pk]
+        if len(ca) > 4 and len(cb) > 4 and ca[4] and cb[4] and ca[4][0] != "D" and cb[4][0] != "D":
+            have = {(q[0], q[3], q[2], q[1]) for q in ca[4]}
+            more = tuple(q for q in cb[4] if (q[0], q[3], q[2], q[1]) not in have)
+            a[pk] = ca[:4] + (tuple(sorted(ca[4] + more, key=lambda q: (q[0], q[2] or 0))),) + ca[5:]
+
+
+def _merge_caps(comp, stmt, std, keep, drop):
+    """Two rows joined into one (a reworded or renamed line): the kept row inherits the captions of the dropped one."""
+    CAPS.setdefault((comp, stmt, std, keep), set()).update(CAPS.pop((comp, stmt, std, drop), set()))
+
+
+def _turn(prints, when):
+    """Prints of reports before the change of presentation, turned to the latest sign (the cell itself is turned the same way)."""
+    return tuple((r, -v, p, u, s, ok, 4) if r < when else (r, v, p, u, s, ok, 0) for r, v, p, u, s, ok, *_ in prints)
+
+
+# The caption of an unlabeled row is read from the page text on the Drive folder. Page texts never change once split, so the answers are
+# cached; a page that cannot be read in FOX_DRIVE_WAIT seconds (Drive streaming stalled) is replayed from the published workbook: the row
+# whose figures were printed on that page of that report with the same values (counted in REPLAYED and printed by the build).
+CAPTION_CACHE = Path(os.environ.get("FOX_CACHE", Path.home() / ".cache" / "fox")) / "captions.json"
+DRIVE_WAIT = float(os.environ.get("FOX_DRIVE_WAIT", "4"))
+_CAPTIONS = {}
+REPLAYED = []
+_PUB = {}
+
+
+def _published(comp):
+    """The published workbook's statement figures of one company, by (url, page): {value: [labels]} (for replaying a caption)."""
+    if comp not in _PUB:
+        f = DATA / "companies" / f"{comp}.json"
+        idx = {}
+        if f.exists():
+            d = json.loads(f.read_text(encoding="utf-8"))
+            urls, M = d.get("urls") or [], d["metrics"]
+            for x in d["facts"]:
+                m = M[x[0]]
+                if not m["sheet"].startswith("X.") or len(x) < 5 or x[4] is None:
+                    continue
+                idx.setdefault((urls[x[4]], x[3]), {}).setdefault(x[2], []).append(m["label"])
+        _PUB[comp] = idx
+    return _PUB[comp]
+
+
+def _replay(comp, stem, page, values):
+    f = ROOT / "data" / "extracted_fs" / comp / f"{stem}.json"
+    try:
+        rid = json.loads(f.read_text(encoding="utf-8")).get("report_id_he")
+    except (OSError, ValueError):
+        return None
+    vals = _published(comp).get((PDF.get(rid), page), {})
+    score = {}
+    for v in (v for v in values if isinstance(v, (int, float))):
+        for mult in (1, 1000):
+            for lab in vals.get(v * mult, []):
+                score[lab] = score.get(lab, 0) + 1
+    if not score:
+        return None
+    best = sorted(score.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+    return "" if best == "סך הכול" else best
+
+
 def page_caption(comp, stem, doc, page, values):
+    key = json.dumps([comp, stem, doc, page, [v for v in values if isinstance(v, (int, float))]], ensure_ascii=False)
+    if key in _CAPTIONS:
+        return _CAPTIONS[key]
+    box = queue.Queue()
+    threading.Thread(target=lambda: box.put(_page_caption(comp, stem, doc, page, values)), daemon=True).start()
+    try:
+        _CAPTIONS[key] = box.get(timeout=DRIVE_WAIT)
+        return _CAPTIONS[key]
+    except queue.Empty:
+        REPLAYED.append(key)
+        return _replay(comp, stem, page, values)
+
+
+def _page_caption(comp, stem, doc, page, values):
     """The caption printed on the same line as the figures, read from the page text (data/work/<company>_<period>/<doc>/pNNN.txt).
     Returns None when the page text is missing or the line cannot be told apart (the row is then dropped), "" when the page prints the
     figures with no caption at all (an unlabeled sum), or the caption."""
@@ -271,6 +381,7 @@ def statements(comp):
                                  "eps": per_share and not r.get("header") and "מספר" not in raw and not shares, "shares": shares}
                     order.insert(order.index(prev) + 1 if prev in order else 0, key)
                 prev = key
+                CAPS.setdefault((comp, st["statement"], d.get("standard") or "IFRS 4", key), set()).add(" ".join(r["label"].split()))
                 # a share count is stored in shares: printed in thousands when the caption says so ("באלפים") or, as the statements of a
                 # company with tens of millions of shares print it, when the figure is below a million; never scaled by the money unit
                 big = max([abs(v) for v in r.get("values") or [] if isinstance(v, (int, float))] or [0])
@@ -306,13 +417,17 @@ def statements(comp):
                 restated = pick is latest and abs(a - b) > tol and abs(a + b) > tol
                 source[(key, pk)] = pick[0][1]
                 printed[(key, pk)] = by[pk]
-                by[pk] = (pick[1], pick[2], pick[3], 8 if restated else 0)
+                by[pk] = (pick[1], pick[2], pick[3], 8 if restated else 0, _prints(by[pk], pick))
         # A line whose sign convention changed (interest paid shown positive, later in brackets) reads in the latest convention throughout:
         # figures taken from reports before the change are turned, and flagged (4), so a series does not flip half way.
         for key, when in turned.items():
             for pk, c in cells.get(key, {}).items():
                 if source[(key, pk)] < min(when):
-                    cells[key][pk] = (-c[0], c[1], c[2], (c[3] if len(c) > 3 else 0) | 4)
+                    cells[key][pk] = (-c[0], c[1], c[2], (c[3] if len(c) > 3 else 0) | 4) + tuple(c[4:])
+        for key, when in turned.items():
+            for pk, c in cells.get(key, {}).items():
+                if len(c) > 4:
+                    cells[key][pk] = c[:4] + (_turn(c[4], min(when)),)
         # A line printed as "הכנסות (הוצאות) אחרות" in one report and "הוצאות אחרות" in another is one line:
         # the bracketed wording and the plain alternative are joined, under the newest wording.
         for key in list(order):
@@ -324,7 +439,7 @@ def statements(comp):
                 continue
             # where a later report reprints an earlier period under the new wording, the newest wording's figure stands
             keep, drop = (key, twin) if order.index(key) < order.index(twin) else (twin, key)
-            cells[keep] = {**cells.pop(drop, {}), **cells.get(keep, {})}
+            _join(cells, keep, drop); cells[keep] = {**cells.pop(drop, {}), **cells.get(keep, {})}; _merge_caps(comp, stmt, std, keep, drop)
             order.remove(drop)
             del meta[drop]
         # A line the company renamed: the old name and the new name print the same figures wherever a later report repeats an earlier
@@ -344,7 +459,7 @@ def statements(comp):
                     # ever print different figures for one period, which is what marks a caption the statement really repeats
                     same_name = a[1] == b[1] and agree and bool(ca) and bool(cb)
                     if same_name or (((renamed and a[0] == b[0]) or len(both) >= 3) and agree and any(abs(ca[p][0]) > 0.6 for p in both)):
-                        cells[a] = {**cb, **ca}
+                        _join(cells, a, b); cells[a] = {**cb, **ca}; _merge_caps(comp, stmt, std, a, b)
                         cells.pop(b, None)
                         order.remove(b)
                         del meta[b]
@@ -360,7 +475,7 @@ def statements(comp):
                     both = set(ca) & set(cb)
                     if min(len(ca), len(cb)) >= 4 and len(both) <= 0.25 * min(len(ca), len(cb)) and all(abs(ca[p][0] - cb[p][0]) < 0.6 for p in both):
                         keep, drop = (a, b) if max(e for _, e in ca) >= max(e for _, e in cb) else (b, a)  # under the newer section
-                        cells[keep] = {**cells.pop(drop, {}), **cells.get(keep, {})}
+                        _join(cells, keep, drop); cells[keep] = {**cells.pop(drop, {}), **cells.get(keep, {})}; _merge_caps(comp, stmt, std, keep, drop)
                         order.remove(drop)
                         del meta[drop]
         if stmt == "balance":
@@ -388,11 +503,11 @@ def statements(comp):
                 n9 = by.get(p9)
                 if typ == "FY" and n9 and ("Q", date) not in by:
                     year = same_print(key, (typ, date), p9) or (fy[0], fy[1], fy[2])  # the year as printed by the nine months' own report
-                    by[("Q", date)] = (round(year[0] - n9[0], 3), year[1], year[2], 1)
+                    by[("Q", date)] = (round(year[0] - n9[0], 3), year[1], year[2], 1, ("D", "FY-9M", (typ, date, year[0], year[2]), ("9M", p9[1], n9[0], n9[2])))
                 h1 = by.get(ph)
                 if typ == "FY" and h1 and ("H", date) not in by:  # the second half, likewise: the year less the first half
                     year = same_print(key, (typ, date), ph) or (fy[0], fy[1], fy[2])
-                    by[("H", date)] = (round(year[0] - h1[0], 3), year[1], year[2], 1)
+                    by[("H", date)] = (round(year[0] - h1[0], 3), year[1], year[2], 1, ("D", "FY-H1", (typ, date, year[0], year[2]), ("H", ph[1], h1[0], h1[2])))
     return out
 
 
@@ -401,8 +516,8 @@ def statements(comp):
 # fee income "הכנסות מעמלות", pretax about NIS 18m a quarter against Yelin's 50m+). Yelin's own 2023 figures come from the 2024 reports'
 # comparative columns. Found by pipeline/check_consistency.py (company page and statements disagreed for Q4'23 pretax).
 OTHER_ENTITY = {"yelin": {1525737, 1545177, 1559780, 1583350}}
-ROWS = []
 RESTATED = {}
+ROLE_MI = {}  # company -> {role: metric index}
 # The lines every insurer prints under some wording: (key, name on screen, sheet, pattern over the caption with "סך הכל" / סה"כ reduced to "סך").
 # The first matching line of a sheet is taken: the IFRS 17 section comes first, and its common lines already run back through IFRS 4.
 ROLES = [
@@ -436,8 +551,6 @@ ROLES = [
     ("cff", "מזומנים נטו מפעילות מימון", "X.תזרים_מזומנים", r"מזומנים נטו.*(מ|ל)פעילות מימון"),
     ("div_paid", "דיבידנד ששולם", "X.תזרים_מזומנים", r"^דיבידנד (ששולם|לבעלי)"),
 ]
-LINES = {"roles": [[k, n, sh] for k, n, sh, _ in ROLES], "periods": [], "urls": [], "data": {k: {} for k, *_ in ROLES}}
-_lp, _lu = {}, {}
 
 
 def caption(t):
@@ -448,157 +561,218 @@ registry = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(
 names = {c["id"]: c["name_he"] for c in (registry if isinstance(registry, list) else registry.get("companies", []))}
 # every company with extracted lines (the series of the insurers) or with full statements (insurers and fund houses)
 COMPANIES = sorted({f.stem for f in (DATA / "series").glob("*.json") if f.stem != "index"} | {p.name for p in (ROOT / "data" / "extracted_fs").iterdir() if p.is_dir() and any(p.glob("*.json"))})
-for comp in COMPANIES:
-    sf = DATA / "series" / f"{comp}.json"
-    series = json.loads(sf.read_text(encoding="utf-8")) if sf.exists() else {"rows": []}
-    base_f = ROOT / "data" / "workbook_base" / f"{comp}.json"  # the spreadsheet-based workbook, kept aside so this script can be rerun
-    live_f = DATA / "companies" / f"{comp}.json"
-    if comp == "phoenix" and not base_f.exists() and live_f.exists():
-        base_f.write_text(live_f.read_text(encoding="utf-8"), encoding="utf-8")
-    base = json.loads(base_f.read_text(encoding="utf-8")) if base_f.exists() else None
-    d = base or {"company": comp, "sources": [], "groups": {}, "sheets": [], "periods": [], "metrics": [], "facts": [], "stats": {}}
-    d["groups"] = {**GROUP_LABELS, **d.get("groups", {})}
-    for m in d["metrics"]:  # the published spreadsheet tags a sum the report prints without a caption, and describes it: keep the description
-        if m["label"].startswith("[ללא כותרת בדוח]"):
-            m["label"], m["total"] = m["label"][len("[ללא כותרת בדוח]"):].strip(), True
-    urls, uidx = [], {}
-    pidx = {p["id"]: i for i, p in enumerate(d["periods"])}
 
-    def period(per, flow):
-        typ = "FY" if per.endswith("FY") else ("Q" if flow else "I")
-        end = f"{per[:4]}-{END[per[4:]]}"
-        pid = f"{typ}{end}"
-        if pid not in pidx:
-            pidx[pid] = len(d["periods"])
-            d["periods"].append({"id": pid, "label": pid, "type": typ, "end": end, "months": {"FY": 12, "Q": 3, "I": 0}[typ]})
-        return pidx[pid]
 
-    def pid(typ, end):
-        k = f"{typ}{end}"
-        if k not in pidx:
-            pidx[k] = len(d["periods"])
-            d["periods"].append({"id": k, "label": k, "type": typ, "end": end, "months": {"FY": 12, "Q": 3, "H": 6, "9M": 9, "I": 0}[typ]})
-        return pidx[k]
+def merge(log=print):
+    """The extraction merge: every company's workbook as the site serves it ({company: workbook}), with what the fact table needs kept
+    beside it in CAPS, META and XFACTS (every print of every statement cell, derivation inputs, captions). Writes nothing:
+    pipeline/build_facts.py builds the fact table from it and writes companies/<id>.json from the table (docs/FACTS.md, migration step 1)."""
+    for x in (CAPS, META, XFACTS, RESTATED, ROLE_MI, PLACEHOLDERS):
+        x.clear()
+    del REPLAYED[:]
+    try:
+        _CAPTIONS.update(json.loads(CAPTION_CACHE.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        pass
+    n0 = len(_CAPTIONS)
+    wbs = {}
+    for comp in COMPANIES:
+        sf = DATA / "series" / f"{comp}.json"
+        series = json.loads(sf.read_text(encoding="utf-8")) if sf.exists() else {"rows": []}
+        base_f = ROOT / "data" / "workbook_base" / f"{comp}.json"  # the spreadsheet-based workbook, kept aside so this script can be rerun
+        live_f = DATA / "companies" / f"{comp}.json"
+        if comp == "phoenix" and not base_f.exists() and live_f.exists():
+            base_f.write_text(live_f.read_text(encoding="utf-8"), encoding="utf-8")
+        base = json.loads(base_f.read_text(encoding="utf-8")) if base_f.exists() else None
+        d = base or {"company": comp, "sources": [], "groups": {}, "sheets": [], "periods": [], "metrics": [], "facts": [], "stats": {}}
+        d["groups"] = {**GROUP_LABELS, **d.get("groups", {})}
+        for m in d["metrics"]:  # the published spreadsheet tags a sum the report prints without a caption, and describes it: keep the description
+            if m["label"].startswith("[ללא כותרת בדוח]"):
+                m["label"], m["total"] = m["label"][len("[ללא כותרת בדוח]"):].strip(), True
+        urls, uidx = [], {}
+        pidx = {p["id"]: i for i, p in enumerate(d["periods"])}
 
-    fs = statements(comp)
-    for stmt, (grp, title) in STATEMENTS.items():
-        parts = [(std, fs[(stmt, std)]) for std in ("IFRS 17", "IFRS 4") if (stmt, std) in fs]
-        if not parts:
-            continue
-        code = f"X.{title.replace(' ', '_')}"
-        d["sheets"].append({"code": code, "entity": "F", "title": title, "pages": "", "group": grp})
-        if not any(s["entity"] == "F" for s in d["sources"]):
-            d["sources"].append({"entity": "F", "name": ENTITY_NAMES["F"], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
-        if len(parts) == 2:
-            # a row that exists once under each standard with the same name (profit for the period, taxes, total assets, equity) is one line:
-            # the periods before the IFRS 17 comparatives are filled from the IFRS 4 statement as originally reported, and marked
-            (o17, m17, c17), (o4, m4, c4) = parts[0][1], parts[1][1]
+        def period(per, flow):
+            typ = "FY" if per.endswith("FY") else ("Q" if flow else "I")
+            end = f"{per[:4]}-{END[per[4:]]}"
+            pid = f"{typ}{end}"
+            if pid not in pidx:
+                pidx[pid] = len(d["periods"])
+                d["periods"].append({"id": pid, "label": pid, "type": typ, "end": end, "months": {"FY": 12, "Q": 3, "I": 0}[typ]})
+            return pidx[pid]
 
-            def nth(order, meta):
-                """(name, ordinal among the rows of that name) -> row; and how many rows carry each name"""
-                seen, out = {}, {}
-                for k in order:
-                    if not meta[k]["header"]:
-                        seen[k[1]] = seen.get(k[1], 0) + 1
-                        out[(k[1], seen[k[1]])] = k
-                return out, seen
+        def pid(typ, end):
+            k = f"{typ}{end}"
+            if k not in pidx:
+                pidx[k] = len(d["periods"])
+                d["periods"].append({"id": k, "label": k, "type": typ, "end": end, "months": {"FY": 12, "Q": 3, "H": 6, "9M": 9, "I": 0}[typ]})
+            return pidx[k]
 
-            (new, n17), (old, n4) = nth(o17, m17), nth(o4, m4)
-            # the same name the same number of times in both statements; the bottom lines of the income statement by their first appearance
-            bottom = {norm(x) for x in ("רווח לתקופה", "בעלי המניות של החברה", "זכויות שאינן מקנות שליטה", "סך הכל הכנסות", "סך הכל הוצאות")} if stmt == "income" else set()
-            new = {k: v for k, v in new.items() if n17[k[0]] == n4.get(k[0]) or (k[0] in bottom and k[1] == 1 and k in old)}
-            for lab in new.keys() & old.keys():
-                have = c17.setdefault(new[lab], {})
-                for pk, c in c4.get(old[lab], {}).items():
-                    if pk not in have:
-                        have[pk] = (c[0], c[1], c[2], (c[3] if len(c) > 3 else 0) | 2)
-        n = 0
-        for std, (order, meta, cells) in parts:
-            if len(parts) > 1:
-                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": STD_NOTE[std], "unit": "k", "header": True, "order": n, "std": True})
-                n += 1
-            for key in order:
-                m, mi = meta[key], len(d["metrics"])
-                unit = "shares" if m.get("shares") else "nis" if (m.get("eps") or "למניה" in m["label"]) and "מספר" not in m["label"] else "k"
-                d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": unit, "header": m["header"], "order": n, **({"total": True} if m["total"] else {})})
-                n += 1
-                for (typ, date), c in cells.get(key, {}).items():
-                    v, page, u = c[0], c[1], c[2]
+        fs = statements(comp)
+        for stmt, (grp, title) in STATEMENTS.items():
+            parts = [(std, fs[(stmt, std)]) for std in ("IFRS 17", "IFRS 4") if (stmt, std) in fs]
+            if not parts:
+                continue
+            code = f"X.{title.replace(' ', '_')}"
+            d["sheets"].append({"code": code, "entity": "F", "title": title, "pages": "", "group": grp})
+            if not any(s["entity"] == "F" for s in d["sources"]):
+                d["sources"].append({"entity": "F", "name": ENTITY_NAMES["F"], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
+            if len(parts) == 2:
+                # a row that exists once under each standard with the same name (profit for the period, taxes, total assets, equity) is one line:
+                # the periods before the IFRS 17 comparatives are filled from the IFRS 4 statement as originally reported, and marked
+                (o17, m17, c17), (o4, m4, c4) = parts[0][1], parts[1][1]
+
+                def nth(order, meta):
+                    """(name, ordinal among the rows of that name) -> row; and how many rows carry each name"""
+                    seen, out = {}, {}
+                    for k in order:
+                        if not meta[k]["header"]:
+                            seen[k[1]] = seen.get(k[1], 0) + 1
+                            out[(k[1], seen[k[1]])] = k
+                    return out, seen
+
+                (new, n17), (old, n4) = nth(o17, m17), nth(o4, m4)
+                # the same name the same number of times in both statements; the bottom lines of the income statement by their first appearance
+                bottom = {norm(x) for x in ("רווח לתקופה", "בעלי המניות של החברה", "זכויות שאינן מקנות שליטה", "סך הכל הכנסות", "סך הכל הוצאות")} if stmt == "income" else set()
+                new = {k: v for k, v in new.items() if n17[k[0]] == n4.get(k[0]) or (k[0] in bottom and k[1] == 1 and k in old)}
+                for lab in new.keys() & old.keys():
+                    have = c17.setdefault(new[lab], {})
+                    for pk, c in c4.get(old[lab], {}).items():
+                        if pk not in have:
+                            have[pk] = (c[0], c[1], c[2], (c[3] if len(c) > 3 else 0) | 2) + tuple(c[4:])
+            n = 0
+            for std, (order, meta, cells) in parts:
+                if len(parts) > 1:
+                    d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": STD_NOTE[std], "unit": "k", "header": True, "order": n, "std": True})
+                    n += 1
+                for key in order:
+                    m, mi = meta[key], len(d["metrics"])
+                    unit = "shares" if m.get("shares") else "nis" if (m.get("eps") or "למניה" in m["label"]) and "מספר" not in m["label"] else "k"
+                    d["metrics"].append({"entity": "F", "sheet": code, "group": grp, "label": m["label"], "unit": unit, "header": m["header"], "order": n, **({"total": True} if m["total"] else {})}); META.setdefault(comp, {})[mi] = ("st", stmt, std, key)
+                    n += 1
+                    for (typ, date), c in cells.get(key, {}).items():
+                        v, page, u = c[0], c[1], c[2]
+                        if u and u not in uidx:
+                            uidx[u] = len(urls)
+                            urls.append(u)
+                        d["facts"].append([mi, pid(typ, date), v, page, uidx.get(u) if u else None] + ([c[3]] if len(c) > 3 and c[3] else [])); XFACTS.setdefault(comp, {})[len(d["facts"]) - 1] = c[4] if len(c) > 4 else None
+
+        by_g = {}
+        for r in series["rows"]:
+            by_g.setdefault(r["g"], []).append(r)
+        for g, rows in by_g.items():
+            ent, grp, title = GROUPS.get(g, ("F", "other", g))
+            code = f"X.{title.replace(' ', '_')}"  # X marks a sheet built from the periodic reports, 2021 onward
+            d["sheets"].append({"code": code, "entity": ent, "title": title, "pages": "", "group": grp})
+            if not any(s["entity"] == ent for s in d["sources"]):
+                d["sources"].append({"entity": ent, "name": ENTITY_NAMES[ent], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
+            for order, r in enumerate(rows):
+                flow = not STOCK.match(r["m"])
+                dim = " · ".join(x for x in (seg_he(r["s"].split(":", 1)[1].strip() if ":" in r["s"] else r["s"]) if r["s"] != r["g"] else "", BASIS.get(r["b"], "")) if x)
+                mi = len(d["metrics"])
+                pct = is_pct(r["m"])
+                d["metrics"].append({"entity": ent, "sheet": code, "group": grp, "label": name(r["m"]), "dim": dim, "unit": "pct" if pct else "k", "header": False, "order": order}); META.setdefault(comp, {})[mi] = ("se", r["m"], r["s"], r["g"], r["b"])
+                for per, c in r["vals"].items():
+                    if per.endswith("FY") and not flow:
+                        continue  # a balance at year-end is already the Q4 column
+                    if c.get("der") and (pct or not flow):
+                        continue  # a ratio or a balance has no "year less nine months"
+                    u = c.get("u")
                     if u and u not in uidx:
                         uidx[u] = len(urls)
                         urls.append(u)
-                    d["facts"].append([mi, pid(typ, date), v, page, uidx.get(u) if u else None] + ([c[3]] if len(c) > 3 and c[3] else []))
+                    d["facts"].append([mi, period(per, flow), c["v"] if pct else round(c["v"] * 1000, 3), c.get("pg"), uidx.get(u) if u else None] + ([1] if c.get("der") else [])); XFACTS.setdefault(comp, {})[len(d["facts"]) - 1] = ("S", per, c)
+        def uix(u):
+            if u and u not in uidx:
+                uidx[u] = len(urls)
+                urls.append(u)
+            return uidx.get(u) if u else None
 
-    by_g = {}
-    for r in series["rows"]:
-        by_g.setdefault(r["g"], []).append(r)
-    for g, rows in by_g.items():
-        ent, grp, title = GROUPS.get(g, ("F", "other", g))
-        code = f"X.{title.replace(' ', '_')}"  # X marks a sheet built from the periodic reports, 2021 onward
-        d["sheets"].append({"code": code, "entity": ent, "title": title, "pages": "", "group": grp})
-        if not any(s["entity"] == ent for s in d["sources"]):
-            d["sources"].append({"entity": ent, "name": ENTITY_NAMES[ent], "doc": "הדוחות התקופתיים של " + names.get(comp, comp), "url": None, "pages": None})
-        for order, r in enumerate(rows):
-            flow = not STOCK.match(r["m"])
-            dim = " · ".join(x for x in (seg_he(r["s"].split(":", 1)[1].strip() if ":" in r["s"] else r["s"]) if r["s"] != r["g"] else "", BASIS.get(r["b"], "")) if x)
-            mi = len(d["metrics"])
-            pct = is_pct(r["m"])
-            d["metrics"].append({"entity": ent, "sheet": code, "group": grp, "label": name(r["m"]), "dim": dim, "unit": "pct" if pct else "k", "header": False, "order": order})
-            for per, c in r["vals"].items():
-                if per.endswith("FY") and not flow:
-                    continue  # a balance at year-end is already the Q4 column
-                if c.get("der") and (pct or not flow):
-                    continue  # a ratio or a balance has no "year less nine months"
-                u = c.get("u")
-                if u and u not in uidx:
-                    uidx[u] = len(urls)
-                    urls.append(u)
-                d["facts"].append([mi, period(per, flow), c["v"] if pct else round(c["v"] * 1000, 3), c.get("pg"), uidx.get(u) if u else None] + ([1] if c.get("der") else []))
-    def uix(u):
-        if u and u not in uidx:
-            uidx[u] = len(urls)
-            urls.append(u)
-        return uidx.get(u) if u else None
-
-    # [sheet, standard, line, period type, period end, as first reported, page, url, as last printed, page, url, period end of the report that reprinted it]
-    d["restated"] = [[r[0], r[1], r[2], r[3], r[4], r[5], r[6], uix(r[7]), r[8], r[9], uix(r[10]), r[11]] for r in RESTATED.get(comp, []) if r[3] != "9M"]
-    d["urls"] = urls
-    # search index: every line of the sheets built from the reports, once per sheet and wording
-    seen = set()
-    for i, m in enumerate(d["metrics"]):
-        if not m["header"] and m["sheet"].startswith("X.") and (m["sheet"], m["label"], m.get("dim")) not in seen:
-            seen.add((m["sheet"], m["label"], m.get("dim")))
-            ROWS.append([comp, m["sheet"], m["label"] + (f" · {m['dim']}" if m.get("dim") else ""), i])
-    # the lines every insurer prints, picked by caption, for the cross-company chart
-    facts_of = {}
-    for x in d["facts"]:
-        facts_of.setdefault(x[0], []).append(x)
-    for key, _, sheet, pat in ROLES:
-        # among the rows whose caption matches, the one that runs to the latest period (a caption renamed in later reports leaves its old
-        # row with history only); a tie goes to the first in the statement (the IFRS 17 section, the line before its breakdown)
-        cand = [i for i, m in enumerate(d["metrics"]) if m["sheet"] == sheet and not m["header"] and m["unit"] != "shares" and (key != "eps" or m["unit"] == "nis")
-                and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4]
-        cand = [i for i in cand if not (key == "div_paid" and "שאינן מקנות" in d["metrics"][i]["label"])]  # the dividend to minorities is another line
-        mi = max(cand, key=lambda i: (max(d["periods"][x[1]]["end"] for x in facts_of[i]), -i)) if cand else None
-        if mi is None:
-            continue
-        d["metrics"][mi]["role"] = key  # the statements page links this row to the same line of every company
-        cells = []
-        for x in facts_of[mi]:
-            p = d["periods"][x[1]]
-            if p["type"] == "9M":
+        # [sheet, standard, line, period type, period end, as first reported, page, url, as last printed, page, url, period end of the report that reprinted it]
+        d["restated"] = [[r[0], r[1], r[2], r[3], r[4], r[5], r[6], uix(r[7]), r[8], r[9], uix(r[10]), r[11]] for r in RESTATED.get(comp, []) if r[3] != "9M"]
+        d["urls"] = urls
+        # the lines every insurer prints, picked by caption, for the cross-company chart
+        facts_of = {}
+        for x in d["facts"]:
+            facts_of.setdefault(x[0], []).append(x)
+        for key, _, sheet, pat in ROLES:
+            # among the rows whose caption matches, the one that runs to the latest period (a caption renamed in later reports leaves its old
+            # row with history only); a tie goes to the first in the statement (the IFRS 17 section, the line before its breakdown)
+            cand = [i for i, m in enumerate(d["metrics"]) if m["sheet"] == sheet and not m["header"] and m["unit"] != "shares" and (key != "eps" or m["unit"] == "nis")
+                    and re.search(pat, caption(m["label"])) and len(facts_of.get(i, [])) >= 4]
+            cand = [i for i in cand if not (key == "div_paid" and "שאינן מקנות" in d["metrics"][i]["label"])]  # the dividend to minorities is another line
+            mi = max(cand, key=lambda i: (max(d["periods"][x[1]]["end"] for x in facts_of[i]), -i)) if cand else None
+            if mi is None:
                 continue
-            pi = _lp.setdefault((p["type"], p["end"]), len(_lp))
-            u = d["urls"][x[4]] if len(x) > 4 and x[4] is not None else None
-            cells.append([pi, x[2], x[3], _lu.setdefault(u, len(_lu)) if u else None, x[5] if len(x) > 5 else 0])
-        LINES["data"][key][comp] = {"label": d["metrics"][mi]["label"], "unit": d["metrics"][mi]["unit"], "cells": cells}
-    live_f.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(comp, len(d["sheets"]), "sheets,", len(d["metrics"]), "lines,", len(d["facts"]), "facts,", len(d["periods"]), "periods")
-(DATA / "search").mkdir(exist_ok=True)
-(DATA / "search" / "rows.json").write_text(json.dumps(ROWS, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-print(len(ROWS), "statement lines indexed for search")
-print("unlabeled rows (caption read from the page / printed sum without caption / dropped, no page text):", dict(PLACEHOLDERS))
-LINES["periods"] = [list(k) for k, _ in sorted(_lp.items(), key=lambda kv: kv[1])]
-LINES["urls"] = [u for u, _ in sorted(_lu.items(), key=lambda kv: kv[1])]
-(DATA / "lines.json").write_text(json.dumps(LINES, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-print("cross-company lines:", {k: len(v) for k, v in LINES["data"].items()})
+            d["metrics"][mi]["role"] = key  # the statements page links this row to the same line of every company
+            ROLE_MI.setdefault(comp, {})[key] = mi
+        wbs[comp] = d
+        log(comp, len(d["sheets"]), "sheets,", len(d["metrics"]), "lines,", len(d["facts"]), "facts,", len(d["periods"]), "periods")
+    if len(_CAPTIONS) != n0:
+        try:
+            CAPTION_CACHE.parent.mkdir(parents=True, exist_ok=True)
+            CAPTION_CACHE.write_text(json.dumps(_CAPTIONS, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
+    log("unlabeled rows (caption read from the page / printed sum without caption / dropped, no page text):", dict(PLACEHOLDERS))
+    return wbs
+
+
+def side_outputs(wbs):
+    """search/rows.json (every line of the sheets built from the reports, once per sheet and wording) and lines.json (the lines every
+    insurer prints, for the cross-company chart: the row the merge gave each role, its current figures)."""
+    rows = []
+    lines = {"roles": [[k, n, sh] for k, n, sh, _ in ROLES], "periods": [], "urls": [], "data": {k: {} for k, *_ in ROLES}}
+    lp, lu = {}, {}
+    for comp, d in wbs.items():
+        seen = set()
+        for i, m in enumerate(d["metrics"]):
+            if not m["header"] and m["sheet"].startswith("X.") and (m["sheet"], m["label"], m.get("dim")) not in seen:
+                seen.add((m["sheet"], m["label"], m.get("dim")))
+                rows.append([comp, m["sheet"], m["label"] + (f" · {m['dim']}" if m.get("dim") else ""), i])
+        facts_of = {}
+        for x in d["facts"]:
+            facts_of.setdefault(x[0], []).append(x)
+        for key, *_ in ROLES:
+            mi = ROLE_MI.get(comp, {}).get(key)
+            if mi is None:
+                continue
+            cells = []
+            for x in facts_of[mi]:
+                p = d["periods"][x[1]]
+                if p["type"] == "9M":
+                    continue
+                pi = lp.setdefault((p["type"], p["end"]), len(lp))
+                u = d["urls"][x[4]] if len(x) > 4 and x[4] is not None else None
+                cells.append([pi, x[2], x[3], lu.setdefault(u, len(lu)) if u else None, x[5] if len(x) > 5 else 0])
+            lines["data"][key][comp] = {"label": d["metrics"][mi]["label"], "unit": d["metrics"][mi]["unit"], "cells": cells}
+    lines["periods"] = [list(k) for k, _ in sorted(lp.items(), key=lambda kv: kv[1])]
+    lines["urls"] = [u for u, _ in sorted(lu.items(), key=lambda kv: kv[1])]
+    return rows, lines
+
+
+def dump(o):
+    return json.dumps(o, ensure_ascii=False, separators=(",", ":"))
+
+
+def write(wbs, rows, lines, log=print):
+    """companies/<id>.json, search/rows.json, lines.json; returns the files whose bytes changed."""
+    changed = []
+
+    def put(f, text):
+        if not f.exists() or f.read_text(encoding="utf-8") != text:
+            f.write_text(text, encoding="utf-8")
+            changed.append(str(f.relative_to(DATA)))
+    for comp, d in wbs.items():
+        put(DATA / "companies" / f"{comp}.json", dump(d))
+    (DATA / "search").mkdir(exist_ok=True)
+    put(DATA / "search" / "rows.json", dump(rows))
+    put(DATA / "lines.json", dump(lines))
+    log(len(rows), "statement lines indexed for search; cross-company lines:", {k: len(v) for k, v in lines["data"].items()})
+    return changed
+
+
+if __name__ == "__main__":
+    # the workbooks are written from the fact table: one build writes companies/, search/rows.json, lines.json and facts/
+    import build_facts
+    sys.exit(build_facts.build())

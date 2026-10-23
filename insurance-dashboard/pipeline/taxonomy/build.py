@@ -1,6 +1,6 @@
 """Build the line taxonomy from the workbooks: one id per workbook row (metric), the taxonomy entries, the coverage report.
 
-Input: the workbooks of the shadow run (taxonomy/shadow.py) with their row meta and every caption each statement row was printed under.
+Input: the workbooks of the extraction merge (build_workbook.merge()) with their row meta and every caption each statement row was printed under.
 Output: (ids, entries, coverage, registry)
   ids       {company: {metric index: (line id, tier, block, occurrence)}}
   entries   {line id: {label, stmt, block, tier, unit, nature, tadd, sadd, std, bridge, cos, n}}

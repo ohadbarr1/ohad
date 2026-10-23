@@ -10,12 +10,11 @@ export PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH"
 PY=/usr/bin/python3  # the .venv on the synced drive takes minutes to import; the gate needs the standard library only
 
 cd "$ROOT"
-"$PY" pipeline/build_web_index.py
-"$PY" pipeline/build_calendar.py
-"$PY" pipeline/canon_kpi.py
-"$PY" pipeline/build_registry.py  # peers registry follows the canon (lane Q)
-"$PY" pipeline/build_market_home.py  # home page: last 36 months of the regulator file
-"$PY" pipeline/build_coverage.py  # /data: coverage matrix, freshness per source, open-file inventory (lane 2H)
+# the build steps deploy has always run, through the pipeline graph (pipeline/dag.py, docs/PIPELINE.md): web index, calendar, KPI canon,
+# peers registry (follows the canon), home slice of the regulator file, /data coverage. In dependency order; a step whose inputs, code and
+# outputs are unchanged since its last run here is skipped (calendar and coverage rerun every day). Upstream builders are not run here
+# (--no-deps); the DAG names any that are stale. `python3 pipeline/dag.py --dry-run` shows the plan.
+"$PY" pipeline/dag.py --only deploy --no-deps || { echo "pipeline step failed: not deploying"; exit 1; }
 "$PY" pipeline/gate.py || { echo "data gate failed: not deploying"; exit 1; }
 
 cd "$ROOT/web"

@@ -1,6 +1,7 @@
 """The fact table with vintage: every figure of every company workbook, with every report that printed it.
 
-    python3 pipeline/build_facts.py            build web/public/data/facts/ and pipeline/taxonomy/{registry,lines,coverage}.json
+    python3 pipeline/build_facts.py            build web/public/data/facts/ and pipeline/taxonomy/{registry,lines,coverage}.json, then write
+                                               companies/<id>.json, search/rows.json and lines.json from the table (= build_workbook.py)
     python3 pipeline/build_facts.py --check    gate check `facts` (pipeline/gate.py): reads only the published files, no rebuild
 
 Model (docs/FACTS.md)
@@ -21,7 +22,7 @@ Row flags (bitmask)
 Vintage policies (web/src/lib/facts.ts): latest = flag 16; original = flag 32; asof:<date> = the latest print published on or before
 the date (derived quarters recomputed within that vintage).
 
-Inputs: pipeline/build_workbook.py run in shadow (taxonomy/shadow.py), which must reproduce companies/<id>.json exactly; search/docs.json
+Inputs: the extraction merge (build_workbook.merge(): every print of every cell, kept natively; it writes nothing itself); search/docs.json
 (report id -> period, publication date). No network, no Drive reads except the page texts build_workbook.py itself reads for the
 captions of unlabeled rows (cached under ~/.cache/fox/captions.json).
 """
@@ -69,19 +70,16 @@ def season(end):
 
 
 def build():
-    from taxonomy import shadow
-    wbs, meta, extra, caps = shadow.run()
-    if shadow.REPLAYED:
-        print(f"captions of {len(shadow.REPLAYED)} unlabeled rows replayed from the published workbooks (page text not readable in time)")
-    # the shadow must be the workbook the site serves
-    for co, d in wbs.items():
-        pub = load(DATA / "companies" / f"{co}.json")
-        if json.loads(dump(d)) != pub:
-            diff = [k for k in set(pub) | set(d) if json.loads(dump(d)).get(k) != pub.get(k)]
-            raise SystemExit(f"build_facts: companies/{co}.json differs from a rebuild ({', '.join(sorted(diff))}): run build_workbook.py first")
+    import build_workbook as bw
+    wbs = bw.merge(log=lambda *a: None)
+    meta, extra, caps = bw.META, bw.XFACTS, bw.CAPS
+    if bw.REPLAYED:
+        print(f"captions of {len(bw.REPLAYED)} unlabeled rows replayed from the published workbooks (page text not readable in time)")
+    written = {}  # company -> the workbook written from the fact table
     docs_file = load(DATA / "search" / "docs.json")
     docs = {r[0]: r for r in docs_file["docs"]}
-    names = {c["id"]: c["name_he"] for c in load(DATA / "companies" / "index.json")}
+    reg = load(ROOT / "data" / "registry" / "companies.json")  # (not companies/index.json: that one is built from the workbooks this writes)
+    names = {c["id"]: c["name_he"] for c in (reg if isinstance(reg, list) else reg.get("companies", []))}
     nfacts = {co: collections.Counter(f[0] for f in d["facts"]) for co, d in wbs.items()}
     reg_f = TAX / "registry.json"
     registry = load(reg_f) if reg_f.exists() else {"v": 1, "alias": {}}
@@ -98,7 +96,7 @@ def build():
         d = wbs[co]
         M, PER, urls = d["metrics"], d["periods"], d.get("urls") or []
         X = extra.get(co, {})
-        base_n = len(d["facts"]) - len(X)  # the Phoenix spreadsheet's facts come first and carry no shadow record
+        base_n = len(d["facts"]) - len(X)  # the Phoenix spreadsheet's facts come first and carry no print record
         src_url = {s["entity"]: s.get("url") for s in d.get("sources") or []}
         base_end = max((PER[f[1]]["end"] for f in d["facts"][:base_n]), default=None)
 
@@ -219,7 +217,7 @@ def build():
                 r[1] = max(cand) if cand else 0
                 # an input that is not a row of this line (build_workbook.py took the year from a print of a row it later merged, or
                 # turned its sign): the figure is kept as a literal, so the arithmetic stays checkable
-                r[5] = (op, fj if fj is not None else [yv], pj if pj is not None else [pv], None)
+                r[5] = (op, fj if fj is not None else [yv, yu], pj if pj is not None else [pv], "D")
                 if fj is None or pj is None:
                     unresolved.append(f"{co} {L['label'][:40]} {r[0][0]}{r[0][1]}")
                 # as first reported: the year as first printed less the part as first printed, when that is another figure
@@ -244,8 +242,8 @@ def build():
             L["rows"] = [rows[k] for k in order]
             for r in L["rows"]:
                 if r[5]:
-                    op, a, b, _ = r[5]
-                    r[5] = (op, remap[a] if isinstance(a, int) else a, remap[b] if isinstance(b, int) else b, None)
+                    op, a, b, kind = r[5]
+                    r[5] = (op, remap[a] if isinstance(a, int) else a, remap[b] if isinstance(b, int) else b, kind)
             # every period has one current row and one first-print row
             byp = collections.defaultdict(lambda: [0, 0])
             for r in L["rows"]:
@@ -271,6 +269,18 @@ def build():
                 u_list.append(vi["url"])
         sheets = sorted({L["sheet"] for L in flat}, key=lambda s: next(i for i, x in enumerate(d["sheets"]) if x["code"] == s) if any(x["code"] == s for x in d["sheets"]) else 999)
         sidx = {s: i for i, s in enumerate(sheets)}
+        # the workbook the site serves, written from the table's current rows (flag 16), in the merge's order
+        written[co] = workbook_of(d, lines, line_of, vint, base_n)
+
+        def lit(a):
+            """A derivation input outside the line: [value], and for the year its report as an index into urls (null when unknown)."""
+            out = [num(a[0]) if a[0] is not None else None]
+            if len(a) > 1:
+                if a[1] and a[1] not in u_idx:
+                    u_idx[a[1]] = len(u_list)
+                    u_list.append(a[1])
+                out.append(u_idx.get(a[1]) if a[1] else None)
+            return out
         rows_p, rows_t, rows_v, rows_pg, rows_f, der, alt = [], [], [], [], [], [], []
         n_rows = 0
         for L in flat:
@@ -285,8 +295,7 @@ def build():
                     alt.append([n_rows, q])
                 if r[5]:
                     op, a, b, _ = r[5]
-                    der.append([n_rows, op, base + a if isinstance(a, int) else [num(x) if x is not None else None for x in a],
-                                base + b if isinstance(b, int) else [num(x) if x is not None else None for x in b]])
+                    der.append([n_rows, op, base + a if isinstance(a, int) else lit(a), base + b if isinstance(b, int) else lit(b)])
                 n_rows += 1
         out = {
             "v": 1, "company": co, "name": names.get(co, co), "workbook": f"companies/{co}.json",
@@ -319,6 +328,10 @@ def build():
                                    "periods": [plist[0][1], plist[-1][1]] if plist else None, "kb": round(sizes[co] / 1024)})
         print(f"{co}: {len(flat)} lines, {n_rows} rows ({multi['multi']} of {multi['cells']} cells printed more than once), {len(vint)} reports, {sizes[co] // 1024} KB")
 
+    # the workbooks, the search rows and the cross-company lines, from the table
+    rows, cross = bw.side_outputs(written)
+    changed = bw.write(written, rows, cross)
+    print(f"companies/, search/rows.json, lines.json written from the fact table: {', '.join(changed) if changed else 'all unchanged'}")
     # the taxonomy: the full entries and the alias registry under pipeline/taxonomy, the client's copy beside the facts
     full = {}
     for lid in sorted(entries):
@@ -354,6 +367,48 @@ def build():
     if problems:
         print("problems:", dict(problems))
     return 1 if problems else 0
+
+
+def workbook_of(d, lines, line_of, vint, base_n):
+    """companies/<id>.json written from the fact table (docs/FACTS.md, migration step 1): every workbook figure is the table's current row of
+    its cell (value, page, report, flags 1/2/4/8); a derived figure cites the report of the year it was computed from. The merge's own
+    workbook (metrics, periods, order, restatement pairs) is the frame; the build stops if the table and the merge disagree on one byte."""
+    cur = {}
+    for L in lines:
+        for k, r in enumerate(L["rows"]):
+            if r[4] & 16:
+                cur[(L["mi"], r[0])] = (L, r)
+    P, old_urls = d["periods"], d.get("urls") or []
+    urls, uidx = [], {}
+
+    def uix(u):
+        if u and u not in uidx:
+            uidx[u] = len(urls)
+            urls.append(u)
+        return uidx.get(u) if u else None
+    facts = []
+    for fi, x in enumerate(d["facts"]):
+        mi, pi = x[0], x[1]
+        L, r = cur[(mi, (P[pi]["type"], P[pi]["end"]))]
+        fl = r[4] & WB_BITS
+        if not L["sheet"].startswith("X."):  # the company's own spreadsheet: [metric, period, value, page]
+            if fi >= base_n:
+                raise SystemExit(f"build_facts: a report figure on the spreadsheet sheet {L['sheet']}")
+            facts.append([mi, pi, r[2], r[3]] + ([fl] if fl else []))
+            continue
+        url = vint[r[1]]["url"] if r[1] is not None else None
+        if r[4] & 1 and r[5] and r[5][3] == "D":  # a statement's fourth quarter / second half: the report of the year
+            a = r[5][1]
+            url = vint[L["rows"][a][1]]["url"] if isinstance(a, int) else a[1]
+        facts.append([mi, pi, r[2], r[3], uix(url)] + ([fl] if fl else []))
+    restated = [[x[0], x[1], x[2], x[3], x[4], x[5], x[6], uix(old_urls[x[7]] if x[7] is not None else None), x[8], x[9],
+                 uix(old_urls[x[10]] if x[10] is not None else None), x[11]] for x in d.get("restated", [])]
+    out = {k: ({"facts": facts, "urls": urls, "restated": restated}.get(k, v)) for k, v in d.items()}
+    if dump(out) != dump(d):
+        bad = next((i for i, (a, b) in enumerate(zip(out["facts"], d["facts"])) if a != b), None)
+        raise SystemExit(f"build_facts: companies/{d['company']}.json written from the table differs from the merge"
+                         + (f" at fact {bad}: {out['facts'][bad]} vs {d['facts'][bad]}" if bad is not None else f" (urls {len(urls)} vs {len(old_urls)})"))
+    return out
 
 
 # ------------------------------------------------------------------------------------------------------------------------------ check

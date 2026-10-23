@@ -24,6 +24,11 @@ jobs:
         run: pip install -r pipeline/requirements.txt
       - name: Autopilot tests
         run: python -m unittest discover -s pipeline/autopilot/tests
+      - name: Pipeline DAG (graph valid, tests, plan; nothing is run)
+        run: |
+          python pipeline/dag.py --check
+          python -m unittest discover -s pipeline/tests
+          python pipeline/dag.py --dry-run
       - name: Data gate (page-text checks are skipped where the page texts are not in git)
         run: python pipeline/gate.py
       - name: Install
