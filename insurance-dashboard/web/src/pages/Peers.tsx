@@ -327,15 +327,19 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
           </tr>
         ))}</tbody>
         <tfoot>
-          {(['med', 'avg'] as const).map((kind) => (
-            <tr key={kind}><td className="pr-ent">{kind === 'med' ? 'חציון' : 'ממוצע'}</td>{sub.map(({ ci, pi }) => {
+          {(['med', 'avg'] as const).map((kind) => {
+            // one note per row: the row label says the set of companies changed somewhere; each affected cell carries a dagger with the detail
+            const anyRo = sub.some(({ ci, pi }) => stats(ci, pi).length >= (kind === 'med' ? 3 : 2) && aggRoster(ci, pi, kind));
+            return (
+            <tr key={kind}><td className="pr-ent">{kind === 'med' ? 'חציון' : 'ממוצע'}{anyRo && <span className="chip est pr-roster" title="בעמודות המסומנות † החברות שיש להן נתון שונות מאשר שנה קודם; ריחוף על † מציג מי נכנס, מי יצא, והערך על בסיס זהה">הרכב השתנה †</span>}</td>{sub.map(({ ci, pi }) => {
               const xs = stats(ci, pi).map(([, x]) => x.v!);
               if (xs.length < (kind === 'med' ? 3 : 2)) return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><span className="muted">–</span></td>;
               const v = kind === 'med' ? median(xs) : xs.reduce((s, x) => s + x, 0) / xs.length;
               const ro = aggRoster(ci, pi, kind);
-              return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><Sourced src={() => statProv(ci, pi, kind, v)}><span className="num">{fmtCol(cols[ci], v)}</span></Sourced>{ro && <span className="chip est pr-roster" title={ro} aria-label={ro}>הרכב השתנה</span>}</td>;
+              return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><Sourced src={() => statProv(ci, pi, kind, v)}><span className="num">{fmtCol(cols[ci], v)}</span></Sourced>{ro && <sup className="pr-dag" title={ro} aria-label={ro}>†</sup>}</td>;
             })}</tr>
-          ))}
+            );
+          })}
         </tfoot>
       </table></div>
       {(used.size > 0 || brkAt.size > 0 || anyRe) && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTE[m]}{m === 6 && rosterLines.size > 0 && <> · {[...rosterLines.keys()].slice(0, 4).join(' · ')}</>}</li>)}{brkAt.size > 0 && <li><span className="pr-brk" /> מעבר ל-IFRS 17: משמאל לקו המספרים כפי שדווחו לפי IFRS 4</li>}{anyRe && <li><span className="num re" /> הוצג מחדש</li>}</ol>}

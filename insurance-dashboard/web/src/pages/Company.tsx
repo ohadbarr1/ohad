@@ -38,7 +38,8 @@ export function CompanyLayout() {
   const { store, error: storeError } = useCompanyStore(id ?? null, !!entry?.has_financials);
   // the regulator's fund data serves the overview and the savings tab only
   const loc = useLocation();
-  const { market } = useMarket(/\/(overview|savings)\/?$/.test(loc.pathname) || /\/company\/[^/]+\/?$/.test(loc.pathname));
+  // the overview reads the latest month and twelve-month sums only: the light slice; the savings tab charts the full history
+  const { market } = useMarket(/\/(overview|savings)\/?$/.test(loc.pathname) || /\/company\/[^/]+\/?$/.test(loc.pathname), !/\/savings\/?$/.test(loc.pathname));
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <Empty title="החברה לא נמצאה">בדוק את הכתובת או חפש בשורת החיפוש.</Empty>;

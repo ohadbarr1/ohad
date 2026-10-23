@@ -100,3 +100,6 @@
   .rs-row .rs-d { flex-direction: row; gap: 10px; align-items: baseline; }
   .rs-sea { flex-basis: 40px; }
 }
+.pr-ent .pr-roster { margin-top: 4px; font-weight: 400; }
+.pr-dag { cursor: help; color: var(--est, var(--muted)); margin-inline-start: 2px; font-size: 0.75em; }
+@media (hover: none) { .pr-dag { padding: 6px 4px; } }

@@ -53,7 +53,9 @@ export interface PriceData { ticker: string; source: string; unit: 'agorot'; aso
 export interface KpiFix { t: 'printed' | 'diff' | 'withheld'; raw?: number | null; rid?: number | null; pg?: number | null; from?: string[]; gap?: boolean; profit?: { t: 'printed'; rid?: number | null; pg?: number | null } }
 export interface KpiData { asof: string; source: string; concepts?: Record<string, string>; notes?: { company: string; corrected: string[]; withheld: string[] }[]; companies: Record<string, { periods: string[]; end: string[]; status?: string[]; values: Record<string, (number | null)[]>; rid?: (number | null)[]; fix?: Record<string, KpiFix>;
     /** a headline figure the statements printed and the tag gives within rounding: [printed, tagged, report id, page]; the printed one is shown */
-    canon?: Record<string, Record<string, [number, number, number | null, number | null]>> }> }
+    canon?: Record<string, Record<string, [number, number, number | null, number | null]>>;
+    /** the listed filer, where it is not the company shown (its own statements, holding `stake`% of it) */
+    filer?: { name: string; stake: number; note: string } }> }
 export interface IfrsFact { c: string; m: string; dv?: number; sn?: number; s: string; g: string; b: string; w: string; d: string; v: number; pg: number | null; l: string; n?: string; src?: string; model?: string; tr?: string; bk?: string; fx?: string; u?: string | null; inc?: number; cl?: number; v0?: number }
 export interface IfrsData { unit: string; files: { company: string; period: string; report_id: number; url: string | null; facts: number }[] }
 

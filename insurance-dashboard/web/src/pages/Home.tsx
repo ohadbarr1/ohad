@@ -26,7 +26,7 @@ type Kind = 'all' | 'insurance_group' | 'fund_house';
 
 /** Front page: what was filed, the macro inputs, the market in four numbers, and every company on one line with its latest figures. */
 export function Home() {
-  const { market: m } = useMarket();
+  const { market: m } = useMarket(true, true);
   const reg = useRegistry();
   const { kpis } = useKpis();
   const watch = useWatchlist();
@@ -119,7 +119,7 @@ export function Home() {
                 </tr>
               ))}
               columns={[
-                { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span></span></span> },
+                { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, k }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span>{k?.filer && <span className="chip est" title={k.filer.note}>{`נתוני ${k.filer.name} · ${k.filer.stake}%`}</span>}</span></span> },
                 { key: 'per', head: 'דוח אחרון', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.period, text: ({ q }) => (q ? periodLabelShort(q.period) : ''), cell: ({ q }) => (q ? <span className="num">{periodLabelShort(q.period)}</span> : dash) },
                 { key: 'q', head: 'רווח נקי, QTD', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.v, unit: 'int', tone: 'neg', src: ({ k, q }) => k!.explain('profit', 'q', q!.period) },
                 { key: 'yoy', head: 'YoY', className: 'c-fin', noExport: view !== 'fin', value: ({ yoy }) => yoy, unit: 'pct', signed: true, tone: true, src: ({ c, k, q, qprior, yoy }) => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] }; } },

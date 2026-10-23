@@ -1,5 +1,5 @@
 {
- "built": "2026-10-23T00:41:12+03:00",
+ "built": "2026-10-23T08:53:05+03:00",
  "checks": [
   {
    "id": "workbook",
@@ -125,9 +125,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 1628,
+   "n": 1629,
    "fail": 0,
-   "note": "1628 files under contract, 0 failing; 29 contracts; 555 files without a contract"
+   "note": "1629 files under contract, 0 failing; 29 contracts; 555 files without a contract"
   }
  ]
 }

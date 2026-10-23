@@ -29,7 +29,7 @@ export function useLoad<T>(path: string | null): Loaded<T> {
   return state;
 }
 
-export const useMarketData = (enabled = true) => useLoad<MarketData>(enabled ? 'market.json' : null);
+export const useMarketData = (enabled = true, file: 'market.json' | 'market_home.json' = 'market.json') => useLoad<MarketData>(enabled ? file : null);
 export const useRegistry = () => useLoad<RegistryCompany[]>('companies/index.json');
 export const useCompanyData = (id: string | null, enabled = true) => useLoad<CompanyData>(id && enabled ? `companies/${id}.json` : null);
 export const useCompanyNotes = (id: string | null, enabled: boolean) => useLoad<Record<string, string>>(id && enabled ? `companies/${id}.notes.json` : null);
@@ -46,13 +46,14 @@ import { CompanyStore } from './company';
 let marketInstance: { data: MarketData; m: Market } | null = null;
 /** The aggregation engine over market.json (built once and shared). */
 /** `enabled` false keeps the regulator file from loading on pages that do not show it. */
-export function useMarket(enabled = true): { market: Market | null; error: string | null } {
-  const { data, error } = useMarketData(enabled);
+export function useMarket(enabled = true, home = false): { market: Market | null; error: string | null } {
+  const { data, error } = useMarketData(enabled, home ? 'market_home.json' : 'market.json');
   const market = useMemo(() => {
     if (!data) return null;
+    if (home) return new Market(data);
     if (!marketInstance || marketInstance.data !== data) marketInstance = { data, m: new Market(data) };
     return marketInstance.m;
-  }, [data]);
+  }, [data, home]);
   return { market, error };
 }
 

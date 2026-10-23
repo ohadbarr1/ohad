@@ -20,6 +20,10 @@ CONCEPTS = {
     "eps": "BasicEarningsLossPerShare", "equity": "EquityAttributableToOwnersOfParent", "assets": "Assets",
 }
 FLOWS = {"profit", "oci", "pretax", "revenue", "cfo", "eps"}
+# Where the listed filer is not the company the site shows: its XBRL is the filer's own statements. Yelin Lapidot is private; the filings
+# under "yelin" are Atrao Capital Markets', which holds 50% of Yelin Lapidot (equity method; Yelin Lapidot's statements are attached as Part D).
+FILER = {"yelin": {"name": "אטראו שוקי הון", "stake": 50,
+                   "note": "נתוני אטראו שוקי הון, המחזיקה 50% בילין לפידות ומציגה אותה לפי שיטת השווי המאזני. דוחות ילין לפידות (100%) מוצגים בדף החברה."}}
 
 con = duckdb.connect(str(ROOT / "data" / "warehouse.duckdb"), read_only=True)
 rows = con.execute("""select company, report_id, doc_type, concept, start_date, end_date, value from xbrl_facts
@@ -128,6 +132,8 @@ for comp, per in out.items():
     site[comp] = {"periods": order, "end": [per[p]["end"] for p in order], "status": [status[p] for p in order],
                   "values": {k: [per[p]["vals"].get(k) for p in order] for k in CONCEPTS},
                   "rid": [per[p]["rid"] for p in order], "fix": {p: v for p, v in fix[comp].items() if status.get(p) in ("corrected", "withheld")}}
+    if comp in FILER:
+        site[comp]["filer"] = FILER[comp]
     print(comp, len(order), {s: list(status.values()).count(s) for s in set(status.values())})
 (ROOT / "web" / "public" / "data" / "kpi.json").write_text(json.dumps(
     {"asof": str(date.today()), "source": "XBRL attached to periodic reports, MAYA", "concepts": CONCEPTS, "notes": notes, "companies": site}), encoding="utf-8")

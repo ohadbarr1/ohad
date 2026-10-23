@@ -61,6 +61,7 @@ export class CompanyKpi {
   private fix: Record<string, KpiFix>;
   private statusOf: string[];
   private canon: NonNullable<KpiData['companies'][string]['canon']>;
+  readonly filer: KpiData['companies'][string]['filer'];
   constructor(readonly id: string, d: KpiData['companies'][string], private price: PriceData | null) {
     this.rid = d.rid ?? d.periods.map(() => null);
     this.fix = d.fix ?? {};
@@ -69,6 +70,7 @@ export class CompanyKpi {
     d.periods.forEach((p, i) => this.idx.set(p, i));
     // one value per figure: where the printed statement and the tag differ by rounding, the printed figure is the one on screen
     this.canon = d.canon ?? {};
+    this.filer = d.filer;
     this.raw = Object.fromEntries(Object.entries(d.values).map(([k, arr]) => [k, arr.map((v, i) => this.canon[k]?.[d.periods[i]]?.[0] ?? v)]));
   }
   private at(key: string, y: number, q: number): number | null {
@@ -143,13 +145,13 @@ export class CompanyKpi {
     const i = this.idx.get(period), v = value ?? this.cur(key, period);
     if (i == null || v == null) return none(this.title(key, period), 'התקופה אינה בדוחות שנקראו או שהמושג אינו מתויג בה');
     const st = status ?? (KPI_BY_KEY[key]?.flow ? this.statusOf[i] : this.statusOf[i] === 'fy' ? 'fy' : undefined);
-    return { k: 'xbrl', title: this.title(key, period), value: this.show(key, v), company: NAMES[this.id] ?? this.id, period: periodTag(period), rid: this.rid[i], concept: KPI_CONCEPTS[key], status: st ? STATUS[st] : undefined, note };
+    return { k: 'xbrl', title: this.title(key, period), value: this.show(key, v), company: this.filer?.name ?? NAMES[this.id] ?? this.id, period: periodTag(period), rid: this.rid[i], concept: KPI_CONCEPTS[key], status: st ? STATUS[st] : undefined, note: [note, this.filer?.note].filter(Boolean).join(' · ') || undefined };
   }
   private report(key: string, period: string, f: { rid?: number | null; pg?: number | null }, note: string): Prov {
     const i = this.idx.get(period), v = this.cur(key, period);
     if (i == null || v == null) return none(this.title(key, period), 'אין ערך');
     const rid = f.rid ?? this.rid[i];
-    return { k: 'report', title: this.title(key, period), value: this.show(key, v), url: rid ? mayaReport(rid) : null, pg: f.pg ?? null, doc: NAMES[this.id], period: periodTag(period), note };
+    return { k: 'report', title: this.title(key, period), value: this.show(key, v), url: rid ? mayaReport(rid) : null, pg: f.pg ?? null, doc: this.filer?.name ?? NAMES[this.id], period: periodTag(period), note: [note, this.filer?.note].filter(Boolean).join(' · ') };
   }
   /** A single quarter of a flow: the tag, the printed figure, the tagged year-to-date less the quarters before it, or FY less the first three quarters. */
   private qProv(key: string, period: string): Prov {
