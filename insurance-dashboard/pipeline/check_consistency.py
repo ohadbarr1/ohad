@@ -6,6 +6,8 @@ Writes web/public/data/consistency.json (the /data page panel). Exit code 1 on a
 
 Surfaces (each is the figure as a page shows it, with that page's own arithmetic mirrored here):
   kpi          kpi.json after canon (printed figure where it and the tag differ by rounding)  → home, KPI cards, valuation inputs
+  home         kpi.json `entity` where the listed filer is another entity: the company itself at 100% from its own statements through the
+               Report Day roles (Yelin Lapidot; Atrao's XBRL stays under `kpi`, tagged `filer`)                   → home
                Q4 = canon Q4 (FY − printed 9M) or FY − Q1 − Q2 − Q3, LTM = four quarters (lib/kpi.ts)
   day          companies/<id>.json read through the Report Day roles (ROLES/linesOf/figAt/ltmAt of pages/ReportDay.tsx; the role
                patterns are read from that file, so a change there is checked here)                    → company home, KPI ledger
@@ -22,7 +24,8 @@ FY − Q1 − Q2 − Q3 on another). Across precisions the allowance is half the
 printed in millions may differ from the thousands figure by NIS 2m).
 
 Basis differences that are labelled on the page are exceptions, never failures, and are listed with their reason:
-  filer        kpi.json `filer` (Yelin: XBRL of Atrao, which holds 50%; the company page shows Yelin at 100%)
+  filer        kpi.json `filer` (Yelin: XBRL of Atrao, which holds 50%, on the KPI cards and the peer table's XBRL columns; home and the
+               company page show Yelin Lapidot at 100%, compared with each other without exception)
   std          one side IFRS 4 as originally reported, the other IFRS 17 (insurers before 2025)
   restated     one side read from a later report that reprints the period (flag 8 / 64, or another report than the period's own)
   alt          Report Day shows the profit-for-the-period row where the filer prints no attribution row (chip on the page)
@@ -46,11 +49,11 @@ DATA = ROOT / "web" / "public" / "data"
 ALLOW = Path(__file__).resolve().parent / "consistency_allow.json"
 END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "Q4": "12-31", "FY": "12-31"}
 QOF = {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "Q4"}
-PAGES = {"kpi": "בית · כרטיסי KPI · הערכת שווי", "day": "דף החברה · יום הדוח", "lines": "דוחות כספיים (השוואה)", "peers.fs": "טבלת עמיתים · דוחות",
+PAGES = {"kpi": "בית · כרטיסי KPI · הערכת שווי", "home": "בית (החברה עצמה, 100%)", "day": "דף החברה · יום הדוח", "lines": "דוחות כספיים (השוואה)", "peers.fs": "טבלת עמיתים · דוחות",
          "peers.xbrl": "טבלת עמיתים · XBRL", "peers.ifrs": "טבלת עמיתים · IFRS 17", "capital": "CSM · הון", "csm": "CSM · ספר", "csm.co": "CSM · קובץ החברה", "csm.ts": "CSM · דף החברה והערכת שווי (lib/csmResolve.ts)",
          "peers.csm": "טבלת עמיתים · CSM"}
 M_HE = {"profit": "רווח נקי לבעלי המניות", "oci": "רווח כולל לבעלי המניות", "pretax": "רווח לפני מס", "eps": "רווח למניה", "equity": "הון לבעלי המניות",
-        "assets": "סך הנכסים", "np": "רווח לתקופה", "csm": "CSM"}
+        "assets": "סך הנכסים", "np": "רווח לתקופה", "teq": "סך ההון", "csm": "CSM"}
 load = lambda p: json.loads(p.read_text(encoding="utf-8"))
 
 
@@ -95,15 +98,20 @@ def back(pk, k):
 # ------------------------------------------------------------------ kpi.json (lib/kpi.ts)
 kpi = load(DATA / "kpi.json")["companies"]
 KPI_M = {"profit": "profit", "oci": "oci", "pretax": "pretax", "eps": "eps", "equity": "equity", "assets": "assets"}
-FLOW = {"profit", "oci", "pretax", "eps", "np"}
+FLOW = {"profit", "oci", "pretax", "eps", "np"}  # "teq" (total equity) is a balance
 kpi_rid = {}
-for ent, c in kpi.items():
+
+
+def kpi_obs(ent, c, surf="kpi", tag=None):
+    """The figures lib/kpi.ts serves from one kpi.json block (the filer's XBRL, or the company's own statements under `entity`)."""
     canon = c.get("canon") or {}
     status = c.get("status") or [None] * len(c["periods"])
     fix = c.get("fix") or {}
-    tag = "filer" if c.get("filer") else None
+    rids = {}
     for i, p in enumerate(c["periods"]):
-        kpi_rid[(ent, p if not p.endswith("FY") else p[:4] + "Q4")] = (c.get("rid") or [None] * len(c["periods"]))[i]
+        rids[(ent, p if not p.endswith("FY") else p[:4] + "Q4")] = (c.get("rid") or [None] * len(c["periods"]))[i]
+    if surf == "kpi":
+        kpi_rid.update(rids)
     for key, metric in KPI_M.items():
         vals = c["values"].get(key)
         if not vals:
@@ -128,31 +136,54 @@ for ent, c in kpi.items():
                 return (None, 4) if None in parts else (parts[0] - sum(parts[1:]), 4)
             for p, v in raw.items():
                 pk = p[:4] + "FY" if p.endswith("FY") else p
-                put(ent, metric, pk, Obs("kpi", v, prec_m(v, unit), std=std(p), tag=tag, rep=kpi_rid.get((ent, p if not p.endswith("FY") else p[:4] + "Q4"))))
+                emit(ent, metric, pk, Obs(surf, v, prec_m(v, unit), std=std(p), tag=tag, rep=rids.get((ent, p if not p.endswith("FY") else p[:4] + "Q4"))))
                 if p.endswith("FY"):
                     v4, n = quarter(int(p[:4]), 4)
                     if v4 is not None and unit != "nis":
-                        put(ent, metric, p[:4] + "Q4", Obs("kpi", v4, prec_m(v, unit), n, True, std=std(p), tag=tag))
+                        emit(ent, metric, p[:4] + "Q4", Obs(surf, v4, prec_m(v, unit), n, True, std=std(p), tag=tag))
             if unit != "nis":
                 qs = [p[:4] + "Q4" if p.endswith("FY") else p for p in c["periods"]]
                 for i in range(3, len(qs)):
                     if qs[i].endswith("Q4") and f"{qs[i][:4]}FY" in raw:  # lib/kpi.ts: at a year end the annual figure
                         fy = raw[f"{qs[i][:4]}FY"]
-                        put(ent, metric, "LTM" + qs[i], Obs("kpi", fy, prec_m(fy, unit), 1, False, std=std(qs[i]), tag=tag))
+                        emit(ent, metric, "LTM" + qs[i], Obs(surf, fy, prec_m(fy, unit), 1, False, std=std(qs[i]), tag=tag))
                         continue
                     parts = [quarter(int(x[:4]), int(x[5])) for x in qs[i - 3:i + 1]]
                     if any(v is None for v, _ in parts) or len({std(x) for x in qs[i - 3:i + 1]}) > 1:
                         continue
                     v = sum(x for x, _ in parts)
-                    put(ent, metric, "LTM" + qs[i], Obs("kpi", v, max(prec_m(x) for x, _ in parts), sum(n for _, n in parts), True, std=std(qs[i]), tag=tag))
+                    emit(ent, metric, "LTM" + qs[i], Obs(surf, v, max(prec_m(x) for x, _ in parts), sum(n for _, n in parts), True, std=std(qs[i]), tag=tag))
         else:
             for p, v in raw.items():
                 pk = p[:4] + "Q4" if p.endswith("FY") else p
-                put(ent, metric, pk, Obs("kpi", v, prec_m(v, unit), std=std(p), tag=tag, rep=kpi_rid.get((ent, pk))))
+                emit(ent, metric, pk, Obs(surf, v, prec_m(v, unit), std=std(p), tag=tag, rep=rids.get((ent, pk))))
+
+
+
+def emit(ent, metric, pk, o):
+    """A row the page names differently is checked under that name: the bottom line where no attribution row is printed (`alt`: like
+    Report Day, it is the profit for the period, and stands for the shareholders' profit with the label), total equity where no attributable equity is."""
+    if o.surf == "home" and metric in ALT_NOW:
+        put(ent, "np" if metric == "profit" else metric, pk, o)
+        if metric == "profit":
+            put(ent, "profit", pk, Obs(o.surf, o.v, o.prec, o.n, o.der, o.rep, o.std, "alt"))
+        return
+    put(ent, "teq" if (o.surf == "home" and metric == "equity" and EQ_ALT_NOW) else metric, pk, o)
+
+
+ALT_NOW, EQ_ALT_NOW = set(), False
+for ent, c in kpi.items():
+    ALT_NOW, EQ_ALT_NOW = set(), False
+    kpi_obs(ent, c, tag="filer" if c.get("filer") else None)
+    if c.get("entity"):  # the front page: the company itself at 100% (kpi.json `entity`, pipeline/canon_kpi.py)
+        e = c["entity"]
+        ALT_NOW, EQ_ALT_NOW = set(e.get("alt") or []), bool(e.get("eq_alt"))
+        kpi_obs(ent, dict(e, status=["verified"] * len(e["periods"]), rid=[(e["src"].get("profit") or {}).get(p, [None])[0] for p in e["periods"]]), surf="home")
+        ALT_NOW, EQ_ALT_NOW = set(), False
 
 # ------------------------------------------------------------------ lines.json (build_workbook.py roles)
 lines = load(DATA / "lines.json")
-L_M = {"np_attr": "profit", "np": "np", "pbt": "pretax", "eps": "eps", "equity_attr": "equity", "total_assets": "assets"}
+L_M = {"np_attr": "profit", "np": "np", "pbt": "pretax", "eps": "eps", "equity_attr": "equity", "total_equity": "teq", "total_assets": "assets"}
 for role, metric in L_M.items():
     for ent, line in (lines["data"].get(role) or {}).items():
         unit = "nis" if line["unit"] == "nis" else "m"

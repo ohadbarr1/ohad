@@ -1,4 +1,4 @@
-import type { KpiData, KpiFix, PriceData } from './types';
+import type { KpiData, KpiEntity, KpiFix, PriceData } from './types';
 import { nf } from './format';
 import type { Prov } from './prov';
 import { mayaReport } from './sources';
@@ -62,7 +62,9 @@ export class CompanyKpi {
   private statusOf: string[];
   private canon: NonNullable<KpiData['companies'][string]['canon']>;
   readonly filer: KpiData['companies'][string]['filer'];
-  constructor(readonly id: string, d: KpiData['companies'][string], private price: PriceData | null) {
+  /** the company itself at 100%, from its own statements, where the listed filer is another entity (Yelin Lapidot under Atrao): the front page reads this */
+  readonly entity: CompanyKpi | null;
+  constructor(readonly id: string, d: KpiData['companies'][string], private price: PriceData | null, private ent?: KpiEntity) {
     this.rid = d.rid ?? d.periods.map(() => null);
     this.fix = d.fix ?? {};
     this.statusOf = d.status ?? d.periods.map(() => 'unverified');
@@ -71,6 +73,7 @@ export class CompanyKpi {
     // one value per figure: where the printed statement and the tag differ by rounding, the printed figure is the one on screen
     this.canon = d.canon ?? {};
     this.filer = d.filer;
+    this.entity = d.entity ? new CompanyKpi(id, { periods: d.entity.periods, end: d.entity.end, values: d.entity.values, canon: d.entity.canon, status: d.entity.periods.map(() => 'verified') }, null, d.entity) : null;
     this.raw = Object.fromEntries(Object.entries(d.values).map(([k, arr]) => [k, arr.map((v, i) => this.canon[k]?.[d.periods[i]]?.[0] ?? v)]));
   }
   private at(key: string, y: number, q: number): number | null {
@@ -145,6 +148,11 @@ export class CompanyKpi {
   private show(key: string, v: number): string { return key === 'eps' ? `${nf(v, 2)} ש"ח` : `${nf(v, 0)} אלפי ש"ח`; }
   private title(key: string, period: string) { return `${KPI_BY_KEY[key]?.label ?? key}, ${periodTag(period)}`; }
   private xbrl(key: string, period: string, note?: string, value?: number | null, status?: string): Prov {
+    if (this.ent) {
+      const s = this.ent.src[key]?.[period], eq = key === 'equity' && this.ent.eq_alt, alt = this.ent.alt?.includes(key);
+      if (!s) return none(this.title(key, period), 'השורה אינה בדוחות שנקראו לתקופה זו');
+      return this.report(key, period, { rid: s[0], pg: s[1] }, [`${this.ent.name}, דוחות כספיים (100%) · שורה: ${s[2]}`, eq ? 'אין בדוח שורת הון המיוחס לבעלי המניות; מוצג סך ההון' : alt ? `אין בדוח שורת ייחוס לבעלי המניות; מוצגת שורת ${key === 'oci' ? 'סך הרווח הכולל' : 'הרווח לתקופה'}` : '', s[3] ? 'נגזר מהנתונים המצטברים' : '', note ?? ''].filter(Boolean).join(' · '));
+    }
     const cn = value == null ? this.canon[key]?.[period] : undefined;
     if (cn) return this.report(key, period, { rid: cn[2], pg: cn[3] }, cn[1] === 0 ? 'כפי שהודפס בדוח. התג ב-XBRL ריק (0)' : `כפי שהודפס בדוח. בתג ה-XBRL: ${this.show(key, cn[1])} (הפרש עיגול)`);
     const i = this.idx.get(period), v = value ?? this.cur(key, period);
@@ -156,7 +164,7 @@ export class CompanyKpi {
     const i = this.idx.get(period), v = this.cur(key, period);
     if (i == null || v == null) return none(this.title(key, period), 'אין ערך');
     const rid = f.rid ?? this.rid[i];
-    return { k: 'report', title: this.title(key, period), value: this.show(key, v), url: rid ? mayaReport(rid) : null, pg: f.pg ?? null, doc: this.filer?.name ?? NAMES[this.id], period: periodTag(period), note: [note, this.filer?.note].filter(Boolean).join(' · ') };
+    return { k: 'report', title: this.title(key, period), value: this.show(key, v), url: rid ? mayaReport(rid) : null, pg: f.pg ?? null, doc: this.filer?.name ?? this.ent?.name ?? NAMES[this.id], period: periodTag(period), note: [note, this.filer?.note].filter(Boolean).join(' · ') };
   }
   /** A single quarter of a flow: the tag, the printed figure, the tagged year-to-date less the quarters before it, or FY less the first three quarters. */
   private qProv(key: string, period: string): Prov {

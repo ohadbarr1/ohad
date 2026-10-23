@@ -92,5 +92,51 @@ for comp, c in kpi["companies"].items():
         c["canon"] = canon
     else:
         c.pop("canon", None)
+
+# The company the site shows, where the listed filer is another entity (kpi `filer`: Yelin Lapidot, held 50% by Atrao, whose XBRL fills
+# `values`). The front page shows the company itself at 100%, read from its own statements through the Report Day roles, the same rows the
+# company page shows: companies.<id>.entity = { name, periods, end, values (NIS thousands), src: {key: {period: [report id, page, row, derived]}},
+# canon: {key: {"<y>Q4": [FY − 9M, …]}} }. Equity is the attributable row, or the total equity where the statements print no attribution
+# (no minorities: the profit row is then the bottom line too). The filer's own figures stay in `values` (KPI cards, valuation inputs).
+NAME_HE = {x["id"]: x.get("name_he") for x in json.loads((DATA / "companies" / "index.json").read_text(encoding="utf-8"))}
+TOTAL_EQ = re.compile(r"^(?:סך(?: ה?כל)? |סה['\"׳״]{1,2}כ )ה?הון$")
+for comp, c in kpi["companies"].items():
+    bk = BOOKS.get(comp)
+    if not c.get("filer") or not bk:
+        c.pop("entity", None)
+        continue
+    eq_rows, _ = bk.resolve(reportday.BY_KEY["eq"])
+    eq_alt = not eq_rows
+    if eq_alt:
+        eq_rows = [l for l in bk.lines_of(reportday.SHEETS["BS"]) if TOTAL_EQ.search(l["label"])]
+    ends = [e for e in bk.ends if e >= "2018-12-31"]
+    per = [(f"{e[:4]}FY" if e.endswith("12-31") else f"{e[:4]}{reportday.QOF[e[5:10]]}", e) for e in ends]
+    ent = {"name": NAME_HE.get(comp) or comp, "periods": [p for p, _ in per], "end": [e for _, e in per],
+           "values": {}, "src": {}, "canon": {}, "eq_alt": eq_alt}
+    def put(key, p, f, alt=False):
+        ent["src"].setdefault(key, {})[p] = [f["rid"], f["pg"], f["row"], int(bool(f["der"]))]
+        return round(f["v"] * 1000, 4)
+    for key, role in (("profit", "net"), ("oci", "comp"), ("pretax", "pbt")):
+        vals = []
+        for p, e in per:
+            f = bk.headline(role, "FY" if p.endswith("FY") else "Q", e)
+            vals.append(put(key, p, f) if f else None)
+            if p.endswith("FY"):  # Q4 as the company page derives it (FY − 9M as printed)
+                q4, n9 = bk.headline(role, "Q", e), bk.fig_at(bk.resolve(reportday.BY_KEY[role])[0], "9M", f"{p[:4]}-09-30")
+                if q4 and f and n9:  # [Q4, Q4, report id and page of the nine months]
+                    ent["canon"].setdefault(key, {})[f"{p[:4]}Q4"] = [round(q4["v"] * 1000, 4), round(q4["v"] * 1000, 4), n9["rid"], n9["pg"]]
+        ent["values"][key] = vals
+        if any(f and f.get("alt") for f in [bk.headline(role, "Q", per[-1][1])]):
+            ent.setdefault("alt", []).append(key)
+    for key, rows in (("equity", eq_rows), ("assets", bk.resolve(reportday.BY_KEY["assets"])[0])):
+        vals = []
+        for p, e in per:
+            f = bk.fig_at(rows, "I", e)
+            vals.append(put(key, p, f) if f else None)
+        ent["values"][key] = vals
+    if not ent["canon"]:
+        ent.pop("canon")
+    c["entity"] = ent
+    print(comp, "entity:", ent["name"], len(per), "periods; latest profit", ent["values"]["profit"][-1], "equity", ent["values"]["equity"][-1])
 (DATA / "kpi.json").write_text(json.dumps(kpi, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 print(n, "headline figures now shown as printed (tag within rounding):", {k: sum(len(v) for v in c.get("canon", {}).values()) for k, c in kpi["companies"].items() if c.get("canon")})

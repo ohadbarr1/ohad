@@ -899,6 +899,42 @@
           "null"
          ]
         }
+       },
+       "entity": {
+        "type": "object",
+        "required": [
+         "name",
+         "periods",
+         "end",
+         "values",
+         "src"
+        ],
+        "properties": {
+         "name": {
+          "type": "string"
+         },
+         "periods": {
+          "type": "array",
+          "items": {
+           "$ref": "#/$defs/period"
+          }
+         },
+         "end": {
+          "type": "array",
+          "items": {
+           "$ref": "#/$defs/date"
+          }
+         },
+         "values": {
+          "type": "object",
+          "additionalProperties": {
+           "$ref": "#/$defs/nums"
+          }
+         },
+         "src": {
+          "type": "object"
+         }
+        }
        }
       }
      }

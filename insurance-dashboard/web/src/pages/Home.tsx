@@ -44,11 +44,12 @@ export function Home() {
   // a subsidiary (more_gemel under more) shares its holding's market group: it gets a sub-row, not a second company with the same figures
   const holdingOf = (c: { id: string; market_group: string | null }) => all.find((x) => x.id !== c.id && c.id.startsWith(`${x.id}_`) && x.market_group === c.market_group);
   const rows = all.filter((c) => !holdingOf(c) && (kind === 'all' || c.kind === kind)).map((c) => {
-    const k = kpis?.get(c.id);
+    // where the listed filer is another entity (Yelin Lapidot, held 50% by Atrao), the row shows the company itself at 100%, from its own statements
+    const kf = kpis?.get(c.id), k = kf?.entity ?? kf;
     const q = k?.latest('profit', 'q') ?? null;
     const prior = q && k ? k.series('profit', 'q').find((p) => p.period === `${Number(q.period.slice(0, 4)) - 1}${q.period.slice(4)}`)?.v ?? null : null;
     const g = m ? m.groupIndex(c.market_group ?? '') : -1;
-    return { c, k, g, qprior: prior, q, yoy: q?.v != null && prior != null && prior > 0 && q.v > 0 ? (q.v / prior - 1) * 100 : null, ltm: k?.latest('profit', 'ltm') ?? null, eq: k?.latest('equity') ?? null, roe: k?.latest('roe') ?? null,
+    return { c, k, filer: kf?.filer, g, qprior: prior, q, yoy: q?.v != null && prior != null && prior > 0 && q.v > 0 ? (q.v / prior - 1) * 100 : null, ltm: k?.latest('profit', 'ltm') ?? null, eq: k?.latest('equity') ?? null, roe: k?.latest('roe') ?? null,
       aum: m && g >= 0 ? m.value('assets', L, 'm', 'all', g) : null };
   });
   // the latest report season on the page; a company whose last figures are more than two quarters older is marked and sorted last
@@ -124,7 +125,7 @@ export function Home() {
                 </tr>
               ))}
               columns={[
-                { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, k, q }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span>{k?.filer && <span className="chip est" title={k.filer.note}>{`נתוני ${k.filer.name} · ${k.filer.stake}%`}</span>}{q && isStale({ q }) && <span className="chip stale" title="הדוח האחרון בנתונים ישן ביותר משני רבעונים מהעונה האחרונה">{`נתון ישן · ${periodLabelShort(q.period)}`}</span>}</span></span> },
+                { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, filer, q }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span>{filer && <span className="chip est" title={filer.note}>{`${filer.name.split(' ')[0]} מחזיקה ${filer.stake}%`}</span>}{q && isStale({ q }) && <span className="chip stale" title="הדוח האחרון בנתונים ישן ביותר משני רבעונים מהעונה האחרונה">{`נתון ישן · ${periodLabelShort(q.period)}`}</span>}</span></span> },
                 { key: 'per', head: 'דוח אחרון', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.period, text: ({ q }) => (q ? periodLabelShort(q.period) : ''), cell: ({ q }) => (q ? <span className="num">{periodLabelShort(q.period)}</span> : dash) },
                 { key: 'q', head: 'רווח נקי, QTD', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.v, unit: 'int', tone: 'neg', src: ({ k, q }) => k!.explain('profit', 'q', q!.period) },
                 { key: 'yoy', head: 'YoY', className: 'c-fin', noExport: view !== 'fin', value: ({ yoy }) => yoy, unit: 'pct', signed: true, tone: true, src: ({ c, k, q, qprior, yoy }) => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] }; } },
@@ -139,7 +140,7 @@ export function Home() {
                 { key: 'feeg', head: 'דמי ניהול, גמל', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'fee', 'fam:gemel', 'm'), cell: ({ g }) => regCell(g, 'fee', (v) => pct(v, 2), 'fam:gemel', 'm') },
                 { key: 'docs', head: 'מסמכים', value: ({ c }) => c.docs || null, cell: ({ c }) => (c.docs > 0 ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : dash) },
               ]} />
-            <div className="src">רווח, הון ו-ROE: XBRL של הדוחות התקופתיים · נכסים, צבירה ודמי ניהול: רשות שוק ההון (פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון; צבירה: פנסיה וגמל)</div>
+            <div className="src">רווח, הון ו-ROE: XBRL של הדוחות התקופתיים (ילין לפידות: הדוחות הכספיים שלה, 100%) · נכסים, צבירה ודמי ניהול: רשות שוק ההון (פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון; צבירה: פנסיה וגמל)</div>
           </section>
         </div>
       </div>

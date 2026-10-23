@@ -55,7 +55,12 @@ export interface KpiData { asof: string; source: string; concepts?: Record<strin
     /** a headline figure the statements printed and the tag gives within rounding: [printed, tagged, report id, page]; the printed one is shown */
     canon?: Record<string, Record<string, [number, number, number | null, number | null]>>;
     /** the listed filer, where it is not the company shown (its own statements, holding `stake`% of it) */
-    filer?: { name: string; stake: number; note: string } }> }
+    filer?: { name: string; stake: number; note: string };
+    /** where `filer` is set: the company the site shows, at 100%, read from its own statements through the Report Day roles (pipeline/canon_kpi.py).
+        `src` = { key: { period: [report id, page, printed row, derived 0/1] } }; `eq_alt` = equity is the total equity row (no attribution printed) */
+    entity?: KpiEntity }> }
+export interface KpiEntity { name: string; periods: string[]; end: string[]; values: Record<string, (number | null)[]>;
+  src: Record<string, Record<string, [number | null, number | null, string, number]>>; canon?: Record<string, Record<string, [number, number, number | null, number | null]>>; eq_alt?: boolean; alt?: string[] }
 export interface IfrsFact { c: string; m: string; dv?: number; sn?: number; s: string; g: string; b: string; w: string; d: string; v: number; pg: number | null; l: string; n?: string; src?: string; model?: string; tr?: string; bk?: string; fx?: string; u?: string | null; inc?: number; cl?: number; v0?: number }
 export interface IfrsData { unit: string; files: { company: string; period: string; report_id: number; url: string | null; facts: number }[] }
 
