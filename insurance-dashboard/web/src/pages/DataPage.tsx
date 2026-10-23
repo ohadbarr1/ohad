@@ -6,6 +6,7 @@ import { citation, type CiteFormat } from '../lib/cite';
 import { byPeriodDesc, fmt, monthLabel, nf, pubLabel } from '../lib/format';
 import { titleFor } from '../lib/title';
 import { useLoad, useRegistry } from '../lib/useData';
+import { ConsistencyPanel } from './DataConsistency';
 import '../styles/data.css';
 
 /* /data (lane 2H; ws5 W5-R2, ws1 W1-18, ws6 W6-15): quality as a product. What the data holds per company and layer, how fresh each
@@ -30,6 +31,7 @@ const CHECK_HE: Record<string, string> = {
   additivity_funds: 'אדיטיביות, בתי השקעות', units: 'יחידות: למניה ומספר מניות', latin: 'תוויות בעברית', placeholder: 'אין כיתובי מילוי', derived: 'נגזר רק על שורות זרם',
   ifrs_slices: 'קובצי IFRS 17 לפי חברה = הקובץ הענפי', ifrs_page: 'כל נתון IFRS 17 מודפס בעמוד שצוטט', ifrs_page_known: 'חריגים ידועים: גרפים ועמודי תמונה', balance: 'מאזן: נכסים = הון + התחייבויות',
   balance_round: 'מאזן: סטייה מעל עיגול', cross_layer: 'XBRL = הדוחות הכספיים', lens: 'עדשת החיסכון = חישוב מחדש', schemas: 'חוזי נתונים: כל קובץ תואם לסכמה',
+  consistency: 'נתון אחד בכל העמודים', fund_roles: 'בתי השקעות: שורות הרווח = XBRL', consistency_old: 'עקביות לפני החלון (היסטוריה)',
 };
 const pl = (p: string | null) => (!p ? '–' : /^\d{6}$/.test(p) ? monthLabel(Number(p)) : /^\d{4}-\d{2}$/.test(p) ? monthLabel(Number(p.replace('-', ''))) : /^\d{4}-\d{2}-\d{2}/.test(p) ? pubLabel(p) : p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
 const days = (iso: string | null, now: Date) => (iso ? Math.floor((now.getTime() - Date.parse(iso.slice(0, 10))) / 864e5) : null);
@@ -113,6 +115,8 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
           <div className="src">חריגה: המקור לא נקרא בתוך היעד, או שדוח שפורסם לפני יותר מ-{c.sources.find((s) => s.id === 'maya')?.sla_days ?? 7} ימים עדיין חסר באחת השכבות שהמקור מזין.</div>
         </Panel>
       </div>
+
+      <ConsistencyPanel name={name} />
 
       <Panel title="קבצי נתונים פתוחים" aside={<a href="/data/schemas.json" download>חוזי הנתונים (JSON Schema)</a>}>
         <div className="licence"><b>נתונים ממקורות ציבוריים; ציטוט עם קישור</b><span className="muted">כל מספר באתר מקושר למסמך או לקובץ שממנו נלקח</span>

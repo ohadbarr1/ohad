@@ -29,3 +29,13 @@ table.dt.cov th:not(:first-child) .dt-sort { text-align: center; }
 .dq { gap: 22px; }
 .dq td:first-child { min-width: 190px; }
 .dq .chip.bad { color: var(--down); border-color: color-mix(in oklch, var(--down) 35%, transparent); background: color-mix(in oklch, var(--down) 8%, transparent); }
+
+/* lane Q: consistency panel */
+.dq-cons .cons-kpis { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-bottom: 12px; }
+.dq-cons .cons-kpis > div { display: flex; flex-direction: column; gap: 2px; min-width: 110px; }
+.dq-cons .cons-kpis .l { font-size: var(--t-2); color: var(--muted); }
+.dq-cons .cons-kpis .v { font-size: var(--t-6); font-weight: 700; line-height: 1.2; }
+.dq-cons .cons-kpis .chip { align-self: flex-start; }
+.dq-cons .cons-more { margin-top: 12px; }
+.dq-cons .cons-more summary { cursor: pointer; font-size: var(--t-3); color: var(--muted); padding: 6px 0; }
+@media (max-width: 760px) { .dq-cons .c-ex { display: none; } .dq-cons .cons-kpis { display: grid; grid-template-columns: 1fr 1fr; } }
