@@ -2316,7 +2316,15 @@
     "none": {
      "type": "array",
      "items": {
-      "type": "string"
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       }
+      ]
      }
     },
     "companies": {

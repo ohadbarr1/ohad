@@ -21,7 +21,7 @@ What MAYA provides (probed 23.10.26):
     `formId == "ת126"`; one page per half-year window for every issuer here.
 
 Raw cache (data/raw/maya_liabilities/, small files only): lists/<maya_id>/<from>_<to>.json (closed windows are never refetched),
-htm/<report_id>.htm.gz, securities/<maya_id>_<yyyy-mm-dd>.csv, manifest.json. Polite: ≤ 2 requests per second, a User-Agent
+htm/<report_id>.htm.gz, securities/<maya_id>_<yyyy-mm-dd>.csv, manifest.json. Polite: one request every 2 seconds, a User-Agent
 naming fox, resume from cache. A 403 is MAYA's rate limiter: back off, never evade.
 """
 import argparse
@@ -47,7 +47,7 @@ UA = "fox-research-il/1.0 (+https://fox-research-il.web.app; fundamentals resear
 HEADERS = {"User-Agent": UA, "accept": "application/json", "content-type": "application/json",
            "origin": "https://maya.tase.co.il", "referer": "https://maya.tase.co.il/", "accept-language": "he-IL,he;q=0.9"}
 FINANCIAL_FAMILY = 100
-PAUSE = 1.0  # seconds between requests (MAYA rate-limits faster listing with 403s)
+PAUSE = 2.0  # seconds between requests: at most one every 2 s (MAYA answers fast listing with 403s)
 SINCE = "2023-01-01"  # ~3 years of quarter ends: FY'22 (filed 03/23) to the latest
 
 # Issuers beyond the registry's listed companies: the groups' bond-issuing subsidiaries (MAYA ids from `probe`).
