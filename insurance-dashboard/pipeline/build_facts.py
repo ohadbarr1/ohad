@@ -78,7 +78,8 @@ def build():
     written = {}  # company -> the workbook written from the fact table
     docs_file = load(DATA / "search" / "docs.json")
     docs = {r[0]: r for r in docs_file["docs"]}
-    names = {c["id"]: c["name_he"] for c in load(DATA / "companies" / "index.json")}
+    reg = load(ROOT / "data" / "registry" / "companies.json")  # (not companies/index.json: that one is built from the workbooks this writes)
+    names = {c["id"]: c["name_he"] for c in (reg if isinstance(reg, list) else reg.get("companies", []))}
     nfacts = {co: collections.Counter(f[0] for f in d["facts"]) for co, d in wbs.items()}
     reg_f = TAX / "registry.json"
     registry = load(reg_f) if reg_f.exists() else {"v": 1, "alias": {}}
