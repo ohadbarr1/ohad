@@ -537,8 +537,10 @@ div.src > a, .fnote a { text-decoration: underline; text-decoration-color: color
   :is(button.chip, a.chip) { display: inline-flex; align-items: center; }
   .subnav a { display: inline-flex; align-items: center; }
   th .thsort { min-height: 40px; }
-  /* sourced figures and links inside tables and figure lines: 40 px hit box, same layout */
-  main :is(a, button).src:not(.bar) { padding: 12px 16px; margin: -12px -16px; }
+  /* sourced figures and links inside tables and figure lines: 40 px hit box, same layout. Height: padding pulled back by an equal
+     negative margin; width: an invisible box at least 40 px wide (a horizontal padding would push a figure into its unit in a flex line) */
+  main :is(a, button).src:not(.bar) { padding: 12px 0; margin: -12px 0; position: relative; }
+  main :is(a, button).src:not(.bar)::after { content: ""; position: absolute; inset: 0 calc(min(0px, (100% - 40px) / 2)); }
   main :is(dd, li, h3, h4, header, .hd, .sub, .aside, .fnote, p, div.src) > a:is(:not([class]), .num),
   main td a:is(:not([class]), .num), main .ledger .rowbtn,
   main td > button:not(.btn, .chip, .src, .thsort, .dt-sort) { padding: 12px 10px; margin: -12px -10px; }
