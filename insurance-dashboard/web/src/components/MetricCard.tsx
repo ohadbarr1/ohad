@@ -38,7 +38,7 @@ export function MetricCard({ title, tag, unit, value, delta, x, series, kind = '
     <section className={`mcard${wide ? ' wide' : ''}`} style={{ ['--i' as string]: i }}>
       <header>
         <h3>{tag && <span className={`tag${tag === 'נגזר' ? ' est' : ''}`}>{tag}</span>}{title}</h3>
-        {to && <Link to={to} className="open" aria-label={`פתח: ${title}`}>⤢</Link>}
+        {to && <Link to={to} className="open" aria-label={`פתח: ${title}`} title={`פתח: ${title}`}>⤢</Link>}
       </header>
       <div className="mval"><span className="v num">{src && value !== '–' ? <Sourced src={src} href={href}>{value}</Sourced> : value}</span><span className="u">{unit}</span>{delta && <span className={`d num ${delta.tone ?? ''}`}>{delta.text}</span>}</div>
       {empty ? <div className="mnone">אין נתון</div> : (

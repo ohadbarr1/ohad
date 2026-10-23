@@ -12,7 +12,7 @@ export interface Item { kind: Kind; label: string; meta: string; to: string; sco
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
 export const FUNCS: { code: string; badge: string; label: string; keys: string[]; to: (id: string) => string }[] = [
   { code: 'ER', badge: 'סקירה', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'yoy', 'qoq'], to: (id) => `/company/${id}/review` },
-  { code: 'RANK', badge: 'דירוג', label: 'מול השוק, לפי מסלול', keys: ['rank', 'דירוג', 'מסלולים', 'יצרן', 'תשואות'], to: (id) => `/funds/makers?mk=${id}` },
+  { code: 'RANK', badge: 'דירוג', label: 'מול השוק, לפי מסלול', keys: ['rank', 'דירוג', 'מסלולים', 'יצרן', 'תשואות'], to: (id) => `/managers?v=makers&mk=${id}` },
   { code: 'SOP', badge: 'מקורות רווח', label: 'מקורות רווח וענפים', keys: ['sop', 'מקורות', 'ענפים', 'נוסטרו', 'combined', 'lob'], to: (id) => `/company/${id}/profit` },
   { code: 'CSM', badge: 'CSM', label: 'IFRS 17 · CSM', keys: ['csm', 'ifrs', 'ra', 'רגישויות', 'solvency', 'סולבנסי', 'כושר', 'פירעון'], to: (id) => `/company/${id}/ifrs17` },
   { code: 'FA', badge: 'דוחות', label: 'דוחות לאורך זמן', keys: ['fa', 'דוחות', 'financials'], to: (id) => `/company/${id}/financials` },
@@ -20,7 +20,7 @@ export const FUNCS: { code: string; badge: string; label: string; keys: string[]
   { code: 'DOC', badge: 'מסמכים', label: 'מסמכים', keys: ['doc', 'docs', 'מסמכים', 'filings'], to: (id) => `/company/${id}/filings` },
   { code: 'VAL', badge: 'שווי', label: 'הערכת שווי, P/B מוצדק', keys: ['val', 'valuation', 'שווי', 'הערכת', 'pb', 'p/b', 'מכפיל'], to: (id) => `/valuation/${id}` },
   { code: 'DCF', badge: 'DCF', label: 'הערכת שווי, DCF', keys: ['dcf'], to: (id) => `/valuation/${id}/dcf` },
-  { code: 'SOTP', badge: 'SOTP', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
+  { code: 'SOTP', badge: 'סכום החלקים', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
 ];
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
