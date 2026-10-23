@@ -50,7 +50,12 @@ export function Home() {
     const g = m ? m.groupIndex(c.market_group ?? '') : -1;
     return { c, k, g, qprior: prior, q, yoy: q?.v != null && prior != null && prior > 0 && q.v > 0 ? (q.v / prior - 1) * 100 : null, ltm: k?.latest('profit', 'ltm') ?? null, eq: k?.latest('equity') ?? null, roe: k?.latest('roe') ?? null,
       aum: m && g >= 0 ? m.value('assets', L, 'm', 'all', g) : null };
-  }).sort((a, b) => Number(watch.has(b.c.id)) - Number(watch.has(a.c.id)) || (b.eq?.v ?? -1) - (a.eq?.v ?? -1) || (b.aum ?? 0) - (a.aum ?? 0));
+  });
+  // the latest report season on the page; a company whose last figures are more than two quarters older is marked and sorted last
+  const qi = (p?: string | null) => (p ? Number(p.slice(0, 4)) * 4 + (p.endsWith('FY') ? 4 : Number(p.slice(5))) : null);
+  const season = Math.max(...rows.map((r) => qi(r.q?.period) ?? 0));
+  const isStale = (r: { q: { period: string } | null }) => { const i = qi(r.q?.period); return i != null && season - i > 2; };
+  rows.sort((a, b) => Number(isStale(a)) - Number(isStale(b)) || Number(watch.has(b.c.id)) - Number(watch.has(a.c.id)) || (b.eq?.v ?? -1) - (a.eq?.v ?? -1) || (b.aum ?? 0) - (a.aum ?? 0));
   const growthProv = (label: string, s: string, g = -1): Prov => {
     const gr = m!.growth(L, 'ltm', s, g), b = L - 12, title = `${label} · שינוי YoY · ${m!.plabel(L)}`;
     if (gr == null || b < 0) return { k: 'none', title, why: 'אין נתון לפני 12 חודשים' };
@@ -109,7 +114,7 @@ export function Home() {
               <span className="view-seg"><Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק ודמי ניהול']]} /></span>
               <span className="muted unit">{view === 'fin' ? 'מיליוני ש"ח, מהדוח האחרון' : `רשות שוק ההון · ${m?.plabel(L) ?? ''}`}</span>
             </div>
-            <DataTable className={`rank cos-t v-${view}`} caption="חברות" rows={rows} rowKey={(r) => r.c.id}
+            <DataTable className={`rank cos-t v-${view}`} caption="חברות" rows={rows} rowKey={(r) => r.c.id} rowClass={(r) => (isStale(r) ? 'stale' : undefined)}
               export={{ name: `fox-companies-${view}`, title: view === 'fin' ? 'חברות · דוחות' : 'חברות · שוק ודמי ניהול', note: view === 'fin' ? 'מיליוני ש"ח · XBRL של הדוחות התקופתיים' : `רשות שוק ההון · ${m?.plabel(L) ?? ''}` }}
               after={({ c }) => all.filter((x) => holdingOf(x)?.id === c.id).map((x) => (
                 <tr key={x.id} className="subrow">
@@ -119,7 +124,7 @@ export function Home() {
                 </tr>
               ))}
               columns={[
-                { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, k }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span>{k?.filer && <span className="chip est" title={k.filer.note}>{`נתוני ${k.filer.name} · ${k.filer.stake}%`}</span>}</span></span> },
+                { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, k, q }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span>{k?.filer && <span className="chip est" title={k.filer.note}>{`נתוני ${k.filer.name} · ${k.filer.stake}%`}</span>}{q && isStale({ q }) && <span className="chip stale" title="הדוח האחרון בנתונים ישן ביותר משני רבעונים מהעונה האחרונה">{`נתון ישן · ${periodLabelShort(q.period)}`}</span>}</span></span> },
                 { key: 'per', head: 'דוח אחרון', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.period, text: ({ q }) => (q ? periodLabelShort(q.period) : ''), cell: ({ q }) => (q ? <span className="num">{periodLabelShort(q.period)}</span> : dash) },
                 { key: 'q', head: 'רווח נקי, QTD', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.v, unit: 'int', tone: 'neg', src: ({ k, q }) => k!.explain('profit', 'q', q!.period) },
                 { key: 'yoy', head: 'YoY', className: 'c-fin', noExport: view !== 'fin', value: ({ yoy }) => yoy, unit: 'pct', signed: true, tone: true, src: ({ c, k, q, qprior, yoy }) => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] }; } },
