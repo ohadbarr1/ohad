@@ -202,7 +202,7 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
             onPoint={(si, di) => { const r = cell(tg[si], d.quarters[di]); if (r && tdef[tk].v(r) != null) open(tdef[tk].p(r)); }}
             build={() => identify(decimals(foxOption({ x: d.quarters.map(ql), unit: tdef[tk].unit, scale: true, legend: true,
               series: tg.map((gg) => ({ name: short(src.name(gg)), kind: 'line' as const, pct: tdef[tk].pct, dec: tdef[tk].dec, color: idColorOfGroup(src.name(gg)), lead: gg === g, dim: g >= 0 && gg !== g,
-                data: d.quarters.map((qq) => { const r = cell(gg, qq); const v = r ? tdef[tk].v(r) : null; return v == null ? null : +v.toFixed(tdef[tk].dec + 1); }) })) }), tk === 'fy' ? 2 : tk === 'ppb' || tk === 'growth' ? 1 : 0, tdef[tk].pct))} />
+                data: d.quarters.map((qq) => { const r = cell(gg, qq); const v = r ? tdef[tk].v(r) : null; return v == null ? null : +v.toFixed(tdef[tk].dec + 1); }) })) }), tk === 'fy' ? 2 : tk === 'ppb' || tk === 'growth' ? 1 : 0, tdef[tk].pct), { height: phone ? 300 : 330 })} />
         </Panel>
       </div>
     </>

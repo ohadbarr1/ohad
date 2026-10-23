@@ -438,7 +438,7 @@ function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; 
             onPoint={(si, di) => { const x = g[si]?.[di]; if (x && x.v != null) open(x.prov()); }}
             build={() => identify(foxOption({ x: shown.map((p) => plab(st.f, p).replace('LTM ', '')), unit: shownUnit(col), legend: false, labels: false, scale: true, breakAt: brkAt > 0 ? brkAt : undefined, breakLabel: brkLabel,
               series: ents.map((e, i) => ({ name: book.short(e), kind: 'line' as const, color: idColor(e), pct, lead: st.hl === e, dim: !!st.hl && st.hl !== e, dec: col.unit === 'm' && col.tr === 'v' ? 0 : 2,
-                faded: g[i].map((x) => !!(x.fl & F_OLD)), data: g[i].map((x) => (x.v == null ? null : +x.v.toFixed(4))) })) }))} />
+                faded: g[i].map((x) => !!(x.fl & F_OLD)), data: g[i].map((x) => (x.v == null ? null : +x.v.toFixed(4))) })) }), { height: 380 })} />
         )}
       </section>
       <section className="panel pr-panel">
