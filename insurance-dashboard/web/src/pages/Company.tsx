@@ -16,7 +16,7 @@ import { NoteMark } from '../components/NoteMark';  // lane F
 import { lineKey } from '../lib/notes';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
-import { useCompanyNotes, useCompanyStore, useKpiData, useMarket, useRegistry } from '../lib/useData';
+import { useCompanyNotes, useCompanyStore, useKpiData, useLoad, useMarket, useRegistry } from '../lib/useData';
 import { keepPeriod } from '../lib/period';
 import { idCss } from '../lib/identity';
 import { NotFound } from './NotFound';
@@ -725,7 +725,8 @@ function CsmExplorer({ store }: { store: CompanyStore }) {
 const LensForGroup = lazy(async () => ({ default: (await import('./SavingsLens')).LensForGroup }));
 export function CompanySavings() {
   const { entry, market } = useCtx();
+  const ai = useLoad<{ managers: { id: string; latest: string | null }[] }>('assets/index.json');
   if (!entry.market_group) return <Empty title="אין שיוך לנתוני שוק" />;
   if (!market) return <Loading what="נתוני שוק" />;
-  return <><Suspense fallback={null}><LensForGroup group={entry.market_group} /></Suspense><GroupPanel m={market} group={entry.market_group} /></>;
+  return <>{ai.data?.managers.some((m) => m.id === entry.id && m.latest) && <p><Link className="chip" to={`/holdings/${entry.id}`}>הרכב נכסים</Link></p>}<Suspense fallback={null}><LensForGroup group={entry.market_group} /></Suspense><GroupPanel m={market} group={entry.market_group} /></>;
 }

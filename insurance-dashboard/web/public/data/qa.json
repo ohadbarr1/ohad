@@ -1,5 +1,5 @@
 {
- "built": "2026-10-23T16:55:04+03:00",
+ "built": "2026-10-23T17:18:54+03:00",
  "checks": [
   {
    "id": "workbook",
@@ -149,9 +149,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 1702,
+   "n": 1709,
    "fail": 0,
-   "note": "1702 files under contract, 0 failing; 42 contracts; 551 files without a contract"
+   "note": "1709 files under contract, 0 failing; 45 contracts; 551 files without a contract"
   },
   {
    "id": "facts",
@@ -160,6 +160,14 @@
    "n": 115510,
    "fail": 0,
    "note": "facts: 115510 workbook figures and 1200 statement restatement pairs checked over 190070 rows of 13 companies; (1200 with the original as the cell's first print; the rest were first printed under an ol"
+  },
+  {
+   "id": "assets",
+   "ok": true,
+   "level": "fail",
+   "n": 38,
+   "fail": 0,
+   "note": "38 manager-quarters; rebuild equal"
   }
  ]
 }

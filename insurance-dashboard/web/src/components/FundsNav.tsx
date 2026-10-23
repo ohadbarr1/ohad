@@ -7,6 +7,7 @@ export function FundsNav() {
     <nav className="subnav" aria-label="קופות">
       <NavLink to="/funds" end>מסלולים</NavLink>
       <NavLink to="/managers">דירוג מנהלים</NavLink>
+      <NavLink to="/holdings">הרכב נכסים</NavLink>
       {/* the lens lives in the industry hub; this is a way there, not a tab of this section */}
       <Link to="/industry/savings" className="subnav-out" title="עדשת חיסכון נמצאת בהשוואה ענפית">עדשת חיסכון · בהשוואה ענפית ↖</Link>
     </nav>
