@@ -68,6 +68,10 @@ const mDebt = () => import('./pages/Debt');  // lane DL
 const Debt = page(mDebt, 'Debt');
 const mFacts = () => import('./pages/Facts');  // lane FT
 const FactsPage = page(mFacts, 'FactsPage');
+const mOwnership = () => import('./pages/Ownership');  // lane OW
+const Ownership = page(mOwnership, 'Ownership');
+const mOwnershipCompany = () => import('./pages/OwnershipCompany');  // lane OW
+const OwnershipCompany = page(mOwnershipCompany, 'OwnershipCompany');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -139,6 +143,8 @@ export function App() {
         <Route path="debt" element={<Debt />} />
         <Route path="debt/:id" element={<Debt />} />
         <Route path="facts/:id" element={<FactsPage />} />
+        <Route path="ownership" element={<Ownership />} />{/* lane OW */}
+        <Route path="ownership/:id" element={<OwnershipCompany />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
