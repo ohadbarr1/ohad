@@ -136,6 +136,10 @@
   {
    "pattern": "consistency.json",
    "schema": "consistency"
+  },
+  {
+   "pattern": "autopilot/status.json",
+   "schema": "autopilotStatus"
   }
  ],
  "$defs": {
@@ -2266,6 +2270,422 @@
            "string",
            "null"
           ]
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "autopilotStatus": {
+   "type": "object",
+   "required": [
+    "built",
+    "mode",
+    "companies",
+    "deploy",
+    "gate",
+    "steps"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "mode": {
+     "enum": [
+      "apply",
+      "dry-run"
+     ]
+    },
+    "source": {
+     "type": "string"
+    },
+    "poll": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "required": [
+      "at",
+      "blocked",
+      "new"
+     ],
+     "properties": {
+      "at": {
+       "type": "string"
+      },
+      "blocked": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "seen": {
+       "type": "integer"
+      },
+      "new": {
+       "type": "integer"
+      },
+      "errors": {
+       "type": "integer"
+      }
+     }
+    },
+    "steps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "step",
+       "ok"
+      ],
+      "properties": {
+       "step": {
+        "type": "string"
+       },
+       "ok": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "gate": {
+     "type": "object",
+     "required": [
+      "ran",
+      "ok",
+      "fails"
+     ],
+     "properties": {
+      "ran": {
+       "type": "boolean"
+      },
+      "ok": {
+       "type": [
+        "boolean",
+        "null"
+       ]
+      },
+      "fails": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "deploy": {
+     "type": "object",
+     "required": [
+      "command",
+      "auto"
+     ],
+     "properties": {
+      "command": {
+       "type": "string"
+      },
+      "auto": {
+       "enum": [
+        false
+       ]
+      }
+     }
+    },
+    "companies": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "latest",
+       "recent",
+       "published",
+       "unverified",
+       "deltas",
+       "next"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "maya_id": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "latest": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "required": [
+         "rid",
+         "type",
+         "date",
+         "title"
+        ],
+        "properties": {
+         "rid": {
+          "type": "integer"
+         },
+         "type": {
+          "enum": [
+           "annual",
+           "quarterly",
+           "presentation",
+           "solvency",
+           "liabilities"
+          ]
+         },
+         "period": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "date": {
+          "$ref": "#/$defs/date"
+         },
+         "title": {
+          "type": "string"
+         },
+         "xbrl": {
+          "type": "boolean"
+         },
+         "new": {
+          "type": "boolean"
+         }
+        }
+       },
+       "recent": {
+        "type": "array",
+        "items": {
+         "type": [
+          "object",
+          "null"
+         ],
+         "required": [
+          "rid",
+          "type",
+          "date",
+          "title"
+         ],
+         "properties": {
+          "rid": {
+           "type": "integer"
+          },
+          "type": {
+           "enum": [
+            "annual",
+            "quarterly",
+            "presentation",
+            "solvency",
+            "liabilities"
+           ]
+          },
+          "period": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "date": {
+           "$ref": "#/$defs/date"
+          },
+          "title": {
+           "type": "string"
+          },
+          "xbrl": {
+           "type": "boolean"
+          },
+          "new": {
+           "type": "boolean"
+          }
+         }
+        }
+       },
+       "published": {
+        "type": "object"
+       },
+       "unverified": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "period",
+          "status",
+          "t0"
+         ],
+         "properties": {
+          "period": {
+           "$ref": "#/$defs/period"
+          },
+          "status": {
+           "enum": [
+            "fy",
+            "verified",
+            "unverified",
+            "corrected",
+            "withheld"
+           ]
+          },
+          "rid": {
+           "type": [
+            "integer",
+            "null"
+           ]
+          },
+          "t0": {
+           "type": "boolean"
+          }
+         }
+        }
+       },
+       "deltas": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "required": [
+         "period",
+         "items",
+         "push"
+        ],
+        "properties": {
+         "period": {
+          "$ref": "#/$defs/period"
+         },
+         "items": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "required": [
+            "key",
+            "label",
+            "period",
+            "prev_period",
+            "basis",
+            "unit",
+            "v",
+            "prev",
+            "chg",
+            "pct",
+            "src"
+           ],
+           "properties": {
+            "key": {
+             "enum": [
+              "profit",
+              "oci",
+              "equity",
+              "csm",
+              "solvency"
+             ]
+            },
+            "basis": {
+             "enum": [
+              "yoy",
+              "qoq",
+              "prev"
+             ]
+            },
+            "unit": {
+             "enum": [
+              "m",
+              "pp"
+             ]
+            },
+            "v": {
+             "type": "number"
+            },
+            "prev": {
+             "type": "number"
+            },
+            "chg": {
+             "type": "number"
+            },
+            "pct": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "src": {
+             "type": "array",
+             "minItems": 2,
+             "items": {
+              "type": "object",
+              "required": [
+               "k"
+              ],
+              "properties": {
+               "k": {
+                "enum": [
+                 "xbrl",
+                 "report"
+                ]
+               },
+               "rid": {
+                "type": [
+                 "integer",
+                 "null"
+                ]
+               },
+               "pg": {
+                "type": [
+                 "integer",
+                 "null"
+                ]
+               },
+               "url": {
+                "type": [
+                 "string",
+                 "null"
+                ]
+               },
+               "period": {
+                "type": "string"
+               }
+              }
+             }
+            }
+           }
+          }
+         },
+         "push": {
+          "type": "object",
+          "required": [
+           "title",
+           "body"
+          ],
+          "properties": {
+           "title": {
+            "type": "string"
+           },
+           "body": {
+            "type": "string"
+           }
+          }
+         }
+        }
+       },
+       "next": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "properties": {
+         "period": {
+          "$ref": "#/$defs/period"
+         },
+         "expected": {
+          "$ref": "#/$defs/date"
          }
         }
        }

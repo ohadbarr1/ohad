@@ -1,0 +1,46 @@
+/* lane AP: the "לא מאומת" chip (components/Unverified.tsx) and /data/autopilot (pages/Autopilot.tsx) */
+.unv-wrap { position: relative; display: inline-flex; vertical-align: middle; }
+.chip.unv { gap: 5px; font-weight: 600; }
+.chip.unv .unv-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.chip.unv.compact { padding: 2px 5px; min-width: 18px; justify-content: center; }
+.chip.unv.conflict { color: var(--down); border-color: color-mix(in oklch, var(--down) 35%, transparent); background: color-mix(in oklch, var(--down) 8%, transparent); }
+.unv-pop { position: absolute; z-index: 40; inset-inline-start: 0; top: calc(100% + 6px); width: min(340px, 80vw); padding: 12px 14px; border-radius: var(--r-2);
+  border: 1px solid var(--line); background: var(--panel); box-shadow: var(--shadow-2, 0 8px 24px rgb(0 0 0 / 0.14)); text-align: start; white-space: normal; }
+.unv-body { display: flex; flex-direction: column; gap: 6px; font-size: var(--t-2); line-height: 1.55; color: var(--fg); font-weight: 400; }
+.unv-body b { font-size: var(--t-3); }
+.unv-links { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 2px; }
+
+.ap { gap: 22px; }
+.ap .kpi .v.warn { color: var(--warn); }
+.ap .kpis .kpi .s .chip { margin-inline-start: 4px; }
+.ap td:first-child { min-width: 120px; }
+.ap-filing { display: inline-flex; flex-direction: column; gap: 1px; align-items: flex-start; }
+.ap-filing small { color: var(--faint); font-size: var(--t-1); }
+.ap-filing .chip { margin-top: 2px; }
+.ap-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.ap-unv { display: inline-flex; align-items: center; gap: 4px; }
+.ap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.ap-card { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--panel); }
+.ap-card header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 700; font-size: var(--t-4); }
+.ap-card header a { color: inherit; text-decoration: none; }
+.ap-card ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ap-card li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 56px; gap: 10px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line-soft); font-size: var(--t-3); }
+.ap-card li:first-child { border-top: 0; }
+.ap-card li .l { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap-card li .v { font-weight: 600; text-align: end; }
+.ap-card li .d { text-align: end; font-weight: 600; }
+.ap-card li .b { color: var(--faint); font-size: var(--t-1); }
+.ap-card footer { font-size: var(--t-2); color: var(--muted); border-top: 1px dashed var(--line-soft); padding-top: 8px; line-height: 1.5; }
+.ap-card footer b { color: var(--fg); font-weight: 600; }
+.ap-steps { margin: 0 0 12px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; counter-reset: s; }
+.ap-steps li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-3); counter-increment: s; }
+.ap-steps li::before { content: counter(s); color: var(--faint); font-size: var(--t-1); min-width: 14px; }
+.ap-steps li.bad b { color: var(--down); }
+.ap-steps .mono, .ap-deploy .mono { font-family: var(--font-mono); font-size: var(--t-1); }
+.ap-deploy { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.ap-deploy code { padding: 8px 10px; border-radius: var(--r-1); background: var(--panel2); border: 1px solid var(--line-soft); overflow-wrap: anywhere; flex: 1 1 260px; min-width: 0; }
+@media (max-width: 760px) {
+  .ap-grid { grid-template-columns: 1fr; }
+  .ap-card li { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .ap-card li .b { display: none; }
+}
