@@ -119,27 +119,27 @@ def capital():
                     if d not in line:
                         line[d] = {**{k: x[k] for k in ("v", "pg", "u", "std", "cmp") if k in x}, "s": r["s"]}
             co[key] = line
-        # own funds, SCR and surplus (with transitional measures) of the main insurer, as the periodic report prints them
-        for m, key in CAP_SOLV.items():
-            cands = [r for r in rows if r["m"] in m and r["b"] == "na" and r.get("g") == "insurer" and not OTHER_ENTITY.search(r["s"]) and not NOT_MAIN.search(r["s"])]
-            cands.sort(key=lambda r: -len(r["vals"]))
-            line = {}
-            for r in cands:
-                for p, x in r["vals"].items():
-                    d = p[:4] + ("FY" if p.endswith(("Q4", "FY")) else p[4:])
-                    if d not in line:
-                        line[d] = {**{k: x[k] for k in ("v", "pg", "u", "std", "cmp") if k in x}, "s": r["s"]}
-            co[key] = line
-        # a filer's own-funds row does not always say its basis: keep a periodic own funds / SCR pair only where it reproduces the
-        # with-transitional ratio printed for the same date (within 1.5 points); otherwise the pair is another basis and is left out
-        for p in list(co.get("of", {})):
-            of, scr, sr = co["of"].get(p), co.get("scr", {}).get(p), co.get("sr_w", {}).get(p)
-            if not (of and scr and sr and scr["v"]) or abs(of["v"] / scr["v"] * 100 - sr["v"]) > 1.5:
-                for k in ("of", "scr", "su"):
-                    co.get(k, {}).pop(p, None)
-        for k in ("scr", "su"):
-            for p in [p for p in co.get(k, {}) if p not in co.get("of", {})]:
-                co[k].pop(p)
+        # own funds, SCR and surplus (with transitional measures) of the main insurer, as the periodic report prints them. A filer's row
+        # does not always say its basis: per date, the own funds / SCR pair kept is the one that reproduces the with-transitional ratio
+        # printed for that date (within 1.5 points), and the surplus the row equal to their difference; no pair, no periodic figure
+        cand = {key: [r for r in rows if r["m"] in m and r["b"] == "na" and r.get("g") == "insurer" and not OTHER_ENTITY.search(r["s"]) and not NOT_MAIN.search(r["s"])]
+                for m, key in CAP_SOLV.items()}
+        pts = lambda key, p: [(r, r["vals"][p]) for r in cand[key] if p in r["vals"]]
+        for k in ("of", "scr", "su"):
+            co[k] = {}
+        for p0, sr in co.get("sr_w", {}).items():
+            if "solv" in sr:
+                continue
+            per = {d: d for d in [p0, p0[:4] + "Q4"]}
+            for p in per:
+                pair = next(((o, x) for o in pts("of", p) for x in pts("scr", p) if x[1]["v"] and abs(o[1]["v"] / x[1]["v"] * 100 - sr["v"]) <= 1.5), None)
+                if not pair:
+                    continue
+                su = next((u for u in pts("su", p) if abs(u[1]["v"] - (pair[0][1]["v"] - pair[1][1]["v"])) <= 1.5), None)
+                for k, rx in (("of", pair[0]), ("scr", pair[1]), ("su", su)):
+                    if rx:
+                        co[k][p0] = {**{q: rx[1][q] for q in ("v", "pg", "u", "std", "cmp") if q in rx[1]}, "s": rx[0]["s"]}
+                break
         merge_solvency(c, co)
         out[c] = co
     return out
