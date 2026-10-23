@@ -22,6 +22,7 @@ const NAV: [string, string, string, string | null][] = [
   ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'ענף', 'ענף'],
   ['/valuation', 'value', 'שווי', 'שווי'], ['/funds', 'market', 'קופות ושוק', 'קופות'],
   ['/data', 'data', 'נתונים ואיכות', null],
+  ['/mine', 'mine', 'שלי', null],  // lane F: rail only; the phone reaches it from the header
 ];
 
 export function Layout() {
