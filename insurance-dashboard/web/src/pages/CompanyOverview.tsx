@@ -1,95 +1,149 @@
+import { useMemo, type ReactNode } from 'react';
 import { DividendCapacity } from '../components/DividendCapacity';
-import { Link } from 'react-router-dom';
-import type { MetricCardProps } from '../components/MetricCard';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ErrorBox, Panel } from '../components/ui';
-import { nf, pct, pubLabel, sn } from '../lib/format';
+import { nf, periodLabel, pubLabel } from '../lib/format';
 import type { CompanyStore } from '../lib/company';
-import type { Market, MetricKey, Win } from '../lib/market';
+import type { Market, MetricKey, Win as MWin } from '../lib/market';
 import { METRIC_BY_KEY } from '../lib/market';
 import { useCompanyDocs, useKpis } from '../lib/useData';
-import { periodLabelShort, type CompanyKpi } from '../lib/kpi';
+import { KPI_BY_KEY, periodLabelShort, type CompanyKpi } from '../lib/kpi';
 import { mayaReport } from '../lib/sources';
 import { printed } from './companyProv';
+import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
+import { usePeriodParam, useWindowParam, type Win } from '../lib/period';
+import { usePhone } from '../lib/useMedia';
 import { DOC_TYPE, useCtx } from './Company';
+import { CompanyTear } from './CompanyTear';
+import { Notes, Star } from '../components/Follow';
+import { FundHouseStrip } from '../components/FundHouseStrip';
+import { KpiLedger, KpiTiles, type LedgerGroup, type LedgerPoint, type LedgerRow } from '../components/KpiLedger';
+import { ReportDay, ROLES, YTD, endOf, figAt, figProv, flowAt, qShift, reportsOf, resolve, type Fig } from './ReportDay';
 
-const tone = (v: number | null | undefined) => (v == null || v === 0 ? undefined : v > 0 ? ('pos' as const) : ('neg' as const));
-const chg = (a: number | null | undefined, b: number | null | undefined) => (a != null && b ? (a / b - 1) * 100 : null);
-
-function marketCards(m: Market, group: string): MetricCardProps[] {
-  const g = m.groupIndex(group);
-  if (g < 0) return [];
-  const L = m.LAST;
-  const pts = m.P.map((p, i) => ((p % 100 === 12 || i === L) && p >= 201012 ? i : -1)).filter((i) => i >= 0);
-  const x = pts.map((i) => (i === L ? m.plabel(i) : `'${String(m.P[i]).slice(2, 4)}`));
-  const to = `savings`;
-  const one = (key: MetricKey, set: string, title: string, color: number, dec = 1): MetricCardProps => {
-    const def = METRIC_BY_KEY[key], w: Win = def.win ? 'ltm' : 'm';
-    const data = pts.map((i) => { const v = m.value(key, i, w, set, g); return v == null ? null : +v.toFixed(3); });
-    const now = data[data.length - 1], prev = data[data.length - 2];
-    const d = now != null && prev != null ? (def.unit === '%' ? { text: `${sn(now - prev, dec)} נק׳`, tone: key === 'fee' ? undefined : tone(now - prev) } : { text: pct(chg(now, prev), 1, true), tone: tone(chg(now, prev)) }) : undefined;
-    return { title, unit: def.unit === '%' ? (def.win ? '%, LTM' : '%') : `מיליארד ש"ח${def.win ? ', LTM' : ''}`, value: now == null ? '–' : nf(now, dec), delta: key === 'assets' || ((key === 'share' || key === 'fee') && Math.abs(now! - prev!) >= 0.5 / 10 ** dec) ? d : undefined, x, src: now == null ? undefined : () => ({ k: 'reg', metric: key, pi: L, w, set, g }), series: [{ name: title, data }], color, dec, to };
-  };
-  const fams: [string, string][] = [['fam:pension', 'פנסיה'], ['fam:gemel', 'גמל והשתלמות'], ['fam:insurance', 'ביטוחי מנהלים ופוליסות חיסכון']];
-  const stack: MetricCardProps = {
-    title: 'נכסים לפי מוצר', unit: 'מיליארד ש"ח', value: nf(m.value('assets', L, 'm', 'all', g) ?? 0, 1), x, kind: 'stack', to, src: () => ({ k: 'reg', metric: 'assets', pi: L, w: 'm', set: 'all', g }),
-    series: fams.map(([s, name], i) => ({ name, color: [0, 2, 4][i], data: pts.map((pi) => +(m.cell(pi, s, g).a / 1000).toFixed(2)) })),
-  };
-  return [one('assets', 'all', 'נכסים מנוהלים', 0), stack, one('share', 'all', 'נתח שוק', 7), one('organic', 'all', 'צבירה אורגנית', 3), one('transfers', 'all', 'ניוד נטו', 4),
-    one('fee', 'fam:pension', 'דמי ניהול, פנסיה', 6, 2), one('fee', 'fam:gemel', 'דמי ניהול, גמל', 6, 2), one('ret', 'fam:pension', 'תשואה, פנסיה', 9)];
-}
-
-// Lines of the full statements (the quarterly history where it exists, otherwise the latest report). One period type per card: quarters first.
-const FIN: { title: string; sheets: string[]; label: string; dim?: string; exact?: boolean; flow: boolean; color: number; tag?: string }[] = [
-  { title: 'רווח לבעלי המניות', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'בעלי המניות של החברה', exact: true, flow: true, color: 1 },
-  { title: 'רווח משירותי ביטוח', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'רווח משירותי ביטוח', exact: true, flow: true, color: 1, tag: 'IFRS 17' },
-  { title: 'רווח מהשקעות ומימון, נטו', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'רווח מהשקעות ומימון, נטו', exact: true, flow: true, color: 9 },
-  { title: 'הכנסות מדמי ניהול', sheets: ['X.רווח_והפסד', 'F.D2_רווח_הפסד'], label: 'הכנסות מדמי ניהול', exact: true, flow: true, color: 5 },
-  { title: 'הון לבעלי המניות', sheets: ['X.מאזן', 'F.D1_מצב_כספי'], label: 'סך הכל הון המיוחס לבעלי המניות של החברה', exact: true, flow: false, color: 7 },
-  { title: 'CSM ברוטו, ביטוח חיים', sheets: ['F.N03_חיים_מאזן'], label: 'מרווח השירות החוזי', dim: 'סך הכל', flow: false, color: 3, tag: 'IFRS 17' },
-  { title: 'CSM ברוטו, ביטוח בריאות', sheets: ['F.N03_בריאות_מאזן'], label: 'מרווח השירות החוזי', dim: 'סך הכל', flow: false, color: 3, tag: 'IFRS 17' },
-];
-function financialCards(store: CompanyStore): MetricCardProps[] {
-  const out: MetricCardProps[] = [];
-  for (const f of FIN) {
-    const sheet = f.sheets.find((x) => store.find(x, f.label, { exact: f.exact, dim: f.dim }) != null);
-    const mi = sheet ? store.find(sheet, f.label, { exact: f.exact, dim: f.dim }) : null;
-    if (mi == null || !sheet) continue;
-    const all = store.d.periods.map((p, i) => ({ p, i })).filter(({ i }) => store.val(mi, i) != null);
-    const type = f.flow ? (['Q', 'H', 'FY'].find((t) => all.filter((a) => a.p.type === t).length > 1) ?? 'H') : 'I';
-    const ps = all.filter((a) => a.p.type === type).sort((a, b) => a.p.end.localeCompare(b.p.end)).slice(-12);
-    if (!ps.length) continue;
-    const data = ps.map(({ i }) => +(store.val(mi, i)! / 1000).toFixed(1));
-    const now = data[data.length - 1], yoy = type === 'Q' || type === 'I', prev = data[data.length - (yoy ? 5 : 2)];  // quarters and balance dates are compared with the same point a year earlier
-    const last = ps[ps.length - 1].i, page = store.page(mi, last);
-    const entity = store.d.sheets.find((x) => x.code === sheet)?.entity ?? '', fact = store.byMetric.get(mi)?.get(last);
-    const href = fact ? store.sourceUrl(entity, page, fact.u) : null;
-    out.push({ title: f.title, tag: f.tag, unit: 'מיליוני ש"ח', value: nf(now, 0), delta: prev ? { text: `${pct(chg(now, prev), 1, true)}${yoy && data.length >= 5 ? ' YoY' : ''}`, tone: tone(chg(now, prev)) } : undefined,
-      x: ps.map(({ i }) => store.plabel(i)), series: [{ name: f.title, data }], color: f.color, dec: 0, to: `financials?sheet=${encodeURIComponent(sheet)}&m=${mi}${sheet.startsWith('X.') ? '&g=1' : ''}`, foot: page ? `דוח כספי, עמ׳ ${page}` : undefined,
-      src: () => printed(store, mi, last, { value: nf(now, 0), unit: 'מיליוני ש"ח', entity, title: f.title }), href });
-  }
+const MN = 'מיליוני ש"ח';
+/** Every quarter end from the first to the last, so that "a quarter back" and "a year back" are always one and four points. */
+function quarterEnds(first: string, last: string): string[] {
+  const out: string[] = [];
+  for (let e = first; e <= last && out.length < 200; e = qShift(e, 1)) out.push(e);
   return out;
 }
+/** How a flow's period is named in a window: Q2'26, H1'26, LTM Q2'26. */
+const winLabel = (end: string, win: Win, flow: boolean) => (!flow ? periodLabel('Q', end) : win === 'ltm' ? `LTM ${periodLabel('Q', end)}` : periodLabel(win === 'q' ? 'Q' : YTD[end.slice(5)], end));
+const WIN_HE: Record<Win, string> = { q: 'רבעון', ytd: 'מתחילת השנה', ltm: 'LTM' };
 
-function kpiCards(k: CompanyKpi): MetricCardProps[] {
-  const from = 2019;
-  const card = (key: string, basis: 'q' | 'ltm', title: string, unit: string, color: number, dec: number, tag?: string): MetricCardProps => {
-    const s = k.series(key, basis).filter((p) => Number(p.period.slice(0, 4)) >= from && p.v != null);
-    const last = s[s.length - 1], now = last?.v ?? null, prev = s[s.length - 5]?.v ?? null;
-    const isRatio = unit === '%' || unit === 'מכפיל';
-    const d = now != null && prev != null ? (isRatio ? { text: `${sn(now - prev, dec)} YoY`, tone: tone(now - prev) } : prev > 0 ? { text: pct(chg(now, prev), 1, true) + ' YoY', tone: tone(chg(now, prev)) } : undefined) : undefined;
-    return { title, tag, unit, value: now == null ? '–' : nf(now, dec), delta: d, x: s.map((p) => periodLabelShort(p.period)), series: [{ name: title, data: s.map((p) => +p.v!.toFixed(3)) }], color, dec, kind: isRatio ? 'area' : 'bar', to: `/industry/headline?k=${key}&b=${basis}`, foot: 'XBRL, דוחות תקופתיים',
-      src: last ? () => k.explain(key, basis, last.period) : undefined, href: last && k.explain(key, basis, last.period).k === 'xbrl' && k.reportId(last.period) ? mayaReport(k.reportId(last.period)!) : null };
+/* ---------- the statements: the same lines, resolved the same way, as the report-day table above ---------- */
+const ST_KEYS = ['net', 'comp', 'isr', 'inv', 'pbt', 'eq', 'assets'];
+const SHORT: Record<string, string> = { net: 'רווח נקי', comp: 'רווח כולל', isr: 'רווח משירותי ביטוח', inv: 'רווח מהשקעות', pbt: 'רווח לפני מס', eq: 'הון עצמי', assets: 'סך הנכסים', profit: 'רווח נקי', oci: 'רווח כולל', equity: 'הון עצמי', eps: 'רווח למניה' };
+function statementRows(store: CompanyStore, win: Win): LedgerRow[] {
+  const reps = reportsOf(store).map(endOf).sort();
+  if (!reps.length) return [];
+  const ends = quarterEnds(reps[0], reps[reps.length - 1]).slice(-24);
+  return ST_KEYS.flatMap((key) => {
+    const role = ROLES.find((r) => r.key === key)!, r = resolve(store, role);
+    // attribution rows the filer stopped printing: the report's bottom line, named on the row (as on the report-day table)
+    const alt = role.alt && !r.alt ? resolve(store, role, true).rows : null;
+    let usedAlt = r.alt;
+    const pts: LedgerPoint[] = ends.map((e) => {
+      let f: Fig | null = role.flow ? flowAt(store, r.rows, e, win) : figAt(store, r.rows, 'I', e);
+      if (!f && alt && role.flow) { f = flowAt(store, alt, e, win); if (f) usedAlt = true; }
+      const label = winLabel(e, win, role.flow);
+      return { end: e, label, v: f ? (f.unit === 'k' ? f.v / 1e3 : f.v) : null, src: f ? () => figProv(f!, role.label, label) : undefined, href: f && !f.calc ? f.href : null, der: !!f?.der };
+    });
+    if (!pts.some((p) => p.v != null)) return [];
+    const mi = r.rows[0]?.mi, sheet = mi != null ? store.d.metrics[mi].sheet : '';
+    return [{ key: `st:${key}`, title: role.label, short: SHORT[key], tag: usedAlt ? role.altChip : key === 'isr' ? 'IFRS 17' : undefined, unit: MN, dec: 1, pts, step: 4, source: 'דוחות כספיים',
+      color: role.flow ? 1 : 7, to: mi != null ? `financials?sheet=${encodeURIComponent(sheet)}&m=${mi}&g=1` : undefined }];
+  });
+}
+
+/* ---------- XBRL: the tagged headline figures, with what the statements do not give (ROE, EPS, leverage) ---------- */
+function kpiRows(k: CompanyKpi, win: Win, keys: string[]): LedgerRow[] {
+  const q = k.quarters;
+  if (!q.length) return [];
+  const ends = quarterEnds(q[0].end, q[q.length - 1].end).slice(-24), byEnd = new Map(q.map((x) => [x.end, x]));
+  const unitOf = (u: string) => (u === 'm' ? MN : u === 'nis' ? 'ש"ח' : u === '%' ? '%' : 'מכפיל');
+  return keys.flatMap((key) => {
+    const def = KPI_BY_KEY[key];
+    if (!def) return [];
+    const flow = def.flow, qs = k.series(key, 'q'), lt = flow ? k.series(key, 'ltm') : [];
+    const iOf = new Map(qs.map((p, i) => [p.period, i]));
+    const pts: LedgerPoint[] = ends.map((e) => {
+      const t = byEnd.get(e), label = winLabel(e, win, flow);
+      if (!t) return { end: e, label, v: null };
+      const i = iOf.get(t.period)!;
+      if (!flow || win === 'q') return { end: e, label, v: qs[i]?.v ?? null, src: () => k.explain(key, 'q', t.period), der: !!def.derived };
+      if (win === 'ltm') return { end: e, label, v: lt[i]?.v ?? null, src: () => k.explain(key, 'ltm', t.period), der: true };
+      // the year to date: the annual figure at a year end, otherwise the quarters of the year added (derived)
+      if (t.q === 4) return { end: e, label, v: k.series(key, 'fy').find((p) => p.period === t.period)?.v ?? null, src: () => k.explain(key, 'fy', t.period) };
+      const ps = q.filter((x) => x.y === t.y && x.q <= t.q).map((x) => ({ x, v: qs[iOf.get(x.period)!]?.v ?? null }));
+      if (ps.length !== t.q || ps.some((p) => p.v == null)) return { end: e, label, v: null };
+      const v = ps.reduce((s, p) => s + p.v!, 0);
+      const src = (): Prov => (t.q === 1 ? k.explain(key, 'q', t.period) : { k: 'calc', title: `${def.label}, ${label}`, value: nf(v, def.unit === 'nis' ? 2 : 1), unit: unitOf(def.unit), formula: `${label} = ${ps.map((p) => periodLabelShort(p.x.period)).join(' + ')}`,
+        inputs: ps.map((p) => ({ label: periodLabelShort(p.x.period), v: nf(p.v!, def.unit === 'nis' ? 2 : 1), src: () => k.explain(key, 'q', p.x.period) })) });
+      return { end: e, label, v, src, der: t.q > 1 };
+    });
+    if (!pts.some((p) => p.v != null)) return [];
+    const rid = (i: number) => { const t = byEnd.get(ends[i]); return t && k.reportId(t.period); };
+    pts.forEach((p, i) => { const r = rid(i); if (p.v != null && r && (!flow || win === 'q') && !def.derived) p.href = mayaReport(r); });
+    const title = key === 'roe' ? 'ROE, LTM' : key === 'leverage' ? 'נכסים להון' : def.label;
+    return [{ key: `kpi:${key}`, title, short: SHORT[key], tag: def.derived ? 'נגזר' : undefined, unit: unitOf(def.unit), dec: def.unit === 'nis' ? 2 : def.unit === '%' || def.unit === 'x' ? 1 : 0, ratio: def.unit === '%' || def.unit === 'x',
+      pts, step: 4, source: k.filer ? `XBRL · ${k.filer.name}` : 'XBRL', color: 0, to: `/industry/headline?k=${key}&b=${flow && win === 'ltm' ? 'ltm' : 'q'}`, filer: !!k.filer }];
+  });
+}
+
+/* ---------- IFRS 17 balances from the statements' notes: CSM by segment, gross ---------- */
+const CSM_ROWS: { key: string; title: string; sheet: string }[] = [
+  { key: 'csm_life', title: 'CSM ברוטו, ביטוח חיים', sheet: 'F.N03_חיים_מאזן' },
+  { key: 'csm_health', title: 'CSM ברוטו, ביטוח בריאות', sheet: 'F.N03_בריאות_מאזן' },
+];
+function csmRows(store: CompanyStore): LedgerRow[] {
+  return CSM_ROWS.flatMap(({ key, title, sheet }) => {
+    const mi = store.find(sheet, 'מרווח השירות החוזי', { dim: 'סך הכל' });
+    if (mi == null) return [];
+    const at = new Map<string, number>();
+    store.d.periods.forEach((p, i) => { if (p.type === 'I' && store.val(mi, i) != null) at.set(p.end, i); });
+    const have = [...at.keys()].sort();
+    if (!have.length) return [];
+    const entity = store.d.sheets.find((x) => x.code === sheet)?.entity ?? 'F';
+    const pts: LedgerPoint[] = quarterEnds(have[0], have[have.length - 1]).map((e) => {
+      const pi = at.get(e), label = periodLabel('Q', e);
+      if (pi == null) return { end: e, label, v: null };
+      const v = store.val(mi, pi)! / 1000, fact = store.byMetric.get(mi)?.get(pi);
+      return { end: e, label, v, src: () => printed(store, mi, pi, { value: nf(v, 1), unit: MN, entity, title }), href: fact ? store.sourceUrl(entity, store.page(mi, pi), fact.u) : null, der: !!fact?.der };
+    });
+    return [{ key: `csm:${key}`, title, tag: 'IFRS 17', unit: MN, dec: 1, pts, step: 4, source: 'ביאור מגזרים', color: 3, to: `ifrs17` }];
+  });
+}
+
+/* ---------- long-term savings: the regulator's monthly figures for the company's group ---------- */
+function marketRows(m: Market, group: string): LedgerRow[] {
+  const g = m.groupIndex(group);
+  if (g < 0) return [];
+  const months = m.P.map((p, i) => ({ p, i })).filter((x) => x.p >= 201012 && x.i <= m.LAST);
+  const end = (p: number) => `${Math.floor(p / 100)}-${String(p % 100).padStart(2, '0')}-01`;
+  const one = (key: MetricKey, set: string, title: string, color: number, dec = 1): LedgerRow | null => {
+    const def = METRIC_BY_KEY[key], w: MWin = def.win ? 'ltm' : 'm';
+    const pts: LedgerPoint[] = months.map(({ p, i }) => { const v = m.value(key, i, w, set, g); return { end: end(p), label: m.plabel(i), v: v == null ? null : +v.toFixed(4), src: v == null ? undefined : () => ({ k: 'reg', metric: key, pi: i, w, set, g }) as Prov }; });
+    if (!pts.some((x) => x.v != null)) return null;
+    return { key: `mkt:${key}:${set}`, title, unit: def.unit === '%' ? '%' : 'מיליארד ש"ח', dec, ratio: def.unit === '%', pts, step: 12, source: 'רשות שוק ההון', color, kind: def.unit === '%' ? 'area' : 'bar', to: 'savings', tag: def.win ? 'LTM' : undefined };
   };
-  return [
-    card('profit', 'q', 'רווח נקי לבעלי המניות, QTD', 'מיליוני ש"ח', 0, 0),
-    card('profit', 'ltm', 'רווח נקי, LTM', 'מיליוני ש"ח', 0, 0),
-    card('oci', 'q', 'רווח כולל, QTD', 'מיליוני ש"ח', 3, 0),
-    card('equity', 'q', 'הון לבעלי המניות', 'מיליוני ש"ח', 7, 0),
-    card('roe', 'q', 'ROE, LTM', '%', 1, 1, 'נגזר'),
-    card('eps', 'q', 'רווח למניה, QTD', 'ש"ח', 4, 2),
-    card('assets', 'q', 'סך הנכסים', 'מיליוני ש"ח', 9, 0),
-  ];
+  const fams: [string, string][] = [['fam:pension', 'פנסיה'], ['fam:gemel', 'גמל והשתלמות'], ['fam:insurance', 'ביטוחי מנהלים ופוליסות חיסכון']];
+  const assets = one('assets', 'all', 'נכסים מנוהלים', 0);
+  // the managed-assets chart splits by product
+  if (assets) { assets.stack = fams.map(([s, name], k) => ({ name, color: [0, 2, 4][k], data: months.map(({ i }) => +(m.cell(i, s, g).a / 1000).toFixed(2)) })); assets.kind = 'stack'; }
+  return [assets, one('share', 'all', 'נתח שוק', 7), one('organic', 'all', 'צבירה אורגנית', 3), one('transfers', 'all', 'ניוד נטו', 4),
+    one('fee', 'fam:pension', 'דמי ניהול, פנסיה', 6, 2), one('fee', 'fam:gemel', 'דמי ניהול, גמל', 6, 2), one('ret', 'fam:pension', 'תשואה, פנסיה', 9)].filter((r): r is LedgerRow => !!r);
+}
+
+/** The phone card's tiles: the headline metrics a reader looks for first, never another company's figures (a listed holding company's tags). */
+function tilesOf(rows: LedgerRow[], fund: boolean): LedgerRow[] {
+  const pref = fund ? ['st:net|kpi:profit', 'kpi:roe', 'st:eq|kpi:equity', 'mkt:assets:all', 'mkt:share:all', 'mkt:organic:all', 'kpi:eps']
+    : ['st:net|kpi:profit', 'kpi:roe', 'st:eq|kpi:equity', 'st:isr', 'st:comp|kpi:oci', 'kpi:eps'];
+  const ok = rows.filter((r) => !r.filer), out: LedgerRow[] = [];
+  for (const alts of pref) { const r = alts.split('|').map((k) => ok.find((x) => x.key === k)).find(Boolean); if (r && out.length < 6) out.push(r); }
+  for (const r of ok) if (out.length < 6 && !out.includes(r) && !r.key.startsWith('mkt:fee')) out.push(r);
+  return out.slice(0, 6);
 }
 
 function LatestDocs({ docs }: { docs: DocEntry[] }) {
@@ -104,36 +158,55 @@ function LatestDocs({ docs }: { docs: DocEntry[] }) {
   );
 }
 
-import { CompanyTear } from './CompanyTear';
-import { Notes, Star } from '../components/Follow';
-import { FundHouseStrip } from '../components/FundHouseStrip';
-import { KpiLedger, type LedgerGroup } from '../components/KpiLedger';
-import { ReportDay } from './ReportDay';
-
 export function CompanyOverview() {
   const { entry, store, market, storeError } = useCtx();
   const docs = useCompanyDocs(entry.id, entry.docs > 0);
   const { kpis } = useKpis();
-  if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
+  const phone = usePhone();
+  const [p] = usePeriodParam();
+  const [w] = useWindowParam();
+  const [sp, setSp] = useSearchParams();
+  const sel = sp.get('row') ?? '';
+  const onSel = (key: string) => setSp((q) => { const n = new URLSearchParams(q); if (key) n.set('row', key); else n.delete('row'); return n; }, { replace: true });
   const k = kpis?.get(entry.id);
-  const kc = k ? kpiCards(k) : [];
-  const fin = store ? financialCards(store).filter((c) => c.tag === 'IFRS 17') : [];
-  const mk = market && entry.market_group ? marketCards(market, entry.market_group) : [];
-  const groups: LedgerGroup[] = [
-    { title: 'רווחיות והון', note: 'XBRL, דוחות תקופתיים', cards: kc },
-    { title: 'IFRS 17', note: store?.d.sources[0]?.doc, cards: fin },
-    ...(market ? [{ title: 'חיסכון ארוך טווח', note: <>רשות שוק ההון · <span className="num">{market.plabel(market.LAST)}</span> · <Link to={`/funds/makers?mk=${encodeURIComponent(entry.market_group ?? '')}`}>מול השוק, לפי מסלול</Link></>, cards: mk }] : []),
-  ];
+  const fund = entry.kind === 'fund_house';
+  // the report on screen: the one in the address when the company has it, otherwise the latest (each row then shows its own latest)
+  const reports = useMemo(() => (store ? reportsOf(store) : []), [store]);
+  const P = reports.includes(p) ? p : '';
+  const asOf = P ? endOf(P) : null;
+  // the window: the address's, or the report day's default (an annual report on the year, an interim one on the quarter)
+  const win: Win = w === 'ltm' ? 'ltm' : (P || reports[0] || '').endsWith('Q1') ? 'q' : w || ((P || reports[0] || '').endsWith('FY') ? 'ytd' : 'q');
+
+  const groups = useMemo<LedgerGroup[]>(() => {
+    const st = store ? statementRows(store, win) : [];
+    const kk = k ? kpiRows(k, win, st.length ? ['roe', 'eps', 'leverage'] : ['profit', 'oci', 'equity', 'assets', 'roe', 'eps', 'leverage']) : [];
+    const cs = store && !fund ? csmRows(store) : [];
+    const mk = market && entry.market_group ? marketRows(market, entry.market_group) : [];
+    const out: LedgerGroup[] = [];
+    if (st.length) out.push({ key: 'st', title: 'מהדוחות הכספיים', note: <>כפי שדווח · {WIN_HE[win]}</>, rows: st });
+    if (kk.length) out.push({ key: 'kpi', title: k?.filer ? `יחסים · ${k.filer.name} (${k.filer.stake}%)` : st.length ? 'יחסים' : 'רווחיות והון', note: <>XBRL, דוחות תקופתיים{k?.filer ? ' · נתוני החברה המדווחת' : ''}</>, rows: kk });
+    if (cs.length) out.push({ key: 'csm', title: 'IFRS 17', note: store?.d.sources[0]?.doc, rows: cs });
+    if (mk.length) out.push({ key: 'mkt', title: 'חיסכון ארוך טווח', note: <>רשות שוק ההון · <Link to={`/funds/makers?mk=${encodeURIComponent(entry.market_group ?? '')}`}>מול השוק, לפי מסלול</Link></>, rows: mk });
+    return out;
+  }, [store, k, win, fund, market, entry.market_group]);
+
+  if (storeError) return <ErrorBox what="נתוני החברה" error={storeError} />;
+  const allRows = groups.flatMap((g) => g.rows);
+  const tiles: ReactNode = phone && allRows.length ? <section className="ccard" aria-label="נתוני מפתח"><KpiTiles rows={tilesOf(allRows, fund)} asOf={asOf} /></section> : null;
+  const repTag = P ? (P.endsWith('FY') ? `FY'${P.slice(2, 4)}` : `${P.slice(4)}'${P.slice(2, 4)}`) : '';
   return (
     <>
-      {entry.has_financials && <ReportDay />}
-      {entry.kind === 'fund_house' && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}
-      {!entry.has_financials && entry.kind !== 'fund_house' && <CompanyTear id={entry.id} />}
-      <section>
-        <h2 className="band">פרופיל<span className="muted">{k ? `${periodLabelShort(k.quarters[0].period)} עד ${periodLabelShort(k.quarters[k.quarters.length - 1].period)}` : ''} · לחיצה על שורה מציגה אותה בגרף</span></h2>
-        <KpiLedger groups={groups} />
-      </section>
-      {entry.kind !== 'fund_house' && <DividendCapacity id={entry.id} />}
+      {entry.has_financials && <ReportDay card={tiles} />}
+      {!entry.has_financials && tiles}
+      {fund && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}
+      {!entry.has_financials && !fund && <CompanyTear id={entry.id} />}
+      {groups.length > 0 && (
+        <section className="kpi-sec">
+          <h2 className="band">נתוני מפתח<span className="muted">{repTag && <><span className="num">{repTag}</span> · </>}{WIN_HE[win]} · {phone ? 'לחיצה על שורה פותחת גרף' : 'לחיצה על שורה מציגה אותה בגרף'}</span></h2>
+          <KpiLedger groups={groups} asOf={asOf} sel={sel} onSel={onSel} />
+        </section>
+      )}
+      {!fund && <DividendCapacity id={entry.id} />}
       {docs.data && <LatestDocs docs={docs.data.docs} />}
       <Panel title="הערות" aside={<><span>מעקב</span><Star id={entry.id} name={entry.name_he} /></>}><Notes id={entry.id} /></Panel>
     </>

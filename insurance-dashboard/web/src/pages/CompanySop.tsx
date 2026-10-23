@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { usePeriodParam } from '../lib/period';
+import { usePeriodParam, useWindowParam } from '../lib/period';
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Empty, Loading, Panel, Seg } from '../components/ui';
@@ -62,11 +62,12 @@ export function CompanySop({ id, docs }: { id: string; docs: number }) {
   const [data, setData] = useState<SopData | null | undefined>(undefined);
   useEffect(() => { setData(undefined); load<SopData>(`sop/${id}.json`).then(setData, () => setData(null)); }, [id]);
   const periods = useMemo(() => Object.keys(data ?? {}).sort(byPeriodDesc), [data]);
-  // the report comes from the address (shared with the other tabs); the window is this tab's own choice
+  // the report and the window come from the address, shared with the other tabs (?p=&w=); an annual report's cumulative window is the year
   const [pp, setPp] = usePeriodParam();
-  const [win, setWinSel] = useState('');
+  const [ww, setWw] = useWindowParam();
+  const win = ww === 'q' ? 'q' : ww === 'ytd' ? (pp.endsWith('FY') ? 'fy' : 'ytd') : '';
   const sel = pp && win ? `${pp}|${win}` : '';
-  const setSel = (v: string) => { const [a, b] = v.split('|'); setPp(a); setWinSel(b ?? ''); };
+  const setSel = (v: string) => { const [a, b] = v.split('|'); setPp(a); if (b === 'q') setWw('q'); else if (b === 'ytd' || b === 'fy') setWw('ytd'); };
   const [fam, setFam] = useState('sop');
   const [exp, setExp] = useState<Record<string, boolean>>({});
 

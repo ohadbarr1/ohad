@@ -1,0 +1,101 @@
+/* Company page (lane A2): the header, the four places and the statement views beneath them, the KPI ledger, the phone company card. */
+
+/* header: identity dot in the company's fixed colour; the filer note in one line */
+.company-head h1 .iddot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-inline-end: 10px; vertical-align: 0.18em; flex: none; }
+.company-head .ch-id { min-width: 0; max-width: 100%; }
+.company-head .filer-note { margin: 8px 0 0; font-size: var(--t-2); color: var(--muted); line-height: 1.5; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.company-head .filer-note.open { white-space: normal; }
+.company-head .filer-note .chip { margin-inline-end: 4px; }
+.company-head .sub .valchip.ph { display: inline-flex; color: var(--accent-text); border-color: var(--accent-line); background: transparent; font-weight: 700; }
+.company-head .head-acts .valchip:not(.wb) { color: var(--accent-text); border: 1px solid var(--accent-line); background: transparent; font-weight: 700; }
+.company-head .head-acts .valchip:not(.wb):hover { text-decoration: none; background: color-mix(in oklch, var(--accent) 8%, transparent); }
+
+/* the four places; long labels on a wide screen, short ones on a phone */
+.cnav .sm, .cnav2 .sm { display: none; }
+@media (max-width: 760px) {
+  .cnav .lg, .cnav2 .lg { display: none; }
+  .cnav .sm, .cnav2 .sm { display: inline; }
+  /* four equal segments across the width: no scrolling, every place in view */
+  .subnav.cnav { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); overflow: visible; mask-image: none; width: 100%; }
+  .subnav.cnav a { min-height: 42px; display: flex; align-items: center; justify-content: center; padding: 8px 4px; text-align: center; }
+  .subnav.cnav .count { margin-right: 5px; }
+  /* the statement views sit under "דוחות" as a second, quieter row (the same as on a wide screen) */
+  .subnav.sub2.cnav2 { display: flex; margin-top: -8px; gap: 0; width: 100%; overflow-x: auto; mask-image: none; }
+  .subnav.sub2.cnav2 a { flex: 1 0 auto; min-height: 40px; display: flex; align-items: center; justify-content: center; padding: 6px 10px; font-size: var(--t-2); }
+  .company-head h1 .iddot { width: 9px; height: 9px; margin-inline-end: 8px; }
+  .company-head .filer-note { margin-top: 6px; font-size: var(--t-1); }
+}
+
+/* report day on a phone: the company is named in the header, the report and window sit in the context bar */
+@media (max-width: 760px) {
+  .rd-head { gap: 6px; }
+  .rd-head .rd-co { display: none; }
+  .rd-title h2 { font-size: 19px; }
+  .rd-head .ctxbar { width: calc(100% + 28px); }
+}
+.rd-pick { display: flex; flex-direction: column; gap: 16px; }
+.rd-pick .rd-reps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.rd-pick .rd-reps .chip { min-height: 40px; justify-content: center; font-size: var(--t-2); border-color: var(--line-soft); background: var(--panel); color: var(--fg); cursor: pointer; }
+.rd-pick .rd-reps .chip.on { background: var(--sel-bg); color: var(--sel-fg); border-color: transparent; font-weight: 700; }
+.rd-pick select { margin-top: 8px; min-height: 40px; }
+.rd-pick .seg button { min-height: 40px; }
+.rd-pick .rd-done { min-height: 44px; font-weight: 700; background: var(--sel-bg); color: var(--sel-fg); border-color: transparent; }
+/* trailing twelve months as the main window: the separate LTM column goes */
+@media (min-width: 761px) { .rd-table.rd-ltm .rd-tr { grid-template-columns: minmax(200px, 1.7fr) repeat(3, minmax(0, 1fr)); } }
+
+/* the phone company card: six tiles, two to a row; the figure opens its source, the tile its chart */
+.ccard { margin: 2px 0 4px; }
+.ktiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ktile { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 4px 12px 8px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-3); cursor: pointer; min-width: 0; }
+.ktile .kt-hd { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 40px; margin: 0 -12px; padding: 0 12px; background: none; border: 0; font: inherit; color: var(--muted); cursor: pointer; text-align: start; }
+.ktile .kt-t { font-size: 12.5px; font-weight: 600; line-height: 1.25; color: var(--fg); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ktile .kt-p { flex: none; font-size: var(--t-1); color: var(--faint); }
+.ktile .kt-v { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
+.ktile .kt-v .num { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.ktile .kt-v :is(a.src, button.src) { display: inline-flex; align-items: center; min-height: 40px; padding: 0; margin-block: -4px; }
+.ktile .kt-u { font-size: var(--t-1); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ktile .kt-f { display: flex; align-items: center; gap: 6px; font-size: 12.5px; min-height: 30px; }
+.ktile .kt-f :is(a.src, button.src) { display: inline-flex; align-items: center; min-height: 36px; font-weight: 700; }
+.ktile .kt-yl { font-size: var(--t-1); color: var(--faint); }
+.ktile .kt-f svg.spark { margin-inline-start: auto; }
+.ktile:active { background: var(--panel2); }
+
+/* the KPI ledger: full width until a row is chosen; then the chosen row's chart in a sticky pane beside it */
+.ledger-wrap:not(.has-pane) { grid-template-columns: minmax(0, 1fr); }
+.ledger-wrap.has-pane { grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); }
+.ledger table { width: 100%; }
+.ledger tr.lhd th { font-size: var(--t-1); font-weight: 600; color: var(--muted); padding-block: 2px 6px; white-space: nowrap; border-bottom: 1px solid var(--line-soft); }
+.ledger tr.lhd th:first-child { color: var(--faint); font-weight: 500; }
+.ledger td.v .num { font-weight: 700; }
+.ledger td.v .dim { display: block; font-size: var(--t-1); color: var(--faint); font-weight: 400; }
+.ledger td .num.der, .ledger td .der .num { font-style: italic; }
+.ledger td.lsrc { font-size: var(--t-1); white-space: nowrap; }
+.ledger td.lsrc .u { display: block; color: var(--faint); }
+.ledger tbody tr.on td { background: color-mix(in oklch, var(--accent) 9%, var(--panel)); }
+.ledger tbody tr.on td.lbl .rowbtn { color: var(--accent-text); font-weight: 700; }
+.ledger-chart { position: sticky; top: 76px; }
+.ledger-chart .ledger-x { position: absolute; inset-inline-end: 8px; top: 8px; z-index: 2; min-width: 32px; min-height: 32px; padding: 0; font-size: 18px; line-height: 1; }
+.ledger-chart .mcard header { padding-inline-end: 40px; }
+@media (max-width: 1100px) {
+  .ledger td.lsrc, .ledger th.lsrc { display: none; }
+}
+@media (max-width: 760px) {
+  .ledger { padding: 4px 2px; }
+  .ledger table { table-layout: auto; }
+  .panel.ledger table :is(td, th) { padding-inline: 5px; min-width: 0; }
+  .panel.ledger table :is(td.lbl, tr.lhd th:first-child) { width: 44%; min-width: 0; max-width: none; white-space: normal; }
+  .ledger td.lbl .lblin { display: flex; flex-wrap: wrap; gap: 2px 6px; }
+  .ledger .rowbtn { min-height: 36px; text-align: start; line-height: 1.25; }
+  .ledger td.lbl .chip { font-size: 10.5px; padding: 0 5px; }
+  .ledger th.spk, .ledger td.spk { width: 64px; }
+  .ledger td.v .num { font-size: 13.5px; }
+  .ledger td :is(a.src, button.src) { display: inline-block; padding-block: 8px; margin-block: -8px; }
+}
+/* a full-screen sheet for a chart on a phone */
+@media (max-width: 760px) { .sheet:has(.sheet-full) { max-height: 100dvh; height: 100dvh; border-radius: 0; } }
+@media (max-width: 760px) {
+  .rd-meta.rd-meta-ph { margin-top: -4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .rd-meta.rd-meta-ph .chip { min-height: 32px; }
+  .company-head .sub .chip { min-height: 30px; }
+  .rd-head .ctxbar-txt b { font-weight: 700; }
+}

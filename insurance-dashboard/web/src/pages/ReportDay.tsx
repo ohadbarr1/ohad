@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
@@ -13,11 +13,14 @@ import { CSM_BASIS_HE, resolveCsm, type CsmClose } from '../lib/csmResolve';
 import { Sourced } from '../components/Source';
 import { useSource, type Prov } from '../lib/prov';
 import { bareUrl, calc, docOf, factPeriod, report } from './companyProv';
+import { useWindowParam, type Win } from '../lib/period';
+import { usePhone } from '../lib/useMedia';
+import { ContextBar, Sheet } from '../components/Sheet';
 import '../styles/reportday.css';
 
 const PL = 'X.רווח_והפסד', BS = 'X.מאזן', OCI = 'X.רווח_כולל';
 const QE = ['03-31', '06-30', '09-30', '12-31'];
-const YTD: Record<string, string> = { '03-31': 'Q', '06-30': 'H', '09-30': '9M', '12-31': 'FY' };
+export const YTD: Record<string, string> = { '03-31': 'Q', '06-30': 'H', '09-30': '9M', '12-31': 'FY' };
 
 /** Quarter ends: shift by `k` quarters; a report is named like the extracted IFRS files ("2026Q2", "2025FY"). */
 export function qShift(end: string, k: number): string { const n = Number(end.slice(0, 4)) * 4 + QE.indexOf(end.slice(5)) + k; return `${Math.floor(n / 4)}-${QE[n % 4]}`; }
@@ -99,8 +102,14 @@ export function ltmAt(store: CompanyStore, rows: Line[], end: string): Fig | nul
 }
 
 export interface HeadRow { key: string; label: string; note?: [string, string]; chips?: string[]; fact?: IfrsFact; cur: Fig | null; yoy: Fig | null; qoq: Fig | null; ltm: Fig | null; ltmPrev: Fig | null }
-/** The statement half of the headline table. `win` is the quarter alone or the cumulative column the report prints (H1, 9M, FY). */
-export function headline(store: CompanyStore, end: string, win: 'q' | 'ytd', late?: Late): { rows: HeadRow[]; missing: string[] } {
+/** One flow line at a quarter end in a window: the quarter, the cumulative column the report prints (H1, 9M, FY), or the trailing twelve months. */
+export function flowAt(store: CompanyStore, rows: Line[], end: string, win: Win, late?: Late): Fig | null {
+  return win === 'ltm' ? ltmAt(store, rows, end) : figAt(store, rows, win === 'q' ? 'Q' : YTD[end.slice(5)], end, late);
+}
+/** The statement half of the headline table. `win` is the quarter alone, the cumulative column the report prints (H1, 9M, FY), or the trailing twelve
+    months (then the comparisons are LTM against LTM and the separate LTM column is empty). */
+export function headline(store: CompanyStore, end: string, win: Win, late?: Late): { rows: HeadRow[]; missing: string[] } {
+  if (win === 'ltm') return headlineLtm(store, end, late);
   const T = win === 'q' ? 'Q' : YTD[end.slice(5)], rows: HeadRow[] = [], missing: string[] = [];
   for (const role of ROLES) {
     let r = resolve(store, role);
@@ -118,18 +127,30 @@ export function headline(store: CompanyStore, end: string, win: 'q' | 'ytd', lat
   }
   return { rows, missing };
 }
+function headlineLtm(store: CompanyStore, end: string, late?: Late): { rows: HeadRow[]; missing: string[] } {
+  const rows: HeadRow[] = [], missing: string[] = [];
+  for (const role of ROLES) {
+    let r = resolve(store, role);
+    const at = (e: string) => (role.flow ? ltmAt(store, r.rows, e) : figAt(store, r.rows, 'I', e, e === end ? late : undefined));
+    let cur = at(end);
+    if (!cur && !r.alt && role.alt) { const a = resolve(store, role, true); const c = role.flow ? ltmAt(store, a.rows, end) : null; if (c) { r = a; cur = c; } }
+    if (!cur) { missing.push(role.label); continue; }
+    rows.push({ key: role.key, label: role.label, note: r.alt ? [role.altChip ?? '', role.altNote ?? ''] : undefined, cur, yoy: at(shiftYear(end, -1)), qoq: at(qShift(end, -1)), ltm: null, ltmPrev: null });
+  }
+  return { rows, missing };
+}
 
 export interface Mover { label: string; cur: Fig; prev: Fig; d: number }
 /** Lines of the P&L above the bottom line, totals left out, ranked by the change in NIS against the same window a year earlier.
     A plain income or expense line cannot change sign, and when insurance service expenses carry opposite signs in the two periods the two reports
     print expenses with opposite signs: such lines are not ranked (`skipped`), since their difference would be an artefact of presentation. */
-export function movers(store: CompanyStore, end: string, win: 'q' | 'ytd'): { up: Mover[]; down: Mover[]; skipped: string[] } {
-  const T = win === 'q' ? 'Q' : YTD[end.slice(5)], lines = linesOf(store, PL).filter((l) => !l.below && !l.total && l.unit === 'k');
+export function movers(store: CompanyStore, end: string, win: Win): { up: Mover[]; down: Mover[]; skipped: string[] } {
+  const lines = linesOf(store, PL).filter((l) => !l.below && !l.total && l.unit === 'k');
   const rank = (std: '17' | '4'): Mover[] => {
     const groups = new Map<string, Line[]>();
     lines.filter((l) => l.std === std).forEach((l) => groups.set(l.label, [...(groups.get(l.label) ?? []), l]));
     return [...groups.values()].flatMap((rows) => {
-      const cur = figAt(store, rows, T, end), prev = figAt(store, rows, T, shiftYear(end, -1));
+      const cur = flowAt(store, rows, end, win), prev = flowAt(store, rows, shiftYear(end, -1), win);
       return cur && prev && cur.std === prev.std ? [{ label: rows[0].raw, cur, prev, d: cur.v - prev.v }] : [];
     });
   };
@@ -208,7 +229,7 @@ const signed = (x: number, d = 1): string => { const r = Number(x.toFixed(d)) ||
 
 const unitTxt = (u: Unit): string => (u === 'pct' ? '%' : u === 'nis' ? 'ש"ח' : 'מיליוני ש"ח');
 /** Where a figure of the table comes from: a printed one opens its page; a trailing twelve months lists its four quarters. */
-function figProv(f: Fig, title: string, period: string, note?: string): Prov {
+export function figProv(f: Fig, title: string, period: string, note?: string): Prov {
   const value = fmt(f.v, f.unit);
   if (f.calc) return calc(`${title} · ${period}`, value, f.calc.formula, f.calc.parts.map((x) => ({ label: x.label, v: fmt(x.fig.v, x.fig.unit), src: () => figProv(x.fig, title, x.label) })), unitTxt(f.unit));
   return report({ title, value, unit: unitTxt(f.unit), url: f.url ?? null, pg: f.page, doc: f.doc, period: f.period ?? period, der: f.der, old: f.std === '4',
@@ -244,7 +265,7 @@ function Cell({ h, base, a, b, main, t, la, lb, bp }: { h: string; base: Fig | n
 }
 
 /** Report day: what one report printed, against a year earlier and the previous quarter, and what it restated in earlier periods. Every figure opens its page. */
-export function ReportDay() {
+export function ReportDay({ card }: { card?: ReactNode }) {
   const { id = '' } = useParams();
   const [sp, setSp] = useSearchParams();
   const reg = useRegistry();
@@ -252,16 +273,19 @@ export function ReportDay() {
   const { store, error } = useCompanyStore(id || null, !!entry?.has_financials);
   const docs = useCompanyDocs(id || null, !!entry);
   const ifrs = useIfrsData();
-  const [win, setWin] = useState<'q' | 'ytd' | ''>('');
+  // the window is in the address (?w=), shared with the KPI ledger below and the statement tabs
+  const [win, setWin] = useWindowParam();
+  const phone = usePhone();
+  const [pickers, setPickers] = useState(false);
   const [thr, setThr] = useState<'big' | 'all'>('big');
   const { open: openSrc } = useSource();
 
   const reports = useMemo(() => (store ? reportsOf(store) : []), [store]);
   const P = reports.includes(sp.get('p') ?? '') ? (sp.get('p') as string) : reports[0] ?? '';
   const end = P ? endOf(P) : '', annual = P.endsWith('FY'), first = end.endsWith('03-31');
-  // an annual report opens on the year, an interim report on the quarter
-  const W: 'q' | 'ytd' = first ? 'q' : win || (annual ? 'ytd' : 'q');
-  const T = W === 'q' ? 'Q' : YTD[end.slice(5)] ?? 'Q';
+  // an annual report opens on the year, an interim report on the quarter; a first quarter's year to date is the quarter
+  const W: Win = win === 'ltm' ? 'ltm' : first ? 'q' : win || (annual ? 'ytd' : 'q');
+  const T = W === 'ytd' ? YTD[end.slice(5)] ?? 'Q' : 'Q', L = W === 'ltm' ? 'LTM ' : '';
 
   // the filing itself: the Hebrew periodic report of that period, preferring the file the figures were read from
   const doc = useMemo(() => {
@@ -298,7 +322,9 @@ export function ReportDay() {
   if (!P) return <Empty title="אין דוחות רבעוניים בנתוני החברה" />;
 
   const rows = [...head.rows, ...extra];
-  const curL = periodLabel(T, end), yoyL = periodLabel(T, shiftYear(end, -1)), qoqL = repName(keyOf(qShift(end, -1))).replace('FY', 'Q4');
+  const curL = L + periodLabel(T, end), yoyL = L + periodLabel(T, shiftYear(end, -1)), qoqL = L + repName(keyOf(qShift(end, -1))).replace('FY', 'Q4');
+  const winOpts: [Win, string][] = [['q', periodLabel('Q', end)], ...(!first ? [['ytd', periodLabel(YTD[end.slice(5)], end)] as [Win, string]] : []), ['ltm', 'LTM']];
+  const ltmW = W === 'ltm';
   const bySheet = [...new Set(rest.map((r) => r.sheet))].map((s) => ({ s, title: store.d.sheets.find((x) => x.code === s)?.title ?? s, all: rest.filter((r) => r.sheet === s).length, big: rest.filter((r) => r.sheet === s && r.big).length }));
   const nBig = rest.filter((r) => r.big).length, shown = thr === 'big' ? rest.filter((r) => r.big) : rest;
   const restDiff = (r: Restated, txt: string, formula: string, u: string): Prov => calc(`${r.line} · ${r.period} · הוצג מחדש`, txt, formula,
@@ -322,25 +348,43 @@ export function ReportDay() {
 
   return (
     <div className="rd">
-      <section className="rd-head">
-        <div className="rd-title">
-          <h2>{entry.name_he} · <span className="num">{repName(P)}</span></h2>
-          <div className="rd-meta">
-            {doc ? <span>פורסם <span className="num">{pubLabel(doc.date)}</span></span> : <span className="muted">תאריך הפרסום לא נמצא ברשימת המסמכים</span>}
-            {doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}
-            {rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש{nBig > 0 && <>, <span className="num">{nBig}</span> מהם ב-2% ומעלה</>}</a>}
+      {phone ? (
+        <section className="rd-head">
+          <ContextBar onOpen={() => setPickers(true)} label="דוח וחלון"><b className="num">{repName(P)}</b> · {W === 'q' ? 'רבעון' : W === 'ytd' ? 'מתחילת השנה' : 'LTM'}{doc && <> · פורסם <span className="num">{pubLabel(doc.date)}</span></>}</ContextBar>
+        </section>
+      ) : (
+        <section className="rd-head">
+          <div className="rd-title">
+            <h2>{entry.name_he} · <span className="num">{repName(P)}</span></h2>
+            <div className="rd-meta">
+              {doc ? <span>פורסם <span className="num">{pubLabel(doc.date)}</span></span> : <span className="muted">תאריך הפרסום לא נמצא ברשימת המסמכים</span>}
+              {doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}
+              {rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש{nBig > 0 && <>, <span className="num">{nBig}</span> מהם ב-2% ומעלה</>}</a>}
+            </div>
           </div>
-        </div>
-        <div className="controls">
-          <Field label="דוח"><select value={P} onChange={(e) => pick(e.target.value)}>{reports.map((p) => <option key={p} value={p}>{repName(p)}</option>)}</select></Field>
-          {!first && <div className="field"><span>חלון</span><Seg label="חלון" value={W} onChange={setWin} options={[['q', periodLabel('Q', end)], ['ytd', periodLabel(YTD[end.slice(5)], end)]]} /></div>}
-        </div>
-      </section>
+          <div className="controls">
+            <Field label="דוח"><select value={P} onChange={(e) => pick(e.target.value)}>{reports.map((p) => <option key={p} value={p}>{repName(p)}</option>)}</select></Field>
+            <div className="field"><span>חלון</span><Seg label="חלון" value={W} onChange={setWin} options={winOpts} /></div>
+          </div>
+        </section>
+      )}
+      {phone && (
+        <Sheet open={pickers} onClose={() => setPickers(false)} title="דוח וחלון">
+          <div className="rd-pick">
+            <div className="field"><span>דוח</span><div className="rd-reps">{reports.slice(0, 12).map((p) => <button key={p} type="button" className={`chip${p === P ? ' on' : ''}`} aria-pressed={p === P} onClick={() => pick(p)}><span className="num">{repName(p)}</span></button>)}</div>
+              {reports.length > 12 && <select aria-label="דוח מוקדם יותר" value={reports.slice(0, 12).includes(P) ? '' : P} onChange={(e) => e.target.value && pick(e.target.value)}><option value="">מוקדם יותר…</option>{reports.slice(12).map((p) => <option key={p} value={p}>{repName(p)}</option>)}</select>}</div>
+            <div className="field"><span>חלון</span><Seg label="חלון" value={W} onChange={setWin} options={winOpts} /></div>
+            <button type="button" className="btn rd-done" onClick={() => history.back()}>הצג</button>
+          </div>
+        </Sheet>
+      )}
+      {card}
+      {phone && <div className="rd-meta rd-meta-ph">{doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}{rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש</a>}</div>}
 
       <Panel title="עיקרי הדוח" aside={<span className="chip">מיליוני ש"ח · כפי שדווח</span>}>
         {rows.length === 0 ? <Empty title="לא נמצאו שורות ראשיות לתקופה" /> : (
-          <div className="rd-table" role="table" aria-label="עיקרי הדוח">
-            <div className="rd-tr rd-th" role="row"><span role="columnheader">שורה</span><span role="columnheader" className="num">{periodLabel(T, end)}</span><span role="columnheader">YoY · <span className="num">{yoyL}</span></span><span role="columnheader">QoQ · <span className="num">{qoqL}</span></span><span role="columnheader">LTM · YoY</span></div>
+          <div className={`rd-table${ltmW ? ' rd-ltm' : ''}`} role="table" aria-label="עיקרי הדוח">
+            <div className="rd-tr rd-th" role="row"><span role="columnheader">שורה</span><span role="columnheader" className="num">{curL}</span><span role="columnheader">YoY · <span className="num">{yoyL}</span></span><span role="columnheader">QoQ · <span className="num">{qoqL}</span></span>{!ltmW && <span role="columnheader">LTM · YoY</span>}</div>
             {rows.map((r) => (
               <div className="rd-tr" role="row" key={r.key}>
                 <div className="rd-l" role="rowheader">{r.label}
@@ -349,7 +393,7 @@ export function ReportDay() {
                 <div className="rd-c rd-cur" role="cell"><V f={r.cur} t={r.label} p={curL} /></div>
                 <Cell h={`YoY · ${yoyL}`} base={r.yoy} a={r.cur} b={r.yoy} t={r.label} la={r.cur?.period ?? curL} lb={r.yoy?.period ?? yoyL} bp={yoyL} />
                 <Cell h={`QoQ · ${qoqL}`} base={r.qoq} a={r.cur} b={r.qoq} t={r.label} la={r.cur?.period ?? curL} lb={r.qoq?.period ?? qoqL} bp={qoqL} />
-                <Cell h="LTM · YoY" base={r.ltm} a={r.ltm} b={r.ltmPrev} main t={r.label} la={`LTM ${periodLabel('Q', end)}`} lb={`LTM ${periodLabel('Q', shiftYear(end, -1))}`} bp={`LTM ${periodLabel('Q', end)}`} />
+                {!ltmW && <Cell h="LTM · YoY" base={r.ltm} a={r.ltm} b={r.ltmPrev} main t={r.label} la={`LTM ${periodLabel('Q', end)}`} lb={`LTM ${periodLabel('Q', shiftYear(end, -1))}`} bp={`LTM ${periodLabel('Q', end)}`} />}
               </div>
             ))}
           </div>

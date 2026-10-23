@@ -1,5 +1,5 @@
-import { Fragment, useMemo, useState } from 'react';
-import { usePeriodParam } from '../lib/period';
+import { Fragment, useMemo } from 'react';
+import { usePeriodParam, useWindowParam } from '../lib/period';
 import { Link } from 'react-router-dom';
 import { Empty, ErrorBox, IncChip, Loading, Panel, Seg } from '../components/ui';
 import { nf, pct, byPeriodDesc, dateLabel } from '../lib/format';
@@ -72,7 +72,8 @@ export function CompanyReview({ id, docs }: { id: string; docs: number }) {
   const { data: d, error } = useIfrsData();
   const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
   const [period, setPeriod] = usePeriodParam();
-  const [win, setWin] = useState<'q' | 'ytd'>('q');
+  // the window is shared with the other company tabs through the address (?w=); a trailing-twelve-month choice reads here as the quarter
+  const [w, setWin] = useWindowParam(), win: 'q' | 'ytd' = w === 'ytd' ? 'ytd' : 'q';
   const P = periods.includes(period) ? period : periods[0] ?? '';
   const PP = P && periods.includes(prevPeriod(P)) ? prevPeriod(P) : null;
   const cur = useIfrsFactsOf(id, P || null), prev = useIfrsFactsOf(id, PP);
