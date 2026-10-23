@@ -14,7 +14,7 @@ Public endpoints used (all read by maya.tase.co.il's own pages, no login; probed
   POST /api/v1/reports/companies                              the company's filings (to find form ת077, the quarterly holdings report)
   GET  mayafiles.tase.co.il/rhtm/.../H{report}.htm            the ת077 form itself: holders, % capital and vote, holder type, controlling holders
   POST /api/v1/funds/assets/{security}  {pageNumber, pageSize} mutual funds and ETFs holding the share, latest monthly report (20 a page)
-  POST /api/v1/funds/mutual  /  /funds/etf                    fund -> fund manager (to add the holdings up by manager)
+  POST /api/v1/funds/all  {pageNumber, pageSize}               fund -> fund manager (to add the holdings up by manager)
 Blocked or not used: /api/v1/companies (403), api.tase.co.il for these data (not needed).
 
 Politeness: one request every PAUSE seconds (≤ 0.5/s), a User-Agent that names fox, every answer cached under data/raw/maya_holders/
@@ -299,7 +299,7 @@ def fund_managers(fund_ids: set[int], refresh: bool) -> None:
     known = (have or {}).get("data", {})
     if not refresh and all(str(i) in known for i in fund_ids) and fresh(f, 60):
         return
-    for kind in ("mutual", "etf"):
+    for kind in ("all",):  # every fund type (mutual, index-tracking, ETF) in one list
         page = 1
         while True:
             d, h = api(f"funds/{kind}", {"pageSize": 20, "pageNumber": page}, with_headers=True)
@@ -312,7 +312,7 @@ def fund_managers(fund_ids: set[int], refresh: bool) -> None:
             if not d or page * 20 >= total:
                 break
             page += 1
-    save(f, stamp(known, f"{API}/funds/mutual + /funds/etf"))
+    save(f, stamp(known, f"{API}/funds/all"))
 
 
 def main() -> None:

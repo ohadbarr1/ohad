@@ -11,6 +11,7 @@ import { cssColor, palette } from '../lib/theme';
 import { useLoad } from '../lib/useData';
 import { usePhone } from '../lib/useMedia';
 import { Disclaimers } from './Ownership';
+import { NotFound } from './NotFound';
 import {
   CHANNEL_HE, ipProv, monthLabel, nameOf, pctTxt, qLabel, reportProv, TYPE_HE,
   type Change, type FundMgr, type Holder, type OwnCompany, type OwnIndex, type Series,
@@ -32,10 +33,11 @@ export function OwnershipCompany() {
   if (idx.error) return <ErrorBox what="נתוני הבעלות" error={idx.error} />;
   if (!idx.data) return <Loading what="נתוני בעלות" />;
   const names = idx.data.names;
+  if (!names[id]) return <NotFound />;
   if (!row) return (
     <div className="own">
       <Head id={id} names={names} />
-      <Empty title={names[id] ? 'אין נתוני בעלות לחברה זו' : 'החברה אינה ברשימה'}>{names[id] && <p>החברה אינה רשומה למסחר בבורסה, ולכן אין לה רשימת בעלי עניין במאיה.</p>}<Link to="/ownership">כל הקבוצות ›</Link></Empty>
+      <Empty title="אין נתוני בעלות לחברה זו"><p>החברה אינה רשומה למסחר בבורסה, ולכן אין לה רשימת בעלי עניין במאיה.</p><Link to="/ownership">כל הקבוצות ›</Link></Empty>
     </div>
   );
   if (error) return <ErrorBox what="בעלי המניות" error={error} />;
@@ -108,7 +110,7 @@ function Kpi({ l, v, sub, c }: { l: string; v: number | null; sub?: string; c: O
 /* ---------- history: the quarterly holdings reports ---------- */
 function History({ c, names, phone }: { c: OwnCompany; names: Record<string, string>; phone: boolean }) {
   const h = c.history;
-  const [view, setView] = useState<'chart' | 'table'>('chart');
+  const [view, setView] = useState<'chart' | 'table'>(h.quarters.length > 1 ? 'chart' : 'table');  // one quarter is a table, not a chart
   const { top, rest } = useMemo(() => {
     const ser = h.series.filter((x) => x.pts.some((v) => (v ?? 0) > 0));
     return { top: ser.slice(0, TOP), rest: ser.slice(TOP) };

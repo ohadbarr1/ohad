@@ -75,7 +75,7 @@ th.own-tot { text-align: start; color: var(--muted); }
 .own-chg li:not(:has(.own-dot)) .own-chg-n { grid-column: 1 / 3; }
 .own-chg-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .own-chg .muted { font-size: var(--t-1); }
-.own-sum td, .own-sum th { background: var(--panel2); }
+.own-sum td, .own-sum th { border-top: 1px solid var(--line); font-weight: 700; }
 .own-rm { color: var(--accent-text); margin-inline-start: 2px; }
 .own-t-controlling { color: var(--fg); border-color: var(--line); font-weight: 700; }
 .own-t-institutional { color: var(--link); }
@@ -97,3 +97,12 @@ th.own-tot { text-align: start; color: var(--muted); }
   .own-cell button { min-width: 44px; height: 40px; font-size: var(--t-1); }
   .own-corner span { display: none; }
 }
+.own-rt { border-inline-start: 1px solid var(--line-soft); color: var(--faint); font-weight: 500; min-width: 48px; }
+.own-col.own-rt { box-shadow: none; font-size: var(--t-1); }
+.own-mx tfoot td, .own-mx tfoot th { border-bottom: 0; vertical-align: middle; }
+.panel .own-mx td:not(:first-child), .panel .own-mx th:not(:first-child) { min-width: 56px; padding: 0; }
+@media (max-width: 760px) { .panel .own-mx td:not(:first-child), .panel .own-mx th:not(:first-child) { min-width: 46px; } }
+.own-mx tbody tr:hover td { background: transparent; }
+.own-mx tbody tr:last-child td { border-bottom: 1px solid var(--line-soft); }
+.own-miss { margin: 0; font-size: var(--t-1); color: var(--warn); }
+.own-mx td, .own-mx th { vertical-align: middle; } .own-mx tbody .own-rt { height: 38px; }

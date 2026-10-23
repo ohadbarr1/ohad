@@ -2526,6 +2526,12 @@
        }
       }
      }
+    },
+    "missing": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
     }
    }
   },

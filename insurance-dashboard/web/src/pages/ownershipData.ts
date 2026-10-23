@@ -14,7 +14,7 @@ export interface IndexRow {
 }
 export interface OwnIndex {
   built: string; source: string; disclaimers: { ip: string; funds: string; terms: string }; names: Record<string, string>;
-  companies: IndexRow[]; matrix: { rows: string[]; cols: string[]; cells: Cell[] };
+  companies: IndexRow[]; matrix: { rows: string[]; cols: string[]; cells: Cell[] }; missing?: string[];
 }
 export interface Holder {
   name: string; group: string | null; self: boolean; type: HolderType; channel: Channel | null; security: string; main: boolean;

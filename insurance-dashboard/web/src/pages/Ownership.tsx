@@ -32,7 +32,7 @@ export function Ownership() {
   const { names, matrix } = data;
   const rows = matrix.rows.filter((h) => matrix.cells.some((x) => x.h === h && (self || !x.self)));
   const colTotal = (c: string) => matrix.cells.filter((x) => x.c === c && !x.self).reduce((s, x) => s + (x.pct ?? 0), 0);
-  const rowTotal = (h: string) => matrix.cells.filter((x) => x.h === h && !x.self).reduce((s, x) => s + (x.pct ?? 0), 0);
+  const rowCount = (h: string) => matrix.cells.filter((x) => x.h === h && !x.self).length;
   const asof = data.companies.map((r) => r.asof).filter(Boolean).sort().pop();
   const fundMonth = data.companies.map((r) => r.funds_month).filter(Boolean).sort().pop();
 
@@ -69,12 +69,13 @@ export function Ownership() {
                       <Link to={`/ownership/${c}`} title={`בעלי המניות של ${names[c] ?? c}`}>{names[c] ?? c}</Link>
                     </th>
                   ))}
+                  <th scope="col" className="own-col own-rt"><span>חברות</span></th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((h) => (
                   <tr key={h}>
-                    <th scope="row" className="own-row"><span className="own-dot" style={{ background: idCss(h) }} />{names[h] ?? h}<small className="num">{rowTotal(h) ? nf(rowTotal(h), 1) : ''}</small></th>
+                    <th scope="row" className="own-row"><span className="own-dot" style={{ background: idCss(h) }} />{names[h] ?? h}</th>
                     {matrix.cols.map((c) => {
                       const x = byKey.get(`${h}~${c}`);
                       if (!x || (x.self && !self)) return <td key={c} className={h === c ? 'own-diag' : ''} />;
@@ -88,6 +89,7 @@ export function Ownership() {
                         </td>
                       );
                     })}
+                    <td className="own-tot own-rt num" title="בכמה מהקבוצות האחרות הקבוצה מחזיקה">{rowCount(h) || '–'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -95,12 +97,14 @@ export function Ownership() {
                 <tr>
                   <th scope="row" className="own-row own-tot">סך מ-17 הקבוצות</th>
                   {matrix.cols.map((c) => <td key={c} className="own-tot num">{colTotal(c) ? nf(colTotal(c), 1) : '–'}</td>)}
+                  <td className="own-tot" />
                 </tr>
               </tfoot>
             </table>
           </div>
           {!phone && <aside className="own-side" aria-live="polite">{detail ?? <p className="muted">בחרו תא לפירוט: מי מחזיק, באיזה ערוץ, נכון לאיזה תאריך, ומקור.</p>}</aside>}
         </div>
+        {!!data.missing?.length && <p className="own-miss">ללא נתונים עדיין: {data.missing.map((m) => names[m] ?? m).join(' · ')}</p>}
         <div className="own-legend">
           <span><i className="sw ip" /> בעל עניין: כל הערוצים, לפי הבורסה</span>
           <span><i className="sw fo" /> קרנות נאמנות וסל בלבד (מתחת לסף בעל עניין)</span>

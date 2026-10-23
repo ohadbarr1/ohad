@@ -330,6 +330,8 @@ def main() -> None:
             "quarters": len(o["history"]["quarters"]), "last_q": (o["history"]["quarters"] or [None])[-1],
         } for o in cos],
         "matrix": {"rows": holders, "cols": held, "cells": cells},
+        # registry companies with a MAYA id that have no fetched holders yet (the fetch stopped, or the company has no listed share)
+        "missing": [c["id"] for c in reg if c.get("maya_id") and c["id"] not in {o["id"] for o in cos}],
     }
     (OUT / "index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"ownership: {len(cos)} companies, {len(cells)} matrix cells, {sum(len(o['history']['quarters']) for o in cos)} company-quarters")
