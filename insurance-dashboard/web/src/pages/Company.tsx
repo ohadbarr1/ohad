@@ -29,6 +29,8 @@ import '../styles/prov-company.css';
 import '../styles/sheet.css';
 import { ContextBar, Sheet } from '../components/Sheet';
 import { usePhone } from '../lib/useMedia';
+import { countChanged, useVintage, VintageMark, VintageToggle, vintageProv } from '../components/VintageToggle';
+import { FL, parsePolicy, policyLabel, policyParam, type Line, type Policy } from '../lib/facts';
 import type { RegistryCompany } from '../lib/types';
 
 export interface Ctx { entry: RegistryCompany; store: CompanyStore | null; storeError: string | null; market: Market | null }
@@ -117,7 +119,7 @@ function NoFinancials({ entry }: { entry: RegistryCompany }) {
 /* ---------- financials: the metric table that drives the chart ---------- */
 const ENTITIES: [string, string][] = [['F', 'חברת האם (מאוחד)'], ['I', 'חברת הביטוח'], ['P', 'פנסיה וגמל']];
 /** the address parameters the statements page writes itself; any other (the source sheet's `src`) is left as it is */
-const OWN = new Set(['sheet', 'm', 't', 'u', 'v', 'r', 'g', 'k', 'all', 's', 'f', 'e', 'fl', 'gr']);
+const OWN = new Set(['sheet', 'm', 't', 'u', 'v', 'r', 'g', 'k', 'all', 's', 'f', 'e', 'fl', 'gr', 'vin']);
 const ownOf = (sp: URLSearchParams) => { const n = new URLSearchParams(); sp.forEach((v, k) => { if (OWN.has(k)) n.append(k, v); }); return n.toString(); };
 const GROUP_ORDER = ['income', 'balance', 'cashflow', 'oci', 'segments', 'life', 'health', 'general', 'pension', 'insurance_services', 'investments', 'instruments', 'capital', 'other'];
 
@@ -206,7 +208,20 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   const hasStd = !!sv?.rows.some((r) => r.m.std);
   const hideOld = hasStd && stdTab === '17';
   const seen = (f: { old?: boolean } | undefined): boolean => !!f && !(hideOld && f.old);
-  const raw = (mi: number | null, pi: number): number | null => { if (mi == null || pi < 0) return null; const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null; };
+  const fromReports = sheetCode.startsWith('X.');
+  // the vintage of the figures (?vin=): the latest print (default), each period as first reported, or as of a report.
+  // The fact table loads only once the policy leaves 'latest'; LTM, YoY, the chart and the export follow, all within one vintage.
+  const [vinPolicy, setVinPolicy] = useState<Policy>(() => parsePolicy(sp.get('vin')));
+  const vin = useVintage(fromReports ? companyId : null);
+  const vLine = (mi: number) => vin.facts?.byMi.get(mi) ?? null;
+  const vP = (pi: number) => (vin.facts ? vin.facts.periodIndex(d.periods[pi].type, d.periods[pi].end) : -1);
+  const vCell = (mi: number, pi: number) => { const l = vLine(mi), p = vP(pi); return l && p >= 0 && vinPolicy !== 'latest' ? vin.facts!.cell(l, p, vinPolicy) : undefined; };
+  const raw = (mi: number | null, pi: number): number | null => {
+    if (mi == null || pi < 0) return null;
+    const c = vCell(mi, pi);
+    if (c !== undefined) return c && seen({ old: !!(c.f & FL.IFRS4) }) ? c.v : null;
+    const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? f.v : null;
+  };
   /** the quarter itself and the three before it; one missing quarter and there is no LTM figure */
   const ltmQs = (mi: number, pi: number): number[] | null => {
     if (d.metrics[mi].unit === 'pct') return null;
@@ -284,10 +299,11 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
     const fl = Object.keys(flip).filter((k) => flip[+k]), gr = Object.entries(growth).filter(([, g]) => g).map(([k, g]) => `${k}:${g}`);
     if (fl.length) q.fl = fl.join(',');
     if (gr.length) q.gr = gr.join(',');
+    if (vinPolicy !== 'latest') q.vin = policyParam(vinPolicy);
     wrote.current = new URLSearchParams(q).toString();
     // parameters this page does not own (the source sheet's `src`) survive the rewrite
     setSp((prev) => { const n = new URLSearchParams(q); prev.forEach((v, k) => { if (!OWN.has(k)) n.set(k, v); }); return n; }, { replace: true });
-  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, flip, growth, compact, setSp]);
+  }, [sheetCode, sel, curType, scale, mode, oldestFirst, showChart, stack, range, stdTab, hasStd, flip, growth, compact, vinPolicy, setSp]);
   useEffect(() => { if (wrote.current != null && ownOf(sp) !== wrote.current) onOutsideLink(); }, [sp, onOutsideLink]);
 
   const prior = (pi: number): number => { const p = d.periods[pi]; return d.periods.findIndex((q) => q.type === p.type && q.end === shiftYear(p.end, -1) && q.months === p.months); };
@@ -336,7 +352,6 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   const unitLabel = mode === 'yoy' ? 'YoY %' : (SCALES.find((s) => s.id === scale)!.label);
 
   const toggle = (mi: number) => setSel((cur) => (cur.includes(mi) ? cur.filter((x) => x !== mi) : [...cur, mi]));
-  const fromReports = sheetCode.startsWith('X.');
   const [showRe, setShowRe] = useState(false);
   const [dense, setDense] = useStored<boolean>('fin.dense', false);
   // named views of this company's statements (table, rows, chart set-up, period window), kept on this device
@@ -346,6 +361,11 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   const restated = (d.restated ?? []).filter((r) => r[0] === sheetCode && (!hasStd || stdTab === 'c' || r[1] === (stdTab === '17' ? 'IFRS 17' : 'IFRS 4')) && (r[3] === baseType || (baseType === 'Q' && r[3] === 'I')));
   // a figure from the periodic reports links only to its own report; the entity's single source file would be the wrong document
   const open = (page: number | null, u?: number | null) => (fromReports && u == null ? null : store.sourceUrl(entity, page, u));
+  const vinLines = vin.facts ? rows.filter((r) => !r.m.header).map((r) => vLine(r.idx)).filter((l): l is Line => !!l) : [];
+        // reports to read the statement as of: every report that printed a figure of this sheet, newest first
+  const vintages = vin.facts ? (() => { const f = vin.facts, ts = new Set<number>(); vinLines.forEach((l) => { for (let k = l.start; k < l.end; k++) ts.add(f.d.rows.t[k]); }); return [...ts].filter((t) => f.vint[t].pub).sort((a, b) => f.vdate(b).localeCompare(f.vdate(a))).map((t) => [f.vdate(t), f.vlabel(t)] as [string, string]); })() : undefined;
+  // restated cells on screen: from the fact table once it is loaded, otherwise the site's restatement list for the sheet
+  const nRestated = vin.facts ? countChanged(vin.facts, vinLines, cols.map(vP).filter((p) => p >= 0)) : restated.length;
 
   /* where a figure on the table comes from: printed ones open the report page, computed ones (LTM, YoY, changes) list what they are computed from */
   const { open: openSrc } = useSource();
@@ -354,10 +374,12 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   const fmtAt = (mi: number, v: number | null) => fmtCell(v, d.metrics[mi].unit, scale);
   const printedAt = (mi: number, pi: number): Prov => printed(store, mi, pi, { value: fmtAt(mi, store.byMetric.get(mi)?.get(pi)?.v ?? null), unit: unitTxt(mi), entity, ownOnly: fromReports });
   /** the figure as the table shows it in value mode: printed, or the sum of four printed quarters */
+  // the source sheet of a cell under the vintage policy, with both prints when it was restated
+  const provAt = (mi: number, pi: number): Prov => { const l = vLine(mi), p = vP(pi); return (l && p >= 0 ? vintageProv(vin.facts!, l, p, vinPolicy, scale) : null) ?? printedAt(mi, pi); };
   const valProv = (mi: number, pi: number): Prov => {
-    if (!ltm) return printedAt(mi, pi);
+    if (!ltm) return provAt(mi, pi);
     const qs = ltmQs(mi, pi) ?? [];
-    return calc(`${titleOf(mi)} · ${pl(pi)}`, fmtAt(mi, val(mi, pi)), `LTM = ${qs.map((qi) => store.plabel(qi)).join(' + ')}`, qs.map((qi) => ({ label: store.plabel(qi), v: fmtAt(mi, raw(mi, qi)), src: () => printedAt(mi, qi) })), unitTxt(mi));
+    return calc(`${titleOf(mi)} · ${pl(pi)}`, fmtAt(mi, val(mi, pi)), `LTM = ${qs.map((qi) => store.plabel(qi)).join(' + ')}`, qs.map((qi) => ({ label: store.plabel(qi), v: fmtAt(mi, raw(mi, qi)), src: () => provAt(mi, qi) })), unitTxt(mi));
   };
   /** change of a row between two columns: % (or points for a rate), each side opens its own source */
   const changeProv = (mi: number, pi: number, pj: number, kind: string, text: string): Prov => {
@@ -391,7 +413,13 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
     ] };
     downloadXlsx(`fox-${companyId}-${sheetName(sheetCode)}`.replace(/\s+/g, '-'), [sheet, about]);
   };
-  const pdfHref = (mi: number, pi: number) => { const f = store.byMetric.get(mi)?.get(pi); return !ltm && mode === 'value' && f && seen(f) ? open(f.page, f.u) : null; };
+  const pdfHref = (mi: number, pi: number) => {
+    if (ltm || mode !== 'value') return null;
+    const c = vCell(mi, pi); if (c) return vin.facts!.pdf(c);
+    const f = store.byMetric.get(mi)?.get(pi); return f && seen(f) ? open(f.page, f.u) : null;
+  };
+  // the dot on a cell whose first print differs from the latest (replaces the `re` class once the fact table is loaded)
+  const vMark = (mi: number, pi: number) => { const l = vLine(mi), p = vP(pi); return vin.facts && l && p >= 0 && !ltm && mode === 'value' ? <VintageMark facts={vin.facts} line={l} p={p} policy={vinPolicy} scale={scale} /> : null; };
 
   // compact view: the latest column, its change on the year-earlier period and, for quarters, on the previous quarter
   const lastPi = cols.length ? cols[cols.length - 1] : null, qoqPi = !ltm && baseType === 'Q' && cols.length > 1 ? cols[cols.length - 2] : null;
@@ -404,9 +432,9 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   };
   const compactCells = (mi: number) => {
     const pi = lastPi!, f0 = store.byMetric.get(mi)?.get(pi), f = seen(f0) ? f0 : undefined, v = val(mi, pi), pp = prior(pi), unit = d.metrics[mi].unit;
-    const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{fmtCell(v, unit, scale)}</span>;
+    const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{fmtCell(v, unit, scale)}</span>;
     return <>
-      <td>{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? open(f.page, f.u) : null}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(d.metrics[mi])} label={d.metrics[mi].label} /></td>
+      <td>{vMark(mi, pi)}{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? pdfHref(mi, pi) ?? open(f.page, f.u) : null}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(d.metrics[mi])} label={d.metrics[mi].label} /></td>
       <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit, mi, pi, pp, 'YoY')}</td>
       {qoqPi != null && <td>{change(v, val(mi, qoqPi), unit, mi, pi, qoqPi, 'QoQ')}</td>}
     </>;
@@ -448,6 +476,8 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
         const rngTxt = stdCols.length ? <span className="rng num">{pl(stdCols[0])} עד {pl(stdCols[stdCols.length - 1])}</span> : null;
         const chartF = <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'גרף מוצג' : 'הצגת גרף'}</button></div>;
         const colsF = <div className="field"><span>עמודות</span><Seg<'c' | 'a'> label="עמודות" value={compact ? 'c' : 'a'} onChange={(v) => setCompact(v === 'c')} options={[['c', 'אחרונה ושינוי'], ['a', 'כל התקופות']]} /></div>;
+        const vinF = fromReports && <div className="field"><span>גרסה</span><VintageToggle value={vinPolicy} onChange={setVinPolicy} busy={vinPolicy !== 'latest' && !vin.facts && !vin.error} vintages={vintages}
+          changed={nRestated} /></div>;
         const active = Number(!!(range[0] || range[1])) + Number(!!q) + Number(mode === 'yoy') + Number(dim !== 'all') + Number(scale !== 'm');
         const opts = <>
           {entityF}
@@ -470,11 +500,11 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
         </>;
         const title = sv ? sheetName(sheetCode) : '';
         if (phone) return <>
-          <ContextBar onOpen={() => setMore(true)}>{title} · {periodLong(curType)}{hasStd ? ` · ${stdOpts.find(([k]) => k === stdTab)?.[1] ?? ''}` : ''}{active ? ` · ${active} הגדרות` : ''}</ContextBar>
-          <Sheet open={more} onClose={() => setMore(false)} title="הדוח המוצג">{sheetF}{periodF}{stdF}{rngTxt}{colsF}{chartF}{opts}</Sheet>
+          <ContextBar onOpen={() => setMore(true)}>{title} · {periodLong(curType)}{hasStd ? ` · ${stdOpts.find(([k]) => k === stdTab)?.[1] ?? ''}` : ''}{fromReports && vinPolicy !== 'latest' ? ` · ${policyLabel(vinPolicy)}` : ''}{active ? ` · ${active} הגדרות` : ''}</ContextBar>
+          <Sheet open={more} onClose={() => setMore(false)} title="הדוח המוצג">{sheetF}{periodF}{stdF}{vinF}{rngTxt}{colsF}{chartF}{opts}</Sheet>
         </>;
         return <>
-          <section className="toolbar">{sheetF}{periodF}{stdF}{rngTxt}{chartF}
+          <section className="toolbar">{sheetF}{periodF}{stdF}{vinF}{rngTxt}{chartF}
             <div className="field"><span>עוד</span><button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${active ? ` · ${active}` : ''}`}</button></div>
           </section>
           {more && <section className="controls opts">{opts}</section>}
@@ -488,7 +518,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
       </>}>
         {series.length === 0 || cols.length === 0 ? <Empty title="סמנו שורה בטבלה כדי להציג אותה בגרף" /> : (
           <>
-            <Chart label="גרף שורות נבחרות" exportName={`${companyId}-${sheetName(sheetCode)}`} height={340} onPoint={onPoint} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth]} build={() => {
+            <Chart label="גרף שורות נבחרות" exportName={`${companyId}-${sheetName(sheetCode)}`} height={340} onPoint={onPoint} deps={[sel, cols, mode, scale, sheetCode, kind, series.length, stack, flip, growth, vinPolicy, vin.facts]} build={() => {
               // rows as printed become series; a rate row or a growth line goes to the percent axis; IFRS 4 figures are drawn lighter and the break is marked
               const isPct = (u: string) => mode === 'yoy' || u === 'pct';
               const fox: FoxSeries[] = [];
@@ -528,7 +558,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
       )}
 
       {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<><span>{!sv ? '' : fromReports ? `נטוי = מחושב מהשנתי · אפור = IFRS 4${restated.length ? ` · נקודה = הוצג מחדש (${restated.length})` : ''} · כל ערך מקושר לעמוד המקור` : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>{sv && rows.length > 0 && <button type="button" className="btn" onClick={() => void exportXlsx()} title="גיליון Excel: המספרים כמספרים, כל מספר מודפס מקושר לעמוד שלו">Excel</button>}</>}>
+      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<><span>{!sv ? '' : fromReports ? `נטוי = מחושב מהשנתי · אפור = IFRS 4${nRestated ? ` · נקודה = הוצג מחדש (${nRestated})` : ''} · כל ערך מקושר לעמוד המקור` : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>{sv && rows.length > 0 && <button type="button" className="btn" onClick={() => void exportXlsx()} title="גיליון Excel: המספרים כמספרים, כל מספר מודפס מקושר לעמוד שלו">Excel</button>}</>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
           <table className={`${dense ? 'dense' : ''}${compact ? ' compact' : ''}`}>
             <thead>{compact && lastPi != null ? <tr><th>שורה</th><th>{pl(lastPi)}</th><th>YoY</th>{qoqPi != null && <th>QoQ</th>}</tr> : <tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{pl(pi)}</th>)}<th>עמ׳</th></tr>}</thead>
@@ -549,7 +579,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
                       <NoteMark co={companyId} m={lineKey(r.m)} label={r.m.label} periods={compact && lastPi != null ? [pl(lastPi)] : colsDesc.map(pl)} add />
 
                     </div></td>
-                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi}>{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(r.m)} label={r.m.label} /></td>; })}
+                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi}>{vMark(r.idx, pi)}{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(r.m)} label={r.m.label} /></td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td></>}
                   </tr>
                 );
