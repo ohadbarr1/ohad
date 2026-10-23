@@ -526,3 +526,34 @@ table.dense tr.sec td { padding-top: 8px; }
 /* a link inside a line of footnote text is told apart by more than its colour */
 div.src > a, .fnote a { text-decoration: underline; text-decoration-color: color-mix(in oklch, currentColor 45%, transparent); text-underline-offset: 2px; }
 /* === end lane H === */
+/* === lane U === */
+/* Touch: every control a thumb can hit (>= 40 px), on any page, only where the pointer is coarse; desktop density is untouched.
+   Chrome controls grow to 40 px; a sourced figure keeps its line height and gets a 40 px hit box (padding pulled back by an equal
+   negative margin, so rows do not move); a chip inside a table gets an invisible hit area instead of a taller pill. */
+@media (pointer: coarse), (max-width: 760px) {
+  .iconbtn { width: 40px; height: 40px; }
+  :is(.btn, button.chip, a.chip, .seg button, .subnav a, select, .thsort, .charttools button, .stdtabs button, .linkbtn, summary):not(td *, th *, .pr-pop *),
+  input:not([type="checkbox"], [type="radio"], [type="range"]) { min-height: 40px; }
+  :is(button.chip, a.chip) { display: inline-flex; align-items: center; }
+  .subnav a { display: inline-flex; align-items: center; }
+  th .thsort { min-height: 40px; }
+  /* sourced figures and links inside tables and figure lines: 40 px hit box, same layout */
+  main :is(a, button).src:not(.bar) { padding: 12px 16px; margin: -12px -16px; }
+  main :is(dd, li, h3, h4, header, .hd, .sub, .aside, .fnote, p, div.src) > a:is(:not([class]), .num),
+  main td a:is(:not([class]), .num), main .ledger .rowbtn,
+  main td > button:not(.btn, .chip, .src, .thsort, .dt-sort) { padding: 12px 10px; margin: -12px -10px; }
+  main th :is(.dt-sort, .thsort, button) { min-height: 40px; }
+  .results a, .sp-quick > a, .sp-facet button { min-height: 40px; align-items: center; }
+  main .mgrchip { position: relative; }
+  main .mgrchip::after { content: ""; position: absolute; inset: -10px -4px; }
+  .fund-pick { display: inline-grid; place-items: center; padding: 10px; margin: -10px; }
+  a.doc { min-height: 40px; }
+  main :is(td, th) :is(button.chip, a.chip, summary) { position: relative; }
+  main :is(td, th) :is(button.chip, a.chip, summary)::after { content: ""; position: absolute; inset: -10px -4px; }
+  .pr-menu > summary { min-width: 40px; min-height: 40px; display: grid; place-items: center; }
+}
+/* the funds section's way out to the savings lens (its home is the industry hub): a link, not a tab */
+.subnav a.subnav-out { margin-inline-start: auto; color: var(--faint); font-weight: 400; font-size: var(--t-2); }
+.subnav a.subnav-out:hover { color: var(--accent-text); background: transparent; }
+.mgr-views .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+/* === end lane U === */

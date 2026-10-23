@@ -45,3 +45,9 @@ table.drill td:first-child { min-width: 64px; }
 .rating table td { padding: 6px 8px; }
 @media (max-width: 760px) { .rating { grid-template-columns: 1fr; } .heat-m { font-size: 10.5px; } .heat-m th, .heat-m td { min-width: 24px; padding: 3px 1px; } }
 .fund-mgr { display: block; }
+/* lane U: neutral share marks, the report-vs-regulator coverage, the way out to the managers' ranking */
+.lens-vs { margin-inline-start: 5px; font-size: 9px; color: var(--faint); vertical-align: 1px; }
+.lens-cover { color: var(--muted); }
+.lens-cover.off { color: var(--warn); font-weight: 600; }
+.lens-views { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.lens-out { font-size: var(--t-2); }
