@@ -602,11 +602,11 @@ function FormulaEditor({ book, ents, freq, p, onAdd }: { book: Book; ents: strin
         <label className="field"><span>יחידה</span><select value={unit} onChange={(e) => setUnit(e.target.value as Unit)}>{(Object.keys(UNIT_HE) as Unit[]).map((u) => <option key={u} value={u}>{UNIT_HE[u]}</option>)}</select></label>
         <button type="button" className="btn primary" disabled={!tree || !!err} onClick={add}>הוספה</button>
       </div>
-      {err ? (
+      {err && !(show && err.pos >= fStart) ? (
         <div className="pr-fxerr" id={errId} role="alert"><p className="err">{err.message}{near.length > 0 && <span className="pr-near"> · אולי: {near.map((l) => <button key={l} type="button" className="chip" onClick={() => fix(l)}>{l}</button>)}</span>}</p>
           {err.pos >= 0 && <code dir="auto"><span>{expr.slice(0, err.pos)}</span><mark>{expr.slice(err.pos, err.pos + Math.max(1, err.len)) || ' '}</mark><span>{expr.slice(err.pos + Math.max(1, err.len))}</span></code>}
         </div>
-      ) : col && (
+      ) : !err && col && (
         <div className="pr-fxok">
           <span className="muted">נקרא כ:</span> <bdi>{col.he}</bdi>
           {prevCol && p && full && <div className="pr-prev">{ents.slice(0, 8).map((e) => { const x = cellVal(full, prevCol, e, freq, p, ents); return <span key={e}><i className="pdot" style={{ background: idCss(e) }} />{full.short(e)} <b className="num">{x.v == null ? '–' : fmtV(unit, x.v)}</b></span>; })}<span className="muted">{plab(freq, p)}</span></div>}
