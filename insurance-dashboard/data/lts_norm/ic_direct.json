@@ -60,6 +60,7 @@
 {"metric":"ic.fees","period":"Q2-2026","value":0.859,"formula":"ic.fees printed for the three months Q2-2026","parts":[{"file":"2026Q2","metric":"management_fees","segment":"investment_contracts","window":"q","date":"2026-06-30","value":859,"unit":"NIS thousands","page":58,"label":"דמי ניהול קבועים בגין חוזי השקעה"}]}
 ],
 "anchors":[
+{"metric":"ic.aum","period":"2023-12","deck":292.529,"ours":293.0,"ours_exact":292.529,"ok":false},
 {"metric":"ic.aum","period":"2024-03","deck":297.715,"ours":298.0,"ours_exact":297.715,"ok":false},
 {"metric":"ic.aum","period":"2024-06","deck":297.27,"ours":297.0,"ours_exact":297.27,"ok":false},
 {"metric":"ic.aum","period":"2024-09","deck":299.299,"ours":299.0,"ours_exact":299.299,"ok":false},
