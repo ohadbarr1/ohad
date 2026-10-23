@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
 import { useStored, useWatchlist } from '../lib/local';
+import { savedWhere, useFactNotes } from '../lib/notes';
 
-/** Star that adds a company to the follow list (kept in this browser). */
+/** Star that adds a company to the follow list (kept in this browser; follows the reader to other devices when sync is on). */
 export function Star({ id, name }: { id: string; name: string }) {
   const w = useWatchlist();
   const on = w.has(id);
@@ -12,13 +14,21 @@ export function Star({ id, name }: { id: string; name: string }) {
   );
 }
 
-/** Free-text notes on one company, saved as typed in this browser. */
+/** Free-text notes on one company, saved as typed; below them, the notes written on this company's figures. */
 export function Notes({ id }: { id: string }) {
   const [text, setText] = useStored<string>(`notes:${id}`, '');
+  const facts = useFactNotes(id);
   return (
     <div className="notes">
       <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="תזה, שאלות פתוחות, מה לבדוק בדוח הבא" aria-label="הערות" />
-      <div className="src">נשמר במכשיר הזה בלבד{text ? ` · ${text.trim().split(/\s+/).length} מילים` : ''}</div>
+      <div className="src">{savedWhere()}{text ? ` · ${text.trim().split(/\s+/).length} מילים` : ''} · <Link to="/mine">כל ההערות</Link></div>
+      {facts.length > 0 && (
+        <ul className="factnotes" aria-label="הערות על מספרים">
+          {facts.slice(0, 8).map((n) => (
+            <li key={n.key}><i aria-hidden="true" /><span className="what">{n.l ?? n.m} · <span className="num">{n.p}</span></span><span className="txt">{n.href ? <Link to={n.href}>{n.t}</Link> : n.t}</span></li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
