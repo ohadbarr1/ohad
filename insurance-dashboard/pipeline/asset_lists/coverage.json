@@ -1,0 +1,878 @@
+{
+ "managers": {
+  "altshuler": {
+   "name": "אלטשולר שחם",
+   "status": "ok",
+   "note": "",
+   "pages": [
+    {
+     "url": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "robots": "ok",
+     "files": 23
+    }
+   ],
+   "files": [
+    {
+     "product": "ca",
+     "quarter": "2024Q3",
+     "url": "https://www.as-invest.co.il/media/0qmjurks/513173393_ca_p_0324.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2024Q4",
+     "url": "https://www.as-invest.co.il/media/odkjg2ew/513173393_ca_p_0424.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q2",
+     "url": "https://www.as-invest.co.il/media/4wveolis/513173393_ca_p_0225.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q3",
+     "url": "https://www.as-invest.co.il/media/nedpi4yc/513173393_ca_p_0325.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q4",
+     "url": "https://www.as-invest.co.il/media/aksl3so4/513173393_ca_p_0425.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2026Q1",
+     "url": "https://www.as-invest.co.il/media/q24lvlzv/513173393_ca_p_0126.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2026Q2",
+     "url": "https://www.as-invest.co.il/media/zyhohk0x/513173393_ca_p_0226.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q3",
+     "url": "https://www.as-invest.co.il/media/ekzfaxfh/513173393_gm_p_0324.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q4",
+     "url": "https://www.as-invest.co.il/media/ywyn0dui/513173393_gm_p_0424.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q1",
+     "url": "https://www.as-invest.co.il/media/yuwbnols/513173393_gm_p_0125.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q2",
+     "url": "https://www.as-invest.co.il/media/3jijviiu/513173393_gm_p_0225.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q3",
+     "url": "https://www.as-invest.co.il/media/xlpj2uz5/513173393_gm_p_0325.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q4",
+     "url": "https://www.as-invest.co.il/media/j0qfx43r/513173393_gm_p_0425.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q1",
+     "url": "https://www.as-invest.co.il/media/y0abchhg/513173393_gm_p_0126.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q2",
+     "url": "https://www.as-invest.co.il/media/cbikyox5/513173393_gm_p_0226.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2024Q3",
+     "url": "https://www.as-invest.co.il/media/2dikae43/513173393_pn_p_0324.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2024Q4",
+     "url": "https://www.as-invest.co.il/media/chkef4lt/513173393_pn_p_0424.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q1",
+     "url": "https://www.as-invest.co.il/media/ltuh5j5u/513173393_pn_p_0125.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q2",
+     "url": "https://www.as-invest.co.il/media/rigfgmqv/513173393_pn_p_0225.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q3",
+     "url": "https://www.as-invest.co.il/media/a1xltwzk/513173393_pn_p_0325.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q4",
+     "url": "https://www.as-invest.co.il/media/mgvnnxui/513173393_pn_p_0425.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2026Q1",
+     "url": "https://www.as-invest.co.il/media/butnclwc/513173393_pn_p_0126.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2026Q2",
+     "url": "https://www.as-invest.co.il/media/hcgjen0x/513173393_pn_p_0226.xlsx",
+     "page": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/",
+     "via": "page"
+    }
+   ],
+   "quarters": [
+    "2024Q3",
+    "2024Q4",
+    "2025Q1",
+    "2025Q2",
+    "2025Q3",
+    "2025Q4",
+    "2026Q1",
+    "2026Q2"
+   ]
+  },
+  "meitav": {
+   "name": "מיטב",
+   "status": "ok",
+   "note": "",
+   "pages": [
+    {
+     "url": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "robots": "ok",
+     "files": 20
+    },
+    {
+     "url": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "robots": "ok",
+     "files": 10
+    }
+   ],
+   "files": [
+    {
+     "product": "ca",
+     "quarter": "2024Q1",
+     "url": "https://www.meitav.co.il/media/gsplsclj/512065202_ca_p_0124.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2024Q2",
+     "url": "https://www.meitav.co.il/media/lmuhhxwb/512065202_ca_p_0224.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2024Q3",
+     "url": "https://www.meitav.co.il/media/04illrp4/512065202_ca_p_0324.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2024Q4",
+     "url": "https://www.meitav.co.il/media/blkbbyse/512065202_ca_p_0424.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q1",
+     "url": "https://www.meitav.co.il/media/ttqlnpni/512065202_ca_p_0125.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q2",
+     "url": "https://www.meitav.co.il/media/u33jzbvq/512065202_ca_p_0225.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q3",
+     "url": "https://www.meitav.co.il/media/gr0feyuc/512065202_ca_p_0325_.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q4",
+     "url": "https://www.meitav.co.il/media/xjugycen/512065202_ca_p_0425.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2026Q1",
+     "url": "https://www.meitav.co.il/media/ca1k0pn3/512065202_ca_p_0126.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2026Q2",
+     "url": "https://www.meitav.co.il/media/1nvdiomc/512065202_ca_p_0226.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q1",
+     "url": "https://www.meitav.co.il/media/1p0lmdnx/512065202_gm_p_0124.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q2",
+     "url": "https://www.meitav.co.il/media/irxf4d0i/512065202_gm_p_0224.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q3",
+     "url": "https://www.meitav.co.il/media/molas2kh/512065202_gm_p_0324.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q4",
+     "url": "https://www.meitav.co.il/media/fvxae2eh/512065202_gm_p_0424.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q1",
+     "url": "https://www.meitav.co.il/media/mdfarlym/512065202_gm_p_0125.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q2",
+     "url": "https://www.meitav.co.il/media/kiylqawy/512065202_gm_p_0225.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q3",
+     "url": "https://www.meitav.co.il/media/xwcibw0l/512065202_gm_p_0325.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q4",
+     "url": "https://www.meitav.co.il/media/p0hlpaly/512065202_gm_p_0425.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q1",
+     "url": "https://www.meitav.co.il/media/ofmkgtaj/512065202_gm_p_0126.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q2",
+     "url": "https://www.meitav.co.il/media/anopjzms/512065202_gm_p_0226.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2024Q1",
+     "url": "https://www.meitav.co.il/media/j5ylng5m/512065202_pn_p_0124.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2024Q2",
+     "url": "https://www.meitav.co.il/media/uuifqsrf/512065202_pn_p_0224.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2024Q3",
+     "url": "https://www.meitav.co.il/media/u2qlgxek/512065202_pn_p_0324.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2024Q4",
+     "url": "https://www.meitav.co.il/media/viipo2mc/512065202_pn_p_0424.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q1",
+     "url": "https://www.meitav.co.il/media/51pnmacc/512065202_pn_p_0125.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q2",
+     "url": "https://www.meitav.co.il/media/11skerm0/512065202_pn_p_0225.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q3",
+     "url": "https://www.meitav.co.il/media/0bifufba/512065202_pn_p_0325.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q4",
+     "url": "https://www.meitav.co.il/media/ttob5115/512065202_pn_p_0425.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2026Q1",
+     "url": "https://www.meitav.co.il/media/f3hbnowx/512065202_pn_p_0126.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2026Q2",
+     "url": "https://www.meitav.co.il/media/hqsn25er/512065202_pn_p_0226.xlsx",
+     "page": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/",
+     "via": "page"
+    }
+   ],
+   "quarters": [
+    "2024Q1",
+    "2024Q2",
+    "2024Q3",
+    "2024Q4",
+    "2025Q1",
+    "2025Q2",
+    "2025Q3",
+    "2025Q4",
+    "2026Q1",
+    "2026Q2"
+   ]
+  },
+  "phoenix": {
+   "name": "הפניקס",
+   "status": "blocked",
+   "note": "BLOCKED 23.10.26: after a few requests digital-content.fnx.co.il answered with a Radware 'Verifying your browser' page; stopped for the site. Before that: pension only. www.fnx.co.il is a client-rendered app behind an AWS WAF challenge script, so its asset-list pages carry no links; the legacy server digital-content.fnx.co.il still serves the יסוד page, whose files are the consolidated pension list. Gemel and managers' insurance lists not reachable without running the site's scripts.",
+   "pages": [
+    {
+     "url": "https://digital-content.fnx.co.il/pension-savings/pension/basic-member-pension-fund/quarterly-assets-list.aspx",
+     "robots": "ok",
+     "error": "blocked: digital-content.fnx.co.il bot wall (radware page)"
+    }
+   ],
+   "files": [],
+   "quarters": []
+  },
+  "migdal": {
+   "name": "מגדל",
+   "status": "partial",
+   "note": "managers' insurance participating portfolio (in) only: its items are embedded in the Wix page. The מקפת pension and gemel lists on /regulations/asset-list are loaded by the browser from the Wix data API (session token), so they are not fetched.",
+   "pages": [
+    {
+     "url": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "robots": "ok",
+     "files": 10
+    }
+   ],
+   "files": [
+    {
+     "product": "in",
+     "quarter": "2024Q1",
+     "url": "https://www.migdal.co.il/_files/ugd/5adfdb_fecad874c5434bf9b4a51435fc00862f.xlsx#520004896_in_p_0124.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2024Q2",
+     "url": "https://www.migdal.co.il/_files/ugd/5adfdb_8608f1cd77254bcd954017344a9bb45c.xlsx#520004896_in_p_0224.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2024Q3",
+     "url": "https://www.migdal.co.il/_files/ugd/5adfdb_a981113e0826492eaebf6401704b7d63.xlsx#520004896_in_p_0324.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2024Q4",
+     "url": "https://www.migdal.co.il/_files/ugd/5adfdb_0bbe89d36d2c4626a460b4b01a32a30d.xlsx#520004896_in_p_0424.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2025Q1",
+     "url": "https://www.migdal.co.il/_files/ugd/5adfdb_677e905c6e104e71bdc823a2731e2410.xlsx#520004896_in_p_0125.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2025Q2",
+     "url": "https://www.migdal.co.il/_files/ugd/5adfdb_0d13b182bdf9481ab06b5bc5193c3a9e.xlsx#520004896_in_p_0225.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2025Q3",
+     "url": "https://www.migdal.co.il/_files/ugd/5adfdb_27ec3dc5ea414181a5144420fce6a822.xlsx#520004896_in_p_0325.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2025Q4",
+     "url": "https://www.migdal.co.il/_files/ugd/ebf348_fd5f8c45b3774da19f09b3a29a5baf67.xlsx#520004896_in_p_0425.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2026Q1",
+     "url": "https://www.migdal.co.il/_files/ugd/ebf348_89d814ddbf7d4b5ca784161384676276.xlsx#520004896_in_p_0126.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    },
+    {
+     "product": "in",
+     "quarter": "2026Q2",
+     "url": "https://www.migdal.co.il/_files/ugd/571a7f_96418cb920d34490bcf311c42239470e.xlsx#520004896_in_p_0226.xlsx",
+     "page": "https://www.migdal.co.il/regulations/migdal-investments-assets",
+     "via": "page"
+    }
+   ],
+   "quarters": [
+    "2024Q1",
+    "2024Q2",
+    "2024Q3",
+    "2024Q4",
+    "2025Q1",
+    "2025Q2",
+    "2025Q3",
+    "2025Q4",
+    "2026Q1",
+    "2026Q2"
+   ]
+  },
+  "analyst": {
+   "name": "אנליסט",
+   "status": "ok",
+   "note": "",
+   "pages": [
+    {
+     "url": "https://www.analyst.co.il/quarterly-property-list/",
+     "robots": "ok",
+     "files": 10
+    }
+   ],
+   "files": [
+    {
+     "product": "gm",
+     "quarter": "2024Q1",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2025/11/511880460_gm_p_0124-1.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q2",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2025/11/511880460_gm_p_0224-1.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q3",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2025/11/511880460_gm_p_0324-1.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2024Q4",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2025/11/511880460_gm_p_0424-1.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q1",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2025/11/511880460_gm_p_0125-1.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q2",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2025/11/511880460_gm_p_0225-1.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q3",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2025/11/511880460_gm_p_0325.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q4",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2026/03/511880460_gm_p_0425.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q1",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2026/05/511880460_gm_p_0126.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q2",
+     "url": "https://www.analyst.co.il/wp-content/uploads/2026/08/511880460_gm_p_0226.xlsx",
+     "page": "https://www.analyst.co.il/quarterly-property-list/",
+     "via": "page"
+    }
+   ],
+   "quarters": [
+    "2024Q1",
+    "2024Q2",
+    "2024Q3",
+    "2024Q4",
+    "2025Q1",
+    "2025Q2",
+    "2025Q3",
+    "2025Q4",
+    "2026Q1",
+    "2026Q2"
+   ]
+  },
+  "infinity": {
+   "name": "אינפיניטי",
+   "status": "ok",
+   "note": "",
+   "pages": [
+    {
+     "url": "https://infinity.co.il/רשימת-נכסים-2026-פנסיה/",
+     "robots": "ok",
+     "files": 4
+    },
+    {
+     "url": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "robots": "ok",
+     "files": 8
+    },
+    {
+     "url": "https://infinity.co.il/רשימת-נכסים-גמל-והשתלמות-2026/",
+     "robots": "ok",
+     "files": 2
+    },
+    {
+     "url": "https://infinity.co.il/רשימת-נכסים-2025/",
+     "robots": "ok",
+     "files": 4
+    },
+    {
+     "url": "https://infinity.co.il/רשימת-נכסים-גמל-והשתלמות/",
+     "robots": "ok",
+     "files": 0
+    }
+   ],
+   "files": [
+    {
+     "product": "ca",
+     "quarter": "2025Q1",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_CA_P_0125.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q2",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_CA_P_0225.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q3",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_CA_P_0325.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2025Q4",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_CA_P_0425.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2026Q1",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_CA_P_0126.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2026-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "ca",
+     "quarter": "2026Q2",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/07/513621110_ca_P_0226.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2026-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q1",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/10/513621110_GM_P_0125.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q2",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_GM_P_0225-1.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q3",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_GM_P_0325-1.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2025Q4",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_GM_P_0425-1.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q1",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_gm_P_0126.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-גמל-והשתלמות-2026/",
+     "via": "page"
+    },
+    {
+     "product": "gm",
+     "quarter": "2026Q2",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/08/513621110_GM_P_0226.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-גמל-והשתלמות-2026/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q1",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_pn_P_0125.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q2",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_pn_P_0225.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q3",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_pn_P_0325.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2025Q4",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_pn_P_0425.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2026Q1",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/09/513621110_pn_P_0126.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2026-פנסיה/",
+     "via": "page"
+    },
+    {
+     "product": "pn",
+     "quarter": "2026Q2",
+     "url": "https://infinity.co.il/wp-content/uploads/2026/07/513621110_pn_P_0226.xlsx",
+     "page": "https://infinity.co.il/רשימת-נכסים-2026-פנסיה/",
+     "via": "page"
+    }
+   ],
+   "quarters": [
+    "2025Q1",
+    "2025Q2",
+    "2025Q3",
+    "2025Q4",
+    "2026Q1",
+    "2026Q2"
+   ]
+  },
+  "menora": {
+   "name": "מנורה מבטחים",
+   "status": "blocked",
+   "note": "first page load listed the files (cdn.menoramivt.co.il, 512245812_*_p_QQYY.xlsx); the next requests got a Radware captcha page (23.10.26). Stopped for the whole site, CDN included.",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "harel": {
+   "name": "הראל",
+   "status": "not_found",
+   "note": "old SharePoint list-of-assets pages redirect to the new site (308 → product pages without file links); the new site's sitemap (4,268 URLs) has no asset-list page.",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "clal": {
+   "name": "כלל",
+   "status": "js_only",
+   "note": "report pages are an Angular app that reads a reports API whose base URL is set at runtime; no file links in the served HTML.",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "more": {
+   "name": "מור",
+   "status": "not_found",
+   "note": "moreinvest.co.il sitemap and home page carry no asset-list page.",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "yelin": {
+   "name": "ילין לפידות",
+   "status": "not_found",
+   "note": "ylp.co.il has no sitemap and no asset-list link on the home page.",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "ayalon": {
+   "name": "איילון",
+   "status": "not_found",
+   "note": "ayalon-ins.co.il sitemap has no asset-list page.",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "hachshara": {
+   "name": "הכשרה",
+   "status": "not_found",
+   "note": "www.hachshara.co.il does not resolve; not searched further.",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "ibi": {
+   "name": "אי.בי.אי",
+   "status": "not_found",
+   "note": "ibi.co.il sitemap has no asset-list page (IBI's gemel arm was sold).",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  },
+  "globalnet": {
+   "name": "גלובלנט",
+   "status": "not_found",
+   "note": "not searched (₪7bn).",
+   "pages": [],
+   "files": [],
+   "quarters": []
+  }
+ },
+ "probed": "23.10.26",
+ "user_agent": "Mozilla/5.0 (compatible; fox-research-il/0.1 asset-lists; +https://fox-research-il.web.app)"
+}
