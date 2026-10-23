@@ -1,5 +1,5 @@
 import type { EChartsCoreOption } from 'echarts/core';
-import { CHART_FONT, chartBase, cssColor } from './theme';
+import { CHART_FONT, chartBase, cssColor, tooltipCss } from './theme';
 import { nf } from './format';
 
 /* One chart engine for the site.
@@ -79,8 +79,8 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
       name: s.name, type: kind, yAxisIndex: s.pct ? pctAxis : 0, stack: s.stack && !s.pct && (kind === 'bar' || s.area) ? 'total' : undefined,
       data: s.data.slice(lo, hi).map((v, i) => (v == null ? null : s.faded?.[lo + i] ? { value: v, itemStyle: { opacity: 0.5 } } : v)),
       barMaxWidth: 46, barGap: s.overlay ? '-100%' : undefined, symbol: spec.dense ? 'none' : undefined, symbolSize: s.dashed ? 5 : 6, connectNulls: !!spec.dense, z: s.lead ? 9 : kind === 'line' ? 5 : 2,
-      itemStyle: { color: s.color, opacity: s.dim ? 0.28 : s.opacity }, areaStyle: s.area ? { opacity: s.stack ? 0.85 : 0.18 } : undefined,
-      lineStyle: { color: s.color, width: s.lead ? 3.4 : s.area && s.stack ? 1 : s.dashed ? 1.8 : 2.4, type: s.dashed ? 'dashed' : 'solid', opacity: s.dim ? 0.28 : 1 }, emphasis: { focus: 'series' },
+      itemStyle: { color: s.color, opacity: s.dim ? 0.28 : s.opacity ?? (kind === 'bar' ? 0.92 : 1), borderRadius: kind === 'bar' && !stacked ? [2, 2, 0, 0] : 0 }, areaStyle: s.area ? { opacity: s.stack ? 0.85 : 0.18 } : undefined,
+      lineStyle: { color: s.color, width: s.lead ? 3 : s.area && s.stack ? 1 : s.dashed ? 1.6 : 2, type: s.dashed ? 'dashed' : 'solid', opacity: s.dim ? 0.28 : 1 }, emphasis: { focus: 'series' },
       tooltip: { valueFormatter: text },
       label: { show: showLabels && !s.dashed, position: 'top', color: b.mu, fontSize: 11, formatter: (p: { value: number | null }) => (p.value == null ? '' : fmtNum(p.value, dec)) },
     };
@@ -92,20 +92,20 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
   }
   const axis = (name: string, pct: boolean, grid: boolean) => ({
     type: 'value', name, nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `${fmtNum(v, 0)}${pct ? '%' : ''}` },
-    splitLine: grid ? { lineStyle: { color: b.ln, type: 'dashed' } } : { show: false },
+    splitLine: grid ? { lineStyle: { color: b.ln2, type: 'solid' } } : { show: false },
   });
   return {
     animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg },
     grid: { left: 8, right: second ? 8 : 14, top: legend ? 58 : 34, bottom: 6, containLabel: true },
-    legend: legend ? { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11.5 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' } : undefined,
-    tooltip: { trigger: 'axis', axisPointer: { type: allLines ? 'line' : 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
+    legend: legend ? { top: 0, type: 'scroll', textStyle: { color: b.fg, fontSize: 11.5 }, itemWidth: 10, itemHeight: 10, itemGap: 14, icon: 'rect' } : undefined,
+    tooltip: { trigger: 'axis', axisPointer: { type: allLines ? 'line' : 'shadow', shadowStyle: { opacity: 0.08 } }, confine: true, backgroundColor: b.panel, borderColor: b.ln, extraCssText: tooltipCss(), textStyle: { color: b.fg, fontSize: 12 },
       // one tooltip everywhere: the period, each series with its figure, the sum where the parts add up, and the unit
       formatter: (ps: { axisValueLabel: string; marker: string; seriesName: string; seriesIndex: number; value: number | null | { value: number } }[]) => {
         let sum = 0;
         const rows = ps.map((q) => { const v = q.value != null && typeof q.value === 'object' ? q.value.value : q.value; if (v == null) return ''; sum += v; return `${q.marker} ${q.seriesName}: <b>${texts[q.seriesIndex]?.(v) ?? fmtNum(v)}</b><br>`; }).join('');
         return `<b>${ps[0]?.axisValueLabel ?? ''}</b><br>${rows}${spec.total ? `סך הכול: <b>${fmtNum(sum)}</b><br>` : ''}<span style="opacity:.65;font-size:11px">${amounts ? spec.unit : '%'}</span>`;
       } },
-    xAxis: { type: 'category', data: x, boundaryGap: !allLines, axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: spec.dense ? 11 : 12, rotate: rot, hideOverlap: true, interval: rot && !spec.dense ? 0 : undefined } },
+    xAxis: { type: 'category', data: x, boundaryGap: !allLines, axisLine: { lineStyle: { color: b.ln } }, axisTick: { show: false }, axisLabel: { color: b.mu, fontSize: 11, rotate: rot, hideOverlap: true, interval: rot && !spec.dense ? 0 : undefined } },
     // one line on its own is read for its shape: the axis follows the data instead of starting at zero
     yAxis: [{ ...axis(amounts ? spec.unit : '%', !amounts, true), scale: !!spec.scale || (allLines && spec.series.length === 1) }, ...(second ? [axis('%', true, false)] : [])],
     series,
@@ -123,12 +123,16 @@ export function polish(option: EChartsCoreOption): EChartsCoreOption {
   list(o.tooltip).forEach((t) => {
     if (t.confine === undefined) t.confine = true;
     if (t.backgroundColor === undefined) { t.backgroundColor = b.panel; t.borderColor = b.ln; t.textStyle = { color: b.fg, fontSize: 12, ...(t.textStyle as Loose | undefined) }; }
+    if (t.extraCssText === undefined) t.extraCssText = tooltipCss();
     if (t.valueFormatter === undefined && t.formatter === undefined) t.valueFormatter = (v: unknown) => (typeof v === 'number' ? fmtNum(v) : v == null ? '–' : String(v));
   });
   [...list(o.xAxis), ...list(o.yAxis)].forEach((a) => {
     if (a.type !== 'value') return;
     const lab = (a.axisLabel ??= {}) as Loose;
     if (lab.formatter === undefined) lab.formatter = (v: number) => fmtNum(v, Math.abs(v) < 10 && !Number.isInteger(v) ? 1 : 0);
+    // house gridlines: solid hairlines in the soft line colour, never dashed
+    const sl = (a.splitLine ??= {}) as Loose;
+    if (sl.show !== false) { const ls = (sl.lineStyle ??= {}) as Loose; if (ls.type === undefined) ls.type = 'solid'; if (ls.color === undefined) ls.color = b.ln2; }
   });
   return option;
 }
@@ -163,8 +167,8 @@ export function foxPeers(spec: PeerSpec): EChartsCoreOption {
     return {
       animationDuration: 650, animationEasing: 'cubicOut', textStyle: { fontFamily: CHART_FONT, color: b.fg },
       grid: { left: 4, right: spec.stack ? 8 : 44, top: spec.stack ? 30 : 6, bottom: 2, containLabel: true },
-      legend: spec.stack ? { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11.5 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' } : undefined,
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: text },
+      legend: spec.stack ? { top: 0, type: 'scroll', textStyle: { color: b.fg, fontSize: 11.5 }, itemWidth: 10, itemHeight: 10, itemGap: 14, icon: 'rect' } : undefined,
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { opacity: 0.08 } }, confine: true, backgroundColor: b.panel, borderColor: b.ln, extraCssText: tooltipCss(), textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: text },
       yAxis: { type: 'category', inverse: true, data: spec.cats, axisTick: { show: false }, axisLine: { show: false },
         axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, formatter: (v: string, i: number) => { const e = spec.sub?.[i]; return e ? `${v} {${e.startsWith('−') || e.startsWith('-') ? 'd' : 'u'}|${LRM}${e}}` : v; },
           rich: { u: { color: b.up, fontSize: 10.5, padding: [0, 6, 0, 6] }, d: { color: b.down, fontSize: 10.5, padding: [0, 6, 0, 6] } } } },
@@ -180,13 +184,13 @@ export function foxPeers(spec: PeerSpec): EChartsCoreOption {
   return {
     animationDuration: 650, animationEasing: 'cubicOut', textStyle: { fontFamily: CHART_FONT, color: b.fg },
     grid: { left: 4, right: 4, top: spec.series.length > 1 ? 30 : 12, bottom: 4, containLabel: true },
-    legend: spec.series.length > 1 ? { top: 0, type: 'scroll', textStyle: { color: b.mu, fontSize: 11.5 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' } : undefined,
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: text },
+    legend: spec.series.length > 1 ? { top: 0, type: 'scroll', textStyle: { color: b.fg, fontSize: 11.5 }, itemWidth: 10, itemHeight: 10, itemGap: 14, icon: 'rect' } : undefined,
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { opacity: 0.08 } }, confine: true, backgroundColor: b.panel, borderColor: b.ln, extraCssText: tooltipCss(), textStyle: { color: b.fg, fontSize: 12 }, valueFormatter: text },
     xAxis: { type: 'category', data: spec.cats, axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } },
       axisLabel: { color: b.fg, fontSize: 11.5, interval: 0, hideOverlap: false, rotate: rot ? 50 : 0,
         formatter: (v: string, i: number) => { const e = spec.sub?.[i]; return e ? (rot ? `${v}  ${LRM}${e}` : `${v}\n{${e.startsWith('−') || e.startsWith('-') ? 'd' : 'u'}|${LRM}${e}}`) : v; },
         rich: { u: { color: b.up, fontSize: 10.5, padding: [3, 0, 0, 0] }, d: { color: b.down, fontSize: 10.5, padding: [3, 0, 0, 0] } } } },
-    yAxis: { type: 'value', show: !!spec.axis, max: spec.max, axisLabel: { color: b.mu, fontSize: 10.5, formatter: (v: number) => `${fmtNum(v, 0)}${spec.pct ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
+    yAxis: { type: 'value', show: !!spec.axis, max: spec.max, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `${fmtNum(v, 0)}${spec.pct ? '%' : ''}` }, splitLine: { lineStyle: { color: b.ln2, type: 'solid' } } },
     series: spec.series.map((s, k) => {
       const base = s.color ?? neutral, op = s.strength ?? 1;
       return {

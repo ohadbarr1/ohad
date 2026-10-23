@@ -46,6 +46,10 @@ export function palette(): string[] {
   return ['--s1', '--s2', '--s3', '--s4', '--s5', '--s6', '--s7', '--s8', '--s9', '--s10', '--s11'].map(cssColor);
 }
 export function chartBase() {
-  return { fg: cssColor('--fg'), mu: cssColor('--muted'), ln: cssColor('--line'), panel: cssColor('--panel'), accent: cssColor('--accent'), down: cssColor('--down'), up: cssColor('--up') };
+  return { fg: cssColor('--fg'), mu: cssColor('--muted'), ln: cssColor('--line'), ln2: cssColor('--line-soft'), panel: cssColor('--panel'), accent: cssColor('--accent'), down: cssColor('--down'), up: cssColor('--up') };
+}
+/** The tooltip box of every chart: the panel surface, lifted (e-2), rounded like a menu. */
+export function tooltipCss(): string {
+  return `box-shadow:${cssVar('--shadow')};border-radius:8px;padding:8px 11px;line-height:1.55;`;
 }
 export const CHART_FONT = '"Heebo", "Inter", sans-serif';
