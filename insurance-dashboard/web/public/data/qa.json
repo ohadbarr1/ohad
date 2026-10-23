@@ -1,5 +1,5 @@
 {
- "built": "2026-10-23T13:39:54+03:00",
+ "built": "2026-10-23T15:03:43+03:00",
  "checks": [
   {
    "id": "workbook",
@@ -125,9 +125,9 @@
    "id": "consistency",
    "ok": true,
    "level": "fail",
-   "n": 25934,
+   "n": 26154,
    "fail": 0,
-   "note": "22255 equal within rounding, 3365 labelled basis differences (alt 14, filer 762, restated 1108, std 1481), last 8 quarters"
+   "note": "22475 equal within rounding, 3365 labelled basis differences (alt 14, filer 762, restated 1108, std 1481), last 8 quarters"
   },
   {
    "id": "fund_roles",
@@ -141,7 +141,7 @@
    "id": "consistency_old",
    "ok": false,
    "level": "warn",
-   "n": 25934,
+   "n": 26154,
    "fail": 314,
    "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
   },
@@ -149,9 +149,17 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 1637,
+   "n": 1702,
    "fail": 0,
-   "note": "1637 files under contract, 0 failing; 31 contracts; 555 files without a contract"
+   "note": "1702 files under contract, 0 failing; 42 contracts; 554 files without a contract"
+  },
+  {
+   "id": "facts",
+   "ok": true,
+   "level": "fail",
+   "n": 115510,
+   "fail": 0,
+   "note": "facts: 115510 workbook figures and 1181 statement restatement pairs checked over 190070 rows of 13 companies; (1178 with the original as the cell's first print; the rest were first printed under an ol"
   }
  ]
 }
