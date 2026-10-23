@@ -29,6 +29,9 @@ Checks
   fund_roles     fund houses: attributable profit and comprehensive income on the company page = XBRL, last 4 quarters
   schemas        every built JSON with a data contract (web/src/lib/schemas.json) matches it: pipeline/check_schemas.py, the same
                  contracts the site checks as each file arrives (lane 2H).
+  facts          the fact table with vintage (web/public/data/facts/) reproduces every current figure of companies/<id>.json exactly
+                 (value, page, report, flags) and every statement pair of restatements.json (both prints, reports, pages); one current
+                 row per cell, derived rows equal their inputs, every line id in the taxonomy (pipeline/build_facts.py --check, lane FT).
 """
 import collections
 import datetime as dt
@@ -352,6 +355,14 @@ def schemas():
     add("schemas", not bad, n, len(bad), summary + (f"; e.g. {bad[0][0]}: {bad[0][2][0]}" if bad else ""))
 
 
+def facts():
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_facts.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()]
+    m = re.search(r"(\d+) workbook figures", out[-1] if out else "")
+    add("facts", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        ((out[-1] if out else p.stderr.strip()[-200:]) if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def main():
     t0 = dt.datetime.now()
     if "--baseline" in sys.argv:  # accept today's value-on-page misses as known (after reviewing them)
@@ -370,6 +381,7 @@ def main():
     lens()
     consistency()
     schemas()
+    facts()
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     failed = [c["id"] for c in checks if not c["ok"] and c["level"] == "fail"]
