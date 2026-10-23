@@ -150,7 +150,7 @@ for per in sorted({f["period"] for f in ifrs_meta["files"]}):
         continue
     end = f"{per[:4]}-{END[per[4:]]}"
     facts_per = json.loads(path.read_text(encoding="utf-8"))
-    for c in {x["c"] for x in facts_per}:
+    for c in sorted({x["c"] for x in facts_per}):  # sorted: set order follows the hash seed, and the chunk url order with it
         ifrs_reports[c].append((per, [x for x in facts_per if x["c"] == c]))
     for x in facts_per:
         if x.get("tr") or x.get("model") or x.get("bk") or x.get("dv") is not None or x["s"] != x["g"] or x["g"] not in SEG_HE or ":" in x["m"]:
