@@ -487,7 +487,7 @@ function MiniGrid({ files, items, withInt = true }: { files: string; items: { c:
     <p className="src dl-munit">{big ? 'מיליארדי ש"ח' : UNIT} · קרן{withInt ? ' וריבית (מקווקו)' : ''} לפי שנת פירעון · בכותרת: קרן, כל השנים</p>
     <ul className="dl-minis">{items.map(({ c, w }) => (
       <li key={c.id}><Link to={`/debt/${c.id}?d=${w.end}`} className="dl-mini-hd"><i className="pdot" style={{ background: idCss(c.id) }} />{c.name}<span className="num" title="קרן, כל השנים">{short(total(w))}</span></Link>
-        <div className="dl-mini" role="img" aria-label={`${c.name}: פירעונות לפי שנה`}>{BK.map((bk) => {
+        <div className="dl-mini" role="group" aria-label={`${c.name}: פירעונות לפי שנה`}>{BK.map((bk) => {
           const p = wallCell(files, c, w, bk, 0).v, i = withInt ? wallCell(files, c, w, bk, 1).v : 0;
           return (<div key={bk} className="dl-mcol"><div className="dl-mbar" style={{ ['--c' as string]: idCss(c.id), height: `${((p + i) / max) * 100}%` }}>
             {i > 0 && <i className="dl-mi" style={{ height: `${(i / (p + i)) * 100}%` }} />}</div>
@@ -530,7 +530,7 @@ export function DebtStrip({ id }: { id: string }) {
   return (
     <section className="panel dl-strip" aria-label="חוב ופירעונות">
       <div className="dl-strip-hd"><h2>חוב ופירעונות</h2><span className="muted">פירעונות לפי שנה · {UNIT} · {dateLabel(w.end)} · קרן וריבית, מאוחד לפי טופס ת126</span><Link to={`/debt/${id}`}>חוב ופירעונות ←</Link></div>
-      <div className="dl-mini" role="img" aria-label={`${c.name}: פירעונות לפי שנה`}>{BK.map((bk) => (
+      <div className="dl-mini" role="group" aria-label={`${c.name}: פירעונות לפי שנה`}>{BK.map((bk) => (
         <div key={bk} className="dl-mcol"><div className="dl-mbar" style={{ ['--c' as string]: idCss(id), height: `${((b(bk, 0) + b(bk, 1)) / max) * 100}%` }}><i className="dl-mi" style={{ height: `${(b(bk, 1) / Math.max(1, b(bk, 0) + b(bk, 1))) * 100}%` }} /></div>
           <Sourced className="num dl-mv" src={() => prov(bk)}>{fmt(m(b(bk, 0) + b(bk, 1)), 'm', { d: 0 })}</Sourced><span className="dl-mx">{BK_HE[bk].replace('שנה ', '')}</span></div>))}</div>
     </section>
