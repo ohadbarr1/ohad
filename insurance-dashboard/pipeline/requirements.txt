@@ -1,11 +1,23 @@
-# pipeline dependencies, pinned to the versions the owner's .venv runs (22 Oct 2026)
-beautifulsoup4==4.15.0
+# fox pipeline: exact pins, from the owner's .venv (Python 3.11, read 23.10.26). Everything else under pipeline/ is standard library.
+#
+# Standard library only (run with /usr/bin/python3, no install): the deploy path (deploy.sh -> pipeline/dag.py --only deploy, gate.py),
+# pipeline/dag.py itself, build_workbook.py + build_facts.py, build_restatements.py, every check_*/verify_* script except
+# verify_extraction.py, and every automatic step of the DAG (docs/PIPELINE.md).
+#
+# Needs a package (manual steps of the DAG):
+#   duckdb    fetch_maya.py (warehouse writes; its classifier imports duckdb lazily), build_ifrs.py, build_kpi.py, build_documents.py,
+#             verify_extraction.py. /usr/bin/python3 on the owner's Mac has NO duckdb: run these with the .venv (or `pip install duckdb==1.5.6`).
+#   pandas + pyarrow (parquet) + numpy   fetch_regulator.py, build_market.py, build_funds.py
+#   openpyxl  extract_company_workbook.py (the Phoenix spreadsheet)
 duckdb==1.5.6
-lxml==6.1.3
 numpy==2.4.6
 openpyxl==3.1.5
 pandas==3.0.6
-pdfplumber==0.11.10
 pyarrow==25.0.1
-requests==2.34.2
-# price input for the valuation pages only (fetch_prices.py)
+# transitive (pinned so an install reproduces the .venv)
+et-xmlfile==2.0.0
+python-dateutil==2.9.0.post0
+pytz==2026.5
+six==1.17.0
+# The .venv also carries beautifulsoup4 4.15.0, lxml 6.1.3, pdfplumber 0.11.10, requests 2.34.2 and yfinance 1.7.0: no file under pipeline/
+# imports them (fetchers use urllib; page text comes from pdftotext), so they are not part of the pipeline's requirements.
