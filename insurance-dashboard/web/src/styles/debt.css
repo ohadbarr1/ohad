@@ -1,0 +1,49 @@
+/* lane DL: debt ladder (/debt, /debt/:id) and the compact strip for the company page and the CSM capital view */
+.dl { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.dl .pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 7px; vertical-align: 1px; flex: none; }
+.dl-actions { display: flex; gap: 8px; }
+.dl-co { white-space: nowrap; }
+.dl-lbl { white-space: normal; min-width: 180px; }
+.dl-lbl b { display: block; font-weight: 500; }
+.dl-lbl .dim { display: block; font-size: var(--t-1); color: var(--faint); }
+.dl tr.dl-total td { font-weight: 700; border-top: 1px solid var(--line); }
+.dl-ents td { vertical-align: top; }
+.dl-ents .chip { white-space: nowrap; }
+
+/* phone: one mini ladder per group, bars on a common scale, interest hatched on top */
+.dl-minis { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 14px 12px; }
+.dl-minis li { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.dl-mini-hd { display: flex; align-items: center; gap: 2px; font-size: var(--t-2); font-weight: 500; color: var(--fg); min-width: 0; }
+.dl-mini-hd .num { margin-inline-start: auto; color: var(--muted); font-weight: 400; font-size: var(--t-1); }
+.dl-mini { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; align-items: end; height: 108px; max-width: 300px; }
+.dl-mcol { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; gap: 2px; }
+.dl-mbar { width: 100%; max-width: 30px; min-height: 1px; background: var(--c); border-radius: 2px 2px 0 0; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+.dl-mi { display: block; width: 100%; flex: none; background: repeating-linear-gradient(135deg, color-mix(in oklch, var(--c) 55%, var(--panel)) 0 3px, color-mix(in oklch, var(--c) 30%, var(--panel)) 3px 6px); }
+.dl-mv { font-size: 10.5px; white-space: nowrap; color: var(--fg); line-height: 1.1; padding: 0; }
+.dl-munit { margin: 0; }
+.dl-mx { font-size: 10px; color: var(--faint); line-height: 1; }
+
+/* checks */
+.dl-kpis { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+.dl-kpis > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dl-kpis span { font-size: var(--t-1); color: var(--muted); font-weight: 500; }
+.dl-kpis b { font-size: var(--t-5); font-weight: 700; line-height: 1.2; }
+.dl-kpis small { font-size: var(--t-1); color: var(--faint); }
+.dl-flags { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 3px; font-size: var(--t-2); color: var(--muted); }
+.dl-warn li::marker { color: var(--warn); }
+.dl-ok { margin: 0; color: var(--up); font-size: var(--t-2); }
+.dl-bs h3 { margin: 4px 0 8px; font-size: var(--t-3); font-weight: 700; }
+.dl-bs td .src { font-size: inherit; }
+
+/* compact strip (company page, CSM capital view) */
+.dl-strip { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dl-strip-hd { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: var(--t-2); }
+.dl-strip-hd h2 { margin: 0; font-size: var(--t-4); }
+.dl-strip-hd .muted { font-size: var(--t-1); }
+.dl-strip-hd a { margin-inline-start: auto; }
+.dl-strip .dl-mini { height: 92px; max-width: 360px; }
+
+@media (max-width: 760px) {
+  .dl-controls { gap: 8px 10px; }
+  .dl-kpis { gap: 8px 18px; }
+}

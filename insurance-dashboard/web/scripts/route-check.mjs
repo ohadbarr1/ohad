@@ -19,10 +19,12 @@ const ROUTES = [
   '/industry/search', '/industry/matrix', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?t=reg&n=5', '/compare', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix', '/valuation/phoenix/ri', '/valuation/phoenix/csm', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/valuation/harel/sotp', '/valuation/hachshara', '/valuation/altshuler/sotp', '/calendar', '/book', '/search?q=%D7%A8%D7%9B%D7%99%D7%91%20%D7%94%D7%A4%D7%A1%D7%93', '/doc/1765739?page=32&q=%D7%93%D7%99%D7%91%D7%99%D7%93%D7%A0%D7%93', '/data', '/data?cite=%2Fcompany%2Fharel&f=CSM', '/restatements', '/restatements?season=2026Q2&min=2', '/presentations', '/mine', '/presentations?co=harel&q=%D7%AA%D7%A9%D7%95%D7%90%D7%94',
   // lane A2: fund houses, an unlisted insurer, the report and window carried between company views
   '/company/yelin', '/company/hachshara', '/company/altshuler/financials', '/company/phoenix?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/review?p=2025Q3&w=ytd', '/company/phoenix/financials?p=2025Q3&w=ltm',
+  // lane DL: debt ladder (industry wall, a group with a capital-raising subsidiary, a fund house, a pinned date and view)
+  '/debt', '/debt?k=fund', '/debt/phoenix', '/debt/meitav', '/debt/harel?d=2025-12-31&v=group&by=link',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */
-const MUST_404 = ['/company/zzz', '/company/zzz/financials'];
+const MUST_404 = ['/company/zzz', '/company/zzz/financials', '/debt/zzz'];
 ROUTES.push(...MUST_404);
 const SIZES = [[390, 844, true], [1440, 900, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
