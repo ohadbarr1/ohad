@@ -64,6 +64,8 @@ const mMine = () => import('./pages/Mine');  // lane F
 const Mine = page(mMine, 'Mine');
 const mAutopilot = () => import('./pages/Autopilot');  // lane AP
 const Autopilot = page(mAutopilot, 'Autopilot');
+const mDebt = () => import('./pages/Debt');  // lane DL
+const Debt = page(mDebt, 'Debt');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -132,6 +134,8 @@ export function App() {
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="mine" element={<Mine />} />
+        <Route path="debt" element={<Debt />} />
+        <Route path="debt/:id" element={<Debt />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

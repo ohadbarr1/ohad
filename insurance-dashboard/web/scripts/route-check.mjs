@@ -21,10 +21,12 @@ const ROUTES = [
   '/company/yelin', '/company/hachshara', '/company/altshuler/financials', '/company/phoenix?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/review?p=2025Q3&w=ytd', '/company/phoenix/financials?p=2025Q3&w=ltm',
   // lane AP: the report-day autopilot's status page
   '/data/autopilot',
+  // lane DL: debt ladder (industry wall, a group with a capital-raising subsidiary, a fund house, a pinned date and view)
+  '/debt', '/debt?k=fund', '/debt/phoenix', '/debt/meitav', '/debt/harel?d=2025-12-31&v=group&by=link',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */
-const MUST_404 = ['/company/zzz', '/company/zzz/financials'];
+const MUST_404 = ['/company/zzz', '/company/zzz/financials', '/debt/zzz'];
 ROUTES.push(...MUST_404);
 const SIZES = [[390, 844, true], [1440, 900, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
