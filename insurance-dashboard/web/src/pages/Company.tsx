@@ -12,6 +12,8 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
+import { NoteMark } from '../components/NoteMark';  // lane F
+import { lineKey } from '../lib/notes';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
 import { useCompanyNotes, useCompanyStore, useKpiData, useMarket, useRegistry } from '../lib/useData';
@@ -404,7 +406,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
     const pi = lastPi!, f0 = store.byMetric.get(mi)?.get(pi), f = seen(f0) ? f0 : undefined, v = val(mi, pi), pp = prior(pi), unit = d.metrics[mi].unit;
     const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{fmtCell(v, unit, scale)}</span>;
     return <>
-      <td>{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? open(f.page, f.u) : null}>{body}</Sourced>}</td>
+      <td>{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? open(f.page, f.u) : null}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(d.metrics[mi])} label={d.metrics[mi].label} /></td>
       <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit, mi, pi, pp, 'YoY')}</td>
       {qoqPi != null && <td>{change(v, val(mi, qoqPi), unit, mi, pi, qoqPi, 'QoQ')}</td>}
     </>;
@@ -544,9 +546,10 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
                       {showChart && on && <span className="dot" style={{ background: pal[k % pal.length] }} />}
                       <span className={hasNotes ? 'expl' : undefined} title={r.m.label} onClick={hasNotes ? () => setExplain(explain === r.idx ? null : r.idx) : undefined}>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       {r.m.role && <Link className="peers" to={`/industry/lines?l=${r.m.role}&c=${companyId}&g=${fund ? 'fund' : 'ins'}`} title="אותה שורה בכל החברות, לאורך זמן">מול עמיתים</Link>}
+                      <NoteMark co={companyId} m={lineKey(r.m)} label={r.m.label} periods={compact && lastPi != null ? [pl(lastPi)] : colsDesc.map(pl)} add />
 
                     </div></td>
-                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi}>{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}</td>; })}
+                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi}>{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(r.m)} label={r.m.label} /></td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td></>}
                   </tr>
                 );

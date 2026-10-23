@@ -27,7 +27,8 @@ function Editor({ k, label, p, periods, onPeriod, autoFocus }: { k: string; labe
   const [text, setText] = useState(note?.t ?? '');
   useEffect(() => { setText(note?.t ?? ''); /* another figure, or another device wrote it */ }, [k, note?.t]);
   return (
-    <div className="note-ed">
+    // a click inside the editor must not reach the row behind it (portals bubble through the React tree)
+    <div className="note-ed" onClick={(e) => e.stopPropagation()}>
       <div className="note-ed-hd">
         <span className="note-ed-what">{label}</span>
         {periods && periods.length > 1 && onPeriod

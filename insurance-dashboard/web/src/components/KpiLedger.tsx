@@ -3,6 +3,7 @@ import { MetricCard, type CardSeries } from './MetricCard';
 import { Sourced } from './Source';
 import { Sheet } from './Sheet';
 import { useMedia } from '../lib/useMedia';
+import { NoteField, NoteMark } from './NoteMark';  // lane F
 import { nf, pct } from '../lib/format';
 import type { Prov } from '../lib/prov';
 
@@ -86,10 +87,13 @@ export function Spark({ data, w = 96, h = 24 }: { data: (number | null)[]; w?: n
 function RowChart({ row, asOf, height }: { row: LedgerRow; asOf: string | null; height: number }) {
   const r = readRow(row, asOf), ix = r.c < 0 ? [] : idxBack(row, r.c, 20), upto = ix.map((i) => row.pts[i]);
   return (
+    <>
     <MetricCard title={row.title} tag={row.tag} unit={row.unit === '%' ? '%' : row.unit} value={fmt(row, r.cur?.v)} dec={row.dec} color={row.color ?? 0} kind={row.kind ?? (row.ratio ? 'area' : 'bar')}
       delta={r.yoy ? { text: `${r.yoy.text} YoY`, tone: r.yoy.tone } : undefined} src={r.cur?.src} href={r.cur?.href} to={row.to} height={height}
       x={upto.map((p) => p.label)} series={row.stack ? row.stack.map((s) => ({ ...s, data: ix.map((i) => s.data[i]) })) : [{ name: row.title, data: upto.map((p) => p.v) }]}
       foot={<>{row.source}{r.cur ? <> · <span className="num">{r.cur.label}</span></> : null}</>} />
+    {r.cur && <NoteField p={r.cur.label} m={row.key} label={row.title} />}
+    </>
   );
 }
 
@@ -126,7 +130,7 @@ export function KpiLedger({ groups, asOf, sel, onSel }: { groups: LedgerGroup[];
                   const r = readRow(row, asOf), on = cur?.key === row.key;
                   return (
                     <tr key={row.key} className={on ? 'on' : ''} onClick={(e) => { if (!(e.target as HTMLElement).closest('.src')) pick(row); }} tabIndex={-1}>
-                      <td className="lbl"><span className="lblin"><button type="button" className="rowbtn" onClick={(e) => { e.stopPropagation(); pick(row); }} aria-pressed={on} aria-label={`${row.title}: גרף`}>{row.title}</button>{row.tag && <span className="chip est">{row.tag}</span>}</span></td>
+                      <td className="lbl"><span className="lblin"><button type="button" className="rowbtn" onClick={(e) => { e.stopPropagation(); pick(row); }} aria-pressed={on} aria-label={`${row.title}: גרף`}>{row.title}</button>{row.tag && <span className="chip est">{row.tag}</span>}{r.cur && <NoteMark p={r.cur.label} m={row.key} label={row.title} add />}</span></td>
                       <td className="v"><Val row={row} p={r.cur} />{r.cur && r.cur.end !== lead?.cur?.end && <span className="dim num">{r.cur.label}</span>}</td>
                       <td className="wide-only"><Val row={row} p={r.q} /></td>
                       <td className="wide-only"><Val row={row} p={r.y} /></td>
@@ -167,7 +171,7 @@ export function KpiTiles({ rows, asOf }: { rows: LedgerRow[]; asOf: string | nul
               <button type="button" className="kt-hd" onClick={(e) => { e.stopPropagation(); setSheet(row.key); }} aria-label={`${row.title}: גרף`}>
                 <span className="kt-t">{row.short ?? row.title}</span><span className="kt-p num">{r.cur?.label}</span>
               </button>
-              <div className="kt-v"><Val row={row} p={r.cur} /><span className="kt-u">{row.unit === '%' ? '' : row.unit}</span></div>
+              <div className="kt-v"><Val row={row} p={r.cur} /><span className="kt-u">{row.unit === '%' ? '' : row.unit}</span>{r.cur && <NoteMark p={r.cur.label} m={row.key} label={row.title} />}</div>
               <div className="kt-f">
                 {r.yoy ? <Sourced src={r.yoy.src}><span className={`num ${r.yoy.tone ?? ''}`}>{r.yoy.text}</span></Sourced> : <span className="muted">–</span>}
                 <span className="kt-yl">YoY</span>

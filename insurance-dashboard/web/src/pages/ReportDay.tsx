@@ -1,3 +1,4 @@
+import { NoteMark } from '../components/NoteMark';  // lane F
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
@@ -387,7 +388,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
             <div className="rd-tr rd-th" role="row"><span role="columnheader">שורה</span><span role="columnheader" className="num">{curL}</span><span role="columnheader">YoY · <span className="num">{yoyL}</span></span><span role="columnheader">QoQ · <span className="num">{qoqL}</span></span>{!ltmW && <span role="columnheader">LTM · YoY</span>}</div>
             {rows.map((r) => (
               <div className="rd-tr" role="row" key={r.key}>
-                <div className="rd-l" role="rowheader">{r.label}
+                <div className="rd-l" role="rowheader">{r.label}<NoteMark p={curL} m={`rd:${r.key}`} label={r.label} add />
                   {(r.note || r.chips?.length || r.cur?.late || r.fact) && <span className="rd-chips">{r.chips?.map((c) => <span key={c} className="chip est">{c}</span>)}{r.note && <span className="chip est" title={r.note[1]}>{r.note[0]}</span>}{r.cur?.late && <span className="chip est" title={`הנתון כפי שהודפס מחדש בדוח ${r.cur.late}; הנתון המקורי בלוח "הוצג מחדש" של אותו דוח`}>לפי {r.cur.late}</span>}<IncChip f={r.fact} /></span>}
                 </div>
                 <div className="rd-c rd-cur" role="cell"><V f={r.cur} t={r.label} p={curL} /></div>
