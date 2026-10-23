@@ -1,28 +1,64 @@
-/* Home: the feed and the macro inputs beside the company table; one column on a phone, two from 1600 px (terminal mode) */
-.home-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
-.home-side, .home-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
-html[data-density="compact"] .home-grid, html[data-density="compact"] .home-side, html[data-density="compact"] .home-main { gap: 14px; }
+/* Home, the season desk (docs/HOME.md): season strip, scoreboard, LTS figures, macro, jump row.
+   Phone: one column, scoreboard first. 761-1599 px: one column, the four LTS figures above the scoreboard. From 1600 px: scoreboard in the
+   main column, the rest in a sticky side column. */
+.home { display: flex; flex-direction: column; gap: 22px; }
+.home-grid { display: flex; flex-direction: column; gap: 22px; }
+.home-main, .home-side { display: contents; }
+.home .cos { order: 1; } .home .hm-kpis { order: 2; } .home .macro { order: 3; } .home .hm-jump { order: 4; }
+html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { gap: 14px; }
+@media (min-width: 761px) and (max-width: 1599px) { .home .hm-kpis { order: 0; } }
 @media (min-width: 1600px) {
-  .home-grid { grid-template-columns: minmax(0, 1fr) minmax(400px, 30%); grid-template-areas: "main side"; }
-  .home-main { grid-area: main; } .home-side { grid-area: side; position: sticky; top: 16px; }
+  .home-grid { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 22vw, 440px); align-items: start; }
+  .home-main, .home-side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .home-side { position: sticky; top: 16px; }
+  .home .hm-kpis { grid-template-columns: 1fr 1fr; }
+  .home .hm-kpis .kpi { padding: 14px 16px 13px; } .home .hm-kpis .kpi .v { font-size: var(--t-6); }
 }
 
-/* filings as a feed: company, document, pages, date on one line */
-.feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.feed li { display: grid; grid-template-columns: minmax(84px, max-content) auto minmax(0, 1fr) auto auto; align-items: baseline; gap: 4px 10px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-3); }
-.feed li:last-child { border-bottom: 0; }
-.feed .co { color: var(--fg); font-weight: 500; }
-.feed .chip { grid-column: 2; }
-.feed li:not(:has(.chip)) .fdoc { grid-column: 2 / 4; }
-.feed .fdoc { color: var(--muted); }
-.feed .pg, .feed .dt { font-size: var(--t-2); }
-html[data-density="compact"] .feed li { padding: 4px 0; font-size: var(--t-2); }
+/* the season strip: period, one tick per reporting company (its identity colour once filed), count, last filing, next due */
+.hm-season { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 16px; min-height: 52px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-3); font-size: var(--t-3); }
+.hm-season[aria-busy] { min-height: 52px; }
+.hm-s-main { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; flex: 1 1 auto; min-width: 0; }
+.hm-s-per { font-size: var(--t-5); font-weight: 700; letter-spacing: -0.01em; color: var(--fg); }
+.hm-s-ticks { display: inline-flex; gap: 3px; }
+.hm-s-ticks i { width: 5px; height: 16px; border-radius: 2px; background: var(--line); }
+.hm-s-k { white-space: nowrap; }
+.hm-s-k .chip { margin-inline-start: 2px; }
+.hm-s-aside { display: flex; align-items: center; gap: 12px; margin-inline-start: auto; font-size: var(--t-2); }
+.hm-s-fresh { flex-basis: 100%; border-top: 1px solid var(--line-soft); padding-top: 2px; }
 @media (max-width: 760px) {
-  .feed li { grid-template-columns: minmax(0, 1fr) auto; }
-  .feed .chip { grid-column: auto; justify-self: start; }
-  .feed .fdoc, .feed li:not(:has(.chip)) .fdoc { grid-column: 1; }
-  .feed .pg { display: none; }
+  .hm-season { padding: 10px 13px; gap: 6px 12px; }
+  .hm-s-main { gap: 4px 12px; }
+  .hm-s-who, .hm-s-last { display: none; }
+  .hm-s-ticks { gap: 2px; } .hm-s-ticks i { width: 4px; }
+  .hm-s-aside { margin-inline-start: auto; }
+  .home .cos .hd { flex-wrap: nowrap; align-items: center; }
+  .hm-s-fresh .feed li:nth-child(n+8) { display: none; }
 }
+
+/* the phone scoreboard: star, identity dot + name (the way in), the key figure large with its two companions small */
+.hm-list { list-style: none; margin: 6px -13px 0; padding: 0; }
+.hm-list li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; grid-template-areas: "star who fig" ". chips chips" ". child child"; align-items: center; column-gap: 6px; padding: 4px 13px 4px 13px; border-top: 1px solid var(--line-soft); }
+.hm-star { grid-area: star; display: grid; place-items: center; }
+.hm-who { grid-area: who; display: grid; grid-template-columns: 8px minmax(0, 1fr); grid-template-areas: "dot name" ". meta"; column-gap: 8px; row-gap: 1px; align-content: center; min-height: 48px; color: var(--fg); text-decoration: none; }
+.hm-who:hover .hm-name { color: var(--accent-text); }
+.hm-dot { grid-area: dot; width: 8px; height: 8px; border-radius: 50%; align-self: center; }
+.hm-name { grid-area: name; font-size: var(--t-4); font-weight: 600; line-height: 1.25; }
+.hm-meta { grid-area: meta; font-size: var(--t-1); color: var(--muted); }
+.hm-fig { grid-area: fig; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.hm-v { font-size: var(--t-5); font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+.hm-u { font-size: var(--t-1); color: var(--muted); font-weight: 500; margin-inline-start: 3px; }
+.hm-sub { display: flex; gap: 10px; font-size: var(--t-1); color: var(--muted); white-space: nowrap; }
+.hm-chips { grid-area: chips; display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 6px; }
+.hm-child { grid-area: child; font-size: var(--t-2); color: var(--fg); padding: 8px 0 10px; }
+.hm-list li.stale :is(.hm-name, .hm-v) { color: var(--muted); }
+.hm-list .src { font-weight: inherit; }
+
+/* where to go next */
+.hm-jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.hm-jump a { display: inline-flex; align-items: center; min-height: 36px; padding: 6px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); color: var(--fg); font-size: var(--t-2); font-weight: 500; text-decoration: none; }
+.hm-jump a:hover { border-color: var(--line); color: var(--accent-text); }
+@media (max-width: 760px) { .hm-jump a { min-height: 40px; } }
 
 /* macro tiles */
 .macro-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 0; margin: 0 -4px; }
@@ -47,12 +83,10 @@ html[data-density="compact"] .feed li { padding: 4px 0; font-size: var(--t-2); }
 }
 .coname { display: flex; align-items: center; gap: 6px; }
 @media (max-width: 760px) { .cos-ctl .unit { margin-inline-start: 0; width: 100%; } }
-@media (max-width: 760px) { .feed li:nth-child(n+6) { display: none; } }
 @media (min-width: 1600px) { .cos-t td:first-child { white-space: nowrap; } .cos-t td:first-child .dim { display: inline; margin-inline-start: 6px; } }
 
 /* lane Q: at 1600 px and up both column sets share the main column; the table fits it without a horizontal scroll down to 1600 px */
 @media (min-width: 1600px) {
-  .home-grid { grid-template-columns: minmax(0, 1fr) clamp(372px, 22vw, 440px); }
   .panel table.cos-t th, .panel table.cos-t td { padding-inline: 6px; }
   .panel table.cos-t th:not(:first-child), .panel table.cos-t td:not(:first-child) { min-width: 0; }
   .cos-t td:first-child { white-space: normal; }
@@ -66,3 +100,7 @@ html[data-density="compact"] .feed li { padding: 4px 0; font-size: var(--t-2); }
 .cos-t tr.stale td { color: var(--muted); }
 .cos-t tr.stale td:first-child a { color: var(--muted); }
 .cos-t .chip.stale { margin-inline-start: 6px; }
+/* iOS / iPadOS WebKit: a sticky first cell inside an RTL overflow scroller is composited off its scroll origin and paints blank (owner's
+   iPhone, 23.10.26: the names column empty, the row tint stopping at it). Where the table still scrolls sideways on Apple touch devices
+   (tablet widths), keep the name column in flow. The phone shows the list instead of the table. */
+@supports (-webkit-touch-callout: none) { .home .cos-t :is(th, td):first-child { position: static; } }
