@@ -119,8 +119,61 @@ def capital():
                     if d not in line:
                         line[d] = {**{k: x[k] for k in ("v", "pg", "u", "std", "cmp") if k in x}, "s": r["s"]}
             co[key] = line
+        # own funds, SCR and surplus (with transitional measures) of the main insurer, as the periodic report prints them
+        for m, key in CAP_SOLV.items():
+            cands = [r for r in rows if r["m"] in m and r["b"] == "na" and r.get("g") == "insurer" and not OTHER_ENTITY.search(r["s"]) and not NOT_MAIN.search(r["s"])]
+            cands.sort(key=lambda r: -len(r["vals"]))
+            line = {}
+            for r in cands:
+                for p, x in r["vals"].items():
+                    d = p[:4] + ("FY" if p.endswith(("Q4", "FY")) else p[4:])
+                    if d not in line:
+                        line[d] = {**{k: x[k] for k in ("v", "pg", "u", "std", "cmp") if k in x}, "s": r["s"]}
+            co[key] = line
+        # a filer's own-funds row does not always say its basis: keep a periodic own funds / SCR pair only where it reproduces the
+        # with-transitional ratio printed for the same date (within 1.5 points); otherwise the pair is another basis and is left out
+        for p in list(co.get("of", {})):
+            of, scr, sr = co["of"].get(p), co.get("scr", {}).get(p), co.get("sr_w", {}).get(p)
+            if not (of and scr and sr and scr["v"]) or abs(of["v"] / scr["v"] * 100 - sr["v"]) > 1.5:
+                for k in ("of", "scr", "su"):
+                    co.get(k, {}).pop(p, None)
+        for k in ("scr", "su"):
+            for p in [p for p in co.get(k, {}) if p not in co.get("of", {})]:
+                co[k].pop(p)
+        merge_solvency(c, co)
         out[c] = co
     return out
+
+
+# the separate economic-solvency reports (build_solvency.py): they fill the dates the periodic report does not print (2017-2020, and
+# the half-years); a figure the periodic report prints is never replaced: when the solvency report prints another value it is kept as `alt`
+CAP_SOLV = {("own_funds", "own_funds_with_transitional"): "of", ("scr", "scr_with_transitional"): "scr", ("solvency_surplus", "solvency_surplus_with_transitional"): "su"}
+NOT_MAIN = re.compile(r"without|mcr|pro_forma|after|subsidiar", re.I)
+SOLV_KEYS = {"sr_w": "sr_w", "sr_wo": "sr_wo", "of": "of_w", "scr": "scr_w", "su": "su_w"}
+_SOLV = None
+
+
+def merge_solvency(c, co):
+    global _SOLV
+    if _SOLV is None:
+        f = DATA / "csm" / "solvency.json"
+        _SOLV = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {"companies": {}, "reports": {}, "files": ""}
+    S, reps = _SOLV["companies"].get(c, {}), _SOLV["reports"]
+    for key, sk in SOLV_KEYS.items():
+        line = co.setdefault(key, {})
+        for dt, cells in S.items():
+            x = cells.get(sk)
+            if not x:
+                continue
+            p = dt[:4] + {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "FY"}[dt[5:]]
+            rep = reps.get(str(x["r"]), {})
+            pt = {"v": x["v"], "pg": x.get("pg"), "u": (_SOLV["files"] + rep["f"]) if rep.get("f") else None, "solv": x["r"], **({"img": 1} if x.get("i") else {})}
+            cur = line.get(p)
+            if cur is None:
+                line[p] = {**pt, "std": "IFRS 4" if dt < "2024-01-01" else "IFRS 17"}
+            elif abs(cur["v"] - x["v"]) > (0.5 if key.startswith("sr") else max(1.5, abs(x["v"]) * 0.002)):
+                cur["alt"] = pt
+        co[key] = dict(sorted(line.items(), key=lambda t: t[0][:4] + {"Q1": "1", "Q2": "2", "Q3": "3", "FY": "4"}.get(t[0][4:], "9")))
 
 
 def main():

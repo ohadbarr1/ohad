@@ -51,9 +51,10 @@ END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "Q4": "12-31", "FY": "12-31"
 QOF = {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "Q4"}
 PAGES = {"kpi": "בית · כרטיסי KPI · הערכת שווי", "home": "בית (החברה עצמה, 100%)", "day": "דף החברה · יום הדוח", "lines": "דוחות כספיים (השוואה)", "peers.fs": "טבלת עמיתים · דוחות",
          "peers.xbrl": "טבלת עמיתים · XBRL", "peers.ifrs": "טבלת עמיתים · IFRS 17", "capital": "CSM · הון", "csm": "CSM · ספר", "csm.co": "CSM · קובץ החברה", "csm.ts": "CSM · דף החברה והערכת שווי (lib/csmResolve.ts)",
-         "peers.csm": "טבלת עמיתים · CSM"}
+         "peers.csm": "טבלת עמיתים · CSM", "solv": "כושר פירעון · דוח כושר פירעון כלכלי", "peers.solv": "טבלת עמיתים · כושר פירעון"}
 M_HE = {"profit": "רווח נקי לבעלי המניות", "oci": "רווח כולל לבעלי המניות", "pretax": "רווח לפני מס", "eps": "רווח למניה", "equity": "הון לבעלי המניות",
-        "assets": "סך הנכסים", "np": "רווח לתקופה", "teq": "סך ההון", "csm": "CSM"}
+        "assets": "סך הנכסים", "np": "רווח לתקופה", "teq": "סך ההון", "csm": "CSM",
+        "sr_w": "יחס כושר פירעון, עם הוראות מעבר", "sr_wo": "יחס כושר פירעון, ללא הוראות מעבר"}
 load = lambda p: json.loads(p.read_text(encoding="utf-8"))
 
 
@@ -290,6 +291,25 @@ for ent, ms in cap.items():
             if metric == "equity" and p.endswith("FY"):
                 continue
             put(ent, metric, p, Obs("capital", x["v"], prec_m(x["v"]), 1, False, rid_of(x.get("u")), "4" if x.get("std") == "IFRS 4" else "17", "restated" if x.get("cmp") else None))
+# solvency ratio: the periodic report's figure on the capital page (capital.json, points not taken from the solvency report) against the
+# separate economic-solvency report (csm/solvency.json) and the peer table's solvency-report cells; one ratio per date on every page
+for ent, ms in cap.items():
+    for key in ("sr_w", "sr_wo"):
+        for p, x in (ms.get(key) or {}).items():
+            if not x.get("solv"):
+                put(ent, key, p[:4] + "Q4" if p.endswith("FY") else p, Obs("capital", x["v"], prec_m(x["v"]), 1, False, None, None, "restated" if x.get("cmp") else None))
+_solv = DATA / "csm" / "solvency.json"
+for ent, dates in (load(_solv)["companies"] if _solv.exists() else {}).items():
+    for d, cells in dates.items():
+        for key in ("sr_w", "sr_wo"):
+            if key in cells:
+                put(ent, key, qkey(d), Obs("solv", cells[key]["v"], prec_m(cells[key]["v"]), 1, False, None, None, None))
+for key in ("sr_w", "sr_wo"):
+    _f = DATA / "peers" / "m" / f"solv-{key}.json"
+    if _f.exists():
+        for ent, e in load(_f)["e"].items():
+            for c in e["c"]:
+                put(ent, key, c[0], Obs("peers.solv", c[1], prec_m(c[1]), 1, False, None, None, None))
 summary = load(DATA / "csm" / "summary.json")
 for ent, dates in summary.get("resolved", {}).items():
     for d, (v, lab, rp, fl) in dates.items():
