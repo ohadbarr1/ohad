@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '../components/Icon';
 import { Link, useSearchParams } from 'react-router-dom';
 import { DataTable, type Column } from '../components/DataTable';
 import { ErrorBox, Field, Loading, Panel, Seg, copyText } from '../components/ui';
@@ -103,7 +104,7 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
 
   return (
     <div className="dq wide-page">
-      <div className="pagehead"><div><h1>נתונים ואיכות</h1><div className="sub">כיסוי, בדיקות ורעננות לפי מקור · נבנה <span className="num">{pubLabel(c.built)}</span> · <Link to="/data/autopilot">טייס אוטומטי</Link></div></div></div>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>נתונים ואיכות</h1><div className="sub">כיסוי, בדיקות ורעננות לפי מקור · נבנה <span className="num">{pubLabel(c.built)}</span> · <Link to="/data/autopilot">טייס אוטומטי</Link></div></div></div>
 
       <section className="kpis">
         <div className="kpi"><div className="l">כיסוי</div><div className="v num">{fmt((fresh / Math.max(1, applicable)) * 100, 'pct', { d: 0 })}</div><div className="s"><span className="num">{fresh}/{applicable}</span> תאים עדכניים · {c.companies.length} חברות × {c.layers.length} שכבות</div></div>

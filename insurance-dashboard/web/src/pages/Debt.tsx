@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Icon } from '../components/Icon';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { DataTable, type Column } from '../components/DataTable';
@@ -153,7 +154,7 @@ function DebtIndustry() {
 
   return (
     <div className="dl">
-      <div className="pagehead"><div><h1>חוב ופירעונות</h1>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="shield" /></span>חוב ופירעונות</h1>
         <div className="sub"><span>מצבת התחייבויות לפי מועדי פירעון (טופס ת126) · <span className="num">{shown.length}</span> קבוצות · {dateLabel(D)} · מאוחד לפי הטופס: האם סולו, מאוחדות שאינן מדווחות ומנפיקות נפרדות</span></div></div>
       </div>
       <section className="controls dl-controls">
@@ -364,7 +365,7 @@ function CompanyView({ d, sp, set }: { d: DebtFile; sp: URLSearchParams; set: (k
 
   return (
     <div className="dl">
-      <div className="pagehead"><div><h1>חוב ופירעונות <span className="muted">· {d.name}</span></h1>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="shield" /></span>חוב ופירעונות <span className="muted">· {d.name}</span></h1>
         <div className="sub"><span><Link to="/debt">כל הקבוצות</Link> · <Link to={`/company/${d.id}`}>דף החברה</Link> · מצבת התחייבויות (ת126) · {tagD}</span></div></div>
         <div className="dl-actions"><button type="button" className="btn" onClick={exportAll}>Excel</button></div>
       </div>

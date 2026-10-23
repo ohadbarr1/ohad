@@ -46,7 +46,7 @@ export function Layout() {
     <a className="skip" href="#main">דילוג לתוכן</a>
     <div className="shell">
       <aside className="rail">
-        <NavLink to="/" className="brand" aria-label="fox" title="fox · דף הבית"><Logo size={36} /></NavLink>
+        <NavLink to="/" className="brand" aria-label="fox" title="fox · דף הבית"><Logo size={40} /></NavLink>
         <nav aria-label="ראשי">
           {NAV.map(([to, icon, label, short]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${short ? '' : ' wide-item'}${isActive || (to === '/' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
         </nav>

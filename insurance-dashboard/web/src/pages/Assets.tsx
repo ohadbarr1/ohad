@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { Icon } from '../components/Icon';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { EChartsCoreOption } from 'echarts/core';
 import { Chart } from '../components/Chart';
@@ -67,7 +68,7 @@ function AssetsIndexPage({ idx }: { idx: AssetsIndex }) {
     <div className="ast">
       <div className="pagehead">
         <div>
-          <h1>הרכב נכסים</h1>
+          <h1><span className="icotile"><Icon name="savings" /></span>הרכב נכסים</h1>
           <div className="sub">
             <span>רשימות הנכסים הרבעוניות של הגופים המוסדיים, נכס אחר נכס</span>
             {idx.asof_label && <span className="chip">{idx.asof_label}</span>}

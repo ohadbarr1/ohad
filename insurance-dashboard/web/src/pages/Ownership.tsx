@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Icon } from '../components/Icon';
 import { Link, useSearchParams } from 'react-router-dom';
 import { DataTable, type Column } from '../components/DataTable';
 import { Sheet } from '../components/Sheet';
@@ -41,7 +42,7 @@ export function Ownership() {
     <div className="own">
       <div className="pagehead">
         <div>
-          <h1>בעלות</h1>
+          <h1><span className="icotile"><Icon name="companies" /></span>בעלות</h1>
           <div className="sub">
             <span>מי מחזיק במי בין 17 הקבוצות</span>
             {asof && <span className="chip">בעלי עניין: {pubLabel(asof)}</span>}
