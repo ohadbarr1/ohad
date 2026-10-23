@@ -13,7 +13,7 @@
   /* light colours: warm paper under white panels, navy ink (the Phoenix deck), one ember */
   --navy: #111C3F; --navy-deep: #0E1632;
   --bg: #F5F3EE; --rail: #FBFAF7; --panel: #FFFFFF; --panel2: #F4F2EC; --panel3: #E9E6DE;
-  --line: #D8D4CA; --line-soft: #EAE7DF; --hi: rgb(255 255 255 / 0.9); --fg: #111C3F; --muted: #4C5366; --faint: #667085; --link: #2F3B8C;
+  --line: #D8D4CA; --line-soft: #EAE7DF; --hi: rgb(255 255 255 / 0.9); --fg: #111C3F; --muted: #4C5366; --faint: #5C6578; --link: #2F3B8C;
   --accent: #FF4E31; --accent-text: #C2391C; --accent-2: #E8431F; --accent-ink: #FFFFFF; --accent-soft: rgb(255 78 49 / 0.1); --accent-line: rgb(255 78 49 / 0.45);
   --sel-bg: #111C3F; --sel-fg: #FFFFFF;
   --up: #0B7F56; --down: #C8102E; --warn: #8A5A00;
