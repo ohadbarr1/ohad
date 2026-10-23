@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Sourced } from '../components/Source';
 import { Seg } from '../components/ui';
+import { Icon } from '../components/Icon';
 import type { Prov } from '../lib/prov';
 import type { MetricKey } from '../lib/market';
 import { cls, nf, pct } from '../lib/format';
@@ -94,7 +95,7 @@ export function Home() {
       <div className="home-grid">
         <div className="home-main">
           <section className="panel cos">
-            <div className="hd"><h2>חברות</h2><div className="aside">{phone ? <Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק']]} /> : <><DensityToggle /><Link to="/industry/peers">טבלת עמיתים</Link><Link to="/valuation">הערכת שווי</Link></>}</div></div>
+            <div className="hd"><h2><span className="icotile"><Icon name="companies" /></span>חברות</h2><div className="aside">{phone ? <Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק']]} /> : <><DensityToggle /><Link to="/industry/peers">טבלת עמיתים</Link><Link to="/valuation">הערכת שווי</Link></>}</div></div>
             <div className="cos-ctl">
               <Seg label="סוג" value={kind} onChange={setKind} options={[['all', 'הכול'], ['insurance_group', 'ביטוח'], ['fund_house', 'בתי השקעות']]} />
               {!phone && <span className="view-seg"><Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק ודמי ניהול']]} /></span>}

@@ -104,3 +104,7 @@
 /* vintage toggle in the statements toolbar: the as-of picker keeps to its content (the toolbar's 220 px select minimum is for the sheet picker) */
 .toolbar .vin-asof select { min-width: 0; }
 .vin-asof > span { white-space: nowrap; }
+
+/* the company's identity dot: a ring with a soft halo in the company colour (design lane) */
+.company-head h1 .iddot { width: 14px; height: 14px; box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 18%, transparent); }
+@media (max-width: 760px) { .company-head h1 .iddot { width: 12px; height: 12px; } }

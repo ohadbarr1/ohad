@@ -69,7 +69,7 @@ export function CompanyLayout() {
     <>
       <div className="pagehead company-head">
         <div className="ch-id">
-          <h1><span className="iddot" style={{ background: idCss(entry.id) }} aria-hidden="true" />{entry.name_he}{entry.name_en && <> <span className="muted en"><span className="sep">· </span><bdi>{entry.name_en}</bdi></span></>}</h1>
+          <h1><span className="iddot" style={{ background: idCss(entry.id), color: idCss(entry.id) }} aria-hidden="true" />{entry.name_he}{entry.name_en && <> <span className="muted en"><span className="sep">· </span><bdi>{entry.name_en}</bdi></span></>}</h1>
           <div className="sub row" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span className="kind">{KIND[entry.kind]}</span>
             {entry.has_financials && <span className="chip loaded" title="הדוח האחרון שנקרא">דוח אחרון <span className="num">{latest}</span></span>}
