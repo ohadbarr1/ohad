@@ -1,4 +1,5 @@
 import { NoteMark } from '../components/NoteMark';  // lane F
+import { lineKey } from '../lib/notes';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
@@ -33,7 +34,9 @@ type Unit = 'k' | 'm' | 'nis' | 'pct';
 /** One printed (or derived) figure with the page it opens. Statement figures are NIS thousands, extracted IFRS facts NIS millions. */
 export interface Fig { v: number; unit: Unit; href: string | null; page: number | null; der?: boolean; std?: '17' | '4'; late?: string; tip?: string;
   /** bare address and name of the document, the period the figure covers when it is not the column's, and what a computed figure is made of */
-  url?: string | null; doc?: string; period?: string; calc?: { formula: string; parts: { label: string; fig: Fig }[] } }
+  url?: string | null; doc?: string; period?: string; calc?: { formula: string; parts: { label: string; fig: Fig }[] };
+  /** the statement row the figure was read from (its note key is the grid's: lib/notes lineKey) */
+  mi?: number }
 
 /** Labels differ between filers in brackets, stray spaces and "(הפסד)": compare without them. */
 export const clean = (s: string): string => s.replace(/\(ביאור[^)]*\)/g, ' ').replace(/[()*:]/g, ' ').replace(/\s+,/g, ',').replace(/\s+/g, ' ').trim();
@@ -81,6 +84,26 @@ export function resolve(store: CompanyStore, role: Role, forceAlt = false): Reso
   return rows.length || !role.alt ? { role, rows, alt: false } : { role, rows: pick((l) => role.alt!.test(l.label)), alt: true };
 }
 
+/** One note per figure: the key of the statement row a figure was read from, the same key the statements grid gives that row
+    (lib/notes lineKey: its cross-company role, else sheet and label); `rd:<role>` only for a figure that is not a statement row. */
+export const figNoteKey = (store: CompanyStore, f: Fig | null | undefined, fallback: string): string => (f?.mi != null && store.d.metrics[f.mi] ? lineKey(store.d.metrics[f.mi]) : fallback);
+/** The note key and period label of a headline role at a report date, for a page that shows the same printed figure (review, sources of profit).
+    `type` is the column: Q, H, 9M, FY or I (a balance). */
+export function roleNote(store: CompanyStore, key: string, type: string, end: string): { m: string; p: string; v: number | null } {
+  const role = ROLES.find((r) => r.key === key)!, t = role.flow ? type : 'I';
+  let r = resolve(store, role), f = figAt(store, r.rows, t, end);
+  if (!f && !r.alt && role.alt) { r = resolve(store, role, true); f = figAt(store, r.rows, t, end); }
+  return { m: figNoteKey(store, f, `rd:${key}`), p: periodLabel(t, end), v: f ? (f.unit === 'k' ? f.v / 1e3 : f.v) : null };
+}
+/** The note anchor of a figure printed elsewhere (an extracted IFRS fact, a sources-of-profit total) that is the statement figure of a role:
+    the same period, and the same number to the printed rounding. Null when it is another figure. */
+export function sameFigNote(store: CompanyStore | null | undefined, key: string, w: string, d: string, v: number, tol = 0.51): { m: string; p: string } | null {
+  if (!store || !QE.includes(d.slice(5))) return null;
+  const t = w === 'instant' ? 'I' : w === 'q' ? 'Q' : w === 'fy' ? 'FY' : YTD[d.slice(5)];
+  const n = roleNote(store, key, t, d);
+  return n.v != null && Math.abs(n.v - v) <= tol ? { m: n.m, p: n.p } : null;
+}
+
 type Late = (u: number | null | undefined) => string | undefined;
 /** The first of the candidate rows that carries a figure for the period: a line whose wording changed over the years sits in several rows. */
 export function figAt(store: CompanyStore, rows: Line[], type: string, end: string, late?: Late): Fig | null {
@@ -88,7 +111,7 @@ export function figAt(store: CompanyStore, rows: Line[], type: string, end: stri
   if (pi < 0) return null;
   for (const l of rows) {
     const f = store.byMetric.get(l.mi)?.get(pi);
-    if (f) { const url = bareUrl(store, 'F', f.u); return { v: f.v, unit: l.unit as Unit, href: store.sourceUrl('F', f.page, f.u), page: f.page, der: f.der, std: f.old ? '4' : l.std, late: late?.(f.u), tip: f.der ? 'נגזר מהנתונים המצטברים (Q4 = FY פחות 9M)' : undefined, url, doc: docOf(store, 'F', url) }; }
+    if (f) { const url = bareUrl(store, 'F', f.u); return { mi: l.mi, v: f.v, unit: l.unit as Unit, href: store.sourceUrl('F', f.page, f.u), page: f.page, der: f.der, std: f.old ? '4' : l.std, late: late?.(f.u), tip: f.der ? 'נגזר מהנתונים המצטברים (Q4 = FY פחות 9M)' : undefined, url, doc: docOf(store, 'F', url) }; }
   }
   return null;
 }
@@ -98,7 +121,7 @@ export function ltmAt(store: CompanyStore, rows: Line[], end: string): Fig | nul
   const ends = [0, -1, -2, -3].map((k) => qShift(end, k)), qs = ends.map((e) => figAt(store, rows, 'Q', e));
   if (qs.some((q) => !q) || new Set(qs.map((q) => q!.std)).size > 1) return null;
   const parts = ends.map((e, i) => ({ label: periodLabel('Q', e), fig: qs[i]! }));
-  return { v: qs.reduce((s, q) => s + q!.v, 0), unit: qs[0]!.unit, href: qs[0]!.href, page: qs[0]!.page, der: true, std: qs[0]!.std, tip: `נגזר: ${ends.reverse().map((e) => periodLabel('Q', e)).join(' + ')}`,
+  return { mi: qs[0]!.mi, v: qs.reduce((s, q) => s + q!.v, 0), unit: qs[0]!.unit, href: qs[0]!.href, page: qs[0]!.page, der: true, std: qs[0]!.std, tip: `נגזר: ${ends.reverse().map((e) => periodLabel('Q', e)).join(' + ')}`,
     calc: { formula: `LTM = ${parts.map((x) => x.label).join(' + ')}`, parts } };
 }
 
@@ -388,7 +411,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
             <div className="rd-tr rd-th" role="row"><span role="columnheader">שורה</span><span role="columnheader" className="num">{curL}</span><span role="columnheader">YoY · <span className="num">{yoyL}</span></span><span role="columnheader">QoQ · <span className="num">{qoqL}</span></span>{!ltmW && <span role="columnheader">LTM · YoY</span>}</div>
             {rows.map((r) => (
               <div className="rd-tr" role="row" key={r.key}>
-                <div className="rd-l" role="rowheader">{r.label}<NoteMark p={curL} m={`rd:${r.key}`} label={r.label} add />
+                <div className="rd-l" role="rowheader">{r.label}<NoteMark p={ROLES.find((x) => x.key === r.key)?.flow === false ? periodLabel('I', end) : curL} m={store ? figNoteKey(store, r.cur, `rd:${r.key}`) : `rd:${r.key}`} was={[`rd:${r.key}`, `st:${r.key}`]} label={r.label} add />
                   {(r.note || r.chips?.length || r.cur?.late || r.fact) && <span className="rd-chips">{r.chips?.map((c) => <span key={c} className="chip est">{c}</span>)}{r.note && <span className="chip est" title={r.note[1]}>{r.note[0]}</span>}{r.cur?.late && <span className="chip est" title={`הנתון כפי שהודפס מחדש בדוח ${r.cur.late}; הנתון המקורי בלוח "הוצג מחדש" של אותו דוח`}>לפי {r.cur.late}</span>}<IncChip f={r.fact} /></span>}
                 </div>
                 <div className="rd-c rd-cur" role="cell"><V f={r.cur} t={r.label} p={curL} /></div>

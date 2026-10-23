@@ -59,3 +59,15 @@ export function savedWhere(): string {
 
 /** a statement line's metric id for a note: its cross-company role when it has one, else sheet + label (+ dimension) */
 export const lineKey = (m: { role?: string; sheet: string; label: string; dim?: string }) => m.role ?? [m.sheet, m.label, m.dim].filter(Boolean).join(':');
+
+/** A note written under an earlier key of the same figure (Report Day `rd:net`, the ledger `st:net`, before every surface used the
+    statement row's key) moves to the figure's key when the figure is read; a note already under the new key is kept. */
+export function migrateNote(co: string, p: string, m: string, was: string[]): void {
+  const to = NOTE_PREFIX + factKey(co, p, m);
+  if (readStored<FactNote | null>(to, null)) return;
+  for (const w of was) {
+    if (w === m) continue;
+    const from = NOTE_PREFIX + factKey(co, p, w), n = readStored<FactNote | null>(from, null);
+    if (n && typeof n.t === 'string' && n.t) { writeStored(to, { ...n, m } satisfies FactNote); writeStored(from, undefined); return; }
+  }
+}

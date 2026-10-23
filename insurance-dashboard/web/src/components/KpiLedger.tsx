@@ -8,7 +8,9 @@ import { nf, pct } from '../lib/format';
 import type { Prov } from '../lib/prov';
 
 /** One point of a ledger row: the figure, its period, and where it comes from. */
-export interface LedgerPoint { end: string; label: string; v: number | null; src?: () => Prov; href?: string | null; der?: boolean }
+export interface LedgerPoint { end: string; label: string; v: number | null; src?: () => Prov; href?: string | null; der?: boolean;
+  /** the figure's note key where it is a statement row (the grid's key, lib/notes lineKey); the row's key otherwise */
+  nk?: string }
 /** One headline metric over time. `step` is points per year (4 quarterly, 12 monthly): the previous quarter is step/4 back, the same period a year earlier `step` back. */
 export interface LedgerRow {
   key: string; title: string; tag?: string; unit: string; dec: number;
@@ -92,7 +94,7 @@ function RowChart({ row, asOf, height }: { row: LedgerRow; asOf: string | null; 
       delta={r.yoy ? { text: `${r.yoy.text} YoY`, tone: r.yoy.tone } : undefined} src={r.cur?.src} href={r.cur?.href} to={row.to} height={height}
       x={upto.map((p) => p.label)} series={row.stack ? row.stack.map((s) => ({ ...s, data: ix.map((i) => s.data[i]) })) : [{ name: row.title, data: upto.map((p) => p.v) }]}
       foot={<>{row.source}{r.cur ? <> · <span className="num">{r.cur.label}</span></> : null}</>} />
-    {r.cur && <NoteField p={r.cur.label} m={row.key} label={row.title} />}
+    {r.cur && <NoteField p={r.cur.label} m={r.cur.nk ?? row.key} label={row.title} />}
     </>
   );
 }
@@ -130,7 +132,7 @@ export function KpiLedger({ groups, asOf, sel, onSel }: { groups: LedgerGroup[];
                   const r = readRow(row, asOf), on = cur?.key === row.key;
                   return (
                     <tr key={row.key} className={on ? 'on' : ''} onClick={(e) => { if (!(e.target as HTMLElement).closest('.src')) pick(row); }} tabIndex={-1}>
-                      <td className="lbl"><span className="lblin"><button type="button" className="rowbtn" onClick={(e) => { e.stopPropagation(); pick(row); }} aria-pressed={on} aria-label={`${row.title}: גרף`}>{row.title}</button>{row.tag && <span className="chip est">{row.tag}</span>}{r.cur && <NoteMark p={r.cur.label} m={row.key} label={row.title} add />}</span></td>
+                      <td className="lbl"><span className="lblin"><button type="button" className="rowbtn" onClick={(e) => { e.stopPropagation(); pick(row); }} aria-pressed={on} aria-label={`${row.title}: גרף`}>{row.title}</button>{row.tag && <span className="chip est">{row.tag}</span>}{r.cur && <NoteMark p={r.cur.label} m={r.cur.nk ?? row.key} was={r.cur.nk ? [row.key, row.key.replace(/^st:/, 'rd:')] : undefined} label={row.title} add />}</span></td>
                       <td className="v"><Val row={row} p={r.cur} />{r.cur && r.cur.end !== lead?.cur?.end && <span className="dim num">{r.cur.label}</span>}</td>
                       <td className="wide-only"><Val row={row} p={r.q} /></td>
                       <td className="wide-only"><Val row={row} p={r.y} /></td>
@@ -171,7 +173,7 @@ export function KpiTiles({ rows, asOf }: { rows: LedgerRow[]; asOf: string | nul
               <button type="button" className="kt-hd" onClick={(e) => { e.stopPropagation(); setSheet(row.key); }} aria-label={`${row.title}: גרף`}>
                 <span className="kt-t">{row.short ?? row.title}</span><span className="kt-p num">{r.cur?.label}</span>
               </button>
-              <div className="kt-v"><Val row={row} p={r.cur} /><span className="kt-u">{row.unit === '%' ? '' : row.unit}</span>{r.cur && <NoteMark p={r.cur.label} m={row.key} label={row.title} />}</div>
+              <div className="kt-v"><Val row={row} p={r.cur} /><span className="kt-u">{row.unit === '%' ? '' : row.unit}</span>{r.cur && <NoteMark p={r.cur.label} m={r.cur.nk ?? row.key} was={r.cur.nk ? [row.key, row.key.replace(/^st:/, 'rd:')] : undefined} label={row.title} />}</div>
               <div className="kt-f">
                 {r.yoy ? <Sourced src={r.yoy.src}><span className={`num ${r.yoy.tone ?? ''}`}>{r.yoy.text}</span></Sourced> : <span className="muted">–</span>}
                 <span className="kt-yl">YoY</span>

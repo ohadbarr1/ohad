@@ -591,9 +591,9 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
 
 /* ---------- IFRS 17: CSM by portfolio group ---------- */
 export function CompanyReviewTab() {
-  const { entry } = useCtx();
+  const { entry, store } = useCtx();
   if (entry.kind === 'fund_house') return <Navigate to=".." replace />;  // a fund house has no IFRS 17 review: its tabs are the ones with content
-  return <CompanyReview id={entry.id} docs={entry.docs} />;
+  return <CompanyReview id={entry.id} docs={entry.docs} store={store} />;
 }
 
 export function CompanyHistTab() {
@@ -602,9 +602,9 @@ export function CompanyHistTab() {
 }
 
 export function CompanySopTab() {
-  const { entry } = useCtx();
+  const { entry, store } = useCtx();
   if (entry.kind === 'fund_house') return <Navigate to=".." replace />;
-  return <CompanySop id={entry.id} docs={entry.docs} />;
+  return <CompanySop id={entry.id} docs={entry.docs} store={store} />;
 }
 
 export function CompanyIfrs17() {

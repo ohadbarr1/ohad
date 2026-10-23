@@ -19,7 +19,7 @@ import { CompanyTear } from './CompanyTear';
 import { Notes, Star } from '../components/Follow';
 import { FundHouseStrip } from '../components/FundHouseStrip';
 import { KpiLedger, KpiTiles, type LedgerGroup, type LedgerPoint, type LedgerRow } from '../components/KpiLedger';
-import { ReportDay, ROLES, YTD, endOf, figAt, figProv, flowAt, qShift, reportsOf, resolve, type Fig } from './ReportDay';
+import { ReportDay, ROLES, YTD, endOf, figAt, figNoteKey, figProv, flowAt, qShift, reportsOf, resolve, type Fig } from './ReportDay';
 
 const MN = 'מיליוני ש"ח';
 /** Every quarter end from the first to the last, so that "a quarter back" and "a year back" are always one and four points. */
@@ -48,7 +48,7 @@ function statementRows(store: CompanyStore, win: Win): LedgerRow[] {
       let f: Fig | null = role.flow ? flowAt(store, r.rows, e, win) : figAt(store, r.rows, 'I', e);
       if (!f && alt && role.flow) { f = flowAt(store, alt, e, win); if (f) usedAlt = true; }
       const label = winLabel(e, win, role.flow);
-      return { end: e, label, v: f ? (f.unit === 'k' ? f.v / 1e3 : f.v) : null, src: f ? () => figProv(f!, role.label, label) : undefined, href: f && !f.calc ? f.href : null, der: !!f?.der };
+      return { end: e, label, v: f ? (f.unit === 'k' ? f.v / 1e3 : f.v) : null, src: f ? () => figProv(f!, role.label, label) : undefined, href: f && !f.calc ? f.href : null, der: !!f?.der, nk: f ? figNoteKey(store, f, `st:${key}`) : undefined };
     });
     if (!pts.some((p) => p.v != null)) return [];
     const mi = r.rows[0]?.mi, sheet = mi != null ? store.d.metrics[mi].sheet : '';

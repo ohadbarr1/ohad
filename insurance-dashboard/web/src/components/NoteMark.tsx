@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useParams } from 'react-router-dom';
-import { factKey, NOTE_PREFIX, savedWhere, useNote } from '../lib/notes';
+import { factKey, migrateNote, NOTE_PREFIX, savedWhere, useNote } from '../lib/notes';
 import { readStored, useStoreTick } from '../lib/local';
 import { usePhone } from '../lib/useMedia';
 import { Sheet } from './Sheet';
@@ -18,6 +18,8 @@ interface Anchor {
   m: string;
   /** what the figure is called, for the note's header and for "שלי" */
   label?: string;
+  /** earlier metric ids of the same figure: a note stored under one of them moves to `m` when the figure is read */
+  was?: string[];
 }
 
 /** The note editor: a text box on one figure, saved as typed; an empty box removes the note. */
@@ -68,11 +70,13 @@ function Pop({ at, onClose, children, title }: { at: HTMLElement; onClose: () =>
 
 /** The marker of a figure's note: a dot where a note exists (a tap opens it); with `add`, a quiet "+" that appears on the row's hover,
  *  for writing one. `periods` lets the "+" of a row pick the column. Renders nothing when there is no note and no `add`. */
-export function NoteMark({ co, p, m, label, add = false, periods }: Anchor & { add?: boolean; periods?: string[] }) {
+export function NoteMark({ co, p, m, label, add = false, periods, was }: Anchor & { add?: boolean; periods?: string[] }) {
   const { id } = useParams();
   const company = co ?? id ?? '';
   const [per, setPer] = useState(p ?? periods?.[0] ?? '');
   useEffect(() => { setPer(p ?? periods?.[0] ?? ''); }, [p, periods?.[0]]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const wasKey = was?.join('\u0001') ?? '';
+  useEffect(() => { if (company && was?.length) (periods ?? (p ? [p] : [])).forEach((x) => migrateNote(company, x, m, was)); }, [company, m, p, periods?.join('\u0001'), wasKey]);  // eslint-disable-line react-hooks/exhaustive-deps
   const k = company && per ? factKey(company, per, m) : null;
   const [note] = useNote(k);
   // a row's "+" shows the dot when any of its columns has a note
