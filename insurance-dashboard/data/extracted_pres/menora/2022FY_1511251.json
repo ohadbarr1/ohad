@@ -7,6 +7,6 @@
  "unit": "NIS millions",
  "facts": [],
  "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): none. Deck language by text layer: Hebrew; text-layer Hebrew chars 711."
+ "status": "extracted_no_facts",
+ "note": "1-page letter dated 16 March 2023 from Monitor Deloitte (partner Shelly Tshuva) to the chair of Isracard responding to Menora's revised Isracard tender-offer presentation; it disputes a claim that the valuation ignored management forecasts. Not an investor presentation: no targets, KPIs or dividends."
 }

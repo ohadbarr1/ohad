@@ -5,8 +5,59 @@
  "pres_date": "2021-08-31",
  "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 1,2,3,4,6. Deck language by text layer: Hebrew; text-layer Hebrew chars 1304."
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "window": "instant",
+   "date": "2021-06-30",
+   "value": 250.069,
+   "page_he": 6,
+   "label": "בניכוי חלוקת מניות מנורה מבטחים אנרגיה כדיבידנד בעין לחברת טראלייט (ללא תמורה) - 250,069 אלפי ש\"ח",
+   "source": "text",
+   "note": "Dividend in kind (distribution of Menora Mivtachim Energy shares, later Trailight, to Menora Holdings shareholders for no consideration), reducing equity. Printed in NIS thousands (250,069), converted to NIS millions. Date = the balance-sheet date the slide references (equity per statements at 30.6.21); the deck does not print a declaration date.",
+   "doc": "pres",
+   "basis": "na"
+  },
+  {
+   "metric": "kpi_investor_subscription_amount",
+   "segment": "trailight",
+   "window": "instant",
+   "date": "2021-08-31",
+   "value": 120,
+   "page_he": 8,
+   "label": "יוקצו ללאומי פרטנרס 9,456,510 מניות בתמורה לסך של 120 מיליון ש\"ח וכן אופציות למניות בסך 3,312,610",
+   "source": "text",
+   "note": "NIS millions as printed. Leumi Partners subscription to Trailight shares (9,456,510 shares plus 3,312,610 share options); date = deck date (pres_date), no other date printed on slide.",
+   "doc": "pres",
+   "basis": "na"
+  },
+  {
+   "metric": "kpi_trailight_reference_share_price",
+   "segment": "trailight",
+   "window": "instant",
+   "date": "2021-08-31",
+   "value": 12.14,
+   "page_he": 8,
+   "label": "מחיר מניה 12.14 ש\"ח",
+   "source": "text",
+   "note": "NIS per share, not NIS millions. Price set from the Leumi Partners transaction (12.14 NIS per share, also on slide 7); date = deck date.",
+   "doc": "pres",
+   "basis": "na"
+  },
+  {
+   "metric": "kpi_trailight_market_value_at_listing",
+   "segment": "trailight",
+   "window": "instant",
+   "date": "2021-08-31",
+   "value": 882.923274,
+   "page_he": 8,
+   "label": "שווי חברה לתחילת המסחר: 12.14*72,728,441= ₪ 882,923,274",
+   "source": "text",
+   "note": "Deck-printed arithmetic (price x 72,728,441 shares = 63,271,931 distributed + 9,456,510 allotted to Leumi Partners), NIS 882,923,274 converted to NIS millions; date = deck date.",
+   "doc": "pres",
+   "basis": "na"
+  }
+ ],
+ "not_found": []
 }

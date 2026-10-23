@@ -7,6 +7,7 @@
  "unit": "NIS millions",
  "facts": [],
  "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): none. Deck language by text layer: English; text-layer Hebrew chars 25."
+ "status": "duplicate_of",
+ "note": "English twin of the Hebrew deck 2024Q2_1614241.json (same publication date, same slide count); not re-extracted.",
+ "duplicate_of": "2024Q2_1614241.json"
 }
