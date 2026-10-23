@@ -1,4 +1,5 @@
 import { idColor } from '../lib/identity';
+import { placeLabels } from '../lib/labelPlace';
 import { NotFound } from './NotFound';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
@@ -196,32 +197,41 @@ export function PeerTable({ rows, focus }: { rows: PeerRow[]; focus: string }) {
   );
 }
 
-/** ROE against P/B for the insurers, with the justified P/B line at the current ke and g. */
+/** ROE against P/B for the insurers, with the justified P/B line at the current ke and g. Labels are placed in pixel space so a
+ *  name never sits on another company's point or label (Harel and Menora sit close), at any width. */
 export function PbScatter({ rows, focus }: { rows: PeerRow[]; focus: string }) {
   const { ke, a } = useV();
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  const [w, setW] = useState(0);
+  useEffect(() => { if (!box) return; const ro = new ResizeObserver(() => setW(Math.round(box.clientWidth))); ro.observe(box); setW(Math.round(box.clientWidth)); return () => ro.disconnect(); }, [box]);
   const pts = rows.filter((r) => fin(r.mkt.roe) && fin(r.mkt.pb));
   if (pts.length < 2) return null;
   const xs = pts.map((r) => r.mkt.roe!), lo = Math.max(0, Math.floor(Math.min(...xs) - 3)), hi = Math.ceil(Math.max(...xs) + 3);
+  const ymax = Math.ceil(Math.max(...pts.map((r) => r.mkt.pb!)) + 0.4);
+  const H = 300, G = { left: 44, right: 16, top: 36, bottom: 36 };
   return (
     <Panel title="ROE מול P/B" aside={<span>קו: P/B מוצדק ב-ke <span className="num">{fin(ke) ? pctS(ke, 1) : '–'}</span>, g <span className="num">{pctS(a.g, 1)}</span></span>}>
-      <Chart label="ROE מול P/B, עמיתים" height={300} deps={[pts.map((r) => `${r.id}${r.mkt.pb}`).join(), ke, a.g, focus]} source="P/B: שווי שוק (TASE) ÷ הון (XBRL) · ROE: LTM, XBRL" build={() => {
+      <div ref={setBox}>
+      <Chart label="ROE מול P/B, עמיתים" height={H} deps={[pts.map((r) => `${r.id}${r.mkt.pb}`).join(), ke, a.g, focus, w]} source="P/B: שווי שוק (TASE) ÷ הון (XBRL) · ROE: LTM, XBRL" build={() => {
         const b = chartBase();
-        // a label that would sit on a neighbour's goes below its point
-        const pos = new Map<string, string>();
-        [...pts].sort((x, y) => x.mkt.roe! - y.mkt.roe!).forEach((r, i, arr) => { const near = arr.slice(0, i).some((q) => pos.get(q.id) === 'top' && Math.abs(q.mkt.roe! - r.mkt.roe!) < 2.5 && Math.abs(q.mkt.pb! - r.mkt.pb!) < 0.35); pos.set(r.id, near ? 'bottom' : 'top'); });
+        const W = w || 600, pw = W - G.left - G.right, ph = H - G.top - G.bottom;
+        const size = (r: PeerRow) => (r.id === focus ? 16 : 11);
+        const place = placeLabels(pts.map((r) => ({ id: r.id, text: r.name, first: r.id === focus, r: size(r) / 2,
+          x: G.left + ((r.mkt.roe! - lo) / (hi - lo)) * pw, y: G.top + (1 - r.mkt.pb! / ymax) * ph })), W, H);
         return {
-          grid: { left: 44, right: 16, top: 36, bottom: 36 },
+          grid: G,
           tooltip: { trigger: 'item', formatter: (p: { seriesName: string; value: [number, number] }) => `${p.seriesName}<br/>ROE ${nf(p.value[0], 1)}% · P/B ${nf(p.value[1], 2)}` },
           xAxis: { type: 'value', name: 'ROE, LTM (%)', nameLocation: 'middle', nameGap: 24, min: lo, max: hi, axisLine: { lineStyle: { color: b.ln } }, splitLine: { show: false }, axisLabel: { color: b.mu } },
-          yAxis: { type: 'value', name: 'P/B', min: 0, axisLabel: { color: b.mu }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
+          yAxis: { type: 'value', name: 'P/B', min: 0, max: ymax, axisLabel: { color: b.mu }, splitLine: { lineStyle: { color: b.ln, opacity: 0.5 } } },
           series: [
             ...(fin(ke) && ke > a.g ? [{ name: 'P/B מוצדק', type: 'line', silent: true, symbol: 'none', lineStyle: { color: b.mu, type: 'dashed', width: 1 }, data: [lo, hi].map((x) => [x, Math.max(0, (x - a.g) / (ke - a.g))]), tooltip: { show: false } }] : []),
             // drawn as one-point lines with markers: the shared chart bundle carries line and bar only
-            ...pts.map((r) => ({ name: r.name, type: 'line', showSymbol: true, symbol: 'circle', lineStyle: { opacity: 0 }, symbolSize: r.id === focus ? 16 : 11, itemStyle: { color: r.color, borderColor: r.id === focus ? b.fg : 'transparent', borderWidth: 1.5 },
-              label: { show: true, formatter: r.name, position: pos.get(r.id) ?? 'top', color: b.fg, fontSize: 11 }, data: [[r.mkt.roe!, r.mkt.pb!]] })),
+            ...pts.map((r) => ({ name: r.name, type: 'line', showSymbol: true, symbol: 'circle', lineStyle: { opacity: 0 }, symbolSize: size(r), itemStyle: { color: r.color, borderColor: r.id === focus ? b.fg : 'transparent', borderWidth: 1.5 },
+              label: { show: true, formatter: r.name, color: b.fg, fontSize: 11, fontWeight: r.id === focus ? 700 : 500, ...(place.get(r.id) ?? { position: 'top' }) }, data: [[r.mkt.roe!, r.mkt.pb!]] })),
           ],
         };
       }} />
+      </div>
     </Panel>
   );
 }

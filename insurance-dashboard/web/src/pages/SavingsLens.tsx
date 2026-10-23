@@ -6,6 +6,7 @@ import { Sheet } from '../components/Sheet';
 import { BreakChip, Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg as SegCtl } from '../components/ui';
 import { IdDot } from '../components/MgrChip';
 import { foxOption } from '../lib/foxchart';
+import { identify } from '../lib/idmarks';
 import { nf, sn } from '../lib/format';
 import { GROUP_ID, idColor, idColorOfGroup } from '../lib/identity';
 import { LensSrc, NO_REP, SEG_LONG, SEGS, bn, madd, pc, ql, rankHistory, spc, useLens, warmRep, ym, type LensData, type LensNow, type LensRow, type RankBy, type Seg } from '../lib/lens';
@@ -199,9 +200,9 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
         <Panel title={tdef[tk].label} aside={TK.length > 1 ? <SegCtl<TrendKey> label="מדד" value={tk} onChange={setTrend} options={TK.map((k) => [k, ({ fy: 'דמי ניהול', ci: 'הוצאות', ppb: 'רווח', flow_share: 'נתח צבירה', growth: 'צמיחה' } as Record<TrendKey, string>)[k]])} /> : <span>{tdef[tk].unit}</span>} className={flows ? '' : 'span2'}>
           <Chart label={`${tdef[tk].label} · ${SEG_LONG[seg]}`} height={phone ? 300 : 330} deps={[seg, tk, g, tg.join()]} source={`${d.meta.source_reg}; ${d.meta.source_rep}`}
             onPoint={(si, di) => { const r = cell(tg[si], d.quarters[di]); if (r && tdef[tk].v(r) != null) open(tdef[tk].p(r)); }}
-            build={() => decimals(foxOption({ x: d.quarters.map(ql), unit: tdef[tk].unit, scale: true, legend: true,
+            build={() => identify(decimals(foxOption({ x: d.quarters.map(ql), unit: tdef[tk].unit, scale: true, legend: true,
               series: tg.map((gg) => ({ name: short(src.name(gg)), kind: 'line' as const, pct: tdef[tk].pct, dec: tdef[tk].dec, color: idColorOfGroup(src.name(gg)), lead: gg === g, dim: g >= 0 && gg !== g,
-                data: d.quarters.map((qq) => { const r = cell(gg, qq); const v = r ? tdef[tk].v(r) : null; return v == null ? null : +v.toFixed(tdef[tk].dec + 1); }) })) }), tk === 'fy' ? 2 : tk === 'ppb' || tk === 'growth' ? 1 : 0, tdef[tk].pct)} />
+                data: d.quarters.map((qq) => { const r = cell(gg, qq); const v = r ? tdef[tk].v(r) : null; return v == null ? null : +v.toFixed(tdef[tk].dec + 1); }) })) }), tk === 'fy' ? 2 : tk === 'ppb' || tk === 'growth' ? 1 : 0, tdef[tk].pct))} />
         </Panel>
       </div>
     </>

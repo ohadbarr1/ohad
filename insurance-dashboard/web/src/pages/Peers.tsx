@@ -5,6 +5,7 @@ import { Sourced } from '../components/Source';
 import { ContextBar, Sheet } from '../components/Sheet';
 import { BreakChip, Empty, ErrorBox, Loading, Seg } from '../components/ui';
 import { foxOption } from '../lib/foxchart';
+import { identify } from '../lib/idmarks';
 import { pubLabel } from '../lib/format';
 import { idColor, idCss } from '../lib/identity';
 import { useStored } from '../lib/local';
@@ -435,9 +436,9 @@ function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; 
           <Chart label={`${colLabel(col)} · ${st.f}`} height={380} deps={[st.c.join('|'), k, st.f, st.w, pend, ents.join(), st.hl, book.files.size]}
             source={`${[...new Set(col.ids.map((id) => book.reg.src[book.byId.get(id)?.src ?? '']).filter(Boolean))].join(' · ')} · fox`}
             onPoint={(si, di) => { const x = g[si]?.[di]; if (x && x.v != null) open(x.prov()); }}
-            build={() => foxOption({ x: shown.map((p) => plab(st.f, p).replace('LTM ', '')), unit: shownUnit(col), legend: false, labels: false, scale: true, breakAt: brkAt > 0 ? brkAt : undefined, breakLabel: brkLabel,
+            build={() => identify(foxOption({ x: shown.map((p) => plab(st.f, p).replace('LTM ', '')), unit: shownUnit(col), legend: false, labels: false, scale: true, breakAt: brkAt > 0 ? brkAt : undefined, breakLabel: brkLabel,
               series: ents.map((e, i) => ({ name: book.short(e), kind: 'line' as const, color: idColor(e), pct, lead: st.hl === e, dim: !!st.hl && st.hl !== e, dec: col.unit === 'm' && col.tr === 'v' ? 0 : 2,
-                faded: g[i].map((x) => !!(x.fl & F_OLD)), data: g[i].map((x) => (x.v == null ? null : +x.v.toFixed(4))) })) })} />
+                faded: g[i].map((x) => !!(x.fl & F_OLD)), data: g[i].map((x) => (x.v == null ? null : +x.v.toFixed(4))) })) }))} />
         )}
       </section>
       <section className="panel pr-panel">
