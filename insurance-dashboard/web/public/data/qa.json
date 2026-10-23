@@ -1,5 +1,5 @@
 {
- "built": "2026-10-23T12:13:31+03:00",
+ "built": "2026-10-23T13:39:54+03:00",
  "checks": [
   {
    "id": "workbook",
@@ -125,9 +125,9 @@
    "id": "consistency",
    "ok": true,
    "level": "fail",
-   "n": 25248,
+   "n": 25934,
    "fail": 0,
-   "note": "21895 equal within rounding, 3039 labelled basis differences (alt 14, filer 436, restated 1108, std 1481), last 8 quarters"
+   "note": "22255 equal within rounding, 3365 labelled basis differences (alt 14, filer 762, restated 1108, std 1481), last 8 quarters"
   },
   {
    "id": "fund_roles",
@@ -141,7 +141,7 @@
    "id": "consistency_old",
    "ok": false,
    "level": "warn",
-   "n": 25248,
+   "n": 25934,
    "fail": 314,
    "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
   },
