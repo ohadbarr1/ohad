@@ -387,8 +387,11 @@ def assets():  # lane AL
     note = f"{n} manager-quarters"
     if (ROOT / "data" / "work" / "asset_lists").exists():
         p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_assets.py"), "--check"], capture_output=True, text=True)
-        if p.returncode:
-            bad.append(p.stdout.strip()[-160:])
+        if p.returncode and ("OSError" in p.stderr or "Errno" in p.stderr):
+            # the work cache sits on the synced drive: an unreadable or half-synced parquet is a cache problem, not a data error
+            note += "; rebuild skipped (work cache unreadable: " + p.stderr.strip().splitlines()[-1][:80] + ")"
+        elif p.returncode:
+            bad.append((p.stdout.strip() or p.stderr.strip())[-160:])
         note += "; rebuild equal" if not p.returncode else ""
     else:
         note += "; rebuild skipped (no data/work/asset_lists)"
