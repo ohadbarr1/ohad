@@ -85,7 +85,7 @@ export function ValuationLayout() {
   const assumeRow = (
     <div className="vas-grid">
       <label>ריבית חסרת סיכון<small>{a.rf == null ? <>בנק ישראל · אפס 10Y · {rf ? mLabel(rf.month) : '–'}</> : 'ההנחה שלך'}</small>
-        <span className="in"><Num label="ריבית חסרת סיכון" value={a.rf ?? rf?.v ?? null} dec={2} step={0.1} onChange={(v) => set({ rf: Number.isFinite(v) ? v : null })} />{a.rf != null && <button type="button" className="btn mini" onClick={() => set({ rf: null })} aria-label="חזרה לנתון בנק ישראל">↺</button>}{a.rf == null && rf && <Sourced className="srcdot" src={() => rfProv(a, rf)}>מקור</Sourced>}</span></label>
+        <span className="in"><Num label="ריבית חסרת סיכון" value={a.rf ?? rf?.v ?? null} dec={2} step={0.1} onChange={(v) => set({ rf: Number.isFinite(v) ? v : null })} />{a.rf != null && <button type="button" className="btn mini" onClick={() => set({ rf: null })} aria-label="חזרה לנתון בנק ישראל" title="חזרה לנתון בנק ישראל">↺</button>}{a.rf == null && rf && <Sourced className="srcdot" src={() => rfProv(a, rf)} title="מקור הריבית: עקום בנק ישראל">מקור</Sourced>}</span></label>
       <label>ביתא<small>הנחה</small><Num label="ביתא" value={a.beta} step={0.05} onChange={(v) => set({ beta: v })} /></label>
       <label>פרמיית סיכון<small>הנחה, %</small><Num label="פרמיית סיכון" value={a.erp} step={0.25} onChange={(v) => set({ erp: v })} /></label>
       <div className="ke"><span>מחיר ההון (ke)</span>{fin(ke) ? <Sourced className="num big" src={() => keProv(a, rf)}>{pctS(ke, 2)}</Sourced> : <Dash />}</div>

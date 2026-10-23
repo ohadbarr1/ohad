@@ -539,7 +539,6 @@ div.src > a, .fnote a { text-decoration: underline; text-decoration-color: color
   th .thsort { min-height: 40px; }
   /* sourced figures and links inside tables and figure lines: 40 px hit box, same layout */
   main :is(a, button).src:not(.bar) { padding: 12px 16px; margin: -12px -16px; }
-  main button.src:not(.bar) { display: inline-block; }
   main :is(dd, li, h3, h4, header, .hd, .sub, .aside, .fnote, p, div.src) > a:is(:not([class]), .num),
   main td a:is(:not([class]), .num), main .ledger .rowbtn,
   main td > button:not(.btn, .chip, .src, .thsort, .dt-sort) { padding: 12px 10px; margin: -12px -10px; }
