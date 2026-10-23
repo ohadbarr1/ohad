@@ -11,7 +11,7 @@ import { usePhone } from '../../lib/useMedia';
 import { nf, sn } from '../../lib/format';
 import { BASIS, SCOPE_HE, STEPS, gapProv, hrefOf, lineProv, medianProv, monthsOf, endOf, periodName, ratioProv, rankProv } from '../../lib/csm';
 import type { Bridge, Line, Win } from '../../lib/csm';
-import { INSURERS, agg2Prov, aggProv, amt, at, closeSrc, industry, likeForLike, type Agg, type Agg2, type At, type Industry, type Ledger } from '../../lib/csmData';
+import { INSURERS, agg2Prov, aggProv, amt, at, closeSrc, industry, likeForLike, sum, type Agg, type Agg2, type At, type Industry, type Ledger } from '../../lib/csmData';
 import { useParam } from './params';
 
 type MK = (typeof MEASURES)[number]['k'];
@@ -52,7 +52,16 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
   const kpiIds = useMemo(() => rows.filter((r) => ind.members.includes(r.id) && r.b?.close && r.eq && r.b.steps.some((s) => s.k === 'nb') && r.b.steps.some((s) => s.k === 'rel')).map((r) => r.id), [rows, ind]);
   const indK = useMemo(() => industry(rows, pref, d, name, when, false, kpiIds), [rows, pref, d, name, when, kpiIds]);
   const indPrev = useMemo(() => industry([...before.values()], pref, d, name, periodName(yearBefore(P))), [before, pref, d, name, P]);
-  const indKPrev = useMemo(() => industry([...before.values()], pref, d, name, periodName(yearBefore(P)), false, kpiIds), [before, pref, d, name, P, kpiIds]);
+  // the industry balance: one set of insurers at both dates (a closing balance on the basis chosen now and a year earlier), so the level and
+  // the YoY beside it add up the same companies; with fewer than two such insurers there is no YoY and the level is every balance on the basis
+  const bal = useMemo(() => {
+    const ok = (r: At | undefined) => !!r?.b?.close && r.b.b === pref;
+    const now = rows.filter(ok), both = now.filter((r) => ok(before.get(r.id)));
+    const set = both.length >= 2 ? both : now;
+    const part = (r: At, per: string) => ({ id: r.id, v: r.b!.close!.v, src: () => closeSrc(r, r.b!.close!, d, `CSM סגירה · ${name(r.id)} · ${periodName(per)}`, showAmt(r.b!.close!.v)) });
+    const cur = sum(set.map((r) => part(r, P))), prev = both.length >= 2 ? sum(both.map((r) => part(before.get(r.id)!, yearBefore(P)))) : null;
+    return { ids: set.map((r) => r.id), cur, prev, yoy: cur && prev?.v ? (cur.v / prev.v - 1) * 100 : null, noPrev: now.filter((r) => !ok(before.get(r.id))).map((r) => r.id) };
+  }, [rows, before, pref, d, name, P]);
   // the roll-forward column and the waterfall: only insurers whose own table rolls forward, so the industry column adds up like a company's
   const full = useMemo(() => industry(rows, pref, d, name, when, true), [rows, pref, d, name, when]);
 
@@ -188,7 +197,6 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
   );
   const kpi = (l: string, v: ReactNode, s?: ReactNode) => <div className="kpi"><div className="l">{l}</div><div className="v">{v}</div>{s && <div className="s">{s}</div>}</div>;
   const ik = (k: MK, kind: 'amt' | 'pct' | 'x') => { const x = indRatio(k, indK); return x.v == null ? <span className="muted">–</span> : <Sourced className="num der" src={x.prov}>{showMeasure(kind, x.v)}</Sourced>; };
-  const lfl = likeForLike(indK.close, indKPrev.close), chgInd = lfl?.v ?? null;
   const membersTxt = `${ind.members.length} מתוך ${ids.length} חברות · ${BASIS[pref]}`;
   const outTxt = ind.out.length ? `מחוץ לסכום: ${ind.out.map((o) => `${name(o.id)} (${o.why})`).join(' · ')}` : '';
 
@@ -252,7 +260,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
           </tr>
         ))}</tbody>
         <tfoot>
-          <tr className="indrow"><td>ענף<span className="dim">{membersTxt}</span></td>{MEASURES.map((c) => { const x = indShown(c.k, c.kind); return <td key={c.k}>{x == null ? <span className="muted">–</span> : <Sourced className="num der" src={view === 'v' ? indRatio(c.k).prov : () => ({ k: 'calc', title: `${c.l} · ענף · YoY`, value: fmt(c.kind, x), formula: 'הערך הענפי בדוח הנוכחי מול אותה תקופה בשנה הקודמת', inputs: [{ label: when, v: showMeasure(c.kind, indRatio(c.k).v!), src: indRatio(c.k).prov }] })}>{fmt(c.kind, x)}</Sourced>}{x != null && <SetMark a={indRatio(c.k).a} of={ind.members.length} />}</td>; })}</tr>
+          <tr className="indrow"><td>ענף<span className="dim">{membersTxt}</span></td>{MEASURES.map((c) => { const x = indShown(c.k, c.kind); return <td key={c.k}>{x == null ? <span className="muted">–</span> : <Sourced className="num der" src={view === 'v' ? indRatio(c.k).prov : () => ({ k: 'calc', title: `${c.l} · ענף · YoY`, value: fmt(c.kind, x), formula: 'הערך הענפי בדוח הנוכחי מול אותה תקופה בשנה הקודמת', inputs: [{ label: when, v: showMeasure(c.kind, indRatio(c.k).v!), src: indRatio(c.k).prov }] })}>{fmt(c.kind, x)}</Sourced>}{x != null && <SetMark a={view === 'y' && c.k === 'close' ? likeForLike(ind.close, indPrev.close)?.now ?? null : indRatio(c.k).a} of={ind.members.length} />}</td>; })}</tr>
           <tr><td>חציון</td>{MEASURES.map((c) => { const x = median(c.k, c.kind); return <td key={c.k}>{x == null ? <span className="muted">–</span> : <Sourced className="num" src={() => medianProv(`${c.l} · חציון · ${when}`, fmt(c.kind, x), rows.map((q) => ({ q, v: shown(q, c.k, c.kind) })).filter((e) => e.v != null).sort((a, b) => a.v! - b.v!).map((e) => ({ label: name(e.q.id), v: fmt(c.kind, e.v!), src: () => cellProv(e.q, c.k, c.kind) })))}>{fmt(c.kind, x)}</Sourced>}</td>; })}</tr>
         </tfoot>
       </table></div>
@@ -268,13 +276,16 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
       {phone ? <><ContextBar onOpen={() => setCtl(true)}>{when} · {wlabel} · {BASIS[pref]}{view === 'y' ? ' · YoY' : ''}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="ספר ה-CSM">{controls}</Sheet></> : controls}
 
       <section className="kpis csm-kpis" aria-label="CSM ענפי">
-        {kpi('יתרת CSM, ענף', indK.close ? <Sourced className="num der" src={() => aggProv(indK.close!, `יתרת CSM · ענף · ${when}`, name)}>{nf(indK.close.v / 1000, 1)}</Sourced> : '–', <>מיליארדי ש"ח{chgInd != null && <> · <Sourced className={`num der ${chgInd < 0 ? 'neg' : 'pos'}`} src={() => ({ k: 'calc', title: `יתרת CSM ענפית · YoY · ${when}`, value: `${sn(chgInd, 1)}%`, formula: `Σ יתרה ÷ Σ יתרה באותו תאריך שנה קודם, פחות 1 · ${lfl!.now.parts.length} החברות שבשני התאריכים`, inputs: [{ label: when, v: amt(lfl!.now.v), src: () => aggProv(lfl!.now, 'יתרת CSM · ענף', name) }, { label: periodName(yearBefore(P)), v: amt(lfl!.then.v), src: () => aggProv(lfl!.then, 'יתרת CSM · ענף', name) }] })}>{sn(chgInd, 1)}%</Sourced> YoY</>}</>)}
+        {kpi('יתרת CSM, ענף', bal.cur ? <Sourced className="num der" src={() => aggProv(bal.cur!, `יתרת CSM · ענף · ${when}`, name)}>{nf(bal.cur.v / 1000, 1)}</Sourced> : '–', <>מיליארדי ש"ח · <span className="num">{bal.ids.length}</span> חברות{bal.yoy != null && <> · <Sourced className={`num der ${bal.yoy < 0 ? 'neg' : 'pos'}`} src={() => ({ k: 'calc', title: `יתרת CSM ענפית · YoY · ${when}`, value: `${sn(bal.yoy!, 1)}%`, formula: `Σ יתרה ÷ Σ יתרה באותו תאריך שנה קודם, פחות 1 · אותן ${bal.ids.length} חברות בשני התאריכים`, inputs: [{ label: when, v: amt(bal.cur!.v), src: () => aggProv(bal.cur!, 'יתרת CSM · ענף', name) }, { label: periodName(yearBefore(P)), v: amt(bal.prev!.v), src: () => aggProv(bal.prev!, 'יתרת CSM · ענף', name) }] })}>{sn(bal.yoy, 1)}%</Sourced> YoY</>}</>)}
         {kpi(`עסק חדש, ${wlabel}`, ik('nb', 'amt'), 'מיליוני ש"ח')}
         {kpi(`שחרור לרווח, ${wlabel}`, ik('rel', 'amt'), 'מיליוני ש"ח')}
         {kpi('עסק חדש / שחרור', ik('nbRel', 'pct'), 'מעל 100%: היתרה נבנית')}
         {kpi('CSM / הון', ik('csmEq', 'x'), 'יתרה ÷ הון לבעלי המניות')}
       </section>
-      <div className="csm-set" aria-label="החברות בשורת הענף"><span className="dim">{kpiIds.length} מתוך {ids.length} · {BASIS[pref]}:</span>{ids.map((id) => <span key={id} className={`csm-chip${kpiIds.includes(id) ? '' : ' off'}`} title={kpiIds.includes(id) ? 'בסכום' : (ind.out.find((o) => o.id === id)?.why ?? 'חסר רכיב: עסק חדש, שחרור או הון')}><Dot id={id} />{name(id)}</span>)}</div>
+      <div className="csm-set" aria-label="החברות בשורת הענף"><span className="dim">יתרה ו-YoY: <span className="num">{bal.ids.length}</span> · עסק חדש, שחרור ויחסים: <span className="num">{kpiIds.length}</span> · מתוך <span className="num">{ids.length}</span> · {BASIS[pref]}:</span>{ids.map((id) => {
+        const inB = bal.ids.includes(id), inK = kpiIds.includes(id);
+        const why = ind.out.find((o) => o.id === id)?.why, tip = [inB ? 'ביתרה' : bal.noPrev.includes(id) ? `לא ביתרה: אין יתרה על אותו בסיס ב-${periodName(yearBefore(P))}` : `לא ביתרה: ${why ?? 'אין יתרת סגירה'}`, inK ? 'בעסק חדש, שחרור ויחסים' : `לא בעסק חדש, שחרור ויחסים: ${why ?? 'חסר רכיב: עסק חדש, שחרור או הון'}`].join(' · ');
+        return <span key={id} className={`csm-chip${inB && inK ? '' : inB || inK ? ' half' : ' off'}`} title={tip}><Dot id={id} />{name(id)}</span>; })}</div>
 
       {phone ? (
         <Panel title="גשר CSM" aside={<span>{when} · {wlabel} · מיליוני ש"ח</span>}>

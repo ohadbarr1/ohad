@@ -94,3 +94,6 @@ tr.indrow td .dim { font-weight: 400; }
 .csm-chip { display: inline-flex; align-items: center; gap: 0; color: var(--fg); white-space: nowrap; }
 .csm-chip.off { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
 .csm-chip.off .iddot { opacity: .35; }
+/* in one of the two sets of the headline row (balance, or flows and ratios), not both */
+.csm-chip.half { color: var(--muted); }
+.csm-chip.half .iddot { opacity: .6; }

@@ -136,7 +136,7 @@ export interface Industry {
 }
 /** A ratio of two industry sums, over the insurers that print both. */
 export interface Agg2 { v: number; num: Agg; den: Agg; scale: number }
-const sum = (parts: Part[]): Agg | null => (parts.length ? { v: parts.reduce((t, x) => t + x.v, 0), parts } : null);
+export const sum = (parts: Part[]): Agg | null => (parts.length ? { v: parts.reduce((t, x) => t + x.v, 0), parts } : null);
 
 /** The industry table: the insurers whose table is on the basis asked for, added line by line. Companies on another basis are left out and named.
     With `full`, only insurers whose table carries opening, closing, new business and release, so the column rolls forward like a company's. */
