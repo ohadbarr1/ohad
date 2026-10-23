@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useLoad } from './useData';
+import { useEffect, useMemo, useState } from 'react';
+import { load, useLoad } from './useData';
 import type { IfrsData, IfrsFact } from './types';
 import type { Prov } from './prov';
 import { nf, byPeriodDesc } from './format';
@@ -14,23 +14,34 @@ export const INSURERS = ['phoenix', 'harel', 'migdal', 'clal', 'menora', 'ayalon
 export const MM = 'מיליוני ש"ח';
 export const amt = (v: number) => nf(v, Math.abs(v) < 100 ? 1 : 0);
 
-interface FactsFile { built: string; files: IfrsData['files']; reports: Record<string, IfrsFact[]> }
+/** One insurer's CSM facts (csm/facts/<id>.json): its reports' facts by report period, its report files and the resolved CSM of every date. */
+export interface FactsFile { built: string; company: string; files: IfrsData['files']; reports: Record<string, IfrsFact[]>; resolved: Record<string, [number, string, string, number]> }
+/** The industry summary (csm/summary.json): the insurers, the report periods and the resolved CSM of every company and date. */
+export interface CsmSummary { built: string; companies: string[]; periods: string[]; files: { company: string; period: string }[]; resolved: Record<string, Record<string, [number, string, string, number]>> }
+export const csmFactsPath = (id: string) => `csm/facts/${id}.json`;
+/** One insurer's CSM facts: a fraction of the industry ledger, for the company and valuation pages. */
+export const useCsmFacts = (id: string | null) => useLoad<FactsFile>(id ? csmFactsPath(id) : null);
+/** One company's reports from its CSM file, oldest first. */
+export const reportsOf = (f: FactsFile): Reports => Object.keys(f.reports).sort(byPeriodDesc).reverse().map((p) => ({ p, F: tag(f.reports[p], p) })).filter((r) => r.F.length);
+
 export interface Ledger { d: IfrsData; byCo: Map<string, Reports>; periods: string[]; built: string }
-/** Every report of every insurer from one file, grouped by company and ordered oldest first. */
+/** Every report of every insurer: the summary names the companies, and their files load side by side when the ledger opens. */
 export function useLedger(): { data: Ledger | null; error: string | null } {
-  const f = useLoad<FactsFile>('csm/facts.json');
+  const s = useLoad<CsmSummary>('csm/summary.json');
+  const [got, setGot] = useState<{ files: FactsFile[] | null; error: string | null }>({ files: null, error: null });
+  useEffect(() => {
+    if (!s.data) return;
+    let live = true;
+    Promise.all(s.data.companies.map((c) => load<FactsFile>(csmFactsPath(c)))).then((files) => live && setGot({ files, error: null }), (e: Error) => live && setGot({ files: null, error: e.message }));
+    return () => { live = false; };
+  }, [s.data]);
   const data = useMemo(() => {
-    if (!f.data) return null;
-    const periods = Object.keys(f.data.reports).sort(byPeriodDesc);
+    if (!s.data || !got.files) return null;
     const byCo = new Map<string, Reports>();
-    [...periods].reverse().forEach((p) => {
-      const by = new Map<string, RF[]>();
-      tag(f.data!.reports[p], p).forEach((x) => { if (!by.has(x.c)) by.set(x.c, []); by.get(x.c)!.push(x); });
-      by.forEach((F, c) => { if (!byCo.has(c)) byCo.set(c, []); byCo.get(c)!.push({ p, F }); });
-    });
-    return { d: { unit: 'NIS millions', files: f.data.files }, byCo, periods, built: f.data.built };
-  }, [f.data]);
-  return { data, error: f.error };
+    got.files.forEach((f) => byCo.set(f.company, reportsOf(f)));
+    return { d: { unit: 'NIS millions', files: got.files.flatMap((f) => f.files) }, byCo, periods: [...s.data.periods].sort(byPeriodDesc), built: s.data.built };
+  }, [s.data, got.files]);
+  return { data, error: s.error ?? got.error };
 }
 
 /* ---------- one company at one date ---------- */

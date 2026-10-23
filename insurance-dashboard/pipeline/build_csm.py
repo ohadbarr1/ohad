@@ -1,9 +1,10 @@
 """The CSM ledger's own files, built from the per-report IFRS 17 facts that build_ifrs.py writes.
 
-python3 pipeline/build_csm.py -> web/public/data/csm/{facts,sens,rates}.json
+python3 pipeline/build_csm.py -> web/public/data/csm/{facts/<company>,summary,sens,rates,capital}.json
 
-facts.json  every CSM movement, equity, solvency, capital-target and dividend fact of every report, grouped by report period
-            (one request instead of six report files; values, signs and pages exactly as build_ifrs wrote them).
+facts/<company>.json  every CSM movement, equity, solvency, capital-target and dividend fact of one insurer's reports, grouped by report
+            period (values, signs and pages exactly as build_ifrs wrote them), its report files and the resolved CSM of every date.
+summary.json  the insurers, report periods and the resolved CSM of every company and date (the one rule), for the industry pages.
 sens.json   the sensitivity disclosures, normalised to risk · direction · size · effect · basis, each with its page.
 rates.json  the discount rates the insurers print (spot, incl. illiquidity premium) by portfolio and tenor, each with its page.
 Nothing is estimated here: a shock whose direction the report does not state keeps `dir: null`.
@@ -175,7 +176,18 @@ def main():
             r = csm_resolve.resolve(rs, csm_resolve.own_period(d), d)
             if r:
                 resolved.setdefault(c, {})[d] = [r["v"], r["label"], r["rp"], r["flags"]]
-    dump("facts.json", {**stamp, "files": index["files"], "reports": reports, "resolved": resolved})
+    # one file per company (the company page reads its own, ~100-170 KB, instead of every insurer's 935 KB) and a small summary: the
+    # companies, their reports and the resolved CSM of every date; the industry ledger loads the company files when it opens
+    (OUT / "facts").mkdir(exist_ok=True)
+    for f in (OUT / "facts").glob("*.json"):
+        f.unlink()
+    (OUT / "facts.json").unlink(missing_ok=True)
+    cos = sorted({x["c"] for F in reports.values() for x in F})
+    for c in cos:
+        dump(f"facts/{c}.json", {**stamp, "company": c, "files": [f for f in index["files"] if f["company"] == c],
+                                 "reports": {p: [x for x in F if x["c"] == c] for p, F in reports.items() if any(x["c"] == c for x in F)}, "resolved": resolved.get(c, {})})
+    dump("summary.json", {**stamp, "companies": cos, "periods": sorted(reports), "files": [{k: f[k] for k in ("company", "period")} for f in index["files"] if f["company"] in cos],
+                          "resolved": resolved})
     dump("sens.json", {**stamp, "rows": sens})
     dump("capital.json", {**stamp, "source": "דוחות כספיים של החברות, MAYA (סדרה רבעונית רציפה, build_series.py)", "companies": capital()})
     dump("rates.json", {**stamp, "rows": sorted(uniq, key=lambda r: (r["c"], r["d"], r["orig"], r["t"]))})
