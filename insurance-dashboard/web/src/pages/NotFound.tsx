@@ -12,7 +12,7 @@ export function NotFound() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <Link className="chip" to="/">דף הבית</Link>
         <Link className="chip" to="/companies">חברות</Link>
-        <Link className="chip" to="/industry">ענף</Link>
+        <Link className="chip" to="/industry">השוואה ענפית</Link>
         <Link className="chip" to="/funds">קופות</Link>
       </div>
     </div>

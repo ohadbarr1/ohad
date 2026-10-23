@@ -1,6 +1,6 @@
 import { foxOption } from '../lib/foxchart';
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { FundsHead, FundsNav } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
 import { CRISES, CRISIS_FORMULA, RATING_NOTE, crisis, ddText, rate, ratingProv, type Rating } from '../lib/rating';
@@ -21,7 +21,7 @@ const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכו
 type Per = 'm1' | 'ytd' | 'y12' | 'a3' | 'a5';
 const PERIODS: [Per, string][] = [['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']];
 type Win = '12' | '36' | '60' | '120' | 'max';
-const WINDOWS: [Win, string][] = [['12', '1Y'], ['36', '3Y'], ['60', '5Y'], ['120', '10Y'], ['max', 'MAX']];
+const WINDOWS: [Win, string][] = [['12', '1Y'], ['36', '3Y'], ['60', '5Y'], ['120', '10Y'], ['max', 'הכול']];
 const ym = (p: number) => `${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`;
 const PER_LABEL: Record<Per, string> = { m1: 'תשואה חודשית', ytd: 'תשואה YTD', y12: 'תשואה LTM', a3: 'תשואה שנתית ממוצעת, 3 שנים', a5: 'תשואה שנתית ממוצעת, 5 שנים' };
 const PER_COL: Partial<Record<Per, string>> = { m1: 'MONTHLY_YIELD', ytd: 'YEAR_TO_DATE_YIELD', a3: 'AVG_ANNUAL_YIELD_TRAILING_3YRS', a5: 'AVG_ANNUAL_YIELD_TRAILING_5YRS' };
@@ -116,7 +116,8 @@ function Growth({ periods, lines, deps, onPoint }: { periods: number[]; lines: {
 }
 
 /** Every savings track the regulator publishes, compared inside its own product and track. */
-export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
+/** `makersOnly`: the makers-vs-market matrix alone; `embedded`: inside the managers page, which carries the section head */
+export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: boolean; embedded?: boolean }) {
   const { data, error } = useFunds();
   const cats = useFundCats().data;
   const [sp, setSp] = useSearchParams();
@@ -202,7 +203,7 @@ export function Funds({ makersOnly = false }: { makersOnly?: boolean }) {
 
   return (
     <>
-      <FundsHead sub={<>{makersOnly ? 'יצרן מול השוק' : 'מסלולים'} · <Sourced src={() => countP('מסלולים פעילים', all.length, 'המסלולים שפורסמו בחודש האחרון בגמל-נט, פנסיה-נט וביטוח-נט')}><span className="num">{nf(all.length, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} />
+      {!embedded && <FundsHead sub={<>{makersOnly ? 'יצרן מול השוק' : 'מסלולים'} · <Sourced src={() => countP('מסלולים פעילים', all.length, 'המסלולים שפורסמו בחודש האחרון בגמל-נט, פנסיה-נט וביטוח-נט')}><span className="num">{nf(all.length, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} />}
       <section className="controls tight">
         <div className="prim">
           <Field label="מוצר"><select value={prod} onChange={(e) => set({ prod: e.target.value, track: '', sel: '' })}>{PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
@@ -488,4 +489,7 @@ function Heatmap({ h, f }: { h: FundHist; f: TrackRef }) {
 }
 
 /** Every managing group against the whole market: its place in each track of a product, on one screen. */
-export function FundMakers() { return <Funds makersOnly />; }
+/** the makers-vs-market matrix, inside the managers page */
+export function MakersBody() { return <Funds makersOnly embedded />; }
+/** /funds/makers: the ranking has one home, the managers page */
+export function FundMakers() { const loc = useLocation(); const n = new URLSearchParams(loc.search); n.set('v', 'makers'); return <Navigate to={`/managers?${n}`} replace />; }

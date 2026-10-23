@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { Sheet } from '../components/Sheet';
@@ -48,16 +48,17 @@ function Lens({ d }: { d: LensData }) {
   const q = d.quarters.includes(sp.get('q') ?? '') ? sp.get('q')! : d.meta.last_rep;
   const g = d.groups.findIndex((x) => x.name === sp.get('g'));
   const set = (patch: Record<string, string>) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k))); setSp(n, { replace: true }); };
-  const views: [View, string][] = [['lens', 'עדשה'], ['now', `אומדן ${ql(d.nowcast.q)}`], ['rank', 'דירוג לאורך זמן'], ['market', 'נכסים ותזרימים'], ['econ', 'רווחיות מהדוחות']];
+  const views: [View, string][] = [['lens', 'עדשה'], ['now', `אומדן ${ql(d.nowcast.q)}`], ['market', 'נכסים ותזרימים'], ['econ', 'רווחיות מהדוחות']];
+  // the managers' ranking over time has one home, the managers page; an old ?v=rank link lands there with its settings
+  if (view === 'rank') { const n = new URLSearchParams(sp); n.set('v', 'rank'); n.delete('q'); return <Navigate to={`/managers?${n}`} replace />; }
   return (
     <>
       <h2 className="band">עדשת חיסכון<span className="muted">תזרימים ונכסים: רשות שוק ההון, חודשי, עד <span className="num">{ym(d.meta.asof)}</span> · הכנסות והוצאות: דוחות החברות המנהלות, עד <span className="num">{ql(d.meta.last_rep)}</span></span></h2>
-      <div className="lens-views"><SegCtl<View> label="תצוגה" value={view} onChange={(v) => set({ v: v === 'lens' ? '' : v })} options={views} /></div>
+      <div className="lens-views"><SegCtl<View> label="תצוגה" value={view} onChange={(v) => set({ v: v === 'lens' ? '' : v })} options={views} /><Link className="chip lens-out" to={`/managers?v=rank${seg !== 'pen' ? `&s=${seg}` : ''}`}>דירוג מנהלים לאורך זמן ←</Link></div>
       {view === 'lens' && <LensView d={d} src={src} seg={seg} q={q} g={g} set={set} />}
       {view === 'now' && <NowView d={d} src={src} seg={seg} set={set} />}
-      {view === 'rank' && <RankView d={d} seg={seg} set={set} by={(sp.get('by') as RankBy) ?? 'aum'} />}
       {(view === 'market' || view === 'econ') && <Suspense fallback={<Loading what="התצוגה" />}>{view === 'market' ? <LensMarket /> : <IndustryEcon />}</Suspense>}
-      {g >= 0 && (view === 'now' || view === 'rank') && <Drill d={d} src={src} g={g} seg={seg} onClose={() => set({ g: '' })} />}
+      {g >= 0 && view === 'now' && <Drill d={d} src={src} g={g} seg={seg} onClose={() => set({ g: '' })} />}
     </>
   );
 }
@@ -148,7 +149,7 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
         {!ins && seg !== 'hish' && <Kpi label="הוצאות להכנסות" value={secCi == null ? '–' : <Sourced src={() => listP(`הוצאות להכנסות · מגזר · ${SEG_LONG[seg]} · ${ql(q)}`, pc(secCi, 1), undefined, 'Σ (שיווק ומכירה + הנהלה וכלליות) ÷ Σ הכנסות מדמי ניהול × 100. ללא מנהלים שהנתון שלהם אינו בר השוואה', ciS, (r) => pc(r.ci, 1), (r) => src.ci(r))}>{pc(secCi, 1)}</Sourced>} sub={<>מהדוחות · <span className="num">{ciS.length}</span> מנהלים</>} />}
         {!ins && seg !== 'hish' && <Kpi label="רווח תפעולי למיליארד" value={secPpb == null ? '–' : <Sourced src={() => listP(`רווח תפעולי למיליארד · מגזר · ${SEG_LONG[seg]} · ${ql(q)}`, nf(secPpb, 2), 'מיליוני ש"ח למיליארד', 'Σ רווח תפעולי × 4 ÷ Σ נכסים ממוצעים ברשות במיליארדים', ppbS, (r) => nf(r.ppb!, 2), (r) => src.ppb(r))}>{nf(secPpb, 2)}</Sourced>} sub="מיליוני ש״ח לכל מיליארד נכסים, שנתי" />}
       </section>
-      {ins && <div className="lens-note"><span className="chip est">שני בסיסים</span> ביטוח-נט מאחד ביטוחי מנהלים (IFRS 17) ופוליסות חיסכון (חוזי השקעה, IFRS 9) באותם מסלולים. תשואת דמי הניהול כאן היא של פוליסות החיסכון בלבד, על הנכסים שבדוח; הנכסים והנתח הם של ביטוח-נט כולו. {brk && <BreakChip b={{ label: ym(Number(brk.from)), note: brk.note }} />}</div>}
+      {ins && <div className="lens-note"><span className="chip est">שני סוגי חוזים</span> ביטוח-נט מאחד ביטוחי מנהלים (IFRS 17) ופוליסות חיסכון (חוזי השקעה, IFRS 9) באותם מסלולים. תשואת דמי הניהול כאן היא של פוליסות החיסכון בלבד, על הנכסים שבדוח; הנכסים והנתח הם של ביטוח-נט כולו. {brk && <BreakChip b={{ label: ym(Number(brk.from)), note: brk.note }} />}</div>}
       {seg === 'hish' && <div className="lens-note"><span className="chip">נתוני רשות בלבד</span> {NO_REP.hish}.</div>}
 
       <Panel title={`${SEG_LONG[seg]} · ${ql(q)}`} aside={<><span>נכסים ותזרימים: מיליארדי ש"ח · יחסים שנתיים</span><button type="button" className="btn" onClick={() => void xlsx()}>Excel</button></>}>
@@ -158,7 +159,7 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
             {flows && <><th className="wide-only">נתח מהצבירה</th><th className="wide-only">ניוד נטו</th><th className="wide-only">צבירה אורגנית</th><th className="wide-only">צמיחה</th></>}
             <th className="wide-only">דמי ניהול מוצהרים {brk && <BreakChip b={{ label: ym(Number(brk.from)), note: brk.note }} />}</th>
             {seg !== 'hish' && <><th>{phone ? 'דמי ניהול' : 'תשואת דמי ניהול'} <span className="chip est">נגזר</span></th>{!ins && <th className="wide-only">על נכסי הדוח</th>}</>}
-            {!ins && seg !== 'hish' && <><th className="wide-only">הוצאות להכנסות</th><th>{phone ? 'רווח/מיליארד' : 'רווח למיליארד'}</th><th className="wide-only">בסיס</th></>}
+            {!ins && seg !== 'hish' && <><th className="wide-only">הוצאות להכנסות</th><th>{phone ? 'רווח/מיליארד' : 'רווח למיליארד'}</th><th className="wide-only" title="נכסים בדוח החברה ÷ נכסיה אצל הרשות: 100% = אותו בסיס">דוח ÷ רשות</th></>}
           </tr></thead>
           <tbody>{rows.map((r) => {
             const name = src.name(r.g), noRep = r.rep ? null : (d.groups[r.g].lts ? NO_REP[seg] : 'לחברה אין דוח רווח והפסד מגזרי באתר');
@@ -168,7 +169,7 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
                 <td>{r.reg.aE == null ? '–' : <S src={() => src.reg('assets', r.reg.e, 'm', seg, r.g, bn(r.reg.aE), 'מיליארד ש"ח')}>{bn(r.reg.aE, r.reg.aE < 10000 ? 2 : 1)}</S>}</td>
                 <td className="wide-only">{r.aum_share == null ? '–' : <S src={() => src.share(r, d.rows, 'aum')}>{pc(r.aum_share, 1)}</S>}</td>
                 {flows && <>
-                  <td className="wide-only">{r.flow_share == null ? <Dash why="אין תזרים מלא לרבעון, או שהצבירה נטו של השוק אינה חיובית" /> : <S className={r.aum_share != null ? (r.flow_share > r.aum_share ? 'pos' : 'neg') : ''} src={() => src.share(r, d.rows, 'flow')}>{pc(r.flow_share, 1)}</S>}</td>
+                  <td className="wide-only">{r.flow_share == null ? <Dash why="אין תזרים מלא לרבעון, או שהצבירה נטו של השוק אינה חיובית" /> : <><S src={() => src.share(r, d.rows, 'flow')}>{pc(r.flow_share, 1)}</S>{r.aum_share != null && r.flow_share !== r.aum_share && <span className="lens-vs" title={r.flow_share > r.aum_share ? 'מעל הנתח בנכסים: צובר מהר מהשוק' : 'מתחת לנתח בנכסים: צובר לאט מהשוק'} aria-label={r.flow_share > r.aum_share ? 'מעל הנתח בנכסים' : 'מתחת לנתח בנכסים'}>{r.flow_share > r.aum_share ? '▲' : '▼'}</span>}</>}</td>
                   <td className="wide-only">{r.reg.tr == null ? <Dash why="אין תזרים מלא לרבעון" /> : <S className={tone(r.reg.tr)} src={() => src.reg('transfers', r.reg.e, 'q', seg, r.g, bn(r.reg.tr, 2), 'מיליארד ש"ח')}>{sn(r.reg.tr / 1000, 2)}</S>}</td>
                   <td className="wide-only">{r.reg.org == null ? <Dash why="אין תזרים מלא לרבעון" /> : <S className={tone(r.reg.org)} src={() => src.reg('organic', r.reg.e, 'q', seg, r.g, bn(r.reg.org, 2), 'מיליארד ש"ח')}>{sn(r.reg.org / 1000, 2)}</S>}</td>
                   <td className="wide-only">{r.growth == null ? <Dash why="אין תזרים מלא לרבעון" /> : <S className={tone(r.growth)} src={() => src.growth(r)}>{spc(r.growth, 1)}</S>}</td>
@@ -181,13 +182,13 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
                 {!ins && seg !== 'hish' && <>
                   <td className="wide-only">{r.ci == null ? <Dash why={noRep ?? 'הדוח אינו מפצל שיווק והנהלה לרבעון זה'} /> : <S src={() => src.ci(r)}>{pc(r.ci, 0)}</S>}</td>
                   <td>{r.ppb == null ? <Dash why={noRep ?? 'חסר רווח תפעולי לרבעון'} /> : <S className={r.ppb < 0 ? 'neg' : ''} src={() => src.ppb(r)}>{nf(r.ppb, 2)}</S>}</td>
-                  <td className="wide-only">{r.cover == null ? '' : <Sourced src={() => src.cover(r)}><span className={`chip ${Math.abs(r.cover - 100) <= 1.5 ? 'pass' : 'est'}`} title="נכסים בדוח ÷ נכסי הרשות">{Math.abs(r.cover - 100) <= 1.5 ? 'תואם' : <span className="num">{nf(r.cover, 0)}%</span>}</span></Sourced>}</td>
+                  <td className="wide-only">{r.cover == null ? '' : <Sourced src={() => src.cover(r)}><span className={`num lens-cover${Math.abs(r.cover - 100) <= 1.5 ? '' : ' off'}`} title={Math.abs(r.cover - 100) <= 1.5 ? 'הדוח והרשות על אותו בסיס נכסים' : 'הדוח כולל נכסים שאינם בנתוני הרשות (קרנות ותיקות, מקבלי קצבה) או חסר מהם'}>{nf(r.cover, 0)}%</span></Sourced>}</td>
                 </>}
               </tr>
             );
           })}</tbody>
         </table></div>
-        <div className="fnote">{ins ? 'תשואת דמי ניהול = הכנסות הרבעון מפוליסות חיסכון × 4 ÷ ממוצע נכסי פוליסות החיסכון בתחילת הרבעון ובסופו, הכול מהדוח. ' : <>{flows ? 'ירוק בנתח מהצבירה: גבוה מהנתח מהנכסים (צובר מהר מהשוק). ' : ''}{seg !== 'hish' && 'תשואת דמי ניהול = הכנסות הרבעון מהדוח × 4 ÷ נכסים ממוצעים (טרפז על ארבעה סופי חודש) מהרשות. "בסיס": נכסים בדוח ÷ נכסי הרשות; מעל 100 כשהדוח כולל קרנות ותיקות או מקבלי קצבה. '}</>}לחיצה על מנהל פותחת אותו.</div>
+        <div className="fnote">{ins ? 'תשואת דמי ניהול = הכנסות הרבעון מפוליסות חיסכון × 4 ÷ ממוצע נכסי פוליסות החיסכון בתחילת הרבעון ובסופו, הכול מהדוח. ' : <>{flows ? '▲ / ▼ בנתח מהצבירה: מעל או מתחת לנתח בנכסים (צובר מהר או לאט מהשוק). ' : ''}{seg !== 'hish' && 'תשואת דמי ניהול = הכנסות הרבעון מהדוח × 4 ÷ נכסים ממוצעים (טרפז על ארבעה סופי חודש) מהרשות. נכסי דוח ÷ רשות: 100% = אותו בסיס; מעל 100 כשהדוח כולל קרנות ותיקות או מקבלי קצבה. '}</>}לחיצה על מנהל פותחת אותו.</div>
       </Panel>
 
       {g >= 0 && <Drill d={d} src={src} g={g} seg={seg} onClose={() => set({ g: '' })} />}
@@ -238,7 +239,7 @@ function Drill({ d, src, g, seg, onClose }: { d: LensData; src: LensSrc; g: numb
   const name = d.groups[g].name, id = d.groups[g].id;
   useEffect(() => { warmRep(d.groups[g].lts); }, [d, g]);
   const body = <DrillBody d={d} src={src} g={g} seg={seg} />;
-  const links = <>{id && <Link className="chip" to={`/company/${id === 'idi' ? 'idi' : id}/savings`}>עמוד החברה</Link>}<Link className="chip" to={`/funds/makers?mk=${encodeURIComponent(name)}`}>המסלולים מול השוק</Link></>;
+  const links = <>{id && <Link className="chip" to={`/company/${id === 'idi' ? 'idi' : id}/savings`}>עמוד החברה</Link>}<Link className="chip" to={`/managers?v=makers&mk=${encodeURIComponent(name)}`}>המסלולים מול השוק</Link></>;
   if (phone) return <Sheet open onClose={onClose} title={`${name} · ${SEG_LONG[seg]}`}><div className="lens-links">{links}</div>{body}</Sheet>;
   return (
     <div ref={(el) => { if (el && el.dataset.g !== String(g)) { el.dataset.g = String(g); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }}><Panel className="lens-drill" title={<><IdDot grp={name} />{name} · {SEG_LONG[seg]}</>} aside={<>{links}<button type="button" className="btn" onClick={onClose} aria-label="סגירה">×</button></>}>{body}</Panel></div>
@@ -267,7 +268,7 @@ function DrillBody({ d, src, g, seg }: { d: LensData; src: LensSrc; g: number; s
       {hasRep && seg !== 'hish' && (!ready ? <div style={{ height: 260 }} /> : <Chart label={`תשואת דמי ניהול · ${d.groups[g].name} · ${SEG_LONG[seg]}`} height={260} deps={[g, seg]} onPoint={(si, di) => { const r = by.get(qs[di]); if (r && series[si].v(r) != null) open(series[si].p(r)); }}
         build={() => decimals(foxOption({ x: qs.map(ql), unit: '%', scale: true, legend: true, series: series.map((s) => ({ name: s.name, kind: 'line' as const, pct: true, dec: 3, dashed: s.dashed, color: s.color, data: qs.map((q) => { const v = s.v(by.get(q)!); return v == null ? null : +v.toFixed(4); }) })) }), 2, true)} />)}
       <div className="scroll"><table className="lens-tbl drill">
-        <thead><tr><th>רבעון</th><th className={hasRep ? 'wide-only' : ''}>נכסים ממוצעים, רשות</th>{hasRep && <><th>הכנסות</th><th className="wide-only">שיווק</th><th className="wide-only">הנהלה</th><th>רווח תפעולי</th><th>תשואת דמי ניהול</th><th className="wide-only">הוצאות להכנסות</th><th className="wide-only">רווח למיליארד</th><th className="wide-only">בסיס</th></>}{!ins && <><th className="wide-only">ניוד נטו</th><th className={hasRep ? 'wide-only' : ''}>צבירה אורגנית</th></>}</tr></thead>
+        <thead><tr><th>רבעון</th><th className={hasRep ? 'wide-only' : ''}>נכסים ממוצעים, רשות</th>{hasRep && <><th>הכנסות</th><th className="wide-only">שיווק</th><th className="wide-only">הנהלה</th><th>רווח תפעולי</th><th>תשואת דמי ניהול</th><th className="wide-only">הוצאות להכנסות</th><th className="wide-only">רווח למיליארד</th><th className="wide-only" title="נכסים בדוח החברה ÷ נכסיה אצל הרשות: 100% = אותו בסיס">דוח ÷ רשות</th></>}{!ins && <><th className="wide-only">ניוד נטו</th><th className={hasRep ? 'wide-only' : ''}>צבירה אורגנית</th></>}</tr></thead>
         <tbody>{[...qs].reverse().map((q) => { const r = by.get(q)!; const fy = ins ? r.fy_rep : r.fy_reg; return (
           <tr key={q} onPointerEnter={() => warmRep(r.rep?.c)}>
             <td><span className="num">{ql(q)}</span></td>
@@ -335,6 +336,21 @@ function NowView({ d, src, seg, set }: { d: LensData; src: LensSrc; seg: Seg; se
       </Panel>
     </>
   );
+}
+
+/** The ranking over time, for the managers page (its one home): activity and measure in the address; a manager opens in the lens. */
+export function LensRank() {
+  const { data: d, error } = useLens();
+  const [sp, setSp] = useSearchParams();
+  const nav = useNavigate();
+  if (error) return <ErrorBox what="דירוג המנהלים" error={error} />;
+  if (!d) return <Loading what="דירוג המנהלים" />;
+  const seg = (SEGS.map(([k]) => k).find((k) => k === sp.get('s')) ?? 'pen') as Seg;
+  const set = (patch: Record<string, string>) => {
+    if (patch.g) { nav(`/industry/savings?g=${encodeURIComponent(patch.g)}${seg !== 'pen' ? `&s=${seg}` : ''}`); return; }
+    const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k))); setSp(n, { replace: true });
+  };
+  return <RankView d={d} seg={seg} set={set} by={(sp.get('by') as RankBy) ?? 'aum'} />;
 }
 
 /* ---------- rank history ---------- */

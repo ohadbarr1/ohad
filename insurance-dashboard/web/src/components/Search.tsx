@@ -50,6 +50,8 @@ function useFullText(q: string, pool: ReturnType<typeof usePool>['pool'], corpus
   return { ...st, busy };
 }
 
+/** the word to type after a company for a function: its Hebrew badge when it is a search key, else its first Hebrew key (CSM and DCF stay) */
+const word = (f: (typeof FUNCS)[number]) => (/^[A-Z]+$/.test(f.badge) && !['CSM', 'DCF'].includes(f.badge) ? f.keys.find((k) => /[\u0590-\u05FF]/.test(k)) ?? f.badge : f.badge.split(' ')[0]);
 const ORDER: Kind[] = ['חיפושים', 'אחרונים', 'חברה', 'פונקציה', 'קופה', 'שורה בדוח', 'מסמך'];
 /** a company with a screen code ("הראל csm"): the screen leads */
 const orderFor = (list: Item[]): Kind[] => (list.some((x) => x.kind === 'פונקציה' && x.score >= 90) ? ['פונקציה', ...ORDER.filter((k) => k !== 'פונקציה')] : ORDER);
@@ -160,7 +162,7 @@ export function Search({ big = false }: { big?: boolean }) {
           </div>
         ) : null;
       })}
-      {!s && <div className="codes"><h4>קודים · לכל חברה</h4><div>{FUNCS.map((f) => <span key={f.code} className="chip" title={f.label}><b className="num">{f.code}</b> {f.label}</span>)}</div><div className="muted omni-tip">לדוגמה: <bdi>הראל CSM</bdi> · <bdi>כלל מצגת Q2'26</bdi> · <bdi>רכיב הפסד</bdi> · <bdi>17,717</bdi>{!phone && <> · מקש <kbd>?</kbd> לכל הקיצורים</>}</div></div>}
+      {!s && <div className="codes"><h4>חברה + נושא · לדוגמה: הראל סקירה</h4><div>{FUNCS.map((f) => <span key={f.code} className="chip" title={`${f.label} · גם באנגלית: ${f.code}`}><b>{word(f)}</b> {f.label !== word(f) && <span className="muted">{f.label}</span>}</span>)}</div><div className="muted omni-tip">לדוגמה: <bdi>הראל CSM</bdi> · <bdi>כלל מצגת Q2'26</bdi> · <bdi>רכיב הפסד</bdi> · <bdi>17,717</bdi>{!phone && <> · מקש <kbd>?</kbd> לכל הקיצורים</>}</div></div>}
     </div>
   );
 

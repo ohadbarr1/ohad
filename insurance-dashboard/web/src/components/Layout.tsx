@@ -19,7 +19,7 @@ import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 // [route, icon, label, label on the phone's bottom bar: the same word, shortened]. Four places on the phone too: search lives in the top bar
 // on every screen, so the fourth place goes to valuation, which no other control on a phone reaches.
 const NAV: [string, string, string, string | null][] = [
-  ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'ענף', 'ענף'],
+  ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'השוואה ענפית', 'ענף'],
   ['/valuation', 'value', 'שווי', 'שווי'], ['/funds', 'market', 'קופות ושוק', 'קופות'],
   ['/data', 'data', 'נתונים ואיכות', null],
 ];
@@ -44,7 +44,7 @@ export function Layout() {
     <a className="skip" href="#main">דילוג לתוכן</a>
     <div className="shell">
       <aside className="rail">
-        <NavLink to="/" className="brand" aria-label="fox"><Logo size={36} /></NavLink>
+        <NavLink to="/" className="brand" aria-label="fox" title="fox · דף הבית"><Logo size={36} /></NavLink>
         <nav aria-label="ראשי">
           {NAV.map(([to, icon, label, short]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${short ? '' : ' wide-item'}${isActive || (to === '/' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
         </nav>

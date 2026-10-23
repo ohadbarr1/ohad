@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
 import { ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
@@ -15,8 +16,29 @@ type Fam = 'all' | Family;
 const wavg = (fs: Fund[], k: keyof Fund) => { let n = 0, d = 0; fs.forEach((f) => { const v = f[k] as number | null, a = f.assets ?? 0; if (v != null && a > 0) { n += v * a; d += a; } }); return d ? n / d : null; };
 const sum = (fs: Fund[], k: keyof Fund) => fs.reduce((s, f) => s + ((f[k] as number | null) ?? 0), 0);
 
-/** Managing companies and their funds, from the regulator's latest monthly snapshot. */
+const LensRank = lazy(async () => ({ default: (await import('./SavingsLens')).LensRank }));
+const Makers = lazy(async () => ({ default: (await import('./Funds')).MakersBody }));
+type View = '' | 'rank' | 'makers';
+const VIEWS: [View, string][] = [['', 'לפי חברה מנהלת'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק']];
+
+/** The managers' ranking, one home for it: the managing companies today (regulator snapshot), their rank over time (savings lens),
+ *  and each manager's biggest track against its category (fund ranks). /funds/makers and the lens's old ?v=rank land here. */
 export function Managers() {
+  const [sp, setSp] = useSearchParams();
+  const view = (VIEWS.map(([v]) => v).find((v) => v && v === sp.get('v')) ?? '') as View;
+  const pick = (v: View) => setSp(() => { const n = new URLSearchParams(); if (v) n.set('v', v); return n; }, { replace: true });
+  const views = <section className="controls mgr-views"><div className="field"><span>דירוג</span><Seg<View> label="דירוג מנהלים" value={view} onChange={pick} options={VIEWS} /></div></section>;
+  if (view === '') return <ManagersTable views={views} />;
+  return (
+    <>
+      <FundsHead sub={view === 'rank' ? 'דירוג מנהלים · לאורך זמן · רשות שוק ההון ודוחות החברות המנהלות' : 'דירוג מנהלים · המסלול הגדול של כל יצרן מול הקטגוריה שלו'} />
+      {views}
+      <Suspense fallback={<Loading what="הדירוג" />}>{view === 'rank' ? <LensRank /> : <Makers />}</Suspense>
+    </>
+  );
+}
+
+function ManagersTable({ views }: { views: React.ReactNode }) {
   const { data, error } = useMarketData();
   const [fam, setFam] = useState<Fam>('all');
   const [grp, setGrp] = useState('all');
@@ -44,7 +66,8 @@ export function Managers() {
   const asof = `${String(data.meta.asof).slice(4)}/${String(data.meta.asof).slice(2, 4)}`;
   return (
     <>
-      <FundsHead sub={<>מנהלים · <S src={() => listP('חברות מנהלות', nf(rows.length, 0), undefined, 'ספירת החברות המנהלות שיש להן מסלולים בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{rows.length}</span></S> חברות מנהלות · <S src={() => listP('סך נכסים, החברות המנהלות', nf(total, 0), 'מיליארד ש"ח', 'סכום הנכסים של כל החברות המנהלות בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{nf(total, 0)}</span></S> מיליארד ש"ח · <span className="num">{asof}</span></>} />
+      <FundsHead sub={<>דירוג מנהלים · <S src={() => listP('חברות מנהלות', nf(rows.length, 0), undefined, 'ספירת החברות המנהלות שיש להן מסלולים בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{rows.length}</span></S> חברות מנהלות · <S src={() => listP('סך נכסים, החברות המנהלות', nf(total, 0), 'מיליארד ש"ח', 'סכום הנכסים של כל החברות המנהלות בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{nf(total, 0)}</span></S> מיליארד ש"ח · <span className="num">{asof}</span></>} />
+      {views}
       <section className="controls">
         <div className="field"><span>מוצר</span><Seg<Fam> label="מוצר" value={fam} onChange={setFam} options={[['all', 'הכול'], ['pension', 'פנסיה'], ['gemel', 'גמל והשתלמות'], ['insurance', 'ביטוח: מנהלים וחיסכון']]} /></div>
         <Field label="קבוצה"><select value={grp} onChange={(e) => setGrp(e.target.value)}><option value="all">כל הקבוצות</option>{groups.map((g) => <option key={g}>{g}</option>)}</select></Field>
@@ -71,7 +94,7 @@ export function Managers() {
             { key: 'fee', head: 'דמי ניהול מצבירה', value: (r) => r.fee, unit: 'pct', d: 2, src: (r) => agg(r, 'fee', 'דמי ניהול מצבירה', 'AVG_ANNUAL_MANAGEMENT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם דמי ניהול', pct(r.fee, 2), undefined, (f) => pct(f.fee, 2), true) },
             { key: 'dep', head: 'מהפקדה', value: (r) => r.dep, unit: 'pct', d: 2, src: (r) => agg(r, 'depfee', 'דמי ניהול מהפקדה', 'AVG_DEPOSIT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.dep, 2), undefined, (f) => pct(f.depfee, 2), true) },
             { key: 'y12', head: 'תשואה, LTM', value: (r) => r.y12, unit: 'pct', tone: true, src: (r) => agg(r, 'y12', 'תשואה LTM', 'תשואת LTM של כל מסלול, משוקללת ב-TOTAL_ASSETS', pct(r.y12, 1), undefined, (f) => pct(f.y12, 1), true) },
-            { key: 'a5', head: '5Y, שנתי', value: (r) => r.a5, unit: 'pct', src: (r) => agg(r, 'a5', 'תשואה שנתית ממוצעת, 5 שנים', 'AVG_ANNUAL_YIELD_TRAILING_5YRS משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.a5, 1), undefined, (f) => pct(f.a5, 1), true) },
+            { key: 'a5', head: '5 שנים, שנתי', value: (r) => r.a5, unit: 'pct', src: (r) => agg(r, 'a5', 'תשואה שנתית ממוצעת, 5 שנים', 'AVG_ANNUAL_YIELD_TRAILING_5YRS משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.a5, 1), undefined, (f) => pct(f.a5, 1), true) },
             { key: 'net', head: 'צבירה נטו', value: (r) => r.net, d: 2, tone: true, src: (r) => agg(r, 'net12', 'צבירה נטו, LTM', 'סכום צבירה אורגנית LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.net!, 2), 'מיליארד ש"ח', (f) => sn(f.net12!, 1)) },
             { key: 'tr', head: 'ניוד נטו', value: (r) => r.tr, d: 2, tone: true, src: (r) => agg(r, 'tr12', 'ניוד נטו, LTM', 'סכום העברות נטו LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.tr!, 2), 'מיליארד ש"ח', (f) => sn(f.tr12!, 1)) },
           ]} />

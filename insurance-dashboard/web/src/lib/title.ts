@@ -22,9 +22,9 @@ export function titleFor(path: string, name: (id: string) => string | null | und
       if (!((p[2] ?? '') in COMPANY_TAB) || name(p[1]) === null) return null;
       return t(name(p[1]) ?? p[1], COMPANY_TAB[p[2] ?? '']);
     }
-    case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'ענף') : null;
-    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'קופות') : p[1] ? t('מסלול', 'קופות') : t('מסלולים', 'קופות');
-    case 'managers': return t('מנהלים', 'קופות');
+    case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'השוואה ענפית') : null;
+    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'קופות ושוק') : p[1] ? t('מסלול', 'קופות ושוק') : t('מסלולים', 'קופות ושוק');
+    case 'managers': return t('דירוג מנהלים', 'קופות ושוק');
     case 'calendar': return t('לוח דיווחים');
     case 'book': return t('ספר הגרפים');
     case 'data': return p[1] ? null : t('נתונים ואיכות');

@@ -553,4 +553,8 @@ div.src > a, .fnote a { text-decoration: underline; text-decoration-color: color
   main :is(td, th) :is(button.chip, a.chip, summary)::after { content: ""; position: absolute; inset: -10px -4px; }
   .pr-menu > summary { min-width: 40px; min-height: 40px; display: grid; place-items: center; }
 }
+/* the funds section's way out to the savings lens (its home is the industry hub): a link, not a tab */
+.subnav a.subnav-out { margin-inline-start: auto; color: var(--faint); font-weight: 400; font-size: var(--t-2); }
+.subnav a.subnav-out:hover { color: var(--accent-text); background: transparent; }
+.mgr-views .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 /* === end lane U === */
