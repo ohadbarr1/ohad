@@ -1,0 +1,64 @@
+{
+  "_doc": "Where each managing company publishes its quarterly single-asset lists (רשימת נכסים ברמת הנכס הבודד, CMA circular 2015-9-14, uniform Excel). Files follow the CMA name <company id>_<product>_p_<Q><YY>.xlsx; product: gm = קופות גמל (incl. השתלמות, גמל להשקעה), pn = קרנות פנסיה, ca = מבטיח תשואה, in = ביטוח משתתף ברווחים. 'pages' are read by probe.py (kind html: links in the page; kind wix: Wix dataset items embedded in the page). 'patterns' are direct file URLs used only for quarters a page no longer lists. status: ok | partial | blocked | js_only | not_found. Probed 23.10.26 with the fox User-Agent, one request every 2 s; robots.txt honoured on every host.",
+  "products": {"gm": "קופות גמל והשתלמות", "pn": "קרנות פנסיה", "ca": "מבטיח תשואה", "in": "ביטוח משתתף ברווחים"},
+  "fetch_products": ["gm", "pn", "in"],
+  "managers": {
+    "altshuler": {
+      "name": "אלטשולר שחם", "entity": "אלטשולר שחם גמל ופנסיה בע\"מ", "company_id": "513173393", "status": "ok",
+      "pages": [{"url": "https://www.as-invest.co.il/interstedin/gemel/רשימת-נכסים-מאוחדת-כל-קופות-הגמל-וקרנות-הפנסיה/", "kind": "html"}]
+    },
+    "meitav": {
+      "name": "מיטב", "entity": "מיטב גמל ופנסיה בע\"מ", "company_id": "512065202", "status": "ok",
+      "pages": [
+        {"url": "https://www.meitav.co.il/provident_pension/pension/quarterly_asset_lists/", "kind": "html"},
+        {"url": "https://www.meitav.co.il/provident_pension/gemel/%D7%A8%D7%A9%D7%99%D7%9E%D7%95%D7%AA_%D7%A0%D7%9B%D7%A1%D7%99%D7%9D_%D7%A8%D7%91%D7%A2%D7%95%D7%A0%D7%99%D7%95%D7%AA", "kind": "html"}
+      ]
+    },
+    "phoenix": {
+      "name": "הפניקס", "entity": "הפניקס פנסיה וגמל בע\"מ", "company_id": "513026484", "status": "blocked",
+      "note": "BLOCKED 23.10.26: after a few requests digital-content.fnx.co.il answered with a Radware 'Verifying your browser' page; stopped for the site. Before that: pension only. www.fnx.co.il is a client-rendered app behind an AWS WAF challenge script, so its asset-list pages carry no links; the legacy server digital-content.fnx.co.il still serves the יסוד page, whose files are the consolidated pension list. Gemel and managers' insurance lists not reachable without running the site's scripts.",
+      "pages": [{"url": "https://digital-content.fnx.co.il/pension-savings/pension/basic-member-pension-fund/quarterly-assets-list.aspx", "kind": "html"}],
+      "patterns": [{"product": "pn", "url": "https://www.fnx.co.il/sites/docs/genery/pensiarheshimatnehasim/513026484_pn_p_{q}{yy}.xlsx"}]
+    },
+    "migdal": {
+      "name": "מגדל", "entity": "מגדל חברה לביטוח בע\"מ", "company_id": "520004896", "status": "partial",
+      "note": "managers' insurance participating portfolio (in) only: its items are embedded in the Wix page. The מקפת pension and gemel lists on /regulations/asset-list are loaded by the browser from the Wix data API (session token), so they are not fetched.",
+      "pages": [{"url": "https://www.migdal.co.il/regulations/migdal-investments-assets", "kind": "wix", "file_base": "https://www.migdal.co.il/_files/ugd/"}]
+    },
+    "analyst": {
+      "name": "אנליסט", "entity": "אנליסט קופות גמל בע\"מ", "company_id": "511880460", "status": "ok",
+      "pages": [{"url": "https://www.analyst.co.il/quarterly-property-list/", "kind": "html"}]
+    },
+    "infinity": {
+      "name": "אינפיניטי", "entity": "אינפיניטי השתלמות גמל ופנסיה בע\"מ", "company_id": "513621110", "status": "ok",
+      "pages": [
+        {"url": "https://infinity.co.il/רשימת-נכסים-2026-פנסיה/", "kind": "html"},
+        {"url": "https://infinity.co.il/רשימת-נכסים-2025-פנסיה/", "kind": "html"},
+        {"url": "https://infinity.co.il/רשימת-נכסים-גמל-והשתלמות-2026/", "kind": "html"},
+        {"url": "https://infinity.co.il/רשימת-נכסים-2025/", "kind": "html"},
+        {"url": "https://infinity.co.il/רשימת-נכסים-גמל-והשתלמות/", "kind": "html"}
+      ]
+    },
+    "menora": {
+      "name": "מנורה מבטחים", "entity": "מנורה מבטחים פנסיה וגמל בע\"מ", "company_id": "512245812", "status": "blocked",
+      "note": "first page load listed the files (cdn.menoramivt.co.il, 512245812_*_p_QQYY.xlsx); the next requests got a Radware captcha page (23.10.26). Stopped for the whole site, CDN included."
+    },
+    "harel": {
+      "name": "הראל", "entity": "הראל פנסיה וגמל בע\"מ", "company_id": "", "status": "not_found",
+      "note": "old SharePoint list-of-assets pages redirect to the new site (308 → product pages without file links); the new site's sitemap (4,268 URLs) has no asset-list page."
+    },
+    "clal": {
+      "name": "כלל", "entity": "כלל פנסיה וגמל בע\"מ", "company_id": "", "status": "js_only",
+      "note": "report pages are an Angular app that reads a reports API whose base URL is set at runtime; no file links in the served HTML."
+    },
+    "more": {"name": "מור", "entity": "מור גמל ופנסיה בע\"מ", "company_id": "", "status": "not_found", "note": "moreinvest.co.il sitemap and home page carry no asset-list page."},
+    "yelin": {"name": "ילין לפידות", "entity": "ילין לפידות ניהול קופות גמל בע\"מ", "company_id": "", "status": "not_found", "note": "ylp.co.il has no sitemap and no asset-list link on the home page."},
+    "ayalon": {"name": "איילון", "entity": "איילון חברה לביטוח בע\"מ", "company_id": "", "status": "not_found", "note": "ayalon-ins.co.il sitemap has no asset-list page."},
+    "hachshara": {"name": "הכשרה", "entity": "הכשרה חברה לביטוח בע\"מ", "company_id": "", "status": "not_found", "note": "www.hachshara.co.il does not resolve; not searched further."},
+    "ibi": {"name": "אי.בי.אי", "entity": "", "company_id": "", "status": "not_found", "note": "ibi.co.il sitemap has no asset-list page (IBI's gemel arm was sold)."},
+    "globalnet": {"name": "גלובלנט", "entity": "", "company_id": "", "status": "not_found", "note": "not searched (₪7bn)."}
+  },
+  "backfill": {
+    "_doc": "data.gov.il copies of the same uniform format (nechasimg/p/b, mishtatef), last updated 21.03.23: a format reference only, not fetched."
+  }
+}
