@@ -7,6 +7,7 @@ import { foxOption } from '../../lib/foxchart';
 import { idColor } from '../../lib/identity';
 import { usePhone } from '../../lib/useMedia';
 import { nf } from '../../lib/format';
+import { mayaReport } from '../../lib/sources';
 import { periodName } from '../../lib/csm';
 import { INSURERS, MM, amt, useCapital, type CapCo, type CapPt, type Ledger } from '../../lib/csmData';
 import { CapitalTable } from '../IndustryCapital';
@@ -32,8 +33,11 @@ export function CapitalView({ L, name }: { L: Ledger; name: (id: string) => stri
   const pt = (id: string, k: Key, p: string): CapPt | null => cos[id]?.[k]?.[p] ?? null;
   const ptProv = (id: string, k: Key, p: string, title: string, unit: string, text: string): Prov => {
     const x = pt(id, k, p)!;
+    const alt = x.alt ? `בדוח כושר הפירעון הכלכלי (${x.alt.solv}, עמ׳ ${x.alt.pg ?? '–'}) הודפס ${nf(x.alt.v, x.alt.v % 1 ? 1 : 0)}; מוצג הערך שבדוח הכספי` : '';
+    if (x.solv) return { k: 'report', title: `${title} · ${name(id)} · ${lab(p)}`, value: text, unit, url: x.u ?? null, pg: x.pg ?? null, doc: 'דוח כושר פירעון כלכלי', srcType: 'דוח כושר פירעון כלכלי (MAYA)', period: lab(p),
+      note: ['הדוח הכספי לא הדפיס ערך לתאריך זה', x.img ? 'נקרא מתמונה' : '', `דיווח ${x.solv}: ${mayaReport(x.solv)}`].filter(Boolean).join(' · ') };
     return { k: 'report', title: `${title} · ${name(id)} · ${lab(p)}`, value: text, unit, url: x.u ?? null, pg: x.pg ?? null, doc: 'דוח כספי', period: lab(p), old: x.std === 'IFRS 4' || undefined, der: !!x.der || undefined,
-      note: [x.cmp ? 'מעמודת ההשוואה של דוח מאוחר' : '', x.s && x.s !== 'group' ? `ישות: ${x.s}` : ''].filter(Boolean).join(' · ') || undefined };
+      note: [x.cmp ? 'מעמודת ההשוואה של דוח מאוחר' : '', x.s && x.s !== 'group' ? `ישות: ${x.s}` : '', alt].filter(Boolean).join(' · ') || undefined };
   };
   /** the periods of a line across the insurers, oldest first; `fy` keeps the annual figures only */
   const axis = (k: Key, fy: boolean) => [...new Set(ids.flatMap((id) => Object.keys(cos[id]?.[k] ?? {})))].filter((p) => !fy || p.endsWith('FY')).filter((p) => !/Q4$/.test(p)).sort((a, b) => pkey(a).localeCompare(pkey(b)));
@@ -55,8 +59,15 @@ export function CapitalView({ L, name }: { L: Ledger; name: (id: string) => stri
           {solv.length < 2 ? <Empty title="אין רצף" /> : <Chart label={sl} height={h} deps={[tb, solv.length]} build={() => joined(foxOption({ x: solv.map(lab), unit: '%', legend: true, labels: false, full: true, scale: true,
             series: ids.map((id) => ({ name: name(id), kind: 'line' as const, pct: true, color: idColor(id), dec: 0, faded: solv.map((p) => pt(id, sk, p)?.std === 'IFRS 4'), data: solv.map((p) => pt(id, sk, p)?.v ?? null) })) }))}
             onPoint={(si, di) => { const id = ids[si], p = solv[di], x = id && p ? pt(id, sk, p) : null; if (x) open(ptProv(id, sk, p, sl, '%', `${nf(x.v, x.v % 1 ? 1 : 0)}%`)); }} />}
-          <div className="src">חברת הביטוח העיקרית בכל קבוצה, כפי שהודפס בדוח הכספי; דוח כושר הפירעון המלא מתפרסם בפיגור. בהיר: לפני IFRS 17.</div>
+          <div className="src">חברת הביטוח העיקרית בכל קבוצה, כפי שהודפס בדוח הכספי; תאריכים שהדוח הכספי לא הדפיס (עד 2020, וחצאי שנה) מדוח כושר הפירעון הכלכלי, עם העמוד. בהיר: לפני IFRS 17.</div>
         </Panel>
+        {(['su', 'scr'] as const).map((k) => { const xs = axis(k, false), t = k === 'su' ? 'עודף הון מעל SCR' : 'הון נדרש (SCR)'; return (
+          <Panel key={k} title={t} aside={<span>מיליארדי ש"ח · עם הוראות מעבר</span>}>
+            {xs.length < 2 ? <Empty title="אין רצף" /> : <Chart label={t} height={h} deps={[xs.length]} build={() => joined(foxOption({ x: xs.map(lab), unit: 'מיליארדי ש"ח', legend: true, labels: false, full: true, scale: k === 'scr',
+              series: ids.map((id) => ({ name: name(id), kind: 'line' as const, color: idColor(id), dec: 1, faded: xs.map((p) => !!pt(id, k, p)?.solv), data: xs.map((p) => { const x = pt(id, k, p); return x ? +(x.v / 1000).toFixed(2) : null; }) })) }))}
+              onPoint={(si, di) => { const id = ids[si], p = xs[di], x = id && p ? pt(id, k, p) : null; if (x) open(ptProv(id, k, p, t, MM, amt(x.v))); }} />}
+            <div className="src">חברת הביטוח העיקרית · בהיר: מדוח כושר הפירעון הכלכלי (הדוח הכספי לא הדפיס, או שהדפיס על בסיס אחר).</div>
+          </Panel>); })}
         <Panel title="הון לבעלי המניות" aside={<span>מיליארדי ש"ח · סוף רבעון</span>}>
           {eqx.length < 2 ? <Empty title="אין רצף" /> : <Chart label="הון לבעלי המניות" height={h} deps={[eqx.length]} build={() => joined(foxOption({ x: eqx.map(lab), unit: 'מיליארדי ש"ח', legend: true, labels: false, full: true, scale: true, breakAt: breakOf('equity_attributable', eqx), breakLabel: 'IFRS 17',
             series: ids.map((id) => ({ name: name(id), kind: 'line' as const, color: idColor(id), dec: 1, faded: eqx.map((p) => pt(id, 'equity_attributable', p)?.std === 'IFRS 4'), data: eqx.map((p) => { const x = pt(id, 'equity_attributable', p); return x ? +(x.v / 1000).toFixed(2) : null; }) })) }))}

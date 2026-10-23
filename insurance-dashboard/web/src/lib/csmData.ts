@@ -199,8 +199,10 @@ export interface SensRow { c: string; rp: string; d: string; shock: string; risk
 export const useSens = () => useLoad<{ built: string; rows: SensRow[] }>('csm/sens.json');
 export interface RateRow { c: string; rp: string; d: string; port: string | null; orig: string; t: number; v: number; pg: number | null; u: string | null; real: boolean; ilp: boolean }
 export const useRates = () => useLoad<{ built: string; rows: RateRow[] }>('csm/rates.json');
-export interface CapPt { v: number; pg?: number | null; u?: string | null; std?: string; der?: number; cmp?: number; s?: string }
-export type CapCo = Partial<Record<'equity_attributable' | 'profit_attributable' | 'comprehensive_income_attributable' | 'dividend_paid' | 'dividend_declared' | 'sr_w' | 'sr_wo', Record<string, CapPt>>>;
+/** `solv` = the report id of the economic-solvency report the point was read from (the periodic report did not print it); `img` = read from the page image;
+    `alt` = the solvency report printed another value for a date the periodic report prints (the periodic figure is shown) */
+export interface CapPt { v: number; pg?: number | null; u?: string | null; std?: string; der?: number; cmp?: number; s?: string; solv?: number; img?: 1; alt?: { v: number; pg?: number | null; u?: string | null; solv?: number } }
+export type CapCo = Partial<Record<'equity_attributable' | 'profit_attributable' | 'comprehensive_income_attributable' | 'dividend_paid' | 'dividend_declared' | 'sr_w' | 'sr_wo' | 'of' | 'scr' | 'su', Record<string, CapPt>>>;
 export const useCapital = () => useLoad<{ built: string; source: string; companies: Record<string, CapCo> }>('csm/capital.json');
 export interface Curve { source: string; url: string; retrieved: string; basis: string; unit: string; months: string[]; tenors: number[]; nominal: Record<string, (number | null)[]>; real: Record<string, (number | null)[]>; codes: Record<string, Record<string, string>> }
 export const useCurve = () => useLoad<Curve>('macro/boi_curve.json');

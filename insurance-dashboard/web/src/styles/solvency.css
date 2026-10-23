@@ -1,0 +1,10 @@
+/* solvency reports: SCR composition, tiers, sensitivities (lane Y) */
+.sv-pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.sv-pick select { min-height: 32px; }
+.sv-t td:first-child { white-space: nowrap; }
+.sv-t tr.tot td { font-weight: 600; border-top: 1px solid var(--line); }
+.sv-t tr.neg td:first-child, .sv-t tr.sub td:first-child { color: var(--muted); }
+.sv-t tr.sub td:first-child { padding-inline-start: 1.2em; }
+.sv-sc { display: block; font-size: var(--t-1); max-width: 22ch; white-space: normal; line-height: 1.3; }
+.sv-img { margin-inline-start: 3px; color: var(--muted); font-size: var(--t-1); cursor: help; }
+.sv-more { margin: 4px 0 16px; }
