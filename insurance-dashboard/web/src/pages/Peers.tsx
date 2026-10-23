@@ -25,7 +25,8 @@ type View = 'table' | 'series' | 'deck';
 interface St { s: string; e: string[] | null; f: Freq; p: string; n: number; v: View; k: number; c: string[]; o: { c: number; i: number; d: 1 | -1 } | null; h: boolean; pin: number; hl: string; w: number }
 interface SavedView { id: string; n: string; q: string }
 const KEYS = ['s', 'e', 'f', 'p', 'n', 'v', 'k', 'c', 'o', 'h', 'pin', 'hl', 'w', 't'];
-const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'table' as View, w: 12 };
+// a series opens on five years (20 quarters): the analyst's "7 insurers × one line × 5 years" in two taps
+const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'table' as View, w: 20 };
 const NOTE: Record<number, string> = { 1: 'נגזר מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM); הנוסחה במקור', 2: 'לפי IFRS 4, כפי שדווח במקור', 3: 'נקרא מגרף או מטקסט בדוח', 4: 'בסיס שונה מרוב החברות בעמודה', 5: 'תג XBRL שתוקן מול הדוח המודפס',
   6: 'הרכב השתנה: החברות שיש להן נתון שונות בין התקופה לשנה שלפניה, ולכן הנתח אינו בר השוואה כמות שהוא', 7: 'כולל קופות חדשות במאגר הרגולטור: חלק מהשינוי הוא קופות שנכנסו לקבוצה, לא כסף שנכנס' };
 const SUP = ['', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷'];
@@ -176,6 +177,8 @@ export function Peers() {
       {phone ? (
         <>
           <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</ContextBar>
+          {/* table or series without opening the sheet: one tap */}
+          {st.v !== 'deck' && <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => set({ v })} options={[['table', 'טבלה'], ['series', 'סדרה']]} /></div>}
           <Sheet open={sheet} onClose={() => setSheet(false)} title="טבלת עמיתים">{controls}{panels}
             {st.v !== 'deck' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
               <div key={i} className="pr-ci"><span>{c.name}</span>

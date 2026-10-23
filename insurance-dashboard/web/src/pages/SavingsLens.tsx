@@ -7,6 +7,7 @@ import { BreakChip, Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg as SegCtl }
 import { IdDot } from '../components/MgrChip';
 import { foxOption } from '../lib/foxchart';
 import { identify } from '../lib/idmarks';
+import { placeLabels } from '../lib/labelPlace';
 import { nf, sn } from '../lib/format';
 import { GROUP_ID, idColor, idColorOfGroup } from '../lib/identity';
 import { LensSrc, NO_REP, SEG_LONG, SEGS, bn, madd, pc, ql, rankHistory, spc, useLens, warmRep, ym, type LensData, type LensNow, type LensRow, type RankBy, type Seg } from '../lib/lens';
@@ -157,7 +158,7 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
         <div className="scroll"><table className="lens-tbl">
           <thead><tr>
             <th>מנהל</th><th>נכסים</th><th className="wide-only">נתח</th>
-            {flows && <><th className="wide-only">נתח מהצבירה</th><th className="wide-only">ניוד נטו</th><th className="wide-only">צבירה אורגנית</th><th className="wide-only">צמיחה</th></>}
+            {flows && <><th>{phone ? 'נתח צבירה' : 'נתח מהצבירה'}</th><th className="wide-only">ניוד נטו</th><th className="wide-only">צבירה אורגנית</th><th className="wide-only">צמיחה</th></>}
             <th className="wide-only">דמי ניהול מוצהרים {brk && <BreakChip b={{ label: ym(Number(brk.from)), note: brk.note }} />}</th>
             {seg !== 'hish' && <><th>{phone ? 'דמי ניהול' : 'תשואת דמי ניהול'} <span className="chip est">נגזר</span></th>{!ins && <th className="wide-only">על נכסי הדוח</th>}</>}
             {!ins && seg !== 'hish' && <><th className="wide-only">הוצאות להכנסות</th><th>{phone ? 'רווח/מיליארד' : 'רווח למיליארד'}</th><th className="wide-only" title="נכסים בדוח החברה ÷ נכסיה אצל הרשות: 100% = אותו בסיס">דוח ÷ רשות</th></>}
@@ -170,7 +171,7 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
                 <td>{r.reg.aE == null ? '–' : <S src={() => src.reg('assets', r.reg.e, 'm', seg, r.g, bn(r.reg.aE), 'מיליארד ש"ח')}>{bn(r.reg.aE, r.reg.aE < 10000 ? 2 : 1)}</S>}</td>
                 <td className="wide-only">{r.aum_share == null ? '–' : <S src={() => src.share(r, d.rows, 'aum')}>{pc(r.aum_share, 1)}</S>}</td>
                 {flows && <>
-                  <td className="wide-only">{r.flow_share == null ? <Dash why="אין תזרים מלא לרבעון, או שהצבירה נטו של השוק אינה חיובית" /> : <><S src={() => src.share(r, d.rows, 'flow')}>{pc(r.flow_share, 1)}</S>{r.aum_share != null && r.flow_share !== r.aum_share && <span className="lens-vs" title={r.flow_share > r.aum_share ? 'מעל הנתח בנכסים: צובר מהר מהשוק' : 'מתחת לנתח בנכסים: צובר לאט מהשוק'} aria-label={r.flow_share > r.aum_share ? 'מעל הנתח בנכסים' : 'מתחת לנתח בנכסים'}>{r.flow_share > r.aum_share ? '▲' : '▼'}</span>}</>}</td>
+                  <td>{r.flow_share == null ? <Dash why="אין תזרים מלא לרבעון, או שהצבירה נטו של השוק אינה חיובית" /> : <><S src={() => src.share(r, d.rows, 'flow')}>{pc(r.flow_share, 1)}</S>{r.aum_share != null && r.flow_share !== r.aum_share && <span className="lens-vs" title={r.flow_share > r.aum_share ? 'מעל הנתח בנכסים: צובר מהר מהשוק' : 'מתחת לנתח בנכסים: צובר לאט מהשוק'} aria-label={r.flow_share > r.aum_share ? 'מעל הנתח בנכסים' : 'מתחת לנתח בנכסים'}>{r.flow_share > r.aum_share ? '▲' : '▼'}</span>}</>}</td>
                   <td className="wide-only">{r.reg.tr == null ? <Dash why="אין תזרים מלא לרבעון" /> : <S className={tone(r.reg.tr)} src={() => src.reg('transfers', r.reg.e, 'q', seg, r.g, bn(r.reg.tr, 2), 'מיליארד ש"ח')}>{sn(r.reg.tr / 1000, 2)}</S>}</td>
                   <td className="wide-only">{r.reg.org == null ? <Dash why="אין תזרים מלא לרבעון" /> : <S className={tone(r.reg.org)} src={() => src.reg('organic', r.reg.e, 'q', seg, r.g, bn(r.reg.org, 2), 'מיליארד ש"ח')}>{sn(r.reg.org / 1000, 2)}</S>}</td>
                   <td className="wide-only">{r.growth == null ? <Dash why="אין תזרים מלא לרבעון" /> : <S className={tone(r.growth)} src={() => src.growth(r)}>{spc(r.growth, 1)}</S>}</td>
@@ -211,26 +212,37 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
 
 function ShareScatter({ rows, d, onPoint, lead }: { rows: LensRow[]; d: LensData; onPoint: (r: LensRow) => void; lead: number }) {
   const phone = usePhone();
+  // names placed in pixel space so none sits on another manager's bubble or name (the chart's width is measured)
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  const [w, setW] = useState(0);
+  useEffect(() => { if (!box) return; const ro = new ResizeObserver(() => setW(Math.round(box.clientWidth))); ro.observe(box); setW(Math.round(box.clientWidth)); return () => ro.disconnect(); }, [box]);
+  const H = phone ? 300 : 330, G = { left: 40, right: 18, top: 30, bottom: 44 };
   return (
-    <Chart label="נתח מנכסים מול נתח מהצבירה" height={phone ? 300 : 330} deps={[rows.map((r) => r.g + ':' + r.flow_share).join(), lead]} onPoint={(_s, di) => { const r = rows[di]; if (r) onPoint(r); }} build={() => {
+    <div ref={setBox}>
+    <Chart label="נתח מנכסים מול נתח מהצבירה" height={H} deps={[rows.map((r) => r.g + ':' + r.flow_share).join(), lead, w]} onPoint={(_s, di) => { const r = rows[di]; if (r) onPoint(r); }} build={() => {
       const b = chartBase();
       const xs = rows.map((r) => r.aum_share!), ys = rows.map((r) => r.flow_share!);
       const hi = Math.max(5, ...xs, ...ys.filter((y) => y > 0)), lo = Math.min(0, ...ys);
       const amax = Math.max(...rows.map((r) => r.reg.aE ?? 0), 1);
+      const X1 = Math.ceil(hi / 5) * 5, Y0 = Math.floor(lo / 10) * 10, Y1 = Math.ceil(hi / 5) * 5, W = w || 600, pw = W - G.left - G.right, ph = H - G.top - G.bottom;
+      const size = (r: LensRow) => 10 + 22 * Math.sqrt((r.reg.aE ?? 0) / amax);
+      const place = placeLabels(rows.map((r) => ({ id: String(r.g), text: short(d.groups[r.g].name), first: r.g === lead, r: size(r) / 2,
+        x: G.left + (r.aum_share! / X1) * pw, y: G.top + ((Y1 - r.flow_share!) / (Y1 - Y0 || 1)) * ph })), W, H);
       return {
         animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg },
-        grid: { left: 8, right: 18, top: 30, bottom: 24, containLabel: true },
+        grid: G,
         tooltip: { trigger: 'item', confine: true, backgroundColor: b.panel, borderColor: b.ln, textStyle: { color: b.fg, fontSize: 12 },
           formatter: (p: { dataIndex: number }) => { const r = rows[p.dataIndex]; return `<b>${d.groups[r.g].name}</b><br>נתח מנכסים: <b>${nf(r.aum_share!, 1)}%</b><br>נתח מהצבירה: <b>${nf(r.flow_share!, 1)}%</b>`; } },
         xAxis: { type: 'value', name: 'נתח מנכסים, %', nameLocation: 'middle', nameGap: 22, nameTextStyle: { color: b.mu, fontSize: 11 }, min: 0, max: Math.ceil(hi / 5) * 5, axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
         yAxis: { type: 'value', name: 'נתח מהצבירה, %', nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, min: Math.floor(lo / 10) * 10, max: Math.ceil(hi / 5) * 5, axisLabel: { color: b.mu, fontSize: 11 }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
         // a line with no stroke draws the points: the registered chart set (lib/echarts.ts) has no scatter type
-        series: [{ type: 'line', lineStyle: { opacity: 0 }, showSymbol: true, symbol: 'circle', z: 5, data: rows.map((r) => ({ value: [r.aum_share, r.flow_share], itemStyle: { color: idColorOfGroup(d.groups[r.g].name), opacity: lead >= 0 && r.g !== lead ? 0.35 : 0.9, borderColor: r.g === lead ? b.fg : 'transparent', borderWidth: 2 } })),
+        series: [{ type: 'line', lineStyle: { opacity: 0 }, showSymbol: true, symbol: 'circle', z: 5, data: rows.map((r) => ({ value: [r.aum_share, r.flow_share], label: place.get(String(r.g)), itemStyle: { color: idColorOfGroup(d.groups[r.g].name), opacity: lead >= 0 && r.g !== lead ? 0.35 : 0.9, borderColor: r.g === lead ? b.fg : 'transparent', borderWidth: 2 } })),
           symbolSize: (_v: unknown, p: { dataIndex: number }) => 10 + 22 * Math.sqrt((rows[p.dataIndex].reg.aE ?? 0) / amax),
           label: { show: true, position: 'right', color: b.fg, fontSize: 11, formatter: (p: { dataIndex: number }) => short(d.groups[rows[p.dataIndex].g].name) },
           markLine: { silent: true, symbol: 'none', lineStyle: { color: b.mu, type: 'dashed', width: 1 }, label: { show: false }, data: [[{ coord: [0, 0] }, { coord: [Math.ceil(hi / 5) * 5, Math.ceil(hi / 5) * 5] }]] } }],
       };
     }} />
+    </div>
   );
 }
 

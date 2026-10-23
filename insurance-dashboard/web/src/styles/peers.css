@@ -126,3 +126,4 @@ table.pr-table tfoot td.pr-ent { position: sticky; inset-inline-start: 0; backgr
 .pr-presets .chip.dim { opacity: 0.6; }
 .pr-pn { margin-inline-start: 6px; font-size: 10.5px; color: var(--warn); }
 .pr-near { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.pr-phoneview .seg { width: 100%; } .pr-phoneview .seg button { flex: 1; }
