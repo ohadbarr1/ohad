@@ -8,6 +8,7 @@ Money is NIS thousands, EPS is NIS. Flows are stored per quarter (Q1-Q3) and per
 a filer that tags a cumulative interim period is differenced back to the single quarter.
 """
 import json
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -135,5 +136,14 @@ for comp, per in out.items():
     if comp in FILER:
         site[comp]["filer"] = FILER[comp]
     print(comp, len(order), {s: list(status.values()).count(s) for s in set(status.values())})
-(ROOT / "web" / "public" / "data" / "kpi.json").write_text(json.dumps(
-    {"asof": str(date.today()), "source": "XBRL attached to periodic reports, MAYA", "concepts": CONCEPTS, "notes": notes, "companies": site}), encoding="utf-8")
+result = {"asof": str(date.today()), "source": "XBRL attached to periodic reports, MAYA", "concepts": dict(CONCEPTS), "notes": notes, "companies": site}
+# Report-day skeleton (pipeline/autopilot/t0.py, lane AP): the other ת930 concepts for every period, and any period whose instance is in
+# data/registry/xbrl_facts.json but not yet in the warehouse, as "unverified" until the printed figure of the same report agrees.
+sys.path.insert(0, str(ROOT / "pipeline" / "autopilot"))
+import t0  # noqa: E402
+
+reg = t0.read_json(t0.Paths(ROOT).xbrl_facts)
+if reg:
+    t0.merge(result, reg)
+    t0.verify(result, t0.Paths(ROOT))
+(ROOT / "web" / "public" / "data" / "kpi.json").write_text(json.dumps(result), encoding="utf-8")
