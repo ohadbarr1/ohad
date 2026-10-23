@@ -1,0 +1,8 @@
+{
+ "_comment": "Autopilot switches. Everything is off: the owner turns a switch on in this file (committed), never a script. Token estimates are labelled estimates (README.md §4 and ws5 table: solvency ≈0.4-0.5M tokens for 70 reports, presentations ≈60k tokens a quarter for ~17 decks); there is no per-report figure on record for statements, so the owner sets that budget.",
+ "llm": {"enabled": false, "approved_by": null, "approved_on": null, "budget_tokens_per_run": 0,
+         "est_tokens": {"solvency": 7000, "presentation": 3500, "quarterly": null, "annual": null, "liabilities": 0},
+         "est_basis": "אומדן: README §4/§8 ו-ws5 (דוחות סולבנסי ≈0.5M ל-70 דוחות; מצגות ≈60k לרבעון); מצבת התחייבויות נקראת בקוד (htm), ללא טוקנים"},
+ "push": {"enabled": false},
+ "deploy": {"auto": false}
+}

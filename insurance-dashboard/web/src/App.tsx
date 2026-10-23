@@ -62,6 +62,8 @@ const mPresentations = () => import('./pages/Presentations');
 const Presentations = page(mPresentations, 'Presentations');
 const mMine = () => import('./pages/Mine');  // lane F
 const Mine = page(mMine, 'Mine');
+const mAutopilot = () => import('./pages/Autopilot');  // lane AP
+const Autopilot = page(mAutopilot, 'Autopilot');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -126,6 +128,7 @@ export function App() {
         <Route path="calendar" element={<Calendar />} />
         <Route path="book" element={<ChartBook />} />
         <Route path="data" element={<DataPage />} />
+        <Route path="data/autopilot" element={<Autopilot />} />
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="mine" element={<Mine />} />

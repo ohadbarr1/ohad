@@ -18,8 +18,6 @@ import urllib.request
 from datetime import date, timedelta
 from pathlib import Path
 
-import duckdb
-
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "data" / "warehouse.duckdb"
 PDF = ROOT / "data" / "sources" / "pdf"
@@ -27,6 +25,8 @@ REGISTRY = ROOT / "data" / "registry" / "companies.json"
 API = "https://maya.tase.co.il/api/v1"
 FILES = "https://mayafiles.tase.co.il/"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+# the report-day autopilot (pipeline/autopilot/) names itself, per the Phase 3 network rules; it never retries a 403 (it stops and reports)
+FOX_UA = "Mozilla/5.0 (compatible; fox-research-il-autopilot/0.1; +https://fox-research-il.web.app)"
 HEADERS = {
     "User-Agent": UA,
     "accept": "application/json",
@@ -118,6 +118,8 @@ def period_of(title, publish, doc_type):
 
 
 def connect():
+    import duckdb  # imported here so the classifier (classify, period_of) and the autopilot run on the standard library alone
+
     DB.parent.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(str(DB))
     con.execute(

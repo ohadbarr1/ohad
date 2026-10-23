@@ -1,0 +1,39 @@
+# fox report-day autopilot (lane AP): a manual dry run. Polls MAYA for the listed companies, classifies what is new since the registry's
+# last report id, previews the XBRL skeleton in memory, and uploads the would-be status.json plus the full run log as artifacts.
+# Dry run only: no --apply, no secrets, no commit, no deploy, no notification. The schedule stays commented until the owner turns the
+# autopilot on (pipeline/autopilot/README.md); even then this job only reports, a human runs ./deploy.sh.
+name: fox-autopilot
+on:
+  workflow_dispatch:
+    inputs:
+      companies:
+        description: 'comma-separated company ids (empty = all with a MAYA id)'
+        required: false
+        default: ''
+  # schedule:
+  #   - cron: '*/20 4-17 * * 0-4'   # every 20 min, 07:00-20:00 Israel (UTC+3), Sunday-Thursday: report-day hours
+defaults:
+  run:
+    working-directory: insurance-dashboard
+permissions:
+  contents: read
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Autopilot tests (recorded responses, no network)
+        run: python -m unittest discover -s pipeline/autopilot/tests -v
+      - name: Poll MAYA and plan the run (dry run, standard library only)
+        run: python pipeline/autopilot/run.py --companies "${{ github.event.inputs.companies }}" --status-out autopilot-status.json --json autopilot-run.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: autopilot-status
+          path: |
+            insurance-dashboard/autopilot-status.json
+            insurance-dashboard/autopilot-run.json
+          if-no-files-found: ignore
