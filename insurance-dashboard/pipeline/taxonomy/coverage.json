@@ -1,0 +1,543 @@
+{
+ "rows": 11298,
+ "rows_core": 1374,
+ "rows_shared": 3285,
+ "rows_own": 6639,
+ "mapped_share": 0.4124,
+ "facts": 115510,
+ "facts_mapped_share": 0.6086,
+ "by_kind": {
+  "company sheets": {
+   "core": 196,
+   "shared": 92,
+   "own": 4337
+  },
+  "series": {
+   "shared": 2441,
+   "own": 470
+  },
+  "statements": {
+   "own": 1832,
+   "core": 1178,
+   "shared": 752
+  }
+ },
+ "facts_by_kind": {
+  "company sheets": {
+   "core": 816,
+   "shared": 404,
+   "own": 11855
+  },
+  "series": {
+   "shared": 17381,
+   "own": 1345
+  },
+  "statements": {
+   "own": 32015,
+   "core": 32700,
+   "shared": 18994
+  }
+ },
+ "by_company": {
+  "altshuler": {
+   "own": 131,
+   "core": 55,
+   "shared": 40
+  },
+  "analyst": {
+   "own": 65,
+   "core": 30,
+   "shared": 11
+  },
+  "ayalon": {
+   "core": 144,
+   "shared": 498,
+   "own": 170
+  },
+  "clal": {
+   "core": 135,
+   "shared": 398,
+   "own": 314
+  },
+  "hachshara": {
+   "core": 122,
+   "shared": 277,
+   "own": 130
+  },
+  "harel": {
+   "core": 135,
+   "shared": 398,
+   "own": 219
+  },
+  "ibi": {
+   "shared": 31,
+   "own": 124,
+   "core": 30
+  },
+  "meitav": {
+   "core": 33,
+   "shared": 25,
+   "own": 183
+  },
+  "menora": {
+   "core": 150,
+   "shared": 589,
+   "own": 308
+  },
+  "migdal": {
+   "core": 140,
+   "shared": 397,
+   "own": 170
+  },
+  "more": {
+   "own": 159,
+   "shared": 33,
+   "core": 29
+  },
+  "phoenix": {
+   "core": 344,
+   "shared": 577,
+   "own": 4617
+  },
+  "yelin": {
+   "own": 49,
+   "core": 27,
+   "shared": 11
+  }
+ },
+ "lines": {
+  "core": 103,
+  "shared": 283,
+  "own": 6046
+ },
+ "core_ids_unused": [
+  "bs.assets_yield_total"
+ ],
+ "conflicts": 0,
+ "collisions": 58,
+ "role_mismatch": [
+  "altshuler: intangibles = נכסים בלתי מוחשיים"
+ ],
+ "tail": [
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "הפחתה של נכסים בלתי מוחשיים",
+   "id": "cf.adj.0522b1",
+   "facts": 52
+  },
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "פחת רכוש קבוע ונכס זכות שימוש",
+   "id": "cf.adj.18eb92",
+   "facts": 52
+  },
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "ריבית שנצברה ושערוך התחייבויות לתאגידים בנקאיים ואחרים",
+   "id": "cf.adj.44520f",
+   "facts": 52
+  },
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "השפעת התנודות בשערי החליפין על יתרות המזומנים ושווי מזומנים",
+   "id": "cf.cash.d8890f",
+   "facts": 52
+  },
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "סך הכל תזרימי מזומנים מפעילות שוטפת לפני מיסים על ההכנסה",
+   "id": "cf.op.fd1220",
+   "facts": 52
+  },
+  {
+   "co": "clal",
+   "sheet": "X.רווח_והפסד",
+   "label": "רווח לתקופה",
+   "id": "pl.pl.4482b0",
+   "facts": 52
+  },
+  {
+   "co": "hachshara",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מזומנים נטו ששימשו לפעילות השקעה",
+   "id": "cf.cfi~2",
+   "facts": 52
+  },
+  {
+   "co": "harel",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "דיבידנד וריבית מחברה מוחזקת",
+   "id": "cf.inv.731438",
+   "facts": 52
+  },
+  {
+   "co": "harel",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "השקעה בחברות מוחזקות",
+   "id": "cf.inv.d7f7c0",
+   "facts": 52
+  },
+  {
+   "co": "menora",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכוש קבוע",
+   "id": "cf.adj.bc5e1e",
+   "facts": 52
+  },
+  {
+   "co": "menora",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "פירעון התחייבויות פיננסיות",
+   "id": "cf.fin.1511fb",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכוש קבוע",
+   "id": "cf.adj.14ea8b",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "נכסים בלתי מוחשיים",
+   "id": "cf.adj.fb7c66",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "דיבידנד שהתקבל מהשקעות פיננסיות",
+   "id": "cf.wc.31cf7b",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישת נדל\"ן להשקעה",
+   "id": "cf.wc.495f0f",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישת נדל\"ן להשקעה",
+   "id": "cf.wc.7aea65",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מכירות, נטו של השקעות פיננסיות",
+   "id": "cf.wc.7bcb90",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מכירות (רכישות), נטו של השקעות פיננסיות",
+   "id": "cf.wc.d1496d",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.רווח_כולל",
+   "label": "רווח כולל לתקופה",
+   "id": "oci.oci.2d5cc8",
+   "facts": 52
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.רווח_והפסד",
+   "label": "רווח לתקופה",
+   "id": "pl.pl.b72517",
+   "facts": 52
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "פרעון קרן התחייבות בגין חכירה",
+   "id": "cf.fin.696246",
+   "facts": 52
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "פרעון התחייבויות פיננסיות",
+   "id": "cf.fin.6ced89",
+   "facts": 52
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "התאמות הדרושות להצגת תזרימי מזומנים מפעילות שוטפת",
+   "id": "cf.op.bae408",
+   "facts": 52
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "שינוי באשראי לרכישת ניירות ערך",
+   "id": "cf.wc.2602d1",
+   "facts": 52
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישת נדל\"ן",
+   "id": "cf.wc.27e1e1",
+   "facts": 52
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "שינוי בהשקעות פיננסיות עבור מחזיקי קרנות, סל, תעודות פיקדון",
+   "id": "cf.wc.8a50c2",
+   "facts": 52
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "הכרה בנכס זכות שימוש כנגד התחייבות בגין חכירה",
+   "id": "cf.wc.f3232a",
+   "facts": 52
+  },
+  {
+   "co": "clal",
+   "sheet": "X.רווח_כולל",
+   "label": "הפרשי תרגום מטבע חוץ בגין פעילויות חוץ שנזקפו לקרן הון",
+   "id": "oci.oci.c6c9be",
+   "facts": 51
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישת נדל\"ן",
+   "id": "cf.wc.525e7a",
+   "facts": 51
+  },
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "ניירות ערך המוחזקים למסחר על ידי חברות מאוחדות שאינן חברות ביטוח",
+   "id": "cf.op.2b292c",
+   "facts": 50
+  },
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "התחייבויות בשל הטבות לעובדים, נטו",
+   "id": "cf.op.7cc898",
+   "facts": 50
+  },
+  {
+   "co": "harel",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישת נדל\"ן להשקעה",
+   "id": "cf.wc.174800",
+   "facts": 50
+  },
+  {
+   "co": "harel",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "תמורה ממימוש השקעה בחברה מוחזקת המטופלת לפי שיטת השווי המאזני",
+   "id": "cf.inv.eb8974",
+   "facts": 49
+  },
+  {
+   "co": "harel",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישת נדל\"ן להשקעה",
+   "id": "cf.wc.ddb636",
+   "facts": 49
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכוש קבוע",
+   "id": "cf.adj.1a40cf",
+   "facts": 48
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מוניטין שנוצר ברכישה",
+   "id": "cf.wc.186c3c",
+   "facts": 48
+  },
+  {
+   "co": "menora",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "נכסים בלתי מוחשיים",
+   "id": "cf.adj.a31813",
+   "facts": 47
+  },
+  {
+   "co": "ayalon",
+   "sheet": "X.רווח_והפסד",
+   "label": "בעלי המניות של החברה",
+   "id": "pl.pl.ecc139",
+   "facts": 46
+  },
+  {
+   "co": "migdal",
+   "sheet": "X.רווח_כולל",
+   "label": "רווח (הפסד) כולל אחר, נטו ממס",
+   "id": "oci.oci.074cc2",
+   "facts": 46
+  },
+  {
+   "co": "clal",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מס הכנסה שהתקבל (ששולם)",
+   "id": "cf.op.a9025e",
+   "facts": 45
+  },
+  {
+   "co": "clal",
+   "sheet": "X.רווח_כולל",
+   "label": "מס (הטבת מס) בגין רכיבים אחרים",
+   "id": "oci.oci.1fbeed",
+   "facts": 45
+  },
+  {
+   "co": "phoenix",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכוש קבוע, נטו",
+   "id": "cf.wc.b11327",
+   "facts": 45
+  },
+  {
+   "co": "altshuler",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "נכסי זכות שימוש",
+   "id": "cf.adj.f2f550",
+   "facts": 44
+  },
+  {
+   "co": "altshuler",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישות של השקעות פיננסיות, נטו",
+   "id": "cf.inv.7d3d12",
+   "facts": 44
+  },
+  {
+   "co": "altshuler",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "סך הכול",
+   "id": "cf.wc.585515",
+   "facts": 44
+  },
+  {
+   "co": "altshuler",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "סך הכול",
+   "id": "cf.wc.b82a7c",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "הוצאות (הכנסות) מימון אחרות מהשקעות לזמן קצר",
+   "id": "cf.adj.1080df",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "ירידת (עליית) ערך השקעות לזמן קצר",
+   "id": "cf.adj.5d629e",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "ירידת (עליית) ערך השקעות לזמן ארוך",
+   "id": "cf.adj.b543b8",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "הוצאות מימון אחרות, נטו",
+   "id": "cf.adj.ff4947",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "דיבידנד ששולם לזכויות שאינן מקנות שליטה",
+   "id": "cf.fin.dc7b96",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "תשלום בגין התחייבויות חכירה",
+   "id": "cf.fin.ffa362",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מימוש השקעות לזמן ארוך",
+   "id": "cf.inv.2bf345",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "קבלת (מתן) הלוואות, נטו",
+   "id": "cf.inv.4936f0",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "רכישת השקעות לזמן ארוך",
+   "id": "cf.inv.8826b5",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מסים על ההכנסה שהתקבלו (שולמו), נטו",
+   "id": "cf.op.b7bde7",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "עליה (ירידה) בהתחייבויות לעובדים בגין שכר ונלוות ובזכאים ויתרות זכות",
+   "id": "cf.wc.26f6e6",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "עלייה בלקוחות",
+   "id": "cf.wc.bf7b2d",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מימוש (רכישת) השקעות לזמן קצר, נטו",
+   "id": "cf.wc.c3ee33",
+   "facts": 44
+  },
+  {
+   "co": "ibi",
+   "sheet": "X.רווח_והפסד",
+   "label": "בעלי מניות של החברה",
+   "id": "pl.np_attr~2",
+   "facts": 44
+  }
+ ]
+}

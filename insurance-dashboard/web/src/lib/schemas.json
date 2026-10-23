@@ -160,6 +160,18 @@
   {
    "pattern": "adjusted.json",
    "schema": "adjusted"
+  },
+  {
+   "pattern": "facts/index.json",
+   "schema": "factsIndex"
+  },
+  {
+   "pattern": "facts/taxonomy.json",
+   "schema": "factsTaxonomy"
+  },
+  {
+   "pattern": "facts/*.json",
+   "schema": "facts"
   }
  ],
  "$defs": {
@@ -3582,6 +3594,457 @@
         }
        }
       }
+     }
+    }
+   }
+  },
+  "facts": {
+   "type": "object",
+   "required": [
+    "v",
+    "company",
+    "periods",
+    "vint",
+    "urls",
+    "sheets",
+    "lines",
+    "rows",
+    "der"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "company": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "periods": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 2,
+      "prefixItems": [
+       {
+        "enum": [
+         "I",
+         "Q",
+         "H",
+         "9M",
+         "FY"
+        ]
+       },
+       {
+        "$ref": "#/$defs/date"
+       }
+      ]
+     }
+    },
+    "vint": {
+     "type": "object",
+     "required": [
+      "rid",
+      "per",
+      "pub",
+      "u"
+     ],
+     "properties": {
+      "rid": {
+       "type": "array",
+       "items": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       }
+      },
+      "per": {
+       "type": "array",
+       "items": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      },
+      "pub": {
+       "type": "array",
+       "items": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      },
+      "u": {
+       "type": "array",
+       "items": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "urls": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "sheets": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "lines": {
+     "type": "object",
+     "required": [
+      "id",
+      "mi",
+      "sh",
+      "ent",
+      "std",
+      "dim",
+      "label",
+      "u",
+      "o",
+      "n"
+     ],
+     "properties": {
+      "id": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "pattern": "^(pl|oci|bs|cf|n|px)\\.[A-Za-z0-9_.~]+$"
+       }
+      },
+      "mi": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       }
+      },
+      "sh": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       }
+      },
+      "ent": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "std": {
+       "type": "array",
+       "items": {
+        "enum": [
+         "17",
+         "4",
+         ""
+        ]
+       }
+      },
+      "dim": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "label": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "u": {
+       "type": "array",
+       "items": {
+        "enum": [
+         "k",
+         "m",
+         "nis",
+         "pct",
+         "shares"
+        ]
+       }
+      },
+      "o": {
+       "type": "array",
+       "items": {
+        "enum": [
+         -1,
+         0,
+         1
+        ]
+       }
+      },
+      "n": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "rows": {
+     "type": "object",
+     "required": [
+      "p",
+      "t",
+      "v",
+      "pg",
+      "f"
+     ],
+     "properties": {
+      "p": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       }
+      },
+      "t": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       }
+      },
+      "v": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       }
+      },
+      "pg": {
+       "type": "array",
+       "items": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       }
+      },
+      "f": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "der": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 4,
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "enum": [
+         "FY-9M",
+         "FY-H1"
+        ]
+       },
+       {
+        "type": [
+         "integer",
+         "array"
+        ]
+       },
+       {
+        "type": [
+         "integer",
+         "array"
+        ]
+       }
+      ]
+     }
+    },
+    "alt": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 2,
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "factsIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "flags",
+    "policies",
+    "companies",
+    "taxonomy"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "flags": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "policies": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "companies": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "lines",
+       "rows",
+       "current",
+       "vintages"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "lines": {
+        "type": "integer"
+       },
+       "rows": {
+        "type": "integer"
+       },
+       "current": {
+        "type": "integer"
+       },
+       "vintages": {
+        "type": "integer"
+       },
+       "kb": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "taxonomy": {
+     "type": "object",
+     "required": [
+      "lines"
+     ],
+     "properties": {
+      "lines": {
+       "type": "integer"
+      }
+     }
+    }
+   }
+  },
+  "factsTaxonomy": {
+   "type": "object",
+   "required": [
+    "v",
+    "stmt",
+    "block",
+    "cols",
+    "lines"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "stmt": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "block": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "cols": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "lines": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "minItems": 11,
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "enum": [
+         "core",
+         "shared",
+         "own"
+        ]
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "enum": [
+         0,
+         1
+        ]
+       },
+       {
+        "enum": [
+         0,
+         1
+        ]
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": [
+         "array",
+         "null"
+        ]
+       },
+       {
+        "type": "integer"
+       }
+      ]
      }
     }
    }

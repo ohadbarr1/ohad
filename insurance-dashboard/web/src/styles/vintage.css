@@ -1,0 +1,13 @@
+/* VintageToggle / VintageMark (lane FT): original vs restated per cell */
+.vin { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vin-asof { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: var(--t-2); }
+.vin-asof select { min-height: 32px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); color: var(--fg); padding: 2px 8px; font: inherit; }
+.vin-n { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: var(--t-2); white-space: nowrap; }
+.vin-dot-key { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+/* the mark: a small dot after the figure, a 24 px target */
+.vin-dot { position: relative; display: inline-block; width: 11px; height: 8px; padding: 0; margin: 0; border: 0; background: transparent; cursor: pointer; flex: none; vertical-align: 0.5em; }
+.vin-dot::before { content: ""; position: absolute; inset-inline-end: 3px; top: 1px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.vin-dot::after { content: ""; position: absolute; inset: -4px -3px; }
+.vin-dot:hover::before, .vin-dot:focus-visible::before { box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent); }
+.vin-dot:focus-visible { outline: none; }
+@media (pointer: coarse) { .vin-dot { width: 18px; } .vin-dot::after { inset: -11px -6px; } }
