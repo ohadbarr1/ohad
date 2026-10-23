@@ -136,7 +136,7 @@ export function Search({ big = false }: { big?: boolean }) {
 
   const field = (auto: boolean) => (
     <input ref={input} autoFocus={auto}
-      type="search" value={q} placeholder={phone ? 'חיפוש: חברה, שורה, מילה בדוחות' : 'חברה, קופה, שורה בדוח או מילה בדוחות · הראל csm'} aria-label="חיפוש"
+      type="search" value={q} placeholder={phone ? 'חברה, שורה או מילה' : 'חברה, קופה, שורה בדוח או מילה בדוחות · הראל csm'} aria-label="חיפוש"
       role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
       enterKeyHint="search" autoComplete="off" spellCheck={false}
       onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKey}

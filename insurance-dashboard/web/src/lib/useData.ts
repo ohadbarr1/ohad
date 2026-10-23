@@ -35,7 +35,8 @@ export const useCompanyData = (id: string | null, enabled = true) => useLoad<Com
 export const useCompanyNotes = (id: string | null, enabled: boolean) => useLoad<Record<string, string>>(id && enabled ? `companies/${id}.notes.json` : null);
 export const useCompanyDocs = (id: string | null, enabled: boolean) => useLoad<DocsData>(id && enabled ? `companies/${id}.docs.json` : null);
 export const useCompanyPrice = (id: string | null, enabled: boolean) => useLoad<PriceData>(id && enabled ? `companies/${id}.price.json` : null);
-export const useKpiData = () => useLoad<KpiData>('kpi.json');
+/** `enabled` false: nothing is fetched (a page that has not yet found its company in the registry, e.g. a mistyped id) */
+export const useKpiData = (enabled = true) => useLoad<KpiData>(enabled ? 'kpi.json' : null);
 export const useIfrsData = () => useLoad<IfrsData>('ifrs.json');
 export const useIfrsFacts = (period: string | null) => useLoad<IfrsFact[]>(period ? `ifrs_${period}.json` : null);
 
@@ -67,8 +68,8 @@ import { CompanyKpi } from './kpi';
 import type { PriceData as Px } from './types';
 
 /** Headline-figure engines for every company in kpi.json, with prices attached when they have loaded. */
-export function useKpis(withPrices = false): { kpis: Map<string, CompanyKpi> | null; asof: string | null; notes: NonNullable<KpiData['notes']>; error: string | null } {
-  const { data, error } = useKpiData();
+export function useKpis(withPrices = false, enabled = true): { kpis: Map<string, CompanyKpi> | null; asof: string | null; notes: NonNullable<KpiData['notes']>; error: string | null } {
+  const { data, error } = useKpiData(enabled);
   const ids = useMemo(() => (data ? Object.keys(data.companies) : []), [data]);
   const reg = useRegistry();
   const [prices, setPrices] = useState<Record<string, Px>>({});
@@ -122,6 +123,6 @@ export interface Fund { k: string; fam: string; prod: string; track: string; nam
   id: number; spec: string | null; sub: string | null; target: string | null; since: string | null; ctrl: string | null; liq: number | null; cls: string | null }
 export interface FundHist { p: number[]; y: (number | null)[]; a: (number | null)[]; fee: (number | null)[]; st: (number | null)[]; fo: (number | null)[]; fx: (number | null)[]; dep?: (number | null)[]; wd?: (number | null)[]; tr?: (number | null)[] }
 export type FundCats = Record<string, { p: number[]; y: number[]; n: number[] }>;
-export const useFunds = () => useLoad<{ asof: number; source: string; funds: Fund[] }>('funds.json');
-export const useFundCats = () => useLoad<FundCats>('funds/cat.json');
+export const useFunds = (enabled = true) => useLoad<{ asof: number; source: string; funds: Fund[] }>(enabled ? 'funds.json' : null);
+export const useFundCats = (enabled = true) => useLoad<FundCats>(enabled ? 'funds/cat.json' : null);
 export const useFundHist = (k: string | null) => useLoad<FundHist>(k ? `funds/${k}.json` : null);

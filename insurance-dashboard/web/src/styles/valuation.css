@@ -94,3 +94,6 @@
   .vassume summary::after { margin-inline-start: 0; }
 }
 .roehist .bars button.src.bar { flex-direction: column; justify-content: flex-end; align-items: stretch; }
+/* the bars stand on the baseline in every browser and pointer mode: each bar is pinned to the bottom of its full-height button */
+.roehist .bars button.src.bar { position: relative; display: block; }
+.roehist .bars button.src.bar i { position: absolute; inset-inline: 0; bottom: 0; }

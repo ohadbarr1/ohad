@@ -8,7 +8,7 @@ export const METRIC_HE: Record<string, string> = {
   insurance_revenue: 'הכנסות משירותי ביטוח', management_fees: 'דמי ניהול', net_investment_and_finance_result: 'תוצאות השקעה ומימון, נטו', csm_release: 'CSM: שחרור לרווח',
   gross_written_premiums: 'פרמיות ברוטו', risk_adjustment: 'התאמת סיכון (RA)', csm_opening: 'CSM: יתרת פתיחה', losses_on_onerous_contracts: 'הפסדים מחוזים מכבידים',
   rev_ra_release: 'הכנסות: שחרור RA', csm_changes_in_estimates: 'CSM: שינויי אומדן', new_business_annualized_premiums: 'פרמיה משונתת, עסק חדש', sensitivity: 'רגישות',
-  pension_gemel_profit_before_tax: 'רווח לפני מס, פנסיה וגמל', csm_interest_accretion: 'CSM: צבירת ריבית', combined_ratio: 'Combined ratio', csm_new_business: 'CSM: עסק חדש',
+  pension_gemel_profit_before_tax: 'רווח לפני מס, פנסיה וגמל', csm_interest_accretion: 'CSM: צבירת ריבית', combined_ratio: 'יחס משולב', csm_new_business: 'CSM: עסק חדש',
   insurance_finance_result: 'הכנסות (הוצאות) מימון ביטוח', rev_csm_release: 'הכנסות: שחרור CSM', discount_rate: 'שיעור היוון', reins_expense_csm_release: 'ביטוח משנה: שחרור CSM',
   rev_paa: 'הכנסות: PAA', loss_component: 'רכיב הפסד', solvency_surplus: 'עודף הון', csm_subtotal: 'CSM: סכום ביניים', total_assets: 'סך נכסים',
   rev_expected_claims_and_expenses: 'הכנסות: תביעות והוצאות צפויות', profit_attributable: 'רווח נקי לבעלי המניות', comprehensive_income_attributable: 'רווח כולל לבעלי המניות',

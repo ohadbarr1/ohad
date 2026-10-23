@@ -56,11 +56,13 @@ export function ValuationLayout() {
   const nav = useNavigate();
   const loc = useLocation();
   const phone = usePhone();
-  const { kpis, error } = useKpis();
   const reg = useRegistry();
+  // an id the registry does not know is answered before any company data is fetched
+  const known = !id || !!reg.data?.some((c) => c.id === id);
+  const { kpis, error } = useKpis(false, known);
   const macro = useMacro().data;
   // market data loads only on the tabs that use the savings assets
-  const { market } = useMarket(loc.pathname.endsWith('/sotp'));
+  const { market } = useMarket(known && loc.pathname.endsWith('/sotp'));
   const has = !!reg.data?.find((c) => c.id === id)?.has_price;
   const [price, setPrice] = useState<TasePrice | null>(null);
   useEffect(() => { setPrice(null); if (id && has) load<TasePrice>(`companies/${id}.price.json`).then(setPrice, () => setPrice(null)); }, [id, has]);
@@ -69,6 +71,7 @@ export function ValuationLayout() {
   const [manual, setManual] = useStored<number | null>(`val.px.${id ?? ''}`, null);
   const insurers = useInsurers(reg.data, kpis);
   if (error) return <ErrorBox what="נתוני החברות" error={error} />;
+  if (reg.data && !known) return <NotFound />;
   if (!kpis || !reg.data) return <Loading what="הערכת שווי" />;
   const ids = reg.data.filter((c) => kpis.get(c.id)?.latest('equity')).map((c) => c.id);
   if (id && !kpis.has(id) && !ids.includes(id)) return <NotFound />;
@@ -268,7 +271,7 @@ export function ValuationPb() {
             <label>הון לבעלי המניות<small>{mkt.eqPeriod ? periodTag(mkt.eqPeriod) : ''} · מיליוני ש"ח</small></label><Fig v={mkt.eq} text={(v) => nf(v, 0)} src={mkt.eqProv} className="ro" />
           </div>
           {hist.length > 2 && <div className="roehist"><span className="l">ROE, LTM · {hist.length} רבעונים</span>
-            <div className="bars">{hist.map((p) => <Sourced key={p.period} className="bar" src={() => k.explain('roe', 'q', p.period)} title={`${periodTag(p.period)} · ${pctS(p.v!)}`}><i style={{ height: `${Math.max(4, Math.min(100, (p.v! / Math.max(...hist.map((h) => h.v!), 1)) * 100))}%` }} /></Sourced>)}</div>
+            <div className="bars">{hist.map((p) => <Sourced key={p.period} className="bar" src={() => k.explain('roe', 'q', p.period)} title={`${periodTag(p.period)} · ${pctS(p.v!)}`} label={`ROE, LTM · ${periodTag(p.period)} · ${pctS(p.v!)}`}><i style={{ height: `${Math.max(4, Math.min(100, (p.v! / Math.max(...hist.map((h) => h.v!), 1)) * 100))}%` }} /></Sourced>)}</div>
             <span className="axis"><span className="num">{periodTag(hist[0].period)}</span><span className="num">{periodTag(hist[hist.length - 1].period)}</span></span></div>}
         </Panel>
         <div className="vcol">

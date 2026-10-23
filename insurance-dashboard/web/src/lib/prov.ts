@@ -8,7 +8,8 @@ export type Prov =
   | { k: 'reg'; metric: MetricKey; pi: number; w: Win; set: string; g: number }
   /** a figure printed in a filed report */
   | { k: 'report'; title: string; value: string; unit?: string; url: string | null; pg: number | null; doc?: string; period?: string; note?: string; srcType?: string;
-      der?: boolean; old?: boolean; turned?: boolean; restated?: { first: string; last: string; firstHref?: string; lastHref?: string; in: string } }
+      /** not printed as such: a flow differenced from cumulative periods (true), or a balance built from printed parts ('stock': segments added, or opening plus movements) */
+      der?: boolean | 'stock'; old?: boolean; turned?: boolean; restated?: { first: string; last: string; firstHref?: string; lastHref?: string; in: string } }
   /** a tagged figure of the electronic filing */
   | { k: 'xbrl'; title: string; value: string; unit?: string; company: string; period: string; rid: number | null; concept: string; status?: string; note?: string }
   /** computed on the site from other sourced figures */

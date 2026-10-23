@@ -45,8 +45,8 @@ export function CompanyLayout() {
   // the regulator's fund data serves the overview and the savings tab only
   const loc = useLocation();
   // the overview reads the latest month and twelve-month sums only: the light slice; the savings tab charts the full history
-  const { market } = useMarket(/\/(overview|savings)\/?$/.test(loc.pathname) || /\/company\/[^/]+\/?$/.test(loc.pathname), !/\/savings\/?$/.test(loc.pathname));
-  const kpi = useKpiData();
+  const { market } = useMarket(!!entry && (/\/(overview|savings)\/?$/.test(loc.pathname) || /\/company\/[^/]+\/?$/.test(loc.pathname)), !/\/savings\/?$/.test(loc.pathname));
+  const kpi = useKpiData(!!entry);
   const phone = usePhone();
   const [noteOpen, setNoteOpen] = useState(false);
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;

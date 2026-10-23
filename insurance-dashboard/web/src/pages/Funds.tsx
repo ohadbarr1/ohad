@@ -303,9 +303,11 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
 /** One track: its record against the category, year by year, with exposure and money flows. */
 export function FundCard() {
   const { k = '' } = useParams();
-  const { data, error } = useFunds();
-  const hist = useFundHist(k);
-  const cats = useFundCats().data;
+  // a track key is a letter and a number (p2009, g103, i512): anything else is answered before 1 MB of fund data is fetched
+  const valid = /^[gip]\d+$/.test(k);
+  const { data, error } = useFunds(valid);
+  const hist = useFundHist(valid ? k : null);
+  const cats = useFundCats(valid).data;
   const [win, setWin] = useState<Win>('60');
   const { open } = useSource();
   const f = data?.funds.find((x) => x.k === k);
@@ -322,6 +324,7 @@ export function FundCard() {
     return [...mine.keys()].sort((a, b) => b - a).map((y) => ({ y, n: mine.get(y)!.r.length, ps: mine.get(y)!.p, cps: theirs.get(y)?.p ?? [], me: comp(mine.get(y)?.r), cat: theirs.get(y)?.r.length === mine.get(y)!.r.length ? comp(theirs.get(y)?.r) : null }));
   }, [h, cat]);
 
+  if (!valid) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds">לכל המסלולים</Link></Empty>;
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data || (!h && !hist.error)) return <Loading what="מסלול" />;
   if (!f || !h) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds">לכל המסלולים</Link></Empty>;

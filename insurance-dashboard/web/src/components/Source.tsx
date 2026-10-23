@@ -24,12 +24,14 @@ function textOf(n: ReactNode): string {
 
 /** A number that opens its source. With `href` it is also a real link: Cmd/Ctrl-click goes straight to the document.
  *  A figure with no Hebrew in it ("−5.5% YoY", "177.0%") is isolated left-to-right, so in a right-to-left line its sign stays in front. */
-export function Sourced({ src, href, children, className: given = '', title }: { src: () => Prov; href?: string | null; children: ReactNode; className?: string; title?: string }) {
+export function Sourced({ src, href, children, className: given = '', title, label }: { src: () => Prov; href?: string | null; children: ReactNode; className?: string; title?: string;
+  /** the accessible name where the figure has no text of its own (a bar, a dot) */
+  label?: string }) {
   const { open } = useSource();
   const t = textOf(children);
   const className = !/\bnum\b/.test(given) && /\d/.test(t) && !/[\u0590-\u05FF]/.test(t) ? `${given} num`.trim() : given;
-  if (href) return <a className={`src ${className}`} href={href} target="_blank" rel="noreferrer" title={title ?? 'מקור הנתון'} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); open(src()); }}>{children}</a>;
-  return <button type="button" className={`src ${className}`} title={title ?? 'מקור הנתון'} onClick={() => open(src())}>{children}</button>;
+  if (href) return <a className={`src ${className}`} href={href} target="_blank" rel="noreferrer" title={title ?? 'מקור הנתון'} aria-label={label} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); open(src()); }}>{children}</a>;
+  return <button type="button" className={`src ${className}`} title={title ?? 'מקור הנתון'} aria-label={label} onClick={() => open(src())}>{children}</button>;
 }
 
 /** One sheet for the whole site. Lives in the layout; any number opens it through `useSource().open`. */
@@ -132,7 +134,7 @@ function PlainSheet({ p }: { p: Exclude<Prov, { k: 'reg' | 'fund' }> }) {
       {p.url ? <a className="srcgo" href={pdfPage(p.url, p.pg)} target="_blank" rel="noreferrer">פתיחת הדוח{p.pg ? `, עמ׳ ${p.pg}` : ''}</a> : !p.srcType && <p className="muted">אין קישור למסמך.</p>}
       {ridOf(p.url) && <Link className="srcgo alt" to={readerHref(ridOf(p.url)!, p.pg)}>פתח בקורא{p.pg ? `, עמ׳ ${p.pg}` : ''}</Link>}
       <Link className="srcgo alt" to={citeHref(undefined, p.title)}>ציטוט</Link>
-      {p.der && <p className="srcnote"><span className="chip est">נגזר</span> לא הודפס בדוח: חושב מהפרש בין תקופות מצטברות של אותו דוח (Q4 = FY פחות 9M, H2 = FY פחות H1).</p>}
+      {p.der && <p className="srcnote"><span className="chip est">נגזר</span> {p.der === 'stock' ? 'יתרה שלא הודפסה כשורה אחת: חושבה מרכיבים שהודפסו (מגזרים שחוברו, או פתיחה ותנועות).' : 'לא הודפס בדוח: חושב מהפרש בין תקופות מצטברות של אותו דוח (Q4 = FY פחות 9M, H2 = FY פחות H1).'}</p>}
       {p.old && <p className="srcnote"><span className="chip est">IFRS 4</span> נתון לפי התקן הקודם, מוצג בשורה שנמשכת בין התקנים.</p>}
       {p.turned && <p className="srcnote"><span className="chip est">סימן</span> הסימן הותאם להצגה בדוח העדכני.</p>}
       {p.restated && <p className="srcnote"><span className="chip est">הוצג מחדש</span> דווח לראשונה {p.restated.firstHref ? <a href={p.restated.firstHref} target="_blank" rel="noreferrer" className="num">{p.restated.first}</a> : <span className="num">{p.restated.first}</span>}, הודפס מחדש {p.restated.lastHref ? <a href={p.restated.lastHref} target="_blank" rel="noreferrer" className="num">{p.restated.last}</a> : <span className="num">{p.restated.last}</span>} בדוח {p.restated.in}.</p>}

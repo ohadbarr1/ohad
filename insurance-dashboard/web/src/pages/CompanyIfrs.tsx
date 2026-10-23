@@ -28,7 +28,7 @@ const HE: Record<string, string> = {
   aum_total: 'נכסים מנוהלים, סך הכול', aum_pension: 'נכסים מנוהלים: פנסיה', aum_gemel: 'נכסים מנוהלים: גמל', aum_nostro: 'נכסי נוסטרו', contributions_pension: 'הפקדות: פנסיה', contributions_gemel: 'הפקדות: גמל',
   insurance_finance_accrued_interest: 'מימון ביטוח: צבירת ריבית', insurance_finance_rate_effect: 'מימון ביטוח: השפעת שינויי ריבית', rev_paa: 'הכנסות: PAA', rev_other: 'הכנסות: אחר', rev_acquisition_cashflow_recovery: 'הכנסות: השבת עלויות רכישה',
   reins_expense_csm_release: 'ביטוח משנה: שחרור CSM', reins_expense_ra_release: 'ביטוח משנה: שחרור RA', profit_before_tax: 'רווח לפני מס', profit_for_year: 'רווח לשנה', comprehensive_income_total: 'רווח כולל', comprehensive_income_attributable: 'רווח כולל לבעלי המניות',
-  dividend_declared: 'דיבידנד שהוכרז', dividend_paid: 'דיבידנד ששולם', roe_reported: 'תשואה להון, כפי שדווחה', combined_ratio: 'Combined ratio',
+  dividend_declared: 'דיבידנד שהוכרז', dividend_paid: 'דיבידנד ששולם', roe_reported: 'תשואה להון, כפי שדווחה', combined_ratio: 'יחס משולב',
   profit_attributable: 'רווח נקי לבעלי המניות', equity_attributable: 'הון לבעלי המניות', total_assets: 'סך נכסים', operating_profit_before_tax: 'רווח תפעולי לפני מס',
   reinsurance_finance_result: 'תוצאות מימון ביטוח משנה', new_business_single_premiums: 'פרמיות חד פעמיות, עסק חדש', investment_contracts_liability: 'התחייבות בגין פוליסות חיסכון (חוזי השקעה)', total_assets_yield_linked: 'נכסים צמודי תשואה',
   income_tax: 'מס הכנסה', income_tax_benefit: 'הטבת מס', capital_instruments_issued_redeemed: 'מכשירי הון שהונפקו ונפדו', own_funds_with_transitional_after_capital_actions: 'הון עצמי לעניין SCR, עם הוראות מעבר, אחרי פעולות הון',

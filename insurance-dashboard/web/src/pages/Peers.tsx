@@ -379,7 +379,8 @@ function ColHead({ book, col, ci, n, st, set, span, brk, pinned, miss, total }: 
         {miss.length > 0 && <Coverage book={book} name={col.name} miss={miss} total={total} />}
         <details ref={ref} className="pr-menu" onToggle={place}>
           <summary aria-label={`פעולות לעמודה ${col.name}`} title={`פעולות לעמודה: ${col.name}`}>⋯</summary>
-          <div className="pr-pop" role="menu" style={pos ? { position: 'fixed', top: pos.top, left: pos.left, right: 'auto', width: 300 } : undefined}>
+          {/* the menu exists only while open: a closed one leaves no hidden controls in the page */}
+          {pos && <div className="pr-pop" role="menu" style={{ position: 'fixed', top: pos.top, left: pos.left, right: 'auto', width: 300 }}>
             {col.err && <p className="err">{col.err}</p>}
             {col.expr && <p><bdi>{col.he ?? col.expr}</bdi>{col.he && col.he !== col.expr && <span className="mono muted" dir="ltr"> · {col.expr}</span>}</p>}
             {def?.nt != null && <p className="muted">{book.reg.notes[def.nt]}</p>}
@@ -389,7 +390,7 @@ function ColHead({ book, col, ci, n, st, set, span, brk, pinned, miss, total }: 
             <button type="button" onClick={() => { move(-1); close(); }} disabled={ci === 0}>הזזה ימינה</button>
             <button type="button" onClick={() => { move(1); close(); }} disabled={ci === n - 1}>הזזה שמאלה</button>
             <button type="button" className="danger" onClick={() => { remove(); close(); }}>הסרה</button>
-          </div>
+          </div>}
         </details>
       </div>
     </th>
