@@ -108,7 +108,11 @@ def issuer_key(r: dict, cw: dict) -> tuple[str, str]:
         return cw[r["sec_id"]]
     if r["issuer_id"] and r["issuer_type"] != "פנימי":
         return r["issuer_id"], r["issuer"] or r["issuer_id"]
-    nm = r["issuer"] or r["name"] or "—"
+    if not r["issuer"] and cls == "realestate" and r["name"]:
+        return "re:" + r["name"], f'{r["name"]} (מקרקעין)'
+    if not r["issuer"] and cls == "loans":   # borrowers are not named in the lists: one bucket per borrower type
+        return "loans:" + r["kind"], f'הלוואות · {r["kind"] or "אחר"} (ללא שם לווה)'
+    nm = r["issuer"] or r["name"] or "ללא שם במקור"
     return "name:" + re.sub(r'\s+|בע"?מ|בעמ|[".,\'-]', "", nm), nm
 
 
@@ -201,7 +205,8 @@ def top_holdings(rows: list[dict], n: int = 25) -> list[dict]:
         if c in ("cash", "other", "deriv"):
             continue
         k = (r["sec_id"] or r["name"], c)
-        a = agg.setdefault(k, {"sec": r["sec_id"], "name": r["name"] or r["issuer"], "issuer": r["issuer"], "cls": c, "v": 0.0, "venue": r["venue"]})
+        nm = r["name"] or r["issuer"] or {"designated": 'אג"ח מיועדות (ללא שם במקור)'}.get(c, "ללא שם במקור")
+        a = agg.setdefault(k, {"sec": r["sec_id"], "name": nm, "issuer": r["issuer"], "cls": c, "v": 0.0, "venue": r["venue"]})
         a["v"] += r["fv"]
     return [{**a, "v": r1(a["v"] / 1e3), "pct": pct(a["v"], tot)} for a in sorted(agg.values(), key=lambda x: -x["v"])[:n]]
 
@@ -215,6 +220,8 @@ def weights(rows: list[dict], cw: dict) -> tuple[dict, dict, dict]:
             sec[r["sec_id"]] += r["fv"] / tot
         if c not in NO_ISSUER:
             k, nm = issuer_key(r, cw)
+            if k.startswith(("loans:", "re:")):   # unnamed borrowers and a manager's own properties are not shared names
+                continue
             iss[k] += r["fv"] / tot
             names[k] = nm
     return sec, iss, names
@@ -249,7 +256,7 @@ def build() -> dict[str, dict]:
         products = sorted({d["product"] for q in qs for d in qs[q][1]})
         doc = {
             "id": mid, "name": m["name"], "entity": m.get("entity", ""), "company_id": m.get("company_id", ""),
-            "status": cov["managers"].get(mid, {}).get("status", m["status"]), "note": m.get("note", ""),
+            "status": cov["managers"].get(mid, {}).get("status", m["status"]), "note": m.get("note_he", ""),
             "products": products, "quarters": sorted(qs), "latest": lq, "unit": "NIS m",
             "series": series,
             "top_issuers": top_issuers(lrows, cw), "top_holdings": top_holdings(lrows),
@@ -263,14 +270,14 @@ def build() -> dict[str, dict]:
         ls = series[lq]
         index_m.append({"id": mid, "name": m["name"], "status": doc["status"], "products": products, "quarters": sorted(qs), "latest": lq,
                         "total": ls["total"], "illiq_pct": ls["illiq_pct"], "ta35_pct": ls["ta35_pct"], "abroad_pct": ls["abroad_pct"],
-                        "note": m.get("note", "")})
+                        "note": m.get("note_he", "")})
     # managers we could not read (blocked / not found / client-rendered)
     for mid, m in src["managers"].items():
         if mid in data:
             continue
         st = cov["managers"].get(mid, {}).get("status", m["status"])
         index_m.append({"id": mid, "name": m["name"], "status": st, "products": [], "quarters": [], "latest": None, "total": None,
-                        "illiq_pct": None, "ta35_pct": None, "abroad_pct": None, "note": cov["managers"].get(mid, {}).get("note") or m.get("note", "")})
+                        "illiq_pct": None, "ta35_pct": None, "abroad_pct": None, "note": m.get("note_he", "")})
     # overlap, latest quarter of each manager
     W = {mid: weights(qs[max(qs)][0], cw) for mid, qs in data.items()}
     pairs = []

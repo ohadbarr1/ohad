@@ -32,6 +32,8 @@ Checks
   facts          the fact table with vintage (web/public/data/facts/) reproduces every current figure of companies/<id>.json exactly
                  (value, page, report, flags) and every statement pair of restatements.json (both prints, reports, pages); one current
                  row per cell, derived rows equal their inputs, every line id in the taxonomy (pipeline/build_facts.py --check, lane FT).
+  assets         quarterly asset lists (web/public/data/assets/): classes add up to the total, every quarter has its source files and
+                 passed the file validation, and the files equal a rebuild from data/work/asset_lists (lane AL).
 """
 import collections
 import datetime as dt
@@ -363,6 +365,36 @@ def facts():
         ((out[-1] if out else p.stderr.strip()[-200:]) if p.returncode == 0 else " · ".join(out[:2]))[:200])
 
 
+def assets():  # lane AL
+    """quarterly asset lists: every published quarter adds up (classes = total within rounding), carries its source files and passed
+    the file validation; the files equal a rebuild from data/work/asset_lists (skipped with a warning where data/work is absent)."""
+    d = DATA / "assets"
+    if not (d / "index.json").exists():
+        return add("assets", True, 0, 0, "no asset-list files", level="warn")
+    n, bad = 0, []
+    for m in load(d / "index.json")["managers"]:
+        if not m["latest"]:
+            continue
+        doc = load(d / f"{m['id']}.json")
+        for q, s in doc["series"].items():
+            n += 1
+            if abs(sum(s["cls"].values()) - s["total"]) > 0.05 * len(s["cls"]) + 0.1:
+                bad.append(f"{m['id']} {q}: classes {sum(s['cls'].values()):.1f} vs total {s['total']}")
+            if not s["src"] or not all(x.get("url") and x.get("retrieved") for x in s["src"]):
+                bad.append(f"{m['id']} {q}: source file missing")
+            if not s["val"]["ok"]:
+                bad.append(f"{m['id']} {q}: file validation failed")
+    note = f"{n} manager-quarters"
+    if (ROOT / "data" / "work" / "asset_lists").exists():
+        p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_assets.py"), "--check"], capture_output=True, text=True)
+        if p.returncode:
+            bad.append(p.stdout.strip()[-160:])
+        note += "; rebuild equal" if not p.returncode else ""
+    else:
+        note += "; rebuild skipped (no data/work/asset_lists)"
+    add("assets", not bad, n, len(bad), (bad[0] if bad else note)[:200])
+
+
 def main():
     t0 = dt.datetime.now()
     if "--baseline" in sys.argv:  # accept today's value-on-page misses as known (after reviewing them)
@@ -382,6 +414,7 @@ def main():
     consistency()
     schemas()
     facts()
+    assets()
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     failed = [c["id"] for c in checks if not c["ok"] and c["level"] == "fail"]

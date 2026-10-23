@@ -27,10 +27,12 @@ const ROUTES = [
   '/facts/harel', '/facts/clal?s=bs&vin=o', '/facts/phoenix?s=cf&w=FY&vin=2025-08-31',
   // lane OW: who owns whom
   '/ownership', '/ownership/harel', '/ownership/phoenix', '/ownership/yelin', '/ownership/infinity', '/ownership?cell=phoenix~harel',
+  // lane AL: quarterly asset lists (index, a pension+gemel house, a participating portfolio, a blocked site, pinned views)
+  '/holdings', '/holdings?m=ta35_pct&pair=altshuler~meitav', '/holdings/meitav', '/holdings/migdal?u=pct', '/holdings/altshuler?f=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA', '/holdings/menora',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */
-const MUST_404 = ['/company/zzz', '/company/zzz/financials', '/debt/zzz', '/facts/zzz', '/ownership/zzz'];
+const MUST_404 = ['/company/zzz', '/company/zzz/financials', '/debt/zzz', '/facts/zzz', '/ownership/zzz', '/holdings/zzz'];
 ROUTES.push(...MUST_404);
 const SIZES = [[390, 844, true], [1440, 900, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

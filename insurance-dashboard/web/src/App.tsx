@@ -72,6 +72,8 @@ const mOwnership = () => import('./pages/Ownership');  // lane OW
 const Ownership = page(mOwnership, 'Ownership');
 const mOwnershipCompany = () => import('./pages/OwnershipCompany');  // lane OW
 const OwnershipCompany = page(mOwnershipCompany, 'OwnershipCompany');
+const mAssets = () => import('./pages/Assets');  // lane AL
+const Assets = page(mAssets, 'Assets');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -145,6 +147,8 @@ export function App() {
         <Route path="facts/:id" element={<FactsPage />} />
         <Route path="ownership" element={<Ownership />} />{/* lane OW */}
         <Route path="ownership/:id" element={<OwnershipCompany />} />
+        <Route path="holdings" element={<Assets />} />{/* lane AL: not /assets, whose /assets/** immutable cache header (hashed bundles) would pin the HTML shell */}
+        <Route path="holdings/:id" element={<Assets />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
