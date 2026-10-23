@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { Icon, type IconName } from './Icon';
+import { Logo } from './Logo';
 
 export function Panel({ title, aside, children, className = '' }: { title?: ReactNode; aside?: ReactNode; children: ReactNode; className?: string }) {
   return (
@@ -36,13 +38,15 @@ export function BreakChip({ b }: { b: { label: string; note: string } | null | u
   return b ? <span className="chip est" title={`${b.note} · ${b.label}`}>שבר בסדרה · <span className="num">{b.label}</span></span> : null;
 }
 
-export function Empty({ title, children }: { title: string; children?: ReactNode }) {
-  return <div className="empty"><b>{title}</b>{children && <p>{children}</p>}</div>;
+/** An empty state: a glyph on a soft tile (inbox by default; pass `icon` for the section's own), the title, one line of words. */
+export function Empty({ title, icon = 'inbox', children }: { title: string; icon?: IconName | string; children?: ReactNode }) {
+  return <div className="empty"><span className="icotile lg"><Icon name={icon} /></span><b>{title}</b>{children && <p>{children}</p>}</div>;
 }
 
-export function Loading({ what }: { what: string }) { return <div className="empty"><p>טוען {what}…</p></div>; }
+/** Data on its way: the mark flaps until it lands (the one looping motion, and only while loading; reduced motion stills it). */
+export function Loading({ what }: { what: string }) { return <div className="empty loading" role="status"><Logo size={40} animated /><p>טוען {what}…</p></div>; }
 export function ErrorBox({ what, error }: { what: string; error: string }) {
-  return <div className="empty err"><b>לא ניתן לטעון {what}</b><p className="mono">{error}</p></div>;
+  return <div className="empty err"><span className="icotile lg"><Icon name="x" /></span><b>לא ניתן לטעון {what}</b><p className="mono">{error}</p></div>;
 }
 
 export function copyText(text: string, done: (ok: boolean) => void) {

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { Icon } from '../components/Icon';
 import { Link } from 'react-router-dom';
 import { Star } from '../components/Follow';
 import { readStored, storedKeys, useStoreTick, useWatchlist, writeStored } from '../lib/local';
@@ -86,7 +87,7 @@ export function Mine() {
     <div className="mine">
       <div className="pagehead">
         <div>
-          <h1>שלי</h1>
+          <h1><span className="icotile"><Icon name="mine" /></span>שלי</h1>
           <div className="sub">
             <span><span className="num">{watch.ids.length}</span> במעקב</span>·<span><span className="num">{views.length}</span> תצוגות</span>·<span><span className="num">{allNotes.length}</span> הערות</span>
           </div>

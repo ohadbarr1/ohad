@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Icon } from '../components/Icon';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Sourced } from '../components/Source';
 import { Empty, ErrorBox, Loading, Seg } from '../components/ui';
@@ -116,7 +117,7 @@ export function Restatements() {
 
   return (
     <div className="rs">
-      <div className="pagehead"><div><h1>הצגות מחדש</h1>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="filing" /></span>הצגות מחדש</h1>
         <div className="sub">כל נתון שדוח מאוחר יותר הדפיס בערך אחר · <span className="num">{Object.keys(data.names).length}</span> חברות · ההדפסה הראשונה מול האחרונה, כל אחת בעמוד שלה</div></div>
         <div className="rs-actions"><button type="button" className="btn" onClick={exportXlsx}>Excel</button></div>
       </div>

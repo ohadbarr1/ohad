@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '../components/Icon';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Empty, ErrorBox, Loading, Seg } from '../components/ui';
 import { pubLabel } from '../lib/format';
@@ -68,7 +69,7 @@ export function Presentations() {
 
   return (
     <div className="pz">
-      <div className="pagehead"><div><h1>מצגות משקיעים</h1>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="statement" /></span>מצגות משקיעים</h1>
         <div className="sub"><span className="num">{decks.length}</span> מצגות · <span className="num">{cos.length}</span> חברות · <span className="num">{years[years.length - 1]}–{years[0]}</span> · כל מצגת נפתחת בקורא, עם המקור ב-MAYA</div></div></div>
 
       <section className="panel pz-search">

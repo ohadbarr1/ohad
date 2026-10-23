@@ -1,4 +1,5 @@
 import { idColor } from '../lib/identity';
+import { Icon } from '../components/Icon';
 import { placeLabels } from '../lib/labelPlace';
 import { NotFound } from './NotFound';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -100,7 +101,7 @@ export function ValuationLayout() {
   return (
     <div className="wide-page valuation">
       <div className="pagehead">
-        <div><h1>הערכת שווי · {entry.name_he}</h1>
+        <div><h1><span className="icotile"><Icon name="value" /></span>הערכת שווי · {entry.name_he}</h1>
           <div className="sub">מודלים על נתוני הדוחות; המחיר והשווי בשוק הם קלט בלבד · {k.latest('equity') && <>הון לפי {periodTag(k.latest('equity')!.period)}</>}</div></div>
         <div className="vhead-tools">
           <Field label="חברה"><select value={id} onChange={(e) => nav(`/valuation/${e.target.value}${tab ? `/${tab}` : ''}`)}>{ids.map((x) => <option key={x} value={x}>{reg.data!.find((c) => c.id === x)?.name_he}</option>)}</select></Field>

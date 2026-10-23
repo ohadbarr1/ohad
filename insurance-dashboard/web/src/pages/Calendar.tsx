@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Icon } from '../components/Icon';
 import { ErrorBox, Loading, Panel } from '../components/ui';
 import { Sourced } from '../components/Source';
 import { DataTable } from '../components/DataTable';
@@ -27,7 +28,7 @@ export function Calendar() {
   const active = data.companies.filter((c) => !c.inactive), idle = data.companies.filter((c) => c.inactive);
   return (
     <>
-      <div className="pagehead"><div><h1>לוח דיווחים</h1><div className="sub">הדוח הבא של כל חברה · אומדן מהרקורד של החברה עצמה · <a href="/data/calendar.ics" download>הוספה ליומן (ICS)</a></div></div></div>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="calendar" /></span>לוח דיווחים</h1><div className="sub">הדוח הבא של כל חברה · אומדן מהרקורד של החברה עצמה · <a href="/data/calendar.ics" download>הוספה ליומן (ICS)</a></div></div></div>
       <Panel title="הדוח הבא" aside={<span>{data.basis}</span>}>
         <DataTable caption="הדוח הבא של כל חברה" rows={active} rowKey={(c) => c.id} export={{ name: 'fox-calendar', title: 'לוח דיווחים', note: data.basis }} columns={[
           { key: 'co', head: 'חברה', value: (c) => c.name, cell: (c) => <Link to={`/company/${c.id}`}>{c.name}</Link> },
