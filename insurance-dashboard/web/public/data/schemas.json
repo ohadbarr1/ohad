@@ -38,6 +38,10 @@
    "schema": "kpi"
   },
   {
+   "pattern": "market_home.json",
+   "schema": "market"
+  },
+  {
    "pattern": "market.json",
    "schema": "market"
   },

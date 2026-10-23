@@ -15,6 +15,7 @@ import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
+import { MineLink } from './MineLink';
 
 // [route, icon, label, label on the phone's bottom bar: the same word, shortened]. Four places on the phone too: search lives in the top bar
 // on every screen, so the fourth place goes to valuation, which no other control on a phone reaches.
@@ -58,7 +59,7 @@ export function Layout() {
           <div className="top-in">
             <NavLink to="/" className="wordmark">fox<span>.</span></NavLink>
             <Search />
-            <ChartBookLink />
+            <ChartBookLink /><MineLink />
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
