@@ -137,7 +137,7 @@ export class Book {
             src: file ? () => ({ k: 'report', title: label, value: show, unit: u, url, pg, doc: `${file.startsWith('ic:') ? 'דוח חברת הביטוח' : pr.entity ?? this.name(ent)}, ${file.replace('ic:', '')}`, period: date }) as Prov : undefined }; }) };
     }
     const notes = [meta?.l ? `שורה בדוח: ${meta.l}` : '', meta?.b && BASIS_HE[meta.b] ? BASIS_HE[meta.b] : '', c[4] & F_CMP ? 'מעמודת ההשוואה בדוח מאוחר יותר (עשוי להיות מוצג מחדש)' : '', c[4] & F_RE ? 'הוצג מחדש' : '', c[4] & F_CHART ? 'נקרא מגרף או מטקסט בדוח' : '', typeof c[5] === 'string' ? c[5] : ''];
-    return { k: 'report', title, value, unit: this.unit(m), url: c[3] != null ? f.u[c[3]] : null, pg: c[2], doc: this.name(ent), period, note: notes.filter(Boolean).join(' · ') || undefined,
+    return { k: 'report', title, value, unit: this.unit(m), url: c[3] != null ? f.u[c[3]] : null, pg: c[2], doc: this.name(ent), period, note: notes.filter(Boolean).join(' · ') || undefined, srcType: m.src === 'adj' ? 'מצגת משקיעים · לפי הגדרת החברה' : m.src === 'solv' ? 'דוח כושר פירעון כלכלי (MAYA)' : undefined,
       der: c[4] & F_DER ? (m.k === 'f' ? true : 'stock') : undefined, old: c[4] & F_OLD ? true : undefined, turned: c[4] & F_TURN ? true : undefined };
   }
   private stored(m: MetricDef, ent: string, p: string, title: string): Val | null {

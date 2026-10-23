@@ -455,6 +455,47 @@ for (m, slug), cells in sorted(sop_cells.items()):
     kind = "r" if m == "combined_ratio" else "f"
     add(f"sop:{m}@{slug}", f"{SOP_M[m]} · {SEG_LABEL[slug]}", "seg", "sop", "pct" if kind == "r" else "m", kind, ch, note="פילוח מגזרי מתוך הדוח (מגזרי פעילות ומקורות רווח)", std="17", min_ents=3)
 
+# ---------------------------------------------------------------- solv: csm/solvency.json (economic-solvency reports, build_solvency.py)
+_sv = DATA / "csm" / "solvency.json"
+if _sv.exists():
+    SV = json.loads(_sv.read_text(encoding="utf-8"))
+    SV_M = {"sr_w": ("יחס כושר פירעון, עם הוראות מעבר", "pct"), "sr_wo": ("יחס כושר פירעון, ללא הוראות מעבר", "pct"), "of_w": ("הון עצמי לעניין SCR", "m"),
+            "scr_w": ("הון נדרש (SCR)", "m"), "su_w": ("עודף הון מעל SCR", "m"), "mcr": ("סף הון (MCR)", "m"), "t1": ("הון רובד 1", "m"), "t2": ("הון רובד 2", "m"),
+            "m_market": ("SCR · סיכון שוק", "m"), "m_life": ("SCR · חיתום חיים", "m"), "m_health": ("SCR · חיתום בריאות", "m"), "m_nonlife": ("SCR · חיתום כללי", "m"),
+            "m_counterparty": ("SCR · צד נגדי", "m"), "m_operational": ("SCR · סיכון תפעולי", "m"), "m_div": ("SCR · השפעת פיזור", "m")}
+    for k, (label, unit) in SV_M.items():
+        ch = Chunk()
+        for c, dates in SV["companies"].items():
+            for d, cells in dates.items():
+                x, p = cells.get(k), qof(d)
+                if x and p:
+                    rep = SV["reports"].get(str(x["r"]), {})
+                    ch.cell(c, p, x["v"], x.get("pg"), (SV["files"] + rep["f"]) if rep.get("f") else None, 16 if x.get("i") else 0,
+                            aux="נקרא מתמונה" if x.get("i") else f"דוח כושר פירעון כלכלי {x['r']}", meta={"l": x.get("l", "")})
+        add(f"solv:{k}", label + " (דוח כושר פירעון)", "bs", "solv", unit, "s", ch, note="מדוחות כושר הפירעון הכלכלי (Solvency II) של חברת הביטוח, כפי שהודפסו; עמוד בכל תא")
+
+# ---------------------------------------------------------------- adj: adjusted.json (company-defined KPIs from the decks, build_targets.py)
+_adj = DATA / "adjusted.json"
+if _adj.exists():
+    AJ = json.loads(_adj.read_text(encoding="utf-8"))
+    by_m = defaultdict(dict)
+    for c, ss in AJ["companies"].items():
+        for m, s in ss.items():
+            by_m[m][c] = s
+    for m, cos in sorted(by_m.items()):
+        ch = Chunk()
+        label = next(iter(cos.values()))["l"]
+        for c, s in cos.items():
+            for x in s["pts"]:
+                if x["p"].endswith("9M"):
+                    continue
+                doc = AJ["docs"].get(str(x["rid"])) if x.get("rid") else None
+                ch.cell(c, x["p"], x["v"], x.get("pg"), (AJ["files"] + doc[4]) if doc else None, 16 if x.get("i") else 0,
+                        aux=f"לפי הגדרת החברה: {s['def'] or 'כפי שהוצג במצגת'}", meta={"l": x.get("l", "")})
+        # never summed or derived (kind r): each company defines its own measure
+        add(f"adj:{m}", f"{label} · לפי הגדרת החברה", "adj", "adj", "pct" if "roe" in m else "m", "r", ch,
+            note="מדד של ההנהלה ממצגת המשקיעים, לפי הגדרת כל חברה; לא שורה בדוחות הכספיים ואינו בר השוואה מלאה בין חברות")
+
 # ---------------------------------------------------------------- reg: market.json
 mk = json.loads((DATA / "market.json").read_text(encoding="utf-8"))
 P, groups = mk["periods"], mk["groups"]
@@ -545,8 +586,8 @@ sets = [
     {"id": "fund", "n": "בתי השקעות", "ids": [e["id"] for e in entities if e["k"] == "fund" and e["id"] != "more_gemel"]},
     {"id": "all", "n": "כולן", "ids": [e["id"] for e in entities]},
 ]
-groups_he = [["pl", "רווח והפסד"], ["bs", "מאזן, הון וכושר פירעון"], ["csm", "IFRS 17 · CSM"], ["seg", "מגזרים"], ["cf", "תזרים"], ["lts", "חיסכון ארוך טווח"], ["econ", "כלכלת החברה המנהלת"], ["reg", "רגולטור"]]
-src_he = {"ifrs": "דוחות · IFRS 17", "fs": "דוחות כספיים", "xbrl": "XBRL", "lts": "דוחות החברות המנהלות", "econ": "דוחות החברות המנהלות", "sop": "פילוח מגזרי", "reg": "רשות שוק ההון"}
+groups_he = [["pl", "רווח והפסד"], ["bs", "מאזן, הון וכושר פירעון"], ["csm", "IFRS 17 · CSM"], ["seg", "מגזרים"], ["cf", "תזרים"], ["lts", "חיסכון ארוך טווח"], ["econ", "כלכלת החברה המנהלת"], ["adj", "מדדים מותאמים · לפי הגדרת החברה"], ["reg", "רגולטור"]]
+src_he = {"ifrs": "דוחות · IFRS 17", "fs": "דוחות כספיים", "xbrl": "XBRL", "lts": "דוחות החברות המנהלות", "econ": "דוחות החברות המנהלות", "sop": "פילוח מגזרי", "reg": "רשות שוק ההון", "solv": "דוחות כושר פירעון כלכלי", "adj": "מצגות · לפי הגדרת החברה"}
 order = {g: i for i, (g, _) in enumerate(groups_he)}
 eidx = {e["id"]: i for i, e in enumerate(entities)}
 notes = []
