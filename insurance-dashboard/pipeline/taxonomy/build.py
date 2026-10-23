@@ -280,7 +280,8 @@ def build(wbs, meta, caps, registry, nfacts):
             entries[b["to"]].setdefault("bridge_from", []).append(lid)
 
     # ---- coverage: share of workbook rows (and of current figures) on a cross-company id
-    cov = {"rows": collections.Counter(), "facts": collections.Counter(), "by_company": {}, "by_kind": collections.defaultdict(collections.Counter)}
+    cov = {"rows": collections.Counter(), "facts": collections.Counter(), "by_company": {}, "by_kind": collections.defaultdict(collections.Counter),
+           "facts_by_kind": collections.defaultdict(collections.Counter)}
     tail = []
     for co, mm in ids.items():
         c = collections.Counter()
@@ -291,6 +292,7 @@ def build(wbs, meta, caps, registry, nfacts):
             cov["rows"][tier] += 1
             cov["facts"][tier] += n
             cov["by_kind"][kind][tier] += 1
+            cov["facts_by_kind"][kind][tier] += n
             c[tier] += 1
             if tier == "own":
                 tail.append((n, co, wbs[co]["metrics"][i]["sheet"], wbs[co]["metrics"][i]["label"], lid))
@@ -303,6 +305,7 @@ def build(wbs, meta, caps, registry, nfacts):
         "mapped_share": round(mapped / tot, 4) if tot else 0,
         "facts": totf, "facts_mapped_share": round((cov["facts"]["core"] + cov["facts"]["shared"]) / totf, 4) if totf else 0,
         "by_kind": {k: dict(v) for k, v in sorted(cov["by_kind"].items())},
+        "facts_by_kind": {k: dict(v) for k, v in sorted(cov["facts_by_kind"].items())},
         "by_company": dict(sorted(cov["by_company"].items())),
         "lines": {"core": sum(1 for e in entries.values() if e["tier"] == "core"), "shared": sum(1 for e in entries.values() if e["tier"] == "shared"),
                   "own": sum(1 for e in entries.values() if e["tier"] == "own")},

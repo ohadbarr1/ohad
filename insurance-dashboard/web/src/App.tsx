@@ -62,6 +62,8 @@ const mPresentations = () => import('./pages/Presentations');
 const Presentations = page(mPresentations, 'Presentations');
 const mMine = () => import('./pages/Mine');  // lane F
 const Mine = page(mMine, 'Mine');
+const mFacts = () => import('./pages/Facts');  // lane FT
+const FactsPage = page(mFacts, 'FactsPage');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -129,6 +131,7 @@ export function App() {
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="mine" element={<Mine />} />
+        <Route path="facts/:id" element={<FactsPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

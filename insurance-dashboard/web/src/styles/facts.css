@@ -1,0 +1,17 @@
+/* /facts/:id (lane FT) */
+.fx { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.fx-head h1 { margin: 0; font-size: var(--t-6); font-weight: 700; }
+.fx-head p { margin: 2px 0 0; font-size: var(--t-2); }
+.fx-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.fx-table th:not(:first-child), .fx-table td:not(:first-child) { text-align: end; white-space: nowrap; }
+.fx-cell { display: inline-block; white-space: nowrap; }
+.fx-lbl { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.fx-id { direction: ltr; unicode-bidi: isolate; align-self: flex-start; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; color: var(--faint); background: transparent; padding: 0; }
+.fx-id.core, .fx-id.shared { color: var(--muted); }
+.fx-table .num.old { color: var(--muted); }
+.fx-foot { font-size: var(--t-1); margin: 0; }
+@media (max-width: 760px) {
+  .fx-bar { gap: 8px; }
+  .fx-bar .seg { max-width: 100%; overflow-x: auto; }
+  .fx-id { font-size: 10px; }
+}

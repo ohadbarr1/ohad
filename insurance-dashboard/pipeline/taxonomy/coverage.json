@@ -22,6 +22,22 @@
    "shared": 753
   }
  },
+ "facts_by_kind": {
+  "company sheets": {
+   "core": 816,
+   "shared": 409,
+   "own": 11850
+  },
+  "series": {
+   "shared": 17381,
+   "own": 1345
+  },
+  "statements": {
+   "own": 30938,
+   "core": 33774,
+   "shared": 18997
+  }
+ },
  "by_company": {
   "altshuler": {
    "own": 121,
