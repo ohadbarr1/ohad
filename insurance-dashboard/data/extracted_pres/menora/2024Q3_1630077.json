@@ -5,8 +5,91 @@
  "pres_date": "2024-11-28",
  "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): none. Deck language by text layer: Hebrew; text-layer Hebrew chars 75."
+ "facts": [
+  {
+   "metric": "kpi_aum_total",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-09-30",
+   "value": 361000,
+   "page_he": 6,
+   "doc": "pres",
+   "label": "נכסים מנוהלים 361 מיליארדי ₪ 30.09.2024",
+   "source": "chart",
+   "note": "NIS millions (printed NIS billions). Number is drawn as graphics (not in the text layer); read from the slide image where it is printed."
+  },
+  {
+   "metric": "kpi_aum_cagr",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2024-09-30",
+   "value": 12.3,
+   "page_he": 6,
+   "doc": "pres",
+   "label": "CAGR 12.3% נכסים מנוהלים (2018-9.2024)",
+   "source": "chart",
+   "note": "Percent CAGR as printed. Number is drawn as graphics (not in the text layer); read from the slide image where it is printed."
+  },
+  {
+   "metric": "kpi_equity_cagr",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2024-09-30",
+   "value": 11.2,
+   "page_he": 6,
+   "doc": "pres",
+   "label": "CAGR 11.2% הון עצמי המיוחס לבעלי המניות (2018-9.2024)",
+   "source": "chart",
+   "note": "Percent CAGR as printed. Number is drawn as graphics (not in the text layer); read from the slide image where it is printed."
+  },
+  {
+   "metric": "kpi_dividend_distributed",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-09-30",
+   "value": 460,
+   "page_he": 6,
+   "doc": "pres",
+   "label": "דיבידנד 460 מיליוני ₪",
+   "source": "chart",
+   "note": "NIS millions as printed on the key-data slide; footnote 2 explains the components (see dividend facts). Number is drawn as graphics (not in the text layer); read from the slide image where it is printed."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-04-30",
+   "value": 175,
+   "page_he": 6,
+   "doc": "pres",
+   "label": "בגין רווחי המחצית השנייה של שנת 2023 הוכרז דיבידנד בסך 175 מיליוני ₪ אשר חולק בחודש אפריל 2024",
+   "source": "chart",
+   "note": "NIS millions, distributed April 2024 in respect of H2 2023 profits (footnote 2); month-end used as date. Number is drawn as graphics (not in the text layer); read from the slide image where it is printed."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 115,
+   "page_he": 6,
+   "doc": "pres",
+   "label": "בגין רווחי 2024 הוכרז דיבידנד בסך 115 מיליוני ₪ אשר יחולק בדצמבר",
+   "source": "chart",
+   "note": "NIS millions, declared in respect of 2024 profits, to be distributed in December (footnote 2); date = December 2024 distribution month-end. Number is drawn as graphics (not in the text layer); read from the slide image where it is printed."
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "why": "part of slide-6 footnote 2 (a further dividend declared for 2024 earlier in the year) too small/illegible in the image; only the two legible dividends were recorded"
+  }
+ ]
 }

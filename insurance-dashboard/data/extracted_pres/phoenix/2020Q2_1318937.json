@@ -3,10 +3,14 @@
  "period": "2020Q2",
  "report_id": 1318937,
  "pres_date": "2020-09-01",
- "doc": "pres",
  "unit": "NIS millions",
+ "doc": "pres",
  "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): none. Deck language by text layer: Hebrew; text-layer Hebrew chars 10251."
+ "not_found": [
+  {
+   "metric": "targets_guidance_adjusted_kpis",
+   "segment": "phoenix_group",
+   "why": "no target, guidance or adjusted-KPI keywords in the Hebrew text layer (no candidate slides)"
+  }
+ ]
 }

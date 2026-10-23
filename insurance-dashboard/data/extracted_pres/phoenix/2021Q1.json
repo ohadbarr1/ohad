@@ -3,10 +3,35 @@
  "period": "2021Q1",
  "report_id": 1372493,
  "pres_date": "2021-05-27",
- "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 6,7,8,9,18. Deck language by text layer: English; text-layer Hebrew chars 0."
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_roe",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "value": null,
+   "value_low": 12,
+   "value_high": 15,
+   "horizon": 2025,
+   "page_he": 7,
+   "doc": "pres",
+   "label": "ROE Mid-term target 12-15%",
+   "source": "table",
+   "note": "Percent; mid-term target based on 5-year plan assuming 3% return on investments; ROE target range assumes 3% to 4.8% return on Nostro investments."
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "value": 30,
+   "horizon": null,
+   "page_he": 7,
+   "doc": "pres",
+   "label": "Dividend And Buyback (NISm): Mid-term Target 30% of profits",
+   "source": "table",
+   "note": "Percent of profits; mid-term target."
+  }
+ ],
+ "not_found": []
 }

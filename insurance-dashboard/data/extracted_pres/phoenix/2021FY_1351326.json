@@ -3,10 +3,21 @@
  "period": "2021FY",
  "report_id": 1351326,
  "pres_date": "2021-02-11",
- "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 6,13,14,16,17,24,25,26,29,34. Deck language by text layer: English; text-layer Hebrew chars 0."
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "value": 30,
+   "horizon": null,
+   "page_he": 6,
+   "doc": "pres",
+   "label": "30% dividend distribution policy",
+   "source": "text",
+   "note": "Percent; dividend distribution policy stated on slide."
+  }
+ ],
+ "not_found": []
 }

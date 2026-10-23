@@ -1,0 +1,355 @@
+{
+ "company": "hachshara",
+ "period": "2019Q2_1271145",
+ "report_id": 1271145,
+ "entity": "הכשרה חברה לביטוח בע\"מ",
+ "as_of": "2019-06-30",
+ "unit": "NIS millions (printed NIS thousands, divided by 1000)",
+ "facts": [
+  {
+   "metric": "own_funds",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 816.868,
+   "page_he": 3,
+   "label": "הון עצמי לעניין הון נדרש לכושר פירעון",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "own_funds",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 826.885,
+   "page_he": 3,
+   "label": "הון עצמי לעניין הון נדרש לכושר פירעון",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "scr",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 710.283,
+   "page_he": 3,
+   "label": "הון נדרש לכושר פירעון ()SCR",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "scr",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 759.092,
+   "page_he": 3,
+   "label": "הון נדרש לכושר פירעון ()SCR",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "solvency_surplus",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 106.585,
+   "page_he": 3,
+   "label": "עודף (גרעון)",
+   "source": "table",
+   "note": "negative = deficit as printed"
+  },
+  {
+   "metric": "solvency_surplus",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 67.793,
+   "page_he": 3,
+   "label": "עודף (גרעון)",
+   "source": "table",
+   "note": "negative = deficit as printed"
+  },
+  {
+   "metric": "solvency_ratio",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 115.0,
+   "page_he": 3,
+   "label": "יחס כושר פירעון (באחוזים)",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "solvency_ratio",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 108.9,
+   "page_he": 3,
+   "label": "יחס כושר פירעון (באחוזים)",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "solvency_ratio_after_capital_actions",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 114.8,
+   "page_he": 3,
+   "label": "יחס כושר פירעון (ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות)",
+   "source": "table",
+   "note": "row printed after the capital-instrument issuance line (Tier 2 issuance), without transitional measures and equity-scenario adjustment"
+  },
+  {
+   "metric": "solvency_ratio_after_capital_actions",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 108.9,
+   "page_he": 3,
+   "label": "יחס כושר פירעון (ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות)",
+   "source": "table",
+   "note": "row printed after the capital-instrument issuance line (Tier 2 issuance), without transitional measures and equity-scenario adjustment"
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "solo",
+   "basis": "na",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 102,
+   "page_he": 3,
+   "label": "יעד הדירקטוריון",
+   "source": "table",
+   "note": "board capital target"
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "solo",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 104,
+   "page_he": 3,
+   "label": "יעד הדירקטוריון",
+   "source": "table",
+   "note": "board capital target"
+  },
+  {
+   "metric": "solvency_surplus_over_target",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 91.202,
+   "page_he": 3,
+   "label": "עודף הון ביחס ליעד",
+   "source": "table",
+   "note": "negative = shortfall vs target as printed"
+  },
+  {
+   "metric": "solvency_surplus_over_target",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 37.429,
+   "page_he": 3,
+   "label": "עודף הון ביחס ליעד",
+   "source": "table",
+   "note": "negative = shortfall vs target as printed"
+  },
+  {
+   "metric": "own_funds",
+   "segment": "solo",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 771.487,
+   "page_he": 3,
+   "label": "הון עצמי לעניין הון נדרש לכושר פירעון",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "own_funds",
+   "segment": "solo",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 786.865,
+   "page_he": 3,
+   "label": "הון עצמי לעניין הון נדרש לכושר פירעון",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "scr",
+   "segment": "solo",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 477.465,
+   "page_he": 3,
+   "label": "הון נדרש לכושר פירעון ()SCR",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "scr",
+   "segment": "solo",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 506.19,
+   "page_he": 3,
+   "label": "הון נדרש לכושר פירעון ()SCR",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "solvency_surplus",
+   "segment": "solo",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 294.022,
+   "page_he": 3,
+   "label": "עודף",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "solvency_surplus",
+   "segment": "solo",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 280.675,
+   "page_he": 3,
+   "label": "עודף",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "mcr",
+   "segment": "solo",
+   "basis": "na",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 214.859,
+   "page_he": 3,
+   "label": "סף ההון ()MCR",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "mcr",
+   "segment": "solo",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 225.961,
+   "page_he": 3,
+   "label": "סף ההון ()MCR",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "own_funds_for_mcr",
+   "segment": "solo",
+   "basis": "na",
+   "window": "instant",
+   "date": "2018-12-31",
+   "value": 575.727,
+   "page_he": 3,
+   "label": "הון עצמי לעניין סף ההון",
+   "source": "table",
+   "note": ""
+  },
+  {
+   "metric": "own_funds_for_mcr",
+   "segment": "solo",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-06-30",
+   "value": 578.962,
+   "page_he": 3,
+   "label": "הון עצמי לעניין סף ההון",
+   "source": "table",
+   "note": ""
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "solvency_ratio",
+   "segment": "solo",
+   "why": "with_transitional: the with-transitional ratio is not printed (abbreviated half-year report, one page of tables)"
+  },
+  {
+   "metric": "scr_market",
+   "segment": "solo",
+   "why": "abbreviated report: no SCR composition, tier, balance-sheet or sensitivity tables"
+  },
+  {
+   "metric": "own_funds_tier1",
+   "segment": "solo",
+   "why": "abbreviated report: no SCR composition, tier, balance-sheet or sensitivity tables"
+  },
+  {
+   "metric": "own_funds_tier2",
+   "segment": "solo",
+   "why": "abbreviated report: no SCR composition, tier, balance-sheet or sensitivity tables"
+  },
+  {
+   "metric": "economic_total_assets",
+   "segment": "solo",
+   "why": "abbreviated report: no SCR composition, tier, balance-sheet or sensitivity tables"
+  },
+  {
+   "metric": "solvency_sensitivity",
+   "segment": "solo",
+   "why": "abbreviated report: no SCR composition, tier, balance-sheet or sensitivity tables"
+  },
+  {
+   "metric": "own_funds_tier3",
+   "segment": "solo",
+   "why": "not printed in this report"
+  },
+  {
+   "metric": "mcr_ratio",
+   "segment": "solo",
+   "why": "not printed in this report"
+  },
+  {
+   "metric": "own_funds_tier1_restricted",
+   "segment": "solo",
+   "why": "no additional Tier 1 line printed in the own-funds composition table"
+  },
+  {
+   "metric": "economic_insurance_liabilities_incl_rm",
+   "segment": "solo",
+   "why": "insurance-liabilities row of the transitional-effect table has no label in the text layer / not printed"
+  },
+  {
+   "metric": "target_solvency_amount",
+   "segment": "solo",
+   "why": "NIS target amount not printed"
+  }
+ ]
+}

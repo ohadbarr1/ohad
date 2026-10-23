@@ -3,10 +3,22 @@
  "period": "2020Q3",
  "report_id": 1334451,
  "pres_date": "2020-11-25",
- "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 2,5. Deck language by text layer: English; text-layer Hebrew chars 0."
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "value": 30,
+   "horizon": null,
+   "qualifier": "at_least",
+   "page_he": 5,
+   "doc": "pres",
+   "label": "New dividend distribution policy - minimum of 30% of annual comprehensive profit (this distribution includes the announced share repurchase plan)",
+   "source": "text",
+   "note": "Percent of annual comprehensive profit; policy floor (minimum), includes the announced share repurchase plan. Same sentence on slide 2."
+  }
+ ],
+ "not_found": []
 }

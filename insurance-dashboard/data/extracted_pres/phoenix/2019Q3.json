@@ -3,10 +3,36 @@
  "period": "2019Q3",
  "report_id": 1265564,
  "pres_date": "2019-11-28",
- "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 5,13,15,17,18. Deck language by text layer: Hebrew; text-layer Hebrew chars 8108."
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "phoenix_insurance",
+   "basis": "na",
+   "value": null,
+   "value_low": 110,
+   "value_high": 115,
+   "horizon": 2024,
+   "page_he": 17,
+   "doc": "pres",
+   "label": "דירקטוריון הפניקס ביטוח אישר יעד הון של 110% שילך ויתעצם ליניארית עד לשיעור של 115% בתום תקופת הפריסה (שנת 2024)",
+   "source": "text",
+   "note": "Percent; Phoenix Insurance board capital target: 110% rising linearly to 115% by the end of the transition period (2024); based on sensitivity tests."
+  },
+  {
+   "metric": "kpi_dividend_distributed_year",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2019-09-30",
+   "value": 480,
+   "page_he": 13,
+   "doc": "pres",
+   "label": "דיבידנד (במיל' ש\"ח) 30/09/2019",
+   "source": "table",
+   "note": "NIS millions; column 30/09/2019 (printed header); footnote: about 230 NIS millions of this is Mehadrin shares distributed as an in-kind dividend."
+  }
+ ],
+ "not_found": []
 }

@@ -43,7 +43,7 @@ for fn in sys.argv[1:]:
     for f in d["facts"]:
         for key in ("value", "value_low", "value_high"):
             v = f.get(key)
-            if not isinstance(v, (int, float)) or f.get("source") == "chart":
+            if not isinstance(v, (int, float)) or f.get("source") in ("chart", "image"):  # read from the slide/page image: checked by eye, not by text
                 continue
             n += 1
             pg = f.get("page_he")

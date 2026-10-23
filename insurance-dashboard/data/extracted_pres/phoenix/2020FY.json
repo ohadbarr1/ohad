@@ -3,10 +3,34 @@
  "period": "2020FY",
  "report_id": 1360188,
  "pres_date": "2021-03-25",
- "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 4,6,8,9,10,12,14. Deck language by text layer: English; text-layer Hebrew chars 0."
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_dividend_with_buyback",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "value": 300,
+   "horizon": null,
+   "page_he": 9,
+   "doc": "pres",
+   "label": "Dividend with buyback (NISm): Mid-term target 300",
+   "source": "table",
+   "note": "NIS millions; mid-term target (5-year plan, 3% return on investments; horizon year not printed on slide); 2020 actual shown as 406 incl. buy-back 26 and cash dividend 380 (slide 6 footnote)."
+  },
+  {
+   "metric": "kpi_dividend_with_buyback",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2020-12-31",
+   "value": 406,
+   "page_he": 9,
+   "doc": "pres",
+   "label": "Dividend with buyback (NISm) 2020",
+   "source": "table",
+   "note": "NIS millions; 2020 column; includes buy-back 26 NISm plus cash dividend 380 NISm per slide 6 footnote."
+  }
+ ],
+ "not_found": []
 }

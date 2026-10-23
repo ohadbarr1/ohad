@@ -3,10 +3,14 @@
  "period": "2020Q1",
  "report_id": 1303494,
  "pres_date": "2020-06-23",
- "doc": "pres",
  "unit": "NIS millions",
+ "doc": "pres",
  "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 13,25. Deck language by text layer: Hebrew; text-layer Hebrew chars 8174."
+ "not_found": [
+  {
+   "metric": "targets_guidance_adjusted_kpis",
+   "segment": "phoenix_group",
+   "why": "only keyword hit is a statement-type footnote (230 NIS m Mehadrin shares dividend in kind, slide 13) and a non-financial slide 25; no deck-only targets or adjusted KPIs found"
+  }
+ ]
 }

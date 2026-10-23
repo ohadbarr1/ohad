@@ -3,10 +3,48 @@
  "period": "2021Q2",
  "report_id": 1396577,
  "pres_date": "2021-08-25",
- "doc": "pres",
  "unit": "NIS millions",
- "facts": [],
- "not_found": [],
- "status": "not_extracted",
- "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 4,5,6,7,8,11,12,24. Deck language by text layer: English; text-layer Hebrew chars 0."
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_roe",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "value": null,
+   "value_low": 12,
+   "value_high": 15,
+   "horizon": 2025,
+   "page_he": 7,
+   "doc": "pres",
+   "label": "ROE Mid-term target 12-15%",
+   "source": "table",
+   "note": "Percent; mid-term target based on 5-year plan assuming 3% return on investments (note 3 on slide)."
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "value": 30,
+   "horizon": null,
+   "page_he": 7,
+   "doc": "pres",
+   "label": "Dividend And Buyback (NISm): Mid-term target 30% of profits",
+   "source": "table",
+   "note": "Percent of profits; mid-term target."
+  },
+  {
+   "metric": "buyback_announced",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 100,
+   "page_he": 7,
+   "doc": "pres",
+   "label": "2021 share buyback plan of 100 NISm announced",
+   "source": "text",
+   "note": "NIS millions; 2021 share buy-back plan."
+  }
+ ],
+ "not_found": []
 }
