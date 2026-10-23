@@ -9,4 +9,4 @@ const dir = mkdtempSync(join(tmpdir(), 'synctest-')), out = join(dir, 'sync.unit
 try {
   await build({ entryPoints: [new URL('../tests/sync.unit.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error' });
   await import(pathToFileURL(out).href);
-} finally { setTimeout(() => rmSync(dir, { recursive: true, force: true }), 3000); }
+} finally { rmSync(dir, { recursive: true, force: true }); }
