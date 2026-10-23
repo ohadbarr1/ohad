@@ -148,6 +148,18 @@
   {
    "pattern": "debt/*.json",
    "schema": "debt"
+  },
+  {
+   "pattern": "csm/solvency.json",
+   "schema": "csmSolvency"
+  },
+  {
+   "pattern": "targets.json",
+   "schema": "targets"
+  },
+  {
+   "pattern": "adjusted.json",
+   "schema": "adjusted"
   }
  ],
  "$defs": {
@@ -3257,6 +3269,317 @@
           ]
          }
         ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "csmSolvency": {
+   "type": "object",
+   "required": [
+    "built",
+    "files",
+    "reports",
+    "companies",
+    "sens"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "files": {
+     "type": "string"
+    },
+    "reports": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "c",
+       "as_of"
+      ],
+      "properties": {
+       "c": {
+        "type": "string"
+       },
+       "as_of": {
+        "type": "string"
+       },
+       "f": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "companies": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "object",
+        "required": [
+         "v",
+         "r",
+         "pg"
+        ],
+        "properties": {
+         "v": {
+          "type": "number"
+         },
+         "r": {
+          "type": "integer"
+         },
+         "pg": {
+          "type": [
+           "integer",
+           "null"
+          ]
+         }
+        }
+       }
+      }
+     }
+    },
+    "sens": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "d",
+       "l",
+       "risk",
+       "b",
+       "v",
+       "r"
+      ],
+      "properties": {
+       "v": {
+        "type": "number"
+       },
+       "b": {
+        "enum": [
+         "w",
+         "wo",
+         "na"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "targets": {
+   "type": "object",
+   "required": [
+    "v",
+    "built",
+    "files",
+    "docs",
+    "rows"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "built": {
+     "type": "string"
+    },
+    "files": {
+     "type": "string"
+    },
+    "docs": {
+     "type": "object"
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "m",
+       "l",
+       "e",
+       "t",
+       "u",
+       "h",
+       "v",
+       "lo",
+       "hi",
+       "src",
+       "st1",
+       "n",
+       "st"
+      ],
+      "properties": {
+       "c": {
+        "type": "string"
+       },
+       "m": {
+        "type": "string"
+       },
+       "l": {
+        "type": "string"
+       },
+       "t": {
+        "enum": [
+         "strategy",
+         "payout",
+         "capital"
+        ]
+       },
+       "u": {
+        "enum": [
+         "pct",
+         "m",
+         "n",
+         "x"
+        ]
+       },
+       "h": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "v": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "lo": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "hi": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "src": {
+        "enum": [
+         "pres",
+         "report"
+        ]
+       },
+       "st": {
+        "enum": [
+         "open",
+         "met",
+         "missed"
+        ]
+       },
+       "n": {
+        "type": "integer"
+       },
+       "act": {
+        "type": "object",
+        "required": [
+         "k",
+         "v",
+         "y",
+         "f",
+         "in"
+        ],
+        "properties": {
+         "v": {
+          "type": "number"
+         },
+         "y": {
+          "type": "integer"
+         },
+         "f": {
+          "type": "string"
+         },
+         "in": {
+          "type": "array"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "adjusted": {
+   "type": "object",
+   "required": [
+    "built",
+    "files",
+    "docs",
+    "companies"
+   ],
+   "properties": {
+    "built": {
+     "type": "string"
+    },
+    "companies": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "required": [
+        "l",
+        "u",
+        "def",
+        "pts"
+       ],
+       "properties": {
+        "l": {
+         "type": "string"
+        },
+        "u": {
+         "enum": [
+          "pct",
+          "m"
+         ]
+        },
+        "def": {
+         "type": "string"
+        },
+        "pts": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "required": [
+           "p",
+           "v",
+           "rid",
+           "pg"
+          ],
+          "properties": {
+           "p": {
+            "type": "string"
+           },
+           "v": {
+            "type": "number"
+           },
+           "rid": {
+            "type": [
+             "integer",
+             "null"
+            ]
+           },
+           "pg": {
+            "type": [
+             "integer",
+             "null"
+            ]
+           }
+          }
+         }
+        }
        }
       }
      }

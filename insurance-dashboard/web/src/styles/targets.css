@@ -1,0 +1,16 @@
+/* targets tracker and adjusted KPIs (lane Y) */
+.tg-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.tg-t td { vertical-align: top; }
+.tg-t td.lbl { white-space: normal; min-width: 180px; }
+.tg-t q { display: block; font-size: var(--t-1); color: var(--faint); quotes: "״" "״"; max-width: 420px; }
+.tg-c td.lbl { min-width: 140px; }
+.tg-st { display: inline-block; padding: 1px 8px; border-radius: var(--r-1, 4px); font-size: var(--t-1); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.tg-st.met { color: var(--up); border-color: currentColor; }
+.tg-st.missed { color: var(--down); border-color: currentColor; }
+.tg-said { font-size: var(--t-1); white-space: nowrap; }
+.tg-doc { display: block; }
+.adj-def { font-size: var(--t-1); color: var(--muted); margin: 2px 0 8px; }
+.adj-co { font-weight: 600; font-size: var(--t-1); color: var(--muted); }
+.tg-y { margin: 0 6px; }
+@media (max-width: 560px) { .tg-c td.lbl { min-width: 0; } .tg-c td, .tg-c th { padding-inline: 4px; } }
+.tg-bar select { min-height: 32px; max-width: 100%; }

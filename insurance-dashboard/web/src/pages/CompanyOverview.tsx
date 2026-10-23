@@ -11,6 +11,9 @@ import { KPI_BY_KEY, periodLabelShort, type CompanyKpi } from '../lib/kpi';
 import { mayaReport } from '../lib/sources';
 import { printed } from './companyProv';
 const DebtStrip = lazy(() => import('./Debt').then((m) => ({ default: m.DebtStrip })));
+const ScrComposition = lazy(() => import('./csm/ScrComposition').then((m) => ({ default: m.ScrComposition })));
+const TargetsCompact = lazy(() => import('../components/TargetsTracker').then((m) => ({ default: m.TargetsCompact })));
+const AdjustedPanel = lazy(() => import('../components/AdjustedPanel').then((m) => ({ default: m.AdjustedPanel })));
 import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
 import { usePeriodParam, useWindowParam, type Win } from '../lib/period';
@@ -208,6 +211,11 @@ export function CompanyOverview() {
         </section>
       )}
       {!fund && <DividendCapacity id={entry.id} />}
+      <Suspense fallback={null}>
+        <TargetsCompact id={entry.id} name={entry.name_he} />
+        <AdjustedPanel id={entry.id} name={entry.name_he} />
+        {!fund && entry.has_financials && <ScrComposition ids={[entry.id]} name={() => entry.name_he} company={entry.id} />}
+      </Suspense>
       <Suspense fallback={null}><DebtStrip id={entry.id} /></Suspense>
       {docs.data && <LatestDocs docs={docs.data.docs} />}
       <Panel title="הערות" aside={<><span>מעקב</span><Star id={entry.id} name={entry.name_he} /></>}><Notes id={entry.id} /></Panel>
