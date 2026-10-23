@@ -173,3 +173,40 @@ Metrics (take all that are printed, per segment):
 - investment policies (insurers): `investment_contract_deposits` (תקבולים בגין חוזי השקעה / הפקדות לפוליסות חיסכון), `investment_contract_aum` (התחייבויות בגין חוזי השקעה תלויי תשואה), fees and expenses of that activity if printed.
 
 Rules: never invent or infer a figure; if a document or a table cannot be found, list it in `not_found` with what you tried. If a site demands a login or blocks access, stop that path and report it; do not work around it. Record each PDF's URL. Use your own uniquely named temp folder under `data/work/lts_<company>_<part>/` for downloads and page text. Do not edit any other file in the repo.
+
+## Solvency reports (v8): the separate Solvency II economic-solvency reports (`doc_type = solvency` in `data/registry/documents.csv`)
+
+Input: one solvency PDF (`local_path`), split to page text with `pdftotext -layout -f N -l N` (1-based pages). Output:
+`data/extracted_solvency/<company>/<period>.json`, same envelope as v1 plus `"report_id"`, `"entity"` (the insurer subsidiary the report is for,
+as printed, e.g. "הראל חברה לביטוח בע\"מ") and `"as_of"` (the solvency date). Rules 1–9 of v1 apply; amounts in NIS millions; ratios in percent.
+Read only the pages that carry the tables (find them by text search: "יחס כושר פירעון", "הון עצמי לצורך", "הון נדרש", "SCR", "MCR", "מודול",
+"הוראות המעבר", "פריסה", "רגישות"); open a page image only when its text layer is broken.
+Metrics (take all that are printed; `segment` = `solo` for the insurer, `group` for a consolidated calculation; set `basis` to
+`with_transitional` / `without_transitional` / `na`):
+- Ratio and capital: `solvency_ratio`, `own_funds` (הון עצמי לצורך יחס כושר פירעון), `own_funds_tier1`, `own_funds_tier1_restricted`, `own_funds_tier2`,
+  `own_funds_tier3`, `scr`, `mcr`, `own_funds_for_mcr`, `mcr_ratio`, `solvency_surplus`, `target_solvency_ratio` (+ range/board text in `note`),
+  `*_after_capital_actions` variants when a separate column is printed.
+- SCR composition (before diversification unless the label says otherwise; put the label verbatim in `label`): `scr_market`, `scr_counterparty`,
+  `scr_life`, `scr_health`, `scr_nonlife`, `scr_operational`, `scr_intangible`, `scr_diversification`, `scr_basic` (BSCR),
+  `scr_adj_deferred_tax`, `scr_adj_technical_provisions`, `scr_equity_shock_transitional` (when shown), `scr_other` with the label.
+- Transitional measures: `transitional_deduction_tp` (ניכוי בעתודות הביטוח בתקופת הפריסה), `transitional_equity_scenario`.
+- Balance sheet for solvency: `economic_total_assets`, `economic_best_estimate_liabilities`, `economic_risk_margin`, `economic_excess_assets`.
+- Sensitivities when tabled: `solvency_sensitivity` with the scenario text in `label`, the ratio impact in percentage points in `value`, and `note`
+  stating whether it is with or without transitional.
+- Dividend policy lines in the report: `target_*` with the sentence in `note`.
+
+## Investor presentations (v9): `doc_type = presentation` (Hebrew decks; English twins only as a cross-check)
+
+Output: `data/extracted_pres/<company>/<period>.json` with `"report_id"`, `"pres_date"`, same fact envelope; `page_he` = the slide (PDF page).
+A deck repeats the statements: do NOT re-extract statement figures already in the quarterly report. Extract only what a deck adds:
+- **Management targets and guidance**: `target_<topic>` (e.g. `target_roe`, `target_profit`, `target_comprehensive_income`, `target_dividend_payout`,
+  `target_solvency_ratio`, `target_aum`, `target_cost_income`, `target_csm_growth`, `target_new_business`, `target_market_share`), with `value` or
+  `value_low`/`value_high`, the horizon year in `horizon` (e.g. 2027), whether pre/post tax in `basis` (`pre_tax`/`post_tax`/`na`), and the slide
+  sentence verbatim in `label`. Also `target_status` when a deck reports progress ("הושג", "בדרך") with the text.
+- **Adjusted / management KPIs** the statements do not carry: `adj_<name>` (e.g. `adj_comprehensive_income`, `adj_roe`, `core_profit`,
+  `operating_profit_<segment>`), with the definition text in `note`; plus `kpi_<name>` for operating KPIs printed as numbers (customers, policies,
+  AUM by product, flows/ניוד, market share, headcount), each with its unit in `note` and the date it refers to in `date`.
+- Dividend announcements and buy-backs stated in the deck: `dividend_announced`, `buyback_announced` (amount, date).
+Find candidate slides by text search ("יעד", "יעדים", "תכנית אסטרטגית", "אסטרטגי", "2026", "2027", "2028", "תחזית", "מתואם", "ליבה", "target",
+"guidance", "adjusted"). Image-only slides: read the slide image only if the text layer is empty AND the slide title suggests targets/KPIs.
+Chart-read values follow v1 rule 8. Never infer a target from a chart trend.
