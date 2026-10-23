@@ -66,7 +66,7 @@ URL form: `?vin=o` (original), `?vin=2025-08-31` (as of), absent = latest.
 
 ### Counts (23.10.26)
 
-13 companies · 6,430 line instances' ids · 190,070 rows · 115,510 cells · 45,957 cells printed by more than one report ·
+13 companies · 6,432 line ids · 190,070 rows · 115,510 cells · 45,957 cells printed by more than one report ·
 1,660 restated cells (flag 8) · 270 reports · 5.8 MB = 0.76× `companies/` (budget 1.5×).
 
 ## The taxonomy
@@ -75,9 +75,9 @@ Every workbook row gets a line id. Three tiers:
 
 | tier | ids | rule |
 |---|---|---|
-| **core** | 127 | curated in `rules.CORE`: readable id (`pl.pbt`, `bs.total_assets`, `cf.cfo`, `oci.total` …), a pattern over the caption, a nature. The 29 roles of `lines.json` are core ids (`ROLE_ID`), so the peer lines keep their keys. |
-| **shared** | 286 | the same normalised caption, in the same statement **block**, printed by two or more companies. Id = `<stmt>.<block>.<6 hex>` of the first caption it was registered under. |
-| **own** | 6,017 | a line only one company prints (most are the Phoenix spreadsheet's notes, `px.*`), or a caption a company prints twice in one block ("סך הכול", "אחרות"). Stable within the company; no cross-company identity. |
+| **core** | 103 | curated in `rules.CORE`: readable id (`pl.pbt`, `bs.total_assets`, `cf.cfo`, `oci.total` …), a pattern over the caption, a nature. The 29 roles of `lines.json` are core ids (`ROLE_ID`), so the peer lines keep their keys. |
+| **shared** | 283 | the same normalised caption, in the same statement **block**, printed by two or more companies. Id = `<stmt>.<block>.<6 hex>` of the first caption it was registered under. |
+| **own** | 6,046 | a line only one company prints (most are the Phoenix spreadsheet's notes, `px.*`), a caption a company prints twice in one block ("סך הכול", "אחרות"), or a second row of one company that reached an id already taken in that block (suffix `~2`). Stable within the company; no cross-company identity. |
 
 Series rows keep the extractor's metric key: `n.<metric>` (shared when two companies have it), with the segment and basis as the
 dimension.
@@ -106,10 +106,10 @@ break, BreakChip): `pl.gpe → pl.ins_rev`, `pl.claims_gross → pl.ins_exp`, `p
 
 | kind | rows | core | shared | own | rows on a cross-company id | figures on one |
 |---|---|---|---|---|---|---|
-| primary statements (from the reports) | 3,762 | 1,233 | 753 | 1,776 | **52.8%** | **63.0%** |
+| primary statements (from the reports) | 3,762 | 1,178 | 752 | 1,832 | **51.3%** | **61.8%** |
 | series sheets (segments, capital, savings) | 2,911 | – | 2,441 | 470 | **83.9%** | **92.8%** |
-| Phoenix spreadsheet sheets | 4,625 | 196 | 93 | 4,336 | 6.2% | 9.4% (company-specific notes) |
-| all workbook rows | 11,298 | 1,429 | 3,287 | 6,582 | **41.7%** | **61.8%** |
+| Phoenix spreadsheet sheets | 4,625 | 196 | 92 | 4,337 | 6.2% | 9.3% (company-specific notes) |
+| all workbook rows | 11,298 | 1,374 | 3,285 | 6,639 | **41.2%** | **60.9%** |
 
 The tail (`coverage.json → tail`): detailed cash-flow lines each company names its own way ("ריבית שנצברה ושערוך התחייבויות לתאגידים
 בנקאיים"), generic captions printed twice in a block ("סך הכול"), second prints of a core line in a combined statement, and the Phoenix

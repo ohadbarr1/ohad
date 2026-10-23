@@ -6,7 +6,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Sourced } from '../components/Source';
 import { countChanged, useVintage, VintageMark, VintageToggle, vintageProv } from '../components/VintageToggle';
 import { Empty, ErrorBox, Loading, Panel, Seg } from '../components/ui';
-import { fmtCell, nf } from '../lib/format';
+import { fmtCell, nf, pubLabel } from '../lib/format';
 import { FL, useTaxonomy, type Facts, type Line } from '../lib/facts';
 import { idCss } from '../lib/identity';
 import { usePhone } from '../lib/useMedia';
@@ -124,7 +124,7 @@ function Statement({ facts, st, set, sp, policy, setPolicy, tax, phone, name, id
         )}
       </Panel>
       <p className="fx-foot muted">
-        {policy === 'latest' ? 'מעודכן: ההדפסה האחרונה של כל תקופה (הערך שבאתר).' : policy === 'original' ? 'כפי שדווח לראשונה: כל תקופה מהדוח הראשון שהדפיס אותה.' : `נכון לדוח: מה שפורסם עד ${vintages.find(([d]) => d === policy.slice(5))?.[1] ?? policy.slice(5)}; רבעון רביעי מחושב באותה גרסה.`}
+        {policy === 'latest' ? 'מעודכן: ההדפסה האחרונה של כל תקופה (הערך שבאתר).' : policy === 'original' ? 'כפי שדווח לראשונה: כל תקופה מהדוח הראשון שהדפיס אותה.' : `נכון לדוח: מה שפורסם עד ${vintages.find(([d]) => d === policy.slice(5))?.[1] ?? pubLabel(policy.slice(5))}; רבעון רביעי מחושב באותה גרסה.`}
         {' '}נקודה = ההדפסה הראשונה שונה מהמעודכן; לחיצה פותחת את שני העמודים.
       </p>
     </div>

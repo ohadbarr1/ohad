@@ -202,7 +202,8 @@ def build(wbs, meta, caps, registry, nfacts):
     for k, r in enumerate(rows):
         lid = assigned[k]
         base = lid.split("~")[0]
-        tier = "core" if base in rules.CORE_META else ("shared" if len(cos_of[base]) >= 2 else "own")
+        # a second row of one company that reached an id (suffix ~n) has no cross-company identity of its own
+        tier = "own" if "~" in lid else "core" if base in rules.CORE_META else ("shared" if len(cos_of[base]) >= 2 else "own")
         ids[r["co"]][r["mi"]] = (lid, tier, r["block"])
         lab_of[lid][r["label"]] += 1
         e = entries.setdefault(lid, {"label": None, "stmt": r["stmt"], "block": r["block"], "tier": tier, "units": collections.Counter(),

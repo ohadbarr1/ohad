@@ -5,7 +5,7 @@
    only when the reader asks for it (toggle or a dot). */
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { fmtCell, MINUS, nf, type Scale } from '../lib/format';
+import { fmtCell, MINUS, nf, pubLabel, type Scale } from '../lib/format';
 import { FL, parsePolicy, policyLabel, policyParam, useFacts, type Fact, type Facts, type Line, type Policy } from '../lib/facts';
 import { useSource, type Prov } from '../lib/prov';
 import '../styles/vintage.css';
@@ -40,6 +40,7 @@ export function VintageToggle({ value, onChange, changed, vintages, busy }: {
         <label className="vin-asof"><span>נכון לדוח</span>
           <select value={asof} onChange={(e) => onChange(e.target.value ? (`asof:${e.target.value}` as Policy) : 'latest')} aria-label="נכון לדוח">
             <option value="">—</option>
+            {asof && !vintages.some(([d]) => d === asof) && <option value={asof}>{pubLabel(asof)}</option>}
             {vintages.map(([d, l]) => <option key={d} value={d}>{l}</option>)}
           </select>
         </label>

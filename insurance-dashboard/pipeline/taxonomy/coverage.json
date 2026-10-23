@@ -1,120 +1,120 @@
 {
  "rows": 11298,
- "rows_core": 1429,
- "rows_shared": 3287,
- "rows_own": 6582,
- "mapped_share": 0.4174,
+ "rows_core": 1374,
+ "rows_shared": 3285,
+ "rows_own": 6639,
+ "mapped_share": 0.4124,
  "facts": 115510,
- "facts_mapped_share": 0.6179,
+ "facts_mapped_share": 0.6086,
  "by_kind": {
   "company sheets": {
    "core": 196,
-   "shared": 93,
-   "own": 4336
+   "shared": 92,
+   "own": 4337
   },
   "series": {
    "shared": 2441,
    "own": 470
   },
   "statements": {
-   "own": 1776,
-   "core": 1233,
-   "shared": 753
+   "own": 1832,
+   "core": 1178,
+   "shared": 752
   }
  },
  "facts_by_kind": {
   "company sheets": {
    "core": 816,
-   "shared": 409,
-   "own": 11850
+   "shared": 404,
+   "own": 11855
   },
   "series": {
    "shared": 17381,
    "own": 1345
   },
   "statements": {
-   "own": 30938,
-   "core": 33774,
-   "shared": 18997
+   "own": 32015,
+   "core": 32700,
+   "shared": 18994
   }
  },
  "by_company": {
   "altshuler": {
-   "own": 121,
-   "core": 63,
-   "shared": 42
+   "own": 131,
+   "core": 55,
+   "shared": 40
   },
   "analyst": {
-   "own": 64,
-   "core": 31,
+   "own": 65,
+   "core": 30,
    "shared": 11
   },
   "ayalon": {
-   "core": 153,
-   "shared": 496,
-   "own": 163
+   "core": 144,
+   "shared": 498,
+   "own": 170
   },
   "clal": {
-   "core": 140,
-   "shared": 399,
-   "own": 308
+   "core": 135,
+   "shared": 398,
+   "own": 314
   },
   "hachshara": {
-   "core": 127,
+   "core": 122,
    "shared": 277,
-   "own": 125
+   "own": 130
   },
   "harel": {
-   "core": 142,
+   "core": 135,
    "shared": 398,
-   "own": 212
+   "own": 219
   },
   "ibi": {
    "shared": 31,
-   "own": 122,
-   "core": 32
-  },
-  "meitav": {
-   "core": 35,
-   "shared": 24,
-   "own": 182
-  },
-  "menora": {
-   "core": 153,
-   "shared": 589,
-   "own": 305
-  },
-  "migdal": {
-   "core": 146,
-   "shared": 396,
-   "own": 165
-  },
-  "more": {
-   "own": 158,
-   "shared": 33,
+   "own": 124,
    "core": 30
   },
+  "meitav": {
+   "core": 33,
+   "shared": 25,
+   "own": 183
+  },
+  "menora": {
+   "core": 150,
+   "shared": 589,
+   "own": 308
+  },
+  "migdal": {
+   "core": 140,
+   "shared": 397,
+   "own": 170
+  },
+  "more": {
+   "own": 159,
+   "shared": 33,
+   "core": 29
+  },
   "phoenix": {
-   "core": 348,
-   "shared": 580,
-   "own": 4610
+   "core": 344,
+   "shared": 577,
+   "own": 4617
   },
   "yelin": {
-   "own": 47,
-   "core": 29,
+   "own": 49,
+   "core": 27,
    "shared": 11
   }
  },
  "lines": {
-  "core": 127,
-  "shared": 286,
-  "own": 6017
+  "core": 103,
+  "shared": 283,
+  "own": 6046
  },
  "core_ids_unused": [
   "bs.assets_yield_total"
  ],
  "conflicts": 0,
- "collisions": 66,
+ "collisions": 58,
  "role_mismatch": [
   "altshuler: intangibles = נכסים בלתי מוחשיים"
  ],
@@ -159,6 +159,13 @@
    "sheet": "X.רווח_והפסד",
    "label": "רווח לתקופה",
    "id": "pl.pl.4482b0",
+   "facts": 52
+  },
+  {
+   "co": "hachshara",
+   "sheet": "X.תזרים_מזומנים",
+   "label": "מזומנים נטו ששימשו לפעילות השקעה",
+   "id": "cf.cfi~2",
    "facts": 52
   },
   {
@@ -528,15 +535,8 @@
   {
    "co": "ibi",
    "sheet": "X.רווח_והפסד",
-   "label": "מהשקעות לזמן ארוך",
-   "id": "pl.pl.2e780d",
-   "facts": 44
-  },
-  {
-   "co": "ibi",
-   "sheet": "X.רווח_והפסד",
-   "label": "מהשקעות לזמן קצר",
-   "id": "pl.pl.3e1fcc",
+   "label": "בעלי מניות של החברה",
+   "id": "pl.np_attr~2",
    "facts": 44
   }
  ]

@@ -99,7 +99,10 @@ def blocks(stmt, rows):
             if re.search(r"^יתרת מזומנים|^(עלי[יה]+|ירידה)( נטו)?( \((עלי[יה]+|ירידה)\))?( נטו)? במזומנים|^השפעת ה?(תנודות|שינויים) בשערי? ה?חליפין", lab) and state != "app":
                 out.append("cash")
                 continue
-            out.append(state)
+            # the three activity totals belong to their own activity, wherever the company prints them
+            tot = "op" if re.search(r"^מזומנים,? ?נטו.*(מ|ל)פעילות שוטפת", lab) else "inv" if re.search(r"^מזומנים,? ?נטו.*(מ|ל)פעילות השקעה", lab) \
+                else "fin" if re.search(r"^מזומנים,? ?נטו.*(מ|ל)פעילות מימון", lab) else None
+            out.append(tot or state)
             if re.search(r"^מזומנים,? ?נטו.*(מ|ל)פעילות מימון", lab):
                 state = "cash"
             elif re.search(r"^מזומנים,? ?נטו.*(מ|ל)פעילות השקעה", lab):
