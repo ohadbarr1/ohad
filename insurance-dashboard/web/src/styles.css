@@ -578,3 +578,7 @@ div.src > a, .fnote a { text-decoration: underline; text-decoration-color: color
 .subnav a.subnav-out:hover { color: var(--accent-text); background: transparent; }
 .mgr-views .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 /* === end lane U === */
+
+/* iOS/iPadOS WebKit can draw a sticky cell inside an RTL horizontal scroller off its scroll origin (blank first column, seen on an
+   iPhone on the home table): there the first column scrolls with the table instead of sticking. */
+@supports (-webkit-touch-callout: none) { [dir="rtl"] .scroll table :is(th, td):first-child { position: static; box-shadow: none; } }

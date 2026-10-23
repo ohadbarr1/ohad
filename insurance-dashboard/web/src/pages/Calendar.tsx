@@ -6,6 +6,7 @@ import { pubLabel } from '../lib/format';
 import { mayaReport } from '../lib/sources';
 import { useLoad } from '../lib/useData';
 import type { Prov } from '../lib/prov';
+import { RecentFilingsPanel } from '../components/home/RecentFilings';
 
 interface Cal { built: string; basis: string; companies: { id: string; name: string; inactive?: boolean; last: { period: string; date: string; type: string; rid: number };
   next: { period: string; end: string; expected?: string; lo?: string; hi?: string; n?: number; lags?: number[] }; history: { period: string; date: string; lag: number }[] }[] }
@@ -28,6 +29,7 @@ export function Calendar() {
   return (
     <>
       <div className="pagehead"><div><h1>לוח דיווחים</h1><div className="sub">הדוח הבא של כל חברה · אומדן מהרקורד של החברה עצמה · <a href="/data/calendar.ics" download>הוספה ליומן (ICS)</a></div></div></div>
+      <RecentFilingsPanel />
       <Panel title="הדוח הבא" aside={<span>{data.basis}</span>}>
         <DataTable caption="הדוח הבא של כל חברה" rows={active} rowKey={(c) => c.id} export={{ name: 'fox-calendar', title: 'לוח דיווחים', note: data.basis }} columns={[
           { key: 'co', head: 'חברה', value: (c) => c.name, cell: (c) => <Link to={`/company/${c.id}`}>{c.name}</Link> },
