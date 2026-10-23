@@ -136,6 +136,14 @@
   {
    "pattern": "consistency.json",
    "schema": "consistency"
+  },
+  {
+   "pattern": "ownership/index.json",
+   "schema": "ownIndex"
+  },
+  {
+   "pattern": "ownership/*.json",
+   "schema": "ownCompany"
   }
  ],
  "$defs": {
@@ -2269,6 +2277,740 @@
          }
         }
        }
+      }
+     }
+    }
+   }
+  },
+  "ownIndex": {
+   "type": "object",
+   "required": [
+    "built",
+    "source",
+    "disclaimers",
+    "names",
+    "companies",
+    "matrix"
+   ],
+   "properties": {
+    "built": {
+     "type": "string",
+     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "source": {
+     "type": "string"
+    },
+    "disclaimers": {
+     "type": "object",
+     "required": [
+      "ip",
+      "funds",
+      "terms"
+     ],
+     "properties": {
+      "ip": {
+       "type": "string"
+      },
+      "funds": {
+       "type": "string"
+      },
+      "terms": {
+       "type": "string"
+      }
+     }
+    },
+    "names": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "companies": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "entity",
+       "listed",
+       "asof",
+       "controlling",
+       "institutional",
+       "public",
+       "quarters"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "entity": {
+        "type": "string"
+       },
+       "listed": {
+        "type": "boolean"
+       },
+       "asof": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "parent_note": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "controlling": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "institutional": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "public": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "interested": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "top": {
+        "type": [
+         "object",
+         "null"
+        ]
+       },
+       "funds_pct": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "funds_month": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "quarters": {
+        "type": "integer"
+       },
+       "last_q": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "matrix": {
+     "type": "object",
+     "required": [
+      "rows",
+      "cols",
+      "cells"
+     ],
+     "properties": {
+      "rows": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "cols": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "cells": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "h",
+         "c",
+         "pct",
+         "basis",
+         "self",
+         "date",
+         "src",
+         "parts"
+        ],
+        "properties": {
+         "h": {
+          "type": "string"
+         },
+         "c": {
+          "type": "string"
+         },
+         "pct": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "basis": {
+          "enum": [
+           "ip",
+           "funds"
+          ]
+         },
+         "self": {
+          "type": "boolean"
+         },
+         "date": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "src": {
+          "type": "string"
+         },
+         "parts": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "required": [
+            "name",
+            "cap"
+           ],
+           "properties": {
+            "name": {
+             "type": [
+              "string",
+              "null"
+             ]
+            },
+            "channel": {
+             "type": [
+              "string",
+              "null"
+             ]
+            },
+            "cap": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "date": {
+             "type": [
+              "string",
+              "null"
+             ]
+            },
+            "funds": {
+             "type": "number"
+            },
+            "nis_m": {
+             "type": "number"
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "ownCompany": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "entity",
+    "maya_id",
+    "listed",
+    "maya_url",
+    "split",
+    "holders",
+    "funds",
+    "history"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "entity": {
+     "type": "string"
+    },
+    "maya_id": {
+     "type": "integer"
+    },
+    "security": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "parent_note": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "listed": {
+     "type": "boolean"
+    },
+    "maya_url": {
+     "type": "string"
+    },
+    "indices": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "retrieved": {
+     "type": "string"
+    },
+    "split": {
+     "type": "object",
+     "required": [
+      "interested",
+      "institutional",
+      "public",
+      "controlling",
+      "asof",
+      "src"
+     ],
+     "properties": {
+      "interested": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "institutional": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "public": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "controlling": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "asof": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "controlling_asof": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "src": {
+       "type": "string"
+      }
+     }
+    },
+    "holders": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "name",
+       "group",
+       "type",
+       "cap",
+       "vote",
+       "date",
+       "main"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "group": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "self": {
+        "type": "boolean"
+       },
+       "type": {
+        "enum": [
+         "controlling",
+         "interested",
+         "institutional",
+         "officer",
+         "treasury"
+        ]
+       },
+       "channel": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "security": {
+        "type": "string"
+       },
+       "main": {
+        "type": "boolean"
+       },
+       "balance": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "cap": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "vote": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "date": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "remark": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "holders_src": {
+     "type": "string"
+    },
+    "funds": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "month": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "issued": {
+       "type": "number"
+      },
+      "n": {
+       "type": "integer"
+      },
+      "total_pct": {
+       "type": "number"
+      },
+      "by_manager": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "manager",
+         "group",
+         "funds",
+         "pct"
+        ],
+        "properties": {
+         "manager": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "group": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "funds": {
+          "type": "integer"
+         },
+         "qty": {
+          "type": "number"
+         },
+         "pct": {
+          "type": "number"
+         },
+         "nis_m": {
+          "type": "number"
+         }
+        }
+       }
+      },
+      "src": {
+       "type": "string"
+      },
+      "api": {
+       "type": "string"
+      },
+      "retrieved": {
+       "type": "string"
+      },
+      "unmapped": {
+       "type": "integer"
+      }
+     }
+    },
+    "history": {
+     "type": "object",
+     "required": [
+      "quarters",
+      "reports",
+      "series",
+      "changes"
+     ],
+     "properties": {
+      "quarters": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "reports": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "q",
+         "rid",
+         "url",
+         "controlling",
+         "total",
+         "public"
+        ],
+        "properties": {
+         "q": {
+          "type": "string",
+          "pattern": "^\\d{4}Q[1-4]$"
+         },
+         "asof": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "rid": {
+          "type": "integer"
+         },
+         "url": {
+          "type": "string"
+         },
+         "file": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "published": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "controlling": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "total": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "public": {
+          "type": [
+           "number",
+           "null"
+          ]
+         }
+        }
+       }
+      },
+      "series": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "key",
+         "name",
+         "group",
+         "type",
+         "pts",
+         "parts"
+        ],
+        "properties": {
+         "key": {
+          "type": "string"
+         },
+         "name": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "group": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "self": {
+          "type": "boolean"
+         },
+         "type": {
+          "enum": [
+           "controlling",
+           "interested",
+           "institutional",
+           "officer",
+           "treasury"
+          ]
+         },
+         "pts": {
+          "type": "array",
+          "items": {
+           "type": [
+            "number",
+            "null"
+           ]
+          }
+         },
+         "parts": {
+          "type": "object",
+          "additionalProperties": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "required": [
+             "name",
+             "cap"
+            ],
+            "properties": {
+             "name": {
+              "type": "string"
+             },
+             "cap": {
+              "type": [
+               "number",
+               "null"
+              ]
+             },
+             "vote": {
+              "type": [
+               "number",
+               "null"
+              ]
+             },
+             "type": {
+              "type": "string"
+             },
+             "channel": {
+              "type": "string"
+             }
+            }
+           }
+          }
+         },
+         "last": {
+          "type": [
+           "number",
+           "null"
+          ]
+         }
+        }
+       }
+      },
+      "changes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "key",
+         "from",
+         "to",
+         "d"
+        ],
+        "properties": {
+         "key": {
+          "type": "string"
+         },
+         "name": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "group": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "from": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "to": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "d": {
+          "type": [
+           "number",
+           "null"
+          ]
+         }
+        }
+       }
+      },
+      "form": {
+       "type": "string"
       }
      }
     }
