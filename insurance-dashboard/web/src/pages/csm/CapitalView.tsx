@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { Chart } from '../../components/Chart';
 import { useSource, type Prov } from '../../lib/prov';
 import { Empty, ErrorBox, Loading, Panel, Seg } from '../../components/ui';
@@ -10,6 +10,7 @@ import { nf } from '../../lib/format';
 import { periodName } from '../../lib/csm';
 import { INSURERS, MM, amt, useCapital, type CapCo, type CapPt, type Ledger } from '../../lib/csmData';
 import { CapitalTable } from '../IndustryCapital';
+const DebtWallStrip = lazy(() => import('../Debt').then((m) => ({ default: m.DebtWallStrip })));
 import { ScrComposition } from './ScrComposition';
 import { useParam } from './params';
 
@@ -78,6 +79,7 @@ export function CapitalView({ L, name }: { L: Ledger; name: (id: string) => stri
         </Panel>
       </div>
       <DividendCapacity ledger={L} />
+      <Suspense fallback={null}><DebtWallStrip /></Suspense>
       <CapitalTable L={L} name={name} />
       <ScrComposition ids={ids} name={name} />
     </>

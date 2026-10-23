@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { lazy, Suspense, useMemo, type ReactNode } from 'react';
 import { DividendCapacity } from '../components/DividendCapacity';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ErrorBox, Panel } from '../components/ui';
@@ -10,6 +10,7 @@ import { useCompanyDocs, useKpis } from '../lib/useData';
 import { KPI_BY_KEY, periodLabelShort, type CompanyKpi } from '../lib/kpi';
 import { mayaReport } from '../lib/sources';
 import { printed } from './companyProv';
+const DebtStrip = lazy(() => import('./Debt').then((m) => ({ default: m.DebtStrip })));
 import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
 import { usePeriodParam, useWindowParam, type Win } from '../lib/period';
@@ -207,6 +208,7 @@ export function CompanyOverview() {
         </section>
       )}
       {!fund && <DividendCapacity id={entry.id} />}
+      <Suspense fallback={null}><DebtStrip id={entry.id} /></Suspense>
       {docs.data && <LatestDocs docs={docs.data.docs} />}
       <Panel title="הערות" aside={<><span>מעקב</span><Star id={entry.id} name={entry.name_he} /></>}><Notes id={entry.id} /></Panel>
     </>

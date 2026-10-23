@@ -22,6 +22,8 @@ jobs:
         with: { python-version: '3.12' }
       - name: Python dependencies
         run: pip install -r pipeline/requirements.txt
+      - name: Autopilot tests
+        run: python -m unittest discover -s pipeline/autopilot/tests
       - name: Data gate (page-text checks are skipped where the page texts are not in git)
         run: python pipeline/gate.py
       - name: Install

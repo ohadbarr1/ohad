@@ -11,6 +11,7 @@ export function IndustryLayout() {
         <NavLink to="savings">עדשת חיסכון</NavLink>
         <NavLink to="/restatements">הצגות מחדש</NavLink>
         <NavLink to="/presentations">מצגות</NavLink>
+        <NavLink to="/debt">חוב ופירעונות</NavLink>
       </nav>
       <Outlet />
     </>
