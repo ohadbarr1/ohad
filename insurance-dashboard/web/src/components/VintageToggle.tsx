@@ -45,7 +45,7 @@ export function VintageToggle({ value, onChange, changed, vintages, busy }: {
           </select>
         </label>
       )}
-      {busy ? <span className="vin-n muted">טוען…</span> : changed != null && <span className="vin-n" title="תאים שההדפסה הראשונה שלהם שונה מהערך המעודכן"><span className="vin-dot-key" aria-hidden />{changed > 0 ? <><span className="num">{nf(changed, 0)}</span> הוצגו מחדש</> : 'אין הצגות מחדש'}</span>}
+      {busy ? <span className="vin-n muted">טוען…</span> : changed != null && <span className="vin-n" title={changed > 0 ? `${changed} תאים בטבלה זו הודפסו לראשונה בערך שונה מהערך המעודכן` : 'אין בטבלה זו תאים שהוצגו מחדש'}><span className="vin-dot-key" aria-hidden />{changed > 0 ? <span className="num">{nf(changed, 0)}</span> : 'ללא שינוי'}</span>}
     </div>
   );
 }

@@ -365,7 +365,8 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
         // reports to read the statement as of: every report that printed a figure of this sheet, newest first
   const vintages = vin.facts ? (() => { const f = vin.facts, ts = new Set<number>(); vinLines.forEach((l) => { for (let k = l.start; k < l.end; k++) ts.add(f.d.rows.t[k]); }); return [...ts].filter((t) => f.vint[t].pub).sort((a, b) => f.vdate(b).localeCompare(f.vdate(a))).map((t) => [f.vdate(t), f.vlabel(t)] as [string, string]); })() : undefined;
   // restated cells on screen: from the fact table once it is loaded, otherwise the site's restatement list for the sheet
-  const nRestated = vin.facts ? countChanged(vin.facts, vinLines, cols.map(vP).filter((p) => p >= 0)) : restated.length;
+  // one definition: cells in this table whose first print differs from the latest (counted once the fact table is loaded)
+  const nRestated = vin.facts ? countChanged(vin.facts, vinLines, cols.map(vP).filter((p) => p >= 0)) : null;
 
   /* where a figure on the table comes from: printed ones open the report page, computed ones (LTM, YoY, changes) list what they are computed from */
   const { open: openSrc } = useSource();
