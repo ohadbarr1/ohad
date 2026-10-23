@@ -1,0 +1,4 @@
+{
+ "_doc": "Basis differences between two pages that pipeline/check_consistency.py would otherwise fail, each verified against the filing page. Entry: {entity, metric, period (2026Q2 / 2026FY / LTM2026Q2), a, b (surfaces: kpi day lines peers.fs peers.xbrl peers.ifrs capital csm csm.co peers.csm), reason (Hebrew, shown on /data), checked (dd.mm.yy, report id and page)}. Known differences the pages already label (kpi filer, IFRS 4 vs IFRS 17, a later report's restated comparative, the profit-for-the-period row where no attribution row is printed) are classified automatically and need no entry. An entry no longer needed fails the gate.",
+ "allow": []
+}

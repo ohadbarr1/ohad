@@ -24,6 +24,9 @@ Checks
                  derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
+  consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)
+                 shows one figure within rounding, last 8 quarters; labelled basis differences listed (pipeline/check_consistency.py, lane Q)
+  fund_roles     fund houses: attributable profit and comprehensive income on the company page = XBRL, last 4 quarters
   schemas        every built JSON with a data contract (web/src/lib/schemas.json) matches it: pipeline/check_schemas.py, the same
                  contracts the site checks as each file arrives (lane 2H).
 """
@@ -322,6 +325,28 @@ def lens():
     add("lens", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
 
 
+def consistency():
+    """Lane Q: one figure per entity, period and metric on every page that serves it (pipeline/check_consistency.py)."""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "check_consistency.py")], capture_output=True, text=True)
+    try:
+        r = load(DATA / "consistency.json")
+    except (OSError, ValueError):
+        add("consistency", False, 0, 1, (p.stdout + p.stderr).strip()[-200:])
+        return
+    ex = r["exceptions"]
+    c = r["conflicts"]
+    c = c + [{"entity": k[0], "metric": k[1], "period": k[2], "a": "allow-list", "va": 0, "b": "no longer needed", "vb": 0} for k in r.get("stale_allow", [])]
+    add("consistency", not c, r["pairs"], len(c), f"{r['passed']} equal within rounding, {sum(x['n'] for x in ex.values())} labelled basis differences ("
+        + ", ".join(f"{k} {x['n']}" for k, x in ex.items()) + f"), last 8 quarters" + (f"; e.g. {c[0]['entity']} {c[0]['metric']} {c[0]['period']}: {c[0]['a']} {c[0]['va']:,} vs {c[0]['b']} {c[0]['vb']:,}" if c else "")
+        + (f"; {p.stdout.strip().splitlines()[-1][:80]}" if p.returncode and not c and p.stdout.strip() else ""))
+    f = r["fund_roles"]
+    bad = [x for x in f["rows"] if not x["ok"] and not x["basis"]]
+    add("fund_roles", not bad, f["n"], len(bad), "fund houses, last 4 quarters: attributable profit and comprehensive income on the company page = XBRL"
+        + (f"; e.g. {bad[0]['entity']} {bad[0]['metric']} {bad[0]['period']}: page {bad[0]['page']:,} vs XBRL {bad[0]['xbrl']:,}" if bad else ""))
+    if r["older"]:
+        add("consistency_old", False, r["pairs"], r["older"], "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)", level="warn")
+
+
 def schemas():
     n, bad, summary = check_schemas.run(quiet=True)
     add("schemas", not bad, n, len(bad), summary + (f"; e.g. {bad[0][0]}: {bad[0][2][0]}" if bad else ""))
@@ -343,6 +368,7 @@ def main():
     balance(wbs)
     cross_layer()
     lens()
+    consistency()
     schemas()
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
