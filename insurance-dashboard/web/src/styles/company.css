@@ -54,8 +54,8 @@
 .ktile .kt-v .num { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
 .ktile .kt-v :is(a.src, button.src) { display: inline-flex; align-items: center; min-height: 40px; padding: 0; margin-block: -4px; }
 .ktile .kt-u { font-size: var(--t-1); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ktile .kt-f { display: flex; align-items: center; gap: 6px; font-size: 12.5px; min-height: 30px; }
-.ktile .kt-f :is(a.src, button.src) { display: inline-flex; align-items: center; min-height: 36px; font-weight: 700; }
+.ktile .kt-f { display: flex; align-items: center; gap: 6px; font-size: 12.5px; min-height: 40px; margin-block: -4px; }
+.ktile .kt-f :is(a.src, button.src) { display: inline-flex; align-items: center; min-height: 40px; font-weight: 700; }
 .ktile .kt-yl { font-size: var(--t-1); color: var(--faint); }
 .ktile .kt-f svg.spark { margin-inline-start: auto; }
 .ktile:active { background: var(--panel2); }
@@ -85,11 +85,11 @@
   .panel.ledger table :is(td, th) { padding-inline: 5px; min-width: 0; }
   .panel.ledger table :is(td.lbl, tr.lhd th:first-child) { width: 44%; min-width: 0; max-width: none; white-space: normal; }
   .ledger td.lbl .lblin { display: flex; flex-wrap: wrap; gap: 2px 6px; }
-  .ledger .rowbtn { min-height: 36px; text-align: start; line-height: 1.25; }
+  .ledger .rowbtn { min-height: 40px; text-align: start; line-height: 1.25; }
   .ledger td.lbl .chip { font-size: 10.5px; padding: 0 5px; }
   .ledger th.spk, .ledger td.spk { width: 64px; }
   .ledger td.v .num { font-size: 13.5px; }
-  .ledger td :is(a.src, button.src) { display: inline-block; padding-block: 8px; margin-block: -8px; }
+  .ledger td :is(a.src, button.src) { display: inline-block; padding-block: 11px; margin-block: -11px; }
 }
 /* a full-screen sheet for a chart on a phone */
 @media (max-width: 760px) { .sheet:has(.sheet-full) { max-height: 100dvh; height: 100dvh; border-radius: 0; } }
@@ -97,5 +97,6 @@
   .rd-meta.rd-meta-ph { margin-top: -4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .rd-meta.rd-meta-ph .chip { min-height: 32px; }
   .company-head .sub .chip { min-height: 30px; }
+  .company-head .sub .valchip.ph { min-height: 40px; padding-inline: 14px; }
   .rd-head .ctxbar-txt b { font-weight: 700; }
 }

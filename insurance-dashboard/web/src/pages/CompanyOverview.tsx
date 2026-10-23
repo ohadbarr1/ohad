@@ -52,7 +52,7 @@ function statementRows(store: CompanyStore, win: Win): LedgerRow[] {
     });
     if (!pts.some((p) => p.v != null)) return [];
     const mi = r.rows[0]?.mi, sheet = mi != null ? store.d.metrics[mi].sheet : '';
-    return [{ key: `st:${key}`, title: role.label, short: SHORT[key], tag: usedAlt ? role.altChip : key === 'isr' ? 'IFRS 17' : undefined, unit: MN, dec: 1, pts, step: 4, source: 'דוחות כספיים',
+    return [{ key: `st:${key}`, title: role.label, short: SHORT[key], stride: role.flow && win === 'ytd' ? 4 : 1, tag: usedAlt ? role.altChip : key === 'isr' ? 'IFRS 17' : undefined, unit: MN, dec: 1, pts, step: 4, source: 'דוחות כספיים',
       color: role.flow ? 1 : 7, to: mi != null ? `financials?sheet=${encodeURIComponent(sheet)}&m=${mi}&g=1` : undefined }];
   });
 }
@@ -87,7 +87,7 @@ function kpiRows(k: CompanyKpi, win: Win, keys: string[]): LedgerRow[] {
     const rid = (i: number) => { const t = byEnd.get(ends[i]); return t && k.reportId(t.period); };
     pts.forEach((p, i) => { const r = rid(i); if (p.v != null && r && (!flow || win === 'q') && !def.derived) p.href = mayaReport(r); });
     const title = key === 'roe' ? 'ROE, LTM' : key === 'leverage' ? 'נכסים להון' : def.label;
-    return [{ key: `kpi:${key}`, title, short: SHORT[key], tag: def.derived ? 'נגזר' : undefined, unit: unitOf(def.unit), dec: def.unit === 'nis' ? 2 : def.unit === '%' || def.unit === 'x' ? 1 : 0, ratio: def.unit === '%' || def.unit === 'x',
+    return [{ key: `kpi:${key}`, title, short: SHORT[key], stride: flow && win === 'ytd' ? 4 : 1, tag: def.derived ? 'נגזר' : undefined, unit: unitOf(def.unit), dec: def.unit === 'nis' ? 2 : def.unit === '%' || def.unit === 'x' ? 1 : 0, ratio: def.unit === '%' || def.unit === 'x',
       pts, step: 4, source: k.filer ? `XBRL · ${k.filer.name}` : 'XBRL', color: 0, to: `/industry/headline?k=${key}&b=${flow && win === 'ltm' ? 'ltm' : 'q'}`, filer: !!k.filer }];
   });
 }

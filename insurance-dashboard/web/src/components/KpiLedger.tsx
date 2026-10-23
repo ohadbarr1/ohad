@@ -16,6 +16,8 @@ export interface LedgerRow {
   /** a percentage or a multiple: its change is a difference, never a percent of a percent */
   ratio?: boolean;
   pts: LedgerPoint[]; step: number;
+  /** the sparkline and chart take every n-th point (a year-to-date series is read against the same period of earlier years, not as a saw) */
+  stride?: number;
   /** short name of the source, for the source column */
   source: string;
   color?: number; kind?: 'bar' | 'area' | 'stack';
@@ -52,10 +54,16 @@ export function change(row: LedgerRow, a: LedgerPoint | undefined, b: LedgerPoin
   };
 }
 
+/** Indices of the last `n` points of a row up to `c`, oldest first, every `stride`-th. */
+function idxBack(row: LedgerRow, c: number, n: number): number[] {
+  const s = row.stride ?? 1, out: number[] = [];
+  for (let i = c; i >= 0 && out.length < n; i -= s) out.unshift(i);
+  return out;
+}
 /** A row read at one report: the figure, the previous quarter, the same period a year earlier, the change, the last twelve points. */
 export function readRow(row: LedgerRow, asOf: string | null) {
   const c = at(row, asOf), cur = row.pts[c], q = row.step >= 4 ? row.pts[c - row.step / 4] : undefined, y = row.pts[c - row.step];
-  return { c, cur, q, y, yoy: change(row, cur, y), spark: c < 0 ? [] : row.pts.slice(Math.max(0, c - 11), c + 1).map((p) => p.v) };
+  return { c, cur, q, y, yoy: change(row, cur, y), spark: c < 0 ? [] : idxBack(row, c, 12).map((i) => row.pts[i].v) };
 }
 
 /** The last twelve points of a series as a small line, the latest marked. */
@@ -76,11 +84,11 @@ export function Spark({ data, w = 96, h = 24 }: { data: (number | null)[]; w?: n
 
 /** The row as the chart card: up to twenty points ending at the report on screen. */
 function RowChart({ row, asOf, height }: { row: LedgerRow; asOf: string | null; height: number }) {
-  const r = readRow(row, asOf), from = Math.max(0, r.c - 19), upto = row.pts.slice(from, r.c + 1);
+  const r = readRow(row, asOf), ix = r.c < 0 ? [] : idxBack(row, r.c, 20), upto = ix.map((i) => row.pts[i]);
   return (
     <MetricCard title={row.title} tag={row.tag} unit={row.unit === '%' ? '%' : row.unit} value={fmt(row, r.cur?.v)} dec={row.dec} color={row.color ?? 0} kind={row.kind ?? (row.ratio ? 'area' : 'bar')}
       delta={r.yoy ? { text: `${r.yoy.text} YoY`, tone: r.yoy.tone } : undefined} src={r.cur?.src} href={r.cur?.href} to={row.to} height={height}
-      x={upto.map((p) => p.label)} series={row.stack ? row.stack.map((s) => ({ ...s, data: s.data.slice(from, r.c + 1) })) : [{ name: row.title, data: upto.map((p) => p.v) }]}
+      x={upto.map((p) => p.label)} series={row.stack ? row.stack.map((s) => ({ ...s, data: ix.map((i) => s.data[i]) })) : [{ name: row.title, data: upto.map((p) => p.v) }]}
       foot={<>{row.source}{r.cur ? <> · <span className="num">{r.cur.label}</span></> : null}</>} />
   );
 }
@@ -119,7 +127,7 @@ export function KpiLedger({ groups, asOf, sel, onSel }: { groups: LedgerGroup[];
                   return (
                     <tr key={row.key} className={on ? 'on' : ''} onClick={(e) => { if (!(e.target as HTMLElement).closest('.src')) pick(row); }} tabIndex={-1}>
                       <td className="lbl"><span className="lblin"><button type="button" className="rowbtn" onClick={(e) => { e.stopPropagation(); pick(row); }} aria-pressed={on} aria-label={`${row.title}: גרף`}>{row.title}</button>{row.tag && <span className="chip est">{row.tag}</span>}</span></td>
-                      <td className="v"><Val row={row} p={r.cur} />{r.cur && r.cur.label !== lead?.cur?.label && <span className="dim num">{r.cur.label}</span>}</td>
+                      <td className="v"><Val row={row} p={r.cur} />{r.cur && r.cur.end !== lead?.cur?.end && <span className="dim num">{r.cur.label}</span>}</td>
                       <td className="wide-only"><Val row={row} p={r.q} /></td>
                       <td className="wide-only"><Val row={row} p={r.y} /></td>
                       <td>{r.yoy ? <Sourced src={r.yoy.src}><span className={`num ${r.yoy.tone ?? ''}`}>{r.yoy.text}</span></Sourced> : <span className="muted">–</span>}</td>
