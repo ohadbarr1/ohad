@@ -12,8 +12,8 @@ import { mayaReport } from '../lib/sources';
 import { usePhone } from '../lib/useMedia';
 import { useSource, type Prov } from '../lib/prov';
 import { back, F_CHART, F_DER, F_FIXED, F_OLD, F_RE, FREQS, fmtV, plab, pord, UNIT_HE, usePeerRegistry, useBook, warmLts, yearAgo, type Book, type Freq, type MetricDef, type PeerSet, type Registry, type Unit, type Val } from '../lib/registry';
-import { cellVal, colLabel, fmtCol, formulaTok, parseCol, resolver, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
-import { ALIASES, autoAlias, ExprError, parse } from '../lib/seriesExpr';
+import { cellVal, colLabel, fmtCol, formulaTok, lexOf, parseCol, resolver, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
+import { ALIASES, autoAlias, codeOf, ExprError, FUNCS, parse, toCode } from '../lib/seriesExpr';
 import { fundRoster, monthOf, rosterDiff, rosterText, useRosterFile } from '../lib/roster';
 import '../styles/peers.css';
 import '../styles/restate.css';
@@ -162,7 +162,7 @@ export function Peers() {
   const panels = (
     <>
       {panel === 'add' && <Picker reg={reg} ents={ents} onAdd={(id) => set({ c: [...st.c, id] })} onClose={() => setPanel('')} />}
-      {panel === 'fx' && <FormulaEditor book={book} ents={ents} freq={st.f} p={pend} onAdd={(tok) => { set({ c: [...st.c, tok] }); setPanel(''); }} />}
+      {panel === 'fx' && <FormulaEditor book={book} ents={ents} freq={st.f} p={pend} onAdd={(tok) => { set({ c: [...st.c, tok] }); setPanel(''); setSheet(false); }} />}
       {panel === 'set' && <SetEditor reg={reg} ents={ents} onChange={(ids) => set({ e: ids })} onSave={(n) => { const id = `u${Date.now().toString(36)}`; setMySets([...mySets, { id, n, ids: ents }]); set({ s: id, e: null }); }}
         own={allSets.find((x) => x.id === st.s && x.own) ?? null} onDelete={(id) => { setMySets(mySets.filter((x) => x.id !== id)); set({ s: DEF.s, e: null }); }} />}
       {panel === 'views' && <Views views={views} onOpen={(q) => setSp(() => new URLSearchParams(q), { replace: true })} onApply={apply}
@@ -281,7 +281,9 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
     for (const id of c.ids) { const m = book.byId.get(id); const b = m?.br?.find((x) => periods.some((p) => { const lo = c.tr === 'y' ? pord(back(st.f, p, st.f === 'FY' ? 1 : st.f === 'H' ? 2 : 4)) : pord(back(st.f, p, 1)); return pord(x.p) > lo - 0.5 && pord(x.p) <= pord(p) + 0.9; })); if (b) return `${b.m}`; }
     return null;
   };
-  const head = (ci: number) => <ColHead key={ci} book={book} col={cols[ci]} ci={ci} n={cols.length} st={st} set={set} span={periods.length} brk={regBreak(cols[ci])} pinned={st.pin === ci} />;
+  // coverage: the companies of the set with no figure in any period shown, and why (the first reason)
+  const cover = (ci: number) => !periods.length ? [] : ents.filter((e) => periods.every((_, pi) => V(ci, pi, e).v == null)).map((e) => ({ e, why: V(ci, 0, e).why }));
+  const head = (ci: number) => <ColHead key={ci} book={book} col={cols[ci]} ci={ci} n={cols.length} st={st} set={set} span={periods.length} brk={regBreak(cols[ci])} pinned={st.pin === ci} miss={cover(ci)} total={ents.length} />;
 
   if (phone && cards && periods.length === 1) {
     return (
@@ -347,7 +349,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
   );
 }
 
-function ColHead({ book, col, ci, n, st, set, span, brk, pinned }: { book: Book; col: Col; ci: number; n: number; st: St; set: (p: Partial<St>) => void; span: number; brk: string | null; pinned: boolean }) {
+function ColHead({ book, col, ci, n, st, set, span, brk, pinned, miss, total }: { book: Book; col: Col; ci: number; n: number; st: St; set: (p: Partial<St>) => void; span: number; brk: string | null; pinned: boolean; miss: { e: string; why?: string }[]; total: number }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   // the menu floats above the table (fixed), so the table's scroll box never clips it
@@ -368,11 +370,12 @@ function ColHead({ book, col, ci, n, st, set, span, brk, pinned }: { book: Book;
     <th colSpan={span} className={`pr-col${pinned ? ' pin' : ''}`} aria-sort={sortable && st.o?.c === ci ? (st.o.d === 1 ? 'descending' : 'ascending') : undefined}>
       <div className="pr-colin">
         {sortable ? <button type="button" className="thsort" onClick={() => set({ o: st.o?.c !== ci ? { c: ci, i: 0, d: 1 } : st.o.d === 1 ? { c: ci, i: 0, d: -1 } : null })}>{label}<i>{st.o?.c === ci ? (st.o.d === 1 ? '▼' : '▲') : ''}</i></button> : label}
+        {miss.length > 0 && <Coverage book={book} name={col.name} miss={miss} total={total} />}
         <details ref={ref} className="pr-menu" onToggle={place}>
-          <summary aria-label={`עמודה: ${col.name}`}>⋯</summary>
+          <summary aria-label={`פעולות לעמודה ${col.name}`} title={`פעולות לעמודה: ${col.name}`}>⋯</summary>
           <div className="pr-pop" role="menu" style={pos ? { position: 'fixed', top: pos.top, left: pos.left, right: 'auto', width: 300 } : undefined}>
             {col.err && <p className="err">{col.err}</p>}
-            {col.expr && <p className="mono">{col.expr}</p>}
+            {col.expr && <p><bdi>{col.he ?? col.expr}</bdi>{col.he && col.he !== col.expr && <span className="mono muted" dir="ltr"> · {col.expr}</span>}</p>}
             {def?.nt != null && <p className="muted">{book.reg.notes[def.nt]}</p>}
             <div className="pr-trs">{(['v', 'y', 'q', 's', 'c'] as Tr[]).map((t) => <button key={t} type="button" className="chip" aria-pressed={col.tr === t} onClick={() => { const c = [...st.c]; c[ci] = withTr(col, t); set({ c }); close(); }}>{TR_HE[t]}</button>)}</div>
             <button type="button" onClick={() => { set({ v: 'series', k: ci }); close(); }}>סדרה לאורך זמן</button>
@@ -384,6 +387,25 @@ function ColHead({ book, col, ci, n, st, set, span, brk, pinned }: { book: Book;
         </details>
       </div>
     </th>
+  );
+}
+
+/** "5/7" on a column head when companies of the set have no figure; hover, tap or Enter lists them with the reason */
+function Coverage({ book, name, miss, total }: { book: Book; name: string; miss: { e: string; why?: string }[]; total: number }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const place = () => { const d = ref.current; if (!d?.open) { setPos(null); return; } const r = d.querySelector('summary')!.getBoundingClientRect(); setPos({ top: r.bottom + 4, left: Math.max(8, Math.min(innerWidth - 268, r.right - 260)) }); };
+  useEffect(() => { if (!pos) return; const off = (e: Event) => { if (ref.current?.contains(e.target as Node)) return; ref.current?.removeAttribute('open'); setPos(null); }; addEventListener('scroll', off, true); addEventListener('pointerdown', off); return () => { removeEventListener('scroll', off, true); removeEventListener('pointerdown', off); }; }, [pos]);
+  const names = miss.map((m) => book.short(m.e));
+  const has = total - miss.length;
+  return (
+    <details ref={ref} className="pr-cov" onToggle={place}>
+      <summary className="num" aria-label={`${name}: יש נתון ל-${has} מתוך ${total} חברות. חסרות: ${names.join(', ')}`} title={`חסר נתון: ${names.join(', ')}`}>{has}/{total}</summary>
+      <div className="pr-pop pr-covpop" role="note" style={pos ? { position: 'fixed', top: pos.top, left: pos.left, right: 'auto', width: 260 } : undefined}>
+        <p><b>חסר נתון ל-{miss.length} מתוך {total}</b></p>
+        <ul>{miss.map((m) => <li key={m.e}><i className="pdot" style={{ background: idCss(m.e) }} />{book.short(m.e)}{m.why && <span className="muted"> · {m.why}</span>}</li>)}</ul>
+      </div>
+    </details>
   );
 }
 
@@ -466,33 +488,129 @@ function Picker({ reg, ents, onAdd, onClose }: { reg: Registry; ents: string[]; 
 const pl = (p: string) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
 
 /* ---------- formula editor ---------- */
+/** ready formulas, one tap each: the ratios analysts build first. Codes resolve through the registry; the Hebrew form is what the column shows. */
+const PRESETS: { n: string; u: Unit; e: string; d: string }[] = [
+  { n: 'תשואה להון (ROE)', u: 'pct', e: 'ann(np) / avg(eq, yago(eq)) * 100', d: 'רווח נקי בקצב שנתי ÷ הון ממוצע (פתיחה וסגירה)' },
+  { n: 'CSM להון', u: 'x', e: 'csm / eq', d: 'יתרת CSM ÷ הון לבעלי המניות' },
+  { n: 'דמי ניהול לנכסים', u: 'pct', e: 'ann(fee) / avg(aum, yago(aum)) * 100', d: 'דמי ניהול בקצב שנתי ÷ נכסים מנוהלים ממוצעים' },
+  { n: 'יחס הוצאות ביטוח', u: 'pct', e: 'abs(fs_ins_exp) / fs_ins_rev * 100', d: 'הוצאות שירותי ביטוח ÷ הכנסות שירותי ביטוח' },
+  { n: 'רווח לכל מיליארד נכסים', u: 'm', e: 'ann(np) / ta * 1000', d: 'רווח נקי בקצב שנתי, מיליוני ש"ח, לכל מיליארד ש"ח נכסים' },
+  { n: 'עסק חדש ÷ שחרור CSM', u: 'x', e: 'nb / abs(rel)', d: 'CSM מעסק חדש ÷ CSM ששוחרר לרווח' },
+  { n: 'מרווח שירותי ביטוח', u: 'pct', e: 'isr / rev * 100', d: 'תוצאות שירותי ביטוח ÷ הכנסות שירותי ביטוח' },
+  { n: 'נכסים להון', u: 'x', e: 'ta / eq', d: 'סך נכסים ÷ הון לבעלי המניות' },
+];
+const OPCH = /[+\-*/^(),{×÷−]/;
+/** the word being typed: from the last operator before the caret to the caret */
+function fragment(s: string, caret: number): [number, string] {
+  let k = caret;
+  while (k > 0 && !OPCH.test(s[k - 1])) k--;
+  while (k < caret && /\s/.test(s[k])) k++;
+  return [k, s.slice(k, caret)];
+}
+const foldTxt = (t: string) => t.toLowerCase().replace(/[׳’`]/g, "'").replace(/[״”“]/g, '"');
+interface Opt { key: string; label: string; meta: string; insert: string; cover?: string; part?: boolean }
+
 function FormulaEditor({ book, ents, freq, p, onAdd }: { book: Book; ents: string[]; freq: Freq; p: string; onAdd: (tok: string) => void }) {
   const [name, setName] = useState('');
   const [expr, setExpr] = useState('');
   const [unit, setUnit] = useState<Unit>('pct');
+  const [caret, setCaret] = useState(0);
+  const [hl, setHl] = useState(0);
+  const [listOpen, setListOpen] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
   const known = useMemo(() => resolver(book), [book]);
-  let err = '', tree = null as ReturnType<typeof parse> | null;
-  if (expr.trim()) { try { tree = parse(expr, known); } catch (e) { err = e instanceof ExprError ? e.message : 'שגיאה'; } }
-  const last = /[A-Za-z_][A-Za-z0-9_]*$/.exec(expr)?.[0] ?? '';
-  const sugg = last ? [...Object.keys(ALIASES), ...book.reg.metrics.map((m) => autoAlias(m.id))].filter((a) => a.startsWith(last) && a !== last).slice(0, 8) : [];
-  const col: Col | null = tree ? parseCol(formulaTok(name || 'נוסחה', unit, expr), book) : null;
+  const lex = useMemo(() => lexOf(book), [book]);
+  const idx = useMemo(() => new Map(book.reg.entities.map((e, i) => [e.id, i])), [book]);
+  const mine = useMemo(() => new Set(ents.map((e) => idx.get(e))), [ents, idx]);
+  let err: ExprError | null = null, tree = null as ReturnType<typeof parse> | null;
+  if (expr.trim()) { try { tree = parse(expr, known, lex); } catch (e) { err = e instanceof ExprError ? e : new ExprError('שגיאה'); } }
+  // the combobox: metrics by Hebrew label (every word typed), by code, and the functions
+  const [fStart, frag] = fragment(expr, caret);
+  const opts: Opt[] = useMemo(() => {
+    const q = foldTxt(frag.trim());
+    if (!q) return [];
+    const words = q.split(/\s+/);
+    const ms = book.reg.metrics.map((m) => {
+      const label = lex.labelOf.get(m.id) ?? m.l, hay = foldTxt(`${label} ${codeOf(m.id)} ${m.id}`);
+      if (!words.every((w) => hay.includes(w))) return null;
+      const n = m.e.filter((i) => mine.has(i)).length;
+      const score = (foldTxt(label).startsWith(q) || codeOf(m.id).startsWith(q) ? 2 : 0) + n / Math.max(1, ents.length);
+      return { o: { key: m.id, label, meta: `${book.reg.src[m.src]} · ${UNIT_HE[m.u]} · ${codeOf(m.id)}`, insert: label, cover: `${n}/${ents.length}`, part: n < ents.length }, score, n };
+    }).filter((x): x is NonNullable<typeof x> => !!x && x.n > 0).sort((a, b) => b.score - a.score).slice(0, 8).map((x) => x.o);
+    const fs = (Object.keys(FUNCS) as (keyof typeof FUNCS)[]).filter((f) => f.startsWith(q)).map((f) => ({ key: `fn:${f}`, label: `${f}( )`, meta: FUNCS[f], insert: `${f}(` }));
+    return [...fs, ...ms];
+  }, [frag, book, lex, mine, ents.length]);
+  const show = listOpen && opts.length > 0;
+  const choose = (o: Opt) => {
+    const after = expr.slice(caret), pad = o.insert.endsWith('(') ? '' : ' ';
+    const next = expr.slice(0, fStart) + o.insert + pad + after.replace(/^\s+/, '');
+    const at = fStart + o.insert.length + pad.length;
+    setExpr(next); setCaret(at); setHl(0); setListOpen(false);
+    requestAnimationFrame(() => { const el = input.current; if (el) { el.focus(); el.setSelectionRange(at, at); } });
+  };
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (show && e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => (h + 1) % opts.length); }
+    else if (show && e.key === 'ArrowUp') { e.preventDefault(); setHl((h) => (h - 1 + opts.length) % opts.length); }
+    else if (show && (e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); choose(opts[Math.min(hl, opts.length - 1)]); }
+    else if (e.key === 'Escape' && show) { e.preventDefault(); setListOpen(false); }
+    else if (e.key === 'Enter' && tree && !err) { e.preventDefault(); add(); }
+    else if (e.key === 'ArrowDown') { setListOpen(true); }
+  };
+  const sync = (el: HTMLInputElement) => setCaret(el.selectionStart ?? el.value.length);
+  const tok = tree ? formulaTok(name.trim() || 'נוסחה', unit, toCode(tree)) : null;
+  const add = () => { if (tok) onAdd(tok); };
+  const col: Col | null = tok ? parseCol(tok, book) : null;
   const { book: full } = useBook(book.reg, col?.ids ?? []);
   const prevCol = col && full ? parseCol(col.tok, full) : null;
+  const errId = 'pr-fx-err', listId = 'pr-fx-list';
+  const preset = (x: (typeof PRESETS)[number]) => onAdd(formulaTok(x.n, x.u, x.e));
+  // each ready formula with how many companies of the set it covers at the table's period (a ratio of half-yearly figures is empty on LTM)
+  const pcols = useMemo(() => PRESETS.map((x) => parseCol(formulaTok(x.n, x.u, x.e), book)), [book]);
+  const { book: pbook } = useBook(book.reg, useMemo(() => [...new Set(pcols.flatMap((c) => c.ids))], [pcols]));
+  const pcover = (i: number) => (pbook && p ? ents.filter((e) => cellVal(pbook, parseCol(pcols[i].tok, pbook), e, freq, p, ents).v != null).length : null);
+  // an unknown word: the labels that hold all its words
+  const near = err && /^מדד לא מוכר/.test(err.message) && err.pos >= 0 ? (() => {
+    const words = foldTxt(expr.slice(err.pos, err.pos + err.len)).split(/\s+/).filter(Boolean);
+    return book.reg.metrics.map((m) => lex.labelOf.get(m.id) ?? m.l).filter((l) => words.every((w) => foldTxt(l).includes(w))).sort((a, b) => a.length - b.length).slice(0, 4);
+  })() : [];
+  const fix = (l: string) => { if (!err) return; const next = expr.slice(0, err.pos) + l + expr.slice(err.pos + err.len); setExpr(next); setCaret(err.pos + l.length); };
   return (
     <section className="panel pr-fx" aria-label="עמודת נוסחה">
-      <div className="pr-row">
-        <label className="field"><span>שם</span><input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="מרווח שירותי ביטוח" /></label>
-        <label className="field pr-grow"><span>נוסחה</span><input type="text" className="mono" dir="ltr" value={expr} onChange={(e) => setExpr(e.target.value)} placeholder="isr / rev * 100" spellCheck={false} /></label>
-        <label className="field"><span>יחידה</span><select value={unit} onChange={(e) => setUnit(e.target.value as Unit)}>{(Object.keys(UNIT_HE) as Unit[]).map((u) => <option key={u} value={u}>{UNIT_HE[u]}</option>)}</select></label>
-        <button type="button" className="btn primary" disabled={!tree || !!err} onClick={() => onAdd(formulaTok(name || 'נוסחה', unit, expr))}>הוספה</button>
+      <div className="pr-presets" role="group" aria-label="נוסחאות מוכנות"><span className="muted">מוכנות:</span>
+        {PRESETS.map((x, i) => { const c = pcols[i], n = pcover(i); return <button key={x.n} type="button" className={`chip${n === 0 ? ' dim' : ''}`} disabled={!!c.err} title={`${x.d}\n${c.he ?? x.e}${n === 0 ? `\nאין נתון ב-${freq} ${p ? plab(freq, p) : ''}: נסו תדירות אחרת` : ''}`} onClick={() => preset(x)}>{x.n}{n != null && n < ents.length && <span className="num pr-pn">{n}/{ents.length}</span>}</button>; })}
       </div>
-      {sugg.length > 0 && <div className="pr-sugg">{sugg.map((s) => <button key={s} type="button" className="chip mono" onClick={() => setExpr(expr.slice(0, expr.length - last.length) + s)}>{s}</button>)}</div>}
-      {err ? <p className="err">{err}</p> : prevCol && p && full && (
-        <div className="pr-prev">{ents.slice(0, 8).map((e) => { const x = cellVal(full, prevCol, e, freq, p, ents); return <span key={e}><i className="pdot" style={{ background: idCss(e) }} />{full.short(e)} <b className="num">{x.v == null ? '–' : fmtV(unit, x.v)}</b></span>; })}<span className="muted">{plab(freq, p)}</span></div>
+      <div className="pr-row">
+        <label className="field"><span>שם העמודה</span><input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="מרווח שירותי ביטוח" /></label>
+        <div className="field pr-grow pr-combo"><label htmlFor="pr-fx-in">נוסחה</label>
+          <input ref={input} id="pr-fx-in" type="text" dir="auto" value={expr} spellCheck={false} autoComplete="off" enterKeyHint="done"
+            placeholder="תוצאות שירותי ביטוח / הכנסות משירותי ביטוח * 100"
+            role="combobox" aria-expanded={show} aria-controls={listId} aria-autocomplete="list" aria-activedescendant={show ? `${listId}-${hl}` : undefined}
+            aria-invalid={!!err} aria-describedby={err ? errId : undefined}
+            onChange={(e) => { setExpr(e.target.value); sync(e.target); setHl(0); setListOpen(true); }} onKeyDown={onKey}
+            onKeyUp={(e) => sync(e.currentTarget)} onClick={(e) => { sync(e.currentTarget); setListOpen(true); }} onBlur={() => setTimeout(() => setListOpen(false), 150)} />
+          {show && <ul className="pr-opts" role="listbox" id={listId} aria-label="מדדים ופונקציות">
+            {opts.map((o, i) => <li key={o.key} id={`${listId}-${i}`} role="option" aria-selected={i === hl} className={i === hl ? 'on' : undefined}
+              onPointerDown={(e) => { e.preventDefault(); choose(o); }} onMouseEnter={() => setHl(i)}>
+              <span className="l">{o.label}</span><span className="m">{o.meta}</span>{o.cover && <span className={`c num${o.part ? ' part' : ''}`} title="חברות בקבוצה שיש להן נתון">{o.cover}</span>}
+            </li>)}
+          </ul>}
+        </div>
+        <label className="field"><span>יחידה</span><select value={unit} onChange={(e) => setUnit(e.target.value as Unit)}>{(Object.keys(UNIT_HE) as Unit[]).map((u) => <option key={u} value={u}>{UNIT_HE[u]}</option>)}</select></label>
+        <button type="button" className="btn primary" disabled={!tree || !!err} onClick={add}>הוספה</button>
+      </div>
+      {err ? (
+        <div className="pr-fxerr" id={errId} role="alert"><p className="err">{err.message}{near.length > 0 && <span className="pr-near"> · אולי: {near.map((l) => <button key={l} type="button" className="chip" onClick={() => fix(l)}>{l}</button>)}</span>}</p>
+          {err.pos >= 0 && <code dir="auto"><span>{expr.slice(0, err.pos)}</span><mark>{expr.slice(err.pos, err.pos + Math.max(1, err.len)) || ' '}</mark><span>{expr.slice(err.pos + Math.max(1, err.len))}</span></code>}
+        </div>
+      ) : col && (
+        <div className="pr-fxok">
+          <span className="muted">נקרא כ:</span> <bdi>{col.he}</bdi>
+          {prevCol && p && full && <div className="pr-prev">{ents.slice(0, 8).map((e) => { const x = cellVal(full, prevCol, e, freq, p, ents); return <span key={e}><i className="pdot" style={{ background: idCss(e) }} />{full.short(e)} <b className="num">{x.v == null ? '–' : fmtV(unit, x.v)}</b></span>; })}<span className="muted">{plab(freq, p)}</span></div>}
+        </div>
       )}
-      <details className="pr-help"><summary>שמות מדדים</summary>
-        <div className="pr-alias">{Object.entries(ALIASES).filter(([, id]) => book.byId.has(id)).map(([a, id]) => <button key={a} type="button" onClick={() => setExpr(`${expr}${expr && !/[\s(+\-*/]$/.test(expr) ? ' ' : ''}${a}`)}><b className="mono">{a}</b> {book.byId.get(id)!.l}</button>)}</div>
-        <p className="muted">כל מדד אחר: שמו הטכני (fs_ins_res, lts_am_aum, reg_assets__all) או {'{מזהה}'}. פונקציות: abs, min, max, avg, lag(x, n).</p>
+      <details className="pr-help"><summary>מדדים נפוצים ופונקציות</summary>
+        <div className="pr-alias">{Object.entries(ALIASES).filter(([, id]) => book.byId.has(id)).map(([a, id]) => <button key={a} type="button" onClick={() => { const l = lex.labelOf.get(id) ?? a; const at = expr.length + (expr && !/[\s(+\-*/]$/.test(expr) ? 1 : 0) + l.length + 1; setExpr(`${expr}${expr && !/[\s(+\-*/]$/.test(expr) ? ' ' : ''}${l} `); setCaret(at); }}>{lex.labelOf.get(id)}<span className="mono muted"> {a}</span></button>)}</div>
+        <p className="muted">כותבים שם מדד בעברית כפי שהוא מופיע ברשימה, או קוד ({'{מזהה}'} לכל מדד). פונקציות: {(Object.keys(FUNCS) as (keyof typeof FUNCS)[]).map((f) => `${f} · ${FUNCS[f]}`).join(' · ')}.</p>
       </details>
     </section>
   );

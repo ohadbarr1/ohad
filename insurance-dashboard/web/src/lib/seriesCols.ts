@@ -1,12 +1,13 @@
 /** Columns of the peer table: a metric or a formula, shown as its value or transformed (YoY, change on the previous period,
  *  share of the peer set's total, 3-year CAGR). A column is one token in the address (?c=…), so a view is a URL. */
 import type { Prov } from './prov';
-import { back, Book, F_DER, fmtChg, fmtV, plab, UNIT_HE, yearAgo, type Freq, type Unit, type Val } from './registry';
-import { ALIASES, autoAlias, evaluate, ExprError, parse, refs, type Node } from './seriesExpr';
+import { back, Book, F_DER, fmtChg, fmtV, perYear, plab, UNIT_HE, yearAgo, type Freq, type Unit, type Val } from './registry';
+import { ALIASES, autoAlias, evaluate, ExprError, lexicon, parse, refs, toHebrew, type Ctx, type Lexicon, type Node } from './seriesExpr';
 
 export type Tr = 'v' | 'y' | 'q' | 's' | 'c';
 export const TR_HE: Record<Tr, string> = { v: 'ערך', y: 'YoY', q: 'מול תקופה קודמת', s: 'נתח מהקבוצה', c: 'CAGR 3 שנים' };
-export interface Col { tok: string; tr: Tr; mid?: string; name: string; unit: Unit; expr?: string; tree?: Node; err?: string; ids: string[] }
+/** `expr` is the formula as stored (codes); `he` is the same formula with the metrics' Hebrew labels; `errAt` points at the error in `expr` */
+export interface Col { tok: string; tr: Tr; mid?: string; name: string; unit: Unit; expr?: string; he?: string; tree?: Node; err?: string; errAt?: [number, number]; ids: string[] }
 
 const none = (title: string, why: string): Val => ({ v: null, fl: 0, why, prov: () => ({ k: 'none', title, why }) });
 
@@ -15,6 +16,15 @@ export function resolver(book: Book): (n: string) => string | undefined {
   const auto = new Map(book.reg.metrics.map((m) => [autoAlias(m.id), m.id]));
   return (n) => ALIASES[n] ?? auto.get(n) ?? (book.byId.has(n) ? n : undefined);
 }
+/** the Hebrew labels of the registry's metrics, unique (one per registry) */
+const lexes = new WeakMap<object, Lexicon>();
+export function lexOf(book: Book): Lexicon {
+  let l = lexes.get(book.reg);
+  if (!l) { l = lexicon(book.reg.metrics, book.reg.src); lexes.set(book.reg, l); }
+  return l;
+}
+/** the period facts a formula reads: a year back is 4 quarters (also on LTM), 2 halves or 1 year; a flow is annualised × 4 on Q, × 2 on H */
+export const ctxOf = (freq: Freq): Ctx => ({ year: perYear(freq), ann: freq === 'Q' ? 4 : freq === 'H' ? 2 : 1 });
 
 export function parseCol(tok: string, book: Book | null): Col {
   let tr: Tr = 'v', body = tok;
@@ -24,7 +34,8 @@ export function parseCol(tok: string, book: Book | null): Col {
     const [name, unit, ...rest] = body.slice(1).split(';'), expr = rest.join(';');
     const col: Col = { tok, tr, name: name || 'נוסחה', unit: (['m', 'bn', 'pct', 'nis', 'x'].includes(unit) ? unit : 'x') as Unit, expr, ids: [] };
     if (!book) return col;
-    try { col.tree = parse(expr, resolver(book)); col.ids = [...refs(col.tree)]; } catch (e) { col.err = e instanceof ExprError ? e.message : 'שגיאה בנוסחה'; }
+    try { col.tree = parse(expr, resolver(book), lexOf(book)); col.ids = [...refs(col.tree)]; col.he = toHebrew(col.tree, lexOf(book)); }
+    catch (e) { col.err = e instanceof ExprError ? e.message : 'שגיאה בנוסחה'; if (e instanceof ExprError && e.pos >= 0) col.errAt = [e.pos, e.len]; }
     return col;
   }
   const def = book?.byId.get(body);
@@ -49,18 +60,18 @@ export function base(book: Book, c: Col, ent: string, freq: Freq, p: string): Va
   if (c.mid) return book.get(c.mid, ent, freq, p);
   if (!c.tree) return none(title, 'הנוסחה נטענת');
   const inputs: { label: string; v: string; src: () => Prov; fl: number }[] = [];
-  const v = evaluate(c.tree, (id, lag, name) => {
+  const v = evaluate(c.tree, (id, lag) => {
     const pp = back(freq, p, lag), x = book.get(id, ent, freq, pp), def = book.byId.get(id);
-    const label = `${name} · ${def?.l ?? id} · ${plab(freq, pp)}`;
+    const label = `${lexOf(book).labelOf.get(id) ?? def?.l ?? id} · ${plab(freq, pp)}`;
     if (!inputs.some((q) => q.label === label)) inputs.push({ label, v: x.v == null ? '–' : fmtV(def?.u ?? 'm', x.v), src: x.prov, fl: x.fl });
     return x.v;
-  });
+  }, 0, ctxOf(freq));
   const fl = inputs.reduce((s, q) => s | q.fl, 0) | F_DER;
   if (v == null) {
-    const miss = inputs.filter((q) => q.v === '–').map((q) => q.label.split(' · ')[1]);
+    const miss = inputs.filter((q) => q.v === '–').map((q) => q.label.slice(0, q.label.lastIndexOf(' · ')));
     return { v: null, fl, why: miss.length ? `חסר: ${miss.join(', ')}` : 'חלוקה באפס', prov: () => ({ k: 'none', title, why: miss.length ? `חסר רכיב: ${miss.join(', ')}` : 'חלוקה באפס' }) };
   }
-  return { v, fl, prov: () => ({ k: 'calc', title, value: fmtV(c.unit, v), unit: UNIT_HE[c.unit], formula: `${c.name} = ${c.expr}`, inputs: inputs.map(({ label, v: t, src }) => ({ label, v: t, src })) }) };
+  return { v, fl, prov: () => ({ k: 'calc', title, value: fmtV(c.unit, v), unit: UNIT_HE[c.unit], formula: `${c.name} = ${c.he ?? c.expr}${c.he && c.he !== c.expr ? ` · בקוד: ${c.expr}` : ''}`, inputs: inputs.map(({ label, v: t, src }) => ({ label, v: t, src })) }) };
 }
 
 /** break across two periods for any metric the column reads */
@@ -110,7 +121,7 @@ export function cellVal(book: Book, c: Col, ent: string, freq: Freq, p: string, 
 export interface Template { id: string; key: string; n: string; s: string; f: Freq; n2?: number; c: string[] }
 export const TEMPLATES: Template[] = [
   { id: 'prof', key: '1', n: 'רווחיות', s: 'ins', f: 'LTM', c: ['ifrs:profit_attributable', 'ifrs:comprehensive_income_before_tax', 'ifrs:insurance_revenue', 'ifrs:insurance_service_result',
-    formulaTok('מרווח שירותי ביטוח', 'pct', 'isr / rev * 100'), formulaTok('רווח נקי להון ממוצע', 'pct', 'np / avg(eq, lag(eq, 4)) * 100'), 'ifrs:equity_attributable', 'y!ifrs:equity_attributable'] },
+    formulaTok('מרווח שירותי ביטוח', 'pct', 'isr / rev * 100'), formulaTok('רווח נקי להון ממוצע', 'pct', 'np / avg(eq, yago(eq)) * 100'), 'ifrs:equity_attributable', 'y!ifrs:equity_attributable'] },
   { id: 'csm', key: '2', n: 'IFRS 17 · CSM', s: 'ins', f: 'FY', c: ['ifrs:csm_closing', 'y!ifrs:csm_closing', formulaTok('CSM / הון', 'x', 'csm / eq'), 'ifrs:csm_closing@life', 'ifrs:csm_closing@health',
     'ifrs:csm_new_business@life', 'ifrs:csm_new_business@health', 'ifrs:csm_release@life', formulaTok('עסק חדש / שחרור, חיים', 'pct', 'ifrs_csm_new_business__life / ifrs_csm_release__life * 100'), 'ifrs:risk_adjustment'] },
   { id: 'lts', key: '3', n: 'חיסכון', s: 'lts', f: 'Q', c: ['lts:am.aum', 'y!lts:am.aum', 'lts:pen.aum.share', 'lts:gem.aum.share', 'lts:pen.tr_net', 'lts:gem.tr_net', 'lts:am.fees', 'lts:am.rev_rate'] },
