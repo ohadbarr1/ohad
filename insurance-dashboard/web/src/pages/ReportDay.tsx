@@ -305,7 +305,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
 
   const files = useMemo(() => (ifrs.data?.files ?? []).filter((f) => f.company === id), [ifrs.data, id]);
   const PP = P ? keyOf(qShift(end, -1)) : '';
-  const ledger = useLoad<{ files: IfrsData['files']; reports: Record<string, IfrsFact[]> }>(files.length ? 'csm/facts.json' : null);
+  const ledger = useLoad<{ files: IfrsData['files']; reports: Record<string, IfrsFact[]> }>(files.length ? `csm/facts/${id}.json` : null);
   const curF = useIfrsFactsOf(id, files.some((f) => f.period === P) ? P : null), prevF = useIfrsFactsOf(id, files.some((f) => f.period === PP) ? PP : null);
   const extra = useMemo(() => {
     if (!curF.data) return [];

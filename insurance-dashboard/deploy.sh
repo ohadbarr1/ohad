@@ -13,6 +13,7 @@ cd "$ROOT"
 "$PY" pipeline/build_web_index.py
 "$PY" pipeline/build_calendar.py
 "$PY" pipeline/canon_kpi.py
+"$PY" pipeline/build_registry.py  # peers registry follows the canon (lane Q)
 "$PY" pipeline/build_market_home.py  # home page: last 36 months of the regulator file
 "$PY" pipeline/build_coverage.py  # /data: coverage matrix, freshness per source, open-file inventory (lane 2H)
 "$PY" pipeline/gate.py || { echo "data gate failed: not deploying"; exit 1; }

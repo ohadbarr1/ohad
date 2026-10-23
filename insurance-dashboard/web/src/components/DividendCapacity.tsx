@@ -9,7 +9,7 @@ import type { IfrsData, IfrsFact } from '../lib/types';
 import { METRIC_HE } from '../lib/labels';
 import { endOf, factProv, hrefOf, periodName, prevQuarter, tag } from '../lib/csm';
 import type { Reports, RF } from '../lib/csm';
-import type { Ledger } from '../lib/csmData';
+import { reportsOf, useCsmFacts, type Ledger } from '../lib/csmData';
 import '../styles/csm.css';
 
 /* Dividend capacity as the reports print it: solvency with and without the transitional measures, the board's target and dividend threshold,
@@ -145,13 +145,16 @@ const qName = (p: string) => periodName(p).replace('FY', 'Q4');
 /** Reports of the companies asked for: the per-company slices for one insurer, the industry files for all of them. */
 function useCapacityData(id: string | undefined, d: IfrsData | null, ledger?: Ledger): { byCo: Map<string, Reports>; done: boolean; lastP: string } {
   const [all, setAll] = useState<Map<string, IfrsFact[]>>(new Map());
+  // one company: its own CSM file (every report's facts), not one file per report
+  const own = useCsmFacts(id && !ledger ? id : null);
   // with the ledger in hand (the industry page) nothing is fetched here
   const periods = useMemo(() => (ledger ? [] : [...new Set((d?.files ?? []).filter((f) => !id || f.company === id).map((f) => f.period))].sort(byPeriodDesc)), [d, id, ledger]);
   const key = `${id ?? ''}|${periods.join()}`;
   useEffect(() => {
+    if (id) return;
     let live = true;
     setAll(new Map());
-    periods.forEach((p) => load<IfrsFact[]>(id ? `ifrs/${id}/${p}.json` : `ifrs_${p}.json`).then((fs) => live && setAll((cur) => new Map(cur).set(p, fs)), () => live && setAll((cur) => new Map(cur).set(p, []))));
+    periods.forEach((p) => load<IfrsFact[]>(`ifrs_${p}.json`).then((fs) => live && setAll((cur) => new Map(cur).set(p, fs)), () => live && setAll((cur) => new Map(cur).set(p, []))));
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
@@ -166,6 +169,7 @@ function useCapacityData(id: string | undefined, d: IfrsData | null, ledger?: Le
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all, key]);
   if (ledger) return { byCo: ledger.byCo, done: true, lastP: ledger.periods[0] ?? '' };
+  if (id) return { byCo: own.data ? new Map([[id, reportsOf(own.data)]]) : new Map(), done: !!(own.data || own.error), lastP: periods[0] ?? '' };
   return { byCo, done: periods.length > 0 && all.size === periods.length, lastP: periods[0] ?? '' };
 }
 
