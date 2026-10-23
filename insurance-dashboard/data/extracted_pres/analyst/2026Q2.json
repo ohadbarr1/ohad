@@ -1,0 +1,59 @@
+{
+ "company": "analyst",
+ "period": "2026Q2",
+ "report_id": 1764754,
+ "pres_date": "2026-08-20",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 2.4,
+   "page_he": 11,
+   "label": "גיוסים נטו בחציון 1 קופות גמל 2.4 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; H1 2026"
+  },
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "mutual_funds",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 2.2,
+   "page_he": 11,
+   "label": "גיוסים נטו בחציון 1 קרנות נאמנות 2.2 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; H1 2026; footnote: net and after NIS 0.2bn invested in the house's own mutual funds"
+  },
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "portfolio_management",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 0.6,
+   "page_he": 11,
+   "label": "גיוסים נטו בחציון 1 תיקי השקעות 0.6 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; H1 2026"
+  },
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 5.2,
+   "page_he": 11,
+   "label": "סה\"כ 5.2 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; H1 2026 total as printed"
+  }
+ ],
+ "not_found": [],
+ "note": "AUM-mix chart on slide 10 not taken (label-to-figure mapping not unambiguous)"
+}

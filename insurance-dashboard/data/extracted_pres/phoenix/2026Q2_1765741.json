@@ -1,0 +1,82 @@
+{
+ "company": "phoenix",
+ "period": "2026Q2",
+ "report_id": 1765741,
+ "pres_date": "2026-08-25",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "core_profit",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "q",
+   "date": "2025-06-30",
+   "value": 692,
+   "page_he": 8,
+   "doc": "pres",
+   "label": "רווח ליבה",
+   "source": "table",
+   "note": "Management KPI 'core profit' (רווח ליבה), NIS millions, excludes non-operating profit per deck footnote. Column labels Q2/25, Q2/26, H1/25, H1/26 are printed under the bars on the slide (checked on the slide image)."
+  },
+  {
+   "metric": "core_profit",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 743,
+   "page_he": 8,
+   "doc": "pres",
+   "label": "רווח ליבה",
+   "source": "table",
+   "note": "Management KPI 'core profit' (רווח ליבה), NIS millions, excludes non-operating profit per deck footnote. Column labels Q2/25, Q2/26, H1/25, H1/26 are printed under the bars on the slide (checked on the slide image)."
+  },
+  {
+   "metric": "core_profit",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 1318,
+   "page_he": 8,
+   "doc": "pres",
+   "label": "רווח ליבה",
+   "source": "table",
+   "note": "Management KPI 'core profit' (רווח ליבה), NIS millions, excludes non-operating profit per deck footnote. Column labels Q2/25, Q2/26, H1/25, H1/26 are printed under the bars on the slide (checked on the slide image)."
+  },
+  {
+   "metric": "core_profit",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 1452,
+   "page_he": 8,
+   "doc": "pres",
+   "label": "רווח ליבה",
+   "source": "table",
+   "note": "Management KPI 'core profit' (רווח ליבה), NIS millions, excludes non-operating profit per deck footnote. Column labels Q2/25, Q2/26, H1/25, H1/26 are printed under the bars on the slide (checked on the slide image)."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 400,
+   "page_he": 10,
+   "doc": "pres",
+   "label": "הוכרז דיבידנד רבעוני בסך 400 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS millions; quarterly dividend declared with Q2 2026 results."
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "target_core_income",
+   "segment": "phoenix_group",
+   "why": "2028 target slide not located/read in this pass"
+  }
+ ]
+}

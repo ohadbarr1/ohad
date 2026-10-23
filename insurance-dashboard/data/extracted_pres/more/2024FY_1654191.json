@@ -1,0 +1,49 @@
+{
+ "company": "more",
+ "period": "2024FY",
+ "report_id": 1654191,
+ "pres_date": "2025-03-26",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "more_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-03-13",
+   "value": 147,
+   "page_he": 5,
+   "label": "147 מיליארד ₪ היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions; approx.; as of 13.3.2025; includes inter-company investments per slide footnote"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": null,
+   "page_he": 8,
+   "label": "תחזית לשנת 2025 של רווח כולל לפני מס שיעמדו על פי הצפי על 90 עד 110 מיליון שקלים",
+   "source": "text",
+   "note": "NIS millions; forecast for the gemel and pension company; forward-looking",
+   "value_low": 90,
+   "value_high": 110,
+   "horizon": 2025
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 63,
+   "page_he": 8,
+   "label": "מור גמל ופנסיה חלוקת דיבידנד בהיקף מצרפי של כ-63 מיליון שקלים בשנת 2024 והכרזה על 9 מיליון שקלים נוספים עם פרסום הדוחות",
+   "source": "text",
+   "note": "NIS millions, approx.; aggregate in 2024, plus NIS 9m more declared with the report"
+  }
+ ],
+ "not_found": []
+}

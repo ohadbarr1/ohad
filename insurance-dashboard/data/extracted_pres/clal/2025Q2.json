@@ -1,0 +1,65 @@
+{
+ "company": "clal",
+ "period": "2025Q2",
+ "report_id": 1687698,
+ "pres_date": "2025-08-25",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "clal_insurance",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-06-30",
+   "value": null,
+   "page_he": 21,
+   "doc": "pres",
+   "label": "מדיניות חלוקת דיבידנד בשיעור של 30%-50% מהרווח הכולל של כלל ביטוח",
+   "source": "text",
+   "note": "Percent of Clal Insurance comprehensive income; board policy of June 2023, restated on the slide.",
+   "value_low": 30,
+   "value_high": 50
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "clal_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-06-30",
+   "value": 115,
+   "page_he": 21,
+   "doc": "pres",
+   "label": "בחודש מאי 2025 עודכן יעד ההון המינימלי לאחר חלוקת דיבידנד לשיעור של 115%",
+   "source": "text",
+   "note": "Minimum capital target for dividend purposes as solvency ratio percent, raised from 110% in May 2025 (slide chart legend: 'יעד הון מינימלי לצרכי דיבידנד')."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "clal_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-06-30",
+   "value": 300,
+   "page_he": 12,
+   "doc": "pres",
+   "label": "חלוקת דיבידנד בכלל ביטוח ובכלל החזקות ,בסכום של 300 מיליוני ₪ ו 200-מיליוני ₪ בהתאמה ,בגין שנת 2024",
+   "source": "text",
+   "note": "NIS millions; Clal Insurance dividend (earnings of 2024)."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "clal_holdings",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-06-30",
+   "value": 200,
+   "page_he": 12,
+   "doc": "pres",
+   "label": "חלוקת דיבידנד בכלל ביטוח ובכלל החזקות ,בסכום של 300 מיליוני ₪ ו 200-מיליוני ₪ בהתאמה ,בגין שנת 2024",
+   "source": "text",
+   "note": "NIS millions; Clal Holdings dividend (earnings of 2024)."
+  }
+ ],
+ "not_found": []
+}

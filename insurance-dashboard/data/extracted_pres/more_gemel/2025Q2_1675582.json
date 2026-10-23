@@ -1,0 +1,65 @@
+{
+ "company": "more_gemel",
+ "period": "2025Q2",
+ "report_id": 1675582,
+ "pres_date": "2025-07-01",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": null,
+   "page_he": 6,
+   "label": "עדכון כלפי מעלה לתחזית הרווח לפני מס של החברה לשנת 2025: 105-120 מיליון ש\"ח לעומת תחזית רווח לפני מס של 110-90 מיליון ש\"ח בדיווח הקודם",
+   "source": "text",
+   "note": "NIS millions; forecast raised from 90-110 in the previous report (printed 110-90); forward-looking",
+   "value_low": 105,
+   "value_high": 120,
+   "horizon": 2025
+  },
+  {
+   "metric": "target_profit_prior",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": null,
+   "page_he": 6,
+   "label": "תחזית רווח לפני מס של 110-90 מיליון ש\"ח בדיווח הקודם",
+   "source": "text",
+   "note": "NIS millions; superseded forecast for 2025 (printed 110-90)",
+   "value_low": 90,
+   "value_high": 110,
+   "horizon": 2025
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-06-26",
+   "value": 100,
+   "page_he": 6,
+   "label": "החברה חצתה בחודש יוני 2025 את רף 100 מיליארד שקלים נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions; crossed the NIS 100bn mark in June 2025; data as of 26.06.2025; growth of 15% since start of year"
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-06-26",
+   "value": 9.5,
+   "page_he": 14,
+   "label": "נתח שוק – *9.5%",
+   "source": "text",
+   "note": "percent; footnote on slide 14"
+  }
+ ],
+ "not_found": [],
+ "note": "Forecast-update filing plus investor deck (1 July 2025)"
+}

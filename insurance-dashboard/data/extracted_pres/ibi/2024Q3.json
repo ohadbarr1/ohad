@@ -1,0 +1,58 @@
+{
+ "company": "ibi",
+ "period": "2024Q3",
+ "report_id": 1630059,
+ "pres_date": "2024-11-28",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_new_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2024-09-30",
+   "value": 17000,
+   "page_he": 10,
+   "label": "בשלושת הרבעונים הראשונים גויסו מעל ל-17,000 לקוחות חדשים",
+   "source": "text",
+   "note": "customers, more than (מעל)"
+  },
+  {
+   "metric": "kpi_dividend_distributed",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2024-09-30",
+   "value": 81,
+   "page_he": 26,
+   "label": "דיבידנד שחולק Q1-3.2024",
+   "source": "text",
+   "note": "NIS millions; slide footnote: includes NIS 16m dividend declared after the balance sheet date"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2024-09-30",
+   "value": 16,
+   "page_he": 26,
+   "label": "כולל דיבידנד בסך 16 מ' ש\"ח שהוכרז לאחר תאריך המאזן",
+   "source": "text",
+   "note": "NIS millions; declared after the balance sheet date"
+  },
+  {
+   "metric": "kpi_dividend_distributed",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 118,
+   "page_he": 26,
+   "label": "דיבידנד שחולק 2023",
+   "source": "text",
+   "note": "NIS millions"
+  }
+ ],
+ "not_found": []
+}

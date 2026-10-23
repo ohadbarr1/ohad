@@ -1,0 +1,25 @@
+{
+ "company": "more_gemel",
+ "period": "2024Q1",
+ "report_id": 1594291,
+ "pres_date": "2024-05-26",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": null,
+   "page_he": 24,
+   "label": "צפי לרווח לפני מס בשנת 2024 68-75 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS millions; printed as 75-68; forward-looking",
+   "value_low": 68.0,
+   "value_high": 75.0,
+   "horizon": 2024
+  }
+ ],
+ "not_found": []
+}

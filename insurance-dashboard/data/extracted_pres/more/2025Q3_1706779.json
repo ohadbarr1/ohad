@@ -1,0 +1,34 @@
+{
+ "company": "more",
+ "period": "2025Q3",
+ "report_id": 1706779,
+ "pres_date": "2025-11-30",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "more_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-11-13",
+   "value": 185.6,
+   "page_he": 5,
+   "label": "כ-185.6 מיליארד ₪ היקף נכסים מנוהלים נכון ליום 13.11.2025",
+   "source": "text",
+   "note": "NIS billions, approx.; includes inter-company investments per slide footnote"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-11-30",
+   "value": 18,
+   "page_he": 8,
+   "label": "דיבידנד בהיקף של כ-18 מיליון שקלים, המצטרפים ל-39 מיליון שקלים שחולקו",
+   "source": "text",
+   "note": "NIS millions, approx.; approved November 2025, in addition to NIS 39m distributed"
+  }
+ ],
+ "not_found": []
+}

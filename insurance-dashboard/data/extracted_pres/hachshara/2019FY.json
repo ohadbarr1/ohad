@@ -1,0 +1,23 @@
+{
+ "company": "hachshara",
+ "period": "2019FY",
+ "report_id": 1208144,
+ "pres_date": "2019-01-08",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2018-11-27",
+   "value": 40,
+   "page_he": 17,
+   "label": "ביום 27 לנובמבר 2018 אישר דירקטוריון החברה חלוקת דיבידנד בסך 40 מיליוני ₪",
+   "source": "text",
+   "note": "NIS m; Hachshara board approval 27 Nov 2018, deducted from equity for solvency transition-period calculation."
+  }
+ ],
+ "not_found": [],
+ "note": "January 2019 deck for subordinated-notes (Series 4) expansion; other slides statement-based."
+}

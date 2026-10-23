@@ -1,0 +1,61 @@
+{
+ "company": "more_gemel",
+ "period": "2026Q1",
+ "report_id": 1742766,
+ "pres_date": "2026-05-20",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "adj_profit_before_tax",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 41,
+   "page_he": 5,
+   "label": "רווח מתואם לפני מס Q1/2026 41 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; adjusted pre-tax profit = excluding share-based payment expense (incl. cash-settled); slide footnote gives profit before tax of NIS 40.3m; labelled record quarterly profit"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-03-31",
+   "value": 21,
+   "page_he": 5,
+   "label": "סך הדיבידנד שהוכרז מתחילת השנה בגין שנת 2026 21 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; declared since start of 2026, in respect of 2026"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 5,
+   "label": "תחזית רווח מתואם לפני מס 2026 140-160 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; forecast of adjusted pre-tax profit for 2026; forward-looking",
+   "value_low": 140,
+   "value_high": 160,
+   "horizon": 2026
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-05-12",
+   "value": 135,
+   "page_he": 5,
+   "label": "כ-135 מיליארד ₪ היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 12.05.2026; growth of about NIS 14bn since start of 2026"
+  }
+ ],
+ "not_found": []
+}

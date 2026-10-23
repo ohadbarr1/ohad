@@ -1,0 +1,46 @@
+{
+ "company": "analyst",
+ "period": "2026Q1",
+ "report_id": 1744726,
+ "pres_date": "2026-05-28",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "portfolio_management",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 0.354,
+   "page_he": 8,
+   "label": "גיוסים נטו בכל חברות הקבוצה במהלך רבעון 1 2026 אנליסט תיקי השקעות 354 מיליון ₪",
+   "source": "text",
+   "note": "NIS billions (printed NIS 354 million); Q1 2026"
+  },
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "mutual_funds",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 0.58,
+   "page_he": 8,
+   "label": "גיוסים נטו אנליסט קרנות נאמנות 580 מיליון ₪",
+   "source": "text",
+   "note": "NIS billions (printed NIS 580 million); Q1 2026"
+  },
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 2.6,
+   "page_he": 8,
+   "label": "גיוסים נטו אנליסט קופות גמל 2.6 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; Q1 2026"
+  }
+ ],
+ "not_found": []
+}

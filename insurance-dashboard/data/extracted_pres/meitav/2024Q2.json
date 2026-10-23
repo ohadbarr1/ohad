@@ -1,0 +1,23 @@
+{
+ "company": "meitav",
+ "period": "2024Q2",
+ "report_id": 1611592,
+ "pres_date": "2024-08-19",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-06-30",
+   "value": 296,
+   "page_he": 3,
+   "label": "היקף נכסים מנוהלים 296 מיליארד ש\"ח נכון ליום 30/06/2024",
+   "source": "text",
+   "note": "NIS billions"
+  }
+ ],
+ "not_found": [],
+ "note": "No targets, guidance or dividend announcement found; only AUM headline taken"
+}

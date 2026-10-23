@@ -1,0 +1,46 @@
+{
+ "company": "ibi",
+ "period": "2024Q2",
+ "report_id": 1611967,
+ "pres_date": "2024-08-20",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "adj_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-06-30",
+   "value": 17,
+   "page_he": 3,
+   "label": "ROE ממוצע 5 שנים 17%",
+   "source": "text",
+   "note": "percent; average ROE over 5 years as printed"
+  },
+  {
+   "metric": "kpi_headcount",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-06-30",
+   "value": 885,
+   "page_he": 3,
+   "label": "עובדים *885",
+   "source": "text",
+   "note": "employees; asterisk on slide: subject to completion of the NextGen transaction"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-06-30",
+   "value": 30,
+   "page_he": 23,
+   "label": "כולל דיבידנד בסך 30 מ' ₪ שהוכרז לאחר תאריך המאזן",
+   "source": "text",
+   "note": "NIS millions; declared after the balance sheet date; solo data footnote"
+  }
+ ],
+ "not_found": []
+}

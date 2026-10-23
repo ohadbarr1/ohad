@@ -1,0 +1,46 @@
+{
+ "company": "more_gemel",
+ "period": "2025Q2",
+ "report_id": 1685552,
+ "pres_date": "2025-08-13",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-06-30",
+   "value": 39,
+   "page_he": 4,
+   "label": "חלוקת דיבידנד בסך כולל של 39 מיליון ש\"ח מתחילת שנת 2025 מתוכם חלוקה של 16 מיליון ש\"ח בגין רבעון שני",
+   "source": "text",
+   "note": "NIS millions; total dividend since start of 2025, of which NIS 16m in respect of Q2"
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-08-05",
+   "value": 106,
+   "page_he": 6,
+   "label": "כ-106 מיליארד ש\"ח היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 05.08.2025; growth of about NIS 19bn since start of 2025"
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-06-30",
+   "value": 9.7,
+   "page_he": 14,
+   "label": "נתח שוק – *9.7%",
+   "source": "text",
+   "note": "percent; footnote on slide 14"
+  }
+ ],
+ "not_found": []
+}

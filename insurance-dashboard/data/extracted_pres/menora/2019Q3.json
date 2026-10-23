@@ -1,0 +1,91 @@
+{
+ "company": "menora",
+ "period": "2019Q3",
+ "report_id": 1264845,
+ "pres_date": "2019-11-26",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "menora_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2017-12-31",
+   "value": 110,
+   "page_he": 19,
+   "doc": "pres",
+   "label": "החל משנת 2017 מנורה מבטחים ביטוח קבעה שיעור של 110% מיחס כושר פירעון כלכלי",
+   "source": "text",
+   "note": "Percent; board target capital for dividend purposes, starting 2017."
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "menora_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 115,
+   "page_he": 19,
+   "doc": "pres",
+   "label": "מתעצם בהדרגה בשיעור של 0.7% מדי שנה עד שנת 2024 ומגיע לשיעור של 115%",
+   "source": "text",
+   "note": "Percent; target capital for dividend purposes reaches 115% by 2024, rising about 0.7% per year.",
+   "horizon": 2024
+  },
+  {
+   "metric": "target_solvency_ratio_annual_step",
+   "segment": "menora_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-09-30",
+   "value": 0.7,
+   "page_he": 19,
+   "doc": "pres",
+   "label": "מתעצם בהדרגה בשיעור של 0.7% מדי שנה",
+   "source": "text",
+   "note": "Percent points per year until 2024."
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "shomera_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2017-12-31",
+   "value": 102,
+   "page_he": 19,
+   "doc": "pres",
+   "label": "החל משנת 2017 שומרה ביטוח קבעה שיעור של 102% מיחס כושר פירעון כלכלי",
+   "source": "text",
+   "note": "Percent; board target capital for dividend purposes of Shomera Insurance, starting 2017."
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "shomera_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 108,
+   "page_he": 19,
+   "doc": "pres",
+   "label": "מתעצם בהדרגה בשיעור של כ 0.86% מדי שנה עד שנת 2024 ומגיע לשיעור של 108%",
+   "source": "text",
+   "note": "Percent; reaches 108% by 2024, rising about 0.86% per year.",
+   "horizon": 2024
+  },
+  {
+   "metric": "target_solvency_ratio_annual_step",
+   "segment": "shomera_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-09-30",
+   "value": 0.86,
+   "page_he": 19,
+   "doc": "pres",
+   "label": "מתעצם בהדרגה בשיעור של כ 0.86% מדי שנה",
+   "source": "text",
+   "note": "Percent points per year until 2024."
+  }
+ ],
+ "not_found": []
+}

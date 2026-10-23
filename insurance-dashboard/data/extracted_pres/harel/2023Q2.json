@@ -1,0 +1,22 @@
+{
+ "company": "harel",
+ "period": "2023Q2",
+ "report_id": 1544496,
+ "pres_date": "2023-08-30",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2023-06-30",
+   "value": 450,
+   "page_he": 17,
+   "label": "בחודש יוני 2023 אישר דירקטוריון הראל ביטוח חלוקת דיבידנד בסך של 450 מיליון ש\"ח אשר שולם בחודש יולי 2023",
+   "source": "text",
+   "note": "NIS m; dividend by Harel Insurance (subsidiary) to Harel Investments, approved June 2023, paid July 2023."
+  }
+ ],
+ "not_found": []
+}

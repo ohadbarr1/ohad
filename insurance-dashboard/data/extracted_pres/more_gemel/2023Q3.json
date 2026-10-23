@@ -1,0 +1,25 @@
+{
+ "company": "more_gemel",
+ "period": "2023Q3",
+ "report_id": 1560130,
+ "pres_date": "2023-11-27",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": null,
+   "page_he": 22,
+   "label": "הרווח הכולל לפני מס צפוי לעמוד בשנת 2023 על 45-50 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS millions; printed as 50-45; slide: raising the annual profit forecast with the Q3-2023 results; comprehensive income before tax; forward-looking",
+   "value_low": 45.0,
+   "value_high": 50.0,
+   "horizon": 2023
+  }
+ ],
+ "not_found": []
+}

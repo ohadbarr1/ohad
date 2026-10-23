@@ -1,0 +1,49 @@
+{
+ "company": "more",
+ "period": "2025Q3",
+ "report_id": 1696762,
+ "pres_date": "2025-10-15",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "more_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-08-31",
+   "value": 178,
+   "page_he": 5,
+   "label": "נכסים מנוהלים כ-178 מיליארד שקלים",
+   "source": "text",
+   "note": "NIS billions, approx.; assets as of 31.8.25 (mutual funds as of 29.9.25); includes inter-company investments of about NIS 2.6bn per slide footnote"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": null,
+   "page_he": 7,
+   "label": "תחזית לרווח לפני מס בשנת 2025 105-120 מלש\"ח, לחברת הגמל והפנסיה",
+   "source": "text",
+   "note": "NIS millions; forecast for the gemel and pension company, forward-looking",
+   "value_low": 105,
+   "value_high": 120,
+   "horizon": 2025
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "hedge_funds_and_investment_funds",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-09-30",
+   "value": 2.3,
+   "page_he": 5,
+   "label": "היקף הנכסים בקרנות הגידור בנאמנות, קרנות הגידור וקרנות ההשקעה הגיע לכ-2.3 מיליארד שקלים",
+   "source": "text",
+   "note": "NIS billions, approx."
+  }
+ ],
+ "not_found": []
+}

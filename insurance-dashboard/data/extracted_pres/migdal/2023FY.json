@@ -1,0 +1,70 @@
+{
+ "company": "migdal",
+ "period": "2023FY",
+ "report_id": 1580977,
+ "pres_date": "2024-03-21",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "target_underwriting_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": 950,
+   "page_he": 33,
+   "label": "היעד: רווח חיתומי (מיליוני ש\"ח) 2027: כ-950 (2023: 440)",
+   "source": "text",
+   "note": "NIS m, approx. Migdal strategic target for 2027 (IFRS 4 basis).",
+   "horizon": 2027
+  },
+  {
+   "metric": "target_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": 12,
+   "page_he": 33,
+   "label": "תשואה על ההון (%) 2027: כ-12% (2023: 6.8%)",
+   "source": "text",
+   "note": "Percent, approx. Migdal strategic target for 2027 (IFRS 4); also CEO letter slide 4: 'תשואה על ההון של כ-12%'.",
+   "horizon": 2027
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "migdal_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": null,
+   "page_he": 33,
+   "label": "יחס כושר פירעון ללא הוראות פריסה 2027: 110%-125% (יוני 2023: 78%)",
+   "source": "text",
+   "note": "Percent, without deferral provisions. Migdal strategic target for 2027.",
+   "horizon": 2027,
+   "value_low": 110,
+   "value_high": 125
+  },
+  {
+   "metric": "target_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": 550000,
+   "page_he": 33,
+   "label": "נכסים מנוהלים (במיליארדי ש\"ח) 2027: כ-550 (2023: 415)",
+   "source": "text",
+   "note": "NIS m (printed approx. NIS 550 billion). Migdal strategic target for 2027.",
+   "horizon": 2027
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "target_comprehensive_income",
+   "segment": "group",
+   "why": "printed only in words ('כמיליארד ש\"ח', ~NIS 1bn after tax) on slides 4, 24, 33; no numeral to verify"
+  }
+ ]
+}

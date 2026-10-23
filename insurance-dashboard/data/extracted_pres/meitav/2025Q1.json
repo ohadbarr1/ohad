@@ -1,0 +1,23 @@
+{
+ "company": "meitav",
+ "period": "2025Q1",
+ "report_id": 1667190,
+ "pres_date": "2025-05-27",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-05-18",
+   "value": 347,
+   "page_he": 4,
+   "label": "נכון ליום ה-18.5.25 מנהלת החברה נכסים בסך של כ-347 מיליארדי ש\"ח",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 18.5.25; slide also states growth of about 127% in managed assets from end-2020 to 31.3.25"
+  }
+ ],
+ "not_found": [],
+ "note": "Only AUM headline taken; no targets or dividend announcement found"
+}

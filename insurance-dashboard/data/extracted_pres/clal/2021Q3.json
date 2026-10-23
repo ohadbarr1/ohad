@@ -1,0 +1,24 @@
+{
+ "company": "clal",
+ "period": "2021Q3",
+ "report_id": 1414469,
+ "pres_date": "2021-11-29",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_status",
+   "segment": "clal_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2021-09-30",
+   "value": null,
+   "page_he": 22,
+   "doc": "pres",
+   "label": "החברה ממשיכה לעמוד ביעדי התוכנית האסטרטגית שלה ,ואף מעבר לכך ,לצמיחה מואצת תוך התייעלות בבסיס ההוצאות שלה ,המובילים יחד לשיפור עקבי ברווח החיתומי.",
+   "source": "text",
+   "note": "CEO and chairman letter, qualitative progress statement against the strategic plan; no number printed."
+  }
+ ],
+ "not_found": []
+}

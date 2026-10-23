@@ -1,0 +1,35 @@
+{
+ "company": "harel",
+ "period": "2025FY",
+ "report_id": 1731041,
+ "pres_date": "2026-03-26",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "adj_core_profit_after_tax",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2395,
+   "page_he": 7,
+   "label": "רווחי ליבה לאחר מס 2025",
+   "source": "chart",
+   "note": "NIS m, FY2025 core profit after tax; mapping confirmed by slide sentence 'growth of NIS 444m in core profit after tax in 2025' (2,395 less 1,951 = 444 as printed)."
+  },
+  {
+   "metric": "adj_core_profit_after_tax",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 1951,
+   "page_he": 7,
+   "label": "רווחי ליבה לאחר מס 2024",
+   "source": "chart",
+   "note": "NIS m, FY2024 core profit after tax; see FY2025 entry."
+  }
+ ],
+ "not_found": [],
+ "note": "2028 targets (slides 3, 10, 11) already extracted from the annual report; not duplicated."
+}

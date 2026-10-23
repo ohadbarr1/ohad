@@ -1,0 +1,16 @@
+{
+ "company": "menora",
+ "period": "2018FY",
+ "report_id": 1241166,
+ "entity": "מנורה מבטחים ביטוח בע\"מ",
+ "as_of": "2018-12-31",
+ "unit": "NIS millions",
+ "facts": [],
+ "not_found": [
+  {
+   "metric": "all",
+   "segment": "solo",
+   "why": "text layer of this original filing is garbled (digits and dates reversed/substituted, e.g. date shown as '8121121.1'); not extracted. The same report was refiled as a typo correction (report 1241258, file 2018FY_1241258.json) with a clean text layer; use that file."
+  }
+ ]
+}

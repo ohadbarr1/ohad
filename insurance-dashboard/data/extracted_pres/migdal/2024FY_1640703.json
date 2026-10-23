@@ -1,0 +1,90 @@
+{
+ "company": "migdal",
+ "period": "2024FY",
+ "report_id": 1640703,
+ "pres_date": "2025-01-15",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "target_comprehensive_income",
+   "segment": "group",
+   "basis": "post_tax",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": 1000,
+   "page_he": 11,
+   "label": "רווח כולל אחרי מס (מיליון ש\"ח): יעד 2027 1,000",
+   "source": "chart",
+   "note": "NIS m, after tax. Migdal strategic target for 2027 (IFRS 4 basis; 'היעדים האסטרטגיים של מגדל'); mapping of the 2027 bar confirmed against the FY2023 deck's text slide (targets: representative profit about NIS 1bn, ROE about 12%, ongoing dividends). Forward-looking.",
+   "horizon": 2027
+  },
+  {
+   "metric": "target_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": 12,
+   "page_he": 11,
+   "label": "תשואה להון (%): יעד 2027 12",
+   "source": "chart",
+   "note": "Percent. Migdal strategic target for 2027 (IFRS 4 basis; 'היעדים האסטרטגיים של מגדל'); mapping of the 2027 bar confirmed against the FY2023 deck's text slide (targets: representative profit about NIS 1bn, ROE about 12%, ongoing dividends). Forward-looking.",
+   "horizon": 2027
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "migdal_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": null,
+   "page_he": 11,
+   "label": "יחס כושר פירעון ללא הוראות פריסה: יעד 2027 110-125%",
+   "source": "chart",
+   "note": "Percent, without deferral/transitional provisions. Migdal strategic target for 2027 (IFRS 4 basis; 'היעדים האסטרטגיים של מגדל'); mapping of the 2027 bar confirmed against the FY2023 deck's text slide (targets: representative profit about NIS 1bn, ROE about 12%, ongoing dividends). Forward-looking.",
+   "horizon": 2027,
+   "value_low": 110,
+   "value_high": 125
+  },
+  {
+   "metric": "target_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": 550000,
+   "page_he": 11,
+   "label": "נכסים מנוהלים (מיליארד ש\"ח): יעד 2027 550",
+   "source": "chart",
+   "note": "NIS m (printed NIS 550 billion). Migdal strategic target for 2027 (IFRS 4 basis; 'היעדים האסטרטגיים של מגדל'); mapping of the 2027 bar confirmed against the FY2023 deck's text slide (targets: representative profit about NIS 1bn, ROE about 12%, ongoing dividends). Forward-looking.",
+   "horizon": 2027
+  },
+  {
+   "metric": "target_underwriting_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2027-12-31",
+   "value": 950,
+   "page_he": 11,
+   "label": "רווח חיתומי (מיליון ש\"ח): יעד 2027 950",
+   "source": "chart",
+   "note": "NIS m. Migdal strategic target for 2027 (IFRS 4 basis; 'היעדים האסטרטגיים של מגדל'); mapping of the 2027 bar confirmed against the FY2023 deck's text slide (targets: representative profit about NIS 1bn, ROE about 12%, ongoing dividends). Forward-looking.",
+   "horizon": 2027
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-11-20",
+   "value": 30,
+   "page_he": 9,
+   "label": "ביום 20 בנובמבר 2024 אישר דירקטוריון מגדל אחזקות חלוקת דיבידנד בסך של כ-30 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m (printed approx.); Migdal Holdings."
+  }
+ ],
+ "not_found": [],
+ "note": "Correction deck (human error) of 1640543."
+}

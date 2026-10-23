@@ -1,0 +1,46 @@
+{
+ "company": "migdal",
+ "period": "2026Q2",
+ "report_id": 1763677,
+ "pres_date": "2026-08-17",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "adj_core_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 1311,
+   "page_he": 3,
+   "label": "רווחי ליבה (מיליוני ש\"ח) H1.26",
+   "source": "text",
+   "note": "NIS m, H1.26 (1 Jan-30 Jun 2026); group core profit as defined by the company; read from KPI slide where H1.26 and Q2.26 columns are printed side by side."
+  },
+  {
+   "metric": "adj_core_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-06-30",
+   "value": 731,
+   "page_he": 3,
+   "label": "רווחי ליבה (מיליוני ש\"ח) Q2.26",
+   "source": "text",
+   "note": "NIS m, Q2.26 (three months); core profit as defined by the company."
+  },
+  {
+   "metric": "kpi_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 2.7,
+   "page_he": 3,
+   "label": "מיליון לקוחות",
+   "source": "text",
+   "note": "Million customers; slide 3 headline KPI."
+  }
+ ],
+ "not_found": []
+}

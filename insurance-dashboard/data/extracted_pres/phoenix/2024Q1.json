@@ -1,0 +1,12 @@
+{
+ "company": "phoenix",
+ "period": "2024Q1",
+ "report_id": 1595207,
+ "pres_date": "2024-05-29",
+ "doc": "pres",
+ "unit": "NIS millions",
+ "facts": [],
+ "not_found": [],
+ "status": "not_extracted",
+ "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 2,3,5,6,7,8,9,10,11,12,14,17,18,20,21,24,25,26,27,28,30,32,33,35,36,38,39,40,41. Deck language by text layer: English; text-layer Hebrew chars 0."
+}

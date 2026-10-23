@@ -1,0 +1,22 @@
+{
+ "company": "ibi",
+ "period": "2023FY",
+ "report_id": 1581181,
+ "pres_date": "2024-03-21",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_new_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": 10000,
+   "page_he": 8,
+   "label": "מעל 10,000 לקוחות חדשים בשנת 2023",
+   "source": "text",
+   "note": "customers, more than (מעל); 2023"
+  }
+ ],
+ "not_found": []
+}

@@ -1,0 +1,22 @@
+{
+ "company": "migdal",
+ "period": "2024Q1",
+ "report_id": 1594111,
+ "pres_date": "2024-05-26",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-05-23",
+   "value": 25,
+   "page_he": 13,
+   "label": "ביום 23 במאי 2024 אישר דירקטוריון החברה חלוקת דיבידנד בסך של כ-25 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m (printed approx.); Migdal Holdings, funded from Migdal Capital Markets dividend."
+  }
+ ],
+ "not_found": []
+}

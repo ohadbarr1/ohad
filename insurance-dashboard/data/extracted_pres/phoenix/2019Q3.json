@@ -1,0 +1,12 @@
+{
+ "company": "phoenix",
+ "period": "2019Q3",
+ "report_id": 1265564,
+ "pres_date": "2019-11-28",
+ "doc": "pres",
+ "unit": "NIS millions",
+ "facts": [],
+ "not_found": [],
+ "status": "not_extracted",
+ "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 5,13,15,17,18. Deck language by text layer: Hebrew; text-layer Hebrew chars 8108."
+}

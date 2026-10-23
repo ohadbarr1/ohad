@@ -1,0 +1,88 @@
+{
+ "company": "harel",
+ "period": "2025Q1",
+ "report_id": 1668065,
+ "pres_date": "2025-05-29",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-03-28",
+   "value": 350,
+   "page_he": 24,
+   "label": "28.3.2024 הכריזה החברה על חלוקת דיבידנד בסך 350 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; Harel Investments; historical announcement shown in Q1 2025 deck."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-08-29",
+   "value": 200,
+   "page_he": 24,
+   "label": "29.8.2024 הכריזה החברה על חלוקת דיבידנד בסך 200 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; Harel Investments; historical announcement."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 250,
+   "page_he": 24,
+   "label": "31.12.2024 הכריזה החברה על חלוקת דיבידנד בסך 250 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; Harel Investments; historical announcement."
+  },
+  {
+   "metric": "buyback_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-11-30",
+   "value": 100,
+   "page_he": 24,
+   "label": "בנובמבר 2024 החברה אישרה תכנית רכישה נוספת בסך 100 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; additional buy-back programme approved November 2024."
+  },
+  {
+   "metric": "target_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 29,
+   "label": "תשואה להון 2026: 18%-19%",
+   "source": "chart",
+   "note": "Percent. Management target for 2026 under IFRS 17 (chart/table on slide); forward-looking.",
+   "value_low": 18,
+   "value_high": 19,
+   "horizon": 2026
+  },
+  {
+   "metric": "target_comprehensive_income",
+   "segment": "group",
+   "basis": "post_tax",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 29,
+   "label": "רווח כולל לאחר מס 2026 לפי IFRS 17: 1.9-2.1 מיליארדי ש\"ח",
+   "source": "chart",
+   "note": "NIS m (printed NIS 1.9-2.1 billion). Management target for 2026 under IFRS 17 (chart/table on slide); forward-looking.",
+   "value_low": 1900,
+   "value_high": 2100,
+   "horizon": 2026
+  }
+ ],
+ "not_found": []
+}

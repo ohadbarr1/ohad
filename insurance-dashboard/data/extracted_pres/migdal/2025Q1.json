@@ -1,0 +1,59 @@
+{
+ "company": "migdal",
+ "period": "2025Q1",
+ "report_id": 1667892,
+ "pres_date": "2025-05-28",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "adj_core_profit_pre_tax",
+   "segment": "group",
+   "basis": "pre_tax",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 531,
+   "page_he": 3,
+   "label": "הרווח מפעילויות ליבה עמד על כ-531 מיליון ש\"ח, לעומת כ-447 מיליון ש\"ח ברבעון המקביל (לפני מס)",
+   "source": "text",
+   "note": "NIS m, Q1 2025, pre-tax core-activities profit (CEO letter; approx.)."
+  },
+  {
+   "metric": "adj_core_profit_pre_tax",
+   "segment": "group",
+   "basis": "pre_tax",
+   "window": "q",
+   "date": "2024-03-31",
+   "value": 447,
+   "page_he": 3,
+   "label": "...לעומת כ-447 מיליון ש\"ח ברבעון המקביל (לפני מס)",
+   "source": "text",
+   "note": "NIS m, Q1 2024 comparative, pre-tax core-activities profit (approx.)."
+  },
+  {
+   "metric": "adj_comprehensive_equity",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 16900,
+   "page_he": 3,
+   "label": "ההון הכולל של החברה, המורכב מהון עצמי בתוספת CSM לאחר מס, הסתכם בכ-16.9 מיליארד ש\"ח, לעומת כ-16.7 מיליארד ש\"ח בסוף שנת 2024",
+   "source": "text",
+   "note": "NIS m (printed approx. NIS 16.9bn), 31.3.2025: equity plus CSM after tax; management measure."
+  },
+  {
+   "metric": "adj_comprehensive_equity",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-12-31",
+   "value": 16700,
+   "page_he": 3,
+   "label": "...לעומת כ-16.7 מיליארד ש\"ח בסוף שנת 2024",
+   "source": "text",
+   "note": "NIS m (approx.), 31.12.2024: equity plus CSM after tax."
+  }
+ ],
+ "not_found": [],
+ "note": "Slide 22 translates the 2027 financial targets to IFRS 17 (comprehensive income 1.3bn, ROE 13% already extracted from the report); other slide-22 mapping ambiguous, not extracted."
+}

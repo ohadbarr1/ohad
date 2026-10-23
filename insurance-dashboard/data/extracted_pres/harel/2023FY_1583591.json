@@ -1,0 +1,22 @@
+{
+ "company": "harel",
+ "period": "2023FY",
+ "report_id": 1583591,
+ "pres_date": "2024-03-31",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-03-28",
+   "value": 350,
+   "page_he": 7,
+   "label": "ביום 28.3.2024 הכריזה החברה על חלוקת דיבידנד בסך 350 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; Harel Investments, announced 28 March 2024."
+  }
+ ],
+ "not_found": []
+}

@@ -1,0 +1,47 @@
+{
+ "company": "analyst",
+ "period": "2025FY",
+ "report_id": 1729237,
+ "pres_date": "2026-03-19",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "portfolio_management",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2.3,
+   "page_he": 8,
+   "label": "גיוסים נטו בכל חברות הקבוצה במהלך שנת 2025 אנליסט תיקי השקעות 2.3 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; 2025"
+  },
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "mutual_funds",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 6.1,
+   "page_he": 8,
+   "label": "גיוסים נטו אנליסט קרנות נאמנות 6.1 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; 2025"
+  },
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 19.6,
+   "page_he": 8,
+   "label": "גיוסים נטו אנליסט קופות גמל 19.6 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; 2025"
+  }
+ ],
+ "not_found": [],
+ "note": "Dividend/capital-raise cell on slide 4 not unambiguous; only net inflows taken"
+}

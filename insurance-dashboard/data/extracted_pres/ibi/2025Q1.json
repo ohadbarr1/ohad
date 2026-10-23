@@ -1,0 +1,95 @@
+{
+ "company": "ibi",
+ "period": "2025Q1",
+ "report_id": 1668074,
+ "pres_date": "2025-05-29",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "adj_ebitda",
+   "segment": "group",
+   "basis": "na",
+   "window": "q",
+   "date": "2025-03-31",
+   "value": 92,
+   "page_he": 3,
+   "label": "EBITDA ב-Q1 92 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS millions; EBITDA as presented by company in the deck, not a statement line"
+  },
+  {
+   "metric": "kpi_dividend_ttm",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-03-31",
+   "value": 146,
+   "page_he": 3,
+   "label": "דיבידנד שחולק ב-4 הרבעונים האחרונים",
+   "source": "text",
+   "note": "NIS millions; trailing four quarters; includes NIS 20m declared and not yet paid"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 20,
+   "page_he": 3,
+   "label": "כולל דיבידנד בסך 20 מ' ₪ שהוכרז וטרם חולק",
+   "source": "text",
+   "note": "NIS millions; declared and not yet paid"
+  },
+  {
+   "metric": "adj_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 18.7,
+   "page_he": 3,
+   "label": "ROE ממוצע 5 שנים",
+   "source": "text",
+   "note": "percent; average ROE over 5 years as printed"
+  },
+  {
+   "metric": "kpi_headcount",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 975,
+   "page_he": 3,
+   "label": "עובדים",
+   "source": "text",
+   "note": "employees"
+  },
+  {
+   "metric": "kpi_accounts_ibi_smart",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-03-31",
+   "value": 59000,
+   "page_he": 7,
+   "label": "כ-59,000 חשבונות נכון לסוף הרבעון",
+   "source": "text",
+   "note": "accounts, approx.; over 8,000 new accounts opened in Q1"
+  },
+  {
+   "metric": "target_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 100000,
+   "page_he": 7,
+   "label": "יעד של 100,000 לקוחות עד אמצע שנת 2026",
+   "source": "text",
+   "note": "IBI SMART self-directed trading customers, by mid-2026",
+   "horizon": 2026
+  }
+ ],
+ "not_found": []
+}

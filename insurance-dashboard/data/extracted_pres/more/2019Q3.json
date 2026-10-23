@@ -1,0 +1,80 @@
+{
+ "company": "more",
+ "period": "2019Q3",
+ "report_id": 1264470,
+ "pres_date": "2019-11-24",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_revenue",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2019-12-31",
+   "value": null,
+   "page_he": 15,
+   "label": "תחזית 2019 הכנסות 176-186",
+   "source": "text",
+   "note": "NIS millions; company estimate (forward-looking) for 2019",
+   "value_low": 176,
+   "value_high": 186,
+   "horizon": 2019
+  },
+  {
+   "metric": "target_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2019-12-31",
+   "value": null,
+   "page_he": 15,
+   "label": "תחזית 2019 רווח נקי 23-33",
+   "source": "text",
+   "note": "NIS millions; net profit, company estimate (forward-looking) for 2019",
+   "value_low": 23,
+   "value_high": 33,
+   "horizon": 2019
+  },
+  {
+   "metric": "target_ebitda",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2019-12-31",
+   "value": null,
+   "page_he": 15,
+   "label": "תחזית 2019 EBITDA 46-56",
+   "source": "text",
+   "note": "NIS millions; EBITDA as defined on the slide, company estimate for 2019",
+   "value_low": 46,
+   "value_high": 56,
+   "horizon": 2019
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 80,
+   "page_he": 17,
+   "label": "לפחות 80% דיבידנד שנתי",
+   "source": "text",
+   "note": "percent; slide-17 summary text as extracted: at least 80% annual dividend (payout basis not stated on slide)",
+   "horizon": null
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-11-14",
+   "value": 24.53,
+   "page_he": 7,
+   "label": "24.53 מיליארד ₪ היקף נכסים מנוהלים ליום 14.11.19",
+   "source": "text",
+   "note": "NIS billions"
+  }
+ ],
+ "not_found": []
+}

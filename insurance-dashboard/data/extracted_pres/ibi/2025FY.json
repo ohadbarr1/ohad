@@ -1,0 +1,73 @@
+{
+ "company": "ibi",
+ "period": "2025FY",
+ "report_id": 1729778,
+ "pres_date": "2026-03-23",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 100000,
+   "page_he": 9,
+   "label": "יעדים לשנת 2026: חציית הרף של 100,000 לקוחות",
+   "source": "text",
+   "note": "IBI SMART self-directed trading customers; 2026 targets list",
+   "horizon": 2026
+  },
+  {
+   "metric": "kpi_new_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 30600,
+   "page_he": 9,
+   "label": "30,600 לקוחות חדשים בשנת 2025 מתוכם 7,600 לקוחות ברבעון 4",
+   "source": "text",
+   "note": "new IBI SMART customers in 2025, of which 7,600 in Q4"
+  },
+  {
+   "metric": "target_aum",
+   "segment": "hedge_funds",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 2.2,
+   "page_he": 18,
+   "label": "יעד של 2.2 מיליארד ₪ AUM בקרנות הגידור ברבעון 1 של שנת 2027",
+   "source": "text",
+   "note": "NIS billions; AUM target in hedge funds by Q1 2027",
+   "horizon": 2027
+  },
+  {
+   "metric": "kpi_dividend_ttm",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 130,
+   "page_he": 3,
+   "label": "₪130M אשר חולק בשנה האחרונה*",
+   "source": "text",
+   "note": "NIS millions; dividend distributed in the last year, as of 19.03.26"
+  },
+  {
+   "metric": "adj_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 21.7,
+   "page_he": 3,
+   "label": "ROE ממוצע 3 שנים אחרונות 21.7%",
+   "source": "text",
+   "note": "percent; average ROE over the last 3 years as printed"
+  }
+ ],
+ "not_found": [],
+ "note": "Slide 3 header ratios other than dividend and ROE not taken (labels not unambiguous in text layer); portfolio-management AUM target on slide 22 has no legible number"
+}

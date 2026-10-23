@@ -1,0 +1,35 @@
+{
+ "company": "altshuler",
+ "period": "2022FY",
+ "report_id": 1512166,
+ "pres_date": "2023-03-22",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 75,
+   "page_he": 3,
+   "label": "מדיניות חלוקת דיבידנדים של לפחות 75% מהרווח הנקי",
+   "source": "text",
+   "note": "percent of net profit; dividend policy, at least (לפחות); no horizon stated",
+   "horizon": null
+  },
+  {
+   "metric": "kpi_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 2.3,
+   "page_he": 3,
+   "label": "כ-2.3 מיליון לקוחות",
+   "source": "text",
+   "note": "millions of customers, approx."
+  }
+ ],
+ "not_found": []
+}

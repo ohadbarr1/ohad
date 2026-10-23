@@ -1,0 +1,86 @@
+{
+ "company": "more_gemel",
+ "period": "2026FY",
+ "report_id": 1729758,
+ "pres_date": "2026-03-22",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "adj_profit_before_tax",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 125,
+   "page_he": 5,
+   "label": "רווח מתואם לפני מס 125 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; adjusted pre-tax profit = excluding share-based payment expense (incl. cash-settled), per slide footnote (director's report section 2.4.3)"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 62,
+   "page_he": 5,
+   "label": "סך הדיבידנד שהוכרז בגין שנת 2025 62 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; declared in respect of 2025"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 5,
+   "label": "תחזית רווח מתואם לפני מס 2026 140-160 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; forecast of adjusted pre-tax profit (excl. share-based payment) for 2026; forward-looking",
+   "value_low": 140,
+   "value_high": 160,
+   "horizon": 2026
+  },
+  {
+   "metric": "target_status",
+   "segment": "pension",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": null,
+   "page_he": 5,
+   "label": "ענף פנסיה: צפי למעבר לרווח מתואם לפני מס במהלך שנת 2027",
+   "source": "text",
+   "note": "pension activity expected to turn to adjusted pre-tax profit during 2027; forward-looking",
+   "horizon": 2027
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-03-10",
+   "value": 128,
+   "page_he": 5,
+   "label": "כ-128 מיליארד ₪ היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 10.03.2026; growth of about NIS 41bn since start of 2025"
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 10.4,
+   "page_he": 12,
+   "label": "נתח שוק – *10.4%",
+   "source": "text",
+   "note": "percent; footnote on slide 12; slide also states growth of about 36% in assets and second place in transfers and accumulation"
+  }
+ ],
+ "not_found": []
+}

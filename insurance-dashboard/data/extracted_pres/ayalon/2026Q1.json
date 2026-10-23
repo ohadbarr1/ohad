@@ -1,0 +1,22 @@
+{
+ "company": "ayalon",
+ "period": "2026Q1",
+ "report_id": 1743844,
+ "pres_date": "2026-05-27",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 30,
+   "page_he": 4,
+   "label": "דיבידנד בגין שנת 2026 מחודש פברואר, בסך 30 מ\"ש ח",
+   "source": "text",
+   "note": "NIS m; dividend in respect of 2026, per slide 4 and CEO letter slide 2; exact declaration date not printed beyond 'from February'."
+  }
+ ],
+ "not_found": []
+}

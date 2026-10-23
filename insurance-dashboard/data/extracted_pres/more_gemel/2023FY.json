@@ -1,0 +1,49 @@
+{
+ "company": "more_gemel",
+ "period": "2023FY",
+ "report_id": 1512722,
+ "pres_date": "2023-03-23",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": null,
+   "page_he": 15,
+   "label": "צפי לרווח לפני מס בשנת 2023 30-35 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; forward-looking profit-before-tax expectation for 2023, as printed",
+   "value_low": 30,
+   "value_high": 35,
+   "horizon": 2023
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2022-12-31",
+   "value": 7.9,
+   "page_he": 11,
+   "label": "נתח השוק של מור גמל ופנסיה עומד על 7.9%",
+   "source": "text",
+   "note": "percent"
+  },
+  {
+   "metric": "kpi_share_of_industry_net_transfers",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "fy",
+   "date": "2022-12-31",
+   "value": 40,
+   "page_he": 11,
+   "label": "כ-40% מכל שקל בניוד נטו בתעשייה מגיע למור גמל",
+   "source": "text",
+   "note": "percent, approx., 2022"
+  }
+ ],
+ "not_found": []
+}

@@ -1,0 +1,62 @@
+{
+ "company": "more_gemel",
+ "period": "2025Q3",
+ "report_id": 1701488,
+ "pres_date": "2025-11-09",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": null,
+   "page_he": 5,
+   "label": "תחזית רווח לפני מס 2025 105-120 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; forecast for 2025; forward-looking",
+   "value_low": 105,
+   "value_high": 120,
+   "horizon": 2025
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-09-30",
+   "value": 113,
+   "page_he": 5,
+   "label": "כ-113 מיליארד ₪ היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 30.09.2025 per Gemel-Net/Pension-Net; growth of about NIS 26bn since start of year"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-09-30",
+   "value": 39,
+   "page_he": 5,
+   "label": "דיבידנד שחולק מתחילת השנה 39 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; distributed since start of 2025"
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-09-30",
+   "value": 10.2,
+   "page_he": 9,
+   "label": "נתח שוק – *10.2%",
+   "source": "text",
+   "note": "percent; footnote on slide 9"
+  }
+ ],
+ "not_found": [],
+ "note": "Deck for bond and option issuance (Nov 2025)"
+}

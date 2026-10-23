@@ -1,0 +1,23 @@
+{
+ "company": "ayalon",
+ "period": "2025Q1",
+ "report_id": 1668061,
+ "pres_date": "2025-05-29",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 90,
+   "page_he": 11,
+   "label": "כולל דיבידנד שחולק בסך של 90 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; dividend distributed, per slide 11 footnote (also slide 12); distribution date not printed."
+  }
+ ],
+ "not_found": [],
+ "note": "Slides 22-36 and others have no text layer; not read."
+}

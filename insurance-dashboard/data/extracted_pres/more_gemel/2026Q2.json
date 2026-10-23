@@ -1,0 +1,73 @@
+{
+ "company": "more_gemel",
+ "period": "2026Q2",
+ "report_id": 1763081,
+ "pres_date": "2026-08-12",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "adj_profit_before_tax",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 75,
+   "page_he": 5,
+   "label": "רווח מתואם לפני מס H1/2026 75 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; adjusted pre-tax profit, not based on GAAP, per slide footnote; definition in the legal-disclaimer slide"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-06-30",
+   "value": 41,
+   "page_he": 5,
+   "label": "סך הדיבידנד שהוכרז מתחילת השנה בגין שנת 2026 41 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; declared since start of 2026, in respect of 2026"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 5,
+   "label": "תחזית רווח מתואם לפני מס לשנת 2026 150-165 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; forecast of adjusted pre-tax profit for 2026; forward-looking",
+   "value_low": 150,
+   "value_high": 165,
+   "horizon": 2026
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-08-04",
+   "value": 140,
+   "page_he": 5,
+   "label": "כ-140 מיליארד ₪ היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 04.08.2026; growth of about NIS 18bn since start of 2026"
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 10.6,
+   "page_he": 12,
+   "label": "נתח שוק – *10.6%",
+   "source": "text",
+   "note": "percent; footnote on slide 12"
+  }
+ ],
+ "not_found": []
+}

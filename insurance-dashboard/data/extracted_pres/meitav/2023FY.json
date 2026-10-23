@@ -1,0 +1,23 @@
+{
+ "company": "meitav",
+ "period": "2023FY",
+ "report_id": 1579475,
+ "pres_date": "2024-03-14",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2023-12-31",
+   "value": 269,
+   "page_he": 3,
+   "label": "היקף נכסים מנוהלים 269 מיליארד ש\"ח נכון ליום 31/12/2023",
+   "source": "text",
+   "note": "NIS billions"
+  }
+ ],
+ "not_found": [],
+ "note": "Only AUM headline taken; no targets or dividend announcement found in candidate slides"
+}

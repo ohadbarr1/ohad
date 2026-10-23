@@ -1,0 +1,86 @@
+{
+ "company": "more",
+ "period": "2026Q1",
+ "report_id": 1743789,
+ "pres_date": "2026-05-26",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "more_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-05-12",
+   "value": 212.5,
+   "page_he": 5,
+   "label": "כ-212.5 מיליארד ₪ היקף נכסים מנוהלים נכון ליום 12.5.2026",
+   "source": "text",
+   "note": "NIS billions, approx.; footnote: includes inter-company investments"
+  },
+  {
+   "metric": "adj_ebitda",
+   "segment": "more_group",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 90.9,
+   "page_he": 5,
+   "label": "כ-90.9 מיליון ₪ EBITDA ב-Q1/26",
+   "source": "text",
+   "note": "NIS millions, approx.; EBITDA as presented in the deck, not a statement line"
+  },
+  {
+   "metric": "adj_profit_before_tax",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "q",
+   "date": "2026-03-31",
+   "value": 41.1,
+   "page_he": 5,
+   "label": "כ-41.1 מיליון ₪ רווח מתואם לפני מס ב-Q1/26 בחברת הגמל והפנסיה",
+   "source": "text",
+   "note": "NIS millions, approx.; excluding share-based payment expense (incl. cash-settled); not GAAP"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 5,
+   "label": "140-160 מיליון ₪ תחזית רווח מתואם לפני מס בשנת 2026 בחברת הגמל והפנסיה",
+   "source": "text",
+   "note": "NIS millions; adjusted pre-tax profit forecast for 2026; forward-looking",
+   "value_low": 140,
+   "value_high": 160,
+   "horizon": 2026
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-05-31",
+   "value": 21,
+   "page_he": 16,
+   "label": "במאי 2026 אושרה חלוקת דיבידנד בהיקף של 21 מיליון",
+   "source": "text",
+   "note": "NIS millions; approved in May 2026"
+  },
+  {
+   "metric": "target_status",
+   "segment": "pension",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": null,
+   "page_he": 8,
+   "label": "2027 צפויה פעילות הפנסיה לעבור לרווח מתואם לפני מס",
+   "source": "text",
+   "note": "pension activity expected to move to adjusted pre-tax profit in 2027; forward-looking",
+   "horizon": 2027
+  }
+ ],
+ "not_found": []
+}

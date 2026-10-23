@@ -1,0 +1,65 @@
+{
+ "company": "harel",
+ "period": "2025Q2",
+ "report_id": 1688875,
+ "pres_date": "2025-08-28",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 400,
+   "page_he": 4,
+   "label": "דיבידנד בסך 400 מיליון ש\"ח הוכרז בגין המחצית הראשונה",
+   "source": "text",
+   "note": "NIS m; Harel Investments dividend declared for H1 2025; board moved to semi-annual dividends (slide 4, 13)."
+  },
+  {
+   "metric": "target_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 27,
+   "label": "תשואה להון 2026: 18%-19%",
+   "source": "chart",
+   "note": "Percent. Management target for 2026 under IFRS 17 (chart/table on slide); forward-looking.",
+   "value_low": 18,
+   "value_high": 19,
+   "horizon": 2026
+  },
+  {
+   "metric": "target_comprehensive_income",
+   "segment": "group",
+   "basis": "post_tax",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 27,
+   "label": "רווח כולל לאחר מס 2026 לפי IFRS 17: 1.9-2.1 מיליארדי ש\"ח",
+   "source": "chart",
+   "note": "NIS m (printed NIS 1.9-2.1 billion). Management target for 2026 under IFRS 17 (chart/table on slide); forward-looking.",
+   "value_low": 1900,
+   "value_high": 2100,
+   "horizon": 2026
+  },
+  {
+   "metric": "target_status",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-06-30",
+   "value": null,
+   "page_he": 27,
+   "label": "צפי להקדמת עמידה ביעדי התכנית האסטרטגית",
+   "source": "text",
+   "note": "Management expects to reach the 2026 profit targets ahead of schedule (also slide 4: 'צפי להקדמת עמידה ביעדי הרווח לשנת 2026'); no number given."
+  }
+ ],
+ "not_found": [],
+ "note": "Targets 2026 'expected early achievement' and update of targets 'in coming months' are text statements without numbers; not extracted."
+}

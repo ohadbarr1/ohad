@@ -1,0 +1,61 @@
+{
+ "company": "more_gemel",
+ "period": "2023Q1",
+ "report_id": 1524546,
+ "pres_date": "2023-05-28",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2023-12-31",
+   "value": null,
+   "page_he": 15,
+   "label": "צפי לרווח לפני מס בשנת 2023 30-35 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; forward-looking profit-before-tax expectation for 2023",
+   "value_low": 30,
+   "value_high": 35,
+   "horizon": 2023
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2023-04-30",
+   "value": 8.9,
+   "page_he": 11,
+   "label": "נתח השוק של מור גמל ופנסיה עומד על 8.9%",
+   "source": "text",
+   "note": "percent; slide also states about 50% of every shekel of net transfers in the industry in Jan-Apr 2023 went to the company"
+  },
+  {
+   "metric": "kpi_share_of_industry_net_transfers",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2023-04-30",
+   "value": 50,
+   "page_he": 11,
+   "label": "כ-50% מכל שקל בניוד נטו בתעשייה מגיע למור גמל",
+   "source": "text",
+   "note": "percent, approx., Jan-Apr 2023"
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2023-05-15",
+   "value": 62.1,
+   "page_he": 3,
+   "label": "כ-62.1 מיליארד ₪ היקף נכסים מנוהלים ליום 15.05.2023",
+   "source": "text",
+   "note": "NIS billions, approx."
+  }
+ ],
+ "not_found": []
+}

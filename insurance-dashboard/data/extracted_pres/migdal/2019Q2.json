@@ -1,0 +1,22 @@
+{
+ "company": "migdal",
+ "period": "2019Q2",
+ "report_id": 1248136,
+ "pres_date": "2019-08-15",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-07-24",
+   "value": 350,
+   "page_he": 15,
+   "label": "ביום 24 ביולי 2019 החליט דירקטוריון מגדל אחזקות לאשר חלוקת דיבידנד בסך 350 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; Migdal Holdings board decision 24 July 2019; general meeting approval 14 August 2019 (per slide)."
+  }
+ ],
+ "not_found": []
+}

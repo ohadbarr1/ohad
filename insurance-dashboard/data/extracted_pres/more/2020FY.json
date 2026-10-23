@@ -1,0 +1,23 @@
+{
+ "company": "more",
+ "period": "2020FY",
+ "report_id": 1287539,
+ "pres_date": "2020-03-30",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 80,
+   "page_he": 18,
+   "label": "לפחות 80% דיבידנד שנתי",
+   "source": "text",
+   "note": "percent; slide-18 summary text as extracted: at least 80% annual dividend (payout basis not stated on slide)",
+   "horizon": null
+  }
+ ],
+ "not_found": []
+}

@@ -1,0 +1,12 @@
+{
+ "company": "menora",
+ "period": "2024Q1",
+ "report_id": 1595832,
+ "pres_date": "2024-05-30",
+ "doc": "pres",
+ "unit": "NIS millions",
+ "facts": [],
+ "not_found": [],
+ "status": "not_extracted",
+ "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): none. Deck language by text layer: English; text-layer Hebrew chars 25."
+}

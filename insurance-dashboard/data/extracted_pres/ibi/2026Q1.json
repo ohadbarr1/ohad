@@ -1,0 +1,47 @@
+{
+ "company": "ibi",
+ "period": "2026Q1",
+ "report_id": 1744440,
+ "pres_date": "2026-05-28",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_dividend_ytd",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-03-31",
+   "value": 120,
+   "page_he": 3,
+   "label": "₪120M אשר חולק מתחילת 2026*",
+   "source": "text",
+   "note": "NIS millions; dividend distributed since start of 2026, includes NIS 70m declared and not yet paid"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-03-31",
+   "value": 70,
+   "page_he": 3,
+   "label": "כולל דיבידנד בסך 70 מ' ₪ שהוכרז וטרם חולק",
+   "source": "text",
+   "note": "NIS millions; declared and not yet paid"
+  },
+  {
+   "metric": "adj_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-03-31",
+   "value": 26.3,
+   "page_he": 3,
+   "label": "ROE 26.3%",
+   "source": "text",
+   "note": "percent; ROE as printed on the overview slide (averaging basis not captured in text layer)"
+  }
+ ],
+ "not_found": [],
+ "note": "Slide 9 chart target marker (06-2028) not legible as a number; not taken"
+}

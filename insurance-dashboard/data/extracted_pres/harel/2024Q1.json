@@ -1,0 +1,76 @@
+{
+ "company": "harel",
+ "period": "2024Q1",
+ "report_id": 1595201,
+ "pres_date": "2024-05-29",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "target_comprehensive_income",
+   "segment": "group",
+   "basis": "post_tax",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": 1447,
+   "page_he": 9,
+   "label": "רווח כולל לאחר מס (מיליוני ש\"ח) 2026: 1,447",
+   "source": "chart",
+   "note": "NIS m, after tax. Management target for 2026 ('הראל 2026' slide 'היעדים שלנו'); the 2026 target is the rightmost bar, mapping to 2022/2023/Q1.24 bars confirmed on slide image of the Q1 2024 deck. Forward-looking; assumptions in slide footnote.",
+   "horizon": 2026
+  },
+  {
+   "metric": "target_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": 13.5,
+   "page_he": 9,
+   "label": "תשואה להון 2026: 13.5%",
+   "source": "chart",
+   "note": "Percent. Management target for 2026 ('הראל 2026' slide 'היעדים שלנו'); the 2026 target is the rightmost bar, mapping to 2022/2023/Q1.24 bars confirmed on slide image of the Q1 2024 deck. Forward-looking; assumptions in slide footnote.",
+   "horizon": 2026
+  },
+  {
+   "metric": "target_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": 520000,
+   "page_he": 10,
+   "label": "נכסים מנוהלים (מיליארדי ש\"ח) 2026: 520",
+   "source": "chart",
+   "note": "NIS m (printed NIS 520 billion). Management target for 2026 ('הראל 2026' slide 'היעדים שלנו'); the 2026 target is the rightmost bar, mapping to 2022/2023/Q1.24 bars confirmed on slide image of the Q1 2024 deck. Forward-looking; assumptions in slide footnote.",
+   "horizon": 2026
+  },
+  {
+   "metric": "target_premiums",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": 43800,
+   "page_he": 10,
+   "label": "פרמיות, דמי גמולים ותקבולים בגין חוזי השקעה (מיליארדי ש\"ח) 2026: 43.8",
+   "source": "chart",
+   "note": "NIS m (printed NIS 43.8 billion). Management target for 2026 ('הראל 2026' slide 'היעדים שלנו'); the 2026 target is the rightmost bar, mapping to 2022/2023/Q1.24 bars confirmed on slide image of the Q1 2024 deck. Forward-looking; assumptions in slide footnote.",
+   "horizon": 2026
+  },
+  {
+   "metric": "target_management_fees",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": 1910,
+   "page_he": 10,
+   "label": "דמי ניהול (מיליארדי ש\"ח) 2026: 1.91",
+   "source": "chart",
+   "note": "NIS m (printed NIS 1.91 billion). Management target for 2026 ('הראל 2026' slide 'היעדים שלנו'); the 2026 target is the rightmost bar, mapping to 2022/2023/Q1.24 bars confirmed on slide image of the Q1 2024 deck. Forward-looking; assumptions in slide footnote.",
+   "horizon": 2026
+  }
+ ],
+ "not_found": [],
+ "note": "Q1 2024 deck; slide 25 repeats dividend history (350m on 28.3.2024)."
+}

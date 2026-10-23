@@ -1,0 +1,83 @@
+{
+ "company": "meitav",
+ "period": "2025Q3",
+ "report_id": 1703446,
+ "pres_date": "2025-11-18",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-09-30",
+   "value": 383,
+   "page_he": 3,
+   "label": "383 מיליארד ש\"ח נכסים מנוהלים ↑ 23% YoY",
+   "source": "text",
+   "note": "NIS billions; YoY +23% as printed"
+  },
+  {
+   "metric": "kpi_trade_accounts",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-09-30",
+   "value": 108,
+   "page_he": 3,
+   "label": "108k חשבונות טרייד ↑ 32% YoY",
+   "source": "text",
+   "note": "thousand accounts (printed as 108k)"
+  },
+  {
+   "metric": "kpi_credit_portfolio",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-09-30",
+   "value": 3580,
+   "page_he": 3,
+   "label": "3,580 מיליון ש\"ח תיק אשראי ↑ 29% YoY",
+   "source": "text",
+   "note": "NIS millions"
+  },
+  {
+   "metric": "kpi_revenue_ltm",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-09-30",
+   "value": 1.9,
+   "page_he": 3,
+   "label": "1.9 מיליארד ש\"ח הכנסות הקבוצה LTM ↑ 24% YoY",
+   "source": "text",
+   "note": "NIS billions; LTM; excluding income from legal claims (slide footnote 3)"
+  },
+  {
+   "metric": "adj_ebitda",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-09-30",
+   "value": 755,
+   "page_he": 3,
+   "label": "755 מיליון ש\"ח EBITDA מנוטרלת LTM ↑ 52% YoY",
+   "source": "text",
+   "note": "NIS millions; LTM; neutralised EBITDA, definition in the directors' report (slide footnote 2)"
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 50,
+   "page_he": 3,
+   "label": "מדיניות דיבידנד חלוקה של לפחות 50% מהרווח הנקי",
+   "source": "text",
+   "note": "percent of net profit; dividend policy, at least (לפחות); no horizon stated",
+   "horizon": null
+  }
+ ],
+ "not_found": []
+}

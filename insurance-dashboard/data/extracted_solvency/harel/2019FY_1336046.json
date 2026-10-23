@@ -1,0 +1,94 @@
+{
+ "company": "harel",
+ "period": "2019FY",
+ "report_id": 1336046,
+ "entity": "הראל חברה לביטוח בע\"מ (letter issued by הראל השקעות בביטוח ושירותים פיננסים בע\"מ, 30.11.2020, update of capital targets)",
+ "as_of": "2019-12-31",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "solvency_ratio",
+   "segment": "group",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2019-12-31",
+   "value": 170,
+   "page_he": 1,
+   "label": "יחס כושר הפירעון עמד על 170%",
+   "source": "text",
+   "note": "Harel Insurance, consolidated basis, taking transitional provisions into account; letter dated 30.11.2020 describing the 31.12.2019 solvency report published 28.10.2020"
+  },
+  {
+   "metric": "solvency_ratio",
+   "segment": "group",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-12-31",
+   "value": 113,
+   "page_he": 1,
+   "label": "יחס כושר הפירעון עמד על 113%",
+   "source": "text",
+   "note": "Harel Insurance, consolidated basis, before transitional provisions (100% SCR)"
+  },
+  {
+   "metric": "solvency_surplus",
+   "segment": "group",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2019-12-31",
+   "value": 6300,
+   "page_he": 1,
+   "label": "עודף ההון ... הסתכם לסך של כ-6.3 מיליארדי ש\"ח",
+   "source": "text",
+   "note": "printed as approximately NIS 6.3 billion"
+  },
+  {
+   "metric": "solvency_surplus",
+   "segment": "group",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2019-12-31",
+   "value": 1450,
+   "page_he": 1,
+   "label": "עודף ההון ... הסתכם לסך של כ-1.45 מיליארדי ש\"ח",
+   "source": "text",
+   "note": "printed as approximately NIS 1.45 billion"
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "solo",
+   "basis": "with_transitional",
+   "window": "instant",
+   "date": "2020-11-30",
+   "value": 135,
+   "page_he": 2,
+   "label": "יחס כושר פירעון כלכלי מינימאלי, בהתחשב בהוראות הפריסה, בשיעור של 135%",
+   "source": "text",
+   "note": "dividend-distribution threshold rule approved by Harel Insurance board on 30.11.2020 (minimum, not a target range); the board decided not to set a target range"
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "solo",
+   "basis": "without_transitional",
+   "window": "instant",
+   "date": "2020-11-30",
+   "value": 105,
+   "page_he": 2,
+   "label": "יחס כושר פירעון מינימאלי, ללא התחשבות בהוראות בתקופת הפריסה, בשיעור של 105%",
+   "source": "text",
+   "note": "dividend-distribution threshold rule approved by Harel Insurance board on 30.11.2020 (minimum, not a target range)"
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "own_funds",
+   "segment": "solo",
+   "why": "letter prints ratios, surplus and dividend thresholds only"
+  },
+  {
+   "metric": "scr",
+   "segment": "solo",
+   "why": "letter prints ratios, surplus and dividend thresholds only"
+  }
+ ]
+}

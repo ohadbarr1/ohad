@@ -1,0 +1,49 @@
+{
+ "company": "more",
+ "period": "2025FY",
+ "report_id": 1730545,
+ "pres_date": "2026-03-25",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "more_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-03-10",
+   "value": 201.1,
+   "page_he": 5,
+   "label": "כ-201.1 מיליארד ₪ היקף נכסים מנוהלים נכון ליום 10.3.2026",
+   "source": "text",
+   "note": "NIS billions, approx.; includes inter-company investments per slide footnote"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 8,
+   "label": "פרסמה תחזית לרווח מתואם לפני מס של 140 עד 160 מיליון שקלים לשנת 2026",
+   "source": "text",
+   "note": "NIS millions; forecast for the gemel and pension company; forward-looking",
+   "value_low": 140,
+   "value_high": 160,
+   "horizon": 2026
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-03-31",
+   "value": 14,
+   "page_he": 16,
+   "label": "במרץ 2026 אושרה חלוקת דיבידנד בהיקף של כ-14",
+   "source": "text",
+   "note": "NIS millions, approx.; approved in March 2026"
+  }
+ ],
+ "not_found": []
+}

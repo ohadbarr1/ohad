@@ -1,0 +1,24 @@
+{
+ "company": "harel",
+ "period": "2026Q1",
+ "report_id": 1743826,
+ "pres_date": "2026-05-27",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 40,
+   "page_he": 21,
+   "label": "מדיניות הדיבידנד בהראל השקעות: שיעור חלוקת הדיבידנד לפחות 40%",
+   "source": "text",
+   "note": "Harel Investments dividend policy: minimum payout of annual comprehensive income per Harel Insurance annual consolidated statements, as long as Harel Insurance meets minimum solvency targets. Percent, minimum.",
+   "horizon": null
+  }
+ ],
+ "not_found": [],
+ "note": "No dividend/buy-back amount announced on text slides; strategic 2028 targets already extracted from quarterly report."
+}

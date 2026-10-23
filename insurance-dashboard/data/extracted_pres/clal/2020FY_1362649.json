@@ -1,0 +1,24 @@
+{
+ "company": "clal",
+ "period": "2020FY",
+ "report_id": 1362649,
+ "pres_date": "2021-04-05",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_status",
+   "segment": "clal_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2020-12-31",
+   "value": null,
+   "page_he": 23,
+   "doc": "pres",
+   "label": "יצוין ,כי החברה בוחנת את עדכון יעד ההון ,וזאת בהתאם להתפתחויות העסקיות והרגולטוריות שאירעו בתקופה האחרונה.",
+   "source": "text",
+   "note": "CEO and chairman message: company is reviewing an update of its capital target; no numeric target stated."
+  }
+ ],
+ "not_found": []
+}

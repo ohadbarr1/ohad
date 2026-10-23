@@ -1,0 +1,23 @@
+{
+ "company": "migdal",
+ "period": "2026Q1",
+ "report_id": 1742384,
+ "pres_date": "2026-05-20",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "kpi_aum_managed",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 618000,
+   "page_he": 3,
+   "label": "היקף הנכסים המנוהלים ... עומדים כיום על כ-618 מיליארד ש\"ח",
+   "source": "text",
+   "note": "NIS m (printed approx. NIS 618 billion), 'near the publication date' of the Q1 2026 report (CEO letter); exact date not printed."
+  }
+ ],
+ "not_found": [],
+ "note": "Dividend distribution goal 'by end of 2027' stated in words without amount."
+}

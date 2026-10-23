@@ -1,0 +1,83 @@
+{
+ "company": "meitav",
+ "period": "2026Q2",
+ "report_id": 1763748,
+ "pres_date": "2026-08-17",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 463,
+   "page_he": 3,
+   "label": "463 מיליארד ש\"ח נכסים מנוהלים ↑ 28% YoY",
+   "source": "text",
+   "note": "NIS billions; YoY growth +28% as printed"
+  },
+  {
+   "metric": "kpi_trade_accounts",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 130,
+   "page_he": 3,
+   "label": "130k חשבונות טרייד ↑ 27% YoY",
+   "source": "text",
+   "note": "thousand accounts (printed as 130k)"
+  },
+  {
+   "metric": "kpi_credit_portfolio",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 4,
+   "page_he": 3,
+   "label": "4 מיליארד ש\"ח תיק אשראי ↑ 21% YoY",
+   "source": "text",
+   "note": "NIS billions"
+  },
+  {
+   "metric": "kpi_revenue_ltm",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2026-06-30",
+   "value": 2.3,
+   "page_he": 3,
+   "label": "2.3 מיליארד ש\"ח הכנסות הקבוצה LTM ↑ 29% YoY",
+   "source": "text",
+   "note": "NIS billions; LTM; excluding income from legal claims (slide footnote 3)"
+  },
+  {
+   "metric": "adj_ebitda",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2026-06-30",
+   "value": 963,
+   "page_he": 3,
+   "label": "963 מיליון ש\"ח EBITDA מנוטרלת LTM ↑ 40% YoY",
+   "source": "text",
+   "note": "NIS millions; LTM; neutralised EBITDA, definition in the directors' report of Q2 2026 (slide footnote 2)"
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 50,
+   "page_he": 3,
+   "label": "מדיניות חלוקת דיבידנד לפחות 50% מהרווח הנקי",
+   "source": "text",
+   "note": "percent of net profit; dividend policy, at least (לפחות); no horizon stated",
+   "horizon": null
+  }
+ ],
+ "not_found": []
+}

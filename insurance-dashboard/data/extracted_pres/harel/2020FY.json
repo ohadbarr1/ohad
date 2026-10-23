@@ -1,0 +1,34 @@
+{
+ "company": "harel",
+ "period": "2020FY",
+ "report_id": 1358994,
+ "pres_date": "2021-03-21",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2021-01-27",
+   "value": 107,
+   "page_he": 11,
+   "label": "ביום 27 בינואר 2021 אישר דירקטוריון החברה חלוקת דיבידנד במזומן בסך של כ-107 מיליוני ש\"ח",
+   "source": "text",
+   "note": "NIS m (printed approx.); Harel Investments, paid 11 February 2021."
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2021-03-21",
+   "value": 150,
+   "page_he": 11,
+   "label": "ביום 21 במרץ 2021 אישר דירקטוריון החברה חלוקת דיבידנד נוספת במזומן בסך של כ-150 מיליוני ש\"ח",
+   "source": "text",
+   "note": "NIS m (printed approx.); additional cash dividend, Harel Investments."
+  }
+ ],
+ "not_found": []
+}

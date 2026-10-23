@@ -1,0 +1,26 @@
+{
+ "company": "menora",
+ "period": "2023Q3",
+ "report_id": 1560860,
+ "pres_date": "2023-11-30",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "menora_holdings",
+   "basis": "na",
+   "window": "fy",
+   "date": "2023-09-30",
+   "value": null,
+   "page_he": 11,
+   "doc": "pres",
+   "label": "לקבוצה מדיניות דיבידנד ,לפיה תחלק לפחות 35% מהרווח",
+   "source": "text",
+   "note": "Percent of profit, lower bound ('at least 35%').",
+   "value_low": 35,
+   "value_high": null
+  }
+ ],
+ "not_found": []
+}

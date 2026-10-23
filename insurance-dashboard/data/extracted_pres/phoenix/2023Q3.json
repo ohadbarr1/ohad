@@ -1,0 +1,12 @@
+{
+ "company": "phoenix",
+ "period": "2023Q3",
+ "report_id": 1560476,
+ "pres_date": "2023-11-29",
+ "doc": "pres",
+ "unit": "NIS millions",
+ "facts": [],
+ "not_found": [],
+ "status": "not_extracted",
+ "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 2,3,6,8,9,10,11,12,13,14,16,18,19,23,24,25,28,40,44,45,46,47. Deck language by text layer: English; text-layer Hebrew chars 0."
+}

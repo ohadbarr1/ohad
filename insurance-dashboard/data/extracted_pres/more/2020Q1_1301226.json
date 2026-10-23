@@ -1,0 +1,56 @@
+{
+ "company": "more",
+ "period": "2020Q1",
+ "report_id": 1301226,
+ "pres_date": "2020-06-11",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_revenue",
+   "segment": "group",
+   "basis": "na",
+   "window": "q",
+   "date": "2020-06-30",
+   "value": null,
+   "page_he": 13,
+   "label": "תחזית Q2-2020 הכנסות 48-50",
+   "source": "text",
+   "note": "NIS millions; company estimate (forward-looking) for Q2 2020",
+   "value_low": 48,
+   "value_high": 50,
+   "horizon": 2020
+  },
+  {
+   "metric": "target_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "q",
+   "date": "2020-06-30",
+   "value": null,
+   "page_he": 13,
+   "label": "תחזית Q2-2020 רווח נקי 5.3-6.3",
+   "source": "text",
+   "note": "NIS millions; net profit, company estimate (forward-looking) for Q2 2020",
+   "value_low": 5.3,
+   "value_high": 6.3,
+   "horizon": 2020
+  },
+  {
+   "metric": "target_ebitda",
+   "segment": "group",
+   "basis": "na",
+   "window": "q",
+   "date": "2020-06-30",
+   "value": null,
+   "page_he": 13,
+   "label": "תחזית Q2-2020 EBITDA 9.8-10.8",
+   "source": "text",
+   "note": "NIS millions; EBITDA as defined on slide (profit before tax and before finance, depreciation, amortisation and share-based payment)",
+   "value_low": 9.8,
+   "value_high": 10.8,
+   "horizon": 2020
+  }
+ ],
+ "not_found": [],
+ "note": "Deck for convertible-bond offering (June 2020); Q2-2020 company estimates"
+}

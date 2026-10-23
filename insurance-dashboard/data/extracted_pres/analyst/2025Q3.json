@@ -1,0 +1,35 @@
+{
+ "company": "analyst",
+ "period": "2025Q3",
+ "report_id": 1706181,
+ "pres_date": "2025-11-27",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_net_inflows",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2025-09-30",
+   "value": 15.1,
+   "page_he": 9,
+   "label": "גיוסים נטו בגמל מתחילת השנה אנליסט קופות גמל 15.1 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; Q1-Q3 2025"
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "mutual_funds",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-09-30",
+   "value": 23,
+   "page_he": 9,
+   "label": "נכסים מנוהלים ל-30.9.25 אנליסט קרנות נאמנות 23 מיליארד ₪",
+   "source": "text",
+   "note": "NIS billions; position-matched label to the mutual-funds column"
+  }
+ ],
+ "not_found": [],
+ "note": "Group revenue cell not taken (statement figure)"
+}

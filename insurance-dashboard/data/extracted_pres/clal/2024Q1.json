@@ -1,0 +1,39 @@
+{
+ "company": "clal",
+ "period": "2024Q1",
+ "report_id": 1595865,
+ "pres_date": "2024-05-30",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "target_dividend_payout",
+   "segment": "clal_insurance",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-03-31",
+   "value": null,
+   "page_he": 18,
+   "doc": "pres",
+   "label": "מדיניות חלוקת דיבידנד בשיעור של 30%-50% מהרווח הכולל של כלל ביטוח",
+   "source": "text",
+   "note": "Percent of Clal Insurance comprehensive income; policy approved by the board in June 2023, restated on the slide.",
+   "value_low": 30,
+   "value_high": 50
+  },
+  {
+   "metric": "target_solvency_ratio",
+   "segment": "clal_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-03-31",
+   "value": 110,
+   "page_he": 18,
+   "doc": "pres",
+   "label": "החלוקה כפופה לכך שהחברה תעמוד ביעד הון מינימלי בשיעור 110%",
+   "source": "text",
+   "note": "Minimum capital target for dividend purposes, as solvency ratio percent (chart legend: 'יעד הון מינימלי לצרכי דיבידנד')."
+  }
+ ],
+ "not_found": []
+}

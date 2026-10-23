@@ -1,0 +1,53 @@
+{
+ "company": "harel",
+ "period": "2024FY",
+ "report_id": 1653730,
+ "pres_date": "2025-03-26",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "target_roe",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 4,
+   "label": "הראל מפרסמת... טווח התשואה להון בשנת 2026 צפוי להיות 18%-19%",
+   "source": "text",
+   "note": "Percent. Management target for 2026 under IFRS 17 (update of the 2026 targets from the April 2024 strategy deck); forward-looking, subject to IFRS 17 implementation caveats on slide.",
+   "value_low": 18,
+   "value_high": 19,
+   "horizon": 2026
+  },
+  {
+   "metric": "target_comprehensive_income",
+   "segment": "group",
+   "basis": "post_tax",
+   "window": "instant",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 4,
+   "label": "הרווח הכולל לאחר מס צפוי לעמוד על 1.9-2.1 מיליארדי ש\"ח בהתאם ל-IFRS17 (2026)",
+   "source": "text",
+   "note": "NIS m (printed NIS 1.9-2.1 billion). Management target for 2026 under IFRS 17 (update of the 2026 targets from the April 2024 strategy deck); forward-looking, subject to IFRS 17 implementation caveats on slide.",
+   "value_low": 1900,
+   "value_high": 2100,
+   "horizon": 2026
+  },
+  {
+   "metric": "buyback_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-03-26",
+   "value": 100,
+   "page_he": 4,
+   "label": "סכום נוסף של 100מ' ש\"ח לתכנית רכישה עצמית ... שהתכנית תסתכם ב-200 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m additional buy-back approved (announced with FY2024 deck, March 2025); programme total NIS 200m as printed."
+  }
+ ],
+ "not_found": [],
+ "note": "Slide 6 compares IFRS 4 target (1,447; 13.5%) with IFRS 17 target; other ranges on slide 6 not unambiguously mapped."
+}

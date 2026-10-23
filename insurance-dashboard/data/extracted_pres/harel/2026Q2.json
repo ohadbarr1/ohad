@@ -1,0 +1,48 @@
+{
+ "company": "harel",
+ "period": "2026Q2",
+ "report_id": 1766118,
+ "pres_date": "2026-08-26",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 400,
+   "page_he": 3,
+   "label": "הכרזה על דיבידנד בסך 400 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS m; Harel Investments, announced with Q2 2026 results; declaration date not stated on slide."
+  },
+  {
+   "metric": "buyback_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 500,
+   "page_he": 22,
+   "label": "רכישה עצמית 500מ' ש\"ח שהוכרז",
+   "source": "text",
+   "note": "NIS m; slide 22; buy-back announced in June (per slide); dividend plus buy-back H1.26 total shown as 1,560."
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 40,
+   "page_he": 22,
+   "label": "מדיניות הדיבידנד בהראל השקעות: שיעור חלוקת הדיבידנד לפחות 40%",
+   "source": "text",
+   "note": "Harel Investments dividend policy: minimum payout of annual comprehensive income per Harel Insurance annual consolidated statements, as long as Harel Insurance meets minimum solvency targets. Percent, minimum.",
+   "horizon": null
+  }
+ ],
+ "not_found": [],
+ "note": "2028 strategic targets already extracted from the quarterly report; chart actuals not read."
+}

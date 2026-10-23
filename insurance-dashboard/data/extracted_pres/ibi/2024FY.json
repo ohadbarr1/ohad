@@ -1,0 +1,47 @@
+{
+ "company": "ibi",
+ "period": "2024FY",
+ "report_id": 1653409,
+ "pres_date": "2025-03-25",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": 100000,
+   "page_he": 10,
+   "label": "חציית 100,000 לקוחות תוך 18 חודשים",
+   "source": "text",
+   "note": "IBI SMART self-directed trading customers; within 18 months; listed with the 2025 targets/multi-year strategy",
+   "horizon": 2025
+  },
+  {
+   "metric": "kpi_new_customers",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 25000,
+   "page_he": 10,
+   "label": "25,000 חדשים בשנת 2024",
+   "source": "text",
+   "note": "new IBI SMART customers in 2024, of which 8,000 in Q4"
+  },
+  {
+   "metric": "kpi_aum_growth",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 30,
+   "page_he": 25,
+   "label": "צמיחה של 30% ב-AUM בשנת 2024",
+   "source": "text",
+   "note": "percent"
+  }
+ ],
+ "not_found": []
+}

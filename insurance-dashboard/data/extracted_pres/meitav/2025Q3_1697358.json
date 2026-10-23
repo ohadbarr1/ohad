@@ -1,0 +1,23 @@
+{
+ "company": "meitav",
+ "period": "2025Q3",
+ "report_id": 1697358,
+ "pres_date": "2025-10-16",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 361,
+   "page_he": 6,
+   "label": "מיטב הוא בית ההשקעות הגדול ביותר בישראל לפי נכסים מנוהלים (AUM) עם נכסים בשווי של כ-361 מיליארד שקל",
+   "source": "text",
+   "note": "NIS billions, approx.; as-of date not stated in the extracted sentence"
+  }
+ ],
+ "not_found": [],
+ "note": "October 2025 bond-offering deck; only AUM headline taken"
+}

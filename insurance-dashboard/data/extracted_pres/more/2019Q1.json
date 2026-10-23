@@ -1,0 +1,55 @@
+{
+ "company": "more",
+ "period": "2019Q1",
+ "report_id": 1231900,
+ "pres_date": "2019-05-28",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_revenue",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2019-12-31",
+   "value": null,
+   "page_he": 16,
+   "label": "תחזית 2019 הכנסות 172-182",
+   "source": "text",
+   "note": "NIS millions; company estimate (forward-looking) for 2019; net profit and EBITDA as defined on the slide",
+   "value_low": 172,
+   "value_high": 182,
+   "horizon": 2019
+  },
+  {
+   "metric": "target_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2019-12-31",
+   "value": null,
+   "page_he": 16,
+   "label": "תחזית 2019 רווח נקי 23-33",
+   "source": "text",
+   "note": "NIS millions; company estimate (forward-looking) for 2019; net profit and EBITDA as defined on the slide",
+   "value_low": 23,
+   "value_high": 33,
+   "horizon": 2019
+  },
+  {
+   "metric": "target_ebitda",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2019-12-31",
+   "value": null,
+   "page_he": 16,
+   "label": "תחזית 2019 EBITDA 46-56",
+   "source": "text",
+   "note": "NIS millions; company estimate (forward-looking) for 2019; net profit and EBITDA as defined on the slide",
+   "value_low": 46,
+   "value_high": 56,
+   "horizon": 2019
+  }
+ ],
+ "not_found": []
+}

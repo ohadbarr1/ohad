@@ -1,0 +1,23 @@
+{
+ "company": "meitav",
+ "period": "2024Q3",
+ "report_id": 1628794,
+ "pres_date": "2024-11-25",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "kpi_aum",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-11-18",
+   "value": 321,
+   "page_he": 4,
+   "label": "נכון ליום ה-18.11.24 מנהלת החברה נכסים בסך של כ-321 מיליארדי ש\"ח",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 18.11.24"
+  }
+ ],
+ "not_found": [],
+ "note": "Only AUM headline taken; no targets or dividend announcement found"
+}

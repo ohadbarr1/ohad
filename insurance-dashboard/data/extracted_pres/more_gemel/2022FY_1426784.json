@@ -1,0 +1,23 @@
+{
+ "company": "more_gemel",
+ "period": "2022FY",
+ "report_id": 1426784,
+ "pres_date": "2022-01-20",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_revenue",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "fy",
+   "date": "2021-12-31",
+   "value": 48.867,
+   "page_he": 6,
+   "label": "צפי הכנסות של 48,867אלפי ₪",
+   "source": "text",
+   "note": "NIS millions (printed in NIS thousands); forecast revenue as printed; period covered not stated in the footnote; forward-looking",
+   "horizon": 2021
+  }
+ ],
+ "not_found": []
+}

@@ -1,0 +1,22 @@
+{
+ "company": "ayalon",
+ "period": "2024Q3",
+ "report_id": 1629500,
+ "pres_date": "2024-11-27",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2024-09-30",
+   "value": 60,
+   "page_he": 4,
+   "label": "בהתחשב בחלוקת דיבידנד שהוכרז בסך 60 מש\"ח",
+   "source": "text",
+   "note": "NIS m; dividend declared in Q3 2024 (slide 12: 'כולל דיבידנד שהוכרז בסך 60 מש\"ח ברבעון השלישי 2024')."
+  }
+ ],
+ "not_found": []
+}

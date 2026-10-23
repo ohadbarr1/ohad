@@ -1,0 +1,85 @@
+{
+ "company": "phoenix",
+ "period": "2025FY",
+ "report_id": 1731068,
+ "pres_date": "2026-03-26",
+ "unit": "NIS millions",
+ "doc": "pres",
+ "facts": [
+  {
+   "metric": "core_profit",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 2296,
+   "page_he": 8,
+   "doc": "pres",
+   "label": "רווח ליבה",
+   "source": "table",
+   "note": "Management KPI 'core profit' (רווח ליבה), NIS millions, excludes non-operating profit per deck footnote. Period column: 2024 IFRS 17"
+  },
+  {
+   "metric": "core_profit",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2650,
+   "page_he": 8,
+   "doc": "pres",
+   "label": "רווח ליבה",
+   "source": "table",
+   "note": "Management KPI 'core profit' (רווח ליבה), NIS millions, excludes non-operating profit per deck footnote. Period column: 2025"
+  },
+  {
+   "metric": "target_core_income",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2028-12-31",
+   "value": null,
+   "page_he": 17,
+   "doc": "pres",
+   "label": "יעד ל-2028 רווח מפעילות ליבה 3,300-3,500 מיליוני ש\"ח",
+   "source": "text",
+   "note": "NIS millions; 2028 target (slide 14 header 'יעד ל-2028 לא כולל פוטנציאל רווח נוסף').",
+   "value_low": 3300,
+   "value_high": 3500,
+   "horizon": 2028
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-12-31",
+   "value": 360,
+   "page_he": 10,
+   "doc": "pres",
+   "label": "הוכרז דיבידנד רבעוני בסך 360 מיליון ש\"ח",
+   "source": "text",
+   "note": "NIS millions; quarterly dividend declared with FY2025 results."
+  },
+  {
+   "metric": "buyback_announced",
+   "segment": "phoenix_group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 300,
+   "page_he": 10,
+   "doc": "pres",
+   "label": "תכנית שנתית ל-300 מיליון ש\"ח ב-2025",
+   "source": "text",
+   "note": "NIS millions; annual buy-back programme for 2025 (as printed)."
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "target_core_roe",
+   "segment": "phoenix_group",
+   "why": "not read in this pass"
+  }
+ ]
+}

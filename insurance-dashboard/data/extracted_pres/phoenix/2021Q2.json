@@ -1,0 +1,12 @@
+{
+ "company": "phoenix",
+ "period": "2021Q2",
+ "report_id": 1396577,
+ "pres_date": "2021-08-25",
+ "doc": "pres",
+ "unit": "NIS millions",
+ "facts": [],
+ "not_found": [],
+ "status": "not_extracted",
+ "note": "NOT EXTRACTED in this pass (token budget exhausted before this deck was read). Keyword-candidate slides (target/guidance/core/dividend/buy-back terms): 4,5,6,7,8,11,12,24. Deck language by text layer: English; text-layer Hebrew chars 0."
+}

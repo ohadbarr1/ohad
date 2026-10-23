@@ -1,0 +1,35 @@
+{
+ "company": "migdal",
+ "period": "2025FY",
+ "report_id": 1730556,
+ "pres_date": "2026-03-25",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "adj_core_profit",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2400,
+   "page_he": 3,
+   "label": "רווחי הליבה ... הסתכמו בכ-2.4 מיליארד ש\"ח",
+   "source": "text",
+   "note": "NIS m (printed approx. NIS 2.4 billion), FY2025 core profit (CEO letter); growth about 38% vs 2024 printed."
+  },
+  {
+   "metric": "kpi_variable_management_fees",
+   "segment": "group",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 1400,
+   "page_he": 3,
+   "label": "דמי הניהול המשתנים, בהיקף של כ-1.4 מיליארד ש\"ח",
+   "source": "text",
+   "note": "NIS m (printed approx. NIS 1.4 billion), FY2025 (CEO letter)."
+  }
+ ],
+ "not_found": [],
+ "note": "Letter states strategic-plan targets were updated upward; the numeric 2028 targets are on the later strategy deck (1754150)."
+}

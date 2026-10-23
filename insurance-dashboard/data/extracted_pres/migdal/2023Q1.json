@@ -1,0 +1,22 @@
+{
+ "company": "migdal",
+ "period": "2023Q1",
+ "report_id": 1525448,
+ "pres_date": "2023-05-31",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2023-05-08",
+   "value": 32,
+   "page_he": 13,
+   "label": "ביום 8 במאי 2023 החברה חילקה דיבידנד בסך של 32 מיליוני ש\"ח",
+   "source": "text",
+   "note": "NIS m; Migdal Holdings distributed 8 May 2023."
+  }
+ ],
+ "not_found": []
+}

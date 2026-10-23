@@ -1,0 +1,51 @@
+{
+ "company": "more_gemel",
+ "period": "2025Q3",
+ "report_id": 1704023,
+ "pres_date": "2025-11-20",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": null,
+   "page_he": 5,
+   "label": "תחזית רווח לפני מס 2025 105-120 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; forecast for 2025; forward-looking",
+   "value_low": 105,
+   "value_high": 120,
+   "horizon": 2025
+  },
+  {
+   "metric": "target_status",
+   "segment": "pension",
+   "basis": "na",
+   "window": "instant",
+   "date": "",
+   "value": null,
+   "page_he": 5,
+   "label": "ענף פנסיה: צפי למעבר רווחיות במגזר במהלך שנת 2027",
+   "source": "text",
+   "note": "pension activity expected to turn profitable during 2027; forward-looking",
+   "horizon": 2027
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2025-11-13",
+   "value": 117,
+   "page_he": 5,
+   "label": "כ-117 מיליארד ₪ היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 13.11.2025; growth of about NIS 30bn since start of year"
+  }
+ ],
+ "not_found": [],
+ "note": "Bond/option issuance update deck (Nov 2025); two-row profit/dividend block on slide 5 not unambiguously labelled in text layer, not taken"
+}

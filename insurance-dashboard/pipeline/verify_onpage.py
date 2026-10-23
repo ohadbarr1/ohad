@@ -29,7 +29,7 @@ def page_text(pdf, pg):
 
 def forms(v):
     a = abs(v)
-    out = {f"{a:,.0f}", f"{a:,.1f}", f"{a:,.2f}", f"{a:.0f}", f"{a:.1f}", f"{a:.2f}", f"{a * 1000:,.0f}", f"{a / 1000:,.1f}", f"{a / 1000:,.2f}"}
+    out = {f"{a:,.0f}", f"{a:,.1f}", f"{a:,.2f}", f"{a:.0f}", f"{a:.1f}", f"{a:.2f}", f"{a * 1000:,.0f}", f"{a / 1000:,.0f}", f"{a / 1000:,.1f}", f"{a / 1000:,.2f}"}  # NIS billions printed, stored in millions
     s = str(a)
     out.add(s.rstrip("0").rstrip(".") if "." in s else s)
     return {x for x in out if x not in ("0", "0.0", "0.00")}

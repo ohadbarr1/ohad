@@ -1,0 +1,23 @@
+{
+ "company": "more",
+ "period": "2022FY",
+ "report_id": 1424668,
+ "pres_date": "2022-01-09",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "target_revenue",
+   "segment": "group",
+   "basis": "na",
+   "window": "q",
+   "date": "2021-12-31",
+   "value": 48.9,
+   "page_he": 18,
+   "label": "תחזית הכנסות: Q4/21 48.9 מיליון שקלים",
+   "source": "text",
+   "note": "NIS millions; revenue forecast for Q4/21, unaudited management estimate per slide footnote; entity scope as on slide 18 (not stated in the extracted line)",
+   "horizon": 2021
+  }
+ ],
+ "not_found": []
+}

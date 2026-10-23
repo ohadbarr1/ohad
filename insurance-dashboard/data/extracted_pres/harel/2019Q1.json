@@ -1,0 +1,22 @@
+{
+ "company": "harel",
+ "period": "2019Q1",
+ "report_id": 1232529,
+ "pres_date": "2019-05-30",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": "2019-04-29",
+   "value": 128,
+   "page_he": 11,
+   "label": "ביום 29 באפריל אישר דירקטוריון החברה חלוקת דיבידנד במזומן בסך של כ-128 מיליוני ש\"ח, הדיבידנד שולם ביום 20 במאי 2019",
+   "source": "text",
+   "note": "NIS m (printed approx.); Harel Investments cash dividend approved 29 April 2019, paid 20 May 2019 (year inferred from payment date printed)."
+  }
+ ],
+ "not_found": []
+}
