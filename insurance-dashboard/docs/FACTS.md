@@ -5,7 +5,7 @@ the first print of a period and each later report that printed it again as a com
 that today re-derive figures from `companies/<id>.json` move to it one at a time (order below).
 
 ```
-python3 pipeline/build_facts.py            # build (≈2.5 min: build_workbook.py runs in shadow)
+python3 pipeline/build_facts.py            # build: facts/, taxonomy, then companies/, search/rows.json, lines.json from the table (= build_workbook.py; seconds with a warm page cache)
 python3 pipeline/build_facts.py --check    # gate check `facts` (pipeline/gate.py), reads only published files, < 1 s
 ```
 
@@ -16,7 +16,7 @@ python3 pipeline/build_facts.py --check    # gate check `facts` (pipeline/gate.p
 | `pipeline/build_facts.py` | the builder and the check |
 | `pipeline/taxonomy/rules.py` | core lines (curated ids + patterns), blocks, the frozen caption normaliser, IFRS 4↔17 bridge |
 | `pipeline/taxonomy/build.py` | line ids for every workbook row, taxonomy entries, coverage |
-| `pipeline/taxonomy/shadow.py` | runs `build_workbook.py` with additive hooks that keep every print (see below) |
+| `pipeline/build_workbook.py` | the extraction merge (`merge()`): picks one print per cell and keeps every print beside it; writes nothing itself |
 | `pipeline/taxonomy/registry.json` | normalised caption → line id, **append-only** (what keeps ids stable) |
 | `pipeline/taxonomy/lines.json` | the taxonomy: one entry per id (label, statement, block, tier, unit, nature, additive flags, standard, bridge, companies, aliases) |
 | `pipeline/taxonomy/coverage.json` | share of workbook rows on a cross-company id, by kind and company, and the unmapped tail |
@@ -118,16 +118,19 @@ spreadsheet's notes. Raising it is curation: add a `CORE` pattern (the row moves
 
 ## How the table is built (and why it can be trusted)
 
-`build_workbook.py` already reads every print of every period and keeps one. `taxonomy/shadow.py` runs **its own code** with additive
-hooks spliced into the source text (each anchored on an exact line; a missing anchor stops the build and names it):
+`build_workbook.merge()` reads every print of every period and picks one per cell; it keeps what it does not pick beside the pick
+(since Phase 3 wave 2 natively; the source-patching `taxonomy/shadow.py` is retired):
 
 - the picked cell keeps the list of prints it was picked from (report, value, page, URL, rounding step, plausible?);
 - prints of a line whose sign convention changed are turned like the cell; prints of a row joined into another follow it;
-- derived cells keep their two inputs; statement rows keep every caption; the workbooks are captured instead of written.
+- derived cells keep their two inputs; statement rows keep every caption.
 
-`build_facts.py` then requires the shadow's workbooks to equal the published `companies/<id>.json` **exactly**, so the fact table can
-never drift from what the site shows. The page texts `build_workbook.py` reads for unlabeled rows (Drive) are cached in
-`~/.cache/fox/captions.json`; a page that cannot be read in 4 s is replayed from the published workbook (the equality check guards it).
+`build_facts.py` builds the table from the merge and then **writes `companies/<id>.json` from the table**: every workbook figure is the
+current row (flag 16) of its cell, a derived figure cites the report of its year input; the merge supplies the frame (metrics, periods,
+order, restatement pairs). The build stops if the workbook written from the table differs from the merge's by one byte, so the site and
+the table cannot drift. `search/rows.json` and `lines.json` (the 29 cross-company roles) are written from those workbooks.
+The page texts the merge reads for unlabeled rows (Drive) are cached in `~/.cache/fox/captions.json`; a page that cannot be read in 4 s
+(`FOX_DRIVE_WAIT`) is replayed from the published workbook (counted and printed by the build).
 
 `--check` (gate `facts`): every one of the 115,510 workbook figures has exactly one current row with the same value, page, report and
 flags 1/2/4/8; every statement pair of `restatements.json` (1,184) is in the table with both values, report ids and pages; one current and
@@ -136,14 +139,18 @@ Note pairs of `restatements.json` (102, IFRS 17 notes from `ifrs_*.json`) are ou
 workbook no longer has is reported as *stale* (3 today: Yelin pairs from Atrao's 2023 filings, which `build_workbook.py` now excludes —
 `build_restatements.py --check` fails on the same 3; rerun it).
 
-## Migration: builders that should read facts (do not migrate in this wave)
+## Migration: builders that should read facts
 
 Order = dependency and payoff. Each step first regenerates today's JSON from the table (zero UI change, byte-compare), then switches.
 
-1. **`build_workbook.py` → split.** Keep the extraction merge as the *writer* of facts (move the hooks' data into the builder: prints,
-   captions, derivation inputs), and generate `companies/<id>.json` from `facts/` (`latest` policy). Retires `shadow.py`.
-2. **`build_restatements.py`** → a query: first-print vs current per cell (flags 32/16) instead of the workbook's `restated` list; the
-   log gains intermediate prints and the rows joined across wordings.
+1. ✅ (wave 2) **`build_workbook.py` → split.** The merge keeps prints, captions and derivation inputs natively; `build_facts.py` writes
+   `companies/<id>.json` from the table. `shadow.py` retired. Output byte-identical to the old pipeline except `facts/<id>.json`: a
+   derivation input outside its line (28 rows) is now `[value, url index]` (the year's report), so the workbook can cite it.
+2. ✅ (wave 2) **`build_restatements.py`** → a query over `facts/` (first print vs latest print per cell, the workbook's rule) instead of
+   the workbooks' `restated` lists. Differences, all verified against the table: 70 rows carry the joined line's current wording; 6
+   rows now cite an earlier first print or a later re-print of the same figures (rows joined across wordings); 21 pairs are new (prints
+   of joined wordings, 6 of them sign-presentation changes from a flipped "income (expenses)" caption); duplicate prints of one figure
+   keep the widest pair. Net effect per season unchanged. The workbooks' `restated` lists stay (the gate's `facts` check reads them).
 3. **`check_consistency.py`, `check_additivity.py`, gate `balance` / `cross_layer`** → read facts by line id; additivity within one
    vintage (W5-1: Q1+Q2 = H1 per vintage, not across).
 4. **`canon_kpi.py`, `csm_resolve.py`** → resolve a KPI to a line id + policy; "printed over XBRL" becomes a vintage rule.
