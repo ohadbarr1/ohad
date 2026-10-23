@@ -1,0 +1,296 @@
+{
+  "about": "Ask fox golden set: 20 analyst questions (Hebrew). `calls` are the tool calls an assistant should make; `checks` pin the figures and pages. Expected values were taken from the data independently of the server (pipeline outputs read directly: csm/summary.json, kpi.json, market.json, csm/capital.json, lens.json, peers/m/*.json, companies/*.json, restatements.json, calendar.json) and, where a figure is printed as is, confirmed on the cited page with document_page(find). Data as of 23.10.26 (regulator through 08/26, filings through Q2'26). Run: npm run eval.",
+  "questions": [
+    {
+      "id": "G01", "q": "מה יתרת ה-CSM של הפניקס ב-Q2'26?",
+      "why": "figure · csm rule (net, group). Phoenix prints its CSM table with a savings-policy row; the rule removes it (flag נגזר), so the figure is the printed total less that row. Expected: csm/summary.json resolved[phoenix][2026-06-30] = 8,325.",
+      "calls": [{ "tool": "figure", "args": { "entity": "הפניקס", "metric": "csm", "period": "Q2'26" } }],
+      "checks": [
+        { "path": "facts[0].value", "approx": 8325 },
+        { "path": "facts[0].unit", "eq": "מיליוני ש\"ח" },
+        { "path": "facts[0].period", "eq": "Q2'26" },
+        { "path": "facts[0].source.doc_id", "eq": 1765739 },
+        { "path": "facts[0].source.page", "eq": 29 },
+        { "path": "facts[0].source.url", "eq": "https://fox-research-il.web.app/doc/1765739?page=29" },
+        { "path": "facts[0].source.note", "contains": "פוליסות ההשקעה" }
+      ]
+    },
+    {
+      "id": "G02", "q": "דרג את המבטחות לפי ROE ב-LTM",
+      "why": "peer_table · kpi:roe (LTM profit ÷ average of equity now and a year earlier; Q4 = FY − 9M; printed canon). Expected: recomputed from kpi.json.",
+      "calls": [{ "tool": "peer_table", "args": { "metric": "kpi:roe", "peers": "ins" } }],
+      "checks": [
+        { "path": "period", "eq": "LTM Q2'26" },
+        { "path": "rows[0].entity", "eq": "ayalon" },
+        { "path": "rows[0].fact.value", "approx": 28.9884, "tol": 0.001 },
+        { "path": "rows[1].entity", "eq": "harel" },
+        { "path": "rows[entity=harel].fact.value", "approx": 27.615, "tol": 0.001 },
+        { "path": "rows[entity=menora].fact.value", "approx": 27.5051, "tol": 0.001 },
+        { "path": "rows[entity=phoenix].fact.value", "approx": 26.2679, "tol": 0.001 },
+        { "path": "rows[entity=migdal].rank", "eq": 7 },
+        { "path": "median.value", "approx": 26.2679, "tol": 0.001 },
+        { "path": "rows[0].fact.calc.formula", "contains": "ROE = רווח נקי LTM" }
+      ]
+    },
+    {
+      "id": "G03", "q": "מי גייס הכי הרבה בגמל ב-08/26?",
+      "why": "peer_table · mkt:netflow@gemel (deposits − withdrawals + net transfers, regulator month) over every regulator group. Expected: summed from market.json rows.",
+      "calls": [{ "tool": "peer_table", "args": { "metric": "mkt:netflow@gemel", "peers": "market", "period": "08/26" } }],
+      "checks": [
+        { "path": "rows[0].entity", "eq": "meitav" },
+        { "path": "rows[0].fact.value", "approx": 1.95138, "tol": 0.0001 },
+        { "path": "rows[0].fact.unit", "eq": "מיליארדי ש\"ח" },
+        { "path": "rows[1].entity", "eq": "clal" },
+        { "path": "rows[1].fact.value", "approx": 1.87985, "tol": 0.0001 },
+        { "path": "rows[2].entity", "eq": "harel" },
+        { "path": "rows[0].fact.source.dataset", "eq": "גמל-נט" },
+        { "path": "rows[0].fact.source.months", "eq": ["08/26"] },
+        { "path": "rows[0].fact.source.url", "contains": "data.gov.il/dataset/gemelnet/resource/" }
+      ]
+    },
+    {
+      "id": "G04", "q": "מה היה הרווח הנקי לבעלי המניות של הראל ב-Q2'26, ומה השינוי YoY?",
+      "why": "figure · st:net (Report Day line) with compare=yoy; the change follows Report Day (a percent between two positives). Printed on page 52 of the Q2'26 report (NIS millions).",
+      "calls": [
+        { "tool": "figure", "args": { "entity": "הראל", "metric": "st:net", "period": "Q2'26", "compare": "yoy" } },
+        { "tool": "document_page", "args": { "doc_id": 1766123, "page": 52, "find": "1,068" } }
+      ],
+      "checks": [
+        { "path": "facts[1].value", "approx": 1068 },
+        { "path": "facts[1].period", "eq": "Q2'26" },
+        { "path": "facts[0].value", "approx": 834 },
+        { "path": "facts[0].period", "eq": "Q2'25" },
+        { "path": "facts[1].source.doc_id", "eq": 1766123 },
+        { "path": "facts[1].source.page", "eq": 52 },
+        { "path": "change.value", "approx": 28.0576, "tol": 0.001 },
+        { "path": "change.display", "eq": "+28.1%" },
+        { "call": 1, "path": "found.present", "eq": true }
+      ]
+    },
+    {
+      "id": "G05", "q": "הצג את הרווח הנקי לבעלי המניות של הפניקס מ-FY'22 עד FY'25",
+      "why": "figure · kpi:profit, window fy, n=4 (XBRL tag, printed canon). Expected: kpi.json.",
+      "calls": [{ "tool": "figure", "args": { "entity": "phoenix", "metric": "kpi:profit", "period": "FY'25", "window": "fy", "n": 4 } }],
+      "checks": [
+        { "path": "facts[0].period", "eq": "FY'22" },
+        { "path": "facts[0].value", "approx": 1257.124 },
+        { "path": "facts[1].value", "approx": 777.403 },
+        { "path": "facts[2].value", "approx": 1817.826 },
+        { "path": "facts[3].period", "eq": "FY'25" },
+        { "path": "facts[3].value", "approx": 3222.714 },
+        { "path": "facts[3].source.kind", "eq": "xbrl" },
+        { "path": "facts[3].source.doc_id", "eq": 1731064 }
+      ]
+    },
+    {
+      "id": "G06", "q": "מה סך הנכסים של מגדל ל-Q2'26?",
+      "why": "figure · st:assets (balance sheet, Report Day). Printed on page 40.",
+      "calls": [
+        { "tool": "figure", "args": { "entity": "מגדל", "metric": "st:assets", "period": "Q2'26" } },
+        { "tool": "document_page", "args": { "doc_id": 1763684, "page": 40, "find": "256,341" } }
+      ],
+      "checks": [
+        { "path": "facts[0].value", "approx": 256341 },
+        { "path": "facts[0].source.doc_id", "eq": 1763684 },
+        { "path": "facts[0].source.page", "eq": 40 },
+        { "call": 1, "path": "found.present", "eq": true }
+      ]
+    },
+    {
+      "id": "G07", "q": "מה הרווח הבסיסי למניה של מנורה ב-FY'25?",
+      "why": "figure · kpi:eps, window fy. Expected: kpi.json menora 2025FY.",
+      "calls": [{ "tool": "figure", "args": { "entity": "מנורה", "metric": "kpi:eps", "period": "FY'25", "window": "fy" } }],
+      "checks": [
+        { "path": "facts[0].value", "approx": 37.71, "tol": 0.001 },
+        { "path": "facts[0].unit", "eq": "ש\"ח" },
+        { "path": "facts[0].entity", "eq": "menora" },
+        { "path": "facts[0].source.doc_id", "eq": 1732162 }
+      ]
+    },
+    {
+      "id": "G08", "q": "פרק את התנועה ב-CSM של הראל ב-Q2'26: עסק חדש, ריבית, שינויי אומדנים, שחרור",
+      "why": "csm_ledger · the quarter table printed on page 19 (net, group). Release = two printed rows (−86 run-off, −333 growth). Expected: csm/facts/harel.json.",
+      "calls": [{ "tool": "csm_ledger", "args": { "company": "harel", "period": "Q2'26" } }],
+      "checks": [
+        { "path": "basis", "eq": "נטו · קבוצה" },
+        { "path": "opening.value", "approx": 17469 },
+        { "path": "steps[metric=csm:nb].value", "approx": 478 },
+        { "path": "steps[metric=csm:int].value", "approx": 150 },
+        { "path": "steps[metric=csm:est].value", "approx": 86 },
+        { "path": "steps[metric=csm:rel].value", "approx": -419 },
+        { "path": "closing.value", "approx": 17717 },
+        { "path": "closing.source.page", "eq": 19 },
+        { "path": "gap.value", "approx": 0 },
+        { "path": "ratios[metric=csm:nbRel].value", "approx": 114.0811, "tol": 0.01 }
+      ]
+    },
+    {
+      "id": "G09", "q": "מאיפה המספר 17,717 (CSM של הראל)? באיזה דוח ובאיזה עמוד?",
+      "why": "figure for the source, then document_page to show the printed line on that page.",
+      "calls": [
+        { "tool": "figure", "args": { "entity": "harel", "metric": "csm", "period": "Q2'26" } },
+        { "tool": "document_page", "args": { "doc_id": 1766123, "page": 19, "find": "17,717" } }
+      ],
+      "checks": [
+        { "path": "facts[0].display", "eq": "17,717" },
+        { "path": "facts[0].source.doc_id", "eq": 1766123 },
+        { "path": "facts[0].source.page", "eq": 19 },
+        { "call": 1, "path": "found.present", "eq": true },
+        { "call": 1, "path": "title", "eq": "הראל · דוח רבעוני Q2'26" },
+        { "call": 1, "path": "url", "eq": "https://fox-research-il.web.app/doc/1766123?page=19" }
+      ]
+    },
+    {
+      "id": "G10", "q": "השווה את יחס כושר הפירעון (עם הוראות מעבר) של שבע המבטחות ל-Q4'25",
+      "why": "peer_table · cap:sr_w (the capital view: main insurer, as printed in the financial report). Expected: csm/capital.json sr_w 2025FY.",
+      "calls": [{ "tool": "peer_table", "args": { "metric": "cap:sr_w", "peers": "ins", "period": "Q4'25" } }],
+      "checks": [
+        { "path": "rows[0].entity", "eq": "phoenix" },
+        { "path": "rows[0].fact.value", "approx": 175 },
+        { "path": "rows[entity=harel].fact.value", "approx": 165 },
+        { "path": "rows[entity=harel].fact.source.page", "eq": 33 },
+        { "path": "rows[entity=menora].fact.value", "approx": 172.3 },
+        { "path": "rows[entity=hachshara].rank", "eq": 7 },
+        { "path": "median.value", "approx": 164 }
+      ]
+    },
+    {
+      "id": "G11", "q": "כמה דיבידנד שילמה הפניקס ב-FY'25?",
+      "why": "figure · cap:dividend_paid (cash-flow statement), window fy; printed in thousands on page 341 of the FY'25 report.",
+      "calls": [
+        { "tool": "figure", "args": { "entity": "הפניקס", "metric": "cap:dividend_paid", "period": "FY'25", "window": "fy" } },
+        { "tool": "document_page", "args": { "doc_id": 1731064, "page": 341, "find": "1,514,931" } }
+      ],
+      "checks": [
+        { "path": "facts[0].value", "approx": 1514.931 },
+        { "path": "facts[0].period", "eq": "FY'25" },
+        { "path": "facts[0].source.page", "eq": 341 },
+        { "path": "facts[0].source.doc_id", "eq": 1731064 },
+        { "call": 1, "path": "found.present", "eq": true }
+      ]
+    },
+    {
+      "id": "G12", "q": "דרג את חמש הגדולות לפי רווח משירותי ביטוח ב-Q2'26, עם YoY",
+      "why": "peer_table · st:isr with compare=yoy (Report Day rule). Expected: companies/*.json (Clal 466 vs 343 → +35.9%).",
+      "calls": [{ "tool": "peer_table", "args": { "metric": "st:isr", "peers": "big5", "period": "Q2'26", "compare": "yoy" } }],
+      "checks": [
+        { "path": "rows[0].entity", "eq": "harel" },
+        { "path": "rows[0].fact.value", "approx": 561 },
+        { "path": "rows[entity=clal].fact.value", "approx": 466 },
+        { "path": "rows[entity=clal].yoy.display", "eq": "+35.9%" },
+        { "path": "rows[entity=phoenix].fact.value", "approx": 433.433 },
+        { "path": "rows[entity=phoenix].yoy.display", "eq": "−36.9%" },
+        { "path": "rows[4].entity", "eq": "phoenix" },
+        { "path": "rows[entity=clal].fact.source.page", "eq": 61 }
+      ]
+    },
+    {
+      "id": "G13", "q": "מה תשואת דמי הניהול בפנסיה של הפניקס ב-Q2'26, ומה יחס ההוצאות להכנסות?",
+      "why": "savings_lens · regulator average assets × the manager's reported fee income. Expected: lens.json row (הפניקס, pen, Q2-2026).",
+      "calls": [{ "tool": "savings_lens", "args": { "group": "הפניקס", "segment": "pen", "quarter": "Q2'26" } }],
+      "checks": [
+        { "path": "rows[0].facts[metric=lens:fy_reg].value", "approx": 0.2935, "tol": 0.0001 },
+        { "path": "rows[0].facts[metric=lens:ci].value", "approx": 82.29, "tol": 0.01 },
+        { "path": "rows[0].facts[metric=lens:ppb].value", "approx": 0.52, "tol": 0.001 },
+        { "path": "rows[0].facts[metric=lens:aum_share].value", "approx": 12.575, "tol": 0.001 },
+        { "path": "rows[0].facts[metric=lens:fees].value", "approx": 113.909, "tol": 0.001 },
+        { "path": "rows[0].facts[metric=lens:fees].calc.inputs[0].source.page", "eq": 49 },
+        { "path": "rows[0].facts[metric=lens:fy_reg].calc.formula", "contains": "× 4 ÷ נכסים ממוצעים" }
+      ]
+    },
+    {
+      "id": "G14", "q": "מה הוצג מחדש ברווח הנקי של איילון ל-FY'23?",
+      "why": "restatements · first print against the latest print, both pages. Expected: restatements.json.",
+      "calls": [{ "tool": "restatements", "args": { "company": "איילון", "period": "FY'23", "line": "רווח נקי" } }],
+      "checks": [
+        { "path": "rows[0].line", "eq": "רווח נקי" },
+        { "path": "rows[0].first.value", "approx": 73.068 },
+        { "path": "rows[0].restated.value", "approx": 84.941 },
+        { "path": "rows[0].first.source.doc_id", "eq": 1593787 },
+        { "path": "rows[0].first.source.page", "eq": 38 },
+        { "path": "rows[0].restated.source.doc_id", "eq": 1651699 },
+        { "path": "rows[0].restated.source.page", "eq": 173 },
+        { "path": "rows[0].restated.in_report", "eq": "FY'24" }
+      ]
+    },
+    {
+      "id": "G15", "q": "מתי צפוי הדוח הבא של הראל?",
+      "why": "calendar · an estimate from the company's own record (median lag of the same report, three years). Expected: calendar.json.",
+      "calls": [{ "tool": "calendar", "args": { "company": "harel" } }],
+      "checks": [
+        { "path": "rows[0].next_report.period", "eq": "Q3'26" },
+        { "path": "rows[0].next_report.expected", "eq": "28.11.26" },
+        { "path": "rows[0].next_report.estimate", "eq": true },
+        { "path": "rows[0].last_report.period", "eq": "Q2'26" },
+        { "path": "rows[0].last_report.source.doc_id", "eq": 1766123 }
+      ]
+    },
+    {
+      "id": "G16", "q": "חפש 'רכיב הפסד' בדוחות של הראל",
+      "why": "search · full text of every filed page; each hit opens the page in the reader with the words highlighted.",
+      "calls": [{ "tool": "search", "args": { "q": "הראל רכיב הפסד", "kinds": ["text", "line"], "limit": 5 } }],
+      "checks": [
+        { "path": "text.mode", "eq": "and" },
+        { "path": "text.hits", "min_len": 5 },
+        { "path": "text.hits[0].title", "contains": "הראל" },
+        { "path": "text.hits[0].url", "matches": "^https://fox-research-il\\.web\\.app/doc/\\d+\\?page=\\d+&q=" },
+        { "path": "lines[0].label", "contains": "רכיב הפסד" },
+        { "path": "lines[0].meta", "contains": "הראל" }
+      ]
+    },
+    {
+      "id": "G17", "q": "תן לי תמונת מצב על כלל לדוח Q2'26",
+      "why": "company_overview · Report Day lines with YoY, ROE, CSM (Clal prints no group net CSM: the rule takes life and health net, labelled). Expected: companies/clal.json, csm/summary.json.",
+      "calls": [{ "tool": "company_overview", "args": { "company": "כלל", "period": "Q2'26" } }],
+      "checks": [
+        { "path": "report", "eq": "Q2'26" },
+        { "path": "headline[metric=st:net].value", "approx": 617 },
+        { "path": "headline[metric=st:net].source.page", "eq": 61 },
+        { "path": "yoy[metric=st:net#yoy].display", "eq": "+14.5%" },
+        { "path": "headline[metric=csm].value", "approx": 10436 },
+        { "path": "headline[metric=csm].source.page", "eq": 176 },
+        { "path": "headline[metric=csm].flags[0]", "eq": "נטו · חיים ובריאות" },
+        { "path": "headline[metric=kpi:roe].value", "approx": 22.6797, "tol": 0.001 },
+        { "path": "views.home", "eq": "https://fox-research-il.web.app/company/clal?p=2026Q2" }
+      ]
+    },
+    {
+      "id": "G18", "q": "מה נתח השוק של הראל בנכסי הפנסיה לפי הרשות ב-08/26?",
+      "why": "figure · mkt:share@pension (regulator month). Expected: market.json.",
+      "calls": [{ "tool": "figure", "args": { "entity": "הראל", "metric": "mkt:share@pension", "period": "08/26" } }],
+      "checks": [
+        { "path": "facts[0].value", "approx": 17.065, "tol": 0.001 },
+        { "path": "facts[0].period", "eq": "08/26" },
+        { "path": "facts[0].source.dataset", "eq": "פנסיה-נט" },
+        { "path": "facts[0].source.group", "eq": "הראל" }
+      ]
+    },
+    {
+      "id": "G19", "q": "מה החציון של CSM עסק חדש בחיים בשבע המבטחות ב-FY'25?",
+      "why": "peer_table · registry metric with the peer table's median (three or more companies). Phoenix has no life new-business figure for FY'25 and is left out, named. Expected: peers/m/ifrs-csm_new_business.life.json.",
+      "calls": [{ "tool": "peer_table", "args": { "metric": "ifrs:csm_new_business@life", "peers": "ins", "period": "FY'25" } }],
+      "checks": [
+        { "path": "median.value", "approx": 251.3 },
+        { "path": "median.calc.inputs", "min_len": 6 },
+        { "path": "rows[0].entity", "eq": "harel" },
+        { "path": "rows[0].fact.value", "approx": 946 },
+        { "path": "rows[0].fact.source.page", "eq": 351 },
+        { "path": "rows[entity=phoenix].rank", "eq": null },
+        { "path": "rows[entity=phoenix].fact.missing", "contains": "חסר רכיב" }
+      ]
+    },
+    {
+      "id": "G20", "q": "כמה נכסים מנהלת כל אחת מחמש הגדולות לפי נתוני הרשות?",
+      "why": "peer_table · mkt:assets@all, latest regulator month. Expected: market.json (all products, 08/26).",
+      "calls": [{ "tool": "peer_table", "args": { "metric": "mkt:assets@all", "peers": "big5" } }],
+      "checks": [
+        { "path": "period", "eq": "08/26" },
+        { "path": "rows[0].entity", "eq": "migdal" },
+        { "path": "rows[0].fact.value", "approx": 453.2155, "tol": 0.001 },
+        { "path": "rows[entity=harel].fact.value", "approx": 417.4623, "tol": 0.001 },
+        { "path": "rows[entity=clal].rank", "eq": 5 },
+        { "path": "rows[0].fact.source.kind", "eq": "regulator" }
+      ]
+    }
+  ]
+}
