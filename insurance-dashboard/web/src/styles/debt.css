@@ -29,6 +29,7 @@
 .dl-kpis span { font-size: var(--t-1); color: var(--muted); font-weight: 500; }
 .dl-kpis b { font-size: var(--t-5); font-weight: 700; line-height: 1.2; }
 .dl-kpis small { font-size: var(--t-1); color: var(--faint); }
+.dl-top b .src { font-size: inherit; font-weight: inherit; color: inherit; }
 .dl-flags { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 3px; font-size: var(--t-2); color: var(--muted); }
 .dl-warn li::marker { color: var(--warn); }
 .dl-ok { margin: 0; color: var(--up); font-size: var(--t-2); }

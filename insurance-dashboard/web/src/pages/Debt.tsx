@@ -368,6 +368,19 @@ function CompanyView({ d, sp, set }: { d: DebtFile; sp: URLSearchParams; set: (k
         <div className="sub"><span><Link to="/debt">כל הקבוצות</Link> · <Link to={`/company/${d.id}`}>דף החברה</Link> · מצבת התחייבויות (ת126) · {tagD}</span></div></div>
         <div className="dl-actions"><button type="button" className="btn" onClick={exportAll}>Excel</button></div>
       </div>
+      {contrib.length > 0 && (() => {
+        const P = grid.reduce((a, p) => a + at(p.cells, { bk: 'total', i: -1 }).v, 0), I = at(ints, { bk: 'total', i: -1 }).v;
+        const p1 = grid.reduce((a, p) => a + p.cells[0].v, 0), i1 = ints[0].v;
+        const pP = () => sumProv(`קרן, כל השנים · ${d.name} · ${viewHe} · ${tagD}`, P, grid.map((p) => ({ label: p.he, v: at(p.cells, { bk: 'total', i: -1 }).v, src: () => cellP(`${p.he} · סה"כ`, at(p.cells, { bk: 'total', i: -1 })) })), 'סכום החלקים');
+        const p12 = () => sumProv(`קרן וריבית, 12 החודשים הקרובים · ${d.name} · ${viewHe} · ${tagD}`, p1 + i1, [...grid.map((p) => ({ label: p.he, v: p.cells[0].v, src: () => cellP(`${p.he} · שנה 1`, p.cells[0]) })), { label: 'ריבית', v: i1, src: () => cellP('ריבית · שנה 1', ints[0]) }], 'סכום החלקים');
+        return (
+          <div className="dl-kpis dl-top">
+            <div><span>קרן לפירעון</span><b><Sourced src={pP}>{mf(P)}</Sourced></b><small>{UNIT}, כל השנים</small></div>
+            <div><span>12 החודשים הקרובים</span><b><Sourced src={p12}>{mf(p1 + i1)}</Sourced></b><small>קרן וריבית · <span className="num">{P ? nf((p1 / P) * 100, 0) : '0'}%</span> מהקרן</small></div>
+            <div><span>ריבית לתשלום</span><b><Sourced src={() => cellP('ריבית · סה"כ', at(ints, { bk: 'total', i: -1 }))}>{mf(I)}</Sourced></b><small>ברוטו, כל השנים</small></div>
+          </div>
+        );
+      })()}
       <section className="controls dl-controls">
         <label className="field"><span>תאריך המצבת</span>
           <select value={D} onChange={(e) => set('d', e.target.value === dates[0] ? '' : e.target.value)}>{dates.map((x) => <option key={x} value={x}>{dateLabel(x)}</option>)}</select></label>
