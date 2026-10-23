@@ -8,6 +8,7 @@ import { baseKey, baseLabel, inst, Lts, parseBase, periodLabel, periodsOf, quart
 import { useSource, type Prov } from '../lib/prov';
 import { CHART_FONT, chartBase, cssColor } from '../lib/theme';
 import { useLoad } from '../lib/useData';
+import { usePhone } from '../lib/useMedia';
 import '../styles/sectors.css';
 
 const PEN = ['phoenix', 'menora', 'clal', 'migdal', 'harel', 'altshuler', 'meitav', 'more'];
@@ -88,12 +89,33 @@ function tones(n: number): string[] {
   return n >= 4 ? set : n === 3 ? [navy, alpha(b.mu, 0.5), hi] : n === 2 ? [alpha(b.mu, 0.5), hi] : [hi];
 }
 
+/* On a phone the companies become rows: bars grow from the right edge (RTL), every company fits the width, no sideways scroll. */
+type Opt = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+const POS: Record<string, string> = { top: 'left', bottom: 'right', inside: 'inside' };
+function flip(o: Opt): Opt {
+  const cat = o.xAxis, val = o.yAxis;
+  return {
+    ...o, grid: { ...o.grid, top: o.legend ? 26 : 4, right: 6, left: 6 },
+    yAxis: { ...cat, inverse: true, position: 'right', axisLabel: { ...cat.axisLabel, interval: 0, align: 'left', margin: 8 } },
+    xAxis: { ...val, type: 'value', inverse: true, show: false, max: (v: { max: number }) => (v.max > 0 ? v.max * 1.16 : 0), min: (v: { min: number }) => (v.min < 0 ? v.min * 1.16 : 0) },  // room for the value labels at the bar ends
+    series: (o.series as Opt[]).map((x) => ({
+      ...x, barCategoryGap: '26%',
+      itemStyle: x.itemStyle?.borderRadius ? { ...x.itemStyle, borderRadius: [2, 0, 0, 2] } : x.itemStyle,
+      label: x.label ? { ...x.label, position: POS[x.label.position as string] ?? x.label.position ?? 'left' } : x.label,
+      data: (x.data as unknown[]).map((d) => (d && typeof d === 'object' && (d as Opt).label ? { ...(d as Opt), label: { ...(d as Opt).label, position: POS[(d as Opt).label.position] ?? 'left' } } : d)),
+      markLine: x.markLine ? { ...x.markLine, data: [{ xAxis: 0 }] } : undefined,
+    })),
+  };
+}
+const flipped = (phone: boolean, b: () => Opt) => (phone ? () => flip(b()) : b);
+
 interface BarsProps { title: string; metric: string; set: PeriodSet; cos: string[]; dec?: number; pct?: boolean; unit: string; g?: [number, number] | 'last'; agg?: 'own' | 'in'; b: Base; sub?: string; height?: number }
 /** Companies side by side, one bar per period. The change between two of the periods is printed under each name. */
 function Bars({ title, metric, set, cos: every, dec = 0, pct, unit, g, agg, b, sub, height = 300 }: BarsProps) {
   const { lts, focus } = useContext(C);
   const { open } = useSource();
   const view = useContext(V);
+  const phone = usePhone();
   const ps = periodsOf(viewSet(set, view), b).filter((p) => lts.has(metric, p));
   if (view !== 'y' && g) g = 'last';
   // only companies with a figure in one of the periods shown: a period built from the reports covers the companies extracted so far
@@ -132,8 +154,8 @@ function Bars({ title, metric, set, cos: every, dec = 0, pct, unit, g, agg, b, s
   return (
     <>
     <div className="sx-row">
-      <div className="sx-scroll"><div style={{ minWidth: w }}><Chart label={title} height={height} deps={[baseKey(b), focus, metric, view]} build={build(cats, false)} onPoint={hit(cats)} /></div></div>
-      {agg === 'own' && ps.some((p) => lts.v(metric, 'all', p) != null) && <div className="sx-agg"><Chart label={`${title}, ${lts.name('all')}`} height={height} deps={[baseKey(b), metric, view]} build={build(['all'], true)} onPoint={hit(['all'])} exportName="" /></div>}
+      <div className="sx-scroll"><div style={{ minWidth: phone ? 0 : w }}><Chart label={title} height={phone ? 34 + cats.length * (ps.length * 13 + 30) : height} deps={[baseKey(b), focus, metric, view, phone]} build={flipped(phone, build(cats, false))} onPoint={hit(cats)} /></div></div>
+      {agg === 'own' && ps.some((p) => lts.v(metric, 'all', p) != null) && <div className="sx-agg"><Chart label={`${title}, ${lts.name('all')}`} height={phone ? 12 + ps.length * 13 + 34 : height} deps={[baseKey(b), metric, view, phone]} build={flipped(phone, build(['all'], true))} onPoint={hit(['all'])} exportName="" /></div>}
     </div>
     {marks.map((t) => <p key={t} className="sx-mark"><b>*</b> {t}</p>)}
     </>
@@ -168,15 +190,16 @@ function Flows({ title, fam, period, cos: every, b }: { title: string; fam: 'pen
   const { lts, focus } = useContext(C);
   const { open } = useSource();
   const keys = [`${fam}.tr_in`, `${fam}.tr_out`];
+  const phone = usePhone();
   const cos = every.filter((c) => lts.v(keys[0], c, period) != null || lts.v(keys[1], c, period) != null);
   if (!lts.has(keys[0], period)) return <div className="sx-none">{periodLabel(period)}: אין נתון</div>;
   return (
     <div className="sx-flow">
       <h3>{periodLabel(period)}</h3>
-      <div className="sx-scroll"><div style={{ minWidth: cos.length * 62 }}>
-        <Chart label={`${title}, ${periodLabel(period)}`} height={250} deps={[period, focus, baseKey(b)]} exportName={`fox-${title}-${period}`.replace(/\s+/g, '-')}
+      <div className="sx-scroll"><div style={{ minWidth: phone ? 0 : cos.length * 62 }}>
+        <Chart label={`${title}, ${periodLabel(period)}`} height={phone ? 40 + cos.length * 40 : 250} deps={[period, focus, baseKey(b), phone]} exportName={`fox-${title}-${period}`.replace(/\s+/g, '-')}
           onPoint={(si, di) => open(provOf(lts, `${title}, ${si === 0 ? 'ניוד פנימה' : 'ניוד החוצה'}`, keys[si], cos[di], period, 'מיליארדי ש"ח', 1))}
-          build={() => {
+          build={flipped(phone, () => {
             const cb = chartBase(), navy = cssColor('--sx-navy'), hi = cssColor('--sx-hi');
             return {
               textStyle: { fontFamily: CHART_FONT }, grid: { left: 6, right: 6, top: 26, bottom: 4, containLabel: true }, legend: { top: 0, right: 0, itemWidth: 10, itemHeight: 10, textStyle: { color: cb.mu, fontSize: 11 } },
@@ -191,7 +214,7 @@ function Flows({ title, fam, period, cos: every, b }: { title: string; fam: 'pen
                 { name: 'ניוד החוצה', type: 'bar', stack: 'a', itemStyle: { color: alpha(hi, 0.42) }, data: cos.map((c) => { const v = lts.v(keys[1], c, period); return v == null ? null : -v; }), label: { show: true, position: 'inside', color: cb.fg, fontSize: 10.5, formatter: (x: { value: number }) => ltr(`(${nf(-x.value, 1)})`) } },
               ],
             };
-          }} />
+          })} />
       </div></div>
     </div>
   );
@@ -217,6 +240,7 @@ function Mix({ b }: { b: Base }) {
   const { lts, focus } = useContext(C);
   const { open } = useSource();
   const p = inst(b), parts: [string, string][] = [['am.mix.pen', 'פנסיה'], ['am.mix.gem', 'גמל'], ['am.mix.ic', 'חוזי השקעה']];
+  const phone = usePhone();
   const build = (list: string[], own: boolean) => () => {
     const cb = chartBase(), cols = [cssColor('--sx-navy'), alpha(cb.mu, 0.42), cssColor('--sx-hi')];
     return {
@@ -234,8 +258,8 @@ function Mix({ b }: { b: Base }) {
   const hit = (list: string[]) => (si: number, di: number) => open(provOf(lts, `תמהיל נכסים, ${parts[si][1]}`, parts[si][0], list[di], p, '%', 0));
   return (
     <div className="sx-row">
-      <div className="sx-scroll"><div style={{ minWidth: cos.length * 58 }}><Chart label="תמהיל נכסים מנוהלים" height={320} deps={[p, focus]} build={build(cos, false)} onPoint={hit(cos)} /></div></div>
-      {lts.v('am.aum', 'all', p) != null && <div className="sx-agg"><Chart label="תמהיל נכסים מנוהלים, סך הענף" height={320} deps={[p]} build={build(['all'], true)} onPoint={hit(['all'])} exportName="" /></div>}
+      <div className="sx-scroll"><div style={{ minWidth: phone ? 0 : cos.length * 58 }}><Chart label="תמהיל נכסים מנוהלים" height={phone ? 40 + cos.length * 38 : 320} deps={[p, focus, phone]} build={flipped(phone, build(cos, false))} onPoint={hit(cos)} /></div></div>
+      {lts.v('am.aum', 'all', p) != null && <div className="sx-agg"><Chart label="תמהיל נכסים מנוהלים, סך הענף" height={phone ? 64 : 320} deps={[p, phone]} build={flipped(phone, build(['all'], true))} onPoint={hit(['all'])} exportName="" /></div>}
     </div>
   );
 }

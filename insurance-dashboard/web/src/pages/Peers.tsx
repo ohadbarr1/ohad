@@ -178,9 +178,9 @@ export function Peers() {
     <div className="pr">
       {phone ? (
         <>
-          <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</ContextBar>
+          {st.v !== 'deck' && <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</ContextBar>}
           {/* table or series without opening the sheet: one tap */}
-          {st.v !== 'deck' && <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה']]} /></div>}
+          <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
           <Sheet open={sheet} onClose={() => setSheet(false)} title="טבלת עמיתים">{controls}{panels}
             {st.v !== 'deck' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
               <div key={i} className="pr-ci"><span>{c.name}</span>

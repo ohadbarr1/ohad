@@ -51,3 +51,9 @@
 
 .sx-mark { margin: 8px 0 0; padding: 8px 12px; border: 1px dashed var(--warn); border-radius: 8px; background: color-mix(in oklch, var(--warn) 10%, transparent); font-size: 12.5px; line-height: 1.5; }
 .sx-mark b { color: var(--warn); font-weight: 700; }
+
+/* phone: companies as rows; the industry total sits under the chart, full width */
+@media (max-width: 760px) {
+  .sx-row { flex-direction: column; }
+  .sx-agg { flex-basis: auto; border-inline-start: 0; border-top: 1px dashed var(--line); padding-inline-start: 0; padding-top: 6px; }
+}
