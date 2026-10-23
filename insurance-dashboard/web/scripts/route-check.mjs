@@ -17,8 +17,13 @@ const ROUTES = [
   '/company/phoenix/ifrs17', '/company/phoenix/savings', '/company/phoenix/filings', '/company/harel/financials', '/company/altshuler', '/company/altshuler/savings',
   '/industry/sectors', '/industry/lines', '/industry/csm', '/industry/csm?view=econ', '/industry/csm?view=sens', '/industry/csm?view=capital', '/industry/csm?view=curve', '/industry/csm?view=facts', '/industry/ifrs', '/industry/capital', '/industry/econ', '/industry/savings', '/industry/headline',
   '/industry/search', '/industry/matrix', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?t=reg&n=5', '/compare', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix', '/valuation/phoenix/ri', '/valuation/phoenix/csm', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/valuation/harel/sotp', '/valuation/hachshara', '/valuation/altshuler/sotp', '/calendar', '/book', '/search?q=%D7%A8%D7%9B%D7%99%D7%91%20%D7%94%D7%A4%D7%A1%D7%93', '/doc/1765739?page=32&q=%D7%93%D7%99%D7%91%D7%99%D7%93%D7%A0%D7%93', '/data', '/data?cite=%2Fcompany%2Fharel&f=CSM', '/restatements', '/restatements?season=2026Q2&min=2', '/presentations', '/mine', '/presentations?co=harel&q=%D7%AA%D7%A9%D7%95%D7%90%D7%94',
+  // lane A2: fund houses, an unlisted insurer, the report and window carried between company views
+  '/company/yelin', '/company/hachshara', '/company/altshuler/financials', '/company/phoenix?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/review?p=2025Q3&w=ytd', '/company/phoenix/financials?p=2025Q3&w=ltm',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
+/** addresses that must land on the not-found page (with its title), not on an empty shell */
+const MUST_404 = ['/company/zzz', '/company/zzz/financials'];
+ROUTES.push(...MUST_404);
 const SIZES = [[390, 844, true], [1440, 900, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -68,8 +73,11 @@ for (const r of all) {
   if (r.error) errs.push(r.error);
   if (r.width === 390 && r.scrollW > r.vw + 1) errs.push(`scrolls sideways (${r.scrollW} px wide)`);
   if (r.isoN) errs.push(`ISO dates ×${r.isoN}: ${r.iso.join(', ')}`);
-  if (!r.title || r.title === 'fox' || r.title.startsWith('העמוד לא נמצא')) errs.push(`title "${r.title}"`);
-  if (r.notFound) errs.push('not-found page');
+  if (MUST_404.includes(r.route)) { if (!r.notFound || !r.title.startsWith('העמוד לא נמצא')) errs.push(`expected the not-found page, got title "${r.title}"`); }
+  else {
+    if (!r.title || r.title === 'fox' || r.title.startsWith('העמוד לא נמצא')) errs.push(`title "${r.title}"`);
+    if (r.notFound) errs.push('not-found page');
+  }
   if (errs.length) fail++;
   const warn = r.latinN ? ` · latin ×${r.latinN}: ${r.latin.join(' | ')}` : '';
   console.log(`${errs.length ? 'FAIL' : 'ok  '} ${String(r.width).padStart(4)} ${r.route.padEnd(30)} first ${String(r.first ?? '–').padStart(5)} px · ${String(r.kb).padStart(4)} KB${errs.length ? ' · ' + errs.join(' · ') : ''}${warn}`);

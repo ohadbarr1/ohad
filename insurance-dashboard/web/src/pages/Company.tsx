@@ -14,7 +14,11 @@ import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
-import { useCompanyNotes, useCompanyStore, useMarket, useRegistry } from '../lib/useData';
+import { useCompanyNotes, useCompanyStore, useKpiData, useMarket, useRegistry } from '../lib/useData';
+import { keepPeriod } from '../lib/period';
+import { idCss } from '../lib/identity';
+import { NotFound } from './NotFound';
+import '../styles/company.css';
 import type { Market } from '../lib/market';
 import { useSource, type Prov } from '../lib/prov';
 import { Sourced } from '../components/Source';
@@ -40,46 +44,52 @@ export function CompanyLayout() {
   const loc = useLocation();
   // the overview reads the latest month and twelve-month sums only: the light slice; the savings tab charts the full history
   const { market } = useMarket(/\/(overview|savings)\/?$/.test(loc.pathname) || /\/company\/[^/]+\/?$/.test(loc.pathname), !/\/savings\/?$/.test(loc.pathname));
+  const kpi = useKpiData();
+  const phone = usePhone();
+  const [noteOpen, setNoteOpen] = useState(false);
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
-  if (!entry) return <Empty title="החברה לא נמצאה">בדוק את הכתובת או חפש בשורת החיפוש.</Empty>;
+  if (!entry) return <NotFound />;
   const latest = entry.filings[0]?.end ? dateLabel(entry.filings[0].end) : entry.filings[0]?.period;  // the latest report, named like every other period
+  const fund = entry.kind === 'fund_house';
   const inStatements = /\/(financials|review|profit|ifrs17)\/?$/.test(loc.pathname);
-  const pNow = new URLSearchParams(loc.search).get('p'), keepP = pNow ? `?p=${pNow}` : '';  // the report travels with the reader between the statement tabs
+  const keep = keepPeriod(loc.search);  // the report and window travel with the reader between the report day and the statement views
+  // a listed holding company files the figures of a company it holds part of (Yelin Lapidot: Atrao, 50%): said once, in the header
+  const filer = kpi.data?.companies[entry.id]?.filer;
+  // the statement views under "דוחות": the full statements, then (insurers) the review, sources of profit and IFRS 17
+  const views: [string, string, string][] = [
+    ...(entry.has_financials ? [['financials', 'דוחות כספיים', 'כספיים'] as [string, string, string]] : []),
+    ...(!fund ? [['review', 'סקירת דוח', 'סקירה'], ['profit', 'מקורות רווח וענפים', 'מקורות רווח'], ['ifrs17', 'IFRS 17', 'IFRS 17']] as [string, string, string][] : []),
+  ];
   return (
     <>
       <div className="pagehead company-head">
-        <div>
-          <h1>{entry.name_he}{entry.name_en && <> <span className="muted en"><span className="sep">· </span><bdi>{entry.name_en}</bdi></span></>}</h1>
+        <div className="ch-id">
+          <h1><span className="iddot" style={{ background: idCss(entry.id) }} aria-hidden="true" />{entry.name_he}{entry.name_en && <> <span className="muted en"><span className="sep">· </span><bdi>{entry.name_en}</bdi></span></>}</h1>
           <div className="sub row" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span className="kind">{KIND[entry.kind]}</span>
-            {entry.has_financials && <span className="chip loaded">נתונים: {latest}</span>}
-            {entry.docs > 0 && <span className="chip loaded">{entry.docs} מסמכים</span>}
+            {entry.has_financials && <span className="chip loaded" title="הדוח האחרון שנקרא">דוח אחרון <span className="num">{latest}</span></span>}
+            {entry.docs > 0 && <span className="chip loaded docs"><span className="num">{entry.docs}</span> מסמכים</span>}
             {market && entry.market_group && <span className="chip mkt">שוק: {market.plabel(market.LAST)}</span>}
+            {phone && entry.has_price && <Link className="chip valchip ph" to={`/valuation/${entry.id}`}>שווי ›</Link>}
           </div>
+          {filer && <p className={`filer-note${noteOpen ? ' open' : ''}`} title={filer.note} onClick={() => setNoteOpen((o) => !o)}><span className="chip est">{filer.name} · <span className="num">{filer.stake}%</span></span> {filer.note}</p>}
         </div>
         <div className="head-acts">
           <CompanyWorkbook id={entry.id} />
-          <Link className="chip valchip" to={`/valuation/${entry.id}/dcf`}>הערכת שווי</Link>
+          {entry.has_price && <Link className="chip valchip" to={`/valuation/${entry.id}`} title="הערכת שווי: P/B מוצדק, הכנסה שיורית, SOTP">הערכת שווי</Link>}
         </div>
       </div>
-      {/* four places: the latest report, the statements (with review, sources of profit and IFRS 17 beneath), long-term savings, documents */}
-      <nav className="subnav" aria-label="חברה">
-        <NavLink to="." end>{entry.has_financials ? 'הדוח האחרון' : 'סקירה'}</NavLink>
-        {(entry.has_financials || entry.kind !== 'fund_house') && <NavLink to="financials" className={() => `wide-tab${inStatements ? ' active' : ''}`}>דוחות</NavLink>}
-        {/* on a phone the statement tabs sit in this one strip, so there is no second row above the figures */}
-        {entry.has_financials && <NavLink to={`financials${keepP}`} className="phone-only">דוחות כספיים</NavLink>}
-        {entry.kind !== 'fund_house' && <><NavLink to={`review${keepP}`} className="phone-only">סקירת דוח</NavLink><NavLink to={`profit${keepP}`} className="phone-only">מקורות רווח</NavLink><NavLink to={`ifrs17${keepP}`} className="phone-only">IFRS 17</NavLink></>}
-        <NavLink to="savings">חיסכון ארוך טווח</NavLink>
+      {/* four places on every width: the report day, the statements (with their views beneath), long-term savings, documents */}
+      <nav className="subnav cnav" aria-label="חברה">
+        <NavLink to={`.${keep}`} end title="יום הדוח: מה הדוח הדפיס, מול שנה ורבעון קודמים">דוח</NavLink>
+        {(entry.has_financials || !fund) && <NavLink to={`${views[0]?.[0] ?? 'financials'}${keep}`} className={() => (inStatements ? 'active' : '')}>דוחות</NavLink>}
+        {entry.market_group && <NavLink to="savings"><span className="lg">חיסכון ארוך טווח</span><span className="sm">חיסכון</span></NavLink>}
         <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
-        <NavLink to={`/valuation/${entry.id}/dcf`} className="phone-only">שווי</NavLink>
       </nav>
-      {inStatements && entry.kind !== 'fund_house' && (
-        <nav className="subnav sub2" aria-label="דוחות">
-          {entry.has_financials && <NavLink to={`financials${keepP}`}>דוחות כספיים</NavLink>}
-          <NavLink to={`review${keepP}`}>סקירת דוח</NavLink>
-          <NavLink to={`profit${keepP}`}>מקורות רווח וענפים</NavLink>
-          <NavLink to={`ifrs17${keepP}`}>IFRS 17</NavLink>
+      {inStatements && views.length > 1 && (
+        <nav className="subnav sub2 cnav2" aria-label="דוחות">
+          {views.map(([to, lg, sm]) => <NavLink key={to} to={`${to}${keep}`}><span className="lg">{lg}</span><span className="sm">{sm}</span></NavLink>)}
         </nav>
       )}
       <Outlet context={{ entry, store, storeError, market } satisfies Ctx} />
@@ -134,7 +144,11 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   const entities = useMemo(() => ENTITIES.filter(([e]) => d.sheets.some((x) => x.entity === e)), [d]);
   const [entity, setEntity] = useState<string>(d.sheets.find((s) => s.code === initSheet)?.entity ?? 'F');
   const [sheetCode, setSheetCode] = useState(initSheet);
-  const [type, setType] = useState<string>(sp.get('t') ?? '');
+  // the report and window of the company page (?p=&w=) open the table on that window and end it at that report, unless the link says otherwise
+  const pP = sp.get('p') ?? '', pW = sp.get('w') ?? '';
+  const [type, setTypeOwn] = useState<string>(sp.get('t') ?? (pW === 'ltm' ? 'LTM' : pW === 'q' ? 'Q' : pW === 'ytd' ? (pP.endsWith('FY') ? 'FY' : pP.endsWith('Q2') ? 'H' : '') : ''));
+  // a period type chosen here becomes the company page's window (H and FY are year-to-date columns)
+  const setType = (t: string) => { setTypeOwn(t); const w = t === 'Q' ? 'q' : t === 'LTM' ? 'ltm' : t === 'H' || t === 'FY' ? 'ytd' : ''; if (w) setSp((prev) => { const n = new URLSearchParams(prev); n.set('w', w); return n; }, { replace: true }); };
   const [scale, setScale] = useState<Scale>((['k', 'm', 'b'] as Scale[]).find((x) => x === sp.get('u')) ?? 'm');
   const [mode, setMode] = useState<'value' | 'yoy'>(sp.get('v') === 'yoy' ? 'yoy' : 'value');
   const [showChart, setShowChart] = useState(sp.get('g') === '1');
@@ -212,7 +226,8 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   const colsOf = (tab: '17' | '4' | 'c') => (sv ? sv.periodIdx.filter((pi) => d.periods[pi].type === baseType && sv.rows.some((r) => tabRows[tab].has(r.idx) && (() => { const f = r.values.get(pi); return !!f && !(tab === '17' && f.old); })())) : []);
   const allCols = useMemo(() => (!sv ? [] : hasStd ? colsOf(stdTab) : sv.periodIdx.filter((pi) => d.periods[pi].type === baseType)), [sv, d, baseType, hasStd, stdTab, tabRows]);  // eslint-disable-line react-hooks/exhaustive-deps
   // the period window: kept as dates, so it survives a change of table or of period type
-  const [range, setRange] = useState<[string | null, string | null]>([sp.get('f'), sp.get('e')]);
+  const pEnd = /^\d{4}(Q[1-3]|FY)$/.test(pP) ? `${pP.slice(0, 4)}-${pP.endsWith('FY') ? '12-31' : ['03-31', '06-30', '09-30'][Number(pP.slice(5)) - 1]}` : null;
+  const [range, setRange] = useState<[string | null, string | null]>([sp.get('f'), sp.get('e') ?? (pEnd && d.periods.some((x) => x.end > pEnd) ? pEnd : null)]);
   const cols = useMemo(() => allCols.filter((pi) => { const e = d.periods[pi].end; return (!range[0] || e >= range[0]) && (!range[1] || e <= range[1]); }).filter((pi) => !ltm || (sv?.rows ?? []).some((r) => !r.m.header && inTab(r.idx) && val(r.idx, pi) != null)), [allCols, d, range, ltm, sv, stdTab]);  // eslint-disable-line react-hooks/exhaustive-deps
   const nAll = allCols.length;
   const loI = Math.max(0, range[0] ? allCols.findIndex((pi) => d.periods[pi].end >= range[0]!) : 0);

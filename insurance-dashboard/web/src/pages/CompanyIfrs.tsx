@@ -1,5 +1,5 @@
 import { foxOption } from '../lib/foxchart';
-import { usePeriodParam } from '../lib/period';
+import { usePeriodParam, useWindowParam } from '../lib/period';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chart } from '../components/Chart';
@@ -89,7 +89,7 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
   const facts = useIfrsFactsOf(id, P || null);
   const all = useMemo(() => (facts.data ?? []).filter((f) => f.c === id), [facts.data, id]);
   const [basis, setBasis] = useState('');
-  const [win, setWin] = useState<'q' | 'ytd'>('q');
+  const [w, setWin] = useWindowParam(), win: 'q' | 'ytd' = w === 'ytd' ? 'ytd' : 'q';  // shared with the other company tabs (?w=)
   const [fam, setFam] = useState('all');
   const [q, setQ] = useState('');
   const [sb, setSb] = useState('net');
