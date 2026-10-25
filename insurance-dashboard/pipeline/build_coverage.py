@@ -209,6 +209,22 @@ def main():
             if d[1] == "presentation":
                 deck_docs[d[0]].add((pkey(d[2]), rid))
     has_deck = {d[ci["company"]] for d in sdocs["docs"] if d[ci["type"]] == "presentation"}
+    # expected: the company's latest presentation in the reader (an annual-deck publisher is not late between its decks)
+    deck_exp = defaultdict(lambda: None)
+    for d in sdocs["docs"]:
+        k = pkey(d[ci["period"]]) if d[ci["type"]] == "presentation" else None
+        if k and (deck_exp[d[ci["company"]]] is None or k > deck_exp[d[ci["company"]]]):
+            deck_exp[d[ci["company"]]] = k
+    # held: every deck read into the deck layer (data/extracted_pres/<company>/<period>[_<report>].json), plus the decks behind targets/adjusted
+    doc_per = {str(d[ci["id"]]): d[ci["period"]] for d in sdocs["docs"]}
+    for p in (ROOT / "data" / "extracted_pres").glob("*/*.json"):
+        try:
+            x = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        k = pkey(doc_per.get(str(x.get("report_id"))) or x.get("period") or "")  # the deck's period as filed, not the file name
+        if k:  # a deck read with nothing to extract (no KPI slide) is still read
+            deck_docs[p.parent.name].add((k, str(x.get("report_id"))))
     debt_idx = load("debt/index.json") or {"companies": [], "none": []}
     debt_last = {}
     for co in debt_idx["companies"]:
@@ -285,7 +301,7 @@ def main():
         row["solvency"] = cell(solv_exp, sd, len(solv.get(cid, {}).get(sd, {})) if sd else None, na=not ins or inactive)
         # decks: a company that publishes investor presentations (any in the reader); the latest deck read into the deck layer
         dk = max(deck_docs.get(cid, set()), default=None)
-        row["decks"] = cell(exp, pname(dk[0]) if dk else None, len(deck_docs.get(cid, ())), na=cid not in has_deck or inactive)
+        row["decks"] = cell(deck_exp[cid], pname(dk[0]) if dk else None, len(deck_docs.get(cid, ())), na=cid not in has_deck or inactive)
         dl = debt_last.get(cid)
         row["debt"] = cell(exp, dl[0] if dl else None, dl[1] if dl else None, na=not filer or inactive or cid in debt_none)
         # ownership: listed companies (a MAYA filer with a share price); the interested-parties snapshot by quarter

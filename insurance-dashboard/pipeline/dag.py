@@ -127,7 +127,7 @@ STEPS = [
           D + "lts.json", D + "market.json", D + "savings_econ.json", D + "series", D + "sop", "web/src/lib/labels.ts"],
          [D + "peers"], groups={"deploy"}, note="Peer Table metric registry (follows the canon)"),
     step("build_market_home", "pipeline/build_market_home.py", [D + "market.json"], [D + "market_home.json"], groups={"deploy"}),
-    step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json"], [D + "coverage.json"], daily=True,
+    step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
 CHECKS = "python3 pipeline/gate.py (after the build: writes qa.json, consistency.json; deploy.sh runs it after `--only deploy`)"
