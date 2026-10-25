@@ -18,6 +18,7 @@ import {
   type CatFile, type CurveFile, type Effect, type Part, type Preset, type SBasis, type Scenario, type SRisk, type TargetFact,
 } from '../../lib/stress';
 import { Dot } from './LedgerView';
+import { METRIC_HE } from '../../lib/labels';
 import '../../styles/stress.css';
 
 type Metric = 'head' | 'eq' | 'csm';
@@ -129,7 +130,8 @@ export function StressLab({ L, name }: { L: Ledger; name: (id: string) => string
   }
   const relProv = (abs: Prov, v: number, base: number, baseSrc: () => Prov, what: string, baseL: string): Prov => ({ k: 'calc', title: `${what} · % מ${baseL}`, value: pctS(v), formula: `ההשפעה ÷ ${baseL} לאותו תאריך × 100`,
     inputs: [{ label: 'ההשפעה', v: 'value' in abs ? abs.value : '', src: () => abs }, { label: baseL, v: amt(base), src: baseSrc }] });
-  const tgtProv = (id: string, t: TargetFact): Prov => factProv({ ...(t as unknown as RF) }, L.d, `${t.l || 'יעד'} · ${name(id)}`, `${nf(t.v, t.v % 1 ? 1 : 0)}%`, '%');
+  const tgtL = (t: TargetFact) => METRIC_HE[t.m] || (/dividend|threshold/.test(t.m) ? 'סף לחלוקת דיבידנד' : 'יעד יחס כושר פירעון');
+  const tgtProv = (id: string, t: TargetFact): Prov => factProv({ ...(t as unknown as RF) }, L.d, `${tgtL(t)} · ${name(id)}`, `${nf(t.v, t.v % 1 ? 1 : 0)}%`, '%');
   const capProv = (id: string, x: CapPt, p: string, b: SBasis): Prov => ({ k: 'report', title: `יחס כושר פירעון, ${b === 'w' ? 'עם' : 'ללא'} הוראות מעבר · ${name(id)} · ${periodName(p).replace('FY', 'Q4')}`, value: `${nf(x.v, x.v % 1 ? 1 : 0)}%`, unit: '%', url: x.u ?? null, pg: x.pg ?? null, doc: x.solv ? 'דוח כושר פירעון כלכלי' : 'דוח כספי', period: periodName(p) });
   const solvCell = (x: { v: number; r: number; pg: number | null; l?: string }, d: string, title: string, unit: string, text: string) => solvProv(Sv, x, title, d, unit, text);
 
@@ -161,7 +163,7 @@ export function StressLab({ L, name }: { L: Ledger; name: (id: string) => string
     return { k: 'calc', title: `מרווח מעל היעד אחרי התרחיש · ${name(r.id)}`, value: pp(o.head), unit: PP, est: s.eff.extra || undefined, formula: 'יחס כושר הפירעון ביום הגילוי + השפעת התרחיש − יעד הדירקטוריון (אותו בסיס)',
       inputs: [{ label: `יחס כושר פירעון ${dLab(s.d)}, ${bLabel(s.b)}`, v: `${nf(s.base!.v, 0)}%`, src: () => solvCell(s.base!, s.d, `יחס כושר פירעון · ${name(r.id)}`, '%', `${nf(s.base!.v, 0)}%`) },
         { label: 'השפעת התרחיש', v: pp(s.eff.v), src: () => effProv(s.eff, solvSrc, PP, pp, `השפעה על יחס כושר הפירעון · ${name(r.id)}`) },
-        { label: s.ref!.l ? `יעד: ${s.ref!.l.slice(0, 60)}` : 'יעד הדירקטוריון', v: `${nf(s.ref!.v, 0)}%`, src: () => tgtProv(r.id, s.ref!) }],
+        { label: tgtL(s.ref!), v: `${nf(s.ref!.v, 0)}%`, src: () => tgtProv(r.id, s.ref!) }],
       note: [s.ref === s.div && !targetsAt([s.ref!], s.d, s.b as SBasis).board ? 'לבסיס זה הודפס רק סף לחלוקת דיבידנד; הוא משמש כיעד' : '', s.eff.combo ? 'ללא פיזור' : ''].filter(Boolean).join(' · ') || undefined };
   };
   const nowProv = (r: Row, v: number): Prov => ({ k: 'calc', title: `מרווח מעל היעד, המצב הנוכחי (ללא תרחיש) · ${name(r.id)}`, value: pp(v), unit: PP, formula: 'יחס כושר הפירעון האחרון שהודפס − היעד בתוקף, אותו בסיס',
@@ -233,7 +235,7 @@ export function StressLab({ L, name }: { L: Ledger; name: (id: string) => string
                   <span className={`chip ${o.room >= 0 ? 'pass' : 'fail'}`}>{o.room >= 0 ? 'מעל סף החלוקה' : 'מתחת לסף החלוקה'}</span>
                   {o.cap != null && s.scr && <Sourced className="num der" src={() => ({ k: 'calc', title: `עודף הון מעל סף החלוקה אחרי התרחיש · ${name(r.id)}`, value: amt(o.cap!), unit: MM, est: true,
                     formula: '(יחס אחרי התרחיש − סף החלוקה) ÷ 100 × SCR ביום הגילוי; בהנחה שה-SCR אינו משתנה בתרחיש',
-                    inputs: [{ label: 'יחס אחרי התרחיש', v: `${nf(o.stressed, 1)}%`, src: () => effProv(s.eff, solvSrc, PP, pp, `השפעה על יחס כושר הפירעון · ${name(r.id)}`) }, { label: o.div.l ? `סף: ${o.div.l.slice(0, 60)}` : 'סף חלוקה', v: `${nf(o.div.v, 0)}%`, src: () => tgtProv(r.id, o.div) },
+                    inputs: [{ label: 'יחס אחרי התרחיש', v: `${nf(o.stressed, 1)}%`, src: () => effProv(s.eff, solvSrc, PP, pp, `השפעה על יחס כושר הפירעון · ${name(r.id)}`) }, { label: tgtL(o.div), v: `${nf(o.div.v, 0)}%`, src: () => tgtProv(r.id, o.div) },
                       { label: `SCR ${dLab(s.d)}, ${bLabel(s.b)}`, v: amt(s.scr!.v), src: () => solvCell(s.scr!, s.d, `SCR · ${name(r.id)}`, MM, amt(s.scr!.v)) }],
                     note: o.div === s.ref && !/dividend|דיבידנד/i.test(`${o.div.m} ${o.div.l ?? ''}`) ? 'לבסיס זה לא הודפס סף חלוקה נפרד: מוצג מול יעד הדירקטוריון' : undefined })}>{o.cap >= 0 ? '≈ ' : ''}{amt(o.cap)}</Sourced>}</>
                   : <span className="muted">–</span>}</>,
