@@ -37,6 +37,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'ownership': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'בעלות')) : t('בעלות');  // lane OW
     case 'holdings': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'הרכב נכסים')) : t('הרכב נכסים');  // lane AL
     case 'doc': return p[1] ? t('קורא מסמכים') : null;
+    case 'card': return p[1] && p[2] && !p[3] && name(p[1]) !== null ? t('כרטיס דוח', name(p[1]) ?? p[1], p[2].endsWith('FY') ? `FY'${p[2].slice(2, 4)}` : `${p[2].slice(4)}'${p[2].slice(2, 4)}`) : null;  // lane S2
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;
     case 'valuation': return p[1] ? (((p[2] ?? '') in VALUATION_TAB) && name(p[1]) !== null ? t(VALUATION_TAB[p[2] ?? ''], name(p[1]) ?? p[1], 'הערכת שווי') : null) : t('הערכת שווי');
     default: return null;

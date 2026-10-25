@@ -3,6 +3,7 @@ import { Sourced } from '../Source';
 import { pubLabel } from '../../lib/format';
 import { useLoad, useRegistry } from '../../lib/useData';
 import type { DocEntry } from '../../lib/types';
+import { CardLink } from '../ReportCardLink';
 import '../../styles/home-feed.css';
 
 export type Filing = DocEntry & { company: string };
@@ -21,6 +22,7 @@ export function FilingsFeed({ docs, name, fresh }: { docs: Filing[]; name: (id: 
           <Link className="co" to={`/company/${f.company}`}>{name(f.company)}</Link>
           {fresh?.(f) && <span className="chip loaded">חדש</span>}
           <a className="fdoc" href={f.url} target="_blank" rel="noreferrer">{t} <span className="num">{filingPeriod(f.period)}</span></a>
+          {(f.type === 'quarterly' || f.type === 'annual') && <CardLink id={f.company} p={f.period} />}
           {f.pages != null && <Sourced className="num muted pg" src={() => ({ k: 'report', title: `מספר עמודים · ${t}`, value: String(f.pages), unit: 'עמודים', url: f.url, pg: null, doc: t, period: filingPeriod(f.period) })}>{`${f.pages} עמ׳`}</Sourced>}
           <span className="num muted dt">{pubLabel(f.date)}</span>
         </li>
