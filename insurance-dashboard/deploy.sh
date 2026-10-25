@@ -50,7 +50,7 @@ $stray"
   git fetch --quiet origin || gate_fail "cannot reach origin to check that HEAD is pushed"
   [[ -n "$(git branch -r --contains "$HEAD_SHA" 2>/dev/null)" ]] || gate_fail "HEAD ${HEAD_SHA:0:8} is not on origin (git push first, then wait for fox-ci)"
   command -v gh >/dev/null || gate_fail "gh (GitHub CLI) not found: cannot read the fox-ci result for HEAD"
-  run=$(gh run list --commit "$HEAD_SHA" --workflow fox-ci --limit 1 --json databaseId,status,conclusion --jq '.[0] | "\(.databaseId) \(.status) \(.conclusion)"' 2>/dev/null) \
+  run=$(gh run list --commit "$HEAD_SHA" --workflow fox-ci --limit 1 --event push --json databaseId,status,conclusion --jq '.[0] // empty | "\(.databaseId) \(.status) \(.conclusion)"' 2>/dev/null) \
     || gate_fail "gh could not list the fox-ci runs (gh auth status?)"
   [[ -n "$run" ]] || gate_fail "no fox-ci run for HEAD ${HEAD_SHA:0:8} yet (pushed just now? wait for it: gh run list --workflow fox-ci)"
   read -r run_id run_status run_conclusion <<< "$run"
@@ -60,6 +60,21 @@ $stray"
 fi
 
 cd "$ROOT"
+# on any exit that leaves no data commit (--check-only, a failed check, a failed deploy), put back the tracked files the build steps
+# regenerated, so the next run still passes the clean-tree gate; only when the tree was clean to begin with (never touch the owner's edits)
+SRV=""
+cleanup() {
+  [[ -n "$SRV" ]] && kill "$SRV" 2>/dev/null
+  [[ -n "$PRE_DIRTY" ]] && return 0
+  local regen; regen=("${(@f)$(cd "$ROOT" && git diff --name-only HEAD -- .)}")
+  if [[ -n "${regen[1]:-}" ]]; then
+    (cd "$(git -C "$ROOT" rev-parse --show-toplevel)" && git restore --quiet --staged --worktree --source=HEAD -- "${regen[@]}") && echo "restored ${#regen} regenerated tracked file(s) to HEAD (nothing was committed)"
+  fi
+  local fresh; fresh=$(comm -13 <(print -r -- "$PRE_UNTRACKED" | sort) <(cd "$ROOT" && git ls-files --others --exclude-standard -- . | sort))
+  [[ -z "$fresh" ]] || echo "note: the build left new untracked files (not removed):\n$fresh"
+  return 0
+}
+trap cleanup EXIT
 # the build steps deploy has always run, through the pipeline graph (pipeline/dag.py, docs/PIPELINE.md): web index, calendar, KPI canon,
 # peers registry (follows the canon), home slice of the regulator file, /data coverage. In dependency order; a step whose inputs, code and
 # outputs are unchanged since its last run here is skipped (calendar and coverage rerun every day). Upstream builders are not run here
@@ -96,7 +111,6 @@ have=$(find "$OUT" -type f ! -path "$OUT/assets/*" ! -name index.html ! -name ".
 
 # the assembled site, served locally, checked route by route before anything is uploaded
 node scripts/serve.mjs "$OUT" 4173 >/dev/null 2>&1 & SRV=$!
-trap 'kill $SRV 2>/dev/null || true' EXIT
 sleep 1
 node --experimental-websocket scripts/route-check.mjs http://127.0.0.1:4173 2>/dev/null || { echo "route check failed: not deploying"; exit 1; }
 

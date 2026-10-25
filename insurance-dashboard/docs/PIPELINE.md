@@ -121,11 +121,13 @@ artifact. To turn the Linux comparison on (or refresh it after an intended chang
 
 **Deploy gate** (`deploy.sh`): refuses unless, before anything runs, (1) no tracked file under `insurance-dashboard/` has uncommitted
 changes and no untracked file sits under `web/src` or `web/public`; (2) HEAD is on origin (`git branch -r --contains`); (3) the
-latest `fox-ci` run for HEAD (`gh run list --commit <sha> --workflow fox-ci`) is completed and succeeded. `--force-unverified`
+latest `fox-ci` push run for HEAD (`gh run list --commit <sha> --workflow fox-ci --event push`; a hand-run `update_baselines` run
+never counts) is completed and succeeded. `--force-unverified`
 skips the gate with a loud warning (restore service only). `--check-only` runs every check and deploys nothing (gate skipped).
 After the pipeline steps and the data gate, the files they regenerated are committed (`Deploy: commit the data files the deploy
 build regenerated`) before the app is built, so the bundle's commit stamp and the deployed data are that commit; the script prints
-it — push it afterwards so origin matches live. Typical flow: commit → push → wait for green (`gh run watch`) → `./deploy.sh`.
+it — push it afterwards so origin matches live. On any exit without a data commit (`--check-only`, a failed check or deploy) the
+regenerated tracked files are restored to HEAD (only when the tree was clean at the start), so the next run still passes the gate. Typical flow: commit → push → wait for green (`gh run watch`) → `./deploy.sh`.
 
 **Optional next step (owner, not implemented): deploy from CI.** Create a Firebase service account with the *Firebase Hosting Admin*
 role (Firebase console → Project settings → Service accounts, or `firebase init hosting:github`), store its JSON as the repository
@@ -143,7 +145,8 @@ that `needs: check`, runs only on pushes to the trunk branch, rebuilds and calls
 | `/data/**/*.*` | the file, else **404** | `public, max-age=300` |
 | `/sw.js` | the file | `no-cache` |
 
-A tab opened before a deploy that asks for a lazy chunk gone with the old build gets a 404, Vite raises `vite:preloadError`, and the
+A 404 under `/assets/**` still carries the `immutable` header (Hosting applies headers by path): harmless, since releases are
+atomic and a hashed name that is missing never comes back. A tab opened before a deploy that asks for a lazy chunk gone with the old build gets a 404, Vite raises `vite:preloadError`, and the
 app reloads once (a second failure within a minute reaches the error boundary). The service worker (v2) revalidates navigations
 (`cache: 'no-cache'`, falls back to the cached shell after 3 s or offline), stores HTML only as the shell, and never stores or serves
 an HTML body for an `/assets` or `/data` request. `scripts/serve.mjs` applies the same rules (same matcher as Hosting: minimatch,
