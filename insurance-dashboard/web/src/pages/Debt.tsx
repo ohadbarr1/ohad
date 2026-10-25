@@ -266,7 +266,7 @@ function CompanyView({ d, sp, set }: { d: DebtFile; sp: URLSearchParams; set: (k
   const rep = (rid: number) => d.reports.find((r) => r.rid === rid)!;
   const cells = useMemo(() => {
     const out = new Map<string, Record<string, number[]>>();
-    for (const [rid, t, rk, ...v] of d.cells) { const k = `${rid}|${t}`; const o = out.get(k) ?? {}; o[rk] = v; out.set(k, o); }
+    for (let ci = 0; ci < d.cells.length; ci++) { const c = d.cells[ci], rid = c[0], t = c[1], rk = c[2], v = c.slice(3) as number[]; const k = `${rid}|${t}`; const o = out.get(k) ?? {}; o[rk] = v; out.set(k, o); }
     return out;
   }, [d]);
   const parentE = d.entities.find((e) => e.role === 'parent')?.maya_id;

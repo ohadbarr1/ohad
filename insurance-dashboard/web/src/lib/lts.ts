@@ -57,7 +57,9 @@ export class Lts {
   private m = new Map<string, [number, number]>();
   private byMetric = new Map<string, Set<string>>();
   constructor(readonly d: LtsData) {
-    for (const [metric, c, p, v, s] of d.facts) {
+    const F = d.facts;  // indexed loop: see CompanyStore (WebKit)
+    for (let i = 0; i < F.length; i++) {
+      const f = F[i], metric = f[0], c = f[1], p = f[2], v = f[3], s = f[4];
       this.m.set(`${metric}|${c}|${p}`, [v, s]);
       if (!this.byMetric.has(metric)) this.byMetric.set(metric, new Set());
       this.byMetric.get(metric)!.add(p);

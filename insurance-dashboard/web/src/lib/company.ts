@@ -10,7 +10,11 @@ export class CompanyStore {
   readonly metricsBySheet = new Map<string, number[]>();
 
   constructor(readonly d: CompanyData) {
-    for (const [mi, pi, v, page, u, flag] of d.facts) {
+    // indexed loop, no destructuring: WebKit's optimiser throws "undefined is not a function" on a destructuring for-of over this
+    // large array when the JSON comes from cache (seen in Playwright WebKit on /company/phoenix reloads)
+    const F = d.facts;
+    for (let i = 0; i < F.length; i++) {
+      const f = F[i], mi = f[0], pi = f[1], v = f[2], page = f[3], u = f[4], flag = f[5];
       let m = this.byMetric.get(mi);
       if (!m) { m = new Map(); this.byMetric.set(mi, m); }
       m.set(pi, flag ? { v, page, u, der: !!(flag & 1), old: !!(flag & 2), turned: !!(flag & 4), re: !!(flag & 8) } : { v, page, u });  // 8: the restated figure of a later report

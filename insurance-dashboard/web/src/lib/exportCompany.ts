@@ -37,7 +37,8 @@ function derivedFrom(d: CompanyData, pi: number): [number, number] | null {
 
 function statements(d: CompanyData, name: string, src: Src[]): XSheet[] {
   const by = new Map<number, Map<number, [number, number | null, number | null | undefined, number]>>();
-  for (const [mi, pi, v, pg, u, fl] of d.facts) { if (v == null) continue; let m = by.get(mi); if (!m) by.set(mi, (m = new Map())); m.set(pi, [v, pg, u, fl ?? 0]); }
+  const F = d.facts;
+  for (let i = 0; i < F.length; i++) { const f = F[i], mi = f[0], pi = f[1], v = f[2], pg = f[3], u = f[4], fl = f[5]; if (v == null) continue; let m = by.get(mi); if (!m) by.set(mi, (m = new Map())); m.set(pi, [v, pg, u, fl ?? 0]); }
   const urlOf = (entity: string, u: number | null | undefined) => (u != null ? d.urls?.[u] : null) ?? d.sources.find((x) => x.entity === entity)?.url ?? null;
   const docOf = (entity: string, url: string | null) => (url ? d.sources.find((x) => x.url === url)?.doc ?? decodeURIComponent(url.split('/').pop() ?? url) : d.sources.find((x) => x.entity === entity)?.doc ?? 'דוח כספי');
   const groups = [...new Set(d.sheets.map((s) => s.group))];
