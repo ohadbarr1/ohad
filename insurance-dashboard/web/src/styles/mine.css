@@ -47,7 +47,7 @@
 /* === end lane F === */
 /* header link (Layout, phone only: the rail carries "שלי" on wider screens) */
 .top .iconbtn.minelink { display: none; place-items: center; flex: none; color: inherit; }
-:root:not([data-theme="dark"]) .top .iconbtn.minelink { color: #FFFFFF; }
+:root:not([data-theme="dark"]) .top .iconbtn.minelink { color: var(--muted); }
 .minelink svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .minelink.active svg { stroke: var(--accent); }
 @media (max-width: 760px) { .top .iconbtn.minelink { display: grid; } }

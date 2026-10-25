@@ -13,10 +13,10 @@
 .ctxbar { position: sticky; top: calc(58px + env(safe-area-inset-top, 0px)); z-index: 15; margin-inline: -14px; padding: 6px 14px; background: var(--bg); border-bottom: 1px solid var(--line-soft); }
 .ctxbar-in { width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--panel); color: var(--fg); cursor: pointer; text-align: start; }
 .ctxbar-txt { font-weight: 500; font-size: var(--t-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.ctxbar-go { flex: none; font-size: var(--t-2); color: var(--accent-text); font-weight: 700; }
+.ctxbar-go { flex: none; font-size: var(--t-2); color: var(--fg); font-weight: 700; }
 /* desktop statements toolbar: one row, the rest behind "אפשרויות" */
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
-.toolbar select { min-width: 220px; }
+.toolbar select { min-width: 220px; } .toolbar .menu.sheetpick .menu-btn { max-width: 360px; }
 .toolbar .rng { font-size: var(--t-2); color: var(--muted); }
 .controls.opts { padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: var(--r-3); background: var(--panel); }
 .sheetwrap.center { align-items: center; justify-content: center; padding: 16px; }

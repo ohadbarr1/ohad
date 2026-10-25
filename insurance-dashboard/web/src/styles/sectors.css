@@ -9,7 +9,7 @@
 .sx-card .hd { flex-wrap: wrap; gap: 6px 12px; }
 .sx-card .hd h2 { font-size: 15px; }
 .sx-card .aside { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-.sx-card .aside select { min-height: 34px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); font: inherit; font-weight: 600; }
+.sx-card .aside select { min-height: 34px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); font: inherit; font-weight: 700; }
 .sx-row { display: flex; gap: 8px; align-items: stretch; }
 .sx-scroll { overflow-x: auto; flex: 1; min-width: 0; overscroll-behavior-x: contain; }
 .sx-agg { flex: 0 0 104px; border-inline-start: 1px dashed var(--line); padding-inline-start: 6px; }
@@ -19,11 +19,11 @@
 .sx-none { padding: 24px 0; color: var(--faint); font-size: 13px; text-align: center; }
 .sx-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
 .sx-table th, .sx-table td { padding: 6px 8px; border-bottom: 1px solid var(--line-soft); text-align: center; white-space: nowrap; }
-.sx-table th:first-child, .sx-table td:first-child { text-align: start; font-weight: 600; }
+.sx-table th:first-child, .sx-table td:first-child { text-align: start; font-weight: 700; }
 .sx-table th { color: var(--muted); font-weight: 500; font-size: 11.5px; }
-.sx-table .on { color: var(--accent-text); font-weight: 700; }
-.sx-table .agg { background: color-mix(in oklch, var(--sx-hi) 12%, transparent); font-weight: 600; }
-.sx-table tr.on td { color: var(--accent-text); font-weight: 700; }
+.sx-table .on { color: var(--fg); font-weight: 700; }
+.sx-table .agg { background: color-mix(in oklch, var(--sx-hi) 12%, transparent); font-weight: 700; }
+.sx-table tr.on td { color: var(--fg); font-weight: 700; background: color-mix(in oklch, var(--fg) 6%, transparent); }
 .sx-table tr.tot td { border-top: 2px solid var(--fg); font-weight: 700; }
 .sx-ic td.num { text-align: end; }
 .sx-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }

@@ -7,7 +7,7 @@
 .rs-strip { display: flex; gap: 4px; align-items: stretch; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
 .rs-sea { flex: 1 0 44px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px 4px; border: 1px solid transparent; border-radius: var(--r-2); background: none; cursor: pointer; color: var(--muted); font: inherit; }
 .rs-sea:hover { background: var(--panel2); }
-.rs-sea.on { border-color: var(--accent-line); background: var(--accent-soft); color: var(--fg); }
+.rs-sea.on { border-color: var(--fg); background: var(--panel); color: var(--fg); }
 .rs-sea b { font-size: var(--t-2); color: var(--fg); font-weight: 700; }
 .rs-s { font-size: var(--t-1); color: var(--faint); white-space: nowrap; }
 .rs-bar { position: relative; width: 18px; height: 72px; display: flex; align-items: flex-end; }
@@ -20,7 +20,7 @@
 .rs-kpi small { font-size: var(--t-1); color: var(--faint); }
 .rs-cos { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 280px; }
 .rs-cos .chip, .pz-cos .chip { cursor: pointer; }
-.rs-cos .chip.on, .pz-cos .chip.on { border-color: var(--accent-line); color: var(--fg); background: var(--accent-soft); }
+.rs-cos .chip.on, .pz-cos .chip.on { border-color: color-mix(in oklch, var(--fg) 55%, transparent); color: var(--fg); background: var(--panel); font-weight: 700; }
 
 .rs-controls .rs-q input { width: 160px; }
 .rs-table td { vertical-align: top; }

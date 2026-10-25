@@ -38,14 +38,14 @@
 .csm-members { margin-top: -8px; }
 .csm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .csm-grid > .panel { margin: 0; min-width: 0; }
-.csm-bridge th button.thsel, .csm-sens th button.thsel { display: inline-flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; white-space: nowrap; }
+.csm-bridge th button.thsel, .csm-sens th button.thsel { display: inline-flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: inherit; cursor: pointer; white-space: nowrap; }
 .csm-bridge th button.thsel:hover, .csm-sens th button.thsel:hover { color: var(--accent-text); }
 .csm-bridge th.on, .csm-sens th button.thsel.on { box-shadow: inset 0 -2px 0 var(--accent); }
 .csm-bridge .indcol { background: var(--panel2); }
-.csm-bridge td sup.mk, .csm-sens td sup.mk { color: var(--accent-text); font-weight: 700; margin-inline-start: 2px; cursor: help; font-size: 10px; }
+.csm-bridge td sup.mk, .csm-sens td sup.mk { color: var(--muted); font-weight: 700; margin-inline-start: 2px; cursor: help; font-size: 10px; }
 .csm-fallhd { display: flex; gap: 10px; align-items: baseline; margin: 14px 0 2px; }
 .csm-fallhd .dim { display: inline; }
-tr.indrow td { font-weight: 600; background: var(--panel2); }
+tr.indrow td { font-weight: 700; background: var(--panel2); }
 tr.indrow td .dim { font-weight: 400; }
 .csm-sens tr.odd td { color: var(--muted); }
 .redot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 6px; vertical-align: 2px; }

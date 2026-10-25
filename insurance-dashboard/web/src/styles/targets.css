@@ -10,7 +10,7 @@
 .tg-said { font-size: var(--t-1); white-space: nowrap; }
 .tg-doc { display: block; }
 .adj-def { font-size: var(--t-1); color: var(--muted); margin: 2px 0 8px; }
-.adj-co { font-weight: 600; font-size: var(--t-1); color: var(--muted); }
+.adj-co { font-weight: 700; font-size: var(--t-1); color: var(--muted); }
 .tg-y { margin: 0 6px; }
 @media (max-width: 560px) { .tg-c td.lbl { min-width: 0; } .tg-c td, .tg-c th { padding-inline: 4px; } }
 .tg-bar select { min-height: 32px; max-width: 100%; }

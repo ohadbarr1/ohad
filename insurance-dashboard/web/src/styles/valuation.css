@@ -6,11 +6,11 @@
 .vinputs { display: flex; flex-wrap: wrap; gap: 10px 28px; padding: 12px 0; border-block: 1px solid var(--line-soft); align-items: flex-end; }
 .vinputs > div { display: flex; flex-direction: column; gap: 3px; min-width: 92px; }
 .vinputs .l { font-size: var(--t-1); color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-.vinputs .v { font-size: var(--t-5); font-weight: 600; display: flex; align-items: baseline; gap: 4px; }
+.vinputs .v { font-size: var(--t-5); font-weight: 700; display: flex; align-items: baseline; gap: 4px; }
 .vinputs .v small, .pxfield small { font-size: var(--t-1); font-weight: 400; color: var(--muted); }
 .vinputs .s { font-size: var(--t-1); color: var(--muted); }
 .pxfield .in { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.pxfield input { width: 110px; min-width: 0; font-size: var(--t-4); font-weight: 600; }
+.pxfield input { width: 110px; min-width: 0; font-size: var(--t-4); font-weight: 700; }
 .srcdot { font-size: var(--t-1); color: var(--muted); }
 .btn.mini { padding: 2px 8px; min-height: 26px; font-size: var(--t-1); }
 
@@ -40,7 +40,7 @@
 .vgrid .vcol { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .assume .in { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 .assume .in input { width: 96px; min-width: 0; }
-.assume .ro { justify-self: end; font-weight: 600; }
+.assume .ro { justify-self: end; font-weight: 700; }
 .verdict .mid { font-size: var(--t-6); font-weight: 700; display: block; }
 .formula { font-size: var(--t-2); color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .sens-t td.heat.here { outline: 1.5px solid var(--fg); outline-offset: -2px; font-weight: 700; }
@@ -59,7 +59,7 @@
 
 /* peers */
 .vpeers { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
-.peer-t tr.focus td { background: color-mix(in oklch, var(--accent) 7%, transparent); font-weight: 600; }
+.peer-t tr.focus td { background: color-mix(in oklch, var(--fg) 6%, transparent); font-weight: 700; }
 .peer-t td:first-child { white-space: nowrap; }
 .peer-t td:first-child .chip { margin-inline-start: 6px; }
 .peer-t th .dim, .sotp-t .dim { display: block; font-weight: 400; }
@@ -82,7 +82,7 @@
   .vas-grid input { width: 100%; }
   .sotp-t td.amt, .sotp-t td.mlt { min-width: 92px; }
 }
-.vas-sum bdi { margin-inline-start: 10px; } .vas-sum b { color: var(--fg); font-weight: 600; }
+.vas-sum bdi { margin-inline-start: 10px; } .vas-sum b { color: var(--fg); font-weight: 700; }
 .roehist .bars button.src.bar { display: flex; flex: 1 1 0; min-width: 0; height: 100%; align-items: flex-end; padding: 0; margin: 0; border: 0; background: none; border-radius: 0; }
 .vas-sum bdi { white-space: nowrap; }
 @media (max-width: 760px) {

@@ -1,6 +1,6 @@
 /* lane AP: the "לא מאומת" chip (components/Unverified.tsx) and /data/autopilot (pages/Autopilot.tsx) */
 .unv-wrap { position: relative; display: inline-flex; vertical-align: middle; }
-.chip.unv { gap: 5px; font-weight: 600; }
+.chip.unv { gap: 5px; font-weight: 700; }
 .chip.unv .unv-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .chip.unv.compact { padding: 2px 5px; min-width: 18px; justify-content: center; }
 .chip.unv.conflict { color: var(--down); border-color: color-mix(in oklch, var(--down) 35%, transparent); background: color-mix(in oklch, var(--down) 8%, transparent); }
@@ -27,11 +27,11 @@
 .ap-card li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 56px; gap: 10px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line-soft); font-size: var(--t-3); }
 .ap-card li:first-child { border-top: 0; }
 .ap-card li .l { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ap-card li .v { font-weight: 600; text-align: end; }
-.ap-card li .d { text-align: end; font-weight: 600; }
+.ap-card li .v { font-weight: 700; text-align: end; }
+.ap-card li .d { text-align: end; font-weight: 700; }
 .ap-card li .b { color: var(--faint); font-size: var(--t-1); }
 .ap-card footer { font-size: var(--t-2); color: var(--muted); border-top: 1px dashed var(--line-soft); padding-top: 8px; line-height: 1.5; }
-.ap-card footer b { color: var(--fg); font-weight: 600; }
+.ap-card footer b { color: var(--fg); font-weight: 700; }
 .ap-steps { margin: 0 0 12px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; counter-reset: s; }
 .ap-steps li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-3); counter-increment: s; }
 .ap-steps li::before { content: counter(s); color: var(--faint); font-size: var(--t-1); min-width: 14px; }
