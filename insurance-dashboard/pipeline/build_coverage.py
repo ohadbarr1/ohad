@@ -298,12 +298,12 @@ def main():
             row["price"] = cell(None, None, na=True)
         # Solvency II reports: insurers that still file; the expected date follows the publication cycle, not the quarter
         sd = max(solv.get(cid, {}), default=None)
-        row["solvency"] = cell(solv_exp, sd, len(solv.get(cid, {}).get(sd, {})) if sd else None, na=not ins or inactive)
+        row["solvency"] = cell(solv_exp, pname(pkey(sd)) if sd else None, len(solv.get(cid, {}).get(sd, {})) if sd else None, na=not ins or inactive)
         # decks: a company that publishes investor presentations (any in the reader); the latest deck read into the deck layer
         dk = max(deck_docs.get(cid, set()), default=None)
         row["decks"] = cell(deck_exp[cid], pname(dk[0]) if dk else None, len(deck_docs.get(cid, ())), na=cid not in has_deck or inactive)
         dl = debt_last.get(cid)
-        row["debt"] = cell(exp, dl[0] if dl else None, dl[1] if dl else None, na=not filer or inactive or cid in debt_none)
+        row["debt"] = cell(exp, pname(pkey(dl[0])) if dl and dl[0] else None, dl[1] if dl else None, na=not filer or inactive or cid in debt_none)
         # ownership: listed companies (a MAYA filer with a share price); the interested-parties snapshot by quarter
         ow = own_by.get(cid)
         row["ownership"] = cell(own_exp, ow["last_q"] if ow else None, ow.get("quarters") if ow else None, na=not c.get("has_price"))
