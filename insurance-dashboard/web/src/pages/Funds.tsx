@@ -9,7 +9,7 @@ import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { countP, dsOf, expP, flowP, fundP, listP, monthIn, monthsBack, retP, seedHist, warmHist, y12P, type TrackRef } from '../lib/market';
 import { useSource, type Prov } from '../lib/prov';
-import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, Field, Kpi, Loading, Panel, Pick, Seg, Toolbar } from '../components/ui';
 import { chartBase, palette } from '../lib/theme';
 import { nf, pct, pubLabel, sn } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
@@ -78,8 +78,8 @@ function idxSrc(name: string, axis: number[], di: number, value: number, f?: Tra
     inputs: f ? ps.map((p) => monthIn(f, 'y', p)) : ps.map((p) => { const i = c!.p.indexOf(p); return { label: `ממוצע הקטגוריה · ${ym(p)}`, v: i < 0 ? '–' : sn(c!.y[i], 2) + '%' }; }) };
 }
 const catKey = (f: Fund) => `${f.prod} | ${f.track}`;
-const tone = (v: number | null | undefined) => (v == null ? '' : v < 0 ? 'neg' : 'pos');
-const P = ({ v, d = 1 }: { v: number | null | undefined; d?: number }) => (v == null ? <span className="muted">–</span> : <span className={`num ${tone(v)}`}>{pct(v, d, true)}</span>);
+/** A return is a level, not a change: ink, with its sign (colour is kept for deltas and signed P&L, ws4 W4-21). */
+const P = ({ v, d = 1 }: { v: number | null | undefined; d?: number }) => (v == null ? <span className="muted">–</span> : <span className="num">{pct(v, d, true)}</span>);
 
 /** Compounded return, annualised volatility and the deepest peak-to-trough fall over the last `n` monthly returns. All derived from the published monthly returns. */
 function stats(y: (number | null)[], n: number) {
@@ -127,7 +127,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
   const sel = useMemo(() => (sp.get('sel') ?? '').split(',').filter(Boolean), [sp]);
   const [closed, setClosed] = useState(false);
   // search, the closed-fund switch and the ranking period sit behind one button on a phone, so the first screen shows figures
-  const [more, setMore] = useState(() => window.matchMedia('(min-width: 761px)').matches);
+  const [more, setMore] = useState(false);  // the screens and the search open from the toolbar's "אפשרויות" (design lane: one toolbar row)
   const [q, setQ] = useState(sp.get('q') ?? '');
   // numeric screens: they hide rows, the rank stays the rank within the whole category
   const num = (k: string) => { const v = sp.get(k); return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null; };
@@ -203,15 +203,13 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
 
   return (
     <>
-      {!embedded && <FundsHead sub={<>{makersOnly ? 'יצרן מול השוק' : 'מסלולים'} · <Sourced src={() => countP('מסלולים פעילים', all.length, 'המסלולים שפורסמו בחודש האחרון בגמל-נט, פנסיה-נט וביטוח-נט')}><span className="num">{nf(all.length, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} />}
-      <section className="controls tight">
-        <div className="prim">
-          <Field label="מוצר"><select value={prod} onChange={(e) => set({ prod: e.target.value, track: '', sel: '' })}>{PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
-          {!makersOnly && <Field label="מסלול"><select value={T} onChange={(e) => set({ track: e.target.value, sel: '' })}><option value={ALL}>כל המסלולים ({tracks.reduce((u, [, c]) => u + c, 0)})</option>{tracks.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select></Field>}
-          <div className="field more-btn"><span>עוד</span><button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${per !== 'y12' || q || closed ? ' •' : ''}`}</button></div>
-        </div>
-        <div className={`extra${more ? '' : ' shut'}`}>
-          <div className="field"><span>דירוג לפי</span><Seg label="תקופה" value={per} onChange={(v) => set({ per: v })} options={PERIODS} /></div>
+      {(() => { const tools = <>
+        <Pick label="מוצר" value={prod} onChange={(p) => set({ prod: p, track: '', sel: '' })} options={PRODUCTS.filter((p) => all.some((f) => f.prod === p)).map((p) => [p, p] as [string, string])} />
+        {!makersOnly && <Pick label="מסלול" className="trackpick" value={T} onChange={(t) => set({ track: t, sel: '' })} options={[[ALL, 'כל המסלולים', nf(tracks.reduce((u, [, c]) => u + c, 0), 0)], ...tracks.map(([t, c]) => [t, t, nf(c, 0)] as [string, string, string])]} />}
+        <Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v })} options={PERIODS} />
+        <button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${q || closed || (feeMax ?? sharpeMin ?? assetsMin) != null ? ' •' : ''}`}</button>
+      </>; return embedded ? <Toolbar>{tools}</Toolbar> : <FundsHead sub={<>{makersOnly ? 'יצרן מול השוק' : 'מסלולים'} · <Sourced src={() => countP('מסלולים פעילים', all.length, 'המסלולים שפורסמו בחודש האחרון בגמל-נט, פנסיה-נט וביטוח-נט')}><span className="num">{nf(all.length, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} tools={tools} />; })()}
+      {more && <section className="controls opts">
           {!makersOnly && <Field label="חיפוש"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם קופה או גוף" /></Field>}
           {!makersOnly && <div className="field screen"><span>סינון{(feeMax ?? sharpeMin ?? assetsMin) != null && <button type="button" className="linkbtn" onClick={() => { setFeeMax(null); setSharpeMin(null); setAssetsMin(null); }}>ניקוי</button>}</span><div className="screen-in">
             <label>דמי ניהול עד <input type="number" inputMode="decimal" step="0.05" min="0" value={feeMax ?? ''} onChange={(e) => setFeeMax(e.target.value === '' ? null : Number(e.target.value))} aria-label="דמי ניהול מקסימליים, אחוז" />%</label>
@@ -219,8 +217,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
             <label>נכסים מ- <input type="number" inputMode="numeric" step="100" min="0" value={assetsMin ?? ''} onChange={(e) => setAssetsMin(e.target.value === '' ? null : Number(e.target.value))} aria-label="נכסים מינימליים, מיליוני ש&quot;ח" />מ׳ ש"ח</label>
           </div></div>}
           <button type="button" className="chip" aria-pressed={closed} onClick={() => setClosed(!closed)}>כולל קופות ענפיות ומפעליות</button>
-        </div>
-      </section>
+      </section>}
 
       {T === ALL && makers.names.length > 0 && (
         <Panel title="יצרן מול השוק" aside={<><span>מקום בכל מסלול לפי {PERIODS.find(([k]) => k === per)?.[1]} · המסלול הגדול של היצרן</span><span className="chip est">נגזר</span></>}>
@@ -267,7 +264,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
                   <td className="wide-only">{f.assets == null ? <span className="num">–</span> : <Sourced src={() => plain(f, asof, 'assets')}><span className="num">{nf(f.assets, 0)}</span></Sourced>}</td>
                   <td className="wide-only">{f.sharpe == null ? <span className="num">–</span> : <Sourced src={() => plain(f, asof, 'sharpe')}><span className="num">{nf(f.sharpe, 2)}</span></Sourced>}</td>
                   <td className="wide-only">{f.st == null ? <span className="num">–</span> : <Sourced src={() => expSrc(f, asof, 'st')}><span className="num">{`${nf(f.st, 0)}%`}</span></Sourced>}</td>
-                  <td className="wide-only">{f.yrs ? <Sourced src={() => topSrc(f)}><span className={`num ${f.top! * 2 > f.yrs ? 'pos' : ''}`}>{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>}</td>
+                  <td className="wide-only">{f.yrs ? <Sourced src={() => topSrc(f)}><span className="num">{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>}</td>
                   <td className="wide-only">{rt.score == null ? <span className="muted" title={rt.why}>–</span> : <Sourced src={() => ratingProv(f, rt, (c) => compSrc(f, c, asof))}><span className="num">{nf(rt.score, 0)}</span></Sourced>}</td>
                 </tr>
               ))}
@@ -287,7 +284,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
             columns={[
               { key: 'f', head: 'מסלול', value: (r) => r.f.name, cell: (r) => <Link to={`/funds/${r.f.k}`}>{r.f.name}</Link> },
               ...(([['ret', 'תשואה בחלון'], ['ann', 'שנתי'], ['vol', 'תנודתיות, שנתי'], ['dd', 'ירידה מרבית'], ['best', 'חודש טוב'], ['worst', 'חודש גרוע']] as const).map(([kind, head]): Column<CmpRow> => ({
-                key: kind, head, value: (r) => r.s?.[kind], unit: 'pct', signed: kind !== 'vol', tone: kind !== 'vol',
+                key: kind, head, value: (r) => r.s?.[kind], unit: 'pct', signed: kind !== 'vol',
                 src: (r) => (r.s ? statSrc(ref(r.f), hist[r.f.k], r.nn, kind, r.s) : null),
               }))),
               { key: 'fee', head: 'דמי ניהול', value: (r) => r.f.fee, unit: 'pct', d: 2, src: (r) => plain(r.f, asof, 'fee') },
@@ -356,7 +353,7 @@ export function FundCard() {
       <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span></div></div></div>
       <FundsNav />
       <section className="kpis">
-        <Kpi label="LTM" value={f.y12 == null ? '–' : SRC(() => perSrc(f, 'y12', asof), pct(f.y12, 1, true))} tone={f.y12 == null ? undefined : f.y12 < 0 ? 'neg' : 'pos'} sub={rankOf('y12') ? <RK k="y12" /> : ' '} />
+        <Kpi label="LTM" value={f.y12 == null ? '–' : SRC(() => perSrc(f, 'y12', asof), pct(f.y12, 1, true))}  sub={rankOf('y12') ? <RK k="y12" /> : ' '} />
         <Kpi label="3Y, שנתי" value={f.a3 == null ? '–' : SRC(() => perSrc(f, 'a3', asof), pct(f.a3, 1, true))} sub={rankOf('a3') ? <RK k="a3" /> : ' '} />
         <Kpi label="5Y, שנתי" value={f.a5 == null ? '–' : SRC(() => perSrc(f, 'a5', asof), pct(f.a5, 1, true))} sub={rankOf('a5') ? <RK k="a5" /> : ' '} />
         <Kpi label="YTD" value={f.ytd == null ? '–' : SRC(() => perSrc(f, 'ytd', asof), pct(f.ytd, 1, true))} sub={rankOf('ytd') ? <RK k="ytd" /> : ' '} />
@@ -381,8 +378,8 @@ export function FundCard() {
         <Panel title="לפי שנה" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
           <DataTable caption="תשואה לפי שנה" maxHeight={470} rows={years} rowKey={(r) => String(r.y)} export={{ name: `fox-fund-${f.k}-years`, title: `תשואה לפי שנה · ${f.name}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }} columns={[
             { key: 'y', head: 'שנה', value: (r) => r.y, cell: (r) => <><span className="num">{r.y}</span>{r.n < 12 && <span className="dim">{r.n} חודשים</span>}</> },
-            { key: 'me', head: 'המסלול', value: (r) => r.me, unit: 'pct', signed: true, tone: true, src: (r) => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`) },
-            { key: 'cat', head: 'ממוצע המסלולים', value: (r) => (cat ? r.cat : null), unit: 'pct', signed: true, tone: true, src: (r) => catYear(r) },
+            { key: 'me', head: 'המסלול', value: (r) => r.me, unit: 'pct', signed: true, src: (r) => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`) },
+            { key: 'cat', head: 'ממוצע המסלולים', value: (r) => (cat ? r.cat : null), unit: 'pct', signed: true, src: (r) => catYear(r) },
             { key: 'gap', head: 'פער', value: (r) => (r.me != null && r.cat != null && cat ? r.me - r.cat : null), unit: 'pct', signed: true, tone: true,
               src: (r) => ({ k: 'calc', title: `פער ${r.y} · ${f.name}`, value: pc(r.me! - r.cat!), formula: 'תשואת המסלול בשנה פחות תשואת ממוצע המסלולים באותה שנה',
                 inputs: [{ label: 'המסלול', v: pc(r.me), src: () => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`) }, { label: `ממוצע ${f.track}`, v: pc(r.cat), src: () => catYear(r) }] }) },

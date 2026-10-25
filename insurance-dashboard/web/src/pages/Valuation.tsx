@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
-import { Empty, ErrorBox, Field, Loading, Panel } from '../components/ui';
+import { Empty, ErrorBox, Loading, Panel, Pick, Toolbar } from '../components/ui';
 import { DensityToggle } from '../components/MacroDensity';
 import { chartBase } from '../lib/theme';
 import { nf, pubLabel, type Unit } from '../lib/format';
@@ -15,7 +15,6 @@ import { periodTag, type CompanyKpi } from '../lib/kpi';
 import type { Prov } from '../lib/prov';
 import type { RegistryCompany } from '../lib/types';
 import { useStored } from '../lib/local';
-import { usePhone } from '../lib/useMedia';
 import { load, useIfrsData, useKpis, useMarket, useRegistry } from '../lib/useData';
 import { useMacro, mLabel } from '../lib/macro';
 import { ASSUME0, csmMultiples, impliedKe, justifiedPb, keOf, keProv, marketOf, mil, requiredRoe, rfProv, useCsm, useInsurers, xS, pctS, MM,
@@ -56,7 +55,6 @@ export function ValuationLayout() {
   const { id } = useParams();
   const nav = useNavigate();
   const loc = useLocation();
-  const phone = usePhone();
   const reg = useRegistry();
   // an id the registry does not know is answered before any company data is fetched
   const known = !id || !!reg.data?.some((c) => c.id === id);
@@ -103,11 +101,12 @@ export function ValuationLayout() {
       <div className="pagehead">
         <div><h1><span className="icotile"><Icon name="value" /></span>הערכת שווי · {entry.name_he}</h1>
           <div className="sub">מודלים על נתוני הדוחות; המחיר והשווי בשוק הם קלט בלבד · {k.latest('equity') && <>הון לפי {periodTag(k.latest('equity')!.period)}</>}</div></div>
-        <div className="vhead-tools">
-          <Field label="חברה"><select value={id} onChange={(e) => nav(`/valuation/${e.target.value}${tab ? `/${tab}` : ''}`)}>{ids.map((x) => <option key={x} value={x}>{reg.data!.find((c) => c.id === x)?.name_he}</option>)}</select></Field>
-          <DensityToggle />
-        </div>
       </div>
+      {/* one toolbar row: the models as tabs, the company and the density at the end (design lane) */}
+      <Toolbar lead={<nav className="subnav" aria-label="מודל">{TABS.map(([to, l, adv]) => <NavLink key={to} to={to ? to : '.'} end={!to} className={adv ? 'adv' : undefined}>{l}</NavLink>)}</nav>}>
+        <Pick label="חברה" cap="חברה" value={id} onChange={(x) => nav(`/valuation/${x}${tab ? `/${tab}` : ''}`)} options={ids.map((x) => [x, reg.data!.find((c) => c.id === x)?.name_he ?? x] as [string, string])} />
+        <DensityToggle />
+      </Toolbar>
       <section className="vinputs" aria-label="קלט שוק">
         <div className="pxfield">
           <span className="l">מחיר למניה <span className="chip est">קלט</span></span>
@@ -122,11 +121,10 @@ export function ValuationLayout() {
         <div><span className="l">ROE, LTM</span><span className="v"><Fig v={mkt.roe} text={(v) => pctS(v)} src={mkt.roeProv} /></span></div>
         <div><span className="l">תשואת דיבידנד, LTM</span><span className="v"><Fig v={mkt.dy} text={(v) => pctS(v)} src={mkt.dyProv} /></span></div>
       </section>
-      <details className="vassume panel" open={!phone}>
+      <details className="vassume panel">
         <summary><h2>הנחות</h2><span className="muted vas-sum">משותפות לכל המודלים ולטבלת העמיתים <bdi>ke <b className="num">{fin(ke) ? pctS(ke, 2) : '–'}</b></bdi> <bdi>g <b className="num">{pctS(a.g, 2)}</b></bdi> <bdi>מס <b className="num">{pctS(a.tax, 2)}</b></bdi></span></summary>
         {assumeRow}
       </details>
-      <nav className="subnav" aria-label="מודל">{TABS.map(([to, l, adv]) => <NavLink key={to} to={to ? to : '.'} end={!to} className={adv ? 'adv' : undefined}>{l}</NavLink>)}</nav>
       <Outlet context={ctx} />
     </div>
   );

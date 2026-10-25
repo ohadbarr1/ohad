@@ -1,12 +1,13 @@
 import { CsmEconomics } from '../components/CsmEconomics';
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CompanyIfrs } from './CompanyIfrs';
 import { CompanyReview } from './CompanyReview';
 import { CompanySop } from './CompanySop';
 import { CompanySeries } from './CompanySeries';
 import { Link, Navigate, NavLink, Outlet, useLocation, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
-import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, Field, Loading, Menu, Panel, Pick, Seg, Toolbar } from '../components/ui';
+import { createPortal } from 'react-dom';
 import { GroupPanel } from './Market';
 import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { foxOption, type FoxSeries } from '../lib/foxchart';
@@ -33,7 +34,11 @@ import { countChanged, useVintage, VintageMark, VintageToggle, vintageProv } fro
 import { FL, parsePolicy, policyLabel, policyParam, type Line, type Policy } from '../lib/facts';
 import type { RegistryCompany } from '../lib/types';
 
-export interface Ctx { entry: RegistryCompany; store: CompanyStore | null; storeError: string | null; market: Market | null }
+export interface Ctx { entry: RegistryCompany; store: CompanyStore | null; storeError: string | null; market: Market | null;
+  /** the end of the company toolbar row: a view renders its own controls there (design lane: one toolbar row, lead first) */
+  tools: HTMLElement | null }
+/** A view's controls, placed in the company toolbar row beside the tabs (null until the row has mounted). */
+export function CompanyTools({ children }: { children: ReactNode }) { const { tools } = useCtx(); return tools ? createPortal(children, tools) : null; }
 export const useCtx = () => useOutletContext<Ctx>();
 export const DOC_TYPE: Record<string, string> = { annual: 'שנתי', quarterly: 'רבעוני', presentation: 'מצגת', solvency: 'כושר פירעון' };
 
@@ -51,6 +56,7 @@ export function CompanyLayout() {
   const kpi = useKpiData(!!entry);
   const phone = usePhone();
   const [noteOpen, setNoteOpen] = useState(false);
+  const [tools, setTools] = useState<HTMLElement | null>(null);
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <NotFound />;
@@ -80,36 +86,41 @@ export function CompanyLayout() {
           {filer && <p className={`filer-note${noteOpen ? ' open' : ''}`} title={filer.note} onClick={() => setNoteOpen((o) => !o)}><span className="chip est">{filer.name} · <span className="num">{filer.stake}%</span></span> {filer.note}</p>}
         </div>
         <div className="head-acts">
-          <CompanyWorkbook id={entry.id} />
-          {entry.has_price && <Link className="chip valchip" to={`/valuation/${entry.id}`} title="הערכת שווי: P/B מוצדק, הכנסה שיורית, SOTP">הערכת שווי</Link>}
+          <CompanyActions id={entry.id} valuation={entry.has_price} />
         </div>
       </div>
-      {/* four places on every width: the report day, the statements (with their views beneath), long-term savings, documents */}
-      <nav className="subnav cnav" aria-label="חברה">
-        <NavLink to={`.${keep}`} end title="יום הדוח: מה הדוח הדפיס, מול שנה ורבעון קודמים">דוח</NavLink>
-        {(entry.has_financials || !fund) && <NavLink to={`${views[0]?.[0] ?? 'financials'}${keep}`} className={() => (inStatements ? 'active' : '')}>דוחות</NavLink>}
-        {entry.market_group && <NavLink to="savings"><span className="lg">חיסכון ארוך טווח</span><span className="sm">חיסכון</span></NavLink>}
-        <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
-      </nav>
-      {inStatements && views.length > 1 && (
-        <nav className="subnav sub2 cnav2" aria-label="דוחות">
-          {views.map(([to, lg, sm]) => <NavLink key={to} to={`${to}${keep}`}><span className="lg">{lg}</span><span className="sm">{sm}</span></NavLink>)}
+      {/* one toolbar row: the four places (the report day, the statements with their views, long-term savings, documents), then the view's own controls */}
+      <Toolbar className="cotools" lead={<>
+        <nav className="subnav cnav" aria-label="חברה">
+          <NavLink to={`.${keep}`} end title="יום הדוח: מה הדוח הדפיס, מול שנה ורבעון קודמים">דוח</NavLink>
+          {(entry.has_financials || !fund) && <NavLink to={`${views[0]?.[0] ?? 'financials'}${keep}`} className={() => (inStatements ? 'active' : '')}>דוחות</NavLink>}
+          {entry.market_group && <NavLink to="savings"><span className="lg">חיסכון ארוך טווח</span><span className="sm">חיסכון</span></NavLink>}
+          <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
         </nav>
-      )}
-      <Outlet context={{ entry, store, storeError, market } satisfies Ctx} />
+        {inStatements && views.length > 1 && (
+          <nav className="subnav sub2 cnav2" aria-label="דוחות">
+            {views.map(([to, lg, sm]) => <NavLink key={to} to={`${to}${keep}`}><span className="lg">{lg}</span><span className="sm">{sm}</span></NavLink>)}
+          </nav>
+        )}
+      </>}><span ref={setTools} className="cotools-slot" /></Toolbar>
+      <Outlet context={{ entry, store, storeError, market, tools } satisfies Ctx} />
     </>
   );
 }
 
-/** "הורד את חוברת החברה": every statement, KPI, IFRS 17 fact, source of profit and savings metric in one workbook, each value with its page (lane G) */
-function CompanyWorkbook({ id }: { id: string }) {
+/** The company's actions in one menu: the workbook ("הורד את חוברת החברה": every statement, KPI, IFRS 17 fact, source of profit and savings
+    metric, each value with its page, lane G) and the way to the valuation. The menu shows the workbook's progress while it is being built. */
+function CompanyActions({ id, valuation }: { id: string; valuation: boolean }) {
   const [state, setState] = useState<string | null>(null);
   const run = async () => {
     setState('מכין…');
     try { const { exportCompany } = await import('../lib/exportCompany'); await exportCompany(id, (s) => setState(`${s}…`)); setState(null); }
     catch { setState('שגיאה'); setTimeout(() => setState(null), 2000); }
   };
-  return <button type="button" className="chip valchip wb" onClick={() => void run()} disabled={!!state} title="חוברת Excel: כל הדוחות, נתוני המפתח, IFRS 17, מקורות רווח וחיסכון, עם מקור לכל ערך">{state ?? 'חוברת Excel'}</button>;
+  return <Menu label="פעולות" summary={state ?? 'פעולות'} align="end" className="coacts" items={[
+    { key: 'wb', label: 'חוברת Excel', hint: 'כל הדוחות והנתונים, עם מקור לכל ערך', disabled: !!state, run: () => void run() },
+    ...(valuation ? [{ key: 'val', label: 'הערכת שווי', hint: 'P/B מוצדק · הכנסה שיורית · SOTP', to: `/valuation/${id}` }] : []),
+  ]} />;
 }
 
 function NoFinancials({ entry }: { entry: RegistryCompany }) {
@@ -435,7 +446,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
     const pi = lastPi!, f0 = store.byMetric.get(mi)?.get(pi), f = seen(f0) ? f0 : undefined, v = val(mi, pi), pp = prior(pi), unit = d.metrics[mi].unit;
     const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{fmtCell(v, unit, scale)}</span>;
     return <>
-      <td>{vMark(mi, pi)}{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? pdfHref(mi, pi) ?? open(f.page, f.u) : null}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(d.metrics[mi])} label={d.metrics[mi].label} /></td>
+      <td className="lead">{vMark(mi, pi)}{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? pdfHref(mi, pi) ?? open(f.page, f.u) : null}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(d.metrics[mi])} label={d.metrics[mi].label} /></td>
       <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit, mi, pi, pp, 'YoY')}</td>
       {qoqPi != null && <td>{change(v, val(mi, qoqPi), unit, mi, pi, qoqPi, 'QoQ')}</td>}
     </>;
@@ -470,18 +481,25 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
         const sheetF = <Field label="דוח"><select value={sheetCode} onChange={(e) => { setSheetCode(e.target.value); setSel([]); }} aria-label="דוח">
           {optGroups.map(({ g, items }) => <optgroup key={g} label={d.groups[g]}>{items.map((x) => <option key={x.code} value={x.code}>{items.length > 1 || sheetName(x.code) !== d.groups[g] ? sheetName(x.code) : d.groups[g]}{span(x.code)}</option>)}</optgroup>)}
         </select></Field>;
+        const sheetM = <Menu label="דוח" cap="דוח" value={sheetCode} className="sheetpick" onPick={(c) => { setSheetCode(c); setSel([]); }}
+          items={optGroups.flatMap(({ g, items }) => items.map((x) => ({ key: x.code, group: d.groups[g], label: items.length > 1 || sheetName(x.code) !== d.groups[g] ? sheetName(x.code) : d.groups[g], hint: span(x.code).replace(/^ · /, '') || undefined })))} />;
         const periodF = <div className="field"><span>תקופה</span><Seg<string> label="תקופה" value={curType} onChange={setType} options={types.map((t) => [t, periodLong(t)] as [string, string])} /></div>;
         const stdOpts = hasStd ? ([['17', 'IFRS 17'], ['c', 'שורות רציפות'], ['4', 'IFRS 4']] as const).filter(([k]) => colsOf(k).length).map(([k, n]) => [k, n] as ['17' | '4' | 'c', string]) : [];
         const stdCols = hasStd ? colsOf(stdTab) : [];
         const stdF = hasStd && <div className="field"><span>תקן</span><Seg<'17' | '4' | 'c'> label="תקן חשבונאי" value={stdTab} onChange={(k) => { setStdTab(k); setRange([null, null]); setSel([]); }} options={stdOpts} /></div>;
         const rngTxt = stdCols.length ? <span className="rng num">{pl(stdCols[0])} עד {pl(stdCols[stdCols.length - 1])}</span> : null;
         const chartF = <div className="field"><span>גרף</span><button type="button" className={`btn${showChart ? ' primary' : ''}`} aria-pressed={showChart} onClick={() => setShowChart((v) => !v)}>{showChart ? 'גרף מוצג' : 'הצגת גרף'}</button></div>;
+        const stdM = hasStd && <Pick<'17' | '4' | 'c'> label="תקן חשבונאי" value={stdTab} onChange={(k) => { setStdTab(k); setRange([null, null]); setSel([]); }} options={stdOpts} />;
+        // the vintage as a menu: the latest print, each period as first reported, or as of one report
+        const vinM = fromReports && <Menu label="גרסה" value={policyParam(vinPolicy) || 'latest'} onPick={(k) => setVinPolicy(parsePolicy(k === 'latest' ? null : k))}
+          summary={vinPolicy !== 'latest' && !vin.facts && !vin.error ? 'טוען…' : nRestated ? <>{policyLabel(vinPolicy)} <span className="num muted">({nRestated})</span></> : policyLabel(vinPolicy)}
+          items={[{ key: 'latest', label: 'מעודכן', hint: 'ההדפסה האחרונה של כל תקופה' }, { key: 'original', label: 'כפי שדווח לראשונה', hint: 'כל תקופה בדוח שלה' },
+            ...(vintages ?? []).map(([dt, l]) => ({ key: `asof:${dt}`, group: 'נכון לדוח', label: l }))]} />;
         const colsF = <div className="field"><span>עמודות</span><Seg<'c' | 'a'> label="עמודות" value={compact ? 'c' : 'a'} onChange={(v) => setCompact(v === 'c')} options={[['c', 'אחרונה ושינוי'], ['a', 'כל התקופות']]} /></div>;
         const vinF = fromReports && <div className="field"><span>גרסה</span><VintageToggle value={vinPolicy} onChange={setVinPolicy} busy={vinPolicy !== 'latest' && !vin.facts && !vin.error} vintages={vintages}
           changed={nRestated} /></div>;
         const active = Number(!!(range[0] || range[1])) + Number(!!q) + Number(mode === 'yoy') + Number(dim !== 'all') + Number(scale !== 'm');
         const opts = <>
-          {entityF}
           <Field label="יחידות"><select value={scale} onChange={(e) => setScale(e.target.value as Scale)} disabled={mode === 'yoy'}>{SCALES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></Field>
           <div className="field"><span>תצוגה</span><Seg<'value' | 'yoy'> label="תצוגה" value={mode} onChange={setMode} options={[['value', 'ערך'], ['yoy', 'YoY %']]} /></div>
           <div className="field"><span>סדר</span><Seg<'new' | 'old'> label="סדר עמודות" value={oldestFirst ? 'old' : 'new'} onChange={(v) => setOldestFirst(v === 'old')} options={[['new', 'חדש תחילה'], ['old', 'ישן תחילה']]} /></div>
@@ -502,13 +520,16 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
         const title = sv ? sheetName(sheetCode) : '';
         if (phone) return <>
           <ContextBar onOpen={() => setMore(true)}>{title} · {periodLong(curType)}{hasStd ? ` · ${stdOpts.find(([k]) => k === stdTab)?.[1] ?? ''}` : ''}{fromReports && vinPolicy !== 'latest' ? ` · ${policyLabel(vinPolicy)}` : ''}{active ? ` · ${active} הגדרות` : ''}</ContextBar>
-          <Sheet open={more} onClose={() => setMore(false)} title="הדוח המוצג">{sheetF}{periodF}{stdF}{vinF}{rngTxt}{colsF}{chartF}{opts}</Sheet>
+          <Sheet open={more} onClose={() => setMore(false)} title="הדוח המוצג">{sheetF}{periodF}{stdF}{vinF}{rngTxt}{colsF}{chartF}{entityF}{opts}</Sheet>
         </>;
         return <>
-          <section className="toolbar">{sheetF}{periodF}{stdF}{vinF}{rngTxt}{chartF}
-            <div className="field"><span>עוד</span><button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${active ? ` · ${active}` : ''}`}</button></div>
-          </section>
-          {more && <section className="controls opts">{opts}</section>}
+          <CompanyTools>
+            {sheetM}
+            <Seg<string> label="תקופה" value={curType} onChange={setType} options={types.map((t) => [t, t === 'I' ? periodLong(t) : t] as [string, string])} />
+            {stdM}{vinM}
+            <button type="button" className={`btn${more ? ' primary' : ''}`} aria-expanded={more} onClick={() => setMore((v) => !v)}>{`אפשרויות${active ? ` · ${active}` : ''}`}</button>
+          </CompanyTools>
+          {more && <section className="controls opts">{entityF}{chartF}{rngTxt}{opts}</section>}
         </>;
       })()}
 
@@ -559,10 +580,10 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
       )}
 
       {!fromReports && longSheet && <div className="explain">הטבלה הזו היא הדוח המלא מהדוח האחרון בלבד, ולכן יש בה רק תקופת הדוח ותקופת ההשוואה. <button type="button" className="btn" onClick={() => { setSheetCode(longSheet.code); setSel([]); }}>לרצף הרבעוני מ-2021</button></div>}
-      <Panel title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<><span>{!sv ? '' : fromReports ? `נטוי = מחושב מהשנתי · אפור = IFRS 4${nRestated ? ` · נקודה = הוצג מחדש (${nRestated})` : ''} · כל ערך מקושר לעמוד המקור` : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>{sv && rows.length > 0 && <button type="button" className="btn" onClick={() => void exportXlsx()} title="גיליון Excel: המספרים כמספרים, כל מספר מודפס מקושר לעמוד שלו">Excel</button>}</>}>
+      <Panel className="finpanel" title={sv ? (sheetName(sheetCode).startsWith(d.groups[sv.group]) ? sheetName(sheetCode) : `${d.groups[sv.group]} · ${sheetName(sheetCode)}`) : ''} aside={<><span className="legend-note">{!sv ? '' : fromReports ? `נטוי = מחושב מהשנתי · אפור = IFRS 4${nRestated ? ` · נקודה = הוצג מחדש (${nRestated})` : ''} · כל ערך מקושר לעמוד המקור` : `עמודים ${d.sheets.find((s) => s.code === sheetCode)?.pages} ב-PDF`}</span>{sv && rows.length > 0 && <button type="button" className="btn" onClick={() => void exportXlsx()} title="גיליון Excel: המספרים כמספרים, כל מספר מודפס מקושר לעמוד שלו">Excel</button>}</>}>
         <div className="scroll" style={{ maxHeight: 640 }}>
-          <table className={`${dense ? 'dense' : ''}${compact ? ' compact' : ''}`}>
-            <thead>{compact && lastPi != null ? <tr><th>שורה</th><th>{pl(lastPi)}</th><th>YoY</th>{qoqPi != null && <th>QoQ</th>}</tr> : <tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi}>{pl(pi)}</th>)}<th>עמ׳</th></tr>}</thead>
+          <table className={`fin${dense ? ' dense' : ''}${compact ? ' compact' : ''}`}>
+            <thead>{compact && lastPi != null ? <tr><th>שורה</th><th className="lead">{pl(lastPi)}</th><th>YoY</th>{qoqPi != null && <th>QoQ</th>}</tr> : <tr><th>שורה</th>{colsDesc.map((pi) => <th key={pi} className={pi === lastPi ? 'lead' : undefined}>{pl(pi)}</th>)}<th>עמ׳</th></tr>}</thead>
             <tbody>
               {rows.map((r) => {
                 if (r.m.header) return <tr key={r.idx} className={`sec${r.m.std ? ' std' : ''}`}><td colSpan={compact ? 4 : colsDesc.length + 2}>{r.m.label}</td></tr>;
@@ -580,7 +601,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
                       <NoteMark co={companyId} m={lineKey(r.m)} label={r.m.label} periods={compact && lastPi != null ? [pl(lastPi)] : colsDesc.map(pl)} add />
 
                     </div></td>
-                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi}>{vMark(r.idx, pi)}{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(r.m)} label={r.m.label} /></td>; })}
+                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi} className={pi === lastPi ? 'lead' : undefined}>{vMark(r.idx, pi)}{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(r.m)} label={r.m.label} /></td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td></>}
                   </tr>
                 );

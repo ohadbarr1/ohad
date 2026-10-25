@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 import { Icon } from './Icon';
 import type { ReactNode } from 'react';
+import { Toolbar } from './ui';
 
 /** One section for the regulator's fund data: one title, one row of tabs, on every page of it. */
 export function FundsNav() {
@@ -15,11 +16,12 @@ export function FundsNav() {
   );
 }
 
-export function FundsHead({ sub }: { sub?: ReactNode }) {
+/** The section head: the title, its tabs and (design lane) the page's own controls on the same toolbar row. */
+export function FundsHead({ sub, tools }: { sub?: ReactNode; tools?: ReactNode }) {
   return (
     <>
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="market" /></span>קופות ושוק</h1>{sub && <div className="sub">{sub}</div>}</div></div>
-      <FundsNav />
+      <Toolbar lead={<FundsNav />}>{tools}</Toolbar>
     </>
   );
 }

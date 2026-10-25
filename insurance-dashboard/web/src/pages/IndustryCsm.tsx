@@ -9,6 +9,8 @@ import { SensView } from './csm/SensView';
 import { CapitalView } from './csm/CapitalView';
 import { CurveView } from './csm/CurveView';
 import { IndustryIfrs } from './IndustryIfrs';
+import { IndustryTools } from './Industry';
+import { usePhone } from '../lib/useMedia';
 import '../styles/csm.css';
 
 /** The views of the ledger, in the order an analyst reads an IFRS 17 quarter: the movement, its economics, what moves it, what it pays out, the rates under it, every printed row. */
@@ -26,12 +28,13 @@ export function IndustryCsm() {
   const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
   // on a phone the tab row scrolls: the view in force is brought into it
   const nav = useRef<HTMLElement>(null);
+  const phone = usePhone();
   useEffect(() => { const el = nav.current, a = el?.querySelector<HTMLElement>('[aria-current="page"]'); if (el && a && el.scrollWidth > el.clientWidth) { const r = a.getBoundingClientRect(), n = el.getBoundingClientRect(); el.scrollLeft += (r.left + r.width / 2) - (n.left + n.width / 2); } }, [view]);
   return (
     <div className="csmpage">
-      <nav ref={nav} className="csm-views" aria-label="IFRS 17 · CSM · הון">
-        {CSM_VIEWS.map(([k, l]) => <Link key={k} to={k === 'ledger' ? '?' : `?view=${k}`} replace aria-current={k === view ? 'page' : undefined}>{l}</Link>)}
-      </nav>
+      {(() => { const tabs = <nav ref={nav} className={phone ? 'csm-views' : 'subnav sub2 csm-tabs'} aria-label="IFRS 17 · CSM · הון">
+        {CSM_VIEWS.map(([k, l]) => <Link key={k} className={k === view ? 'active' : undefined} to={k === 'ledger' ? '?' : `?view=${k}`} replace aria-current={k === view ? 'page' : undefined}>{l}</Link>)}
+      </nav>; return phone ? tabs : <IndustryTools at="lead">{tabs}</IndustryTools>; })()}
       {view === 'facts' ? <IndustryIfrs />
         : error ? <ErrorBox what="נתוני CSM" error={error} />
         : !L || !reg.data ? <Loading what="ספר ה-CSM" />

@@ -5,6 +5,7 @@ import { Sourced } from '../../components/Source';
 import { useSource, type Prov } from '../../lib/prov';
 import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../../components/ui';
 import { ContextBar, Sheet } from '../../components/Sheet';
+import { IndustryTools } from '../Industry';
 import { CHART_FONT, chartBase } from '../../lib/theme';
 import { usePhone } from '../../lib/useMedia';
 import { nf, sn, dateLabel } from '../../lib/format';
@@ -81,7 +82,7 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
   const C = ids.includes(co) ? co : ids[0];
   const tor = shocks.map(([k, s]) => ({ k, s, r: cell(C, (r) => keyOf(r) === k) })).filter((x) => x.r && shown(x.r) != null);
   const controls = (
-    <section className="controls">
+    <section className={phone ? "controls" : "tbar-fields"}>
       <div className="field"><span>השפעה על</span><Seg<EffPick> label="השפעה על" value={eff} onChange={setEff} options={[['csm', 'CSM'], ['profit', 'רווח'], ['equity', 'הון']]} /></div>
       <div className="field"><span>בסיס</span><Seg<'net' | 'gross'> label="בסיס" value={basis} onChange={setBasis} options={[['net', 'נטו'], ['gross', 'ברוטו']]} /></div>
       <div className="field"><span>יחידה</span><Seg<Unit> label="יחידה" value={unit} onChange={setUnit} options={[['v', 'מיליוני ש"ח'], ['csm', '% מה-CSM'], ['eq', '% מההון']]} /></div>
@@ -90,7 +91,7 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
   const pages = ids.map((id) => { const r = rows.find((x) => x.c === id && x.pg != null); return { id, r }; });
   return (
     <>
-      {phone ? <><ContextBar onOpen={() => setCtl(true)}>{EFF_L[eff]} · {BASIS[basis]} · {unit === 'v' ? 'מיליוני ש"ח' : unit === 'csm' ? '% מה-CSM' : '% מההון'}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="רגישויות">{controls}</Sheet></> : controls}
+      {phone ? <><ContextBar onOpen={() => setCtl(true)}>{EFF_L[eff]} · {BASIS[basis]} · {unit === 'v' ? 'מיליוני ש"ח' : unit === 'csm' ? '% מה-CSM' : '% מההון'}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="רגישויות">{controls}</Sheet></> : <IndustryTools>{controls}</IndustryTools>}
       <Panel title={`רגישויות · ${EFF_L[eff]}`} aside={<span>{periodName(rp)} · {unit === 'v' ? 'מיליוני ש"ח, כפי שהודפס' : 'נגזר: ההשפעה ÷ היתרה של החברה'}</span>}>
         <div className="scroll"><table className="sens csm-sens">
           <thead><tr><th>תרחיש</th>{ids.map((id) => <th key={id}><button type="button" className={`thsel ${C === id ? 'on' : ''}`} onClick={() => setCo(id)}><Dot id={id} />{name(id)}</button></th>)}</tr></thead>
