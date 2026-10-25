@@ -72,7 +72,7 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `build_registry` | auto · deploy | build_kpi, canon_kpi, facts, build_series, build_sop, build_lts, build_targets, … | peers/ |
 | `build_market_home` | auto · deploy | build_market | market_home.json |
 | `build_cards` | auto · deploy | facts, build_kpi, canon_kpi, build_targets, build_ifrs, build_csm, build_registry | cards/ (report card per filing; `check_cards.py` = gate `cards`) |
-| `build_since` | auto, daily · deploy | build_documents, build_restatements, build_targets, build_market | since.json (per-company dated events, last 400 days) |
+| `build_since` | auto, daily · deploy | build_documents, facts, build_targets, build_market | since.json (per-company dated events, last 400 days) |
 | `build_coverage` | auto, daily · deploy | every step that writes JSON | coverage.json (reads qa.json from the last gate) |
 
 After the build: `python3 pipeline/gate.py` (all checks; writes qa.json, consistency.json). It is not a step: deploy.sh runs it after

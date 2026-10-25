@@ -5,7 +5,7 @@ python3 pipeline/build_since.py      (standard library only; reads published fil
 The site keeps, per company, the day the reader last opened it (lib/visits.ts, a stored key that sync carries). Every surface that
 names the company (header, home scoreboard, watchlist, omnibox) compares that day with the events here and marks what is newer:
   f  a filing on MAYA (Hebrew; report, annual, deck, solvency report)    companies/<id>.docs.json
-  r  a report that restated earlier periods (statements rows changed)    restatements.json
+  r  a report that restated earlier periods (as Report Day counts them)   companies/<id>.json restated
   t  a management target first stated, or revised, in a filing or deck  targets.json
   m  a new month of the regulator's fund data for the company's group    market.json (meta.fetched: the day fox received it)
 Events: [kind, ISO date, id, ...payload]; the id is stable, so an event seen on the day of a visit is not shown again.
@@ -51,20 +51,28 @@ def main():
                 continue
             ev[c].append(["f", d["date"], f"f:{d['id']}", d["type"], d["period"], d["id"], rel(d["url"]), d.get("pages")])
 
-    # restatements: one event per restating report
-    rs = load("restatements.json")
-    col = {k: i for i, k in enumerate(rs["cols"])}
-    agg = defaultdict(lambda: [0, 0])
-    for r in rs["rows"]:
-        key = (r[col["co"]], r[col["d1"]], r[col["in"]])
-        v0, v1 = r[col["v0"]], r[col["v1"]]
-        agg[key][0] += 1
-        agg[key][1] += int(v0 == 0 or abs(v1 - v0) / abs(v0) >= 0.02)
-    for (c, d1, season), (n, big) in agg.items():
-        doc = rs["docs"].get(str(d1))
-        if not doc or doc[3] < start:
+    # restatements: one event per restating report, counted as Report Day counts them (companies/<id>.json `restated`: figures of earlier
+    # periods that the report printed with a different value), dated by the report's publication
+    def key_of(end):
+        return f"{end[:4]}FY" if end.endswith("12-31") else f"{end[:4]}Q{['03-31', '06-30', '09-30'].index(end[5:]) + 1}"
+    for c in ids:
+        wb, dp = DATA / "companies" / f"{c}.json", DATA / "companies" / f"{c}.docs.json"
+        if not wb.exists() or not dp.exists():
             continue
-        ev[c].append(["r", doc[3], f"r:{d1}", season, d1, doc[4], n, big])
+        reps = {}
+        for d in json.loads(dp.read_text(encoding="utf-8"))["docs"]:
+            if d["type"] in ("quarterly", "annual") and not d.get("en"):
+                reps.setdefault(d["period"], d)
+        agg = defaultdict(lambda: [0, 0])
+        for r in json.loads(wb.read_text(encoding="utf-8")).get("restated") or []:
+            agg[r[11]][0] += 1
+            agg[r[11]][1] += int(r[5] == 0 or abs(r[8] - r[5]) / abs(r[5]) >= 0.02)
+        for end, (n, big) in agg.items():
+            season = key_of(end)
+            doc = reps.get(season)
+            if not doc or doc["date"] < start:
+                continue
+            ev[c].append(["r", doc["date"], f"r:{doc['id']}", season, doc["id"], rel(doc["url"]), n, big])
 
     # targets: the statement that first set a target, and each later revision of its value (deck rows carry dated revisions)
     tg = load("targets.json")

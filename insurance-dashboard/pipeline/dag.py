@@ -134,7 +134,7 @@ STEPS = [
          [D + "cards"], code=["pipeline/reportday.py", "pipeline/csm_resolve.py"], groups={"deploy"},
          note="report cards: Report Day roles, csm_resolve, Peer Table cells, targets"),
     step("build_since", "pipeline/build_since.py",
-         [D + "companies/index.json", D + "companies/*.docs.json", D + "restatements.json", D + "targets.json", D + "market.json"],
+         [*WB, D + "companies/index.json", D + "companies/*.docs.json", D + "targets.json", D + "market.json"],
          [D + "since.json"], daily=True, groups={"deploy"}, note="dated events per company for the \"since you last looked\" marks (last 400 days)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
