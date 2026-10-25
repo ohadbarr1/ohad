@@ -8,12 +8,13 @@ import { EconView } from './csm/EconView';
 import { SensView } from './csm/SensView';
 import { CapitalView } from './csm/CapitalView';
 import { CurveView } from './csm/CurveView';
+import { StressLab } from './csm/StressLab';
 import { IndustryIfrs } from './IndustryIfrs';
 import '../styles/csm.css';
 
 /** The views of the ledger, in the order an analyst reads an IFRS 17 quarter: the movement, its economics, what moves it, what it pays out, the rates under it, every printed row. */
 export const CSM_VIEWS = [
-  ['ledger', 'גשר CSM'], ['econ', 'כלכלת CSM'], ['sens', 'רגישויות'], ['capital', 'הון ודיבידנד'], ['curve', 'עקום ריבית'], ['facts', 'כל השורות'],
+  ['ledger', 'גשר CSM'], ['econ', 'כלכלת CSM'], ['sens', 'רגישויות'], ['stress', 'מעבדת תרחישים'], ['capital', 'הון ודיבידנד'], ['curve', 'עקום ריבית'], ['facts', 'כל השורות'],
 ] as const;
 export type CsmView = (typeof CSM_VIEWS)[number][0];
 
@@ -38,6 +39,7 @@ export function IndustryCsm() {
         : view === 'capital' ? <CapitalView L={L} name={name} />
         : view === 'econ' ? <EconView L={L} name={name} />
         : view === 'sens' ? <SensView L={L} name={name} />
+        : view === 'stress' ? <StressLab L={L} name={name} />
         : view === 'curve' ? <CurveView L={L} name={name} />
         : <LedgerView L={L} name={name} />}
     </div>
