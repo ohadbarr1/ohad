@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Star } from '../Follow';
 import { idCss } from '../../lib/identity';
+import { SinceDot } from '../SinceBadge';
 
 export interface ListRow {
   id: string; name: string; meta: string; stale: boolean;
@@ -22,7 +23,7 @@ export function CompanyList({ rows, label }: { rows: ListRow[]; label: string })
           <span className="hm-star"><Star id={r.id} name={r.name} /></span>
           <Link className="hm-who" to={`/company/${r.id}`}>
             <i className="hm-dot" style={{ background: idCss(r.id) }} aria-hidden="true" />
-            <span className="hm-name">{r.name}</span>
+            <span className="hm-name">{r.name}</span><SinceDot id={r.id} />
             <span className="hm-meta">{r.meta}</span>
           </Link>
           <span className="hm-fig">

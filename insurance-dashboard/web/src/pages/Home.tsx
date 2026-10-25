@@ -8,6 +8,7 @@ import { cls, nf, pct } from '../lib/format';
 import { useKpis, useMarket, useRegistry } from '../lib/useData';
 import { useStored, useWatchlist } from '../lib/local';
 import { Star } from '../components/Follow';
+import { SinceDot } from '../components/SinceBadge';
 import { usePhone } from '../lib/useMedia';
 import { SeasonStrip } from '../components/home/SeasonStrip';
 import { CompanyList, type ListRow } from '../components/home/CompanyList';
@@ -112,7 +113,7 @@ export function Home() {
                   </tr>
                 ))}
                 columns={[
-                  { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, filer, q }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><span className="dim">{KIND[c.kind] ?? ''}</span>{filer && <span className="chip est" title={filer.note}>{`${filer.name.split(' ')[0]} מחזיקה ${filer.stake}%`}</span>}{q && isStale({ q }) && <span className="chip stale" title="הדוח האחרון בנתונים ישן ביותר משני רבעונים מהעונה האחרונה">{`נתון ישן · ${periodLabelShort(q.period)}`}</span>}</span></span> },
+                  { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, filer, q }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><SinceDot id={c.id} /><span className="dim">{KIND[c.kind] ?? ''}</span>{filer && <span className="chip est" title={filer.note}>{`${filer.name.split(' ')[0]} מחזיקה ${filer.stake}%`}</span>}{q && isStale({ q }) && <span className="chip stale" title="הדוח האחרון בנתונים ישן ביותר משני רבעונים מהעונה האחרונה">{`נתון ישן · ${periodLabelShort(q.period)}`}</span>}</span></span> },
                   { key: 'per', head: 'דוח אחרון', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.period, text: ({ q }) => (q ? periodLabelShort(q.period) : ''), cell: ({ q }) => (q ? <span className="num">{periodLabelShort(q.period)}</span> : dash) },
                   { key: 'q', head: 'רווח נקי, QTD', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.v, unit: 'int', tone: 'neg', src: ({ k, q }) => k!.explain('profit', 'q', q!.period) },
                   { key: 'yoy', head: 'YoY', className: 'c-fin', noExport: view !== 'fin', value: ({ yoy }) => yoy, unit: 'pct', signed: true, tone: true, src: ({ c, k, q, qprior, yoy }) => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] }; } },

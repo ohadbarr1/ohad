@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLoad, useRegistry } from '../lib/useData';
 import { sheetName } from '../lib/company';
+import { SinceDot } from './SinceBadge';
 import { usePhone } from '../lib/useMedia';
 import { loadCorpus, recentQueries, readerHref, rememberQuery, searchText, type Corpus } from '../lib/search';
 import { buildPool, docLabel, FUNCS, parse, rank, type Item, type Kind } from '../lib/searchOmni';
@@ -155,7 +156,7 @@ export function Search({ big = false }: { big?: boolean }) {
               return (
                 <Link key={it.to + it.label} to={it.to} id={optId(i)} role="option" aria-selected={hl === i} className={hl === i ? 'on' : ''} onMouseEnter={() => setHl(i)}
                   onClick={(e) => { e.preventDefault(); go(it); }}>
-                  <span className="lbl">{it.score === -1 ? <><span className="muted">חיפוש בכל הדוחות: </span><bdi>{s}</bdi></> : it.label}{it.sub && <span className="sub">{it.sub}</span>}</span><span className="meta num">{it.meta}</span>
+                  <span className="lbl">{it.score === -1 ? <><span className="muted">חיפוש בכל הדוחות: </span><bdi>{s}</bdi></> : it.label}{it.sub && <span className="sub">{it.sub}</span>}{it.kind === 'חברה' && <SinceDot id={it.to.split('/')[2]} n />}</span><span className="meta num">{it.meta}</span>
                 </Link>
               );
             })}

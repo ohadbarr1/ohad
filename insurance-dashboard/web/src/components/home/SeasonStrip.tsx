@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sourced } from '../Source';
 import { pubLabel } from '../../lib/format';
 import { idCss } from '../../lib/identity';
-import { useStored } from '../../lib/local';
 import type { Prov } from '../../lib/prov';
 import { mayaReport } from '../../lib/sources';
 import { useLoad } from '../../lib/useData';
-import { FILING_TYPE, FilingsFeed, filingPeriod as pl, useFilings } from './RecentFilings';
+import { FILING_TYPE, filingPeriod as pl } from './RecentFilings';
+import { SinceStrip } from '../SinceBadge';
 
 interface CalCo { id: string; name: string; inactive?: boolean; last: { period: string; date: string; type: string; rid: number };
   next: { period: string; end: string; expected?: string; lo?: string; hi?: string }; history: { period: string; date: string; lag: number }[] }
@@ -21,15 +20,11 @@ const expectProv = (c: CalCo): Prov => ({ k: 'calc', est: true, title: `דוח $
   inputs: [{ label: `סוף התקופה ${pl(c.next.period)}`, v: pubLabel(c.next.end) }, ...c.history.filter((h) => h.period.slice(4) === c.next.period.slice(4)).slice(-3).map((h) => ({ label: `${pl(h.period)} פורסם ${pubLabel(h.date)}`, v: `${h.lag} ימים` }))] });
 const filedProv = (c: CalCo): Prov => ({ k: 'report', title: `${FILING_TYPE[c.last.type] ?? 'דוח'} ${pl(c.last.period)} · ${c.name}`, value: pubLabel(c.last.date), url: mayaReport(c.last.rid), pg: null, doc: 'MAYA', period: pl(c.last.period), note: `פורסם ${pubLabel(c.last.date)}` });
 
-/** The season in one line: which period is current, who has filed it, when the next report is due; and the filings that arrived since the last visit. */
+/** The season in one line: which period is current, who has filed it, when the next report is due; and, per company, what arrived since the
+ *  reader last opened it (lane S2: one visit date per company, not one global date). */
 export function SeasonStrip() {
   const cal = useLoad<Cal>('calendar.json');
-  const filings = useFilings();
-  // the visit date moves forward when the page is left, so the next visit marks what arrived in between
-  const [seen, setSeen] = useStored<string>('seen', '');
   const today = new Date().toISOString().slice(0, 10);
-  useEffect(() => () => setSeen(today), [setSeen, today]);
-  const [open, setOpen] = useState(false);
   if (!cal.data) return <section className="hm-season" aria-busy="true" />;
   const active = cal.data.companies.filter((c) => !c.inactive);
   if (!active.length) return null;
@@ -41,7 +36,6 @@ export function SeasonStrip() {
   const due = (waiting.length ? waiting : active).filter((c) => c.next.expected).sort((a, b) => a.next.expected!.localeCompare(b.next.expected!))[0];
   const left = due?.next.expected ? days(due.next.expected, today) : null;
   const name = (id: string) => cal.data!.companies.find((c) => c.id === id)?.name ?? id;
-  const fresh = seen ? (filings.data?.docs ?? []).filter((f) => !f.en && f.date > seen) : [];
   const countProv = (): Prov => ({ k: 'calc', title: `דיווחו ${pl(season)}`, value: `${done.length}/${active.length}`, formula: 'חברות שהדוח התקופתי האחרון שלהן ב-MAYA הוא לתקופה, מתוך החברות המדווחות',
     inputs: [...done.map((c) => ({ label: c.name, v: pubLabel(c.last.date), src: () => filedProv(c) })), ...waiting.map((c) => ({ label: `${c.name} (אחרון ${pl(c.last.period)})`, v: 'טרם', src: () => filedProv(c) }))] });
   return (
@@ -59,10 +53,9 @@ export function SeasonStrip() {
         )}
       </div>
       <div className="hm-s-aside">
-        {fresh.length > 0 && <button type="button" className="chip loaded" aria-expanded={open} onClick={() => setOpen(!open)}><span className="num">{fresh.length}</span> חדשים מאז <span className="num">{pubLabel(seen)}</span></button>}
+        <SinceStrip />
         <Link to="/calendar">לוח דיווחים</Link>
       </div>
-      {open && fresh.length > 0 && <div className="hm-s-fresh"><FilingsFeed docs={fresh} name={name} /></div>}
     </section>
   );
 }
