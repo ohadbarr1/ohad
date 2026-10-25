@@ -20,11 +20,14 @@ interface Cov {
   layers: { id: string; label: string; cadence: string; source: string }[];
   companies: { id: string; name: string; kind: string; expected: string | null; filed: string | null; inactive?: boolean | null }[];
   cells: Record<string, Record<string, { s: St; last: string | null; n: number | null }>>;
-  sources: { id: string; label: string; url: string; cadence: string; sla_days: number; asof: string | null; checked: string | null; feeds: string[]; age_rule?: boolean; behind: { id: string; period: string; filed: string | null; layers: string[] }[] }[];
+  sources: { id: string; label: string; url: string; cadence: string; sla_days: number; asof: string | null; checked: string | null; feeds: string[]; age_rule?: boolean; state?: SrcState; upstream?: { asof: string | null; checked: string | null; via: string } | null; behind: { id: string; period: string; filed: string | null; layers: string[] }[] }[];
   files: { pattern: string; contract: string; files: number; bytes: number; example: string }[];
 }
 interface Qa { built: string; checks: { id: string; ok: boolean; level: 'fail' | 'warn'; n: number; fail: number; note: string }[] }
 
+/** upstream-aware state per source (build_coverage.py): fresh only when fox holds what the source has now; unchecked is never green */
+type SrcState = 'fresh' | 'pending' | 'behind' | 'unchecked' | 'empty';
+const SRC_HE: Record<SrcState, [string, string]> = { fresh: ['עדכני מול המקור', 'pass'], pending: ['בתוך היעד', 'est'], behind: ['מאחור', 'bad'], unchecked: ['לא נבדק', ''], empty: ['אין נתונים', 'bad'] };
 const ST_HE: Record<St, string> = { fresh: 'עדכני', stale: 'מאחור', missing: 'חסר', na: 'לא רלוונטי' };
 const CADENCE: Record<string, string> = { daily: 'יומי', monthly: 'חודשי', quarterly: 'רבעוני', annual: 'שנתי', event: 'בכל עדכון' };
 const CHECK_HE: Record<string, string> = {
@@ -92,14 +95,17 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
   const breach = (s: Cov['sources'][number]) => {
     const age = days(s.checked, now);
     const late = s.behind.filter((b) => b.filed && (days(b.filed, now) ?? 0) > s.sla_days);
-    return { age, late, bad: (s.age_rule !== false && age != null && age > s.sla_days) || late.length > 0 };
+    const old = (s.age_rule !== false && age != null && age > s.sla_days) || late.length > 0;
+    const state: SrcState = s.state ?? (old ? 'behind' : 'fresh');
+    return { age, late, state, bad: state === 'behind' || state === 'empty' };
   };
-  const inSla = c.sources.filter((s) => !breach(s).bad).length;
+  const inSla = c.sources.filter((s) => breach(s).state === 'fresh').length;
+  const nCo = c.companies.filter((x) => x.kind !== 'market').length, nNa = cells.filter((s) => s === 'na').length;
   const totalBytes = c.files.reduce((t, f) => t + f.bytes, 0), totalFiles = c.files.reduce((t, f) => t + f.files, 0);
   const name = (id: string) => c.companies.find((x) => x.id === id)?.name ?? id;
 
   const covCols: Column<Cov['companies'][number]>[] = [
-    { key: 'co', head: 'חברה', value: (co) => co.name, cell: (co) => <span className="co"><Link to={`/company/${co.id}`}>{co.name}</Link><small>{co.expected ? <>דוח אחרון <span className="num">{pl(co.expected)}</span>{co.inactive ? ' · לא פעילה' : ''}</> : 'ללא דוחות תקופתיים'}</small></span> },
+    { key: 'co', head: 'חברה', value: (co) => co.name, cell: (co) => co.kind === 'market' ? <span className="co">{co.name}<small>רשות שוק ההון, בנק ישראל, הלמ"ס</small></span> : <span className="co"><Link to={`/company/${co.id}`}>{co.name}</Link><small>{co.expected ? <>דוח אחרון <span className="num">{pl(co.expected)}</span>{co.inactive ? ' · לא פעילה' : ''}</> : 'ללא דוחות תקופתיים'}</small></span> },
     ...c.layers.map((l): Column<Cov['companies'][number]> => ({
       key: l.id, head: l.label, title: `${l.label} · ${CADENCE[l.cadence] ?? l.cadence}`,
       value: (co) => ({ fresh: 3, stale: 2, missing: 1, na: 0 })[c.cells[co.id]?.[l.id]?.s ?? 'missing'],
@@ -114,9 +120,9 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>נתונים ואיכות</h1><div className="sub">כיסוי, בדיקות ורעננות לפי מקור · נבנה <span className="num">{pubLabel(c.built)}</span> · <Link to="/data/autopilot">טייס אוטומטי</Link></div></div></div>
 
       <section className="kpis">
-        <div className="kpi"><div className="l">כיסוי</div><div className="v num">{fmt((fresh / Math.max(1, applicable)) * 100, 'pct', { d: 0 })}</div><div className="s"><span className="num">{fresh}/{applicable}</span> תאים עדכניים · {c.companies.length} חברות × {c.layers.length} שכבות</div></div>
+        <div className="kpi"><div className="l">כיסוי</div><div className="v num">{fmt((fresh / Math.max(1, applicable)) * 100, 'pct', { d: 0 })}</div><div className="s"><span className="num">{fresh}/{applicable}</span> תאים רלוונטיים עדכניים · {nCo} חברות ושוק × {c.layers.length} שכבות · <span className="num">{nNa}</span> לא רלוונטי</div></div>
         <div className="kpi"><div className="l">בדיקות איכות</div><div className={`v num ${fails ? 'neg' : ''}`}>{qa ? `${pass}/${qa.checks.length}` : '–'}</div><div className="s">{fails ? <span className="chip bad">{fails} נכשלו</span> : <span className="chip pass">ללא כשל חוסם</span>}{warns > 0 && <span className="chip est">{warns} אזהרות</span>}</div></div>
-        <div className="kpi"><div className="l">מקורות בתוך היעד</div><div className={`v num ${inSla < c.sources.length ? 'neg' : ''}`}>{inSla}/{c.sources.length}</div><div className="s">יעד הרענון של fox לכל מקור</div></div>
+        <div className="kpi"><div className="l">מקורות עדכניים</div><div className={`v num ${inSla < c.sources.length ? 'neg' : ''}`}>{inSla}/{c.sources.length}</div><div className="s">fox מחזיק את מה שיש במקור כעת</div></div>
         <div className="kpi"><div className="l">קבצים פתוחים</div><div className="v num">{nf(totalFiles, 0)}</div><div className="s"><span className="num">{kb(totalBytes)}</span> · {c.files.length} משפחות · JSON עם חוזה</div></div>
       </section>
 
@@ -144,14 +150,16 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
           <DataTable caption="רעננות לפי מקור" rows={c.sources} rowKey={(s) => s.id} export={{ name: 'fox-freshness', title: 'רעננות לפי מקור', note: `נבדק ${pubLabel(now.toISOString())}` }} columns={[
             { key: 's', head: 'מקור', value: (s) => s.label, cell: (s) => <><a href={s.url} target="_blank" rel="noreferrer">{s.label}</a><span className="dim">{CADENCE[s.cadence] ?? s.cadence}</span></> },
             { key: 'asof', head: 'נתונים עד', value: (s) => s.asof, text: (s) => pl(s.asof), cell: (s) => <span className="num">{pl(s.asof)}</span> },
+            { key: 'up', head: 'במקור', value: (s) => s.upstream?.asof ?? null, text: (s) => pl(s.upstream?.asof ?? null),
+              cell: (s) => <span className="num" title={s.upstream ? `${s.upstream.via}${s.upstream.checked ? ` · ${pubLabel(s.upstream.checked)}` : ''}` : ''}>{pl(s.upstream?.asof ?? null)}</span> },
             { key: 'chk', head: 'נקרא', value: (s) => s.checked, text: (s) => pubLabel(s.checked), cell: (s) => <span className="num">{s.checked ? pubLabel(s.checked) : '–'}</span> },
             { key: 'age', head: 'ימים', value: (s) => breach(s).age, unit: 'int', firstDir: 'desc' },
             { key: 'sla', head: 'יעד', value: (s) => s.sla_days, text: (s) => `≤ ${s.sla_days} ימים`, cell: (s) => <span className="muted">≤ <span className="num">{s.sla_days}</span> ימים</span> },
-            { key: 'st', head: 'מצב', value: (s) => (breach(s).bad ? 0 : 1), firstDir: 'asc', text: (s) => (breach(s).bad ? 'חריגה' : 'בתוך היעד'),
-              cell: (s) => { const b = breach(s); return <span className="chips"><span className={`chip ${b.bad ? 'bad' : 'pass'}`}>{b.bad ? 'חריגה' : 'בתוך היעד'}</span>
+            { key: 'st', head: 'מצב', value: (s) => ({ behind: 0, empty: 0, unchecked: 1, pending: 2, fresh: 3 })[breach(s).state], firstDir: 'asc', text: (s) => SRC_HE[breach(s).state][0],
+              cell: (s) => { const b = breach(s); return <span className="chips"><span className={`chip ${SRC_HE[b.state][1]}`}>{SRC_HE[b.state][0]}</span>
                 {s.behind.map((x) => <span key={x.id} className={`chip ${b.late.includes(x) ? 'est' : ''}`} title={`${name(x.id)} · ${pl(x.period)} פורסם ${pubLabel(x.filed)} · חסר ב: ${x.layers.map((l) => c.layers.find((y) => y.id === l)?.label ?? l).join(', ')}`}>{name(x.id)} <span className="num">{pl(x.period)}</span></span>)}</span>; } },
           ]} />
-          <div className="src">חריגה: המקור לא נקרא בתוך היעד, או שדוח שפורסם לפני יותר מ-{c.sources.find((s) => s.id === 'maya')?.sla_days ?? 7} ימים עדיין חסר באחת השכבות שהמקור מזין.</div>
+          <div className="src">עדכני: fox מחזיק את התקופה האחרונה שיש במקור (בדיקה ישירה מול data.gov.il, בנק ישראל והלמ"ס; MAYA לפי הסקירה האחרונה של הטייס האוטומטי). מאחור: למקור תקופה חדשה יותר, או שדוח שפורסם לפני יותר מ-{c.sources.find((s) => s.id === 'maya')?.sla_days ?? 7} ימים חסר באחת השכבות. לא נבדק: אין בדיקה מול המקור.</div>
         </Panel>
       </div>
 
