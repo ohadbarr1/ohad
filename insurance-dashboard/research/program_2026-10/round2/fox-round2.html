@@ -1,0 +1,284 @@
+<title>fox Round 2 Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column with full-width data bands; a consultancy deck set as a page — verdict, scorecard, causes, fixes, options, sequence, decisions. */
+:root {
+  --paper: #f6f4f0; --panel: #ffffff; --ink: #141a2e; --muted: #5a6072; --faint: #8a8f9c; --line: #e3dfd7;
+  --ember: #d9531e; --ember-soft: #fbe7dc; --navy: #1b2547; --good: #1f7a4d; --warn: #a86a00; --bad: #b3261e;
+  --r1: #b9bdc8; --r2: #1b2547; --tgt: #d9531e;
+  --display: "Spectral", Georgia, "Times New Roman", serif;
+  --body: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #11141c; --panel: #191d28; --ink: #ecebe6; --muted: #a7abb7; --faint: #7d8291; --line: #2b3040;
+  --ember: #f0773f; --ember-soft: #3a2218; --navy: #c8d0ec; --good: #4cc68a; --warn: #e2a640; --bad: #f07b72;
+  --r1: #4a5062; --r2: #c8d0ec; --tgt: #f0773f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #11141c; --panel: #191d28; --ink: #ecebe6; --muted: #a7abb7; --faint: #7d8291; --line: #2b3040;
+  --ember: #f0773f; --ember-soft: #3a2218; --navy: #c8d0ec; --good: #4cc68a; --warn: #e2a640; --bad: #f07b72;
+  --r1: #4a5062; --r2: #c8d0ec; --tgt: #f0773f; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.6 var(--body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.08; font-weight: 600; }
+h2 { font-size: 26px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; font-family: var(--body); letter-spacing: 0; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font: 600 11px/1 var(--body); text-transform: uppercase; letter-spacing: .12em; color: var(--ember); }
+.muted { color: var(--muted); }
+.num, td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 18px; min-width: 0; }
+.head { display: grid; gap: 14px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+.head .meta { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--muted); }
+.verdict { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.verdict p { font-size: 17px; line-height: 1.65; }
+.big { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; display: grid; gap: 10px; }
+.big .row { display: flex; align-items: baseline; gap: 12px; }
+.big .v { font: 600 52px/1 var(--mono); color: var(--navy); }
+.big .from { font: 400 22px/1 var(--mono); color: var(--faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+.big .lbl { font-size: 13px; color: var(--muted); }
+.big .stat { display: flex; justify-content: space-between; font-size: 13px; border-top: 1px solid var(--line); padding-top: 10px; }
+/* scorecard */
+.score { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px/1.3 var(--body); text-transform: uppercase; letter-spacing: .08em; color: var(--faint); background: transparent; }
+tr:last-child td { border-bottom: 0; }
+td.n { white-space: nowrap; }
+.bar { position: relative; height: 10px; min-width: 150px; background: transparent; border-radius: 5px; }
+.bar i { position: absolute; top: 0; height: 10px; border-radius: 5px; }
+.bar .a { background: var(--r1); }
+.bar .b { background: var(--r2); height: 10px; }
+.bar .t { width: 2px; height: 16px; top: -3px; background: var(--tgt); border-radius: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.cap { font-size: 13px; color: var(--muted); }
+/* causes */
+.causes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.cause { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.cause b { font-family: var(--display); font-size: 18px; font-weight: 600; }
+.cause p { font-size: 14px; color: var(--muted); }
+/* p0 */
+.p0 { display: grid; gap: 0; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--bad); border-radius: 10px; }
+.p0 div { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; padding: 13px 18px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.p0 div:last-child { border-bottom: 0; }
+.p0 .k { font: 600 13px/1.6 var(--mono); color: var(--bad); }
+.p0 strong { font-weight: 700; }
+/* paths */
+.paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.path { border-top: 2px solid var(--navy); padding-top: 10px; display: grid; gap: 4px; }
+.path h3 { display: flex; justify-content: space-between; gap: 8px; }
+.path h3 .num { font-size: 13px; color: var(--muted); font-weight: 400; }
+.path p { font-size: 14px; color: var(--muted); }
+/* options */
+.bets { display: grid; gap: 26px; }
+.bet { display: grid; gap: 12px; }
+.bet > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.bet > header h3 { font-family: var(--display); font-size: 21px; }
+.bet > header p { font-size: 14px; color: var(--muted); }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.opt { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.opt .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.opt .id { font: 600 12px/1 var(--mono); color: var(--ember); }
+.opt h4 { margin: 0; font: 700 15px/1.3 var(--body); }
+.opt p { font-size: 13.5px; color: var(--muted); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 600 11px/1 var(--body); padding: 5px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.tag.e { color: var(--navy); }
+.tag.star { background: var(--ember-soft); color: var(--ember); border-color: transparent; }
+.dont { font-size: 14px; color: var(--muted); border-left: 2px solid var(--line); padding-left: 12px; }
+/* sequence */
+.seq { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.step { padding: 16px 18px; display: grid; gap: 8px; align-content: start; border-inline-end: 1px solid var(--line); }
+.step:last-child { border-inline-end: 0; }
+.step .when { font: 600 12px/1 var(--mono); color: var(--ember); }
+.step h3 { font-family: var(--display); font-size: 18px; }
+.step ul { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--muted); display: grid; gap: 3px; }
+.step .goal { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+/* decisions */
+.dec { display: grid; gap: 10px; counter-reset: d; }
+.dec div { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; }
+.dec div::before { counter-increment: d; content: counter(d); font: 600 20px/1.2 var(--display); color: var(--ember); }
+.dec b { display: block; }
+.dec span { font-size: 14px; color: var(--muted); }
+footer { font-size: 12.5px; color: var(--faint); border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 6px; }
+footer code { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+@media (max-width: 760px) {
+  .verdict { grid-template-columns: 1fr; }
+  .wrap { gap: 36px; padding-block: 24px 48px; }
+  .step { border-inline-end: 0; border-bottom: 1px solid var(--line); }
+  .step:last-child { border-bottom: 0; }
+}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <span class="eyebrow">fox · round 2 review · 25 Oct 2026</span>
+    <h1>From a fact base to the reference of record for Israeli insurance and long-term savings</h1>
+    <div class="meta"><span>9 lanes: 7 cylinder re-grades, horizons, free-data scout</span><span>64 figures checked against their filing page</span><span>Live site: fox-research-il.web.app</span></div>
+  </header>
+
+  <section class="verdict">
+    <div style="display:grid;gap:14px">
+      <span class="eyebrow">Bottom line</span>
+      <p>fox moved from 5.8 to 7.3 in three days. The fact base, provenance, exports and phone basics are now best in class for this niche. What stands between fox and 9.0 is no longer data or features. Nobody can find or quote it, it has news four times a year while analysts work daily, it looks like a well-kept admin panel, its operations are not yet trustworthy at speed, and the newest layers have coverage holes.</p>
+      <p class="muted">Where it should go: an analyst that reads every filing first, tells you what changed, lets you test what-if, and travels into other people's models and articles. All of it on free, public data.</p>
+    </div>
+    <div class="big">
+      <span class="lbl">Average across seven cylinders</span>
+      <div class="row"><span class="v">7.3</span><span class="from">5.8</span></div>
+      <div class="stat"><span>Figures spot-checked against the source page</span><span class="num">64 · 0 errors</span></div>
+      <div class="stat"><span>Cylinders at 9.0+</span><span class="num">0 of 7</span></div>
+      <div class="stat"><span>Q3'26 season opens</span><span class="num">20.11.26</span></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Scorecard</span>
+    <h2>Every cylinder moved; none is at 9 yet</h2>
+    <div class="legend"><span><i style="background:var(--r1)"></i>Round 1 (22 Oct)</span><span><i style="background:var(--r2)"></i>Round 2 (25 Oct)</span><span><i style="background:var(--tgt);width:3px"></i>9.0 target</span></div>
+    <div class="score">
+      <table>
+        <thead><tr><th>Cylinder</th><th>R1</th><th>R2</th><th>Progress to 10</th><th>Benchmark</th><th>What still caps it</th></tr></thead>
+        <tbody id="sc"></tbody>
+      </table>
+    </div>
+    <p class="cap">Benchmarks are the best general competitor per cylinder; on Israeli insurance and LTS depth no competitor scores above 4.</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">Root causes</span>
+    <h2>Five things hold fox below 9</h2>
+    <div class="causes">
+      <div class="cause"><b>Hidden</b><p>Every path sends <span class="num">noindex</span>; every URL returns the same 1.8 KB shell titled "fox"; embeds are blocked. Google sends "Harel financials" to stockanalysis and TipRanks.</p></div>
+      <div class="cause"><b>Quarterly product, daily job</b><p>Autopilot built but off. data.gov.il already has 09/26; fox shows 08/26 and calls it fresh. No alerts, sync off.</p></div>
+      <div class="cause"><b>Admin-panel look</b><p>No lead on any screen, 66 controls before the first table on a company page, 17 font sizes against an 8-step scale, colour on levels instead of changes, charts without a frame.</p></div>
+      <div class="cause"><b>Trust at speed</b><p>CI has failed on every push since 23.10 and the deploy ignores it. Four live data files are uncommitted. Company pages crash in WebKit. A missing chunk can be cached as HTML for a year.</p></div>
+      <div class="cause"><b>Coverage holes</b><p>Solvency current for 2 of 7 insurers, ownership 1 of 14, holdings 5 of ≈20, 6,501 Phoenix cells cite links that now redirect to an error.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">This week · before anything new</span>
+    <h2>Five fixes that protect what is already live</h2>
+    <div class="p0">
+      <div><span class="k">P0</span><span><strong>WebKit crash on company pages.</strong> A destructuring loop in <span class="num">lib/company.ts</span> throws on cached data (6 of 9 reloads of /company/phoenix in WebKit). Indexed loops, a WebKit phone project in CI, then a check on the owner's iPhone.</span></div>
+      <div><span class="k">P0</span><span><strong>CI as the only door to live.</strong> Fix the autopilot test fixture, one Python version, deploy only from green CI (needs a Firebase service-account secret), commit generated data before every deploy.</span></div>
+      <div><span class="k">P1</span><span><strong>Cache contract.</strong> Rewrite only extensionless paths, no-cache on HTML, real 404s for missing assets and data, reload on a failed chunk.</span></div>
+      <div><span class="k">P1</span><span><strong>Gate every published layer.</strong> Solvency, adjusted KPIs, targets and decks checked on page at deploy; freshness measured against the upstream source; an honest coverage matrix (≈70%, not 95%).</span></div>
+      <div><span class="k">P1</span><span><strong>Re-source the Phoenix cells</strong> to the MAYA filing, and run a weekly link check over every source.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Path to 9.0</span>
+    <h2>What each cylinder needs</h2>
+    <div class="paths" id="paths"></div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Where fox can evolve</span>
+    <h2>Four bets, nineteen options, no paid data</h2>
+    <p class="muted">Starred options are the recommended core. Effort: S under 3 days, M 1–3 weeks, L over 3 weeks.</p>
+    <div class="bets" id="bets"></div>
+    <p class="dont"><b>Do not build:</b> a paid-API chat inside the site (the hosted MCP covers it at zero model cost), fund star ratings (crosses into advice), price alerts (outside the fundamentals-only rule).</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">Recommended sequence</span>
+    <h2>Season-ready first, then become the reference</h2>
+    <div class="seq">
+      <div class="step"><span class="when">Now → 20.11</span><h3>Season-ready</h3><ul><li>The five fixes above</li><li>Autopilot on a schedule, "לא מאומת" until checked</li><li>Telegram channel and Web Push alerts</li><li>Sync on, per-company "since you last looked"</li><li>A report card per filing</li><li>Lead-first screens, table grammar, colour, controls</li></ul><span class="goal">≈8.5 on every cylinder</span></div>
+      <div class="step"><span class="when">Dec → Jan</span><h3>Reference of record</h3><ul><li>Go public: sitemap, prerendered pages, one share card per URL</li><li>≈5k citable series pages and embeds</li><li>Live Link API with page per row</li><li>Stress lab and credibility ledger</li><li>The CMA statements database</li><li>Solvency from the insurers' own sites</li></ul><span class="goal">9.0+</span></div>
+      <div class="step"><span class="when">Q1'27</span><h3>Intelligence and reach</h3><ul><li>Sourced report-day notes</li><li>Preview engine with a backtest</li><li>Regulatory tracker on every chart</li><li>Desk mode, tear sheets</li><li>Hosted Ask-fox</li><li>EIOPA and OECD benchmarks</li></ul><span class="goal">Hold 9.0+, widen the moat</span></div>
+      <div class="step"><span class="when">2027</span><h3>Moonshots</h3><ul><li>IFRS 17 academy on real filings</li><li>Climate and concentration from holdings</li><li>Conduct scorecard, M&amp;A precedents</li><li>Verified-professional annotations</li><li>Savings transparency as a sub-brand</li></ul><span class="goal">New audiences</span></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Owner decisions</span>
+    <h2>Six calls only the owner can make</h2>
+    <div class="dec">
+      <div><p><b>Go public.</b><span>Drop noindex. The series pages, embeds, share cards and every growth loop depend on it.</span></p></div>
+      <div><p><b>Who fox is for.</b><span>Rewrite PRODUCT.md from "one user" to four segments: insurer and LTS analysts, industry insiders, journalists, allocators. A consumer tool only as a separate sub-brand.</span></p></div>
+      <div><p><b>Autopilot schedule and season budget.</b><span>Mac launchd or GitHub Actions, and an extraction budget per season (≈0.5–1M tokens).</span></p></div>
+      <div><p><b>Firebase.</b><span>Enable Auth for sync, add a service-account secret for CI deploys, and the Blaze plan only if a hosted Ask-fox is wanted.</span></p></div>
+      <div><p><b>Ask TASE for permission.</b><span>MAYA and TASE robots.txt disallow /api/ without explicit permission; the filings, XBRL and price fetchers use it, and the ownership layer is blocked.</span></p></div>
+      <div><p><b>Solvency extraction from the insurers' sites.</b><span>≈25 reports, ≈0.3–0.4M tokens, to bring 5 of 7 insurers current.</span></p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Lane reports: <code>research/program_2026-10/round2/</code> — r2-ws1-strategy, r2-ws2-desktop, r2-ws3-mobile, r2-ws4-design, r2-ws5-data, r2-ws6-engineering, r2-ws7-features, r2-h1-directions, r2-h2-free-data; evidence under <code>round2/shots/</code>.</span>
+    <span>Effort for the full sequence (estimate): season-ready 8–12 build sessions; reference of record 10–15; intelligence and reach ≈15; extraction 0.5–1M tokens per season.</span>
+  </footer>
+</div>
+
+<script>
+const SC = [
+  ["Strategy / positioning", 6.0, 7.0, "Quartr ≈8 (reach)", "noindex on every path, one shell per URL, embeds blocked, no analytics"],
+  ["Desktop UX / IA", 6.5, 7.8, "Koyfin ≈8.5", "9 orphan pages, search finds data not places, 1440 layout at 1920"],
+  ["Mobile UX", 5.0, 6.8, "StockUnlock ≈8", "WebKit crash on company pages, paginated chart legends, long pages"],
+  ["Visual design", 6.0, 6.8, "Fiscal.ai ≈8.5", "same card everywhere, controls before content, colour on levels"],
+  ["Data integrity", 6.5, 7.8, "Fiscal.ai / Koyfin ≈8.5", "gate skips new layers, solvency stale for 5 of 7, false-green freshness"],
+  ["Engineering", 5.0, 7.2, "Koyfin ≈8", "CI red and bypassed, live ≠ git, post-deploy cache bug, no telemetry"],
+  ["Workflows / features", 5.5, 7.4, "Koyfin 8.5", "autopilot off, no alerts, sync off, nothing new between seasons"],
+];
+const pct = (v) => (v / 10 * 100).toFixed(1) + "%";
+document.getElementById("sc").innerHTML = SC.map(([n, a, b, bm, cap]) => `
+  <tr><td><b>${n}</b></td><td class="n">${a.toFixed(1)}</td><td class="n"><b>${b.toFixed(1)}</b></td>
+  <td><div class="bar" role="img" aria-label="${n}: ${a} to ${b} of 10, target 9"><i class="a" style="width:${pct(a)}"></i><i class="b" style="left:${pct(a)};width:${pct(b - a)}"></i><i class="t" style="left:90%"></i></div></td>
+  <td class="muted">${bm}</td><td class="muted">${cap}</td></tr>`).join("");
+
+const PATHS = [
+  ["Strategy", "7.0 → 9", "Go public with a sitemap, prerendered HTML and one share card per URL; /embed routes; RSS, Telegram and email rails; cookieless analytics; PRODUCT.md around four segments."],
+  ["Desktop", "7.8 → 9", "Every route in a section; search returns destinations and actions; terminal width from 1600 px; peer-table control diet; in-page index on the company home; one export pattern."],
+  ["Mobile", "6.8 → 9", "Crash fix and WebKit in CI; a phone chart mode with one lead series and grey peers; one share button per chart; a one-line company header; stale-while-revalidate data; install prompt and push."],
+  ["Design", "6.8 → 9", "Lead-first screens with one toolbar row; denser tables with sparklines; colour only on changes; one control grammar; a type-scale gate; framed charts with the source stamped on export; deeper dark plates."],
+  ["Data", "7.8 → 9", "Gate every layer; solvency from the insurers' sites; vintage for IFRS 17, solvency and decks; Phoenix re-sourced; autopilot T+0 marked unverified; a public errata log."],
+  ["Engineering", "7.2 → 9", "CI-only deploys; Linux baselines and performance budgets; no layout shift; the cache contract; free telemetry; then content-addressed data, data off Drive, Dependabot, tests on the shared engines."],
+  ["Workflows", "7.4 → 9", "Autopilot on a season schedule; Web Push; sync on; per-company 'since you last looked'; a chart book that rolls forward; a remote MCP with all tools."],
+];
+document.getElementById("paths").innerHTML = PATHS.map(([h, s, t]) => `<div class="path"><h3>${h}<span class="num">${s}</span></h3><p>${t}</p></div>`).join("");
+
+const BETS = [
+  ["A", "Reference of record", "fox as the data utility everyone cites, like FRED or Our World in Data for this niche.", [
+    ["A1", "FRED for Israeli LTS", "≈5k prerendered, citable, embeddable series pages: every company × metric and every fund.", "M", "Existing fact base", true],
+    ["A2", "Live Link", "Versioned /api/v1 CSV and JSON with document and page on every row, an Excel and Sheets recipe, a quarterly DOI on Zenodo, CC BY.", "S", "Existing data", true],
+    ["A3", "The whole market", "The regulator's statements database: ≈30 insurers since 2002 including unlisted ones, managing companies since 2011, funds since 2012, quarterly reports by line.", "M", "insurancedata.cma.gov.il", true],
+    ["A4", "International benchmarks", "Israeli solvency and pension metrics against European and OECD medians.", "S", "EIOPA, OECD, BoI", false],
+  ]],
+  ["B", "The analyst that reads the filing", "Move from showing figures to telling what changed and testing what-if.", [
+    ["B1", "Report-day wire and notes", "A numbers-only report card within hours of each filing, then a sourced 'what changed' note. Every digit validated against the fact table; the first season approved by the owner.", "M", "MAYA filings, fact table", true],
+    ["B2", "Fundamentals alerts", "Filing, restatement, solvency headroom, regulator flows. A public Telegram channel first, Web Push next.", "M", "Autopilot, data.gov.il", true],
+    ["B3", "Stress lab", "Sliders for rates, equities and lapse over 248 disclosed IFRS 17 sensitivities and 75 solvency sensitivities: headroom over board target and dividend capacity.", "S–M", "Extracted sensitivities, BoI curve", true],
+    ["B4", "Preview engine", "Quarter-to-date variable management fees from the regulator's monthly returns, with a published backtest and a preview-versus-actual scorecard.", "M", "ביטוח-נט monthly", false],
+    ["B5", "Management credibility ledger", "The 207 extracted targets scored against printed actuals: a hit rate per company and management team.", "S", "Extracted decks", true],
+    ["B6", "Capital-generation engine", "Own-funds generation, SCR drift by module, transitional run-off and dividend capacity.", "M", "Solvency reports", false],
+  ]],
+  ["C", "The Wire and regulation", "Daily content between seasons, linked to the figures it moves.", [
+    ["C1", "The Wire", "MAYA immediate reports (ratings, bond issues, dividends, M&A), regulator circulars and BoI decisions, each linked to the figures it changes. Depends on TASE permission.", "M", "MAYA, CMA, BoI", false],
+    ["C2", "Regulatory tracker", "Knesset bills and regulator circulars as markers on every affected chart.", "M", "Knesset OData, CMA", false],
+    ["C3", "Conduct scorecard", "Complaints and service-quality results per company.", "M", "CMA complaints report, service index", false],
+    ["C4", "M&A precedents", "Price per ₪bn of assets and implied P/B from business-combination notes in the 108k-page corpus.", "L", "Existing filings", false],
+  ]],
+  ["D", "Workspace and reach", "Where professionals spend their day, and how fox reaches new readers.", [
+    ["D1", "Desk mode and search spine", "From 1600 px: statement, chart, source PDF and notes side by side with saved layouts; search that runs destinations and actions.", "M", "Existing", false],
+    ["D2", "Tear sheets and peer packs", "A4 and 16:9 company sheets, a CFO-office peer pack, a seasonal chart book published automatically.", "M", "Existing", false],
+    ["D3", "Journalist kit", "Embeddable cards with a fixed source footer and a 'chart of the week'.", "S–M", "Existing", false],
+    ["D4", "Hosted Ask-fox", "The MCP server reachable from claude.ai and a phone, at zero model cost to fox.", "S–M", "Existing MCP", false],
+    ["D5", "Moonshots", "IFRS 17 academy on real filings; climate and concentration from holdings; verified annotations; a savings transparency tool as a sub-brand.", "L", "Mixed", false],
+  ]],
+];
+document.getElementById("bets").innerHTML = BETS.map(([k, name, sub, opts]) => `
+  <div class="bet"><header><h3>${k} · ${name}</h3><p>${sub}</p></header>
+  <div class="opts">${opts.map(([id, h, p, e, src, star]) => `
+    <div class="opt"><div class="top"><span class="id">${id}</span>${star ? '<span class="tag star">Core</span>' : ''}</div>
+    <h4>${h}</h4><p>${p}</p><div class="tags"><span class="tag e">Effort ${e}</span><span class="tag">${src}</span></div></div>`).join("")}</div></div>`).join("");
+</script>
