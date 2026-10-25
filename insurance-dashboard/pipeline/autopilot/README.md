@@ -1,22 +1,27 @@
-# Report-Day autopilot (lane AP, Phase 3 wave 1)
+# Report-Day autopilot (lane AP, Phase 3 wave 1; on a schedule since lane S4, season-ready wave)
 
-Spec: `research/program_2026-10/README.md` §4 Phase 3 (W7-R1, W3-R1/R4, W5-R4). Code only, **off by default**: every entry point is a
-dry run unless `--apply`; nothing deploys, pushes, notifies or schedules.
+Spec: `research/program_2026-10/README.md` §4 Phase 3 (W7-R1, W3-R1/R4, W5-R4); scheduling, channels, install and budget:
+**`docs/AUTOPILOT.md`**. Nothing here deploys, pushes or commits; publishing is `./deploy.sh` by a human.
 
 ```
-poll.py   MAYA → new filings since the last report id seen (state: data/registry/autopilot_state.json)
-          → classify (fetch_maya rules; period from the XBRL instance when attached) → --apply: PDF + XBRL + liabilities htm into the
-          source layout, documents.csv (+ warehouse when duckdb is importable), data/registry/autopilot_filings.json
-t0.py     data/registry/xbrl_facts.json → kpi.json: 19 ת930 concepts per period; a new period lands "unverified" until the printed
-          figure of the same report agrees (lines.json / kpi_windows.json / capital.json)
-deltas.py headline deltas with both sources: profit YoY, comprehensive income YoY, equity QoQ, CSM QoQ (same basis), solvency
-run.py    poll → skeleton → extraction hook (OFF) → builders → gate → web/public/data/autopilot/status.json → prints ./deploy.sh
-tests/    recorded MAYA responses (Phoenix + Menora, Q2'26 report day); no network
+tick.py      launchd entry (ops/com.fox.autopilot.plist, every quarter hour) -> schedule.py decides -> run.run(apply, trigger=schedule)
+schedule.py  cadence: 15 min in filing windows (calendar.json expected ± 10 days) on filing days 07:00-22:00, hourly otherwise,
+             data.gov.il daily; "report due" reminders
+regulator.py data.gov.il CKAN probe (max REPORT_PERIOD, last_modified) -> new month -> dag fetch_regulator + builders
+poll.py      MAYA -> new filings since the last report id seen. MANUAL only (run.py --maya-once, <= 1 request / 2 s): MAYA's robots.txt
+             disallows /api/; the schedule calls it only with TASE's written permission in ops/autopilot.toml
+t0.py        data/registry/xbrl_facts.json -> kpi.json: 19 ת930 concepts per period; a new period lands "unverified" until the printed
+             figure of the same report agrees (lines.json / kpi_windows.json / capital.json)
+deltas.py    headline deltas with both sources: profit YoY, comprehensive income YoY, equity QoQ, CSM QoQ (same basis), solvency
+llm.py       optional extraction by `claude -p` under EXTRACT_SPEC.md, OFF; season/filing/run token budget, ledger
+run.py       discover -> fetch -> skeleton -> llm hook -> dag.py --only deploy -> gate -> status.json -> notification (notify.py)
+conf.py      ops/autopilot.toml reader (3.9 fallback for tomllib)
+tests/       recorded MAYA responses (Phoenix + Menora, Q2'26 report day), fake CKAN/clock/CLI; no network
 ```
 
-Run: `/usr/bin/python3 pipeline/autopilot/run.py` (dry run), `… --apply --no-poll` (rebuild the status from disk),
-`/usr/bin/python3 -m unittest discover -s pipeline/autopilot/tests`. CI: `.github/workflows/autopilot.yml` (manual dispatch, dry run,
-status.json as an artifact).
+Run: `/usr/bin/python3 pipeline/autopilot/run.py` (dry run), `… --apply` (permitted channels), `… --maya-once` (owner, manual),
+`… --apply --no-poll` (rebuild the status from disk), `/usr/bin/python3 pipeline/autopilot/tick.py --status`,
+`/usr/bin/python3 -m unittest discover -s pipeline/autopilot/tests`.
 
 What the XBRL can and cannot give: the ISA instance is the ת930 summary form, 26 ifrs-full concepts. No filer tags insurance revenue,
 insurance service result, CSM, dividends, AUM or solvency (`fetch_xbrl.py --registry --coverage` prints the matrix over all 431
@@ -24,18 +29,17 @@ instances). Those come only from the PDF, i.e. from the extraction step that wai
 always say "three months" even where Menora/Clal/Hachshara/Ayalon put year-to-date figures in them, so a T+0 quarter follows the filer's
 own habit for that quarter and stays unverified until the printed figure agrees.
 
-Network: MAYA's public JSON list API and mayafiles, User-Agent `fox-research-il-autopilot`, ≤ 1 request/s by default (never > 2/s),
+Network (MAYA, manual `--maya-once` only): MAYA's JSON list API and mayafiles, User-Agent `fox-research-il-autopilot`, one request every 2 s,
 raw list responses cached under `data/raw/maya_autopilot/<date>/` on `--apply`; a 403/429 stops the run (`blocked` in the status), it is
 never retried around. Liabilities schedules (form ת126, htm only) are cached at `data/raw/maya_liabilities/htm/<rid>.htm.gz`, the path
 the debt-ladder lane's `fetch_liabilities.py` reads.
 
-## Switches (config.json, all off)
+## Switches
 
-| switch | effect when on | who turns it on |
-|---|---|---|
-| `llm.enabled` + `approved_by` + `budget_tokens_per_run` | the extraction hook in `run.py` may call the model (not implemented in wave 1) | owner, per the standing budget rule |
-| `push.enabled` | the sender below may send | owner, after the Firebase steps |
-| `deploy.auto` | stays false: deploy is `./deploy.sh` by a human after the gate | — |
+`ops/autopilot.toml` (the owner's, committed): schedule, `[discovery]` (regulator on; MAYA scheduling off and needing
+`maya_permission_ref`), `[notify]`, `[llm]` (off; `enabled` + `approved_by`; season budget 1,000,000 tokens, per-filing and per-run caps,
+`--max-budget-usd` backstop). `config.json`: token estimates per document type, `push.enabled` (off: the sender below is not built),
+`deploy.auto` (stays false).
 
 ## Web Push / FCM: design note (not implemented)
 

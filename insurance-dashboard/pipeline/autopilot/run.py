@@ -1,24 +1,31 @@
-"""Report-day run plan: new filing -> fetch -> XBRL skeleton -> (extraction hook, off) -> rebuild -> gate -> status.json. Never deploys.
+"""Report-day run: permitted discovery -> fetch the specific new files -> XBRL skeleton -> (LLM hook, off) -> DAG -> gate -> status.json
+-> macOS notification with the publish command. Never deploys, never pushes, never commits.
 
-python3 pipeline/autopilot/run.py                     # dry run: poll, preview the skeleton in memory, print the plan; writes only
-                                                      #   the status file to $TMPDIR/fox-autopilot/status.json (or --status-out)
-python3 pipeline/autopilot/run.py --apply             # do it: fetch, registry, kpi.json, builders, gate, web/public/data/autopilot/status.json
-python3 pipeline/autopilot/run.py --apply --no-poll   # no network: rebuild the status from what is on disk
-options: --replay DIR / --record DIR (see poll.py), --companies a,b, --skip-gate, --skip-build, --status-out PATH, --json PATH
+python3 pipeline/autopilot/run.py                     # dry run: data.gov.il probe + local pickup, plan printed; status to $TMPDIR
+python3 pipeline/autopilot/run.py --apply             # do it (what the schedule runs, via tick.py): permitted channels only
+python3 pipeline/autopilot/run.py --maya-once         # MANUAL, owner only: one MAYA pass at <= 1 request / 2 s, then the same run
+python3 pipeline/autopilot/run.py --maya-once --dry-run   # the MAYA pass listing what is new, nothing written
+python3 pipeline/autopilot/run.py --apply --no-poll   # no network at all: rebuild the status from what is on disk
+options: --replay DIR / --record DIR (see poll.py; imply a MAYA pass), --companies a,b, --skip-gate, --skip-build, --status-out PATH,
+         --json PATH, --no-regulator, --no-notify
+
+Discovery (docs/AUTOPILOT.md). TASE offers no channel for automated consumption of filings that fox may use: no RSS (maya.tase.co.il/rss
+answers 403), the DataHub's free products are funds/indices/securities only (announcements are a paid feed), and MAYA's robots.txt
+disallows /api/ ("bulk extraction ... require[s] explicit authorization"). So:
+  scheduled   data.gov.il CKAN (regulator months) + local pickup (XBRL instances already in data/sources/xbrl that the registry has
+              not parsed, e.g. after a --maya-once). MAYA only if ops/autopilot.toml has maya_scheduled AND maya_permission_ref.
+  manual      --maya-once: the owner's own one-shot pass over the existing poller, 2 s between requests; a 403/429 stops it.
 
 Steps
-  1. poll        poll.py over the listed companies (dry run unless --apply)
-  2. skeleton    each new quarterly/annual report with an XBRL instance -> data/registry/xbrl_facts.json -> kpi.json (t0.py):
-                 the period appears with its 19 tagged values, status "unverified", until the printed figure of the same report agrees
-                 (t0.verify). With duckdb importable, fetch_xbrl.py + build_kpi.py run instead (build_kpi.py calls t0 itself).
-  3. extraction  hook only. The owner-approved LLM extraction of the PDF (statements v6, IFRS 17, solvency, presentation KPIs) would run
-                 here under a token budget (config.json "llm"); it is OFF and nothing here calls a model. Each filing records the
-                 estimate and why it was skipped.
-  4. rebuild     the builders whose inputs changed, in deploy.sh's order (canon_kpi, build_registry, build_calendar, build_coverage)
-  5. gate        pipeline/gate.py; its verdict goes into status.json
-  6. status      web/public/data/autopilot/status.json: per company the latest filing seen, what the site publishes, what is
-                 unverified, headline deltas with sources, the next expected report; the run's own log
-  7. deploy      printed for a human, never run: the exact ./deploy.sh command
+  1. discover    regulator probe (regulator.py), MAYA pass (poll.py, manual), local pickup
+  2. fetch       regulator: dag fetch_regulator + build_market + build_funds; MAYA: the PDFs/XBRL of the new filings (poll.py --apply)
+  3. skeleton    each new quarterly/annual XBRL instance -> xbrl_facts.json -> kpi.json (t0.py), status "unverified" until the printed
+                 figure of the same report agrees
+  4. extraction  llm.py: claude -p under EXTRACT_SPEC.md, OFF unless ops/autopilot.toml [llm] says on; budget-capped
+  5. rebuild     python3 pipeline/dag.py --only deploy (the deploy group plus every stale automatic step upstream of it)
+  6. gate        pipeline/gate.py; its verdict goes into status.json
+  7. status      web/public/data/autopilot/status.json (only when something happened: a no-op tick leaves the repo untouched)
+  8. publish     printed and notified for a human, never run: commit, push, wait for fox-ci, ./deploy.sh
 """
 import csv
 import datetime as dt
@@ -30,8 +37,13 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import conf  # noqa: E402
 import deltas  # noqa: E402
+import llm  # noqa: E402
+import notify  # noqa: E402
 import poll as pl  # noqa: E402
+import regulator as rg  # noqa: E402
+import schedule as sch  # noqa: E402
 import t0  # noqa: E402
 from common import FILES, Blocked, Paths, read_json, write_json  # noqa: E402
 
@@ -39,11 +51,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import fetch_xbrl as fx  # noqa: E402
 
 PY = sys.executable or "/usr/bin/python3"
-DEPLOY = "cd insurance-dashboard && ./deploy.sh --check-only && ./deploy.sh"
-BUILDERS_KPI = ["canon_kpi.py", "build_registry.py", "build_coverage.py"]
-BUILDERS_DOCS = ["build_calendar.py", "build_coverage.py"]
+DEPLOY = "./deploy.sh --check-only && ./deploy.sh"
+DAG_DEPLOY = ["pipeline/dag.py", "--only", "deploy"]
+DAG_REGULATOR = ["pipeline/dag.py", "--only", "fetch_regulator,build_market,build_funds", "--manual"]
+PUBLISH_PATHS = ["web/public/data", "data/registry", "pipeline/taxonomy"]
 TRACKED = ("annual", "quarterly", "presentation", "solvency", "liabilities")
 TYPE_HE = {"annual": "דוח שנתי", "quarterly": "דוח רבעוני", "presentation": "מצגת", "solvency": "דוח סולבנסי", "liabilities": "מצבת התחייבויות"}
+RUNS_KEPT = 20
+CHANNEL = {
+    "maya_feed": None,
+    "finding": "אין לבורסה ערוץ לצריכה אוטומטית של דיווחים שמותר ל-fox להשתמש בו: אין RSS, ה-DataHub החינמי אינו כולל דיווחים, "
+               "ו-robots.txt של MAYA אוסר /api/ ודורש אישור מפורש לשליפה שיטתית. הבקשה לבורסה: docs/TASE_REQUEST.md",
+    "checked": "2026-10-25",
+}
 
 
 def has_duckdb():
@@ -54,14 +74,12 @@ def has_duckdb():
         return False
 
 
-def llm_hook(filing, cfg):
-    """The point where the owner-approved extraction would run. Off: records the estimate and the reason, calls nothing."""
-    llm = cfg.get("llm", {})
-    est = (llm.get("est_tokens") or {}).get(filing["type"])
-    if not llm.get("enabled") or not llm.get("approved_by") or not llm.get("budget_tokens_per_run"):
-        return {"ran": False, "why": "כבוי: דורש אישור תקציב של הבעלים (config.json llm)", "est_tokens": est}
-    # deliberately not implemented in wave 1: the extraction spec, queue and budget accounting land with the owner's approval
-    return {"ran": False, "why": "מאושר אך טרם מומש בגל זה", "est_tokens": est}
+def llm_hook(filing, cfg, paths=None, budget=None):
+    """The extraction step for one filing (llm.py): off unless ops/autopilot.toml [llm] is on; budget-capped when on."""
+    est = (((cfg.get("estimates") or {}).get("llm") or {}).get("est_tokens") or {}).get(filing["type"])
+    if paths is None or budget is None or not conf.llm_on(cfg):
+        return {"ran": False, "why": "כבוי: ops/autopilot.toml [llm] (enabled + approved_by)", "est_tokens": est}
+    return llm.extract(filing, cfg, paths, budget, est=est)
 
 
 def preview_skeleton(paths, tr, filings, log):
@@ -208,12 +226,13 @@ def build_status(paths, mode, poll_res, steps, gate_res, cfg, kpi=None, today=No
                      "note": None if co.get("maya_id") else "לא מדווחת ב-MAYA (אין מזהה חברה בבורסה): אין דוחות לסקור"})
     return {
         "built": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "mode": mode,
-        "source": "MAYA (maya.tase.co.il), דוחות תקופתיים ו-XBRL (טופס ת930); הנתונים המודפסים מהדוחות כפי שחולצו",
+        "source": "MAYA (maya.tase.co.il), דוחות תקופתיים ו-XBRL (טופס ת930); רשות שוק ההון (data.gov.il); הנתונים המודפסים מהדוחות כפי שחולצו",
         "poll": None if not poll_res else {"at": poll_res["at"], "mode": poll_res["mode"], "blocked": poll_res["blocked"],
                                            "seen": sum(c["seen"] for c in poll_res["companies"].values()),
                                            "new": sum(1 for f in poll_res["filings"] if f.get("wanted")), "errors": len(poll_res["errors"])},
-        "steps": steps, "gate": gate_res, "llm": {"enabled": bool(cfg.get("llm", {}).get("enabled")), "approved_by": cfg.get("llm", {}).get("approved_by")},
-        "push": {"enabled": bool(cfg.get("push", {}).get("enabled"))},
+        "steps": steps, "gate": gate_res,
+        "llm": {"enabled": conf.llm_on(cfg), "approved_by": (cfg.get("llm") or {}).get("approved_by") or None},
+        "push": {"enabled": bool((cfg.get("estimates") or {}).get("push", {}).get("enabled"))},
         "deploy": {"command": DEPLOY, "auto": False},
         "filings_logged": len(log.get("filings", [])),
         "companies": rows,
@@ -221,58 +240,188 @@ def build_status(paths, mode, poll_res, steps, gate_res, cfg, kpi=None, today=No
 
 
 # ------------------------------------------------------------------------------------------------------------------------------ run
-def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, skip_build=False, status_out=None, today=None, log=print):
-    cfg = read_json(paths.config, {}) or {}
-    steps, kpi_preview = [], None
-    poll_res = None
+def run_dag(paths, argv, log, step="build"):
+    """python3 pipeline/dag.py ... in the checkout; the last lines of its output go into the step record."""
+    p = subprocess.run([PY, *argv], cwd=paths.root, capture_output=True, text=True, timeout=5400)
+    out = (p.stdout + p.stderr).strip().splitlines()
+    tail = " | ".join(x.strip() for x in out[-3:])[:300]
+    log(f"  {' '.join(argv[1:])}: {'ok' if p.returncode == 0 else 'FAILED'} {tail}")
+    return {"step": step, "script": " ".join(argv), "ok": p.returncode == 0, "tail": tail}
+
+
+def git(paths, *args):
+    try:
+        p = subprocess.run(["git", *args], cwd=paths.root, capture_output=True, text=True, timeout=60)
+        return p.stdout if p.returncode == 0 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def pending_publication(paths):
+    """What the live site does not have yet: data files changed in this checkout, and local commits not on origin (None outside git)."""
+    st = git(paths, "status", "--porcelain", "--", *PUBLISH_PATHS)
+    if st is None:
+        return None
+    files = sorted({ln[3:].strip().split(" -> ")[-1] for ln in st.splitlines() if ln.strip()})
+    ahead = (git(paths, "rev-list", "--count", "@{u}..HEAD") or "").strip()
+    return {"files": files[:60], "count": len(files), "ahead": int(ahead) if ahead.isdigit() else None,
+            "head": (git(paths, "rev-parse", "--short", "HEAD") or "").strip() or None}
+
+
+def publish_commands(paths, landed, cfg=None):
+    """The exact commands a human runs to publish (deploy.sh refuses a dirty, unpushed or CI-red HEAD). In this checkout's own tree the
+    folder shown is the configured one (ops/autopilot.toml [repo] path: where the schedule runs)."""
+    home = str(Path.home())
+    root = str(paths.root)
+    if cfg and Path(root).resolve() == conf.ROOT.resolve():
+        root = (cfg.get("repo") or {}).get("path") or root
+    root = "~" + root[len(home):] if root.startswith(home) else root
+    msg = "Autopilot: " + ("; ".join(landed)[:120] if landed else "data refresh")
+    return [f"cd {root}", f"git add {' '.join(PUBLISH_PATHS)} && git commit -m {json.dumps(msg, ensure_ascii=False)}",
+            "git push", "gh run list --workflow fox-ci --limit 1   # wait until it is green: deploy.sh refuses a red or running CI", DEPLOY]
+
+
+def pickup(paths):
+    """Quarterly/annual XBRL instances listed in documents.csv and present locally that xbrl_facts.json has not parsed yet."""
+    reg = read_json(paths.xbrl_facts, {"reports": {}}) or {"reports": {}}
+    have = set(reg.get("reports", {}))
+    out = []
+    for r in pl.documents(paths):
+        if r["file_type"] == "xbrl" and r["doc_type"] in pl.PERIODIC and r["report_id"] not in have \
+                and (paths.xbrl / f"{r['company']}_{r['report_id']}.xbrl").exists():
+            out.append({"company": r["company"], "rid": int(r["report_id"]), "period": r["period"], "type": r["doc_type"]})
+    return out
+
+
+def _name(paths, cid):
+    try:
+        return next((c.get("name_he") or cid for c in pl.companies(paths) if c["id"] == cid), cid)
+    except Exception:  # noqa: BLE001
+        return cid
+
+
+def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, skip_build=False, status_out=None, today=None, log=print,
+        regulator=False, http=None, cfg=None, trigger="manual", notify_on=None):
+    """One run. do_poll: a MAYA pass over `tr` (manual --maya-once, a replay, or the schedule with TASE's permission). regulator: the
+    data.gov.il probe over `http`. trigger: schedule | manual | maya-once (a scheduled no-op run writes nothing)."""
+    cfg = cfg if cfg is not None else conf.load()
+    cfg = {**cfg, "estimates": read_json(paths.config, {}) or {}}
+    notify_on = bool((cfg.get("notify") or {}).get("enabled")) if notify_on is None else notify_on
+    today = today or pl.today_il()
+    steps, kpi_preview, landed, problems = [], None, [], []
+    poll_res, reg_res = None, None
+    # 1. discover ------------------------------------------------------------------------------------------------------------
+    if regulator:
+        reg_res = rg.probe(http or rg.Http(), paths.data, log=log)
+        new_m = [d for d in reg_res["datasets"] if d["new"]]
+        steps.append({"step": "regulator", "ok": not reg_res["errors"],
+                      "note": ("חודש חדש: " + ", ".join(f"{d['id']} {rg.month_label(d['upstream'])}" for d in new_m)) if new_m
+                      else ("לא נבדק: " + reg_res["errors"][0]["error"][:80]) if reg_res["errors"] and not any(d.get("upstream") for d in reg_res["datasets"])
+                      else "ללא חודש חדש"})
+        if reg_res["errors"]:
+            problems.append("data.gov.il: " + "; ".join(e["id"] for e in reg_res["errors"]))
     if do_poll:
         poll_res = pl.poll(paths, tr, only=only, apply=apply, today=today, log=log)
         steps.append({"step": "poll", "ok": not poll_res["blocked"], "note": f"{poll_res['mode']}: {sum(1 for f in poll_res['filings'] if f.get('wanted'))} חדשים"})
+        if poll_res["blocked"]:
+            problems.append("MAYA חסמה: " + str(poll_res["blocked"])[:80])
     filings = [f for f in (poll_res or {}).get("filings", []) if f.get("wanted")]
     periodic = [f for f in filings if f["type"] in pl.PERIODIC and f.get("xbrl")]
-    # 2. skeleton
+    picked = pickup(paths) if not periodic else []
+    if picked:
+        steps.append({"step": "pickup", "ok": True, "note": f"{len(picked)} מופעי XBRL מקומיים שטרם נקלטו"})
+    # 2. fetch (regulator) ---------------------------------------------------------------------------------------------------
+    reg_new = bool(reg_res and reg_res["new"])
+    if reg_new and apply and not skip_build:
+        r = run_dag(paths, DAG_REGULATOR, log, step="regulator-fetch")
+        steps.append(r)
+        if r["ok"]:
+            landed += [f"רשות שוק ההון {rg.month_label(d['upstream'])} ({d['id']})" for d in reg_res["datasets"] if d["new"]]
+        else:
+            problems.append("שליפת נתוני הרשות נכשלה")
+    elif reg_new:
+        steps.append({"step": "regulator-fetch", "ok": True, "planned": [" ".join(DAG_REGULATOR)], "note": "dry run" if not apply else "skipped"})
+    # 3. skeleton ------------------------------------------------------------------------------------------------------------
     t0res = None
     if periodic and not apply:
         kpi_preview, t0res = preview_skeleton(paths, tr, periodic, log)
-    elif apply and (periodic or not do_poll):
-        if periodic:
+    elif apply and (periodic or picked or not (do_poll or regulator)):
+        if periodic or picked:
             fx.registry(root=paths.root, quiet=True)
-        if periodic and has_duckdb() and not skip_build:
+        if (periodic or picked) and has_duckdb() and not skip_build:
             steps.append(run_script(paths, "fetch_xbrl.py", log) | {"step": "xbrl"})
             steps.append(run_script(paths, "build_kpi.py", log) | {"step": "kpi"})  # calls t0.run itself
-            t0res = t0.run(paths, apply=True, today=today, log=log)  # idempotent: verify the T+0 periods against the printed figures
-        else:
-            t0res = t0.run(paths, apply=True, today=today, log=log)
+        t0res = t0.run(paths, apply=True, today=today, log=log)  # idempotent: verify the T+0 periods against the printed figures
     if t0res is not None:
         steps.append({"step": "skeleton", "ok": True, "new": t0res["new"], "replaced": t0res["replaced"], "ext": t0res["ext"],
                       "verified": [list(x) for x in t0res["verified"]], "applied": apply})
-    # 3. extraction hook (off)
+        if apply:
+            landed += [f"{_name(paths, c)} {deltas.PL(p)} · שלד XBRL (לא מאומת)" for c, p, *_ in t0res["new"]]
+            landed += [f"{_name(paths, c)} {deltas.PL(p)} · אומת מול הדוח" for c, p, *_ in t0res["verified"]]
+    if apply and not (poll_res or {}).get("blocked"):
+        for f in filings:
+            if f["type"] not in pl.PERIODIC or not f.get("xbrl"):
+                per = deltas.PL(f["period"]) if f.get("period") else ""
+                landed.append(f"{_name(paths, f['company'])} · {TYPE_HE.get(f['type'], f['type'])} {per}".strip())
+    # 4. extraction hook -----------------------------------------------------------------------------------------------------
+    budget = llm.Budget(paths, cfg) if conf.llm_on(cfg) and apply else None
     for f in filings:
-        f["llm"] = llm_hook(f, cfg)
+        f["llm"] = llm_hook(f, cfg, paths if apply else None, budget)
     if filings:
-        steps.append({"step": "extraction", "ok": True, "ran": 0, "skipped": len(filings),
-                      "est_tokens": sum((f["llm"]["est_tokens"] or 0) for f in filings), "note": "כבוי עד אישור הבעלים"})
-    # 4. rebuild
-    todo = []
-    if t0res and (t0res["new"] or t0res["replaced"] or t0res["ext"] or t0res["verified"]):
-        todo += BUILDERS_KPI
-    if filings:
-        todo += [b for b in BUILDERS_DOCS if b not in todo]
-    if todo:
+        ran = [f for f in filings if f["llm"].get("ran")]
+        steps.append({"step": "extraction", "ok": all(f["llm"].get("ok") for f in ran), "ran": len(ran), "skipped": len(filings) - len(ran),
+                      "tokens": sum(f["llm"].get("tokens") or 0 for f in ran),
+                      "est_tokens": sum((f["llm"].get("est_tokens") or 0) for f in filings),
+                      "note": "כבוי עד אישור הבעלים" if not conf.llm_on(cfg) else f"{len(ran)} חולצו · לא מאומת"})
+    # 5. rebuild -------------------------------------------------------------------------------------------------------------
+    changed = bool(reg_new or filings or (t0res and (t0res["new"] or t0res["replaced"] or t0res["ext"] or t0res["verified"])))
+    if changed or (apply and not (do_poll or regulator)):
         if apply and not skip_build:
-            for b in todo:
-                steps.append(run_script(paths, b, log) | {"step": "build"})
+            r = run_dag(paths, DAG_DEPLOY, log)
+            steps.append(r)
+            if not r["ok"]:
+                problems.append("הבנייה (dag.py) נכשלה")
         else:
-            steps.append({"step": "build", "ok": True, "planned": todo, "note": "dry run" if not apply else "skipped"})
-    # 5. gate
+            steps.append({"step": "build", "ok": True, "planned": [" ".join(DAG_DEPLOY)], "note": "dry run" if not apply else "skipped"})
+    # 6. gate ----------------------------------------------------------------------------------------------------------------
     gate_res = {"ran": False, "ok": None, "fails": [], "note": "dry run" if not apply else "skipped"}
-    if apply and not skip_gate and (todo or not do_poll):
+    if apply and not skip_gate and (changed or not (do_poll or regulator)):
         gate_res = gate(paths, log)
-    # 6. status
+        if not gate_res["ok"]:
+            problems.append("שער האיכות נכשל: " + ", ".join(gate_res["fails"][:4]))
+    # 7. status --------------------------------------------------------------------------------------------------------------
     mode = "apply" if apply else "dry-run"
     status = build_status(paths, mode, poll_res, steps, gate_res, cfg, kpi=kpi_preview, today=today)
-    out = Path(status_out) if status_out else (paths.status if apply else Path(tempfile.gettempdir()) / "fox-autopilot" / "status.json")
-    write_json(out, status)
+    prev = read_json(paths.status, {}) or {}
+    if status["poll"] is None and prev.get("poll"):
+        status["poll"] = {**prev["poll"], "carried": True}  # the last MAYA pass stays on record with its own date (no new request)
+    substantive = bool(landed or problems or gate_res["ran"] or trigger != "schedule")
+    entry = {"at": status["built"], "trigger": trigger, "mode": mode, "landed": landed, "problems": problems,
+             "gate": gate_res.get("ok") if gate_res["ran"] else None, "maya": bool(do_poll), "regulator": bool(regulator)}
+    pend = pending_publication(paths)
+    status.update(
+        schedule=sch.summary(cfg, read_json(paths.data / "calendar.json", {}), today),
+        discovery={"regulator": bool(cfg["discovery"].get("regulator")), "maya_scheduled": conf.maya_scheduled(cfg),
+                   "maya_permission_ref": cfg["discovery"].get("maya_permission_ref") or None, "maya_manual": "python3 pipeline/autopilot/run.py --maya-once",
+                   "maya_interval_seconds": max(2.0, float(cfg["discovery"].get("maya_interval_seconds") or 2.0)), **CHANNEL},
+        regulator=reg_res if reg_res else prev.get("regulator"),
+        runs=([entry] + [r for r in prev.get("runs", []) if r.get("at") != entry["at"]])[:RUNS_KEPT] if substantive and apply else prev.get("runs", []),
+        publish={"pending": pend, "commands": publish_commands(paths, landed or [x for r in prev.get("runs", [])[:3] for x in r.get("landed", [])], cfg),
+                 "auto": False, "note": "deploy.sh מפרסם רק commit נקי, דחוף, ש-fox-ci עבר עליו"},
+        llm_budget=(budget or llm.Budget(paths, cfg)).summary() | {"enabled": conf.llm_on(cfg)},
+        extracted_pending=llm.pending(paths),
+    )
+    if status_out:
+        out = Path(status_out)
+    elif apply and substantive:
+        out = paths.status
+    elif apply:
+        out = None  # a scheduled tick that found nothing: the repo stays untouched (tick.py keeps its own heartbeat)
+    else:
+        out = Path(tempfile.gettempdir()) / "fox-autopilot" / "status.json"
+    if out:
+        write_json(out, status)
+        log(f"status: {out}")
     if apply and filings:
         lg = read_json(paths.filings, {"filings": []})
         for e in lg["filings"]:
@@ -281,31 +430,57 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
                 e["llm"] = f["llm"]
                 e["run"] = status["built"]
         write_json(paths.filings, lg, compact=False)
-    log(f"status: {out}")
     status["_poll"] = poll_res  # for --json (the CI artifact): every new filing, wanted or not, with its classification
-    # 7. deploy: printed, never run
-    if apply and (todo or not do_poll):
+    status["_landed"], status["_problems"], status["_written"] = landed, problems, str(out) if out else None
+    # 8. publish: printed and notified, never run ----------------------------------------------------------------------------
+    if apply and (landed or problems):
         ok = gate_res.get("ok")
-        log(("gate passed; to publish, a human runs:\n  " if ok else "gate did not pass (or was skipped); after fixing, a human runs:\n  ") + DEPLOY)
+        cmds = status["publish"]["commands"]
+        log(("gate passed; to publish, a human runs:\n  " if ok else "gate did not pass (or was skipped); after fixing, a human runs:\n  ")
+            + "\n  ".join(cmds))
+        if notify_on:
+            title = "fox · " + ("נחת: " + landed[0] if landed else "דרושה בדיקה")
+            body = ("; ".join(landed[1:3]) + " · " if len(landed) > 1 else "") + ("; ".join(problems) + " · " if problems else "") \
+                + ("שער עבר · לפרסום: ./deploy.sh (אחרי commit, push ו-CI ירוק)" if ok else "השער לא עבר: python3 pipeline/gate.py")
+            status["_notified"] = notify.show(title, body, subtitle=f"{len(landed)} עדכונים" if landed else None)
     return status
 
 
 def main(argv=None):
     def extra(ap):
-        ap.add_argument("--no-poll", action="store_true", help="skip the network poll: rebuild from what is on disk")
+        ap.add_argument("--no-poll", action="store_true", help="no network at all: rebuild from what is on disk")
+        ap.add_argument("--maya-once", action="store_true", help="MANUAL: one MAYA pass at <= 1 request / 2 s, then the run (implies --apply)")
+        ap.add_argument("--dry-run", action="store_true", help="with --maya-once: list what is new, write nothing")
+        ap.add_argument("--no-regulator", action="store_true", help="skip the data.gov.il probe")
+        ap.add_argument("--no-notify", action="store_true")
         ap.add_argument("--skip-gate", action="store_true")
         ap.add_argument("--skip-build", action="store_true")
         ap.add_argument("--status-out", help="where to write status.json")
+        ap.add_argument("--trigger", default=None, help=argparse_hidden())
     a = pl.args(argv, extra)
+    cfg = conf.load()
     paths = Paths(a.root)
-    tr = None if a.no_poll else pl.transport(a)
-    st = run(paths, tr, apply=a.apply, do_poll=not a.no_poll, only=[c for c in a.companies.split(",") if c] or None,
+    apply = (a.apply or a.maya_once) and not a.dry_run
+    maya = bool(a.maya_once or a.replay or a.record) and not a.no_poll
+    if a.maya_once:
+        a.interval = max(2.0, float(cfg["discovery"].get("maya_interval_seconds") or 2.0), a.interval)  # <= 1 request / 2 s
+    elif not maya and conf.maya_scheduled(cfg) and not a.no_poll:
+        maya, a.interval = True, max(2.0, float(cfg["discovery"]["maya_interval_seconds"]))  # TASE's written permission on record
+    tr = pl.transport(a) if maya else None
+    st = run(paths, tr, apply=apply, do_poll=maya, only=[c for c in a.companies.split(",") if c] or None,
              skip_gate=a.skip_gate, skip_build=a.skip_build, status_out=a.status_out,
-             today=dt.date.fromisoformat(a.today) if a.today else None)
+             today=dt.date.fromisoformat(a.today) if a.today else None,
+             regulator=not (a.no_regulator or a.no_poll or a.replay) and bool(cfg["discovery"].get("regulator")),
+             cfg=cfg, trigger=a.trigger or ("maya-once" if a.maya_once else "manual"), notify_on=False if a.no_notify else None)
     if a.json:
-        write_json(a.json, {"status": {k: v for k, v in st.items() if k != "_poll"}, "poll": st.get("_poll")}, compact=False)
+        write_json(a.json, {"status": {k: v for k, v in st.items() if not k.startswith("_")}, "poll": st.get("_poll")}, compact=False)
     blocked = (st.get("poll") or {}).get("blocked")
     return 2 if blocked else 0
+
+
+def argparse_hidden():
+    import argparse  # noqa: PLC0415
+    return argparse.SUPPRESS
 
 
 if __name__ == "__main__":
