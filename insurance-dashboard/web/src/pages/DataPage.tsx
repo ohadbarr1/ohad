@@ -40,7 +40,7 @@ const CHECK_HE: Record<string, string> = {
   solvency: 'כושר פירעון: מקור, יחידות וטווח', solvency_page: 'כושר פירעון: כל נתון בעמוד שצוטט', capital_page: 'שימושי הון: נתון בעמוד שצוטט',
   adjusted_page: 'מדדים מותאמים: נתון בעמוד שצוטט', targets_page: 'יעדים: נתון או ציטוט בעמוד', decks_page: 'מצגות: כל נתון בשקף שצוטט',
   image_notes: 'נתונים מתמונה: הערת קריאה וסימון לעמוד', debt: 'חוב (ת126): התאמת טבלאות ומקור', debt_warn: 'חוב: הערות טופס',
-  ownership: 'בעלי עניין: אחוזים, תאריך ומקור', macro: 'מאקרו: מקור, טווח ורצף', links: 'קישורי מקור: בדיקה שבועית',
+  ownership: 'בעלי עניין: אחוזים, תאריך ומקור', macro: 'מאקרו: מקור, טווח ורצף', links: 'קישורי מקור: בדיקה שבועית', cell_sources: 'כל נתון בדוחות: דוח MAYA ותאריך פרסום',
 };
 /** a check id the table does not know: its family label plus the variant (known misses, skipped for lack of page text, image page) */
 const checkHe = (id: string) => CHECK_HE[id] ?? (() => { const m = id.match(/^(.*)_(known|skipped|noimgflag)$/); return m && CHECK_HE[m[1]] ? `${CHECK_HE[m[1]]} · ${({ known: 'חריגים ידועים', skipped: 'לא נבדק (אין טקסט)', noimgflag: 'עמוד תמונה ללא סימון' } as Record<string, string>)[m[2]]}` : id; })();

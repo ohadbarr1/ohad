@@ -14,6 +14,7 @@ A value read from a page or slide image (source image|chart, flag i) is not text
   debt           debt/: the ת126 self-check (tables parsed and tied out) and every cell's report listed with URL + publication date
   ownership      ownership/: shares in [0, 100] that add up, every holding dated, every company with source URL + retrieval date
   macro          macro/: every series with source URL + retrieval date, values numeric and in range, months in order
+  cell_sources   every current statement figure cites a MAYA report with its publication date (warns with the count where not)
 
 Page checks: a miss not in pipeline/gate_known.json fails; a known miss warns; a value with no page text here is counted as
 "skipped (no sources)" and warns (CI has the reader text but not the PDFs): never a silent pass.
@@ -334,6 +335,31 @@ def macro(add):
     add("macro", not bad, n, len(bad), f"{n} macro values: source URL + retrieval date, numeric, in range, months in order" + (f"; e.g. {bad[0]}" if bad else ""))
 
 
+def cell_sources(add):
+    """Every current statement figure (flag 16 in the fact table) cites a MAYA report with its publication date. A figure on a company-site
+    copy (no report id, no date) warns with its count; the workbook source carries the mark (r2-ws5 finding 7)."""
+    idx = load("facts/index.json") or {"companies": []}
+    n = bad = 0
+    by = collections.Counter()
+    hosts = collections.Counter()
+    for co in idx["companies"]:
+        d = load(f"facts/{co['id']}.json")
+        if not d:
+            continue
+        V, R = d["vint"], d["rows"]
+        for t, fl in zip(R["t"], R["f"]):
+            if not fl & 16:
+                continue
+            n += 1
+            if V["rid"][t] is None or not V["pub"][t]:
+                bad += 1
+                by[co["id"]] += 1
+                u = d["urls"][V["u"][t]] if V["u"][t] is not None and V["u"][t] < len(d["urls"]) else None
+                hosts[re.sub(r"^https?://(www\.)?([^/]+).*$", r"\2", u or "-")] += 1
+    add("cell_sources", bad == 0, n, bad, f"{n} current statement figures; {bad} without a MAYA report id + publication date"
+        + (f" ({', '.join(f'{k} {v}' for k, v in by.items())}; cited host: {', '.join(f'{k} {v}' for k, v in hosts.items())})" if bad else ""), level="warn")
+
+
 def run(add):
     solvency(add)
     capital(add)
@@ -344,4 +370,5 @@ def run(add):
     debt(add)
     ownership(add)
     macro(add)
+    cell_sources(add)
     pagetext.save()
