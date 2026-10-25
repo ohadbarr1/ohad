@@ -1,0 +1,41 @@
+/* === lane S3 · management-credibility ledger (/credibility, company panel) === */
+.cr { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.cr > .panel, .cr > .kpis { margin: 0; }
+.tg-st.partial { color: var(--warn); border-color: currentColor; }
+.tg-st.nc { color: var(--muted); border-style: dashed; }
+.cr-t td.wide { min-width: 300px; max-width: 520px; white-space: normal; }
+.cr-t td, .cr-co td { vertical-align: top; }
+.cr-t td .dim, .cr-kv .dim { display: block; font-size: 11.5px; color: var(--muted); }
+.cr-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cr-said .cr-l { font-weight: 600; }
+.cr-said q { font-size: var(--t-1); color: var(--faint); quotes: "״" "״"; overflow-wrap: anywhere; }
+.cr-said .dim { font-size: 11.5px; color: var(--muted); }
+.cr-why { display: block; font-size: 12px; color: var(--muted); white-space: normal; min-width: 180px; max-width: 320px; }
+.cr-co td { white-space: nowrap; }
+.cr-co tr.on td { background: var(--panel2); }
+.cr-co .thsel { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; }
+.cr-co .thsel:hover { color: var(--accent-text); }
+.cr-co td.cr-eras { white-space: normal; min-width: 200px; max-width: 340px; }
+.cr-eras .chip { margin: 0 0 3px 4px; }
+.cr-eras .chip .dim { color: var(--muted); }
+.cr .pdot, .cr-cards .pdot, .cr-t .pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; flex: none; }
+.cr-filter { display: flex; gap: 6px; margin-bottom: 10px; }
+.cr-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cr-card { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--panel); min-width: 0; }
+.cr-card header { display: flex; align-items: center; gap: 6px; }
+.cr-card header .cr-h { margin-inline-start: auto; color: var(--muted); font-size: 12px; }
+.cr-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cr-kv .l { display: block; font-size: 11.5px; color: var(--muted); }
+.cr-kv .cr-why { min-width: 0; }
+/* === end lane S3 === */
+/* === lane S3 · credibility, phone company list === */
+.cr-cocards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.cr-cocards li { padding: 9px 0; border-bottom: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 4px; }
+.cr-cocards li.on { background: var(--panel2); }
+.cr-cohd { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cr-cohd .thsel { display: inline-flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; }
+.cr-cohd b { margin-inline-start: auto; }
+.cr-cohd .dim { font-size: 11.5px; color: var(--muted); width: 100%; }
+.cr-cocards .cr-eras:empty { display: none; }
+.cr-cocards .cr-eras .chip { margin: 0 0 3px 4px; }
+/* === end lane S3 === */

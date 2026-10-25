@@ -1,0 +1,35 @@
+/* === lane S3 · stress lab (/industry/csm?view=stress) === */
+.stress-ctl { display: flex; flex-direction: column; gap: 12px; }
+.stress-sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 8px 22px; }
+.stress-sl { display: grid; grid-template-columns: 76px minmax(0, 1fr) 74px; align-items: center; gap: 10px; min-width: 0; }
+.stress-sl .l { font-size: var(--t-2); color: var(--muted); }
+.stress-sl.on .l { color: var(--fg); font-weight: 600; }
+.stress-sl input[type="range"] { width: 100%; min-width: 0; accent-color: var(--accent); direction: ltr; height: 24px; }
+.stress-sl .v { text-align: left; font-weight: 600; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+.stress-sl .v small { font-weight: 400; color: var(--muted); margin-left: 3px; font-size: 11px; }
+.stress-sl:not(.on) .v { color: var(--muted); font-weight: 400; }
+.stress-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.stress-presets .dim { margin-left: 4px; font-size: var(--t-1); }
+.stress-presets button.chip:disabled { opacity: .45; cursor: default; }
+.stress-t td { vertical-align: top; white-space: nowrap; }
+.stress-t td > .num { display: block; }
+.stress-t td > .num.dim, .stress-t td > span.dim { display: block; font-size: 11.5px; color: var(--muted); font-weight: 400; }
+.stress-t td.lbl .dim { display: block; font-size: 11px; color: var(--muted); }
+.stress-t td .chip { margin: 3px 0 0 4px; font-size: 10.5px; padding: 0 6px; }
+@media (max-width: 760px) {
+  .stress-sliders { grid-template-columns: 1fr; gap: 4px; }
+  .stress-sl { grid-template-columns: 64px minmax(0, 1fr) 70px; }
+}
+/* === end lane S3 === */
+/* === lane S3 · stress lab, phone cards === */
+.stress-k { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+.stress-k > div { min-width: 0; display: block; }
+.stress-k > div > .num, .stress-k > div > span.dim, .stress-k > div > span.muted { display: block; text-align: right; }
+.stress-k > div:last-child { grid-column: 1 / -1; }
+.stress-k .l { font-size: 11.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; margin-bottom: 2px; }
+.stress-k .l .chip { font-size: 10px; padding: 0 5px; }
+.stress-k > div > .num { font-weight: 600; }
+.stress-k > div > .num.dim, .stress-k > div > span.dim { font-size: 11.5px; color: var(--muted); font-weight: 400; }
+.stress-k > div > .chip { font-size: 10.5px; padding: 0 6px; margin: 3px 0 0 4px; }
+.stress-card header .dim { margin-inline-start: auto; font-size: 11px; color: var(--muted); }
+/* === end lane S3 === */

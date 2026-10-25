@@ -58,6 +58,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_additivity  # noqa: E402
 import check_schemas  # noqa: E402
 import gate_layers  # noqa: E402  (lane G: solvency, capital, adjusted, targets, decks, image notes, debt, ownership, macro)
+import gate_s3  # noqa: E402  (lane S3: stress-lab reproduction, credibility ledger)
 
 LATIN = re.compile(r"[A-Za-z][A-Za-z'\-]*(?:[\s,/&()\-]+[A-Za-z][A-Za-z'\-]*){2,}")
 PROPER = ("S&P Global Ratings",)  # a proper name is not untranslated text
@@ -439,6 +440,7 @@ def main():
     facts()
     assets()
     gate_layers.run(add)
+    gate_s3.run(add)
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     failed = [c["id"] for c in checks if not c["ok"] and c["level"] == "fail"]
