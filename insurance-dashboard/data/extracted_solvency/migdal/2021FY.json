@@ -156,11 +156,11 @@
    "basis": "with_transitional",
    "window": "instant",
    "date": "2021-12-31",
-   "value": 600000,
+   "value": 159,
    "page_he": 9,
-   "label": "לתאריך פרסום דוח יחס כושר פירעון",
+   "label": "יחס כושר פירעון כלכלי (באחוזים)",
    "source": "table",
-   "note": "after material capital actions between calculation date and publication date"
+   "note": "after material capital actions between calculation date and publication date; corrected 25.10.26 (gate): the row read before (600,000) is the NIS-thousands amount of the capital action, the ratio after it is 159% two rows below on the same page"
   },
   {
    "metric": "own_funds",

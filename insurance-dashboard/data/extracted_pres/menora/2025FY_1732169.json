@@ -185,8 +185,8 @@
    "page_he": 41,
    "doc": "pres",
    "label": "92% מהרווח המותאם לפני מס מקורם ממוצרים ממשיכים",
-   "source": "text",
-   "note": "Percent as printed."
+   "source": "image",
+   "note": "Percent as printed. Text layer of the slide does not carry the figure (graphic text); second read on the page render 25.10.26 confirms the value."
   },
   {
    "metric": "kpi_continuing_products_share_profit_reserve",
@@ -198,8 +198,8 @@
    "page_he": 41,
    "doc": "pres",
    "label": "90% ממחסנית הרווח מקורם ממוצרים ממשיכים",
-   "source": "text",
-   "note": "Percent as printed."
+   "source": "image",
+   "note": "Percent as printed. Text layer of the slide does not carry the figure (graphic text); second read on the page render 25.10.26 confirms the value."
   },
   {
    "metric": "kpi_profit_reserve_continuing_products",
@@ -276,8 +276,8 @@
    "page_he": 7,
    "doc": "pres",
    "label": "מחסנית הרווח 20.0 מיליארדי ₪ 31.12.2024",
-   "source": "text",
-   "note": "NIS millions (printed NIS billions)."
+   "source": "image",
+   "note": "NIS millions (printed NIS billions). Text layer of the slide does not carry the figure (graphic text); second read on the page render 25.10.26 confirms the value."
   },
   {
    "metric": "kpi_new_business_contribution_to_profit_reserve",
@@ -419,8 +419,8 @@
    "page_he": 7,
    "doc": "pres",
    "label": "דיבידנד 600 מיליוני ₪",
-   "source": "text",
-   "note": "NIS millions as printed on the key-data slide (2025)."
+   "source": "image",
+   "note": "NIS millions as printed on the key-data slide (2025). Text layer of the slide does not carry the figure (graphic text); second read on the page render 25.10.26 confirms the value."
   }
  ],
  "not_found": []

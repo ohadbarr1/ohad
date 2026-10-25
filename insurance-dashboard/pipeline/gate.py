@@ -33,7 +33,8 @@ Checks
                  (value, page, report, flags) and every statement pair of restatements.json (both prints, reports, pages); one current
                  row per cell, derived rows equal their inputs, every line id in the taxonomy (pipeline/build_facts.py --check, lane FT).
   assets         quarterly asset lists (web/public/data/assets/): classes add up to the total, every quarter has its source files and
-                 passed the file validation, and the files equal a rebuild from data/work/asset_lists (lane AL).
+                 passed the file validation, and the files equal a rebuild from data/work/asset_lists (lane AL); a skipped rebuild warns.
+  solvency … macro   the published layers outside the statements: source, type/unit, value on its cited page (pipeline/gate_layers.py, lane G)
 """
 import collections
 import datetime as dt
@@ -54,6 +55,7 @@ POOL = ThreadPoolExecutor(48)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_additivity  # noqa: E402
 import check_schemas  # noqa: E402
+import gate_layers  # noqa: E402  (lane G: solvency, capital, adjusted, targets, decks, image notes, debt, ownership, macro)
 
 LATIN = re.compile(r"[A-Za-z][A-Za-z'\-]*(?:[\s,/&()\-]+[A-Za-z][A-Za-z'\-]*){2,}")
 PROPER = ("S&P Global Ratings",)  # a proper name is not untranslated text
@@ -370,7 +372,7 @@ def assets():  # lane AL
     the file validation; the files equal a rebuild from data/work/asset_lists (skipped with a warning where data/work is absent)."""
     d = DATA / "assets"
     if not (d / "index.json").exists():
-        return add("assets", True, 0, 0, "no asset-list files", level="warn")
+        return add("assets", False, 0, 1, "no asset-list files", level="warn")
     n, bad = 0, []
     for m in load(d / "index.json")["managers"]:
         if not m["latest"]:
@@ -395,15 +397,22 @@ def assets():  # lane AL
         note += "; rebuild equal" if not p.returncode else ""
     else:
         note += "; rebuild skipped (no data/work/asset_lists)"
-    add("assets", not bad, n, len(bad), (bad[0] if bad else note)[:200])
+    if bad:
+        add("assets", False, n, len(bad), bad[0][:200])
+    elif "skipped" in note:  # the sums and sources passed but the rebuild-equality step did not run: a warning, never a pass
+        add("assets", False, n, 1, note[:200], level="warn")
+    else:
+        add("assets", True, n, 0, note[:200])
 
 
 def main():
     t0 = dt.datetime.now()
     if "--baseline" in sys.argv:  # accept today's value-on-page misses as known (after reviewing them)
         misses = ifrs_pages()
-        KNOWN.write_text(json.dumps({"ifrs_page": sorted(misses)}, ensure_ascii=False, indent=1), encoding="utf-8")
-        print(len(misses), "misses written to", KNOWN)
+        gate_layers.run(lambda *a, **k: None)
+        known = {"ifrs_page": sorted(misses), **{k: sorted(v) for k, v in gate_layers.MISSES.items() if v}}
+        KNOWN.write_text(json.dumps(known, ensure_ascii=False, indent=1), encoding="utf-8")
+        print(sum(len(v) for v in known.values()), "misses written to", KNOWN)
         return 0
     run_script("workbook", "check_workbook.py")
     run_script("prov", "verify_prov.py")
@@ -418,6 +427,7 @@ def main():
     schemas()
     facts()
     assets()
+    gate_layers.run(add)
     out = {"built": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "checks": checks}
     (DATA / "qa.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     failed = [c["id"] for c in checks if not c["ok"] and c["level"] == "fail"]

@@ -1,0 +1,47 @@
+{
+ "checked": "2026-10-25T13:52:13+02:00",
+ "n": 223,
+ "dead": [],
+ "refused": [
+  {
+   "url": "https://data.gov.il/dataset/gemelnet",
+   "status": 403,
+   "files": [
+    "coverage.json"
+   ]
+  }
+ ],
+ "skipped": {
+  "maya api (robots.txt)": 2,
+  "mayafiles (sampled)": 867
+ },
+ "hosts": {
+  "api.cbs.gov.il": 1,
+  "cdn.menoramivt.co.il": 11,
+  "data.gov.il": 1,
+  "digital-content.fnx.co.il": 5,
+  "edge.boi.gov.il": 3,
+  "en.wikipedia.org": 1,
+  "fox-research-il.web.app": 2,
+  "infinity.co.il": 16,
+  "market.tase.co.il": 14,
+  "maya.tase.co.il": 10,
+  "mayafiles.tase.co.il": 25,
+  "media.harel-group.co.il": 8,
+  "mrkmd.meitav.co.il": 11,
+  "my.migdal.co.il": 3,
+  "phoenixfinancial.co.il": 1,
+  "www.555.co.il": 3,
+  "www.analyst.co.il": 20,
+  "www.as-invest.co.il": 28,
+  "www.boi.org.il": 2,
+  "www.cbs.gov.il": 1,
+  "www.clalbit.co.il": 11,
+  "www.fnx.co.il": 7,
+  "www.harel-group.co.il": 3,
+  "www.meitav.co.il": 18,
+  "www.migdal.co.il": 17,
+  "www.tase.co.il": 1
+ },
+ "ua": "fox-research/1.0 (+https://fox-research-il.web.app/data; weekly source link check)"
+}
