@@ -40,7 +40,7 @@ export function TargetsTracker({ inCo, name, all, setAll, status, setStatus }: {
   const n = { pres: base.filter((t) => t.src === 'pres').length, act: base.filter((t) => t.act).length, met: base.filter((t) => t.st === 'met').length, missed: base.filter((t) => t.st === 'missed').length };
   return (
     <section className="panel tg">
-      <div className="hd"><h2>יעדי הנהלה · מעקב</h2><div className="aside"><span><span className="num">{base.length}</span> יעדים · <span className="num">{n.pres}</span> ממצגות · בפועל ל-<span className="num">{n.act}</span></span></div></div>
+      <div className="hd"><h2>יעדי הנהלה · מעקב</h2><div className="aside"><Link to="/credibility">אמינות יעדים</Link> · <span><span className="num">{base.length}</span> יעדים · <span className="num">{n.pres}</span> ממצגות · בפועל ל-<span className="num">{n.act}</span></span></div></div>
       <div className="tg-bar">
         <Seg<string> label="סטטוס" value={status} onChange={setStatus} options={[['', 'הכול'], ['act', 'עם בפועל'], ['met', `הושג ${n.met}`], ['missed', `לא הושג ${n.missed}`], ['open', 'פתוח']]} />
         <Seg<string> label="הצהרות" value={all ? '1' : ''} onChange={(v) => setAll(!!v)} options={[['', 'האחרון לכל יעד'], ['1', 'כל התאריכים']]} />

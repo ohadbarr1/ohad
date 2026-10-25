@@ -21,6 +21,7 @@ import { usePhone } from '../lib/useMedia';
 import { ContextBar, Sheet } from '../components/Sheet';
 import '../styles/reportday.css';
 import { CardLink } from '../components/ReportCardLink';  // lane S2
+import { CredibilityPanel } from './Credibility';  // lane S3
 
 const PL = 'X.רווח_והפסד', BS = 'X.מאזן', OCI = 'X.רווח_כולל';
 const QE = ['03-31', '06-30', '09-30', '12-31'];
@@ -467,6 +468,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
           {rest.length > 0 && <p className="src">מיליוני ש"ח (שורות למניה: ש"ח) · שני המספרים נפתחים בעמוד שבו הודפסו.</p>}
         </Panel>
       </section>
+      <CredibilityPanel id={id} name={entry?.name_he ?? id} />
 
       <Panel title="רווח נקי ורווח משירותי ביטוח · 12 רבעונים" aside={<span className="chip">הרבעון המדווח מודגש · בהיר: נגזר (Q4) או IFRS 4</span>}>
         <Chart build={build} height={250} onPoint={(si, di) => { const f = (si === 0 ? netQ : isrQ)[di]; if (f) openSrc(figProv(f, si === 0 ? ROLES[4].label : ROLES[1].label, periodLabel('Q', qEnds[di]))); }} deps={[id, P, store]} label={`רווח נקי ורווח משירותי ביטוח, 12 רבעונים עד ${periodLabel('Q', end)}`} exportName={`fox-${id}-${P}-report-day`} />

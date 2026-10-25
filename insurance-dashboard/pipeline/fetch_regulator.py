@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 
 API = "https://data.gov.il/api/3/action"
-UA = {"User-Agent": "Mozilla/5.0"}
+UA = {"User-Agent": "fox-research/1.0 (+https://fox-research-il.web.app; fundamentals research, low-volume)"}
 RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
 DATASETS = {"gemel": "gemelnet", "pensia": "pensia-net", "insurance": "insurance"}
 PAGE = 30000
