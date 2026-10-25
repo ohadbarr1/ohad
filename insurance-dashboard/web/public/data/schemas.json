@@ -192,6 +192,18 @@
   {
    "pattern": "assets/*.json",
    "schema": "assetsManager"
+  },
+  {
+   "pattern": "cards/index.json",
+   "schema": "cardsIndex"
+  },
+  {
+   "pattern": "cards/*/*.json",
+   "schema": "card"
+  },
+  {
+   "pattern": "since.json",
+   "schema": "since"
   }
  ],
  "$defs": {
@@ -5146,6 +5158,602 @@
        "v",
        "pct"
       ]
+     }
+    }
+   }
+  },
+  "cardTok": {
+   "type": "object",
+   "properties": {
+    "f": {
+     "type": "string"
+    },
+    "p": {
+     "$ref": "#/$defs/period"
+    },
+    "d": {
+     "$ref": "#/$defs/date"
+    },
+    "pl": {
+     "type": "array",
+     "minItems": 2,
+     "prefixItems": [
+      {
+       "type": "string",
+       "enum": [
+        "Q",
+        "H",
+        "9M",
+        "FY",
+        "I"
+       ]
+      },
+      {
+       "$ref": "#/$defs/date"
+      }
+     ]
+    },
+    "y": {
+     "type": "integer"
+    }
+   },
+   "additionalProperties": false
+  },
+  "cardSrc": {
+   "type": "object",
+   "required": [
+    "k"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "pg",
+      "calc",
+      "xbrl",
+      "count"
+     ]
+    },
+    "u": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "dp": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "dt": {
+     "type": "string"
+    },
+    "fl": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "der",
+       "re",
+       "ifrs4",
+       "chart",
+       "text",
+       "cmp"
+      ]
+     }
+    },
+    "l": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "late": {
+     "type": "string"
+    },
+    "ref": {
+     "type": "object",
+     "required": [
+      "l"
+     ],
+     "properties": {
+      "l": {
+       "type": "string",
+       "enum": [
+        "wb",
+        "csm",
+        "ifrs",
+        "peer",
+        "tg",
+        "tgin",
+        "rest",
+        "kpi",
+        "count"
+       ]
+      }
+     }
+    },
+    "op": {
+     "type": "string",
+     "enum": [
+      "diff",
+      "pct",
+      "ratio",
+      "sum",
+      "roe",
+      "nbrel",
+      "tgact"
+     ]
+    },
+    "in": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "fx": {
+     "type": "string"
+    },
+    "rid": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    }
+   }
+  },
+  "cardFact": {
+   "type": "object",
+   "required": [
+    "v",
+    "u",
+    "t",
+    "s"
+   ],
+   "properties": {
+    "v": {
+     "type": "number"
+    },
+    "u": {
+     "type": "string",
+     "enum": [
+      "m",
+      "pct",
+      "pp",
+      "dpct",
+      "dm",
+      "x",
+      "n",
+      "tpct"
+     ]
+    },
+    "t": {
+     "type": "string"
+    },
+    "s": {
+     "$ref": "#/$defs/cardSrc"
+    },
+    "std": {
+     "type": "string",
+     "enum": [
+      "17",
+      "4"
+     ]
+    }
+   },
+   "additionalProperties": false
+  },
+  "card": {
+   "type": "object",
+   "required": [
+    "v",
+    "c",
+    "name",
+    "kind",
+    "p",
+    "end",
+    "w",
+    "st",
+    "doc",
+    "rows",
+    "lead",
+    "tg",
+    "f",
+    "u",
+    "chk"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "c": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "ins",
+      "fund"
+     ]
+    },
+    "p": {
+     "$ref": "#/$defs/period"
+    },
+    "end": {
+     "$ref": "#/$defs/date"
+    },
+    "w": {
+     "type": "string",
+     "enum": [
+      "Q",
+      "FY"
+     ]
+    },
+    "st": {
+     "type": "string",
+     "enum": [
+      "verified",
+      "unverified"
+     ]
+    },
+    "doc": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "rid": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "pub": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "u": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "pages": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      }
+     }
+    },
+    "cmp": {
+     "type": "object",
+     "properties": {
+      "y": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "q": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     }
+    },
+    "t0": {
+     "type": "object"
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "k",
+       "l",
+       "cur"
+      ],
+      "properties": {
+       "k": {
+        "type": "string"
+       },
+       "l": {
+        "type": "string"
+       },
+       "cur": {
+        "type": "string"
+       },
+       "yoy": {
+        "type": "string"
+       },
+       "dy": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "qoq": {
+        "type": "string"
+       },
+       "dq": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "y0": {
+        "type": "string"
+       },
+       "alt": {
+        "type": "integer"
+       },
+       "der": {
+        "type": "integer"
+       },
+       "dyx": {
+        "type": "string"
+       },
+       "dqx": {
+        "type": "string"
+       },
+       "basis": {
+        "type": "string"
+       },
+       "at": {
+        "$ref": "#/$defs/date"
+       },
+       "multi": {
+        "type": "integer"
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "lead": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": [
+        "string",
+        "object"
+       ]
+      }
+     }
+    },
+    "board": {
+     "type": "object",
+     "required": [
+      "t",
+      "d"
+     ],
+     "properties": {
+      "t": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "d": {
+       "$ref": "#/$defs/date"
+      },
+      "hd": {
+       "type": "string"
+      },
+      "base": {
+       "type": "string",
+       "enum": [
+        "w",
+        "wo"
+       ]
+      }
+     }
+    },
+    "rest": {
+     "type": "object",
+     "required": [
+      "n",
+      "big",
+      "top"
+     ],
+     "properties": {
+      "n": {
+       "type": "string"
+      },
+      "big": {
+       "type": "string"
+      },
+      "top": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "i",
+         "l",
+         "pl",
+         "a",
+         "b",
+         "d"
+        ]
+       }
+      }
+     }
+    },
+    "tg": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "i",
+       "l",
+       "e"
+      ],
+      "properties": {
+       "i": {
+        "type": "integer"
+       },
+       "l": {
+        "type": "string"
+       },
+       "e": {
+        "type": "string"
+       },
+       "src": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "v": {
+        "type": "string"
+       },
+       "lo": {
+        "type": "string"
+       },
+       "hi": {
+        "type": "string"
+       },
+       "h": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "act": {
+        "type": "string"
+       },
+       "st": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "y": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "f": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/cardFact"
+     }
+    },
+    "u": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "chk": {
+     "type": "string"
+    }
+   }
+  },
+  "cardsIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "built",
+    "co"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "built": {
+     "$ref": "#/$defs/date"
+    },
+    "co": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "p"
+      ],
+      "properties": {
+       "p": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/period"
+        }
+       },
+       "u": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/period"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "since": {
+   "type": "object",
+   "required": [
+    "v",
+    "built",
+    "from",
+    "files",
+    "co"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "built": {
+     "$ref": "#/$defs/date"
+    },
+    "from": {
+     "$ref": "#/$defs/date"
+    },
+    "files": {
+     "type": "string"
+    },
+    "source": {
+     "type": "string"
+    },
+    "co": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "minItems": 3,
+       "prefixItems": [
+        {
+         "type": "string",
+         "enum": [
+          "f",
+          "r",
+          "t",
+          "m"
+         ]
+        },
+        {
+         "$ref": "#/$defs/date"
+        },
+        {
+         "type": "string"
+        }
+       ]
+      }
      }
     }
    }

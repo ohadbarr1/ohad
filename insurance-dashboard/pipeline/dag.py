@@ -127,6 +127,15 @@ STEPS = [
           D + "lts.json", D + "market.json", D + "savings_econ.json", D + "series", D + "sop", "web/src/lib/labels.ts"],
          [D + "peers"], groups={"deploy"}, note="Peer Table metric registry (follows the canon)"),
     step("build_market_home", "pipeline/build_market_home.py", [D + "market.json"], [D + "market_home.json"], groups={"deploy"}),
+    # lane S2: report card per filing (numbers only, every digit a fact; pipeline/check_cards.py validates) and the per-company "new since" events
+    step("build_cards", "pipeline/build_cards.py",
+         [*WB, D + "companies/index.json", D + "companies/*.docs.json", D + "kpi.json", D + "targets.json", D + "ifrs.json", D + "ifrs_*.json",
+          D + "csm/facts", D + "peers/m/ifrs-csm_new_business.json", D + "peers/m/ifrs-csm_release.json", "web/src/pages/ReportDay.tsx"],
+         [D + "cards"], code=["pipeline/reportday.py", "pipeline/csm_resolve.py"], groups={"deploy"},
+         note="report cards: Report Day roles, csm_resolve, Peer Table cells, targets"),
+    step("build_since", "pipeline/build_since.py",
+         [D + "companies/index.json", D + "companies/*.docs.json", D + "restatements.json", D + "targets.json", D + "market.json"],
+         [D + "since.json"], daily=True, groups={"deploy"}, note="dated events per company for the \"since you last looked\" marks (last 400 days)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
