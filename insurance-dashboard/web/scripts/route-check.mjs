@@ -55,7 +55,9 @@ async function run(width, height, phone) {
   const port = 9300 + Math.floor(Math.random() * 600), prof = mkdtempSync(join(tmpdir(), 'rc-'));
   const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-first-run', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, `--window-size=${width},${height}`, 'about:blank'], { stdio: 'ignore' });
   let wsUrl = null;
-  for (let i = 0; i < 60 && !wsUrl; i++) { try { wsUrl = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((t) => t.type === 'page')?.webSocketDebuggerUrl; } catch {} if (!wsUrl) await sleep(200); }
+  for (let i = 0; i < 150 && !wsUrl; i++)  // up to 30 s: a cold CI runner can take >12 s to start Chrome
+  { try { wsUrl = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((t) => t.type === 'page')?.webSocketDebuggerUrl; } catch {} if (!wsUrl) await sleep(200); }
+  if (!wsUrl) throw new Error(`Chrome did not expose a debugging target on port ${port} within 30 s`);
   const ws = new WebSocket(wsUrl); await new Promise((r) => (ws.onopen = r));
   let id = 0; const pending = new Map();
   ws.onmessage = (m) => { const d = JSON.parse(m.data); if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id); } };
