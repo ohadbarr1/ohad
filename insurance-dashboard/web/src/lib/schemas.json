@@ -2791,6 +2791,161 @@
        }
       }
      }
+    },
+    "schedule": {
+     "type": "object",
+     "required": [
+      "timezone",
+      "in_window_minutes",
+      "outside_minutes"
+     ],
+     "properties": {
+      "in_window_minutes": {
+       "type": "integer"
+      },
+      "outside_minutes": {
+       "type": "integer"
+      },
+      "regulator_hours": {
+       "type": "number"
+      },
+      "current": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "next": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "due": {
+       "type": "array"
+      }
+     }
+    },
+    "discovery": {
+     "type": "object",
+     "required": [
+      "regulator",
+      "maya_scheduled"
+     ],
+     "properties": {
+      "regulator": {
+       "type": "boolean"
+      },
+      "maya_scheduled": {
+       "type": "boolean"
+      },
+      "maya_permission_ref": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     }
+    },
+    "regulator": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "datasets": {
+       "type": "array"
+      },
+      "new": {
+       "type": "boolean"
+      }
+     }
+    },
+    "runs": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "at",
+       "trigger",
+       "landed"
+      ],
+      "properties": {
+       "at": {
+        "type": "string"
+       },
+       "trigger": {
+        "enum": [
+         "schedule",
+         "manual",
+         "maya-once"
+        ]
+       },
+       "landed": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "problems": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "gate": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "publish": {
+     "type": "object",
+     "required": [
+      "commands",
+      "auto"
+     ],
+     "properties": {
+      "commands": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "auto": {
+       "const": false
+      },
+      "pending": {
+       "type": [
+        "object",
+        "null"
+       ]
+      }
+     }
+    },
+    "llm_budget": {
+     "type": "object",
+     "required": [
+      "budget",
+      "spent"
+     ],
+     "properties": {
+      "budget": {
+       "type": "integer"
+      },
+      "spent": {
+       "type": "integer"
+      }
+     }
+    },
+    "extracted_pending": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
     }
    }
   },

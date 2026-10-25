@@ -1,0 +1,49 @@
+# fox report-day autopilot: the owner's switches (read by pipeline/autopilot/conf.py; docs/AUTOPILOT.md explains each one).
+# Edit this file by hand and commit it. A script never flips a switch. Times are Israel time.
+
+[repo]
+# the checkout the scheduled job runs in (the owner's local working copy; data/raw etc. are symlinks to the synced drive)
+path = "~/code/ohad/insurance-dashboard"
+# the job runs only while this branch is checked out (empty = any branch); a merge, rebase or held index.lock always skips the tick
+branch = "claude/festive-ramanujan-7f9ihj"
+
+[schedule]
+timezone = "Asia/Jerusalem"
+# filing days: Israeli issuers file Sunday to Friday (TASE trades Monday to Friday since January 2026; Sunday filings still occur)
+days = ["sun", "mon", "tue", "wed", "thu", "fri"]
+start = "07:00"
+end = "22:00"
+# a filing window is calendar.json's expected date of each company's next report, widened by its own lo/hi range and this many days
+window_days = 10
+in_window_minutes = 15     # inside a window, on a filing day, between start and end
+outside_minutes = 60       # every other hour of the year
+regulator_hours = 24       # data.gov.il (Capital Market Authority) probe: at most once a day
+
+[discovery]
+# data.gov.il CKAN (documented API, open licence): max REPORT_PERIOD + last_modified per dataset, then the fetch when a month is new
+regulator = true
+# MAYA (maya.tase.co.il/api, mayafiles.tase.co.il). robots.txt disallows /api/ and says bulk extraction needs explicit authorisation,
+# so the schedule NEVER calls MAYA unless BOTH of these are set, after TASE answered docs/TASE_REQUEST.md in writing.
+maya_scheduled = false
+maya_permission_ref = ""   # e.g. "TASE letter of 01.12.26, ref 1234": shown on /data/autopilot
+maya_interval_seconds = 2.0
+
+[notify]
+enabled = true             # macOS notification (osascript) when data landed, a run failed, or a source blocked
+reminders = true           # one notification per company per day when its report is due and not yet in fox
+
+[llm]
+# Optional extraction of a new filing's PDF by the Claude Code CLI in headless mode (claude -p) under pipeline/EXTRACT_SPEC.md.
+# OFF. To turn it on: enabled = true, approved_by = your name, approved_on = the date; commit. Output lands in data/extracted_autopilot/
+# as "unverified" and never feeds the site until verify_extraction.py passes and you move it.
+enabled = false
+approved_by = ""
+approved_on = ""
+season = "2026Q3"                  # the budget resets when this changes
+season_budget_tokens = 1000000     # all calls in the season, input + output + cache tokens as the CLI reports them
+per_filing_tokens = 120000         # a filing whose estimate exceeds this is skipped; a call stops being started once the season is short of it
+per_run_tokens = 300000            # one run (one tick) never starts calls beyond this
+per_filing_max_usd = 4.0           # hard stop passed to the CLI (--max-budget-usd); a backstop, the token budget is the rule
+max_turns = 40
+model = ""                         # empty = the CLI's default model
+claude_bin = "claude"
