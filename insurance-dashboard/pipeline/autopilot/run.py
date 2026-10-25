@@ -310,6 +310,8 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
     today = today or pl.today_il()
     steps, kpi_preview, landed, problems = [], None, [], []
     poll_res, reg_res = None, None
+    # --apply --no-poll by hand: rebuild everything from disk. Never on a schedule (a tick with nothing to discover does nothing).
+    from_disk = apply and not (do_poll or regulator) and trigger != "schedule"
     # 1. discover ------------------------------------------------------------------------------------------------------------
     if regulator:
         reg_res = rg.probe(http or rg.Http(), paths.data, log=log)
@@ -345,7 +347,7 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
     t0res = None
     if periodic and not apply:
         kpi_preview, t0res = preview_skeleton(paths, tr, periodic, log)
-    elif apply and (periodic or picked or not (do_poll or regulator)):
+    elif apply and (periodic or picked or from_disk):
         if periodic or picked:
             fx.registry(root=paths.root, quiet=True)
         if (periodic or picked) and has_duckdb() and not skip_build:
@@ -375,7 +377,7 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
                       "note": "כבוי עד אישור הבעלים" if not conf.llm_on(cfg) else f"{len(ran)} חולצו · לא מאומת"})
     # 5. rebuild -------------------------------------------------------------------------------------------------------------
     changed = bool(reg_new or filings or (t0res and (t0res["new"] or t0res["replaced"] or t0res["ext"] or t0res["verified"])))
-    if changed or (apply and not (do_poll or regulator)):
+    if changed or from_disk:
         if apply and not skip_build:
             r = run_dag(paths, DAG_DEPLOY, log)
             steps.append(r)
@@ -385,7 +387,7 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
             steps.append({"step": "build", "ok": True, "planned": [" ".join(DAG_DEPLOY)], "note": "dry run" if not apply else "skipped"})
     # 6. gate ----------------------------------------------------------------------------------------------------------------
     gate_res = {"ran": False, "ok": None, "fails": [], "note": "dry run" if not apply else "skipped"}
-    if apply and not skip_gate and (changed or not (do_poll or regulator)):
+    if apply and not skip_gate and (changed or from_disk):
         gate_res = gate(paths, log)
         if not gate_res["ok"]:
             problems.append("שער האיכות נכשל: " + ", ".join(gate_res["fails"][:4]))

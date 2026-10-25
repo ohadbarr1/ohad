@@ -167,11 +167,11 @@ class ScheduledRun(unittest.TestCase):
         self.dag.append(" ".join(argv))
         return {"step": step, "script": " ".join(argv), "ok": True, "tail": "ok"}
 
-    def go(self, http, **kw):
+    def go(self, http, regulator=True, **kw):
         with mock.patch.object(run, "run_dag", self.fake_dag), \
                 mock.patch.object(run, "gate", lambda paths, log: {"ran": True, "ok": True, "fails": [], "built": None}), \
                 mock.patch.object(poll, "poll", side_effect=AssertionError("MAYA must not be called")):
-            return run.run(self.paths, None, apply=True, do_poll=False, regulator=True, http=http, cfg=cfg(), trigger="schedule",
+            return run.run(self.paths, None, apply=True, do_poll=False, regulator=regulator, http=http, cfg=cfg(), trigger="schedule",
                            today=dt.date(2026, 10, 25), log=self.quiet, **kw)
 
     def test_new_regulator_month_lands_through_the_dag_and_notifies(self):
@@ -197,6 +197,12 @@ class ScheduledRun(unittest.TestCase):
         self.assertIsNone(st["_written"])
         self.assertEqual(self.dag, [])
         self.assertEqual(notify.SENT, [])
+
+    def test_a_tick_with_nothing_due_does_not_rebuild(self):
+        before = sorted(p for p in Path(self.tmp).rglob("*") if p.is_file())
+        st = self.go(None, regulator=False)
+        self.assertEqual((self.dag, st["_written"], st["gate"]["ran"]), ([], None, False))
+        self.assertEqual(sorted(p for p in Path(self.tmp).rglob("*") if p.is_file()), before)
 
 
 class Entry(unittest.TestCase):
