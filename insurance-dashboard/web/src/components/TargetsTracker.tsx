@@ -16,7 +16,7 @@ export function latestRows(rows: Target[]): Target[] {
 }
 
 function StatusChip({ t }: { t: Target }) {
-  return <span className={`tg-st ${t.st}`} title={t.st === 'open' ? (t.h ? `היעד ל-${t.h} טרם נמדד` : 'מדיניות מתמשכת') : `בפועל FY'${String(t.act?.y).slice(2)} מול היעד`}>{ST_HE[t.st]}</span>;
+  return <span className={`tg-st ${t.st}`} title={t.st === 'open' || t.st === 'policy' ? (t.h ? `היעד ל-${t.h} טרם נמדד` : 'מדיניות מתמשכת') : t.st === 'nc' ? t.why ?? 'לא ניתן להשוואה' : `בפועל FY'${String(t.act?.y).slice(2)} מול היעד`}>{ST_HE[t.st]}</span>;
 }
 function Actual({ t, name }: { t: Target; name: string }) {
   if (!t.act) return <span className="muted">–</span>;
@@ -36,13 +36,13 @@ export function TargetsTracker({ inCo, name, all, setAll, status, setStatus }: {
   const d = tg.data;
   const mine = d.rows.filter((t) => inCo(t.c));
   const base = all ? mine : latestRows(mine);
-  const shown = base.filter((t) => !status || (status === 'act' ? !!t.act : t.st === status));
+  const shown = base.filter((t) => !status || (status === 'act' ? !!t.act : t.st === status || (status === 'open' && t.st === 'policy')));
   const n = { pres: base.filter((t) => t.src === 'pres').length, act: base.filter((t) => t.act).length, met: base.filter((t) => t.st === 'met').length, missed: base.filter((t) => t.st === 'missed').length };
   return (
     <section className="panel tg">
       <div className="hd"><h2>יעדי הנהלה · מעקב</h2><div className="aside"><span><span className="num">{base.length}</span> יעדים · <span className="num">{n.pres}</span> ממצגות · בפועל ל-<span className="num">{n.act}</span></span></div></div>
       <div className="tg-bar">
-        <Seg<string> label="סטטוס" value={status} onChange={setStatus} options={[['', 'הכול'], ['act', 'עם בפועל'], ['met', `הושג ${n.met}`], ['missed', `פוספס ${n.missed}`], ['open', 'פתוח']]} />
+        <Seg<string> label="סטטוס" value={status} onChange={setStatus} options={[['', 'הכול'], ['act', 'עם בפועל'], ['met', `הושג ${n.met}`], ['missed', `לא הושג ${n.missed}`], ['open', 'פתוח']]} />
         <Seg<string> label="הצהרות" value={all ? '1' : ''} onChange={(v) => setAll(!!v)} options={[['', 'האחרון לכל יעד'], ['1', 'כל התאריכים']]} />
       </div>
       {shown.length === 0 ? <Empty title="אין יעדים בסינון זה" /> : (

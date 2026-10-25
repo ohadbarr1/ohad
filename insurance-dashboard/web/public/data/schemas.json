@@ -3414,7 +3414,8 @@
     "built",
     "files",
     "docs",
-    "rows"
+    "rows",
+    "cred"
    ],
    "properties": {
     "v": {
@@ -3508,7 +3509,10 @@
         "enum": [
          "open",
          "met",
-         "missed"
+         "missed",
+         "partial",
+         "nc",
+         "policy"
         ]
        },
        "n": {
@@ -3535,6 +3539,56 @@
          },
          "in": {
           "type": "array"
+         }
+        }
+       },
+       "why": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "rev": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "cred": {
+     "type": "object",
+     "required": [
+      "era",
+      "all",
+      "companies",
+      "scored"
+     ],
+     "properties": {
+      "era": {
+       "enum": [
+        "year"
+       ]
+      },
+      "all": {
+       "$ref": "#/$defs/credAgg"
+      },
+      "scored": {
+       "type": "integer"
+      },
+      "companies": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "object",
+        "required": [
+         "n",
+         "hit",
+         "eras"
+        ],
+        "properties": {
+         "eras": {
+          "type": "object",
+          "additionalProperties": {
+           "$ref": "#/$defs/credAgg"
+          }
          }
         }
        }
@@ -5147,6 +5201,44 @@
        "pct"
       ]
      }
+    }
+   }
+  },
+  "credAgg": {
+   "type": "object",
+   "required": [
+    "n",
+    "met",
+    "partial",
+    "missed",
+    "nc",
+    "open",
+    "hit"
+   ],
+   "properties": {
+    "n": {
+     "type": "integer"
+    },
+    "met": {
+     "type": "integer"
+    },
+    "partial": {
+     "type": "integer"
+    },
+    "missed": {
+     "type": "integer"
+    },
+    "nc": {
+     "type": "integer"
+    },
+    "open": {
+     "type": "integer"
+    },
+    "hit": {
+     "type": [
+      "number",
+      "null"
+     ]
     }
    }
   }

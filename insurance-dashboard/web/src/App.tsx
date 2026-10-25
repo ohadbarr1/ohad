@@ -59,6 +59,8 @@ const DataPage = page(mDataPage, 'DataPage');
 const mRestatements = () => import('./pages/Restatements');
 const Restatements = page(mRestatements, 'Restatements');
 const mPresentations = () => import('./pages/Presentations');
+const mCredibility = () => import('./pages/Credibility');
+const Credibility = page(mCredibility, 'Credibility'); // lane S3
 const Presentations = page(mPresentations, 'Presentations');
 const mMine = () => import('./pages/Mine');  // lane F
 const Mine = page(mMine, 'Mine');
@@ -141,6 +143,7 @@ export function App() {
         <Route path="data/autopilot" element={<Autopilot />} />
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
+        <Route path="credibility" element={<Credibility />} />{/* lane S3 */}
         <Route path="mine" element={<Mine />} />
         <Route path="debt" element={<Debt />} />
         <Route path="debt/:id" element={<Debt />} />

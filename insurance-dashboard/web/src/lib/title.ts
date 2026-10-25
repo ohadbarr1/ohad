@@ -30,6 +30,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'data': return p[1] === 'autopilot' && !p[2] ? t('טייס אוטומטי', 'נתונים ואיכות') : p[1] ? null : t('נתונים ואיכות');
     case 'restatements': return p[1] ? null : t('הצגות מחדש', 'השוואה ענפית');
     case 'presentations': return p[1] ? null : t('מצגות משקיעים');
+    case 'credibility': return p[1] ? null : t('אמינות יעדים');  // lane S3
     case 'search': return t('חיפוש');
     case 'mine': return p[1] ? null : t('שלי');
     case 'debt': return p[1] ? (name(p[1]) === null || p[2] ? null : t(name(p[1]) ?? p[1], 'חוב ופירעונות')) : t('חוב ופירעונות');

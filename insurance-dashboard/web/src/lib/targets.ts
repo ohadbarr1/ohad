@@ -5,17 +5,22 @@ import { useLoad } from './useData';
 /* targets.json v2 (pipeline/build_targets.py): management targets from the filings and the investor decks, each with its first and last
    statement, its revisions, and the actual where the site carries it (calc provenance). */
 export type Stmt = [string, number | null, number | null] | null; // [date, report id, page]
-export interface TargetAct { k: 'roe' | 'ci' | 'profit' | 'sr' | 'payout'; v: number; y: number; f: string; in: [string, number, string | null, number | null, string, number | null][]; ref?: 1; prog?: 1 }
+export interface TargetAct { k: 'roe' | 'ci' | 'profit' | 'sr' | 'payout' | 'equity' | 'core'; v: number; y: number; f: string; in: [string, number, string | null, number | null, string, number | null][]; ref?: 1; prog?: 1; /** a company-defined KPI from a deck */ def?: 'core' }
 export interface Target {
   c: string; m: string; l: string; e: string; seg: string; t: 'strategy' | 'payout' | 'capital'; u: 'pct' | 'm' | 'n' | 'x'; h: number | null; b: string; d: string;
   v: number | null; lo: number | null; hi: number | null; r: string | null; doc: number | null; pg: number | null; q: string; n: number;
-  hist: (string | number | null)[][] | null; src: 'pres' | 'report'; st0: Stmt; st1: Stmt; img?: 1; nt?: string; st: 'open' | 'met' | 'missed'; act?: TargetAct;
+  hist: (string | number | null)[][] | null; src: 'pres' | 'report'; st0: Stmt; st1: Stmt; img?: 1; nt?: string; st: TargetSt; act?: TargetAct;
+  /** why a passed target is not comparable, or not yet reported */ why?: string | null; /** revisions of the value */ rev?: number;
 }
-export interface Targets { v: number; built: string; source: string; files: string; docs: Record<string, [string, string, string, string, string]>; status: Record<string, [string, string, number | null, number | null, string][]>; rows: Target[] }
+/** met · partial (inside a range, below its top) · missed · open (horizon not reached) · nc (not comparable, see `why`) · policy (a standing policy, never scored) */
+export type TargetSt = 'open' | 'met' | 'missed' | 'partial' | 'nc' | 'policy';
+export interface CredAgg { n: number; met: number; partial: number; missed: number; nc: number; open: number; hit: number | null }
+export interface Cred { era: 'year'; rule: string; all: CredAgg; scored: number; companies: Record<string, CredAgg & { eras: Record<string, CredAgg> }> }
+export interface Targets { v: number; cred?: Cred; built: string; source: string; files: string; docs: Record<string, [string, string, string, string, string]>; status: Record<string, [string, string, number | null, number | null, string][]>; rows: Target[] }
 export const useTargets = () => useLoad<Targets>('targets.json');
 
 export const TOPIC: [Target['t'], string][] = [['strategy', 'יעדים אסטרטגיים'], ['capital', 'הון וכושר פירעון'], ['payout', 'מדיניות חלוקה']];
-export const ST_HE: Record<Target['st'], string> = { open: 'פתוח', met: 'הושג', missed: 'פוספס' };
+export const ST_HE: Record<Target['st'], string> = { open: 'פתוח', met: 'הושג', missed: 'לא הושג', partial: 'חלקית', nc: 'לא ניתן להשוואה', policy: 'מדיניות' };
 const DOC_HE: Record<string, string> = { annual: 'דוח שנתי', quarterly: 'דוח רבעוני', presentation: 'מצגת', solvency: 'כושר פירעון' };
 const UNIT_HE: Record<Target['u'], string> = { pct: '%', m: 'מיליוני ש"ח', n: 'לקוחות', x: '' };
 
@@ -29,6 +34,7 @@ export function tv(t: { u: Target['u']; v: number | null; lo: number | null; hi:
   return '–';
 }
 export const actText = (t: Target) => (t.act ? (t.act.k === 'sr' || t.act.k === 'roe' || t.act.k === 'payout' ? `${nf(t.act.v, 1)}%` : nf(t.act.v, 0)) : '');
+export const isPctAct = (a: TargetAct) => a.k === 'sr' || a.k === 'roe' || a.k === 'payout';
 export const unitHe = (t: Target) => UNIT_HE[t.u];
 export const horizon = (t: Target) => (t.h ? String(t.h) : 'מדיניות');
 export const docName = (d: Targets, id: number | null | undefined) => { const x = id != null ? d.docs[String(id)] : undefined; return x ? `${DOC_HE[x[1]] ?? 'דוח'} ${x[2].endsWith('FY') ? `FY'${x[2].slice(2, 4)}` : `${x[2].slice(4)}'${x[2].slice(2, 4)}`}` : 'דוח'; };
@@ -54,11 +60,11 @@ export function actProv(t: Target, name: string): Prov | null {
   const a = t.act; if (!a) return null;
   const MM = 'מיליוני ש"ח';
   return {
-    k: 'calc', title: `בפועל מול ${t.l} · ${name} · FY'${String(a.y).slice(2)}`, value: actText(t), unit: a.k === 'sr' || a.k === 'roe' || a.k === 'payout' ? '%' : MM, formula: a.f,
-    note: [a.prog ? `השנה האחרונה שדווחה; היעד ל-${t.h ?? 'מדיניות'} טרם נמדד` : '', a.ref ? 'להשוואה בלבד: מזומן ששולם בשנה מול מדיניות על רווחי השנה' : '', a.k === 'roe' ? 'ההגדרה של החברה עשויה להיות שונה (ממוצע, רווח מתואם)' : ''].filter(Boolean).join(' · ') || undefined,
-    inputs: a.in.map(([label, v, url, pg, per, solv]) => ({ label: `${label} · ${per}`, v: label.startsWith('יחס') ? `${nf(v, 1)}%` : nf(v, 0),
-      src: () => ({ k: 'report', title: `${label} · ${name} · ${per}`, value: label.startsWith('יחס') ? `${nf(v, 1)}%` : nf(v, 0), unit: label.startsWith('יחס') ? '%' : MM, url, pg, period: per,
-        doc: solv ? 'דוח כושר פירעון כלכלי' : 'דוח כספי', srcType: solv ? 'דוח כושר פירעון כלכלי (MAYA)' : undefined }) as Prov })),
+    k: 'calc', title: `בפועל מול ${t.l} · ${name} · FY'${String(a.y).slice(2)}`, value: actText(t), unit: isPctAct(a) ? '%' : MM, formula: a.f,
+    note: [a.prog ? `השנה האחרונה שדווחה; היעד ל-${t.h ?? 'מדיניות'} טרם נמדד` : '', a.ref ? 'להשוואה בלבד: מזומן ששולם בשנה מול מדיניות על רווחי השנה' : '', a.k === 'roe' && !a.def ? 'ההגדרה של החברה עשויה להיות שונה (ממוצע, רווח מתואם)' : '', a.def === 'core' ? 'מדד לפי הגדרת החברה, כפי שהוצג במצגת' : ''].filter(Boolean).join(' · ') || undefined,
+    inputs: a.in.map(([label, v, url, pg, per, solv]) => { const pc = label.startsWith('יחס') || (a.k === 'roe' && a.def === 'core'); return { label: `${label} · ${per}`, v: pc ? `${nf(v, 1)}%` : nf(v, 0),
+      src: () => ({ k: 'report', title: `${label} · ${name} · ${per}`, value: pc ? `${nf(v, 1)}%` : nf(v, 0), unit: pc ? '%' : MM, url, pg, period: per,
+        doc: solv ? 'דוח כושר פירעון כלכלי' : a.def === 'core' || /הגדרת החברה|מצגת/.test(label) ? 'מצגת משקיעים' : 'דוח כספי', srcType: solv ? 'דוח כושר פירעון כלכלי (MAYA)' : a.def === 'core' ? 'מצגת משקיעים (MAYA)' : undefined }) as Prov }; }),
   };
 }
 
