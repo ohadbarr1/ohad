@@ -53,12 +53,12 @@
    "basis": "na",
    "window": "instant",
    "date": "2023-03-31",
-   "value": 1.2,
+   "value": 2.1,
    "page_he": 19,
    "doc": "pres",
-   "label": "מתעצם בהדרגה בשיעור של 1.2% מדי שנה",
+   "label": "מתעצם בהדרגה בשיעור של 2.1% מדי שנה",
    "source": "text",
-   "note": "Percent points per year until 2024."
+   "note": "Percent points per year until 2024. Corrected 25.10.26 (gate value-on-page check, checked on the slide render): the slide prints 2.1% (Shomera), not 1.2%."
   },
   {
    "metric": "target_dividend_payout",

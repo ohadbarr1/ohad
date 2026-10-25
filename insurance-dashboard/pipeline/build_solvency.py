@@ -73,6 +73,7 @@ def main():
     cand = defaultdict(list)   # (company, date, key) -> [(rank, cell)]
     sens = defaultdict(list)
     reports, n_facts, skipped = {}, 0, Counter()
+    img_pages = set()  # (report, page) with any value read from the page image: the flag is set per page (r2-ws5 finding 4)
     for c in INSURERS:
         for f in sorted((SRC / c).glob("*.json")):
             d = json.loads(f.read_text(encoding="utf-8"))
@@ -88,6 +89,8 @@ def main():
                     skipped["date/segment"] += 1
                     continue
                 img = 1 if x.get("source") in ("image", "chart") else 0
+                if img:
+                    img_pages.add((rid, x.get("page_he")))
                 rank = (dt == as_of, rid)
                 if x["metric"] == "solvency_sensitivity":
                     if x.get("value") is None:
@@ -116,6 +119,10 @@ def main():
                 if img:
                     cell["i"] = 1
                 cand[(c, dt, k)].append((rank, cell))
+    for cs in list(cand.values()) + list(sens.values()):
+        for _, cell in cs:
+            if (cell["r"], cell["pg"]) in img_pages:
+                cell["i"] = 1
     comp = defaultdict(lambda: defaultdict(dict))
     n_alt = 0
     for (c, dt, k), cs in cand.items():
