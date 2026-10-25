@@ -3,6 +3,7 @@ import { Sourced } from './Source';
 import { cls, fmt, xlsxFmt, type Unit } from '../lib/format';
 import type { Prov } from '../lib/prov';
 import type { XCell } from '../lib/xlsx';
+import { Spark } from './Spark';
 import '../styles/datatable.css';
 
 /* One table for the site (lane 2H, ws6 W6-14). A column spec in, a table out: sortable headers (aria-sort), a sticky header and
@@ -54,6 +55,10 @@ export interface Column<R> {
   /** export text when the column has no numeric value (default: the text of the cell) */
   text?: (r: R) => string;
   width?: number | string;
+  /** the column that leads the table (the latest period): an ink tint, the heading in the text colour */
+  lead?: boolean;
+  /** a sparkline cell: the run behind the row's figure (latest point in the ember); the export gets `value`/`text` as usual */
+  spark?: (r: R) => (number | null)[];
 }
 
 export interface DataTableProps<R> {
@@ -143,7 +148,7 @@ export function DataTable<R>(p: DataTableProps<R>) {
       <thead><tr>{cols.map((c) => {
         const can = c.sortable ?? !!c.value, on = sort?.key === c.key;
         return (
-          <th key={c.key} className={c.className} title={c.title} style={c.width != null ? { width: c.width } : undefined} scope="col"
+          <th key={c.key} className={[c.className, c.lead ? 'lead' : '', c.spark ? 'spk' : ''].filter(Boolean).join(' ') || undefined} title={c.title} style={c.width != null ? { width: c.width } : undefined} scope="col"
             aria-sort={can ? (on ? (sort!.dir === 'asc' ? 'ascending' : 'descending') : 'none') : undefined}>
             {can ? <button type="button" className={`dt-sort${on ? ' on' : ''}`} onClick={() => click(c)}><span className="dt-h">{c.head}</span><span className="dt-arr" aria-hidden="true">{on ? (sort!.dir === 'asc' ? '▲' : '▼') : '↕'}</span></button> : c.head}
           </th>
@@ -157,7 +162,7 @@ export function DataTable<R>(p: DataTableProps<R>) {
           const k = p.rowKey(r, i);
           const tr = (
             <tr key={k} {...rp} className={[rp.className, p.rowClass?.(r)].filter(Boolean).join(' ') || undefined}>
-              {cols.map((c) => <td key={c.key} className={[c.className, c.tdClass?.(r)].filter(Boolean).join(' ') || undefined} {...c.tdProps?.(r)}>{c.cell ? c.cell(r, i) : <Figure c={c} r={r} v={c.value?.(r)} />}</td>)}
+              {cols.map((c) => <td key={c.key} className={[c.className, c.lead ? 'lead' : '', c.spark ? 'spk' : '', c.tdClass?.(r)].filter(Boolean).join(' ') || undefined} {...c.tdProps?.(r)}>{c.spark ? <Spark data={c.spark(r)} w={72} h={20} /> : c.cell ? c.cell(r, i) : <Figure c={c} r={r} v={c.value?.(r)} />}</td>)}
             </tr>
           );
           const extra = p.after?.(r);
@@ -166,7 +171,7 @@ export function DataTable<R>(p: DataTableProps<R>) {
       </tbody>
       {(hasTotal || p.foot) && (
         <tfoot>
-          {hasTotal && <tr className="tot">{cols.map((c, j) => <td key={c.key} className={c.className}>{j === 0 && !c.total ? (p.totalLabel ?? 'סה"כ') : totalOf(c)}</td>)}</tr>}
+          {hasTotal && <tr className="tot">{cols.map((c, j) => <td key={c.key} className={[c.className, c.lead ? 'lead' : ''].filter(Boolean).join(' ') || undefined}>{j === 0 && !c.total ? (p.totalLabel ?? 'סה"כ') : totalOf(c)}</td>)}</tr>}
           {p.foot}
         </tfoot>
       )}

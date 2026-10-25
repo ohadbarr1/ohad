@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
-import { ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
+import { ErrorBox, Loading, Panel, Pick, Seg } from '../components/ui';
 import { Sourced } from '../components/Source';
 import { fundCell, fundRef, listP, warmHist } from '../lib/market';
 import type { Prov } from '../lib/prov';
@@ -27,12 +27,11 @@ export function Managers() {
   const [sp, setSp] = useSearchParams();
   const view = (VIEWS.map(([v]) => v).find((v) => v && v === sp.get('v')) ?? '') as View;
   const pick = (v: View) => setSp(() => { const n = new URLSearchParams(); if (v) n.set('v', v); return n; }, { replace: true });
-  const views = <section className="controls mgr-views"><div className="field"><span>דירוג</span><Seg<View> label="דירוג מנהלים" value={view} onChange={pick} options={VIEWS} /></div></section>;
+  const views = <Seg<View> label="דירוג מנהלים" value={view} onChange={pick} options={VIEWS} />;
   if (view === '') return <ManagersTable views={views} />;
   return (
     <>
-      <FundsHead sub={view === 'rank' ? 'דירוג מנהלים · לאורך זמן · רשות שוק ההון ודוחות החברות המנהלות' : 'דירוג מנהלים · המסלול הגדול של כל יצרן מול הקטגוריה שלו'} />
-      {views}
+      <FundsHead sub={view === 'rank' ? 'דירוג מנהלים · לאורך זמן · רשות שוק ההון ודוחות החברות המנהלות' : 'דירוג מנהלים · המסלול הגדול של כל יצרן מול הקטגוריה שלו'} tools={views} />
       <Suspense fallback={<Loading what="הדירוג" />}>{view === 'rank' ? <LensRank /> : <Makers />}</Suspense>
     </>
   );
@@ -66,12 +65,11 @@ function ManagersTable({ views }: { views: React.ReactNode }) {
   const asof = `${String(data.meta.asof).slice(4)}/${String(data.meta.asof).slice(2, 4)}`;
   return (
     <>
-      <FundsHead sub={<>דירוג מנהלים · <S src={() => listP('חברות מנהלות', nf(rows.length, 0), undefined, 'ספירת החברות המנהלות שיש להן מסלולים בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{rows.length}</span></S> חברות מנהלות · <S src={() => listP('סך נכסים, החברות המנהלות', nf(total, 0), 'מיליארד ש"ח', 'סכום הנכסים של כל החברות המנהלות בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{nf(total, 0)}</span></S> מיליארד ש"ח · <span className="num">{asof}</span></>} />
-      {views}
-      <section className="controls">
-        <div className="field"><span>מוצר</span><Seg<Fam> label="מוצר" value={fam} onChange={setFam} options={[['all', 'הכול'], ['pension', 'פנסיה'], ['gemel', 'גמל והשתלמות'], ['insurance', 'ביטוח: מנהלים וחיסכון']]} /></div>
-        <Field label="קבוצה"><select value={grp} onChange={(e) => setGrp(e.target.value)}><option value="all">כל הקבוצות</option>{groups.map((g) => <option key={g}>{g}</option>)}</select></Field>
-      </section>
+      <FundsHead sub={<>דירוג מנהלים · <S src={() => listP('חברות מנהלות', nf(rows.length, 0), undefined, 'ספירת החברות המנהלות שיש להן מסלולים בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{rows.length}</span></S> חברות מנהלות · <S src={() => listP('סך נכסים, החברות המנהלות', nf(total, 0), 'מיליארד ש"ח', 'סכום הנכסים של כל החברות המנהלות בבחירה', rows.map((r) => ({ label: r.mgr, v: nf(r.assets, 1), src: () => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) })))}><span className="num">{nf(total, 0)}</span></S> מיליארד ש"ח · <span className="num">{asof}</span></>} tools={<>
+        {views}<span className="sep" />
+        <Seg<Fam> label="מוצר" value={fam} onChange={setFam} options={[['all', 'הכול'], ['pension', 'פנסיה'], ['gemel', 'גמל והשתלמות'], ['insurance', 'ביטוח: מנהלים וחיסכון']]} />
+        <Pick label="קבוצה" cap="קבוצה" value={grp} onChange={setGrp} options={[['all', 'כל הקבוצות'], ...groups.map((g) => [g, g] as [string, string])]} />
+      </>} />
       <Panel aside={<span>דמי ניהול ותשואות משוקללים בנכסים · צבירה וניוד: LTM, מיליארדי ש"ח</span>}>
         <DataTable caption="חברות מנהלות" rows={rows} rowKey={(r) => r.mgr} export={{ name: `fox-managers-${data.meta.asof}`, title: 'חברות מנהלות', note: `רשות שוק ההון · ${asof} · נכסים, צבירה וניוד: מיליארדי ש"ח` }}
           rowClass={(r) => (open === r.mgr ? 'lead' : undefined)}
@@ -82,18 +80,18 @@ function ManagersTable({ views }: { views: React.ReactNode }) {
               <td>{f.assets == null ? '–' : <S src={() => fundCell(A, f, 'assets')!}><span className="num">{fmt(f.assets / 1000, 'n', { d: 2 })}</span></S>}</td><td />
               <td>{f.stock == null ? '' : <S src={() => fundCell(A, f, 'stock')!}><span className="num muted">{`מניות ${fmt(f.stock, 'int')}%`}</span></S>}</td>
               <td>{f.fee == null ? '–' : <S src={() => fundCell(A, f, 'fee')!}><span className="num">{fmt(f.fee, 'pct', { d: 2 })}</span></S>}</td><td>{f.depfee == null ? '–' : <S src={() => fundCell(A, f, 'depfee')!}><span className="num">{fmt(f.depfee, 'pct', { d: 2 })}</span></S>}</td>
-              <td onPointerEnter={() => warmHist(fundRef(f))}>{f.y12 == null ? '–' : <S src={() => fundCell(A, f, 'y12')!}><span className={`num ${cls(f.y12)}`}>{fmt(f.y12, 'pct')}</span></S>}</td><td>{f.a5 == null ? '–' : <S src={() => fundCell(A, f, 'a5')!}><span className="num">{fmt(f.a5, 'pct')}</span></S>}</td>
+              <td onPointerEnter={() => warmHist(fundRef(f))}>{f.y12 == null ? '–' : <S src={() => fundCell(A, f, 'y12')!}><span className="num">{fmt(f.y12, 'pct', { signed: true })}</span></S>}</td><td>{f.a5 == null ? '–' : <S src={() => fundCell(A, f, 'a5')!}><span className="num">{fmt(f.a5, 'pct')}</span></S>}</td>
               <td onPointerEnter={() => warmHist(fundRef(f))}>{f.net12 == null ? '–' : <S src={() => fundCell(A, f, 'net12')!}><span className={`num ${cls(f.net12)}`}>{fmt(f.net12 / 1000, 'n', { d: 2 })}</span></S>}</td><td onPointerEnter={() => warmHist(fundRef(f))}>{f.tr12 == null ? '–' : <S src={() => fundCell(A, f, 'tr12')!}><span className={`num ${cls(f.tr12)}`}>{fmt(f.tr12 / 1000, 'n', { d: 2 })}</span></S>}</td>
             </tr>
           ))}
           columns={[
-            { key: 'mgr', head: 'חברה מנהלת', value: (r) => r.mgr, cell: (r) => <>{r.mgr}<span className="fund-mgr"><MgrChip grp={r.grp} /></span></> },
+            { key: 'mgr', head: 'חברה מנהלת', value: (r) => r.mgr, tdClass: () => 'lbl', cell: (r) => <>{r.mgr}<span className="fund-mgr"><MgrChip grp={r.grp} /></span></> },
             { key: 'assets', head: 'נכסים, מיליארד', value: (r) => r.assets, d: 1, src: (r) => agg(r, 'assets', 'נכסים', 'סכום TOTAL_ASSETS של מסלולי החברה, חלקי 1,000 (מיליוני ש"ח למיליארדי ש"ח)', nf(r.assets, 1), 'מיליארד ש"ח', (f) => nf(f.assets!, 1)) },
             { key: 'bar', head: '', width: 120, noExport: true, cell: (r) => <div className="bar"><i style={{ width: `${(r.assets / max) * 100}%` }} /></div> },
             { key: 'n', head: 'מסלולים', value: (r) => r.list.length, unit: 'int', src: (r) => agg(r, 'assets', 'מסלולים', 'ספירת מסלולי החברה בחודש האחרון', nf(r.list.length, 0), undefined, (f) => nf(f.assets!, 1)) },
             { key: 'fee', head: 'דמי ניהול מצבירה', value: (r) => r.fee, unit: 'pct', d: 2, src: (r) => agg(r, 'fee', 'דמי ניהול מצבירה', 'AVG_ANNUAL_MANAGEMENT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם דמי ניהול', pct(r.fee, 2), undefined, (f) => pct(f.fee, 2), true) },
             { key: 'dep', head: 'מהפקדה', value: (r) => r.dep, unit: 'pct', d: 2, src: (r) => agg(r, 'depfee', 'דמי ניהול מהפקדה', 'AVG_DEPOSIT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.dep, 2), undefined, (f) => pct(f.depfee, 2), true) },
-            { key: 'y12', head: 'תשואה, LTM', value: (r) => r.y12, unit: 'pct', tone: true, src: (r) => agg(r, 'y12', 'תשואה LTM', 'תשואת LTM של כל מסלול, משוקללת ב-TOTAL_ASSETS', pct(r.y12, 1), undefined, (f) => pct(f.y12, 1), true) },
+            { key: 'y12', head: 'תשואה, LTM', value: (r) => r.y12, unit: 'pct', signed: true, src: (r) => agg(r, 'y12', 'תשואה LTM', 'תשואת LTM של כל מסלול, משוקללת ב-TOTAL_ASSETS', pct(r.y12, 1), undefined, (f) => pct(f.y12, 1), true) },
             { key: 'a5', head: '5 שנים, שנתי', value: (r) => r.a5, unit: 'pct', src: (r) => agg(r, 'a5', 'תשואה שנתית ממוצעת, 5 שנים', 'AVG_ANNUAL_YIELD_TRAILING_5YRS משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.a5, 1), undefined, (f) => pct(f.a5, 1), true) },
             { key: 'net', head: 'צבירה נטו', value: (r) => r.net, d: 2, tone: true, src: (r) => agg(r, 'net12', 'צבירה נטו, LTM', 'סכום צבירה אורגנית LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.net!, 2), 'מיליארד ש"ח', (f) => sn(f.net12!, 1)) },
             { key: 'tr', head: 'ניוד נטו', value: (r) => r.tr, d: 2, tone: true, src: (r) => agg(r, 'tr12', 'ניוד נטו, LTM', 'סכום העברות נטו LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.tr!, 2), 'מיליארד ש"ח', (f) => sn(f.tr12!, 1)) },

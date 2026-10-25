@@ -1,16 +1,16 @@
 /* === chart book (lane G) === */
 /* the chart toolbar's book action: the one call to action among the export buttons */
 .charttools { flex-wrap: wrap; }
-.charttools .tobook { color: var(--accent-text); border-color: var(--accent-line); font-weight: 600; }
+.charttools .tobook { color: var(--muted); font-weight: 500; }
 .charttools .tobook:hover { background: var(--accent-soft); }
-.charttools a.booked { display: inline-flex; align-items: center; border: 1px solid transparent; border-radius: var(--r-1); padding: 3px 11px; font-size: 11.5px; color: var(--accent-text); background: var(--accent-soft); font-weight: 600; text-decoration: none; }
+.charttools a.booked { display: inline-flex; align-items: center; border: 1px solid transparent; border-radius: var(--r-1); padding: 3px 11px; font-size: 11.5px; color: var(--accent-text); background: var(--accent-soft); font-weight: 700; text-decoration: none; }
 @media (max-width: 760px) { .charttools a.booked { min-height: 36px; } }
 
 /* header link to the book (Layout) */
 .booklink { position: relative; text-decoration: none; }
 /* the theme button leaves the header on desktop (it sits in the rail); the book stays in the header on every width */
 .top .iconbtn.booklink { display: grid; place-items: center; flex: none; color: inherit; }
-:root:not([data-theme="dark"]) .top .iconbtn.booklink { color: #FFFFFF; }
+:root:not([data-theme="dark"]) .top .iconbtn.booklink { color: var(--muted); }
 .booklink svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .booklink .count { position: absolute; top: -4px; inset-inline-end: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center; }
 
@@ -60,7 +60,7 @@
 @media print { .book-actions, .book-tools, .book-foot .chip, .book-note:placeholder-shown { display: none !important; } .book-grid { display: block; } .book-card { break-inside: avoid; margin-bottom: 12pt; } }
 /* company header: the workbook beside the valuation link */
 .company-head .head-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.company-head .valchip.wb { font: inherit; font-size: var(--t-1); font-weight: 600; cursor: pointer; border-color: var(--line); background: var(--panel); color: var(--fg); }
+.company-head .valchip.wb { font: inherit; font-size: var(--t-1); font-weight: 700; cursor: pointer; border-color: var(--line); background: var(--panel); color: var(--fg); }
 .company-head .valchip.wb:hover:not(:disabled) { border-color: var(--accent-line); color: var(--accent-text); }
 .company-head .valchip.wb:disabled { cursor: progress; color: var(--muted); }
 /* === end lane G === */

@@ -34,7 +34,7 @@ table.drill td:first-child { min-width: 64px; }
 .heat-m { width: 100%; border-collapse: separate; border-spacing: 2px; font-size: 11.5px; }
 .heat-m th, .heat-m td { padding: 4px 2px; border: 0; text-align: center; min-width: 30px; }
 .heat-m th { position: static; box-shadow: none; background: none; }
-.heat-m td.y { text-align: start; font-weight: 600; color: var(--muted); min-width: 38px; }
+.heat-m td.y { text-align: start; font-weight: 700; color: var(--muted); min-width: 38px; }
 .heat-m td.c { border-radius: 3px; font-variant-numeric: tabular-nums; color: var(--fg); }
 .heat-m td.tot { font-weight: 700; }
 .rating { display: grid; grid-template-columns: auto 1fr; gap: 14px 18px; align-items: center; }
@@ -44,10 +44,11 @@ table.drill td:first-child { min-width: 64px; }
 .rating .band i.on { background: var(--accent); }
 .rating table td { padding: 6px 8px; }
 @media (max-width: 760px) { .rating { grid-template-columns: 1fr; } .heat-m { font-size: 10.5px; } .heat-m th, .heat-m td { min-width: 24px; padding: 3px 1px; } }
-.fund-mgr { display: block; }
+.fund-mgr { display: inline; margin-inline-start: 8px; }
+.fund-mgr .mgrchip { margin-top: 0; border-color: transparent; background: transparent; padding-inline: 0; }
 /* lane U: neutral share marks, the report-vs-regulator coverage, the way out to the managers' ranking */
 .lens-vs { margin-inline-start: 5px; font-size: 9px; color: var(--faint); vertical-align: 1px; }
 .lens-cover { color: var(--muted); }
-.lens-cover.off { color: var(--warn); font-weight: 600; }
+.lens-cover.off { color: var(--warn); font-weight: 700; }
 .lens-views { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
 .lens-out { font-size: var(--t-2); }

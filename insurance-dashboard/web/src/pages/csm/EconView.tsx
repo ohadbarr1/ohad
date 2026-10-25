@@ -4,8 +4,9 @@ import type { EChartsCoreOption } from 'echarts/core';
 import { Chart } from '../../components/Chart';
 import { Sourced } from '../../components/Source';
 import { useSource, type Prov } from '../../lib/prov';
-import { Empty, Field, Panel, Seg } from '../../components/ui';
+import { Empty, Panel, Pick, Seg } from '../../components/ui';
 import { ContextBar, Sheet } from '../../components/Sheet';
+import { IndustryTools } from '../Industry';
 import { Fig, MEASURES, Marks, Notes, lineOf, showAmt, showMeasure } from '../../components/CsmEconomics';
 import { foxOption } from '../../lib/foxchart';
 import { chartBase } from '../../lib/theme';
@@ -121,10 +122,10 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
   const SetStrip = ({ S, what }: { S: string[]; what: string }) => S.length < 2 ? <div className="src">{what}: אין שתי חברות עם נתון בכל התקופות</div> : (
     <div className="csm-set" aria-label={`${what}: החברות בסכום`}><span className="dim">{what} · {S.length} מתוך {ids.length}, אותן חברות בכל נקודה:</span>{ids.map((id) => <span key={id} className={`csm-chip${S.includes(id) ? '' : ' off'}`} title={S.includes(id) ? 'בסכום' : 'חסר באחת התקופות המוצגות'}><Dot id={id} />{name(id)}</span>)}</div>);
   const controls = (
-    <section className="controls">
+    <section className={phone ? "controls" : "tbar-fields"}>
       <div className="field"><span>חלון</span><Seg<'q' | 'ytd'> label="חלון" value={span} onChange={setSpan} options={[['q', 'רבעון'], ['ytd', 'מצטבר']]} /></div>
       <div className="field"><span>בסיס מועדף</span><Seg<'net' | 'gross'> label="בסיס מועדף" value={pref} onChange={setPref} options={[['net', 'נטו'], ['gross', 'ברוטו']]} /></div>
-      <Field label="מיקוד"><select value={lead} onChange={(e) => setLead(e.target.value)}><option value="">כל החברות</option>{ids.map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>
+      <Pick label="מיקוד" cap="מיקוד" value={lead} onChange={setLead} options={[['', 'כל החברות'], ...ids.map((id) => [id, name(id)] as [string, string])]} />
       <div className="field"><span>תצוגה</span><Seg<'c' | 't'> label="תצוגה" value={mode} onChange={setMode} options={[['c', 'גרפים'], ['t', 'טבלה']]} /></div>
     </section>
   );
@@ -140,7 +141,7 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
 
   return (
     <>
-      {phone ? <><ContextBar onOpen={() => setCtl(true)}>{span === 'q' ? 'רבעוני' : 'מצטבר'} · {BASIS[pref]}{lead ? ` · ${name(lead)}` : ''} · {mode === 'c' ? 'גרפים' : 'טבלה'}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="כלכלת CSM">{controls}</Sheet></> : controls}
+      {phone ? <><ContextBar onOpen={() => setCtl(true)}>{span === 'q' ? 'רבעוני' : 'מצטבר'} · {BASIS[pref]}{lead ? ` · ${name(lead)}` : ''} · {mode === 'c' ? 'גרפים' : 'טבלה'}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="כלכלת CSM">{controls}</Sheet></> : <IndustryTools>{controls}</IndustryTools>}
 
       {mode === 'c' ? (
         <>
@@ -165,7 +166,7 @@ export function EconView({ L, name }: { L: Ledger; name: (id: string) => string 
         </>
       ) : (
         <Panel title={tm.l} aside={<span>{span === 'q' ? 'רבעוני' : 'מצטבר'} · {tm.kind === 'amt' ? 'מיליוני ש"ח' : tm.kind === 'x' ? '×' : '%'} · ÷ נגזר</span>}>
-          <section className="controls"><Field label="מדד"><select value={tk} onChange={(e) => setTk(e.target.value as MK)}>{MEASURES.map((m) => <option key={m.k} value={m.k}>{m.l}</option>)}</select></Field></section>
+          <section className="controls"><Pick<MK> label="מדד" cap="מדד" value={tk} onChange={setTk} options={MEASURES.map((m) => [m.k, m.l] as [MK, string])} /></section>
           {tcols.length === 0 ? <Empty title="אין נתונים" /> : <div className="scroll"><table className="csm-series">
             <thead><tr><th>חברה</th>{tcols.map(({ key }) => <th key={key}><span className="num">{qLabel(key, span)}</span></th>)}</tr></thead>
             <tbody>{ids.map((id) => (

@@ -28,24 +28,25 @@
 /* ---------- the IFRS 17 · CSM · capital ledger (/industry/csm) ---------- */
 .csmpage { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .csmpage > .panel, .csmpage > .kpis { margin: 0; }
-.csm-views { display: flex; gap: 2px; padding: 0 0 0; border-bottom: 1px solid var(--line-soft); overflow-x: auto; scrollbar-width: none; }
+/* the six views on a phone: the same tab grammar as everywhere (a white tile in a paper track), scrolling sideways */
+.csm-views { display: flex; gap: 2px; padding: 3px; background: var(--panel2); border: 1px solid var(--line-soft); border-radius: var(--r-2); overflow-x: auto; scrollbar-width: none; mask-image: linear-gradient(to left, #000 88%, transparent); }
 .csm-views::-webkit-scrollbar { display: none; }
-.csm-views a { flex: none; padding: 8px 12px 9px; color: var(--muted); font-weight: 500; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color var(--fast), border-color var(--fast); }
+.csm-views a { flex: none; padding: 5px 12px; border-radius: 6px; color: var(--muted); font-weight: 500; white-space: nowrap; transition: color var(--fast), background var(--fast); }
 .csm-views a:hover { color: var(--fg); text-decoration: none; }
-.csm-views a[aria-current="page"] { color: var(--fg); font-weight: 700; border-bottom-color: var(--accent); }
+.csm-views a[aria-current="page"] { color: var(--fg); font-weight: 700; background: var(--panel); box-shadow: 0 0 0 1px var(--line-soft), 0 1px 2px rgb(17 28 63 / 0.08); }
 .iddot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; vertical-align: 1px; flex: none; }
 .csm-kpis .kpi .v { font-size: var(--t-6); }
 .csm-members { margin-top: -8px; }
 .csm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .csm-grid > .panel { margin: 0; min-width: 0; }
-.csm-bridge th button.thsel, .csm-sens th button.thsel { display: inline-flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; white-space: nowrap; }
+.csm-bridge th button.thsel, .csm-sens th button.thsel { display: inline-flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: inherit; cursor: pointer; white-space: nowrap; }
 .csm-bridge th button.thsel:hover, .csm-sens th button.thsel:hover { color: var(--accent-text); }
 .csm-bridge th.on, .csm-sens th button.thsel.on { box-shadow: inset 0 -2px 0 var(--accent); }
 .csm-bridge .indcol { background: var(--panel2); }
-.csm-bridge td sup.mk, .csm-sens td sup.mk { color: var(--accent-text); font-weight: 700; margin-inline-start: 2px; cursor: help; font-size: 10px; }
+.csm-bridge td sup.mk, .csm-sens td sup.mk { color: var(--muted); font-weight: 700; margin-inline-start: 2px; cursor: help; font-size: 10px; }
 .csm-fallhd { display: flex; gap: 10px; align-items: baseline; margin: 14px 0 2px; }
 .csm-fallhd .dim { display: inline; }
-tr.indrow td { font-weight: 600; background: var(--panel2); }
+tr.indrow td { font-weight: 700; background: var(--panel2); }
 tr.indrow td .dim { font-weight: 400; }
 .csm-sens tr.odd td { color: var(--muted); }
 .redot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 6px; vertical-align: 2px; }

@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { ContextBar, Sheet } from '../components/Sheet';
-import { BreakChip, Empty, ErrorBox, Loading, Seg } from '../components/ui';
+import { BreakChip, Empty, ErrorBox, Loading, Menu, Pick, Seg } from '../components/ui';
+import { IndustryTools } from './Industry';
 import { foxOption } from '../lib/foxchart';
 import { identify } from '../lib/idmarks';
 import { pubLabel } from '../lib/format';
@@ -128,39 +129,32 @@ export function Peers() {
   const loading = pending > 0;
   const shareQ = () => { const n = writeSt(new URLSearchParams(), st); return n.toString(); };
 
+  // one toolbar row (ws2 L4): the set, the frequency, the period, the columns' depth and the view; then "+ מדד", the templates and the rest behind one menu
   const controls = (
     <>
-      <div className="pr-row">
-        <div className="field"><span>קבוצת עמיתים</span>
-          <div className="pr-sets">
-            <select aria-label="קבוצת עמיתים" value={st.e ? '' : st.s} onChange={(e) => set({ s: e.target.value, e: null })}>
-              {st.e && <option value="">מותאמת ({st.e.length})</option>}
-              {allSets.map((x) => <option key={x.id} value={x.id}>{x.n}{x.own ? ' ·' : ''}</option>)}
-            </select>
-            <button type="button" className={`btn${panel === 'set' ? ' primary' : ''}`} aria-expanded={panel === 'set'} onClick={() => setPanel(panel === 'set' ? '' : 'set')}>עריכה</button>
-          </div>
-        </div>
-        {st.v !== 'deck' && <><div className="field"><span>תדירות</span><Seg<Freq> label="תדירות" value={st.f} onChange={(f) => set({ f, p: '', o: null })} options={FREQS} /></div>
-        <label className="field"><span>עד</span>
-          <select value={st.p} onChange={(e) => set({ p: e.target.value })}>
-            <option value="">האחרון{pend ? ` · ${plab(st.f, pend)}` : ''}</option>
-            {pend && Array.from({ length: 24 }, (_, i) => back(st.f, pend, i + 1)).filter((p) => Number(p.slice(0, 4)) >= 2012).map((p) => <option key={p} value={p}>{plab(st.f, p)}</option>)}
-          </select>
-        </label>
-        {st.v === 'table' && <div className="field"><span>תקופות</span><Seg<string> label="תקופות לכל מדד" value={String(st.n)} onChange={(n) => set({ n: Number(n), o: null })} options={[['1', '1'], ['3', '3'], ['5', '5'], ['8', '8']]} /></div>}
-        {st.v === 'series' && <div className="field"><span>טווח</span><Seg<string> label="טווח הסדרה" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={st.f === 'Q' ? [['8', '2 שנים'], ['12', '3 שנים'], ['20', '5 שנים'], ['40', '10 שנים']] : [['8', '8'], ['12', '12'], ['20', '20'], ['40', '40']]} /></div>}</>}
-        <div className="field"><span>תצוגה</span><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
-      </div>
-      {st.v !== 'deck' && <div className="pr-row">
+      <span className="pr-sets">
+        <Pick label="קבוצת עמיתים" cap="קבוצה" value={st.e ? '' : st.s} onChange={(v) => set({ s: v, e: null })} options={[...(st.e ? [['', `מותאמת (${st.e.length})`] as [string, string]] : []), ...allSets.map((x) => [x.id, `${x.n}${x.own ? ' ·' : ''}`] as [string, string])]} />
+        <button type="button" className={`btn${panel === 'set' ? ' primary' : ''}`} aria-expanded={panel === 'set'} onClick={() => setPanel(panel === 'set' ? '' : 'set')} title="עריכת הקבוצה">עריכה</button>
+      </span>
+      {st.v !== 'deck' && <><Seg<Freq> label="תדירות" value={st.f} onChange={(f) => set({ f, p: '', o: null })} options={FREQS} />
+        <Pick label="עד" cap="עד" value={st.p} onChange={(v) => set({ p: v })} options={[['', `האחרון${pend ? ` · ${plab(st.f, pend)}` : ''}`], ...(pend ? Array.from({ length: 24 }, (_, i) => back(st.f, pend, i + 1)).filter((p) => Number(p.slice(0, 4)) >= 2012).map((p) => [p, plab(st.f, p)] as [string, string]) : [])]} />
+      </>}
+      {st.v === 'table' && <Pick label="תקופות לכל מדד" cap="תקופות" value={String(st.n)} onChange={(n) => set({ n: Number(n), o: null })} options={[['1', '1'], ['3', '3'], ['5', '5'], ['8', '8']]} />}
+      {st.v === 'series' && <Pick label="טווח הסדרה" cap="טווח" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={st.f === 'Q' ? [['8', '2 שנים'], ['12', '3 שנים'], ['20', '5 שנים'], ['40', '10 שנים']] : [['8', '8'], ['12', '12'], ['20', '20']]} />}
+      <Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} />
+      {st.v !== 'deck' && <>
         <button type="button" className={`btn${panel === 'add' ? ' primary' : ''}`} aria-expanded={panel === 'add'} onClick={() => setPanel(panel === 'add' ? '' : 'add')}>+ מדד</button>
-        <button type="button" className={`btn${panel === 'fx' ? ' primary' : ''}`} aria-expanded={panel === 'fx'} onClick={() => setPanel(panel === 'fx' ? '' : 'fx')}>+ נוסחה</button>
-        <button type="button" className={`btn${panel === 'views' ? ' primary' : ''}`} aria-expanded={panel === 'views'} onClick={() => setPanel(panel === 'views' ? '' : 'views')}>תבניות ותצוגות</button>
-        <span className="pr-tpl" role="group" aria-label="תבניות">{TEMPLATES.map((t) => <button key={t.id} type="button" className="chip" onClick={() => apply(t)} title={`מקש ${t.key}`}><kbd>{t.key}</kbd>{t.n}</button>)}</span>
-        {st.v === 'table' && <button type="button" className="chip" aria-pressed={st.h} onClick={() => set({ h: !st.h })}>מפת חום</button>}
-        <span className="pr-sp" />
-        <button type="button" className="btn" onClick={() => void exportXlsx(book, cols, ents, st, periods, setName)}>Excel</button>
-        <button type="button" className="btn" onClick={() => exportCsv(book, cols, ents, st, periods)}>CSV</button>
-      </div>}
+        <Menu label="תבניות" summary="תבניות" items={[
+          ...TEMPLATES.map((t) => ({ key: t.id, label: t.n, hint: <kbd>{t.key}</kbd>, group: 'תבניות', run: () => apply(t) })),
+          { key: 'fx', label: '+ נוסחה', group: 'עוד', run: () => setPanel(panel === 'fx' ? '' : 'fx') },
+          { key: 'views', label: 'תצוגות שמורות', group: 'עוד', hint: views.length ? <span className="num">{views.length}</span> : undefined, run: () => setPanel(panel === 'views' ? '' : 'views') },
+        ]} />
+        <Menu label="עוד" summary="⋯" align="end" className="pr-more" items={[
+          ...(st.v === 'table' ? [{ key: 'heat', label: st.h ? '✓ מפת חום' : 'מפת חום', run: () => set({ h: !st.h }) }] : []),
+          { key: 'xlsx', label: 'Excel', group: 'ייצוא', run: () => void exportXlsx(book, cols, ents, st, periods, setName) },
+          { key: 'csv', label: 'CSV', group: 'ייצוא', run: () => exportCsv(book, cols, ents, st, periods) },
+        ]} />
+      </>}
     </>
   );
   const panels = (
@@ -189,7 +183,7 @@ export function Peers() {
               </div>))}</div>}
           </Sheet>
         </>
-      ) : <section className="controls pr-controls">{controls}</section>}
+      ) : <IndustryTools>{controls}</IndustryTools>}
       {!phone && panels}
 
       {st.v === 'deck' ? <Suspense fallback={<Loading what="מצגת החיסכון" />}><Deck /></Suspense>
@@ -295,7 +289,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
     return (
       <>
         <div className="pr-cardbar"><Seg<string> label="פריסה" value="cards" onChange={() => setCards(false)} options={[['cards', 'כרטיסים'], ['table', 'טבלה']]} />
-          <label className="field"><span>מיון</span><select value={st.o ? String(st.o.c) : ''} onChange={(e) => set({ o: e.target.value === '' ? null : { c: Number(e.target.value), i: 0, d: 1 } })}><option value="">לפי הקבוצה</option>{cols.map((c, i) => <option key={i} value={i}>{colLabel(c)}</option>)}</select></label></div>
+          <Pick label="מיון" cap="מיון" value={st.o ? String(st.o.c) : ''} onChange={(v) => set({ o: v === '' ? null : { c: Number(v), i: 0, d: 1 } })} options={[['', 'לפי הקבוצה'], ...cols.map((c, i) => [String(i), colLabel(c)] as [string, string])]} /></div>
         <div className="pr-cards">{sorted.map((e, ri) => (
           <section key={e} className={`panel pr-card${st.hl === e ? ' lead' : ''}`}>
             <h3><i className="pdot" style={{ background: idCss(e) }} />{st.o && <span className="rk num">{ri + 1}</span>}<Link to={`/company/${e}`}>{book.name(e)}</Link></h3>
@@ -609,7 +603,7 @@ function FormulaEditor({ book, ents, freq, p, onAdd }: { book: Book; ents: strin
             </li>)}
           </ul>}
         </div>
-        <label className="field"><span>יחידה</span><select value={unit} onChange={(e) => setUnit(e.target.value as Unit)}>{(Object.keys(UNIT_HE) as Unit[]).map((u) => <option key={u} value={u}>{UNIT_HE[u]}</option>)}</select></label>
+        <Pick<Unit> label="יחידה" cap="יחידה" value={unit} onChange={setUnit} options={(Object.keys(UNIT_HE) as Unit[]).map((u) => [u, UNIT_HE[u]] as [Unit, string])} />
         <button type="button" className="btn primary" disabled={!tree || !!err} onClick={add}>הוספה</button>
       </div>
       {err && !(show && err.pos >= fStart) ? (

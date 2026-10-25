@@ -9,9 +9,9 @@ table.dt th:first-child .dt-sort { text-align: start; }
 .dt-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--r-1); }
 .dt-sort.on { color: var(--fg); }
 /* the arrow sits in the cell's end padding, so a sortable header is exactly as wide as a plain one */
-.dt-arr { position: absolute; inset-inline-end: 1px; bottom: 10px; font-size: 8px; line-height: 1; color: var(--accent-text); opacity: 0; transition: opacity var(--fast); pointer-events: none; }
+.dt-arr { position: absolute; inset-inline-end: 1px; bottom: 10px; font-size: 8px; line-height: 1; color: var(--muted); opacity: 0; transition: opacity var(--fast); pointer-events: none; }
 table.dt th:first-child .dt-arr { inset-inline-end: auto; inset-inline-start: 1px; }
-.dt-sort.on .dt-arr { opacity: 1; }
+.dt-sort.on .dt-arr { opacity: 1; color: var(--accent-text); }
 .dt-sort:hover .dt-arr, .dt-sort:focus-visible .dt-arr { opacity: 0.55; }
 .dt-sort.on:hover .dt-arr { opacity: 1; }
 table.dt th[aria-sort="ascending"], table.dt th[aria-sort="descending"] { box-shadow: inset 0 -2px 0 var(--accent), 0 1px 0 var(--line) !important; }

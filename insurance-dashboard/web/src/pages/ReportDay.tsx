@@ -3,7 +3,8 @@ import { lineKey } from '../lib/notes';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
-import { Empty, ErrorBox, Field, IncChip, Loading, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, IncChip, Loading, Menu, Panel, Seg } from '../components/ui';
+import { CompanyTools } from './Company';
 import { CompanyStore, shiftYear } from '../lib/company';
 import { foxOption } from '../lib/foxchart';
 import { byPeriodDesc, cls, dateLabel, nf, pct, periodLabel, pubLabel } from '../lib/format';
@@ -378,21 +379,10 @@ export function ReportDay({ card }: { card?: ReactNode }) {
           <ContextBar onOpen={() => setPickers(true)} label="דוח וחלון"><b className="num">{repName(P)}</b> · {W === 'q' ? 'רבעון' : W === 'ytd' ? 'מתחילת השנה' : 'LTM'}{doc && <> · פורסם <span className="num">{pubLabel(doc.date)}</span></>}</ContextBar>
         </section>
       ) : (
-        <section className="rd-head">
-          <div className="rd-title">
-            <h2>{entry.name_he} · <span className="num">{repName(P)}</span></h2>
-            <div className="rd-meta">
-              {doc ? <span>פורסם <span className="num">{pubLabel(doc.date)}</span></span> : <span className="muted">תאריך הפרסום לא נמצא ברשימת המסמכים</span>}
-              {doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}
-              {rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש{nBig > 0 && <>, <span className="num">{nBig}</span> מהם ב-2% ומעלה</>}</a>}
-              <CardLink id={id} p={P} />
-            </div>
-          </div>
-          <div className="controls">
-            <Field label="דוח"><select value={P} onChange={(e) => pick(e.target.value)}>{reports.map((p) => <option key={p} value={p}>{repName(p)}</option>)}</select></Field>
-            <div className="field"><span>חלון</span><Seg label="חלון" value={W} onChange={setWin} options={winOpts} /></div>
-          </div>
-        </section>
+        <CompanyTools>
+          <Menu label="דוח" cap="דוח" value={P} onPick={pick} items={reports.map((p) => ({ key: p, label: <span className="num">{repName(p)}</span> }))} />
+          <Seg label="חלון" value={W} onChange={setWin} options={winOpts} />
+        </CompanyTools>
       )}
       {phone && (
         <Sheet open={pickers} onClose={() => setPickers(false)} title="דוח וחלון">
@@ -407,7 +397,13 @@ export function ReportDay({ card }: { card?: ReactNode }) {
       {card}
       {phone && <div className="rd-meta rd-meta-ph">{doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}{rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש</a>}<CardLink id={id} p={P} /></div>}
 
-      <Panel title="עיקרי הדוח" aside={<span className="chip">מיליוני ש"ח · כפי שדווח</span>}>
+      <Panel title={<>עיקרי הדוח · <span className="num">{repName(P)}</span></>} aside={<>
+        {!phone && (doc ? <span>פורסם <span className="num">{pubLabel(doc.date)}</span></span> : <span className="muted">תאריך הפרסום לא נמצא ברשימת המסמכים</span>)}
+        {!phone && doc && <a className="rd-pdf" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}
+        {!phone && <CardLink id={id} p={P} />}
+        {!phone && rest.length > 0 && <a className="rd-rs" href="#rd-restated"><span className="num">{rest.length}</span> הוצגו מחדש{nBig > 0 && <>, <span className="num">{nBig}</span> ב-2% ומעלה</>}</a>}
+        <span className="note">מיליוני ש"ח · כפי שדווח</span>
+      </>}>
         {rows.length === 0 ? <Empty title="לא נמצאו שורות ראשיות לתקופה" /> : (
           <div className={`rd-table${ltmW ? ' rd-ltm' : ''}`} role="table" aria-label="עיקרי הדוח">
             <div className="rd-tr rd-th" role="row"><span role="columnheader">שורה</span><span role="columnheader" className="num">{curL}</span><span role="columnheader">YoY · <span className="num">{yoyL}</span></span><span role="columnheader">QoQ · <span className="num">{qoqL}</span></span>{!ltmW && <span role="columnheader">LTM · YoY</span>}</div>

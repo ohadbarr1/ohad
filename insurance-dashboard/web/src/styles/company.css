@@ -6,8 +6,8 @@
 .company-head .filer-note { margin: 8px 0 0; font-size: var(--t-2); color: var(--muted); line-height: 1.5; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .company-head .filer-note.open { white-space: normal; }
 .company-head .filer-note .chip { margin-inline-end: 4px; }
-.company-head .sub .valchip.ph { display: inline-flex; color: var(--accent-text); border-color: var(--accent-line); background: transparent; font-weight: 700; }
-.company-head .head-acts .valchip:not(.wb) { color: var(--accent-text); border: 1px solid var(--accent-line); background: transparent; font-weight: 700; }
+.company-head .sub .valchip.ph { display: inline-flex; color: var(--fg); border-color: var(--line); background: var(--panel); font-weight: 700; }
+.company-head .head-acts .valchip:not(.wb) { color: var(--fg); border: 1px solid var(--line); background: var(--panel); font-weight: 700; }
 .company-head .head-acts .valchip:not(.wb):hover { text-decoration: none; background: color-mix(in oklch, var(--accent) 8%, transparent); }
 
 /* the four places; long labels on a wide screen, short ones on a phone */
@@ -48,7 +48,7 @@
 .ktiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .ktile { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 4px 12px 8px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-3); cursor: pointer; min-width: 0; }
 .ktile .kt-hd { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 40px; margin: 0 -12px; padding: 0 12px; background: none; border: 0; font: inherit; color: var(--muted); cursor: pointer; text-align: start; }
-.ktile .kt-t { font-size: 12.5px; font-weight: 600; line-height: 1.25; color: var(--fg); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ktile .kt-t { font-size: 12.5px; font-weight: 700; line-height: 1.25; color: var(--fg); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .ktile .kt-p { flex: none; font-size: var(--t-1); color: var(--faint); }
 .ktile .kt-v { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
 .ktile .kt-v .num { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
@@ -64,15 +64,15 @@
 .ledger-wrap:not(.has-pane) { grid-template-columns: minmax(0, 1fr); }
 .ledger-wrap.has-pane { grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); }
 .ledger table { width: 100%; }
-.ledger tr.lhd th { font-size: var(--t-1); font-weight: 600; color: var(--muted); padding-block: 2px 6px; white-space: nowrap; border-bottom: 1px solid var(--line-soft); }
+.ledger tr.lhd th { font-size: var(--t-1); font-weight: 700; color: var(--muted); padding-block: 2px 6px; white-space: nowrap; border-bottom: 1px solid var(--line-soft); }
 .ledger tr.lhd th:first-child { color: var(--faint); font-weight: 500; }
 .ledger td.v .num { font-weight: 700; }
 .ledger td.v .dim { display: block; font-size: var(--t-1); color: var(--faint); font-weight: 400; }
 .ledger td .num.der, .ledger td .der .num { font-style: italic; }
 .ledger td.lsrc { font-size: var(--t-1); white-space: nowrap; }
 .ledger td.lsrc .u { display: block; color: var(--faint); }
-.ledger tbody tr.on td { background: color-mix(in oklch, var(--accent) 9%, var(--panel)); }
-.ledger tbody tr.on td.lbl .rowbtn { color: var(--accent-text); font-weight: 700; }
+.ledger tbody tr.on td { background: color-mix(in oklch, var(--fg) 6%, var(--panel)); }
+.ledger tbody tr.on td.lbl .rowbtn { color: var(--fg); font-weight: 700; }
 .ledger-chart { position: sticky; top: 76px; }
 .ledger-chart .ledger-x { position: absolute; inset-inline-end: 8px; top: 8px; z-index: 2; min-width: 32px; min-height: 32px; padding: 0; font-size: 18px; line-height: 1; }
 .ledger-chart .mcard header { padding-inline-end: 40px; }
@@ -108,3 +108,16 @@
 /* the company's identity dot: a ring with a soft halo in the company colour (design lane) */
 .company-head h1 .iddot { width: 14px; height: 14px; box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 18%, transparent); }
 @media (max-width: 760px) { .company-head h1 .iddot { width: 12px; height: 12px; } }
+
+/* design lane: one toolbar row (the places, then the view's controls); the company's actions in one menu; the report's facts lead the headline panel */
+.cotools .tbar-lead { gap: 6px 8px; }
+.cotools-slot { display: contents; }
+.cotools-slot:empty { display: none; }
+.cotools .menu.sheetpick .menu-btn { max-width: 300px; }
+.head-acts .coacts .menu-btn { font-weight: 500; }
+.rd .panel .aside a.rd-pdf, .rd .panel .aside a.rd-rs { color: var(--fg); text-decoration: underline; text-decoration-color: color-mix(in oklch, currentColor 40%, transparent); text-underline-offset: 3px; }
+.rd .panel .aside a:hover { text-decoration-color: currentColor; }
+.rd .panel .aside .note { color: var(--faint); }
+@media (max-width: 760px) { .cotools { flex-direction: column; align-items: stretch; } .cotools .tbar-lead { width: 100%; } .cotools .subnav.cnav { width: 100%; } .cotools-slot { display: none; } }
+/* phone: the actions menu is a desktop thing (the valuation chip sits in the sub line); the statement legend yields its lines to the figures */
+@media (max-width: 760px) { .company-head .head-acts { display: none; } .finpanel .hd .legend-note { display: none; } .finpanel .hd { gap: 4px 10px; } }

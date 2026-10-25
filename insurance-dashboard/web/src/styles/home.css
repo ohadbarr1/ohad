@@ -43,7 +43,7 @@ html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { ga
 .hm-who { grid-area: who; display: grid; grid-template-columns: 8px minmax(0, 1fr); grid-template-areas: "dot name" ". meta"; column-gap: 8px; row-gap: 1px; align-content: center; min-height: 48px; color: var(--fg); text-decoration: none; }
 .hm-who:hover .hm-name { color: var(--accent-text); }
 .hm-dot { grid-area: dot; width: 8px; height: 8px; border-radius: 50%; align-self: center; }
-.hm-name { grid-area: name; font-size: var(--t-4); font-weight: 600; line-height: 1.25; }
+.hm-name { grid-area: name; font-size: var(--t-4); font-weight: 700; line-height: 1.25; }
 .hm-meta { grid-area: meta; font-size: var(--t-1); color: var(--muted); }
 .hm-fig { grid-area: fig; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
 .hm-v { font-size: var(--t-5); font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }

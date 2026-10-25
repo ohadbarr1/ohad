@@ -2,8 +2,9 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Sourced } from '../../components/Source';
 import { useSource, type Prov } from '../../lib/prov';
-import { Empty, Field, Panel, Seg } from '../../components/ui';
+import { Empty, Panel, Pick, Seg } from '../../components/ui';
 import { ContextBar, Sheet } from '../../components/Sheet';
+import { IndustryTools } from '../Industry';
 import { Fig, MEASURES, Marks, Notes, lineMarks, lineOf, ratioMarks, showAmt, showMeasure, tableMarks } from '../../components/CsmEconomics';
 import { MiniFall, WaterfallChart, type FallPt } from '../../components/CsmWaterfall';
 import { idCss } from '../../lib/identity';
@@ -187,8 +188,8 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
 
   /* ---------- the parts ---------- */
   const controls = (
-    <section className="controls">
-      <Field label="דוח"><select value={P} onChange={(e) => setPeriod(e.target.value)}>{periods.map((p) => <option key={p} value={p}>{periodName(p)}</option>)}</select></Field>
+    <section className={phone ? "controls" : "tbar-fields"}>
+      <Pick label="דוח" cap="דוח" value={P} onChange={setPeriod} options={periods.map((p) => [p, <span className="num">{periodName(p)}</span>] as [string, ReactNode])} />
       {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'QTD'], ['ytd', 'YTD']]} /></div>}
       <div className="field"><span>בסיס מועדף</span><Seg<'net' | 'gross'> label="בסיס מועדף" value={pref} onChange={setPref} options={[['net', 'נטו'], ['gross', 'ברוטו']]} /></div>
       <div className="field"><span>תצוגה</span><Seg<'v' | 'y'> label="תצוגה" value={view} onChange={setView} options={[['v', 'ערך'], ['y', 'YoY']]} /></div>
@@ -273,7 +274,7 @@ export function LedgerView({ L, name }: { L: Ledger; name: (id: string) => strin
   const sheetRow = sheet ? rows.find((r) => r.id === sheet) : null;
   return (
     <>
-      {phone ? <><ContextBar onOpen={() => setCtl(true)}>{when} · {wlabel} · {BASIS[pref]}{view === 'y' ? ' · YoY' : ''}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="ספר ה-CSM">{controls}</Sheet></> : controls}
+      {phone ? <><ContextBar onOpen={() => setCtl(true)}>{when} · {wlabel} · {BASIS[pref]}{view === 'y' ? ' · YoY' : ''}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="ספר ה-CSM">{controls}</Sheet></> : <IndustryTools>{controls}</IndustryTools>}
 
       <section className="kpis csm-kpis" aria-label="CSM ענפי">
         {kpi('יתרת CSM, ענף', bal.cur ? <Sourced className="num der" src={() => aggProv(bal.cur!, `יתרת CSM · ענף · ${when}`, name)}>{nf(bal.cur.v / 1000, 1)}</Sourced> : '–', <>מיליארדי ש"ח · <span className="num">{bal.ids.length}</span> חברות{bal.yoy != null && <> · <Sourced className={`num der ${bal.yoy < 0 ? 'neg' : 'pos'}`} src={() => ({ k: 'calc', title: `יתרת CSM ענפית · YoY · ${when}`, value: `${sn(bal.yoy!, 1)}%`, formula: `Σ יתרה ÷ Σ יתרה באותו תאריך שנה קודם, פחות 1 · אותן ${bal.ids.length} חברות בשני התאריכים`, inputs: [{ label: when, v: amt(bal.cur!.v), src: () => aggProv(bal.cur!, 'יתרת CSM · ענף', name) }, { label: periodName(yearBefore(P)), v: amt(bal.prev!.v), src: () => aggProv(bal.prev!, 'יתרת CSM · ענף', name) }] })}>{sn(bal.yoy, 1)}%</Sourced> YoY</>}</>)}
