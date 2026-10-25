@@ -142,7 +142,7 @@ def upsert_warehouse(paths, rows, maya_ids):
         import duckdb  # noqa: F401
     except ImportError:
         return "skipped (duckdb not importable)"
-    con = fm.connect() if paths.warehouse == fm.DB else __import__("duckdb").connect(str(paths.warehouse))
+    con = fm.connect(paths.warehouse)  # creates the documents table when the warehouse is new (a test's temp root, a fresh clone)
     for r in rows:
         con.execute("""insert into documents (report_id, company, maya_company_id, title, publish_date, form_id, financial_family, doc_type,
                 period, file_type, file_name, size_kb, url, local_path, sha256, bytes, downloaded_at)

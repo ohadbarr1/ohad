@@ -1,5 +1,9 @@
 # fox: every push and pull request is typechecked, gated on the data checks (incl. the data contracts), built, checked route by route,
-# and run through the Playwright visual smoke and axe accessibility checks (installed Google Chrome, no browser download).
+# checked against the cache contract (firebase.json rules + served headers), and run through Playwright: visual smoke + axe in chromium
+# (phone, desktop) and the WebKit crash regression + sticky-column lint in an iPhone 13 profile (webkit-phone).
+# deploy.sh refuses to deploy a commit whose latest fox-ci run did not succeed (docs/PIPELINE.md, "Deploy gate").
+# Visual baselines: tests/__screenshots__/linux/ is compared when committed; until then each run uploads the screenshots it took as the
+# `linux-baselines` artifact (commit them to turn the comparison on). Run the workflow by hand with update_baselines to refresh them.
 # A pull request gets a Firebase preview channel when the FIREBASE_SERVICE_ACCOUNT secret is set; nothing here deploys the live site.
 name: fox-ci
 on:
@@ -7,22 +11,29 @@ on:
     paths: ['insurance-dashboard/**', '.github/workflows/fox-ci.yml']
   pull_request:
     paths: ['insurance-dashboard/**', '.github/workflows/fox-ci.yml']
+  workflow_dispatch:
+    inputs:
+      update_baselines:
+        description: 'Re-take every Linux visual baseline (uploaded as the linux-baselines artifact; nothing is committed)'
+        type: boolean
+        default: false
 defaults:
   run:
     working-directory: insurance-dashboard
 jobs:
   check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm, cache-dependency-path: insurance-dashboard/web/package-lock.json }
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
+      # one Python for CI: the version in insurance-dashboard/.python-version (3.12; the deploy path itself needs the standard library only)
+      - uses: actions/setup-python@v6
+        with: { python-version-file: insurance-dashboard/.python-version, cache: pip, cache-dependency-path: insurance-dashboard/pipeline/requirements.txt }
       - name: Python dependencies
-        run: pip install -r pipeline/requirements.txt
-      - name: Autopilot tests
+        run: python --version && pip install -r pipeline/requirements.txt
+      - name: Autopilot tests (recorded MAYA responses, temp warehouse)
         run: python -m unittest discover -s pipeline/autopilot/tests
       - name: Pipeline DAG (graph valid, tests, plan; nothing is run)
         run: |
@@ -44,16 +55,30 @@ jobs:
           node scripts/serve.mjs dist 4173 >/dev/null 2>&1 &
           sleep 1
           node scripts/route-check.mjs http://127.0.0.1:4173 --json route-check.json
+      - name: Cache contract (firebase.json rules, hashed assets, served status and headers)
+        working-directory: insurance-dashboard/web
+        run: node scripts/hosting-check.mjs dist --serve http://127.0.0.1:4173
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: route-check, path: insurance-dashboard/web/route-check.json, if-no-files-found: ignore }
-      - name: Visual smoke and accessibility (Playwright + axe, 14 routes x 390/1440 x both themes)
+      - name: Playwright browsers (chromium + webkit, versions from the lockfile)
         working-directory: insurance-dashboard/web
-        env: { CI: 'true' }
-        run: npx playwright test
+        run: npx playwright install --with-deps chromium webkit
+      - name: Playwright (visual + axe in chromium phone/desktop; WebKit crash regression + sticky lint in iPhone 13)
+        working-directory: insurance-dashboard/web
+        env: { CI: 'true', E2E_CHROME: '0', E2E_WRITE_BASELINES: '1' }
+        run: |
+          if [ "${{ inputs.update_baselines }}" = "true" ]; then
+            npx playwright test tests/visual.spec.ts --project=phone --project=desktop --update-snapshots=all
+          else
+            npx playwright test
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: playwright-report, path: insurance-dashboard/web/playwright-report, if-no-files-found: ignore }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: linux-baselines, path: insurance-dashboard/web/tests/__screenshots__/linux, if-no-files-found: ignore }
       - name: Preview channel
         if: github.event_name == 'pull_request' && env.FIREBASE_SERVICE_ACCOUNT != ''
         env: { FIREBASE_SERVICE_ACCOUNT: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' }

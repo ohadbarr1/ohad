@@ -104,3 +104,50 @@ Rebuilding every automatic step from HEAD's inputs changes outputs that HEAD com
 + `facts/` + taxonomy (one label: labels.ts `combined_ratio` became "יחס משולב" in 8717445d, never rebuilt); `data/lts_norm/*` anchors
 (17), `lens.json` rows, `recon.json`, `schemas.json` (coverage copies `web/src/lib/schemas.json`), `search/docs.json`. Not rebuilt in
 this commit series; one `python3 pipeline/dag.py` + gate brings them in line (review the diff first).
+
+## Delivery: CI, deploy gate, cache contract (25.10.26)
+
+**CI** (`.github/workflows/fox-ci.yml`, every push/PR under `insurance-dashboard/`): Python from `.python-version` (3.12) with
+`pipeline/requirements.txt`; autopilot tests (recorded MAYA responses, temp warehouse: `fetch_maya.connect(db)` creates the
+`documents` table for any path); DAG check, tests, dry run; data gate; `tsc`; `vite build`; route check (390/1440); cache contract
+(`web/scripts/hosting-check.mjs dist --serve …`); Playwright at the lockfile's chromium + webkit: visual smoke and axe (projects
+`phone`, `desktop`), WebKit crash regression and sticky-column lint (`webkit-phone`, iPhone 13, `tests/webkit.spec.ts`).
+Reproduce locally: `uv venv -p 3.12 && uv pip install -r pipeline/requirements.txt`, then the same commands; `npx playwright test`.
+
+**Visual baselines** are per platform: `web/tests/__screenshots__/darwin/` (the owner's Mac, installed Chrome) is compared locally;
+`…/linux/` is compared in CI once committed. Until then CI attaches each screenshot and uploads the set as the `linux-baselines`
+artifact. To turn the Linux comparison on (or refresh it after an intended change: run the workflow by hand with `update_baselines`):
+`gh run download <run-id> -n linux-baselines -D insurance-dashboard/web/tests/__screenshots__/linux` → review → commit.
+
+**Deploy gate** (`deploy.sh`): refuses unless, before anything runs, (1) no tracked file under `insurance-dashboard/` has uncommitted
+changes and no untracked file sits under `web/src` or `web/public`; (2) HEAD is on origin (`git branch -r --contains`); (3) the
+latest `fox-ci` push run for HEAD (`gh run list --commit <sha> --workflow fox-ci --event push`; a hand-run `update_baselines` run
+never counts) is completed and succeeded. `--force-unverified`
+skips the gate with a loud warning (restore service only). `--check-only` runs every check and deploys nothing (gate skipped).
+After the pipeline steps and the data gate, the files they regenerated are committed (`Deploy: commit the data files the deploy
+build regenerated`) before the app is built, so the bundle's commit stamp and the deployed data are that commit; the script prints
+it — push it afterwards so origin matches live. On any exit without a data commit (`--check-only`, a failed check or deploy) the
+regenerated tracked files are restored to HEAD (only when the tree was clean at the start), so the next run still passes the gate. Typical flow: commit → push → wait for green (`gh run watch`) → `./deploy.sh`.
+
+**Optional next step (owner, not implemented): deploy from CI.** Create a Firebase service account with the *Firebase Hosting Admin*
+role (Firebase console → Project settings → Service accounts, or `firebase init hosting:github`), store its JSON as the repository
+secret `FIREBASE_SERVICE_ACCOUNT`. That alone turns on the PR preview channel already in fox-ci. To deploy live from CI, add a job
+that `needs: check`, runs only on pushes to the trunk branch, rebuilds and calls `FirebaseExtended/action-hosting-deploy@v0` with
+`channelId: live`; then deploy.sh becomes the fallback. Protect the trunk branch (required check: `fox-ci / check`) first.
+
+**Cache contract** (`web/firebase.json`, `public/sw.js`, `src/lib/reload.ts`; checked by `web/scripts/hosting-check.mjs`):
+
+| Path | Served | Cache-Control |
+|---|---|---|
+| extensionless (`/`, `/company/harel`, `/data/autopilot`) | `index.html` via rewrite `!**/*.*` | `no-cache` |
+| `*.html` | the file | `no-cache` |
+| `/assets/*` (content-hashed names only; checked) | the file, else **404** | `public, max-age=31536000, immutable` |
+| `/data/**/*.*` | the file, else **404** | `public, max-age=300` |
+| `/sw.js` | the file | `no-cache` |
+
+A 404 under `/assets/**` still carries the `immutable` header (Hosting applies headers by path): harmless, since releases are
+atomic and a hashed name that is missing never comes back. A tab opened before a deploy that asks for a lazy chunk gone with the old build gets a 404, Vite raises `vite:preloadError`, and the
+app reloads once (a second failure within a minute reaches the error boundary). The service worker (v2) revalidates navigations
+(`cache: 'no-cache'`, falls back to the cached shell after 3 s or offline), stores HTML only as the shell, and never stores or serves
+an HTML body for an `/assets` or `/data` request. `scripts/serve.mjs` applies the same rules (same matcher as Hosting: minimatch,
+cross-checked against superstatic), so the route check, Playwright and the hosting check run under the live behaviour.
