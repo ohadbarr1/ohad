@@ -12,7 +12,7 @@
     "cleanUrls": false,
     "rewrites": [
       {
-        "source": "**",
+        "source": "!**/*.*",
         "destination": "/index.html"
       }
     ],
@@ -27,7 +27,7 @@
         ]
       },
       {
-        "source": "/data/**",
+        "source": "/data/**/*.*",
         "headers": [
           {
             "key": "Cache-Control",
@@ -45,7 +45,16 @@
         ]
       },
       {
-        "source": "/index.html",
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "!**/*.*",
         "headers": [
           {
             "key": "Cache-Control",
