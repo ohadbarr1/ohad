@@ -289,7 +289,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
     return (
       <>
         <div className="pr-cardbar"><Seg<string> label="פריסה" value="cards" onChange={() => setCards(false)} options={[['cards', 'כרטיסים'], ['table', 'טבלה']]} />
-          <label className="field"><span>מיון</span><select value={st.o ? String(st.o.c) : ''} onChange={(e) => set({ o: e.target.value === '' ? null : { c: Number(e.target.value), i: 0, d: 1 } })}><option value="">לפי הקבוצה</option>{cols.map((c, i) => <option key={i} value={i}>{colLabel(c)}</option>)}</select></label></div>
+          <Pick label="מיון" cap="מיון" value={st.o ? String(st.o.c) : ''} onChange={(v) => set({ o: v === '' ? null : { c: Number(v), i: 0, d: 1 } })} options={[['', 'לפי הקבוצה'], ...cols.map((c, i) => [String(i), colLabel(c)] as [string, string])]} /></div>
         <div className="pr-cards">{sorted.map((e, ri) => (
           <section key={e} className={`panel pr-card${st.hl === e ? ' lead' : ''}`}>
             <h3><i className="pdot" style={{ background: idCss(e) }} />{st.o && <span className="rk num">{ri + 1}</span>}<Link to={`/company/${e}`}>{book.name(e)}</Link></h3>
@@ -603,7 +603,7 @@ function FormulaEditor({ book, ents, freq, p, onAdd }: { book: Book; ents: strin
             </li>)}
           </ul>}
         </div>
-        <label className="field"><span>יחידה</span><select value={unit} onChange={(e) => setUnit(e.target.value as Unit)}>{(Object.keys(UNIT_HE) as Unit[]).map((u) => <option key={u} value={u}>{UNIT_HE[u]}</option>)}</select></label>
+        <Pick<Unit> label="יחידה" cap="יחידה" value={unit} onChange={setUnit} options={(Object.keys(UNIT_HE) as Unit[]).map((u) => [u, UNIT_HE[u]] as [Unit, string])} />
         <button type="button" className="btn primary" disabled={!tree || !!err} onClick={add}>הוספה</button>
       </div>
       {err && !(show && err.pos >= fStart) ? (

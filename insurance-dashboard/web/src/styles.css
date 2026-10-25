@@ -678,6 +678,11 @@ html[data-density="compact"] th, html[data-density="compact"] td { padding: 3px 
 @media (min-width: 761px) { table.rank td:first-child { white-space: nowrap; } table.rank td:first-child > span { align-items: center !important; } }
 /* phone: a fund's name holds to two lines, the manager dot after it */
 @media (max-width: 760px) { table.rank td:first-child a.name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } }
+@media (max-width: 760px) {
+  .tbar-ctl { mask-image: linear-gradient(to left, #000 90%, transparent); padding-inline-end: 12px; }
+  .panel table.rank td:first-child, .panel table.rank th:first-child { min-width: 46vw; max-width: 50vw; }
+  table.rank .fund-mgr { display: block; margin: 0; }
+}
 /* === end lane S1 === */
 
 /* iOS/iPadOS WebKit can draw a sticky cell inside an RTL horizontal scroller off its scroll origin (blank first column, seen on an
