@@ -1,0 +1,35 @@
+/* lane S4: /data/autopilot schedule, channels, last runs, publication (pages/Autopilot.tsx) */
+.ap-sched { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 14px 22px; align-items: start; }
+.ap-cad { margin: 0; display: flex; flex-direction: column; }
+.ap-cad > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-3); }
+.ap-cad dt { color: var(--muted); }
+.ap-cad dd { margin: 0; text-align: end; font-weight: 600; }
+.ap-chan { width: 100%; border-collapse: collapse; font-size: var(--t-3); }
+.ap-chan th { text-align: start; font-weight: 500; color: var(--faint); font-size: var(--t-1); padding: 4px 8px 6px 0; border-bottom: 1px solid var(--line); }
+.ap-chan td { padding: 8px 8px 8px 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; white-space: normal; text-align: start; }
+.ap-chan td:first-child { white-space: nowrap; font-weight: 600; }
+.ap-chan code, .ap-cmds code, .ap-files .mono { font-family: var(--font-mono); font-size: var(--t-1); overflow-wrap: anywhere; word-break: break-all; }
+.ap-sched > * { min-width: 0; }
+.ap-reg { display: inline-block; margin-inline-end: 12px; white-space: nowrap; }
+.ap-due { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: var(--t-2); }
+.ap-due b { margin-inline-end: 4px; }
+.ap-runs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ap-runs li { display: grid; grid-template-columns: 112px auto minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-3); }
+.ap-runs li .t { color: var(--muted); font-size: var(--t-2); }
+.ap-runs li .w { min-width: 0; }
+.ap-runs li.bad .w b { color: var(--down); font-weight: 600; }
+.ap-cmds { margin: 0 0 10px; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 6px; }
+.ap-cmds code { display: block; padding: 7px 10px; border-radius: var(--r-1); background: var(--panel2); border: 1px solid var(--line-soft); text-align: left; }
+.ap-files { margin-bottom: 10px; font-size: var(--t-2); }
+.ap-files ul { margin: 6px 0 0; padding-inline-start: 18px; max-height: 180px; overflow: auto; }
+@media (max-width: 760px) {
+  .ap-sched { grid-template-columns: 1fr; }
+  .ap-chan thead { display: none; }
+  .ap-chan, .ap-chan tbody, .ap-chan tr, .ap-chan td { display: block; width: 100%; }
+  .ap-chan tr { padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+  .ap-chan td { border: 0; padding: 2px 0; }
+  .panel .ap-chan td:first-child { white-space: normal; max-width: none; min-width: 0; }
+  .ap-runs li { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .ap-runs li .t { grid-column: 1 / -1; }
+}
+.ap-copy { align-self: flex-start; }
