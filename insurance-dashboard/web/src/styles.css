@@ -619,3 +619,6 @@ div.src > a, .fnote a { text-decoration: underline; text-decoration-color: color
 /* iOS/iPadOS WebKit can draw a sticky cell inside an RTL horizontal scroller off its scroll origin (blank first column, seen on an
    iPhone on the home table): there the first column scrolls with the table instead of sticking. */
 @supports (-webkit-touch-callout: none) { [dir="rtl"] .scroll table :is(th, td):first-child { position: static; box-shadow: none; } }
+/* the same for the sticky columns outside .scroll tables: the presentations grid's company column and the peers matrix's pinned second
+   column (it sits 112 px from the edge, so it would float over the now static first column). tests/webkit.spec.ts lints for any other. */
+@supports (-webkit-touch-callout: none) { [dir="rtl"] :is(.pz-table th.pz-co, table.pr-table :is(th, td).pin) { position: static; box-shadow: none; } }
