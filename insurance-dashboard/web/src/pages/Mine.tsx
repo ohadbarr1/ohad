@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { Icon } from '../components/Icon';
 import { Link } from 'react-router-dom';
 import { Star } from '../components/Follow';
+import { SinceDot } from '../components/SinceBadge';
 import { readStored, storedKeys, useStoreTick, useWatchlist, writeStored } from '../lib/local';
 import { removeNote, useFactNotes } from '../lib/notes';
 import { idCss } from '../lib/identity';
@@ -104,7 +105,7 @@ export function Mine() {
                 const c = names.get(id);
                 return (
                   <li key={id}>
-                    <Link to={`/company/${id}`} className="mi-row">{dot(id)}<span className="mi-l">{nm(id)}</span>{c && <span className="mi-m">{KIND[c.kind]}</span>}</Link>
+                    <Link to={`/company/${id}`} className="mi-row">{dot(id)}<span className="mi-l">{nm(id)}</span><SinceDot id={id} n />{c && <span className="mi-m">{KIND[c.kind]}</span>}</Link>
                     <Star id={id} name={nm(id)} />
                   </li>
                 );

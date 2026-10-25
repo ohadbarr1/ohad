@@ -19,6 +19,7 @@ import { useWindowParam, type Win } from '../lib/period';
 import { usePhone } from '../lib/useMedia';
 import { ContextBar, Sheet } from '../components/Sheet';
 import '../styles/reportday.css';
+import { CardLink } from '../components/ReportCardLink';  // lane S2
 
 const PL = 'X.רווח_והפסד', BS = 'X.מאזן', OCI = 'X.רווח_כולל';
 const QE = ['03-31', '06-30', '09-30', '12-31'];
@@ -384,6 +385,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
               {doc ? <span>פורסם <span className="num">{pubLabel(doc.date)}</span></span> : <span className="muted">תאריך הפרסום לא נמצא ברשימת המסמכים</span>}
               {doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}
               {rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש{nBig > 0 && <>, <span className="num">{nBig}</span> מהם ב-2% ומעלה</>}</a>}
+              <CardLink id={id} p={P} />
             </div>
           </div>
           <div className="controls">
@@ -403,7 +405,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
         </Sheet>
       )}
       {card}
-      {phone && <div className="rd-meta rd-meta-ph">{doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}{rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש</a>}</div>}
+      {phone && <div className="rd-meta rd-meta-ph">{doc && <a className="chip" href={doc.url} target="_blank" rel="noreferrer" title={doc.title}>הדוח המלא (PDF{doc.pages ? <>, <span className="num">{doc.pages}</span> עמ׳</> : null})</a>}{rest.length > 0 && <a className="chip est" href="#rd-restated"><span className="num">{rest.length}</span> נתונים הוצגו מחדש</a>}<CardLink id={id} p={P} /></div>}
 
       <Panel title="עיקרי הדוח" aside={<span className="chip">מיליוני ש"ח · כפי שדווח</span>}>
         {rows.length === 0 ? <Empty title="לא נמצאו שורות ראשיות לתקופה" /> : (

@@ -71,12 +71,14 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `canon_kpi` | auto · deploy | build_kpi, facts, build_company_index | kpi.json (in place) |
 | `build_registry` | auto · deploy | build_kpi, canon_kpi, facts, build_series, build_sop, build_lts, build_targets, … | peers/ |
 | `build_market_home` | auto · deploy | build_market | market_home.json |
+| `build_cards` | auto · deploy | facts, build_kpi, canon_kpi, build_targets, build_ifrs, build_csm, build_registry | cards/ (report card per filing; `check_cards.py` = gate `cards`) |
+| `build_since` | auto, daily · deploy | build_documents, facts, build_targets, build_market | since.json (per-company dated events, last 400 days) |
 | `build_coverage` | auto, daily · deploy | every step that writes JSON | coverage.json (reads qa.json from the last gate) |
 
 After the build: `python3 pipeline/gate.py` (all checks; writes qa.json, consistency.json). It is not a step: deploy.sh runs it after
 `dag.py --only deploy --no-deps`, exactly as before.
 
-`deploy.sh` runs the six `deploy` steps it always ran, in the same order; a step whose inputs, code and outputs are unchanged since its
+`deploy.sh` runs the `deploy` steps (the six it always ran, plus lane S2's `build_cards` and `build_since`), in the same order; a step whose inputs, code and outputs are unchanged since its
 last run in that checkout is skipped (identical output: these steps are deterministic, verified byte for byte except the time stamps of
 calendar.ics and coverage.json). It does not run upstream builders; the DAG prints the stale ones.
 

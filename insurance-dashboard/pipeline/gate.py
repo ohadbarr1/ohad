@@ -35,6 +35,8 @@ Checks
   assets         quarterly asset lists (web/public/data/assets/): classes add up to the total, every quarter has its source files and
                  passed the file validation, and the files equal a rebuild from data/work/asset_lists (lane AL); a skipped rebuild warns.
   solvency … macro   the published layers outside the statements: source, type/unit, value on its cited page (pipeline/gate_layers.py, lane G)
+  cards          report cards (web/public/data/cards/): every digit a card shows is a fact token, and every fact equals the published figure
+                 it cites or its operation over cited inputs (pipeline/check_cards.py, lane S2)
 """
 import collections
 import datetime as dt
@@ -359,6 +361,14 @@ def schemas():
     add("schemas", not bad, n, len(bad), summary + (f"; e.g. {bad[0][0]}: {bad[0][2][0]}" if bad else ""))
 
 
+def cards():  # lane S2: the digit validator of the report cards
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "check_cards.py"), "--quiet"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()]
+    m = re.search(r"(\d+) cards, (\d+) facts, (\d+) problems", out[-1] if out else "")
+    add("cards", p.returncode == 0 and bool(m), int(m.group(2)) if m else 0, int(m.group(3)) if m else 1,
+        (f"{m.group(1)} report cards, every digit a published fact" if m and p.returncode == 0 else (out[-1] if out else p.stderr.strip()[-200:]))[:200])
+
+
 def facts():
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_facts.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()]
@@ -425,6 +435,7 @@ def main():
     lens()
     consistency()
     schemas()
+    cards()
     facts()
     assets()
     gate_layers.run(add)

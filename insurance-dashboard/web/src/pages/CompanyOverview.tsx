@@ -23,6 +23,7 @@ import { CompanyTear } from './CompanyTear';
 import { Notes, Star } from '../components/Follow';
 import { FundHouseStrip } from '../components/FundHouseStrip';
 import { KpiLedger, KpiTiles, type LedgerGroup, type LedgerPoint, type LedgerRow } from '../components/KpiLedger';
+import { SinceBlock } from '../components/SinceBadge';
 import { ReportDay, ROLES, YTD, endOf, figAt, figNoteKey, figProv, flowAt, qShift, reportsOf, resolve, type Fig } from './ReportDay';
 
 const MN = 'מיליוני ש"ח';
@@ -200,6 +201,7 @@ export function CompanyOverview() {
   const repTag = P ? (P.endsWith('FY') ? `FY'${P.slice(2, 4)}` : `${P.slice(4)}'${P.slice(2, 4)}`) : '';
   return (
     <>
+      <SinceBlock id={entry.id} />
       {entry.has_financials && <ReportDay card={tiles} />}
       {!entry.has_financials && tiles}
       {fund && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}

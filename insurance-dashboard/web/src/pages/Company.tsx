@@ -12,6 +12,8 @@ import { CHART_FONT, chartBase, palette } from '../lib/theme';
 import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
+import { useMarkVisit } from '../lib/visits';
+import { SinceChip } from '../components/SinceBadge';
 import { NoteMark } from '../components/NoteMark';  // lane F
 import { lineKey } from '../lib/notes';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
@@ -51,6 +53,7 @@ export function CompanyLayout() {
   const kpi = useKpiData(!!entry);
   const phone = usePhone();
   const [noteOpen, setNoteOpen] = useState(false);
+  useMarkVisit(entry?.id);  // lane S2: the visit date moves when the reader leaves the company
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <NotFound />;
@@ -74,6 +77,7 @@ export function CompanyLayout() {
             <span className="kind">{KIND[entry.kind]}</span>
             {entry.has_financials && <span className="chip loaded" title="הדוח האחרון שנקרא">דוח אחרון <span className="num">{latest}</span></span>}
             {entry.docs > 0 && <span className="chip loaded docs"><span className="num">{entry.docs}</span> מסמכים</span>}
+            <SinceChip id={entry.id} />
             {market && entry.market_group && <span className="chip mkt">שוק: {market.plabel(market.LAST)}</span>}
             {phone && entry.has_price && <Link className="chip valchip ph" to={`/valuation/${entry.id}`}>שווי ›</Link>}
           </div>
