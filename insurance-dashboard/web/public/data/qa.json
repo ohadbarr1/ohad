@@ -1,5 +1,5 @@
 {
- "built": "2026-10-25T13:46:32+02:00",
+ "built": "2026-10-25T13:52:36+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -267,19 +267,19 @@
   },
   {
    "id": "cell_sources",
-   "ok": false,
+   "ok": true,
    "level": "warn",
    "n": 115510,
-   "fail": 6501,
-   "note": "115510 current statement figures; 6501 without a MAYA report id + publication date (phoenix 6501; cited host: fnx.co.il 6501)"
+   "fail": 0,
+   "note": "115510 current statement figures; 0 without a MAYA report id + publication date"
   },
   {
    "id": "links",
-   "ok": false,
+   "ok": true,
    "level": "warn",
    "n": 223,
-   "fail": 1,
-   "note": "223 source URLs checked 2026-10-25 (0 days ago); 1 dead (www.fnx.co.il 1); 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+   "fail": 0,
+   "note": "223 source URLs checked 2026-10-25 (0 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
   }
  ]
 }

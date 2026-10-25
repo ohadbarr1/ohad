@@ -98,6 +98,9 @@ def build():
         X = extra.get(co, {})
         base_n = len(d["facts"]) - len(X)  # the Phoenix spreadsheet's facts come first and carry no print record
         src_url = {s["entity"]: s.get("url") for s in d.get("sources") or []}
+        # a source filed on MAYA by another entity (the insurance company's statements, filed by its capital-raising subsidiary) is not in
+        # the reader's document list: its period and publication date come from the workbook's source record
+        src_maya = {s["url"]: s["maya"] for s in d.get("sources") or [] if s.get("url") and isinstance(s.get("maya"), dict)}
         base_end = max((PER[f[1]]["end"] for f in d["facts"][:base_n]), default=None)
 
         vint, vidx = [], {}
@@ -108,8 +111,9 @@ def build():
             if k not in vidx:
                 rid = rid_of(url)
                 doc = docs.get(rid)
-                per = doc[3] if doc else (season(rep_end) if rep_end else None)
-                pub = doc[4] if doc else None
+                sm = src_maya.get(url) if not doc else None
+                per = doc[3] if doc else (sm or {}).get("per") or (season(rep_end) if rep_end else None)
+                pub = doc[4] if doc else (sm or {}).get("pub")
                 vidx[k] = len(vint)
                 vint.append({"rid": rid, "url": url or (src_url.get(entity) if entity else None), "per": per, "pub": pub, "end": rep_end})
             return vidx[k]
