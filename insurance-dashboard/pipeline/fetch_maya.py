@@ -117,11 +117,13 @@ def period_of(title, publish, doc_type):
     return f"{y4}FY" if q == 4 else f"{y4}Q{q}"
 
 
-def connect():
+def connect(db=None):
+    """The warehouse (default data/warehouse.duckdb; the autopilot tests pass a temp file), with the documents table created if missing."""
     import duckdb  # imported here so the classifier (classify, period_of) and the autopilot run on the standard library alone
 
-    DB.parent.mkdir(parents=True, exist_ok=True)
-    con = duckdb.connect(str(DB))
+    db = Path(db) if db else DB
+    db.parent.mkdir(parents=True, exist_ok=True)
+    con = duckdb.connect(str(db))
     con.execute(
         """create table if not exists documents (
             report_id bigint, company varchar, maya_company_id integer, title varchar,
