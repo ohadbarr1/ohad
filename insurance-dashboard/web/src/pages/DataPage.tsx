@@ -33,7 +33,14 @@ const CHECK_HE: Record<string, string> = {
   ifrs_slices: 'קובצי IFRS 17 לפי חברה = הקובץ הענפי', ifrs_page: 'כל נתון IFRS 17 מודפס בעמוד שצוטט', ifrs_page_known: 'חריגים ידועים: גרפים ועמודי תמונה', balance: 'מאזן: נכסים = הון + התחייבויות',
   balance_round: 'מאזן: סטייה מעל עיגול', cross_layer: 'XBRL = הדוחות הכספיים', lens: 'עדשת החיסכון = חישוב מחדש', schemas: 'חוזי נתונים: כל קובץ תואם לסכמה',
   consistency: 'נתון אחד בכל העמודים', fund_roles: 'בתי השקעות: שורות הרווח = XBRL', consistency_old: 'עקביות לפני החלון (היסטוריה)',
+  facts: 'טבלת העובדות = הדוחות באתר', assets: 'רשימות נכסים: סכומים, מקור, בנייה מחדש',
+  solvency: 'כושר פירעון: מקור, יחידות וטווח', solvency_page: 'כושר פירעון: כל נתון בעמוד שצוטט', capital_page: 'שימושי הון: נתון בעמוד שצוטט',
+  adjusted_page: 'מדדים מותאמים: נתון בעמוד שצוטט', targets_page: 'יעדים: נתון או ציטוט בעמוד', decks_page: 'מצגות: כל נתון בשקף שצוטט',
+  image_notes: 'נתונים מתמונה: הערת קריאה וסימון לעמוד', debt: 'חוב (ת126): התאמת טבלאות ומקור', debt_warn: 'חוב: הערות טופס',
+  ownership: 'בעלי עניין: אחוזים, תאריך ומקור', macro: 'מאקרו: מקור, טווח ורצף', links: 'קישורי מקור: בדיקה שבועית',
 };
+/** a check id the table does not know: its family label plus the variant (known misses, skipped for lack of page text, image page) */
+const checkHe = (id: string) => CHECK_HE[id] ?? (() => { const m = id.match(/^(.*)_(known|skipped|noimgflag)$/); return m && CHECK_HE[m[1]] ? `${CHECK_HE[m[1]]} · ${({ known: 'חריגים ידועים', skipped: 'לא נבדק (אין טקסט)', noimgflag: 'עמוד תמונה ללא סימון' } as Record<string, string>)[m[2]]}` : id; })();
 const CO_HE: Record<string, string> = { phoenix: 'הפניקס', harel: 'הראל', migdal: 'מגדל', clal: 'כלל', menora: 'מנורה', hachshara: 'הכשרה', ayalon: 'איילון', altshuler: 'אלטשולר שחם', meitav: 'מיטב', more: 'מור', analyst: 'אנליסט', yelin: 'ילין לפידות', ibi: 'אי.בי.אי' };
 const BASIS_HE: Record<string, string> = { alt: 'שורת רווח לתקופה', filer: 'ישות מדווחת אחרת', restated: 'הוצג מחדש', std: 'IFRS 4 מול IFRS 17', allow: 'רשימת חריגים' };
 /** The gate writes its details in English (a terminal tool); the page reads them in Hebrew: the numbers of the note in a Hebrew sentence per check.
@@ -123,7 +130,7 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
         <Panel title="בדיקות איכות" aside={qa && <span>gate · <span className="num">{pubLabel(qa.built)}</span> · כשל חוסם עוצר פריסה</span>}>
           {qaError ? <ErrorBox what="תוצאות הבדיקות" error={qaError} /> : !qa ? <Loading what="בדיקות" /> : (
             <DataTable caption="בדיקות איכות" rows={qa.checks} rowKey={(x) => x.id} export={{ name: 'fox-qa', title: 'בדיקות איכות', note: `pipeline/gate.py · ${pubLabel(qa.built)}` }} columns={[
-              { key: 'id', head: 'בדיקה', value: (x) => CHECK_HE[x.id] ?? x.id, cell: (x) => <>{CHECK_HE[x.id] ?? x.id}<span className="dim mono" dir="ltr">{x.id}</span></> },
+              { key: 'id', head: 'בדיקה', value: (x) => checkHe(x.id), cell: (x) => <>{checkHe(x.id)}<span className="dim mono" dir="ltr">{x.id}</span></> },
               { key: 'ok', head: 'מצב', value: (x) => (x.ok ? 2 : x.level === 'warn' ? 1 : 0), text: (x) => (x.ok ? 'עבר' : x.level === 'warn' ? 'אזהרה' : 'נכשל'), firstDir: 'asc',
                 cell: (x) => <span className={`chip ${x.ok ? 'pass' : x.level === 'warn' ? 'est' : 'bad'}`}>{x.ok ? 'עבר' : x.level === 'warn' ? 'אזהרה' : 'נכשל'}</span> },
               { key: 'n', head: 'נבדקו', value: (x) => x.n, unit: 'int' },
