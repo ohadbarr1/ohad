@@ -14,6 +14,7 @@ A value read from a page or slide image (source image|chart, flag i) is not text
   debt           debt/: the ת126 self-check (tables parsed and tied out) and every cell's report listed with URL + publication date
   ownership      ownership/: shares in [0, 100] that add up, every holding dated, every company with source URL + retrieval date
   macro          macro/: every series with source URL + retrieval date, values numeric and in range, months in order
+  links          the last weekly link check (pipeline/check_links.py), as a warning; missing or older than 8 days warns
   cell_sources   every current statement figure cites a MAYA report with its publication date (warns with the count where not)
 
 Page checks: a miss not in pipeline/gate_known.json fails; a known miss warns; a value with no page text here is counted as
@@ -360,6 +361,22 @@ def cell_sources(add):
         + (f" ({', '.join(f'{k} {v}' for k, v in by.items())}; cited host: {', '.join(f'{k} {v}' for k, v in hosts.items())})" if bad else ""), level="warn")
 
 
+def links(add):
+    """The weekly link check (pipeline/check_links.py, not run by deploy): its last result, as a warning. Missing or older than 8 days warns."""
+    p = ROOT / "data" / "registry" / "links.json"
+    try:
+        r = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return add("links", False, 0, 1, "link check not run (python3 pipeline/check_links.py)", level="warn")
+    import datetime as dt
+    age = (dt.datetime.now().astimezone() - dt.datetime.fromisoformat(r["checked"])).days
+    dead = r.get("dead", [])
+    hosts = collections.Counter(re.sub(r"^https?://([^/]+).*$", r"\1", d["url"]) for d in dead)
+    note = (f"{r['n']} source URLs checked {r['checked'][:10]} ({age} days ago); {len(dead)} dead" + (f" ({', '.join(f'{h} {n}' for h, n in hosts.most_common())})" if dead else "")
+            + (f"; {len(r.get('refused', []))} refused by a bot shield" if r.get("refused") else "") + f"; not requested: {', '.join(f'{k} {v}' for k, v in r.get('skipped', {}).items())}" + ("; older than 8 days" if age > 8 else ""))
+    add("links", not dead and age <= 8, r["n"], len(dead) + (1 if age > 8 else 0), note, level="warn")
+
+
 def run(add):
     solvency(add)
     capital(add)
@@ -371,4 +388,5 @@ def run(add):
     ownership(add)
     macro(add)
     cell_sources(add)
+    links(add)
     pagetext.save()

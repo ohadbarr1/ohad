@@ -1,5 +1,5 @@
 {
- "built": "2026-10-23T20:00:47+03:00",
+ "built": "2026-10-25T13:20:32+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -163,11 +163,123 @@
   },
   {
    "id": "assets",
+   "ok": false,
+   "level": "warn",
+   "n": 38,
+   "fail": 1,
+   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: Deserializing page header failed.)"
+  },
+  {
+   "id": "solvency",
    "ok": true,
    "level": "fail",
-   "n": 38,
+   "n": 1871,
    "fail": 0,
-   "note": "38 manager-quarters; rebuild equal"
+   "note": "1871 cells and sensitivities: report with file + publication date, page, numeric, ratio in (0, 1000)%"
+  },
+  {
+   "id": "solvency_page",
+   "ok": true,
+   "level": "fail",
+   "n": 1887,
+   "fail": 0,
+   "note": "solvency (Solvency II reports): 1887/1887 on the cited page; 0 new misses; 62 read from the image (note checked separately); 0 skipped (no sources)"
+  },
+  {
+   "id": "capital_page",
+   "ok": true,
+   "level": "fail",
+   "n": 1074,
+   "fail": 0,
+   "note": "capital use (csm/capital.json; 101 derived Q4 = FY less 9M not printed): 1074/1074 on the cited page; 0 new misses; 8 read from the image (note checked separately); 0 skipped (no sources)"
+  },
+  {
+   "id": "capital_page_noimgflag",
+   "ok": false,
+   "level": "warn",
+   "n": 1084,
+   "fail": 10,
+   "note": "cited page has no text layer (an image page) but the value carries no image flag: 10, e.g. menora sr_w 2022FY"
+  },
+  {
+   "id": "adjusted_page",
+   "ok": true,
+   "level": "fail",
+   "n": 95,
+   "fail": 0,
+   "note": "adjusted KPIs (adjusted.json): 95/95 on the cited page; 0 new misses; 43 read from the image (note checked separately); 0 skipped (no sources)"
+  },
+  {
+   "id": "targets_page",
+   "ok": true,
+   "level": "fail",
+   "n": 175,
+   "fail": 0,
+   "note": "targets (targets.json; a figure, else the quoted words): 175/175 on the cited page; 0 new misses; 32 read from the image (note checked separately); 0 skipped (no sources)"
+  },
+  {
+   "id": "decks_page",
+   "ok": true,
+   "level": "fail",
+   "n": 939,
+   "fail": 0,
+   "note": "deck facts (data/extracted_pres): 939/939 on the cited page; 0 new misses; 384 read from the image (note checked separately); 0 skipped (no sources)"
+  },
+  {
+   "id": "image_notes",
+   "ok": true,
+   "level": "fail",
+   "n": 502,
+   "fail": 0,
+   "note": "442 values read from a page or slide image, each with its reading note; 60 flagged solvency cells"
+  },
+  {
+   "id": "debt",
+   "ok": true,
+   "level": "fail",
+   "n": 4981,
+   "fail": 0,
+   "note": "ת126 self-check 809/809 tables tie out over 253 forms; 4981 cells, each of a listed report with URL + publication date"
+  },
+  {
+   "id": "debt_warn",
+   "ok": false,
+   "level": "warn",
+   "n": 809,
+   "fail": 14,
+   "note": "form notes (a parent's table splits years differently from the subsidiary's form): 14"
+  },
+  {
+   "id": "ownership",
+   "ok": true,
+   "level": "fail",
+   "n": 13,
+   "fail": 0,
+   "note": "1 companies, holdings dated, shares in [0, 100] and adding up, source URL + retrieval date"
+  },
+  {
+   "id": "macro",
+   "ok": true,
+   "level": "fail",
+   "n": 4113,
+   "fail": 0,
+   "note": "4113 macro values: source URL + retrieval date, numeric, in range, months in order"
+  },
+  {
+   "id": "cell_sources",
+   "ok": false,
+   "level": "warn",
+   "n": 115510,
+   "fail": 6501,
+   "note": "115510 current statement figures; 6501 without a MAYA report id + publication date (phoenix 6501; cited host: fnx.co.il 6501)"
+  },
+  {
+   "id": "links",
+   "ok": false,
+   "level": "warn",
+   "n": 223,
+   "fail": 1,
+   "note": "223 source URLs checked 2026-10-25 (0 days ago); 1 dead (www.fnx.co.il 1); 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
   }
  ]
 }
