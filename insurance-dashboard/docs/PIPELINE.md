@@ -64,6 +64,8 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `build_lts` | auto | extraction, lts_norm | lts.json, lts_prov/ |
 | `build_recon` | auto | build_market, facts | recon.json |
 | `build_lens` | auto | build_market, build_lts, build_recon | lens.json |
+| `build_flow_npv` | auto | build_lens, build_market, build_lts, build_macro | flow_npv.json (M3: NPV of net transfers and organic flow; gate `flow_npv`) |
+| `build_nowcast` | auto | extraction, build_market, build_macro, build_lens, build_calendar | nowcast.json, data/nowcast/est_events.json; appends data/ledger/nowcast/ (module M1, unpublished; gate `nowcast` + `nowcast_ledger`) |
 | `build_roster` | auto | build_market, build_funds | roster.json |
 | `build_pagefacts` | auto | build_ifrs, facts, build_savings, build_lts | search/facts/ |
 | `build_web_index` | auto · deploy | build_documents, build_market | search/entities.json, filings_latest.json |
@@ -73,6 +75,8 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `build_market_home` | auto · deploy | build_market | market_home.json |
 | `build_cards` | auto · deploy | facts, build_kpi, canon_kpi, build_targets, build_ifrs, build_csm, build_registry | cards/ (report card per filing; `check_cards.py` = gate `cards`) |
 | `build_since` | auto, daily · deploy | build_documents, facts, build_targets, build_market | since.json (per-company dated events, last 400 days) |
+| `build_feed` | auto · deploy | build_search, facts, build_company_index, build_cards, build_restatements, build_targets, build_market, build_funds, build_solvency | feed.json (module M2: the delta feed at `/feed`; `check_feed.py` = gate `feed`) |
+| `build_digest` | auto, daily | build_feed | data/digest/digest.html, digest.txt (the last 7 days as an email body; untracked, no sender) |
 | `build_coverage` | auto, daily · deploy | every step that writes JSON | coverage.json (reads qa.json from the last gate) |
 
 After the build: `python3 pipeline/gate.py` (all checks; writes qa.json, consistency.json). It is not a step: deploy.sh runs it after

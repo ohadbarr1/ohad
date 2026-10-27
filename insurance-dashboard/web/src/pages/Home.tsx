@@ -14,6 +14,7 @@ import { CompanyList, type ListRow } from '../components/home/CompanyList';
 import { DataTable } from '../components/DataTable';
 import { periodLabelShort, periodTag } from '../lib/kpi';
 import { MacroPanel } from '../components/MacroPanel';
+import { FeedBlock } from '../components/home/FeedBlock';
 import '../styles/market.css';
 import '../styles/home.css';
 
@@ -130,6 +131,7 @@ export function Home() {
             {inactive.length > 0 && <div className="src cos-inactive">לא פעילות בדיווח, מחוץ לטבלה: {inactive.map(({ c, q }, i) => <span key={c.id}>{i ? ' · ' : ''}<Link to={`/company/${c.id}`}>{c.name_he}</Link>{q ? <span className="num"> (נתון אחרון {periodTag(q.period)})</span> : ''}</span>)}</div>}
             <div className="src">רווח, הון ו-ROE: XBRL של הדוחות התקופתיים (ילין לפידות: הדוחות הכספיים שלה, 100%) · נכסים, צבירה ודמי ניהול: רשות שוק ההון (פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון; צבירה: פנסיה וגמל)</div>
           </section>
+          <FeedBlock />
         </div>
         <div className="home-side">
           {m && (

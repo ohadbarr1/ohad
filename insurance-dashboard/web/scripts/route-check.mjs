@@ -1,5 +1,5 @@
 // Route check: every route rendered in headless Chrome at phone and desktop width; fails on what a reader must never see.
-// usage: node --experimental-websocket scripts/route-check.mjs <base url, e.g. http://localhost:4173> [--json out.json] [--hash]
+// usage: node --experimental-websocket scripts/route-check.mjs <base url, e.g. http://localhost:4173> [--json out.json] [--hash] [--only /feed,/card]
 // Fails (exit 1) on: the page scrolling sideways at 390 px, an ISO date (2026-08-27) in the text, a route without its own title,
 // a valid route landing on the not-found page. Reports, without failing: Latin runs of 3+ words, first-figure position, transfer size.
 import { spawn } from 'node:child_process';
@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 const args = process.argv.slice(2);
 // clean URLs; --hash for a build that still routes through the fragment
-const BASE = (args.find((a) => !a.startsWith('--')) ?? 'http://localhost:4173').replace(/\/$/, '') + (args.includes('--hash') ? '/#' : '');
+const BASE = (args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--only' && args[i - 1] !== '--json') ?? 'http://localhost:4173').replace(/\/$/, '') + (args.includes('--hash') ? '/#' : '');
 const JSON_OUT = args.includes('--json') ? args[args.indexOf('--json') + 1] : null;
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const ROUTES = [
@@ -31,11 +31,16 @@ const ROUTES = [
   '/holdings', '/holdings?m=ta35_pct&pair=altshuler~meitav', '/holdings/meitav', '/holdings/migdal?u=pct', '/holdings/altshuler?f=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA', '/holdings/menora',
   // lane S2: report cards (an insurer quarter, an annual report, a fund house)
   '/card/harel/2026Q2', '/card/phoenix/2025FY', '/card/meitav/2026Q2',
+  // module M2: the delta feed (all, one company, one type, the empty estimate slot)
+  '/feed', '/feed?co=harel', '/feed?t=fee', '/feed?co=market&t=regmonth', '/feed?t=est',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */
 const MUST_404 = ['/company/zzz', '/company/zzz/financials', '/debt/zzz', '/facts/zzz', '/ownership/zzz', '/holdings/zzz', '/card/zzz/2026Q2'];
 ROUTES.push(...MUST_404);
+// --only <a,b>: just the routes that contain one of these strings (a module's own pages while it is built)
+const ONLY = args.includes('--only') ? args[args.indexOf('--only') + 1].split(',') : null;
+if (ONLY) ROUTES.splice(0, ROUTES.length, ...ROUTES.filter((r) => ONLY.some((o) => r.includes(o))));
 const SIZES = [[390, 844, true], [1440, 900, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
