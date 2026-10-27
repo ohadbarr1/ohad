@@ -13,11 +13,9 @@ import { printed } from './companyProv';
 const DebtStrip = lazy(() => import('./Debt').then((m) => ({ default: m.DebtStrip })));
 const ScrComposition = lazy(() => import('./csm/ScrComposition').then((m) => ({ default: m.ScrComposition })));
 const TargetsCompact = lazy(() => import('../components/TargetsTracker').then((m) => ({ default: m.TargetsCompact })));
-const AttributionPanel = lazy(() => import('../components/Attribution').then((m) => ({ default: m.AttributionPanel })));
-const PositionsBlock = lazy(() => import('./Positions').then((m) => ({ default: m.PositionsBlock })));  // module A6: only when the company has a position
-const FragilityPanel = lazy(() => import('../components/FragilityPanel').then((m) => ({ default: m.FragilityPanel })));  // module A10: the company's signals
 const AdjustedPanel = lazy(() => import('../components/AdjustedPanel').then((m) => ({ default: m.AdjustedPanel })));
-const CapitalPanel = lazy(() => import('../components/CapitalPanel').then((m) => ({ default: m.CapitalPanel })));  // module A7: insurers only
+// the advisory panels (positions A6, attribution A4, fragility A10, capital A7) live on the thesis, the company's default view (CompanyThesis.tsx);
+// this page is the evidence under it: the report day, the key-figure ledger and the balance-sheet panels
 import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
 import { usePeriodParam, useWindowParam, type Win } from '../lib/period';
@@ -26,7 +24,6 @@ import { DOC_TYPE, useCtx } from './Company';
 import { CompanyTear } from './CompanyTear';
 import { FundHouseStrip } from '../components/FundHouseStrip';
 import { KpiLedger, KpiTiles, type LedgerGroup, type LedgerPoint, type LedgerRow } from '../components/KpiLedger';
-import { SinceBlock } from '../components/SinceBadge';
 import { ReportDay, ROLES, YTD, endOf, figAt, figProv, flowAt, qShift, reportsOf, resolve, type Fig } from './ReportDay';
 
 const MN = 'מיליוני ש"ח';
@@ -204,10 +201,8 @@ export function CompanyOverview() {
   const repTag = P ? (P.endsWith('FY') ? `FY'${P.slice(2, 4)}` : `${P.slice(4)}'${P.slice(2, 4)}`) : '';
   return (
     <>
-      <SinceBlock id={entry.id} />
       {entry.has_financials && <ReportDay card={tiles} />}
       {!entry.has_financials && tiles}
-      {entry.has_financials && <Suspense fallback={null}><AttributionPanel id={entry.id} /></Suspense>}
       {fund && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}
       {!entry.has_financials && !fund && <CompanyTear id={entry.id} />}
       {groups.length > 0 && (
@@ -217,10 +212,7 @@ export function CompanyOverview() {
         </section>
       )}
       {!fund && <DividendCapacity id={entry.id} />}
-      {!fund && <Suspense fallback={null}><CapitalPanel id={entry.id} /></Suspense>}
       <Suspense fallback={null}>
-        <PositionsBlock id={entry.id} />
-        <FragilityPanel id={entry.id} />
         <TargetsCompact id={entry.id} name={entry.name_he} />
         <AdjustedPanel id={entry.id} name={entry.name_he} />
         {!fund && entry.has_financials && <ScrComposition ids={[entry.id]} name={() => entry.name_he} company={entry.id} />}

@@ -1,12 +1,16 @@
 /* The fox icon set: one language in both looks. Each glyph is a 24-px duotone — a soft fill (`.f`, currentColor at low opacity, or the
    ember on the active item) under a 1.6-px stroke — so icons read as objects with a little depth, not as wire outlines, without any
-   raster or per-theme art. Nav: home, compare, value, market, data, mine. Sections: statement, csm (the CSM bridge), shield (solvency),
+   raster or per-theme art. Nav: home, scenarios (three sliders), warroom (a crosshair), positions (a clipboard with a check); the
+   evidence group: market, compare, value. Also data, mine. Sections: statement, csm (the CSM bridge), shield (solvency),
    filing, savings, search, calendar, book, companies, inbox (empty states), download, sliders. Payload: ~2 KB in the shell bundle. */
 type Glyph = { f?: string; s: string };
 const G: Record<string, Glyph> = {
   home: { f: 'M5 10l7-6 7 6v10H5z', s: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10' },
   compare: { f: 'M4 12h4v8H4zM10 4h4v16h-4zM16 9h4v11h-4z', s: 'M4 12h4v8H4zM10 4h4v16h-4zM16 9h4v11h-4z' },
   value: { f: 'M4 4h16v16H4z', s: 'M4 4h16v16H4zM8 8h8M8 12h3M13 12h3M8 16h3M13 16h3' },
+  scenarios: { f: 'M6 14a2 2 0 100 4 2 2 0 000-4zM12 6a2 2 0 100 4 2 2 0 000-4zM18 11a2 2 0 100 4 2 2 0 000-4z', s: 'M6 3v11M6 18v3M12 3v3M12 10v11M18 3v8M18 15v6M6 14a2 2 0 100 4 2 2 0 000-4zM12 6a2 2 0 100 4 2 2 0 000-4zM18 11a2 2 0 100 4 2 2 0 000-4z' },
+  warroom: { f: 'M12 4a8 8 0 100 16 8 8 0 000-16z', s: 'M12 4a8 8 0 100 16 8 8 0 000-16zM12 9a3 3 0 100 6 3 3 0 000-6zM12 2v4M12 18v4M2 12h4M18 12h4' },
+  positions: { f: 'M6 5h12v16H6z', s: 'M9 3h6v4H9zM9 5H6v16h12V5h-3M9 13.5l2 2 4-4.5' },
   market: { f: 'M3 17l5-6 4 3 4-7 5 5v5H3z', s: 'M3 17l5-6 4 3 4-7 5 5M3 21h18' },
   funds: { f: 'M12 3l9 5-9 5-9-5z', s: 'M12 3l9 5-9 5-9-5 9-5M3 13l9 5 9-5M3 18l9 5 9-5' },
   data: { f: 'M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6c0-1.7-3.6-3-8-3S4 4.3 4 6z', s: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3' },

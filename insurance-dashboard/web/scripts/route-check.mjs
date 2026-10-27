@@ -19,6 +19,9 @@ const ROUTES = [
   '/industry/search', '/industry/matrix', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?t=reg&n=5', '/compare', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix', '/valuation/phoenix/ri', '/valuation/phoenix/csm', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/valuation/harel/sotp', '/valuation/hachshara', '/valuation/altshuler/sotp', '/calendar', '/book', '/search?q=%D7%A8%D7%9B%D7%99%D7%91%20%D7%94%D7%A4%D7%A1%D7%93', '/doc/1765739?page=32&q=%D7%93%D7%99%D7%91%D7%99%D7%93%D7%A0%D7%93', '/data', '/data?cite=%2Fcompany%2Fharel&f=CSM', '/restatements', '/restatements?season=2026Q2&min=2', '/presentations', '/credibility', '/credibility?co=phoenix&v=scored', '/mine', '/presentations?co=harel&q=%D7%AA%D7%A9%D7%95%D7%90%D7%94',
   // lane A2: fund houses, an unlisted insurer, the report and window carried between company views
   '/company/yelin', '/company/hachshara', '/company/altshuler/financials', '/company/phoenix?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/review?p=2025Q3&w=ytd', '/company/phoenix/financials?p=2025Q3&w=ltm',
+  // the advisory surface: the thesis is the company home, the report day moved to "numbers" (old deep links land there)
+  '/company/phoenix/thesis', '/company/phoenix/numbers', '/company/phoenix/numbers?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/report?p=2025Q3', '/company/more', '/company/more/numbers', '/company/more/review', '/company/idi', '/company/idi/numbers',
+  '/scenarios', '/warroom', '/positions', '/fragility', '/capital',
   // lane AP: the report-day autopilot's status page
   '/data/autopilot',
   // lane DL: debt ladder (industry wall, a group with a capital-raising subsidiary, a fund house, a pinned date and view)

@@ -15,6 +15,7 @@ import { DataTable } from '../components/DataTable';
 import { periodLabelShort, periodTag } from '../lib/kpi';
 import { MacroPanel } from '../components/MacroPanel';
 import { FeedBlock } from '../components/home/FeedBlock';
+import { AdvisoryHub } from '../components/home/AdvisoryHub';
 import '../styles/market.css';
 import '../styles/home.css';
 
@@ -92,6 +93,7 @@ export function Home() {
   return (
     <div className="wide-page home">
       <h1 className="sr-only">fox · ביטוח, פנסיה וגמל</h1>
+      <AdvisoryHub />
       <SeasonStrip />
       <div className="home-grid">
         <div className="home-main">
