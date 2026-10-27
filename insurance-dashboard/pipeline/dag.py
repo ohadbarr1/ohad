@@ -122,6 +122,10 @@ STEPS = [
          groups={"deploy"}),
     step("build_calendar", "pipeline/build_calendar.py", [REG + "companies.json", REG + "documents.csv"], [D + "calendar.json", D + "calendar.ics"],
          daily=True, groups={"deploy"}, note="projections from today's date"),
+    # module M1 (unpublished): the nowcast engine; appends the live stage to the frozen ledger (never rewrites an entry)
+    step("build_nowcast", "pipeline/build_nowcast.py", [D + "lens.json", D + "market.json", D + "calendar.json", D + "macro/macro.json",
+         REG + "documents.csv", "data/extracted_fs"], [D + "nowcast.json", "data/nowcast/est_events.json"], edits=["data/ledger/nowcast"],
+         note="append-only ledger data/ledger/nowcast/<quarter>/<stage>.json"),
     step("canon_kpi", "pipeline/canon_kpi.py", [D + "lines.json", D + "companies/index.json", *WB, "web/src/pages/ReportDay.tsx"],
          [], code=["pipeline/reportday.py"], edits=[D + "kpi.json"], groups={"deploy"}, note="printed figure over the XBRL tag, in place"),
     step("build_registry", "pipeline/build_registry.py",

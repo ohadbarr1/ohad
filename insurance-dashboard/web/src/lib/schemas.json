@@ -212,6 +212,10 @@
   {
    "pattern": "flow_npv.json",
    "schema": "flowNpv"
+  },
+  {
+   "pattern": "nowcast.json",
+   "schema": "nowcast"
   }
  ],
  "$defs": {
@@ -6813,6 +6817,319 @@
        }
       }
      }
+    }
+   }
+  },
+  "nowcast": {
+   "type": "object",
+   "required": [
+    "meta",
+    "params",
+    "cover",
+    "houses",
+    "abstain",
+    "ledger",
+    "score",
+    "backtest",
+    "summary"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "method",
+      "draft",
+      "live"
+     ],
+     "properties": {
+      "method": {
+       "type": "string"
+      },
+      "draft": {
+       "type": "boolean",
+       "enum": [
+        true
+       ]
+      },
+      "live": {
+       "type": "object",
+       "required": [
+        "q",
+        "stage"
+       ],
+       "properties": {
+        "q": {
+         "type": "string",
+         "pattern": "^Q[1-4]-\\d{4}$"
+        },
+        "stage": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "params": {
+     "type": "object"
+    },
+    "cover": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "houses": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "abstain": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "ledger": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "quarter",
+       "stage",
+       "created_at",
+       "method_version",
+       "inputs_hash",
+       "rows"
+      ],
+      "properties": {
+       "quarter": {
+        "type": "string",
+        "pattern": "^Q[1-4]-\\d{4}$"
+       },
+       "stage": {
+        "type": "integer",
+        "enum": [
+         1,
+         2
+        ]
+       },
+       "created_at": {
+        "type": "string"
+       },
+       "method_version": {
+        "type": "string"
+       },
+       "inputs_hash": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+       },
+       "rows": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "c",
+          "g",
+          "q",
+          "stage",
+          "rev",
+          "op",
+          "segs",
+          "scope"
+         ],
+         "properties": {
+          "c": {
+           "type": "string"
+          },
+          "g": {
+           "type": "integer"
+          },
+          "rev": {
+           "type": "number"
+          },
+          "op": {
+           "type": [
+            "number",
+            "null"
+           ]
+          },
+          "scope": {
+           "type": "string",
+           "enum": [
+            "house",
+            "segment"
+           ]
+          },
+          "segs": {
+           "type": "object"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "score": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "q"
+      ]
+     }
+    },
+    "backtest": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "q",
+       "T",
+       "act",
+       "s1"
+      ],
+      "properties": {
+       "c": {
+        "type": "string"
+       },
+       "q": {
+        "type": "string",
+        "pattern": "^Q[1-4]-\\d{4}$"
+       },
+       "T": {
+        "$ref": "#/$defs/date"
+       },
+       "s1": {
+        "type": "object",
+        "required": [
+         "day",
+         "rev",
+         "op",
+         "lag_ok",
+         "segs"
+        ],
+        "properties": {
+         "day": {
+          "$ref": "#/$defs/date"
+         },
+         "rev": {
+          "type": "number"
+         },
+         "op": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "lag_ok": {
+          "type": "boolean"
+         },
+         "e_rev": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "e_op": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "e_opm": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "segs": {
+          "type": "object"
+         }
+        }
+       },
+       "s2": {
+        "type": "object",
+        "required": [
+         "day",
+         "rev",
+         "op",
+         "lag_ok",
+         "segs"
+        ],
+        "properties": {
+         "day": {
+          "$ref": "#/$defs/date"
+         },
+         "rev": {
+          "type": "number"
+         },
+         "op": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "lag_ok": {
+          "type": "boolean"
+         },
+         "e_rev": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "e_op": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "e_opm": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "segs": {
+          "type": "object"
+         }
+        }
+       },
+       "act": {
+        "type": "object",
+        "required": [
+         "rev",
+         "op"
+        ],
+        "properties": {
+         "rev": {
+          "type": "number"
+         },
+         "op": {
+          "type": [
+           "number",
+           "null"
+          ]
+         }
+        }
+       },
+       "rev_s1s2": {
+        "type": [
+         "number",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "summary": {
+     "type": "object"
     }
    }
   }
