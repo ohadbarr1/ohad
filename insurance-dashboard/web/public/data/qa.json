@@ -1,5 +1,5 @@
 {
- "built": "2026-10-28T00:33:40+02:00",
+ "built": "2026-10-28T01:45:58+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -178,6 +178,22 @@
    "note": "112 passed, 0 failed"
   },
   {
+   "id": "consolidation",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "consolidation: 9 companies, 72 pairs (56 ranked), 784 identities; rebuild matches; 0 misses"
+  },
+  {
+   "id": "consolidation_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 1831,
+   "fail": 0,
+   "note": "1831 passed, 0 failed"
+  },
+  {
    "id": "capital",
    "ok": true,
    "level": "fail",
@@ -189,9 +205,17 @@
    "id": "capital_lib",
    "ok": true,
    "level": "fail",
-   "n": 635,
+   "n": 660,
    "fail": 0,
-   "note": "635 passed, 0 failed"
+   "note": "660 passed, 0 failed"
+  },
+  {
+   "id": "expectations",
+   "ok": true,
+   "level": "fail",
+   "n": 40,
+   "fail": 0,
+   "note": "expectations: 12 listed names decoded, 1 not available; 40 solved inputs reproduce the market value within 0.5%; rebuild matches; 0 misses"
   },
   {
    "id": "nowcast",
@@ -253,9 +277,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 2055,
+   "n": 2152,
    "fail": 0,
-   "note": "2055 files under contract, 0 failing; 62 contracts; 551 files without a contract"
+   "note": "2152 files under contract, 0 failing; 68 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
