@@ -1,5 +1,5 @@
 {
- "built": "2026-10-27T21:39:03+02:00",
+ "built": "2026-10-27T22:50:28+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -122,6 +122,30 @@
    "note": "lens.json matches a rebuild; 784 quarter rows; 0 formula misses"
   },
   {
+   "id": "flow_npv",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "flow_npv.json matches a rebuild; 421 NPVs; 0 misses"
+  },
+  {
+   "id": "nowcast",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "nowcast.json matches a rebuild; 1 ledger entries; 90 backtest rows; 0 problems"
+  },
+  {
+   "id": "nowcast_ledger",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "1 frozen estimates at HEAD unchanged"
+  },
+  {
    "id": "consistency",
    "ok": true,
    "level": "fail",
@@ -149,9 +173,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 2013,
+   "n": 2016,
    "fail": 0,
-   "note": "2013 files under contract, 0 failing; 48 contracts; 551 files without a contract"
+   "note": "2016 files under contract, 0 failing; 51 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
@@ -160,6 +184,14 @@
    "n": 7242,
    "fail": 0,
    "note": "302 report cards, every digit a published fact"
+  },
+  {
+   "id": "feed",
+   "ok": true,
+   "level": "fail",
+   "n": 272,
+   "fail": 0,
+   "note": "272 events, 4656 figures, 0 problems"
   },
   {
    "id": "facts",
