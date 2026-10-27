@@ -6,9 +6,12 @@ import { nf } from '../lib/format';
 export interface FallPt { l: string; v: number; total?: boolean }
 
 /** The roll-forward as a waterfall: opening and closing balances in the ink colour, additions up, the release and other reductions down. */
-export function WaterfallChart({ pts, label, onPoint, height = 300, deps }: { pts: FallPt[]; label: string; onPoint?: (i: number) => void; height?: number; deps: unknown[] }) {
+export function WaterfallChart({ pts, label, onPoint, height = 300, deps, unit = 'מיליוני ש"ח', dec, source }: { pts: FallPt[]; label: string; onPoint?: (i: number) => void; height?: number; deps: unknown[];
+  /** the unit of the axis and the tooltip, and the decimals of the bar labels (default: the roll-forward's NIS millions) */
+  unit?: string; dec?: number; source?: string }) {
+  const dd = (v: number) => dec ?? (Math.abs(v) < 100 ? 1 : 0), d0 = dec ?? 0;
   return (
-    <Chart label={label} height={height} deps={deps} onPoint={(_, di) => onPoint?.(di)} build={() => {
+    <Chart label={label} height={height} deps={deps} source={source} onPoint={(_, di) => onPoint?.(di)} build={() => {
       const b = chartBase();
       let run = 0; const base: (number | null)[] = [], up: (number | null)[] = [], down: (number | null)[] = [], tot: (number | null)[] = [];
       pts.forEach((p) => { if (p.total) { base.push(0); tot.push(p.v); up.push(null); down.push(null); run = p.v; } else { const nx = run + p.v; base.push(Math.min(run, nx)); up.push(p.v >= 0 ? p.v : null); down.push(p.v < 0 ? -p.v : null); tot.push(null); run = nx; } });
@@ -17,15 +20,15 @@ export function WaterfallChart({ pts, label, onPoint, height = 300, deps }: { pt
       const lo = Math.min(...pts.filter((p) => p.total).map((p) => p.v), ...base.filter((x): x is number => x != null && x > 0));
       return {
         animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg }, grid: { left: 6, right: 6, top: 24, bottom: 4, containLabel: true },
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: (ps: { dataIndex: number }[]) => { const p = pts[ps[0].dataIndex]; return `${p.l}: <b>‎${p.total ? '' : p.v > 0 ? '+' : ''}${nf(p.v, Math.abs(p.v) < 100 ? 1 : 0)}</b><br><span style="opacity:.65;font-size:11px">מיליוני ש"ח</span>`; } },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: (ps: { dataIndex: number }[]) => { const p = pts[ps[0].dataIndex]; return `${p.l}: <b>‎${p.total ? '' : p.v > 0 ? '+' : ''}${nf(p.v, dd(p.v))}</b><br><span style="opacity:.65;font-size:11px">${unit}</span>`; } },
         xAxis: { type: 'category', data: pts.map((p) => p.l), axisTick: { show: false }, axisLine: { lineStyle: { color: b.ln } }, axisLabel: { color: b.mu, fontSize: 11, interval: 0, rotate: narrow || pts.length > 7 ? 35 : 0 } },
         // the axis starts near the smallest balance, not at zero, so the movements are visible next to a large balance; the bars say so by their gap
-        yAxis: { type: 'value', min: lo > 0 ? Math.floor((lo * 0.9) / 100) * 100 : undefined, name: 'מיליוני ש"ח', nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 10.5, formatter: (v: number) => `‎${nf(v, 0)}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
+        yAxis: { type: 'value', min: lo > 0 ? Math.floor((lo * 0.9) / 100) * 100 : undefined, name: unit, nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 10.5, formatter: (v: number) => `‎${nf(v, 0)}` }, splitLine: { lineStyle: { color: b.ln, type: 'dashed' } } },
         series: [
           { type: 'bar', stack: 'w', data: base, itemStyle: { color: 'transparent' }, silent: true, tooltip: { show: false } },
-          { type: 'bar', stack: 'w', data: tot, barMaxWidth: 44, itemStyle: { color: b.fg, opacity: 0.82, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `‎${nf(p.value, 0)}` } },
-          { type: 'bar', stack: 'w', data: up, barMaxWidth: 44, itemStyle: { color: b.up, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `‎+${nf(p.value, 0)}` } },
-          { type: 'bar', stack: 'w', data: down, barMaxWidth: 44, itemStyle: { color: b.down, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `‎−${nf(p.value, 0)}` } },
+          { type: 'bar', stack: 'w', data: tot, barMaxWidth: 44, itemStyle: { color: b.fg, opacity: 0.82, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `‎${nf(p.value, d0)}` } },
+          { type: 'bar', stack: 'w', data: up, barMaxWidth: 44, itemStyle: { color: b.up, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `‎+${nf(p.value, d0)}` } },
+          { type: 'bar', stack: 'w', data: down, barMaxWidth: 44, itemStyle: { color: b.down, borderRadius: [2, 2, 0, 0] }, label: { ...lab, formatter: (p: { value: number }) => `‎−${nf(p.value, d0)}` } },
         ],
       };
     }} />
