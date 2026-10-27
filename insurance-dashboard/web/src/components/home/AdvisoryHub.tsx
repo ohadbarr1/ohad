@@ -147,7 +147,7 @@ function WarCell() {
         <li><Link to="/warroom">מהלך דמי ניהול</Link></li>
         <li><Link to="/warroom/regulation">צנרת רגולציה</Link></li>
         <li><Link to="/capital">הון ואפשרויות הקצאה</Link></li>
-        <li><Link to="/consolidation">קונסולידציה</Link></li>
+        <li><Link to="/consolidation">מסך האיחודים</Link></li>
       </ul>
     </Cell>
   );
@@ -162,7 +162,7 @@ function Cell({ cls, icon, title, to, more, children }: { cls: string; icon: str
   );
 }
 
-const EVIDENCE: [string, string][] = [['/savings', 'חיסכון ארוך טווח'], ['/industry', 'השוואה ענפית'], ['/valuation', 'שווי'], ['/capital', 'הון'], ['/consolidation', 'קונסולידציה'], ['/drivers', 'מנגנונים'], ['/feed', 'מה השתנה']];
+const EVIDENCE: [string, string][] = [['/savings', 'חיסכון ארוך טווח'], ['/industry', 'השוואה ענפית'], ['/valuation', 'שווי'], ['/capital', 'הון'], ['/consolidation', 'מסך האיחודים'], ['/drivers', 'מנגנונים'], ['/feed', 'מה השתנה']];
 
 export function AdvisoryHub() {
   return (

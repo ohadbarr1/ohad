@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType } from 'react';
+import { lazy, Suspense } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useCtx } from './Company';
 import { SinceBlock } from '../components/SinceBadge';
@@ -14,8 +14,7 @@ const PositionsBlock = lazy(() => import('./Positions').then((m) => ({ default: 
 const AttributionPanel = lazy(() => import('../components/Attribution').then((m) => ({ default: m.AttributionPanel })));  // A4
 const FragilityPanel = lazy(() => import('../components/FragilityPanel').then((m) => ({ default: m.FragilityPanel })));  // A10
 const CapitalPanel = lazy(() => import('../components/CapitalPanel').then((m) => ({ default: m.CapitalPanel })));  // A7: insurers only
-// A3 at merge: this line becomes lazy(() => import('../components/Expectations').then((m) => ({ default: m.ExpectationsPanel }))), and thesisSlots flips
-const ExpectationsPanel: ComponentType<{ id: string }> | null = null;
+const ExpectationsPanel = lazy(() => import('../components/Expectations').then((m) => ({ default: m.ExpectationsPanel })));  // module A3
 
 /** the report day's own address parameters and anchors: a link carrying them was written for the numbers view */
 const NUMBERS_PARAMS = ['p', 'w', 'row'];
