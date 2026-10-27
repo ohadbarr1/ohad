@@ -37,6 +37,8 @@ Checks
   solvency … macro   the published layers outside the statements: source, type/unit, value on its cited page (pipeline/gate_layers.py, lane G)
   cards          report cards (web/public/data/cards/): every digit a card shows is a fact token, and every fact equals the published figure
                  it cites or its operation over cited inputs (pipeline/check_cards.py, lane S2)
+  feed           the delta feed (web/public/data/feed.json, module M2): every event has a date, a source and a type, no event twice,
+                 every figure re-read from the published file it cites (pipeline/check_feed.py)
 """
 import collections
 import datetime as dt
@@ -370,6 +372,15 @@ def cards():  # lane S2: the digit validator of the report cards
         (f"{m.group(1)} report cards, every digit a published fact" if m and p.returncode == 0 else (out[-1] if out else p.stderr.strip()[-200:]))[:200])
 
 
+def feed():  # module M2: the delta feed
+    import check_feed
+    try:
+        n, n_fig, probs, summary = check_feed.run(quiet=True)
+    except (OSError, ValueError, KeyError) as e:
+        return add("feed", False, 0, 1, f"feed.json unreadable: {e}"[:200])
+    add("feed", not probs, n, len(probs), (summary + (f"; e.g. {probs[0]}" if probs else ""))[:200])
+
+
 def facts():
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_facts.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()]
@@ -437,6 +448,7 @@ def main():
     consistency()
     schemas()
     cards()
+    feed()
     facts()
     assets()
     gate_layers.run(add)

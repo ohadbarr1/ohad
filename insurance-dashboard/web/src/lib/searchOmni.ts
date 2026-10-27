@@ -18,9 +18,12 @@ export const FUNCS: { code: string; badge: string; label: string; keys: string[]
   { code: 'FA', badge: 'דוחות', label: 'דוחות לאורך זמן', keys: ['fa', 'דוחות', 'financials'], to: (id) => `/company/${id}/financials` },
   { code: 'LTS', badge: 'חיסכון', label: 'חיסכון ארוך טווח', keys: ['lts', 'חיסכון', 'פנסיה', 'גמל', 'aum'], to: (id) => `/company/${id}/savings` },
   { code: 'DOC', badge: 'מסמכים', label: 'מסמכים', keys: ['doc', 'docs', 'מסמכים', 'filings'], to: (id) => `/company/${id}/filings` },
+  { code: 'NEW', badge: 'מה השתנה', label: 'מה השתנה', keys: ['new', 'feed', 'פיד', 'מה', 'שינויים', 'השתנה', 'חדש', 'חדשות', 'עדכונים', 'delta'].map(normalize), to: (id) => `/feed?co=${id}` },
   { code: 'VAL', badge: 'שווי', label: 'הערכת שווי, P/B מוצדק', keys: ['val', 'valuation', 'שווי', 'הערכת', 'pb', 'p/b', 'מכפיל'], to: (id) => `/valuation/${id}` },
   { code: 'RI', badge: 'הכנסה שיורית', label: 'הערכת שווי, הכנסה שיורית', keys: ['ri', 'שיורית', 'residual'], to: (id) => `/valuation/${id}/ri` },
 ];
+/** words that reach the delta feed (/feed) without a company */
+const FEED_KEYS = ['feed', 'new', 'delta', 'פיד', 'שינויים', 'השתנה', 'מה', 'חדש', 'חדשות', 'עדכונים', 'עדכון'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -109,6 +112,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     const c = p.company, rest = p.rest;
     FUNCS.filter((f) => rest.length === 0 || rest.every((w) => f.keys.some((k) => k.startsWith(w)) || f.code.toLowerCase().startsWith(w)))
       .slice(0, rest.length ? 4 : 9).forEach((f, i) => out.push({ kind: 'פונקציה', label: `${c.name_he} · ${f.label}`, meta: f.badge, to: f.to(c.id) + (p.period && /\/company\//.test(f.to(c.id)) ? `?p=${p.period}` : ''), score: (rest.length ? 95 : 50) - i }));
+  }
+  // screens that are not per company: the delta feed (module M2)
+  if (!p.company && words.length && words.every((w) => FEED_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'מה השתנה · כל השינויים', meta: 'דוחות, הצגות מחדש, כושר פירעון, יעדים, נתוני הרשות', to: '/feed', score: 96 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {

@@ -73,6 +73,8 @@ const mAssets = () => import('./pages/Assets');  // lane AL
 const Assets = page(mAssets, 'Assets');
 const mReportCard = () => import('./pages/ReportCard');  // lane S2
 const ReportCardPage = page(mReportCard, 'ReportCardPage');
+const mFeed = () => import('./pages/Feed');  // module M2: the delta feed
+const Feed = page(mFeed, 'Feed');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -151,6 +153,7 @@ export function App() {
         <Route path="holdings" element={<Assets />} />{/* lane AL: not /assets, whose /assets/** immutable cache header (hashed bundles) would pin the HTML shell */}
         <Route path="holdings/:id" element={<Assets />} />
         <Route path="card/:company/:period" element={<ReportCardPage />} />{/* lane S2 */}
+        <Route path="feed" element={<Feed />} />{/* module M2: reached from the home block and search, not a nav item */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
