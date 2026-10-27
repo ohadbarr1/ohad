@@ -112,6 +112,8 @@ STEPS = [
     step("build_recon", "pipeline/build_recon.py", [D + "market.json", D + "prov/reg", *WB, REG + "recon_map.json"],
          [D + "recon.json"]),
     step("build_lens", "pipeline/build_lens.py", [D + "market.json", D + "lts.json", D + "recon.json"], [D + "lens.json"]),
+    step("build_flow_npv", "pipeline/build_flow_npv.py", [D + "lens.json", D + "market.json", D + "lts.json", D + "macro/macro.json", "web/src/lib/valuation.ts"],
+         [D + "flow_npv.json"], note="M3: NPV of net transfers and organic flow per manager x product (assumptions labelled)"),
     step("build_roster", "pipeline/build_roster.py", [D + "market.json", D + "funds.json", D + "funds"], [D + "roster.json"]),
     step("build_pagefacts", "pipeline/build_pagefacts.py", [*WB, D + "ifrs", D + "ifrs.json", D + "savings_econ.json", D + "lts_prov"],
          [D + "search/facts"]),

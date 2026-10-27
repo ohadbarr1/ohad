@@ -22,6 +22,8 @@ Checks
                  rounding of figures printed in NIS millions (NIS 2m) or 0.05%: fail above 1% (a line read wrongly), warn between.
   lens           web/public/data/lens.json equals a rebuild from market.json + lts.json (pipeline/build_lens.py --check), and every
                  derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
+  flow_npv       web/public/data/flow_npv.json equals a rebuild (pipeline/build_flow_npv.py --check): inputs present, every NPV equals its
+                 formula, NPV sign = flow sign x margin sign, LTM = the sum of its quarters, no NaN, ke constants = valuation.ts (M3).
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
   consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)
@@ -335,6 +337,12 @@ def lens():
     add("lens", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
 
 
+def flow_npv():
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_flow_npv.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("flow_npv", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, " · ".join(out[:2])[:200])
+
+
 def consistency():
     """Lane Q: one figure per entity, period and metric on every page that serves it (pipeline/check_consistency.py)."""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "check_consistency.py")], capture_output=True, text=True)
@@ -434,6 +442,7 @@ def main():
     balance(wbs)
     cross_layer()
     lens()
+    flow_npv()
     consistency()
     schemas()
     cards()

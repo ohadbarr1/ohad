@@ -1,0 +1,23 @@
+/* Savings Lens, view "ערך הניוד" (pages/SavingsLensNpv.tsx, M3) */
+.npv-ctl { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+.npv-ctl .seg { max-width: 100%; }
+.npv-as { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-end; margin: 0 0 14px; padding: 10px 14px; border: 1px dashed color-mix(in oklch, var(--warn) 40%, transparent); border-radius: var(--r-2); background: color-mix(in oklch, var(--warn) 5%, var(--panel)); }
+.npv-as label, .npv-as .ann { display: flex; flex-direction: column; gap: 3px; font-size: var(--t-2); color: var(--fg); min-width: 0; }
+.npv-as small { color: var(--faint); font-size: var(--t-1); }
+.npv-as .in { display: flex; align-items: center; gap: 6px; }
+.npv-as input { width: 84px; min-width: 0; }
+.npv-as .srcdot { font-size: var(--t-1); color: var(--muted); }
+.npv-as .ann { padding-inline-start: 18px; border-inline-start: 1px solid var(--line-soft); }
+.npv-as .ann > span:first-child { color: var(--muted); }
+.npv-as .big { font-size: var(--t-5); font-weight: 700; }
+.npv-tbl td:nth-child(4) { min-width: 0; }
+@media (max-width: 760px) {
+  .npv-ctl > * { flex: 1 1 100%; }
+  .npv-ctl .seg { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+  .npv-ctl .seg button { white-space: nowrap; }
+  .npv-as { gap: 10px 14px; padding: 10px 12px; }
+  .npv-as label { flex: 1 1 calc(50% - 14px); }
+  .npv-as input { width: 100%; }
+  .npv-as .ann { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 8px 0 0; border-inline-start: 0; border-top: 1px solid var(--line-soft); }
+  .npv-tbl th, .npv-tbl td { padding: 8px 6px; }
+}

@@ -162,7 +162,7 @@ export function warmRep(c: string | undefined | null) {
 }
 const unitHe = (u: string) => u.replace('NIS thousands', 'אלפי ש"ח').replace('NIS thousand', 'אלפי ש"ח').replace('NIS millions', 'מיליוני ש"ח').replace('NIS billions', 'מיליארדי ש"ח');
 const WIN_HE: Record<string, string> = { q: 'רבעון', ytd: 'YTD', fy: 'FY', h1: 'H1', instant: '' };
-function ltsProv(c: string, metric: string, period: string, title: string, unit: string, note?: string, value?: string): Prov {
+export function ltsProv(c: string, metric: string, period: string, title: string, unit: string, note?: string, value?: string): Prov {
   const pr = provCache.get(c), f = pr?.facts[`${metric}|${period}`];
   if (!pr) { warmRep(c); return { k: 'none', title, why: 'פירוט הרכיבים מהדוח נטען כעת. נסו שוב בעוד רגע.' }; }
   if (!f) return { k: 'none', title, why: 'לנתון זה לא נרשמו רכיבים מודפסים.' };
