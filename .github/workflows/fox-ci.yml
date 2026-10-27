@@ -40,11 +40,12 @@ jobs:
           python pipeline/dag.py --check
           python -m unittest discover -s pipeline/tests
           python pipeline/dag.py --dry-run
-      - name: Data gate (page-text checks are skipped where the page texts are not in git)
-        run: python pipeline/gate.py
+      # before the gate: its stress check bundles tests/stress.unit.ts with esbuild from web/node_modules
       - name: Install
         working-directory: insurance-dashboard/web
         run: npm ci --no-audit --no-fund
+      - name: Data gate (page-text checks are skipped where the page texts are not in git)
+        run: python pipeline/gate.py
       - name: Typecheck and build
         working-directory: insurance-dashboard/web
         run: npx tsc --noEmit && npx vite build
