@@ -53,6 +53,9 @@ Checks
                  own funds − SCR × target − buffer on every constraint, own funds ÷ SCR = the printed ratio, every figure has provenance
                  down to a report page or is a labelled assumption, no NaN; and web/src/lib/capital.ts reproduces the option rows and
                  gives every A2 preset a finite stressed surplus or a gap (web/tests/capital.unit.ts, run in node)
+  expectations   module A3: web/public/data/expectations/*.json equal a rebuild (pipeline/build_expectations.py --check): the forward model,
+                 rebuilt from each file's stored inputs, reproduces the market value at every solved input within 0.5%; every figure carries
+                 provenance; the price date and its label ("מחיר 22.10.26, קלט ידני") are shown; no NaN
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
   consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)
@@ -442,6 +445,14 @@ def capital():
         (tail.replace("capital: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
+def expectations():
+    """module A3: the expectations files rebuild equal and verify (solved inputs reproduce the market value, provenance, price date, no NaN)"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_expectations.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) solved inputs", out[0])
+    add("expectations", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+
+
 def nowcast():
     """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
@@ -597,6 +608,7 @@ def main():
     regulation()
     warroom()
     capital()
+    expectations()
     nowcast()
     positions()
     consistency()

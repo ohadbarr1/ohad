@@ -256,6 +256,14 @@
   {
    "pattern": "capital/options.json",
    "schema": "capitalOptions"
+  },
+  {
+   "pattern": "expectations/index.json",
+   "schema": "expectationsIndex"
+  },
+  {
+   "pattern": "expectations/*.json",
+   "schema": "expectationsCompany"
   }
  ],
  "$defs": {
@@ -10568,6 +10576,768 @@
       "none",
       "xbrl"
      ]
+    }
+   }
+  },
+  "expectFig": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "required": [
+    "v",
+    "prov"
+   ],
+   "properties": {
+    "v": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "prov": {
+     "type": "object",
+     "required": [
+      "k"
+     ],
+     "properties": {
+      "k": {
+       "type": "string",
+       "enum": [
+        "report",
+        "reg",
+        "xbrl",
+        "calc",
+        "fund",
+        "price",
+        "none",
+        "lts"
+       ]
+      }
+     }
+    },
+    "unit": {
+     "type": "string"
+    },
+    "est": {
+     "type": "boolean"
+    }
+   }
+  },
+  "expectHist": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "required": [
+    "what",
+    "n",
+    "min",
+    "med",
+    "max",
+    "pct",
+    "unit",
+    "dir",
+    "prov"
+   ],
+   "properties": {
+    "n": {
+     "type": "integer"
+    },
+    "min": {
+     "type": "number"
+    },
+    "med": {
+     "type": "number"
+    },
+    "max": {
+     "type": "number"
+    },
+    "pct": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "unit": {
+     "type": "string"
+    },
+    "dir": {
+     "type": "string",
+     "enum": [
+      "up",
+      "down"
+     ]
+    },
+    "prov": {
+     "type": "object",
+     "required": [
+      "k"
+     ]
+    }
+   }
+  },
+  "expectLever": {
+   "type": "object",
+   "required": [
+    "k",
+    "he",
+    "unit",
+    "status",
+    "trail",
+    "req"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "aum",
+      "fee",
+      "ci",
+      "csm",
+      "roe"
+     ]
+    },
+    "he": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "beyond",
+      "below"
+     ]
+    },
+    "trail": {
+     "$ref": "#/$defs/expectFig"
+    },
+    "req": {
+     "$ref": "#/$defs/expectFig"
+    },
+    "bound": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "roe28": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "req_d": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "check": {
+     "type": "object",
+     "required": [
+      "value",
+      "err"
+     ],
+     "properties": {
+      "value": {
+       "type": "number"
+      },
+      "err": {
+       "type": "number"
+      }
+     }
+    },
+    "hist": {
+     "$ref": "#/$defs/expectHist"
+    },
+    "ref": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "he",
+       "v",
+       "prov"
+      ]
+     }
+    },
+    "joint": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "required": [
+      "he",
+      "k",
+      "n"
+     ],
+     "properties": {
+      "k": {
+       "type": "integer"
+      },
+      "n": {
+       "type": "integer"
+      },
+      "when": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "path": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "p",
+       "roe",
+       "np"
+      ]
+     }
+    }
+   }
+  },
+  "expectationsCompany": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "kind",
+    "status",
+    "meta"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "insurance_group",
+      "fund_house"
+     ]
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "na"
+     ]
+    },
+    "why": {
+     "type": "string"
+    },
+    "flag": {
+     "type": "string"
+    },
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "v",
+      "price_date",
+      "price_label",
+      "horizon",
+      "periods"
+     ],
+     "properties": {
+      "built": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "v": {
+       "type": "integer",
+       "enum": [
+        1
+       ]
+      },
+      "price_date": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+      },
+      "price_label": {
+       "type": "string"
+      },
+      "horizon": {
+       "type": "string",
+       "pattern": "^FY'\\d\\d$"
+      },
+      "periods": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "price": {
+     "type": "object",
+     "required": [
+      "date",
+      "label",
+      "mcap"
+     ],
+     "properties": {
+      "date": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+      },
+      "label": {
+       "type": "string"
+      },
+      "px": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "mcap": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "shares": {
+       "$ref": "#/$defs/expectFig"
+      }
+     }
+    },
+    "base": {
+     "type": "object",
+     "required": [
+      "q",
+      "ltm",
+      "end",
+      "pb",
+      "equity",
+      "np_ltm",
+      "np_norm",
+      "ke",
+      "g",
+      "payout",
+      "value",
+      "gap",
+      "path"
+     ],
+     "properties": {
+      "q": {
+       "type": "string",
+       "pattern": "^Q[1-4]'\\d\\d$"
+      },
+      "ltm": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "pb": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "equity": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "np_ltm": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "np_norm": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "ke": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "g": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "payout": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "value": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "gap": {
+       "$ref": "#/$defs/expectFig"
+      },
+      "path": {
+       "type": "array",
+       "minItems": 3,
+       "items": {
+        "type": "object",
+        "required": [
+         "p",
+         "np",
+         "roe",
+         "b"
+        ]
+       }
+      },
+      "savings": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "csm": {
+       "type": [
+        "object",
+        "null"
+       ]
+      }
+     }
+    },
+    "model": {
+     "type": "object",
+     "required": [
+      "mcap",
+      "b0",
+      "div_after",
+      "np",
+      "adj",
+      "tax",
+      "attr",
+      "payout",
+      "rf",
+      "ke",
+      "g",
+      "a_ltm",
+      "fy0",
+      "ci0",
+      "op0",
+      "c0",
+      "csm0",
+      "rr0",
+      "periods"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "mcap": {
+       "type": "number"
+      },
+      "b0": {
+       "type": "number"
+      },
+      "div_after": {
+       "type": "number"
+      },
+      "np": {
+       "type": "number"
+      },
+      "adj": {
+       "type": "number"
+      },
+      "tax": {
+       "type": "number"
+      },
+      "attr": {
+       "type": "number"
+      },
+      "payout": {
+       "type": "number"
+      },
+      "rf": {
+       "type": "number"
+      },
+      "ke": {
+       "type": "number"
+      },
+      "g": {
+       "type": "number"
+      },
+      "c0": {
+       "type": "number"
+      },
+      "a_ltm": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "fy0": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "ci0": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "op0": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "csm0": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "rr0": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "periods": {
+       "type": "array",
+       "minItems": 3,
+       "items": {
+        "type": "array",
+        "prefixItems": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "number"
+         },
+         {
+          "type": "number"
+         },
+         {
+          "type": "number"
+         }
+        ]
+       }
+      }
+     }
+    },
+    "levers": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/expectLever"
+     }
+    },
+    "roe": {
+     "$ref": "#/$defs/expectLever"
+    },
+    "targets": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "m",
+       "he",
+       "unit",
+       "prov"
+      ]
+     }
+    },
+    "rank": {
+     "type": "object",
+     "required": [
+      "max",
+      "parts",
+      "key"
+     ],
+     "properties": {
+      "max": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "parts": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "k",
+         "pct"
+        ]
+       }
+      },
+      "key": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       }
+      }
+     }
+    },
+    "verdict": {
+     "type": "string"
+    },
+    "gaps": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "expectationsIndex": {
+   "type": "object",
+   "required": [
+    "meta",
+    "companies"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "v",
+      "price_date",
+      "price_label",
+      "horizon",
+      "periods"
+     ],
+     "properties": {
+      "built": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "v": {
+       "type": "integer",
+       "enum": [
+        1
+       ]
+      },
+      "price_date": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+      },
+      "price_label": {
+       "type": "string"
+      },
+      "horizon": {
+       "type": "string",
+       "pattern": "^FY'\\d\\d$"
+      },
+      "periods": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "companies": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "kind",
+       "status"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "status": {
+        "type": "string",
+        "enum": [
+         "ok",
+         "na"
+        ]
+       },
+       "rank": {
+        "type": "integer"
+       },
+       "pb": {
+        "type": "number"
+       },
+       "gap": {
+        "type": "number"
+       },
+       "max": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "key": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "verdict": {
+        "type": "string"
+       },
+       "why": {
+        "type": "string"
+       },
+       "parts": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "k",
+          "he",
+          "unit",
+          "status",
+          "req",
+          "trail",
+          "pct"
+         ],
+         "properties": {
+          "k": {
+           "type": "string",
+           "enum": [
+            "aum",
+            "fee",
+            "ci",
+            "csm",
+            "roe"
+           ]
+          },
+          "status": {
+           "type": "string",
+           "enum": [
+            "ok",
+            "beyond",
+            "below"
+           ]
+          },
+          "req": {
+           "type": [
+            "number",
+            "null"
+           ]
+          },
+          "trail": {
+           "type": [
+            "number",
+            "null"
+           ]
+          },
+          "pct": {
+           "type": [
+            "number",
+            "null"
+           ]
+          },
+          "bound": {
+           "type": [
+            "number",
+            "null"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
     }
    }
   }

@@ -47,6 +47,7 @@ const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
 const mValuationModels = () => import('./pages/ValuationModels');
 const ValuationRi = page(mValuationModels, 'ValuationRi');
+const ValuationExpectations = page(mValuationModels, 'ValuationExpectations'); // module A3
 const mManagers = () => import('./pages/Managers');
 const Managers = page(mManagers, 'Managers');
 const mCalendar = () => import('./pages/Calendar');
@@ -85,7 +86,8 @@ const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: 
 const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // module A2: the scenario studio (from home and search, not a nav item)
 const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRoomRegulation'); // module A8: the regulatory pipeline (not a nav item)
 const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator (not a nav item; linked from /savings and search)
-const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
+const Capital = page(() => import('./pages/Capital'), 'Capital');
+const Expectations = page(() => import('./pages/Expectations'), 'Expectations'); // module A3: what the multiple requires, all listed names (from the valuation tab and search, not a nav item) // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -175,12 +177,14 @@ export function App() {
         <Route path="warroom/regulation" element={<WarRoomRegulation />} />{/* module A8: reached from /warroom (A5), /savings and search, not a nav item */}
         <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
         <Route path="capital" element={<Capital />} />{/* module A7 */}
+        <Route path="expectations" element={<Expectations />} />{/* module A3 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
         <Route path="valuation/:id" element={<ValuationLayout />}>
           <Route index element={<ValuationPb />} />
           <Route path="ri" element={<ValuationRi />} />
+          <Route path="expectations" element={<ValuationExpectations />} />{/* module A3 */}
           {/* retired models: an old link lands on justified P/B */}
           <Route path="csm" element={<Navigate to=".." replace />} />
           <Route path="sotp" element={<Navigate to=".." replace />} />

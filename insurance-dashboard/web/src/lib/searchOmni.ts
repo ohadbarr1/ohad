@@ -32,6 +32,8 @@ const SCN_KEYS = ['scenario', 'scenarios', 'stress', 'shock', 'war', 'תרחיש
 const REG_KEYS = ['regulation', 'regulatory', 'רגולציה', 'רגולטור', 'רגולטורי', 'רשות', 'חוזר', 'חוזרים', 'טיוטה', 'טיוטות', 'אסדרה', 'יוזמות', 'צנרת', 'ברירת', 'מחדל', 'חשבון השקעה'].map(normalize);
 /** words that reach capital and strategic options (/capital, module A7) without a company */
 const CAP_KEYS = ['capital', 'surplus', 'dividend', 'buyback', 'allocation', 'הון', 'עודף', 'דיבידנד', 'חלוקה', 'רכישה', 'עצמית', 'הקצאה', 'אפשרויות', 'בר-חלוקה'].map(normalize);
+/** words that reach the expectations decoder (/expectations, module A3) without a company */
+const EXP_KEYS = ['expectations', 'implied', 'reverse', 'priced', 'ציפיות', 'מגולם', 'מגלם', 'משתמע', 'נדרש', 'דורש', 'מתמחר'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -140,6 +142,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // capital and strategic options (module A7)
   if (!p.company && words.length && words.every((w) => CAP_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'הון ואפשרויות הקצאה · כל המבטחות', meta: 'הון בר-חלוקה מעל יעד הדירקטוריון, דיבידנד מול צמיחה, העודף אחרי תרחישי לחץ', to: '/capital', score: 96 });
+  }
+  // the expectations decoder (module A3)
+  if (!p.company && words.length && words.every((w) => EXP_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'ציפיות השוק · מה המכפיל דורש', meta: 'צמיחת נכסים, דמי ניהול, עלות, שחרור CSM ו-ROE שהמחיר מגלם, מול ההיסטוריה', to: '/expectations', score: 96 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {

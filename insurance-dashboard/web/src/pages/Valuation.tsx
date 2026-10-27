@@ -41,7 +41,7 @@ export function Fig({ v, text, src, className = '' }: { v: number | null | undef
 }
 
 // two models: justified P/B and residual income. Equity + CSM, sum-of-the-parts and DCF are gone; a segment SOTP returns on forward inputs.
-const TABS: [string, string, boolean?][] = [['', 'P/B מוצדק'], ['ri', 'הכנסה שיורית']];
+const TABS: [string, string, boolean?][] = [['', 'P/B מוצדק'], ['ri', 'הכנסה שיורית'], ['expectations', 'ציפיות השוק']];
 
 export function ValuationLayout() {
   const { id } = useParams();

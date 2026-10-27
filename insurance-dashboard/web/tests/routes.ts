@@ -21,6 +21,8 @@ export const ROUTES: [string, string][] = [
   ['warroom', '/warroom'],
   ['capital', '/capital'],
   ['capital-preset', '/capital?s=eqdd&buf=5'],
+  ['expectations', '/expectations'],
+  ['valuation-expectations', '/valuation/phoenix/expectations'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

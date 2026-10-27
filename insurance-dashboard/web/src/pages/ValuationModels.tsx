@@ -9,6 +9,8 @@ import type { Prov } from '../lib/prov';
 import { useStored } from '../lib/local';
 import { keProv, mil, pctS, residualIncome, xS, MM, type RiIn } from '../lib/valuation';
 import { Fig, Gate, Num, fin, useV } from './Valuation';
+import { ExpectationsPanel } from '../components/Expectations';
+import { ASSUME0 } from '../lib/valuation';
 
 /* ---------- residual income ---------- */
 type RiO = Partial<Pick<RiIn, 'roe1' | 'roeL' | 'fade' | 'payout'>>;
@@ -80,4 +82,13 @@ export function ValuationRi() {
       </div>
     </div>
   );
+}
+
+/* ---------- A3: what the multiple requires (the expectations decoder) ---------- */
+export function ValuationExpectations() {
+  const { id, entry, mkt, a } = useV();
+  if (!entry.has_price) return <Empty title="ציפיות השוק מחושבות לחברות הנסחרות בלבד" />;
+  const own = mkt.manual || (['erp', 'beta', 'g', 'tax'] as const).some((k) => a[k] !== ASSUME0[k]) || a.rf != null;
+  const note = own ? <p className="s exp-own">מחושב על המחיר של 22.10.26 ועל הנחות ברירת המחדל; המחיר או ההנחות שהזנת למעלה לא משנים את הלוח הזה.</p> : undefined;
+  return <ExpectationsPanel key={id} id={id} note={note} />;
 }

@@ -181,6 +181,12 @@ STEPS = [
          [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json"],
          [D + "capital/options.json"], groups={"deploy"},
          note="A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9) / hold rows; the A2 overlay runs on the page"),
+    # module A3: the expectations decoder (what the multiple requires, one input at a time, scored against the company's own history); gate `expectations`
+    step("build_expectations", "pipeline/build_expectations.py",
+         [D + "drivers", D + "companies/index.json", D + "companies/*.price.json", D + "market.json", D + "lens.json", D + "kpi.json", D + "targets.json",
+          D + "series", D + "funds/cat.json"],
+         [D + "expectations"], code=["pipeline/build_drivers.py"], groups={"deploy"},
+         note="A3: forward model to FY'28 + terminal at justified P/B; bisection per lever; percentiles against the company's own 24 quarters"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
