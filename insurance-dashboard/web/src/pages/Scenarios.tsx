@@ -218,7 +218,7 @@ export function Scenarios() {
     <div className="scn">
       <div className="pagehead"><div>
         <h1><span className="icotile"><Icon name="sliders" /></span>חדר תרחישים</h1>
-        <div className="sub"><span><span className="num">{ctx.length}</span> חברות</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/drivers">המנגנונים</Link><Link to="/industry/csm?view=stress">מעבדת הרגישויות</Link></div>
+        <div className="sub"><span><span className="num">{ctx.length}</span> חברות</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/drivers">המנגנונים</Link><Link to="/industry/csm?view=stress">מעבדת הרגישויות</Link><Link to="/fragility?s=scen">מוניטור שבריריות</Link></div>
       </div></div>
 
       {presetBar}

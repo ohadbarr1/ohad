@@ -26,6 +26,8 @@ export const FUNCS: { code: string; badge: string; label: string; keys: string[]
 const FEED_KEYS = ['feed', 'new', 'delta', 'פיד', 'שינויים', 'השתנה', 'מה', 'חדש', 'חדשות', 'עדכונים', 'עדכון'].map(normalize);
 /** words that reach the scenario studio (/scenarios, module A2) without a company */
 const SCN_KEYS = ['scenario', 'scenarios', 'stress', 'shock', 'war', 'תרחיש', 'תרחישים', 'זעזוע', 'סטרס', 'חדר', 'מלחמה', 'רגישות', 'ריבית', 'מפולת', 'סטגפלציה', '2008'].map(normalize);
+/** words that reach the Fragility Monitor (/fragility, module A10): with a company, its row */
+const FRAG_KEYS = ['fragility', 'fragile', 'warning', 'early', 'שבריריות', 'שביר', 'אזהרה', 'אזהרות', 'התראה', 'התראות', 'סימני', 'מוניטור', 'סיכון'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -122,6 +124,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // the scenario studio (module A2)
   if (!p.company && words.length && words.every((w) => SCN_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'חדר תרחישים · כל החברות תחת זעזוע', meta: 'ריבית, מניות, מדד, ניוד, דמי ניהול: דירוג פגיעות', to: '/scenarios', score: 97 });
+  }
+  // the Fragility Monitor (module A10): alone, or with a company (that company's row)
+  if (words.length && (p.company ? p.rest.length > 0 && p.rest.every((w) => FRAG_KEYS.some((k) => k.startsWith(w))) : words.every((w) => FRAG_KEYS.some((k) => k.startsWith(w))))) {
+    out.push({ kind: 'פונקציה', label: p.company ? `${p.company.name_he} · מוניטור שבריריות` : 'מוניטור שבריריות · אותות אזהרה לכל מנהל', meta: 'ניוד, דמי ניהול, ביצועים, עלויות, כושר פירעון, CSM, תרחיש: בלי ציון מצרפי', to: p.company ? `/fragility?c=${p.company.id}` : '/fragility', score: 97 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {

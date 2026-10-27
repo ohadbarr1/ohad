@@ -15,6 +15,7 @@ const ScrComposition = lazy(() => import('./csm/ScrComposition').then((m) => ({ 
 const TargetsCompact = lazy(() => import('../components/TargetsTracker').then((m) => ({ default: m.TargetsCompact })));
 const AttributionPanel = lazy(() => import('../components/Attribution').then((m) => ({ default: m.AttributionPanel })));
 const PositionsBlock = lazy(() => import('./Positions').then((m) => ({ default: m.PositionsBlock })));  // module A6: only when the company has a position
+const FragilityPanel = lazy(() => import('../components/FragilityPanel').then((m) => ({ default: m.FragilityPanel })));  // module A10: the company's signals
 const AdjustedPanel = lazy(() => import('../components/AdjustedPanel').then((m) => ({ default: m.AdjustedPanel })));
 import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
@@ -217,6 +218,7 @@ export function CompanyOverview() {
       {!fund && <DividendCapacity id={entry.id} />}
       <Suspense fallback={null}>
         <PositionsBlock id={entry.id} />
+        <FragilityPanel id={entry.id} />
         <TargetsCompact id={entry.id} name={entry.name_he} />
         <AdjustedPanel id={entry.id} name={entry.name_he} />
         {!fund && entry.has_financials && <ScrComposition ids={[entry.id]} name={() => entry.name_he} company={entry.id} />}

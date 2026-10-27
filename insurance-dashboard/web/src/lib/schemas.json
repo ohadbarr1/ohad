@@ -234,6 +234,10 @@
    "schema": "positions"
   },
   {
+   "pattern": "fragility.json",
+   "schema": "fragility"
+  },
+  {
    "pattern": "drivers/graph.json",
    "schema": "driversGraph"
   },
@@ -6056,7 +6060,8 @@
       "fund",
       "calc",
       "count",
-      "pos"
+      "pos",
+      "frag"
      ]
     },
     "rid": {
@@ -6138,6 +6143,15 @@
     },
     "per": {
      "type": "string"
+    },
+    "c": {
+     "type": "string"
+    },
+    "sig": {
+     "type": "string"
+    },
+    "seg": {
+     "type": "string"
     }
    }
   },
@@ -6166,7 +6180,8 @@
       "dm",
       "dbn",
       "dpct",
-      "n"
+      "n",
+      "r"
      ]
     },
     "s": {
@@ -6243,7 +6258,8 @@
       "solv",
       "fee",
       "est",
-      "pos"
+      "pos",
+      "fragility"
      ]
     },
     "d": {
@@ -6287,7 +6303,8 @@
         "doc",
         "reg",
         "fund",
-        "pos"
+        "pos",
+        "frag"
        ]
       },
       "rid": {
@@ -6318,6 +6335,12 @@
       },
       "rev": {
        "type": "integer"
+      },
+      "c": {
+       "type": "string"
+      },
+      "sig": {
+       "type": "string"
       }
      }
     },
@@ -6344,7 +6367,15 @@
       "close",
       "drift",
       "falsifier",
-      "review"
+      "review",
+      "fragility"
+     ]
+    },
+    "fs": {
+     "type": "string",
+     "enum": [
+      "watch",
+      "alert"
      ]
     }
    }
@@ -6391,7 +6422,8 @@
       "solv",
       "fee",
       "est",
-      "pos"
+      "pos",
+      "fragility"
      ],
      "additionalProperties": false,
      "properties": {
@@ -6547,6 +6579,24 @@
        }
       },
       "pos": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "fragility": {
        "type": "object",
        "required": [
         "he",
@@ -7896,7 +7946,9 @@
        "due",
        "drift",
        "suggest",
-       "involved"
+       "involved",
+       "frag",
+       "frag_now"
       ],
       "properties": {
        "id": {
@@ -8216,6 +8268,89 @@
        },
        "problems": {
         "type": "array"
+       },
+       "frag": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "c",
+          "sig",
+          "he",
+          "st",
+          "d",
+          "dk",
+          "per",
+          "ev"
+         ],
+         "additionalProperties": false,
+         "properties": {
+          "c": {
+           "type": "string"
+          },
+          "sig": {
+           "type": "string"
+          },
+          "he": {
+           "type": "string"
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "watch",
+            "alert"
+           ]
+          },
+          "d": {
+           "$ref": "#/$defs/date"
+          },
+          "dk": {
+           "type": "string",
+           "enum": [
+            "pub",
+            "fetched",
+            "month"
+           ]
+          },
+          "per": {
+           "type": "string"
+          },
+          "ev": {
+           "type": "string"
+          }
+         }
+        }
+       },
+       "frag_now": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "c",
+          "sig",
+          "he",
+          "st"
+         ],
+         "additionalProperties": false,
+         "properties": {
+          "c": {
+           "type": "string"
+          },
+          "sig": {
+           "type": "string"
+          },
+          "he": {
+           "type": "string"
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "watch",
+            "alert"
+           ]
+          }
+         }
+        }
        }
       }
      }
@@ -8863,6 +8998,455 @@
        "id",
        "he"
       ]
+     }
+    }
+   }
+  },
+  "fragSeg": {
+   "type": "object",
+   "required": [
+    "st"
+   ],
+   "properties": {
+    "st": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "watch",
+      "alert",
+      "nodata",
+      "na"
+     ]
+    },
+    "why": {
+     "type": "string"
+    },
+    "stale": {
+     "type": "boolean"
+    },
+    "x": {
+     "type": "object"
+    },
+    "v": {
+     "$ref": "#/$defs/num"
+    },
+    "t": {
+     "$ref": "#/$defs/num"
+    },
+    "m": {
+     "$ref": "#/$defs/num"
+    },
+    "pct": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "n": {
+     "type": "integer"
+    },
+    "asof": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "d": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "dk": {
+     "type": "string",
+     "enum": [
+      "pub",
+      "month"
+     ]
+    },
+    "prov": {
+     "type": "object",
+     "required": [
+      "k"
+     ]
+    },
+    "provT": {
+     "type": [
+      "object",
+      "null"
+     ]
+    },
+    "provM": {
+     "type": "object"
+    },
+    "provR": {
+     "type": "object"
+    },
+    "ser": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "$ref": "#/$defs/num"
+       }
+      ]
+     }
+    },
+    "h": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "number"
+       },
+       {
+        "type": "string",
+        "enum": [
+         "ok",
+         "watch",
+         "alert",
+         "nodata",
+         "na"
+        ]
+       }
+      ]
+     }
+    }
+   }
+  },
+  "fragCell": {
+   "type": "object",
+   "required": [
+    "st",
+    "seg",
+    "segs"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "st": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "watch",
+      "alert",
+      "nodata",
+      "na"
+     ]
+    },
+    "seg": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "why": {
+     "type": "string"
+    },
+    "stale": {
+     "type": "boolean"
+    },
+    "segs": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/fragSeg"
+     }
+    }
+   }
+  },
+  "fragility": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "rule",
+    "sigs",
+    "params",
+    "stale_ratio_m",
+    "presets",
+    "cos",
+    "rows",
+    "skipped",
+    "events"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "asof": {
+     "type": "object",
+     "required": [
+      "lens",
+      "reg",
+      "funds",
+      "base"
+     ]
+    },
+    "rule": {
+     "type": "string"
+    },
+    "sigs": {
+     "type": "array",
+     "minItems": 7,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "short",
+       "metric",
+       "u",
+       "better",
+       "pctl",
+       "rule",
+       "src",
+       "segs"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "enum": [
+         "flow",
+         "fee",
+         "perf",
+         "cost",
+         "solv",
+         "csm",
+         "scen"
+        ]
+       },
+       "better": {
+        "type": "string",
+        "enum": [
+         "hi",
+         "lo"
+        ]
+       },
+       "rule": {
+        "type": "object",
+        "required": [
+         "watch",
+         "alert"
+        ]
+       }
+      }
+     }
+    },
+    "params": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "v",
+       "he",
+       "u",
+       "sig"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "v": {
+        "type": "number"
+       },
+       "he": {
+        "type": "string"
+       },
+       "u": {
+        "type": "string"
+       },
+       "sig": {
+        "type": "string",
+        "enum": [
+         "flow",
+         "fee",
+         "perf",
+         "cost",
+         "solv",
+         "csm",
+         "scen"
+        ]
+       }
+      }
+     }
+    },
+    "stale_ratio_m": {
+     "type": "integer"
+    },
+    "presets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "y10",
+       "eq",
+       "ok"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "he": {
+        "type": "string"
+       },
+       "y10": {
+        "type": "number"
+       },
+       "eq": {
+        "type": "number"
+       },
+       "ok": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "cos": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "rows": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "name",
+       "kind",
+       "sig",
+       "flags",
+       "nodata"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "c": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "insurance_group",
+         "fund_house"
+        ]
+       },
+       "sig": {
+        "type": "object",
+        "required": [
+         "flow",
+         "fee",
+         "perf",
+         "cost",
+         "solv",
+         "csm",
+         "scen"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "flow": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "fee": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "perf": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "cost": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "solv": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "csm": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "scen": {
+          "$ref": "#/$defs/fragCell"
+         }
+        }
+       },
+       "flags": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "sig",
+          "st"
+         ],
+         "additionalProperties": false,
+         "properties": {
+          "sig": {
+           "type": "string",
+           "enum": [
+            "flow",
+            "fee",
+            "perf",
+            "cost",
+            "solv",
+            "csm",
+            "scen"
+           ]
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "watch",
+            "alert"
+           ]
+          }
+         }
+        }
+       },
+       "nodata": {
+        "type": "array",
+        "items": {
+         "type": "string",
+         "enum": [
+          "flow",
+          "fee",
+          "perf",
+          "cost",
+          "solv",
+          "csm",
+          "scen"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "skipped": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "why"
+      ]
+     }
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/feedEvent"
      }
     }
    }

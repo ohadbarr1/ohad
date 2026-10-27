@@ -17,6 +17,8 @@ export const ROUTES: [string, string][] = [
   ['positions', '/positions'],
   ['scenarios', '/scenarios'],
   ['scenarios-preset', '/scenarios?e=-25&cr=150'],
+  ['fragility', '/fragility'],
+  ['fragility-detail', '/fragility?c=altshuler&s=flow&fee_watch=1'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

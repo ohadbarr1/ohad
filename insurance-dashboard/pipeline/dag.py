@@ -144,13 +144,14 @@ STEPS = [
          [D + "since.json"], daily=True, groups={"deploy"}, note="dated events per company for the \"since you last looked\" marks (last 400 days)"),
     # module A6: the position book, published positions (append-only ledger data/ledger/positions/) scored against the published data
     step("build_positions", "pipeline/build_positions.py",
-         [D + "lens.json", D + "kpi.json", D + "targets.json", D + "calendar.json", D + "companies/index.json", D + "cards", "data/ledger/positions"],
+         [D + "lens.json", D + "kpi.json", D + "targets.json", D + "calendar.json", D + "companies/index.json", D + "cards", "data/ledger/positions",
+          D + "fragility.json"],
          [D + "positions.json"], groups={"deploy"},
          note="drafts (data/positions/, status draft) only with --drafts, a dev build the gate refuses (check `positions`)"),
     # module M2: the delta feed (/feed) from the published files, and its weekly digest (an email body; no sender is wired)
     step("build_feed", "pipeline/build_feed.py",
          [D + "search/docs.json", D + "companies/index.json", *WB, D + "cards", D + "restatements.json", D + "targets.json", D + "market.json",
-          D + "funds", D + "csm/solvency.json", D + "positions.json", "web/src/pages/ReportDay.tsx"],
+          D + "funds", D + "csm/solvency.json", D + "positions.json", D + "fragility.json", "web/src/pages/ReportDay.tsx"],
          [D + "feed.json"], code=["pipeline/reportday.py"], groups={"deploy"},
          note="dated, typed, sourced events since 01.01.25 (pipeline/check_feed.py = gate `feed`)"),
     # module A4: the attribution engine (the "why" of every ROE / profit change, and between peers), from the reported facts only
@@ -166,6 +167,13 @@ STEPS = [
           D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", "web/src/lib/valuation.ts"],
          [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py"], groups={"deploy"},
          note="A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)"),
+    # module A10: the Fragility Monitor (/fragility): seven signals per manager, each with its value, trend, peer percentile, stated rule and
+    # state, no composite; its crossings feed M2 and mark A6 positions for review (so it runs before build_positions and build_feed)
+    step("build_fragility", "pipeline/build_fragility.py",
+         [D + "lens.json", D + "market.json", D + "funds.json", D + "funds", D + "macro/macro.json", D + "macro/boi_curve.json", D + "calendar.json",
+          D + "csm/solvency.json", D + "csm/facts", D + "cards", D + "companies/index.json", D + "drivers"],
+         [D + "fragility.json"], code=["pipeline/csm_resolve.py"], groups={"deploy"},
+         note="A10: flow, fee, performance, cost, solvency, CSM runway, A2 scenario headroom; gate `fragility` (rebuild, provenance, no composite)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

@@ -13,6 +13,7 @@ the type counts add up and the estimate slot stays empty. Every figure is re-rea
   calc   every input is itself a valid figure, and a difference or a ratio re-computes from its two inputs
   count  a whole number
   pos    the value equals the position's metric at that period in positions.json (module A6), and the position is published there
+  frag   the value equals the signal's history at that period in fragility.json (module A10), and the manager is there
 """
 import collections
 import json
@@ -25,7 +26,7 @@ import build_feed as bf  # noqa: E402
 import reportday as rd  # noqa: E402
 
 DATA = bf.DATA
-UNITS = {"m", "bn", "pct", "pp", "dm", "dbn", "dpct", "n"}
+UNITS = {"m", "bn", "pct", "pp", "dm", "dbn", "dpct", "n", "r"}
 DK = {"pub", "fetched", "month"}
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -92,6 +93,8 @@ def run(quiet=False):
     n_fig = 0
     P = bf.load("positions.json") if (DATA / "positions.json").exists() else {"positions": [], "metrics": {}}
     pos_ids = {p["id"]: p for p in P["positions"] if p.get("status") == "published"}
+    FR = bf.load("fragility.json") if (DATA / "fragility.json").exists() else {"rows": []}
+    frag = {r["c"]: r for r in FR["rows"]}
 
     def bad(eid, msg):
         probs.append(f"{eid}: {msg}")
@@ -155,6 +158,11 @@ def run(quiet=False):
             base = next((t["base"]["v"] for t in pos_ids[s["pid"]]["triggers"] if t["metric"] == s["m"] and t.get("base")), None)
             if want is None and base is None or (want is None or abs(want - v) > 1e-9) and (base is None or abs(base - v) > 1e-9):
                 return bad(eid, f"{where}: {v} vs positions.json {want}")
+        elif k == "frag":
+            h = (((frag.get(s.get("c")) or {}).get("sig", {}).get(s.get("sig")) or {}).get("segs", {}).get(s.get("seg")) or {}).get("h") or []
+            want = next((x[1] for x in h if x[0] == s.get("per")), None)
+            if want is None or abs(want - v) > 1e-9:
+                return bad(eid, f"{where}: {v} vs fragility.json {want}")
         else:
             bad(eid, f"{where}: unknown source kind {k!r}")
 
@@ -184,6 +192,9 @@ def run(quiet=False):
             x = pos_ids.get(src.get("pid"))
             if not x or not any(r["rev"] == src.get("rev") for r in x["revs"]):
                 bad(eid, f"source position {src.get('pid')} r{src.get('rev')} not published in positions.json")
+        elif src.get("k") == "frag":
+            if src.get("c") not in frag or src.get("sig") not in frag[src["c"]]["sig"]:
+                bad(eid, f"source signal {src.get('c')}.{src.get('sig')} not in fragility.json")
         else:
             bad(eid, "no source")
         content[(e.get("t"), e.get("c"), e.get("per"), json.dumps(src, sort_keys=True), e.get("h"))] += 1

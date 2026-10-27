@@ -22,7 +22,8 @@ The object (data/positions/<id>.json, the working file; the ledger freezes a cop
               every print after the position was opened; AT LEAST ONE, or the gate rejects the position
   triggers    [{metric, threshold_pp | threshold_pct, base}]   evidence drift: the metric moved past the threshold since opening;
               base = {per, v}, frozen when published
-  review      "print" (each quarterly print of the companies involved) or an ISO date
+  review      "print" (each quarterly print of the companies involved) or an ISO date; also due when a company involved crosses into
+              watch / alert on the Fragility Monitor after the last revision (module A10, fragility.json: `frag`, feed pk "fragility")
   status      draft | published (working file only)
 
 Metric keys (machine-checkable, every value carries the cells it is made of):
@@ -95,12 +96,13 @@ ROUTES = ["/", "/savings", "/funds", "/managers", "/calendar", "/book", "/data",
           "/debt", "/ownership", "/holdings", "/search", "/industry/peers", "/industry/csm", "/positions",
           "/company/:id", "/company/:id/review", "/company/:id/financials", "/company/:id/profit", "/company/:id/ifrs17",
           "/company/:id/savings", "/company/:id/filings", "/card/:id/:period", "/valuation/:id", "/debt/:id", "/ownership/:id",
-          "/holdings/:id", "/facts/:id", "/positions/:pid"]
+          "/holdings/:id", "/facts/:id", "/positions/:pid", "/fragility"]
 
 PAGE_HE = {"": "בית", "savings": "עדשת החיסכון", "funds": "מסלולים", "managers": "דירוג מנהלים", "calendar": "לוח דיווחים", "book": "ספר הגרפים",
            "data": "נתונים ואיכות", "restatements": "הצגות מחדש", "presentations": "מצגות משקיעים", "credibility": "אמינות יעדים", "feed": "מה השתנה",
            "debt": "חוב ופירעונות", "ownership": "בעלות", "holdings": "הרכב נכסים", "search": "חיפוש", "industry": "השוואה ענפית", "positions": "ספר העמדות",
-           "company": "עמוד החברה", "card": "כרטיס דוח", "valuation": "הערכת שווי", "facts": "עובדות"}
+           "company": "עמוד החברה", "card": "כרטיס דוח", "valuation": "הערכת שווי", "facts": "עובדות",
+           "fragility": "מוניטור שבריריות"}
 SUB_HE = {"peers": "טבלת עמיתים", "csm": "IFRS 17 · CSM · הון", "review": "סקירת דוח", "financials": "דוחות כספיים", "profit": "מקורות רווח וענפים",
           "ifrs17": "IFRS 17", "savings": "חיסכון ארוך טווח", "filings": "מסמכים"}
 VIEW_HE = {"rank": "דירוג", "market": "שוק", "econ": "רווחיות", "now": "אומדן", "npv": "ערך צבירה"}
@@ -180,6 +182,8 @@ class Ctx:
                 self.prints.setdefault((c["id"], c["last"]["period"]), c["last"]["date"])
         self.next_print = {c["id"]: (c.get("next") or {}).get("expected") for c in self.cal["companies"]}
         self.cards = (load(self.data / "cards" / "index.json").get("co") or {}) if (self.data / "cards" / "index.json").exists() else {}
+        # module A10: the Fragility Monitor (its crossings mark a position for review; additive, absent file = no marks)
+        self.frag = load(self.data / "fragility.json") if (self.data / "fragility.json").exists() else None
         self._card = {}
 
     def print_date(self, c, per):
@@ -687,8 +691,22 @@ def evaluate(p, ctx, meta, metrics):
             d, c, per = prints[0]
             due = {"d": d, "c": c, "per": per}
     sugg = "falsified" if any(f.get("st") == "met" for f in fals) else None
+    frag, frag_now = frag_marks(ctx, cos, meta.get("revised"))
     return {"evidence": ev, "falsifiers": fals, "triggers": trig, "next_review": nxt, "review_basis": basis, "due": due,
-            "drift": any(t.get("fired") for t in trig), "suggest": sugg, "involved": cos}
+            "drift": any(t.get("fired") for t in trig), "suggest": sugg, "involved": cos, "frag": frag, "frag_now": frag_now}
+
+
+def frag_marks(ctx, cos, since):
+    """module A10: the Fragility Monitor crossings (into watch / alert) of the companies involved after the position's last revision
+    (each marks the position for review), and their signals in watch / alert now. A draft (no revision yet) carries only the latter."""
+    F = ctx.frag
+    if not F:
+        return [], []
+    sh = {s["id"]: s["he"] for s in F.get("sigs") or []}
+    marks = [{"c": e["c"], "sig": e["src"]["sig"], "he": sh.get(e["src"]["sig"], e["src"]["sig"]), "st": e.get("fs"), "d": e["d"], "dk": e["dk"], "per": e["per"], "ev": e["id"]}
+             for e in F.get("events") or [] if since and e["c"] in cos and e["d"] > since]
+    now = [{"c": r["c"], "sig": f["sig"], "he": sh.get(f["sig"], f["sig"]), "st": f["st"]} for r in F.get("rows") or [] if r["c"] in cos for f in r["flags"]]
+    return sorted(marks, key=lambda m: (m["d"], m["ev"])), now
 
 
 def position_out(pid, pos, ctx, meta, metrics, status):
@@ -746,6 +764,10 @@ def feed_events(ps, ctx):
                             "h": f"תנאי הפרכה התקיים (הצעה: falsified, הסגירה בידי הכותב): {claim}", "src": src, "to": to,
                             "rows": [{"l": f"{f['label']} {f['op']} {f['value']}", "ab": [qlabel(f["at"]["p"])],
                                       "a": {"v": f["at"]["v"], "u": unit_feed(f["unit"]), "s": {"k": "pos", "pid": p["id"], "m": f["metric"], "per": f["at"]["p"]}}}]})
+        for m in p.get("frag") or []:
+            out.append({"id": f"pos:{p['id']}:frag:{m['ev']}", "t": "pos", "pk": "fragility", "d": m["d"], "dk": m["dk"], "c": c, "per": m["per"],
+                        "h": f"עמדה לסקירה: {ctx.cos.get(m['c'], m['c'])} עברה ל{'התראה' if m['st'] == 'alert' else 'מעקב'} ב{m['he']} (מוניטור שבריריות)",
+                        "src": src, "to": to})
         if p.get("due"):
             u = p["due"]
             out.append({"id": f"pos:{p['id']}:review:{u['c']}:{u['per']}", "t": "pos", "pk": "review", "d": u["d"], "dk": "pub", "c": c, "per": u["per"],
@@ -806,7 +828,8 @@ def build(ctx, ledger=LEDGER, work=WORK, drafts=False):
         "withheld": len(withheld),
         "rules": {"hit": "אושרו ÷ (אושרו + הופרכו), עמדות סגורות בלבד; פג תוקף ונמשכו נספרות בנפרד",
                   "falsifier": "תנאי שהתקיים מציע 'הופרכה'; הסגירה היא רישום מתוארך של הכותב, לעולם לא אוטומטית",
-                  "drift": "מדד שזז מעבר לסף מאז פתיחת העמדה (בסיס מוקפא בפרסום)"},
+                  "drift": "מדד שזז מעבר לסף מאז פתיחת העמדה (בסיס מוקפא בפרסום)",
+                  "fragility": "חברה בעמדה שעברה למעקב או להתראה במוניטור השבריריות אחרי העדכון האחרון: העמדה לסקירה"},
         "cos": {**{"industry": "ענפי"}, **ctx.cos},
         "groups": ctx.GN,
         "metrics": metrics,
