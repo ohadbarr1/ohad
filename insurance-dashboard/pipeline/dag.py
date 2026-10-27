@@ -160,6 +160,12 @@ STEPS = [
          note="QoQ / YoY / LTM bridges per company and pairwise peer bridges (pipeline/build_attribution.py --check = gate `attribution`)"),
     step("build_digest", "pipeline/build_digest.py", [D + "feed.json"], ["data/digest/digest.html", "data/digest/digest.txt"], daily=True,
          note="the last 7 days of feed.json as a Hebrew RTL email body (untracked output; no sender is wired)"),
+    # module A1: the driver graph (mechanisms layer): calibrated edges per company over the published files; gate `drivers`
+    step("build_drivers", "pipeline/build_drivers.py",
+         [D + "lens.json", D + "flow_npv.json", D + "market.json", D + "funds/cat.json", D + "macro/boi_curve.json", D + "lines.json", D + "csm/sens.json",
+          D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", "web/src/lib/valuation.ts"],
+         [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py"], groups={"deploy"},
+         note="A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

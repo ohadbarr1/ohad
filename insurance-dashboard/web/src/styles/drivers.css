@@ -1,0 +1,46 @@
+/* === module A1 · /drivers/:id, the driver graph's elasticities === */
+.dr { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dr > .panel { margin: 0; }
+.dr .pagehead { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; justify-content: space-between; }
+.dr .pagehead > div { min-width: 0; }
+.dr-pick { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.dr-pick select { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--r-1, 6px); background: var(--panel); color: inherit; max-width: 60vw; }
+.dr-note { font-size: 12.5px; color: var(--muted); }
+.dr-cos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px 16px; }
+.dr-nodes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 18px; margin: 0; }
+.dr-nodes > div { min-width: 0; }
+.dr-nodes dt { font-size: 11.5px; color: var(--muted); }
+.dr-nodes dd { margin: 2px 0 0; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-weight: 600; }
+.dr-nodes dd .dim { font-size: 11px; font-weight: 400; color: var(--muted); }
+.dr-t { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+.dr-t th { text-align: start; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.dr-t td { padding: 5px 6px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+.dr-t td.lbl { min-width: 150px; }
+.dr-t td.v { font-weight: 600; white-space: nowrap; }
+.dr-t td .num, .dr-t td.v .num { display: inline; }
+.dr-t td.dim { color: var(--muted); font-size: 12px; }
+.dr-t tr.missing td { color: var(--muted); }
+.dr-why { display: block; font-size: 11.5px; color: var(--muted); max-width: 460px; white-space: normal; }
+.dr-meta { display: inline-flex; flex-wrap: wrap; gap: 2px 8px; font-size: 11.5px; color: var(--muted); }
+.dr-q { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.dr-q.high { color: var(--up); }
+.dr-q.medium { color: var(--warn); }
+.dr-q.low { color: var(--down); }
+.dr-q.missing { color: var(--muted); border-style: dashed; }
+.dr-est { font-style: italic; }
+.dr-est::after { content: '*'; }
+.dr-miss { color: var(--muted); }
+.dr-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dr-cards li { padding: 8px 0; border-bottom: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dr-cards .dr-l { font-size: 13px; }
+.dr-cards .dr-l .dim, .dr-cards .dr-v .dim { color: var(--muted); font-size: 12px; font-weight: 400; }
+.dr-cards .dr-v { font-weight: 600; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.dr-cards .dr-m { font-size: 11.5px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.dr-checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.dr-checks li { overflow-wrap: anywhere; }
+.dr-checks .dr-ck { display: inline-block; width: 16px; font-weight: 700; }
+.dr-checks li.ok .dr-ck { color: var(--up); }
+.dr-checks li.warn .dr-ck { color: var(--warn); }
+.dr-checks li.fail .dr-ck { color: var(--down); }
+.dr-checks .dim { color: var(--muted); }
+/* === end module A1 === */

@@ -232,6 +232,14 @@
   {
    "pattern": "positions.json",
    "schema": "positions"
+  },
+  {
+   "pattern": "drivers/graph.json",
+   "schema": "driversGraph"
+  },
+  {
+   "pattern": "drivers/*.json",
+   "schema": "drivers"
   }
  ],
  "$defs": {
@@ -8237,6 +8245,624 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/feedEvent"
+     }
+    }
+   }
+  },
+  "driverProv": {
+   "type": "object",
+   "required": [
+    "k"
+   ],
+   "properties": {
+    "k": {
+     "enum": [
+      "report",
+      "reg",
+      "calc",
+      "lts",
+      "none"
+     ]
+    },
+    "title": {
+     "type": "string"
+    },
+    "value": {
+     "type": "string"
+    },
+    "url": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "formula": {
+     "type": "string"
+    },
+    "why": {
+     "type": "string"
+    },
+    "pi": {
+     "type": "integer"
+    },
+    "metric": {
+     "type": "string"
+    },
+    "inputs": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "label",
+       "v"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "v": {
+        "type": "string"
+       },
+       "p": {
+        "$ref": "#/$defs/driverProv"
+       }
+      }
+     }
+    }
+   }
+  },
+  "driverNode": {
+   "type": "object",
+   "required": [
+    "v",
+    "unit",
+    "period",
+    "prov"
+   ],
+   "properties": {
+    "v": {
+     "$ref": "#/$defs/num"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "period": {
+     "type": "string"
+    },
+    "prov": {
+     "$ref": "#/$defs/driverProv"
+    }
+   }
+  },
+  "driverEdge": {
+   "type": "object",
+   "required": [
+    "id",
+    "e",
+    "from",
+    "to",
+    "unit",
+    "sign",
+    "x",
+    "v",
+    "method",
+    "quality",
+    "prov"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "e": {
+     "type": "string"
+    },
+    "from": {
+     "type": "string"
+    },
+    "to": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "sign": {
+     "enum": [
+      -1,
+      0,
+      1
+     ]
+    },
+    "x": {
+     "$ref": "#/$defs/num"
+    },
+    "v": {
+     "$ref": "#/$defs/num"
+    },
+    "method": {
+     "enum": [
+      "identity",
+      "regression",
+      "disclosure",
+      "assumption",
+      "none"
+     ]
+    },
+    "quality": {
+     "enum": [
+      "high",
+      "medium",
+      "low",
+      "missing"
+     ]
+    },
+    "n": {
+     "type": "integer"
+    },
+    "window": {
+     "type": "string"
+    },
+    "fit": {
+     "type": "object",
+     "required": [
+      "r2",
+      "t"
+     ],
+     "properties": {
+      "r2": {
+       "type": "number"
+      },
+      "t": {
+       "type": "number"
+      }
+     }
+    },
+    "range": {
+     "type": "array",
+     "items": {
+      "type": "number"
+     }
+    },
+    "why": {
+     "type": "string"
+    },
+    "note": {
+     "type": "string"
+    },
+    "pts": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     }
+    },
+    "prov": {
+     "$ref": "#/$defs/driverProv"
+    }
+   }
+  },
+  "driverLine": {
+   "type": "object",
+   "required": [
+    "eff",
+    "b",
+    "pts"
+   ],
+   "properties": {
+    "eff": {
+     "type": "string"
+    },
+    "b": {
+     "type": "string"
+    },
+    "pts": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "x",
+       "v",
+       "p"
+      ],
+      "properties": {
+       "x": {
+        "type": "number"
+       },
+       "v": {
+        "type": "number"
+       },
+       "p": {
+        "$ref": "#/$defs/driverProv"
+       }
+      }
+     }
+    }
+   }
+  },
+  "driversGraph": {
+   "type": "object",
+   "required": [
+    "meta",
+    "shocks",
+    "nodes",
+    "equations",
+    "edges"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "v",
+      "methods",
+      "quality",
+      "units"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "v": {
+       "type": "integer"
+      }
+     }
+    },
+    "shocks": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "k",
+       "he",
+       "unit",
+       "range"
+      ],
+      "properties": {
+       "k": {
+        "type": "string"
+       },
+       "he": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string"
+       },
+       "range": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       }
+      }
+     }
+    },
+    "nodes": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "unit",
+       "kind"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "driver",
+         "line",
+         "output"
+        ]
+       }
+      }
+     }
+    },
+    "equations": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "out",
+       "text",
+       "kind"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "identity",
+         "regression",
+         "disclosure"
+        ]
+       }
+      }
+     }
+    },
+    "edges": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "from",
+       "to",
+       "sign",
+       "unit",
+       "he"
+      ],
+      "properties": {
+       "sign": {
+        "enum": [
+         -1,
+         0,
+         1
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "drivers": {
+   "type": "object",
+   "required": [
+    "meta",
+    "products",
+    "nodes",
+    "edges",
+    "lines",
+    "targets",
+    "checks",
+    "notes"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "company",
+      "name",
+      "kind",
+      "built",
+      "base",
+      "assume"
+     ],
+     "properties": {
+      "company": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "kind": {
+       "enum": [
+        "insurance_group",
+        "fund_house"
+       ]
+      },
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "base": {
+       "type": "object",
+       "required": [
+        "q",
+        "end",
+        "ltm"
+       ],
+       "properties": {
+        "q": {
+         "type": "string",
+         "pattern": "^Q[1-4]'\\d\\d$"
+        },
+        "end": {
+         "$ref": "#/$defs/date"
+        }
+       }
+      },
+      "assume": {
+       "type": "object",
+       "required": [
+        "tax",
+        "g",
+        "beta",
+        "erp",
+        "ke",
+        "rf"
+       ],
+       "properties": {
+        "tax": {
+         "type": "number"
+        },
+        "g": {
+         "type": "number"
+        },
+        "beta": {
+         "type": "number"
+        },
+        "erp": {
+         "type": "number"
+        },
+        "ke": {
+         "type": "number"
+        },
+        "rf": {
+         "type": "number"
+        }
+       }
+      },
+      "flag": {
+       "enum": [
+        "employer"
+       ]
+      }
+     }
+    },
+    "products": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "s",
+       "he",
+       "g",
+       "avg",
+       "aum",
+       "edges"
+      ],
+      "properties": {
+       "s": {
+        "enum": [
+         "pen",
+         "gem",
+         "ic"
+        ]
+       },
+       "g": {
+        "type": "integer"
+       },
+       "avg": {
+        "$ref": "#/$defs/driverNode"
+       },
+       "aum": {
+        "$ref": "#/$defs/driverNode"
+       },
+       "fy": {
+        "$ref": "#/$defs/driverNode"
+       },
+       "edges": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/driverEdge"
+        }
+       }
+      }
+     }
+    },
+    "nodes": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/driverNode"
+     }
+    },
+    "edges": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/driverEdge"
+     }
+    },
+    "lines": {
+     "type": "object",
+     "properties": {
+      "csm": {
+       "type": "object",
+       "additionalProperties": {
+        "$ref": "#/$defs/driverLine"
+       }
+      },
+      "np": {
+       "type": "object",
+       "additionalProperties": {
+        "$ref": "#/$defs/driverLine"
+       }
+      },
+      "eqb": {
+       "type": "object",
+       "additionalProperties": {
+        "$ref": "#/$defs/driverLine"
+       }
+      },
+      "solv": {
+       "type": "object",
+       "required": [
+        "d",
+        "b",
+        "pts"
+       ],
+       "properties": {
+        "d": {
+         "$ref": "#/$defs/date"
+        },
+        "pts": {
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "m",
+       "d",
+       "v"
+      ],
+      "properties": {
+       "m": {
+        "type": "string"
+       },
+       "d": {
+        "$ref": "#/$defs/date"
+       },
+       "v": {
+        "type": "number"
+       }
+      }
+     }
+    },
+    "checks": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "lhs",
+       "rhs",
+       "tol",
+       "ok",
+       "level"
+      ],
+      "properties": {
+       "ok": {
+        "type": "boolean"
+       },
+       "level": {
+        "enum": [
+         "fail",
+         "warn"
+        ]
+       },
+       "lhs": {
+        "type": "number"
+       },
+       "rhs": {
+        "type": "number"
+       }
+      }
+     }
+    },
+    "notes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he"
+      ]
      }
     }
    }

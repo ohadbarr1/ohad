@@ -81,6 +81,7 @@ const Feed = page(mFeed, 'Feed');
 const mPositions = () => import('./pages/Positions');  // module A6: the position book
 const Positions = page(mPositions, 'Positions');
 const PositionSheet = page(mPositions, 'PositionSheet');
+const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -164,6 +165,8 @@ export function App() {
         <Route path="feed" element={<Feed />} />{/* module M2: reached from the home block and search, not a nav item */}
         <Route path="positions" element={<Positions />} />{/* module A6: reached from the feed and the company homes, not a nav item */}
         <Route path="positions/:id" element={<PositionSheet />} />
+        <Route path="drivers" element={<Drivers />} />
+        <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
