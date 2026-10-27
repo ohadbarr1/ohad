@@ -1,5 +1,5 @@
 {
- "built": "2026-10-27T22:50:28+02:00",
+ "built": "2026-10-28T00:33:40+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -130,20 +130,100 @@
    "note": "flow_npv.json matches a rebuild; 421 NPVs; 0 misses"
   },
   {
+   "id": "drivers",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "drivers: 17 companies, 489 edges (91 missing with a reason), 149 identity checks; rebuild matches; 0 misses"
+  },
+  {
+   "id": "drivers_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 1987,
+   "fail": 0,
+   "note": "1987 passed, 0 failed"
+  },
+  {
+   "id": "regulation",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "regulation: 6 initiatives (4 modelled), 53 manager impacts, 15 exposure rows; rebuild matches; 0 misses"
+  },
+  {
+   "id": "regulation_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 1887,
+   "fail": 0,
+   "note": "1887 passed, 0 failed"
+  },
+  {
+   "id": "warroom",
+   "ok": true,
+   "level": "fail",
+   "n": 18386,
+   "fail": 0,
+   "note": "warroom: pen B -0.1627 t -1.97 n 5633 low; gemel B +0.0115 t 0.55 n 6948 none; hisht B -0.0489 t -1.32 n 5805 low; rebuild matches; 0 misses"
+  },
+  {
+   "id": "warroom_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 112,
+   "fail": 0,
+   "note": "112 passed, 0 failed"
+  },
+  {
+   "id": "capital",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "capital: 7 insurers computed, 10 marked not available; 41 identities; rebuild matches; 0 misses"
+  },
+  {
+   "id": "capital_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 635,
+   "fail": 0,
+   "note": "635 passed, 0 failed"
+  },
+  {
    "id": "nowcast",
    "ok": true,
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "nowcast.json matches a rebuild; 1 ledger entries; 90 backtest rows; 0 problems"
+   "note": "nowcast.json matches a rebuild; 2 ledger entries; 99 backtest rows; 0 problems"
   },
   {
    "id": "nowcast_ledger",
    "ok": true,
    "level": "fail",
+   "n": 2,
+   "fail": 0,
+   "note": "2 frozen estimates at HEAD unchanged"
+  },
+  {
+   "id": "positions",
+   "ok": true,
+   "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "1 frozen estimates at HEAD unchanged"
+   "note": "positions: 0 published, 0 ledger entries, 0 problems"
+  },
+  {
+   "id": "positions_ledger",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "1 position ledger entries at HEAD unchanged"
   },
   {
    "id": "consistency",
@@ -173,9 +253,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 2016,
+   "n": 2055,
    "fail": 0,
-   "note": "2016 files under contract, 0 failing; 51 contracts; 551 files without a contract"
+   "note": "2055 files under contract, 0 failing; 62 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
@@ -189,9 +269,33 @@
    "id": "feed",
    "ok": true,
    "level": "fail",
-   "n": 272,
+   "n": 302,
    "fail": 0,
-   "note": "272 events, 4656 figures, 0 problems"
+   "note": "302 events, 4716 figures, 0 problems"
+  },
+  {
+   "id": "fragility",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "fragility: 15 managers, 60 signals with data, 16 in watch/alert, 30 events, 0 problems"
+  },
+  {
+   "id": "fragility_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 350,
+   "fail": 0,
+   "note": "350 passed, 0 failed"
+  },
+  {
+   "id": "attribution",
+   "ok": true,
+   "level": "fail",
+   "n": 668,
+   "fail": 0,
+   "note": "attribution: 15 files, 406 bridges, 668 decompositions sum to their totals, every contribution opens to a report page; 0 problems"
   },
   {
    "id": "facts",
