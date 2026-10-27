@@ -21,6 +21,8 @@ const mCompanyDocs = () => import('./pages/CompanyDocs');
 const CompanyDocs = page(mCompanyDocs, 'CompanyDocs');
 const mIndustry = () => import('./pages/Industry');
 const IndustryLayout = page(mIndustry, 'IndustryLayout');
+const mAttribution = () => import('./pages/Attribution');
+const AttributionPage = page(mAttribution, 'AttributionPage');
 const mPeers = () => import('./pages/Peers');
 const Peers = page(mPeers, 'Peers');
 const mPeersRedirect = () => import('./pages/PeersRedirect');
@@ -155,6 +157,7 @@ export function App() {
         <Route path="holdings" element={<Assets />} />{/* lane AL: not /assets, whose /assets/** immutable cache header (hashed bundles) would pin the HTML shell */}
         <Route path="holdings/:id" element={<Assets />} />
         <Route path="card/:company/:period" element={<ReportCardPage />} />{/* lane S2 */}
+        <Route path="attribution" element={<AttributionPage />} />{/* module A4: reached from the company home's attribution panel, not a nav item */}
         <Route path="feed" element={<Feed />} />{/* module M2: reached from the home block and search, not a nav item */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />

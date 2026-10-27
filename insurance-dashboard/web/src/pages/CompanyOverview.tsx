@@ -13,6 +13,7 @@ import { printed } from './companyProv';
 const DebtStrip = lazy(() => import('./Debt').then((m) => ({ default: m.DebtStrip })));
 const ScrComposition = lazy(() => import('./csm/ScrComposition').then((m) => ({ default: m.ScrComposition })));
 const TargetsCompact = lazy(() => import('../components/TargetsTracker').then((m) => ({ default: m.TargetsCompact })));
+const AttributionPanel = lazy(() => import('../components/Attribution').then((m) => ({ default: m.AttributionPanel })));
 const AdjustedPanel = lazy(() => import('../components/AdjustedPanel').then((m) => ({ default: m.AdjustedPanel })));
 import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
@@ -203,6 +204,7 @@ export function CompanyOverview() {
       <SinceBlock id={entry.id} />
       {entry.has_financials && <ReportDay card={tiles} />}
       {!entry.has_financials && tiles}
+      {entry.has_financials && <Suspense fallback={null}><AttributionPanel id={entry.id} /></Suspense>}
       {fund && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}
       {!entry.has_financials && !fund && <CompanyTear id={entry.id} />}
       {groups.length > 0 && (

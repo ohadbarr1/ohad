@@ -22,6 +22,18 @@
    "schema": "workbook"
   },
   {
+   "pattern": "attribution/index.json",
+   "schema": "attributionIndex"
+  },
+  {
+   "pattern": "attribution/peers_*.json",
+   "schema": "attributionPeers"
+  },
+  {
+   "pattern": "attribution/*.json",
+   "schema": "attribution"
+  },
+  {
    "pattern": "peers/registry.json",
    "schema": "peersRegistry"
   },
@@ -7132,6 +7144,526 @@
      "type": "object"
     }
    }
+  },
+  "attrFact": {
+   "type": "object",
+   "required": [
+    "l",
+    "p",
+    "v",
+    "u"
+   ],
+   "properties": {
+    "l": {
+     "type": "string"
+    },
+    "p": {
+     "type": "string"
+    },
+    "v": {
+     "type": "number"
+    },
+    "u": {
+     "type": "string"
+    },
+    "url": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "doc": {
+     "type": "string"
+    },
+    "der": {
+     "type": "integer"
+    },
+    "f": {
+     "type": "string"
+    },
+    "of": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "attrDriver": {
+   "type": "object",
+   "required": [
+    "k",
+    "l",
+    "v",
+    "f",
+    "in"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "restate",
+      "isr",
+      "inv",
+      "fees",
+      "fees.yield",
+      "fees.volume",
+      "fees.mix",
+      "fees.other",
+      "rev_other",
+      "cost",
+      "op",
+      "other",
+      "pbt",
+      "tax",
+      "minority",
+      "equity"
+     ]
+    },
+    "l": {
+     "type": "string"
+    },
+    "v": {
+     "type": "number"
+    },
+    "f": {
+     "type": "string"
+    },
+    "in": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string"
+     }
+    },
+    "ctx": {
+     "type": "string"
+    },
+    "chg": {
+     "type": "string"
+    },
+    "seg": {
+     "type": "integer"
+    }
+   },
+   "additionalProperties": false
+  },
+  "attrDecomp": {
+   "type": "object",
+   "required": [
+    "from",
+    "to",
+    "total",
+    "residual",
+    "unit",
+    "mode",
+    "drivers",
+    "sentence"
+   ],
+   "properties": {
+    "from": {
+     "type": "number"
+    },
+    "to": {
+     "type": "number"
+    },
+    "total": {
+     "type": "number"
+    },
+    "residual": {
+     "type": "number"
+    },
+    "from_latest": {
+     "type": "number"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "mode": {
+     "type": "string",
+     "enum": [
+      "rate",
+      "amount"
+     ]
+    },
+    "drivers": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/attrDriver"
+     }
+    },
+    "sentence": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": false
+  },
+  "attribution": {
+   "type": "object",
+   "required": [
+    "v",
+    "company",
+    "name",
+    "kind",
+    "last",
+    "ends",
+    "method",
+    "roe_def",
+    "bridges",
+    "gaps",
+    "facts"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "company": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "ins",
+      "fund"
+     ]
+    },
+    "last": {
+     "type": "string",
+     "pattern": "^\\d{4}Q[1-4]$"
+    },
+    "ends": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "pattern": "^\\d{4}Q[1-4]$"
+     }
+    },
+    "method": {
+     "type": "string"
+    },
+    "roe_def": {
+     "type": "string"
+    },
+    "bridges": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "kind",
+       "win",
+       "a",
+       "b",
+       "la",
+       "lb",
+       "roe",
+       "np",
+       "chk"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^(qoq|yoy|ltm):\\d{4}Q[1-4]$"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "qoq",
+         "yoy",
+         "ltm"
+        ]
+       },
+       "win": {
+        "type": "string",
+        "enum": [
+         "q",
+         "ltm"
+        ]
+       },
+       "a": {
+        "type": "string",
+        "pattern": "^\\d{4}Q[1-4]$"
+       },
+       "b": {
+        "type": "string",
+        "pattern": "^\\d{4}Q[1-4]$"
+       },
+       "la": {
+        "type": "string"
+       },
+       "lb": {
+        "type": "string"
+       },
+       "roe": {
+        "$ref": "#/$defs/attrDecomp"
+       },
+       "np": {
+        "$ref": "#/$defs/attrDecomp"
+       },
+       "chk": {
+        "type": "object",
+        "required": [
+         "a",
+         "b"
+        ],
+        "properties": {
+         "a": {
+          "type": "array",
+          "minItems": 4
+         },
+         "b": {
+          "type": "array",
+          "minItems": 4
+         }
+        },
+        "additionalProperties": false
+       },
+       "notes": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "gaps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "why"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "why": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "facts": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/attrFact"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "attributionPeers": {
+   "type": "object",
+   "required": [
+    "v",
+    "period",
+    "label",
+    "method",
+    "def",
+    "companies",
+    "bridges",
+    "gaps",
+    "facts"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "period": {
+     "type": "string",
+     "pattern": "^\\d{4}Q[1-4]$"
+    },
+    "label": {
+     "type": "string"
+    },
+    "method": {
+     "type": "string"
+    },
+    "def": {
+     "type": "string"
+    },
+    "companies": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "name",
+       "kind"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "ins",
+         "fund"
+        ]
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "bridges": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "win",
+       "a",
+       "b",
+       "roe",
+       "chk"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^(q|ltm):[a-z_]+:[a-z_]+$"
+       },
+       "win": {
+        "type": "string",
+        "enum": [
+         "q",
+         "ltm"
+        ]
+       },
+       "a": {
+        "type": "string"
+       },
+       "b": {
+        "type": "string"
+       },
+       "roe": {
+        "$ref": "#/$defs/attrDecomp"
+       },
+       "chk": {
+        "type": "object",
+        "required": [
+         "a",
+         "b"
+        ],
+        "properties": {
+         "a": {
+          "type": "array",
+          "minItems": 4
+         },
+         "b": {
+          "type": "array",
+          "minItems": 4
+         }
+        },
+        "additionalProperties": false
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "gaps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "why"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "why": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "facts": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/attrFact"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "attributionIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "peers",
+    "period",
+    "companies"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "peers": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "period": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "companies": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "kind",
+       "last",
+       "n"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "ins",
+         "fund"
+        ]
+       },
+       "last": {
+        "type": "string"
+       },
+       "n": {
+        "type": "integer"
+       }
+      },
+      "additionalProperties": false
+     }
+    }
+   },
+   "additionalProperties": false
   }
  }
 }

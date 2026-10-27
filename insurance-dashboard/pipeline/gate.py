@@ -44,6 +44,9 @@ Checks
                  it cites or its operation over cited inputs (pipeline/check_cards.py, lane S2)
   feed           the delta feed (web/public/data/feed.json, module M2): every event has a date, a source and a type, no event twice,
                  every figure re-read from the published file it cites (pipeline/check_feed.py)
+  attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
+                 every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
+                 from the facts it cites, and every contribution has inputs that open down to a report and page
 """
 import collections
 import datetime as dt
@@ -414,6 +417,13 @@ def feed():  # module M2: the delta feed
     add("feed", not probs, n, len(probs), (summary + (f"; e.g. {probs[0]}" if probs else ""))[:200])
 
 
+def attribution():  # module A4
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) decompositions", out[-1])
+    add("attribution", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else 1, out[-1][:200])
+
+
 def facts():
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_facts.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()]
@@ -484,6 +494,7 @@ def main():
     schemas()
     cards()
     feed()
+    attribution()
     facts()
     assets()
     gate_layers.run(add)
