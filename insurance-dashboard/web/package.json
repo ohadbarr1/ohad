@@ -17,7 +17,8 @@
     "test:drivers": "node scripts/drivers-test.mjs",
     "test:scenarios": "node scripts/scenarios-test.mjs",
     "test:regulation": "node scripts/regulation-test.mjs",
-    "test:warroom": "node scripts/warroom-test.mjs"
+    "test:warroom": "node scripts/warroom-test.mjs",
+    "test:capital": "node scripts/capital-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

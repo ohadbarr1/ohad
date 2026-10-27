@@ -30,6 +30,8 @@ const FEED_KEYS = ['feed', 'new', 'delta', 'פיד', 'שינויים', 'השתנ
 const SCN_KEYS = ['scenario', 'scenarios', 'stress', 'shock', 'war', 'תרחיש', 'תרחישים', 'זעזוע', 'סטרס', 'חדר', 'מלחמה', 'רגישות', 'ריבית', 'מפולת', 'סטגפלציה', '2008'].map(normalize);
 /** words that reach the regulatory pipeline (/warroom/regulation, module A8) without a company */
 const REG_KEYS = ['regulation', 'regulatory', 'רגולציה', 'רגולטור', 'רגולטורי', 'רשות', 'חוזר', 'חוזרים', 'טיוטה', 'טיוטות', 'אסדרה', 'יוזמות', 'צנרת', 'ברירת', 'מחדל', 'חשבון השקעה'].map(normalize);
+/** words that reach capital and strategic options (/capital, module A7) without a company */
+const CAP_KEYS = ['capital', 'surplus', 'dividend', 'buyback', 'allocation', 'הון', 'עודף', 'דיבידנד', 'חלוקה', 'רכישה', 'עצמית', 'הקצאה', 'אפשרויות', 'בר-חלוקה'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -134,6 +136,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // the war room (module A5): a fee move and the competitors' answers
   if (!p.company && words.length && words.every((w) => WAR_KEYS.some((k) => k.startsWith(w))) && words.some((w) => WAR_STRONG.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'חדר מלחמה · מהלך דמי ניהול', meta: 'גמישות הניוד לדמי ניהול, מי מפסיד, מטריצת תגובות', to: '/warroom', score: 95 });
+  }
+  // capital and strategic options (module A7)
+  if (!p.company && words.length && words.every((w) => CAP_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'הון ואפשרויות הקצאה · כל המבטחות', meta: 'הון בר-חלוקה מעל יעד הדירקטוריון, דיבידנד מול צמיחה, העודף אחרי תרחישי לחץ', to: '/capital', score: 96 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {

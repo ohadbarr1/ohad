@@ -16,6 +16,7 @@ const TargetsCompact = lazy(() => import('../components/TargetsTracker').then((m
 const AttributionPanel = lazy(() => import('../components/Attribution').then((m) => ({ default: m.AttributionPanel })));
 const PositionsBlock = lazy(() => import('./Positions').then((m) => ({ default: m.PositionsBlock })));  // module A6: only when the company has a position
 const AdjustedPanel = lazy(() => import('../components/AdjustedPanel').then((m) => ({ default: m.AdjustedPanel })));
+const CapitalPanel = lazy(() => import('../components/CapitalPanel').then((m) => ({ default: m.CapitalPanel })));  // module A7: insurers only
 import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
 import { usePeriodParam, useWindowParam, type Win } from '../lib/period';
@@ -215,6 +216,7 @@ export function CompanyOverview() {
         </section>
       )}
       {!fund && <DividendCapacity id={entry.id} />}
+      {!fund && <Suspense fallback={null}><CapitalPanel id={entry.id} /></Suspense>}
       <Suspense fallback={null}>
         <PositionsBlock id={entry.id} />
         <TargetsCompact id={entry.id} name={entry.name_he} />

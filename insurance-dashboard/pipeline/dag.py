@@ -176,6 +176,11 @@ STEPS = [
          [D + "prov/reg", D + "market.json", D + "funds.json", D + "lens.json", D + "flow_npv.json", D + "companies/index.json", "pipeline/build_funds.py"],
          [D + "warroom"], code=["pipeline/warroom_ols.py"], groups={"deploy"},
          note="A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)"),
+    # module A7: capital and strategic options per insurer (distributable capital, the option set, its ranking); gate `capital`
+    step("build_capital", "pipeline/build_capital.py",
+         [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json"],
+         [D + "capital/options.json"], groups={"deploy"},
+         note="A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9) / hold rows; the A2 overlay runs on the page"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
