@@ -43,7 +43,7 @@ function EventRow({ id, e, data }: { id: string; e: SinceEvent; data: SinceData 
     body = <><a href={href(path) ?? undefined} target="_blank" rel="noreferrer">{DOC[type] ?? type} <span className="num">{per(p)}</span></a>{pages != null && <span className="muted num"> · {pages} עמ׳</span>}{(type === 'quarterly' || type === 'annual') && <CardLink id={id} p={p} />}</>;
   } else if (e[0] === 'r') {
     const [, , , season, , , n, big] = e;
-    body = <Link to={`/company/${id}?p=${season}#rd-restated`}>הצגה מחדש בדוח <span className="num">{per(season)}</span>: <span className="num">{n}</span> נתונים{big > 0 && <>, <span className="num">{big}</span> ב-2% ומעלה</>}</Link>;
+    body = <Link to={`/company/${id}/numbers?p=${season}#rd-restated`}>הצגה מחדש בדוח <span className="num">{per(season)}</span>: <span className="num">{n}</span> נתונים{big > 0 && <>, <span className="num">{big}</span> ב-2% ומעלה</>}</Link>;
   } else if (e[0] === 't') {
     const [, , , label, entity, , pg, path, revised] = e;
     const h = href(path, pg);

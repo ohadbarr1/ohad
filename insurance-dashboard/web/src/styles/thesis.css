@@ -1,0 +1,12 @@
+/* The company thesis (pages/CompanyThesis.tsx): the advisory panels in the page's own column (the wrapper takes no box of its own),
+   a not-yet-built section as a muted dashed slot, and the row of links down to the evidence. */
+.thesis { display: contents; }
+.panel.th-slot { background: transparent; box-shadow: none; border-style: dashed; padding-block: 12px; }
+.panel.th-slot h2 { color: var(--muted); font-weight: 600; }
+.panel.th-slot > .hd > h2::before { background: var(--line); }
+.th-ev { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.th-ev .l { font-size: var(--t-2); font-weight: 600; color: var(--muted); margin-inline-end: 4px; }
+.th-ev a { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); color: var(--fg); font-size: var(--t-2); font-weight: 500; text-decoration: none; }
+.th-ev a:hover { border-color: var(--line); color: var(--accent-text); }
+.th-ev a .num { color: var(--muted); font-size: var(--t-1); }
+@media (max-width: 760px) { .th-ev a { min-height: 40px; } }

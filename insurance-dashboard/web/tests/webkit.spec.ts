@@ -28,8 +28,8 @@ test('company page survives reloads and place switches in WebKit', async ({ page
   for (let i = 1; i <= 3; i++) { await page.reload(); await settle(page); await ok(`reload ${i}`); }
 
   const places = page.getByRole('navigation', { name: 'חברה' });
-  for (const [name, url] of [['דוחות', /\/company\/phoenix\/(financials|review|profit|ifrs17)/], ['חיסכון', /\/company\/phoenix\/savings/], ['מסמכים', /\/company\/phoenix\/filings/], ['דוח', /\/company\/phoenix\/?(\?|$)/]] as const) {
-    await places.getByRole('link', { name, exact: name === 'דוח' }).first().click();
+  for (const [name, url] of [['מספרים', /\/company\/phoenix\/numbers/], ['דוחות', /\/company\/phoenix\/(financials|review|profit|ifrs17)/], ['חיסכון', /\/company\/phoenix\/savings/], ['מסמכים', /\/company\/phoenix\/filings/], ['תזה', /\/company\/phoenix\/?(\?|$)/]] as const) {
+    await places.getByRole('link', { name, exact: name === 'תזה' }).first().click();
     await expect(page).toHaveURL(url);
     await settle(page);
     await ok(`place ${name}`);
@@ -38,7 +38,29 @@ test('company page survives reloads and place switches in WebKit', async ({ page
   for (const view of ['review', 'profit', 'ifrs17', 'financials']) {
     await page.goto(`/company/phoenix/${view}`); await settle(page); await ok(view);
   }
-  expect(seen.length).toBe(12);
+  expect(seen.length).toBe(13);
+});
+
+/* The phone's bottom bar (the owner's iPhone): the four places only, each label whole on one line, the evidence group off the bar,
+   the active place lit for a company page, and the bar inside the screen. */
+test('phone bottom bar shows the four places in WebKit', async ({ page }) => {
+  await open(page, '/company/phoenix', 'phoenix');
+  const bar = page.getByRole('navigation', { name: 'ראשי' });
+  const items = bar.locator('a.item:visible');
+  await expect(items).toHaveCount(4);
+  expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(['בית', 'תרחישים', 'חדר מלחמה', 'עמדות']);
+  await expect(bar.locator('.rail-ev')).toBeHidden();
+  await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'בית');
+  const fit = await items.evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(); return { cut: l.scrollWidth > l.clientWidth + 1 || l.getBoundingClientRect().height > 20, out: r.left < -1 || r.right > innerWidth + 1 }; }));
+  expect(fit.filter((f) => f.cut || f.out), 'a bottom-bar label wraps, is cut or leaves the screen').toEqual([]);
+  for (const [name, url] of [['תרחישים', /\/scenarios/], ['חדר מלחמה', /\/warroom/], ['עמדות', /\/positions/], ['בית', /\/$/]] as const) {
+    await bar.getByRole('link', { name, exact: true }).click();
+    await expect(page).toHaveURL(url);
+    await settle(page);
+    await expect(boundary(page)).toHaveCount(0);
+    const sideways = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    expect(sideways, `${name} scrolls sideways`).toBeLessThanOrEqual(1);
+  }
 });
 
 /* Sticky-column lint (r2-ws3 #2). iOS WebKit paints a position:sticky cell inside an RTL horizontal scroller off its scroll origin

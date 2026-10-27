@@ -106,7 +106,7 @@ export function ReportCardView({ card, actions, tiles }: { card: Card; actions?:
         </div>
         <div className="rc-acts">
           {docUrl && <a className="chip" href={docUrl} target="_blank" rel="noreferrer">הדוח המלא{card.doc?.pages ? <> · <span className="num">{card.doc.pages}</span> עמ׳</> : null}</a>}
-          <Link className="chip" to={`/company/${card.c}?p=${card.p}`}>יום הדוח</Link>
+          <Link className="chip" to={`/company/${card.c}/numbers?p=${card.p}`}>יום הדוח</Link>
           {actions}
         </div>
       </header>
@@ -157,7 +157,7 @@ export function ReportCardView({ card, actions, tiles }: { card: Card; actions?:
           <h2>הוצג מחדש בדוח <span className="muted"><N card={card} id={card.rest.n} /> נתונים · <N card={card} id={card.rest.big} /> ב-2% ומעלה</span></h2>
           {card.rest.top.length > 0 && <table className="rc-rest tight"><thead><tr><th>שורה ותקופה</th><th>כפי שדווח אז</th><th>כפי שהוצג מחדש</th><th>הפרש</th></tr></thead>
             <tbody>{card.rest.top.map((t) => <tr key={t.a}><td className="lbl">{t.l} <span className="dim num">{periodLabel(t.pl[0], t.pl[1])}</span></td><td><N card={card} id={t.a} title={`${t.l} · כפי שדווח אז`} /></td><td><N card={card} id={t.b} title={`${t.l} · כפי שהוצג מחדש`} /></td><td><N card={card} id={t.d} title={`${t.l} · הפרש`} /></td></tr>)}</tbody></table>}
-          <Link className="rc-more" to={`/company/${card.c}?p=${card.p}#rd-restated`}>כל ההצגות מחדש בדוח</Link>
+          <Link className="rc-more" to={`/company/${card.c}/numbers?p=${card.p}#rd-restated`}>כל ההצגות מחדש בדוח</Link>
         </section>
       )}
 

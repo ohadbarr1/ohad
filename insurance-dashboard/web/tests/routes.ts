@@ -2,6 +2,9 @@
 export const ROUTES: [string, string][] = [
   ['home', '/'],
   ['company', '/company/phoenix'],
+  ['thesis', '/company/phoenix/thesis'],
+  ['numbers', '/company/phoenix/numbers'],
+  ['company-more', '/company/more'],
   ['financials', '/company/phoenix/financials'],
   ['ifrs17', '/company/phoenix/ifrs17'],
   ['peers', '/industry/peers'],
