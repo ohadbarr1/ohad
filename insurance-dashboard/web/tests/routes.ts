@@ -23,6 +23,8 @@ export const ROUTES: [string, string][] = [
   ['capital-preset', '/capital?s=eqdd&buf=5'],
   ['fragility', '/fragility'],
   ['fragility-detail', '/fragility?c=altshuler&s=flow&fee_watch=1'],
+  ['expectations', '/expectations'],
+  ['valuation-expectations', '/valuation/phoenix/expectations'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

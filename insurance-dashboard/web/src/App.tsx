@@ -47,6 +47,7 @@ const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
 const mValuationModels = () => import('./pages/ValuationModels');
 const ValuationRi = page(mValuationModels, 'ValuationRi');
+const ValuationExpectations = page(mValuationModels, 'ValuationExpectations'); // module A3
 const mManagers = () => import('./pages/Managers');
 const Managers = page(mManagers, 'Managers');
 const mCalendar = () => import('./pages/Calendar');
@@ -87,6 +88,7 @@ const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRo
 const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator (not a nav item; linked from /savings and search)
 const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const Fragility = page(() => import('./pages/Fragility'), 'Fragility'); // module A10: the Fragility Monitor (not a nav item)
+const Expectations = page(() => import('./pages/Expectations'), 'Expectations'); // module A3: what the multiple requires, all listed names (from the valuation tab and search, not a nav item) // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -177,12 +179,14 @@ export function App() {
         <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
         <Route path="capital" element={<Capital />} />{/* module A7 */}
         <Route path="fragility" element={<Fragility />} />{/* module A10: reached from /savings, /scenarios, search and the company homes, not a nav item */}
+        <Route path="expectations" element={<Expectations />} />{/* module A3 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
         <Route path="valuation/:id" element={<ValuationLayout />}>
           <Route index element={<ValuationPb />} />
           <Route path="ri" element={<ValuationRi />} />
+          <Route path="expectations" element={<ValuationExpectations />} />{/* module A3 */}
           {/* retired models: an old link lands on justified P/B */}
           <Route path="csm" element={<Navigate to=".." replace />} />
           <Route path="sotp" element={<Navigate to=".." replace />} />
