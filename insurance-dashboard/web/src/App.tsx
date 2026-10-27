@@ -82,6 +82,7 @@ const mPositions = () => import('./pages/Positions');  // module A6: the positio
 const Positions = page(mPositions, 'Positions');
 const PositionSheet = page(mPositions, 'PositionSheet');
 const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
+const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator (not a nav item; linked from /savings and search)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -167,6 +168,7 @@ export function App() {
         <Route path="positions/:id" element={<PositionSheet />} />
         <Route path="drivers" element={<Drivers />} />
         <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
+        <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

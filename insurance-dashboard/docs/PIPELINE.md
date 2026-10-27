@@ -79,6 +79,7 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `build_feed` | auto · deploy | build_search, facts, build_company_index, build_cards, build_restatements, build_targets, build_market, build_funds, build_solvency, build_positions | feed.json (module M2: the delta feed at `/feed`; `check_feed.py` = gate `feed`) |
 | `build_attribution` | auto · deploy | facts, build_company_index, build_lens, build_lts, build_search | attribution/<id>.json, attribution/peers_<period>.json (module A4: QoQ / YoY / LTM ROE and profit bridges, peer bridges; `build_attribution.py --check` = gate `attribution`) |
 | `build_drivers` | auto · deploy | build_lens, build_flow_npv, build_market, build_funds, build_boi_curve, facts, build_solvency, build_csm, build_debt, build_company_index | drivers/graph.json, drivers/<company>.json (module A1: the driver graph, elasticities with provenance; `build_drivers.py --check` + `tests/drivers.unit.ts` = gate `drivers`) |
+| `build_warroom` | auto · deploy | build_market, build_funds, build_lens, build_flow_npv, build_company_index | warroom/elasticity.json, warroom/board.json (module A5: fee → flow elasticities per product, quality-labelled, and the move board of `/warroom`; `build_warroom.py --check` = gate `warroom`) |
 | `build_digest` | auto, daily | build_feed | data/digest/digest.html, digest.txt (the last 7 days as an email body; untracked, no sender) |
 | `build_coverage` | auto, daily · deploy | every step that writes JSON | coverage.json (reads qa.json from the last gate) |
 

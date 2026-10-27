@@ -234,6 +234,14 @@
    "schema": "positions"
   },
   {
+   "pattern": "warroom/elasticity.json",
+   "schema": "warroomElasticity"
+  },
+  {
+   "pattern": "warroom/board.json",
+   "schema": "warroomBoard"
+  },
+  {
    "pattern": "drivers/graph.json",
    "schema": "driversGraph"
   },
@@ -8863,6 +8871,650 @@
        "id",
        "he"
       ]
+     }
+    }
+   }
+  },
+  "warProv": {
+   "type": "object",
+   "required": [
+    "k",
+    "title"
+   ],
+   "properties": {
+    "k": {
+     "enum": [
+      "report",
+      "reg",
+      "calc",
+      "fund",
+      "none"
+     ]
+    },
+    "title": {
+     "type": "string"
+    },
+    "value": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "url": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "formula": {
+     "type": "string"
+    },
+    "why": {
+     "type": "string"
+    },
+    "ds": {
+     "enum": [
+      "gemel",
+      "pensia",
+      "insurance"
+     ]
+    },
+    "id": {
+     "type": "integer"
+    },
+    "period": {
+     "type": [
+      "integer",
+      "string"
+     ]
+    },
+    "col": {
+     "type": "string"
+    },
+    "est": {
+     "type": "boolean"
+    },
+    "inputs": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "label",
+       "v"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "v": {
+        "type": "string"
+       },
+       "p": {
+        "$ref": "#/$defs/warProv"
+       }
+      }
+     }
+    }
+   }
+  },
+  "warSpec": {
+   "type": "object",
+   "required": [
+    "B",
+    "se",
+    "t",
+    "n",
+    "clusters",
+    "r2",
+    "coef"
+   ],
+   "properties": {
+    "B": {
+     "type": "number"
+    },
+    "se": {
+     "type": "number"
+    },
+    "t": {
+     "type": "number"
+    },
+    "n": {
+     "type": "integer"
+    },
+    "clusters": {
+     "type": "integer"
+    },
+    "r2": {
+     "type": "number"
+    },
+    "coef": {
+     "type": "array",
+     "minItems": 5,
+     "items": {
+      "type": "object",
+      "required": [
+       "x",
+       "b",
+       "se",
+       "t"
+      ],
+      "properties": {
+       "x": {
+        "type": "string"
+       },
+       "b": {
+        "type": "number"
+       },
+       "se": {
+        "type": "number"
+       },
+       "t": {
+        "type": "number"
+       }
+      }
+     }
+    }
+   }
+  },
+  "warroomElasticity": {
+   "type": "object",
+   "required": [
+    "meta",
+    "products",
+    "pooled"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "asof",
+      "window",
+      "lags",
+      "source",
+      "fee_timing"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "asof": {
+       "$ref": "#/$defs/month"
+      },
+      "window": {
+       "type": "string"
+      },
+      "lags": {
+       "type": "integer"
+      },
+      "source": {
+       "type": "string"
+      },
+      "fee_timing": {
+       "type": "object",
+       "required": [
+        "corr_same",
+        "corr_prior",
+        "changes",
+        "january",
+        "rule"
+       ],
+       "properties": {
+        "corr_same": {
+         "$ref": "#/$defs/num"
+        },
+        "corr_prior": {
+         "$ref": "#/$defs/num"
+        },
+        "changes": {
+         "type": "integer"
+        },
+        "january": {
+         "type": "integer"
+        },
+        "rule": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "products": {
+     "type": "object",
+     "required": [
+      "pen",
+      "gemel",
+      "hisht"
+     ],
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "he",
+       "a1",
+       "main",
+       "rob",
+       "quality",
+       "why",
+       "per_bp_year",
+       "ramp",
+       "events",
+       "tracks",
+       "window",
+       "prov"
+      ],
+      "properties": {
+       "he": {
+        "type": "string"
+       },
+       "a1": {
+        "enum": [
+         "pen",
+         "gem"
+        ]
+       },
+       "main": {
+        "$ref": "#/$defs/warSpec"
+       },
+       "rob": {
+        "type": "object",
+        "required": [
+         "mgr",
+         "fd",
+         "posted"
+        ],
+        "additionalProperties": {
+         "$ref": "#/$defs/warSpec"
+        }
+       },
+       "quality": {
+        "enum": [
+         "high",
+         "medium",
+         "low",
+         "none"
+        ]
+       },
+       "why": {
+        "type": "string"
+       },
+       "per_bp_year": {
+        "type": "number"
+       },
+       "peak_lag": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "half_lag": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "ramp": {
+        "type": "object",
+        "required": [
+         "how",
+         "c"
+        ],
+        "properties": {
+         "how": {
+          "enum": [
+           "lags",
+           "assumed"
+          ]
+         },
+         "c": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "events": {
+        "type": "object",
+        "required": [
+         "ge1",
+         "ge5",
+         "cuts",
+         "rises"
+        ],
+        "properties": {
+         "ge1": {
+          "type": "integer"
+         },
+         "ge5": {
+          "type": "integer"
+         },
+         "cuts": {
+          "type": "integer"
+         },
+         "rises": {
+          "type": "integer"
+         }
+        }
+       },
+       "tracks": {
+        "type": "integer"
+       },
+       "window": {
+        "type": "string"
+       },
+       "prov": {
+        "$ref": "#/$defs/warProv"
+       }
+      }
+     }
+    },
+    "pooled": {
+     "type": "object",
+     "required": [
+      "main",
+      "quality",
+      "why",
+      "per_bp_year"
+     ],
+     "properties": {
+      "main": {
+       "$ref": "#/$defs/warSpec"
+      },
+      "quality": {
+       "enum": [
+        "high",
+        "medium",
+        "low",
+        "none"
+       ]
+      },
+      "why": {
+       "type": "string"
+      },
+      "per_bp_year": {
+       "type": "number"
+      }
+     }
+    }
+   }
+  },
+  "warroomBoard": {
+   "type": "object",
+   "required": [
+    "meta",
+    "groups",
+    "co",
+    "products",
+    "ctx"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "asof",
+      "fee_year",
+      "q_months",
+      "l12",
+      "div",
+      "ke",
+      "dur"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "asof": {
+       "$ref": "#/$defs/month"
+      },
+      "fee_year": {
+       "type": "integer"
+      },
+      "q_months": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/month"
+       }
+      },
+      "l12": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/month"
+       }
+      },
+      "ke": {
+       "type": "object",
+       "required": [
+        "v"
+       ],
+       "properties": {
+        "v": {
+         "type": "number"
+        }
+       }
+      },
+      "dur": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "number"
+       }
+      }
+     }
+    },
+    "groups": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string"
+     }
+    },
+    "co": {
+     "type": "object",
+     "additionalProperties": {
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "products": {
+     "type": "object",
+     "required": [
+      "pen",
+      "gemel",
+      "hisht"
+     ],
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "he",
+       "a1",
+       "ds",
+       "cats"
+      ],
+      "properties": {
+       "he": {
+        "type": "string"
+       },
+       "a1": {
+        "enum": [
+         "pen",
+         "gem"
+        ]
+       },
+       "ds": {
+        "enum": [
+         "gemel",
+         "pensia"
+        ]
+       },
+       "cats": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "type": "object",
+         "required": [
+          "cat",
+          "A",
+          "mgrs",
+          "div"
+         ],
+         "properties": {
+          "cat": {
+           "type": "string"
+          },
+          "A": {
+           "type": "number"
+          },
+          "mgrs": {
+           "type": "array",
+           "minItems": 2,
+           "items": {
+            "type": "object",
+            "required": [
+             "g",
+             "c",
+             "he",
+             "A",
+             "fee",
+             "trq",
+             "tr12",
+             "tracks"
+            ],
+            "properties": {
+             "g": {
+              "type": "integer"
+             },
+             "c": {
+              "type": [
+               "string",
+               "null"
+              ]
+             },
+             "he": {
+              "type": "string"
+             },
+             "A": {
+              "type": "number"
+             },
+             "fee": {
+              "$ref": "#/$defs/num"
+             },
+             "trq": {
+              "type": "number"
+             },
+             "tr12": {
+              "type": "number"
+             },
+             "tracks": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+               "type": "array",
+               "prefixItems": [
+                {
+                 "enum": [
+                  "gemel",
+                  "pensia"
+                 ]
+                },
+                {
+                 "type": "integer"
+                },
+                {
+                 "type": "string"
+                },
+                {
+                 "type": "number"
+                },
+                {
+                 "$ref": "#/$defs/num"
+                },
+                {
+                 "type": "array",
+                 "minItems": 3,
+                 "items": {
+                  "type": "number"
+                 }
+                },
+                {
+                 "type": "number"
+                }
+               ],
+               "minItems": 7
+              }
+             }
+            }
+           }
+          },
+          "div": {
+           "type": "object",
+           "additionalProperties": {
+            "type": "object",
+            "required": [
+             "how",
+             "cover",
+             "n",
+             "w"
+            ],
+            "properties": {
+             "how": {
+              "enum": [
+               "revealed",
+               "share"
+              ]
+             },
+             "cover": {
+              "type": "number"
+             },
+             "n": {
+              "type": "integer"
+             },
+             "w": {
+              "type": "object",
+              "additionalProperties": {
+               "type": "number"
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "ctx": {
+     "type": "object",
+     "required": [
+      "q",
+      "pi",
+      "tr"
+     ],
+     "properties": {
+      "q": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "pi": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "integer"
+       }
+      },
+      "tr": {
+       "type": "object"
+      }
      }
     }
    }

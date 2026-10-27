@@ -23,6 +23,8 @@ export const FUNCS: { code: string; badge: string; label: string; keys: string[]
   { code: 'RI', badge: 'הכנסה שיורית', label: 'הערכת שווי, הכנסה שיורית', keys: ['ri', 'שיורית', 'residual'], to: (id) => `/valuation/${id}/ri` },
 ];
 /** words that reach the delta feed (/feed) without a company */
+const WAR_KEYS = ['warroom', 'war', 'room', 'simulator', 'חדר', 'מלחמה', 'סימולטור', 'מהלך', 'הורדת', 'דמי', 'ניהול', 'תחרות', 'גמישות', 'מטריצת', 'תגובות'].map(normalize);
+const WAR_STRONG = ['warroom', 'war', 'simulator', 'חדר', 'מלחמה', 'סימולטור', 'מהלך', 'הורדת', 'תחרות', 'גמישות', 'מטריצת', 'תגובות'].map(normalize);
 const FEED_KEYS = ['feed', 'new', 'delta', 'פיד', 'שינויים', 'השתנה', 'מה', 'חדש', 'חדשות', 'עדכונים', 'עדכון'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
@@ -116,6 +118,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // screens that are not per company: the delta feed (module M2)
   if (!p.company && words.length && words.every((w) => FEED_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'מה השתנה · כל השינויים', meta: 'דוחות, הצגות מחדש, כושר פירעון, יעדים, נתוני הרשות', to: '/feed', score: 96 });
+  }
+  // the war room (module A5): a fee move and the competitors' answers
+  if (!p.company && words.length && words.every((w) => WAR_KEYS.some((k) => k.startsWith(w))) && words.some((w) => WAR_STRONG.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'חדר מלחמה · מהלך דמי ניהול', meta: 'גמישות הניוד לדמי ניהול, מי מפסיד, מטריצת תגובות', to: '/warroom', score: 95 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {
