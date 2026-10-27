@@ -171,6 +171,11 @@ STEPS = [
          ["data/regulation/initiatives.json", D + "drivers", D + "market.json"],
          [D + "regulation/impact.json"], groups={"deploy"},
          note="A8: low / central / high impact per initiative x manager, the exposure to the whole pipeline (weights labelled)"),
+    # module A5: the war room (/warroom): fee -> flow elasticities per product from the regulator's track-month files, and the move board
+    step("build_warroom", "pipeline/build_warroom.py",
+         [D + "prov/reg", D + "market.json", D + "funds.json", D + "lens.json", D + "flow_npv.json", D + "companies/index.json", "pipeline/build_funds.py"],
+         [D + "warroom"], code=["pipeline/warroom_ols.py"], groups={"deploy"},
+         note="A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

@@ -23,6 +23,8 @@ export const FUNCS: { code: string; badge: string; label: string; keys: string[]
   { code: 'RI', badge: 'הכנסה שיורית', label: 'הערכת שווי, הכנסה שיורית', keys: ['ri', 'שיורית', 'residual'], to: (id) => `/valuation/${id}/ri` },
 ];
 /** words that reach the delta feed (/feed) without a company */
+const WAR_KEYS = ['warroom', 'war', 'room', 'simulator', 'חדר', 'מלחמה', 'סימולטור', 'מהלך', 'הורדת', 'דמי', 'ניהול', 'תחרות', 'גמישות', 'מטריצת', 'תגובות'].map(normalize);
+const WAR_STRONG = ['warroom', 'war', 'simulator', 'חדר', 'מלחמה', 'סימולטור', 'מהלך', 'הורדת', 'תחרות', 'גמישות', 'מטריצת', 'תגובות'].map(normalize);
 const FEED_KEYS = ['feed', 'new', 'delta', 'פיד', 'שינויים', 'השתנה', 'מה', 'חדש', 'חדשות', 'עדכונים', 'עדכון'].map(normalize);
 /** words that reach the scenario studio (/scenarios, module A2) without a company */
 const SCN_KEYS = ['scenario', 'scenarios', 'stress', 'shock', 'war', 'תרחיש', 'תרחישים', 'זעזוע', 'סטרס', 'חדר', 'מלחמה', 'רגישות', 'ריבית', 'מפולת', 'סטגפלציה', '2008'].map(normalize);
@@ -128,6 +130,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // the regulatory pipeline (module A8)
   if (!p.company && words.length && words.every((w) => REG_KEYS.some((k) => k.startsWith(w) || k.split(' ').some((x) => x.startsWith(w))))) {
     out.push({ kind: 'פונקציה', label: 'צנרת רגולציה · השפעה לפי מנהל', meta: 'רשות שוק ההון ומשרד האוצר: יוזמות, מועדים, מקורות, חשיפה', to: '/warroom/regulation', score: 95 });
+  }
+  // the war room (module A5): a fee move and the competitors' answers
+  if (!p.company && words.length && words.every((w) => WAR_KEYS.some((k) => k.startsWith(w))) && words.some((w) => WAR_STRONG.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'חדר מלחמה · מהלך דמי ניהול', meta: 'גמישות הניוד לדמי ניהול, מי מפסיד, מטריצת תגובות', to: '/warroom', score: 95 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {

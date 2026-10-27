@@ -18,6 +18,7 @@ export const ROUTES: [string, string][] = [
   ['scenarios', '/scenarios'],
   ['scenarios-preset', '/scenarios?e=-25&cr=150'],
   ['regulation', '/warroom/regulation'],
+  ['warroom', '/warroom'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

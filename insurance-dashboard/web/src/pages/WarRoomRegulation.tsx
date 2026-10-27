@@ -13,6 +13,7 @@ import {
   type Band, type Exposure, type Impact, type Initiative, type RegFile, type Status,
 } from '../lib/regulation';
 import '../styles/regulation.css';
+import { WarTabs } from '../components/WarTabs';
 
 /* A8 · /warroom/regulation: the tracked pipeline of Capital Market Authority and Ministry of Finance initiatives, each modelled as a shock
    through the A1 driver graph (pipeline/build_regulation.py → regulation/impact.json). The register, the impact per initiative per manager
@@ -172,6 +173,7 @@ export function WarRoomRegulation() {
         <h1><span className="icotile"><Icon name="shield" /></span>צנרת רגולציה: השפעה לפי מנהל</h1>
         <div className="sub">רשות שוק ההון ומשרד האוצר · <span className="num">{f.initiatives.length}</span> יוזמות, <span className="num">{modelled.length}</span> ממודלות דרך גרף המנגנונים · בסיס <span className="num">{f.meta.base.q}</span>, LTM <span className="num">{f.meta.base.ltm[0]}–{f.meta.base.ltm[3]}</span> · מיליוני ש"ח לשנה, קצב שנתי · מקורות נשלפו <span className="num">{dlab(f.meta.retrieved)}</span></div>
       </div>{bandSeg}</div>
+      <WarTabs />
 
       <Panel title="חשיפה לצנרת כולה" aside={<span className="rg-ws">משקל לפי שלב <span className="chip est">הנחה</span> {(Object.keys(STATUS_HE) as Status[]).map((s) => <span key={s} className="rg-wi">{STATUS_HE[s]} <span className="num">{fmt(W[s], 2)}</span></span>)}</span>}>
         <ExposureList f={f} band={band} phone={phone} />

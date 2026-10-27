@@ -84,6 +84,7 @@ const PositionSheet = page(mPositions, 'PositionSheet');
 const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
 const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // module A2: the scenario studio (from home and search, not a nav item)
 const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRoomRegulation'); // module A8: the regulatory pipeline (not a nav item)
+const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator (not a nav item; linked from /savings and search)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -171,6 +172,7 @@ export function App() {
         <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
         <Route path="scenarios" element={<Scenarios />} />{/* module A2 */}
         <Route path="warroom/regulation" element={<WarRoomRegulation />} />{/* module A8: reached from /warroom (A5), /savings and search, not a nav item */}
+        <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

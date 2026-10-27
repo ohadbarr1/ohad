@@ -41,6 +41,10 @@ Checks
                  every assumption carries a reason, every impact has its inputs with provenance, no NaN, the default-fund redistribution
                  sums to zero, the exposure = Σ weight × impact; and `regulation_lib`: drivers.ts re-propagates every product shock
                  (web/tests/regulation.unit.ts, run in node)
+  warroom        module A5: web/public/data/warroom/ equals a rebuild (pipeline/build_warroom.py --check): every elasticity has n, se, t and
+                 a quality label that follows its rule, no NaN, provenance down to a regulator dataset and window, B = the sum of its lags,
+                 managers add to their category and tracks to their manager, allocation weights sum to 1; and the simulation library
+                 (web/tests/warroom.unit.ts, run in node): zero-sum flows, the regression's own arithmetic, NPV = M3, provenance to the regulator
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
   consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)
@@ -397,6 +401,23 @@ def regulation():
         (tail.replace("regulation: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
+def warroom():
+    """module A5: the war room's elasticities and board rebuild byte-equal and verify"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_warroom.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.findall(r" n (\d+) ", out[0])
+    add("warroom", p.returncode == 0, sum(int(x) for x in m), 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("warroom_lib", False, 0, 1, "node not found: warroom.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/warroom-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("warroom_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("warroom: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
 def nowcast():
     """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
@@ -550,6 +571,7 @@ def main():
     flow_npv()
     drivers()
     regulation()
+    warroom()
     nowcast()
     positions()
     consistency()
