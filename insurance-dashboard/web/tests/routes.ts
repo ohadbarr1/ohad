@@ -21,6 +21,8 @@ export const ROUTES: [string, string][] = [
   ['warroom', '/warroom'],
   ['capital', '/capital'],
   ['capital-preset', '/capital?s=eqdd&buf=5'],
+  ['fragility', '/fragility'],
+  ['fragility-detail', '/fragility?c=altshuler&s=flow&fee_watch=1'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

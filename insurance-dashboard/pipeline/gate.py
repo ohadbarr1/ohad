@@ -70,6 +70,11 @@ Checks
                  it cites or its operation over cited inputs (pipeline/check_cards.py, lane S2)
   feed           the delta feed (web/public/data/feed.json, module M2): every event has a date, a source and a type, no event twice,
                  every figure re-read from the published file it cites (pipeline/check_feed.py)
+  fragility      module A10, the Fragility Monitor: web/public/data/fragility.json equals a rebuild (pipeline/build_fragility.py --check);
+                 every signal in a data state carries provenance and an as-of date and follows its stated rule; no composite field (score,
+                 rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
+                 `fragility_lib`: the page's rules (web/src/lib/fragility.ts) give the same states, and the A2 engine (scenarios.ts) the same
+                 worst-case headroom (web/tests/fragility.unit.ts, run in node)
   attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
                  every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
                  from the facts it cites, and every contribution has inputs that open down to a report and page
@@ -521,6 +526,21 @@ def feed():  # module M2: the delta feed
     add("feed", not probs, n, len(probs), (summary + (f"; e.g. {probs[0]}" if probs else ""))[:200])
 
 
+def fragility():  # module A10
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_fragility.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("fragility", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), out[0][:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("fragility_lib", False, 0, 1, "node not found: fragility.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/fragility-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("fragility_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("fragility: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
 def attribution():  # module A4
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -603,6 +623,7 @@ def main():
     schemas()
     cards()
     feed()
+    fragility()
     attribution()
     facts()
     assets()

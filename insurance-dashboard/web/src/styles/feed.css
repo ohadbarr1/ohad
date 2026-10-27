@@ -26,6 +26,8 @@
 .fd-t.t-restate, .fd-t.st-missed { color: var(--down); border-color: color-mix(in oklch, var(--down) 30%, transparent); background: color-mix(in oklch, var(--down) 7%, transparent); }
 .fd-t.st-met { color: var(--up); border-color: color-mix(in oklch, var(--up) 30%, transparent); background: color-mix(in oklch, var(--up) 8%, transparent); }
 .fd-t.st-partial { color: var(--warn); border-color: color-mix(in oklch, var(--warn) 30%, transparent); }
+.fd-t.fs-watch { color: var(--warn); border-color: color-mix(in oklch, var(--warn) 35%, transparent); }
+.fd-t.fs-alert { color: var(--down); border-color: color-mix(in oklch, var(--down) 30%, transparent); background: color-mix(in oklch, var(--down) 7%, transparent); }
 .fd-co { font-weight: 700; color: var(--fg); white-space: nowrap; }
 .fd-h { color: var(--link); min-width: 0; overflow-wrap: anywhere; }
 .fd-src { margin-inline-start: auto; font-size: var(--t-1); color: var(--faint); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }

@@ -82,3 +82,6 @@ a.ps-co:hover { color: var(--accent-text); }
   .ps-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ps-kpis .kpi:first-child { grid-column: 1 / -1; }
 }
+
+/* module A10: the Fragility Monitor's review marks */
+.ps-banner a, .ps-frag { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }

@@ -28,6 +28,12 @@ function StateTag({ p }: { p: Position }) {
   const s = stateOf(p);
   return <span className={`ps-st ${s.k}`}>{s.he}</span>;
 }
+/** module A10: the involved companies' signals in watch / alert now (a link to the monitor); never a score */
+function FragNow({ p }: { p: Position }) {
+  const xs = p.frag_now ?? [];
+  if (!xs.length) return null;
+  return <> · <Link className="ps-frag" to={`/fragility?c=${xs[0].c}&s=${xs[0].sig}`}>שבריריות: {xs.slice(0, 3).map((x) => `${x.he} (${x.st === 'alert' ? 'התראה' : 'מעקב'})`).join(', ')}{xs.length > 3 ? ` ועוד ${xs.length - 3}` : ''}</Link></>;
+}
 function DriftMark({ p }: { p: Position }) {
   const fired = p.triggers.filter((t) => t.fired);
   if (!p.triggers.length) return <span className="muted">–</span>;
@@ -183,6 +189,7 @@ export function PositionSheet() {
         <Kpi label="סטייה בראיות" value={`${p.triggers.filter((x) => x.fired).length}/${p.triggers.length}`} sub="מדדים שעברו את הסף" tone={p.drift ? 'neg' : undefined} />
         <Kpi label="מצב" value={<span className={`ps-st ${s.k}`}>{s.he}</span>} sub={p.suggest ? 'הצעת המנוע; הכותב סוגר' : p.outcome.date ? pubLabel(p.outcome.date) : undefined} />
       </section>
+      {p.frag?.length && p.outcome.st === 'open' ? <p className="ps-banner" role="note">לסקירה, מוניטור השבריריות: {p.frag.map((m, i) => <span key={m.ev}>{i ? ' · ' : ''}<Link to={`/fragility?c=${m.c}&s=${m.sig}`}>{F.cos[m.c] ?? m.c} · {m.he}</Link> עברה ל{m.st === 'alert' ? 'התראה' : 'מעקב'} (<span className="num">{m.dk === 'month' ? `${m.per.slice(4)}/${m.per.slice(2, 4)}` : pubLabel(m.d)}</span>)</span>)}, אחרי העדכון האחרון של העמדה.</p> : null}
       {p.due && p.outcome.st === 'open' && <p className="ps-banner" role="note">לסקירה: דוח <span className="num">{perLabel(p.due.per)}</span> של {F.cos[p.due.c] ?? p.due.c} פורסם <span className="num">{pubLabel(p.due.d)}</span>, אחרי העדכון האחרון של העמדה.</p>}
 
       <Panel title="תנאי הפרכה" aside={<span>תנאי שהתקיים מציע "הופרכה"; הסגירה בידי הכותב</span>}>
@@ -242,7 +249,7 @@ export function PositionsBlock({ id }: { id: string }) {
     <Panel title="עמדות" className="ps-block" aside={<Link className="ps-all" to={`/positions?co=${id}`}>ספר העמדות</Link>}>
       <ul className="ps-closed">{ps.map((p) => (
         <li key={p.id}><StateTag p={p} />{p.status === 'draft' && <span className="chip ps-draft">טיוטה</span>}<span className="dim">ביטחון {CONF_HE[p.confidence]} · אופק <span className="num">{pubLabel(p.horizon)}</span></span>
-          <Link className="ps-claim" to={`/positions/${p.id}`}>{p.claim}</Link><span className="dim">{companiesHe(F, p)} · סקירה <span className="num">{pubLabel(p.next_review)}</span> · <FalsSummary p={p} /> · <DriftMark p={p} /></span></li>))}</ul>
+          <Link className="ps-claim" to={`/positions/${p.id}`}>{p.claim}</Link><span className="dim">{companiesHe(F, p)} · סקירה <span className="num">{pubLabel(p.next_review)}</span> · <FalsSummary p={p} /> · <DriftMark p={p} /><FragNow p={p} /></span></li>))}</ul>
     </Panel>
   );
 }

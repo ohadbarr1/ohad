@@ -31,7 +31,12 @@ export interface Position {
   outcome: { st: OutSt; date?: string; note?: string }; outcomes: { seq: number; date: string; st: OutSt; note: string }[];
   evidence: PEvid[]; falsifiers: PFals[]; triggers: PTrig[]; next_review: string | null; review_basis: string; due: { d: string; c: string; per: string } | null;
   drift: boolean; suggest: 'falsified' | null; involved: string[]; problems?: string[];
+  /** module A10: Fragility Monitor crossings (into watch / alert) of a company involved after the last revision: the position is due a review */
+  frag?: FragMark[];
+  /** module A10: the involved companies' signals in watch / alert now */
+  frag_now?: { c: string; sig: string; he: string; st: 'watch' | 'alert' }[];
 }
+export interface FragMark { c: string; sig: string; he: string; st: 'watch' | 'alert'; d: string; dk: 'pub' | 'fetched' | 'month'; per: string; ev: string }
 export interface HitAgg { n: number; confirmed: number; falsified: number; expired: number; withdrawn: number; hit: number | null }
 export interface PositionsFile {
   v: 1; asof: { lens: string; kpi: string }; drafts: boolean; abstain: Record<string, string>; withheld: number; rules: Record<string, string>;
