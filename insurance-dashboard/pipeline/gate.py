@@ -34,8 +34,10 @@ Checks
                  formula, NPV sign = flow sign x margin sign, LTM = the sum of its quarters, no NaN, ke constants = valuation.ts (M3).
   drivers        module A1: web/public/data/drivers/ equals a rebuild (pipeline/build_drivers.py --check): every edge has provenance or is
                  `missing` with a reason, no NaN, signs as expected, the identity nodes reconcile (op = fees − S&M − G&A, net profit =
-                 PBT − tax, solvency = own funds ÷ SCR), disclosed points = csm/sens.json and csm/solvency.json, NPV per NIS 1bn = M3;
-                 and the propagation library reproduces them (web/tests/drivers.unit.ts, run in node)
+                 PBT − tax, solvency = own funds ÷ SCR), disclosed points = csm/sens.json and csm/solvency.json, NPV per NIS 1bn = M3,
+                 one policy -> 1Y pass-through in every file, nostro cash and bank-credit edges = their nodes ÷ 100, a cost fit constrained
+                 at a = 0 only where the free fixed cost was negative, a variable cost above the fee yield always labelled, the policy ->
+                 IFRS 17 gap labelled on every insurer; and the propagation library reproduces them (web/tests/drivers.unit.ts, in node)
   regulation     module A8: web/public/data/regulation/impact.json equals a rebuild (pipeline/build_regulation.py --check): every
                  initiative cites a public regulator document (gov.il) with a retrieval date, every date and fact points at a source,
                  every assumption carries a reason, every impact has its inputs with provenance, no NaN, the default-fund redistribution

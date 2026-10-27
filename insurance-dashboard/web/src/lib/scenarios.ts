@@ -41,7 +41,6 @@ export const SLIDERS: SliderDef[] = [
 export const SL_OF = Object.fromEntries(SLIDERS.map((s) => [s.k, s])) as Record<SKey, SliderDef>;
 /** inputs the driver graph has no calibrated channel for: shown as gaps, never as zero effects */
 export const GAP_INPUT: Partial<Record<SKey, string>> = {
-  policy: 'אין ערוץ מכויל: הדוחות לא מפרסמים חוב בריבית משתנה מול קבועה (טופס ת126), ואין גילוי רגישות לריבית בנק ישראל',
   credit: 'אף חברה לא גילתה רגישות למרווחי אשראי (CSM, רווח או כושר פירעון); לא מוזרם',
 };
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -254,7 +253,7 @@ export interface Res {
   head: { t: Target; base: number; d: number | null; v: number | null; rp: string; prov: () => Prov } | null;
   capUse: number | null; earnUse: number | null; vul: number | null; driver: 'cap' | 'earn' | null;
   breach: boolean; below0: boolean; tier: 0 | 1 | 2; capProv: () => Prov; earnProv: () => Prov;
-  /** inputs in force that reach none of the company's figures (credit spreads, the policy rate): one mark per company, not per cell */
+  /** inputs in force that reach none of the company's figures (credit spreads; the policy rate since A1-fix reaches the nostro's cash and bank credit): one mark per company, not per cell */
   rowGap: string[];
 }
 const Q_RANK: Record<Quality, number> = { high: 3, medium: 2, low: 1, missing: 0 };
@@ -269,7 +268,7 @@ function edgesFor(c: Ctx, key: OutKey, s: Scn, sh: Shock, t: Target | null): Edg
   let es: Edge[] = [];
   if (key === 'revenue') es = prod(['eq.aum', 'y10.aum', 'fee.op']);
   else if (key === 'op_profit') es = prod(['eq.aum', 'y10.aum', 'fee.op', 'aum.opex', 'cpi.opex']);
-  else if (key === 'net_profit' || key === 'roe' || key === 'pb') es = [...prod(['eq.aum', 'y10.aum', 'fee.op', 'aum.opex', 'cpi.opex']), ...grp((e) => ['cpi.fin', 'y10.fin', 'policy.fin'].includes(e.e)), ...disc('net_profit'), ...(s.y10 || s.eq ? grp((e) => e.e === 'csm.isr') : [])];
+  else if (key === 'net_profit' || key === 'roe' || key === 'pb') es = [...prod(['eq.aum', 'y10.aum', 'fee.op', 'aum.opex', 'cpi.opex']), ...grp((e) => ['cpi.fin', 'y10.fin', 'policy.fin', 'policy.y1', 'y1.inv'].includes(e.e)), ...disc('net_profit'), ...(s.y10 || s.eq ? grp((e) => e.e === 'csm.isr') : [])];
   else if (key === 'csm') es = disc('csm');
   else if (key === 'solv_w') es = disc('solv_w');
   else if (key === 'solv_wo') es = [...disc('solv_wo'), ...disc('solv_w')];
@@ -296,7 +295,7 @@ export function runOne(c: Ctx, s: Scn, ncAt: NcBase, mode: 'clamp' | 'linear', l
     const gap: string[] = [], est: string[] = [];
     const edges = edgesFor(c, key, s, shock, c.target);
     // a savings policy's costs are never printed apart (A1 leaves them unallocated by design): not a gap of the scenario
-    for (const e of edges) if (e.quality === 'missing' && e.from !== 'credit' && e.from !== 'policy' && !(e.e === 'aum.opex' && e.seg === 'ic')) gap.push(`${e.he}: ${e.why ?? 'חסר'}`);
+    for (const e of edges) if (e.quality === 'missing' && e.from !== 'credit' && !(e.e === 'aum.opex' && e.seg === 'ic')) gap.push(`${e.he}: ${e.why ?? 'חסר'}`);
     let v = o.v, d = o.d;
     if (SOLV.includes(key) && c.ins && solvShock && noSolvLines) { v = null; d = null; gap.push('רגישויות יחס כושר הפירעון לא חולצו לחברה: היחס אחרי התרחיש לא חושב'); }
     if (key === 'csm' && c.ins && solvShock && !L.csm) { v = null; d = null; gap.push('לא חולצו גילויי IFRS 17'); }
@@ -344,7 +343,7 @@ export function runOne(c: Ctx, s: Scn, ncAt: NcBase, mode: 'clamp' | 'linear', l
   const earnProv = (): Prov => (earnUse != null
     ? calcP(`שחיקת הרווח · ${c.name}`, `${fmt(earnUse, 1)}%`, '−Δ רווח נקי בתרחיש ÷ רווח נקי LTM × 100', [{ label: 'Δ רווח נקי', v: fmtS(npC.d!, 0), src: () => npC.o.prov }, { label: 'רווח נקי LTM', v: fmt(npB!, 0), src: () => npC.o.prov }], npC.gap.length ? `חסר בערוצים: ${npC.gap.join(' · ')}` : undefined, true)
     : { k: 'none', title: `שחיקת הרווח · ${c.name}`, why: npB == null ? 'אין רווח נקי LTM לחברה' : 'רווח LTM שלילי' });
-  const rowGap = (['credit', 'policy'] as const).filter((k) => s[k]).map((k) => `${SL_OF[k].he}: ${GAP_INPUT[k]}`);
+  const rowGap = (['credit'] as const).filter((k) => s[k]).map((k) => `${SL_OF[k].he}: ${GAP_INPUT[k]}`);
   return { id: c.id, name: c.name, kind: c.f.meta.kind, P, cells, prods, head, capUse, earnUse, vul, driver, breach, below0, tier, capProv, earnProv, rowGap };
 }
 

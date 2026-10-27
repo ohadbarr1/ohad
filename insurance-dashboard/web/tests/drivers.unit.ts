@@ -147,6 +147,47 @@ for (const [id, f] of files) {
   ok(f.checks.every((c) => c.ok || c.level === 'warn'), `${id}: identity checks reconcile`);
 }
 
+// 11 · the policy rate: −150bp moves net profit by exactly (cash × β − unlinked bank credit) × Δ ÷ 10,000 × (1 − tax), nothing else
+//      moves; the same β everywhere; an insurer's IFRS 17 finance result is a labelled gap, never a silent zero
+const betas = new Set<number>();
+let nPol = 0;
+for (const [id, f] of files) {
+  const py = f.edges.find((e) => e.e === 'policy.y1'), yi = f.edges.find((e) => e.e === 'y1.inv'), pf = f.edges.find((e) => e.e === 'policy.fin');
+  ok(py && py.v != null && py.method === 'regression' && py.n! >= 24, `${id}: policy → 1Y pass-through calibrated`);
+  if (py?.v != null) betas.add(py.v);
+  const b = py?.v != null ? py.v / py.x! : 0;
+  const inv = yi?.v != null ? yi.v / yi.x! * b * -150 : 0, fin = pf?.v != null ? pf.v / pf.x! * -150 : 0;
+  const r = propagate(f, { policy: -150 });
+  const want = f.nodes.net_profit?.v != null ? (inv - fin) * (1 - f.meta.assume.tax / 100) : null;
+  ok(want == null || near(r.out.net_profit.d, want, 1e-9), `${id} policy −150: Δnp ${r.out.net_profit.d} vs (cash × β − bank) × Δ × (1 − t) ${want}`);
+  for (const k of ['revenue', 'op_profit', 'csm', 'solv_w', 'solv_wo'] as const) ok(!r.out[k].d, `${id} policy −150 leaves ${k} unchanged`);
+  if (yi?.v != null) ok(near(yi.v, f.nodes.cash!.v! / 100, 1e-9), `${id}: y1.inv = cash ÷ 100`);
+  if (pf?.v != null) ok(pf.method === 'assumption' && pf.quality === 'low' && near(pf.v, f.nodes.debt_bank!.v! / 100, 1e-9), `${id}: policy.fin = bank credit ÷ 100, a low-quality assumption`);
+  if (f.meta.kind === 'insurance_group' && f.lines.csm) {
+    ok(f.edges.some((e) => e.e === 'policy.np' && e.quality === 'missing' && e.why), `${id}: policy → IFRS 17 finance result is a labelled gap`);
+    ok(r.flags.some((x) => x.includes('IFRS 17') && x.includes('לא נכלל ברווח')), `${id}: the IFRS 17 gap is flagged under a policy shock`);
+  }
+  if (yi?.v != null && inv) nPol++;
+}
+ok(betas.size === 1, `one policy → 1Y beta in every file (${[...betas].join(', ')})`);
+ok(nPol >= 7, `the nostro cash channel moves profit for the insurers (${nPol})`);
+
+// 12 · the variable cost: no negative fixed cost; a constrained fit says so; a variable cost above the fee yield carries its reason
+for (const [id, f] of files) for (const p of f.products) {
+  const e = p.edges.find((x) => x.e === 'aum.opex');
+  if (!e || e.v == null) continue;
+  ok((e.fit?.a ?? 0) >= 0, `${id} ${p.s}: fixed cost ≥ 0 (${e.fit?.a})`);
+  if (e.fit?.c) ok((e.fit.a0 ?? 0) < 0 && e.quality !== 'high' && /constrained at a = 0/.test(e.note ?? ''), `${id} ${p.s}: constrained fit labelled`);
+  if (p.fy?.v != null && e.v > p.fy.v * 10) {
+    ok(/exceeds the fee yield/.test(e.note ?? '') && e.quality !== 'high', `${id} ${p.s}: variable cost above the fee yield labelled`);
+    ok(elasticityRows(f).some((x) => x.e === e && x.note), `${id} ${p.s}: the page row carries the reason`);
+  }
+}
+const alt = files.get('altshuler')!.products.find((p) => p.s === 'gem')!, altVc = alt.edges.find((e) => e.e === 'aum.opex')!;
+ok(altVc.fit?.c === true && altVc.v! < alt.fy!.v! * 10, `Altshuler gemel: constrained variable cost ${altVc.v} below the fee yield ${alt.fy!.v! * 10}`);
+const altG = propagate(files.get('altshuler')!, { flow: 5 });
+ok(altG.out.op_profit.d! > 0, `Altshuler: 5% net inflows raise operating profit (${altG.out.op_profit.d})`);
+
 const nE = [...files.values()].reduce((t, f) => t + edgesOf(f).length, 0), nMiss = [...files.values()].reduce((t, f) => t + edgesOf(f).filter((e) => e.quality === 'missing').length, 0);
 console.log(`drivers: ${files.size} companies, ${nE} edges (${nMiss} missing), ${nSolv} solvency and ${nCsm} CSM disclosures reproduced, ${nNpv} NPV edges = M3, ${leaves} provenance leaves opened`);
 console.log(`drivers: ${pass} passed, ${fail} failed`);
