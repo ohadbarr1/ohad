@@ -34,8 +34,10 @@ Checks
                  formula, NPV sign = flow sign x margin sign, LTM = the sum of its quarters, no NaN, ke constants = valuation.ts (M3).
   drivers        module A1: web/public/data/drivers/ equals a rebuild (pipeline/build_drivers.py --check): every edge has provenance or is
                  `missing` with a reason, no NaN, signs as expected, the identity nodes reconcile (op = fees − S&M − G&A, net profit =
-                 PBT − tax, solvency = own funds ÷ SCR), disclosed points = csm/sens.json and csm/solvency.json, NPV per NIS 1bn = M3;
-                 and the propagation library reproduces them (web/tests/drivers.unit.ts, run in node)
+                 PBT − tax, solvency = own funds ÷ SCR), disclosed points = csm/sens.json and csm/solvency.json, NPV per NIS 1bn = M3,
+                 one policy -> 1Y pass-through in every file, nostro cash and bank-credit edges = their nodes ÷ 100, a cost fit constrained
+                 at a = 0 only where the free fixed cost was negative, a variable cost above the fee yield always labelled, the policy ->
+                 IFRS 17 gap labelled on every insurer; and the propagation library reproduces them (web/tests/drivers.unit.ts, in node)
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
   consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)

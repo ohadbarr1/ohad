@@ -8419,6 +8419,24 @@
       },
       "t": {
        "type": "number"
+      },
+      "se": {
+       "type": "number"
+      },
+      "a": {
+       "type": "number"
+      },
+      "c": {
+       "type": "boolean"
+      },
+      "a0": {
+       "type": "number"
+      },
+      "b0": {
+       "type": "number"
+      },
+      "d": {
+       "type": "number"
       }
      }
     },

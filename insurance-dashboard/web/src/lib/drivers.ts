@@ -28,7 +28,11 @@
    returns); Δrevenue = (AUM + ΔAUM) × (fy − fee/100) − AUM × fy; Δopex = variable cost × ΔAUM + opex × (cpi + cost)/100; disclosed
    IFRS 17 and solvency effects are read off the printed points exactly as the stress lab reads them (stress.ts evalLine: interpolated
    between disclosed points, clamped beyond, never diversified); ΔCSM releases at the FY'25 release rate; Δfinancing = CPI-linked
-   principal × cpi + next-12-month maturities × y10; Δnet profit = Σ Δpre-tax × (1 − tax) + printed after-tax effects. */
+   principal × cpi + next-12-month maturities × y10 + unlinked bank credit × policy (assumed prime-linked, quality low); the policy rate
+   reaches the short end through a fitted pass-through (Δy1 = β × policy, regression on monthly changes) and the nostro's cash reprices at
+   it (Δinvestment income = cash × Δy1, run rate); Δnet profit = Σ Δpre-tax × (1 − tax) + printed after-tax effects. The IFRS 17 finance
+   result has no short-end disclosure (only the parallel shift, wired to y10): a policy shock leaves it out and says so.
+   Variable cost (aum.opex): a free OLS whose fixed cost comes out negative is re-fitted at a = 0 (edge.fit.c = true, labelled). */
 import type { Prov } from './prov';
 import { evalLine, type Pt } from './stress';
 
@@ -56,8 +60,9 @@ export type Quality = 'high' | 'medium' | 'low' | 'missing';
 export interface Edge {
   id: string; e: string; from: string; to: string; he: string; unit: string; sign: number;
   /** the shock the effect is quoted at (from-units) */ x: number | null; /** the effect at x (to-units); null = not usable */ v: number | null;
-  method: Method; quality: Quality; seg?: 'pen' | 'gem' | 'ic'; n?: number; window?: string; fit?: { r2: number; t: number; se?: number; a?: number };
+  method: Method; quality: Quality; seg?: 'pen' | 'gem' | 'ic'; n?: number; window?: string; fit?: { r2: number; t: number; se?: number; a?: number; c?: boolean; a0?: number; b0?: number; d?: number };
   range?: [number, number]; note?: string; why?: string; prov: ProvJ;
+  /** aum.opex: c = fitted at a fixed cost of 0 (the free fit's a0 < 0, b0 its annual slope); d = the annual slope on quarter-on-quarter changes (a cross-check) */
   /** disclosure edges: the disclosed points [x, v] and their date */ pts?: [number, number][]; d?: string; b?: string; scale?: number;
   m?: number; D?: number; ke?: number; a?: number;
 }
@@ -231,9 +236,22 @@ export function propagate(f: DriverFile, s0: Partial<Shock>, opts: PropOpts = {}
   let dFin = 0; const finIn: Inp[] = [];
   if (s.cpi) { if (usable(cf)) { dFin += per(cf) * s.cpi; finIn.push({ label: `קרן צמודה × Δמדד (${cf.quality})`, v: fmtS(per(cf) * s.cpi), src: P(cf.prov) }); } else flags.push(`מדד ← מימון: ${cf?.why ?? 'חסר'}`); }
   if (s.y10) { if (usable(yf)) { dFin += per(yf) * s.y10; finIn.push({ label: `מחזור פירעונות 12 חודשים (${yf.quality}, הנחה)`, v: fmtS(per(yf) * s.y10), src: P(yf.prov) }); } else if (f.edges.some((e) => e.e === 'y10.fin')) flags.push(`תשואה ← מימון: ${yf?.why ?? 'חסר'}`); }
-  if (s.policy) flags.push(`ריבית בנק ישראל: ${edgeOf(f, 'policy.fin')?.why ?? 'אין ערוץ מכויל'}; לא הוחל`);
+  /* --- the policy rate: bank credit (financing), the short end and the nostro's cash (investment income), the IFRS 17 gap --- */
+  const pf = edgeOf(f, 'policy.fin'), py = edgeOf(f, 'policy.y1'), yi = edgeOf(f, 'y1.inv'), pn = edgeOf(f, 'policy.np');
+  let dInv = 0; const invIn: Inp[] = [];
+  if (s.policy) {
+    if (usable(pf)) { dFin += per(pf) * s.policy; finIn.push({ label: `אשראי בנקאי לא צמוד × Δריבית בנק ישראל (${pf.quality}, הנחה: צמוד פריים)`, v: fmtS(per(pf) * s.policy), src: P(pf.prov) }); }
+    else flags.push(`ריבית בנק ישראל ← מימון: ${pf?.why ?? 'אין ערוץ מכויל'}; לא הוחל`);
+    if (usable(py) && usable(yi)) {
+      const dy = per(py) * s.policy;
+      dInv = per(yi) * dy;
+      invIn.push({ label: `Δ תשואת שנה = β × Δריבית (${py.quality})`, v: `${fmtS(dy, 1)} נ״ב`, src: P(py.prov) }, { label: `מזומני הנוסטרו × Δ תשואת שנה (${yi.quality})`, v: fmtS(dInv), src: P(yi.prov) });
+    } else flags.push(`ריבית בנק ישראל ← הכנסה ממזומני הנוסטרו: ${(!usable(py) ? py?.why : yi?.why) ?? 'אין ערוץ מכויל'}; לא הוחל`);
+    if (pn && !usable(pn)) flags.push(`ריבית בנק ישראל ← תוצאה מימונית IFRS 17: לא גולתה רגישות לקצה הקצר; לא נכלל ברווח (${pn.why ?? 'חסר'})`);
+  }
   if (s.credit) flags.push('מרווחי אשראי: אף חברה לא גילתה רגישות (CSM, רווח או כושר פירעון); לא הוחל');
   add('fin', 'הוצאות מימון', dFin, MM, 'financing');
+  add('inv.cash', 'הכנסה ממזומני הנוסטרו', dInv, MM, 'inv_income');
 
   /* --- insurers: the disclosed lines --- */
   const sum = (ln: 'csm' | 'np' | 'eqb') => {
@@ -265,13 +283,14 @@ export function propagate(f: DriverFile, s0: Partial<Shock>, opts: PropOpts = {}
     ins ? [] : ['לא מבטחת, או שלא חולצו גילויי IFRS 17']);
 
   /* --- net profit, ROE, P/B --- */
-  const pre = dOpAll + dRel - dFin, keep = 1 - tax / 100;
+  const pre = dOpAll + dRel - dFin + dInv, keep = 1 - tax / 100;
   const dNp = pre * keep + D.v;
   const npIn: Inp[] = [nodeIn('רווח נקי LTM', N.net_profit), { label: 'Δ רווח תפעולי, כל המוצרים (לפני מס)', v: fmtS(dOpAll) }, { label: 'Δ שחרור CSM (לפני מס)', v: fmtS(dRel), src: usable(rel) ? P(rel.prov) : undefined },
     { label: 'Δ הוצאות מימון (לפני מס)', v: fmtS(-dFin), src: finIn.length ? () => ({ k: 'calc', title: 'Δ הוצאות מימון', value: fmtS(dFin), unit: MM, formula: 'Σ הערוצים', inputs: finIn }) : undefined },
+    { label: 'Δ הכנסה ממזומני הנוסטרו (לפני מס)', v: fmtS(dInv), src: invIn.length ? () => ({ k: 'calc', title: 'Δ הכנסה ממזומני הנוסטרו', value: fmtS(dInv), unit: MM, formula: 'מזומנים ושווי מזומנים אחרים × β × Δריבית בנק ישראל ÷ 10,000 (קצב שנתי)', inputs: invIn, est: true }) : undefined },
     { label: `× (1 − מס ${fmt(tax, 2)}%)`, v: fmt(keep, 4), src: N.tax ? P(N.tax.prov) : undefined }, { label: 'Δ גילוי IFRS 17, אחרי מס', v: fmtS(D.v), src: D.inp.length ? () => ({ k: 'calc', title: 'Δ רווח, גילוי', value: fmtS(D.v), unit: MM, formula: 'Σ ההשפעות שגולו, ללא פיזור', inputs: D.inp }) : undefined }];
   const npBase = N.net_profit?.v ?? null;
-  out.net_profit = mk('net_profit', npBase, dNp, calc('רווח נקי לבעלי המניות', npBase != null ? npBase + dNp : null, MM, 'LTM + (Δ רווח תפעולי + Δ שחרור CSM − Δ מימון) × (1 − מס) + Δ גילוי אחרי מס (קצב שנתי + השפעה מיידית)', npIn),
+  out.net_profit = mk('net_profit', npBase, dNp, calc('רווח נקי לבעלי המניות', npBase != null ? npBase + dNp : null, MM, 'LTM + (Δ רווח תפעולי + Δ שחרור CSM + Δ הכנסה ממזומנים − Δ מימון) × (1 − מס) + Δ גילוי אחרי מס (קצב שנתי + השפעה מיידית)', npIn),
     npBase == null ? ['אין רווח נקי LTM'] : []);
   const eq = N.equity?.v ?? null, roeB = N.roe?.v ?? null;
   const dRoe = eq ? dNp / eq * 100 : null, roeV = roeB != null && dRoe != null ? roeB + dRoe : null;
@@ -349,11 +368,14 @@ export function elasticityRows(f: DriverFile): ElRow[] {
         'aum.rev': ['נכסים ← הכנסות', 'מיליארד ש״ח', 'מיליוני ש״ח לשנה'], 'aum.opex': ['נכסים ← הוצאות (משתנה)', 'מיליארד ש״ח', 'מיליוני ש״ח לשנה'], 'cpi.opex': ['מדד ← הוצאות', '+1 נ״א', 'מיליוני ש״ח לשנה'],
       };
       const L = lab[e.e]; if (!L) continue;
-      rows.push({ sec: 'sav', seg: p.he, label: L[0], shock: L[1], e, v: e.v == null ? null : e.e === 'eq.aum' ? e.v / (e.x || 1) : e.v, unit: L[2] });
+      const tag = e.e !== 'aum.opex' || e.v == null ? undefined : [e.fit?.c ? 'נאמד עם קבוע ≥ 0: בהתאמה החופשית יצא קבוע שלילי' : '',
+        p.fy?.v != null && e.v > p.fy.v * 10 ? `מעל תשואת דמי הניהול (${fmt(p.fy.v * 10, 2)}): גידול בנכסים מקטין רווח, כפי שנאמד` : ''].filter(Boolean).join(' · ') || undefined;
+      rows.push({ sec: 'sav', seg: p.he, label: L[0], shock: L[1], e, v: e.v == null ? null : e.e === 'eq.aum' ? e.v / (e.x || 1) : e.v, unit: L[2], note: tag });
     }
   }
   const G: [string, string, string, string][] = [['cpi.fin', 'מדד ← הוצאות מימון', '+1 נ״א', 'מיליוני ש״ח לשנה'], ['y10.fin', 'תשואת 10 שנים ← הוצאות מימון', '+100 נ״ב', 'מיליוני ש״ח לשנה'],
-    ['policy.fin', 'ריבית בנק ישראל ← הוצאות מימון', '+100 נ״ב', 'מיליוני ש״ח לשנה'], ['op.np', 'רווח לפני מס ← רווח נקי', '1 ש״ח', 'ש״ח'], ['np.roe', 'רווח נקי ← תשואה להון', '100 מיליוני ש״ח', 'נ״א'],
+    ['policy.fin', 'ריבית בנק ישראל ← הוצאות מימון (אשראי בנקאי)', '+100 נ״ב', 'מיליוני ש״ח לשנה'], ['policy.y1', 'ריבית בנק ישראל ← תשואת שנה', '+100 נ״ב', 'נ״ב'],
+    ['y1.inv', 'תשואת שנה ← הכנסה ממזומני הנוסטרו', '+100 נ״ב', 'מיליוני ש״ח לשנה'], ['policy.np', 'ריבית בנק ישראל ← תוצאה מימונית IFRS 17', '+100 נ״ב', 'מיליוני ש״ח'], ['op.np', 'רווח לפני מס ← רווח נקי', '1 ש״ח', 'ש״ח'], ['np.roe', 'רווח נקי ← תשואה להון', '100 מיליוני ש״ח', 'נ״א'],
     ['y10.ke', 'תשואת 10 שנים ← מחיר ההון', '+100 נ״ב', 'נ״א'], ['roe.pb', 'תשואה להון ← מכפיל הון מוצדק', '+1 נ״א', 'x'], ['csm.isr', 'CSM ← שחרור לרווח בשנה', 'מיליון ש״ח', 'מיליוני ש״ח'],
     ['solv.dist', 'יחס כושר פירעון ← הון עודף', '+1 נ״א', 'מיליוני ש״ח']];
   for (const [id, label, shock, unit] of G) { const e = edgeOf(f, id); if (e) rows.push({ sec: 'grp', label, shock, e, v: e.v, unit }); }

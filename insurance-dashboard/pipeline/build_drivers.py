@@ -9,13 +9,14 @@ Inputs (all already built and gated; nothing new is extracted here)
   web/public/data/flow_npv.json        M3: NPV of net transfers per manager x product (its formula, margin, duration and ke, reused as is)
   web/public/data/market.json          regulator monthly assets, flows and asset-weighted returns per group x product (AUM roll-forward, beta)
   web/public/data/funds/cat.json       gemel-net category returns ("גמל | מניות" = the equity proxy of the stress lab presets)
-  web/public/data/macro/boi_curve.json BoI zero curve, 10Y nominal monthly mean from 2008 (the regression's yield series)
+  web/public/data/macro/boi_curve.json BoI zero curve, 10Y nominal monthly mean from 2008 (the regression's yield series); 1Y nominal (the short end)
+  web/public/data/macro/macro.json     BoI policy rate: the days it changed (calendar-day monthly mean -> the policy -> 1Y pass-through)
   web/public/data/lines.json           group statement lines per company and period (profit, tax, equity, ISR, investment result)
   web/public/data/csm/sens.json        IFRS 17 sensitivities as printed (CSM, profit, equity), the stress lab's input
   web/public/data/csm/solvency.json    Solvency II sensitivities as printed (pp of the ratio), the stress lab's input
   web/public/data/csm/capital.json     solvency ratio with / without transitional, own funds, SCR, from the financial statements
   web/public/data/csm/facts/<co>.json  IFRS 17 facts per report: CSM (pipeline/csm_resolve.py), CSM release, board targets
-  web/public/data/debt/index.json + debt/<co>.json   MAYA form ת126: principal by linkage and maturity
+  web/public/data/debt/index.json + debt/<co>.json   MAYA form ת126: principal by linkage and maturity; table ג = credit from banks
   web/src/lib/valuation.ts             ASSUME0 (tax, g, beta, erp): the shared valuation assumptions
 Output
   web/public/data/drivers/graph.json   nodes, equations, edges (the graph, the same for every company)
@@ -25,7 +26,8 @@ python3 pipeline/build_drivers.py           build
 python3 pipeline/build_drivers.py --check   rebuild in memory, compare with the files on disk, and verify (exit 1 on any miss): every
                                             edge has provenance (or is `missing` with a reason), no NaN, signs as expected, the identity
                                             nodes reconcile to the reported figures, the disclosed points equal the stress lab's files,
-                                            the NPV per NIS 1bn equals the M3 formula, the shared constants equal valuation.ts
+                                            the NPV per NIS 1bn equals the M3 formula, the shared constants equal valuation.ts, the
+                                            short-end edges equal their nodes, cost fits constrained only on a negative fixed cost
 
 Edge methods: identity (an accounting identity over printed inputs), regression (OLS on fox's history: n, window, R², t), disclosure
 (as printed by the company: report + page), assumption (a labelled modelling choice, always quality low). Quality: high / medium /
@@ -256,6 +258,8 @@ NODES = [
     ("csm_release", "שחרור CSM לרווח", MM, "line"),
     ("isr", "רווח משירותי ביטוח", MM, "line"),
     ("inv_income", "רווח מהשקעות ומימון, נטו", MM, "line"),
+    ("y1", "תשואת שנה (אפס נומינלי, בנק ישראל)", "%", "driver"),
+    ("cash", "מזומנים ושווי מזומנים אחרים (נוסטרו)", MM, "line"),
     ("financing", "הוצאות מימון על חוב", MM, "line"),
     ("tax", "שיעור מס", "%", "driver"),
     ("net_profit", "רווח נקי לבעלי המניות", MM, "output"),
@@ -281,7 +285,9 @@ EQUATIONS = [
     ("isr", "isr", "ISR = CSM_release + RA_release ± experience (only CSM_release is modelled; the rest is the printed residual)", "identity"),
     ("csm_release", "csm_release", "CSM_release(next year) = CSM × release rate (FY'25: release ÷ average CSM, gross life + health)", "identity"),
     ("inv_income", "inv_income", "inv_income = nostro × return (shocks: the printed IFRS 17 profit sensitivities, after tax)", "disclosure"),
-    ("financing", "financing", "Δfinancing = CPI-linked principal × ΔCPI + next-12-month maturities × Δyield (refinanced)", "identity"),
+    ("y1", "y1", "Δy1 = β × Δpolicy (OLS on monthly changes: BoI 1Y nominal zero, monthly mean, on the policy rate's calendar-day monthly mean)", "regression"),
+    ("inv_cash", "inv_income", "Δinv_income (run rate) = nostro cash and cash equivalents × Δy1 (they reprice within the year)", "identity"),
+    ("financing", "financing", "Δfinancing = CPI-linked principal × ΔCPI + next-12-month maturities × Δyield (refinanced) + unlinked bank credit × Δpolicy (assumed prime-linked)", "identity"),
     ("net_profit", "net_profit", "net_profit = (op_profit + ISR + inv_income − financing) × (1 − tax); Δ = Σ Δ(pre-tax) × (1 − tax) + Δ(printed, after tax)", "identity"),
     ("roe", "roe", "ROE = net_profit ÷ average equity", "identity"),
     ("ke", "ke", "ke = rf (BoI 10Y) + β × ERP (valuation.ts ASSUME0)", "identity"),
@@ -301,7 +307,10 @@ EDGES = [
     ("cpi.opex", "cpi", "opex", 1, "מיליוני ש״ח לשנה לכל 1 נ״א במדד", "מדד ← הוצאות"),
     ("cpi.fin", "cpi", "financing", 1, "מיליוני ש״ח לשנה לכל 1 נ״א במדד", "מדד ← מימון (קרן צמודה)"),
     ("y10.fin", "y10", "financing", 1, "מיליוני ש״ח לשנה לכל 100 נ״ב", "תשואה ← מימון (מחזור פירעונות 12 חודשים)"),
-    ("policy.fin", "policy", "financing", 1, "מיליוני ש״ח לשנה לכל 100 נ״ב", "ריבית בנק ישראל ← מימון"),
+    ("policy.fin", "policy", "financing", 1, "מיליוני ש״ח לשנה לכל 100 נ״ב", "ריבית בנק ישראל ← מימון (אשראי בנקאי לא צמוד)"),
+    ("policy.y1", "policy", "y1", 1, "נ״ב לכל 100 נ״ב", "ריבית בנק ישראל ← תשואת שנה"),
+    ("y1.inv", "y1", "inv_income", 1, "מיליוני ש״ח לשנה לכל 100 נ״ב", "תשואת שנה ← הכנסה ממזומני הנוסטרו"),
+    ("policy.np", "policy", "net_profit", 0, MM, "ריבית בנק ישראל ← תוצאה מימונית IFRS 17"),
     ("op.np", "op_profit", "net_profit", 1, "מיליוני ש״ח לכל מיליון ש״ח לפני מס", "רווח לפני מס ← רווח נקי (1 − מס)"),
     ("csm.isr", "csm", "csm_release", 1, "מיליוני ש״ח שחרור בשנה לכל מיליון ש״ח CSM", "CSM ← שחרור לרווח"),
     ("np.roe", "net_profit", "roe", 1, "נ״א לכל 100 מיליוני ש״ח", "רווח נקי ← תשואה להון"),
@@ -342,7 +351,8 @@ def graph(built):
                         "disclosure": "the company's printed sensitivity (report + page), read as the stress lab reads it: between the disclosed points, clamped beyond",
                         "assumption": "a labelled modelling choice; quality always low"},
             "quality": {"high": "identity over printed inputs; regression with n >= 36 months (12 quarters), R² >= 0.7, |t| >= 2; disclosure at most 24 months before its base",
-                        "medium": "R² >= 0.4, or a disclosure 25–36 months old, or an identity over labelled M3 assumptions (duration, ke, average margin)",
+                        "medium": "R² >= 0.4, or a disclosure 25–36 months old, or an identity over labelled M3 assumptions (duration, ke, average margin) or over a balance held through the year; "
+                                  "a cost fit constrained at a fixed cost >= 0, or whose variable cost exceeds the fee yield, is at most medium",
                         "low": "a labelled assumption, a weak or short fit, or a disclosure older than 36 months",
                         "missing": "no free public input publishes it; the reason is written on the edge"},
             "units": {"money": "NIS millions", "rates": "percent", "shocks": "bp (rates, fees, spreads), % (equities, insurance risks, cost), pp (CPI, net flow % of assets a year)"},
@@ -413,8 +423,32 @@ class Inputs:
         self.curve = load("macro/boi_curve.json")  # the BoI zero curve from 2008 (macro.json's nom10 starts 10/22: too short for 60 months)
         self.y10 = {int(m.replace("-", "")): v for m, v in zip(self.curve["months"], self.curve["nominal"]["10"]) if v is not None}
         self.eq = dict(zip(self.cat["p"], self.cat["y"])) if self.cat else {}
+        self.y1 = {int(m.replace("-", "")): v for m, v in zip(self.curve["months"], self.curve["nominal"].get("1", [])) if v is not None}
         self.res = self.mkt["meta"]["resources"]
         self.pkg = self.mkt["meta"]["packages"]
+        self._policy()
+
+    def _policy(self):
+        """the BoI policy rate as a calendar-day monthly mean (the basis of the curve's monthly means), from the days it changed
+        (macro.json rate.changes), to the regulator's last month; a month is kept only when a change on or before its first day fixes
+        every one of its days. Also the rate in force on the base date."""
+        self.macro = load("macro/macro.json")["series"]["rate"]
+        ch = sorted((dt.date.fromisoformat(d), v) for d, v in self.macro["changes"])
+        self.pol, self.pol_base = {}, None
+        if not ch:
+            return
+        at = lambda day: [v for d, v in ch if d <= day][-1]
+        y, m = ch[0][0].year, ch[0][0].month
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+        end = self.lens["meta"]["asof"]
+        while y * 100 + m <= end:
+            first, nxt = dt.date(y, m, 1), dt.date(y + (m == 12), m % 12 + 1, 1)
+            days = (nxt - first).days
+            self.pol[y * 100 + m] = fsum(at(first + dt.timedelta(days=k)) for k in range(days)) / days
+            y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+        base = dt.date(2026, 6, 30)
+        if ch[0][0] <= base:
+            self.pol_base = at(base)
 
 
 # ------------------------------------------------------------------------------------------------------------------------------ helpers
@@ -571,7 +605,7 @@ class Co:
             ed.append(e)
         if "fy" in P:
             ed.append(self.rev_edge(s, P["fy"]))
-        ed.append(self.opex_edge(s) if own else missing("aum.opex", "החברה אינה מפרסמת דוח מגזרי לחברה המנהלת", seg=s, x=1))
+        ed.append(self.opex_edge(s, (P.get("fy") or {}).get("v")) if own else missing("aum.opex", "החברה אינה מפרסמת דוח מגזרי לחברה המנהלת", seg=s, x=1))
         if "opex_ltm" in P:
             ed.append(edge("cpi.opex", 1, P["opex_ltm"]["v"] / 100, "assumption", "low",
                            P_calc(f"מדד ← הוצאות · {self.gname()} · {SEG_HE[s]}", nf(P["opex_ltm"]["v"] / 100, 2), "מיליוני ש״ח לכל 1 נ״א",
@@ -647,7 +681,11 @@ class Co:
                            "Δ הכנסות = Δ נכסים × תשואת דמי הניהול: 1,000 מיליוני ש״ח × fy ÷ 100", [("תשואת דמי ניהול", pc(fy, 4), fyn["prov"])]),
                     seg=s, n=1, window=fyn["period"])
 
-    def opex_edge(self, s):
+    def opex_edge(self, s, fy=None):
+        """quarterly segment costs on average assets: opex = a + b × AUM. A fixed cost cannot be negative: when the free fit puts a < 0
+        the fixed / variable split is not identified (the slope has absorbed a cost trend that moved with the assets), so the fit is
+        re-run constrained at a = 0 (every cost variable: least squares through the origin, the boundary solution of a >= 0) and labelled.
+        A variable cost above the fee yield (growth lowers profit) is kept as the data says, with the reason on the edge."""
         I = self.I
         xs, ys, qs = [], [], []
         for q in I.lens["quarters"]:
@@ -660,20 +698,60 @@ class Co:
         if len(xs) < 6:
             return missing("aum.opex", f"{len(xs)} רבעונים עם הוצאות מגזריות: מעט מדי לאמידה", seg=s, x=1)
         f = ols([xs], ys)
-        b, se = f["b"][1], f["se"][1]
+        a0, b0 = f["b"]
+        n = f["n"]
+        win = f"{ql(qs[0])}–{ql(qs[-1])}"
+        cons = a0 < 0
+        if cons:
+            sxx = fsum(x * x for x in xs)
+            b = fsum(x * y for x, y in zip(xs, ys)) / sxx
+            my = fsum(ys) / n
+            sse = fsum((y - b * x) ** 2 for x, y in zip(xs, ys))
+            sst = fsum((y - my) ** 2 for y in ys)
+            r2 = 1 - sse / sst if sst else 0.0
+            se = math.sqrt(sse / (n - 1) / sxx) if n > 1 else float("nan")
+            a = 0.0
+        else:
+            a, b, se, r2 = a0, b0, f["se"][1], f["r2"]
         t = b / se if se else 0.0
         v = b * 4  # NIS m a year per NIS bn of average assets
-        win = f"{ql(qs[0])}–{ql(qs[-1])}"
+        # a cross-check that a level trend cannot drive: quarter-on-quarter changes in costs on changes in assets
+        dx = [q1 - q0 for q0, q1 in zip(xs, xs[1:])]
+        dy = [q1 - q0 for q0, q1 in zip(ys, ys[1:])]
+        fd = ols([dx], dy) if len(dx) >= 5 else None
+        d4 = fd["b"][1] * 4 if fd else None
+        notes, he = [], []
+        if cons:
+            notes.append(f"free fit: fixed cost a = {nf(a0, 1)} a quarter (negative), slope {nf(b0 * 4, 2)}: the slope absorbed a cost trend that moved with the assets; "
+                         f"constrained at a = 0 (all costs variable)" + (f"; quarter-on-quarter changes give {nf(d4, 2)}" if d4 is not None else ""))
+            he.append(f"בהתאמה החופשית יצא קבוע שלילי ({nf(a0, 1)} מיליוני ש״ח ברבעון) ושיפוע {nf(b0 * 4, 2)}: השיפוע ספג מגמת קיצוץ הוצאות שנעה יחד עם הנכסים. "
+                      f"נאמד מחדש עם קבוע ≥ 0 (כל ההוצאות משתנות, קו דרך הראשית)" + (f"; שינויים רבעוניים נותנים {nf(d4, 2)}" if d4 is not None else ""))
+        odd = fy is not None and v > fy * 10
+        if odd:
+            notes.append(f"variable cost {nf(v, 2)} per NIS bn exceeds the fee yield ({nf(fy * 10, 2)}): in this window costs rose with assets faster than fees "
+                         "(a build-out); kept as fitted, so asset growth lowers operating profit here")
+            he.append(f"ההוצאה המשתנה ({nf(v, 2)} לכל מיליארד) גבוהה מתשואת דמי הניהול ({nf(fy * 10, 2)}): בחלון זה ההוצאות גדלו עם הנכסים מהר מההכנסות (שלב בנייה). "
+                      "נשמר כפי שנאמד: כאן גידול בנכסים מקטין את הרווח התפעולי")
         prov = P_calc(f"נכסים ← הוצאות (רכיב משתנה) · {self.gname()} · {SEG_HE[s]}", nf(v, 2), "מיליוני ש״ח לשנה לכל מיליארד ש״ח",
-                      f"OLS: הוצאות רבעון (שיווק + הנהלה, מהדוח) = a + b × נכסים ממוצעים (רשות, מיליארדים); ×4 לשנה. n = {f['n']}, {win}, R² = {nf(f['r2'], 2)}, t = {nf(t, 1)}",
-                      [(f"b (רבעוני)", nf(b, 3), None), ("a (קבוע, רבעוני)", nf(f["b"][0], 1), None), ("R²", nf(f["r2"], 2), None), ("n", str(f["n"]), None)] +
-                      [(ql(q), f"{nf(y, 1)} / {nf(x, 1)}", None) for q, x, y in zip(qs, xs, ys)][-4:], est=True,
-                      note="הקשר בין נכסים להוצאות ברבעונים אלה כולל גם אינפלציה וצמיחה; האומדן הוא קשר היסטורי, לא עלות שולית מוכחת")
-        q = q_reg(f["n"], f["r2"], t, monthly=False)
+                      (f"OLS: הוצאות רבעון (שיווק + הנהלה, מהדוח) = a + b × נכסים ממוצעים (רשות, מיליארדים); ×4 לשנה. n = {n}, {win}, R² = {nf(r2, 2)}, t = {nf(t, 1)}"
+                       + (". הקבוע שנאמד שלילי: האמידה עם a = 0 (b = Σxy ÷ Σx²)" if cons else "")),
+                      [(f"b (רבעוני)", nf(b, 3), None), ("a (קבוע, רבעוני)", nf(a, 1), None)] + ([("a בהתאמה החופשית", nf(a0, 1), None), ("b בהתאמה החופשית (שנתי)", nf(b0 * 4, 2), None)] if cons else [])
+                      + ([("שינויים רבעוניים: b (שנתי)", nf(d4, 2), None)] if cons and d4 is not None else [])
+                      + [("R²", nf(r2, 2), None), ("n", str(n), None)] + ([("תשואת דמי ניהול × 10", nf(fy * 10, 2), None)] if fy is not None else [])
+                      + [(ql(q), f"{nf(y, 1)} / {nf(x, 1)}", None) for q, x, y in zip(qs, xs, ys)][-4:], est=True,
+                      note=" · ".join(he + ["הקשר בין נכסים להוצאות ברבעונים אלה כולל גם אינפלציה וצמיחה; האומדן הוא קשר היסטורי, לא עלות שולית מוכחת"]))
+        q = q_reg(n, r2, t, monthly=False)
+        if (cons or odd) and q == "high":
+            q = "medium"
+        fit = {"r2": r(r2, 3), "t": r(t, 2), "a": r(a, 3)}
+        if cons:
+            fit.update({"c": True, "a0": r(a0, 3), "b0": r(b0 * 4, 4)})
+        if d4 is not None:
+            fit["d"] = r(d4, 4)
         if v <= 0:
-            return edge("aum.opex", 1, None, "regression", "low", prov, seg=s, n=f["n"], window=win, fit={"r2": r(f["r2"], 3), "t": r(t, 2)},
+            return edge("aum.opex", 1, None, "regression", "low", prov, seg=s, n=n, window=win, fit={"r2": r(r2, 3), "t": r(t, 2)},
                         note="slope not positive: no usable variable-cost estimate; propagation uses 0", why="שיפוע לא חיובי: אין אומדן לרכיב משתנה")
-        return edge("aum.opex", 1, v, "regression", q, prov, seg=s, n=f["n"], window=win, fit={"r2": r(f["r2"], 3), "t": r(t, 2), "a": r(f["b"][0], 3)})
+        return edge("aum.opex", 1, v, "regression", q, prov, seg=s, n=n, window=win, fit=fit, note="; ".join(notes) or None)
 
     def beta_edges(self, s):
         """r(t) = a + b_eq × equity proxy(t) + b_y × Δ10Y(t) / 100, monthly, the group's asset-weighted return of the segment's tracks"""
@@ -832,6 +910,28 @@ class Co:
                                    P_calc(f"1 נ״א ROE ← מכפיל הון מוצדק · {self.name}", nf(1 / (ke["v"] - g), 3), "x", "d(P/B) ÷ d(ROE) = 1 ÷ (ke − g)", [("ke", pc(ke["v"], 2), keP), ("g", pc(g, 1), None)], est=True)))
         self.edges.append(edge("op.np", 1, 1 - tax / 100, "identity", "high", P_calc("1 ש״ח לפני מס ← רווח נקי", nf(1 - tax / 100, 4), "ש״ח", "1 − שיעור המס (הנחה אחידה, valuation.ts)", [("שיעור מס", pc(tax, 2), n["tax"]["prov"])], est=True)))
         self.debt()
+        self.cash()
+
+    def cash(self):
+        """the nostro's cash and cash equivalents (the balance sheet's 'other' cash: not the yield-dependent policyholders' cash) reprice
+        within the year: Δ investment income (run rate, pre-tax) = cash × Δ 1Y yield. Short-term holdings beyond cash are not split out
+        in lines.json, so the channel is a lower bound of the nostro's short end"""
+        v, p = self.lineP("cash", ("I", "2026-06-30"), "מזומנים ושווי מזומנים אחרים (נוסטרו)")
+        if v is None:
+            self.edges.append(missing("y1.inv", "שורת המזומנים של הנוסטרו לא חולצה לחברה (lines.json: cash, מבטחות בלבד)" if self.kind == "insurance_group"
+                                      else "שורת המזומנים לא חולצה לחברה (lines.json: cash מכסה את שבע המבטחות)", x=100))
+            return
+        self.nodes["cash"] = node(v, MM, "Q2'26", p)
+        self.edges.append(edge("y1.inv", 100, v / 100, "identity", "medium",
+                               P_calc(f"100 נ״ב בתשואת שנה ← הכנסה ממזומני הנוסטרו · {self.name}", sn(v / 100, 2), "מיליוני ש״ח לשנה",
+                                      "Δ הכנסה מהשקעות (קצב שנתי, לפני מס) = מזומנים ושווי מזומנים אחרים × Δ תשואת שנה ÷ 10,000. הנחה: היתרה ליום 30.06.26 נשמרת "
+                                      "ומתומחרת מחדש בתוך השנה (שווי מזומנים: עד 3 חודשים) בתשואת השנה",
+                                      [("מזומנים ושווי מזומנים אחרים", nf(v), p)], est=True,
+                                      note="רק המזומנים: השקעות קצרות אחרות של הנוסטרו אינן מופרדות בדוח שחולץ, ולכן זה חסם תחתון. אינו כלול ברגישות הריבית שגולתה "
+                                           "(הזזה מקבילה, השפעה מיידית על השווי)"),
+                               n=1, window="Q2'26",
+                               note="identity over the printed balance; assumption: the Q2'26 balance is held and reprices within the year at the 1Y yield; "
+                                    "other short-term nostro holdings are not split out (lower bound); not part of the disclosed parallel-shift rate sensitivity"))
 
     def debt(self):
         I = self.I
@@ -879,7 +979,29 @@ class Co:
         self.edges.append(edge("y10.fin", 100, y1 / 100, "assumption", "low",
                                P_calc(f"100 נ״ב ← הוצאות מימון · {self.name}", nf(y1 / 100, 2), "מיליוני ש״ח לשנה", "Δ הוצאות מימון = פירעונות 12 חודשים × Δ תשואה ÷ 10,000 × 100. הנחה: הפירעונות ממוחזרים בתשואה החדשה, באותו מרווח",
                                       [("פירעונות 12 חודשים", nf(y1), y1P)], est=True), n=1, window=dlab(w["end"]), note="assumption: maturities refinanced at the shocked yield"))
-        self.edges.append(missing("policy.fin", "טופס ת126 מפרסם הצמדה ומועדי פירעון, לא ריבית קבועה מול משתנה; האג\"ח בקבוצות אלה בריבית קבועה", x=100))
+        # policy -> financing: ת126 prints linkage (CPI, unlinked, FX) and maturities, never fixed vs floating. Table ג (credit from banks,
+        # per entity filing a solo form) is the only lender split: its unlinked-shekel principal is ASSUMED prime-linked (prime = policy +
+        # 1.5pp), bonds fixed. Subsidiaries' debt (table ח) is printed without a lender split, so their bank credit is not covered.
+        bank, bparts = 0.0, []
+        for pt in w["parts"]:
+            if pt["k"] not in ("solo", "sep"):
+                continue
+            c = cells.get((pt["rid"], "bank", "total"))
+            b = c[4] / 1000 if c else 0.0
+            bank += b
+            bparts.append((pt, b, c is not None))
+        bankP = P_calc(f"אשראי מבנקים, שקלי לא צמוד · {self.name} · {dlab(w['end'])}", nf(bank), MM,
+                       "Σ עמודת 'שקלי לא צמוד' בשורת הסיכום של טבלה ג (אשראי מתאגידים בנקאיים) בטפסי הסולו של הקיר; ישות בלי טבלה ג = 0",
+                       [(f"{pt['k']} · {pt['e']}", nf(b), formP(pt, "אשראי מבנקים, שקלי לא צמוד", b) if has else None) for pt, b, has in bparts])
+        self.nodes["debt_bank"] = node(bank, MM, dlab(w["end"]), bankP)
+        self.edges.append(edge("policy.fin", 100, bank / 100, "assumption", "low",
+                               P_calc(f"100 נ״ב בריבית בנק ישראל ← הוצאות מימון · {self.name}", nf(bank / 100, 2), "מיליוני ש״ח לשנה",
+                                      "Δ הוצאות מימון = אשראי בנקאי שקלי לא צמוד × Δ ריבית בנק ישראל ÷ 10,000. הנחה: האשראי הבנקאי צמוד פריים (פריים = ריבית בנק ישראל + 1.5 נ״א), "
+                                      "האג\"ח בריבית קבועה. טופס ת126 מפרסם הצמדה ומועדי פירעון בלבד, לא ריבית קבועה מול משתנה",
+                                      [("אשראי בנקאי שקלי לא צמוד", nf(bank), bankP)], est=True,
+                                      note="חוב החברות הבנות (טבלה ח) מודפס בלי פיצול למלווים: האשראי הבנקאי שלהן אינו כלול"),
+                               n=1, window=dlab(w["end"]),
+                               note="assumption: unlinked bank credit (ת126 table ג, solo forms) floats with prime; bonds fixed; subsidiaries' bank credit not split (not covered)"))
 
     # ---------------- insurers: CSM, release, solvency, disclosures, targets
     def insurer(self):
@@ -915,6 +1037,10 @@ class Co:
             self.edges.append(missing("csm.isr", "שחרור CSM ברוטו או יתרות ברוטו לחיים ולבריאות לא חולצו מהדוח השנתי", x=1))
         # IFRS 17 disclosures: CSM, profit, equity, per risk (the stress lab's pickIfrs, ported)
         mine = [x for x in I.sens if x["c"] == self.c]
+        tbl = sorted({x["pg"] for x in mine if x.get("rp") == "2025FY" and x.get("pg")})
+        where = f"ביאור הרגישויות בדוח FY'25 (עמ' {', '.join(str(p) for p in tbl)})"
+        gap_he = {"credit.csm": f"{where} מפרסם ריבית, מניות, תמותה ותחלואה בלבד: אין שורת מרווחי אשראי, ובדוח אין גילוי כמותי אחר של רגישות למרווחים (סיכון המרווח מתואר במילים בלבד)",
+                  "lapse.csm": f"{where} מפרסם ריבית, מניות, תמותה ותחלואה בלבד: אין שורת ביטולים. אף מבטחת אינה מפרסמת רגישות CSM לביטולים בדוחות FY'25"}
         for eff, effs, eid in (("csm", ("csm",), "csm"), ("np", ("profit", "pe"), "np"), ("eqb", ("equity", "pe", "profit"), None)):
             pts_all = {}
             for risk in RISKS:
@@ -946,7 +1072,7 @@ class Co:
                     continue
                 L = pts_all.get(risk)
                 if not L:
-                    self.edges.append(missing(key, "החברה לא גילתה רגישות זו בדוח IFRS 17 (FY'25)", x=None))
+                    self.edges.append(missing(key, gap_he[key] if key in gap_he and tbl else "החברה לא גילתה רגישות זו בדוח IFRS 17 (FY'25)", x=None))
                     continue
                 xs = {p["x"]: p for p in L["pts"]}
                 x0 = {"rate": -50, "equity": -10, "mortality": -5, "morbidity": 5, "lapse": 10}[risk]
@@ -961,7 +1087,9 @@ class Co:
                                        extra={"pts": [[q["x"], q["v"]] for q in L["pts"]], "d": row["d"]}))
         for key in ("credit.csm", "lapse.csm"):
             if not any(e["id"] == key for e in self.edges):
-                self.edges.append(missing(key, "אף מבטחת לא גילתה רגישות של ה-CSM לגורם זה בדוחות שחולצו (FY'25)" if key == "credit.csm" else "החברה לא גילתה רגישות של ה-CSM לביטולים בדוח FY'25"))
+                self.edges.append(missing(key, gap_he[key] if tbl else "גילויי הרגישות של IFRS 17 לא חולצו לחברה"))
+        self.edges.append(missing("policy.np", "גילויי הרגישות של IFRS 17 לא חולצו לחברה" if not tbl else f"{where} מפרסם רגישות לתזוזה מקבילה של עקום הריבית חסר הסיכון (מחובר לזעזוע 10 שנים) ולא לקצה הקצר או לריבית בנק ישראל; "
+                                  "ההשפעה על התוצאה המימונית של IFRS 17 לא נאמדת", x=100))
         self.solvency()
 
     def sensP(self, x):
@@ -1029,8 +1157,11 @@ class Co:
         solvP = lambda x: P_rep(f"{x['l']} · {self.name} · {dlab(x['d'])}", spp(x['v']), "נקודות אחוז", MAYA + reps[str(x["r"])]["f"] if str(x["r"]) in reps else None, x.get("pg"),
                                 "דוח כושר פירעון כלכלי", dlab(x["d"]), note=f"בסיס: {'עם הוראות מעבר' if x['b'] == 'w' else 'ללא הוראות מעבר' if x['b'] == 'wo' else 'לא צוין'}")
         if not sens:
+            have = sorted({v["as_of"] for v in reps.values() if v.get("c") == self.c})
+            why = ("רגישויות יחס כושר הפירעון לא חולצו לחברה: דוחות כושר הפירעון שבמאגר הם ליום " + ", ".join(dlab(d) for d in have) +
+                   " בלבד, בלי טבלת רגישות; הדוח הכספי FY'25 אינו מפרסם רגישות של היחס") if have else "רגישויות יחס כושר הפירעון לא חולצו לחברה (אין דוח כושר פירעון במאגר)"
             for k in ("y10.solv_w", "y10.solv_wo", "eq.solv_w", "eq.solv_wo", "mortality.solv_w", "morbidity.solv_w", "lapse.solv_w"):
-                self.edges.append(missing(k, "רגישויות יחס כושר הפירעון לא חולצו לחברה (דוחות כושר פירעון)"))
+                self.edges.append(missing(k, why))
             self.edges.append(missing("credit.solv_w", "רגישות למרווחי אשראי אינה מופיעה בגילויים שחולצו"))
             return
         newest = max(x["d"] for x in sens)
@@ -1101,10 +1232,19 @@ class Co:
                 p = self.product(s)
                 if p:
                     self.products.append(p)
+        self.edges.append(policy_y1(I))
+        if I.pol_base is not None:
+            M = I.macro
+            self.nodes["policy_rate"] = node(I.pol_base, "%", "Q2'26", P_rep("ריבית בנק ישראל ביום 30.06.26", pc(I.pol_base, 2), "%", M["url"], None, f"בנק ישראל · {M['code']}", "Q2'26",
+                                                                       note=f"macro/macro.json: הריבית בתוקף ביום הבסיס · נמשך {M['retrieved']}", src_type="נתון חיצוני"))
+        if 202606 in I.y1:
+            cv = I.curve
+            self.nodes["y1"] = node(I.y1[202606], "%", "06/26", P_rep("תשואה נומינלית אפס שנה, ממוצע 06/26", pc(I.y1[202606], 2), "%", cv["url"], None, "בנק ישראל · ZCM", "06/26",
+                                                                 note=f"{cv['codes']['nominal']['1']} · macro/boi_curve.json · נמשך {cv['retrieved']}", src_type="נתון חיצוני"))
         if self.reg.get("has_financials") and self.c != "more_gemel":
             self.group()
         else:
-            for eid, x in (("cpi.fin", 1), ("y10.fin", 100), ("policy.fin", 100)):
+            for eid, x in (("cpi.fin", 1), ("y10.fin", 100), ("policy.fin", 100), ("y1.inv", 100)):
                 self.edges.append(missing(eid, "לחברה אין דוחות כספיים באתר", x=x))
         if self.kind == "insurance_group" and self.reg.get("has_financials"):
             self.insurer()
@@ -1126,6 +1266,42 @@ class Co:
         out["checks"] = self.checks
         out["notes"] = self.notes
         return out
+
+
+# ------------------------------------------------------------------------------------------------------------------------------ the short end
+def policy_y1(I):
+    """Δ1Y = a + β × Δpolicy, monthly changes of monthly means (BoI 1Y nominal zero on the policy rate's calendar-day mean), over the months
+    the policy series covers to the regulator's last month. Changes, not levels: two trending rates in levels give a spurious fit. The same
+    edge in every company file (a market relation, not a company's)"""
+    if getattr(I, "_py1", None) is not None:
+        return json.loads(json.dumps(I._py1))
+    ms = sorted(m for m in I.pol if m in I.y1)
+    pairs = [(m0, m1) for m0, m1 in zip(ms, ms[1:]) if mdiff(m1, m0) == 1]
+    if len(pairs) < 24:
+        e = missing("policy.y1", f"{len(pairs)} חודשים של ריבית בנק ישראל ותשואת שנה: מעט מדי לאמידה", x=100)
+    else:
+        X = [I.pol[m1] - I.pol[m0] for m0, m1 in pairs]
+        Y = [I.y1[m1] - I.y1[m0] for m0, m1 in pairs]
+        f = ols([X], Y)
+        b, se = f["b"][1], f["se"][1]
+        t = b / se if se else 0.0
+        win = f"{ym(pairs[0][1])}–{ym(pairs[-1][1])}"
+        M = I.macro
+        cv = I.curve
+        polP = P_rep("ריבית בנק ישראל, ממוצע חודשי לפי ימים", f"{len(pairs) + 1} חודשים", "%", M["url"], None, f"בנק ישראל · {M['code']}", win,
+                     note=f"macro/macro.json: ימי השינוי של הריבית ({len(M['changes'])} שינויים מ-{M['changes'][0][0]}), ממוצע לפי ימי לוח · נמשך {M['retrieved']}", src_type="נתון חיצוני")
+        y1P = P_rep("תשואה נומינלית אפס שנה, ממוצע חודשי", f"{len(pairs) + 1} חודשים", "%", cv["url"], None, "בנק ישראל · ZCM", win,
+                    note=f"{cv['codes']['nominal']['1']} · macro/boi_curve.json · נמשך {cv['retrieved']}", src_type="נתון חיצוני")
+        prov = P_calc("ריבית בנק ישראל ← תשואת שנה", nf(b * 100, 1), "נ״ב לכל 100 נ״ב",
+                      f"OLS חודשי בשינויים: Δ תשואת שנה (נ״א) = a + β × Δ ריבית בנק ישראל (נ״א), ממוצעים חודשיים. n = {f['n']}, {win}, R² = {nf(f['r2'], 2)}, t = {nf(t, 1)}",
+                      [("ריבית בנק ישראל", f"{f['n'] + 1} חודשים", polP), ("תשואת שנה", f"{f['n'] + 1} חודשים", y1P), ("β", nf(b, 3), None), ("a (נ״א לחודש)", nf(f["b"][0], 3), None),
+                       ("R²", nf(f["r2"], 3), None)], est=True,
+                      note="העברה בתוך החודש: תשואת השנה מקדימה את ההחלטה, ולכן β חודשי הוא חלק מהתזוזה המלאה. החלון כולל מחזור העלאה והורדה אחד")
+        q = q_reg(f["n"], f["r2"], t, monthly=True)
+        e = edge("policy.y1", 100, b * 100, "regression", q, prov, n=f["n"], window=win, fit={"r2": r(f["r2"], 3), "t": r(t, 2), "se": r(se, 4), "a": r(f["b"][0], 4)},
+                 note="monthly changes of monthly means; the 1Y yield anticipates decisions, so the same-month beta understates the full pass-through; one hiking and one cutting cycle")
+    I._py1 = e
+    return json.loads(json.dumps(e))
 
 
 # ------------------------------------------------------------------------------------------------------------------------------ stress.ts ports
@@ -1299,6 +1475,34 @@ def verify(files, I):
         for ch in d["checks"]:
             if not ch["ok"] and ch["level"] == "fail":
                 bad.append(("identity does not reconcile", c, ch["id"], ch["lhs"], ch["rhs"], ch["tol"]))
+    # the short end and the cost fits: one policy -> 1Y edge everywhere; the cash and bank-credit identities over their own nodes; a
+    # constrained cost fit only where the free fixed cost was negative; a variable cost above the fee yield always carries its reason
+    py = {dumps(d["edges"][[e["e"] for e in d["edges"]].index("policy.y1")]) for k, d in files.items() if k != "graph.json" and any(e["e"] == "policy.y1" for e in d["edges"])}
+    if len(py) != 1 or sum(1 for k, d in files.items() if k != "graph.json" and any(e["e"] == "policy.y1" for e in d["edges"])) != len(files) - 1:
+        bad.append(("policy.y1 differs between companies or is missing from one",))
+    for name, d in files.items():
+        if name == "graph.json":
+            continue
+        c = d["meta"]["company"]
+        for e in d["edges"]:
+            if e["e"] == "y1.inv" and e["v"] is not None and abs(e["v"] - d["nodes"]["cash"]["v"] / 100) > 1e-6:
+                bad.append(("y1.inv differs from cash ÷ 100", c))
+            if e["e"] == "policy.fin" and e["v"] is not None and abs(e["v"] - d["nodes"]["debt_bank"]["v"] / 100) > 1e-6:
+                bad.append(("policy.fin differs from bank credit ÷ 100", c))
+        if d["meta"]["kind"] == "insurance_group" and d["lines"].get("csm") and not any(e["e"] == "policy.np" and e["quality"] == "missing" for e in d["edges"]):
+            bad.append(("insurer without the labelled policy -> IFRS 17 gap", c))
+        for pr in d["products"]:
+            for e in pr["edges"]:
+                if e["e"] != "aum.opex" or e["v"] is None:
+                    continue
+                fit = e.get("fit") or {}
+                if fit.get("c") and not fit.get("a0", 0) < 0:
+                    bad.append(("constrained cost fit without a negative free intercept", c, pr["s"]))
+                if not fit.get("c") and fit.get("a", 0) < 0:
+                    bad.append(("cost fit with a negative fixed cost", c, pr["s"]))
+                fy = (pr.get("fy") or {}).get("v")
+                if fy is not None and e["v"] > fy * 10 and "exceeds the fee yield" not in (e.get("note") or ""):
+                    bad.append(("variable cost above the fee yield without its reason", c, pr["s"]))
     gids = {e["id"] for e in files["graph.json"]["edges"]}
     for name, d in files.items():
         if name != "graph.json":
