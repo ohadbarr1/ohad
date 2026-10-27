@@ -89,6 +89,9 @@ const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: 
 const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const Fragility = page(() => import('./pages/Fragility'), 'Fragility'); // module A10: the Fragility Monitor (not a nav item)
 const Expectations = page(() => import('./pages/Expectations'), 'Expectations'); // module A3: what the multiple requires, all listed names (from the valuation tab and search, not a nav item) // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
+const mConsolidation = () => import('./pages/Consolidation');
+const Consolidation = page(mConsolidation, 'Consolidation'); // module A9: the consolidation screen (from /capital, /savings and search, not a nav item)
+const ConsolidationPair = page(mConsolidation, 'ConsolidationPair');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -180,6 +183,8 @@ export function App() {
         <Route path="capital" element={<Capital />} />{/* module A7 */}
         <Route path="fragility" element={<Fragility />} />{/* module A10: reached from /savings, /scenarios, search and the company homes, not a nav item */}
         <Route path="expectations" element={<Expectations />} />{/* module A3 */}
+        <Route path="consolidation" element={<Consolidation />} />{/* module A9 */}
+        <Route path="consolidation/:a/:t" element={<ConsolidationPair />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

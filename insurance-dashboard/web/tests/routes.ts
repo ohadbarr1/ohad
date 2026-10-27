@@ -25,6 +25,8 @@ export const ROUTES: [string, string][] = [
   ['fragility-detail', '/fragility?c=altshuler&s=flow&fee_watch=1'],
   ['expectations', '/expectations'],
   ['valuation-expectations', '/valuation/phoenix/expectations'],
+  ['consolidation', '/consolidation'],
+  ['consolidation-pair', '/consolidation/menora/clal?r=60'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

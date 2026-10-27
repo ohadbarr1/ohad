@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { DriverFile, LtsResolver } from '../src/lib/drivers';
 import { ncRows, presets, type CatFile, type CurveFile, type MacroFile, type NowcastFile } from '../src/lib/scenarios';
-import { bindingOf, cprov, isOk, isRow, optionsAt, stressOf, worstOf, type CapFile, type CProvJ, type OptRow } from '../src/lib/capital';
+import { bindingOf, cprov, isBolt, isOk, isRow, optionsAt, stressOf, worstOf, type CapFile, type CProvJ, type OptRow } from '../src/lib/capital';
 import type { Prov } from '../src/lib/prov';
 
 const DATA = join(process.cwd(), 'public', 'data');
@@ -55,6 +55,10 @@ for (const c of cos) {
   }
   ok(JSON.stringify(R.rank) === JSON.stringify(c.rank), `${c.id}: rank ${R.rank} = file ${c.rank}`);
   ok(c.options.some((o) => o.id === 'bolt' && !isRow(o)) && c.options.some((o) => o.id === 'hold' && !isRow(o)), `${c.id}: bolt-on (A9) and hold rows present`);
+  // the A9 bolt-on: a filled row opens to leaves (its refs resolve inside the row's table), or says why there is none
+  const bolt = c.options.find((o) => o.id === 'bolt')!;
+  if (isBolt(bolt)) for (const k of ['cap', 'roic', 'roe', 'eps', 'npv', 'metric', 'solv'] as const) { const f = bolt[k]; if (f) ok(leaves(cprov(c, f.prov, lts)) > 0, `${c.id} bolt.${k}: the source opens to a leaf`); }
+  else ok(bolt.status !== 'none' || ('why' in bolt && bolt.why.length > 10), `${c.id}: no bolt-on, with a reason`);
   // a buffer of zero gives the headroom; a larger buffer lowers the capacity one for one (dividend) and never raises the growth capacity
   const R0 = optionsAt(c, 0), R9 = optionsAt(c, c.buffer.pp + 5);
   ok(near(R0.dist, bind.headroom.v, 1e-9) && near(R9.dist, bind.headroom.v! - Bb.scr.v! * (c.buffer.pp + 5) / 100, 1e-9), `${c.id}: buffer override identity`);

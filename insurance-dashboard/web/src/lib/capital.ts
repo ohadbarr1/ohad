@@ -20,7 +20,11 @@ export type Basis = 'w' | 'wo';
 export interface CBasis { of: CFig; scr: CFig; ratio: CFig; printed: number | null; printed_prov?: CProvJ }
 export interface Con { id: string; kind: 'board' | 'div' | 'reg'; basis: Basis; stated: Basis | null; t: number; t_prov: CProvJ; period: string; he: string; headroom: CFig; pp: number }
 export interface OptRow { id: 'div' | 'org'; cap: CFig; roic: CFig; solv: CFig; per_bn: number; roe: CFig; eps: CFig; eps_bb?: CFig }
-export type Opt = OptRow | { id: 'bolt'; status: 'A9' } | { id: 'hold'; status: 'A2' };
+/** the A9 bolt-on (pipeline/build_consolidation.py): the best-ranked target the insurer can afford at a 20% premium, at the file's buffer;
+    its provenance table `src` travels with the row (refs `bolt.<pointer>`) */
+export interface BoltRow { id: 'bolt'; status: 'ok'; tgt: string; tgt_name: string; pair: string; rank_a9: number; premium: number;
+  cap: CFig; roic: CFig; solv?: CFig; solv_gw?: CFig; roe: CFig; eps: CFig; npv: CFig; metric: CFig; src: Record<string, CProvJ> }
+export type Opt = OptRow | BoltRow | { id: 'bolt'; status: 'none'; why: string } | { id: 'bolt'; status: 'A9' } | { id: 'hold'; status: 'A2' };
 export interface Policy { he: string; v: number; unit: string; d: string; prov: CProvJ }
 export interface CapOk {
   id: string; name: string; kind: string; status: 'ok'; flag?: string; date: string; period: string;
@@ -37,6 +41,8 @@ export interface CapFile { meta: { built: string; base: { q: string; end: string
 export const CAPITAL_PATH = 'capital/options.json';
 export const isOk = (c: CapCo): c is CapOk => c.status === 'ok';
 export const isRow = (o: Opt): o is OptRow => o.id === 'div' || o.id === 'org';
+export const isBolt = (o: Opt): o is BoltRow => o.id === 'bolt' && o.status === 'ok';
+export const boltOf = (c: CapOk): Opt => c.options.find((o) => o.id === 'bolt') ?? { id: 'bolt', status: 'A9' };
 
 /* ---------- provenance ---------- */
 /** the provenance a ref points at (the rule of build_capital.resolve) */
@@ -46,6 +52,7 @@ export function resolveRef(c: CapOk, path: string): CProvJ | null {
   if (a[0] === 'buffer') return a[1] === 'v' ? c.buffer.v_prov : c.buffer.prov;
   if (a[0] === 'pnl') return (c.pnl as Record<string, CFig | undefined>)[a[1]]?.prov ?? null;
   if (a[0] === 'bases') return c.bases[a[1] as Basis]?.[a[2] as 'of' | 'scr' | 'ratio']?.prov ?? null;
+  if (a[0] === 'bolt') { const b = c.options.find(isBolt); return b?.src[path.slice(5)] ?? null; }
   if (a[0] === 'con') { const k = c.constraints.find((x) => x.id === a[1]); return k ? (a[2] === 't' ? k.t_prov : k.headroom.prov) : null; }
   return null;
 }
@@ -68,7 +75,7 @@ export const OPT_HE: Record<Opt['id'], string> = { div: 'דיבידנד / רכי
 export const bindingOf = (c: CapOk) => c.constraints.find((x) => x.id === c.binding)!;
 
 /* ---------- the option rows at a buffer (build_capital.options, the same formulas) ---------- */
-export interface Rows { pp: number; buffer: number; dist: number; div: OptRow; org: OptRow; rank: ('div' | 'org')[]; override: boolean }
+export interface Rows { pp: number; buffer: number; dist: number; div: OptRow; org: OptRow; rank: ('div' | 'org' | 'bolt')[]; override: boolean }
 type Calc = Extract<CProvJ, { k: 'calc' }>;
 const recalc = (title: string, value: string, unit: string, formula: string, pp: number, base: CFig): Calc =>
   ({ k: 'calc', title, value, unit, formula, est: true, note: 'מחושב מחדש עם המרווח הניהולי שבחרת; שאר הקלטים כבחישוב ברירת המחדל',
@@ -108,7 +115,9 @@ export function optionsAt(c: CapOk, ppIn?: number | null): Rows {
     solv: pick(-costO, fileOrg.solv, `עלות כושר פירעון · צמיחה אורגנית · ${c.name}`, `${fmtS(-costO, 1)} נ״א`, 'נקודות אחוז'), per_bn: -perO,
     roe: pick(E ? extra / E * 100 : null, fileOrg.roe, `השפעה על ROE · צמיחה אורגנית · ${c.name}`, E ? `${fmtS(extra / E * 100, 1)} נ״א` : '–', 'נקודות אחוז'),
     eps: pick(np ? extra / np * 100 : null, fileOrg.eps, `השפעה על הרווח למניה · צמיחה אורגנית · ${c.name}`, np ? `${fmtS(extra / np * 100, 1)}%` : '–', '%') };
-  const rank = [div, org].filter((o) => (o.cap.v ?? 0) > 0).map((o) => [o.id, o.roic.v! - ke] as const)
+  const bolt = c.options.find(isBolt);   // the bolt-on is priced at the file's buffer (A9); ranked on the same ROIC − ke
+  const rank = [...[div, org].filter((o) => (o.cap.v ?? 0) > 0).map((o) => [o.id, o.roic.v! - ke] as const),
+    ...(bolt && bolt.roic.v != null && (bolt.cap.v ?? 0) > 0 ? [['bolt', bolt.roic.v - ke] as const] : [])]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([i]) => i);
   return { pp, buffer: buf, dist: D, div, org, rank, override };
 }

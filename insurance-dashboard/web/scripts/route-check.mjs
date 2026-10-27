@@ -33,6 +33,8 @@ const ROUTES = [
   '/card/harel/2026Q2', '/card/phoenix/2025FY', '/card/meitav/2026Q2',
   // module M2: the delta feed (all, one company, one type, the empty estimate slot)
   '/feed', '/feed?co=harel', '/feed?t=fee', '/feed?co=market&t=regmonth', '/feed?t=est',
+  // module A9: the consolidation screen (matrix, an override, tear sheets: an insurer arm, a fund house, a flagged pair)
+  '/consolidation', '/consolidation?r=80&lev=50', '/consolidation/menora/clal', '/consolidation/analyst/more', '/consolidation/meitav/harel',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */

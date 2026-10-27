@@ -5,7 +5,8 @@
     Options                    Capacity   ROIC                     Solvency cost                  Accretion
       Dividend / buyback        ₪m         ke (valuation.ts)        capital ÷ SCR, pp              ROE and EPS effect
       Organic growth capital    ₪m         LTM ROE (labelled est)   OF ÷ (SCR + capital ÷ target)   EPS effect of the return over rf
-      Bolt-on                   A9, not computed here
+      Bolt-on                   A9: the best-ranked target the insurer can afford (consolidation/bolt.json, pipeline/build_consolidation.py):
+                                price at a 20% premium, ROIC with run-rate synergies, solvency cost − cash ÷ SCR
       Hold against stress       on the page: the A2 presets through web/src/lib/drivers.ts propagate (web/src/lib/capital.ts)
 
 Inputs (all built and gated already; nothing is extracted here)
@@ -13,6 +14,7 @@ Inputs (all built and gated already; nothing is extracted here)
   web/public/data/csm/facts/<co>.json  the same lines as the financial statements print them, the dividend lines and the payout policy
   web/public/data/csm/capital.json     the ratio series (with / without transitional) for the buffer's drift
   web/public/data/drivers/<co>.json    A1: board targets as printed (with page), LTM net profit, equity, ROE, ke, rf, tax, justified P/B
+  web/public/data/consolidation/bolt.json   A9: the bolt-on row (its provenance table travels with the row: refs `bolt.<pointer>`)
 Output
   web/public/data/capital/options.json
 
@@ -37,6 +39,7 @@ from statistics import median
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web" / "public" / "data"
 OUT = WEB / "capital" / "options.json"
+BOLT = WEB / "consolidation" / "bolt.json"
 MM = 'מיליוני ש"ח'
 MINUS = "−"
 INSURERS = ["phoenix", "harel", "migdal", "clal", "menora", "ayalon", "hachshara", "idi"]
@@ -346,7 +349,7 @@ class Co:
                 "prov": self.fact_prov(x, f"עודף הון מעל היעד, כפי שהודפס · {self.name} · {dperiod(x['d'])}", fm(x["v"]))}
 
     # --- the whole company
-    def build(self):
+    def build(self, bolt=None):
         base = {"id": self.c, "name": self.name, "kind": "insurance_group"}
         if self.c == "phoenix" and self.f and self.f["meta"].get("flag"):
             base["flag"] = self.f["meta"]["flag"]
@@ -437,14 +440,29 @@ class Co:
         div = {"ltm": ltm, "policy": self.policy(), "printed_over": self.printed_over()}
         out = {**base, "status": "ok", "date": d, "period": dperiod(d), "bases": B, "constraints": cons, "binding": bind["id"], "buffer": buffer,
                "distributable": distributable, "pnl": P, "dividend": div}
-        out["options"] = options(out)
+        out["options"] = options(out, bolt)
         out["rank"] = rank(out)
         return out
 
 
 # ---------------------------------------------------------------- the option set (web/src/lib/capital.ts recomputes it for a buffer override: same formulas)
-def options(c):
-    """the four rows at the file's buffer; the TS library reproduces them (tests/capital.unit.ts) and recomputes them for an override"""
+def bolt_row(b):
+    """the A9 bolt-on row from consolidation/bolt.json (None: the file is not built yet)"""
+    if b is None:
+        return {"id": "bolt", "status": "A9"}
+    if b.get("status") != "ok":
+        return {"id": "bolt", "status": "none", "why": b.get("why") or "אין יעד"}
+    row = {"id": "bolt", "status": "ok", "tgt": b["t"], "tgt_name": b["name"], "pair": b["pair"], "rank_a9": b["rank"], "premium": b["premium"], "cap": b["price"]}
+    for k in ("roic", "solv", "solv_gw", "roe", "eps", "npv", "metric"):
+        if k in b:
+            row[k] = b[k]
+    row["src"] = b["src"]
+    return row
+
+
+def options(c, bolt=None):
+    """the four rows at the file's buffer; the TS library reproduces them (tests/capital.unit.ts) and recomputes them for an override.
+    The bolt-on (A9) is computed by pipeline/build_consolidation.py at the file's buffer and carried as is."""
     bind = next(x for x in c["constraints"] if x["id"] == c["binding"])
     B = c["bases"]
     P = c["pnl"]
@@ -507,29 +525,37 @@ def options(c):
                                                                      "הון × (ROE − rf × (1 − מס)) ÷ רווח נקי LTM",
                                                                      [inp("הון לצמיחה", fm(Xo), oprov), inp("ROE LTM", pct(roe, 1), ref("pnl.roe")), inp("rf (הנחה)", pct(rf, 2), ref("pnl.rf")),
                                                                       inp("רווח נקי LTM", fm(np_, 1), ref("pnl.net_profit"))], unit="%", est=True))})
-    rows.append({"id": "bolt", "status": "A9"})
+    rows.append(bolt_row(bolt))
     rows.append({"id": "hold", "status": "A2"})
     return rows
 
 
 def rank(c):
-    """the options by ROIC − ke per NIS deployed (dividend / buyback = 0 by construction); the bolt-on (A9) and the hold row are not ranked"""
+    """the options by ROIC − ke per NIS deployed (dividend / buyback = 0 by construction); the bolt-on (A9) when a target is affordable; the
+    hold row is not ranked"""
     ke = c["pnl"]["ke"]["v"]
-    rs = [(o["roic"]["v"] - ke, o["id"]) for o in c["options"] if "roic" in o and o["cap"]["v"] > 0]
+    rs = [(o["roic"]["v"] - ke, o["id"]) for o in c["options"] if "roic" in o and o["roic"]["v"] is not None and o["cap"]["v"] > 0]
     return [i for _, i in sorted(rs, key=lambda x: (-x[0], x[1]))]
 
 
 FUND_WHY = "הון עצמי של חברה מנהלת מול דרישת ההון המינימלית לא חולץ מהדוחות; אין חישוב הון בר-חלוקה"
 
 
+def bolts():
+    if not BOLT.exists():
+        return {}
+    return json.loads(BOLT.read_text(encoding="utf8")).get("bolt", {})
+
+
 def build():
     I = Inputs()
+    BB = bolts()
     built = max((f["meta"]["built"] for f in I.drv.values()), default=dt.date.today().isoformat())
     base = next(iter(I.drv.values()))["meta"]["base"] if I.drv else {}
     cos = []
     for cid, r in I.reg.items():
         if r.get("kind") == "insurance_group":
-            cos.append(Co(I, cid).build())
+            cos.append(Co(I, cid).build(BB.get(cid)))
         else:
             cos.append({"id": cid, "name": r["name_he"], "kind": r.get("kind", "fund_house"), "status": "na", "why": FUND_WHY})
     order = {c: i for i, c in enumerate(INSURERS)}
@@ -555,6 +581,9 @@ def resolve(c, path):
             return c["pnl"][a[1]]["prov"]
         if a[0] == "bases":
             return c["bases"][a[1]][a[2]]["prov"]
+        if a[0] == "bolt":
+            row = next(o for o in c["options"] if o["id"] == "bolt")
+            return row["src"][path[5:]]
         if a[0] == "con":
             k = next(x for x in c["constraints"] if x["id"] == a[1])
             return k["t_prov"] if a[2] == "t" else k["headroom"]["prov"]
@@ -564,7 +593,7 @@ def resolve(c, path):
 
 
 def walk(p, where, bad, depth=0, c=None):
-    if depth > 40:
+    if depth > 80:
         return
     if not isinstance(p, dict) or "k" not in p:
         bad.append(("no provenance", where))
@@ -579,7 +608,7 @@ def walk(p, where, bad, depth=0, c=None):
     if p["k"] == "report":
         if not p.get("url"):
             bad.append(("report without a url", where, p.get("title")))
-        if p.get("pg") is None and "בנק ישראל" not in (p.get("doc") or ""):
+        if p.get("pg") is None and "בנק ישראל" not in (p.get("doc") or "") and "ת126" not in (p.get("doc") or ""):   # ת126 is an htm form: no pages
             bad.append(("report without a page", where, p.get("title")))
     elif p["k"] == "calc":
         if not p.get("inputs") and not p.get("est"):
@@ -587,7 +616,7 @@ def walk(p, where, bad, depth=0, c=None):
         for x in p.get("inputs", []):
             if "p" in x and x["p"] is not None:
                 walk(x["p"], where + " > " + x["label"][:30], bad, depth + 1, c)
-    elif p["k"] not in ("lts", "none", "xbrl"):
+    elif p["k"] not in ("lts", "none", "xbrl", "reg", "fund"):   # reg / fund: the regulator's files (A9 bolt-on inputs)
         bad.append(("unknown provenance kind", where, p["k"]))
 
 
@@ -602,8 +631,9 @@ def finite(x, where, bad):
             finite(v, f"{where}[{i}]", bad)
 
 
-def verify(d):
+def verify(d, BB=None):
     bad, n_id = [], 0
+    BB = bolts() if BB is None else BB
     finite(d, "options", bad)
     for c in d["companies"]:
         if c["status"] != "ok":
@@ -643,11 +673,11 @@ def verify(d):
         if c["dividend"]["ltm"]:
             walk(c["dividend"]["ltm"]["prov"], f"{w}.dividend", bad, 0, c)
         for o in c["options"]:
-            for k in ("cap", "roic", "solv", "roe", "eps", "eps_bb"):
+            for k in ("cap", "roic", "solv", "solv_gw", "roe", "eps", "eps_bb", "npv", "metric"):
                 if k in o:
                     if o[k]["v"] is not None:
                         walk(o[k]["prov"], f"{w}.{o['id']}.{k}", bad, 0, c)
-        if options(c) != c["options"]:
+        if options(c, BB.get(c["id"])) != c["options"]:
             bad.append(("option rows do not re-derive", w))
         div = next(o for o in c["options"] if o["id"] == "div")
         if abs(div["cap"]["v"] - max(c["distributable"]["v"], 0)) > 1e-6:

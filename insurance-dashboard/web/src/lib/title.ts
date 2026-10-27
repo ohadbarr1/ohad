@@ -43,6 +43,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'capital': return p[1] ? null : t('הון ואפשרויות הקצאה');  // module A7
     case 'fragility': return p[1] ? null : t('מוניטור שבריריות');  // module A10
     case 'expectations': return p[1] ? null : t('ציפיות השוק');  // module A3
+    case 'consolidation': return p[1] ? (p[3] || !p[2] || name(p[1]) === null || name(p[2]) === null ? null : t(`${name(p[1]) ?? p[1]} ← ${name(p[2]) ?? p[2]}`, 'מסך האיחודים')) : t('מסך האיחודים');  // module A9
     case 'debt': return p[1] ? (name(p[1]) === null || p[2] ? null : t(name(p[1]) ?? p[1], 'חוב ופירעונות')) : t('חוב ופירעונות');
     case 'facts': return p[1] && !p[2] && name(p[1]) !== null ? t('עובדות', name(p[1]) ?? p[1]) : null;
     case 'ownership': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'בעלות')) : t('בעלות');  // lane OW

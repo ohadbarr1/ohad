@@ -268,6 +268,22 @@
   {
    "pattern": "expectations/*.json",
    "schema": "expectationsCompany"
+  },
+  {
+   "pattern": "consolidation/matrix.json",
+   "schema": "consolidationMatrix"
+  },
+  {
+   "pattern": "consolidation/bolt.json",
+   "schema": "consolidationBolt"
+  },
+  {
+   "pattern": "consolidation/pairs/*.json",
+   "schema": "consolidationPair"
+  },
+  {
+   "pattern": "consolidation/mix/*.json",
+   "schema": "consolidationMix"
   }
  ],
  "$defs": {
@@ -10530,7 +10546,8 @@
       "type": "string",
       "enum": [
        "div",
-       "org"
+       "org",
+       "bolt"
       ]
      }
     }
@@ -10650,7 +10667,9 @@
      "type": "string",
      "enum": [
       "A9",
-      "A2"
+      "A2",
+      "ok",
+      "none"
      ]
     },
     "cap": {
@@ -10673,6 +10692,37 @@
     },
     "eps_bb": {
      "$ref": "#/$defs/capitalFig"
+    },
+    "solv_gw": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "npv": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "metric": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "tgt": {
+     "type": "string"
+    },
+    "tgt_name": {
+     "type": "string"
+    },
+    "pair": {
+     "type": "string",
+     "pattern": "^[a-z_]+__[a-z_]+$"
+    },
+    "rank_a9": {
+     "type": "integer"
+    },
+    "premium": {
+     "type": "number"
+    },
+    "why": {
+     "type": "string"
+    },
+    "src": {
+     "type": "object"
     }
    }
   },
@@ -10709,7 +10759,9 @@
       "ref",
       "lts",
       "none",
-      "xbrl"
+      "xbrl",
+      "reg",
+      "fund"
      ]
     }
    }
@@ -11949,6 +12001,852 @@
           "reason": {
            "type": "string"
           }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "consFig": {
+   "type": "object",
+   "required": [
+    "v",
+    "prov"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "prov": {
+     "$ref": "#/$defs/consProv"
+    }
+   }
+  },
+  "consProv": {
+   "type": "object",
+   "required": [
+    "k"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "report",
+      "calc",
+      "ref",
+      "lts",
+      "reg",
+      "fund",
+      "xbrl",
+      "none"
+     ]
+    },
+    "r": {
+     "type": "string",
+     "pattern": "^(c/[a-z_]+|m/[a-z_]+|a|p):[A-Za-z0-9_.]+$|^bolt\\."
+    }
+   }
+  },
+  "consAssume": {
+   "type": "object",
+   "required": [
+    "v",
+    "he",
+    "unit",
+    "url",
+    "prov"
+   ],
+   "properties": {
+    "v": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "he": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    },
+    "prov": {
+     "$ref": "#/$defs/consProv"
+    }
+   }
+  },
+  "consProduct": {
+   "type": "object",
+   "required": [
+    "s",
+    "he",
+    "g",
+    "aum",
+    "fy",
+    "fees",
+    "opex",
+    "op",
+    "ci",
+    "dur"
+   ],
+   "properties": {
+    "s": {
+     "enum": [
+      "pen",
+      "gem"
+     ]
+    },
+    "he": {
+     "type": "string"
+    },
+    "g": {
+     "type": "integer"
+    },
+    "aum": {
+     "$ref": "#/$defs/consFig"
+    },
+    "fy": {
+     "$ref": "#/$defs/consFig"
+    },
+    "fees": {
+     "$ref": "#/$defs/consFig"
+    },
+    "opex": {
+     "$ref": "#/$defs/consFig"
+    },
+    "op": {
+     "$ref": "#/$defs/consFig"
+    },
+    "ci": {
+     "$ref": "#/$defs/consFig"
+    },
+    "dur": {
+     "$ref": "#/$defs/consFig"
+    }
+   }
+  },
+  "consCompany": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "kind",
+    "status",
+    "products",
+    "blend",
+    "pnl",
+    "lev",
+    "cap",
+    "val",
+    "nc"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "kind": {
+     "enum": [
+      "insurance_group",
+      "fund_house"
+     ]
+    },
+    "status": {
+     "enum": [
+      "ok"
+     ]
+    },
+    "flag": {
+     "type": "string"
+    },
+    "nc": {
+     "type": "boolean"
+    },
+    "nc_why": {
+     "type": "string"
+    },
+    "products": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/consProduct"
+     }
+    },
+    "blend": {
+     "$ref": "#/$defs/consFig"
+    },
+    "lev": {
+     "$ref": "#/$defs/consFig"
+    },
+    "pnl": {
+     "type": "object",
+     "required": [
+      "net_profit",
+      "equity",
+      "equity_end",
+      "ke",
+      "rf",
+      "tax",
+      "g",
+      "debt_total"
+     ],
+     "additionalProperties": {
+      "$ref": "#/$defs/consFig"
+     }
+    },
+    "cap": {
+     "type": "object",
+     "required": [
+      "kind",
+      "cash"
+     ],
+     "properties": {
+      "kind": {
+       "enum": [
+        "a7",
+        "equity"
+       ]
+      },
+      "period": {
+       "type": "string"
+      },
+      "basis": {
+       "type": "string"
+      },
+      "dist": {
+       "$ref": "#/$defs/consFig"
+      },
+      "cash": {
+       "$ref": "#/$defs/consFig"
+      },
+      "scr": {
+       "$ref": "#/$defs/consFig"
+      }
+     }
+    },
+    "val": {
+     "type": "object",
+     "required": [
+      "basis",
+      "v0",
+      "earn",
+      "book"
+     ],
+     "properties": {
+      "basis": {
+       "enum": [
+        "pb",
+        "pe"
+       ]
+      },
+      "v0": {
+       "$ref": "#/$defs/consFig"
+      },
+      "earn": {
+       "$ref": "#/$defs/consFig"
+      },
+      "book": {
+       "type": [
+        "object",
+        "null"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "consRow": {
+   "type": "object",
+   "required": [
+    "a",
+    "t",
+    "rank",
+    "nc",
+    "gross",
+    "net",
+    "npv_g",
+    "npv",
+    "cap",
+    "price",
+    "ok",
+    "metric",
+    "eps",
+    "roe",
+    "solv",
+    "fit_prod",
+    "fit_track"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "a": {
+     "type": "string"
+    },
+    "t": {
+     "type": "string"
+    },
+    "rank": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "nc": {
+     "type": "boolean"
+    },
+    "ok": {
+     "type": "boolean"
+    },
+    "gross": {
+     "type": "number"
+    },
+    "net": {
+     "type": "number"
+    },
+    "npv_g": {
+     "type": "number"
+    },
+    "npv": {
+     "type": "number"
+    },
+    "cap": {
+     "type": "number"
+    },
+    "price": {
+     "type": "number"
+    },
+    "fit_prod": {
+     "type": "number"
+    },
+    "fit_track": {
+     "type": "number"
+    },
+    "metric": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "eps": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "roe": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "solv": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   }
+  },
+  "consolidationMatrix": {
+   "type": "object",
+   "required": [
+    "meta",
+    "cos",
+    "pairs",
+    "bolt"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "base",
+      "v",
+      "asof",
+      "formula",
+      "assume",
+      "premia",
+      "primary",
+      "products",
+      "example",
+      "excluded",
+      "note"
+     ],
+     "properties": {
+      "built": {
+       "type": "string"
+      },
+      "base": {
+       "type": "object",
+       "required": [
+        "q",
+        "end",
+        "ltm"
+       ]
+      },
+      "v": {
+       "type": "integer",
+       "enum": [
+        1
+       ]
+      },
+      "assume": {
+       "type": "object",
+       "required": [
+        "r",
+        "ic",
+        "h",
+        "lev",
+        "kd"
+       ],
+       "additionalProperties": {
+        "$ref": "#/$defs/consAssume"
+       }
+      },
+      "premia": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "number"
+       }
+      },
+      "primary": {
+       "type": "number"
+      },
+      "example": {
+       "type": "object",
+       "required": [
+        "id",
+        "seg",
+        "q",
+        "ci",
+        "ppb",
+        "ok"
+       ],
+       "properties": {
+        "ci": {
+         "$ref": "#/$defs/consFig"
+        },
+        "ppb": {
+         "$ref": "#/$defs/consFig"
+        },
+        "ok": {
+         "type": "boolean"
+        }
+       }
+      },
+      "excluded": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "id",
+         "name",
+         "why"
+        ]
+       }
+      }
+     }
+    },
+    "cos": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/consCompany"
+     }
+    },
+    "pairs": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/consRow"
+     }
+    },
+    "bolt": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "status"
+      ],
+      "properties": {
+       "status": {
+        "enum": [
+         "ok",
+         "none"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "consolidationBolt": {
+   "type": "object",
+   "required": [
+    "meta",
+    "bolt"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "v",
+      "premium"
+     ]
+    },
+    "bolt": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "status"
+      ],
+      "properties": {
+       "status": {
+        "enum": [
+         "ok",
+         "none"
+        ]
+       },
+       "t": {
+        "type": "string"
+       },
+       "pair": {
+        "type": "string"
+       },
+       "price": {
+        "$ref": "#/$defs/consFig"
+       },
+       "roic": {
+        "$ref": "#/$defs/consFig"
+       },
+       "solv": {
+        "$ref": "#/$defs/consFig"
+       },
+       "solv_gw": {
+        "$ref": "#/$defs/consFig"
+       },
+       "roe": {
+        "$ref": "#/$defs/consFig"
+       },
+       "eps": {
+        "$ref": "#/$defs/consFig"
+       },
+       "npv": {
+        "$ref": "#/$defs/consFig"
+       },
+       "metric": {
+        "$ref": "#/$defs/consFig"
+       },
+       "src": {
+        "type": "object",
+        "additionalProperties": {
+         "$ref": "#/$defs/consProv"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "consolidationPair": {
+   "type": "object",
+   "required": [
+    "meta",
+    "acq",
+    "tgt",
+    "nc",
+    "rank",
+    "products",
+    "synergy",
+    "capacity",
+    "value",
+    "premia",
+    "metric",
+    "fit"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "a",
+      "t",
+      "assume",
+      "premia",
+      "primary"
+     ]
+    },
+    "nc": {
+     "type": "boolean"
+    },
+    "rank": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "products": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "s",
+       "aum",
+       "fy",
+       "ci_t",
+       "ci_a",
+       "gross",
+       "net",
+       "h",
+       "npv"
+      ],
+      "properties": {
+       "s": {
+        "enum": [
+         "pen",
+         "gem"
+        ]
+       },
+       "aum": {
+        "$ref": "#/$defs/consFig"
+       },
+       "fy": {
+        "$ref": "#/$defs/consFig"
+       },
+       "ci_t": {
+        "$ref": "#/$defs/consFig"
+       },
+       "ci_a": {
+        "$ref": "#/$defs/consFig"
+       },
+       "gross": {
+        "$ref": "#/$defs/consFig"
+       },
+       "net": {
+        "$ref": "#/$defs/consFig"
+       },
+       "h": {
+        "$ref": "#/$defs/consFig"
+       },
+       "npv": {
+        "$ref": "#/$defs/consFig"
+       }
+      }
+     }
+    },
+    "synergy": {
+     "type": "object",
+     "required": [
+      "gross",
+      "net",
+      "ic",
+      "npv_g",
+      "npv"
+     ],
+     "additionalProperties": {
+      "$ref": "#/$defs/consFig"
+     }
+    },
+    "capacity": {
+     "type": "object",
+     "required": [
+      "cash",
+      "room",
+      "total",
+      "lev",
+      "lev_max"
+     ],
+     "additionalProperties": {
+      "$ref": "#/$defs/consFig"
+     }
+    },
+    "premia": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "p",
+       "price",
+       "cash",
+       "debt",
+       "ok",
+       "dnp",
+       "eps",
+       "roe",
+       "roic",
+       "gw"
+      ],
+      "properties": {
+       "p": {
+        "type": "number"
+       },
+       "ok": {
+        "type": "boolean"
+       },
+       "price": {
+        "$ref": "#/$defs/consFig"
+       },
+       "cash": {
+        "$ref": "#/$defs/consFig"
+       },
+       "debt": {
+        "$ref": "#/$defs/consFig"
+       },
+       "dnp": {
+        "$ref": "#/$defs/consFig"
+       },
+       "eps": {
+        "$ref": "#/$defs/consFig"
+       },
+       "roe": {
+        "$ref": "#/$defs/consFig"
+       },
+       "roic": {
+        "$ref": "#/$defs/consFig"
+       },
+       "gw": {
+        "$ref": "#/$defs/consFig"
+       },
+       "solv": {
+        "$ref": "#/$defs/consFig"
+       },
+       "solv_gw": {
+        "$ref": "#/$defs/consFig"
+       }
+      }
+     }
+    },
+    "metric": {
+     "$ref": "#/$defs/consFig"
+    },
+    "fit": {
+     "type": "object",
+     "required": [
+      "prod",
+      "track",
+      "channel"
+     ],
+     "properties": {
+      "prod": {
+       "type": "object",
+       "required": [
+        "v",
+        "rows",
+        "period"
+       ],
+       "properties": {
+        "v": {
+         "$ref": "#/$defs/consFig"
+        }
+       }
+      },
+      "track": {
+       "type": "object",
+       "required": [
+        "v",
+        "rows",
+        "period",
+        "n"
+       ],
+       "properties": {
+        "v": {
+         "$ref": "#/$defs/consFig"
+        }
+       }
+      },
+      "channel": {
+       "type": "object",
+       "required": [
+        "status",
+        "why"
+       ],
+       "properties": {
+        "status": {
+         "enum": [
+          "nodata"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "consolidationMix": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "g",
+    "aum",
+    "tracks"
+   ],
+   "properties": {
+    "aum": {
+     "type": "object",
+     "required": [
+      "period",
+      "tot",
+      "prods"
+     ],
+     "properties": {
+      "prods": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "required": [
+         "key",
+         "he",
+         "v",
+         "w",
+         "prov"
+        ],
+        "properties": {
+         "prov": {
+          "$ref": "#/$defs/consProv"
+         }
+        }
+       }
+      }
+     }
+    },
+    "tracks": {
+     "type": "object",
+     "required": [
+      "period",
+      "tot",
+      "n",
+      "cats"
+     ],
+     "properties": {
+      "cats": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "required": [
+         "cat",
+         "v",
+         "w",
+         "n",
+         "prov"
+        ],
+        "properties": {
+         "prov": {
+          "$ref": "#/$defs/consProv"
          }
         }
        }
