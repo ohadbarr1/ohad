@@ -63,7 +63,7 @@ function Lens({ d }: { d: LensData }) {
   return (
     <>
       <h2 className="band">עדשת חיסכון<span className="muted">תזרימים ונכסים: רשות שוק ההון, חודשי, עד <span className="num">{ym(d.meta.asof)}</span> · הכנסות והוצאות: דוחות החברות המנהלות, עד <span className="num">{ql(d.meta.last_rep)}</span></span></h2>
-      <div className="lens-views"><SegCtl<View> label="תצוגה" value={view} onChange={(v) => set({ v: v === 'lens' ? '' : v })} options={views} /><Link className="chip lens-out" to={`/managers?v=rank${seg !== 'pen' ? `&s=${seg}` : ''}`}>דירוג מנהלים לאורך זמן ←</Link><Link className="chip lens-out" to="/warroom">חדר מלחמה: מהלך דמי ניהול ←</Link><Link className="chip lens-out" to="/warroom/regulation">צנרת רגולציה ←</Link></div>
+      <div className="lens-views"><SegCtl<View> label="תצוגה" value={view} onChange={(v) => set({ v: v === 'lens' ? '' : v })} options={views} /><Link className="chip lens-out" to={`/managers?v=rank${seg !== 'pen' ? `&s=${seg}` : ''}`}>דירוג מנהלים לאורך זמן ←</Link><Link className="chip lens-out" to="/warroom">חדר מלחמה: מהלך דמי ניהול ←</Link><Link className="chip lens-out" to="/warroom/regulation">צנרת רגולציה ←</Link><Link className="chip lens-out" to="/consolidation">מסך האיחודים ←</Link></div>
       {view === 'lens' && <LensView d={d} src={src} seg={seg} q={q} g={g} set={set} />}
       {view === 'now' && <NowView d={d} src={src} seg={seg} set={set} />}
       {(view === 'market' || view === 'econ') && <Suspense fallback={<Loading what="התצוגה" />}>{view === 'market' ? <LensMarket /> : <IndustryEcon />}</Suspense>}

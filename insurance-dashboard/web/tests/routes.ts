@@ -21,6 +21,8 @@ export const ROUTES: [string, string][] = [
   ['warroom', '/warroom'],
   ['capital', '/capital'],
   ['capital-preset', '/capital?s=eqdd&buf=5'],
+  ['consolidation', '/consolidation'],
+  ['consolidation-pair', '/consolidation/menora/clal?r=60'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

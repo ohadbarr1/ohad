@@ -7,7 +7,7 @@ import { ltsProv } from '../lib/lens';
 import { driversPath, fmt, fmtS, type DriverFile, type LtsResolver } from '../lib/drivers';
 import { ncRows, presets, type CatFile, type CurveFile, type MacroFile, type NowcastFile, type Preset } from '../lib/scenarios';
 import {
-  BASIS_HE, CAPITAL_PATH, KIND_HE, OPT_HE, bindingOf, cprov, distAt, isOk, optionsAt, stressOf, worstOf,
+  BASIS_HE, CAPITAL_PATH, KIND_HE, OPT_HE, bindingOf, boltOf, cprov, distAt, isBolt, isOk, optionsAt, stressOf, worstOf,
   type CapFile, type CapOk, type CFig, type OptRow, type Rows, type Stressed,
 } from '../lib/capital';
 import '../styles/capital.css';
@@ -67,7 +67,7 @@ const estOf = (f: CFig | undefined) => !!f && f.prov.k === 'calc' && !!(f.prov a
 /** the four option rows */
 export function OptionTable({ c, R, W, sel }: { c: CapOk; R: Rows; W: Stressed | null; sel?: string }) {
   const ke = c.pnl.ke;
-  const rk = (id: 'div' | 'org') => { const i = R.rank.indexOf(id); return i < 0 ? <span className="rk" title="אין קיבולת">–</span> : <span className={`rk ${i === 0 ? 'one' : ''}`} title="דירוג לפי ROIC − ke לכל שקל">{i + 1}</span>; };
+  const rk = (id: 'div' | 'org' | 'bolt') => { const i = R.rank.indexOf(id); return i < 0 ? <span className="rk" title="אין קיבולת">–</span> : <span className={`rk ${i === 0 ? 'one' : ''}`} title="דירוג לפי ROIC − ke לכל שקל">{i + 1}</span>; };
   const none = (R.div.cap.v ?? 0) <= 0;
   const row = (o: OptRow, acc: ReactNode, roicSub: ReactNode) => (
     <div className="tr" key={o.id}>
@@ -85,13 +85,32 @@ export function OptionTable({ c, R, W, sel }: { c: CapOk; R: Rows; W: Stressed |
         <><bdi>ke</bdi> · {S(c, ke, `${fmt(ke.v, 2)}%`, 'num')}</>)}
       {row(R.org, <>{S(c, R.org.eps, <>רווח למניה {signP(R.org.eps.v)}</>)}<span className="s"><bdi>ROE</bdi> {S(c, R.org.roe, `${sign(R.org.roe.v)} נ״א`, 'num')} · התשואה מעל rf אחרי מס</span></>,
         <>ROE LTM כאומדן לתשואה השולית {estOf(R.org.roic) && <Est t="הדוחות לא מפרסמים את צריכת ההון של עסק חדש; ה-ROE הממוצע משמש כאומדן" />}</>)}
-      <div className="tr off"><div className="lbl"><span className="rk">–</span>{OPT_HE.bolt}</div><div className="wide na" data-l="">A9 · מודול האיחודים: טרם חושב</div><div className="na ph">–</div><div className="na ph">–</div><div className="na ph">–</div></div>
+      <BoltLine c={c} R={R} rk={rk('bolt')} />
       <div className={`tr hold ${sel ? 'sel' : ''}`}>
         <div className="lbl"><span className="rk">–</span>{OPT_HE.hold}</div>
         <div data-l="עודף שנשאר, מ׳ ש״ח">{W && W.v != null ? <Sourced className={`v num ${W.v < 0 ? 'neg' : ''}`} src={W.prov}>{amt(W.v)}</Sourced> : <span className="na">–</span>}<span className="s">{W ? <>אחרי "{W.he}"{sel ? '' : ', החמור שחושב'}</> : 'לא חושב'}</span></div>
         <div data-l="להחזיק">{W && W.v != null ? <><span className="v num">{amt(R.dist - W.v)}</span><span className="s">מ׳ ש״ח שהתרחיש צורך</span></> : <span className="na">–</span>}</div>
         <div className="na ph">–</div><div className="na ph">–</div>
       </div>
+    </div>
+  );
+}
+
+/** the A9 bolt-on: the best-ranked consolidation target the insurer can afford at a 20% premium (at the file's buffer) */
+function BoltLine({ c, R, rk }: { c: CapOk; R: Rows; rk: ReactNode }) {
+  const b = boltOf(c);
+  if (!isBolt(b)) return (
+    <div className="tr off"><div className="lbl"><span className="rk">–</span>{OPT_HE.bolt}</div>
+      <div className="wide na" data-l="">{'why' in b ? b.why : 'A9 · מודול האיחודים: טרם חושב'} · <Link to="/consolidation">מסך האיחודים</Link></div><div className="na ph">–</div><div className="na ph">–</div><div className="na ph">–</div></div>
+  );
+  const [a, t] = b.pair.split('__');
+  return (
+    <div className="tr">
+      <div className="lbl">{rk}{OPT_HE.bolt}</div>
+      <div data-l="מחיר, מ׳ ש״ח">{S(c, b.cap, amt(b.cap.v))}<span className="s"><Link to={`/consolidation/${a}/${t}`}>{b.tgt_name}</Link> · פרמיה <span className="num">{fmt(b.premium, 0)}%</span> · דירוג A9 <span className="num">{b.rank_a9}</span>{R.override && <> · במרווח ברירת המחדל</>}</span></div>
+      <div data-l="ROIC">{S(c, b.roic, `${fmt(b.roic.v, 1)}%`)}<span className="s">רווח היעד וסינרגיה נטו ÷ מחיר <Est t="סינרגיה בקצב מלא אחרי שיעור מימוש; שווי מוצדק, לא מחיר שוק" /></span></div>
+      <div data-l="עלות כושר פירעון">{b.solv ? S(c, b.solv, `${sign(b.solv.v)} נ״א`) : <span className="na">–</span>}<span className="s">{b.solv_gw ? <>רישום בחברת הביטוח: {S(c, b.solv_gw, `${sign(b.solv_gw.v)} נ״א`, 'num')}</> : 'מזומן מהעודף ÷ SCR'}</span></div>
+      <div data-l="השפעה" className="acc">{S(c, b.eps, <>רווח למניה {signP(b.eps.v)}</>)}<span className="s"><bdi>ROE</bdi> {S(c, b.roe, `${sign(b.roe.v, 2)} נ״א`, 'num')} · ערך נוכחי של הסינרגיה {S(c, b.npv, amt(b.npv.v), 'num')}</span></div>
     </div>
   );
 }

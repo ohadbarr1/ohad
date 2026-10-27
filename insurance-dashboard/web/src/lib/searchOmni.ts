@@ -32,6 +32,8 @@ const SCN_KEYS = ['scenario', 'scenarios', 'stress', 'shock', 'war', 'תרחיש
 const REG_KEYS = ['regulation', 'regulatory', 'רגולציה', 'רגולטור', 'רגולטורי', 'רשות', 'חוזר', 'חוזרים', 'טיוטה', 'טיוטות', 'אסדרה', 'יוזמות', 'צנרת', 'ברירת', 'מחדל', 'חשבון השקעה'].map(normalize);
 /** words that reach capital and strategic options (/capital, module A7) without a company */
 const CAP_KEYS = ['capital', 'surplus', 'dividend', 'buyback', 'allocation', 'הון', 'עודף', 'דיבידנד', 'חלוקה', 'רכישה', 'עצמית', 'הקצאה', 'אפשרויות', 'בר-חלוקה'].map(normalize);
+/** words that reach the consolidation screen (/consolidation, module A9) without a company */
+const CONS_KEYS = ['consolidation', 'merger', 'acquisition', 'synergy', 'bolt-on', 'm&a', 'איחוד', 'איחודים', 'מיזוג', 'מיזוגים', 'רכישה', 'רכישות', 'סינרגיה', 'סינרגיות', 'רוכשת', 'יעד', 'יעדים'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -140,6 +142,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // capital and strategic options (module A7)
   if (!p.company && words.length && words.every((w) => CAP_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'הון ואפשרויות הקצאה · כל המבטחות', meta: 'הון בר-חלוקה מעל יעד הדירקטוריון, דיבידנד מול צמיחה, העודף אחרי תרחישי לחץ', to: '/capital', score: 96 });
+  }
+  // the consolidation screen (module A9)
+  if (!p.company && words.length && words.every((w) => CONS_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'מסך האיחודים · רוכשת מול יעד', meta: 'סינרגיית עלויות, קיבולת תשלום, השפעה על הרווח למניה, עלות כושר פירעון', to: '/consolidation', score: 96 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {

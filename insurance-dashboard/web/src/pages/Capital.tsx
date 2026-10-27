@@ -76,7 +76,7 @@ export function Capital() {
     <div className="cap scn">
       <div className="pagehead"><div>
         <h1><span className="icotile"><Icon name="shield" /></span>הון ואפשרויות הקצאה</h1>
-        <div className="sub"><span><span className="num">{cos.length}</span> מבטחות</span><span>·</span><span>כושר פירעון <span className="num">{dates}</span>, רווח LTM <span className="num">{B.file.meta.base.ltm[0]}–{B.file.meta.base.ltm[3]}</span></span><span>·</span><span>מיליוני ש״ח</span><span>·</span><Link to="/scenarios">חדר התרחישים</Link><Link to="/industry/csm?view=capital">כושר חלוקה כפי שדווח</Link></div>
+        <div className="sub"><span><span className="num">{cos.length}</span> מבטחות</span><span>·</span><span>כושר פירעון <span className="num">{dates}</span>, רווח LTM <span className="num">{B.file.meta.base.ltm[0]}–{B.file.meta.base.ltm[3]}</span></span><span>·</span><span>מיליוני ש״ח</span><span>·</span><Link to="/scenarios">חדר התרחישים</Link><Link to="/industry/csm?view=capital">כושר חלוקה כפי שדווח</Link><Link to="/consolidation">מסך האיחודים</Link></div>
       </div></div>
 
       <div className="cap-ctl">

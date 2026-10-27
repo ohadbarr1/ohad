@@ -86,6 +86,9 @@ const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // modul
 const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRoomRegulation'); // module A8: the regulatory pipeline (not a nav item)
 const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator (not a nav item; linked from /savings and search)
 const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
+const mConsolidation = () => import('./pages/Consolidation');
+const Consolidation = page(mConsolidation, 'Consolidation'); // module A9: the consolidation screen (from /capital, /savings and search, not a nav item)
+const ConsolidationPair = page(mConsolidation, 'ConsolidationPair');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -175,6 +178,8 @@ export function App() {
         <Route path="warroom/regulation" element={<WarRoomRegulation />} />{/* module A8: reached from /warroom (A5), /savings and search, not a nav item */}
         <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
         <Route path="capital" element={<Capital />} />{/* module A7 */}
+        <Route path="consolidation" element={<Consolidation />} />{/* module A9 */}
+        <Route path="consolidation/:a/:t" element={<ConsolidationPair />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
