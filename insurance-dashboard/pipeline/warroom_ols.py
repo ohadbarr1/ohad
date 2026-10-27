@@ -10,6 +10,7 @@ Standard library only (no numpy): the regressors are few (about a dozen), the ro
       cluster  list of n keys: the one-way cluster-robust (sandwich) variance with the small-sample factor G/(G-1) x (n-1)/(n-k)
     lincom(fit, a) -> (value, se): a linear combination a'b and its standard error (the sum of distributed-lag coefficients)
 """
+from math import fsum  # correctly rounded: the same result on Python 3.9 (local) and 3.12 (CI), whose sum() compensates
 import math
 from collections import defaultdict
 
@@ -65,12 +66,12 @@ def fit(y, X, w, fes, cluster, names):
     n, k = len(y), len(X[0])
     cols = demean([y] + [[r[j] for r in X] for j in range(k)], w, fes)
     yd, Xd = cols[0], cols[1:]
-    XtX = [[sum(w[i] * Xd[a][i] * Xd[b][i] for i in range(n)) for b in range(k)] for a in range(k)]
-    Xty = [sum(w[i] * Xd[a][i] * yd[i] for i in range(n)) for a in range(k)]
+    XtX = [[fsum(w[i] * Xd[a][i] * Xd[b][i] for i in range(n)) for b in range(k)] for a in range(k)]
+    Xty = [fsum(w[i] * Xd[a][i] * yd[i] for i in range(n)) for a in range(k)]
     inv = solve(XtX, [[1.0 if i == j else 0.0 for i in range(k)] for j in range(k)])  # columns of the inverse
     Inv = [[inv[j][i] for j in range(k)] for i in range(k)]
-    b = [sum(Inv[a][c] * Xty[c] for c in range(k)) for a in range(k)]
-    e = [yd[i] - sum(b[a] * Xd[a][i] for a in range(k)) for i in range(n)]
+    b = [fsum(Inv[a][c] * Xty[c] for c in range(k)) for a in range(k)]
+    e = [yd[i] - fsum(b[a] * Xd[a][i] for a in range(k)) for i in range(n)]
     sc = defaultdict(lambda: [0.0] * k)
     for i in range(n):
         s = sc[cluster[i]]
@@ -85,19 +86,19 @@ def fit(y, X, w, fes, cluster, names):
                 for c in range(k):
                     meat[a][c] += s[a] * s[c]
     q = G / (G - 1) * (n - 1) / (n - k) if G > 1 and n > k else 1.0
-    IM = [[sum(Inv[a][m] * meat[m][c] for m in range(k)) for c in range(k)] for a in range(k)]
-    V = [[q * sum(IM[a][m] * Inv[m][c] for m in range(k)) for c in range(k)] for a in range(k)]
+    IM = [[fsum(Inv[a][m] * meat[m][c] for m in range(k)) for c in range(k)] for a in range(k)]
+    V = [[q * fsum(IM[a][m] * Inv[m][c] for m in range(k)) for c in range(k)] for a in range(k)]
     se = [math.sqrt(max(V[a][a], 0.0)) for a in range(k)]
-    ybar = sum(w[i] * yd[i] for i in range(n)) / sum(w)
-    sst = sum(w[i] * (yd[i] - ybar) ** 2 for i in range(n))
-    sse = sum(w[i] * e[i] ** 2 for i in range(n))
+    ybar = fsum(w[i] * yd[i] for i in range(n)) / fsum(w)
+    sst = fsum(w[i] * (yd[i] - ybar) ** 2 for i in range(n))
+    sse = fsum(w[i] * e[i] ** 2 for i in range(n))
     return {"names": names, "b": b, "se": se, "t": [b[a] / se[a] if se[a] else 0.0 for a in range(k)], "V": V, "n": n, "k": k,
             "r2": 1 - sse / sst if sst else 0.0, "clusters": G}
 
 
 def lincom(f, a):
-    v = sum(x * y for x, y in zip(a, f["b"]))
-    var = sum(a[i] * f["V"][i][j] * a[j] for i in range(len(a)) for j in range(len(a)))
+    v = fsum(x * y for x, y in zip(a, f["b"]))
+    var = fsum(a[i] * f["V"][i][j] * a[j] for i in range(len(a)) for j in range(len(a)))
     return v, math.sqrt(max(var, 0.0))
 
 
@@ -106,13 +107,13 @@ def ols1(y, x):
     n = len(y)
     if n < 3:
         return None
-    mx, my = sum(x) / n, sum(y) / n
-    sxx = sum((v - mx) ** 2 for v in x)
+    mx, my = fsum(x) / n, fsum(y) / n
+    sxx = fsum((v - mx) ** 2 for v in x)
     if sxx <= 0:
         return None
-    b = sum((u - mx) * (v - my) for u, v in zip(x, y)) / sxx
+    b = fsum((u - mx) * (v - my) for u, v in zip(x, y)) / sxx
     a = my - b * mx
-    sse = sum((v - a - b * u) ** 2 for u, v in zip(x, y))
-    sst = sum((v - my) ** 2 for v in y)
+    sse = fsum((v - a - b * u) ** 2 for u, v in zip(x, y))
+    sst = fsum((v - my) ** 2 for v in y)
     se = math.sqrt(sse / (n - 2) / sxx) if n > 2 else float("nan")
     return a, b, se, (1 - sse / sst) if sst else 0.0, n

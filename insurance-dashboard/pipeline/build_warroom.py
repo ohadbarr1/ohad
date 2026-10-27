@@ -46,6 +46,7 @@ last quarter and the last 12 months, each figure with its tracks. Revealed subst
 transfers in the category regressed on m's (01/20 to the latest month): d_j = max(0, -slope_j), normalised. Used where the competitors mirror at
 least 30% of m's flow over at least 36 months; else the competitors' share of the category's assets (labelled). Units: NIS m, bp, % a month.
 """
+from math import fsum  # correctly rounded: the same result on Python 3.9 (local) and 3.12 (CI), whose sum() compensates
 import ast
 import datetime as dt
 import json
@@ -332,7 +333,7 @@ def fee_timing(P):
     for x in lens["rows"]:
         if x["s"] == "gem" and x["q"].startswith("Q") and x.get("fy_reg"):
             fy[(x["g"], int(x["q"][3:]))].append(x["fy_reg"])
-    fy = {k: sum(v) / len(v) for k, v in fy.items() if len(v) == 4 or k[1] == P.asof // 100}
+    fy = {k: fsum(v) / len(v) for k, v in fy.items() if len(v) == 4 or k[1] == P.asof // 100}
     post = defaultdict(lambda: [0.0, 0.0])
     for t in P.tr.values():
         if t["prod"] not in ("gemel", "hisht"):
@@ -353,10 +354,10 @@ def fee_timing(P):
         n = len(xs)
         if n < 5:
             return None, n
-        mx, my = sum(xs) / n, sum(ys) / n
-        sxy = sum((a - mx) * (b - my) for a, b in zip(xs, ys))
-        sxx = sum((a - mx) ** 2 for a in xs)
-        syy = sum((b - my) ** 2 for b in ys)
+        mx, my = fsum(xs) / n, fsum(ys) / n
+        sxy = fsum((a - mx) * (b - my) for a, b in zip(xs, ys))
+        sxx = fsum((a - mx) ** 2 for a in xs)
+        syy = fsum((b - my) ** 2 for b in ys)
         return round(sxy / math.sqrt(sxx * syy), 3), n
     c0, n0 = corr(0)
     c1, n1 = corr(1)
@@ -422,7 +423,7 @@ def estimate(P):
         half = next((k for k, c in enumerate(rp["c"]) if c >= 0.5), None) if rp["how"] == "lags" else None
         prods[prod] = {"he": pr["he"], "a1": pr["a1"], "fam": pr["fam"], "ds": pr["ds"], "main": main, "rob": rob, "quality": q, "why": why,
                        "per_bp_year": r(-main["B"] * 12, 4), "ramp": rp, "peak_lag": peak, "half_lag": half, "events": ev, "tracks": tracks,
-                       "window": f"{mlabel(ms[0])}–{mlabel(ms[-1])}", "flow_share": r(sum(x["tr"] for x in R if x["tr"] > 0) / max(1e-9, sum(x["A"] for x in R)) * 100, 4),
+                       "window": f"{mlabel(ms[0])}–{mlabel(ms[-1])}", "flow_share": r(fsum(x["tr"] for x in R if x["tr"] > 0) / max(1e-9, fsum(x["A"] for x in R)) * 100, 4),
                        "prov": est_prov(P, prod, main, q, why, ev, tracks)}
     pooled = spec_main(pooled_rows)
     pq, pwhy = quality(pooled, {})
@@ -446,21 +447,21 @@ def board(P):
             cats[t["cat"]][t["g"][asof]].append(t)
         clist = []
         for cat, by in cats.items():
-            tot = sum(t["a"][asof] for ts in by.values() for t in ts)
+            tot = fsum(t["a"][asof] for ts in by.values() for t in ts)
             if len(by) < 2 or tot < 1000:
                 continue
             mgrs = []
-            for g, ts in sorted(by.items(), key=lambda kv: -sum(t["a"][asof] for t in kv[1])):
+            for g, ts in sorted(by.items(), key=lambda kv: -fsum(t["a"][asof] for t in kv[1])):
                 ts = sorted(ts, key=lambda t: -t["a"][asof])
-                A = sum(t["a"][asof] for t in ts)
+                A = fsum(t["a"][asof] for t in ts)
                 fw = [(t["a"][asof], t["post"].get(y, (None,))[0]) for t in ts]
-                fa = sum(a for a, f in fw if f is not None)
-                fee = sum(a * f for a, f in fw if f is not None) / fa if fa else None
-                trq = sum(t["tr"].get(m, 0.0) for t in ts for m in q_months)
-                tr12 = sum(t["tr"].get(m, 0.0) for t in ts for m in l12)
+                fa = fsum(a for a, f in fw if f is not None)
+                fee = fsum(a * f for a, f in fw if f is not None) / fa if fa else None
+                trq = fsum(t["tr"].get(m, 0.0) for t in ts for m in q_months)
+                tr12 = fsum(t["tr"].get(m, 0.0) for t in ts for m in l12)
                 mgrs.append({"g": g, "c": P.co.get(P.G[g]), "he": P.G[g], "A": r(A, 1), "fee": r(fee, 4), "trq": r(trq, 1), "tr12": r(tr12, 1),
                              "tracks": [[t["ds"], t["id"], t["name"], r(t["a"][asof], 1), r(t["post"].get(y, (None,))[0], 2),
-                                         [r(t["tr"].get(m, 0.0), 1) for m in q_months], r(sum(t["tr"].get(m, 0.0) for m in l12), 1)] for t in ts]})
+                                         [r(t["tr"].get(m, 0.0), 1) for m in q_months], r(fsum(t["tr"].get(m, 0.0) for m in l12), 1)] for t in ts]})
             # revealed substitution: monthly net transfers of every manager in the category (closed tracks included), 01/20 to asof
             series = defaultdict(lambda: defaultdict(float))
             for t in P.tr.values():
@@ -481,9 +482,9 @@ def board(P):
                     o = ols1([series[j].get(m, 0.0) for m in months], xs)
                     if o:
                         raw[j] = {"b": r(o[1], 4), "t": r(o[1] / o[2], 2) if o[2] and o[2] == o[2] else None}
-                cover = sum(max(0.0, -v["b"]) for v in raw.values())
+                cover = fsum(max(0.0, -v["b"]) for v in raw.values())
                 share = {x["g"]: x["A"] for x in mgrs if x["g"] != mv}
-                st = sum(share.values())
+                st = fsum(share.values())
                 use = cover >= MIN_COVER and len(months) >= MIN_DIV_N
                 if use:
                     w = {j: max(0.0, -raw[j]["b"]) / cover for j in raw}
@@ -563,20 +564,20 @@ def verify(files):
         exp, _ = quality(m, p["rob"])
         if exp != p["quality"]:
             bad.append(f"{prod}: quality {p['quality']} != rule {exp}")
-        if abs(sum(c["b"] for c in m["coef"][:LAGS + 1]) - m["B"]) > 1e-4:
+        if abs(fsum(c["b"] for c in m["coef"][:LAGS + 1]) - m["B"]) > 1e-4:
             bad.append(f"{prod}: B != sum of the lag coefficients")
     bd = files["board.json"]
     for prod, p in bd["products"].items():
         for c in p["cats"]:
-            if abs(sum(x["A"] for x in c["mgrs"]) - c["A"]) > 0.5:
+            if abs(fsum(x["A"] for x in c["mgrs"]) - c["A"]) > 0.5:
                 bad.append(f"{prod}/{c['cat']}: managers do not add to the category")
             for x in c["mgrs"]:
-                if abs(sum(sum(t[5]) for t in x["tracks"]) - x["trq"]) > 0.5:
+                if abs(fsum(fsum(t[5]) for t in x["tracks"]) - x["trq"]) > 0.5:
                     bad.append(f"{prod}/{c['cat']}/{x['he']}: track transfers do not add to the manager's quarter")
-                if abs(sum(t[3] for t in x["tracks"]) - x["A"]) > 0.5:
+                if abs(fsum(t[3] for t in x["tracks"]) - x["A"]) > 0.5:
                     bad.append(f"{prod}/{c['cat']}/{x['he']}: tracks do not add to the manager")
             for mv, dv in c["div"].items():
-                s = sum(dv["w"].values())
+                s = fsum(dv["w"].values())
                 if dv["w"] and abs(s - 1) > 2e-3:
                     bad.append(f"{prod}/{c['cat']}/{mv}: allocation weights sum to {s}")
     return bad
