@@ -82,6 +82,7 @@ const mPositions = () => import('./pages/Positions');  // module A6: the positio
 const Positions = page(mPositions, 'Positions');
 const PositionSheet = page(mPositions, 'PositionSheet');
 const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
+const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRoomRegulation'); // module A8: the regulatory pipeline (not a nav item)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -167,6 +168,7 @@ export function App() {
         <Route path="positions/:id" element={<PositionSheet />} />
         <Route path="drivers" element={<Drivers />} />
         <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
+        <Route path="warroom/regulation" element={<WarRoomRegulation />} />{/* module A8: reached from /warroom (A5), /savings and search, not a nav item */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

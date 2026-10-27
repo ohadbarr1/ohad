@@ -240,6 +240,10 @@
   {
    "pattern": "drivers/*.json",
    "schema": "drivers"
+  },
+  {
+   "pattern": "regulation/impact.json",
+   "schema": "regulationImpact"
   }
  ],
  "$defs": {
@@ -8863,6 +8867,628 @@
        "id",
        "he"
       ]
+     }
+    }
+   }
+  },
+  "regBand": {
+   "type": "object",
+   "required": [
+    "low",
+    "central",
+    "high"
+   ],
+   "properties": {
+    "low": {
+     "type": "number"
+    },
+    "central": {
+     "type": "number"
+    },
+    "high": {
+     "type": "number"
+    }
+   }
+  },
+  "regSource": {
+   "type": "object",
+   "required": [
+    "url",
+    "title",
+    "doc",
+    "pg",
+    "retrieved"
+   ],
+   "properties": {
+    "url": {
+     "type": "string",
+     "pattern": "^https://([a-z0-9.-]+\\.)?gov\\.il/"
+    },
+    "title": {
+     "type": "string"
+    },
+    "doc": {
+     "type": "string"
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "retrieved": {
+     "$ref": "#/$defs/date"
+    }
+   }
+  },
+  "regDate": {
+   "type": "object",
+   "required": [
+    "k",
+    "d",
+    "he",
+    "src"
+   ],
+   "properties": {
+    "k": {
+     "enum": [
+      "published",
+      "effective",
+      "ends",
+      "expected"
+     ]
+    },
+    "d": {
+     "type": "string",
+     "pattern": "^\\d{4}(-\\d\\d(-\\d\\d)?)?$"
+    },
+    "he": {
+     "type": "string"
+    },
+    "src": {
+     "type": "integer"
+    }
+   }
+  },
+  "regImpact": {
+   "type": "object",
+   "required": [
+    "c",
+    "d",
+    "net",
+    "aum",
+    "rev",
+    "products",
+    "flags"
+   ],
+   "properties": {
+    "c": {
+     "type": "string"
+    },
+    "d": {
+     "$ref": "#/$defs/regBand"
+    },
+    "net": {
+     "$ref": "#/$defs/regBand"
+    },
+    "aum": {
+     "$ref": "#/$defs/regBand"
+    },
+    "rev": {
+     "$ref": "#/$defs/regBand"
+    },
+    "pct_np": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "required": [
+      "low",
+      "central",
+      "high"
+     ],
+     "properties": {
+      "low": {
+       "type": "number"
+      },
+      "central": {
+       "type": "number"
+      },
+      "high": {
+       "type": "number"
+      }
+     }
+    },
+    "products": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "s",
+       "shock",
+       "d",
+       "basis"
+      ],
+      "properties": {
+       "s": {
+        "enum": [
+         "pen",
+         "gem",
+         "ic"
+        ]
+       },
+       "shock": {
+        "type": "object",
+        "required": [
+         "low",
+         "central",
+         "high"
+        ],
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "flow",
+          "fee"
+         ],
+         "properties": {
+          "flow": {
+           "type": "number"
+          },
+          "fee": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "d": {
+        "type": "object",
+        "required": [
+         "low",
+         "central",
+         "high"
+        ],
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "dA",
+          "dRev",
+          "dVar",
+          "dOp"
+         ],
+         "properties": {
+          "dA": {
+           "type": "number"
+          },
+          "dRev": {
+           "type": "number"
+          },
+          "dVar": {
+           "type": "number"
+          },
+          "dOp": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "basis": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "label",
+          "v",
+          "unit",
+          "est"
+         ],
+         "properties": {
+          "label": {
+           "type": "string"
+          },
+          "v": {
+           "$ref": "#/$defs/regBand"
+          },
+          "unit": {
+           "type": "string"
+          },
+          "est": {
+           "type": "boolean"
+          },
+          "p": {
+           "$ref": "#/$defs/driverProv"
+          },
+          "param": {
+           "type": "string"
+          }
+         }
+        }
+       },
+       "net_flow": {
+        "$ref": "#/$defs/regBand"
+       }
+      }
+     }
+    },
+    "flags": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "regulationImpact": {
+   "type": "object",
+   "required": [
+    "meta",
+    "managers",
+    "initiatives",
+    "exposure"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "retrieved",
+      "base",
+      "units",
+      "bands",
+      "weights",
+      "excluded"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "retrieved": {
+       "$ref": "#/$defs/date"
+      },
+      "base": {
+       "type": "object",
+       "required": [
+        "q",
+        "ltm"
+       ],
+       "properties": {
+        "q": {
+         "type": "string",
+         "pattern": "^Q[1-4]'\\d\\d$"
+        }
+       }
+      },
+      "bands": {
+       "type": "array",
+       "prefixItems": [
+        {
+         "enum": [
+          "low"
+         ]
+        },
+        {
+         "enum": [
+          "central"
+         ]
+        },
+        {
+         "enum": [
+          "high"
+         ]
+        }
+       ]
+      },
+      "weights": {
+       "type": "object",
+       "required": [
+        "proposal",
+        "consultation",
+        "approved",
+        "in_force"
+       ],
+       "additionalProperties": {
+        "type": "number"
+       }
+      },
+      "excluded": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "c",
+         "name",
+         "why"
+        ]
+       }
+      }
+     }
+    },
+    "managers": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "name",
+       "kind",
+       "tax",
+       "products",
+       "np"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "insurance_group",
+         "fund_house"
+        ]
+       },
+       "tax": {
+        "type": "number"
+       },
+       "products": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "he",
+          "A",
+          "fy",
+          "vc"
+         ],
+         "properties": {
+          "A": {
+           "type": "object",
+           "required": [
+            "v",
+            "p"
+           ],
+           "properties": {
+            "v": {
+             "type": "number"
+            },
+            "p": {
+             "$ref": "#/$defs/driverProv"
+            }
+           }
+          },
+          "fy": {
+           "type": "object",
+           "required": [
+            "v",
+            "p"
+           ],
+           "properties": {
+            "v": {
+             "type": "number"
+            },
+            "p": {
+             "$ref": "#/$defs/driverProv"
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "initiatives": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "title",
+       "short",
+       "regulator",
+       "type",
+       "status",
+       "w",
+       "dates",
+       "next",
+       "facts",
+       "sources",
+       "model",
+       "impacts",
+       "total"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+       },
+       "title": {
+        "type": "string"
+       },
+       "short": {
+        "type": "string"
+       },
+       "regulator": {
+        "type": "string"
+       },
+       "type": {
+        "enum": [
+         "fee",
+         "default",
+         "substitution",
+         "solvency",
+         "transparency",
+         "cost"
+        ]
+       },
+       "status": {
+        "enum": [
+         "proposal",
+         "consultation",
+         "approved",
+         "in_force"
+        ]
+       },
+       "w": {
+        "type": "number"
+       },
+       "dates": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "$ref": "#/$defs/regDate"
+        }
+       },
+       "next": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "required": [
+         "k",
+         "d",
+         "he",
+         "src"
+        ],
+        "properties": {
+         "k": {
+          "enum": [
+           "published",
+           "effective",
+           "ends",
+           "expected"
+          ]
+         },
+         "d": {
+          "type": "string",
+          "pattern": "^\\d{4}(-\\d\\d(-\\d\\d)?)?$"
+         },
+         "he": {
+          "type": "string"
+         },
+         "src": {
+          "type": "integer"
+         }
+        }
+       },
+       "facts": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "he",
+          "src"
+         ]
+        }
+       },
+       "sources": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "$ref": "#/$defs/regSource"
+        }
+       },
+       "model": {
+        "type": "object",
+        "required": [
+         "kind",
+         "he",
+         "products",
+         "params"
+        ],
+        "properties": {
+         "kind": {
+          "enum": [
+           "fee",
+           "default",
+           "substitution",
+           "none"
+          ]
+         },
+         "params": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "required": [
+            "k",
+            "he",
+            "unit",
+            "src"
+           ],
+           "properties": {
+            "src": {
+             "enum": [
+              "source",
+              "assumption",
+              "regulator"
+             ]
+            }
+           }
+          }
+         }
+        }
+       },
+       "impacts": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/regImpact"
+        }
+       },
+       "total": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "required": [
+         "low",
+         "central",
+         "high"
+        ],
+        "properties": {
+         "low": {
+          "type": "number"
+         },
+         "central": {
+          "type": "number"
+         },
+         "high": {
+          "type": "number"
+         }
+        }
+       }
+      }
+     }
+    },
+    "exposure": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "d",
+       "net",
+       "by",
+       "pct_np"
+      ],
+      "properties": {
+       "d": {
+        "$ref": "#/$defs/regBand"
+       },
+       "net": {
+        "$ref": "#/$defs/regBand"
+       },
+       "by": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "id",
+          "w"
+         ],
+         "properties": {
+          "w": {
+           "type": "number"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }

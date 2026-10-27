@@ -166,6 +166,11 @@ STEPS = [
           D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", "web/src/lib/valuation.ts"],
          [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py"], groups={"deploy"},
          note="A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)"),
+    # module A8: the regulatory impact simulator: the hand-curated initiative register through the A1 driver files; gate `regulation`
+    step("build_regulation", "pipeline/build_regulation.py",
+         ["data/regulation/initiatives.json", D + "drivers", D + "market.json"],
+         [D + "regulation/impact.json"], groups={"deploy"},
+         note="A8: low / central / high impact per initiative x manager, the exposure to the whole pipeline (weights labelled)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

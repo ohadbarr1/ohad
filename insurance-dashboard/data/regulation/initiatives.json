@@ -1,0 +1,210 @@
+{
+ "$comment": "A8 · the initiative register (hand-curated). Every entry is a real, public initiative of the Capital Market, Insurance and Savings Authority or the Ministry of Finance, read from the regulator's own document (sources[].url, the page the fact is on, the retrieval date). Nothing here is inferred: a date or a parameter the document does not print is left out. The modelled shock is a labelled assumption (src = 'assumption') unless the document prints it (src = 'source'). pipeline/build_regulation.py turns each entry into a shock per manager x product through the A1 driver files and writes web/public/data/regulation/impact.json.",
+ "retrieved": "2026-10-27",
+ "weights": {
+  "$comment": "assumption: the probability that an initiative takes effect, by its stage, used only to weight the exposure to the whole pipeline. An initiative in force is already inside the LTM base of the driver files, so it adds nothing incremental (weight 0); its row shows what the rule is worth a year.",
+  "proposal": 0.25,
+  "consultation": 0.5,
+  "approved": 0.85,
+  "in_force": 0
+ },
+ "initiatives": [
+  {
+   "id": "default-funds-2024",
+   "title": "ההליך הרביעי לקביעת קרנות פנסיה נבחרות (ברירת מחדל)",
+   "short": "קרנות ברירת מחדל",
+   "regulator": "רשות שוק ההון, ביטוח וחיסכון",
+   "type": "default",
+   "status": "in_force",
+   "dates": [
+    {"k": "published", "d": "2024-08-25", "he": "חוזר גופים מוסדיים 2024-9-6 (הוראות לעניין בחירת קופת גמל, עדכון)", "src": 1},
+    {"k": "published", "d": "2024-09-19", "he": "הודעה על תוצאות ההליך", "src": 0},
+    {"k": "effective", "d": "2024-11-01", "he": "תחילת תקופת הקרנות הנבחרות", "src": 0},
+    {"k": "effective", "d": "2025-06-01", "he": "מנגנון החלוקה לפי ספרת הביקורת חל על מעסיק של 50 עובדים ומעלה", "src": 0},
+    {"k": "ends", "d": "2028-10-31", "he": "סוף תקופת הקרנות הנבחרות", "src": 0}
+   ],
+   "next": {"d": "2028-11-01", "he": "המועד הקובע הבא, נגזר מהגדרת החוזר: \"אחת לארבע שנים החל מיום 1 בנובמבר 2024\"", "src": 1},
+   "facts": [
+    {"he": "נבחרו: אינפיניטי, אלטשולר שחם, מור ומיטב", "src": 0},
+    {"he": "דמי ניהול מרביים: 0.22% מהצבירה ו-1% מההפקדות, מובטחים לעובד ל-10 שנים", "src": 0},
+    {"he": "חלוקה לפי ספרת ביקורת: 7,8,9 אינפיניטי · 4,5,6 מור · 2,3 אלטשולר שחם · 0,1 מיטב", "src": 0}
+   ],
+   "sources": [
+    {"url": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/notice-2024-101/he/Results_of_the_fourth_procedure_for_determining_selected_funds_pdf.pdf",
+     "title": "תוצאות ההליך הרביעי לקביעת קרנות פנסיה נבחרות", "doc": "רשות שוק ההון, שה.2024-2531, 19.09.2024", "pg": 1, "retrieved": "2026-10-27"},
+    {"url": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/notice-2024-097/he/Regulations_regarding_the_selection_of_%20a_provident_fund-updating%20_(pdf).pdf",
+     "title": "חוזר גופים מוסדיים 2024-9-6: הוראות לעניין בחירת קופת גמל, עדכון", "doc": "רשות שוק ההון, 25.08.2024", "pg": 4, "retrieved": "2026-10-27"}
+   ],
+   "model": {
+    "kind": "default",
+    "he": "חלוקה מחדש של הפקדות המצטרפים שלא בחרו קרן: לארבע הקרנות הנבחרות לפי ספרת הביקורת, במקום לפי נתח ההפקדות של כל קבוצה (חלופה נגדית); הנכסים הנוספים בקרן נבחרת מתומחרים ב-0.22%",
+    "products": ["pen"],
+    "params": [
+     {"k": "s", "he": "חלק המצטרפים שלא בחרו קרן מסך ההפקדות לקרנות פנסיה חדשות", "unit": "%", "low": 2, "central": 5, "high": 8, "src": "assumption",
+      "why": "לא פורסם נתון על היקף ההפקדות דרך מנגנון ברירת המחדל; טווח הנחה"},
+     {"k": "fee_assets", "he": "דמי ניהול מהצבירה בקרן נבחרת", "unit": "%", "low": 0.22, "central": 0.22, "high": 0.22, "src": "source", "srcIdx": 0,
+      "why": "תקרה שקבעה הרשות; דמי הניהול מההפקדה (1%) לא נכללו"},
+     {"k": "alloc", "he": "חלוקה בין הקרנות הנבחרות (ספרת ביקורת)", "unit": "%", "src": "source", "srcIdx": 0,
+      "split": {"infinity": 30, "more": 30, "altshuler": 20, "meitav": 20}},
+     {"k": "counter", "he": "חלופה נגדית: ללא המנגנון ההפקדות היו מתחלקות לפי נתח ההפקדות LTM של כל קבוצה", "unit": "", "src": "assumption",
+      "why": "הנחת מודל; אין נתון על התפלגות המצטרפים לפני המנגנון"}
+    ]
+   }
+  },
+  {
+   "id": "investment-account-2026",
+   "title": "חשבון השקעה מוטב במס: הדו\"ח המסכם של הצוות לצמצום הפערים במכשירי השקעה בחיסכון לטווח קצר ובינוני",
+   "short": "חשבון השקעה",
+   "regulator": "משרד האוצר",
+   "type": "substitution",
+   "status": "proposal",
+   "dates": [
+    {"k": "published", "d": "2024-02-25", "he": "שר האוצר הקים את הצוות", "src": 0},
+    {"k": "published", "d": "2025-02-13", "he": "דו\"ח ביניים להערות הציבור", "src": 0},
+    {"k": "published", "d": "2026-07", "he": "דו\"ח מסכם", "src": 0}
+   ],
+   "next": null,
+   "facts": [
+    {"he": "חשבון השקעה מוטב במס שבו יוחזקו קרנות נאמנות, קופות גמל להשקעה ופוליסות חיסכון, בניטרליות מיסויית בין המכשירים", "src": 0},
+    {"he": "הפטור ממס רווחי הון מוגבל להשקעה כוללת של 200 אלף ש\"ח לתושב, צמוד למדד", "src": 0},
+    {"he": "דחיית המס בקופות גמל להשקעה ובפוליסות חיסכון מעל התקרה תבוטל", "src": 0},
+    {"he": "רשות שוק ההון צירפה התייחסות משלימה עם הסתייגויות (נספח 2)", "src": 0},
+    {"he": "היישום מחייב תיקוני חקיקה; הדו\"ח אינו קובע מועד תחילה", "src": 0}
+   ],
+   "sources": [
+    {"url": "https://www.gov.il/BlobFolder/news/press020726/he/%D7%93%D7%95%D7%97%20%D7%9E%D7%A1%D7%9B%D7%9D%20%D7%95%D7%A2%D7%93%D7%AA%20%D7%94%D7%90%D7%A8%D7%91%D7%99%D7%98%D7%A8%D7%90%D7%96%20-%D7%99%D7%95%D7%9C%D7%99%202026%20%D7%97%D7%AA%D7%95%D7%9D.pdf",
+     "title": "הצוות לצמצום הפערים במכשירי השקעה בחיסכון לטווח קצר ובינוני: דו\"ח מסכם", "doc": "משרד האוצר, יולי 2026", "pg": 14, "retrieved": "2026-10-27"},
+    {"url": "https://www.gov.il/BlobFolder/news/press_13022025/he/press_13022025_file.pdf",
+     "title": "דו\"ח ביניים להערות הציבור", "doc": "משרד האוצר, 13.02.2025", "pg": null, "retrieved": "2026-10-27"}
+   ],
+   "model": {
+    "kind": "substitution",
+    "he": "תחליף מוצרים: יציאת נכסים מפוליסות חיסכון ומקופות גמל להשקעה לחשבון ההשקעה ולקרנות נאמנות, ולחץ על דמי הניהול בנכסים שנותרו",
+    "products": ["ic", "gem"],
+    "params": [
+     {"k": "out", "he": "יציאה נטו מהנכסים הזכאים", "unit": "% מהנכסים בשנה", "low": 0, "central": 3, "high": 6, "src": "assumption",
+      "why": "הדו\"ח אינו מכמת מעבר בין מוצרים; טווח הנחה"},
+     {"k": "fee", "he": "שחיקת דמי ניהול בנכסים הזכאים", "unit": "נ\"ב", "low": 0, "central": 5, "high": 10, "src": "assumption",
+      "why": "הדו\"ח צופה לחץ תחרותי על דמי הניהול ואינו מכמת אותו; טווח הנחה"},
+     {"k": "theta", "he": "חלק קופות הגמל להשקעה מנכסי מוצר גמל והשתלמות של הקבוצה", "unit": "%", "src": "regulator",
+      "why": "גמל-נט, נכסים 06/26; הנכסים הזכאים מתומחרים בתשואת דמי הניהול הממוצעת של המוצר (הנחה)"}
+    ]
+   }
+  },
+  {
+   "id": "eac-reasoning-2026",
+   "title": "חוזר סוכנים ויועצים, מסמך הנמקה (תיקון): הצגת העלות השנתית הצפויה בהליך השיווק והייעוץ הפנסיוני",
+   "short": "עלות שנתית צפויה במסמך ההנמקה",
+   "regulator": "רשות שוק ההון, ביטוח וחיסכון",
+   "type": "transparency",
+   "status": "proposal",
+   "dates": [
+    {"k": "published", "d": "2023-07-20", "he": "חוזר גופים מוסדיים 2023-9-6: אופן הצגת העלות השנתית הצפויה (הבסיס, בתוקף)", "src": 1},
+    {"k": "effective", "d": "2024-01-01", "he": "תחילת החוזר הבסיסי, לא יאוחר מ", "src": 1},
+    {"k": "published", "d": "2025-12-31", "he": "התיקון נכלל בתכנית האסדרה לשנת 2026 (עדכון 14.01.2026)", "src": 0}
+   ],
+   "next": {"d": "2026", "he": "שנת התכנית; לא אותרה טיוטה במקור ציבורי", "src": 0},
+   "facts": [
+    {"he": "התיקון יתאים את מסמך ההנמקה לחוזר אופן הצגת עלות שנתית צפויה, לשם הצגתה בהליך השיווק או הייעוץ", "src": 0},
+    {"he": "העלות השנתית הצפויה: דמי ניהול מצבירה, דמי ניהול מהפקדה והוצאות ישירות, לכל מסלול", "src": 1}
+   ],
+   "sources": [
+    {"url": "https://www.gov.il/BlobFolder/reports/report_0015/he/regulation_plan_26_1.pdf",
+     "title": "תכנית אסדרה לשנת 2026", "doc": "רשות שוק ההון, 31.12.2025, עדכון 1: 14.01.2026", "pg": 18, "retrieved": "2026-10-27"},
+    {"url": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/notice-2023-010/he/Presentation-of-the-expected-yearly-costs-for-pension-fund-members-and-life-insurance-policy-holders-%20PDF.pdf",
+     "title": "חוזר גופים מוסדיים 2023-9-6: אופן הצגת העלות השנתית הצפויה לעמית או למבוטח", "doc": "רשות שוק ההון, 20.07.2023", "pg": 1, "retrieved": "2026-10-27"}
+   ],
+   "model": {
+    "kind": "fee",
+    "he": "שקיפות כמדד לשחיקת דמי ניהול: הצגת העלות הכוללת בנקודת המכירה מוחלת כשחיקה קטנה בתשואת דמי הניהול על כל הנכסים",
+    "products": ["pen", "gem", "ic"],
+    "params": [
+     {"k": "fee", "he": "שחיקת דמי ניהול", "unit": "נ\"ב", "low": 0, "central": 0.5, "high": 1, "src": "assumption",
+      "why": "מדד עקיף לשקיפות; התכנית אינה מכמתת השפעה"}
+    ]
+   }
+  },
+  {
+   "id": "returns-publication-2026",
+   "title": "חוזר כללי פרסום תשואה ומסלולי השקעה לגופים המוסדיים",
+   "short": "כללי פרסום תשואה",
+   "regulator": "רשות שוק ההון, ביטוח וחיסכון",
+   "type": "transparency",
+   "status": "proposal",
+   "dates": [
+    {"k": "published", "d": "2025-12-31", "he": "נכלל בתכנית האסדרה לשנת 2026 (עדכון 14.01.2026)", "src": 0}
+   ],
+   "next": {"d": "2026", "he": "שנת התכנית; לא אותרה טיוטה במקור ציבורי", "src": 0},
+   "facts": [
+    {"he": "כללים אחידים לגילוי ולפרסום של מסלולי ההשקעה ותשואותיהם, במקום כללים שנקבעו לפני 15 שנים", "src": 0},
+    {"he": "המטרה: תחרות על הצרכן בין הגופים המוסדיים, בגילוי אינפורמטיבי-מיטבי", "src": 0}
+   ],
+   "sources": [
+    {"url": "https://www.gov.il/BlobFolder/reports/report_0015/he/regulation_plan_26_1.pdf",
+     "title": "תכנית אסדרה לשנת 2026", "doc": "רשות שוק ההון, 31.12.2025, עדכון 1: 14.01.2026", "pg": 21, "retrieved": "2026-10-27"}
+   ],
+   "model": {
+    "kind": "fee",
+    "he": "שקיפות כמדד לשחיקת דמי ניהול: השוואתיות טובה יותר בין מסלולים מוחלת כשחיקה קטנה בתשואת דמי הניהול",
+    "products": ["pen", "gem", "ic"],
+    "params": [
+     {"k": "fee", "he": "שחיקת דמי ניהול", "unit": "נ\"ב", "low": 0, "central": 0.25, "high": 0.5, "src": "assumption",
+      "why": "מדד עקיף לשקיפות; התכנית אינה מכמתת השפעה"}
+    ]
+   }
+  },
+  {
+   "id": "mgmt-capital-2026",
+   "title": "תיקון תקנות הפיקוח על שירותים פיננסיים (קופות גמל) (הון עצמי מזערי הנדרש מחברה מנהלת של קופת גמל או קרן פנסיה), התשע\"ב-2012",
+   "short": "הון עצמי מזערי לחברות מנהלות",
+   "regulator": "רשות שוק ההון, ביטוח וחיסכון",
+   "type": "solvency",
+   "status": "proposal",
+   "dates": [
+    {"k": "published", "d": "2025-12-31", "he": "נכלל בתכנית האסדרה לשנת 2026 (עדכון 14.01.2026)", "src": 0}
+   ],
+   "next": {"d": "2026", "he": "שנת התכנית; לא אותרה טיוטה במקור ציבורי", "src": 0},
+   "facts": [
+    {"he": "המטרה: לחזק את ההון העצמי המזערי הנדרש מחברות מנהלות ולהתאימו למסגרות יציבות עדכניות", "src": 0},
+    {"he": "התקנות הוסדרו ב-2012; תחולה: חברות מנהלות", "src": 0}
+   ],
+   "sources": [
+    {"url": "https://www.gov.il/BlobFolder/reports/report_0015/he/regulation_plan_26_1.pdf",
+     "title": "תכנית אסדרה לשנת 2026", "doc": "רשות שוק ההון, 31.12.2025, עדכון 1: 14.01.2026", "pg": 14, "retrieved": "2026-10-27"}
+   ],
+   "model": {
+    "kind": "none",
+    "he": "לא מודל",
+    "products": [],
+    "params": [],
+    "why": "התכנית אינה נוקבת בשיעור או בסכום; קבצי המנגנונים (A1) אינם כוללים הון עצמי ודרישת הון של החברות המנהלות"
+   }
+  },
+  {
+   "id": "clearing-fees-2026",
+   "title": "חוזר תשלום עבור שימוש במערכת סליקה פנסיונית מרכזית (עדכון)",
+   "short": "תשלום למסלקה הפנסיונית",
+   "regulator": "רשות שוק ההון, ביטוח וחיסכון",
+   "type": "cost",
+   "status": "proposal",
+   "dates": [
+    {"k": "published", "d": "2025-12-31", "he": "נכלל בתכנית האסדרה לשנת 2026 (עדכון 14.01.2026)", "src": 0}
+   ],
+   "next": {"d": "2026", "he": "שנת התכנית, כחלק ממכרז המסלקה החדש; לא אותרה טיוטה במקור ציבורי", "src": 0},
+   "facts": [
+    {"he": "סך התשלום מכלל הגופים המוסדיים והמשתמשים במסלקה יופחת ויותאם להיקף הפעילות הידוע כיום", "src": 0}
+   ],
+   "sources": [
+    {"url": "https://www.gov.il/BlobFolder/reports/report_0015/he/regulation_plan_26_1.pdf",
+     "title": "תכנית אסדרה לשנת 2026", "doc": "רשות שוק ההון, 31.12.2025, עדכון 1: 14.01.2026", "pg": 18, "retrieved": "2026-10-27"}
+   ],
+   "model": {
+    "kind": "none",
+    "he": "לא מודל",
+    "products": [],
+    "params": [],
+    "why": "התכנית אינה נוקבת בסכום ההפחתה ואינה מפרסמת את התשלום הנוכחי לפי גוף"
+   }
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+/* === module A8 · /warroom/regulation, the regulatory impact simulator === */
+.rg { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.rg > .panel { margin: 0; min-width: 0; }
+.rg .pagehead { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; justify-content: space-between; }
+.rg .pagehead > div { min-width: 0; }
+.rg .dim { color: var(--muted); display: inline; font-size: inherit; }
+.rg .rg-i { color: var(--muted); }
+.rg .neg { color: var(--down); }
+.rg .pos { color: var(--up); }
+.rg .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.rg-ws { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rg-wi { white-space: nowrap; }
+.rg-foot { margin: 10px 0 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.rg > .rg-foot { margin: 0; }
+
+/* tables (desktop) */
+.rg-t { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rg-t th { text-align: start; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.rg-t td { padding: 5px 6px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+.rg-t td.v { font-weight: 600; white-space: nowrap; }
+.rg-t td.lbl { min-width: 110px; }
+.rg-t .rg-rng { white-space: nowrap; font-size: 12px; }
+.rg-t .rg-bc { width: 22%; min-width: 80px; }
+.rg-prods { font-size: 11.5px; }
+.rg-bar { display: block; height: 6px; border-radius: 3px; background: var(--panel2); overflow: hidden; }
+.rg-bar > span { display: block; height: 100%; background: var(--neutral); border-radius: 3px; }
+.rg-bar > span.neg { background: var(--down); }
+.rg-bar > span.pos { background: var(--up); }
+
+/* ranked cards (phone) */
+.rg-rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.rg-rank li { padding: 8px 0; border-bottom: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rg-rk-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 13.5px; font-weight: 600; min-width: 0; }
+.rg-rk-h a { color: var(--fg); }
+.rg-n { color: var(--muted); font-weight: 500; min-width: 1.4em; }
+.rg-rk-v { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13px; font-weight: 600; }
+.rg-rk-v .dim { font-weight: 400; font-size: 11.5px; }
+
+/* the initiative picker */
+.rg-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.rg-pick .chip { font-size: 12px; padding: 4px 10px; }
+.rg-model-l { font-size: 12.5px; margin-bottom: 8px; overflow-wrap: anywhere; }
+.rg-model-l a, .rg-srcs a { text-decoration: underline; text-underline-offset: 3px; }
+.rg-flags { margin: 8px 0 0; padding-inline-start: 18px; font-size: 12px; color: var(--muted); }
+
+/* the register */
+.rg-reg { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.rg-reg > li { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 12px 14px; min-width: 0; background: var(--panel); scroll-margin-top: 80px; }
+.rg-reg h3 { margin: 6px 0 8px; font-size: 14.5px; line-height: 1.45; font-weight: 700; overflow-wrap: anywhere; }
+.rg-reg-h { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12px; }
+.rg-w { margin-inline-start: auto; white-space: nowrap; color: var(--muted); }
+.rg-st { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.rg-st.prop { color: var(--muted); }
+.rg-st.cons { color: var(--warn); }
+.rg-st.appr { color: var(--link); }
+.rg-st.force { color: var(--up); }
+.rg-dates { margin: 0 0 8px; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 12px; font-size: 12.5px; }
+.rg-dates > div { display: contents; }
+.rg-dates dt { color: var(--muted); white-space: nowrap; }
+.rg-dates dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.rg-dates .next dt, .rg-dates .next dd { font-weight: 600; }
+.rg-dates button.src, .rg-facts button.src { font-size: inherit; color: inherit; text-align: start; }
+.rg-facts { margin: 0 0 8px; padding-inline-start: 18px; font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
+.rg-model { font-size: 12.5px; margin-bottom: 6px; overflow-wrap: anywhere; }
+.rg-params { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.rg-params li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+.rg-pv { font-weight: 600; }
+.rg-why { flex-basis: 100%; font-size: 11.5px; }
+.rg-srcs { list-style: none; margin: 0; padding: 0; font-size: 12px; display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .rg-reg > li { padding: 10px; }
+  .rg-w { margin-inline-start: 0; }
+}
+/* === end module A8 === */

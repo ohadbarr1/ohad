@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "test:schemas": "python3 ../pipeline/check_schemas.py",
     "test:stress": "node scripts/stress-test.mjs",
-    "test:drivers": "node scripts/drivers-test.mjs"
+    "test:drivers": "node scripts/drivers-test.mjs",
+    "test:regulation": "node scripts/regulation-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

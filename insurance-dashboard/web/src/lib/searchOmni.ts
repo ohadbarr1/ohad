@@ -24,6 +24,8 @@ export const FUNCS: { code: string; badge: string; label: string; keys: string[]
 ];
 /** words that reach the delta feed (/feed) without a company */
 const FEED_KEYS = ['feed', 'new', 'delta', 'פיד', 'שינויים', 'השתנה', 'מה', 'חדש', 'חדשות', 'עדכונים', 'עדכון'].map(normalize);
+/** words that reach the regulatory pipeline (/warroom/regulation, module A8) without a company */
+const REG_KEYS = ['regulation', 'regulatory', 'רגולציה', 'רגולטור', 'רגולטורי', 'רשות', 'חוזר', 'חוזרים', 'טיוטה', 'טיוטות', 'אסדרה', 'יוזמות', 'צנרת', 'ברירת', 'מחדל', 'חשבון השקעה'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -116,6 +118,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // screens that are not per company: the delta feed (module M2)
   if (!p.company && words.length && words.every((w) => FEED_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'מה השתנה · כל השינויים', meta: 'דוחות, הצגות מחדש, כושר פירעון, יעדים, נתוני הרשות', to: '/feed', score: 96 });
+  }
+  // the regulatory pipeline (module A8)
+  if (!p.company && words.length && words.every((w) => REG_KEYS.some((k) => k.startsWith(w) || k.split(' ').some((x) => x.startsWith(w))))) {
+    out.push({ kind: 'פונקציה', label: 'צנרת רגולציה · השפעה לפי מנהל', meta: 'רשות שוק ההון ומשרד האוצר: יוזמות, מועדים, מקורות, חשיפה', to: '/warroom/regulation', score: 95 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {
