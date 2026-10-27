@@ -1,0 +1,53 @@
+{
+ "status": "draft",
+ "id": "altshuler-net-transfers-fy27",
+ "claim": "אלטשולר שחם תישאר עם העברות נטו שליליות בפנסיה ובגמל: LTM שלילי בכל רבעון עד Q4'27 (‎-38.2 מיליארד ש\"ח LTM ב-Q2'26).",
+ "horizon": "2028-03-31",
+ "confidence": "medium",
+ "direction": "cautious",
+ "company": "altshuler",
+ "evidence": [
+  {
+   "ref": "lens:altshuler:pg:tr.ltm",
+   "note": "העברות נטו LTM: ‎-12.9 מיליארד ש\"ח ב-Q2'25, ‎-38.2 ב-Q2'26"
+  },
+  {
+   "ref": "lens:altshuler:gem:aum_share",
+   "note": "הנתח בנכסי הגמל וההשתלמות ירד מ-15.9% ב-Q3'24 ל-10.3% ב-Q2'26"
+  },
+  {
+   "ref": "lens:altshuler:pen:tr.ltm",
+   "note": "גם בפנסיה: ‎-0.8 מיליארד LTM ב-Q2'25, ‎-6.5 ב-Q2'26"
+  },
+  {
+   "ref": "/savings?g=אלטשולר שחם&s=pg",
+   "note": "נכסים וצבירה חודשיים מנתוני הרשות, כל חודש עם המסלולים שלו"
+  },
+  {
+   "ref": "/feed?co=altshuler&t=flow",
+   "note": "מעברי הצבירה נטו של החברה בפיד השינויים"
+  }
+ ],
+ "mechanism": "ניוד החוצה נמשך כל עוד התשואות היחסיות של המסלולים הכלליים נמוכות מהמתחרים בחלון של 12 עד 36 חודשים שבו עמיתים ויועצים משווים; העברות מגיבות לתשואה בפיגור.",
+ "mechanism_edge": null,
+ "falsifiers": [
+  {
+   "metric": "lens:altshuler:pg:tr.ltm",
+   "op": ">=",
+   "value": 0,
+   "period": "each",
+   "note": "העברות נטו LTM מגיעות לאפס או חיוביות ברבעון כלשהו עד Q4'27"
+  }
+ ],
+ "triggers": [
+  {
+   "metric": "lens:altshuler:pg:tr.ltm",
+   "threshold_pct": 25.0
+  },
+  {
+   "metric": "lens:altshuler:gem:aum_share",
+   "threshold_pp": 1.0
+  }
+ ],
+ "review": "print"
+}

@@ -36,7 +36,8 @@ Method (version METHOD; every assumption below is labelled as such on the page):
               no mark-to-market gains or losses. Shown as a separate line: segment op + nostro = the whole-business proxy.
   scope       investment houses (HOUSES): the savings segment is most of the business, shown as a whole-business proxy with the nostro
               line. Insurers: a SEGMENT estimate of the managing company only (pension + gemel), never group earnings.
-  phoenix     ABSTAIN_PHOENIX: fox does not estimate phoenix (the owner's employer). Nothing is computed or stored for it.
+  phoenix     ABSTAIN_PHOENIX (off since 27.10.26, owner's decision): when on, nothing about phoenix is computed or stored.
+              Phoenix joined Q3'26 stage 1 after it was frozen, through the dated addendum stage1.add-20261027.json.
   backtest    every past quarter, as of its own Stage 1 / Stage 2 day: reported quarters only if printed before that day (documents.csv),
               regulator months only up to the stage's months. LIMIT: the regulator's monthly files are the current vintage (data.gov.il
               does not keep vintages), so later revisions to old months are in the backtest inputs.
@@ -59,10 +60,10 @@ EVENTS = ROOT / "data" / "nowcast" / "est_events.json"
 
 METHOD = "m1.0"
 # ---- the owner's switch: fox does not estimate its owner's employer. Set to False only by the owner's decision.
-ABSTAIN_PHOENIX = True
+ABSTAIN_PHOENIX = False  # owner decision 27.10.26: phoenix is estimated like every other manager
 ABSTAIN_TEXT = "fox אינו מעריך את הפניקס"
 # ---- coverage
-COVER = ["harel", "migdal", "clal", "menora", "meitav", "altshuler", "more", "analyst", "yelin"]
+COVER = ([] if ABSTAIN_PHOENIX else ["phoenix"]) + ["harel", "migdal", "clal", "menora", "meitav", "altshuler", "more", "analyst", "yelin"]
 HOUSES = {"meitav", "altshuler", "more", "analyst", "yelin"}
 NOT_COVERED = {
     "ibi": "אין לקבוצה מגזר פנסיה וגמל בדוחות שבאתר, וחברת הגמל שלה כלולה ברשות בקבוצת \"קרנות ענפיות ואחרות\"",
@@ -452,9 +453,9 @@ def ledger_path(qk, stage):
     return LEDGER / qk / f"stage{stage}.json"
 
 
-def make_entry(I, y, q, stage, now):
+def make_entry(I, y, q, stage, now, only=None):
     rows = []
-    for c in COVER:
+    for c in (only or COVER):
         ts = [I.expected.get(k) for k in DOC_KEYS.get(c, [c])]
         ts = [x[1] for x in ts if x and x[0] == f"{y}Q{q}" and x[1]]
         T = min(ts) if ts else None
@@ -476,7 +477,7 @@ def make_entry(I, y, q, stage, now):
 def read_ledger():
     out = []
     if LEDGER.exists():
-        for f in sorted(LEDGER.glob("*/stage*.json")):
+        for f in sorted(LEDGER.glob("*/stage*.json")):  # stageN.json, then any dated addendum stageN.add-YYYYMMDD.json
             out.append(json.loads(f.read_text(encoding="utf-8")))
     return out
 
@@ -591,6 +592,16 @@ def main():
         p = ledger_path(qkey(y, q), st)
         if p.exists():
             print(f"ledger: {p.relative_to(ROOT)} exists (frozen); not rewritten")
+            # a manager covered after the stage was frozen gets a dated addendum: the frozen file is never touched
+            have = {e["c"] for f in p.parent.glob(f"stage{st}*.json") for e in json.loads(f.read_text(encoding="utf-8"))["inputs"]["rows"]}
+            missing = [c for c in COVER if c not in have]
+            now = dt.datetime.now().astimezone()
+            a = p.parent / f"stage{st}.add-{now:%Y%m%d}.json"
+            if missing and not a.exists():
+                entry = make_entry(I, y, q, st, now, only=missing)
+                if entry["inputs"]["rows"]:
+                    a.write_text(json.dumps(entry, ensure_ascii=False, indent=1), encoding="utf-8")
+                    print(f"ledger: wrote addendum {a.relative_to(ROOT)} ({', '.join(e['c'] for e in entry['inputs']['rows'])})")
         else:
             entry = make_entry(I, y, q, st, dt.datetime.now().astimezone())
             p.parent.mkdir(parents=True, exist_ok=True)
@@ -601,10 +612,10 @@ def main():
     for L in ledger:
         if sha(L["inputs"]) != L["inputs_hash"]:
             bad.append(f"ledger {L['quarter']} stage {L['stage']}: inputs hash does not recompute")
-        if not no_phoenix(L):
+        if ABSTAIN_PHOENIX and not no_phoenix(L):
             bad.append(f"ledger {L['quarter']} stage {L['stage']}: carries a phoenix estimate")
     d = build(I, ledger)
-    if not no_phoenix(d):
+    if ABSTAIN_PHOENIX and not no_phoenix(d):
         bad.append("nowcast.json carries a phoenix estimate")
     if check:
         disk = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else None

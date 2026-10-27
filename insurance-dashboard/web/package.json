@@ -13,7 +13,13 @@
     "routes": "node --experimental-websocket scripts/route-check.mjs",
     "test:e2e": "playwright test",
     "test:schemas": "python3 ../pipeline/check_schemas.py",
-    "test:stress": "node scripts/stress-test.mjs"
+    "test:stress": "node scripts/stress-test.mjs",
+    "test:drivers": "node scripts/drivers-test.mjs",
+    "test:scenarios": "node scripts/scenarios-test.mjs",
+    "test:regulation": "node scripts/regulation-test.mjs",
+    "test:warroom": "node scripts/warroom-test.mjs",
+    "test:capital": "node scripts/capital-test.mjs",
+    "test:fragility": "node scripts/fragility-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

@@ -21,6 +21,8 @@ const mCompanyDocs = () => import('./pages/CompanyDocs');
 const CompanyDocs = page(mCompanyDocs, 'CompanyDocs');
 const mIndustry = () => import('./pages/Industry');
 const IndustryLayout = page(mIndustry, 'IndustryLayout');
+const mAttribution = () => import('./pages/Attribution');
+const AttributionPage = page(mAttribution, 'AttributionPage');
 const mPeers = () => import('./pages/Peers');
 const Peers = page(mPeers, 'Peers');
 const mPeersRedirect = () => import('./pages/PeersRedirect');
@@ -76,6 +78,15 @@ const mReportCard = () => import('./pages/ReportCard');  // lane S2
 const ReportCardPage = page(mReportCard, 'ReportCardPage');
 const mFeed = () => import('./pages/Feed');  // module M2: the delta feed
 const Feed = page(mFeed, 'Feed');
+const mPositions = () => import('./pages/Positions');  // module A6: the position book
+const Positions = page(mPositions, 'Positions');
+const PositionSheet = page(mPositions, 'PositionSheet');
+const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
+const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // module A2: the scenario studio (from home and search, not a nav item)
+const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRoomRegulation'); // module A8: the regulatory pipeline (not a nav item)
+const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator (not a nav item; linked from /savings and search)
+const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
+const Fragility = page(() => import('./pages/Fragility'), 'Fragility'); // module A10: the Fragility Monitor (not a nav item)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -155,7 +166,17 @@ export function App() {
         <Route path="holdings" element={<Assets />} />{/* lane AL: not /assets, whose /assets/** immutable cache header (hashed bundles) would pin the HTML shell */}
         <Route path="holdings/:id" element={<Assets />} />
         <Route path="card/:company/:period" element={<ReportCardPage />} />{/* lane S2 */}
+        <Route path="attribution" element={<AttributionPage />} />{/* module A4: reached from the company home's attribution panel, not a nav item */}
         <Route path="feed" element={<Feed />} />{/* module M2: reached from the home block and search, not a nav item */}
+        <Route path="positions" element={<Positions />} />{/* module A6: reached from the feed and the company homes, not a nav item */}
+        <Route path="positions/:id" element={<PositionSheet />} />
+        <Route path="drivers" element={<Drivers />} />
+        <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
+        <Route path="scenarios" element={<Scenarios />} />{/* module A2 */}
+        <Route path="warroom/regulation" element={<WarRoomRegulation />} />{/* module A8: reached from /warroom (A5), /savings and search, not a nav item */}
+        <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
+        <Route path="capital" element={<Capital />} />{/* module A7 */}
+        <Route path="fragility" element={<Fragility />} />{/* module A10: reached from /savings, /scenarios, search and the company homes, not a nav item */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

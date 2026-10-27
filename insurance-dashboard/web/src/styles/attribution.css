@@ -1,0 +1,43 @@
+/* module A4: the attribution engine (components/Attribution.tsx, pages/Attribution.tsx) */
+.attr .attr-sub { font-size: var(--t-1); font-weight: 500; }
+.attr-c { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
+.attr-b { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.attr-sent { margin: 0; font-size: var(--t-3); line-height: 1.6; font-weight: 500; max-width: 78ch; }
+.attr-sent .src { font-weight: 700; }
+.attr-ends { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; font-size: var(--t-2); }
+.attr-ends .pos, .attr-t .pos { color: var(--up); }
+.attr-ends .neg, .attr-t .neg { color: var(--down); }
+.attr-tw { min-width: 0; }
+.attr-t { width: 100%; border-collapse: collapse; font-size: var(--t-2); }
+.attr-t th, .attr-t td { padding: 5px 8px; border-bottom: 1px solid var(--line-soft); text-align: start; vertical-align: baseline; }
+.attr-t thead th { font-size: var(--t-1); color: var(--muted); font-weight: 500; }
+.attr-t tbody th { font-weight: 500; white-space: nowrap; }
+.attr-t tbody th .chip { margin-inline-start: 6px; }
+.attr-t td.ctx { color: var(--muted); font-size: var(--t-1); min-width: 0; }
+.attr-t td.ctx .ctxb { color: inherit; text-align: start; white-space: normal; }
+.attr-t td:nth-child(2) { white-space: nowrap; text-align: end; }
+.attr-t tr.sv th { color: var(--fg); }
+.attr-t .ctx { width: 52%; }
+.attr-note { margin: 0; font-size: var(--t-1); line-height: 1.5; }
+.attr-page .attr-pick { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
+.attr-mx { width: 100%; border-collapse: collapse; font-size: var(--t-2); }
+.attr-mx th, .attr-mx td { padding: 5px 8px; border-bottom: 1px solid var(--line-soft); text-align: start; }
+.attr-mx td.n { white-space: nowrap; text-align: end; }
+.attr-mx tr[aria-current="true"] { background: var(--panel2); }
+.attr-mx a { text-decoration: underline; text-underline-offset: 2px; }
+/* the phone strip of the waterfall (the same rules as styles/csm.css, which this page does not load) */
+.attr-b .minifall { display: grid; gap: 3px; }
+.attr-b .mf-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 52px; align-items: center; gap: 8px; font-size: var(--t-1); }
+.attr-b .mf-l { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attr-b .mf-v { text-align: left; color: var(--muted); }
+.attr-b .mf-track { position: relative; height: 10px; direction: ltr; background: linear-gradient(var(--line-soft), var(--line-soft)) no-repeat 0 50% / 100% 1px; }
+.attr-b .mf-track i { position: absolute; top: 1px; bottom: 1px; border-radius: 2px; }
+.attr-b .mf-track i.up { background: var(--up); }
+.attr-b .mf-track i.dn { background: var(--down); }
+.attr-b .mf-track i.tk { width: 3px; top: -1px; bottom: -1px; background: var(--fg); }
+@media (max-width: 760px) {
+  .attr-t tbody th { white-space: normal; }
+  .attr-t .ctx { display: none; }
+  .attr-sent { font-size: var(--t-2); }
+  .attr-mx .wide { display: none; }
+}

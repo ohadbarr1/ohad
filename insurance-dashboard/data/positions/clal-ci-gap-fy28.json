@@ -1,0 +1,64 @@
+{
+ "status": "draft",
+ "id": "clal-ci-gap-fy28",
+ "claim": "כלל תסגור לפחות מחצית מפער יחס ההוצאות להכנסות בפנסיה ובגמל (LTM) מול חציון ארבע המבטחות האחרות עד FY'28: מ-13.9 נק׳ ב-Q2'26 ל-7.0 נק׳ או פחות ב-Q4'28.",
+ "horizon": "2029-03-31",
+ "confidence": "low",
+ "direction": "constructive",
+ "company": "clal",
+ "evidence": [
+  {
+   "ref": "/savings?g=כלל&s=pg",
+   "note": "דמי ניהול, שיווק ומכירה והנהלה וכלליות של המגזר, כל רכיב עם עמוד בדוח החברה המנהלת"
+  },
+  {
+   "ref": "lens:clal:pg:ci.ltm",
+   "note": "95.1% LTM ב-Q2'26 מול 94.1% ב-Q2'25: אין עדיין שיפור"
+  },
+  {
+   "ref": "lens:median(harel,migdal,menora,phoenix):pg:ci.ltm",
+   "note": "החציון ירד מ-84.3% ב-Q2'25 ל-81.1% ב-Q2'26: הפער נפתח מהצד של המתחרות"
+  },
+  {
+   "ref": "lens:clal:pg:ci.ltm - lens:median(harel,migdal,menora,phoenix):pg:ci.ltm",
+   "note": "הפער גדל מ-5.4 נק׳ ב-Q2'24 ל-13.9 נק׳ ב-Q2'26; הטענה הולכת נגד המגמה, ולכן ביטחון נמוך"
+  },
+  {
+   "ref": "lens:clal:pg:sm.ltm",
+   "note": "שיווק ומכירה LTM עלו 16% YoY (330.7 מול 284.7 מיליוני ש\"ח), מהר מדמי הניהול (11%)"
+  },
+  {
+   "ref": "target:clal:target_roe:group:2027",
+   "note": "יעד התשואה להון של הקבוצה ל-2027, 12%–15% (מצגת המשקיעים)"
+  }
+ ],
+ "mechanism": "הפער נובע מהוצאות שיווק ומכירה והנהלה וכלליות שגדלות מהר מדמי הניהול. דמי הניהול בענף יורדים, ולכן סגירת הפער דורשת האטה מוחלטת בהוצאות, לא רק צמיחה בנכסים.",
+ "mechanism_edge": null,
+ "falsifiers": [
+  {
+   "metric": "lens:clal:pg:ci.ltm - lens:median(harel,migdal,menora,phoenix):pg:ci.ltm",
+   "op": ">",
+   "value": 7.0,
+   "period": "Q4'28",
+   "note": "פחות ממחצית הפער נסגרה עד FY'28"
+  },
+  {
+   "metric": "lens:clal:pg:ci.ltm - lens:median(harel,migdal,menora,phoenix):pg:ci.ltm",
+   "op": ">=",
+   "value": 17.0,
+   "period": "each",
+   "note": "הפער מתרחב ל-17 נק׳ או יותר בכל רבעון שיפורסם"
+  }
+ ],
+ "triggers": [
+  {
+   "metric": "lens:clal:pg:ci.ltm - lens:median(harel,migdal,menora,phoenix):pg:ci.ltm",
+   "threshold_pp": 2.0
+  },
+  {
+   "metric": "lens:clal:pg:ci.ltm",
+   "threshold_pp": 3.0
+  }
+ ],
+ "review": "print"
+}

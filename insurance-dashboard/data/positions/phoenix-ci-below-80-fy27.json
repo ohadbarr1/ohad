@@ -1,0 +1,41 @@
+{
+ "status": "draft",
+ "id": "phoenix-ci-below-80-fy27",
+ "claim": "הפניקס תשמור על יחס הוצאות להכנסות (LTM) בפנסיה ובגמל מתחת ל-80% בכל רבעון עד Q4'27 (78.3% ב-Q2'26).",
+ "horizon": "2028-03-31",
+ "confidence": "medium",
+ "direction": "constructive",
+ "company": "phoenix",
+ "evidence": [
+  {
+   "ref": "lens:phoenix:pg:ci.ltm",
+   "note": "81.4% ב-Q2'25, 78.3% ב-Q2'26"
+  },
+  {
+   "ref": "lens:median(harel,migdal,menora,phoenix):pg:ci.ltm",
+   "note": "חציון ארבע המבטחות, 81.1% ב-Q2'26, לצורך השוואה"
+  },
+  {
+   "ref": "/savings?g=הפניקס&s=pg",
+   "note": "רכיבי ההכנסות וההוצאות של המגזר, כל רכיב עם עמוד בדוח"
+  }
+ ],
+ "mechanism": "צמיחה בנכסים מגדילה את דמי הניהול מהר יותר מההוצאות הקבועות של התפעול; הסיכון הוא הוצאות שיווק ומכירה שגדלות עם הצבירה.",
+ "mechanism_edge": null,
+ "falsifiers": [
+  {
+   "metric": "lens:phoenix:pg:ci.ltm",
+   "op": ">=",
+   "value": 80.0,
+   "period": "each",
+   "note": "היחס LTM מגיע ל-80% או יותר ברבעון כלשהו עד Q4'27"
+  }
+ ],
+ "triggers": [
+  {
+   "metric": "lens:phoenix:pg:ci.ltm",
+   "threshold_pp": 1.5
+  }
+ ],
+ "review": "print"
+}

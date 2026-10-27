@@ -22,6 +22,18 @@
    "schema": "workbook"
   },
   {
+   "pattern": "attribution/index.json",
+   "schema": "attributionIndex"
+  },
+  {
+   "pattern": "attribution/peers_*.json",
+   "schema": "attributionPeers"
+  },
+  {
+   "pattern": "attribution/*.json",
+   "schema": "attribution"
+  },
+  {
    "pattern": "peers/registry.json",
    "schema": "peersRegistry"
   },
@@ -216,6 +228,38 @@
   {
    "pattern": "nowcast.json",
    "schema": "nowcast"
+  },
+  {
+   "pattern": "positions.json",
+   "schema": "positions"
+  },
+  {
+   "pattern": "drivers/graph.json",
+   "schema": "driversGraph"
+  },
+  {
+   "pattern": "drivers/*.json",
+   "schema": "drivers"
+  },
+  {
+   "pattern": "regulation/impact.json",
+   "schema": "regulationImpact"
+  },
+  {
+   "pattern": "warroom/elasticity.json",
+   "schema": "warroomElasticity"
+  },
+  {
+   "pattern": "warroom/board.json",
+   "schema": "warroomBoard"
+  },
+  {
+   "pattern": "capital/options.json",
+   "schema": "capitalOptions"
+  },
+  {
+   "pattern": "fragility.json",
+   "schema": "fragility"
   }
  ],
  "$defs": {
@@ -6031,7 +6075,9 @@
       "reg",
       "fund",
       "calc",
-      "count"
+      "count",
+      "pos",
+      "frag"
      ]
     },
     "rid": {
@@ -6104,6 +6150,24 @@
      "items": {
       "$ref": "#/$defs/feedFig"
      }
+    },
+    "pid": {
+     "type": "string"
+    },
+    "m": {
+     "type": "string"
+    },
+    "per": {
+     "type": "string"
+    },
+    "c": {
+     "type": "string"
+    },
+    "sig": {
+     "type": "string"
+    },
+    "seg": {
+     "type": "string"
     }
    }
   },
@@ -6132,7 +6196,8 @@
       "dm",
       "dbn",
       "dpct",
-      "n"
+      "n",
+      "r"
      ]
     },
     "s": {
@@ -6208,7 +6273,9 @@
       "target",
       "solv",
       "fee",
-      "est"
+      "est",
+      "pos",
+      "fragility"
      ]
     },
     "d": {
@@ -6251,7 +6318,9 @@
        "enum": [
         "doc",
         "reg",
-        "fund"
+        "fund",
+        "pos",
+        "frag"
        ]
       },
       "rid": {
@@ -6276,6 +6345,18 @@
       },
       "id": {
        "type": "integer"
+      },
+      "pid": {
+       "type": "string"
+      },
+      "rev": {
+       "type": "integer"
+      },
+      "c": {
+       "type": "string"
+      },
+      "sig": {
+       "type": "string"
       }
      }
     },
@@ -6293,6 +6374,25 @@
     },
     "to": {
      "type": "string"
+    },
+    "pk": {
+     "type": "string",
+     "enum": [
+      "open",
+      "revise",
+      "close",
+      "drift",
+      "falsifier",
+      "review",
+      "fragility"
+     ]
+    },
+    "fs": {
+     "type": "string",
+     "enum": [
+      "watch",
+      "alert"
+     ]
     }
    }
   },
@@ -6337,7 +6437,9 @@
       "target",
       "solv",
       "fee",
-      "est"
+      "est",
+      "pos",
+      "fragility"
      ],
      "additionalProperties": false,
      "properties": {
@@ -6489,6 +6591,42 @@
          "enum": [
           1
          ]
+        }
+       }
+      },
+      "pos": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "fragility": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
         }
        }
       }
@@ -7130,6 +7268,3890 @@
     },
     "summary": {
      "type": "object"
+    }
+   }
+  },
+  "attrFact": {
+   "type": "object",
+   "required": [
+    "l",
+    "p",
+    "v",
+    "u"
+   ],
+   "properties": {
+    "l": {
+     "type": "string"
+    },
+    "p": {
+     "type": "string"
+    },
+    "v": {
+     "type": "number"
+    },
+    "u": {
+     "type": "string"
+    },
+    "url": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "doc": {
+     "type": "string"
+    },
+    "der": {
+     "type": "integer"
+    },
+    "f": {
+     "type": "string"
+    },
+    "of": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "attrDriver": {
+   "type": "object",
+   "required": [
+    "k",
+    "l",
+    "v",
+    "f",
+    "in"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "restate",
+      "isr",
+      "inv",
+      "fees",
+      "fees.yield",
+      "fees.volume",
+      "fees.mix",
+      "fees.other",
+      "rev_other",
+      "cost",
+      "op",
+      "other",
+      "pbt",
+      "tax",
+      "minority",
+      "equity"
+     ]
+    },
+    "l": {
+     "type": "string"
+    },
+    "v": {
+     "type": "number"
+    },
+    "f": {
+     "type": "string"
+    },
+    "in": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string"
+     }
+    },
+    "ctx": {
+     "type": "string"
+    },
+    "chg": {
+     "type": "string"
+    },
+    "seg": {
+     "type": "integer"
+    }
+   },
+   "additionalProperties": false
+  },
+  "attrDecomp": {
+   "type": "object",
+   "required": [
+    "from",
+    "to",
+    "total",
+    "residual",
+    "unit",
+    "mode",
+    "drivers",
+    "sentence"
+   ],
+   "properties": {
+    "from": {
+     "type": "number"
+    },
+    "to": {
+     "type": "number"
+    },
+    "total": {
+     "type": "number"
+    },
+    "residual": {
+     "type": "number"
+    },
+    "from_latest": {
+     "type": "number"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "mode": {
+     "type": "string",
+     "enum": [
+      "rate",
+      "amount"
+     ]
+    },
+    "drivers": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/attrDriver"
+     }
+    },
+    "sentence": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": false
+  },
+  "attribution": {
+   "type": "object",
+   "required": [
+    "v",
+    "company",
+    "name",
+    "kind",
+    "last",
+    "ends",
+    "method",
+    "roe_def",
+    "bridges",
+    "gaps",
+    "facts"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "company": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "ins",
+      "fund"
+     ]
+    },
+    "last": {
+     "type": "string",
+     "pattern": "^\\d{4}Q[1-4]$"
+    },
+    "ends": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "pattern": "^\\d{4}Q[1-4]$"
+     }
+    },
+    "method": {
+     "type": "string"
+    },
+    "roe_def": {
+     "type": "string"
+    },
+    "bridges": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "kind",
+       "win",
+       "a",
+       "b",
+       "la",
+       "lb",
+       "roe",
+       "np",
+       "chk"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^(qoq|yoy|ltm):\\d{4}Q[1-4]$"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "qoq",
+         "yoy",
+         "ltm"
+        ]
+       },
+       "win": {
+        "type": "string",
+        "enum": [
+         "q",
+         "ltm"
+        ]
+       },
+       "a": {
+        "type": "string",
+        "pattern": "^\\d{4}Q[1-4]$"
+       },
+       "b": {
+        "type": "string",
+        "pattern": "^\\d{4}Q[1-4]$"
+       },
+       "la": {
+        "type": "string"
+       },
+       "lb": {
+        "type": "string"
+       },
+       "roe": {
+        "$ref": "#/$defs/attrDecomp"
+       },
+       "np": {
+        "$ref": "#/$defs/attrDecomp"
+       },
+       "chk": {
+        "type": "object",
+        "required": [
+         "a",
+         "b"
+        ],
+        "properties": {
+         "a": {
+          "type": "array",
+          "minItems": 4
+         },
+         "b": {
+          "type": "array",
+          "minItems": 4
+         }
+        },
+        "additionalProperties": false
+       },
+       "notes": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "gaps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "why"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "why": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "facts": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/attrFact"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "attributionPeers": {
+   "type": "object",
+   "required": [
+    "v",
+    "period",
+    "label",
+    "method",
+    "def",
+    "companies",
+    "bridges",
+    "gaps",
+    "facts"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "period": {
+     "type": "string",
+     "pattern": "^\\d{4}Q[1-4]$"
+    },
+    "label": {
+     "type": "string"
+    },
+    "method": {
+     "type": "string"
+    },
+    "def": {
+     "type": "string"
+    },
+    "companies": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "name",
+       "kind"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "ins",
+         "fund"
+        ]
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "bridges": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "win",
+       "a",
+       "b",
+       "roe",
+       "chk"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^(q|ltm):[a-z_]+:[a-z_]+$"
+       },
+       "win": {
+        "type": "string",
+        "enum": [
+         "q",
+         "ltm"
+        ]
+       },
+       "a": {
+        "type": "string"
+       },
+       "b": {
+        "type": "string"
+       },
+       "roe": {
+        "$ref": "#/$defs/attrDecomp"
+       },
+       "chk": {
+        "type": "object",
+        "required": [
+         "a",
+         "b"
+        ],
+        "properties": {
+         "a": {
+          "type": "array",
+          "minItems": 4
+         },
+         "b": {
+          "type": "array",
+          "minItems": 4
+         }
+        },
+        "additionalProperties": false
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "gaps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "why"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "why": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "facts": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/attrFact"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "attributionIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "peers",
+    "period",
+    "companies"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "peers": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "period": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "companies": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "kind",
+       "last",
+       "n"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "ins",
+         "fund"
+        ]
+       },
+       "last": {
+        "type": "string"
+       },
+       "n": {
+        "type": "integer"
+       }
+      },
+      "additionalProperties": false
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "posObs": {
+   "type": "object",
+   "required": [
+    "p",
+    "v",
+    "d"
+   ],
+   "properties": {
+    "p": {
+     "type": "string"
+    },
+    "v": {
+     "type": "number"
+    },
+    "d": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "positions": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "drafts",
+    "abstain",
+    "withheld",
+    "rules",
+    "cos",
+    "groups",
+    "metrics",
+    "positions",
+    "hit",
+    "events"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "asof": {
+     "type": "object"
+    },
+    "drafts": {
+     "type": "boolean"
+    },
+    "abstain": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "withheld": {
+     "type": "integer"
+    },
+    "rules": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "cos": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "groups": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "metrics": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "key",
+       "label",
+       "unit",
+       "fx",
+       "to",
+       "ser"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "key": {
+        "type": "string"
+       },
+       "label": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "pct",
+         "pp",
+         "m"
+        ]
+       },
+       "fx": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "to": {
+        "type": "string"
+       },
+       "ser": {
+        "type": "array",
+        "items": {
+         "type": "array",
+         "prefixItems": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          {
+           "type": "array"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    "positions": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "status",
+       "claim",
+       "horizon",
+       "confidence",
+       "direction",
+       "mechanism",
+       "mechanism_edge",
+       "review",
+       "company",
+       "rev",
+       "opened",
+       "revised",
+       "revs",
+       "outcome",
+       "outcomes",
+       "evidence",
+       "falsifiers",
+       "triggers",
+       "next_review",
+       "review_basis",
+       "due",
+       "drift",
+       "suggest",
+       "involved",
+       "frag",
+       "frag_now"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]{2,60}$"
+       },
+       "status": {
+        "type": "string",
+        "enum": [
+         "published",
+         "draft"
+        ]
+       },
+       "claim": {
+        "type": "string"
+       },
+       "horizon": {
+        "$ref": "#/$defs/date"
+       },
+       "confidence": {
+        "type": "string",
+        "enum": [
+         "low",
+         "medium",
+         "high"
+        ]
+       },
+       "direction": {
+        "type": "string",
+        "enum": [
+         "constructive",
+         "cautious",
+         "neutral"
+        ]
+       },
+       "mechanism": {
+        "type": "string"
+       },
+       "mechanism_edge": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "review": {
+        "type": "string"
+       },
+       "company": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "rev": {
+        "type": "integer"
+       },
+       "opened": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "revised": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "revs": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "rev",
+          "date",
+          "note",
+          "hash",
+          "supersedes"
+         ],
+         "properties": {
+          "rev": {
+           "type": "integer"
+          },
+          "date": {
+           "$ref": "#/$defs/date"
+          },
+          "note": {
+           "type": "string"
+          },
+          "hash": {
+           "type": "string",
+           "pattern": "^[0-9a-f]{64}$"
+          },
+          "supersedes": {
+           "type": [
+            "string",
+            "null"
+           ]
+          }
+         }
+        }
+       },
+       "outcome": {
+        "type": "object",
+        "required": [
+         "st"
+        ],
+        "properties": {
+         "st": {
+          "type": "string",
+          "enum": [
+           "open",
+           "confirmed",
+           "falsified",
+           "expired",
+           "withdrawn"
+          ]
+         },
+         "date": {
+          "$ref": "#/$defs/date"
+         },
+         "note": {
+          "type": "string"
+         }
+        }
+       },
+       "outcomes": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "seq",
+          "date",
+          "st",
+          "note"
+         ]
+        }
+       },
+       "evidence": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "ref",
+          "note",
+          "ok",
+          "kind",
+          "label",
+          "to"
+         ],
+         "properties": {
+          "ref": {
+           "type": "string"
+          },
+          "note": {
+           "type": "string"
+          },
+          "ok": {
+           "type": "boolean"
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "route",
+            "metric",
+            "target",
+            "card",
+            "missing"
+           ]
+          },
+          "label": {
+           "type": "string"
+          },
+          "to": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "pdf": {
+           "type": [
+            "object",
+            "null"
+           ]
+          },
+          "val": {
+           "type": "object"
+          }
+         }
+        }
+       },
+       "falsifiers": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "type": "object",
+         "required": [
+          "metric",
+          "op",
+          "value",
+          "period",
+          "st"
+         ],
+         "properties": {
+          "metric": {
+           "type": "string"
+          },
+          "op": {
+           "type": "string",
+           "enum": [
+            "<",
+            "<=",
+            ">",
+            ">="
+           ]
+          },
+          "value": {
+           "type": "number"
+          },
+          "period": {
+           "type": "string"
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "met",
+            "clear",
+            "watch",
+            "pending",
+            "unresolved"
+           ]
+          },
+          "at": {
+           "$ref": "#/$defs/posObs"
+          },
+          "last": {
+           "$ref": "#/$defs/posObs"
+          }
+         }
+        }
+       },
+       "triggers": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "metric",
+          "st"
+         ],
+         "properties": {
+          "metric": {
+           "type": "string"
+          },
+          "threshold_pp": {
+           "type": "number"
+          },
+          "threshold_pct": {
+           "type": "number"
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "ok",
+            "fired",
+            "unresolved"
+           ]
+          },
+          "fired": {
+           "type": "boolean"
+          },
+          "base": {
+           "type": "object",
+           "required": [
+            "per",
+            "v"
+           ]
+          },
+          "last": {
+           "$ref": "#/$defs/posObs"
+          }
+         }
+        }
+       },
+       "next_review": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "review_basis": {
+        "type": "string"
+       },
+       "due": {
+        "type": [
+         "object",
+         "null"
+        ]
+       },
+       "drift": {
+        "type": "boolean"
+       },
+       "suggest": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "enum": [
+         "falsified",
+         null
+        ]
+       },
+       "involved": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "problems": {
+        "type": "array"
+       },
+       "frag": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "c",
+          "sig",
+          "he",
+          "st",
+          "d",
+          "dk",
+          "per",
+          "ev"
+         ],
+         "additionalProperties": false,
+         "properties": {
+          "c": {
+           "type": "string"
+          },
+          "sig": {
+           "type": "string"
+          },
+          "he": {
+           "type": "string"
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "watch",
+            "alert"
+           ]
+          },
+          "d": {
+           "$ref": "#/$defs/date"
+          },
+          "dk": {
+           "type": "string",
+           "enum": [
+            "pub",
+            "fetched",
+            "month"
+           ]
+          },
+          "per": {
+           "type": "string"
+          },
+          "ev": {
+           "type": "string"
+          }
+         }
+        }
+       },
+       "frag_now": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "c",
+          "sig",
+          "he",
+          "st"
+         ],
+         "additionalProperties": false,
+         "properties": {
+          "c": {
+           "type": "string"
+          },
+          "sig": {
+           "type": "string"
+          },
+          "he": {
+           "type": "string"
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "watch",
+            "alert"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "hit": {
+     "type": "object",
+     "required": [
+      "n",
+      "confirmed",
+      "falsified",
+      "expired",
+      "withdrawn",
+      "hit",
+      "by_conf",
+      "open"
+     ],
+     "properties": {
+      "hit": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     }
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/feedEvent"
+     }
+    }
+   }
+  },
+  "driverProv": {
+   "type": "object",
+   "required": [
+    "k"
+   ],
+   "properties": {
+    "k": {
+     "enum": [
+      "report",
+      "reg",
+      "calc",
+      "lts",
+      "none"
+     ]
+    },
+    "title": {
+     "type": "string"
+    },
+    "value": {
+     "type": "string"
+    },
+    "url": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "formula": {
+     "type": "string"
+    },
+    "why": {
+     "type": "string"
+    },
+    "pi": {
+     "type": "integer"
+    },
+    "metric": {
+     "type": "string"
+    },
+    "inputs": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "label",
+       "v"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "v": {
+        "type": "string"
+       },
+       "p": {
+        "$ref": "#/$defs/driverProv"
+       }
+      }
+     }
+    }
+   }
+  },
+  "driverNode": {
+   "type": "object",
+   "required": [
+    "v",
+    "unit",
+    "period",
+    "prov"
+   ],
+   "properties": {
+    "v": {
+     "$ref": "#/$defs/num"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "period": {
+     "type": "string"
+    },
+    "prov": {
+     "$ref": "#/$defs/driverProv"
+    }
+   }
+  },
+  "driverEdge": {
+   "type": "object",
+   "required": [
+    "id",
+    "e",
+    "from",
+    "to",
+    "unit",
+    "sign",
+    "x",
+    "v",
+    "method",
+    "quality",
+    "prov"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "e": {
+     "type": "string"
+    },
+    "from": {
+     "type": "string"
+    },
+    "to": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "sign": {
+     "enum": [
+      -1,
+      0,
+      1
+     ]
+    },
+    "x": {
+     "$ref": "#/$defs/num"
+    },
+    "v": {
+     "$ref": "#/$defs/num"
+    },
+    "method": {
+     "enum": [
+      "identity",
+      "regression",
+      "disclosure",
+      "assumption",
+      "none"
+     ]
+    },
+    "quality": {
+     "enum": [
+      "high",
+      "medium",
+      "low",
+      "missing"
+     ]
+    },
+    "n": {
+     "type": "integer"
+    },
+    "window": {
+     "type": "string"
+    },
+    "fit": {
+     "type": "object",
+     "required": [
+      "r2",
+      "t"
+     ],
+     "properties": {
+      "r2": {
+       "type": "number"
+      },
+      "t": {
+       "type": "number"
+      },
+      "se": {
+       "type": "number"
+      },
+      "a": {
+       "type": "number"
+      },
+      "c": {
+       "type": "boolean"
+      },
+      "a0": {
+       "type": "number"
+      },
+      "b0": {
+       "type": "number"
+      },
+      "d": {
+       "type": "number"
+      }
+     }
+    },
+    "range": {
+     "type": "array",
+     "items": {
+      "type": "number"
+     }
+    },
+    "why": {
+     "type": "string"
+    },
+    "note": {
+     "type": "string"
+    },
+    "pts": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     }
+    },
+    "prov": {
+     "$ref": "#/$defs/driverProv"
+    }
+   }
+  },
+  "driverLine": {
+   "type": "object",
+   "required": [
+    "eff",
+    "b",
+    "pts"
+   ],
+   "properties": {
+    "eff": {
+     "type": "string"
+    },
+    "b": {
+     "type": "string"
+    },
+    "pts": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "x",
+       "v",
+       "p"
+      ],
+      "properties": {
+       "x": {
+        "type": "number"
+       },
+       "v": {
+        "type": "number"
+       },
+       "p": {
+        "$ref": "#/$defs/driverProv"
+       }
+      }
+     }
+    }
+   }
+  },
+  "driversGraph": {
+   "type": "object",
+   "required": [
+    "meta",
+    "shocks",
+    "nodes",
+    "equations",
+    "edges"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "v",
+      "methods",
+      "quality",
+      "units"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "v": {
+       "type": "integer"
+      }
+     }
+    },
+    "shocks": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "k",
+       "he",
+       "unit",
+       "range"
+      ],
+      "properties": {
+       "k": {
+        "type": "string"
+       },
+       "he": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string"
+       },
+       "range": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       }
+      }
+     }
+    },
+    "nodes": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "unit",
+       "kind"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "driver",
+         "line",
+         "output"
+        ]
+       }
+      }
+     }
+    },
+    "equations": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "out",
+       "text",
+       "kind"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "identity",
+         "regression",
+         "disclosure"
+        ]
+       }
+      }
+     }
+    },
+    "edges": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "from",
+       "to",
+       "sign",
+       "unit",
+       "he"
+      ],
+      "properties": {
+       "sign": {
+        "enum": [
+         -1,
+         0,
+         1
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "drivers": {
+   "type": "object",
+   "required": [
+    "meta",
+    "products",
+    "nodes",
+    "edges",
+    "lines",
+    "targets",
+    "checks",
+    "notes"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "company",
+      "name",
+      "kind",
+      "built",
+      "base",
+      "assume"
+     ],
+     "properties": {
+      "company": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "kind": {
+       "enum": [
+        "insurance_group",
+        "fund_house"
+       ]
+      },
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "base": {
+       "type": "object",
+       "required": [
+        "q",
+        "end",
+        "ltm"
+       ],
+       "properties": {
+        "q": {
+         "type": "string",
+         "pattern": "^Q[1-4]'\\d\\d$"
+        },
+        "end": {
+         "$ref": "#/$defs/date"
+        }
+       }
+      },
+      "assume": {
+       "type": "object",
+       "required": [
+        "tax",
+        "g",
+        "beta",
+        "erp",
+        "ke",
+        "rf"
+       ],
+       "properties": {
+        "tax": {
+         "type": "number"
+        },
+        "g": {
+         "type": "number"
+        },
+        "beta": {
+         "type": "number"
+        },
+        "erp": {
+         "type": "number"
+        },
+        "ke": {
+         "type": "number"
+        },
+        "rf": {
+         "type": "number"
+        }
+       }
+      },
+      "flag": {
+       "enum": [
+        "employer"
+       ]
+      }
+     }
+    },
+    "products": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "s",
+       "he",
+       "g",
+       "avg",
+       "aum",
+       "edges"
+      ],
+      "properties": {
+       "s": {
+        "enum": [
+         "pen",
+         "gem",
+         "ic"
+        ]
+       },
+       "g": {
+        "type": "integer"
+       },
+       "avg": {
+        "$ref": "#/$defs/driverNode"
+       },
+       "aum": {
+        "$ref": "#/$defs/driverNode"
+       },
+       "fy": {
+        "$ref": "#/$defs/driverNode"
+       },
+       "edges": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/driverEdge"
+        }
+       }
+      }
+     }
+    },
+    "nodes": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/driverNode"
+     }
+    },
+    "edges": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/driverEdge"
+     }
+    },
+    "lines": {
+     "type": "object",
+     "properties": {
+      "csm": {
+       "type": "object",
+       "additionalProperties": {
+        "$ref": "#/$defs/driverLine"
+       }
+      },
+      "np": {
+       "type": "object",
+       "additionalProperties": {
+        "$ref": "#/$defs/driverLine"
+       }
+      },
+      "eqb": {
+       "type": "object",
+       "additionalProperties": {
+        "$ref": "#/$defs/driverLine"
+       }
+      },
+      "solv": {
+       "type": "object",
+       "required": [
+        "d",
+        "b",
+        "pts"
+       ],
+       "properties": {
+        "d": {
+         "$ref": "#/$defs/date"
+        },
+        "pts": {
+         "type": "object"
+        }
+       }
+      }
+     }
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "m",
+       "d",
+       "v"
+      ],
+      "properties": {
+       "m": {
+        "type": "string"
+       },
+       "d": {
+        "$ref": "#/$defs/date"
+       },
+       "v": {
+        "type": "number"
+       }
+      }
+     }
+    },
+    "checks": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "lhs",
+       "rhs",
+       "tol",
+       "ok",
+       "level"
+      ],
+      "properties": {
+       "ok": {
+        "type": "boolean"
+       },
+       "level": {
+        "enum": [
+         "fail",
+         "warn"
+        ]
+       },
+       "lhs": {
+        "type": "number"
+       },
+       "rhs": {
+        "type": "number"
+       }
+      }
+     }
+    },
+    "notes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he"
+      ]
+     }
+    }
+   }
+  },
+  "regBand": {
+   "type": "object",
+   "required": [
+    "low",
+    "central",
+    "high"
+   ],
+   "properties": {
+    "low": {
+     "type": "number"
+    },
+    "central": {
+     "type": "number"
+    },
+    "high": {
+     "type": "number"
+    }
+   }
+  },
+  "regSource": {
+   "type": "object",
+   "required": [
+    "url",
+    "title",
+    "doc",
+    "pg",
+    "retrieved"
+   ],
+   "properties": {
+    "url": {
+     "type": "string",
+     "pattern": "^https://([a-z0-9.-]+\\.)?gov\\.il/"
+    },
+    "title": {
+     "type": "string"
+    },
+    "doc": {
+     "type": "string"
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "retrieved": {
+     "$ref": "#/$defs/date"
+    }
+   }
+  },
+  "regDate": {
+   "type": "object",
+   "required": [
+    "k",
+    "d",
+    "he",
+    "src"
+   ],
+   "properties": {
+    "k": {
+     "enum": [
+      "published",
+      "effective",
+      "ends",
+      "expected"
+     ]
+    },
+    "d": {
+     "type": "string",
+     "pattern": "^\\d{4}(-\\d\\d(-\\d\\d)?)?$"
+    },
+    "he": {
+     "type": "string"
+    },
+    "src": {
+     "type": "integer"
+    }
+   }
+  },
+  "regImpact": {
+   "type": "object",
+   "required": [
+    "c",
+    "d",
+    "net",
+    "aum",
+    "rev",
+    "products",
+    "flags"
+   ],
+   "properties": {
+    "c": {
+     "type": "string"
+    },
+    "d": {
+     "$ref": "#/$defs/regBand"
+    },
+    "net": {
+     "$ref": "#/$defs/regBand"
+    },
+    "aum": {
+     "$ref": "#/$defs/regBand"
+    },
+    "rev": {
+     "$ref": "#/$defs/regBand"
+    },
+    "pct_np": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "required": [
+      "low",
+      "central",
+      "high"
+     ],
+     "properties": {
+      "low": {
+       "type": "number"
+      },
+      "central": {
+       "type": "number"
+      },
+      "high": {
+       "type": "number"
+      }
+     }
+    },
+    "products": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "s",
+       "shock",
+       "d",
+       "basis"
+      ],
+      "properties": {
+       "s": {
+        "enum": [
+         "pen",
+         "gem",
+         "ic"
+        ]
+       },
+       "shock": {
+        "type": "object",
+        "required": [
+         "low",
+         "central",
+         "high"
+        ],
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "flow",
+          "fee"
+         ],
+         "properties": {
+          "flow": {
+           "type": "number"
+          },
+          "fee": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "d": {
+        "type": "object",
+        "required": [
+         "low",
+         "central",
+         "high"
+        ],
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "dA",
+          "dRev",
+          "dVar",
+          "dOp"
+         ],
+         "properties": {
+          "dA": {
+           "type": "number"
+          },
+          "dRev": {
+           "type": "number"
+          },
+          "dVar": {
+           "type": "number"
+          },
+          "dOp": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "basis": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "label",
+          "v",
+          "unit",
+          "est"
+         ],
+         "properties": {
+          "label": {
+           "type": "string"
+          },
+          "v": {
+           "$ref": "#/$defs/regBand"
+          },
+          "unit": {
+           "type": "string"
+          },
+          "est": {
+           "type": "boolean"
+          },
+          "p": {
+           "$ref": "#/$defs/driverProv"
+          },
+          "param": {
+           "type": "string"
+          }
+         }
+        }
+       },
+       "net_flow": {
+        "$ref": "#/$defs/regBand"
+       }
+      }
+     }
+    },
+    "flags": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "regulationImpact": {
+   "type": "object",
+   "required": [
+    "meta",
+    "managers",
+    "initiatives",
+    "exposure"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "retrieved",
+      "base",
+      "units",
+      "bands",
+      "weights",
+      "excluded"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "retrieved": {
+       "$ref": "#/$defs/date"
+      },
+      "base": {
+       "type": "object",
+       "required": [
+        "q",
+        "ltm"
+       ],
+       "properties": {
+        "q": {
+         "type": "string",
+         "pattern": "^Q[1-4]'\\d\\d$"
+        }
+       }
+      },
+      "bands": {
+       "type": "array",
+       "prefixItems": [
+        {
+         "enum": [
+          "low"
+         ]
+        },
+        {
+         "enum": [
+          "central"
+         ]
+        },
+        {
+         "enum": [
+          "high"
+         ]
+        }
+       ]
+      },
+      "weights": {
+       "type": "object",
+       "required": [
+        "proposal",
+        "consultation",
+        "approved",
+        "in_force"
+       ],
+       "additionalProperties": {
+        "type": "number"
+       }
+      },
+      "excluded": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "c",
+         "name",
+         "why"
+        ]
+       }
+      }
+     }
+    },
+    "managers": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "name",
+       "kind",
+       "tax",
+       "products",
+       "np"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "insurance_group",
+         "fund_house"
+        ]
+       },
+       "tax": {
+        "type": "number"
+       },
+       "products": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "he",
+          "A",
+          "fy",
+          "vc"
+         ],
+         "properties": {
+          "A": {
+           "type": "object",
+           "required": [
+            "v",
+            "p"
+           ],
+           "properties": {
+            "v": {
+             "type": "number"
+            },
+            "p": {
+             "$ref": "#/$defs/driverProv"
+            }
+           }
+          },
+          "fy": {
+           "type": "object",
+           "required": [
+            "v",
+            "p"
+           ],
+           "properties": {
+            "v": {
+             "type": "number"
+            },
+            "p": {
+             "$ref": "#/$defs/driverProv"
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "initiatives": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "title",
+       "short",
+       "regulator",
+       "type",
+       "status",
+       "w",
+       "dates",
+       "next",
+       "facts",
+       "sources",
+       "model",
+       "impacts",
+       "total"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+       },
+       "title": {
+        "type": "string"
+       },
+       "short": {
+        "type": "string"
+       },
+       "regulator": {
+        "type": "string"
+       },
+       "type": {
+        "enum": [
+         "fee",
+         "default",
+         "substitution",
+         "solvency",
+         "transparency",
+         "cost"
+        ]
+       },
+       "status": {
+        "enum": [
+         "proposal",
+         "consultation",
+         "approved",
+         "in_force"
+        ]
+       },
+       "w": {
+        "type": "number"
+       },
+       "dates": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "$ref": "#/$defs/regDate"
+        }
+       },
+       "next": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "required": [
+         "k",
+         "d",
+         "he",
+         "src"
+        ],
+        "properties": {
+         "k": {
+          "enum": [
+           "published",
+           "effective",
+           "ends",
+           "expected"
+          ]
+         },
+         "d": {
+          "type": "string",
+          "pattern": "^\\d{4}(-\\d\\d(-\\d\\d)?)?$"
+         },
+         "he": {
+          "type": "string"
+         },
+         "src": {
+          "type": "integer"
+         }
+        }
+       },
+       "facts": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "he",
+          "src"
+         ]
+        }
+       },
+       "sources": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "$ref": "#/$defs/regSource"
+        }
+       },
+       "model": {
+        "type": "object",
+        "required": [
+         "kind",
+         "he",
+         "products",
+         "params"
+        ],
+        "properties": {
+         "kind": {
+          "enum": [
+           "fee",
+           "default",
+           "substitution",
+           "none"
+          ]
+         },
+         "params": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "required": [
+            "k",
+            "he",
+            "unit",
+            "src"
+           ],
+           "properties": {
+            "src": {
+             "enum": [
+              "source",
+              "assumption",
+              "regulator"
+             ]
+            }
+           }
+          }
+         }
+        }
+       },
+       "impacts": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/regImpact"
+        }
+       },
+       "total": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "required": [
+         "low",
+         "central",
+         "high"
+        ],
+        "properties": {
+         "low": {
+          "type": "number"
+         },
+         "central": {
+          "type": "number"
+         },
+         "high": {
+          "type": "number"
+         }
+        }
+       }
+      }
+     }
+    },
+    "exposure": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "d",
+       "net",
+       "by",
+       "pct_np"
+      ],
+      "properties": {
+       "d": {
+        "$ref": "#/$defs/regBand"
+       },
+       "net": {
+        "$ref": "#/$defs/regBand"
+       },
+       "by": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "id",
+          "w"
+         ],
+         "properties": {
+          "w": {
+           "type": "number"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "warProv": {
+   "type": "object",
+   "required": [
+    "k",
+    "title"
+   ],
+   "properties": {
+    "k": {
+     "enum": [
+      "report",
+      "reg",
+      "calc",
+      "fund",
+      "none"
+     ]
+    },
+    "title": {
+     "type": "string"
+    },
+    "value": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "url": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "formula": {
+     "type": "string"
+    },
+    "why": {
+     "type": "string"
+    },
+    "ds": {
+     "enum": [
+      "gemel",
+      "pensia",
+      "insurance"
+     ]
+    },
+    "id": {
+     "type": "integer"
+    },
+    "period": {
+     "type": [
+      "integer",
+      "string"
+     ]
+    },
+    "col": {
+     "type": "string"
+    },
+    "est": {
+     "type": "boolean"
+    },
+    "inputs": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "label",
+       "v"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "v": {
+        "type": "string"
+       },
+       "p": {
+        "$ref": "#/$defs/warProv"
+       }
+      }
+     }
+    }
+   }
+  },
+  "warSpec": {
+   "type": "object",
+   "required": [
+    "B",
+    "se",
+    "t",
+    "n",
+    "clusters",
+    "r2",
+    "coef"
+   ],
+   "properties": {
+    "B": {
+     "type": "number"
+    },
+    "se": {
+     "type": "number"
+    },
+    "t": {
+     "type": "number"
+    },
+    "n": {
+     "type": "integer"
+    },
+    "clusters": {
+     "type": "integer"
+    },
+    "r2": {
+     "type": "number"
+    },
+    "coef": {
+     "type": "array",
+     "minItems": 5,
+     "items": {
+      "type": "object",
+      "required": [
+       "x",
+       "b",
+       "se",
+       "t"
+      ],
+      "properties": {
+       "x": {
+        "type": "string"
+       },
+       "b": {
+        "type": "number"
+       },
+       "se": {
+        "type": "number"
+       },
+       "t": {
+        "type": "number"
+       }
+      }
+     }
+    }
+   }
+  },
+  "warroomElasticity": {
+   "type": "object",
+   "required": [
+    "meta",
+    "products",
+    "pooled"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "asof",
+      "window",
+      "lags",
+      "source",
+      "fee_timing"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "asof": {
+       "$ref": "#/$defs/month"
+      },
+      "window": {
+       "type": "string"
+      },
+      "lags": {
+       "type": "integer"
+      },
+      "source": {
+       "type": "string"
+      },
+      "fee_timing": {
+       "type": "object",
+       "required": [
+        "corr_same",
+        "corr_prior",
+        "changes",
+        "january",
+        "rule"
+       ],
+       "properties": {
+        "corr_same": {
+         "$ref": "#/$defs/num"
+        },
+        "corr_prior": {
+         "$ref": "#/$defs/num"
+        },
+        "changes": {
+         "type": "integer"
+        },
+        "january": {
+         "type": "integer"
+        },
+        "rule": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "products": {
+     "type": "object",
+     "required": [
+      "pen",
+      "gemel",
+      "hisht"
+     ],
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "he",
+       "a1",
+       "main",
+       "rob",
+       "quality",
+       "why",
+       "per_bp_year",
+       "ramp",
+       "events",
+       "tracks",
+       "window",
+       "prov"
+      ],
+      "properties": {
+       "he": {
+        "type": "string"
+       },
+       "a1": {
+        "enum": [
+         "pen",
+         "gem"
+        ]
+       },
+       "main": {
+        "$ref": "#/$defs/warSpec"
+       },
+       "rob": {
+        "type": "object",
+        "required": [
+         "mgr",
+         "fd",
+         "posted"
+        ],
+        "additionalProperties": {
+         "$ref": "#/$defs/warSpec"
+        }
+       },
+       "quality": {
+        "enum": [
+         "high",
+         "medium",
+         "low",
+         "none"
+        ]
+       },
+       "why": {
+        "type": "string"
+       },
+       "per_bp_year": {
+        "type": "number"
+       },
+       "peak_lag": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "half_lag": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "ramp": {
+        "type": "object",
+        "required": [
+         "how",
+         "c"
+        ],
+        "properties": {
+         "how": {
+          "enum": [
+           "lags",
+           "assumed"
+          ]
+         },
+         "c": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "events": {
+        "type": "object",
+        "required": [
+         "ge1",
+         "ge5",
+         "cuts",
+         "rises"
+        ],
+        "properties": {
+         "ge1": {
+          "type": "integer"
+         },
+         "ge5": {
+          "type": "integer"
+         },
+         "cuts": {
+          "type": "integer"
+         },
+         "rises": {
+          "type": "integer"
+         }
+        }
+       },
+       "tracks": {
+        "type": "integer"
+       },
+       "window": {
+        "type": "string"
+       },
+       "prov": {
+        "$ref": "#/$defs/warProv"
+       }
+      }
+     }
+    },
+    "pooled": {
+     "type": "object",
+     "required": [
+      "main",
+      "quality",
+      "why",
+      "per_bp_year"
+     ],
+     "properties": {
+      "main": {
+       "$ref": "#/$defs/warSpec"
+      },
+      "quality": {
+       "enum": [
+        "high",
+        "medium",
+        "low",
+        "none"
+       ]
+      },
+      "why": {
+       "type": "string"
+      },
+      "per_bp_year": {
+       "type": "number"
+      }
+     }
+    }
+   }
+  },
+  "warroomBoard": {
+   "type": "object",
+   "required": [
+    "meta",
+    "groups",
+    "co",
+    "products",
+    "ctx"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "asof",
+      "fee_year",
+      "q_months",
+      "l12",
+      "div",
+      "ke",
+      "dur"
+     ],
+     "properties": {
+      "built": {
+       "$ref": "#/$defs/date"
+      },
+      "asof": {
+       "$ref": "#/$defs/month"
+      },
+      "fee_year": {
+       "type": "integer"
+      },
+      "q_months": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/month"
+       }
+      },
+      "l12": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/month"
+       }
+      },
+      "ke": {
+       "type": "object",
+       "required": [
+        "v"
+       ],
+       "properties": {
+        "v": {
+         "type": "number"
+        }
+       }
+      },
+      "dur": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "number"
+       }
+      }
+     }
+    },
+    "groups": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string"
+     }
+    },
+    "co": {
+     "type": "object",
+     "additionalProperties": {
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "products": {
+     "type": "object",
+     "required": [
+      "pen",
+      "gemel",
+      "hisht"
+     ],
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "he",
+       "a1",
+       "ds",
+       "cats"
+      ],
+      "properties": {
+       "he": {
+        "type": "string"
+       },
+       "a1": {
+        "enum": [
+         "pen",
+         "gem"
+        ]
+       },
+       "ds": {
+        "enum": [
+         "gemel",
+         "pensia"
+        ]
+       },
+       "cats": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "type": "object",
+         "required": [
+          "cat",
+          "A",
+          "mgrs",
+          "div"
+         ],
+         "properties": {
+          "cat": {
+           "type": "string"
+          },
+          "A": {
+           "type": "number"
+          },
+          "mgrs": {
+           "type": "array",
+           "minItems": 2,
+           "items": {
+            "type": "object",
+            "required": [
+             "g",
+             "c",
+             "he",
+             "A",
+             "fee",
+             "trq",
+             "tr12",
+             "tracks"
+            ],
+            "properties": {
+             "g": {
+              "type": "integer"
+             },
+             "c": {
+              "type": [
+               "string",
+               "null"
+              ]
+             },
+             "he": {
+              "type": "string"
+             },
+             "A": {
+              "type": "number"
+             },
+             "fee": {
+              "$ref": "#/$defs/num"
+             },
+             "trq": {
+              "type": "number"
+             },
+             "tr12": {
+              "type": "number"
+             },
+             "tracks": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+               "type": "array",
+               "prefixItems": [
+                {
+                 "enum": [
+                  "gemel",
+                  "pensia"
+                 ]
+                },
+                {
+                 "type": "integer"
+                },
+                {
+                 "type": "string"
+                },
+                {
+                 "type": "number"
+                },
+                {
+                 "$ref": "#/$defs/num"
+                },
+                {
+                 "type": "array",
+                 "minItems": 3,
+                 "items": {
+                  "type": "number"
+                 }
+                },
+                {
+                 "type": "number"
+                }
+               ],
+               "minItems": 7
+              }
+             }
+            }
+           }
+          },
+          "div": {
+           "type": "object",
+           "additionalProperties": {
+            "type": "object",
+            "required": [
+             "how",
+             "cover",
+             "n",
+             "w"
+            ],
+            "properties": {
+             "how": {
+              "enum": [
+               "revealed",
+               "share"
+              ]
+             },
+             "cover": {
+              "type": "number"
+             },
+             "n": {
+              "type": "integer"
+             },
+             "w": {
+              "type": "object",
+              "additionalProperties": {
+               "type": "number"
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "ctx": {
+     "type": "object",
+     "required": [
+      "q",
+      "pi",
+      "tr"
+     ],
+     "properties": {
+      "q": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "pi": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "integer"
+       }
+      },
+      "tr": {
+       "type": "object"
+      }
+     }
+    }
+   }
+  },
+  "capitalOptions": {
+   "type": "object",
+   "required": [
+    "meta",
+    "companies"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "built",
+      "base",
+      "v",
+      "formula",
+      "buffer_rule",
+      "stress"
+     ],
+     "properties": {
+      "built": {
+       "type": "string"
+      },
+      "base": {
+       "type": "object",
+       "required": [
+        "q",
+        "end",
+        "ltm"
+       ]
+      },
+      "v": {
+       "type": "integer",
+       "enum": [
+        1
+       ]
+      }
+     }
+    },
+    "companies": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/capitalCompany"
+     }
+    }
+   }
+  },
+  "capitalCompany": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "kind",
+    "status"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "insurance_group",
+      "fund_house"
+     ]
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "na"
+     ]
+    },
+    "why": {
+     "type": "string"
+    },
+    "flag": {
+     "type": "string"
+    },
+    "date": {
+     "type": "string",
+     "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+    },
+    "period": {
+     "type": "string",
+     "pattern": "^(FY|Q[1-4])'\\d\\d$"
+    },
+    "bases": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "w": {
+       "$ref": "#/$defs/capitalBasis"
+      },
+      "wo": {
+       "$ref": "#/$defs/capitalBasis"
+      }
+     }
+    },
+    "constraints": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/capitalConstraint"
+     }
+    },
+    "binding": {
+     "type": "string"
+    },
+    "buffer": {
+     "type": "object",
+     "required": [
+      "pp",
+      "v",
+      "rule",
+      "n",
+      "basis",
+      "prov",
+      "v_prov"
+     ],
+     "properties": {
+      "pp": {
+       "type": "number"
+      },
+      "v": {
+       "type": "number"
+      },
+      "rule": {
+       "type": "string",
+       "enum": [
+        "drift",
+        "fallback"
+       ]
+      },
+      "n": {
+       "type": "integer"
+      },
+      "basis": {
+       "type": "string",
+       "enum": [
+        "w",
+        "wo"
+       ]
+      },
+      "prov": {
+       "$ref": "#/$defs/capitalProv"
+      },
+      "v_prov": {
+       "$ref": "#/$defs/capitalProv"
+      }
+     }
+    },
+    "distributable": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "pnl": {
+     "type": "object",
+     "required": [
+      "net_profit",
+      "equity",
+      "roe",
+      "ke",
+      "tax",
+      "rf"
+     ],
+     "additionalProperties": {
+      "$ref": "#/$defs/capitalFig"
+     }
+    },
+    "dividend": {
+     "type": "object",
+     "required": [
+      "ltm",
+      "policy",
+      "printed_over"
+     ],
+     "properties": {
+      "ltm": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "policy": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "he",
+         "v",
+         "unit",
+         "d",
+         "prov"
+        ]
+       }
+      },
+      "printed_over": {
+       "type": [
+        "object",
+        "null"
+       ]
+      }
+     }
+    },
+    "options": {
+     "type": "array",
+     "minItems": 4,
+     "items": {
+      "$ref": "#/$defs/capitalOption"
+     }
+    },
+    "rank": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "div",
+       "org"
+      ]
+     }
+    }
+   }
+  },
+  "capitalBasis": {
+   "type": "object",
+   "required": [
+    "of",
+    "scr",
+    "ratio",
+    "printed"
+   ],
+   "properties": {
+    "of": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "scr": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "ratio": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "printed": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "printed_prov": {
+     "$ref": "#/$defs/capitalProv"
+    }
+   }
+  },
+  "capitalConstraint": {
+   "type": "object",
+   "required": [
+    "id",
+    "kind",
+    "basis",
+    "stated",
+    "t",
+    "t_prov",
+    "period",
+    "he",
+    "headroom",
+    "pp"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^(board|div|reg)_(w|wo)$"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "board",
+      "div",
+      "reg"
+     ]
+    },
+    "basis": {
+     "type": "string",
+     "enum": [
+      "w",
+      "wo"
+     ]
+    },
+    "stated": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "w",
+      "wo",
+      null
+     ]
+    },
+    "t": {
+     "type": "number"
+    },
+    "t_prov": {
+     "$ref": "#/$defs/capitalProv"
+    },
+    "period": {
+     "type": "string"
+    },
+    "he": {
+     "type": "string"
+    },
+    "headroom": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "pp": {
+     "type": "number"
+    }
+   }
+  },
+  "capitalOption": {
+   "type": "object",
+   "required": [
+    "id"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "enum": [
+      "div",
+      "org",
+      "bolt",
+      "hold"
+     ]
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "A9",
+      "A2"
+     ]
+    },
+    "cap": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "roic": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "solv": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "per_bn": {
+     "type": "number"
+    },
+    "roe": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "eps": {
+     "$ref": "#/$defs/capitalFig"
+    },
+    "eps_bb": {
+     "$ref": "#/$defs/capitalFig"
+    }
+   }
+  },
+  "capitalFig": {
+   "type": "object",
+   "required": [
+    "v",
+    "prov"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "prov": {
+     "$ref": "#/$defs/capitalProv"
+    }
+   }
+  },
+  "capitalProv": {
+   "type": "object",
+   "required": [
+    "k"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "report",
+      "calc",
+      "ref",
+      "lts",
+      "none",
+      "xbrl"
+     ]
+    }
+   }
+  },
+  "fragSeg": {
+   "type": "object",
+   "required": [
+    "st"
+   ],
+   "properties": {
+    "st": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "watch",
+      "alert",
+      "nodata",
+      "na"
+     ]
+    },
+    "why": {
+     "type": "string"
+    },
+    "stale": {
+     "type": "boolean"
+    },
+    "x": {
+     "type": "object"
+    },
+    "v": {
+     "$ref": "#/$defs/num"
+    },
+    "t": {
+     "$ref": "#/$defs/num"
+    },
+    "m": {
+     "$ref": "#/$defs/num"
+    },
+    "pct": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "n": {
+     "type": "integer"
+    },
+    "asof": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "d": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "dk": {
+     "type": "string",
+     "enum": [
+      "pub",
+      "month"
+     ]
+    },
+    "prov": {
+     "type": "object",
+     "required": [
+      "k"
+     ]
+    },
+    "provT": {
+     "type": [
+      "object",
+      "null"
+     ]
+    },
+    "provM": {
+     "type": "object"
+    },
+    "provR": {
+     "type": "object"
+    },
+    "ser": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "$ref": "#/$defs/num"
+       }
+      ]
+     }
+    },
+    "h": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "number"
+       },
+       {
+        "type": "string",
+        "enum": [
+         "ok",
+         "watch",
+         "alert",
+         "nodata",
+         "na"
+        ]
+       }
+      ]
+     }
+    }
+   }
+  },
+  "fragCell": {
+   "type": "object",
+   "required": [
+    "st",
+    "seg",
+    "segs"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "st": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "watch",
+      "alert",
+      "nodata",
+      "na"
+     ]
+    },
+    "seg": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "why": {
+     "type": "string"
+    },
+    "stale": {
+     "type": "boolean"
+    },
+    "segs": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/fragSeg"
+     }
+    }
+   }
+  },
+  "fragility": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "rule",
+    "sigs",
+    "params",
+    "stale_ratio_m",
+    "presets",
+    "cos",
+    "rows",
+    "skipped",
+    "events"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "asof": {
+     "type": "object",
+     "required": [
+      "lens",
+      "reg",
+      "funds",
+      "base"
+     ]
+    },
+    "rule": {
+     "type": "string"
+    },
+    "sigs": {
+     "type": "array",
+     "minItems": 7,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "short",
+       "metric",
+       "u",
+       "better",
+       "pctl",
+       "rule",
+       "src",
+       "segs"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "enum": [
+         "flow",
+         "fee",
+         "perf",
+         "cost",
+         "solv",
+         "csm",
+         "scen"
+        ]
+       },
+       "better": {
+        "type": "string",
+        "enum": [
+         "hi",
+         "lo"
+        ]
+       },
+       "rule": {
+        "type": "object",
+        "required": [
+         "watch",
+         "alert"
+        ]
+       }
+      }
+     }
+    },
+    "params": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "v",
+       "he",
+       "u",
+       "sig"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "v": {
+        "type": "number"
+       },
+       "he": {
+        "type": "string"
+       },
+       "u": {
+        "type": "string"
+       },
+       "sig": {
+        "type": "string",
+        "enum": [
+         "flow",
+         "fee",
+         "perf",
+         "cost",
+         "solv",
+         "csm",
+         "scen"
+        ]
+       }
+      }
+     }
+    },
+    "stale_ratio_m": {
+     "type": "integer"
+    },
+    "presets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "he",
+       "y10",
+       "eq",
+       "ok"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "he": {
+        "type": "string"
+       },
+       "y10": {
+        "type": "number"
+       },
+       "eq": {
+        "type": "number"
+       },
+       "ok": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "cos": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "rows": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "name",
+       "kind",
+       "sig",
+       "flags",
+       "nodata"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "c": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "insurance_group",
+         "fund_house"
+        ]
+       },
+       "sig": {
+        "type": "object",
+        "required": [
+         "flow",
+         "fee",
+         "perf",
+         "cost",
+         "solv",
+         "csm",
+         "scen"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "flow": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "fee": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "perf": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "cost": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "solv": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "csm": {
+          "$ref": "#/$defs/fragCell"
+         },
+         "scen": {
+          "$ref": "#/$defs/fragCell"
+         }
+        }
+       },
+       "flags": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "sig",
+          "st"
+         ],
+         "additionalProperties": false,
+         "properties": {
+          "sig": {
+           "type": "string",
+           "enum": [
+            "flow",
+            "fee",
+            "perf",
+            "cost",
+            "solv",
+            "csm",
+            "scen"
+           ]
+          },
+          "st": {
+           "type": "string",
+           "enum": [
+            "watch",
+            "alert"
+           ]
+          }
+         }
+        }
+       },
+       "nodata": {
+        "type": "array",
+        "items": {
+         "type": "string",
+         "enum": [
+          "flow",
+          "fee",
+          "perf",
+          "cost",
+          "solv",
+          "csm",
+          "scen"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "skipped": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "c",
+       "why"
+      ]
+     }
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/feedEvent"
+     }
     }
    }
   }

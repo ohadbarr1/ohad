@@ -23,7 +23,7 @@ const NAV: [string, string, string, string | null][] = [
   ['/industry', 'compare', 'השוואה ענפית', 'ענף'], ['/valuation', 'value', 'שווי', 'שווי'],
 ];
 /** the long-term savings section: the lens, the tracks, the managers and their holdings (and the old /market links) */
-const SAVINGS = ['/savings', '/funds', '/managers', '/holdings', '/market'];
+const SAVINGS = ['/savings', '/funds', '/managers', '/holdings', '/market', '/warroom'];
 
 export function Layout() {
   const { theme, toggle, next } = useTheme();

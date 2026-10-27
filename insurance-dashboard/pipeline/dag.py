@@ -142,14 +142,53 @@ STEPS = [
     step("build_since", "pipeline/build_since.py",
          [*WB, D + "companies/index.json", D + "companies/*.docs.json", D + "targets.json", D + "market.json"],
          [D + "since.json"], daily=True, groups={"deploy"}, note="dated events per company for the \"since you last looked\" marks (last 400 days)"),
+    # module A6: the position book, published positions (append-only ledger data/ledger/positions/) scored against the published data
+    step("build_positions", "pipeline/build_positions.py",
+         [D + "lens.json", D + "kpi.json", D + "targets.json", D + "calendar.json", D + "companies/index.json", D + "cards", "data/ledger/positions",
+          D + "fragility.json"],
+         [D + "positions.json"], groups={"deploy"},
+         note="drafts (data/positions/, status draft) only with --drafts, a dev build the gate refuses (check `positions`)"),
     # module M2: the delta feed (/feed) from the published files, and its weekly digest (an email body; no sender is wired)
     step("build_feed", "pipeline/build_feed.py",
          [D + "search/docs.json", D + "companies/index.json", *WB, D + "cards", D + "restatements.json", D + "targets.json", D + "market.json",
-          D + "funds", D + "csm/solvency.json", "web/src/pages/ReportDay.tsx"],
+          D + "funds", D + "csm/solvency.json", D + "positions.json", D + "fragility.json", "web/src/pages/ReportDay.tsx"],
          [D + "feed.json"], code=["pipeline/reportday.py"], groups={"deploy"},
          note="dated, typed, sourced events since 01.01.25 (pipeline/check_feed.py = gate `feed`)"),
+    # module A4: the attribution engine (the "why" of every ROE / profit change, and between peers), from the reported facts only
+    step("build_attribution", "pipeline/build_attribution.py",
+         [*WB, D + "companies/index.json", D + "lens.json", D + "lts_prov", D + "search/docs.json"],
+         [D + "attribution"], code=["pipeline/attribution.py"], groups={"deploy"},
+         note="QoQ / YoY / LTM bridges per company and pairwise peer bridges (pipeline/build_attribution.py --check = gate `attribution`)"),
     step("build_digest", "pipeline/build_digest.py", [D + "feed.json"], ["data/digest/digest.html", "data/digest/digest.txt"], daily=True,
          note="the last 7 days of feed.json as a Hebrew RTL email body (untracked output; no sender is wired)"),
+    # module A1: the driver graph (mechanisms layer): calibrated edges per company over the published files; gate `drivers`
+    step("build_drivers", "pipeline/build_drivers.py",
+         [D + "lens.json", D + "flow_npv.json", D + "market.json", D + "funds/cat.json", D + "macro/boi_curve.json", D + "macro/macro.json", D + "lines.json", D + "csm/sens.json",
+          D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", "web/src/lib/valuation.ts"],
+         [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py"], groups={"deploy"},
+         note="A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)"),
+    # module A8: the regulatory impact simulator: the hand-curated initiative register through the A1 driver files; gate `regulation`
+    step("build_regulation", "pipeline/build_regulation.py",
+         ["data/regulation/initiatives.json", D + "drivers", D + "market.json"],
+         [D + "regulation/impact.json"], groups={"deploy"},
+         note="A8: low / central / high impact per initiative x manager, the exposure to the whole pipeline (weights labelled)"),
+    # module A5: the war room (/warroom): fee -> flow elasticities per product from the regulator's track-month files, and the move board
+    step("build_warroom", "pipeline/build_warroom.py",
+         [D + "prov/reg", D + "market.json", D + "funds.json", D + "lens.json", D + "flow_npv.json", D + "companies/index.json", "pipeline/build_funds.py"],
+         [D + "warroom"], code=["pipeline/warroom_ols.py"], groups={"deploy"},
+         note="A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)"),
+    # module A7: capital and strategic options per insurer (distributable capital, the option set, its ranking); gate `capital`
+    step("build_capital", "pipeline/build_capital.py",
+         [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json"],
+         [D + "capital/options.json"], groups={"deploy"},
+         note="A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9) / hold rows; the A2 overlay runs on the page"),
+    # module A10: the Fragility Monitor (/fragility): seven signals per manager, each with its value, trend, peer percentile, stated rule and
+    # state, no composite; its crossings feed M2 and mark A6 positions for review (so it runs before build_positions and build_feed)
+    step("build_fragility", "pipeline/build_fragility.py",
+         [D + "lens.json", D + "market.json", D + "funds.json", D + "funds", D + "macro/macro.json", D + "macro/boi_curve.json", D + "calendar.json",
+          D + "csm/solvency.json", D + "csm/facts", D + "cards", D + "companies/index.json", D + "drivers"],
+         [D + "fragility.json"], code=["pipeline/csm_resolve.py"], groups={"deploy"},
+         note="A10: flow, fee, performance, cost, solvency, CSM runway, A2 scenario headroom; gate `fragility` (rebuild, provenance, no composite)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

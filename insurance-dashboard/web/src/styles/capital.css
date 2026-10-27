@@ -1,0 +1,80 @@
+/* === A7 · Capital & Strategic Options (company panel + /capital) === */
+.cap { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.cap .pagehead .sub a, .cap-panel .src a, .cap .src a, .cap-panel .hd .aside a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+
+/* the surplus strip: own funds, SCR, the binding constraint, the buffer, the distributable capital */
+.cap-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; margin-bottom: 14px; }
+.cap-strip > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cap-strip .l { font-size: var(--t-1); color: var(--muted); }
+.cap-strip .v { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.cap-strip .v.neg, .cap-t .neg, .cap-rank .neg { color: var(--down); }
+.cap-strip .s { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.cap-strip .hero { border-inline-start: 3px solid var(--accent); padding-inline-start: 10px; }
+
+/* the buffer: an assumption the reader can change */
+.cap-buf { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cap-buf input { width: 92px; font: inherit; font-variant-numeric: tabular-nums; padding: 3px 6px; border: 1px solid var(--line); border-radius: var(--r-1, 6px); background: var(--panel); color: var(--fg); direction: ltr; text-align: center; }
+.cap-buf button.chip { font-size: var(--t-1); padding: 2px 8px; }
+
+/* the option table: a grid that becomes stacked cards on a phone (no sideways scroll) */
+.cap-t { display: grid; grid-template-columns: minmax(150px, 1.25fr) repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); margin-bottom: 14px; }
+.cap-t.st { grid-template-columns: minmax(130px, 1.1fr) repeat(4, minmax(0, 1fr)) minmax(0, .9fr); }
+.cap-t > .tr { display: contents; }
+.cap-t > .tr > div { padding: 8px 8px; border-bottom: 1px solid var(--line-soft, var(--line)); min-width: 0; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.cap-t > .th > div { font-size: var(--t-1); color: var(--muted); font-weight: 600; padding-top: 6px; padding-bottom: 6px; }
+.cap-t .lbl { font-weight: 700; flex-direction: row !important; align-items: center; justify-content: flex-start !important; gap: 8px; flex-wrap: wrap; }
+.cap-t .lbl .rk { display: inline-grid; place-items: center; min-width: 20px; height: 20px; border-radius: 10px; font-size: 11px; font-weight: 700; background: var(--panel2); color: var(--muted); font-variant-numeric: tabular-nums; }
+.cap-t .lbl .rk.one { background: var(--sel-bg); color: var(--sel-fg); }
+.cap-t .v { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cap-t .s { font-size: 11px; color: var(--muted); line-height: 1.35; }
+.cap-t .na { color: var(--muted); font-size: var(--t-1); }
+.cap-t .tr.off > div { background: color-mix(in oklch, var(--panel2) 55%, transparent); }
+.cap-t .tr.hold > div { border-bottom: 0; }
+.cap-t .tr.sel > div { background: color-mix(in oklch, var(--accent) 7%, transparent); }
+.cap-t .tr button.lnk { all: unset; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
+.cap-t .tr button.lnk:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cap-mk, .cap-t > .tr > .cap-mk { display: flex; flex-direction: row; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: flex-start; }
+
+/* a share of the surplus that survives */
+.cap-bar { position: relative; height: 6px; border-radius: 3px; background: var(--line-soft, var(--line)); overflow: hidden; margin-top: 3px; direction: ltr; max-width: 140px; }
+.cap-bar i { position: absolute; inset-block: 0; left: 0; border-radius: 3px; background: var(--up); }
+.cap-bar.low i { background: var(--warn); }
+.cap-bar.gone i { background: var(--down); }
+
+.cap-cons { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--t-2); color: var(--muted); margin: -4px 0 12px; }
+.cap-cons b { color: var(--fg); font-weight: 600; }
+.cap-cons .bind { color: var(--fg); }
+
+/* /capital: the ranking */
+.cap-ctl { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.cap-ctl .scn-presets { flex: 1 1 auto; }
+.cap-rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.cap-rank > li { display: grid; grid-template-columns: 28px minmax(130px, 1.1fr) repeat(4, minmax(0, 1fr)) minmax(0, 1.4fr); gap: 4px 12px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--line-soft, var(--line)); }
+.cap-rank > li.hd { font-size: var(--t-1); color: var(--muted); font-weight: 600; padding-top: 4px; padding-bottom: 6px; }
+.cap-rank > li > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cap-rank .n { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+.cap-rank .who { flex-direction: row !important; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 700; }
+.cap-rank .v { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cap-rank .s { font-size: 11px; color: var(--muted); line-height: 1.35; }
+.cap-rank > li.incomplete .n { opacity: .5; }
+.cap-rank > li > .opts { align-items: flex-start; }
+.cap-rank > li > .opts .chip { white-space: normal; }
+
+@media (max-width: 760px) {
+  .cap-strip { grid-template-columns: 1fr 1fr; }
+  .cap-strip .v { font-size: 19px; }
+  .cap-t, .cap-t.st { grid-template-columns: 1fr 1fr; border-top: 0; }
+  .cap-t > .th { display: none; }
+  .cap-t > .tr > div { border-bottom: 0; padding: 4px 2px; }
+  .cap-t > .tr > .lbl { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 10px; }
+  .cap-t > .tr > div[data-l]::before { content: attr(data-l); font-size: 10.5px; color: var(--muted); font-weight: 500; }
+  .cap-t > .tr > .wide { grid-column: 1 / -1; }
+  .cap-t > .tr > .ph { display: none; }
+  .cap-rank > li { grid-template-columns: 1fr 1fr; position: relative; padding-inline-start: 28px; gap: 6px 12px; }
+  .cap-rank > li.hd { display: none; }
+  .cap-rank > li > .n { position: absolute; inset-inline-start: 2px; top: 12px; }
+  .cap-rank > li > .who, .cap-rank > li > .opts { grid-column: 1 / -1; }
+  .cap-rank > li > div[data-l]::before { content: attr(data-l); font-size: 10.5px; color: var(--muted); font-weight: 500; }
+}
+.chip.gap { color: var(--muted); border-style: dashed; background: transparent; }
+.cap bdi, .cap-panel bdi { unicode-bidi: isolate; direction: ltr; }

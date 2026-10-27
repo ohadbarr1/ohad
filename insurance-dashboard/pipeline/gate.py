@@ -23,10 +23,36 @@ Checks
   nowcast        module M1 (unpublished): web/public/data/nowcast.json equals a rebuild (pipeline/build_nowcast.py --check), every
                  ledger entry's inputs hash recomputes, nothing about phoenix is stored, and the ledger is append-only: every file
                  under data/ledger/nowcast/ at git HEAD is still there, byte for byte (an estimate is never edited or removed once frozen).
+  positions      module A6, the position book: web/public/data/positions.json equals a rebuild WITHOUT drafts (a --drafts dev build
+                 fails), every ledger entry is valid (at least one falsifier, every evidence ref and metric resolves, horizon after the
+                 revision date, revisions chained by `supersedes`, hashes recompute, outcomes dated and after the last revision, nothing
+                 after a close; with ABSTAIN_PHOENIX on, no phoenix position), and `positions_ledger`: every file under
+                 data/ledger/positions/ at git HEAD is still there, byte for byte (pipeline/build_positions.py --check).
   lens           web/public/data/lens.json equals a rebuild from market.json + lts.json (pipeline/build_lens.py --check), and every
                  derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
   flow_npv       web/public/data/flow_npv.json equals a rebuild (pipeline/build_flow_npv.py --check): inputs present, every NPV equals its
                  formula, NPV sign = flow sign x margin sign, LTM = the sum of its quarters, no NaN, ke constants = valuation.ts (M3).
+  drivers        module A1: web/public/data/drivers/ equals a rebuild (pipeline/build_drivers.py --check): every edge has provenance or is
+                 `missing` with a reason, no NaN, signs as expected, the identity nodes reconcile (op = fees − S&M − G&A, net profit =
+                 PBT − tax, solvency = own funds ÷ SCR), disclosed points = csm/sens.json and csm/solvency.json, NPV per NIS 1bn = M3,
+                 one policy -> 1Y pass-through in every file, nostro cash and bank-credit edges = their nodes ÷ 100, a cost fit constrained
+                 at a = 0 only where the free fixed cost was negative, a variable cost above the fee yield always labelled, the policy ->
+                 IFRS 17 gap labelled on every insurer; and the propagation library reproduces them (web/tests/drivers.unit.ts, in node)
+  regulation     module A8: web/public/data/regulation/impact.json equals a rebuild (pipeline/build_regulation.py --check): every
+                 initiative cites a public regulator document (gov.il) with a retrieval date, every date and fact points at a source,
+                 every assumption carries a reason, every impact has its inputs with provenance, no NaN, the default-fund redistribution
+                 sums to zero, the exposure = Σ weight × impact; and `regulation_lib`: drivers.ts re-propagates every product shock
+                 (web/tests/regulation.unit.ts, run in node)
+  warroom        module A5: web/public/data/warroom/ equals a rebuild (pipeline/build_warroom.py --check): every elasticity has n, se, t and
+                 a quality label that follows its rule, no NaN, provenance down to a regulator dataset and window, B = the sum of its lags,
+                 managers add to their category and tracks to their manager, allocation weights sum to 1; and the simulation library
+                 (web/tests/warroom.unit.ts, run in node): zero-sum flows, the regression's own arithmetic, NPV = M3, provenance to the regulator
+                 PBT − tax, solvency = own funds ÷ SCR), disclosed points = csm/sens.json and csm/solvency.json, NPV per NIS 1bn = M3;
+                 and the propagation library reproduces them (web/tests/drivers.unit.ts, run in node)
+  capital        module A7: web/public/data/capital/options.json equals a rebuild (pipeline/build_capital.py --check): distributable =
+                 own funds − SCR × target − buffer on every constraint, own funds ÷ SCR = the printed ratio, every figure has provenance
+                 down to a report page or is a labelled assumption, no NaN; and web/src/lib/capital.ts reproduces the option rows and
+                 gives every A2 preset a finite stressed surplus or a gap (web/tests/capital.unit.ts, run in node)
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
   consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)
@@ -44,6 +70,14 @@ Checks
                  it cites or its operation over cited inputs (pipeline/check_cards.py, lane S2)
   feed           the delta feed (web/public/data/feed.json, module M2): every event has a date, a source and a type, no event twice,
                  every figure re-read from the published file it cites (pipeline/check_feed.py)
+  fragility      module A10, the Fragility Monitor: web/public/data/fragility.json equals a rebuild (pipeline/build_fragility.py --check);
+                 every signal in a data state carries provenance and an as-of date and follows its stated rule; no composite field (score,
+                 rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
+                 `fragility_lib`: the page's rules (web/src/lib/fragility.ts) give the same states, and the A2 engine (scenarios.ts) the same
+                 worst-case headroom (web/tests/fragility.unit.ts, run in node)
+  attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
+                 every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
+                 from the facts it cites, and every contribution has inputs that open down to a report and page
 """
 import collections
 import datetime as dt
@@ -348,15 +382,84 @@ def flow_npv():
     add("flow_npv", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, " · ".join(out[:2])[:200])
 
 
+def drivers():
+    """module A1: the driver graph files rebuild byte-equal and verify; the TS propagation library reproduces them"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_drivers.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("drivers", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("drivers_lib", False, 0, 1, "node not found: drivers.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/drivers-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("drivers_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("drivers: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
+def regulation():
+    """module A8: the impact file rebuilds equal and verifies; the TS propagation library reproduces every product shock"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_regulation.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("regulation", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("regulation_lib", False, 0, 1, "node not found: regulation impacts not re-propagated", level="warn")
+    q = subprocess.run([node, "scripts/regulation-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("regulation_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("regulation: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
+def warroom():
+    """module A5: the war room's elasticities and board rebuild byte-equal and verify"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_warroom.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.findall(r" n (\d+) ", out[0])
+    add("warroom", p.returncode == 0, sum(int(x) for x in m), 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("warroom_lib", False, 0, 1, "node not found: warroom.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/warroom-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("warroom_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("warroom: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
+def capital():
+    """module A7: the capital options file rebuilds equal and verifies; the TS library reproduces it and runs the A2 overlay"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_capital.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("capital", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("capital_lib", False, 0, 1, "node not found: capital.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/capital-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("capital_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("capital: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
 def nowcast():
     """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
     out = (p.stdout.strip() or p.stderr.strip() or "no output").splitlines()
     add("nowcast", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
-    led = "data/ledger/nowcast"
+    append_only("nowcast_ledger", "data/ledger/nowcast", "frozen estimates")
+
+
+def append_only(id_, led, what):
+    """an append-only ledger: every file under `led` at git HEAD is still there, byte for byte (new files may be added)"""
     ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", "HEAD", "--", led], cwd=ROOT, capture_output=True, text=True)
     if ls.returncode:
-        return add("nowcast_ledger", False, 0, 1, "git HEAD not readable: ledger immutability not checked", level="warn")
+        return add(id_, False, 0, 1, "git HEAD not readable: ledger immutability not checked", level="warn")
     top = subprocess.run(["git", "rev-parse", "--show-prefix"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     files = [f[len(top):] if top and f.startswith(top) else f for f in ls.stdout.split()]
     bad = []
@@ -367,7 +470,16 @@ def nowcast():
             bad.append(f"{f} removed")
         elif head.returncode or head.stdout != cur.read_bytes():
             bad.append(f"{f} changed")
-    add("nowcast_ledger", not bad, len(files), len(bad), (f"{len(files)} frozen estimates at HEAD unchanged" if not bad else "; ".join(bad))[:200])
+    add(id_, not bad, len(files), len(bad), (f"{len(files)} {what} at HEAD unchanged" if not bad else "; ".join(bad))[:200])
+
+
+def positions():
+    """module A6: positions.json equals a rebuild without drafts, every ledger entry is valid (at least one falsifier, every evidence
+    ref and metric resolves, revisions chained, outcomes dated), and the ledger is append-only against git HEAD"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_positions.py"), "--check"], capture_output=True, text=True)
+    out = (p.stdout.strip() or p.stderr.strip() or "no output").splitlines()
+    add("positions", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), out[0][:200])
+    append_only("positions_ledger", "data/ledger/positions", "position ledger entries")
 
 
 def consistency():
@@ -412,6 +524,28 @@ def feed():  # module M2: the delta feed
     except (OSError, ValueError, KeyError) as e:
         return add("feed", False, 0, 1, f"feed.json unreadable: {e}"[:200])
     add("feed", not probs, n, len(probs), (summary + (f"; e.g. {probs[0]}" if probs else ""))[:200])
+
+
+def fragility():  # module A10
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_fragility.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("fragility", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), out[0][:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("fragility_lib", False, 0, 1, "node not found: fragility.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/fragility-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("fragility_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("fragility: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
+def attribution():  # module A4
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) decompositions", out[-1])
+    add("attribution", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else 1, out[-1][:200])
 
 
 def facts():
@@ -479,11 +613,18 @@ def main():
     cross_layer()
     lens()
     flow_npv()
+    drivers()
+    regulation()
+    warroom()
+    capital()
     nowcast()
+    positions()
     consistency()
     schemas()
     cards()
     feed()
+    fragility()
+    attribution()
     facts()
     assets()
     gate_layers.run(add)

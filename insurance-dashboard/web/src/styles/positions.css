@@ -1,0 +1,87 @@
+/* module A6: the position book (/positions, /positions/<id>, the company-home block). Prefix ps-. */
+.ps { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ps > .panel, .ps > .kpis { margin: 0; }
+.ps .pdot, .ps-block .pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px; vertical-align: 1px; flex: none; }
+.ps-h1 { font-size: var(--t-6) !important; line-height: 1.3 !important; max-width: 70ch; }
+.ps-banner { margin: 0; padding: 8px 12px; border: 1px solid color-mix(in oklch, var(--warn) 45%, transparent); background: color-mix(in oklch, var(--warn) 9%, var(--panel)); border-radius: var(--r-2); font-size: var(--t-2); overflow-wrap: anywhere; }
+.chip.ps-draft { border-color: color-mix(in oklch, var(--warn) 55%, transparent); background: color-mix(in oklch, var(--warn) 14%, var(--panel)); color: var(--fg); font-weight: 600; margin-inline: 6px; }
+.ps-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.ps-controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.ps-chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.ps-chips .chip { cursor: pointer; font: inherit; font-size: var(--t-1); }
+.ps-chips .chip.on { border-color: color-mix(in oklch, var(--fg) 55%, transparent); color: var(--fg); background: var(--panel); font-weight: 700; }
+
+.ps-co { display: inline-flex; align-items: center; font-weight: 700; color: var(--fg); white-space: nowrap; margin-inline-end: 8px; }
+a.ps-co:hover { color: var(--accent-text); }
+.ps-claim { color: var(--link); overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.ps-note { display: block; font-size: var(--t-1); color: var(--muted); overflow-wrap: anywhere; }
+.ps .dim, .ps-block .dim { color: var(--muted); font-size: var(--t-1); }
+.ps-t td .dim { display: block; }
+
+/* states: open · suggestion (a falsifier met) · horizon passed · the author's closes */
+.ps-st { display: inline-block; font-size: var(--t-1); font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.ps-st.open { color: var(--muted); }
+.ps-st.confirmed { color: var(--up); border-color: color-mix(in oklch, var(--up) 40%, transparent); }
+.ps-st.falsified, .ps-st.suggest { color: var(--down); border-color: color-mix(in oklch, var(--down) 40%, transparent); }
+.ps-st.suggest { border-style: dashed; }
+.ps-st.due, .ps-st.expired { color: var(--warn); border-color: color-mix(in oklch, var(--warn) 40%, transparent); }
+.ps-st.withdrawn { color: var(--faint); border-style: dashed; }
+.ps-fst, .ps-tst { font-weight: 700; white-space: nowrap; }
+.ps-fst.met, .ps-tst.fired, .ps-hot { color: var(--down); }
+.ps-fst.clear { color: var(--up); }
+.ps-fst.watch, .ps-fst.pending, .ps-tst.ok { color: var(--muted); font-weight: 600; }
+.ps-fst.unresolved, .ps-tst.unresolved { color: var(--warn); }
+.ps-fs { white-space: nowrap; }
+.ps-fs.met { color: var(--down); font-weight: 700; }
+
+.ps-drift { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; white-space: nowrap; }
+.ps-drift i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--line); align-self: center; }
+.ps-drift.on i { background: var(--down); }
+.ps-drift.on { color: var(--down); font-weight: 600; }
+.ps-drift .dim { font-weight: 400; }
+
+/* tables (desktop) and cards (phone) */
+.ps-t { width: 100%; }
+.ps-t td, .ps-t th { vertical-align: top; }
+.ps-t td.wide, .ps-t th.wide { min-width: 260px; max-width: 520px; white-space: normal; }
+.ps-t td:not(.wide) { white-space: nowrap; }
+.ps-ser td { text-align: center; }
+.ps-ser td .dim { display: block; font-size: 10.5px; }
+.ps-ser th .dim { display: block; font-weight: 400; }
+.ps-to { font-size: var(--t-1); font-weight: 400; text-decoration: underline; text-underline-offset: 2px; }
+.ps-cards, .ps-fcards { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ps-card, .ps-fcard { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--panel); min-width: 0; }
+.ps-card header { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.ps-card header .ps-st { margin-inline-start: auto; }
+.ps-fcard.met, .ps-fcard.fired { border-color: color-mix(in oklch, var(--down) 40%, transparent); }
+.ps-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 0; }
+.ps-kv > div { min-width: 0; overflow-wrap: anywhere; }
+.ps-kv .w { grid-column: 1 / -1; }
+.ps-kv .l { display: block; font-size: 11.5px; color: var(--muted); }
+.ps-kv .ps-drift { white-space: normal; }
+
+/* closed list, company block, evidence, log */
+.ps-closed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ps-closed li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 10px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); min-width: 0; }
+.ps-closed li:last-child { border-bottom: 0; }
+.ps-closed .ps-claim { flex: 1 1 100%; }
+.ps-ev { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; }
+.ps-ev li { min-width: 0; overflow-wrap: anywhere; }
+.ps-ev li.bad { color: var(--warn); }
+.ps-ev a { text-decoration: underline; text-underline-offset: 2px; }
+.ps-mech { margin: 0; max-width: 80ch; line-height: 1.6; }
+.ps-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ps-log li { display: flex; flex-wrap: wrap; gap: 3px 12px; align-items: baseline; min-width: 0; overflow-wrap: anywhere; }
+.ps-all { text-decoration: underline; text-underline-offset: 2px; }
+.ps .eyebrow a { text-decoration: underline; text-underline-offset: 2px; color: inherit; }
+.ltr-in { unicode-bidi: isolate; }
+.ps-bc { display: inline-flex; gap: 10px; }
+.ps-bc span + span::before { content: '·'; margin-inline-end: 10px; color: var(--faint); }
+@media (max-width: 760px) {
+  .ps-h1 { font-size: var(--t-5) !important; }
+  .ps-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ps-kpis .kpi:first-child { grid-column: 1 / -1; }
+}
+
+/* module A10: the Fragility Monitor's review marks */
+.ps-banner a, .ps-frag { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }

@@ -45,7 +45,7 @@ export function FeedItem({ F, e, byId, compact }: { F: FeedFile; e: FeedEvent; b
     <li className={`fd-ev t-${e.t}`} id={compact ? undefined : `ev-${e.id.replace(/[^a-zA-Z0-9_-]/g, '_')}`}>
       <div className="fd-hd">
         <span className="fd-when num" title={`${DK_HE[e.dk]}${e.dk === 'month' ? ' (יום הפרסום של הרשות אינו נשמר)' : ''}`}>{e.dk === 'month' ? <>{ymLabel(Number(e.per))}<small>חודש נתונים</small></> : <>{pubLabel(e.d)}{e.dk === 'fetched' && <small>התקבל</small>}</>}</span>
-        <span className={`chip fd-t t-${e.t}${e.st ? ` st-${e.st}` : ''}`}>{TYPE_SHORT[e.t]}</span>
+        <span className={`chip fd-t t-${e.t}${e.st ? ` st-${e.st}` : ''}${e.fs ? ` fs-${e.fs}` : ''}`}>{TYPE_SHORT[e.t]}{e.fs ? ` · ${e.fs === 'alert' ? 'התראה' : 'מעקב'}` : ''}</span>
         {e.c === 'market' ? <span className="fd-co">{name}</span> : <Link className="fd-co" to={`/company/${e.c}`}><i className="pdot" style={{ background: idCss(e.c) }} />{name}</Link>}
         <Link className="fd-h" to={e.to}>{e.h}</Link>
         {!compact && (src.href ? <a className="fd-src" href={src.href} target="_blank" rel="noreferrer" title="המסמך במאיה">{src.text}</a> : <span className="fd-src">{src.text}</span>)}
