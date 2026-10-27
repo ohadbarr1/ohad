@@ -83,6 +83,7 @@ const Positions = page(mPositions, 'Positions');
 const PositionSheet = page(mPositions, 'PositionSheet');
 const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
 const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // module A2: the scenario studio (from home and search, not a nav item)
+const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -169,6 +170,7 @@ export function App() {
         <Route path="drivers" element={<Drivers />} />
         <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
         <Route path="scenarios" element={<Scenarios />} />{/* module A2 */}
+        <Route path="capital" element={<Capital />} />{/* module A7 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

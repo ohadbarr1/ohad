@@ -166,6 +166,11 @@ STEPS = [
           D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", "web/src/lib/valuation.ts"],
          [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py"], groups={"deploy"},
          note="A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)"),
+    # module A7: capital and strategic options per insurer (distributable capital, the option set, its ranking); gate `capital`
+    step("build_capital", "pipeline/build_capital.py",
+         [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json"],
+         [D + "capital/options.json"], groups={"deploy"},
+         note="A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9) / hold rows; the A2 overlay runs on the page"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
