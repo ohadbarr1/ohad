@@ -142,10 +142,15 @@ STEPS = [
     step("build_since", "pipeline/build_since.py",
          [*WB, D + "companies/index.json", D + "companies/*.docs.json", D + "targets.json", D + "market.json"],
          [D + "since.json"], daily=True, groups={"deploy"}, note="dated events per company for the \"since you last looked\" marks (last 400 days)"),
+    # module A6: the position book, published positions (append-only ledger data/ledger/positions/) scored against the published data
+    step("build_positions", "pipeline/build_positions.py",
+         [D + "lens.json", D + "kpi.json", D + "targets.json", D + "calendar.json", D + "companies/index.json", D + "cards", "data/ledger/positions"],
+         [D + "positions.json"], groups={"deploy"},
+         note="drafts (data/positions/, status draft) only with --drafts, a dev build the gate refuses (check `positions`)"),
     # module M2: the delta feed (/feed) from the published files, and its weekly digest (an email body; no sender is wired)
     step("build_feed", "pipeline/build_feed.py",
          [D + "search/docs.json", D + "companies/index.json", *WB, D + "cards", D + "restatements.json", D + "targets.json", D + "market.json",
-          D + "funds", D + "csm/solvency.json", "web/src/pages/ReportDay.tsx"],
+          D + "funds", D + "csm/solvency.json", D + "positions.json", "web/src/pages/ReportDay.tsx"],
          [D + "feed.json"], code=["pipeline/reportday.py"], groups={"deploy"},
          note="dated, typed, sourced events since 01.01.25 (pipeline/check_feed.py = gate `feed`)"),
     # module A4: the attribution engine (the "why" of every ROE / profit change, and between peers), from the reported facts only

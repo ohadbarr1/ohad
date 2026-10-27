@@ -5,20 +5,23 @@ import type { MetricKey, Win } from './market';
 import type { RegDs } from './sources';
 import { useLoad } from './useData';
 
-export type FeedType = 'filing' | 'restate' | 'regmonth' | 'flow' | 'target' | 'solv' | 'fee' | 'est';
+export type FeedType = 'filing' | 'restate' | 'regmonth' | 'flow' | 'target' | 'solv' | 'fee' | 'est' | 'pos';
 export type FeedUnit = 'm' | 'bn' | 'pct' | 'pp' | 'dm' | 'dbn' | 'dpct' | 'n';
 export type FeedSrc =
   | { k: 'pg'; rid: number; pg: number | null; der?: 1 | 2 }
   | { k: 'reg'; metric: MetricKey; ym: number; pi: number; w: Win; set: string; g: number }
   | { k: 'fund'; ds: RegDs; id: number; ym: number; col: string }
   | { k: 'calc'; fx: string; in: FeedFig[] }
-  | { k: 'count'; fx: string };
+  | { k: 'count'; fx: string }
+  /** a value of a position's metric (positions.json, module A6): opened on the position's tear sheet */
+  | { k: 'pos'; pid: string; m: string; per: string };
 export interface FeedFig { v: number; u: FeedUnit; s: FeedSrc; l?: string }
 export interface FeedRow { l: string; ab?: string[]; a: FeedFig; b?: FeedFig; d?: FeedFig; dp?: FeedFig; rng?: 1; note?: string }
 export interface FeedEvent {
   id: string; t: FeedType; d: string; dk: 'pub' | 'fetched' | 'month'; c: string; per: string; h: string; to: string;
-  src: { k: 'doc'; rid: number; pg?: number | null } | { k: 'reg'; ym: number } | { k: 'fund'; ds: RegDs; id: number; ym: number };
+  src: { k: 'doc'; rid: number; pg?: number | null } | { k: 'reg'; ym: number } | { k: 'fund'; ds: RegDs; id: number; ym: number } | { k: 'pos'; pid: string; rev: number };
   rows?: FeedRow[]; refs?: string[]; st?: 'met' | 'partial' | 'missed';
+  /** position events (t: pos): which ledger or data event */ pk?: 'open' | 'revise' | 'close' | 'drift' | 'falsifier' | 'review';
 }
 export interface FeedFile {
   v: number; built: string; from: string; files: string; source: string;
@@ -31,9 +34,9 @@ export interface FeedFile {
 }
 export const useFeed = (enabled = true) => useLoad<FeedFile>(enabled ? 'feed.json' : null);
 
-export const FEED_TYPES: FeedType[] = ['filing', 'restate', 'solv', 'target', 'regmonth', 'flow', 'fee', 'est'];
+export const FEED_TYPES: FeedType[] = ['filing', 'restate', 'solv', 'target', 'regmonth', 'flow', 'fee', 'pos', 'est'];
 /** short labels for chips and filters */
-export const TYPE_SHORT: Record<FeedType, string> = { filing: 'דוח', restate: 'הצגה מחדש', regmonth: 'חודש רשות', flow: 'צבירה נטו', target: 'יעד', solv: 'כושר פירעון', fee: 'דמי ניהול', est: 'אומדנים' };
+export const TYPE_SHORT: Record<FeedType, string> = { filing: 'דוח', restate: 'הצגה מחדש', regmonth: 'חודש רשות', flow: 'צבירה נטו', target: 'יעד', solv: 'כושר פירעון', fee: 'דמי ניהול', est: 'אומדנים', pos: 'עמדות' };
 export const DK_HE: Record<FeedEvent['dk'], string> = { pub: 'פרסום', fetched: 'התקבל מהרשות', month: 'חודש נתונים' };
 const DOC_HE: Record<string, string> = { annual: 'דוח שנתי', quarterly: 'דוח רבעוני', presentation: 'מצגת', solvency: 'דוח כושר פירעון' };
 const DS_HE: Record<string, string> = { gemel: 'גמל-נט', pensia: 'פנסיה-נט', insurance: 'ביטוח-נט' };
@@ -85,6 +88,7 @@ export function figProv(F: FeedFile, f: FeedFig, title: string): Prov {
     case 'fund': return { k: 'fund', title, value, unit, ds: s.ds, id: s.id, period: s.ym, col: s.col, note: `${DS_HE[s.ds] ?? s.ds} · ${ym(s.ym)}` };
     case 'calc': return { k: 'calc', title, value, unit, formula: s.fx, inputs: s.in.map((x) => ({ label: x.l ?? '', v: fmtFig(x), src: () => figProv(F, x, `${x.l ?? ''} · ${title}`) })) };
     case 'count': return { k: 'calc', title, value, formula: s.fx, inputs: [] };
+    case 'pos': return { k: 'calc', title, value, unit, formula: `ערך המדד של העמדה ב-${per(s.per)}; המקור המלא, עד עמוד הדוח, בדף העמדה /positions/${s.pid}`, inputs: [], note: s.m };
   }
 }
 
@@ -93,6 +97,7 @@ export function eventSource(F: FeedFile, e: FeedEvent): { text: string; href: st
   const s = e.src;
   if (s.k === 'doc') { const u = docUrl(F, s.rid); return { text: docName(F, s.rid) + (s.pg ? ` · עמ׳ ${s.pg}` : ''), href: u ? u + (s.pg ? `#page=${s.pg}` : '') : null }; }
   if (s.k === 'reg') return { text: `רשות שוק ההון · ${ym(s.ym)}`, href: null };
+  if (s.k === 'pos') return { text: `ספר העמדות · r${s.rev}`, href: null };
   return { text: `${DS_HE[s.ds] ?? s.ds} · קופה ${s.id} · ${ym(s.ym)}`, href: null };
 }
 

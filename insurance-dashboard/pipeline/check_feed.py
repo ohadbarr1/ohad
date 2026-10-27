@@ -12,6 +12,7 @@ the type counts add up and the estimate slot stays empty. Every figure is re-rea
   fund   the value equals the track's published month (funds/<k>.json)
   calc   every input is itself a valid figure, and a difference or a ratio re-computes from its two inputs
   count  a whole number
+  pos    the value equals the position's metric at that period in positions.json (module A6), and the position is published there
 """
 import collections
 import json
@@ -89,6 +90,8 @@ def run(quiet=False):
     probs = []
     fund_cache = {}
     n_fig = 0
+    P = bf.load("positions.json") if (DATA / "positions.json").exists() else {"positions": [], "metrics": {}}
+    pos_ids = {p["id"]: p for p in P["positions"] if p.get("status") == "published"}
 
     def bad(eid, msg):
         probs.append(f"{eid}: {msg}")
@@ -144,6 +147,14 @@ def run(quiet=False):
         elif k == "count":
             if v != int(v) or v < 0:
                 bad(eid, f"{where}: count is not a whole number")
+        elif k == "pos":
+            m = P["metrics"].get(s.get("m") or "")
+            if s.get("pid") not in pos_ids or not m:
+                return bad(eid, f"{where}: position {s.get('pid')} or its metric not in positions.json")
+            want = next((x[1] for x in m["ser"] if x[0] == s.get("per")), None)
+            base = next((t["base"]["v"] for t in pos_ids[s["pid"]]["triggers"] if t["metric"] == s["m"] and t.get("base")), None)
+            if want is None and base is None or (want is None or abs(want - v) > 1e-9) and (base is None or abs(base - v) > 1e-9):
+                return bad(eid, f"{where}: {v} vs positions.json {want}")
         else:
             bad(eid, f"{where}: unknown source kind {k!r}")
 
@@ -169,6 +180,10 @@ def run(quiet=False):
         elif src.get("k") == "fund":
             if not (DATA / "funds" / f"{bf.TK.get(src.get('ds'), '?')}{src.get('id')}.json").exists():
                 bad(eid, "source track file missing")
+        elif src.get("k") == "pos":
+            x = pos_ids.get(src.get("pid"))
+            if not x or not any(r["rev"] == src.get("rev") for r in x["revs"]):
+                bad(eid, f"source position {src.get('pid')} r{src.get('rev')} not published in positions.json")
         else:
             bad(eid, "no source")
         content[(e.get("t"), e.get("c"), e.get("per"), json.dumps(src, sort_keys=True), e.get("h"))] += 1
