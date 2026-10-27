@@ -7,7 +7,6 @@ import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletCon
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
 import { Empty, ErrorBox, Loading, Panel, Pick, Toolbar } from '../components/ui';
-import { DensityToggle } from '../components/MacroDensity';
 import { chartBase } from '../lib/theme';
 import { nf, pubLabel, type Unit } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
@@ -15,19 +14,17 @@ import { periodTag, type CompanyKpi } from '../lib/kpi';
 import type { Prov } from '../lib/prov';
 import type { RegistryCompany } from '../lib/types';
 import { useStored } from '../lib/local';
-import { load, useIfrsData, useKpis, useMarket, useRegistry } from '../lib/useData';
+import { load, useIfrsData, useKpis, useRegistry } from '../lib/useData';
 import { useMacro, mLabel } from '../lib/macro';
 import { ASSUME0, csmMultiples, impliedKe, justifiedPb, keOf, keProv, marketOf, mil, requiredRoe, rfProv, useCsm, useInsurers, xS, pctS, MM,
   type Assume, type Mkt, type Rf, type TasePrice, type CsmOf } from '../lib/valuation';
-import type { Market } from '../lib/market';
-import '../lib/density';
 import '../styles/prov-kpi.css';
 import '../styles/market.css';
 import '../styles/valuation.css';
 
 export interface VCtx {
   id: string; k: CompanyKpi; name: string; entry: RegistryCompany; price: TasePrice | null; mkt: Mkt;
-  a: Assume; setA: (a: Assume) => void; rf: Rf | null; ke: number | null; aum: number | null;
+  a: Assume; setA: (a: Assume) => void; rf: Rf | null; ke: number | null;
   kpis: Map<string, CompanyKpi>; reg: RegistryCompany[]; insurers: string[];
 }
 export const useV = () => useOutletContext<VCtx>();
@@ -43,13 +40,8 @@ export function Fig({ v, text, src, className = '' }: { v: number | null | undef
   return fin(v) ? <Sourced className={`num ${className}`} src={src}>{text(v)}</Sourced> : <Dash />;
 }
 
-function savingsAum(m: Market | null, group: string | null): number | null {
-  if (!m || !group) return null;
-  const g = m.groupIndex(group);
-  return g < 0 ? null : (m.cell(m.LAST, 'fam:pension', g).a + m.cell(m.LAST, 'fam:gemel', g).a) / 1000;
-}
-
-const TABS: [string, string, boolean?][] = [['', 'P/B מוצדק'], ['ri', 'הכנסה שיורית'], ['csm', 'הון ו-CSM'], ['sotp', 'סכום החלקים'], ['dcf', 'DCF · מתקדם', true]];
+// two models: justified P/B and residual income. Equity + CSM, sum-of-the-parts and DCF are gone; a segment SOTP returns on forward inputs.
+const TABS: [string, string, boolean?][] = [['', 'P/B מוצדק'], ['ri', 'הכנסה שיורית']];
 
 export function ValuationLayout() {
   const { id } = useParams();
@@ -60,8 +52,6 @@ export function ValuationLayout() {
   const known = !id || !!reg.data?.some((c) => c.id === id);
   const { kpis, error } = useKpis(false, known);
   const macro = useMacro().data;
-  // market data loads only on the tabs that use the savings assets
-  const { market } = useMarket(known && loc.pathname.endsWith('/sotp'));
   const has = !!reg.data?.find((c) => c.id === id)?.has_price;
   const [price, setPrice] = useState<TasePrice | null>(null);
   useEffect(() => { setPrice(null); if (id && has) load<TasePrice>(`companies/${id}.price.json`).then(setPrice, () => setPrice(null)); }, [id, has]);
@@ -83,7 +73,7 @@ export function ValuationLayout() {
   const mkt = marketOf(k, price, manual);
   const tab = loc.pathname.split('/')[3] ?? '';
   const set = (p: Partial<Assume>) => setA({ ...a, ...p });
-  const ctx: VCtx = { id, k, name: entry.name_he, entry, price, mkt, a, setA, rf, ke, aum: savingsAum(market, entry.market_group), kpis, reg: reg.data, insurers };
+  const ctx: VCtx = { id, k, name: entry.name_he, entry, price, mkt, a, setA, rf, ke, kpis, reg: reg.data, insurers };
   const assumeRow = (
     <div className="vas-grid">
       <label>ריבית חסרת סיכון<small>{a.rf == null ? <>בנק ישראל · אפס 10Y · {rf ? mLabel(rf.month) : '–'}</> : 'ההנחה שלך'}</small>
@@ -102,10 +92,9 @@ export function ValuationLayout() {
         <div><h1><span className="icotile"><Icon name="value" /></span>הערכת שווי · {entry.name_he}</h1>
           <div className="sub">מודלים על נתוני הדוחות; המחיר והשווי בשוק הם קלט בלבד · {k.latest('equity') && <>הון לפי {periodTag(k.latest('equity')!.period)}</>}</div></div>
       </div>
-      {/* one toolbar row: the models as tabs, the company and the density at the end (design lane) */}
+      {/* one toolbar row: the models as tabs, the company at the end (design lane) */}
       <Toolbar lead={<nav className="subnav" aria-label="מודל">{TABS.map(([to, l, adv]) => <NavLink key={to} to={to ? to : '.'} end={!to} className={adv ? 'adv' : undefined}>{l}</NavLink>)}</nav>}>
         <Pick label="חברה" cap="חברה" value={id} onChange={(x) => nav(`/valuation/${x}${tab ? `/${tab}` : ''}`)} options={ids.map((x) => [x, reg.data!.find((c) => c.id === x)?.name_he ?? x] as [string, string])} />
-        <DensityToggle />
       </Toolbar>
       <section className="vinputs" aria-label="קלט שוק">
         <div className="pxfield">
@@ -156,7 +145,7 @@ const COLS: { k: ColK; l: string; unit?: string; u: Unit; d: number; get: (r: Pe
   { k: 'eq', l: 'הון', unit: 'מיליארד', get: (r) => (fin(r.mkt.eq) ? r.mkt.eq / 1000 : null), u: 'n', d: 1 },
   { k: 'pb', l: 'P/B', get: (r) => r.mkt.pb, u: 'n', d: 2 },
   { k: 'roe', l: 'ROE, LTM', get: (r) => r.mkt.roe, u: 'pct', d: 1 },
-  { k: 'jpb', l: 'P/B מוצדק', get: (r) => r.jpb, u: 'n', d: 2 },
+  { k: 'jpb', l: 'P/B מוצדק · ROE LTM', get: (r) => r.jpb, u: 'n', d: 2 },
   { k: 'ike', l: 'ke משתמע', get: (r) => r.ike, u: 'pct', d: 1 },
   { k: 'pe', l: 'P/E, LTM', get: (r) => r.mkt.pe, u: 'n', d: 1 },
   { k: 'csm', l: 'CSM אחרי מס', unit: 'מיליארד', get: (r) => (r.cm ? r.cm.csmNet / 1000 : null), u: 'n', d: 1 },
@@ -241,14 +230,16 @@ export function PbScatter({ rows, focus }: { rows: PeerRow[]; focus: string }) {
 /* ---------- the default view: justified P/B ---------- */
 export function ValuationPb() {
   const { id, k, mkt, a, ke, rf, name } = useV();
+  // the model runs on a forward (normalised) ROE: the reader's figure, defaulting to LTM ROE from the reports until one is typed
   const [roeO, setRoeO] = useStored<number | null>(`val.roe.${id}`, null);
   const roe = fin(roeO) ? roeO : mkt.roe;
   const rows = usePeers();
   const jpb = fin(roe) && fin(ke) ? justifiedPb(roe, ke, a.g) : null;
   const ike = fin(mkt.pb) && fin(roe) ? impliedKe(mkt.pb, roe, a.g) : null;
   const rroe = fin(mkt.pb) && fin(ke) ? requiredRoe(mkt.pb, ke, a.g) : null;
-  const roeSrc = (): Prov => (fin(roeO) ? { k: 'none', title: 'ROE', why: `ההנחה שלך: ${pctS(roeO)}. ROE LTM מהדוחות: ${fin(mkt.roe) ? pctS(mkt.roe) : '–'}` } : mkt.roeProv());
-  const roeLabel = fin(roeO) ? 'ROE (ההנחה שלך)' : `ROE, LTM עד ${mkt.roePeriod ? periodTag(mkt.roePeriod) : ''}`;
+  const ltmTag = `LTM ${mkt.roePeriod ? periodTag(mkt.roePeriod) : ''}`.trim();
+  const roeSrc = (): Prov => (fin(roeO) ? { k: 'none', title: 'ROE צפוי (נורמלי)', why: `הנחה שהוזנה: ${pctS(roeO)}. ROE ${ltmTag} מהדוחות: ${fin(mkt.roe) ? pctS(mkt.roe) : '–'}` } : mkt.roeProv());
+  const roeLabel = fin(roeO) ? 'ROE צפוי (הנחה)' : `ROE צפוי = ROE ${ltmTag} (ברירת מחדל)`;
   const jpbProv = (): Prov => ({ k: 'calc', title: `P/B מוצדק · ${name}`, value: xS(jpb!), est: true, formula: 'P/B מוצדק = (ROE − g) ÷ (ke − g)',
     inputs: [{ label: roeLabel, v: pctS(roe!), src: roeSrc }, { label: 'ke', v: pctS(ke!, 2), src: () => keProv(a, rf) }, { label: 'g (הנחה)', v: pctS(a.g, 2) }] });
   const ikeProv = (): Prov => ({ k: 'calc', title: 'מחיר הון משתמע מהשוק', value: pctS(ike!), unit: '%', est: true, formula: 'ke משתמע = g + (ROE − g) ÷ P/B בשוק',
@@ -263,8 +254,8 @@ export function ValuationPb() {
       <div className="grid12 vgrid">
         <Panel title="קלטים">
           <div className="assume">
-            <label>{fin(roeO) ? 'ROE · ההנחה שלך' : 'ROE, LTM'}<small>% · ברירת מחדל: <Sourced src={mkt.roeProv}>{`מהדוחות${mkt.roePeriod ? `, ${periodTag(mkt.roePeriod)}` : ''}`}</Sourced></small></label>
-            <span className="in"><Num label="ROE" value={roe} dec={2} step={0.5} onChange={(v) => setRoeO(Number.isFinite(v) ? v : null)} />{fin(roeO) && <button type="button" className="btn mini" onClick={() => setRoeO(null)} aria-label="חזרה ל-ROE מהדוחות">↺</button>}</span>
+            <label>ROE צפוי (נורמלי) <span className="chip est">{fin(roeO) ? 'הנחה' : 'ברירת מחדל: LTM'}</span><small>% · ניתן לשינוי · ברירת מחדל: <Sourced src={mkt.roeProv}>{`ROE ${ltmTag} מהדוחות`}</Sourced></small></label>
+            <span className="in"><Num label="ROE" value={roe} dec={2} step={0.5} onChange={(v) => setRoeO(Number.isFinite(v) ? v : null)} />{fin(roeO) && <button type="button" className="btn mini" onClick={() => setRoeO(null)} aria-label="חזרה ל-ROE LTM מהדוחות" title={`חזרה ל-ROE ${ltmTag}`}>↺</button>}</span>
             <label>מחיר ההון (ke)<small>מההנחות המשותפות</small></label><span className="num ro">{fin(ke) ? pctS(ke, 2) : '–'}</span>
             <label>צמיחה לטווח ארוך (g)<small>מההנחות המשותפות</small></label><span className="num ro">{pctS(a.g, 2)}</span>
             <label>הון לבעלי המניות<small>{mkt.eqPeriod ? periodTag(mkt.eqPeriod) : ''} · מיליוני ש"ח</small></label><Fig v={mkt.eq} text={(v) => nf(v, 0)} src={mkt.eqProv} className="ro" />

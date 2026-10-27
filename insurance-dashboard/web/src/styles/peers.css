@@ -5,7 +5,7 @@
 .pr-sp { flex: 1; }
 .pr-sets { display: flex; gap: 6px; }
 .pr-tpl { display: inline-flex; flex-wrap: wrap; gap: 4px; }
-.pr-tpl .chip kbd, .pr-views kbd { font: 700 10.5px/1 var(--mono, ui-monospace, monospace); border: 1px solid var(--line); border-radius: 4px; padding: 2px 4px; margin-inline-end: 4px; color: var(--muted); background: var(--panel); }
+.pr-tpl .chip kbd { font: 700 10.5px/1 var(--mono, ui-monospace, monospace); border: 1px solid var(--line); border-radius: 4px; padding: 2px 4px; margin-inline-end: 4px; color: var(--muted); background: var(--panel); }
 .pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 7px; vertical-align: 1px; flex: none; }
 .pr-panel .hd .aside { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .pr-scroll { max-height: 72vh; }
@@ -45,7 +45,7 @@ table.pr-table th.brk, table.pr-table td.brk { box-shadow: inset -2px 0 0 var(--
 .pr-brk { display: inline-block; width: 2px; height: 12px; background: var(--accent-line); vertical-align: -2px; margin-inline-end: 4px; }
 table.pr-table tfoot td.pr-ent { position: sticky; inset-inline-start: 0; background: var(--panel); }
 .pr-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.pr-picker, .pr-fx, .pr-seted, .pr-views { display: flex; flex-direction: column; gap: 10px; }
+.pr-picker, .pr-fx, .pr-seted { display: flex; flex-direction: column; gap: 10px; }
 .pr-picker input[type="search"] { flex: 1; min-width: 220px; }
 .pr-groups { display: flex; flex-wrap: wrap; gap: 4px; }
 .pr-list { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2px 12px; }
@@ -66,13 +66,6 @@ table.pr-table tfoot td.pr-ent { position: sticky; inset-inline-start: 0; backgr
 .pr-alias button:hover { background: var(--panel2); }
 .pr-alias b { color: var(--fg); margin-inline-end: 6px; }
 .pr-gl { min-width: 84px; font-size: 12px; align-self: center; }
-.pr-views { flex-direction: row; flex-wrap: wrap; gap: 24px; }
-.pr-vcol { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 8px; }
-.pr-vcol h3 { margin: 0; font-size: var(--t-3); }
-.pr-vcol ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.pr-vcol li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.pr-vcol li > button:first-child { flex: 1; text-align: start; background: none; border: 0; padding: 6px 8px; border-radius: var(--r-1); cursor: pointer; color: var(--fg); font: inherit; font-size: 13px; }
-.pr-vcol li > button:first-child:hover { background: var(--panel2); }
 .pr-foot { margin-top: -4px; }
 .pr-cardbar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .pr-cards { display: grid; gap: 10px; }

@@ -23,8 +23,9 @@ export function titleFor(path: string, name: (id: string) => string | null | und
       return t(name(p[1]) ?? p[1], COMPANY_TAB[p[2] ?? '']);
     }
     case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'השוואה ענפית') : null;
-    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'קופות ושוק') : p[1] ? t('מסלול', 'קופות ושוק') : t('מסלולים', 'קופות ושוק');
-    case 'managers': return t('דירוג מנהלים', 'קופות ושוק');
+    case 'savings': return p[1] ? null : t('עדשת חיסכון', 'חיסכון ארוך טווח');
+    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון ארוך טווח') : p[1] ? t('מסלול', 'חיסכון ארוך טווח') : t('מסלולים', 'חיסכון ארוך טווח');
+    case 'managers': return t('דירוג מנהלים', 'חיסכון ארוך טווח');
     case 'calendar': return t('לוח דיווחים');
     case 'book': return t('ספר הגרפים');
     case 'data': return p[1] === 'autopilot' && !p[2] ? t('טייס אוטומטי', 'נתונים ואיכות') : p[1] ? null : t('נתונים ואיכות');
@@ -32,7 +33,6 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'presentations': return p[1] ? null : t('מצגות משקיעים');
     case 'credibility': return p[1] ? null : t('אמינות יעדים');  // lane S3
     case 'search': return t('חיפוש');
-    case 'mine': return p[1] ? null : t('שלי');
     case 'debt': return p[1] ? (name(p[1]) === null || p[2] ? null : t(name(p[1]) ?? p[1], 'חוב ופירעונות')) : t('חוב ופירעונות');
     case 'facts': return p[1] && !p[2] && name(p[1]) !== null ? t('עובדות', name(p[1]) ?? p[1]) : null;
     case 'ownership': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'בעלות')) : t('בעלות');  // lane OW

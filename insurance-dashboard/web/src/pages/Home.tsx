@@ -6,8 +6,7 @@ import type { Prov } from '../lib/prov';
 import type { MetricKey } from '../lib/market';
 import { cls, nf, pct } from '../lib/format';
 import { useKpis, useMarket, useRegistry } from '../lib/useData';
-import { useStored, useWatchlist } from '../lib/local';
-import { Star } from '../components/Follow';
+import { useStored } from '../lib/local';
 import { SinceDot } from '../components/SinceBadge';
 import { usePhone } from '../lib/useMedia';
 import { SeasonStrip } from '../components/home/SeasonStrip';
@@ -15,14 +14,12 @@ import { CompanyList, type ListRow } from '../components/home/CompanyList';
 import { DataTable } from '../components/DataTable';
 import { periodLabelShort, periodTag } from '../lib/kpi';
 import { MacroPanel } from '../components/MacroPanel';
-import { DensityToggle } from '../components/MacroDensity';
-import '../lib/density';
 import '../styles/market.css';
 import '../styles/home.css';
 
 const KIND: Record<string, string> = { insurance_group: 'ביטוח', fund_house: 'בית השקעות' };
 /** where an analyst goes next from the season desk (docs/HOME.md §5) */
-const JUMP: [string, string][] = [['/industry/peers', 'טבלת עמיתים'], ['/industry/csm', 'IFRS 17 · CSM'], ['/industry/savings', 'עדשת חיסכון'], ['/valuation', 'הערכת שווי'], ['/restatements', 'הצגות מחדש'], ['/calendar', 'לוח דיווחים']];
+const JUMP: [string, string][] = [['/industry/peers', 'טבלת עמיתים'], ['/industry/csm', 'IFRS 17 · CSM'], ['/savings', 'עדשת חיסכון'], ['/valuation', 'הערכת שווי'], ['/restatements', 'הצגות מחדש'], ['/calendar', 'לוח דיווחים']];
 type View = 'fin' | 'mkt';
 type Kind = 'all' | 'insurance_group' | 'fund_house';
 
@@ -32,7 +29,6 @@ export function Home() {
   const { market: m } = useMarket(true, true);
   const reg = useRegistry();
   const { kpis } = useKpis();
-  const watch = useWatchlist();
   const phone = usePhone();
   const [view, setView] = useStored<View>('home.view', 'fin');
   const [kind, setKind] = useStored<Kind>('home.kind', 'all');
@@ -41,7 +37,10 @@ export function Home() {
   const all = reg.data ?? [];
   // a subsidiary (more_gemel under more) shares its holding's market group: it gets a sub-row, not a second company with the same figures
   const holdingOf = (c: { id: string; market_group: string | null }) => all.find((x) => x.id !== c.id && c.id.startsWith(`${x.id}_`) && x.market_group === c.market_group);
-  const rows = all.filter((c) => !holdingOf(c) && (kind === 'all' || c.kind === kind)).map((c) => {
+  // a company with no statements of its own that is not a subsidiary (ביטוח ישיר, last figures Q3'19; אינפיניטי; גלובלנט) leaves the table for a footnote
+  const dormant = (c: { id: string; market_group: string | null; has_financials: boolean }) => !c.has_financials && !holdingOf(c);
+  const inactive = all.filter((c) => dormant(c) && (kind === 'all' || c.kind === kind)).map((c) => { const kf = kpis?.get(c.id); return { c, q: (kf?.entity ?? kf)?.latest('profit', 'q') ?? null }; });
+  const rows = all.filter((c) => !holdingOf(c) && !dormant(c) && (kind === 'all' || c.kind === kind)).map((c) => {
     // where the listed filer is another entity (Yelin Lapidot, held 50% by Atrao), the row shows the company itself at 100%, from its own statements
     const kf = kpis?.get(c.id), k = kf?.entity ?? kf;
     const q = k?.latest('profit', 'q') ?? null;
@@ -54,7 +53,7 @@ export function Home() {
   const qi = (p?: string | null) => (p ? Number(p.slice(0, 4)) * 4 + (p.endsWith('FY') ? 4 : Number(p.slice(5))) : null);
   const season = Math.max(...rows.map((r) => qi(r.q?.period) ?? 0));
   const isStale = (r: { q: { period: string } | null }) => { const i = qi(r.q?.period); return i != null && season - i > 2; };
-  rows.sort((a, b) => Number(isStale(a)) - Number(isStale(b)) || Number(watch.has(b.c.id)) - Number(watch.has(a.c.id)) || (b.eq?.v ?? -1) - (a.eq?.v ?? -1) || (b.aum ?? 0) - (a.aum ?? 0));
+  rows.sort((a, b) => Number(isStale(a)) - Number(isStale(b)) || (b.eq?.v ?? -1) - (a.eq?.v ?? -1) || (b.aum ?? 0) - (a.aum ?? 0));
   const growthProv = (label: string, s: string, g = -1): Prov => {
     const gr = m!.growth(L, 'ltm', s, g), b = L - 12, title = `${label} · שינוי YoY · ${m!.plabel(L)}`;
     if (gr == null || b < 0) return { k: 'none', title, why: 'אין נתון לפני 12 חודשים' };
@@ -70,8 +69,8 @@ export function Home() {
     return <Sourced className={`num${tone ? ` ${cls(v)}` : ''}`} src={() => (metric === 'growth' ? growthProv('נכסים', 'all', g) : { k: 'reg', metric, pi: L, w, set, g })}>{fmt(v)}</Sourced>;
   };
 
-  // the phone list: the market view ranks by assets; the statements view keeps the table's order (watched first, then by equity)
-  const listSrc = view === 'mkt' ? [...rows].sort((a, b) => Number(isStale(a)) - Number(isStale(b)) || Number(watch.has(b.c.id)) - Number(watch.has(a.c.id)) || (b.aum ?? -1) - (a.aum ?? -1)) : rows;
+  // the phone list: the market view ranks by assets; the statements view keeps the table's order (by equity)
+  const listSrc = view === 'mkt' ? [...rows].sort((a, b) => Number(isStale(a)) - Number(isStale(b)) || (b.aum ?? -1) - (a.aum ?? -1)) : rows;
   const listRows: ListRow[] = phone ? listSrc.map((r) => {
     const { c, k, q, filer } = r, stale = isStale(r);
     const yoyProv = (): Prov => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(r.yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(r.qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] }; };
@@ -96,7 +95,7 @@ export function Home() {
       <div className="home-grid">
         <div className="home-main">
           <section className="panel cos">
-            <div className="hd"><h2><span className="icotile"><Icon name="companies" /></span>חברות</h2><div className="aside">{phone ? <Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק']]} /> : <><DensityToggle /><Link to="/industry/peers">טבלת עמיתים</Link><Link to="/valuation">הערכת שווי</Link></>}</div></div>
+            <div className="hd"><h2><span className="icotile"><Icon name="companies" /></span>חברות</h2><div className="aside">{phone ? <Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק']]} /> : <><Link to="/industry/peers">טבלת עמיתים</Link><Link to="/valuation">הערכת שווי</Link></>}</div></div>
             <div className="cos-ctl">
               <Seg label="סוג" value={kind} onChange={setKind} options={[['all', 'הכול'], ['insurance_group', 'ביטוח'], ['fund_house', 'בתי השקעות']]} />
               {!phone && <span className="view-seg"><Seg label="תצוגה" value={view} onChange={setView} options={[['fin', 'דוחות'], ['mkt', 'שוק ודמי ניהול']]} /></span>}
@@ -113,7 +112,7 @@ export function Home() {
                   </tr>
                 ))}
                 columns={[
-                  { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, filer, q }) => <span className="coname"><Star id={c.id} name={c.name_he} /><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><SinceDot id={c.id} /><span className="dim">{KIND[c.kind] ?? ''}</span>{filer && <span className="chip est" title={filer.note}>{`${filer.name.split(' ')[0]} מחזיקה ${filer.stake}%`}</span>}{q && isStale({ q }) && <span className="chip stale" title="הדוח האחרון בנתונים ישן ביותר משני רבעונים מהעונה האחרונה">{`נתון ישן · ${periodLabelShort(q.period)}`}</span>}</span></span> },
+                  { key: 'co', head: 'חברה', value: ({ c }) => c.name_he, cell: ({ c, filer, q }) => <span className="coname"><span><Link to={`/company/${c.id}`}>{c.name_he}</Link><SinceDot id={c.id} /><span className="dim">{KIND[c.kind] ?? ''}</span>{filer && <span className="chip est" title={filer.note}>{`${filer.name.split(' ')[0]} מחזיקה ${filer.stake}%`}</span>}{q && isStale({ q }) && <span className="chip stale" title="הדוח האחרון בנתונים ישן ביותר משני רבעונים מהעונה האחרונה">{`נתון ישן · ${periodLabelShort(q.period)}`}</span>}</span></span> },
                   { key: 'per', head: 'דוח אחרון', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.period, text: ({ q }) => (q ? periodLabelShort(q.period) : ''), cell: ({ q }) => (q ? <span className="num">{periodLabelShort(q.period)}</span> : dash) },
                   { key: 'q', head: 'רווח נקי, QTD', className: 'c-fin', noExport: view !== 'fin', value: ({ q }) => q?.v, unit: 'int', tone: 'neg', src: ({ k, q }) => k!.explain('profit', 'q', q!.period) },
                   { key: 'yoy', head: 'YoY', className: 'c-fin', noExport: view !== 'fin', value: ({ yoy }) => yoy, unit: 'pct', signed: true, tone: true, src: ({ c, k, q, qprior, yoy }) => { const pp = `${Number(q!.period.slice(0, 4)) - 1}${q!.period.slice(4)}`; return { k: 'calc', title: `רווח נקי, YoY · ${c.name_he} · ${periodTag(q!.period)}`, value: pct(yoy, 1, true), formula: 'רווח נקי ברבעון ÷ הרווח באותו רבעון בשנה הקודמת, פחות 1', inputs: [{ label: periodTag(q!.period), v: nf(q!.v!, 0), src: () => k!.explain('profit', 'q', q!.period) }, { label: periodTag(pp), v: nf(qprior!, 0), src: () => k!.explain('profit', 'q', pp) }] }; } },
@@ -128,6 +127,7 @@ export function Home() {
                   { key: 'feeg', head: 'דמי ניהול, גמל', className: 'c-mkt', noExport: view !== 'mkt', value: ({ g }) => regV(g, 'fee', 'fam:gemel', 'm'), cell: ({ g }) => regCell(g, 'fee', (v) => pct(v, 2), 'fam:gemel', 'm') },
                   { key: 'docs', head: 'מסמכים', value: ({ c }) => c.docs || null, cell: ({ c }) => (c.docs > 0 ? <Link className="num" to={`/company/${c.id}/filings`}>{c.docs}</Link> : dash) },
                 ]} />)}
+            {inactive.length > 0 && <div className="src cos-inactive">לא פעילות בדיווח, מחוץ לטבלה: {inactive.map(({ c, q }, i) => <span key={c.id}>{i ? ' · ' : ''}<Link to={`/company/${c.id}`}>{c.name_he}</Link>{q ? <span className="num"> (נתון אחרון {periodTag(q.period)})</span> : ''}</span>)}</div>}
             <div className="src">רווח, הון ו-ROE: XBRL של הדוחות התקופתיים (ילין לפידות: הדוחות הכספיים שלה, 100%) · נכסים, צבירה ודמי ניהול: רשות שוק ההון (פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון; צבירה: פנסיה וגמל)</div>
           </section>
         </div>

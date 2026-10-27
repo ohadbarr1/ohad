@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { SYNC_ENABLED } from './syncConfig';
 
 export const PREFIX = 'fox:';
 export const EVENT = 'fox:stored';
@@ -9,8 +8,7 @@ function read<T>(key: string, init: T): T {
 }
 const announce = (key: string) => window.dispatchEvent(new CustomEvent(EVENT, { detail: key }));
 
-/** A value kept in this browser's storage and shared between the components that use the same key. Local first: when the reader
- *  signs in (lib/auth, behind SYNC_ENABLED) the same keys follow them to their other devices; until then nothing is sent anywhere. */
+/** A display preference kept in this browser's storage and shared between the components that use the same key. Nothing is sent anywhere. */
 export function useStored<T>(key: string, init: T): [T, (next: T) => void] {
   const [value, setValue] = useState<T>(() => read(key, init));
   useEffect(() => {
@@ -28,13 +26,7 @@ export function useStored<T>(key: string, init: T): [T, (next: T) => void] {
   return [value, set];
 }
 
-/** Companies the user follows. */
-export function useWatchlist(): { has: (id: string) => boolean; toggle: (id: string) => void; ids: string[] } {
-  const [ids, set] = useStored<string[]>('watch', []);
-  return { ids, has: (id) => ids.includes(id), toggle: (id) => set(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]) };
-}
-
-/* ---------- outside a component: "שלי", notes, sync ---------- */
+/* ---------- outside a component ---------- */
 
 /** The value under a key, or `init`. */
 export const readStored = <T,>(key: string, init: T): T => read(key, init);
@@ -52,7 +44,7 @@ export function storedKeys(start = ''): string[] {
   return out.sort();
 }
 
-/** Re-renders when any stored key (optionally: one starting with `start`) changes, here, in another tab, or from another device. */
+/** Re-renders when any stored key (optionally: one starting with `start`) changes, here or in another tab. */
 export function useStoreTick(start = ''): number {
   const [n, setN] = useState(0);
   useEffect(() => {
@@ -66,13 +58,4 @@ export function useStoreTick(start = ''): number {
 if (typeof window !== 'undefined') {
   // another tab wrote a key: the components here show it too
   window.addEventListener('storage', (e) => { if (e.key?.startsWith(PREFIX)) announce(e.key.slice(PREFIX.length)); });
-  // a reader who signed in on this device: the sync layer resumes after the first paint (never before it, never for anyone else)
-  if (SYNC_ENABLED) {
-    let on = false;
-    try { on = localStorage.getItem('foxsync:on') === '1'; } catch { /* storage may be blocked */ }
-    if (on) {
-      const go = () => { void import('./auth').then((a) => a.resume()); };
-      if ('requestIdleCallback' in window) window.requestIdleCallback(go, { timeout: 5000 }); else setTimeout(go, 2500);
-    }
-  }
 }

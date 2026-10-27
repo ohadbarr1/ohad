@@ -1,5 +1,3 @@
-import { NoteMark } from '../components/NoteMark';  // lane F
-import { lineKey } from '../lib/notes';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
@@ -85,26 +83,6 @@ export function resolve(store: CompanyStore, role: Role, forceAlt = false): Reso
   const pick = (f: (l: Line) => boolean) => [...all.filter((l) => l.std === '17' && f(l)), ...all.filter((l) => l.std === '4' && f(l))];
   const rows = forceAlt ? [] : pick((l) => (role.attr ? l.attr === role.attr : role.re!.test(l.label)));
   return rows.length || !role.alt ? { role, rows, alt: false } : { role, rows: pick((l) => role.alt!.test(l.label)), alt: true };
-}
-
-/** One note per figure: the key of the statement row a figure was read from, the same key the statements grid gives that row
-    (lib/notes lineKey: its cross-company role, else sheet and label); `rd:<role>` only for a figure that is not a statement row. */
-export const figNoteKey = (store: CompanyStore, f: Fig | null | undefined, fallback: string): string => (f?.mi != null && store.d.metrics[f.mi] ? lineKey(store.d.metrics[f.mi]) : fallback);
-/** The note key and period label of a headline role at a report date, for a page that shows the same printed figure (review, sources of profit).
-    `type` is the column: Q, H, 9M, FY or I (a balance). */
-export function roleNote(store: CompanyStore, key: string, type: string, end: string): { m: string; p: string; v: number | null } {
-  const role = ROLES.find((r) => r.key === key)!, t = role.flow ? type : 'I';
-  let r = resolve(store, role), f = figAt(store, r.rows, t, end);
-  if (!f && !r.alt && role.alt) { r = resolve(store, role, true); f = figAt(store, r.rows, t, end); }
-  return { m: figNoteKey(store, f, `rd:${key}`), p: periodLabel(t, end), v: f ? (f.unit === 'k' ? f.v / 1e3 : f.v) : null };
-}
-/** The note anchor of a figure printed elsewhere (an extracted IFRS fact, a sources-of-profit total) that is the statement figure of a role:
-    the same period, and the same number to the printed rounding. Null when it is another figure. */
-export function sameFigNote(store: CompanyStore | null | undefined, key: string, w: string, d: string, v: number, tol = 0.51): { m: string; p: string } | null {
-  if (!store || !QE.includes(d.slice(5))) return null;
-  const t = w === 'instant' ? 'I' : w === 'q' ? 'Q' : w === 'fy' ? 'FY' : YTD[d.slice(5)];
-  const n = roleNote(store, key, t, d);
-  return n.v != null && Math.abs(n.v - v) <= tol ? { m: n.m, p: n.p } : null;
 }
 
 type Late = (u: number | null | undefined) => string | undefined;
@@ -410,7 +388,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
             <div className="rd-tr rd-th" role="row"><span role="columnheader">שורה</span><span role="columnheader" className="num">{curL}</span><span role="columnheader">YoY · <span className="num">{yoyL}</span></span><span role="columnheader">QoQ · <span className="num">{qoqL}</span></span>{!ltmW && <span role="columnheader">LTM · YoY</span>}</div>
             {rows.map((r) => (
               <div className="rd-tr" role="row" key={r.key}>
-                <div className="rd-l" role="rowheader">{r.label}<NoteMark p={ROLES.find((x) => x.key === r.key)?.flow === false ? periodLabel('I', end) : curL} m={store ? figNoteKey(store, r.cur, `rd:${r.key}`) : `rd:${r.key}`} was={[`rd:${r.key}`, `st:${r.key}`]} label={r.label} add />
+                <div className="rd-l" role="rowheader">{r.label}
                   {(r.note || r.chips?.length || r.cur?.late || r.fact) && <span className="rd-chips">{r.chips?.map((c) => <span key={c} className="chip est">{c}</span>)}{r.note && <span className="chip est" title={r.note[1]}>{r.note[0]}</span>}{r.cur?.late && <span className="chip est" title={`הנתון כפי שהודפס מחדש בדוח ${r.cur.late}; הנתון המקורי בלוח "הוצג מחדש" של אותו דוח`}>לפי {r.cur.late}</span>}<IncChip f={r.fact} /></span>}
                 </div>
                 <div className="rd-c rd-cur" role="cell"><V f={r.cur} t={r.label} p={curL} /></div>

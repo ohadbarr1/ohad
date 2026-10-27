@@ -15,16 +15,15 @@ import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
-import { MineLink } from './MineLink';
 
-// [route, icon, label, label on the phone's bottom bar: the same word, shortened]. Four places on the phone too: search lives in the top bar
-// on every screen, so the fourth place goes to valuation, which no other control on a phone reaches.
+// [route, icon, label, label on the phone's bottom bar: the same word, shortened]. Four places, the same on the rail and the phone:
+// search lives in the top bar on every screen. Data quality (/data) keeps its address but is not a place: each figure opens its own source.
 const NAV: [string, string, string, string | null][] = [
-  ['/', 'home', 'בית', 'בית'], ['/industry', 'compare', 'השוואה ענפית', 'ענף'],
-  ['/valuation', 'value', 'שווי', 'שווי'], ['/funds', 'market', 'קופות ושוק', 'קופות'],
-  ['/data', 'data', 'נתונים ואיכות', null],
-  ['/mine', 'mine', 'שלי', null],  // lane F: rail only; the phone reaches it from the header
+  ['/', 'home', 'בית', 'בית'], ['/savings', 'market', 'חיסכון ארוך טווח', 'חיסכון'],
+  ['/industry', 'compare', 'השוואה ענפית', 'ענף'], ['/valuation', 'value', 'שווי', 'שווי'],
 ];
+/** the long-term savings section: the lens, the tracks, the managers and their holdings (and the old /market links) */
+const SAVINGS = ['/savings', '/funds', '/managers', '/holdings', '/market'];
 
 export function Layout() {
   const { theme, toggle, next } = useTheme();
@@ -48,7 +47,7 @@ export function Layout() {
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox" title="fox · דף הבית"><Logo size={40} /></NavLink>
         <nav aria-label="ראשי">
-          {NAV.map(([to, icon, label, short]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${short ? '' : ' wide-item'}${isActive || (to === '/' && loc.pathname.startsWith('/company/')) || (to === '/funds' && (loc.pathname.startsWith('/managers') || loc.pathname.startsWith('/market'))) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
+          {NAV.map(([to, icon, label, short]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${short ? '' : ' wide-item'}${isActive || (to === '/' && loc.pathname.startsWith('/company/')) || (to === '/savings' && SAVINGS.some((s) => loc.pathname.startsWith(s))) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
         </nav>
         <div className="foot">
           <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
@@ -59,7 +58,7 @@ export function Layout() {
           <div className="top-in">
             <NavLink to="/" className="wordmark">fox<span>.</span></NavLink>
             <Search />
-            <ChartBookLink /><MineLink />
+            <ChartBookLink />
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>

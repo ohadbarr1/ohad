@@ -9,8 +9,6 @@ import { BASIS, endOf } from './IndustryIfrs';
 import { he, isPct, periodName, segName } from './CompanyIfrs';
 import { Sourced } from '../components/Source';
 import { calc, factPeriod, factUrl, ifrsProv } from './companyProv';
-import { NoteMark } from '../components/NoteMark';
-import { sameFigNote } from './ReportDay';
 import type { CompanyStore } from '../lib/company';
 import '../styles/review.css';
 
@@ -28,14 +26,6 @@ const prevPeriod = (p: string) => ({ Q1: `${Number(p.slice(0, 4)) - 1}FY`, Q2: `
 /** Same fact twice (text and chart-read): the text figure wins. */
 const textFirst = (a: IfrsFact, b: IfrsFact) => Number(a.src === 'chart') - Number(b.src === 'chart');
 const yearBack = (iso: string) => `${Number(iso.slice(0, 4)) - 1}${iso.slice(4)}`;
-/** extracted facts that are a headline line of the statements: the note on that figure is the one Report Day, the ledger and the grid show */
-const ROLE_OF: Record<string, string> = { profit_attributable: 'net', comprehensive_income_attributable: 'comp', equity_attributable: 'eq', total_assets: 'assets',
-  insurance_revenue: 'rev', insurance_service_result: 'isr', net_investment_and_finance_result: 'inv' };
-function FigNote({ f, store, id }: { f: IfrsFact; store?: CompanyStore | null; id: string }) {
-  const role = f.g === 'group' ? ROLE_OF[f.m] : undefined, n = role ? sameFigNote(store, role, f.w, f.d, f.v) : null;
-  return n ? <NoteMark co={id} p={n.p} m={n.m} label={he(f.m)} /> : null;
-}
-
 const unitOf = (f: IfrsFact) => (isPct(f.m) ? '%' : 'מיליוני ש"ח');
 const txtOf = (f: IfrsFact) => nf(f.v, isPct(f.m) || Math.abs(f.v) < 100 ? 1 : 0) + (isPct(f.m) ? '%' : '');
 const titleOf = (f: IfrsFact) => `${he(f.m)}${f.g !== 'group' ? ` · ${segName(f.s)}` : ''}`;
@@ -78,7 +68,7 @@ function Trend({ pts }: { pts: { p: string; v: number }[] }) {
 }
 
 /** One report against the same period a year earlier and the previous quarter. Every figure is as printed and opens its source page. */
-export function CompanyReview({ id, docs, store }: { id: string; docs: number; store?: CompanyStore | null }) {
+export function CompanyReview({ id, docs }: { id: string; docs: number; store?: CompanyStore | null }) {
   const { data: d, error } = useIfrsData();
   const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
   const [period, setPeriod] = usePeriodParam();
@@ -150,7 +140,7 @@ export function CompanyReview({ id, docs, store }: { id: string; docs: number; s
                 <tr>
                   <td className="lbl">{multi(i) ? segName(r.f.s) : <>{he(r.f.m)}{r.f.g !== 'group' && <span className="muted"> · {segName(r.f.s)}</span>}</>}
                     {(r.f.b !== 'na' || s.main.get(r.f.m) !== 'na' || r.W === 'ytd' && win === 'q' || r.at !== end || r.n > 1 || r.f.src === 'chart') && <span className="dim">{(r.f.b !== 'na' || s.main.get(r.f.m) !== 'na') && <span className={`chip ${r.f.b === s.main.get(r.f.m) ? '' : 'est'}`} title={r.f.b === s.main.get(r.f.m) ? undefined : `בסיס שונה מרוב השורות בבלוק (${BASIS[s.main.get(r.f.m) ?? 'na']}); הסימן כפי שהודפס`}>{BASIS[r.f.b]}</span>}{r.W === 'ytd' && win === 'q' && <span className="chip est">YTD</span>}{r.at !== end && <span className="chip est" title="המדד פורסם לתאריך שונה מתקופת הדוח">נכון ל־<span className="num">{dateLabel(r.at)}</span></span>}{r.n > 1 && <span className="chip est" title="אותה שורה מופיעה בדוח בכמה ערכים; ראו לשונית IFRS 17">{r.n} ערכים</span>}{r.f.src === 'chart' && <span className="chip est">מגרף</span>}</span>}</td>
-                  <td><Val f={r.f} d={d} p={P} /><FigNote f={r.f} store={store} id={id} /><div className="narrow-only"><Trend pts={r.trend} /></div></td>
+                  <td><Val f={r.f} d={d} p={P} /><div className="narrow-only"><Trend pts={r.trend} /></div></td>
                   <td><span className="pair"><span className="vs"><Val f={r.yoy} d={d} p={P} /></span><Delta a={r.f} b={r.yoy} d={d} pa={P} pb={P} /></span></td>
                   {!annual && <td><span className="pair"><span className="vs"><Val f={r.qoq} d={d} p={r.qoqIn} /></span><Delta a={r.f} b={r.qoq} d={d} pa={P} pb={r.qoqIn} /></span></td>}
                   <td className="wide-only"><Trend pts={r.trend} /></td>

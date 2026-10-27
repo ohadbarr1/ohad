@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const SHORTCUTS: [string, string][] = [
-  ['/', 'חיפוש: חברה, קופה, שורה בדוח, או חברה + קוד (הראל CSM)'], ['g h', 'דף הבית'], ['g c', 'חברות'], ['g i', 'השוואה ענפית'], ['g f', 'קופות ושוק'],
-  ['g v', 'הערכת שווי'], ['g d', 'נתונים ואיכות'], ['t', 'החלפת ערכת עיצוב'], ['1–7', 'טבלת עמיתים: תבניות'], ['8 9 0', 'טבלת עמיתים: תצוגות שמורות'], ['← → ↑ ↓', 'מעבר בין מספרים בטבלה (אחרי Tab אל הטבלה)'], ['Enter', 'פתיחת המקור של המספר'], ['?', 'רשימה זו'],
+  ['/', 'חיפוש: חברה, קופה, שורה בדוח, או חברה + קוד (הראל CSM)'], ['g h', 'דף הבית'], ['g c', 'חברות'], ['g s', 'חיסכון ארוך טווח'], ['g i', 'השוואה ענפית'], ['g f', 'מסלולים'],
+  ['g v', 'הערכת שווי'], ['g d', 'נתונים ואיכות'], ['t', 'החלפת ערכת עיצוב'], ['1–7', 'טבלת עמיתים: תבניות'], ['← → ↑ ↓', 'מעבר בין מספרים בטבלה (אחרי Tab אל הטבלה)'], ['Enter', 'פתיחת המקור של המספר'], ['?', 'רשימה זו'],
 ];
 
 const typing = (t: EventTarget | null) => { const e = t as HTMLElement | null; return !!e && (e.tagName === 'INPUT' || e.tagName === 'SELECT' || e.tagName === 'TEXTAREA' || e.isContentEditable); };
@@ -56,7 +56,7 @@ export function useKeyboard(toggleTheme: () => void): { help: boolean; setHelp: 
       if (e.key === 't') { toggleTheme(); return; }
       if (e.key === 'g') { pendingG.current = Date.now(); return; }
       if (Date.now() - pendingG.current < 1200) {
-        const to = { h: '/', c: '/companies', i: '/industry', f: '/funds', v: '/valuation', d: '/data' }[e.key];
+        const to = { h: '/', c: '/companies', s: '/savings', i: '/industry', f: '/funds', v: '/valuation', d: '/data' }[e.key];
         pendingG.current = 0;
         if (to) { e.preventDefault(); nav(to); }
       }

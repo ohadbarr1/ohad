@@ -7,7 +7,7 @@ const page = <M extends Record<string, unknown>>(load: () => Promise<M>, name: k
 const mHome = () => import('./pages/Home');
 const Home = page(mHome, 'Home');
 const mLens = () => import('./pages/SavingsLens');
-const SavingsLens = page(mLens, 'SavingsLens');
+const SavingsPage = page(mLens, 'SavingsPage');
 const mCompany = () => import('./pages/Company');
 const CompanyLayout = page(mCompany, 'CompanyLayout');
 const CompanyFinancials = page(mCompany, 'CompanyFinancials');
@@ -45,9 +45,6 @@ const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
 const mValuationModels = () => import('./pages/ValuationModels');
 const ValuationRi = page(mValuationModels, 'ValuationRi');
-const ValuationCsm = page(mValuationModels, 'ValuationCsm');
-const Sotp = page(mValuationModels, 'Sotp');
-const Dcf = page(mValuationModels, 'Dcf');
 const mManagers = () => import('./pages/Managers');
 const Managers = page(mManagers, 'Managers');
 const mCalendar = () => import('./pages/Calendar');
@@ -62,8 +59,6 @@ const mPresentations = () => import('./pages/Presentations');
 const mCredibility = () => import('./pages/Credibility');
 const Credibility = page(mCredibility, 'Credibility'); // lane S3
 const Presentations = page(mPresentations, 'Presentations');
-const mMine = () => import('./pages/Mine');  // lane F
-const Mine = page(mMine, 'Mine');
 const mAutopilot = () => import('./pages/Autopilot');  // lane AP
 const Autopilot = page(mAutopilot, 'Autopilot');
 const mDebt = () => import('./pages/Debt');  // lane DL
@@ -81,7 +76,7 @@ const ReportCardPage = page(mReportCard, 'ReportCardPage');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
-/** /market/* and /industry/econ became views of the Savings Lens: an old link lands on the same figures */
+/** /market/*, /industry/econ and /industry/savings became the Savings Lens at /savings: an old link lands on the same figures */
 function LensRedirect({ to, view }: { to?: 'funds'; view?: string }) {
   const loc = useLocation(), { name } = useParams();
   const q = new URLSearchParams(loc.search);
@@ -89,7 +84,7 @@ function LensRedirect({ to, view }: { to?: 'funds'; view?: string }) {
   if (view) q.set('v', view);
   if (name) q.set('g', name);
   const qs = q.toString();
-  return <Navigate to={`/industry/savings${qs ? '?' + qs : ''}`} replace />;
+  return <Navigate to={`/savings${qs ? '?' + qs : ''}`} replace />;
 }
 /** the report day is the company home now: an old link keeps its report (?p=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`..${loc.search}`} replace />; }
@@ -124,7 +119,7 @@ export function App() {
         <Route path="industry" element={<IndustryLayout />}>
           <Route index element={<Navigate to="peers" replace />} />
           <Route path="peers" element={<Peers />} />
-          <Route path="savings" element={<SavingsLens />} />
+          <Route path="savings" element={<LensRedirect />} />
           <Route path="ifrs" element={<CsmRedirect view="facts" />} />
           <Route path="sectors" element={<FromSectors />} />
           <Route path="matrix" element={<FromMatrix />} />
@@ -135,6 +130,7 @@ export function App() {
           <Route path="headline" element={<FromHeadline />} />
           <Route path="search" element={<DocSearchRedirect />} />
         </Route>
+        <Route path="savings" element={<SavingsPage />} />
         <Route path="funds" element={<Funds />} />
         <Route path="funds/makers" element={<FundMakers />} />
         <Route path="funds/:k" element={<FundCard />} />
@@ -146,7 +142,7 @@ export function App() {
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="credibility" element={<Credibility />} />{/* lane S3 */}
-        <Route path="mine" element={<Mine />} />
+        <Route path="mine" element={<Navigate to="/book" replace />} />{/* the workspace is gone; the chart book stays */}
         <Route path="debt" element={<Debt />} />
         <Route path="debt/:id" element={<Debt />} />
         <Route path="facts/:id" element={<FactsPage />} />
@@ -161,9 +157,10 @@ export function App() {
         <Route path="valuation/:id" element={<ValuationLayout />}>
           <Route index element={<ValuationPb />} />
           <Route path="ri" element={<ValuationRi />} />
-          <Route path="csm" element={<ValuationCsm />} />
-          <Route path="sotp" element={<Sotp />} />
-          <Route path="dcf" element={<Dcf />} />
+          {/* retired models: an old link lands on justified P/B */}
+          <Route path="csm" element={<Navigate to=".." replace />} />
+          <Route path="sotp" element={<Navigate to=".." replace />} />
+          <Route path="dcf" element={<Navigate to=".." replace />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

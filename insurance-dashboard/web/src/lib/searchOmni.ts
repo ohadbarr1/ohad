@@ -19,8 +19,7 @@ export const FUNCS: { code: string; badge: string; label: string; keys: string[]
   { code: 'LTS', badge: 'חיסכון', label: 'חיסכון ארוך טווח', keys: ['lts', 'חיסכון', 'פנסיה', 'גמל', 'aum'], to: (id) => `/company/${id}/savings` },
   { code: 'DOC', badge: 'מסמכים', label: 'מסמכים', keys: ['doc', 'docs', 'מסמכים', 'filings'], to: (id) => `/company/${id}/filings` },
   { code: 'VAL', badge: 'שווי', label: 'הערכת שווי, P/B מוצדק', keys: ['val', 'valuation', 'שווי', 'הערכת', 'pb', 'p/b', 'מכפיל'], to: (id) => `/valuation/${id}` },
-  { code: 'DCF', badge: 'DCF', label: 'הערכת שווי, DCF', keys: ['dcf'], to: (id) => `/valuation/${id}/dcf` },
-  { code: 'SOTP', badge: 'סכום החלקים', label: 'סכום החלקים, SOTP', keys: ['sotp', 'חלקים'], to: (id) => `/valuation/${id}/sotp` },
+  { code: 'RI', badge: 'הכנסה שיורית', label: 'הערכת שווי, הכנסה שיורית', keys: ['ri', 'שיורית', 'residual'], to: (id) => `/valuation/${id}/ri` },
 ];
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
@@ -113,7 +112,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {
-    pool.groups.forEach((g) => { const s = wordScore(g.words, words); if (s) out.push({ kind: 'קופה', label: g.label, meta: 'קבוצה · פנסיה, גמל וביטוח', to: `/industry/savings?g=${encodeURIComponent(g.label)}`, score: 70 + s }); });
+    pool.groups.forEach((g) => { const s = wordScore(g.words, words); if (s) out.push({ kind: 'קופה', label: g.label, meta: 'קבוצה · פנסיה, גמל וביטוח', to: `/savings?g=${encodeURIComponent(g.label)}`, score: 70 + s }); });
     let n = 0;
     for (const f of pool.funds) {
       const s = wordScore(f.words, words);

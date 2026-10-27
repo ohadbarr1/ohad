@@ -5,6 +5,7 @@ import { Sourced } from '../components/Source';
 import { Sheet } from '../components/Sheet';
 import { BreakChip, Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg as SegCtl } from '../components/ui';
 import { IdDot } from '../components/MgrChip';
+import { FundsHead } from '../components/FundsNav';
 import { foxOption } from '../lib/foxchart';
 import { identify } from '../lib/idmarks';
 import { placeLabels } from '../lib/labelPlace';
@@ -35,6 +36,11 @@ const Dash = ({ why }: { why: string }) => <span className="muted lens-dash" tit
 const S = ({ src, children, className = '' }: { src: () => Prov; children: ReactNode; className?: string }) => <Sourced src={src}><span className={`num ${className}`}>{children}</span></Sourced>;
 
 /** Savings Lens: the regulator's monthly fund data and the managers' quarterly P&L on one axis. */
+/** The long-term savings section's first page: the lens under the section's head and tabs. */
+export function SavingsPage() {
+  return <><FundsHead /><SavingsLens /></>;
+}
+
 export function SavingsLens() {
   const { data, error } = useLens();
   if (error) return <ErrorBox what="עדשת החיסכון" error={error} />;
@@ -82,7 +88,7 @@ export function LensForGroup({ group }: { group: string }) {
   const S0 = segs.some(([k]) => k === seg) ? seg : segs[0]?.[0];
   if (!S0) return null;
   return (
-    <Panel title={<>עדשת חיסכון · {SEG_LONG[S0]}</>} aside={<><SegCtl<Seg> label="פעילות" value={S0} onChange={setSeg} options={segs} /><Link className="chip" to={`/industry/savings?g=${encodeURIComponent(group)}&s=${S0}`}>מול המנהלים האחרים</Link></>}>
+    <Panel title={<>עדשת חיסכון · {SEG_LONG[S0]}</>} aside={<><SegCtl<Seg> label="פעילות" value={S0} onChange={setSeg} options={segs} /><Link className="chip" to={`/savings?g=${encodeURIComponent(group)}&s=${S0}`}>מול המנהלים האחרים</Link></>}>
       <DrillBody d={d} src={src} g={g} seg={S0} />
     </Panel>
   );
@@ -360,7 +366,7 @@ export function LensRank() {
   if (!d) return <Loading what="דירוג המנהלים" />;
   const seg = (SEGS.map(([k]) => k).find((k) => k === sp.get('s')) ?? 'pen') as Seg;
   const set = (patch: Record<string, string>) => {
-    if (patch.g) { nav(`/industry/savings?g=${encodeURIComponent(patch.g)}${seg !== 'pen' ? `&s=${seg}` : ''}`); return; }
+    if (patch.g) { nav(`/savings?g=${encodeURIComponent(patch.g)}${seg !== 'pen' ? `&s=${seg}` : ''}`); return; }
     const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k))); setSp(n, { replace: true });
   };
   return <RankView d={d} seg={seg} set={set} by={(sp.get('by') as RankBy) ?? 'aum'} />;

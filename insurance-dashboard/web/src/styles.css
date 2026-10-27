@@ -334,18 +334,11 @@ svg.trend { color: var(--muted); vertical-align: middle; overflow: visible; } sv
 tr:hover svg.trend { color: var(--fg); }
 table.tight th.wide-only, table.tight td.wide-only { width: 120px; }
 @media (max-width: 760px) { .wide-only { display: none; } }
-.star { display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; background: transparent; cursor: pointer; color: var(--faint); border-radius: var(--r-2); transition: color var(--fast); }
-.star:hover { color: var(--fg); } .star[aria-pressed="true"] { color: var(--accent-text); }
-.star svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; } .star[aria-pressed="true"] svg { fill: currentColor; }
-.notes textarea { width: 100%; min-height: 92px; resize: vertical; background: var(--panel2); border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 10px 12px; color: var(--fg); font: inherit; line-height: 1.6; transition: border-color var(--fast), box-shadow var(--mid); }
-.notes textarea:focus { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
-@media (max-width: 760px) { .notes textarea { font-size: 16px; } }
 
 /* QA sweep: mobile touch targets (>= ~40px) */
 @media (max-width: 760px) {
   .seg button { min-height: 40px; }
   a.doc { min-height: 36px; align-items: center; }
-  .star { width: 40px; height: 40px; }
   .mcard .open { padding: 10px 12px; }
 }
 
@@ -657,9 +650,6 @@ table.dt:has(td.bar), table.dt.full, table.fin.compact { width: 100%; }
 /* compact density: 28-px rows */
 html[data-density="compact"] { --row-h: 28px; }
 html[data-density="compact"] th, html[data-density="compact"] td { padding: 3px 10px; line-height: 1.35; }
-/* the density switch is a toggle like the rest */
-.density { padding: 3px; background: var(--panel2); border-radius: var(--r-2); }
-.density button[aria-pressed="true"] { background: var(--panel); box-shadow: 0 0 0 1px var(--line-soft), 0 1px 2px rgb(17 28 63 / 0.08); font-weight: 700; }
 /* a phone's context bar keeps to the ink */
 .ctxbar-go { color: var(--fg); }
 @media (pointer: coarse), (max-width: 760px) { .menu-btn { min-height: 40px; } .menu-it { min-height: 40px; align-items: center; } }

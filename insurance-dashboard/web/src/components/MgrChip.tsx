@@ -9,7 +9,7 @@ export function MgrChip({ grp, mgr, short = false }: { grp: string; mgr?: string
   const id = GROUP_ID[grp];
   useTheme();  // the dot follows the theme
   return (
-    <Link className="mgrchip" to={`/industry/savings?g=${encodeURIComponent(grp)}`} title={mgr ? `${mgr} · ${grp}` : grp} onClick={(e) => e.stopPropagation()}>
+    <Link className="mgrchip" to={`/savings?g=${encodeURIComponent(grp)}`} title={mgr ? `${mgr} · ${grp}` : grp} onClick={(e) => e.stopPropagation()}>
       <i style={{ background: id ? idCss(id) : 'var(--neutral)' }} aria-hidden="true" />{short ? grp.replace('מנורה מבטחים', 'מנורה').replace('אלטשולר שחם', 'אלטשולר').replace('ילין לפידות', 'ילין').replace('קרנות ענפיות ואחרות', 'ענפיות') : grp}
     </Link>
   );

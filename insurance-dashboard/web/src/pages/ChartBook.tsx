@@ -60,7 +60,7 @@ export function ChartBook() {
       {!items.length ? (
         <Empty title="הספר ריק">
           <span>בכל גרף באתר: <b>+ לספר</b>. הגרפים נשמרים בדפדפן הזה ומיוצאים כמצגת עם מקורות.</span>
-          <span className="book-starts"><Link to="/industry/peers">טבלת עמיתים</Link><Link to="/industry/csm?view=econ">כלכלת CSM</Link><Link to="/industry/savings">עדשת חיסכון</Link><Link to="/company/harel/financials">דוחות הראל</Link></span>
+          <span className="book-starts"><Link to="/industry/peers">טבלת עמיתים</Link><Link to="/industry/csm?view=econ">כלכלת CSM</Link><Link to="/savings">עדשת חיסכון</Link><Link to="/company/harel/financials">דוחות הראל</Link></span>
         </Empty>
       ) : (
         <ol className="book-grid">

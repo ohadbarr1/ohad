@@ -15,8 +15,6 @@ import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
 import { useMarkVisit } from '../lib/visits';
 import { SinceChip } from '../components/SinceBadge';
-import { NoteMark } from '../components/NoteMark';  // lane F
-import { lineKey } from '../lib/notes';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
 import { useCompanyNotes, useCompanyStore, useKpiData, useLoad, useMarket, useRegistry } from '../lib/useData';
@@ -369,9 +367,6 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
   const toggle = (mi: number) => setSel((cur) => (cur.includes(mi) ? cur.filter((x) => x !== mi) : [...cur, mi]));
   const [showRe, setShowRe] = useState(false);
   const [dense, setDense] = useStored<boolean>('fin.dense', false);
-  // named views of this company's statements (table, rows, chart set-up, period window), kept on this device
-  const [views, setViews] = useStored<{ n: string; q: string }[]>(`fin.views.${companyId}`, []);
-  const [viewName, setViewName] = useState('');
   // restatements of the statement on screen, in the structure on screen
   const restated = (d.restated ?? []).filter((r) => r[0] === sheetCode && (!hasStd || stdTab === 'c' || r[1] === (stdTab === '17' ? 'IFRS 17' : 'IFRS 4')) && (r[3] === baseType || (baseType === 'Q' && r[3] === 'I')));
   // a figure from the periodic reports links only to its own report; the entity's single source file would be the wrong document
@@ -450,7 +445,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
     const pi = lastPi!, f0 = store.byMetric.get(mi)?.get(pi), f = seen(f0) ? f0 : undefined, v = val(mi, pi), pp = prior(pi), unit = d.metrics[mi].unit;
     const body = <span className={`num${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{fmtCell(v, unit, scale)}</span>;
     return <>
-      <td className="lead">{vMark(mi, pi)}{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? pdfHref(mi, pi) ?? open(f.page, f.u) : null}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(d.metrics[mi])} label={d.metrics[mi].label} /></td>
+      <td className="lead">{vMark(mi, pi)}{v == null ? body : <Sourced src={() => valProv(mi, pi)} href={!ltm && f ? pdfHref(mi, pi) ?? open(f.page, f.u) : null}>{body}</Sourced>}</td>
       <td>{change(v, pp >= 0 ? val(mi, pp) : null, unit, mi, pi, pp, 'YoY')}</td>
       {qoqPi != null && <td>{change(v, val(mi, qoqPi), unit, mi, pi, qoqPi, 'QoQ')}</td>}
     </>;
@@ -515,11 +510,6 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
           <div className="field"><span>שורות</span><Seg<'n' | 'd'> label="צפיפות" value={dense ? 'd' : 'n'} onChange={(v) => setDense(v === 'd')} options={[['n', 'רגיל'], ['d', 'צפוף']]} /></div>
           <Field label="חיפוש שורה"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="רווח, פרמיות, CSM" /></Field>
           {sv && sv.dims.length > 1 && <Field label="פילוח"><select value={dim} onChange={(e) => setDim(e.target.value)}><option value="all">כל הפילוחים</option>{sv.dims.map((x) => <option key={x}>{x}</option>)}</select></Field>}
-          <div className="field"><span>תצוגות שמורות</span><div className="views">
-            {views.map((v) => <span key={v.n} className="chip"><button type="button" onClick={() => setSp(Object.fromEntries(new URLSearchParams(v.q)))}>{v.n}</button><button type="button" aria-label={`מחיקת ${v.n}`} onClick={() => setViews(views.filter((x) => x.n !== v.n))}>×</button></span>)}
-            <input type="text" value={viewName} onChange={(e) => setViewName(e.target.value)} placeholder="שם לתצוגה הנוכחית" aria-label="שם לתצוגה" />
-            <button type="button" className="btn" disabled={!viewName.trim()} onClick={() => { setViews([...views.filter((x) => x.n !== viewName.trim()), { n: viewName.trim(), q: ownOf(sp) }]); setViewName(''); }}>שמירה</button>
-          </div></div>
         </>;
         const title = sv ? sheetName(sheetCode) : '';
         if (phone) return <>
@@ -602,10 +592,10 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
                       {showChart && on && <span className="dot" style={{ background: pal[k % pal.length] }} />}
                       <span className={hasNotes ? 'expl' : undefined} title={r.m.label} onClick={hasNotes ? () => setExplain(explain === r.idx ? null : r.idx) : undefined}>{r.m.label}{r.m.dim && <span className="dim">{r.m.dim}</span>}</span>
                       {r.m.role && <Link className="peers" to={`/industry/lines?l=${r.m.role}&c=${companyId}&g=${fund ? 'fund' : 'ins'}`} title="אותה שורה בכל החברות, לאורך זמן">מול עמיתים</Link>}
-                      <NoteMark co={companyId} m={lineKey(r.m)} label={r.m.label} periods={compact && lastPi != null ? [pl(lastPi)] : colsDesc.map(pl)} add />
+                      
 
                     </div></td>
-                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi} className={pi === lastPi ? 'lead' : undefined}>{vMark(r.idx, pi)}{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}<NoteMark co={companyId} p={pl(pi)} m={lineKey(r.m)} label={r.m.label} /></td>; })}
+                    {compact && lastPi != null ? compactCells(r.idx) : <>{colsDesc.map((pi) => { const f0 = r.values.get(pi), f = seen(f0) ? f0 : undefined, txt = shown(r.idx, pi), body = <span className={`num ${mode === 'yoy' ? (cell(r.idx, pi) ?? 0) >= 0 ? 'pos' : 'neg' : ''}${f?.der ? ' der' : ''}${f?.old ? ' old' : ''}${f?.re && !vin.facts ? ' re' : ''}`} title={f?.der ? 'מחושב: FY פחות 9M' : f?.re && !vin.facts ? 'הוצג מחדש בדוח מאוחר: מוצג הערך המעודכן' : undefined}>{txt}</span>; return <td key={pi} className={pi === lastPi ? 'lead' : undefined}>{vMark(r.idx, pi)}{txt === '–' ? body : <Sourced src={() => cellProv(r.idx, pi)} href={pdfHref(r.idx, pi)}>{body}</Sourced>}</td>; })}
                     <td>{page != null ? (link ? <a href={link} target="_blank" rel="noreferrer" className="num">{page}</a> : <span className="num">{page}</span>) : '–'}</td></>}
                   </tr>
                 );

@@ -52,7 +52,7 @@ export function GroupPanel({ m, group, standalone = false }: { m: Market; group:
   return (
     <>
       {standalone && <div className="pagehead"><div><h1>{group}</h1><div className="sub">שוק החיסכון הפנסיוני · קבוצה</div></div>
-        <Field label="קבוצה"><select value={group} onChange={(e) => nav(`/industry/savings?g=${encodeURIComponent(e.target.value)}`)}>{gopts.map((g) => <option key={g}>{g}</option>)}</select></Field></div>}
+        <Field label="קבוצה"><select value={group} onChange={(e) => nav(`/savings?g=${encodeURIComponent(e.target.value)}`)}>{gopts.map((g) => <option key={g}>{g}</option>)}</select></Field></div>}
       <section className="controls"><Field label="מוצר"><select value={set} onChange={(e) => setSet(e.target.value)}>{m.sets.map((s) => <option key={s.id} value={s.id}>{s.sub ? '  ' : ''}{s.label}</option>)}</select></Field></section>
       <div className="grid21">
         <Panel title={def.label} aside={<>{def.unit === 'bn' ? 'מיליארד ש"ח' : def.win ? 'LTM' : null} <BreakChip b={m.breaksFor(metric, set)[0]} /></>}>

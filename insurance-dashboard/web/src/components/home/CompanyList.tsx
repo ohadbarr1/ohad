@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Star } from '../Follow';
 import { idCss } from '../../lib/identity';
 import { SinceDot } from '../SinceBadge';
 
@@ -20,7 +19,7 @@ export function CompanyList({ rows, label }: { rows: ListRow[]; label: string })
     <ol className="hm-list" aria-label={label}>
       {rows.map((r) => (
         <li key={r.id} className={r.stale ? 'stale' : undefined}>
-          <span className="hm-star"><Star id={r.id} name={r.name} /></span>
+          
           <Link className="hm-who" to={`/company/${r.id}`}>
             <i className="hm-dot" style={{ background: idCss(r.id) }} aria-hidden="true" />
             <span className="hm-name">{r.name}</span><SinceDot id={r.id} />

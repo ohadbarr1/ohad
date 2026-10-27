@@ -6,7 +6,7 @@
     --accent: #D4451F; --accent-text: #B5361A; --up: #0B7F56; --down: #B00D28; color-scheme: light;
   }
   html, body { background: #FFFFFF !important; font-size: 10.5pt; }
-  .rail, .top, .skip, .subnav, .toolbar, .controls, .ctxbar, .charttools, .sheetwrap, .srcwrap, .star, button.chip, .btn, .info, .twist, .valchip, .notes, .views, select, input { display: none !important; }
+  .rail, .top, .skip, .subnav, .toolbar, .controls, .ctxbar, .charttools, .sheetwrap, .srcwrap, button.chip, .btn, .info, .twist, .valchip, .views, select, input { display: none !important; }
   .shell { display: block; }
   .page { max-width: none; padding: 0; gap: 10pt; }
   .panel, .mcard, .kpis, .card { border: 1px solid var(--line-soft); break-inside: avoid; box-shadow: none; }

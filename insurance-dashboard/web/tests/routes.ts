@@ -6,7 +6,7 @@ export const ROUTES: [string, string][] = [
   ['ifrs17', '/company/phoenix/ifrs17'],
   ['peers', '/industry/peers'],
   ['csm', '/industry/csm'],
-  ['savings', '/industry/savings'],
+  ['savings', '/savings'],
   ['funds', '/funds'],
   ['fund', '/funds/p2009'],
   ['managers', '/managers'],

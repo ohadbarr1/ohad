@@ -24,7 +24,6 @@ const Deck = lazy(() => import('./IndustrySectors').then((m) => ({ default: m.In
 
 type View = 'table' | 'series' | 'deck';
 interface St { s: string; e: string[] | null; f: Freq; p: string; n: number; v: View; k: number; c: string[]; o: { c: number; i: number; d: 1 | -1 } | null; h: boolean; pin: number; hl: string; w: number }
-interface SavedView { id: string; n: string; q: string }
 const KEYS = ['s', 'e', 'f', 'p', 'n', 'v', 'k', 'c', 'o', 'h', 'pin', 'hl', 'w', 't'];
 // a series opens on five years (20 quarters): the analyst's "7 insurers × one line × 5 years" in two taps
 const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'table' as View, w: 20 };
@@ -71,9 +70,8 @@ export function Peers() {
   // the series opens on quarters, 20 of them (five years): from an LTM table the same tap switches the frequency (job: 7 insurers × a line × 5 years)
   const toView = (v: View, extra: Partial<St> = {}) => set(v === 'series' && st.f === 'LTM' ? { v, f: 'Q', p: '', o: null, ...extra } : { v, ...extra });
   const [mySets, setMySets] = useStored<PeerSet[]>('peers.sets', []);
-  const [views, setViews] = useStored<SavedView[]>('peers.views', []);
   const phone = usePhone();
-  const [panel, setPanel] = useState<'' | 'add' | 'fx' | 'set' | 'views'>('');
+  const [panel, setPanel] = useState<'' | 'add' | 'fx' | 'set'>('');
   const [sheet, setSheet] = useState(false);
   const [cards, setCards] = useState(true);
 
@@ -87,15 +85,13 @@ export function Peers() {
     } else if (t) setSp((prev) => writeSt(prev, readSt(prev)), { replace: true });
   }, [sp, setSp]);
 
-  // hotkeys: 1–7 templates, 8 9 0 the first saved views
-  const live = useRef({ apply, views, setSp }); live.current = { apply, views, setSp };
+  // hotkeys: 1–7 templates
+  const live = useRef({ apply }); live.current = { apply };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target) || document.querySelector('.sheetwrap')) return;
       const t = TEMPLATES.find((x) => x.key === e.key);
-      if (t) { e.preventDefault(); live.current.apply(t); return; }
-      const vi = ['8', '9', '0'].indexOf(e.key), v = live.current.views[vi];
-      if (v) { e.preventDefault(); live.current.setSp((prev) => { const n = new URLSearchParams(v.q); const s = prev.get('src'); if (s) n.set('src', s); return n; }, { replace: true }); }
+      if (t) { e.preventDefault(); live.current.apply(t); }
     };
     addEventListener('keydown', key);
     return () => removeEventListener('keydown', key);
@@ -127,7 +123,6 @@ export function Peers() {
   const periods = pend ? Array.from({ length: st.n }, (_, i) => back(st.f, pend, i)) : [];
   const setName = st.e ? 'קבוצה מותאמת' : allSets.find((x) => x.id === st.s)?.n ?? '';
   const loading = pending > 0;
-  const shareQ = () => { const n = writeSt(new URLSearchParams(), st); return n.toString(); };
 
   // one toolbar row (ws2 L4): the set, the frequency, the period, the columns' depth and the view; then "+ מדד", the templates and the rest behind one menu
   const controls = (
@@ -147,7 +142,6 @@ export function Peers() {
         <Menu label="תבניות" summary="תבניות" items={[
           ...TEMPLATES.map((t) => ({ key: t.id, label: t.n, hint: <kbd>{t.key}</kbd>, group: 'תבניות', run: () => apply(t) })),
           { key: 'fx', label: '+ נוסחה', group: 'עוד', run: () => setPanel(panel === 'fx' ? '' : 'fx') },
-          { key: 'views', label: 'תצוגות שמורות', group: 'עוד', hint: views.length ? <span className="num">{views.length}</span> : undefined, run: () => setPanel(panel === 'views' ? '' : 'views') },
         ]} />
         <Menu label="עוד" summary="⋯" align="end" className="pr-more" items={[
           ...(st.v === 'table' ? [{ key: 'heat', label: st.h ? '✓ מפת חום' : 'מפת חום', run: () => set({ h: !st.h }) }] : []),
@@ -163,8 +157,6 @@ export function Peers() {
       {panel === 'fx' && <FormulaEditor book={book} ents={ents} freq={st.f} p={pend} onAdd={(tok) => { set({ c: [...st.c, tok] }); setPanel(''); setSheet(false); }} />}
       {panel === 'set' && <SetEditor reg={reg} ents={ents} onChange={(ids) => set({ e: ids })} onSave={(n) => { const id = `u${Date.now().toString(36)}`; setMySets([...mySets, { id, n, ids: ents }]); set({ s: id, e: null }); }}
         own={allSets.find((x) => x.id === st.s && x.own) ?? null} onDelete={(id) => { setMySets(mySets.filter((x) => x.id !== id)); set({ s: DEF.s, e: null }); }} />}
-      {panel === 'views' && <Views views={views} onOpen={(q) => setSp(() => new URLSearchParams(q), { replace: true })} onApply={apply}
-        onSave={(n) => setViews([...views, { id: Date.now().toString(36), n, q: shareQ() }])} onDelete={(id) => setViews(views.filter((v) => v.id !== id))} />}
     </>
   );
 
@@ -640,30 +632,6 @@ function SetEditor({ reg, ents, onChange, onSave, own, onDelete }: { reg: Regist
         <button type="button" className="btn" disabled={!name.trim() || !ents.length} onClick={() => { onSave(name.trim()); setName(''); }}>שמירה כקבוצה</button>
         {own && <button type="button" className="btn" onClick={() => onDelete(own.id)}>מחיקת “{own.n}”</button>}
         <span className="src">נשמר בדפדפן זה</span>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- templates and saved views ---------- */
-function Views({ views, onOpen, onApply, onSave, onDelete }: { views: SavedView[]; onOpen: (q: string) => void; onApply: (t: Template) => void; onSave: (n: string) => void; onDelete: (id: string) => void }) {
-  const [name, setName] = useState('');
-  const [copied, setCopied] = useState(false);
-  return (
-    <section className="panel pr-views" aria-label="תבניות ותצוגות">
-      <div className="pr-vcol">
-        <h3>תבניות</h3>
-        <ul>{TEMPLATES.map((t) => <li key={t.id}><button type="button" onClick={() => onApply(t)}><kbd>{t.key}</kbd> {t.n}<span className="muted"> · {t.c.length} עמודות · {t.f}</span></button></li>)}</ul>
-      </div>
-      <div className="pr-vcol">
-        <h3>התצוגות שלי</h3>
-        {views.length ? <ul>{views.map((v, i) => <li key={v.id}><button type="button" onClick={() => onOpen(v.q)}>{i < 3 && <kbd>{['8', '9', '0'][i]}</kbd>} {v.n}</button><button type="button" className="linkbtn" onClick={() => onDelete(v.id)} aria-label={`מחיקת ${v.n}`}>מחיקה</button></li>)}</ul> : <p className="muted">אין עדיין</p>}
-        <div className="pr-row">
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="שם התצוגה" aria-label="שם התצוגה" />
-          <button type="button" className="btn" disabled={!name.trim()} onClick={() => { onSave(name.trim()); setName(''); }}>שמירה</button>
-          <button type="button" className="btn" onClick={() => { void navigator.clipboard?.writeText(location.href).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}>{copied ? 'הועתק' : 'העתקת קישור'}</button>
-        </div>
-        <p className="src">התצוגה כולה בכתובת: קישור פותח אותה כמו שהיא. שמירה: בדפדפן זה.</p>
       </div>
     </section>
   );

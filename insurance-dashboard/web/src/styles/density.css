@@ -1,4 +1,4 @@
-/* Density modes (ws4 R6): comfortable 34 px rows at --t-3, compact 26 px rows at --t-2. Set on <html data-density>. */
+/* Density (ws4 R6): comfortable 34 px rows at --t-3; compact 26 px rows at --t-2 from 1920 px (lib/density sets <html data-density>). */
 html[data-density="compact"] { --row-pad-y: 4px; --row-pad-x: 10px; }
 html[data-density="compact"] th, html[data-density="compact"] td { padding: 3px 10px; line-height: 1.35; }
 html[data-density="compact"] tbody td { font-size: var(--t-2); }
@@ -13,9 +13,3 @@ html[data-density="compact"] .vstrip { margin: 0 0 8px; padding: 6px 0; }
 @media (min-width: 1600px) {
   .page:has(> .wide-page) { max-width: min(100%, 2400px); padding-inline: 32px; }
 }
-
-/* the density switch */
-.density { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); }
-.density button { border: 0; background: none; color: var(--muted); font: inherit; font-size: var(--t-1); padding: 3px 8px; border-radius: var(--r-1); cursor: pointer; min-height: 28px; }
-.density button[aria-pressed="true"] { background: var(--panel2); color: var(--fg); font-weight: 700; }
-@media (max-width: 760px) { .density { display: none; } }

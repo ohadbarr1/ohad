@@ -36,10 +36,9 @@ html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { ga
   .hm-s-fresh .feed li:nth-child(n+8) { display: none; }
 }
 
-/* the phone scoreboard: star, identity dot + name (the way in), the key figure large with its two companions small */
+/* the phone scoreboard: identity dot + name (the way in), the key figure large with its two companions small */
 .hm-list { list-style: none; margin: 6px -13px 0; padding: 0; }
-.hm-list li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; grid-template-areas: "star who fig" ". chips chips" ". child child"; align-items: center; column-gap: 6px; padding: 4px 13px 4px 13px; border-top: 1px solid var(--line-soft); }
-.hm-star { grid-area: star; display: grid; place-items: center; }
+.hm-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who fig" "chips chips" "child child"; align-items: center; column-gap: 6px; padding: 4px 13px 4px 13px; border-top: 1px solid var(--line-soft); }
 .hm-who { grid-area: who; display: grid; grid-template-columns: 8px minmax(0, 1fr); grid-template-areas: "dot name" ". meta"; column-gap: 8px; row-gap: 1px; align-content: center; min-height: 48px; color: var(--fg); text-decoration: none; }
 .hm-who:hover .hm-name { color: var(--accent-text); }
 .hm-dot { grid-area: dot; width: 8px; height: 8px; border-radius: 50%; align-self: center; }

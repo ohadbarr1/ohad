@@ -41,6 +41,8 @@
 .rc-rest .lbl, .rc-tg .lbl { white-space: normal; }
 .rc-rest .dim, .rc-tg .dim { display: block; color: var(--faint); font-size: var(--t-1); }
 .rc-tg .chip { margin-inline-start: 6px; font-size: var(--t-1); }
+/* a phone: a range target (1,300.0–1,500.0) breaks at its dash and the status chip sits under the figure, so the table keeps to the sheet */
+@media (max-width: 760px) { .rc-tg td { white-space: normal; } .rc-tg .chip { display: table; margin: 2px 0 0; } }
 .rc-more { display: inline-block; margin-top: 6px; font-size: var(--t-2); }
 .rc-foot { margin-top: auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; border-top: 1px solid var(--line); padding-top: 10px; font-size: var(--t-1); color: var(--muted); }
 .rc-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

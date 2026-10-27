@@ -3,7 +3,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { FundsHead, FundsNav } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
-import { CRISES, CRISIS_FORMULA, RATING_NOTE, crisis, ddText, rate, ratingProv, type Rating } from '../lib/rating';
+import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
@@ -44,9 +44,6 @@ const rankSrc = (f: Fund, per: Per, asof: number, rank: number, n: number): Prov
 const topSrc = (f: Fund): Prov => ({ k: 'calc', title: `רבע עליון · ${f.name}`, value: `${f.top}/${f.yrs}`,
   formula: 'בכמה מהשנים הקלנדריות המלאות מתוך חמש האחרונות תשואת המסלול (ריבית דריבית על 12 תשואות חודשיות) הייתה ברבע העליון של הקטגוריה: מקום ≤ ⌈n÷4⌉, בקטגוריה של 4 מסלולים לפחות',
   inputs: [{ label: 'שנים ברבע העליון', v: nf(f.top ?? 0, 0) }, { label: 'שנים שנבדקו', v: nf(f.yrs ?? 0, 0) }], note: 'מחושב מתשואות כל חברי הקטגוריה היום, בבניית הנתונים' });
-/** the source of a rating component's value */
-const compSrc = (f: Fund, c: 'sharpe' | 'ret' | 'cons' | 'fee', asof: number): (() => Prov) | undefined =>
-  c === 'sharpe' ? () => plain(f, asof, 'sharpe') : c === 'fee' ? () => plain(f, asof, 'fee') : c === 'cons' ? (f.yrs ? () => topSrc(f) : undefined) : () => perSrc(f, f.a5 != null ? 'a5' : 'a3', asof);
 /** A category average over its last n months: asset-weighted monthly returns of today's members, compounded. */
 const CAT_F = 'ממוצע משוקלל נכסים של תשואות חברי הקטגוריה בכל חודש (MONTHLY_YIELD), ובריבית דריבית על חודשי התקופה';
 const catSrc = (title: string, c: FundCats[string], n: number, value: string, formula = CAT_F): Prov => {
@@ -152,7 +149,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
       const shown = all.filter((f) => f.prod === prod && f.track === tr && (closed || !f.closed));  // the rank is among the tracks on screen
       const ranked = shown.filter((f) => f[per] != null).sort((a, b) => b[per]! - a[per]!);
       const rank = new Map(ranked.map((f, i) => [f.k, i + 1]));
-      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => (!t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)) && screened(f)).map((f) => ({ f, rank: rank.get(f.k) ?? null, r: rate(f, shown) }));
+      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => (!t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)) && screened(f)).map((f) => ({ f, rank: rank.get(f.k) ?? null }));
       return { tr, list, n: ranked.length, assets: shown.reduce((u, f) => u + (f.assets ?? 0), 0), cat: cats?.[`${prod} | ${tr}`] };
     }).filter((g) => g.list.length).sort((x, y) => y.assets - x.assets);
   }, [all, tracks, T, prod, per, closed, q, cats, feeMax, sharpeMin, assetsMin]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -242,7 +239,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
       {!makersOnly && <Panel title={`${prod} · ${T === ALL ? 'כל המסלולים' : T}`} aside={<>{T === ALL && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.tr))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}<span><Sourced src={() => countP('מסלולים מדורגים', rows.n, 'המסלולים בטבלה שיש להם תשואה בתקופה שנבחרה')}>{rows.n}</Sourced> מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}{T === ALL && <span>שורת קבוצה: ממוצע המסלול, משוקלל נכסים</span>}<span>סמן עד 6 להשוואה</span></>}>
         {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
           <div className="scroll" style={{ maxHeight: 640 }}><table className="rank">
-            <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th><th className="wide-only" title={RATING_NOTE}>דירוג fox</th></tr></thead>
+            <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>דמי ניהול</th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th></tr></thead>
             <tbody>
               {groups.map((g) => (
                 <Fragment key={g.tr}>
@@ -253,8 +250,8 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
                       <td className="wide-only"><AssetsOf g={g} /></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td>
                     </tr>
                   )}
-                  {g.cat && T !== ALL && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><CatP g={g} k={k} /></td>)}<td></td><td className="wide-only"><AssetsOf g={g} /></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
-              {(T !== ALL || open.includes(g.tr)) && g.list.map(({ f, rank, r: rt }) => (
+                  {g.cat && T !== ALL && <tr className="lead"><td>ממוצע המסלול<span className="dim">משוקלל נכסים · נגזר</span></td><td></td>{PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}><CatP g={g} k={k} /></td>)}<td></td><td className="wide-only"><AssetsOf g={g} /></td><td className="wide-only"></td><td className="wide-only"></td><td className="wide-only"></td></tr>}
+              {(T !== ALL || open.includes(g.tr)) && g.list.map(({ f, rank }) => (
                 <tr key={f.k} onPointerEnter={() => warmHist(ref(f))}>
                   <td><span style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}><label className="fund-pick" title={`השוואה: ${f.name}`}><input type="checkbox" checked={sel.includes(f.k)} onChange={() => toggle(f.k)} aria-label={`השווה את ${f.name}`} style={{ marginTop: 4, accentColor: 'var(--accent)' }} /></label>
                     <span><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link>{f.closed && <span className="chip" style={{ marginInlineStart: 6 }}>סגורה</span>}<span className="fund-mgr"><MgrChip grp={f.grp} mgr={f.mgr} short /></span></span></span></td>
@@ -265,7 +262,6 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
                   <td className="wide-only">{f.sharpe == null ? <span className="num">–</span> : <Sourced src={() => plain(f, asof, 'sharpe')}><span className="num">{nf(f.sharpe, 2)}</span></Sourced>}</td>
                   <td className="wide-only">{f.st == null ? <span className="num">–</span> : <Sourced src={() => expSrc(f, asof, 'st')}><span className="num">{`${nf(f.st, 0)}%`}</span></Sourced>}</td>
                   <td className="wide-only">{f.yrs ? <Sourced src={() => topSrc(f)}><span className="num">{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>}</td>
-                  <td className="wide-only">{rt.score == null ? <span className="muted" title={rt.why}>–</span> : <Sourced src={() => ratingProv(f, rt, (c) => compSrc(f, c, asof))}><span className="num">{nf(rt.score, 0)}</span></Sourced>}</td>
                 </tr>
               ))}
                 </Fragment>
@@ -387,7 +383,6 @@ export function FundCard() {
         </Panel>
       </div>
 
-      <div className="grid2">
         <Panel title="משברים" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
           <DataTable caption="משברים" rows={CRISES.map((c) => ({ c, me: crisis(h, c.base, c.to), ct: cat ? crisis(cat, c.base, c.to) : null }))} rowKey={(r) => r.c.key}
             export={{ name: `fox-fund-${f.k}-crises`, title: `משברים · ${f.name}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }}
@@ -400,8 +395,6 @@ export function FundCard() {
             ]} />
           <div className="fnote">ירידה: מסוף חודש הבסיס עד השפל בחלון. התאוששות: מספר החודשים מהשפל עד חזרה לרמת הבסיס.</div>
         </Panel>
-        <RatingPanel f={f} peers={peers} asof={asof} />
-      </div>
       <Heatmap h={h} f={R0} />
 
       <div className="grid2">
@@ -445,27 +438,6 @@ export function FundCard() {
         </Panel>
       )}
     </>
-  );
-}
-
-/** fox's rating of the track in its category: the score, its band and every component, each opening its calculation. */
-function RatingPanel({ f, peers, asof }: { f: Fund; peers: Fund[]; asof: number }) {
-  const r: Rating = rate(f, peers);
-  return (
-    <Panel title="דירוג fox" aside={<span className="chip" title={RATING_NOTE}>שיטת fox · לא המלצה</span>}>
-      {r.score == null ? <Empty title="לא דורג">{r.why}</Empty> : (
-        <div className="rating">
-          <div><Sourced src={() => ratingProv(f, r, (c) => compSrc(f, c, asof))}><span className="score num">{nf(r.score, 0)}</span></Sourced><div className="band" role="img" aria-label={`דרגה ${r.band} מתוך 5`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= r.band! ? 'on' : ''} />)}</div><div className="dim">מתוך 100 · {f.prod} · {f.track} · <span className="num">{peers.length}</span> מסלולים</div></div>
-          <div className="scroll"><table>
-            <thead><tr><th>רכיב</th><th className="wide-only">משקל</th><th>ערך</th><th>אחוזון</th></tr></thead>
-            <tbody>{r.parts.map((x) => { const sv = compSrc(f, x.c.key, asof); return <tr key={x.c.key}><td>{x.c.label}</td><td className="wide-only"><span className="num muted">{x.c.w}</span></td>
-              <td>{x.v == null ? '–' : sv ? <Sourced src={sv}><span className="num">{x.c.show(x.v)}</span></Sourced> : <span className="num">{x.c.show(x.v)}</span>}</td>
-              <td>{x.p == null ? <span className="muted" title="פחות מ-5 מסלולים עם נתון">–</span> : <Sourced src={() => ({ k: 'calc', title: `אחוזון · ${x.c.label} · ${f.name}`, value: nf(x.p!, 0), formula: '100 × (גרועים + חצי מהשווים) ÷ (n − 1)', inputs: [{ label: 'ערך המסלול', v: x.c.show(x.v!), src: sv }, { label: 'n', v: nf(x.n, 0) }, { label: 'גרועים', v: nf(x.worse, 0) }, { label: 'שווים', v: nf(x.ties, 0) }] })}><span className="num">{nf(x.p, 0)}</span></Sourced>}</td></tr>; })}</tbody>
-          </table></div>
-        </div>
-      )}
-      <div className="fnote">{RATING_NOTE} הנוסחה המלאה בפתיחת הציון.</div>
-    </Panel>
   );
 }
 

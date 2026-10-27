@@ -78,7 +78,8 @@ export function Line({ card, toks }: { card: Card; toks: Tok[] }) {
     : <span key={i} className="num">{t.y}</span>)}</>;
 }
 
-const ST_HE: Record<string, string> = { open: 'פתוח', met: 'הושג', missed: 'פוספס' };
+// the same words as the targets tracker (lib/targets ST_HE), so a policy or a partial target never shows its raw key
+const ST_HE: Record<string, string> = { open: 'פתוח', met: 'הושג', missed: 'לא הושג', partial: 'חלקית', nc: 'לא ניתן להשוואה', policy: 'מדיניות' };
 
 /** The card itself: header, lead, headline table, capital, restatements, targets, stamp. With `tiles` (a phone), the tiles take the
  *  table's place under the header, so the first screen carries every headline figure. */

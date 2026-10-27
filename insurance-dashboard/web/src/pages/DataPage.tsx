@@ -182,7 +182,7 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
 }
 
 const PAGES: [string, string][] = [
-  ['/', 'דף הבית'], ['/industry/peers', 'טבלת עמיתים'], ['/industry/csm', 'IFRS 17 · CSM · הון'], ['/industry/savings', 'עדשת חיסכון'], ['/funds', 'מסלולים'], ['/managers', 'מנהלים'], ['/calendar', 'לוח דיווחים'], ['/data', 'נתונים ואיכות'],
+  ['/', 'דף הבית'], ['/industry/peers', 'טבלת עמיתים'], ['/industry/csm', 'IFRS 17 · CSM · הון'], ['/savings', 'עדשת חיסכון'], ['/funds', 'מסלולים'], ['/managers', 'מנהלים'], ['/calendar', 'לוח דיווחים'], ['/data', 'נתונים ואיכות'],
 ];
 
 /** "fox · page · figure · data date · original source · link · seen": built from the page's own route, with the data date and the source

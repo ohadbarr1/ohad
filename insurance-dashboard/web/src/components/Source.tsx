@@ -22,6 +22,23 @@ function textOf(n: ReactNode): string {
   return '';
 }
 
+/** The figure's provenance in one line, for the hover badge: where it was read, or what it was computed from. Built on hover, never on render. */
+function provLine(p: Prov): string {
+  switch (p.k) {
+    case 'report': return ['מקור', p.doc ?? 'דוח', p.period, p.pg != null ? `עמ' ${p.pg}` : null, p.srcType].filter(Boolean).join(' · ');
+    case 'xbrl': return `מקור · XBRL · ${p.company} · ${p.period}${p.status ? ` · ${p.status}` : ''}`;
+    case 'reg': return 'מקור · רשות שוק ההון (גמל-נט, פנסיה-נט, ביטוח-נט)';
+    case 'fund': return `מקור · רשות שוק ההון · ${p.col} · ${String(p.period % 100).padStart(2, '0')}/${String(Math.floor(p.period / 100)).slice(2)}`;
+    case 'calc': return `${p.est ? 'נגזר (הנחה)' : 'מחושב'} · ${p.inputs.length} רכיבים · ${p.formula.split(/[.;]/)[0].slice(0, 90)}`;
+    case 'price': return `מקור · ${p.vendor} · ${p.date}`;
+    case 'none': return p.why;
+  }
+}
+const badge = (src: () => Prov, title?: string) => (e: { currentTarget: HTMLElement }) => {
+  if (title) return;  // rebuilt on every hover: a row that re-renders with another period keeps its element, not its figure
+  try { e.currentTarget.title = `${provLine(src())} · לחיצה: המקור המלא`; } catch { /* keep the generic title */ }
+};
+
 /** A number that opens its source. With `href` it is also a real link: Cmd/Ctrl-click goes straight to the document.
  *  A figure with no Hebrew in it ("−5.5% YoY", "177.0%") is isolated left-to-right, so in a right-to-left line its sign stays in front. */
 export function Sourced({ src, href, children, className: given = '', title, label }: { src: () => Prov; href?: string | null; children: ReactNode; className?: string; title?: string;
@@ -30,8 +47,8 @@ export function Sourced({ src, href, children, className: given = '', title, lab
   const { open } = useSource();
   const t = textOf(children);
   const className = !/\bnum\b/.test(given) && /\d/.test(t) && !/[\u0590-\u05FF]/.test(t) ? `${given} num`.trim() : given;
-  if (href) return <a className={`src ${className}`} href={href} target="_blank" rel="noreferrer" title={title ?? 'מקור הנתון'} aria-label={label} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); open(src()); }}>{children}</a>;
-  return <button type="button" className={`src ${className}`} title={title ?? 'מקור הנתון'} aria-label={label} onClick={() => open(src())}>{children}</button>;
+  if (href) return <a className={`src ${className}`} href={href} target="_blank" rel="noreferrer" title={title ?? 'מקור הנתון'} aria-label={label} onPointerEnter={badge(src, title)} onFocus={badge(src, title)} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); open(src()); }}>{children}</a>;
+  return <button type="button" className={`src ${className}`} title={title ?? 'מקור הנתון'} aria-label={label} onPointerEnter={badge(src, title)} onFocus={badge(src, title)} onClick={() => open(src())}>{children}</button>;
 }
 
 /** One sheet for the whole site. Lives in the layout; any number opens it through `useSource().open`. */

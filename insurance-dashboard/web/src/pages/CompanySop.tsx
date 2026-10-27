@@ -12,8 +12,6 @@ import { Sourced } from '../components/Source';
 import { calc, repName, report } from './companyProv';
 import type { Prov } from '../lib/prov';
 import type { CompanyStore } from '../lib/company';
-import { NoteMark } from '../components/NoteMark';
-import { sameFigNote } from './ReportDay';
 import '../styles/ifrs.css';
 
 interface SopFact { f: string; m: string; s: string; w: string; d: string; v: number; pg: number | null; b: string; u?: string | null; src?: string; n?: string }
@@ -29,8 +27,6 @@ const prevQEnd = (e: string) => ({ '03-31': `${Number(e.slice(0, 4)) - 1}-12-31`
 /** The window as a period name: QTD of a Q2 report is Q2'26, its YTD is H1'26, an annual report's year is FY'25 and its fourth quarter Q4'25. */
 const winLabel = (w: string, end: string) => (w === 'fy' ? periodLabel('FY', end) : w === 'ytd' ? periodLabel(end.slice(5, 7) === '06' ? 'H' : end.slice(5, 7) === '09' ? '9M' : 'Q', end) : w === 'q' ? periodLabel('Q', end) : dateLabel(end));
 const isPct = (m: string) => /ratio|pct/.test(m);
-/** sources-of-profit totals that are a statement line: the note on that figure is the one Report Day, the ledger and the grid show */
-const SOP_ROLE: Record<string, string> = { 'sop_total:רווח כולל': 'comp' };
 const mark = (f: SopFact) => f.src === 'image' || f.src === 'chart';
 
 /** Where a figure sits in the tree: sources of profit by line and then segment; the other tables by segment, then line of business, then metric. */
@@ -63,7 +59,7 @@ function missingHe(m: string) {
 }
 
 /** What the report says about where profit comes from: sources of profit by segment, results by line of business, and the insurer's own investment book. As printed, each figure on its page. */
-export function CompanySop({ id, docs, store }: { id: string; docs: number; store?: CompanyStore | null }) {
+export function CompanySop({ id, docs }: { id: string; docs: number; store?: CompanyStore | null }) {
   const [data, setData] = useState<SopData | null | undefined>(undefined);
   useEffect(() => { setData(undefined); load<SopData>(`sop/${id}.json`).then(setData, () => setData(null)); }, [id]);
   const periods = useMemo(() => Object.keys(data ?? {}).sort(byPeriodDesc), [data]);
@@ -164,7 +160,7 @@ export function CompanySop({ id, docs, store }: { id: string; docs: number; stor
         <td className="lbl tl" style={{ '--d': n.depth } as CSSProperties}>
           {kids ? <button type="button" className="tg" aria-expanded={open} aria-label={`${open ? 'סגירת' : 'פתיחת'} ${n.label}`} onClick={() => setExp((e) => ({ ...e, [`${F}${n.key}`]: !open }))}>{open ? '−' : '+'}</button> : n.depth > 0 && <span className="tg gap" />}{n.label}
         </td>
-        <td>{r ? fig(r.cur, r) : null}{r?.cur && SOP_ROLE[r.cur.f.m] && r.cur.f.s === 'group' && (() => { const n = sameFigNote(store, SOP_ROLE[r.cur!.f.m], r.cur!.f.w, r.cur!.f.d, r.cur!.f.v, 1.01); /* a total of segment figures, each rounded to millions */ return n ? <NoteMark co={id} p={n.p} m={n.m} label="רווח כולל לבעלי המניות" /> : null; })()}</td>
+        <td>{r ? fig(r.cur, r) : null}</td>
         {hasYoy && <td>{r ? <span className="pair"><span className="vs">{fig(r.yoy, r)}</span>{chg(r.cur, r.yoy, r)}</span> : null}</td>}
         {hasQoq && <td>{r ? <span className="pair"><span className="vs">{fig(r.qoq, r)}</span>{chg(r.cur, r.qoq, r)}</span> : null}</td>}
       </tr>,
