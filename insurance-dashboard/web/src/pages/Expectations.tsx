@@ -4,7 +4,7 @@ import { Empty, ErrorBox, Loading, Panel } from '../components/ui';
 import { useLoad } from '../lib/useData';
 import { idCss } from '../lib/identity';
 import { fmt, fmtS } from '../lib/drivers';
-import { EXPECTATIONS_INDEX, LEVER_NOTE, LEVER_SHORT, dateHe, pctText, pctTone, reqText, type EIndex, type EIndexRow, type EPart, type LeverKey } from '../lib/expectations';
+import { EXPECTATIONS_INDEX, NONBINDING, LEVER_NOTE, LEVER_SHORT, dateHe, pctText, pctTone, reqText, type EIndex, type EIndexRow, type EPart, type LeverKey } from '../lib/expectations';
 import '../styles/expectations.css';
 
 /* A3 · /expectations: every listed name ranked by how extreme its required inputs are. The rank is the highest percentile among the
@@ -16,6 +16,7 @@ const iso = (s: string) => `⁦${s}⁩`;
 
 function Cell({ p }: { p: EPart | undefined }) {
   if (!p) return <span className="na s" title="אין לחברה רכיב כזה (או שהוא לא מדווח)">–</span>;
+  if (p.status === 'nonbinding') return <><span className="v nbt">{NONBINDING}</span><span className="s">{p.reason}</span></>;
   const tone = pctTone(p.pct);
   return (
     <>
@@ -65,7 +66,7 @@ export function Expectations() {
         </ol>
         <div className="src">
           לכל חברה: מודל קדימה עד {m.horizon} (רווח מנורמל, חיסכון = נכסים × תשואת דמי ניהול × (1 − עלות להכנסה), שחרור CSM, ההון שנצבר בריבית חסרת סיכון) וערך סיום ב-P/B מוצדק, מהוון ב-ke מ-{dateHe(m.price_date)}.
-          כל מנוף נפתר לבדו, השאר בערכם הנוכחי; ROE {m.horizon} הוא המסלול שכל המנופים יחד צריכים לייצר. מדורג לפי האחוזון הגבוה, בשוויון לפי הבא אחריו. ניתוח של מה שהמכפיל מגלם, לא המלצה.
+          כל מנוף נפתר לבדו, השאר בערכם הנוכחי; ROE {m.horizon} הוא המסלול שכל המנופים יחד צריכים לייצר. מדורג לפי האחוזון הגבוה מבין המנופים המכריעים ו-ROE, בשוויון לפי הבא אחריו; מנוף שאינו מכריע (פלח מתחת ל-15% מהרווח לפני מס, אין פתרון בטווח, או יותר מפי 2 מהשיא של החברה) לא נכנס לדירוג. ניתוח של מה שהמכפיל מגלם, לא המלצה.
         </div>
       </Panel>
       {na.length > 0 && <div className="src">לא חושב: {na.map((c, i) => <span key={c.id}>{i ? ' · ' : ''}<Link to={`/company/${c.id}`}>{c.name}</Link> ({c.why})</span>)}</div>}

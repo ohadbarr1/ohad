@@ -53,6 +53,8 @@ CKAN = A1.CKAN
 MAYA = A1.MAYA
 EQ_CAT = A1.EQ_CAT
 TOL = 0.5                 # %: the model must reproduce the market value at a solved input within this
+SHARE_MIN = 15.0          # %: a lever whose segment is under this share of LTM pre-tax profit cannot move the price (nonbinding)
+PLAUS_X = 2.0             # a requirement more than this multiple of the company's own historical maximum is not a finding (nonbinding)
 N_HIST = 24               # quarters of history a required input is scored against
 WIN = 24                  # months: the plausibility window ("the same two-year window")
 PRICE_LABEL = "מחיר 22.10.26, קלט ידני"
@@ -458,6 +460,14 @@ class Co:
         if V("csm") and V("csm_release_rate") and not self.filer:
             csm = dict(v=V("csm"), rr=V("csm_release_rate"), P=n["csm"]["prov"], rrP=n["csm_release_rate"]["prov"])
         self.csm = csm
+        # the share of LTM pre-tax profit each lever's segment carries (the nonbinding rule)
+        self.pbt = pbt if pbt and pbt > 0 else (NP / attr / (1 - tax / 100) if NP > 0 else None)
+        self.share = {}
+        if self.pbt:
+            if sav:
+                self.share["sav"] = sav["op"] / self.pbt * 100
+            if csm:
+                self.share["csm"] = csm["rr"] / 100 * csm["v"] / self.pbt * 100
         # history first (the AUM trailing value is the five-year realised CAGR)
         hist = self.history(base_end)
         c0 = hist["aum5"]["v"] if sav and hist.get("aum5") else 0.0
@@ -652,6 +662,51 @@ class Co:
         L["hist"] = hb
         L["ref"] = ref
         L["joint"] = joint
+        return self.classify(L, m, h)
+
+    def classify(self, L, m, h):
+        """nonbinding: the lever cannot move the price. Its segment is under SHARE_MIN % of LTM pre-tax profit, or the solver found no value
+        in range (or an impossible one: cost/income below 0), or the requirement is more than PLAUS_X × the company's own historical
+        maximum (AUM CAGR; the yearly fee-yield change; the cost/income improvement over its range; peers' CSM release). The mechanical
+        solution stays in the file (`mech`), labelled, for the provenance sheet only; the percentile, the joint check and the ranking drop it."""
+        k, hb = L["k"], L.get("hist")
+        seg = self.share.get("csm" if k == "csm" else "sav")
+        segHe = "שחרור CSM" if k == "csm" else "פלח פנסיה וגמל"
+        why = None
+        v = L["req"]["v"] if L.get("req") else None
+        if seg is not None and seg < SHARE_MIN:
+            why, kind = f"{segHe} ≈ {nf(seg, 0)}% מהרווח לפני מס", "share"
+        elif L["status"] != "ok" or (k == "ci" and v is not None and v < 0):
+            why, kind = "לא קיים פתרון בטווח", "range"
+        elif hb:
+            mx = None
+            if k == "aum" and hb["max"] > 0:
+                mx, req = hb["max"], v
+            elif k == "fee":
+                mx, req = max(abs(hb["min"]), abs(hb["max"])), abs(L.get("req_d") or 0)
+            elif k == "ci":
+                mx, req = (hb["max"] - hb["min"]) or None, m["ci0"] - v
+            elif k == "csm" and hb["max"] > 0:
+                mx, req = hb["max"], v
+            if mx and req > PLAUS_X * mx:
+                what = {"aum": f"השיא של החברה בחלון של שנתיים ({nf(hb['max'], 1)}%)", "fee": f"השינוי השנתי הגדול ביותר שלה ({nf(mx, 1)} נ״ב)",
+                        "ci": f"טווח יחס העלות שלה ({nf(hb['min'], 1)}%–{nf(hb['max'], 1)}%)", "csm": f"השיא בענף ב-FY'25 ({nf(hb['max'], 1)}%)"}[k]
+                why, kind = f"נדרש יותר מפי {nf(PLAUS_X, 0)} מ{what}", "range"
+        if why is None:
+            return L
+        L["solved"] = L["status"]
+        L["status"] = "nonbinding"
+        L["reason"] = why
+        L["why"] = kind
+        if seg is not None:
+            L["share"] = r6(seg)
+        if L.get("req"):
+            prov = dict(L["req"]["prov"], title=f"פתרון מכני (לא מנוף מכריע: {why}) · {L['he']} · {self.name}")
+            L["mech"] = fig(L["req"]["v"], prov, L["unit"])
+            L["req"] = None
+        if hb:
+            hb["pct"] = None
+        L["joint"] = None
         return L
 
     def lever_roe(self, mm, h, base, keP, gP, b0P, npnP, payoutP, divAfterP):
@@ -726,7 +781,7 @@ class Co:
 
     # -- ranking parts and the verdict line
     def rank(self, levers, roe):
-        parts = [{"k": L["k"], "pct": L["hist"]["pct"]} for L in levers if L.get("hist")]
+        parts = [{"k": L["k"], "pct": L["hist"]["pct"]} for L in levers if L.get("hist") and L["status"] != "nonbinding"]
         if roe.get("hist"):
             parts.append({"k": "roe", "pct": roe["hist"]["pct"]})
         ps = [p["pct"] for p in parts if p["pct"] is not None]
@@ -777,15 +832,18 @@ class Co:
                 S.append(f"במונחי תשואה: {roe_txt}.")
             return " ".join(S)
         S = [f"השוק דורש {mn} {roe_txt}." if roe_txt else f"שווי השוק של {nm} גבוה משווי המודל ב-{nf(gap * 100, 0)}%."]
-        if levers:
-            a = next((L for L in levers if L["k"] == "aum"), None) or levers[0]
-            if a["status"] == "ok":
-                req, jt = self.lever_text(a, alone=True)
-                S.append(f"אף מנוף בודד לא מגיע לשם בתוך ההיסטוריה שלה: לבדה, {req}; {jt}.")
+        binding = [L for L in levers if L["status"] == "ok" and L.get("hist")]
+        if binding:
+            a = min(binding, key=lambda L: (L["hist"]["pct"] if L["hist"]["pct"] is not None else 101, ["aum", "fee", "ci", "csm"].index(L["k"])))
+            req, jt = self.lever_text(a, alone=True)
+            S.append(f"אף מנוף בודד לא מגיע לשם בתוך ההיסטוריה שלה: לבדה, {req}; {jt}.")
+        nb = [L for L in levers if L["status"] == "nonbinding"]
+        if nb and not binding:
+            sh = next((L for L in nb if L.get("why") == "share" and L["k"] != "csm"), None)
+            if sh:
+                S.append(f"מנופי החיסכון אינם מכריעים: {sh['reason']}.")
             else:
-                bt = {"aum": f"צמיחת נכסים של {nf(a['bound'], 0)}% בשנה בפנסיה ובגמל", "fee": f"תשואת דמי ניהול של {pc(a['bound'], 1)}", "ci": "יחס עלות להכנסה של 0%",
-                      "csm": f"שחרור CSM של {nf(a['bound'], 0)}% בשנה"}[a["k"]]
-                S.append(f"אף מנוף בודד לא מגשר על הפער: גם {bt} לא מספיקה.")
+                S.append("אף מנוף בודד אינו מכריע: " + "; ".join(f"{L['he']}: {L['reason']}" for L in nb) + ".")
         return " ".join(S)
 
     def lever_text(self, L, alone=False):
@@ -841,8 +899,9 @@ def build():
             row["why"] = c["why"]
         else:
             row.update({"pb": c["base"]["pb"]["v"], "gap": c["base"]["gap"]["v"], "max": c["rank"]["max"], "key": c["rank"]["key"], "verdict": c["verdict"],
-                        "parts": [{"k": L["k"], "he": L["he"], "unit": L["unit"], "status": L["status"], "req": L["req"]["v"] if L.get("req") else None, "bound": L.get("bound"),
-                                   "trail": L["trail"]["v"], "pct": L["hist"]["pct"] if L.get("hist") else None} for L in c["levers"] + [c["roe"]]]})
+                        "parts": [dict({"k": L["k"], "he": L["he"], "unit": L["unit"], "status": L["status"], "req": L["req"]["v"] if L.get("req") else None, "bound": L.get("bound"),
+                                         "trail": L["trail"]["v"], "pct": L["hist"]["pct"] if L.get("hist") else None}, **({"reason": L["reason"]} if L.get("reason") else {}))
+                                    for L in c["levers"] + [c["roe"]]]})
             if c.get("flag"):
                 row["flag"] = c["flag"]
         idx["companies"].append(row)
@@ -920,17 +979,24 @@ def verify(files):
         base = model(m, trail_x(m))
         mm = dict(m, _base_roe=[rw["roe"] for rw in base["rows"]])
         for L in c["levers"] + [c["roe"]]:
-            if L["status"] != "ok":
+            if L["status"] == "nonbinding":
+                if not L.get("reason") or L.get("req") is not None or (L.get("hist") or {}).get("pct") is not None:
+                    bad.append(f"{name}: {L['k']} nonbinding without a reason, or still showing a requirement / percentile")
+                if any(p["k"] == L["k"] for p in c["rank"]["parts"]):
+                    bad.append(f"{name}: nonbinding {L['k']} drives the ranking")
+                if not L.get("mech"):
+                    continue
+            elif L["status"] != "ok":
                 if L.get("bound") is None:
                     bad.append(f"{name}: {L['k']} not solved and no bound")
                 continue
             x = trail_x(m)
-            x[L["k"]] = L["req"]["v"]
+            x[L["k"]] = (L["mech"] if L["status"] == "nonbinding" else L["req"])["v"]
             v = model(mm if L["k"] == "roe" else m, x)["v"]
             n_chk += 1
             err = abs(v / m["mcap"] - 1) * 100
             if err > TOL:
-                bad.append(f"{name}: {L['k']} at {L['req']['v']:.4f} gives {v:,.1f} against {m['mcap']:,.1f} ({err:.2f}%)")
+                bad.append(f"{name}: {L['k']} at {x[L['k']]:.4f} gives {v:,.1f} against {m['mcap']:,.1f} ({err:.2f}%)")
         # the trailing inputs reproduce the stored base value
         if abs(base["v"] - c["base"]["value"]["v"]) > 0.5:
             bad.append(f"{name}: base value {base['v']:.1f} ≠ stored {c['base']['value']['v']:.1f}")

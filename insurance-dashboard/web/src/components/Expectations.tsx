@@ -7,7 +7,7 @@ import { ltsProv } from '../lib/lens';
 import { fmt, fmtS, toProv, type LtsResolver, type ProvJ } from '../lib/drivers';
 import type { Prov } from '../lib/prov';
 import {
-  LEVER_NOTE, dateHe, expectationsPath, isOkE, leverText, pctText, pctTone, reqText, targetText,
+  LEVER_NOTE, NONBINDING, dateHe, expectationsPath, isOkE, leverText, pctText, pctTone, reqText, targetText,
   type ECompany, type ECompanyOk, type EFig, type ELever, type LeverKey,
 } from '../lib/expectations';
 import '../styles/expectations.css';
@@ -75,6 +75,7 @@ const ROW_LABEL: Record<LeverKey, string> = { aum: 'צמיחת נכסים', fee:
 const REQ_CAP: Record<LeverKey, string> = { aum: 'CAGR עד FY\'28', fee: 'ב-FY\'28', ci: 'ב-FY\'28', csm: 'לשנה, ב-FY\'28', roe: 'הון ממוצע' };
 
 function LeverRow({ L, c }: { L: ELever; c: ECompanyOk }) {
+  if (L.status === 'nonbinding') return <NonBindingRow L={L} c={c} />;
   const sc = onScale(L, c), h = L.hist;
   const now = L.k === 'roe' ? c.base.roe_ltm : L.trail;
   const nowCap = { aum: '5 שנים בפועל', fee: 'LTM', ci: 'LTM', csm: "FY'25", roe: `LTM ${c.base.q}` }[L.k];
@@ -109,6 +110,29 @@ function LeverRow({ L, c }: { L: ELever; c: ECompanyOk }) {
           </span>
         ) : <span className="s muted">–</span>}
       </div>
+    </div>
+  );
+}
+
+/** a lever that cannot move the price: the reason instead of the number; the mechanical solution only in its provenance sheet */
+function NonBindingRow({ L, c }: { L: ELever; c: ECompanyOk }) {
+  const nowCap = { aum: '5 שנים בפועל', fee: 'LTM', ci: 'LTM', csm: "FY'25", roe: '' }[L.k];
+  const h = L.hist;
+  return (
+    <div className="tr nb">
+      <div className="lbl"><b>{ROW_LABEL[L.k]}</b><span className="s">{c.base.savings && L.k !== 'csm' ? c.base.savings.he : 'קבוצה, נטו'}</span></div>
+      <div data-l="נדרש" className="nbv">
+        <span className="v nbt">{NONBINDING}</span>
+        <span className="s">{L.reason}</span>
+        {L.mech && <span className="s"><Sourced src={srcOf(L.mech.prov)} title="הפתרון המכני של המודל: לא ממצא, כי המנוף אינו מכריע">פתרון מכני</Sourced></span>}
+      </div>
+      <div data-l="עכשיו"><F f={L.trail} text={L.k === 'fee' ? pc(2) : pc(1)} className="v" /><span className="s">{nowCap}</span></div>
+      <div data-l="מול ההיסטוריה" className="hist">
+        {h ? <RangeBar min={h.min} med={h.med} max={h.max} now={L.k === 'fee' ? L.ref?.find((r) => r.he.startsWith('מגמת'))?.v ?? null : L.trail.v} label={`${ROW_LABEL[L.k]}: ${NONBINDING}`} /> : null}
+        {h ? histLine(L) : <span className="s muted">–</span>}
+      </div>
+      <div data-l="השוואה" className="refs">{(L.ref ?? []).filter((r) => !r.he.startsWith('5 שנים')).map((r) => <span key={r.he} className="s"><span>{r.he}:</span> <Sourced className="num" src={srcOf(r.prov)}>{r.lo != null && r.hi != null && r.lo !== r.hi ? iso(`${fmt(r.lo, 1)}%–${fmt(r.hi, 1)}%`) : r.unit?.includes('נ״ב') ? iso(fmtS(r.v, 1)) : iso(`${fmt(r.v, 1)}%`)}</Sourced>{r.unit?.includes('נ״ב') ? ' נ״ב לשנה' : ''}</span>)}{!(L.ref ?? []).some((r) => !r.he.startsWith('5 שנים')) && <span className="s muted">–</span>}</div>
+      <div data-l="יחד" className="joint"><span className="s muted">–</span></div>
     </div>
   );
 }
@@ -150,7 +174,7 @@ export function ExpectationsView({ c, head = true, note }: { c: ECompanyOk; head
         {c.gaps.length > 0 && <p className="s">{c.gaps.join(' · ')}</p>}
       </details>
       <div className="src">
-        שווי = Σ ערך נוכחי של החלוקות ב-{c.meta.periods.join(', ')} + P/B מוצדק (ROE − g) ÷ (ke − g) על ההון של {c.meta.horizon}. כל מנוף נפתר לבדו (חיפוש בינארי), השאר בערכם הנוכחי; נכסים צומחים בקצב 5 השנים. אחוזון = חלק ההיסטוריה של החברה שדורש פחות. {c.meta.price_label}. ניתוח של מה שהמכפיל מגלם, לא המלצה.{' '}
+        שווי = Σ ערך נוכחי של החלוקות ב-{c.meta.periods.join(', ')} + P/B מוצדק (ROE − g) ÷ (ke − g) על ההון של {c.meta.horizon}. כל מנוף נפתר לבדו (חיפוש בינארי), השאר בערכם הנוכחי; נכסים צומחים בקצב 5 השנים. אחוזון = חלק ההיסטוריה של החברה שדורש פחות. "לא מנוף מכריע": הפלח מתחת ל-15% מהרווח לפני מס, אין פתרון בטווח, או נדרש יותר מפי 2 מהשיא של החברה; לא נכנס לשורת המסקנה ולדירוג. {c.meta.price_label}. ניתוח של מה שהמכפיל מגלם, לא המלצה.{' '}
         <Link to="/expectations">כל החברות</Link>
       </div>
     </div>

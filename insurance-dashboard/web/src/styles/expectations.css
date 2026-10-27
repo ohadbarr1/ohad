@@ -110,3 +110,7 @@
   .exp-rank > li > .vd { order: 4; }
 }
 .exp-own { margin: 0; font-size: 12px; color: var(--muted); }
+.exp-t .nbt, .exp-rank .nbt { font-size: 13px; font-weight: 700; color: var(--muted); white-space: normal; }
+.exp-t > .tr.nb > div { background: color-mix(in oklch, var(--panel2) 45%, transparent); }
+.exp-t .nbv a, .exp-t .nbv button { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .exp-t > .tr.nb > div { background: transparent; } }

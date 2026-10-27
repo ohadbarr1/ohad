@@ -10709,7 +10709,8 @@
      "enum": [
       "ok",
       "beyond",
-      "below"
+      "below",
+      "nonbinding"
      ]
     },
     "trail": {
@@ -10800,6 +10801,33 @@
        "np"
       ]
      }
+    },
+    "solved": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "beyond",
+      "below"
+     ]
+    },
+    "reason": {
+     "type": "string"
+    },
+    "why": {
+     "type": "string",
+     "enum": [
+      "share",
+      "range"
+     ]
+    },
+    "share": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "mech": {
+     "$ref": "#/$defs/expectFig"
     }
    }
   },
@@ -11306,7 +11334,8 @@
            "enum": [
             "ok",
             "beyond",
-            "below"
+            "below",
+            "nonbinding"
            ]
           },
           "req": {
@@ -11332,6 +11361,9 @@
             "number",
             "null"
            ]
+          },
+          "reason": {
+           "type": "string"
           }
          }
         }

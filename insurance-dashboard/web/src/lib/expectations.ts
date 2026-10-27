@@ -9,7 +9,9 @@ export interface EHist { what: string; n: number; min: number; med: number; max:
 export interface ERef { he: string; v: number; prov: ProvJ; unit?: string; lo?: number; hi?: number; aum_lo?: number; aum_hi?: number; aum_now?: number }
 export interface EJoint { he: string; k: number; n: number; first: string | null; last: string | null; when: string[] }
 export interface ELever {
-  k: LeverKey; he: string; unit: string; status: 'ok' | 'beyond' | 'below';
+  /** nonbinding: the lever cannot move the price (segment under 15% of pre-tax profit, no solution in range, or more than 2× the
+      company's own historical maximum); `mech` keeps the mechanical solution for the provenance sheet only */
+  k: LeverKey; he: string; unit: string; status: 'ok' | 'beyond' | 'below' | 'nonbinding'; solved?: 'ok' | 'beyond' | 'below'; reason?: string; why?: 'share' | 'range'; share?: number | null; mech?: EFig;
   trail: EFig; req: EFig | null; bound?: number; roe28?: number; req_d?: number; check?: { value: number; err: number };
   hist: EHist | null; ref?: ERef[]; joint?: EJoint | null; path?: { p: string; roe: number; np: number }[];
 }
@@ -28,7 +30,8 @@ export interface ECompanyOk {
 }
 export interface ECompanyNa { id: string; name: string; kind: string; status: 'na'; why: string; meta: EMeta }
 export type ECompany = ECompanyOk | ECompanyNa;
-export interface EPart { k: LeverKey; he: string; unit: string; status: 'ok' | 'beyond' | 'below'; req: number | null; bound: number | null; trail: number; pct: number | null }
+export interface EPart { k: LeverKey; he: string; unit: string; status: 'ok' | 'beyond' | 'below' | 'nonbinding'; req: number | null; bound: number | null; trail: number; pct: number | null; reason?: string }
+export const NONBINDING = 'לא מנוף מכריע';
 export interface EIndexRow { id: string; name: string; kind: string; status: 'ok' | 'na'; rank?: number; pb?: number; gap?: number; max?: number | null; key?: number[]; verdict?: string; parts?: EPart[]; why?: string; flag?: string }
 export interface EIndex { meta: EMeta; companies: EIndexRow[] }
 
@@ -57,6 +60,7 @@ export function leverText(k: LeverKey, v: number | null | undefined): string {
 /** the requirement, or what the bound says when the solver could not reach it */
 export function reqText(L: Pick<ELever, 'k' | 'status' | 'req' | 'bound'> | EPart): string {
   const v = 'req' in L && L.req && typeof L.req === 'object' ? L.req.v : (L as EPart).req;
+  if (L.status === 'nonbinding') return NONBINDING;
   if (L.status === 'ok') return leverText(L.k, v as number);
   if (L.bound == null) return '–';
   if (L.k === 'ci') return L.status === 'beyond' ? 'גם 0% לא מספיק' : `גם ${fmt(L.bound, 0)}% מספיק`;
