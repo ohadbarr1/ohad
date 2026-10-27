@@ -1,5 +1,5 @@
 {
- "built": "2026-10-25T14:25:49+02:00",
+ "built": "2026-10-27T19:12:36+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -149,9 +149,17 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 1709,
+   "n": 2013,
    "fail": 0,
-   "note": "1709 files under contract, 0 failing; 45 contracts; 551 files without a contract"
+   "note": "2013 files under contract, 0 failing; 48 contracts; 551 files without a contract"
+  },
+  {
+   "id": "cards",
+   "ok": true,
+   "level": "fail",
+   "n": 7242,
+   "fail": 0,
+   "note": "302 report cards, every digit a published fact"
   },
   {
    "id": "facts",
@@ -279,7 +287,23 @@
    "level": "warn",
    "n": 223,
    "fail": 0,
-   "note": "223 source URLs checked 2026-10-25 (0 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+   "note": "223 source URLs checked 2026-10-25 (2 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+  },
+  {
+   "id": "stress",
+   "ok": true,
+   "level": "fail",
+   "n": 317,
+   "fail": 0,
+   "note": "244 IFRS 17 rows and 73 solvency rows reproduced at their disclosed size (4 IFRS 17 rows with no stated direction, 2 solvency rows on risks with no slider) ; 402 passed, 0 failed"
+  },
+  {
+   "id": "credibility",
+   "ok": true,
+   "level": "fail",
+   "n": 6,
+   "fail": 0,
+   "note": "6 scored targets (met 5, partial 1, missed 0), 23 not comparable with a reason; target page + actual page on every scored row"
   }
  ]
 }
