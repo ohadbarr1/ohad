@@ -7,7 +7,7 @@
      type Shock        { policy, y10, eq, credit, cpi, flow, fee, cost, mortality?, morbidity?, lapse? }
                        policy, y10, credit: basis points; eq, cost, mortality, morbidity, lapse: % change; cpi: percentage points of
                        inflation over the year; flow: extra net flow, % of each product's assets a year; fee: fee compression on
-                       assets in bp (positive = lower fees)
+                       assets in bp (positive = lower fees); by?: per product { fee?, flow? } in place of fee / flow (added for A2)
      NO_SHOCK          the zero vector
      propagate(file, shock, opts?) -> Propagated
                        opts: { extrapolate?: 'clamp' | 'linear' (default 'clamp', the stress lab's rule), tax?: %, g?: % }
@@ -38,6 +38,8 @@ export interface Shock {
   /** credit spreads, bp */ credit: number; /** CPI, pp over the year */ cpi: number; /** extra net flow, % of assets a year */ flow: number;
   /** fee compression on assets, bp (+ = lower fees) */ fee: number; /** cost inflation beyond CPI, % */ cost: number;
   mortality?: number; morbidity?: number; lapse?: number;
+  /** per product, in place of `fee` / `flow` (A2: the fee cap differs for pension and provident funds, flows are each company's own) */
+  by?: Partial<Record<'pen' | 'gem' | 'ic', { fee?: number; flow?: number }>>;
 }
 export const NO_SHOCK: Shock = { policy: 0, y10: 0, eq: 0, credit: 0, cpi: 0, flow: 0, fee: 0, cost: 0, mortality: 0, morbidity: 0, lapse: 0 };
 export const SHOCK_KEYS = ['policy', 'y10', 'eq', 'credit', 'cpi', 'flow', 'fee', 'cost', 'mortality', 'morbidity', 'lapse'] as const;
@@ -110,9 +112,10 @@ const per = (e: Edge & { v: number }) => e.v / (e.x || 1);
 
 /* ---------- formats (plain, so the library has no DOM or locale dependency beyond Intl) ---------- */
 const MINUS = '−';
+const NF: Intl.NumberFormat[] = [];   // one formatter per decimal count: toLocaleString builds one per call (A2 calls this 17 × per frame)
 export const fmt = (v: number | null | undefined, d = 1) => {
   if (v == null || !Number.isFinite(v)) return '–';
-  const t = v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const t = (NF[d] ??= new Intl.NumberFormat('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })).format(v);
   return /^-[0.,]+$/.test(t) ? t.slice(1) : t.replace('-', MINUS);
 };
 export const fmtS = (v: number | null | undefined, d = 1) => (v != null && Number(v.toFixed(d)) > 0 ? '+' : '') + fmt(v, d);
@@ -167,7 +170,10 @@ export function propagate(f: DriverFile, s0: Partial<Shock>, opts: PropOpts = {}
   const P = (j: ProvJ) => () => toProv(j, lts);
   const N = f.nodes, flags: string[] = [], parts: PartOut[] = [];
   const active = SHOCK_KEYS.filter((k) => (s[k] ?? 0) !== 0);
-  const shockTxt = active.map((k) => shockLabel(k, s[k]!)).join(' · ') || 'ללא זעזוע';
+  const BY_HE = { pen: 'פנסיה', gem: 'גמל', ic: 'פוליסות חיסכון' } as const;
+  const byTxt = (Object.entries(s.by ?? {}) as [keyof typeof BY_HE, { fee?: number; flow?: number } | undefined][]).flatMap(([k, b]) => [
+    b?.fee ? `שחיקת דמי ניהול, ${BY_HE[k]} ${fmtS(b.fee, Math.abs(b.fee) % 1 ? 1 : 0)} נ״ב` : '', b?.flow ? `צבירה נטו, ${BY_HE[k]} ${fmtS(b.flow, 2)}% מהנכסים` : '']).filter(Boolean);
+  const shockTxt = [...active.map((k) => shockLabel(k, s[k]!)), ...byTxt].join(' · ') || 'ללא זעזוע';
   const add = (id: string, he: string, d: number, unit: string, to: string, extra?: boolean) => { if (d) parts.push({ id, he, d, unit, to, extra }); };
 
   /* --- savings products --- */
@@ -177,13 +183,14 @@ export function propagate(f: DriverFile, s0: Partial<Shock>, opts: PropOpts = {}
   for (const p of f.products) {
     const A = p.avg.v, fy = p.fy?.v ?? null;
     if (A == null) continue;
+    const fee = s.by?.[p.s]?.fee ?? s.fee, flow = s.by?.[p.s]?.flow ?? s.flow;
     const bEq = pEdge(p, 'eq.aum'), bY = pEdge(p, 'y10.aum');
-    let dPct = s.flow;
+    let dPct = flow;
     if (s.eq) { if (usable(bEq)) dPct += per(bEq) * s.eq; else flags.push(`${p.he}: אין β למניות (${bEq?.why ?? 'חסר'}); הנכסים לא זזו עם המניות`); }
     if (s.y10) { if (usable(bY)) dPct += per(bY) * s.y10; else flags.push(`${p.he}: אין רגישות של הנכסים לתשואה (${bY?.why ?? 'חסר'})`); }
     const dA = A * dPct / 100;
-    if (fy == null) { if (dA || s.fee) flags.push(`${p.he}: אין תשואת דמי ניהול; ההכנסות לא חושבו`); continue; }
-    const dRev = (A + dA) * (fy - s.fee / 100) / 100 - A * fy / 100;
+    if (fy == null) { if (dA || fee) flags.push(`${p.he}: אין תשואת דמי ניהול; ההכנסות לא חושבו`); continue; }
+    const dRev = (A + dA) * (fy - fee / 100) / 100 - A * fy / 100;
     const vc = pEdge(p, 'aum.opex');
     const dVar = usable(vc) ? per(vc) * dA / 1000 : 0;
     if (dA && !usable(vc) && p.s !== 'ic') flags.push(`${p.he}: אין אומדן לרכיב ההוצאה המשתנה; ההוצאות לא זזו עם הנכסים`);
@@ -199,7 +206,7 @@ export function propagate(f: DriverFile, s0: Partial<Shock>, opts: PropOpts = {}
     if (usable(vc) && dA) pin.push({ label: `הוצאה משתנה לכל מיליארד ש״ח (${vc.quality})`, v: fmt(vc.v, 2), src: P(vc.prov) });
     if (opex != null && (s.cpi || s.cost)) pin.push({ label: 'הוצאות LTM (הצמדה מלאה, הנחה)', v: fmt(opex), src: P(p.opex_ltm!.prov) });
     const pProv: Prov = { k: 'calc', title: `${p.he} · ${shockTxt}`, value: `${fmtS(dOp)} ${MM}`, unit: 'לשנה', est: true,
-      formula: `ΔAUM = AUM × (${fmt(dPct, 3)}%) = ${fmt(dA)}; Δהכנסות = (AUM + ΔAUM) × (fy − ${fmt(s.fee / 100, 3)}%) − AUM × fy = ${fmtS(dRev)}; Δהוצאות = ${fmtS(dVar + dInf)}; Δרווח תפעולי = ${fmtS(dOp)}`,
+      formula: `ΔAUM = AUM × (${fmt(dPct, 3)}%) = ${fmt(dA)}; Δהכנסות = (AUM + ΔAUM) × (fy − ${fmt(fee / 100, 3)}%) − AUM × fy = ${fmtS(dRev)}; Δהוצאות = ${fmtS(dVar + dInf)}; Δרווח תפעולי = ${fmtS(dOp)}`,
       inputs: pin };
     if (p.s === 'ic') {
       if (dRev) flags.push(`${p.he}: Δהכנסות ${fmtS(dRev)} נכנס לרווח הנקי בלבד (אין רווח תפעולי מגזרי מודפס)`);
@@ -298,7 +305,7 @@ export function propagate(f: DriverFile, s0: Partial<Shock>, opts: PropOpts = {}
   if (stale && dW) solvFl.push(`הגילוי האחרון ליום ${SL!.d}: ישן מ-36 חודשים לפני יחס הבסיס (איכות נמוכה)`);
   if (extraW) solvFl.push('זעזוע מחוץ לטווח שגולה');
   if (SL?.b.includes('na') && dW) solvFl.push('בסיס הגילוי לא צוין: מוחל על היחס עם הוראות מעבר');
-  if (s.policy || s.credit || s.fee || s.flow || s.cpi || s.cost) solvFl.push('דמי ניהול, צבירה, מדד ואשראי אינם מגולגלים ליחס (אין גילוי)');
+  if (s.policy || s.credit || s.fee || s.flow || s.cpi || s.cost || Object.values(s.by ?? {}).some((b) => b?.fee || b?.flow)) solvFl.push('דמי ניהול, צבירה, מדד ואשראי אינם מגולגלים ליחס (אין גילוי)');
   out.solv_w = mk('solv_w', sw, ins && sw != null ? dW : null, calc('יחס כושר פירעון, עם הוראות מעבר', sw != null ? sw + dW : null, '%', 'היחס ליום הבסיס + Σ ההשפעות שגולו (נקודות אחוז), ללא פיזור', wIn), solvFl);
   // without the transitional measures: a disclosure on that basis, else the same relative move (an assumption, labelled)
   let dWo: number | null = null; const woFl: string[] = [];

@@ -15,6 +15,8 @@ export const ROUTES: [string, string][] = [
   ['search', '/search?q=%D7%A8%D7%9B%D7%99%D7%91%20%D7%94%D7%A4%D7%A1%D7%93'],
   ['data', '/data'],
   ['positions', '/positions'],
+  ['scenarios', '/scenarios'],
+  ['scenarios-preset', '/scenarios?e=-25&cr=150'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

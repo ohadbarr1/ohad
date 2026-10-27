@@ -47,7 +47,7 @@ test('company page survives reloads and place switches in WebKit', async ({ page
    under an always-true condition (same sheet, same index: the real cascade and specificity) and fails on any element that is still
    sticky on the inline axis inside an RTL overflow-x scroller. */
 const STICKY_ROUTES = ['/', '/company/phoenix/financials', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?pin=0', '/industry/csm', '/industry/csm?view=sens',
-  '/industry/csm?view=econ', '/industry/csm?view=curve', '/ownership', '/holdings', '/presentations', '/restatements', '/funds', '/managers', '/data'];
+  '/industry/csm?view=econ', '/industry/csm?view=curve', '/ownership', '/holdings', '/presentations', '/restatements', '/funds', '/managers', '/data', '/scenarios?e=-25&cr=150'];
 
 test('sticky columns in RTL scrollers are all covered by the iOS override', async ({ page }) => {
   test.setTimeout(240_000);
@@ -87,4 +87,33 @@ test('sticky columns in RTL scrollers are all covered by the iOS override', asyn
     }
   }
   expect([...bad], 'sticky columns without the iOS override (add their selector to the @supports (-webkit-touch-callout: none) block at the end of styles.css)').toEqual([]);
+});
+
+/* A2 · /scenarios on the owner's engine: the page survives reloads, a preset and a slider reprice the ranking, the sliders open in a
+   sheet on the phone, and nothing scrolls sideways. */
+test('scenario studio reprices in WebKit without sideways scroll', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await open(page, '/scenarios', 'phoenix');
+  for (let i = 0; i < 2; i++) { await page.reload(); await settle(page); }
+  await expect(boundary(page)).toHaveCount(0);
+  const first = async () => (await page.locator('.scn-r .who a').first().textContent()) ?? '';
+  await page.getByRole('button', { name: 'מפולת מניות' }).click();
+  await expect(page).toHaveURL(/e=-25/);
+  const a = await first();
+  await page.getByRole('button', { name: 'תקרת דמי ניהול' }).click();
+  await expect(page).toHaveURL(/fg=10/);
+  expect(await page.locator('.scn-r').count()).toBeGreaterThan(5);
+  // the sliders live in a sheet on the phone
+  await page.locator('.ctxbar-in').click();
+  const sheet = page.getByRole('dialog', { name: 'מחוונים' });
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('slider', { name: /^מניות/ }).fill('-40');
+  await page.keyboard.press('Escape');
+  await expect(page).toHaveURL(/e=-40/);
+  expect(a.length).toBeGreaterThan(0);
+  const sideways = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  expect(sideways, 'page scrolls sideways').toBeLessThanOrEqual(1);
+  await expect(boundary(page)).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

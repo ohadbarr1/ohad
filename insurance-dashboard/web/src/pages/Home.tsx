@@ -20,7 +20,7 @@ import '../styles/home.css';
 
 const KIND: Record<string, string> = { insurance_group: 'ביטוח', fund_house: 'בית השקעות' };
 /** where an analyst goes next from the season desk (docs/HOME.md §5) */
-const JUMP: [string, string][] = [['/industry/peers', 'טבלת עמיתים'], ['/industry/csm', 'IFRS 17 · CSM'], ['/savings', 'עדשת חיסכון'], ['/valuation', 'הערכת שווי'], ['/restatements', 'הצגות מחדש'], ['/calendar', 'לוח דיווחים']];
+const JUMP: [string, string][] = [['/scenarios', 'חדר תרחישים'], ['/industry/peers', 'טבלת עמיתים'], ['/industry/csm', 'IFRS 17 · CSM'], ['/savings', 'עדשת חיסכון'], ['/valuation', 'הערכת שווי'], ['/restatements', 'הצגות מחדש'], ['/calendar', 'לוח דיווחים']];
 type View = 'fin' | 'mkt';
 type Kind = 'all' | 'insurance_group' | 'fund_house';
 
