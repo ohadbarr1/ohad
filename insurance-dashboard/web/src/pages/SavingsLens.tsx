@@ -20,8 +20,9 @@ import '../styles/prov-market.css';
 
 const LensMarket = lazy(async () => ({ default: (await import('./SavingsLensMarket')).LensMarket }));
 const IndustryEcon = lazy(async () => ({ default: (await import('./IndustryEcon')).IndustryEcon }));
+const LensNpv = lazy(async () => ({ default: (await import('./SavingsLensNpv')).LensNpv }));  // M3: value of the flows
 
-type View = 'lens' | 'now' | 'rank' | 'market' | 'econ';
+type View = 'lens' | 'now' | 'rank' | 'market' | 'econ' | 'npv';
 const OTHERS = 'קרנות ענפיות ואחרות';
 const short = (g: string) => g.replace('מנורה מבטחים', 'מנורה').replace('אלטשולר שחם', 'אלטשולר').replace('ילין לפידות', 'ילין').replace('ביטוח ישיר', 'ישיר').replace(OTHERS, 'ענפיות');
 const tone = (v: number | null | undefined) => (v == null ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : '');
@@ -51,12 +52,12 @@ export function SavingsLens() {
 function Lens({ d }: { d: LensData }) {
   const [sp, setSp] = useSearchParams();
   const src = useMemo(() => new LensSrc(d), [d]);
-  const view = (['lens', 'now', 'rank', 'market', 'econ'] as View[]).find((v) => v === sp.get('v')) ?? 'lens';
+  const view = (['lens', 'now', 'rank', 'market', 'econ', 'npv'] as View[]).find((v) => v === sp.get('v')) ?? 'lens';
   const seg = (SEGS.map(([k]) => k).find((k) => k === sp.get('s')) ?? 'pen') as Seg;
   const q = d.quarters.includes(sp.get('q') ?? '') ? sp.get('q')! : d.meta.last_rep;
   const g = d.groups.findIndex((x) => x.name === sp.get('g'));
   const set = (patch: Record<string, string>) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k))); setSp(n, { replace: true }); };
-  const views: [View, string][] = [['lens', 'עדשה'], ['now', `אומדן ${ql(d.nowcast.q)}`], ['market', 'נכסים ותזרימים'], ['econ', 'רווחיות מהדוחות']];
+  const views: [View, string][] = [['lens', 'עדשה'], ['now', `אומדן ${ql(d.nowcast.q)}`], ['market', 'נכסים ותזרימים'], ['econ', 'רווחיות מהדוחות'], ['npv', 'ערך הניוד']];
   // the managers' ranking over time has one home, the managers page; an old ?v=rank link lands there with its settings
   if (view === 'rank') { const n = new URLSearchParams(sp); n.set('v', 'rank'); n.delete('q'); return <Navigate to={`/managers?${n}`} replace />; }
   return (
@@ -66,6 +67,7 @@ function Lens({ d }: { d: LensData }) {
       {view === 'lens' && <LensView d={d} src={src} seg={seg} q={q} g={g} set={set} />}
       {view === 'now' && <NowView d={d} src={src} seg={seg} set={set} />}
       {(view === 'market' || view === 'econ') && <Suspense fallback={<Loading what="התצוגה" />}>{view === 'market' ? <LensMarket /> : <IndustryEcon />}</Suspense>}
+      {view === 'npv' && <Suspense fallback={<Loading what="התצוגה" />}><LensNpv /></Suspense>}
       {g >= 0 && view === 'now' && <Drill d={d} src={src} g={g} seg={seg} onClose={() => set({ g: '' })} />}
     </>
   );

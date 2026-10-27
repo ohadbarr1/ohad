@@ -208,6 +208,10 @@
   {
    "pattern": "feed.json",
    "schema": "feed"
+  },
+  {
+   "pattern": "flow_npv.json",
+   "schema": "flowNpv"
   }
  ],
  "$defs": {
@@ -6538,6 +6542,276 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/feedEvent"
+     }
+    }
+   }
+  },
+  "flowNpv": {
+   "type": "object",
+   "required": [
+    "meta",
+    "segs",
+    "groups",
+    "periods",
+    "dur",
+    "rows"
+   ],
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "generated",
+      "asof",
+      "last_rep",
+      "ltm",
+      "formula",
+      "ke"
+     ],
+     "properties": {
+      "generated": {
+       "$ref": "#/$defs/date"
+      },
+      "asof": {
+       "$ref": "#/$defs/month"
+      },
+      "last_rep": {
+       "type": "string",
+       "pattern": "^Q[1-4]-\\d{4}$"
+      },
+      "ltm": {
+       "type": "string",
+       "pattern": "^LTM-Q[1-4]-\\d{4}$"
+      },
+      "formula": {
+       "type": "string"
+      },
+      "ke": {
+       "type": "object",
+       "required": [
+        "v",
+        "rf",
+        "rf_month",
+        "beta",
+        "erp"
+       ],
+       "properties": {
+        "v": {
+         "type": "number"
+        },
+        "rf": {
+         "type": "number"
+        },
+        "rf_month": {
+         "type": "string"
+        },
+        "beta": {
+         "type": "number"
+        },
+        "erp": {
+         "type": "number"
+        },
+        "rf_url": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "segs": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "groups": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string"
+     }
+    },
+    "periods": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string",
+      "pattern": "^(LTM-)?Q[1-4]-\\d{4}$"
+     }
+    },
+    "dur": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "v",
+       "avg",
+       "wd",
+       "out",
+       "n",
+       "q",
+       "months",
+       "groups"
+      ],
+      "properties": {
+       "v": {
+        "type": "number"
+       },
+       "avg": {
+        "type": "number"
+       },
+       "wd": {
+        "type": "number"
+       },
+       "out": {
+        "type": "number"
+       },
+       "n": {
+        "type": "integer"
+       },
+       "q": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "months": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/month"
+        }
+       },
+       "groups": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "g",
+          "c",
+          "avg",
+          "wdm",
+          "tro",
+          "d"
+         ],
+         "properties": {
+          "g": {
+           "type": "integer"
+          },
+          "c": {
+           "type": "string"
+          },
+          "avg": {
+           "$ref": "#/$defs/nums"
+          },
+          "wdm": {
+           "$ref": "#/$defs/nums"
+          },
+          "tro": {
+           "$ref": "#/$defs/nums"
+          },
+          "d": {
+           "$ref": "#/$defs/num"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "rows": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "g",
+       "s",
+       "p",
+       "qs",
+       "fy",
+       "ci",
+       "m",
+       "tr",
+       "org",
+       "npv_tr",
+       "npv_org"
+      ],
+      "properties": {
+       "g": {
+        "type": "integer"
+       },
+       "s": {
+        "type": "string",
+        "enum": [
+         "pen",
+         "gem"
+        ]
+       },
+       "p": {
+        "type": "string",
+        "pattern": "^(LTM-)?Q[1-4]-\\d{4}$"
+       },
+       "c": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "qs": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "type": "string"
+        }
+       },
+       "fees": {
+        "$ref": "#/$defs/num"
+       },
+       "sm": {
+        "$ref": "#/$defs/num"
+       },
+       "ga": {
+        "$ref": "#/$defs/num"
+       },
+       "avg": {
+        "$ref": "#/$defs/num"
+       },
+       "fy": {
+        "$ref": "#/$defs/num"
+       },
+       "ci": {
+        "$ref": "#/$defs/num"
+       },
+       "m": {
+        "$ref": "#/$defs/num"
+       },
+       "tr": {
+        "$ref": "#/$defs/num"
+       },
+       "org": {
+        "$ref": "#/$defs/num"
+       },
+       "npv_tr": {
+        "$ref": "#/$defs/num"
+       },
+       "npv_org": {
+        "$ref": "#/$defs/num"
+       },
+       "rk_tr": {
+        "type": "integer"
+       },
+       "rk_org": {
+        "type": "integer"
+       },
+       "n_tr": {
+        "type": "integer"
+       },
+       "n_org": {
+        "type": "integer"
+       },
+       "mark": {
+        "type": "string"
+       }
+      }
      }
     }
    }
