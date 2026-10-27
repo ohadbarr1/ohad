@@ -107,7 +107,7 @@ function BoltLine({ c, R, rk }: { c: CapOk; R: Rows; rk: ReactNode }) {
   return (
     <div className="tr">
       <div className="lbl">{rk}{OPT_HE.bolt}</div>
-      <div data-l="מחיר, מ׳ ש״ח">{S(c, b.cap, amt(b.cap.v))}<span className="s"><Link to={`/consolidation/${a}/${t}`}>{b.tgt_name}</Link> · פרמיה <span className="num">{fmt(b.premium, 0)}%</span> · דירוג A9 <span className="num">{b.rank_a9}</span>{R.override && <> · במרווח ברירת המחדל</>}</span></div>
+      <div data-l="מחיר, מ׳ ש״ח">{S(c, b.cap, amt(b.cap.v))}<span className="s"><Link className="cap-bolt" to={`/consolidation/${a}/${t}`}>{b.tgt_name}</Link> · פרמיה <span className="num">{fmt(b.premium, 0)}%</span> · דירוג A9 <span className="num">{b.rank_a9}</span>{R.override && <> · במרווח ברירת המחדל</>}</span></div>
       <div data-l="ROIC">{S(c, b.roic, `${fmt(b.roic.v, 1)}%`)}<span className="s">רווח היעד וסינרגיה נטו ÷ מחיר <Est t="סינרגיה בקצב מלא אחרי שיעור מימוש; שווי מוצדק, לא מחיר שוק" /></span></div>
       <div data-l="עלות כושר פירעון">{b.solv ? S(c, b.solv, `${sign(b.solv.v)} נ״א`) : <span className="na">–</span>}<span className="s">{b.solv_gw ? <>רישום בחברת הביטוח: {S(c, b.solv_gw, `${sign(b.solv_gw.v)} נ״א`, 'num')}</> : 'מזומן מהעודף ÷ SCR'}</span></div>
       <div data-l="השפעה" className="acc">{S(c, b.eps, <>רווח למניה {signP(b.eps.v)}</>)}<span className="s"><bdi>ROE</bdi> {S(c, b.roe, `${sign(b.roe.v, 2)} נ״א`, 'num')} · ערך נוכחי של הסינרגיה {S(c, b.npv, amt(b.npv.v), 'num')}</span></div>
