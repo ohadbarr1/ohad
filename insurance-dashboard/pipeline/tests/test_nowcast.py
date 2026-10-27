@@ -54,14 +54,16 @@ class Nowcast(unittest.TestCase):
         self.assertTrue(all("s2" in x and x["s2"].get("e_rev") is not None for x in bt))
         self.assertTrue(all(x.get("rev_s1s2") is not None for x in bt))
 
-    def test_phoenix_abstains(self):
-        self.assertTrue(B.ABSTAIN_PHOENIX)
-        self.assertNotIn("phoenix", B.COVER)
+    def test_phoenix_policy(self):
+        """the flag decides: off (owner, 27.10.26) = phoenix covered like any manager; on = nothing about phoenix computed or stored"""
         d = json.loads(B.OUT.read_text(encoding="utf-8"))
-        self.assertTrue(B.no_phoenix({k: v for k, v in d.items() if k != "abstain"}))
-        self.assertEqual(d["abstain"].get("phoenix"), B.ABSTAIN_TEXT)
-        for f in B.LEDGER.glob("*/stage*.json"):
-            self.assertTrue(B.no_phoenix(json.loads(f.read_text(encoding="utf-8"))), f)
+        if B.ABSTAIN_PHOENIX:
+            self.assertNotIn("phoenix", B.COVER)
+            self.assertTrue(B.no_phoenix({k: v for k, v in d.items() if k != "abstain"}))
+            self.assertEqual(d["abstain"].get("phoenix"), B.ABSTAIN_TEXT)
+        else:
+            self.assertIn("phoenix", B.COVER)
+            self.assertEqual(d["abstain"], {})
 
     def test_ledger_hash(self):
         for f in B.LEDGER.glob("*/stage*.json"):
