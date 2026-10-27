@@ -22,12 +22,16 @@ source of both. Event types (`t`):
   fee      a track's average management fee moving by 0.05 points or more month on month (funds/<k>.json), on tracks of NIS 1bn
            or more; months where the regulator's fee series breaks for the product (market.json `breaks`) are skipped
   est      estimate revision / estimate vs actual: a typed, empty slot (module M1 fills it); no event is emitted
+  pos      the position book (module A6, positions.json, built by pipeline/build_positions.py): a published position opened, revised
+           or closed (the ledger date), evidence drift (a trigger's first crossing since opening: that report's publication day),
+           a falsifier met (a suggestion; the author closes), a review due (a print after the last revision). `pk` names which.
 
-Event: {id, t, d, dk, c, per, h, src, rows?, refs?, to}
+Event: {id, t, d, dk, c, per, h, src, rows?, refs?, to, pk?}
   d    ISO date of the event; dk says what the date is: pub (the document's publication day on MAYA), fetched (the day fox received
        the regulator's file: the latest month only), month (the last day of the data month: the regulator's release day of older
        months is not recorded anywhere in the pipeline)
   src  the event's document: {k: doc, rid, pg?} (a MAYA filing in `docs`) · {k: reg, ym} (the regulator's month) · {k: fund, ds, id, ym}
+       · {k: pos, pid, rev} (a revision of a published position, positions.json)
   rows [{l, ab?, a, b?, d?, dp?, rng?, note?}]: a figure is {v, u, s}; u: m (NIS m) · bn (NIS bn) · pct (%) · pp (points) · dm (NIS m,
        signed) · dbn (NIS bn, signed) · dpct (%, signed) · n (count); s is its source:
          {k: pg, rid, pg, der?}                                        printed on a page of a filing in `docs` (der 1: a flow differenced
@@ -36,6 +40,8 @@ Event: {id, t, d, dk, c, per, h, src, rows?, refs?, to}
          {k: fund, ds, id, ym, col}                                    one track's published figure
          {k: calc, fx, in: [{l, v, u, s}]}                             computed here from the listed inputs
          {k: count, fx}                                                a count over a published file
+         {k: pos, pid, m, per}                                         a value of a position's metric (positions.json `metrics`, each
+                                                                       value with the cells it is made of)
 """
 import collections
 import datetime as dt
@@ -64,6 +70,7 @@ TK = {"pensia": "p", "gemel": "g", "insurance": "i"}
 TYPES = {
     "filing": "דוח כספי חדש", "restate": "הצגה מחדש", "regmonth": "חודש נתוני רשות", "flow": "מעבר בצבירה נטו",
     "target": "יעד הנהלה הוכרע", "solv": "יחס כושר פירעון", "fee": "שינוי בדמי ניהול", "est": "עדכון אומדן / אומדן מול בפועל",
+    "pos": "ספר העמדות",
 }
 
 
@@ -597,6 +604,16 @@ def solvency(docs, cos):
     return out
 
 
+# ---------------------------------------------------------------------------------------------------------------- positions
+def positions():
+    """module A6: the events build_positions.py shaped for this feed (published positions only; a drafts build is never merged)"""
+    p = DATA / "positions.json"
+    if not p.exists():
+        return []
+    P = load("positions.json")
+    return [] if P.get("drafts") else list(P.get("events") or [])
+
+
 # ---------------------------------------------------------------------------------------------------------------- main
 def main():
     reg_co = load("companies/index.json")
@@ -617,6 +634,7 @@ def main():
     ev += fees(reg, slug)
     ev += targets(docs, cos)
     ev += solvency(docs, cos)
+    ev += positions()
     order = {t: i for i, t in enumerate(TYPES)}
     ev.sort(key=lambda e: (e["d"], -order[e["t"]], e["id"]), reverse=True)
     counts = collections.Counter(e["t"] for e in ev)

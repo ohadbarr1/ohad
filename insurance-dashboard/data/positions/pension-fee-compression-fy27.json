@@ -1,0 +1,52 @@
+{
+ "status": "draft",
+ "id": "pension-fee-compression-fy27",
+ "claim": "תשואת דמי הניהול בקרנות הפנסיה של חמש המבטחות תמשיך לרדת: החציון (על נכסים מדווחים, שנתי) יהיה 0.255% או פחות ב-Q4'27, לעומת 0.270% ב-Q2'26.",
+ "horizon": "2028-03-31",
+ "confidence": "medium",
+ "direction": "cautious",
+ "company": "industry",
+ "evidence": [
+  {
+   "ref": "lens:median(harel,migdal,clal,menora,phoenix):pen:fy_rep",
+   "note": "החציון ירד מ-0.307% ב-Q2'24 ל-0.294% ב-Q2'25 ול-0.270% ב-Q2'26"
+  },
+  {
+   "ref": "/savings?v=rank&s=pen&by=fy",
+   "note": "דירוג תשואת דמי הניהול בפנסיה לפי קבוצה, לפי רבעון"
+  },
+  {
+   "ref": "lens:migdal:pen:fy_rep",
+   "note": "מגדל: 0.294% ב-Q2'25, 0.265% ב-Q2'26"
+  },
+  {
+   "ref": "lens:clal:pen:fy_rep",
+   "note": "כלל: 0.278% ב-Q2'25, 0.254% ב-Q2'26"
+  }
+ ],
+ "mechanism": "תחרות על עמיתים חדשים ומכרזי קרנות ברירת מחדל מורידות את דמי הניהול מהפקדות ומצבירה, ותמהיל הנכסים נע לעמיתים גדולים בדמי ניהול נמוכים.",
+ "mechanism_edge": null,
+ "falsifiers": [
+  {
+   "metric": "lens:median(harel,migdal,clal,menora,phoenix):pen:fy_rep",
+   "op": ">",
+   "value": 0.255,
+   "period": "Q4'27",
+   "note": "החציון ב-Q4'27 מעל 0.255%"
+  },
+  {
+   "metric": "lens:median(harel,migdal,clal,menora,phoenix):pen:fy_rep",
+   "op": ">=",
+   "value": 0.285,
+   "period": "each",
+   "note": "החציון חוזר ל-0.285% ומעלה ברבעון כלשהו"
+  }
+ ],
+ "triggers": [
+  {
+   "metric": "lens:median(harel,migdal,clal,menora,phoenix):pen:fy_rep",
+   "threshold_pp": 0.01
+  }
+ ],
+ "review": "print"
+}

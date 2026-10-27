@@ -75,7 +75,8 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `build_market_home` | auto · deploy | build_market | market_home.json |
 | `build_cards` | auto · deploy | facts, build_kpi, canon_kpi, build_targets, build_ifrs, build_csm, build_registry | cards/ (report card per filing; `check_cards.py` = gate `cards`) |
 | `build_since` | auto, daily · deploy | build_documents, facts, build_targets, build_market | since.json (per-company dated events, last 400 days) |
-| `build_feed` | auto · deploy | build_search, facts, build_company_index, build_cards, build_restatements, build_targets, build_market, build_funds, build_solvency | feed.json (module M2: the delta feed at `/feed`; `check_feed.py` = gate `feed`) |
+| `build_positions` | auto · deploy | build_lens, canon_kpi, build_targets, build_calendar, build_company_index, build_cards | positions.json (module A6: the position book at `/positions`, from the append-only ledger `data/ledger/positions/`; drafts only with `--drafts`, refused by gate `positions`) |
+| `build_feed` | auto · deploy | build_search, facts, build_company_index, build_cards, build_restatements, build_targets, build_market, build_funds, build_solvency, build_positions | feed.json (module M2: the delta feed at `/feed`; `check_feed.py` = gate `feed`) |
 | `build_digest` | auto, daily | build_feed | data/digest/digest.html, digest.txt (the last 7 days as an email body; untracked, no sender) |
 | `build_coverage` | auto, daily · deploy | every step that writes JSON | coverage.json (reads qa.json from the last gate) |
 

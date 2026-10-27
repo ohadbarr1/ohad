@@ -23,6 +23,11 @@ Checks
   nowcast        module M1 (unpublished): web/public/data/nowcast.json equals a rebuild (pipeline/build_nowcast.py --check), every
                  ledger entry's inputs hash recomputes, nothing about phoenix is stored, and the ledger is append-only: every file
                  under data/ledger/nowcast/ at git HEAD is still there, byte for byte (an estimate is never edited or removed once frozen).
+  positions      module A6, the position book: web/public/data/positions.json equals a rebuild WITHOUT drafts (a --drafts dev build
+                 fails), every ledger entry is valid (at least one falsifier, every evidence ref and metric resolves, horizon after the
+                 revision date, revisions chained by `supersedes`, hashes recompute, outcomes dated and after the last revision, nothing
+                 after a close; with ABSTAIN_PHOENIX on, no phoenix position), and `positions_ledger`: every file under
+                 data/ledger/positions/ at git HEAD is still there, byte for byte (pipeline/build_positions.py --check).
   lens           web/public/data/lens.json equals a rebuild from market.json + lts.json (pipeline/build_lens.py --check), and every
                  derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
   flow_npv       web/public/data/flow_npv.json equals a rebuild (pipeline/build_flow_npv.py --check): inputs present, every NPV equals its
@@ -353,10 +358,14 @@ def nowcast():
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
     out = (p.stdout.strip() or p.stderr.strip() or "no output").splitlines()
     add("nowcast", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
-    led = "data/ledger/nowcast"
+    append_only("nowcast_ledger", "data/ledger/nowcast", "frozen estimates")
+
+
+def append_only(id_, led, what):
+    """an append-only ledger: every file under `led` at git HEAD is still there, byte for byte (new files may be added)"""
     ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", "HEAD", "--", led], cwd=ROOT, capture_output=True, text=True)
     if ls.returncode:
-        return add("nowcast_ledger", False, 0, 1, "git HEAD not readable: ledger immutability not checked", level="warn")
+        return add(id_, False, 0, 1, "git HEAD not readable: ledger immutability not checked", level="warn")
     top = subprocess.run(["git", "rev-parse", "--show-prefix"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     files = [f[len(top):] if top and f.startswith(top) else f for f in ls.stdout.split()]
     bad = []
@@ -367,7 +376,16 @@ def nowcast():
             bad.append(f"{f} removed")
         elif head.returncode or head.stdout != cur.read_bytes():
             bad.append(f"{f} changed")
-    add("nowcast_ledger", not bad, len(files), len(bad), (f"{len(files)} frozen estimates at HEAD unchanged" if not bad else "; ".join(bad))[:200])
+    add(id_, not bad, len(files), len(bad), (f"{len(files)} {what} at HEAD unchanged" if not bad else "; ".join(bad))[:200])
+
+
+def positions():
+    """module A6: positions.json equals a rebuild without drafts, every ledger entry is valid (at least one falsifier, every evidence
+    ref and metric resolves, revisions chained, outcomes dated), and the ledger is append-only against git HEAD"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_positions.py"), "--check"], capture_output=True, text=True)
+    out = (p.stdout.strip() or p.stderr.strip() or "no output").splitlines()
+    add("positions", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), out[0][:200])
+    append_only("positions_ledger", "data/ledger/positions", "position ledger entries")
 
 
 def consistency():
@@ -480,6 +498,7 @@ def main():
     lens()
     flow_npv()
     nowcast()
+    positions()
     consistency()
     schemas()
     cards()

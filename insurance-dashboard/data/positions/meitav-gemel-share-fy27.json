@@ -1,0 +1,52 @@
+{
+ "status": "draft",
+ "id": "meitav-gemel-share-fy27",
+ "claim": "מיטב תמשיך להגדיל את נתחה בנכסי הגמל וההשתלמות: 15.5% או יותר ב-Q4'27, לעומת 14.3% ב-Q2'26.",
+ "horizon": "2028-03-31",
+ "confidence": "medium",
+ "direction": "constructive",
+ "company": "meitav",
+ "evidence": [
+  {
+   "ref": "lens:meitav:gem:aum_share",
+   "note": "12.2% ב-Q2'25, 14.3% ב-Q2'26 (+2.1 נק׳ YoY)"
+  },
+  {
+   "ref": "lens:meitav:gem:flow_share",
+   "note": "נתח מהצבירה נטו של הענף: 64.4% ב-Q2'26, מעל הנתח בנכסים"
+  },
+  {
+   "ref": "/savings?g=מיטב&s=gem",
+   "note": "הנכסים והצבירה החודשיים של הקבוצה מנתוני הרשות"
+  }
+ ],
+ "mechanism": "הנתח מהצבירה נטו גבוה מהנתח בנכסים, ולכן הנתח בנכסים עולה מכנית כל עוד הפער נשמר; הסיכון הוא היפוך בתשואות היחסיות שמניע את הניוד.",
+ "mechanism_edge": null,
+ "falsifiers": [
+  {
+   "metric": "lens:meitav:gem:aum_share",
+   "op": "<",
+   "value": 15.5,
+   "period": "Q4'27",
+   "note": "הנתח ב-Q4'27 מתחת ל-15.5%"
+  },
+  {
+   "metric": "lens:meitav:gem:aum_share",
+   "op": "<",
+   "value": 14.0,
+   "period": "each",
+   "note": "הנתח יורד מתחת ל-14.0% ברבעון כלשהו"
+  }
+ ],
+ "triggers": [
+  {
+   "metric": "lens:meitav:gem:aum_share",
+   "threshold_pp": 0.5
+  },
+  {
+   "metric": "lens:meitav:gem:flow_share",
+   "threshold_pp": 20.0
+  }
+ ],
+ "review": "print"
+}

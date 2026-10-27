@@ -76,6 +76,9 @@ const mReportCard = () => import('./pages/ReportCard');  // lane S2
 const ReportCardPage = page(mReportCard, 'ReportCardPage');
 const mFeed = () => import('./pages/Feed');  // module M2: the delta feed
 const Feed = page(mFeed, 'Feed');
+const mPositions = () => import('./pages/Positions');  // module A6: the position book
+const Positions = page(mPositions, 'Positions');
+const PositionSheet = page(mPositions, 'PositionSheet');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -156,6 +159,8 @@ export function App() {
         <Route path="holdings/:id" element={<Assets />} />
         <Route path="card/:company/:period" element={<ReportCardPage />} />{/* lane S2 */}
         <Route path="feed" element={<Feed />} />{/* module M2: reached from the home block and search, not a nav item */}
+        <Route path="positions" element={<Positions />} />{/* module A6: reached from the feed and the company homes, not a nav item */}
+        <Route path="positions/:id" element={<PositionSheet />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
