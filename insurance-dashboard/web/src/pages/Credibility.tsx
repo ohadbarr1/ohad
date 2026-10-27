@@ -144,7 +144,7 @@ export function CredibilityPanel({ id, name }: { id: string; name: string }) {
   if (!d || !x || x.n + x.nc === 0) return null;
   const rows = d.rows.filter((t) => t.c === id && PASSED.has(t.st)).sort((a, b) => (b.h ?? 0) - (a.h ?? 0) || ORDER[a.st] - ORDER[b.st]).slice(0, 6);
   return (
-    <Panel title="אמינות יעדים" aside={<span>שיעור עמידה <b className="num">{hitText(x)}</b> · n = <span className="num">{x.n}</span>{x.nc ? <> · <span className="num">{x.nc}</span> לא ניתנים להשוואה</> : null} · <Link to={`/credibility?co=${id}`}>כל היעדים</Link></span>}>
+    <Panel title="אמינות יעדים" aside={<span>שיעור עמידה <b className="num">{hitText(x)}</b> · n = <span className="num">{x.n}</span>{x.nc ? <> · <span className="num">{x.nc}</span> לא ניתנים להשוואה</> : null} · <Link className="cr-all" to={`/credibility?co=${id}`}>כל היעדים</Link></span>}>
       <List d={d} rows={rows} name={() => name} phone={phone} co={false} />
     </Panel>
   );

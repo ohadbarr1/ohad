@@ -103,3 +103,6 @@ html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { ga
    iPhone, 23.10.26: the names column empty, the row tint stopping at it). Where the table still scrolls sideways on Apple touch devices
    (tablet widths), keep the name column in flow. The phone shows the list instead of the table. */
 @supports (-webkit-touch-callout: none) { .home .cos-t :is(th, td):first-child { position: static; } }
+
+/* the inactive-companies footnote: its links are in running text, so they are underlined (WCAG 1.4.1) */
+.cos-inactive a { text-decoration: underline; text-underline-offset: 2px; }
