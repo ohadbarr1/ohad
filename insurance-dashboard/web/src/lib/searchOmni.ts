@@ -34,6 +34,10 @@ const REG_KEYS = ['regulation', 'regulatory', 'רגולציה', 'רגולטור'
 const CAP_KEYS = ['capital', 'surplus', 'dividend', 'buyback', 'allocation', 'הון', 'עודף', 'דיבידנד', 'חלוקה', 'רכישה', 'עצמית', 'הקצאה', 'אפשרויות', 'בר-חלוקה'].map(normalize);
 /** words that reach the Fragility Monitor (/fragility, module A10): with a company, its row */
 const FRAG_KEYS = ['fragility', 'fragile', 'warning', 'early', 'שבריריות', 'שביר', 'אזהרה', 'אזהרות', 'התראה', 'התראות', 'סימני', 'מוניטור', 'סיכון'].map(normalize);
+/** words that reach the expectations decoder (/expectations, module A3) without a company */
+const EXP_KEYS = ['expectations', 'implied', 'reverse', 'priced', 'ציפיות', 'מגולם', 'מגלם', 'משתמע', 'נדרש', 'דורש', 'מתמחר'].map(normalize);
+/** words that reach the consolidation screen (/consolidation, module A9) without a company */
+const CONS_KEYS = ['consolidation', 'merger', 'acquisition', 'synergy', 'bolt-on', 'm&a', 'איחוד', 'איחודים', 'מיזוג', 'מיזוגים', 'רכישה', 'רכישות', 'סינרגיה', 'סינרגיות', 'רוכשת', 'יעד', 'יעדים'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -146,6 +150,14 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   // the Fragility Monitor (module A10): alone, or with a company (that company's row)
   if (words.length && (p.company ? p.rest.length > 0 && p.rest.every((w) => FRAG_KEYS.some((k) => k.startsWith(w))) : words.every((w) => FRAG_KEYS.some((k) => k.startsWith(w))))) {
     out.push({ kind: 'פונקציה', label: p.company ? `${p.company.name_he} · מוניטור שבריריות` : 'מוניטור שבריריות · אותות אזהרה לכל מנהל', meta: 'ניוד, דמי ניהול, ביצועים, עלויות, כושר פירעון, CSM, תרחיש: בלי ציון מצרפי', to: p.company ? `/fragility?c=${p.company.id}` : '/fragility', score: 97 });
+  }
+  // the expectations decoder (module A3)
+  if (!p.company && words.length && words.every((w) => EXP_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'ציפיות השוק · מה המכפיל דורש', meta: 'צמיחת נכסים, דמי ניהול, עלות, שחרור CSM ו-ROE שהמחיר מגלם, מול ההיסטוריה', to: '/expectations', score: 96 });
+  }
+  // the consolidation screen (module A9)
+  if (!p.company && words.length && words.every((w) => CONS_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'מסך האיחודים · רוכשת מול יעד', meta: 'סינרגיית עלויות, קיבולת תשלום, השפעה על הרווח למניה, עלות כושר פירעון', to: '/consolidation', score: 96 });
   }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {

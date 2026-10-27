@@ -2,6 +2,9 @@
 export const ROUTES: [string, string][] = [
   ['home', '/'],
   ['company', '/company/phoenix'],
+  ['thesis', '/company/phoenix/thesis'],
+  ['numbers', '/company/phoenix/numbers'],
+  ['company-more', '/company/more'],
   ['financials', '/company/phoenix/financials'],
   ['ifrs17', '/company/phoenix/ifrs17'],
   ['peers', '/industry/peers'],
@@ -23,6 +26,10 @@ export const ROUTES: [string, string][] = [
   ['capital-preset', '/capital?s=eqdd&buf=5'],
   ['fragility', '/fragility'],
   ['fragility-detail', '/fragility?c=altshuler&s=flow&fee_watch=1'],
+  ['expectations', '/expectations'],
+  ['valuation-expectations', '/valuation/phoenix/expectations'],
+  ['consolidation', '/consolidation'],
+  ['consolidation-pair', '/consolidation/menora/clal?r=60'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

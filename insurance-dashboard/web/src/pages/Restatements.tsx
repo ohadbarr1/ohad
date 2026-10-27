@@ -180,7 +180,7 @@ export function Restatements() {
         {list.length === 0 ? <Empty title="אין נתונים שהוצגו מחדש בסינון זה" /> : phone ? (
           <ul className="rs-cards">{list.slice(0, n).map((r, i) => (
             <li key={i}>
-              <div className="rs-who"><i className="pdot" style={{ background: idCss(r.co) }} /><Link to={`/company/${r.co}?p=${r.season}`}>{name(r.co)}</Link><span className="num rs-s">{seasonLabel(r.season)}</span></div>
+              <div className="rs-who"><i className="pdot" style={{ background: idCss(r.co) }} /><Link to={`/company/${r.co}/numbers?p=${r.season}`}>{name(r.co)}</Link><span className="num rs-s">{seasonLabel(r.season)}</span></div>
               <div className="rs-lbl">{label(r)}</div>
               <div className="rs-row"><div><small>לראשונה</small>{cell(r, 0)}</div><span className="rs-arr" aria-hidden>←</span><div><small>מחדש</small>{cell(r, 1)}</div><div>{delta(r)}</div></div>
             </li>
@@ -190,7 +190,7 @@ export function Restatements() {
             <thead><tr><th>חברה</th><th>שורה ותקופה</th><th>כפי שדווח לראשונה</th><th>כפי שהוצג מחדש</th><th>הפרש · שינוי</th><th>בדוח</th></tr></thead>
             <tbody>{list.slice(0, n).map((r, i) => (
               <tr key={i}>
-                <td className="rs-co"><i className="pdot" style={{ background: idCss(r.co) }} /><Link to={`/company/${r.co}?p=${r.season}`}>{name(r.co)}</Link></td>
+                <td className="rs-co"><i className="pdot" style={{ background: idCss(r.co) }} /><Link to={`/company/${r.co}/numbers?p=${r.season}`}>{name(r.co)}</Link></td>
                 <td className="lbl">{label(r)}</td>
                 <td>{cell(r, 0)}</td>
                 <td>{cell(r, 1)}</td>

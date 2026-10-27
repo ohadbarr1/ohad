@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const SHORTCUTS: [string, string][] = [
-  ['/', 'חיפוש: חברה, קופה, שורה בדוח, או חברה + קוד (הראל CSM)'], ['g h', 'דף הבית'], ['g c', 'חברות'], ['g s', 'חיסכון ארוך טווח'], ['g i', 'השוואה ענפית'], ['g f', 'מסלולים'],
+  ['/', 'חיפוש: חברה, קופה, שורה בדוח, או חברה + קוד (הראל CSM)'], ['g h', 'דף הבית'], ['g t', 'תרחישים'], ['g w', 'חדר מלחמה'], ['g p', 'עמדות'], ['g c', 'חברות'], ['g s', 'חיסכון ארוך טווח'], ['g i', 'השוואה ענפית'], ['g f', 'מסלולים'],
   ['g v', 'הערכת שווי'], ['g d', 'נתונים ואיכות'], ['t', 'החלפת ערכת עיצוב'], ['1–7', 'טבלת עמיתים: תבניות'], ['← → ↑ ↓', 'מעבר בין מספרים בטבלה (אחרי Tab אל הטבלה)'], ['Enter', 'פתיחת המקור של המספר'], ['?', 'רשימה זו'],
 ];
 
@@ -53,10 +53,11 @@ export function useKeyboard(toggleTheme: () => void): { help: boolean; setHelp: 
       if (typing(t)) return;
       if (e.key === '?') { e.preventDefault(); setHelp((v) => !v); return; }
       if (e.key === 'Escape') { setHelp(false); return; }
-      if (e.key === 't') { toggleTheme(); return; }
       if (e.key === 'g') { pendingG.current = Date.now(); return; }
+      // "g t" goes to the scenarios; a lone "t" switches the theme
+      if (e.key === 't' && Date.now() - pendingG.current >= 1200) { toggleTheme(); return; }
       if (Date.now() - pendingG.current < 1200) {
-        const to = { h: '/', c: '/companies', s: '/savings', i: '/industry', f: '/funds', v: '/valuation', d: '/data' }[e.key];
+        const to = { h: '/', t: '/scenarios', w: '/warroom', p: '/positions', c: '/companies', s: '/savings', i: '/industry', f: '/funds', v: '/valuation', d: '/data' }[e.key];
         pendingG.current = 0;
         if (to) { e.preventDefault(); nav(to); }
       }

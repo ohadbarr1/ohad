@@ -1,14 +1,14 @@
 /** The browser-tab title of every route: what the page is, then the company or section, then the site.
  *  One place, so history, bookmarks, tab strips and screen-reader page announcements can tell pages apart. */
 const COMPANY_TAB: Record<string, string> = {
-  '': 'הדוח האחרון', review: 'סקירת דוח', financials: 'דוחות כספיים', report: 'יום הדוח', profit: 'מקורות רווח וענפים',
+  '': 'תזה', thesis: 'תזה', numbers: 'מספרים', review: 'סקירת דוח', financials: 'דוחות כספיים', report: 'יום הדוח', profit: 'מקורות רווח וענפים',
   ifrs17: 'IFRS 17', savings: 'חיסכון ארוך טווח', filings: 'מסמכים',
 };
 const INDUSTRY_TAB: Record<string, string> = {
   peers: 'טבלת עמיתים', sectors: 'השוואת ענפים', lines: 'שורות דוח', csm: 'IFRS 17 · CSM · הון', ifrs: 'IFRS 17 · CSM · הון', capital: 'IFRS 17 · CSM · הון',
   econ: 'רווחיות פנסיה וגמל', savings: 'עדשת חיסכון', headline: 'לאורך זמן', search: 'חיפוש בדוחות', matrix: 'מטריצת עמיתים',
 };
-const VALUATION_TAB: Record<string, string> = { '': 'P/B מוצדק', ri: 'הכנסה שיורית', csm: 'הון ו-CSM', sotp: 'סכום החלקים', dcf: 'DCF' };
+const VALUATION_TAB: Record<string, string> = { '': 'P/B מוצדק', ri: 'הכנסה שיורית', expectations: 'ציפיות השוק', csm: 'הון ו-CSM', sotp: 'סכום החלקים', dcf: 'DCF' };
 const MARKET_TAB: Record<string, string> = { overview: 'סקירת שוק', ranking: 'דירוג חברות', funds: 'קופות' };
 
 /** `name` returns undefined while the company list loads and null for an id that is not on it (the page does not exist). */
@@ -42,6 +42,8 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'scenarios': return p[1] ? null : t('חדר תרחישים');  // module A2
     case 'capital': return p[1] ? null : t('הון ואפשרויות הקצאה');  // module A7
     case 'fragility': return p[1] ? null : t('מוניטור שבריריות');  // module A10
+    case 'expectations': return p[1] ? null : t('ציפיות השוק');  // module A3
+    case 'consolidation': return p[1] ? (p[3] || !p[2] || name(p[1]) === null || name(p[2]) === null ? null : t(`${name(p[1]) ?? p[1]} ← ${name(p[2]) ?? p[2]}`, 'מסך האיחודים')) : t('מסך האיחודים');  // module A9
     case 'debt': return p[1] ? (name(p[1]) === null || p[2] ? null : t(name(p[1]) ?? p[1], 'חוב ופירעונות')) : t('חוב ופירעונות');
     case 'facts': return p[1] && !p[2] && name(p[1]) !== null ? t('עובדות', name(p[1]) ?? p[1]) : null;
     case 'ownership': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'בעלות')) : t('בעלות');  // lane OW

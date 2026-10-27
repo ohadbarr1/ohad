@@ -17,6 +17,7 @@ const CompanySavings = page(mCompany, 'CompanySavings');
 const CompanySopTab = page(mCompany, 'CompanySopTab');
 const mCompanyOverview = () => import('./pages/CompanyOverview');
 const CompanyOverview = page(mCompanyOverview, 'CompanyOverview');
+const CompanyThesis = page(() => import('./pages/CompanyThesis'), 'CompanyThesis');  // the company's default view: the advisory layer
 const mCompanyDocs = () => import('./pages/CompanyDocs');
 const CompanyDocs = page(mCompanyDocs, 'CompanyDocs');
 const mIndustry = () => import('./pages/Industry');
@@ -47,6 +48,7 @@ const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
 const mValuationModels = () => import('./pages/ValuationModels');
 const ValuationRi = page(mValuationModels, 'ValuationRi');
+const ValuationExpectations = page(mValuationModels, 'ValuationExpectations'); // module A3
 const mManagers = () => import('./pages/Managers');
 const Managers = page(mManagers, 'Managers');
 const mCalendar = () => import('./pages/Calendar');
@@ -82,11 +84,15 @@ const mPositions = () => import('./pages/Positions');  // module A6: the positio
 const Positions = page(mPositions, 'Positions');
 const PositionSheet = page(mPositions, 'PositionSheet');
 const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
-const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // module A2: the scenario studio (from home and search, not a nav item)
+const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // module A2: the scenario studio, a main place (nav: תרחישים)
 const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRoomRegulation'); // module A8: the regulatory pipeline (not a nav item)
-const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator (not a nav item; linked from /savings and search)
+const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator, a main place (nav: חדר מלחמה, which also lights /capital, /consolidation, /fragility)
 const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const Fragility = page(() => import('./pages/Fragility'), 'Fragility'); // module A10: the Fragility Monitor (not a nav item)
+const Expectations = page(() => import('./pages/Expectations'), 'Expectations'); // module A3: what the multiple requires, all listed names (from the valuation tab and search, not a nav item) // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
+const mConsolidation = () => import('./pages/Consolidation');
+const Consolidation = page(mConsolidation, 'Consolidation'); // module A9: the consolidation screen (from /capital, /savings and search, not a nav item)
+const ConsolidationPair = page(mConsolidation, 'ConsolidationPair');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -100,8 +106,8 @@ function LensRedirect({ to, view }: { to?: 'funds'; view?: string }) {
   const qs = q.toString();
   return <Navigate to={`/savings${qs ? '?' + qs : ''}`} replace />;
 }
-/** the report day is the company home now: an old link keeps its report (?p=) */
-function ReportRedirect() { const loc = useLocation(); return <Navigate to={`..${loc.search}`} replace />; }
+/** the report day lives under "numbers" now (the thesis is the company home): an old link keeps its report, window and row (?p=&w=&row=) */
+function ReportRedirect() { const loc = useLocation(); return <Navigate to={`../numbers${loc.search}${loc.hash}`} replace />; }
 /** the IFRS 17 and capital tabs are views of the CSM ledger now: an old link keeps its pickers */
 function CsmRedirect({ view }: { view: string }) { const loc = useLocation(); return <Navigate to={`/industry/csm?view=${view}${loc.search ? `&${loc.search.slice(1)}` : ''}`} replace />; }
 
@@ -119,7 +125,9 @@ export function App() {
         </Route>
         <Route path="companies" element={<Navigate to="/" replace />} />
         <Route path="company/:id" element={<CompanyLayout />}>
-          <Route index element={<CompanyOverview />} />
+          <Route index element={<CompanyThesis />} />
+          <Route path="thesis" element={<CompanyThesis />} />
+          <Route path="numbers" element={<CompanyOverview />} />
           <Route path="review" element={<CompanyReviewTab />} />
           <Route path="financials" element={<CompanyFinancials />} />
           <Route path="report" element={<ReportRedirect />} />
@@ -168,7 +176,7 @@ export function App() {
         <Route path="card/:company/:period" element={<ReportCardPage />} />{/* lane S2 */}
         <Route path="attribution" element={<AttributionPage />} />{/* module A4: reached from the company home's attribution panel, not a nav item */}
         <Route path="feed" element={<Feed />} />{/* module M2: reached from the home block and search, not a nav item */}
-        <Route path="positions" element={<Positions />} />{/* module A6: reached from the feed and the company homes, not a nav item */}
+        <Route path="positions" element={<Positions />} />{/* module A6: the position book, a main place (nav: עמדות) */}
         <Route path="positions/:id" element={<PositionSheet />} />
         <Route path="drivers" element={<Drivers />} />
         <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
@@ -177,12 +185,16 @@ export function App() {
         <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
         <Route path="capital" element={<Capital />} />{/* module A7 */}
         <Route path="fragility" element={<Fragility />} />{/* module A10: reached from /savings, /scenarios, search and the company homes, not a nav item */}
+        <Route path="expectations" element={<Expectations />} />{/* module A3 */}
+        <Route path="consolidation" element={<Consolidation />} />{/* module A9 */}
+        <Route path="consolidation/:a/:t" element={<ConsolidationPair />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />
         <Route path="valuation/:id" element={<ValuationLayout />}>
           <Route index element={<ValuationPb />} />
           <Route path="ri" element={<ValuationRi />} />
+          <Route path="expectations" element={<ValuationExpectations />} />{/* module A3 */}
           {/* retired models: an old link lands on justified P/B */}
           <Route path="csm" element={<Navigate to=".." replace />} />
           <Route path="sotp" element={<Navigate to=".." replace />} />

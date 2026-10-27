@@ -177,11 +177,18 @@ STEPS = [
          [D + "prov/reg", D + "market.json", D + "funds.json", D + "lens.json", D + "flow_npv.json", D + "companies/index.json", "pipeline/build_funds.py"],
          [D + "warroom"], code=["pipeline/warroom_ols.py"], groups={"deploy"},
          note="A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)"),
+    # module A9: the consolidation screen (every acquirer x target among the managers with printed costs); gate `consolidation`.
+    # It runs the A7 capital logic in memory (pipeline/build_capital.py as code), and A7 reads its bolt-on row back: no cycle
+    step("build_consolidation", "pipeline/build_consolidation.py",
+         [D + "drivers", D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "companies/index.json", D + "lens.json",
+          D + "market.json", D + "funds.json", D + "flow_npv.json"],
+         [D + "consolidation"], code=["pipeline/build_capital.py"], groups={"deploy"},
+         note="A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components"),
     # module A7: capital and strategic options per insurer (distributable capital, the option set, its ranking); gate `capital`
     step("build_capital", "pipeline/build_capital.py",
-         [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json"],
+         [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json", D + "consolidation/bolt.json"],
          [D + "capital/options.json"], groups={"deploy"},
-         note="A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9) / hold rows; the A2 overlay runs on the page"),
+         note="A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9, consolidation/bolt.json) / hold rows; the A2 overlay runs on the page"),
     # module A10: the Fragility Monitor (/fragility): seven signals per manager, each with its value, trend, peer percentile, stated rule and
     # state, no composite; its crossings feed M2 and mark A6 positions for review (so it runs before build_positions and build_feed)
     step("build_fragility", "pipeline/build_fragility.py",
@@ -189,6 +196,12 @@ STEPS = [
           D + "csm/solvency.json", D + "csm/facts", D + "cards", D + "companies/index.json", D + "drivers"],
          [D + "fragility.json"], code=["pipeline/csm_resolve.py"], groups={"deploy"},
          note="A10: flow, fee, performance, cost, solvency, CSM runway, A2 scenario headroom; gate `fragility` (rebuild, provenance, no composite)"),
+    # module A3: the expectations decoder (what the multiple requires, one input at a time, scored against the company's own history); gate `expectations`
+    step("build_expectations", "pipeline/build_expectations.py",
+         [D + "drivers", D + "companies/index.json", D + "companies/*.price.json", D + "market.json", D + "lens.json", D + "kpi.json", D + "targets.json",
+          D + "series", D + "funds/cat.json"],
+         [D + "expectations"], code=["pipeline/build_drivers.py"], groups={"deploy"},
+         note="A3: forward model to FY'28 + terminal at justified P/B; bisection per lever; percentiles against the company's own 24 quarters"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

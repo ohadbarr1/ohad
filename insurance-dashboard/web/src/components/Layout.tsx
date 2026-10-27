@@ -16,14 +16,23 @@ import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 
-// [route, icon, label, label on the phone's bottom bar: the same word, shortened]. Four places, the same on the rail and the phone:
-// search lives in the top bar on every screen. Data quality (/data) keeps its address but is not a place: each figure opens its own source.
-const NAV: [string, string, string, string | null][] = [
-  ['/', 'home', 'בית', 'בית'], ['/savings', 'market', 'חיסכון ארוך טווח', 'חיסכון'],
-  ['/industry', 'compare', 'השוואה ענפית', 'ענף'], ['/valuation', 'value', 'שווי', 'שווי'],
+// The four places, the same on the rail and the phone's bottom bar: [route, icon, label, label on the phone (the same word, shortened),
+// other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
+const NAV: [string, string, string, string, string[]][] = [
+  ['/', 'home', 'בית', 'בית', ['/company/']],
+  ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', []],
+  ['/warroom', 'warroom', 'חדר מלחמה', 'חדר מלחמה', ['/capital', '/consolidation', '/fragility']],
+  ['/positions', 'positions', 'עמדות', 'עמדות', []],
 ];
-/** the long-term savings section: the lens, the tracks, the managers and their holdings (and the old /market links) */
-const SAVINGS = ['/savings', '/funds', '/managers', '/holdings', '/market', '/warroom'];
+/** the evidence layer under the four places: on the desktop rail only (the phone reaches it from the home hub and from search) */
+const EVIDENCE: [string, string, string, string[]][] = [
+  // the long-term savings section: the lens, the tracks, the managers and their holdings (and the old /market links)
+  ['/savings', 'market', 'חיסכון ארוך טווח', ['/funds', '/managers', '/holdings', '/market']],
+  ['/industry', 'compare', 'השוואה ענפית', []],
+  ['/valuation', 'value', 'שווי', []],
+];
+/** an address that lights a place besides its own: '/company/' covers every company page, '/capital' itself and anything under it */
+const lit = (path: string, also: string[]) => also.some((s) => (s.endsWith('/') ? path.startsWith(s) : path === s || path.startsWith(`${s}/`)));
 
 export function Layout() {
   const { theme, toggle, next } = useTheme();
@@ -47,7 +56,11 @@ export function Layout() {
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox" title="fox · דף הבית"><Logo size={40} /></NavLink>
         <nav aria-label="ראשי">
-          {NAV.map(([to, icon, label, short]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${short ? '' : ' wide-item'}${isActive || (to === '/' && loc.pathname.startsWith('/company/')) || (to === '/savings' && SAVINGS.some((s) => loc.pathname.startsWith(s))) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
+          {NAV.map(([to, icon, label, short, also]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${isActive || lit(loc.pathname, also) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
+          <div className="rail-ev" role="group" aria-labelledby="rail-ev-l">
+            <span className="rail-ev-l" id="rail-ev-l">ראיות</span>
+            {EVIDENCE.map(([to, icon, label, also]) => <NavLink key={to} to={to} aria-label={label} className={({ isActive }) => `item ev${isActive || lit(loc.pathname, also) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span></NavLink>)}
+          </div>
         </nav>
         <div className="foot">
           <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>

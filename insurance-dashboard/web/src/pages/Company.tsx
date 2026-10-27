@@ -49,10 +49,10 @@ export function CompanyLayout() {
   const reg = useRegistry();
   const entry = reg.data?.find((c) => c.id === id) ?? null;
   const { store, error: storeError } = useCompanyStore(id ?? null, !!entry?.has_financials);
-  // the regulator's fund data serves the overview and the savings tab only
+  // the regulator's fund data serves the numbers and the savings tab only (the thesis panels load their own files)
   const loc = useLocation();
-  // the overview reads the latest month and twelve-month sums only: the light slice; the savings tab charts the full history
-  const { market } = useMarket(!!entry && (/\/(overview|savings)\/?$/.test(loc.pathname) || /\/company\/[^/]+\/?$/.test(loc.pathname)), !/\/savings\/?$/.test(loc.pathname));
+  // the numbers read the latest month and twelve-month sums only: the light slice; the savings tab charts the full history
+  const { market } = useMarket(!!entry && /\/(overview|numbers|savings)\/?$/.test(loc.pathname), !/\/savings\/?$/.test(loc.pathname));
   const kpi = useKpiData(!!entry);
   const phone = usePhone();
   const [noteOpen, setNoteOpen] = useState(false);
@@ -64,6 +64,7 @@ export function CompanyLayout() {
   const latest = entry.filings[0]?.end ? dateLabel(entry.filings[0].end) : entry.filings[0]?.period;  // the latest report, named like every other period
   const fund = entry.kind === 'fund_house';
   const inStatements = /\/(financials|review|profit|ifrs17)\/?$/.test(loc.pathname);
+  const inThesis = /^\/company\/[^/]+(\/thesis)?\/?$/.test(loc.pathname);
   const keep = keepPeriod(loc.search);  // the report and window travel with the reader between the report day and the statement views
   // a listed holding company files the figures of a company it holds part of (Yelin Lapidot: Atrao, 50%): said once, in the header
   const filer = kpi.data?.companies[entry.id]?.filer;
@@ -91,10 +92,12 @@ export function CompanyLayout() {
           <CompanyActions id={entry.id} valuation={entry.has_price} />
         </div>
       </div>
-      {/* one toolbar row: the four places (the report day, the statements with their views, long-term savings, documents), then the view's own controls */}
+      {/* one toolbar row: the thesis (the default view), then the evidence: the numbers (the report day), the statements with their views,
+          long-term savings, documents; then the view's own controls */}
       <Toolbar className="cotools" lead={<>
         <nav className="subnav cnav" aria-label="חברה">
-          <NavLink to={`.${keep}`} end title="יום הדוח: מה הדוח הדפיס, מול שנה ורבעון קודמים">דוח</NavLink>
+          <NavLink to="." end className={() => (inThesis ? 'active' : '')} title="תזה: עמדה, ציפיות השוק, גשר ROE, שבריריות והון">תזה</NavLink>
+          <NavLink to={`numbers${keep}`} title="מספרים: מה הדוח הדפיס, מול שנה ורבעון קודמים, ונתוני המפתח לאורך זמן">מספרים</NavLink>
           {(entry.has_financials || !fund) && <NavLink to={`${views[0]?.[0] ?? 'financials'}${keep}`} className={() => (inStatements ? 'active' : '')}>דוחות</NavLink>}
           {entry.market_group && <NavLink to="savings"><span className="lg">חיסכון ארוך טווח</span><span className="sm">חיסכון</span></NavLink>}
           <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
@@ -638,7 +641,7 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
 /* ---------- IFRS 17: CSM by portfolio group ---------- */
 export function CompanyReviewTab() {
   const { entry, store } = useCtx();
-  if (entry.kind === 'fund_house') return <Navigate to=".." replace />;  // a fund house has no IFRS 17 review: its tabs are the ones with content
+  if (entry.kind === 'fund_house') return <Navigate to="../numbers" replace />;  // a fund house has no IFRS 17 review: its tabs are the ones with content
   return <CompanyReview id={entry.id} docs={entry.docs} store={store} />;
 }
 
@@ -649,13 +652,13 @@ export function CompanyHistTab() {
 
 export function CompanySopTab() {
   const { entry, store } = useCtx();
-  if (entry.kind === 'fund_house') return <Navigate to=".." replace />;
+  if (entry.kind === 'fund_house') return <Navigate to="../numbers" replace />;
   return <CompanySop id={entry.id} docs={entry.docs} store={store} />;
 }
 
 export function CompanyIfrs17() {
   const { entry, store } = useCtx();
-  if (entry.kind === 'fund_house') return <Navigate to=".." replace />;
+  if (entry.kind === 'fund_house') return <Navigate to="../numbers" replace />;
   return <><CompanyIfrs id={entry.id} docs={entry.docs} /><CsmEconomics id={entry.id} />{store && <CsmExplorer store={store} />}</>;
 }
 

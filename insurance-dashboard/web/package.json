@@ -19,7 +19,8 @@
     "test:regulation": "node scripts/regulation-test.mjs",
     "test:warroom": "node scripts/warroom-test.mjs",
     "test:capital": "node scripts/capital-test.mjs",
-    "test:fragility": "node scripts/fragility-test.mjs"
+    "test:fragility": "node scripts/fragility-test.mjs",
+    "test:consolidation": "node scripts/consolidation-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",
