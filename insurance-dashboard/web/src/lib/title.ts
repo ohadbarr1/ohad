@@ -32,6 +32,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'restatements': return p[1] ? null : t('הצגות מחדש', 'השוואה ענפית');
     case 'presentations': return p[1] ? null : t('מצגות משקיעים');
     case 'credibility': return p[1] ? null : t('אמינות יעדים');  // lane S3
+    case 'nowcast': return p[1] ? null : t('אומדנים לפני הדוח', 'טיוטה');  // module M1, unpublished
     case 'search': return t('חיפוש');
     case 'debt': return p[1] ? (name(p[1]) === null || p[2] ? null : t(name(p[1]) ?? p[1], 'חוב ופירעונות')) : t('חוב ופירעונות');
     case 'facts': return p[1] && !p[2] && name(p[1]) !== null ? t('עובדות', name(p[1]) ?? p[1]) : null;

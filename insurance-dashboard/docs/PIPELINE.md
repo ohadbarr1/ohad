@@ -64,6 +64,7 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `build_lts` | auto | extraction, lts_norm | lts.json, lts_prov/ |
 | `build_recon` | auto | build_market, facts | recon.json |
 | `build_lens` | auto | build_market, build_lts, build_recon | lens.json |
+| `build_nowcast` | auto | extraction, build_market, build_macro, build_lens, build_calendar | nowcast.json, data/nowcast/est_events.json; appends data/ledger/nowcast/ (module M1, unpublished; gate `nowcast` + `nowcast_ledger`) |
 | `build_roster` | auto | build_market, build_funds | roster.json |
 | `build_pagefacts` | auto | build_ifrs, facts, build_savings, build_lts | search/facts/ |
 | `build_web_index` | auto · deploy | build_documents, build_market | search/entities.json, filings_latest.json |

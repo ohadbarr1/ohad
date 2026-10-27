@@ -20,6 +20,9 @@ Checks
                  web/public/data/ifrs/<company>/<period>.json must be exactly the company's rows of ifrs_<period>.json.
   balance        on every balance sheet built from the reports, total assets = total equity and liabilities at every date, within the
                  rounding of figures printed in NIS millions (NIS 2m) or 0.05%: fail above 1% (a line read wrongly), warn between.
+  nowcast        module M1 (unpublished): web/public/data/nowcast.json equals a rebuild (pipeline/build_nowcast.py --check), every
+                 ledger entry's inputs hash recomputes, nothing about phoenix is stored, and the ledger is append-only: every file
+                 under data/ledger/nowcast/ at git HEAD is still there, byte for byte (an estimate is never edited or removed once frozen).
   lens           web/public/data/lens.json equals a rebuild from market.json + lts.json (pipeline/build_lens.py --check), and every
                  derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
@@ -335,6 +338,28 @@ def lens():
     add("lens", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
 
 
+def nowcast():
+    """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
+    out = (p.stdout.strip() or p.stderr.strip() or "no output").splitlines()
+    add("nowcast", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
+    led = "data/ledger/nowcast"
+    ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", "HEAD", "--", led], cwd=ROOT, capture_output=True, text=True)
+    if ls.returncode:
+        return add("nowcast_ledger", False, 0, 1, "git HEAD not readable: ledger immutability not checked", level="warn")
+    top = subprocess.run(["git", "rev-parse", "--show-prefix"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    files = [f[len(top):] if top and f.startswith(top) else f for f in ls.stdout.split()]
+    bad = []
+    for f in files:
+        head = subprocess.run(["git", "show", f"HEAD:./{f}"], cwd=ROOT, capture_output=True)
+        cur = ROOT / f
+        if not cur.exists():
+            bad.append(f"{f} removed")
+        elif head.returncode or head.stdout != cur.read_bytes():
+            bad.append(f"{f} changed")
+    add("nowcast_ledger", not bad, len(files), len(bad), (f"{len(files)} frozen estimates at HEAD unchanged" if not bad else "; ".join(bad))[:200])
+
+
 def consistency():
     """Lane Q: one figure per entity, period and metric on every page that serves it (pipeline/check_consistency.py)."""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "check_consistency.py")], capture_output=True, text=True)
@@ -434,6 +459,7 @@ def main():
     balance(wbs)
     cross_layer()
     lens()
+    nowcast()
     consistency()
     schemas()
     cards()

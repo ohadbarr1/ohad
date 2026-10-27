@@ -1,0 +1,12 @@
+/* Nowcast (pages/Nowcast.tsx, module M1, unpublished) */
+.chip.nc-draft { border-color: color-mix(in oklch, var(--warn) 55%, transparent); background: color-mix(in oklch, var(--warn) 14%, var(--panel)); color: var(--fg); font-weight: 600; margin-inline-end: 8px; }
+.chip.nc-scope { font-size: var(--t-1); white-space: nowrap; }
+.chip.nc-scope.seg { border-style: dashed; }
+.nc-tbl td, .nc-tbl th { white-space: nowrap; }
+.nc-tbl tr.nc-abstain td { white-space: normal; color: var(--muted); text-align: start; }
+.nc-tbl tr.nc-abstain td:first-child { color: var(--fg); }
+.nc-mgr { cursor: default; }
+.nc-lag { color: var(--warn); margin-inline-start: 2px; cursor: help; }
+.nc-notes { margin: 0; padding-inline-start: 18px; color: var(--muted); font-size: var(--t-2); line-height: 1.6; }
+.nc-notes li { margin: 2px 0; }
+@media (max-width: 760px) { .nc-tbl tr.nc-abstain td { font-size: var(--t-1); } }

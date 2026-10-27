@@ -58,6 +58,7 @@ const Restatements = page(mRestatements, 'Restatements');
 const mPresentations = () => import('./pages/Presentations');
 const mCredibility = () => import('./pages/Credibility');
 const Credibility = page(mCredibility, 'Credibility'); // lane S3
+const Nowcast = page(() => import('./pages/Nowcast'), 'Nowcast'); // module M1: unpublished (no link anywhere, noindex)
 const Presentations = page(mPresentations, 'Presentations');
 const mAutopilot = () => import('./pages/Autopilot');  // lane AP
 const Autopilot = page(mAutopilot, 'Autopilot');
@@ -142,6 +143,7 @@ export function App() {
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="credibility" element={<Credibility />} />{/* lane S3 */}
+        <Route path="nowcast" element={<Nowcast />} />{/* module M1: unpublished draft */}
         <Route path="mine" element={<Navigate to="/book" replace />} />{/* the workspace is gone; the chart book stays */}
         <Route path="debt" element={<Debt />} />
         <Route path="debt/:id" element={<Debt />} />
