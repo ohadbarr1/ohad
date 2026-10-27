@@ -27,6 +27,10 @@ Checks
                  derived Savings Lens figure equals its formula over the inputs printed beside it (lane 2C).
   flow_npv       web/public/data/flow_npv.json equals a rebuild (pipeline/build_flow_npv.py --check): inputs present, every NPV equals its
                  formula, NPV sign = flow sign x margin sign, LTM = the sum of its quarters, no NaN, ke constants = valuation.ts (M3).
+  drivers        module A1: web/public/data/drivers/ equals a rebuild (pipeline/build_drivers.py --check): every edge has provenance or is
+                 `missing` with a reason, no NaN, signs as expected, the identity nodes reconcile (op = fees − S&M − G&A, net profit =
+                 PBT − tax, solvency = own funds ÷ SCR), disclosed points = csm/sens.json and csm/solvency.json, NPV per NIS 1bn = M3;
+                 and the propagation library reproduces them (web/tests/drivers.unit.ts, run in node)
   cross_layer    Q2'26 profit attributable to shareholders (quarter) and equity attributable (30.6.26): XBRL (kpi.json) = the
                  statements workbooks (lines.json), within rounding of a figure printed in NIS millions (NIS 1.5m) or 0.1%.
   consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)
@@ -348,6 +352,22 @@ def flow_npv():
     add("flow_npv", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, " · ".join(out[:2])[:200])
 
 
+def drivers():
+    """module A1: the driver graph files rebuild byte-equal and verify; the TS propagation library reproduces them"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_drivers.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("drivers", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("drivers_lib", False, 0, 1, "node not found: drivers.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/drivers-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("drivers_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("drivers: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+
+
 def nowcast():
     """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
@@ -479,6 +499,7 @@ def main():
     cross_layer()
     lens()
     flow_npv()
+    drivers()
     nowcast()
     consistency()
     schemas()

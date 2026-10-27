@@ -181,7 +181,7 @@ class DagTest(unittest.TestCase):
         g = dag.Graph(dag.STEPS, state_file=self.state)
         self.assertEqual(g.check(), [])
         deploy = [n for n in g.order if "deploy" in g.steps[n]["groups"]]
-        self.assertEqual(deploy, ["build_web_index", "build_calendar", "canon_kpi", "build_registry", "build_market_home", "build_cards", "build_since", "build_feed", "build_coverage"])
+        self.assertEqual(deploy, ["build_web_index", "build_calendar", "canon_kpi", "build_registry", "build_market_home", "build_cards", "build_since", "build_feed", "build_drivers", "build_coverage"])
         self.assertLess(g.order.index("facts"), g.order.index("build_restatements"))
         self.assertIn("build_kpi", g.deps["canon_kpi"])
 

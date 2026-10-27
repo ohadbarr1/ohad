@@ -13,7 +13,8 @@
     "routes": "node --experimental-websocket scripts/route-check.mjs",
     "test:e2e": "playwright test",
     "test:schemas": "python3 ../pipeline/check_schemas.py",
-    "test:stress": "node scripts/stress-test.mjs"
+    "test:stress": "node scripts/stress-test.mjs",
+    "test:drivers": "node scripts/drivers-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",
