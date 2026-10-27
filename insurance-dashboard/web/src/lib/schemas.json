@@ -204,6 +204,10 @@
   {
    "pattern": "since.json",
    "schema": "since"
+  },
+  {
+   "pattern": "feed.json",
+   "schema": "feed"
   }
  ],
  "$defs": {
@@ -6002,6 +6006,539 @@
       "number",
       "null"
      ]
+    }
+   }
+  },
+  "feedSrc": {
+   "type": "object",
+   "required": [
+    "k"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "pg",
+      "reg",
+      "fund",
+      "calc",
+      "count"
+     ]
+    },
+    "rid": {
+     "type": "integer"
+    },
+    "pg": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "der": {
+     "type": "integer",
+     "enum": [
+      1,
+      2
+     ]
+    },
+    "metric": {
+     "type": "string",
+     "enum": [
+      "assets",
+      "netflow"
+     ]
+    },
+    "ym": {
+     "type": "integer"
+    },
+    "pi": {
+     "type": "integer"
+    },
+    "w": {
+     "type": "string",
+     "enum": [
+      "m",
+      "q",
+      "ltm"
+     ]
+    },
+    "set": {
+     "type": "string"
+    },
+    "g": {
+     "type": "integer"
+    },
+    "ds": {
+     "type": "string",
+     "enum": [
+      "gemel",
+      "pensia",
+      "insurance"
+     ]
+    },
+    "id": {
+     "type": "integer"
+    },
+    "col": {
+     "type": "string",
+     "enum": [
+      "AVG_ANNUAL_MANAGEMENT_FEE",
+      "TOTAL_ASSETS"
+     ]
+    },
+    "fx": {
+     "type": "string"
+    },
+    "in": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/feedFig"
+     }
+    }
+   }
+  },
+  "feedFig": {
+   "type": "object",
+   "required": [
+    "v",
+    "u",
+    "s"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "l": {
+     "type": "string"
+    },
+    "v": {
+     "type": "number"
+    },
+    "u": {
+     "type": "string",
+     "enum": [
+      "m",
+      "bn",
+      "pct",
+      "pp",
+      "dm",
+      "dbn",
+      "dpct",
+      "n"
+     ]
+    },
+    "s": {
+     "$ref": "#/$defs/feedSrc"
+    }
+   }
+  },
+  "feedRow": {
+   "type": "object",
+   "required": [
+    "l",
+    "a"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "l": {
+     "type": "string"
+    },
+    "ab": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "a": {
+     "$ref": "#/$defs/feedFig"
+    },
+    "b": {
+     "$ref": "#/$defs/feedFig"
+    },
+    "d": {
+     "$ref": "#/$defs/feedFig"
+    },
+    "dp": {
+     "$ref": "#/$defs/feedFig"
+    },
+    "rng": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "note": {
+     "type": "string"
+    }
+   }
+  },
+  "feedEvent": {
+   "type": "object",
+   "required": [
+    "id",
+    "t",
+    "d",
+    "dk",
+    "c",
+    "per",
+    "h",
+    "src",
+    "to"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "t": {
+     "type": "string",
+     "enum": [
+      "filing",
+      "restate",
+      "regmonth",
+      "flow",
+      "target",
+      "solv",
+      "fee",
+      "est"
+     ]
+    },
+    "d": {
+     "$ref": "#/$defs/date"
+    },
+    "dk": {
+     "type": "string",
+     "enum": [
+      "pub",
+      "fetched",
+      "month"
+     ]
+    },
+    "c": {
+     "type": "string"
+    },
+    "per": {
+     "type": "string"
+    },
+    "h": {
+     "type": "string"
+    },
+    "st": {
+     "type": "string",
+     "enum": [
+      "met",
+      "partial",
+      "missed"
+     ]
+    },
+    "src": {
+     "type": "object",
+     "required": [
+      "k"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "k": {
+       "type": "string",
+       "enum": [
+        "doc",
+        "reg",
+        "fund"
+       ]
+      },
+      "rid": {
+       "type": "integer"
+      },
+      "pg": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "ym": {
+       "type": "integer"
+      },
+      "ds": {
+       "type": "string",
+       "enum": [
+        "gemel",
+        "pensia",
+        "insurance"
+       ]
+      },
+      "id": {
+       "type": "integer"
+      }
+     }
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/feedRow"
+     }
+    },
+    "refs": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "to": {
+     "type": "string"
+    }
+   }
+  },
+  "feed": {
+   "type": "object",
+   "required": [
+    "v",
+    "built",
+    "from",
+    "files",
+    "source",
+    "types",
+    "rules",
+    "cos",
+    "groups",
+    "docs",
+    "events"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "built": {
+     "$ref": "#/$defs/date"
+    },
+    "from": {
+     "$ref": "#/$defs/date"
+    },
+    "files": {
+     "type": "string"
+    },
+    "source": {
+     "type": "string"
+    },
+    "types": {
+     "type": "object",
+     "required": [
+      "filing",
+      "restate",
+      "regmonth",
+      "flow",
+      "target",
+      "solv",
+      "fee",
+      "est"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "filing": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "restate": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "regmonth": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "flow": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "target": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "solv": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "fee": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "est": {
+       "type": "object",
+       "required": [
+        "he",
+        "n",
+        "slot"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer",
+         "enum": [
+          0
+         ]
+        },
+        "slot": {
+         "type": "integer",
+         "enum": [
+          1
+         ]
+        }
+       }
+      }
+     }
+    },
+    "rules": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "number"
+     }
+    },
+    "cos": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "groups": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "docs": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "minItems": 6,
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": [
+         "integer",
+         "null"
+        ]
+       }
+      ]
+     }
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/feedEvent"
+     }
     }
    }
   }
