@@ -37,6 +37,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'feed': return p[1] ? null : t('מה השתנה');  // module M2
     case 'attribution': return p[1] ? null : t('גשר ROE');  // module A4
     case 'positions': return p[2] ? null : p[1] ? t('עמדה', 'ספר העמדות') : t('ספר העמדות');  // module A6
+    case 'warroom': return p[1] === 'regulation' && !p[2] ? t('צנרת רגולציה', 'חדר מלחמה') : null;  // module A8 (A5 owns /warroom itself)
     case 'drivers': return p[1] ? (p[2] || name(p[1]) === null ? null : t('מנגנונים', name(p[1]) ?? p[1])) : t('מנגנונים');  // module A1
     case 'scenarios': return p[1] ? null : t('חדר תרחישים');  // module A2
     case 'debt': return p[1] ? (name(p[1]) === null || p[2] ? null : t(name(p[1]) ?? p[1], 'חוב ופירעונות')) : t('חוב ופירעונות');
