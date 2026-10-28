@@ -18,6 +18,9 @@ costs the managing companies print (A1 driver files). Savings policies and manag
     Price at a premium p over the justified standalone value V0
         V0       = listed fund house: A1 justified P/B × equity attributable (the whole company, a valuation input, not a market price);
                    an insurer's savings arm (not separately listed): after-tax LTM operating profit × justified P/E 1 ÷ (ke − g)
+        floor    = target pension + provident AUM (06/26) × the median market value per NIS bn of AUM of the listed fund houses whose
+                   business is mostly long-term savings (Meitav, Altshuler, More, Analyst; Yelin excluded: its listed share is Atrao's);
+                   V0 = max(justified, floor), the binding one labelled per target; the premia apply on top
         financing: cash first (up to the cash capacity), the rest debt; affordable when the debt fits the headroom
     Accretion (LTM, run-rate synergy, integration cost excluded, no new shares)
         ΔNP      = target earnings + Σ net × (1 − tax) − cash × rf × (1 − tax) − debt × (rf + spread) × (1 − tax)
@@ -43,6 +46,7 @@ Analytical, not a recommendation to buy or sell anything. Phoenix (the owner's e
 """
 import json
 import math
+from math import fsum
 import sys
 from pathlib import Path
 from statistics import median
@@ -66,6 +70,10 @@ DEF = {"r": 50.0, "ic": 1.0, "kd": 1.5, "h": None}   # lev: the peer median, com
 ID_TOL = 1e-5     # relative, on figures stored to 6 decimals
 ABS = 1e-4        # NIS m, sums of stored figures
 AUM_YM = 202606     # the regulator month of the A1 AUM (06/26)
+MULT_PEERS = ["meitav", "altshuler", "more", "analyst"]   # listed houses whose business is mostly pension / provident funds
+MULT_EXCL = {"yelin": "המניה הנסחרת היא של אטראו שוקי הון, המחזיקה 50% בילין לפידות: שווי השוק אינו של המנהלת"}
+MULT_YM = 202608     # the regulator month nearest the price date
+FLOOR_HE = "מחיר לפי שווי לנכסים, חציון בתי ההשקעות הנסחרים"
 
 
 def ann(h, ke):
@@ -104,6 +112,8 @@ def res(r, M, doc=None):
         node = (M.get("mix") or {}).get(scope[2:])
     elif scope == "a":
         node = M["meta"]["assume"]
+    elif scope == "k":
+        node = M["meta"]
     elif scope == "p":
         node = doc
     else:
@@ -218,8 +228,8 @@ def company(I, cid, A0):
                                            f"נכסים ממוצעים {fm(D['avg'])}, משיכות {fm(D['wd'])}, ניוד יוצא {fm(D['out'])} (מיליוני ש\"ח)", unit="שנים"))}
     if not prods:
         return {**out, "status": "na", "why": "הכנסות והוצאות פנסיה / גמל לא חולצו מהדוחות (אין יחס עלות להכנסה)"}
-    sf = sum(x["fees"]["v"] for x in prods.values())
-    so = sum(x["opex"]["v"] for x in prods.values())
+    sf = fsum(x["fees"]["v"] for x in prods.values())
+    so = fsum(x["opex"]["v"] for x in prods.values())
     blend = so / sf * 100
     out["products"] = prods
     out["blend"] = fig(blend, calc(f"יחס עלות להכנסה, פנסיה וגמל יחד · {name} · LTM {meta['base']['q']}", pct(blend), "Σ הוצאות ÷ Σ הכנסות מדמי ניהול × 100",
@@ -264,7 +274,7 @@ def company(I, cid, A0):
                                          note="קלט הערכה, לא מחיר שוק; החברה כולה, כולל פעילויות שמחוץ לפנסיה ולגמל")),
                       "earn": fig(P["net_profit"]["v"], R(sc, "pnl.net_profit")), "book": fig(E, R(sc, "pnl.equity_end"))}
     else:
-        op = sum(x["op"]["v"] for x in prods.values())
+        op = fsum(x["op"]["v"] for x in prods.values())
         earn = op * (1 - tax / 100)
         pe = 100 / (ke - g)
         v0 = max(earn, 0.0) * pe
@@ -277,6 +287,59 @@ def company(I, cid, A0):
                       "earn": fig(earn, eprov), "book": None}
     out["status"] = "ok"
     return out
+
+
+# ---------------------------------------------------------------- the AUM floor of a target's price
+def multiple(I):
+    """the median market value per NIS bn of pension + provident AUM of the listed fund houses whose business is mostly long-term savings"""
+    M = I.mkt
+    pi = M["periods"].index(MULT_YM)
+    ml = f"{MULT_YM % 100:02d}/{str(MULT_YM)[2:4]}"
+    rows, ins = [], []
+    for cid in MULT_PEERS:
+        pr = json.loads((WEB / "companies" / f"{cid}.price.json").read_text(encoding="utf8"))
+        g = I.drv[cid]["products"][0]["g"]
+        fam = {f: fsum(r[3] for r in M["rows"] if r[0] == pi and r[2] == g and M["products"][r[1]]["family"] == f) for f in sorted(FAM, reverse=True)}
+        aum = fsum(fam.values())
+        mc = pr["mcap"]
+        v = mc / (aum / 1000)
+        d = pr["asof"]
+        dl = f"{d[8:10]}.{d[5:7]}.{d[2:4]}"
+        name = I.reg[cid]["name_he"]
+        pp = {"k": "price", "title": f"שווי שוק · {pr['name']}", "value": f"{fm(mc, 1)} מיליוני ש\"ח", "ticker": pr["ticker"], "vendor": pr["source"], "date": dl}
+        regp = lambda f: {"k": "reg", "metric": "assets", "pi": pi, "w": "m", "set": f"fam:{f}", "g": g}
+        cp = calc(f"שווי שוק לכל מיליארד נכסים · {name}", fm(v, 2), "שווי שוק ÷ (נכסי פנסיה + גמל והשתלמות ÷ 1,000)",
+                  [inp(f"שווי שוק · {dl}", fm(mc, 1), pp)] + [inp(f"נכסים · {({'pension': 'פנסיה', 'gemel': 'גמל והשתלמות'})[f]} · {ml}", fm(fam[f] / 1000, 2), regp(f)) for f in fam if fam[f]],
+                  unit="מיליוני ש\"ח למיליארד", note="שווי השוק כולל את כל פעילויות החברה (גם קרנות נאמנות וניהול תיקים)")
+        rows.append({"id": cid, "name": name, "mcap": r6(mc), "aum": r6(aum), "v": r6(v), "date": dl})
+        ins.append(inp(name, fm(v, 2), cp))
+    m = median(x["v"] for x in rows)
+    date = rows[0]["date"]
+    prov = calc(f"שווי לכל מיליארד נכסים · חציון בתי ההשקעות הנסחרים", fm(m, 2), f"חציון של שווי שוק ÷ נכסי פנסיה וגמל, {len(rows)} חברות",
+                ins, unit="מיליוני ש\"ח למיליארד", est=True,
+                note=f"מחירי {date}, נכסים {ml}; לא נכללו: " + "; ".join(f"{I.reg[k]['name_he']} ({w})" for k, w in MULT_EXCL.items()) + ". רצפה למחיר, קלט הערכה")
+    return {"v": r6(m), "date": date, "aum_month": ml, "he": FLOOR_HE, "peers": rows, "excl": [{"id": k, "why": w} for k, w in MULT_EXCL.items()], "prov": prov}
+
+
+def apply_floor(c, mult):
+    """V0 = max(justified value, target AUM × the multiple); the binding basis is named"""
+    sc = f"c/{c['id']}"
+    V = c["val"]
+    just = V["v0"]
+    aum = fsum(x["aum"]["v"] for x in c["products"].values())
+    floor = aum / 1000 * mult["v"]
+    fp = calc(f"רצפת שווי לנכסים · {c['name']}", fm(floor), "נכסי פנסיה וגמל (מיליארד) × שווי לכל מיליארד, חציון בתי ההשקעות הנסחרים",
+              [inp(f"נכסים · {x['he']} · 06/26", num(x["aum"]["v"], 0), R(sc, f"products.{s}.aum")) for s, x in c["products"].items()]
+              + [inp(f"שווי לכל מיליארד · מחירי {mult['date']}", fm(mult["v"], 2), R("k", "mult"))], est=True, note=FLOOR_HE)
+    binds = "aum" if floor > just["v"] else "just"
+    v0 = max(floor, just["v"])
+    V["just"] = just
+    V["floor"] = fig(floor, fp)
+    V["binds"] = binds
+    V["v0"] = fig(v0, calc(f"מחיר בסיס · {c['name']}", fm(v0), "max(שווי מוצדק עצמאי, רצפת שווי לנכסים)",
+                           [inp("שווי מוצדק עצמאי" + (" (P/B)" if V["basis"] == "pb" else " (P/E)"), fm(just["v"]), R(sc, "val.just")),
+                            inp(f"רצפת שווי לנכסים{' · קובעת' if binds == 'aum' else ''}", fm(floor), R(sc, "val.floor"))], est=True,
+                           note=(FLOOR_HE + f" · מחירי {mult['date']}") if binds == "aum" else "השווי המוצדק גבוה מהרצפה"))
 
 
 # ---------------------------------------------------------------- assumptions
@@ -317,11 +380,11 @@ def compute(ca, ct, A):
         a = ann(h, ke)
         net = gross * A["r"] / 100
         rows.append({"s": s, "cia": cia, "own": bool(pa), "gross": gross, "net": net, "h": h, "ann": a, "npv_g": gross * after * a, "npv": net * after * a})
-    G = sum(x["gross"] for x in rows)
-    Nn = sum(x["net"] for x in rows)
+    G = fsum(x["gross"] for x in rows)
+    Nn = fsum(x["net"] for x in rows)
     ic = A["ic"] * max(G, 0.0)
-    npv_g = sum(x["npv_g"] for x in rows)
-    npv = sum(x["npv"] for x in rows) - ic * after
+    npv_g = fsum(x["npv_g"] for x in rows)
+    npv = fsum(x["npv"] for x in rows) - ic * after
     D, E, Eavg, np_a = P["debt_total"]["v"], P["equity_end"]["v"], P["equity"]["v"], P["net_profit"]["v"]
     L = A["lev"] / 100
     room = max(0.0, L / (1 - L) * E - D) if L < 1 else 0.0
@@ -399,7 +462,8 @@ def pair_doc(ca, ct, A, Ad, X, fit, nc, rank, built, base):
     for j, q in enumerate(X["prem"]):
         tag = f"פרמיה {fm(q['p'], 0)}%"
         Q = lambda k: R("p", f"premia.{j}.{k}")
-        pr = calc(f"מחיר · {tn} · {tag}", fm(q["price"]), "שווי מוצדק עצמאי × (1 + פרמיה)", [inp("שווי מוצדק עצמאי", fm(v0["v"]), R(st, "val.v0")), inp("פרמיה", pct(q["p"], 0))], est=True)
+        pr = calc(f"מחיר · {tn} · {tag}", fm(q["price"]), "מחיר בסיס × (1 + פרמיה); מחיר בסיס = max(שווי מוצדק, רצפת שווי לנכסים)",
+                  [inp("מחיר בסיס" + (f" ({FLOOR_HE})" if ct["val"]["binds"] == "aum" else " (שווי מוצדק)"), fm(v0["v"]), R(st, "val.v0")), inp("פרמיה", pct(q["p"], 0))], est=True)
         cash_p = calc(f"מזומן · {tag}", fm(q["cash"]), "min(מחיר, קיבולת מזומן): מזומן קודם", [inp("מחיר", fm(q["price"]), Q("price")), inp("קיבולת מזומן", fm(X["cash_cap"]), R(sa, "cap.cash"))], est=True)
         debt_p = calc(f"חוב · {tag}", fm(q["debt"]), "מחיר − מזומן", [inp("מחיר", fm(q["price"]), Q("price")), inp("מזומן", fm(q["cash"]), Q("cash"))], est=True)
         dnp_p = calc(f"תוספת לרווח הנקי · {an} ← {tn} · {tag}", fs(q["dnp"], 1),
@@ -430,12 +494,13 @@ def pair_doc(ca, ct, A, Ad, X, fit, nc, rank, built, base):
                                    [inp("ערך נוכחי של הסינרגיה", fs(X["npv"], 1), R("p", "synergy.npv")), inp("מחיר בפרמיה 20%", fm(prem[j20]["price"]["v"]), R("p", f"premia.{j20}.price"))], unit="%", est=True))
     return {"meta": {"built": built, "base": base, "v": 1, "a": ca["id"], "t": ct["id"], "assume": assume_vals(Ad), "premia": PREMIA, "primary": PRIMARY,
                      "refs": "c/<id>:<path> = matrix.json cos; a:<key> = matrix.json meta.assume; p:<path> = this file"},
-            "acq": {"id": ca["id"], "name": an, "kind": ca["kind"], "cap": ca["cap"]["kind"]}, "tgt": {"id": ct["id"], "name": tn, "kind": ct["kind"], "val": ct["val"]["basis"]},
+            "acq": {"id": ca["id"], "name": an, "kind": ca["kind"], "cap": ca["cap"]["kind"]}, "tgt": {"id": ct["id"], "name": tn, "kind": ct["kind"], "val": ct["val"]["basis"], "binds": ct["val"]["binds"]},
             "nc": nc, "rank": rank, "products": prods, "kd": fig(X["kd"], kd_p),
             "synergy": {"gross": fig(X["gross"], gross_p), "net": fig(X["net"], net_p), "ic": fig(X["ic"], ic_p), "npv_g": fig(X["npv_g"], npv_g_p), "npv": fig(X["npv"], npv_p)},
             "capacity": {"cash": fig(X["cash_cap"], R(sa, "cap.cash")), "room": fig(X["room"], room_p), "total": fig(X["capacity"], cap_p), "lev": fig(ca["lev"]["v"], R(sa, "lev")),
                          "lev_max": fig(A["lev"], AP["lev"]), **({"scr": fig(ca["cap"]["scr"]["v"], R(sa, "cap.scr"))} if ca["cap"].get("scr") else {})},
-            "value": {"v0": fig(v0["v"], R(st, "val.v0")), "earn": fig(ct["val"]["earn"]["v"], R(st, "val.earn")),
+            "value": {"v0": fig(v0["v"], R(st, "val.v0")), "just": fig(ct["val"]["just"]["v"], R(st, "val.just")), "floor": fig(ct["val"]["floor"]["v"], R(st, "val.floor")),
+                      "binds": ct["val"]["binds"], "earn": fig(ct["val"]["earn"]["v"], R(st, "val.earn")),
                       **({"book": fig(ct["val"]["book"]["v"], R(st, "val.book"))} if ct["val"]["book"] else {})},
             "premia": prem, "metric": metric, "fit": fit}
 
@@ -454,9 +519,10 @@ def mix_of(I, c):
     for r in M["rows"]:
         if r[0] == pi and r[2] == g and M["products"][r[1]]["family"] in FAM:
             k = M["products"][r[1]]["key"]
-            by[k] = by.get(k, 0.0) + r[3]
-    fam = {f: sum(r[3] for r in M["rows"] if r[0] == pi and r[2] == g and M["products"][r[1]]["family"] == f) for f in FAM}
-    tot = sum(by.values())
+            by.setdefault(k, []).append(r[3])
+    by = {k: fsum(v) for k, v in by.items()}
+    fam = {f: fsum(r[3] for r in M["rows"] if r[0] == pi and r[2] == g and M["products"][r[1]]["family"] == f) for f in FAM}
+    tot = fsum(by.values())
     regp = lambda st: {"k": "reg", "metric": "assets", "pi": pi, "w": "m", "set": st, "g": g}
     famin = [inp(f"נכסים · {({'pension': 'פנסיה', 'gemel': 'גמל והשתלמות'})[f]}", fm(fam[f] / 1000, 2), regp(f"fam:{f}")) for f in sorted(FAM, reverse=True)]
     prods = []
@@ -472,13 +538,13 @@ def mix_of(I, c):
     al = f"{asof % 100:02d}/{str(asof)[2:4]}"
     gname = M["groups"][g]
     xs = [f for f in I.funds["funds"] if f["grp"] == gname and f["fam"] in ("pensia", "gemel") and f.get("assets")]
-    ttot = sum(f["assets"] for f in xs)
+    ttot = fsum(f["assets"] for f in xs)
     cats = {}
     for f in xs:
         cats.setdefault(f["track"], []).append(f)
     cl = []
-    for cat in sorted(cats, key=lambda k: -sum(f["assets"] for f in cats[k])):
-        v = sum(f["assets"] for f in cats[cat])
+    for cat in sorted(cats, key=lambda k: (-fsum(f["assets"] for f in cats[k]), k)):
+        v = fsum(f["assets"] for f in cats[cat])
         w = v / ttot * 100
         cl.append({"cat": cat, "v": r6(v), "w": r6(w), "n": len(cats[cat]),
                    "prov": calc(f"משקל מסלולי {cat} · {c['name']} · {al}", pct(w), "Σ נכסי המסלולים בקטגוריה ÷ Σ נכסי מסלולי הפנסיה והגמל של הקבוצה × 100",
@@ -503,7 +569,7 @@ def fit_of(ma, mt):
             terms.append(inp(f"{he} · {ma['name']}", pct(wa), R(f"m/{ma['id']}", f"aum.prods.{ia}")))
         if xt:
             terms.append(inp(f"{he} · {mt['name']}", pct(wt), R(f"m/{mt['id']}", f"aum.prods.{it}")))
-    ov = sum(min(x["wa"], x["wt"]) for x in rows)
+    ov = fsum(min(x["wa"], x["wt"]) for x in rows)
     out["prod"] = {"v": fig(ov, calc(f"חפיפת מוצרים · {ma['name']} ↔ {mt['name']}", pct(ov), "Σ על המוצרים min(משקל הרוכשת, משקל היעד); משקל = נכסי המוצר ÷ נכסי פנסיה וגמל, 06/26",
                                      terms, unit="%")), "rows": rows, "period": "06/26"}
     A, T = {x["cat"]: (i, x) for i, x in enumerate(ma["tracks"]["cats"])}, {x["cat"]: (i, x) for i, x in enumerate(mt["tracks"]["cats"])}
@@ -515,7 +581,7 @@ def fit_of(ma, mt):
         if xa and xt:   # a category held by one side only adds 0
             cterms.append(inp(f"{k} · {ma['name']}", pct(xa["w"]), R(f"m/{ma['id']}", f"tracks.cats.{ia}")))
             cterms.append(inp(f"{k} · {mt['name']}", pct(xt["w"]), R(f"m/{mt['id']}", f"tracks.cats.{it}")))
-    co = sum(min(x["wa"], x["wt"]) for x in crows)
+    co = fsum(min(x["wa"], x["wt"]) for x in crows)
     crows.sort(key=lambda x: -(x["wa"] + x["wt"]))
     out["track"] = {"v": fig(co, calc(f"צפיפות מסלולים · {ma['name']} ↔ {mt['name']}", pct(co), "Σ על קטגוריות המסלול min(משקל הרוכשת, משקל היעד); קטגוריה שרק לצד אחד מוסיפה 0",
                                       cterms, unit="%", est=not cterms)), "rows": crows, "period": ma["tracks"]["period"], "n": [ma["tracks"]["n"], mt["tracks"]["n"]]}
@@ -577,6 +643,9 @@ def build():
         if c["nc"]:
             c["nc_why"] = I.lens["marks"][cid]["text"]
         cos[cid] = c
+    mult = multiple(I)
+    for c in cos.values():
+        apply_floor(c, mult)
     Ad = assumptions(cos, A0)
     A = assume_vals(Ad)
     ids = sorted(cos, key=lambda c: (cos[c]["kind"] != "insurance_group", c))
@@ -611,7 +680,7 @@ def build():
             continue
         b = min(cand, key=lambda r: r["rank"])
         bolt[a] = {"status": "ok", "t": b["t"], "name": cos[b["t"]]["name"], "pair": f"{a}__{b['t']}", "rank": b["rank"], "premium": PRIMARY}
-    M0 = {"meta": {"assume": Ad}, "cos": cos, "mix": mix}
+    M0 = {"meta": {"assume": Ad, "mult": mult}, "cos": cos, "mix": mix}
     full = {}
     for a, x in bolt.items():
         if x["status"] != "ok":
@@ -626,10 +695,10 @@ def build():
                        "formula": {"synergy": "נכסי היעד × תשואת דמי ניהול × (יחס עלות היעד − יחס עלות הרוכשת): חיובי כשהרוכשת זולה יותר",
                                    "npv": "Σ סינרגיה × מימוש × (1 − מס) × a(H, ke) − עלות אינטגרציה × (1 − מס)",
                                    "capacity": "קיבולת מזומן (A7 / הון עצמי) + max(0, L ÷ (1 − L) × הון − חוב)",
-                                   "price": "שווי מוצדק עצמאי × (1 + פרמיה); מזומן קודם, השאר חוב",
+                                   "price": "max(שווי מוצדק עצמאי, נכסים × שווי לכל מיליארד של בתי ההשקעות הנסחרים) × (1 + פרמיה); מזומן קודם, השאר חוב",
                                    "metric": "ערך נוכחי של הסינרגיה ÷ מחיר בפרמיה 20%"},
-                       "assume": Ad, "premia": PREMIA, "primary": PRIMARY, "products": PRODUCTS,
-                       "inputs": ["drivers/<co>.json", "capital (A7, pipeline/build_capital.py)", "lens.json", "market.json", "funds.json", "flow_npv.json"],
+                       "assume": Ad, "mult": mult, "premia": PREMIA, "primary": PRIMARY, "products": PRODUCTS,
+                       "inputs": ["drivers/<co>.json", "capital (A7, pipeline/build_capital.py)", "lens.json", "market.json", "funds.json", "flow_npv.json", "companies/<id>.price.json"],
                        "example": example(I), "excluded": excluded,
                        "note": "מספרים אנליטיים, לא המלצה לקנות או למכור דבר"},
               "cos": cos, "pairs": rows, "bolt": bolt}
@@ -645,7 +714,7 @@ def build():
 
 
 # ---------------------------------------------------------------- verification
-KINDS = ("report", "calc", "lts", "reg", "fund", "xbrl", "none", "ref")
+KINDS = ("report", "calc", "lts", "reg", "fund", "xbrl", "none", "ref", "price")
 
 
 def walk(p, where, bad, M, doc=None, depth=0, bolt=None):
@@ -679,6 +748,9 @@ def walk(p, where, bad, M, doc=None, depth=0, bolt=None):
     elif k == "fund":
         if not all(p.get(x) for x in ("ds", "id", "period", "col")):
             bad.append(("track figure without its key", where))
+    elif k == "price":
+        if not all(p.get(x) for x in ("ticker", "vendor", "date", "value")):
+            bad.append(("market figure without ticker / source / date", where))
     elif k == "lts":
         if not all(p.get(x) for x in ("c", "metric", "period")):
             bad.append(("report component without its key", where))
@@ -719,6 +791,21 @@ def verify(matrix, docs, mix=None, boltf=None):
             bad.append(("assumption not listed or not labelled", k))
     A = assume_vals(Ad)
     cos = matrix["cos"]
+    mu = matrix["meta"].get("mult")
+    if not mu or not mu.get("prov") or len(mu["peers"]) < 3:
+        bad.append(("the AUM multiple is missing or thin",))
+    else:
+        walk(mu["prov"], "mult", bad, matrix)
+        if abs(median(x["v"] for x in mu["peers"]) - mu["v"]) > 1e-6 or any(abs(x["mcap"] / (x["aum"] / 1000) - x["v"]) > 1e-4 for x in mu["peers"]):
+            bad.append(("multiple ≠ median of market value ÷ AUM",))
+        if any(x["id"] in MULT_EXCL for x in mu["peers"]):
+            bad.append(("an excluded house is in the multiple",))
+    for cid, c in cos.items():
+        V = c["val"]
+        n += 1
+        fl = fsum(x["aum"]["v"] for x in c["products"].values()) / 1000 * mu["v"]
+        if abs(V["floor"]["v"] - fl) > ABS or abs(V["v0"]["v"] - max(V["just"]["v"], V["floor"]["v"])) > ABS or V["binds"] != ("aum" if V["floor"]["v"] > V["just"]["v"] else "just"):
+            bad.append(("price base ≠ max(justified, AUM floor), or the binding label is wrong", cid))
     for k, d in docs.items():
         a, t = d["acq"]["id"], d["tgt"]["id"]
         ca, ct = cos[a], cos[t]
@@ -738,9 +825,9 @@ def verify(matrix, docs, mix=None, boltf=None):
                 bad.append(("net ≠ gross × realisation", k, x["s"]))
         S = d["synergy"]
         n += 3
-        if abs(S["gross"]["v"] - sum(x["gross"]["v"] for x in d["products"])) > ABS:
+        if abs(S["gross"]["v"] - fsum(x["gross"]["v"] for x in d["products"])) > ABS:
             bad.append(("Σ gross", k))
-        if abs(S["npv"]["v"] - (sum(x["npv"]["v"] for x in d["products"]) - S["ic"]["v"] * (1 - ca["pnl"]["tax"]["v"] / 100))) > ABS:
+        if abs(S["npv"]["v"] - (fsum(x["npv"]["v"] for x in d["products"]) - S["ic"]["v"] * (1 - ca["pnl"]["tax"]["v"] / 100))) > ABS:
             bad.append(("NPV identity", k))
         C = d["capacity"]
         if abs(C["total"]["v"] - C["cash"]["v"] - C["room"]["v"]) > ABS:
@@ -774,7 +861,7 @@ def verify(matrix, docs, mix=None, boltf=None):
     for cid, m in (mix or {}).items():
         for x in m["aum"]["prods"] + m["tracks"]["cats"]:
             walk(x["prov"], f"mix.{cid}", bad, matrix)
-        if abs(sum(x["w"] for x in m["aum"]["prods"]) - 100) > 1e-3 or abs(sum(x["w"] for x in m["tracks"]["cats"]) - 100) > 1e-3:
+        if abs(fsum(x["w"] for x in m["aum"]["prods"]) - 100) > 1e-3 or abs(fsum(x["w"] for x in m["tracks"]["cats"]) - 100) > 1e-3:
             bad.append(("mix weights do not add to 100%", cid))
     for a, b in ((boltf or {}).get("bolt") or {}).items():
         if b["status"] == "ok":

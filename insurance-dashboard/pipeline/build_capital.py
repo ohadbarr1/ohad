@@ -616,7 +616,7 @@ def walk(p, where, bad, depth=0, c=None):
         for x in p.get("inputs", []):
             if "p" in x and x["p"] is not None:
                 walk(x["p"], where + " > " + x["label"][:30], bad, depth + 1, c)
-    elif p["k"] not in ("lts", "none", "xbrl", "reg", "fund"):   # reg / fund: the regulator's files (A9 bolt-on inputs)
+    elif p["k"] not in ("lts", "none", "xbrl", "reg", "fund", "price"):   # reg / fund: the regulator's files; price: the A9 AUM floor (TASE market value)
         bad.append(("unknown provenance kind", where, p["k"]))
 
 

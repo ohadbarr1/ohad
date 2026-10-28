@@ -10761,7 +10761,8 @@
       "none",
       "xbrl",
       "reg",
-      "fund"
+      "fund",
+      "price"
      ]
     }
    }
@@ -12044,12 +12045,13 @@
       "reg",
       "fund",
       "xbrl",
-      "none"
+      "none",
+      "price"
      ]
     },
     "r": {
      "type": "string",
-     "pattern": "^(c/[a-z_]+|m/[a-z_]+|a|p):[A-Za-z0-9_.]+$|^bolt\\."
+     "pattern": "^(c/[a-z_]+|m/[a-z_]+|a|k|p):[A-Za-z0-9_.]+$|^bolt\\."
     }
    }
   },
@@ -12238,6 +12240,9 @@
      "required": [
       "basis",
       "v0",
+      "just",
+      "floor",
+      "binds",
       "earn",
       "book"
      ],
@@ -12258,6 +12263,18 @@
        "type": [
         "object",
         "null"
+       ]
+      },
+      "just": {
+       "$ref": "#/$defs/consFig"
+      },
+      "floor": {
+       "$ref": "#/$defs/consFig"
+      },
+      "binds": {
+       "enum": [
+        "just",
+        "aum"
        ]
       }
      }
@@ -12379,7 +12396,8 @@
       "products",
       "example",
       "excluded",
-      "note"
+      "note",
+      "mult"
      ],
      "properties": {
       "built": {
@@ -12453,6 +12471,43 @@
          "name",
          "why"
         ]
+       }
+      },
+      "mult": {
+       "type": "object",
+       "required": [
+        "v",
+        "date",
+        "aum_month",
+        "he",
+        "peers",
+        "excl",
+        "prov"
+       ],
+       "properties": {
+        "v": {
+         "type": "number"
+        },
+        "date": {
+         "type": "string"
+        },
+        "peers": {
+         "type": "array",
+         "minItems": 3,
+         "items": {
+          "type": "object",
+          "required": [
+           "id",
+           "mcap",
+           "aum",
+           "v",
+           "date"
+          ]
+         }
+        },
+        "prov": {
+         "$ref": "#/$defs/consProv"
+        }
        }
       }
      }
@@ -12779,6 +12834,24 @@
          ]
         }
        }
+      }
+     }
+    },
+    "value": {
+     "type": "object",
+     "required": [
+      "v0",
+      "just",
+      "floor",
+      "binds",
+      "earn"
+     ],
+     "properties": {
+      "binds": {
+       "enum": [
+        "just",
+        "aum"
+       ]
       }
      }
     }
