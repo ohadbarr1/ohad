@@ -89,11 +89,16 @@ class Built(unittest.TestCase):
         self.assertTrue(any("composite" in b for b in bf.problems(o)))
 
     def test_stale_or_missing_is_never_a_pass(self):
-        by = {r["c"]: r for r in self.out["rows"]}
-        h = by["hachshara"]["sig"]["solv"]
-        self.assertEqual(h["st"], "nodata")
-        self.assertTrue(h.get("stale"))
-        self.assertIn("30.06.24", h["why"])
+        # the rule, on every manager and signal: stale or missing data is "nodata", never "ok"
+        for r in self.out["rows"]:
+            for k, sg in r["sig"].items():
+                for part in [sg, *(sg.get("segs") or {}).values()]:
+                    if part.get("stale"):
+                        self.assertIn(part["st"], ("nodata", "na"), f"{r['c']} {k}")
+        # Hachshara's solvency was stale (30.06.24) until A1 rolled the base to the latest printed ratio (FY'25, 111.3% vs a 110% target)
+        h = {r["c"]: r for r in self.out["rows"]}["hachshara"]["sig"]["solv"]
+        self.assertFalse(h.get("stale"))
+        self.assertNotEqual(h["st"], "ok")
         for r in self.out["rows"]:
             for s in bf.SIG_IDS:
                 for x in r["sig"][s]["segs"].values():

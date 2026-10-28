@@ -1130,6 +1130,23 @@ class Co:
             if ps:
                 n[k + "_latest"] = node(cap[k][ps[-1]]["v"], "%", per_lab(ps[-1]), capP(k, ps[-1], cap[k][ps[-1]], lab, "%"), d=endof(ps[-1]))
         base_d = endof(b)
+        # a later printed ratio than the last date with own funds and SCR amounts (Hachshara: amounts to Q2'24, ratios to FY'25): the scenario
+        # base is the latest printed ratio, SCR is held at the amount date and own funds are derived as SCR × ratio, labelled; never a stale ratio
+        lw = sorted(cap.get("sr_w", {}), key=pkey)
+        if lw and pkey(lw[-1]) > pkey(b):
+            L = lw[-1]
+            rw = cap["sr_w"][L]
+            n["solv_w"] = node(rw["v"], "%", per_lab(L), capP("sr_w", L, rw, "יחס כושר פירעון, עם הוראות מעבר", "%"), d=endof(L))
+            lwo = sorted(cap.get("sr_wo", {}), key=pkey)  # each basis at its own latest print (a quarterly report may print only one)
+            if lwo and pkey(lwo[-1]) > pkey(b):
+                Lo = lwo[-1]
+                n["solv_wo"] = node(cap["sr_wo"][Lo]["v"], "%", per_lab(Lo), capP("sr_wo", Lo, cap["sr_wo"][Lo], "יחס כושר פירעון, ללא הוראות מעבר", "%"), d=endof(Lo))
+            of_d = scr["v"] * rw["v"] / 100
+            n["own_funds"] = node(of_d, MM, per_lab(L), P_calc(f"הון עצמי לכושר פירעון, נגזר · {self.name} · {per_lab(L)}", nf(of_d, 0), MM,
+                                  f"SCR של {per_lab(b)} × יחס כושר הפירעון שהודפס ל-{per_lab(L)} (הסכומים לא הודפסו/לא חולצו ל-{per_lab(L)})",
+                                  [("SCR · " + per_lab(b), nf(scr["v"], 0), n["scr"]["prov"]), ("יחס · " + per_lab(L), nf(rw["v"], 1) + "%", n["solv_w"]["prov"])]), d=endof(L))
+            self.notes.append({"id": "solv_roll", "he": f"בסיס כושר הפירעון: היחס של {per_lab(L)} (האחרון שהודפס); SCR מ-{per_lab(b)} והון עצמי נגזר (SCR × יחס), כי הסכומים ל-{per_lab(L)} חסרים", "src": "derived"})
+            base_d = endof(L)
         self.edges.append(edge("solv.dist", 1, scr["v"] / 100, "identity", "high",
                                P_calc(f"1 נ״א ביחס ← הון עודף · {self.name}", nf(scr["v"] / 100, 1), "מיליוני ש״ח", "Δ הון עודף = SCR × Δ יחס ÷ 100 (SCR קבוע)", [("SCR", nf(scr["v"]), n["scr"]["prov"])]),
                                n=1, window=per_lab(b)))
