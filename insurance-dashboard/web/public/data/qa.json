@@ -1,5 +1,5 @@
 {
- "built": "2026-10-28T02:37:21+02:00",
+ "built": "2026-10-28T03:26:40+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -183,15 +183,15 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "consolidation: 9 companies, 72 pairs (56 ranked), 784 identities; rebuild matches; 0 misses"
+   "note": "consolidation: 9 companies, 72 pairs (56 ranked), 793 identities; rebuild matches; 0 misses"
   },
   {
    "id": "consolidation_lib",
    "ok": true,
    "level": "fail",
-   "n": 1831,
+   "n": 1862,
    "fail": 0,
-   "note": "1831 passed, 0 failed"
+   "note": "1862 passed, 0 failed"
   },
   {
    "id": "capital",
@@ -205,9 +205,9 @@
    "id": "capital_lib",
    "ok": true,
    "level": "fail",
-   "n": 660,
+   "n": 654,
    "fail": 0,
-   "note": "660 passed, 0 failed"
+   "note": "654 passed, 0 failed"
   },
   {
    "id": "expectations",
