@@ -1,5 +1,5 @@
 {
- "built": "2026-10-28T01:45:58+02:00",
+ "built": "2026-10-28T02:37:21+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -303,15 +303,15 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "fragility: 15 managers, 60 signals with data, 16 in watch/alert, 30 events, 0 problems"
+   "note": "fragility: 15 managers, 62 signals with data, 18 in watch/alert, 30 events, 0 problems"
   },
   {
    "id": "fragility_lib",
    "ok": true,
    "level": "fail",
-   "n": 350,
+   "n": 352,
    "fail": 0,
-   "note": "350 passed, 0 failed"
+   "note": "352 passed, 0 failed"
   },
   {
    "id": "attribution",
