@@ -126,9 +126,9 @@ DET_HE = {
              "החלפת מקומות בתוך הפס היא רעש; המניע (מי נעקף ובכמה) מוצג. מהותיות: השינוי במדד מתורגם להכנסה / עלות שנתית (₪ מיליון). "
              "הפתעה: התזוזה בסטיות התקן של כל תזוזות הדירוג YoY של אותו מדד בהיסטוריה."},
 }
-ORDER_RULE = ("סדר הממצאים: מכפלת המהותיות (mat.v, ₪ מיליון בשנה) בהפתעה (sur.v, סטיות תקן), מהגבוה לנמוך; בשוויון לפי מזהה. "
-              "מובילים (top): הראשונים בסדר הזה, עד {top_n}, לכל היותר {top_per_det} מכל גלאי ואחד לכל חברה. אין שדה מצרפי בקובץ: הסדר משוחזר "
-              "משני הרכיבים שפורסמו.")
+ORDER_RULE = ("מכפלת המהותיות (₪ מיליון בשנה) בהפתעה (סטיות תקן), מהגבוה לנמוך; בשוויון לפי המזהה. "
+              "המובילים: {top_n} הראשונים בסדר הזה, לכל היותר {top_per_det} מכל גלאי ואחד לכל חברה. אין שדה מצרפי בקובץ: הסדר משוחזר "
+              "משני הרכיבים שפורסמו.")  # placeholders filled from PARAMS at build (order_rule())
 
 
 # ------------------------------------------------------------------------------------------------ small arithmetic (deterministic on 3.9 and 3.12)
@@ -1588,7 +1588,7 @@ def build():
         "asof": {"lens": lq(L.last_q), "reg": ym(L.asof), "targets": A.dlab(asof_date), "facts": lq(L.last_q), "end": lens_end},
         "params": PARAMS,
         "dets": {k: {"he": DET_HE[k]["he"], "rule": DET_HE[k]["rule"]} for k in DETS},
-        "order_rule": ORDER_RULE,
+        "order_rule": ORDER_RULE.format(top_n=P("top_n"), top_per_det=P("top_per_det")),
         "n": {k: sum(1 for r in rows if r["det"] == k) for k in DETS},
         "disc_base": disc_stats,
         "rows": rows,
