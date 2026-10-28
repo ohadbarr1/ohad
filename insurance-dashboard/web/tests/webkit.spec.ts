@@ -41,19 +41,19 @@ test('company page survives reloads and place switches in WebKit', async ({ page
   expect(seen.length).toBe(13);
 });
 
-/* The phone's bottom bar (the owner's iPhone): the four places only, each label whole on one line, the evidence group off the bar,
+/* The phone's bottom bar (the owner's iPhone): the five places only (שאלות added with the Question Index, S1), each label whole on one line, the evidence group off the bar,
    the active place lit for a company page, and the bar inside the screen. */
-test('phone bottom bar shows the four places in WebKit', async ({ page }) => {
+test('phone bottom bar shows the five places in WebKit', async ({ page }) => {
   await open(page, '/company/phoenix', 'phoenix');
   const bar = page.getByRole('navigation', { name: 'ראשי' });
   const items = bar.locator('a.item:visible');
-  await expect(items).toHaveCount(4);
-  expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(['בית', 'תרחישים', 'חדר מלחמה', 'עמדות']);
+  await expect(items).toHaveCount(5);
+  expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(['בית', 'שאלות', 'תרחישים', 'חדר מלחמה', 'עמדות']);
   await expect(bar.locator('.rail-ev')).toBeHidden();
   await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'בית');
   const fit = await items.evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(); return { cut: l.scrollWidth > l.clientWidth + 1 || l.getBoundingClientRect().height > 20, out: r.left < -1 || r.right > innerWidth + 1 }; }));
   expect(fit.filter((f) => f.cut || f.out), 'a bottom-bar label wraps, is cut or leaves the screen').toEqual([]);
-  for (const [name, url] of [['תרחישים', /\/scenarios/], ['חדר מלחמה', /\/warroom/], ['עמדות', /\/positions/], ['בית', /\/$/]] as const) {
+  for (const [name, url] of [['שאלות', /\/questions/], ['תרחישים', /\/scenarios/], ['חדר מלחמה', /\/warroom/], ['עמדות', /\/positions/], ['בית', /\/$/]] as const) {
     await bar.getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(url);
     await settle(page);
