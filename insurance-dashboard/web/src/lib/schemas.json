@@ -288,6 +288,14 @@
   {
    "pattern": "findings.json",
    "schema": "findings"
+  },
+  {
+   "pattern": "answers/index.json",
+   "schema": "answersIndex"
+  },
+  {
+   "pattern": "answers/*.json",
+   "schema": "answersTopic"
   }
  ],
  "$defs": {
@@ -13406,6 +13414,351 @@
         "type": "string"
        }
       }
+     }
+    }
+   }
+  },
+  "ansFig": {
+   "type": "object",
+   "required": [
+    "l",
+    "v",
+    "u",
+    "t",
+    "b",
+    "asof",
+    "prov"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "l": {
+     "type": "string"
+    },
+    "v": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "u": {
+     "type": "string",
+     "enum": [
+      "pct",
+      "pp",
+      "bp",
+      "m",
+      "bn",
+      "x",
+      "r",
+      "n",
+      "yrs"
+     ]
+    },
+    "t": {
+     "type": "string"
+    },
+    "b": {
+     "type": "string",
+     "enum": [
+      "actual",
+      "target",
+      "forward",
+      "estimate"
+     ]
+    },
+    "asof": {
+     "type": "string"
+    },
+    "prov": {
+     "$ref": "#/$defs/findProv"
+    },
+    "c": {
+     "type": "string"
+    }
+   }
+  },
+  "ansIndexRow": {
+   "type": "object",
+   "required": [
+    "id",
+    "q",
+    "chairs",
+    "topic",
+    "cos",
+    "st",
+    "corr",
+    "why",
+    "asof",
+    "chg",
+    "h",
+    "cs",
+    "cf"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^Q-\\d{3}$"
+    },
+    "q": {
+     "type": "string"
+    },
+    "chairs": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string",
+      "enum": [
+       "ceo",
+       "cfo",
+       "board",
+       "reg",
+       "dist",
+       "inv",
+       "strat"
+      ]
+     }
+    },
+    "topic": {
+     "type": "string"
+    },
+    "cos": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "st": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "nodata"
+     ]
+    },
+    "corr": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "why": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "asof": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "chg": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "holds",
+      "tripped",
+      null
+     ]
+    },
+    "h": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "cs": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "cf": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "additionalProperties": {
+      "$ref": "#/$defs/ansFig"
+     }
+    }
+   }
+  },
+  "answersIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "chairs",
+    "topics",
+    "bases",
+    "n",
+    "ok",
+    "rows"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "chairs": {
+     "type": "object"
+    },
+    "topics": {
+     "type": "object"
+    },
+    "bases": {
+     "type": "object"
+    },
+    "n": {
+     "type": "integer"
+    },
+    "ok": {
+     "type": "integer"
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/ansIndexRow"
+     }
+    }
+   }
+  },
+  "ansRow": {
+   "type": "object",
+   "required": [
+    "id",
+    "q",
+    "chairs",
+    "topic",
+    "cos",
+    "st"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^Q-\\d{3}$"
+    },
+    "q": {
+     "type": "string"
+    },
+    "chairs": {
+     "type": "array",
+     "minItems": 1
+    },
+    "topic": {
+     "type": "string"
+    },
+    "cos": {
+     "type": "array"
+    },
+    "st": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "nodata"
+     ]
+    },
+    "why": {
+     "type": "string"
+    },
+    "figs": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/ansFig"
+     }
+    },
+    "corr": {
+     "type": "string"
+    },
+    "email": {
+     "type": "string"
+    },
+    "ex": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/findExhibit"
+      }
+     ]
+    },
+    "chg": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/findChg"
+      }
+     ]
+    },
+    "vk": {
+     "type": "string"
+    },
+    "links": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "l",
+       "to"
+      ]
+     }
+    },
+    "rel": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "pattern": "^Q-\\d{3}$"
+     }
+    },
+    "asof": {
+     "type": "string"
+    },
+    "note": {
+     "type": "string"
+    },
+    "mix": {
+     "type": "array"
+    },
+    "h": {
+     "type": "string"
+    }
+   }
+  },
+  "answersTopic": {
+   "type": "object",
+   "required": [
+    "v",
+    "topic",
+    "label",
+    "rows"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "topic": {
+     "type": "string"
+    },
+    "label": {
+     "type": "string"
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/ansRow"
      }
     }
    }
