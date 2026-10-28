@@ -135,7 +135,7 @@ export function Consolidation() {
                 <div className="n">{r.rank ?? '–'}</div>
                 <div className="who"><Dot id={x.a} /><Link to={`/consolidation/${x.a}/${x.t}${q}`}>{x.ca.name} ← {x.ct.name}</Link>{x.nc && <Nc t={[x.ca.nc_why, x.ct.nc_why].filter(Boolean).join('\n')} />}</div>
                 <div data-l="ערך נוכחי"><S src={P.npv} neg={x.npv < 0}>{sgn(x.npv)}</S><span className="s">גולמי <span className="num">{sgn(x.gross, 0)}</span> לשנה</span></div>
-                <div data-l="מחיר בפרמיה 20%"><S src={() => P.price(p20.p)}>{amt(p20.price)}</S><span className="s">{x.ct.val.basis === 'pb' ? 'P/B מוצדק' : 'P/E מוצדק, הזרוע'}</span></div>
+                <div data-l="מחיר בפרמיה 20%"><S src={() => P.price(p20.p)}>{amt(p20.price)}</S><span className="s">{x.ct.val.binds === 'aum' ? <>שווי לנכסים <span className="chip est" title={`${M.meta.mult.he} · מחירי ${M.meta.mult.date}`}>רצפה</span></> : x.ct.val.basis === 'pb' ? 'P/B מוצדק' : 'P/E מוצדק, הזרוע'}</span></div>
                 <div data-l="ערך ÷ מחיר"><S src={P.metric} neg={(x.metric ?? 0) < 0}>{pc(x.metric, 1)}</S></div>
                 <div data-l="קיבולת"><S src={P.capacity}>{amt(x.capacity)}</S><span className={`cns-band ${band}`}>{BAND_HE[band]}</span></div>
                 <div data-l="רווח למניה"><S src={() => P.eps(p20.p)} neg={(p20.eps ?? 0) < 0}>{pcS(p20.eps, 1)}</S><span className="s"><bdi>ROE</bdi> <span className="num">{sgn(p20.roe, 2)}</span> נ״א</span></div>
@@ -144,7 +144,7 @@ export function Consolidation() {
           })}
         </ol>
         <div className="cns-more">{!all ? <button type="button" className="chip" onClick={() => setAll(true)}>כל {R.length} הזוגות</button> : <button type="button" className="chip" onClick={() => setAll(false)}>עשרת הראשונים</button>}</div>
-        <div className="src">סינרגיה = נכסי היעד × תשואת דמי ניהול × (יחס עלות היעד − יחס עלות הרוכשת): חיובית כשהרוכשת זולה יותר, לפי מוצר (פנסיה; גמל והשתלמות). ערך נוכחי = הסינרגיה × שיעור מימוש × (1 − מס) לאורך משך הספר (M3), פחות עלות אינטגרציה. מחיר = שווי מוצדק עצמאי × 1.2: P/B מוצדק לבית השקעות נסחר, P/E מוצדק לזרוע חיסכון של מבטחת. קיבולת = הון בר-חלוקה (<Link to="/capital">A7</Link>) או הון עצמי, ועוד מרווח חוב מול מינוף מרבי (<Link to="/debt">ת126</Link>). מסומן "לא בר השוואה": עלויות שאינן מוצגות במלואן; לא מדורג. מספרים אנליטיים, לא המלצה.</div>
+        <div className="src">סינרגיה = נכסי היעד × תשואת דמי ניהול × (יחס עלות היעד − יחס עלות הרוכשת): חיובית כשהרוכשת זולה יותר, לפי מוצר (פנסיה; גמל והשתלמות). ערך נוכחי = הסינרגיה × שיעור מימוש × (1 − מס) לאורך משך הספר (M3), פחות עלות אינטגרציה. מחיר = הגבוה מבין השווי המוצדק העצמאי (P/B מוצדק לבית השקעות נסחר, P/E מוצדק לזרוע חיסכון של מבטחת) ורצפת שווי לנכסים (נכסי היעד × <Sourced className="num" src={() => xprov(M, M.meta.mult.prov, lts)}>{fmt(M.meta.mult.v, 1)}</Sourced> מיליוני ש״ח למיליארד: {M.meta.mult.he}, מחירי {M.meta.mult.date}), × 1.2. קיבולת = הון בר-חלוקה (<Link to="/capital">A7</Link>) או הון עצמי, ועוד מרווח חוב מול מינוף מרבי (<Link to="/debt">ת126</Link>). מסומן "לא בר השוואה": עלויות שאינן מוצגות במלואן; לא מדורג. מספרים אנליטיים, לא המלצה.</div>
       </Panel>
 
       <Panel title="מטריצה: ערך נוכחי של הסינרגיה" aside={<span>שורה = רוכשת · עמודה = יעד · צבע = קיבולת מול מחיר בפרמיה 20%</span>} className="cns-mx-panel">
@@ -208,7 +208,8 @@ export function ConsolidationPair() {
         <div><span className="l">סינרגיה נטו, לשנה</span><S src={P.netT} neg={x.net < 0}>{sgn(x.net, 1)}</S><span className="s">מימוש <span className="num">{fmt(A.r, 0)}%</span> <Est /></span></div>
         <div><span className="l">ערך נוכחי, גולמי</span><S src={P.npvG} neg={x.npv_g < 0}>{sgn(x.npv_g)}</S><span className="s">אחרי מס, בלי מימוש ואינטגרציה</span></div>
         <div className="hero"><span className="l">ערך נוכחי, נטו</span><S src={P.npv} neg={x.npv < 0}>{sgn(x.npv)}</S><span className="s">אינטגרציה <S src={P.ic} cls="num">{amt(x.ic)}</S> <Est /></span></div>
-        <div><span className="l">מחיר בפרמיה {fmt(M.meta.primary, 0)}%</span><S src={() => P.price(p20.p)}>{amt(p20.price)}</S><span className="s">{x.ct.val.basis === 'pb' ? 'P/B מוצדק × הון (החברה כולה)' : 'P/E מוצדק × רווח הזרוע'} <Est t="קלט הערכה, לא מחיר שוק" /></span></div>
+        <div><span className="l">מחיר בפרמיה {fmt(M.meta.primary, 0)}%</span><S src={() => P.price(p20.p)}>{amt(p20.price)}</S><span className="s">{x.ct.val.binds === 'aum' ? <>{M.meta.mult.he} · מחירי {M.meta.mult.date}</> : x.ct.val.basis === 'pb' ? 'P/B מוצדק × הון (החברה כולה)' : 'P/E מוצדק × רווח הזרוע'} <Est t="קלט הערכה" /></span></div>
+        <div><span className="l">שווי מוצדק · רצפת נכסים</span><S src={() => P.co(t, 'val.just')}>{amt(x.ct.val.just.v)}</S><span className="s">רצפה <S src={() => P.co(t, 'val.floor')} cls="num">{amt(x.ct.val.floor.v)}</S> · <S src={() => xprov(M, M.meta.mult.prov, lts)} cls="num">{fmt(M.meta.mult.v, 1)}</S> למיליארד{x.ct.val.binds === 'aum' ? ' · הרצפה קובעת' : ' · השווי המוצדק קובע'}</span></div>
         <div><span className="l">ערך ÷ מחיר</span><S src={P.metric} neg={(x.metric ?? 0) < 0}>{pc(x.metric, 1)}</S><span className="s">המדד המדרג</span></div>
         <div><span className="l">קיבולת תשלום</span><S src={P.capacity}>{amt(x.capacity)}</S><span className={`cns-band ${band}`}>{BAND_HE[band]}</span></div>
       </div>

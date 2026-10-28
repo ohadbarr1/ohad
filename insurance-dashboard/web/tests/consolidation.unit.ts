@@ -67,6 +67,20 @@ for (const y of S) {
 }
 for (const id of Object.keys(M.cos)) for (const k of ['ci', 'aum', 'fy', 'dur'] as const) for (const s of Object.keys(M.cos[id].products) as Seg[]) ok(leaves(xprov(M, M.cos[id].products[s]![k].prov, lts)) > 0, `${id}.${s}.${k} opens`);
 ok(leaves(xprov(M, M.meta.example.ci.prov, lts)) > 0 && M.meta.example.ok, 'the More example is verified and opens');
+// the AUM floor: the multiple is the peers' median, each target's base price is max(justified, floor), the binding one named
+{
+  const mu = M.meta.mult, vs = mu.peers.map((p) => p.v).sort((a, b) => a - b), h = vs.length >> 1;
+  ok(mu.peers.length >= 3 && !mu.peers.some((p) => p.id === 'yelin'), 'multiple peers (Yelin excluded)');
+  ok(near(mu.v, vs.length % 2 ? vs[h] : (vs[h - 1] + vs[h]) / 2, 1e-6), 'multiple = median');
+  ok(mu.peers.every((p) => near(p.v, p.mcap / (p.aum / 1000), 1e-6)), 'market value ÷ AUM per peer');
+  ok(leaves(xprov(M, mu.prov, lts)) >= mu.peers.length * 2, 'the multiple opens to the market values and the regulator AUM');
+  for (const [id, c] of Object.entries(M.cos)) {
+    const aum = Object.values(c.products).reduce((z, p) => z + p!.aum.v!, 0);
+    ok(near(c.val.floor.v, aum / 1000 * mu.v, 1e-9) && near(c.val.v0.v, Math.max(c.val.just.v!, c.val.floor.v!), 1e-9), `${id}: base = max(justified, AUM floor)`);
+    ok(c.val.binds === (c.val.floor.v! > c.val.just.v! ? 'aum' : 'just'), `${id}: the binding basis is named`);
+    ok(leaves(xprov(M, c.val.v0.prov, lts)) > 0, `${id}: the base price opens`);
+  }
+}
 
 // 3 · an override: the identities hold, a higher realisation raises every positive NPV, a higher leverage cap never lowers capacity
 const A2 = { ...D, r: 80, lev: 60, h: 5 };

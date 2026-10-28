@@ -22,7 +22,8 @@ export interface Co {
   id: string; name: string; kind: string; flag?: string; status: 'ok'; nc: boolean; nc_why?: string;
   products: Partial<Record<Seg, Prod>>; blend: Fig; pnl: Partial<Record<PnlKey, Fig>>; lev: Fig;
   cap: { kind: 'a7' | 'equity'; period?: string; basis?: string; dist?: Fig; cash: Fig; scr?: Fig };
-  val: { basis: 'pb' | 'pe'; v0: Fig; earn: Fig; book: Fig | null };
+  /** v0 = max(just, floor): the justified value or the AUM floor (target AUM × the listed houses' median market value per NIS bn), `binds` names which */
+  val: { basis: 'pb' | 'pe'; v0: Fig; just: Fig; floor: Fig; binds: 'just' | 'aum'; earn: Fig; book: Fig | null };
 }
 export type AKey = 'r' | 'ic' | 'h' | 'lev' | 'kd';
 export interface AssumeJ { v: number | null; he: string; unit: string; url: string; prov: XProvJ }
@@ -31,10 +32,11 @@ export interface Row {
   metric: number | null; eps: number | null; roe: number | null; solv: number | null; fit_prod: number; fit_track: number;
 }
 export interface Example { claim: string; id: string; seg: Seg; q: string; ci: Fig; ppb: Fig; ok: boolean; aum: number; first: { q: string; ci: number; aum: number }; pg_ci: number | null; pg_ppb: number | null; roe: number; note: string }
+export interface Mult { v: number; date: string; aum_month: string; he: string; peers: { id: string; name: string; mcap: number; aum: number; v: number; date: string }[]; excl: { id: string; why: string }[]; prov: XProvJ }
 export interface BoltSum { status: 'ok' | 'none'; why?: string; t?: string; name?: string; pair?: string; rank?: number; premium?: number; price?: number; roic?: number; solv?: number; solv_gw?: number; roe?: number; eps?: number; npv?: number; metric?: number }
 export interface MatrixFile {
   meta: { built: string; base: { q: string; end: string; ltm: string[] }; v: number; asof: { aum: string; funds: string }; formula: Record<string, string>;
-    assume: Record<AKey, AssumeJ>; premia: number[]; primary: number; products: Record<Seg, string>; inputs: string[]; example: Example;
+    assume: Record<AKey, AssumeJ>; mult: Mult; premia: number[]; primary: number; products: Record<Seg, string>; inputs: string[]; example: Example;
     excluded: { id: string; name: string; why: string }[]; note: string };
   cos: Record<string, Co>; pairs: Row[]; bolt: Record<string, BoltSum>;
 }
@@ -60,7 +62,7 @@ const PP = 'נקודות אחוז';
 export function resolve(M: MatrixFile, r: string, mixes?: Record<string, MixFile>, doc?: unknown): XProvJ | null {
   const i = r.indexOf(':');
   const scope = r.slice(0, i), path = r.slice(i + 1);
-  let node: unknown = scope.startsWith('c/') ? M.cos[scope.slice(2)] : scope.startsWith('m/') ? mixes?.[scope.slice(2)] : scope === 'a' ? M.meta.assume : scope === 'p' ? doc : null;
+  let node: unknown = scope.startsWith('c/') ? M.cos[scope.slice(2)] : scope.startsWith('m/') ? mixes?.[scope.slice(2)] : scope === 'a' ? M.meta.assume : scope === 'k' ? M.meta : scope === 'p' ? doc : null;
   for (const k of path.split('.')) {
     if (node == null) return null;
     node = Array.isArray(node) ? node[Number(k)] : (node as Record<string, unknown>)[k];
@@ -214,8 +216,8 @@ export function provsOf(M: MatrixFile, x: Pair, lts: LtsResolver = noLts): Provs
     capacity: () => C(`קיבולת תשלום · ${an}`, fmt(x.capacity, 0), 'קיבולת מזומן + מרווח חוב',
       [i_(`קיבולת מזומן${ca.cap.kind === 'a7' ? ' (A7)' : ' (הון עצמי)'}`, fmt(x.cashCap, 0), () => co(ca.id, 'cap.cash')), i_('מרווח חוב', fmt(x.room, 0), P.room)]),
     kd: () => C('עלות החוב', pct(x.kd, 2), 'rf + מרווח', [i_('rf', pct(rf, 2), RF), i_('מרווח (הנחה)', `${fmt(A.kd, 1)} נ״א`, () => assume('kd'))], '%'),
-    price: (p) => { const q = x.prem.find((z) => z.p === p)!; return C(`מחיר · ${tn} · פרמיה ${fmt(p, 0)}%`, fmt(q.price, 0), 'שווי מוצדק עצמאי × (1 + פרמיה)',
-      [i_('שווי מוצדק עצמאי', fmt(ct.val.v0.v, 0), () => co(ct.id, 'val.v0')), i_('פרמיה', pct(p, 0))]); },
+    price: (p) => { const q = x.prem.find((z) => z.p === p)!; return C(`מחיר · ${tn} · פרמיה ${fmt(p, 0)}%`, fmt(q.price, 0), 'מחיר בסיס × (1 + פרמיה); מחיר בסיס = max(שווי מוצדק, רצפת שווי לנכסים)',
+      [i_(`מחיר בסיס (${ct.val.binds === 'aum' ? M.meta.mult.he : 'שווי מוצדק'})`, fmt(ct.val.v0.v, 0), () => co(ct.id, 'val.v0')), i_('פרמיה', pct(p, 0))]); },
     cashP: (p) => { const q = x.prem.find((z) => z.p === p)!; return C(`מזומן · פרמיה ${fmt(p, 0)}%`, fmt(q.cash, 0), 'min(מחיר, קיבולת מזומן): מזומן קודם',
       [i_('מחיר', fmt(q.price, 0), () => P.price(p)), i_('קיבולת מזומן', fmt(x.cashCap, 0), () => co(ca.id, 'cap.cash'))]); },
     debtP: (p) => { const q = x.prem.find((z) => z.p === p)!; return C(`חוב · פרמיה ${fmt(p, 0)}%`, fmt(q.debt, 0), 'מחיר − מזומן', [i_('מחיר', fmt(q.price, 0), () => P.price(p)), i_('מזומן', fmt(q.cash, 0), () => P.cashP(p))]); },
