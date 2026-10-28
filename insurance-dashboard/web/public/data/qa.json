@@ -1,5 +1,5 @@
 {
- "built": "2026-10-28T03:26:40+02:00",
+ "built": "2026-10-28T18:31:53+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -194,6 +194,30 @@
    "note": "1862 passed, 0 failed"
   },
   {
+   "id": "answers",
+   "ok": true,
+   "level": "fail",
+   "n": 163,
+   "fail": 0,
+   "note": "answers: 163 questions, 163 answered, 0 problems"
+  },
+  {
+   "id": "answers_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 3792,
+   "fail": 0,
+   "note": "3792 passed, 0 failed"
+  },
+  {
+   "id": "findings",
+   "ok": true,
+   "level": "fail",
+   "n": 14,
+   "fail": 0,
+   "note": "findings: 14 findings (div:5 brk:1 peer:3 sd:1 disc:1 rank:3), 5 top, 26 suppressed, 0 problems"
+  },
+  {
    "id": "capital",
    "ok": true,
    "level": "fail",
@@ -277,9 +301,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 2152,
+   "n": 2164,
    "fail": 0,
-   "note": "2152 files under contract, 0 failing; 68 contracts; 551 files without a contract"
+   "note": "2164 files under contract, 0 failing; 71 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
@@ -447,7 +471,7 @@
    "level": "warn",
    "n": 223,
    "fail": 0,
-   "note": "223 source URLs checked 2026-10-25 (2 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+   "note": "223 source URLs checked 2026-10-25 (3 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
   },
   {
    "id": "stress",
