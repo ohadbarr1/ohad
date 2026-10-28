@@ -21,8 +21,8 @@ function ok(cond: unknown, what: string) { if (cond) pass++; else { fail++; bad.
 // the digits a sentence may carry outside its figures (pipeline/answer_core.py ALLOWED, the same pattern)
 const ALLOWED = new RegExp(
   "(Q[1-4]'\\d\\d|H[12]'\\d\\d|FY'\\d\\d|9M'\\d\\d|\\b\\d\\d/\\d\\d\\b|\\b\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}\\b|\\b(19|20)\\d\\d\\b|\\b[QF]-\\d{3}\\b|\\b\\d{1,2}M\\b|\\b\\d{1,2}Y\\b|" +
-  '\\b\\d{1,2} (רבעונים|רבעונים רצופים|חודשים|שנים|מנהלים|חברות|קבוצות|מתחרים|עמיתים|מסלולים|רבעון|חודש|שנה|מוצרים|קטגוריות)\\b|' +
-  '\\b(ב|ל|מ|ה)-\\d{1,2} (רבעונים|חודשים|שנים|המנהלים|החברות)\\b)', 'g');
+  '\\b\\d{1,2} (רבעונים|רבעונים רצופים|חודשים|שנים|מנהלים|חברות|קבוצות|מתחרים|עמיתים|מסלולים|רבעון|חודש|שנה|מוצרים|קטגוריות)(?![\\u0590-\\u05FF])|' +
+  '(?<![\\u0590-\\u05FF])(ב|ל|מ|ה)-\\d{1,2} (רבעונים|חודשים|שנים|המנהלים|החברות)(?![\\u0590-\\u05FF]))', 'g');  // JS \\b is ASCII-only: Hebrew edges by lookaround (Python's \\b is Unicode)
 /** the plain text with every quoted figure's display text removed and the allowed labels removed: what is left must hold no digit */
 function strayDigits(text: string, b: OkBody, ids: string[]): string | null {
   let t = text;
@@ -56,7 +56,8 @@ function checkBody(where: string, b: Body, corrFromBuilder?: string | null) {
   ok(sourceLine(b.figs, figIds(b.email)) !== '', `${where}: source line built`);
   if (b.chg) {
     const t = plain(b.chg.text, b.figs, b.chg.thr);
-    ok(t.includes(b.chg.thr) && !t.includes('{thr}'), `${where}/chg: {thr} renders the threshold (${t})`);
+    // a falsifier may name its threshold ({thr}) or describe the crossing in words ("when X overtakes Y"); either way no token survives
+    ok(!t.includes('{thr}') && (!b.chg.text.includes('{thr}') || t.includes(b.chg.thr)), `${where}/chg: {thr} renders the threshold (${t})`);
     ok(b.chg.st === 'holds' || b.chg.st === 'tripped', `${where}/chg: state`);
   }
 }
