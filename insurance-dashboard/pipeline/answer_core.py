@@ -389,7 +389,15 @@ def body_problems(where, a):
 
 # ------------------------------------------------------------------------------------------------ the Savings Lens and the regulator
 SEG_HE = {"pen": "פנסיה", "gem": "גמל והשתלמות", "pg": "פנסיה וגמל", "hish": "קרנות השתלמות", "ins": "ביטוחי מנהלים ופוליסות חיסכון", "all": ""}
-SEG_SET = {"pen": "fam:pension", "gem": "fam:gemel", "pg": "all-ins", "hish": "p:hishtalmut"}
+SEG_SET = {"pen": "fam:pension", "gem": "fam:gemel", "hish": "p:hishtalmut", "ins": "fam:insurance"}  # pg = pen + gem (no single set)
+
+
+def P_reg_seg(metric, pi, w, s, g, title="", value="", unit=""):
+    """a regulator aggregate of a lens segment: one set, or (pg) the sum of the pension and gemel families as a calc node"""
+    if s != "pg":
+        return P_reg(metric, pi, w, SEG_SET[s], g)
+    return P_calc(title or f"{metric} · {SEG_HE['pg']}", value, unit, "פנסיה ועוד גמל והשתלמות",
+                  [(SEG_HE["pen"], "", P_reg(metric, pi, w, "fam:pension", g)), (SEG_HE["gem"], "", P_reg(metric, pi, w, "fam:gemel", g))])
 MM = 'מיליוני ש"ח'
 
 
@@ -448,16 +456,23 @@ class Lens:
         if what == "aum_share":
             return P_calc(f"נתח נכסים · {he(c)} · {SEG_HE[s]} · {lq(q)}", f"{nf(r['aum_share'], 1)}%", "%",
                           "נכסי הקבוצה בסוף הרבעון ÷ נכסי השוק × 100 (רשות שוק ההון; lens.json aum_share)",
-                          [("נכסי הקבוצה", nf(r["reg"]["aE"], 0), P_reg("assets", pi, "m", SEG_SET[s], mg)),
-                           ("נכסי השוק", "", P_reg("assets", pi, "m", SEG_SET[s], -1))])
-        return P_calc(f"נתח ניוד · {he(c)} · {SEG_HE[s]} · {lq(q)}", f"{nf(r['flow_share'], 1)}%", "%",
-                      "העברות נטו של הקבוצה ברבעון ÷ סך ההעברות החיוביות בשוק × 100 (lens.json flow_share)",
-                      [("העברות נטו ברבעון", nf(r["reg"]["tr"], 1), P_reg("transfers", pi, "q", SEG_SET[s], mg))])
+                          [("נכסי הקבוצה", nf(r["reg"]["aE"], 0), P_reg_seg("assets", pi, "m", s, mg)),
+                           ("נכסי השוק", "", P_reg_seg("assets", pi, "m", s, -1))])
+        return P_calc(f"נתח צבירה נטו · {he(c)} · {SEG_HE[s]} · {lq(q)}", f"{nf(r['flow_share'], 1)}%", "%",
+                      "(צבירה אורגנית + העברות נטו) של הקבוצה ברבעון ÷ אותו סכום לכל השוק × 100 (lens.json flow_share)",
+                      [("צבירה אורגנית ברבעון", nf(r["reg"]["org"], 1), P_reg_seg("organic", pi, "q", s, mg)),
+                       ("העברות נטו ברבעון", nf(r["reg"]["tr"], 1), P_reg_seg("transfers", pi, "q", s, mg)),
+                       ("צבירה נטו כולל ניוד, כל השוק", "", P_reg_seg("netflow", pi, "q", s, -1))])
 
     def prov_lts(self, c, s, metric, q):
         r = self.row(c, s, q)
         v = r["rep"][metric]
-        return P_lts(r["rep"]["c"], f"{s}.{metric}", q, f"{LTS_HE.get(metric, metric)} · {he(c)} · {SEG_HE[s]} · {lq(q)}", MM, nf(v, 1))
+        title = f"{LTS_HE.get(metric, metric)} · {he(c)} · {SEG_HE[s]} · {lq(q)}"
+        if s == "pg":  # the lts files carry pension and provident separately: pg = their sum
+            return P_calc(title, nf(v, 1), MM, "מגזר הפנסיה ועוד מגזר הגמל, מהדוח",
+                          [(SEG_HE[x], "", P_lts(r["rep"]["c"], f"{x}.{metric}", q, title.replace(SEG_HE["pg"], SEG_HE[x]), MM, ""))
+                           for x in ("pen", "gem")])
+        return P_lts(r["rep"]["c"], f"{'ic' if s == 'ins' else s}.{metric}", q, title, MM, nf(v, 1))
 
     def prov_ci(self, c, s, q):
         r = self.row(c, s, q)
