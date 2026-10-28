@@ -209,6 +209,12 @@ STEPS = [
           D + "nowcast.json", D + "flow_npv.json"],
          [D + "answers"], code=["pipeline/answer_core.py", "pipeline/questions"], groups={"deploy"},
          note="S1: answers/index.json + answers/<topic>.json; every figure a token with provenance (answer_core rules)"),
+    # module S2: the Finding Engine (six detectors over the published files, ranked by materiality x surprise, top 3-5 per build); gate `findings`
+    step("build_findings", "pipeline/build_findings.py",
+         [D + "lens.json", D + "market.json", D + "companies/index.json", D + "targets.json", D + "kpi.json", D + "csm/solvency.json",
+          D + "facts", D + "restatements.json"],
+         [D + "findings.json"], code=["pipeline/answer_core.py"], groups={"deploy"},
+         note="S2: div / brk / peer / sd / disc / rank findings, each an answer body (answer_core rules), every figure with `src` re-derived"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
