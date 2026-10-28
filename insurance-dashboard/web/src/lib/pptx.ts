@@ -52,7 +52,12 @@ function carry(c: string, t: DeckTheme): string {
 const decOf = (vals: (number | null)[]): number => { const m = Math.max(0, ...vals.map((v) => Math.abs(v ?? 0))); return m >= 100 ? 0 : m >= 1 ? 1 : 2; };
 const fmtCode = (d: number) => (d === 0 ? '#,##0' : d === 1 ? '#,##0.0' : '#,##0.00');
 
-export interface DeckMeta { title: string; theme: DeckTheme; host: string; built: string; dataDate?: string }
+export interface DeckMeta { title: string; theme: DeckTheme; host: string; built: string; dataDate?: string;
+  /** false: the user's own material, sent as theirs (S6 exhibits): no fox mark, no site link or author / company, no "fox-" file prefix,
+   *  no sources slide (the slide's footnote carries the sources). Default (undefined / true): the chart book's branded deck. */
+  brand?: boolean }
+/** a spec may carry a table instead of a chart (an S6 exhibit table) and footnotes printed above the source line */
+type SlideSpec = ChartSpec & { table?: (string | number | null)[][]; foot?: string[] };
 
 /** The footnote of a slide: documents with their pages (each a link to the first page), credits, the computation; then the stamp. */
 function footRuns(spec: ChartSpec, t: Tone, meta: DeckMeta, maxDocs = 5): PptxGenJS.TextProps[] {
@@ -69,8 +74,14 @@ function footRuns(spec: ChartSpec, t: Tone, meta: DeckMeta, maxDocs = 5): PptxGe
   if (formulas.length) parts.push({ text: `מחושב באתר: ${formulas[0]}${formulas.length > 1 ? ` (ועוד ${formulas.length - 1})` : ''}`, options: opt({ italic: true }) });
   if (!parts.length) parts.push({ text: 'הדוחות של החברות ונתוני רשות שוק ההון', options: opt() });
   parts.forEach((p, i) => { runs.push(p); if (i < parts.length - 1) runs.push({ text: ' · ', options: opt() }); });
-  const url = `https://${meta.host}${spec.route}`;
+  const foot = (spec as SlideSpec).foot?.filter(Boolean) ?? [];
+  if (foot.length) runs.unshift({ text: foot.join(' · '), options: opt({ color: t.ink, breakLine: true }) });
   runs.push({ text: '', options: opt({ breakLine: true }) });
+  if (meta.brand === false) {
+    runs.push({ text: `נתונים ${pubLabel(spec.dataDate ?? meta.dataDate ?? meta.built)}`, options: opt({ color: t.faint }) });
+    return runs;
+  }
+  const url = `https://${meta.host}${spec.route}`;
   runs.push({ text: `fox · `, options: opt({ color: t.faint, breakLine: false }) });
   runs.push({ text: `${meta.host}${spec.route.split('?')[0]}`, options: opt({ color: t.faint, hyperlink: { url, tooltip: 'הגרף באתר' } }) });
   runs.push({ text: ` · נתונים ${pubLabel(spec.dataDate ?? meta.dataDate ?? meta.built)} · הופק ${pubLabel(meta.built)}`, options: opt({ color: t.faint }) });
@@ -152,16 +163,26 @@ function addChart(pptx: PptxGenJS, slide: PptxGenJS.Slide, spec: ChartSpec, t: T
   } as unknown as unknown[]);
 }
 
-function frame(slide: PptxGenJS.Slide, t: Tone, n: number) {
+/** a table exhibit: the first row is the header; right to left, the first column drawn rightmost */
+function addTable(slide: PptxGenJS.Slide, rows: (string | number | null)[][], t: Tone, box: [number, number, number, number]) {
+  const [x, y, w, h] = box, n = Math.max(...rows.map((r) => r.length));
+  const cell = (v: string | number | null, head: boolean, first: boolean): PptxGenJS.TableCell => ({ text: v == null ? '–' : typeof v === 'number' ? v.toLocaleString('he-IL') : String(v),
+    options: { fontFace: FONT, fontSize: rows.length > 14 ? 9 : 11, color: head ? t.muted : t.ink, bold: head || first, align: first ? 'right' : 'center', valign: 'middle', ...HE, ...(head ? { fill: { color: t.panel } } : {}) } });
+  const body = rows.map((r, i) => Array.from({ length: n }, (_, k) => cell(r[k] ?? null, i === 0, k === 0)).reverse());
+  const first = Math.min(4.5, w * 0.36), rest = (w - first) / Math.max(1, n - 1);
+  slide.addTable(body, { x, y, w, colW: [first, ...Array(n - 1).fill(rest)].reverse() as number[], rowH: Math.min(0.36, h / rows.length), border: { type: 'solid', pt: 0.5, color: t.line }, fill: { color: t.bg }, margin: 0.05 });
+}
+
+function frame(slide: PptxGenJS.Slide, t: Tone, n: number, brand = true) {
   // fox mark, top left; page number, bottom left (the deck reads right to left: title and footnote sit on the right)
-  slide.addText([{ text: 'fox', options: { color: t.ink, bold: true } }, { text: '.', options: { color: t.accent, bold: true } }], { x: M - 0.05, y: 0.28, w: 1.2, h: 0.4, fontFace: FONT, fontSize: 14, align: 'left', margin: 0 });
+  if (brand) slide.addText([{ text: 'fox', options: { color: t.ink, bold: true } }, { text: '.', options: { color: t.accent, bold: true } }], { x: M - 0.05, y: 0.28, w: 1.2, h: 0.4, fontFace: FONT, fontSize: 14, align: 'left', margin: 0 });
   slide.addText(String(n), { x: M - 0.05, y: H - 0.48, w: 0.8, h: 0.3, fontFace: FONT, fontSize: 9, color: t.faint, align: 'left', margin: 0 });
 }
 
 function chartSlide(pptx: PptxGenJS, spec: ChartSpec, meta: DeckMeta, n: number) {
   const t = TONES[meta.theme], slide = pptx.addSlide();
   slide.background = { color: t.bg };
-  frame(slide, t, n);
+  frame(slide, t, n, meta.brand !== false);
   slide.addText(spec.title || spec.label, { x: M + 1.3, y: 0.24, w: W - 2 * M - 1.3, h: 0.62, fontFace: FONT, fontSize: 22, bold: true, color: t.ink, align: 'right', valign: 'middle', margin: 0, fit: 'shrink', ...HE });
   const sub = [spec.title !== spec.label ? spec.label : '', spec.kind === 'scatter' ? [spec.xName, spec.yName].filter(Boolean).join(' מול ') : spec.unit, spec.span].filter(Boolean).join(' · ');
   slide.addText(sub || ' ', { x: M, y: 0.86, w: W - 2 * M, h: 0.34, fontFace: FONT, fontSize: 12, color: t.muted, align: 'right', margin: 0, ...HE });
@@ -171,7 +192,9 @@ function chartSlide(pptx: PptxGenJS, spec: ChartSpec, meta: DeckMeta, n: number)
   const note = spec.note?.trim();
   const top = note ? 1.82 : 1.42;
   if (note) slide.addText(note, { x: M, y: 1.36, w: W - 2 * M, h: 0.42, fontFace: FONT, fontSize: 12, color: t.ink, italic: true, align: 'right', margin: 0, fit: 'shrink', ...HE });
-  addChart(pptx, slide, spec, t, meta.theme, [M, top, W - 2 * M, 6.18 - top]);
+  const table = (spec as SlideSpec).table;
+  if (table && table.length > 1) addTable(slide, table, t, [M, top, W - 2 * M, 6.18 - top]);
+  else addChart(pptx, slide, spec, t, meta.theme, [M, top, W - 2 * M, 6.18 - top]);
   slide.addShape(pptx.ShapeType.rect, { x: M, y: 6.27, w: W - 2 * M, h: 0.008, fill: { color: t.line }, line: { color: t.line, width: 0 } });
   slide.addText(footRuns(spec, t, meta), { x: M + 0.9, y: 6.32, w: W - 2 * M - 0.9, h: 0.78, align: 'right', valign: 'top', margin: 0, fit: 'shrink', paraSpaceAfter: 2, ...HE });
   if (note) slide.addNotes(note);
@@ -243,14 +266,16 @@ export async function deckBlob(items: ChartSpec[], meta: DeckMeta): Promise<Blob
   const pptx = new Pptx();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.rtlMode = true;
-  pptx.author = 'fox'; pptx.company = 'fox'; pptx.title = meta.title; pptx.subject = `${meta.host} · ${pubLabel(meta.built)}`;
+  const brand = meta.brand !== false;
+  if (brand) { pptx.author = 'fox'; pptx.company = 'fox'; }
+  pptx.title = meta.title; pptx.subject = brand ? `${meta.host} · ${pubLabel(meta.built)}` : pubLabel(meta.built);
   pptx.theme = { headFontFace: FONT, bodyFontFace: FONT };
   const book = items.length > 1;
   let n = 1;
   if (book) { coverSlide(pptx, items, meta); n++; }
   const first = n;
   items.forEach((s) => chartSlide(pptx, s, meta, n++));
-  sourcesSlides(pptx, items, meta, first, n);
+  if (brand) sourcesSlides(pptx, items, meta, first, n);
   const buf = await pptx.write({ outputType: 'arraybuffer' }) as ArrayBuffer;
   return finish(buf);
 }
@@ -262,10 +287,10 @@ export function saveBlob(name: string, blob: Blob) {
 }
 
 /** file name with the period grammar's date: fox-ספר-הגרפים-22.10.26.pptx */
-export const fileName = (title: string, ext: string, built: string) => `fox-${title.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '-')}-${pubLabel(built)}.${ext}`;
+export const fileName = (title: string, ext: string, built: string, brand = true) => `${brand ? 'fox-' : ''}${title.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '-')}-${pubLabel(built)}.${ext}`;
 
 export async function exportDeck(items: ChartSpec[], meta: DeckMeta) {
-  saveBlob(fileName(meta.title, 'pptx', meta.built), await deckBlob(items, meta));
+  saveBlob(fileName(meta.title, 'pptx', meta.built, meta.brand !== false), await deckBlob(items, meta));
 }
 
 export type { SrcRef };

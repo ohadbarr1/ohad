@@ -81,6 +81,8 @@ Checks
                  every figure re-read from the published file it cites (pipeline/check_feed.py)
   answers        module S1 + S6, the Question Index: web/public/data/answers/ equals a rebuild (pipeline/build_answers.py --check); every
                  figure sourced, no number outside a figure token, corridor = one figure, email = two or more, no first-person framing
+                 And `answers_lib`: the page's renderer (web/src/lib/answers.ts) shows every token as its figure, the pasted email keeps no
+                 digit outside a figure and carries a source line, findings keep their two components (web/tests/answers.unit.ts, run in node)
   fragility      module A10, the Fragility Monitor: web/public/data/fragility.json equals a rebuild (pipeline/build_fragility.py --check);
                  every signal in a data state carries provenance and an as-of date and follows its stated rule; no composite field (score,
                  rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
@@ -488,6 +490,16 @@ def answers():
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
     m = re.search(r"(\d+) answered", out[0])
     add("answers", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    # `answers_lib`: the page's token renderer and email builder (web/src/lib/answers.ts) on every published answer (web/tests/answers.unit.ts)
+    node = gate_s3.NODE
+    if not node:
+        return add("answers_lib", False, 0, 1, "node not found: answers.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/answers-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("answers_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("answers: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
 def nowcast():

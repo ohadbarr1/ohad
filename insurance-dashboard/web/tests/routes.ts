@@ -30,6 +30,13 @@ export const ROUTES: [string, string][] = [
   ['valuation-expectations', '/valuation/phoenix/expectations'],
   ['consolidation', '/consolidation'],
   ['consolidation-pair', '/consolidation/menora/clal?r=60'],
+  ['questions', '/questions'],
+  ['questions-filter', '/questions?ch=reg&q=%D7%92%D7%9E%D7%9C'],
+  ['question', '/questions/Q-001'],
+  ['question-email', '/questions/Q-001?r=email'],
+  ['question-exhibit', '/questions/Q-001?r=ex'],
+  ['question-missing', '/questions/Q-999'],
+  ['findings', '/findings'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

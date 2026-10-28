@@ -6,7 +6,7 @@ import { matches, normalize, startsWord, stems, terms } from './hebrew';
 import type { RegistryCompany } from './types';
 import { DOC_TYPE_HE, type Corpus, type DocMeta, type DocType } from './search';
 
-export type Kind = 'אחרונים' | 'חיפושים' | 'חברה' | 'פונקציה' | 'קופה' | 'שורה בדוח' | 'מסמך';
+export type Kind = 'אחרונים' | 'חיפושים' | 'חברה' | 'פונקציה' | 'שאלה' | 'קופה' | 'שורה בדוח' | 'מסמך';
 export interface Item { kind: Kind; label: string; meta: string; to: string; score: number; sub?: string }
 
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
@@ -38,6 +38,9 @@ const FRAG_KEYS = ['fragility', 'fragile', 'warning', 'early', 'שבריריות
 const EXP_KEYS = ['expectations', 'implied', 'reverse', 'priced', 'ציפיות', 'מגולם', 'מגלם', 'משתמע', 'נדרש', 'דורש', 'מתמחר'].map(normalize);
 /** words that reach the consolidation screen (/consolidation, module A9) without a company */
 const CONS_KEYS = ['consolidation', 'merger', 'acquisition', 'synergy', 'bolt-on', 'm&a', 'איחוד', 'איחודים', 'מיזוג', 'מיזוגים', 'רכישה', 'רכישות', 'סינרגיה', 'סינרגיות', 'רוכשת', 'יעד', 'יעדים'].map(normalize);
+/** words that reach the Question Index (/questions, S1) and the findings (/findings, S2) */
+const QI_KEYS = ['questions', 'question', 'ask', 'שאלה', 'שאלות', 'שואלים', 'תשובה', 'תשובות', 'אינדקס'].map(normalize);
+const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 'הפתעה', 'הפתעות', 'חריג', 'חריגים'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -84,11 +87,14 @@ export function parse(q: string, names: ReturnType<typeof companyNames>): Parsed
   return { words: all, company, period, type, rest, restText: rest.join(' ') };
 }
 
-export interface Pool { reg: RegistryCompany[]; names: ReturnType<typeof companyNames>; groups: { label: string; words: string[] }[]; funds: { label: string; grp: string; words: string[] }[]; rows: { c: string; sheet: string; label: string; i: number; words: string[] }[] }
+export interface Pool { reg: RegistryCompany[]; names: ReturnType<typeof companyNames>; groups: { label: string; words: string[] }[]; funds: { label: string; grp: string; words: string[] }[]; rows: { c: string; sheet: string; label: string; i: number; words: string[] }[];
+  /** the Question Index (S1): id, question, the companies it is about */
+  questions: { id: string; q: string; cos: string[]; words: string[] }[] }
 
-export function buildPool(reg: RegistryCompany[], groups: string[], funds: [string, string][], rows: [string, string, string, number][]): Pool {
+export function buildPool(reg: RegistryCompany[], groups: string[], funds: [string, string][], rows: [string, string, string, number][], questions: { id: string; q: string; cos: string[] }[] = []): Pool {
   return {
     reg, names: companyNames(reg),
+    questions: questions.map((x) => ({ id: x.id, q: x.q, cos: x.cos, words: terms(x.q) })),
     groups: groups.map((g) => ({ label: g, words: terms(g) })),
     funds: funds.map(([label, grp]) => ({ label, grp, words: terms(label) })),
     rows: rows.map(([c, sheet, label, i]) => ({ c, sheet, label, i, words: terms(label) })),
@@ -159,6 +165,24 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   if (!p.company && words.length && words.every((w) => CONS_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'מסך האיחודים · רוכשת מול יעד', meta: 'סינרגיית עלויות, קיבולת תשלום, השפעה על הרווח למניה, עלות כושר פירעון', to: '/consolidation', score: 96 });
   }
+  // the Question Index and the findings (S1, S2)
+  if (!p.company && words.length && words.every((w) => QI_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'שאלות · אינדקס השאלות של הענף', meta: 'לפי מי ששואל ולפי נושא, כל תשובה מחושבת ומקושרת למקור', to: '/questions', score: 96 });
+  }
+  if (!p.company && words.length && words.every((w) => FD_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'ממצאים · הפתעות בבסיס העובדות', meta: 'מהותיות והפתעה כשני רכיבים, בלי ציון מצרפי', to: '/findings', score: 96 });
+  }
+  // questions: a question id ("Q-001"), or every word left after the company starts a word of the question (within that company's questions)
+  if (words.length) {
+    const idq = /^q-?\d{1,3}$/i.test(q.trim()) ? q.trim().toLowerCase().replace('-', '') : null;
+    const qw = p.company ? p.rest : words;
+    for (const x of pool.questions) {
+      if (idq) { if (x.id.toLowerCase().replace('-', '').startsWith(idq)) out.push({ kind: 'שאלה', label: x.q, meta: x.id, to: `/questions/${x.id}`, score: 92 }); continue; }
+      if (p.company && !x.cos.includes(p.company.id)) continue;
+      const s = qw.length ? wordScore(x.words, qw) : (p.company ? 1 : 0);
+      if (s) out.push({ kind: 'שאלה', label: x.q, meta: x.id, to: `/questions/${x.id}`, score: 62 + s * 5 });
+    }
+  }
   // market groups and funds (no company filter: a fund's name carries its maker)
   if (words.length) {
     pool.groups.forEach((g) => { const s = wordScore(g.words, words); if (s) out.push({ kind: 'קופה', label: g.label, meta: 'קבוצה · פנסיה, גמל וביטוח', to: `/savings?g=${encodeURIComponent(g.label)}`, score: 70 + s }); });
@@ -182,7 +206,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     docs.docs.filter((d) => d.company === p.company!.id && (!p.type || d.type === p.type) && (!p.period || d.period === p.period))
       .slice(0, 5).forEach((d, i) => out.push({ kind: 'מסמך', label: docLabel(d, name), meta: `${d.pages} עמ׳`, to: `/doc/${d.id}`, score: 90 - i }));
   }
-  const cap: Partial<Record<Kind, number>> = { 'חברה': 5, 'פונקציה': 9, 'קופה': 6, 'שורה בדוח': 7, 'מסמך': 5 };
+  const cap: Partial<Record<Kind, number>> = { 'חברה': 5, 'פונקציה': 9, 'שאלה': 5, 'קופה': 6, 'שורה בדוח': 7, 'מסמך': 5 };
   const by = new Map<Kind, Item[]>();
   out.sort((a, b) => b.score - a.score).forEach((it) => { const l = by.get(it.kind) ?? []; if (l.length < (cap[it.kind] ?? 6)) { l.push(it); by.set(it.kind, l); } });
   return [...by.values()].flat();

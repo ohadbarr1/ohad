@@ -19,14 +19,16 @@ const dataDate = () => load<{ built?: string }>('qa.json').then((q) => q.built?.
 
 /** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens.
  *  With `exportName` the chart carries its own export: the picture as PNG and the plotted series as CSV. */
-export function Chart({ build, height = 320, deps, label, exportName: named, onPoint, source, bookable = true }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+export function Chart({ build, height = 320, deps, label, exportName: named, onPoint, source, bookable = true, tools = true }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+  /** false: no toolbar under the chart (the caller carries its own exports: the S6 exhibit, which exports without the site's mark) */
+  tools?: boolean;
   /** false: no "add to the chart book" action (the book's own cards) */
   bookable?: boolean;
   /** the source line printed under the exported picture ("דוח Q2'26, עמ׳ 75"); without it the picture points to the page on fox */
   source?: string;
   /** a click on a plotted point: lets a chart open the source of the figure it draws */
   onPoint?: (seriesIndex: number, dataIndex: number, seriesName: string) => void }) {
-  const exportName = named ?? (height >= 200 ? `fox-${label.replace(/[\s,]+/g, '-')}` : undefined);
+  const exportName = tools ? named ?? (height >= 200 ? `fox-${label.replace(/[\s,]+/g, '-')}` : undefined) : undefined;
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<ECharts | null>(null);
   const [ready, setReady] = useState(false);

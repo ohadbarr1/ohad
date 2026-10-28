@@ -93,6 +93,10 @@ const Expectations = page(() => import('./pages/Expectations'), 'Expectations');
 const mConsolidation = () => import('./pages/Consolidation');
 const Consolidation = page(mConsolidation, 'Consolidation'); // module A9: the consolidation screen (from /capital, /savings and search, not a nav item)
 const ConsolidationPair = page(mConsolidation, 'ConsolidationPair');
+const mQuestions = () => import('./pages/Questions');  // S1 + S2 + S6: the Question Index, the findings, the Answer Ladder
+const Questions = page(mQuestions, 'Questions');
+const QuestionPage = page(mQuestions, 'QuestionPage');
+const Findings = page(mQuestions, 'Findings');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -188,6 +192,9 @@ export function App() {
         <Route path="expectations" element={<Expectations />} />{/* module A3 */}
         <Route path="consolidation" element={<Consolidation />} />{/* module A9 */}
         <Route path="consolidation/:a/:t" element={<ConsolidationPair />} />
+        <Route path="questions" element={<Questions />} />{/* S1: a main place (nav: שאלות, which also lights /findings) */}
+        <Route path="questions/:id" element={<QuestionPage />} />{/* S6: one answer on the ladder */}
+        <Route path="findings" element={<Findings />} />{/* S2 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

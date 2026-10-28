@@ -16,10 +16,11 @@ import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 
-// The four places, the same on the rail and the phone's bottom bar: [route, icon, label, label on the phone (the same word, shortened),
+// The five places, the same on the rail and the phone's bottom bar: [route, icon, label, label on the phone (the same word, shortened),
 // other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
 const NAV: [string, string, string, string, string[]][] = [
   ['/', 'home', 'בית', 'בית', ['/company/']],
+  ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings']],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', []],
   ['/warroom', 'warroom', 'חדר מלחמה', 'חדר מלחמה', ['/capital', '/consolidation', '/fragility']],
   ['/positions', 'positions', 'עמדות', 'עמדות', []],

@@ -5,6 +5,7 @@
    filing, savings, search, calendar, book, companies, inbox (empty states), download, sliders. Payload: ~2 KB in the shell bundle. */
 type Glyph = { f?: string; s: string };
 const G: Record<string, Glyph> = {
+  questions: { f: 'M4 5h16v11H10l-5 4v-4H4z', s: 'M4 5h16v11H10l-5 4v-4H4zM9.6 9.2a2.4 2.4 0 014.8 0c0 1.6-2.4 1.7-2.4 3.2M12 14.6v.2' },
   home: { f: 'M5 10l7-6 7 6v10H5z', s: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10' },
   compare: { f: 'M4 12h4v8H4zM10 4h4v16h-4zM16 9h4v11h-4z', s: 'M4 12h4v8H4zM10 4h4v16h-4zM16 9h4v11h-4z' },
   value: { f: 'M4 4h16v16H4z', s: 'M4 4h16v16H4zM8 8h8M8 12h3M13 12h3M8 16h3M13 16h3' },

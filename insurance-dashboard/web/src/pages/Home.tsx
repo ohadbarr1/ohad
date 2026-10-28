@@ -16,6 +16,7 @@ import { periodLabelShort, periodTag } from '../lib/kpi';
 import { MacroPanel } from '../components/MacroPanel';
 import { FeedBlock } from '../components/home/FeedBlock';
 import { AdvisoryHub } from '../components/home/AdvisoryHub';
+import { AskStrip } from '../components/home/AskStrip';
 import '../styles/market.css';
 import '../styles/home.css';
 
@@ -94,6 +95,7 @@ export function Home() {
     <div className="wide-page home">
       <h1 className="sr-only">fox · ביטוח, פנסיה וגמל</h1>
       <AdvisoryHub />
+      <AskStrip />
       <SeasonStrip />
       <div className="home-grid">
         <div className="home-main">

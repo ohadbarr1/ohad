@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { execSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 const commit = (() => { try { return execSync('git rev-parse --short HEAD').toString().trim(); } catch { return 'local'; } })();
 
@@ -11,7 +12,9 @@ const single = process.env.SINGLE === '1';
 export default defineConfig({
   // clean URLs (/company/harel): assets are addressed from the site root, so a deep route finds them
   base: single ? './' : '/',
-  define: { __BUILD__: JSON.stringify({ commit, built: new Date().toISOString() }) },
+  // __HAS_FINDINGS__: the Finding Engine (S2) wrote public/data/findings.json before this build (deploy builds the data first, then the
+  // app): without it the page asks for no file at all, so a build without findings logs no 404 (lib/answersLoad.ts useFindings); HAS_FINDINGS=1 forces it on (a test build that adds a fixture)
+  define: { __BUILD__: JSON.stringify({ commit, built: new Date().toISOString() }), __HAS_FINDINGS__: JSON.stringify(process.env.HAS_FINDINGS === '1' || existsSync(new URL('./public/data/findings.json', import.meta.url))) },
   plugins: [react(), ...(single ? [viteSingleFile()] : [])],
   build: {
     outDir: single ? 'dist-single' : 'dist', chunkSizeWarningLimit: 1800,

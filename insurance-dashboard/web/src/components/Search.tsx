@@ -17,9 +17,10 @@ function usePool(enabled: boolean) {
   const ent = useLoad<Entities>(enabled ? 'search/entities.json' : null);
   const reg = useRegistry();
   const rows = useLoad<[string, string, string, number][]>(enabled ? 'search/rows.json' : null);
+  const qi = useLoad<{ rows: { id: string; q: string; cos: string[] }[] }>(enabled ? 'answers/index.json' : null);  // S1: the Question Index
   const [corpus, setCorpus] = useState<Corpus | null>(null);
   useEffect(() => { if (enabled && !corpus) loadCorpus().then(setCorpus, () => {}); }, [enabled, corpus]);
-  const pool = useMemo(() => (enabled && reg.data ? buildPool(reg.data, ent.data?.groups ?? [], ent.data?.funds ?? [], rows.data ?? []) : null), [enabled, reg.data, ent.data, rows.data]);
+  const pool = useMemo(() => (enabled && reg.data ? buildPool(reg.data, ent.data?.groups ?? [], ent.data?.funds ?? [], rows.data ?? [], qi.data?.rows ?? []) : null), [enabled, reg.data, ent.data, rows.data, qi.data]);
   return { pool, corpus, ready: !!(pool && ent.data && rows.data) };
 }
 
@@ -53,10 +54,10 @@ function useFullText(q: string, pool: ReturnType<typeof usePool>['pool'], corpus
 
 /** the word to type after a company for a function: its Hebrew badge when it is a search key, else its first Hebrew key (CSM and DCF stay) */
 const word = (f: (typeof FUNCS)[number]) => (/^[A-Z]+$/.test(f.badge) && !['CSM', 'DCF'].includes(f.badge) ? f.keys.find((k) => /[\u0590-\u05FF]/.test(k)) ?? f.badge : f.badge.split(' ')[0]);
-const ORDER: Kind[] = ['חיפושים', 'אחרונים', 'חברה', 'פונקציה', 'קופה', 'שורה בדוח', 'מסמך'];
+const ORDER: Kind[] = ['חיפושים', 'אחרונים', 'חברה', 'פונקציה', 'שאלה', 'קופה', 'שורה בדוח', 'מסמך'];
 /** a company with a screen code ("הראל csm"): the screen leads */
 const orderFor = (list: Item[]): Kind[] => (list.some((x) => x.kind === 'פונקציה' && x.score >= 90) ? ['פונקציה', ...ORDER.filter((k) => k !== 'פונקציה')] : ORDER);
-const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
+const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'שאלה': 'שאלות', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
 
 export function Search({ big = false }: { big?: boolean }) {
   const [q, setQ] = useState('');
