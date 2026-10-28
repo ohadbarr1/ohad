@@ -79,6 +79,8 @@ Checks
                  it cites or its operation over cited inputs (pipeline/check_cards.py, lane S2)
   feed           the delta feed (web/public/data/feed.json, module M2): every event has a date, a source and a type, no event twice,
                  every figure re-read from the published file it cites (pipeline/check_feed.py)
+  answers        module S1 + S6, the Question Index: web/public/data/answers/ equals a rebuild (pipeline/build_answers.py --check); every
+                 figure sourced, no number outside a figure token, corridor = one figure, email = two or more, no first-person framing
   fragility      module A10, the Fragility Monitor: web/public/data/fragility.json equals a rebuild (pipeline/build_fragility.py --check);
                  every signal in a data state carries provenance and an as-of date and follows its stated rule; no composite field (score,
                  rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
@@ -480,6 +482,14 @@ def consolidation():
         (tail.replace("consolidation: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
+def answers():
+    """module S1 + S6: the Question Index rebuilds equal; every answer obeys the answer rules (answer_core.body_problems)"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_answers.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) answered", out[0])
+    add("answers", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+
+
 def nowcast():
     """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
@@ -650,6 +660,7 @@ def main():
     regulation()
     warroom()
     consolidation()
+    answers()
     capital()
     expectations()
     nowcast()

@@ -202,6 +202,13 @@ STEPS = [
           D + "series", D + "funds/cat.json"],
          [D + "expectations"], code=["pipeline/build_drivers.py"], groups={"deploy"},
          note="A3: forward model to FY'28 + terminal at justified P/B; bisection per lever; percentiles against the company's own 24 quarters"),
+    # module S1 + S6: the Question Index (standing questions, each answered at three altitudes from the published files); gate `answers`
+    step("build_answers", "pipeline/build_answers.py",
+         [D + "lens.json", D + "market.json", D + "companies/index.json", D + "fragility.json", D + "targets.json", D + "kpi.json", D + "csm",
+          D + "capital", D + "consolidation", D + "expectations", D + "warroom", D + "regulation", D + "attribution", D + "drivers", D + "funds.json",
+          D + "nowcast.json", D + "flow_npv.json"],
+         [D + "answers"], code=["pipeline/answer_core.py", "pipeline/questions"], groups={"deploy"},
+         note="S1: answers/index.json + answers/<topic>.json; every figure a token with provenance (answer_core rules)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
