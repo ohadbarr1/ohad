@@ -120,11 +120,11 @@ def fmt(v, u, d=None, signed=False):
         return f"{sn(v, 1 if d is None else d)} נק׳"
     if u == "bp":
         return f"{sn(v, 0 if d is None else d)} נ״ב"
-    if u == "m":
-        dd = (1 if abs(v) < 100 else 0) if d is None else d
-        return f"₪{f(v, dd)} מיליון"
-    if u == "bn":
-        return f"₪{f(v, 1 if d is None else d)} מיליארד"
+    if u in ("m", "bn"):  # the sign goes before the currency: −₪13.7 מיליון, +₪1,686 מיליון
+        dd = ((1 if abs(v) < 100 else 0) if u == "m" else 1) if d is None else d
+        body = nf(abs(v), dd)
+        sign = "" if body.strip("0.,") == "" else MINUS if v < 0 else "+" if signed and v > 0 else ""
+        return f"{sign}₪{body} {'מיליון' if u == 'm' else 'מיליארד'}"
     if u == "x":
         return f"{f(v, 2 if d is None else d)}×"
     if u == "yrs":

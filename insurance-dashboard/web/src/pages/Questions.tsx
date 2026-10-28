@@ -25,7 +25,7 @@ function QRow({ r, a, I }: { r: IndexRow; a?: Answer; I: IndexFile }) {
     <li className={`qi-row st-${r.st}${r.chg === 'tripped' ? ' tripped' : ''}`}>
       <div className="qi-q"><span className="qi-id mono">{r.id}</span><Link to={`/questions/${r.id}`}>{r.q}</Link></div>
       {r.st === 'ok'
-        ? <p className="qi-a">{ok ? <Tokens text={ok.corr} figs={ok.figs} /> : r.corr}</p>
+        ? <p className="qi-a">{r.cs && r.cf ? <Tokens text={r.cs} figs={r.cf} /> : ok ? <Tokens text={ok.corr} figs={ok.figs} /> : r.corr}</p>
         : <p className="qi-a qi-nd"><span className="an-st nodata">אין תשובה כרגע</span> {r.why}</p>}
       <div className="qi-meta">
         {r.asof && <span>נכון ל-<span className="num">{r.asof}</span></span>}
@@ -87,7 +87,8 @@ export function Questions() {
   const set = (k: string, v: string) => setSp((p) => set1(p, k, v), { replace: true });
   const names = useNames();
   const topics = useMemo(() => (I ? Object.keys(I.topics) : null), [I]);
-  const bodies = useBodies(topics);
+  // the index rows carry their corridor figure (cs / cf): the topic files load only for an index written before that
+  const bodies = useBodies(I && I.rows.some((r) => r.st === 'ok' && !r.cf) ? topics : null);
   const rows = useMemo(() => {
     if (!I) return [];
     return I.rows.filter((r) => (!ch || r.chairs.includes(ch)) && (!tp || r.topic === tp))

@@ -43,6 +43,9 @@ def build():
         by_topic.setdefault(q["topic"], []).append(a)
         rows.append({"id": a["id"], "q": a["q"], "chairs": a["chairs"], "topic": a["topic"], "cos": a["cos"], "st": a["st"],
                      "corr": A.render(a["corr"], a["figs"]) if a["st"] == "ok" else None, "why": a.get("why"),
+                     # the corridor sentence with its one figure, so the index renders sourced numbers without loading the topic files
+                     "cs": a["corr"] if a["st"] == "ok" else None,
+                     "cf": {k: a["figs"][k] for k in A.TOKEN.findall(a["corr"]) if k in a["figs"]} if a["st"] == "ok" else None,
                      "asof": a.get("asof"), "chg": a["chg"]["st"] if a.get("chg") else None, "h": a.get("h")})
     index = {"v": 1, "chairs": A.CHAIRS, "topics": {k: v for k, v in A.TOPICS.items() if k in by_topic}, "bases": A.BASES,
              "n": len(rows), "ok": sum(r["st"] == "ok" for r in rows), "rows": rows}

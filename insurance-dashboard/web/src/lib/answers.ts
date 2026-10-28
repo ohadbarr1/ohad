@@ -22,7 +22,9 @@ export interface NoBody { st: 'nodata'; why: string }
 export type Body = OkBody | NoBody;
 /** an answered question as answers/<topic>.json carries it */
 export type Answer = Body & { id: string; q: string; chairs: string[]; topic: string; cos: string[] };
-export interface IndexRow { id: string; q: string; chairs: string[]; topic: string; cos: string[]; st: 'ok' | 'nodata'; corr: string | null; why: string | null; asof: string | null; chg: 'holds' | 'tripped' | null; h: string | null }
+export interface IndexRow { id: string; q: string; chairs: string[]; topic: string; cos: string[]; st: 'ok' | 'nodata'; corr: string | null; why: string | null; asof: string | null; chg: 'holds' | 'tripped' | null; h: string | null;
+  /** the corridor sentence with tokens and its figure, so the index renders sourced numbers without the topic files */
+  cs?: string | null; cf?: Record<string, Fig> | null }
 export interface IndexFile { v: 1; chairs: Record<string, string>; topics: Record<string, string>; bases: Record<string, string>; n: number; ok: number; rows: IndexRow[] }
 export interface TopicFile { v: 1; topic: string; label: string; rows: Answer[] }
 /** one published component of a finding's rank: materiality (u "m": ₪ millions a year at stake) or surprise (u "sd": standard deviations
