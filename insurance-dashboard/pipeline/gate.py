@@ -81,6 +81,9 @@ Checks
                  every figure re-read from the published file it cites (pipeline/check_feed.py)
   answers        module S1 + S6, the Question Index: web/public/data/answers/ equals a rebuild (pipeline/build_answers.py --check); every
                  figure sourced, no number outside a figure token, corridor = one figure, email = two or more, no first-person framing
+  findings       module S2, the Finding Engine: web/public/data/findings.json equals a rebuild (pipeline/build_findings.py --check); every
+                 finding obeys the answer rules (answer_core.body_problems), every figure re-derives from the file its `src` names, the order
+                 reproduces from the two published components (mat x sur) and the stated rule, the top marks follow it, no composite key
   fragility      module A10, the Fragility Monitor: web/public/data/fragility.json equals a rebuild (pipeline/build_fragility.py --check);
                  every signal in a data state carries provenance and an as-of date and follows its stated rule; no composite field (score,
                  rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
@@ -490,6 +493,14 @@ def answers():
     add("answers", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
 
 
+def findings():
+    """module S2: the Finding Engine rebuilds equal; every finding obeys the answer rules, re-derives from its sources and follows the order rule"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_findings.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) findings", out[0])
+    add("findings", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+
+
 def nowcast():
     """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
@@ -661,6 +672,7 @@ def main():
     warroom()
     consolidation()
     answers()
+    findings()
     capital()
     expectations()
     nowcast()

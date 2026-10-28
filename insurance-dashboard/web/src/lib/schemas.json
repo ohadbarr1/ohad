@@ -284,6 +284,10 @@
   {
    "pattern": "consolidation/mix/*.json",
    "schema": "consolidationMix"
+  },
+  {
+   "pattern": "findings.json",
+   "schema": "findings"
   }
  ],
  "$defs": {
@@ -12922,6 +12926,484 @@
           "$ref": "#/$defs/consProv"
          }
         }
+       }
+      }
+     }
+    }
+   }
+  },
+  "findProv": {
+   "type": "object",
+   "required": [
+    "k"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "enum": [
+      "report",
+      "xbrl",
+      "reg",
+      "fund",
+      "calc",
+      "lts",
+      "price",
+      "none"
+     ]
+    }
+   }
+  },
+  "findFig": {
+   "type": "object",
+   "required": [
+    "l",
+    "v",
+    "u",
+    "t",
+    "b",
+    "asof",
+    "prov",
+    "src"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "l": {
+     "type": "string"
+    },
+    "v": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "u": {
+     "type": "string",
+     "enum": [
+      "pct",
+      "pp",
+      "bp",
+      "m",
+      "bn",
+      "x",
+      "r",
+      "n",
+      "yrs"
+     ]
+    },
+    "t": {
+     "type": "string"
+    },
+    "b": {
+     "type": "string",
+     "enum": [
+      "actual",
+      "target",
+      "forward",
+      "estimate"
+     ]
+    },
+    "asof": {
+     "type": "string"
+    },
+    "prov": {
+     "$ref": "#/$defs/findProv"
+    },
+    "c": {
+     "type": "string"
+    },
+    "src": {
+     "type": "array",
+     "minItems": 1
+    }
+   }
+  },
+  "findPart": {
+   "type": "object",
+   "required": [
+    "v",
+    "u",
+    "t",
+    "why"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "number"
+    },
+    "u": {
+     "type": "string"
+    },
+    "t": {
+     "type": "string"
+    },
+    "why": {
+     "type": "string"
+    }
+   }
+  },
+  "findExhibit": {
+   "type": "object",
+   "required": [
+    "kind",
+    "title",
+    "unit",
+    "cats",
+    "series",
+    "foot"
+   ],
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "cat",
+      "hbar",
+      "line",
+      "table"
+     ]
+    },
+    "title": {
+     "type": "string"
+    },
+    "unit": {
+     "type": "string"
+    },
+    "cats": {
+     "type": "array"
+    },
+    "series": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "name",
+       "type",
+       "data"
+      ]
+     }
+    },
+    "foot": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "string"
+     }
+    },
+    "span": {
+     "type": "string"
+    },
+    "rows": {
+     "type": "array"
+    }
+   }
+  },
+  "findChg": {
+   "type": "object",
+   "required": [
+    "text",
+    "fig",
+    "op",
+    "v",
+    "st",
+    "thr"
+   ],
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "fig": {
+     "type": "string"
+    },
+    "op": {
+     "type": "string",
+     "enum": [
+      "<",
+      "<=",
+      ">",
+      ">="
+     ]
+    },
+    "v": {
+     "type": "number"
+    },
+    "st": {
+     "type": "string",
+     "enum": [
+      "holds",
+      "tripped"
+     ]
+    },
+    "thr": {
+     "type": "string"
+    }
+   }
+  },
+  "findRow": {
+   "type": "object",
+   "required": [
+    "id",
+    "det",
+    "c",
+    "seg",
+    "mat",
+    "sur",
+    "top",
+    "st",
+    "figs",
+    "corr",
+    "email",
+    "ex",
+    "chg",
+    "vk",
+    "links",
+    "rel",
+    "asof"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^F-(div|brk|peer|sd|disc|rank)-[a-z0-9_-]+$"
+    },
+    "det": {
+     "type": "string",
+     "enum": [
+      "div",
+      "brk",
+      "peer",
+      "sd",
+      "disc",
+      "rank"
+     ]
+    },
+    "c": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "seg": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "mat": {
+     "$ref": "#/$defs/findPart"
+    },
+    "sur": {
+     "$ref": "#/$defs/findPart"
+    },
+    "top": {
+     "type": "boolean"
+    },
+    "st": {
+     "type": "string",
+     "enum": [
+      "ok"
+     ]
+    },
+    "figs": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/$defs/findFig"
+     }
+    },
+    "corr": {
+     "type": "string"
+    },
+    "email": {
+     "type": "string"
+    },
+    "ex": {
+     "type": [
+      "object",
+      "null"
+     ]
+    },
+    "chg": {
+     "type": [
+      "object",
+      "null"
+     ]
+    },
+    "vk": {
+     "type": "string"
+    },
+    "links": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "l",
+       "to"
+      ]
+     }
+    },
+    "rel": {
+     "type": "array"
+    },
+    "asof": {
+     "type": "string"
+    },
+    "mix": {
+     "type": "array"
+    }
+   }
+  },
+  "findings": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "params",
+    "dets",
+    "order_rule",
+    "n",
+    "rows",
+    "skipped"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "asof": {
+     "type": "object",
+     "required": [
+      "lens",
+      "reg",
+      "targets",
+      "facts",
+      "end"
+     ]
+    },
+    "params": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "v",
+       "he",
+       "u",
+       "det"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "v": {
+        "type": "number"
+       },
+       "he": {
+        "type": "string"
+       },
+       "u": {
+        "type": "string"
+       },
+       "det": {
+        "type": "string",
+        "enum": [
+         "div",
+         "brk",
+         "peer",
+         "sd",
+         "disc",
+         "rank",
+         "all"
+        ]
+       }
+      }
+     }
+    },
+    "dets": {
+     "type": "object",
+     "required": [
+      "div",
+      "brk",
+      "peer",
+      "sd",
+      "disc",
+      "rank"
+     ],
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "he",
+       "rule"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "he": {
+        "type": "string"
+       },
+       "rule": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "order_rule": {
+     "type": "string"
+    },
+    "n": {
+     "type": "object",
+     "required": [
+      "div",
+      "brk",
+      "peer",
+      "sd",
+      "disc",
+      "rank"
+     ]
+    },
+    "disc_base": {
+     "type": "object",
+     "required": [
+      "opp",
+      "stops",
+      "rate"
+     ]
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/findRow"
+     }
+    },
+    "skipped": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "det",
+       "c",
+       "why"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "det": {
+        "type": "string",
+        "enum": [
+         "div",
+         "brk",
+         "peer",
+         "sd",
+         "disc",
+         "rank"
+        ]
+       },
+       "c": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "why": {
+        "type": "string"
        }
       }
      }
