@@ -71,6 +71,46 @@ test('phone bottom bar shows the six places in WebKit', async ({ page }) => {
   }
 });
 
+/* W1 · three doors (plan 01.11.26): a first visit lands on the picker; ?door= opens a door and keeps it; each door has its own bottom bar
+   (saver five places, agent six, Pro the six above), whole labels at 375 px; the phone's door menu switches doors and goes back to the
+   picker; a Pro page opened from the saver's door works and says so. No open() here: it chooses Pro on every load. */
+const DOOR_BARS: [string, string[]][] = [['saver', ['בית', 'המוצרים שלי', 'דמי ניהול', 'השוואה', 'המעקב שלי']], ['agent', ['בית', 'מסלולים', 'השוואה', 'ברירת מחדל', 'גופים', 'כלים']]];
+test('three doors: picker, ?door=, per-door bottom bar and the door menu in WebKit', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.addInitScript(() => { try { localStorage.setItem('theme2', 'phoenix'); localStorage.setItem('fox:seen', JSON.stringify('2099-01-01')); } catch { /* blocked */ } });
+  await page.goto('/'); await settle(page);
+  await expect(page.getByRole('heading', { level: 3, name: 'מה יש לך?' })).toBeVisible();
+  await expect(page.locator('.dfacts .src').first()).toBeVisible();
+  const bar = page.getByRole('navigation', { name: 'ראשי' });
+  for (const [door, places] of DOOR_BARS) {
+    await page.goto(`/?door=${door}`); await settle(page);
+    await expect(page).toHaveURL(/\/$/);  // the door is kept, the address is clean
+    const items = bar.locator('a.item:visible');
+    expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(places);
+    const fit = await items.evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1 || r.left < -1 || r.right > innerWidth + 1; }));
+    expect(fit.filter(Boolean), `a ${door} bar label wraps, is cut or leaves the screen`).toEqual([]);
+    await page.reload(); await settle(page);
+    expect(await items.count(), `${door} kept after a reload`).toBe(places.length);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), `${door} home scrolls sideways`).toBeLessThanOrEqual(1);
+  }
+  // the door menu: switch to Pro (its six places), then back to the picker
+  const pill = page.locator('.door-pill');
+  await pill.click();
+  await page.getByRole('menuitemradio', { name: /^Pro/ }).click();
+  await expect(bar.locator('a.item:visible')).toHaveCount(6);
+  await pill.click();
+  await page.getByRole('menuitem', { name: 'כל הדלתות' }).click();
+  await expect(page.getByRole('heading', { level: 3, name: 'מה יש לך?' })).toBeVisible();
+  // a Pro page from the saver's door: it opens, with the chip and the saver's bar
+  await page.goto('/warroom?door=saver'); await settle(page);
+  await expect(boundary(page)).toHaveCount(0);
+  await expect(page.locator('.pro-chip')).toContainText('עמוד מקצועי');
+  await expect(bar.locator('a.item:visible')).toHaveCount(5);
+  expect(errors).toEqual([]);
+});
+
 /* F1 · the funds section on the phone: hub, screener cards, the compare tray into the head-to-head; no error, no sideways scroll. */
 test('funds hub, screener and compare work on the phone in WebKit', async ({ page }) => {
   const errors: string[] = [];

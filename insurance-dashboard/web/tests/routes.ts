@@ -1,6 +1,11 @@
 /** The routes the visual smoke and the accessibility run cover: one per signature page. */
 export const ROUTES: [string, string][] = [
-  ['home', '/'],
+  ['home', '/'],                                         // the Pro door's home (open() chooses Pro unless the route says ?door=)
+  ['doors', '/?door=pick'],                              // W1: the door picker (no door chosen)
+  ['home-saver', '/?door=saver'],                        // W1: the saver's home
+  ['home-agent', '/?door=agent'],                        // W1: the agent's home
+  ['pro', '/pro'],                                       // W1: the Pro home at its fixed address
+  ['pro-from-saver', '/warroom?door=saver'],             // W1: a Pro page opened from the saver's door (the "עמוד מקצועי" chip, the saver's nav)
   ['company', '/company/phoenix'],
   ['thesis', '/company/phoenix/thesis'],
   ['numbers', '/company/phoenix/numbers'],
@@ -53,9 +58,10 @@ export const ROUTES: [string, string][] = [
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 
-/** Opens a route in a theme and waits until its data has arrived (no "טוען" placeholder left). */
+/** Opens a route in a theme and waits until its data has arrived (no "טוען" placeholder left). The Pro door is chosen (W1: the
+ *  routes are the terminal's pages, and their baselines show its rail) unless the route asks for another door with ?door=. */
 export async function open(page: import('@playwright/test').Page, route: string, theme: (typeof THEMES)[number]) {
-  await page.addInitScript((t) => { try { localStorage.setItem('theme2', t); localStorage.setItem('fox:seen', JSON.stringify('2099-01-01')); } catch { /* blocked */ } }, theme);
+  await page.addInitScript((t) => { try { localStorage.setItem('theme2', t); localStorage.setItem('fox:seen', JSON.stringify('2099-01-01')); localStorage.setItem('fox:door', JSON.stringify('pro')); } catch { /* blocked */ } }, theme);
   await page.goto(route, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => !/טוען/.test(document.querySelector('main')?.textContent ?? ''), null, { timeout: 20_000 }).catch(() => {});
   await page.evaluate(() => document.fonts.ready);
