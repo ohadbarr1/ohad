@@ -50,6 +50,7 @@ TOPICS = {
     "channel": "ערוצי הפצה",
     "perf": "תשואות וביצועים",
     "val": "שווי ותמחור",
+    "funds": "קופות ומסלולים",
 }
 UNITS = {"pct", "pp", "bp", "m", "bn", "x", "r", "n", "yrs"}
 BASES = {"actual": "בפועל", "target": "יעד", "forward": "צפי", "estimate": "אומדן"}

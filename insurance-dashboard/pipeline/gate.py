@@ -92,6 +92,10 @@ Checks
                  rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
                  `fragility_lib`: the page's rules (web/src/lib/fragility.ts) give the same states, and the A2 engine (scenarios.ts) the same
                  worst-case headroom (web/tests/fragility.unit.ts, run in node)
+  funds_contract the funds module (F1): the regulator month landed whole and nothing was dropped silently (every raw track is live or
+                 closed, every family at the same latest month, the CMA's field set unchanged), the latest month's returns in bounds, and
+                 every derived figure re-derives from the published files: net of fees, percentile ranks, the point-in-time category
+                 returns (pipeline/check_funds_contract.py). Without data/raw or pandas only the published-file half runs: a warning.
   attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
                  every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
                  from the facts it cites, and every contribution has inputs that open down to a report and page
@@ -615,6 +619,16 @@ def fragility():  # module A10
         (tail.replace("fragility: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
+def funds_contract():  # module F1
+    import check_funds_contract
+    R, skipped, summary = check_funds_contract.run(quiet=True)
+    if R.fail:
+        return add("funds_contract", False, R.n, len(R.fail), (summary + f"; e.g. {R.fail[0]}")[:200])
+    if skipped:  # the published files passed but the comparison with the regulator files did not run: a warning, never a pass
+        return add("funds_contract", False, R.n, 1, summary[:200], level="warn")
+    add("funds_contract", True, R.n, 0, (summary + (f"; warn: {R.warn[0]}" if R.warn else ""))[:200])
+
+
 def attribution():  # module A4
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -702,6 +716,7 @@ def main():
     cards()
     feed()
     fragility()
+    funds_contract()
     attribution()
     facts()
     assets()

@@ -114,6 +114,10 @@
    "schema": "fundCats"
   },
   {
+   "pattern": "funds/closed.json",
+   "schema": "fundsClosed"
+  },
+  {
    "pattern": "funds/*.json",
    "schema": "fundHist"
   },
@@ -1699,39 +1703,56 @@
      "type": "array",
      "minItems": 1,
      "items": {
-      "type": "object",
-      "required": [
-       "k",
-       "fam",
-       "prod",
-       "track",
-       "name",
-       "mgr",
-       "grp",
-       "id"
-      ],
-      "properties": {
-       "k": {
-        "type": "string"
-       },
-       "id": {
-        "type": "integer"
-       },
-       "name": {
-        "type": "string"
-       },
-       "assets": {
-        "$ref": "#/$defs/num"
-       },
-       "fee": {
-        "$ref": "#/$defs/num"
-       },
-       "y12": {
-        "$ref": "#/$defs/num"
-       },
-       "closed": {
-        "type": "boolean"
-       }
+      "$ref": "#/$defs/fundRow"
+     }
+    },
+    "basis": {
+     "type": "string"
+    },
+    "net_method": {
+     "type": "string"
+    },
+    "real_method": {
+     "type": "string"
+    },
+    "pr_method": {
+     "type": "string"
+    },
+    "cpi_asof": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "cpi_src": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "closed_n": {
+     "type": "integer"
+    },
+    "tx": {
+     "type": "object",
+     "required": [
+      "live",
+      "joined",
+      "mapped",
+      "dis"
+     ],
+     "properties": {
+      "live": {
+       "type": "integer"
+      },
+      "joined": {
+       "type": "integer"
+      },
+      "mapped": {
+       "type": "integer"
+      },
+      "dis": {
+       "type": "integer"
       }
      }
     }
@@ -1975,6 +1996,30 @@
     },
     "tr": {
      "$ref": "#/$defs/nums"
+    },
+    "yn": {
+     "$ref": "#/$defs/nums"
+    },
+    "nd": {
+     "$ref": "#/$defs/nums"
+    },
+    "act": {
+     "$ref": "#/$defs/nums"
+    },
+    "ct": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "$ref": "#/$defs/month"
+       },
+       {
+        "type": "string"
+       }
+      ]
+     }
     }
    }
   },
@@ -1998,6 +2043,24 @@
       "$ref": "#/$defs/nums"
      },
      "n": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     },
+     "ys": {
+      "$ref": "#/$defs/nums"
+     },
+     "ns": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     },
+     "yn": {
+      "$ref": "#/$defs/nums"
+     },
+     "nn": {
       "type": "array",
       "items": {
        "type": "integer"
@@ -13759,6 +13822,230 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/ansRow"
+     }
+    }
+   }
+  },
+  "fundRow": {
+   "type": "object",
+   "required": [
+    "k",
+    "fam",
+    "prod",
+    "track",
+    "name",
+    "mgr",
+    "grp",
+    "id"
+   ],
+   "properties": {
+    "k": {
+     "type": "string"
+    },
+    "id": {
+     "type": "integer"
+    },
+    "name": {
+     "type": "string"
+    },
+    "assets": {
+     "$ref": "#/$defs/num"
+    },
+    "fee": {
+     "$ref": "#/$defs/num"
+    },
+    "y12": {
+     "$ref": "#/$defs/num"
+    },
+    "closed": {
+     "type": "boolean"
+    },
+    "fam": {
+     "enum": [
+      "gemel",
+      "pensia",
+      "insurance"
+     ]
+    },
+    "prod": {
+     "type": "string"
+    },
+    "track": {
+     "type": "string"
+    },
+    "mgr": {
+     "type": "string"
+    },
+    "grp": {
+     "type": "string"
+    },
+    "net": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "number"
+     }
+    },
+    "real": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "number"
+     }
+    },
+    "realn": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "number"
+     }
+    },
+    "alpha": {
+     "type": "number"
+    },
+    "fee1": {
+     "type": "number"
+    },
+    "nd": {
+     "type": "number"
+    },
+    "nd12": {
+     "type": "number"
+    },
+    "act": {
+     "type": "number"
+    },
+    "act_p": {
+     "$ref": "#/$defs/month"
+    },
+    "mgr_id": {
+     "type": "integer"
+    },
+    "pid": {
+     "type": "integer"
+    },
+    "pr": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "prn": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "pn": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "pnn": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "pr1": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "pn1": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "tx": {
+     "type": "object",
+     "required": [
+      "src"
+     ],
+     "properties": {
+      "src": {
+       "enum": [
+        "tb",
+        "name"
+       ]
+      },
+      "type": {
+       "type": "string"
+      },
+      "spec": {
+       "type": "string"
+      },
+      "sub": {
+       "type": "string"
+      },
+      "fund": {
+       "type": "integer"
+      },
+      "op": {
+       "type": "string"
+      },
+      "dis": {
+       "type": "boolean"
+      },
+      "nm": {
+       "type": "string"
+      }
+     }
+    },
+    "gone": {
+     "type": "boolean"
+    },
+    "end": {
+     "$ref": "#/$defs/month"
+    },
+    "end_assets": {
+     "type": "number"
+    },
+    "end_ap": {
+     "$ref": "#/$defs/month"
+    }
+   }
+  },
+  "fundsClosed": {
+   "type": "object",
+   "required": [
+    "asof",
+    "source",
+    "n",
+    "funds"
+   ],
+   "properties": {
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "source": {
+     "type": "string"
+    },
+    "n": {
+     "type": "integer"
+    },
+    "funds": {
+     "type": "array",
+     "items": {
+      "allOf": [
+       {
+        "$ref": "#/$defs/fundRow"
+       },
+       {
+        "type": "object",
+        "required": [
+         "gone",
+         "end"
+        ],
+        "properties": {
+         "gone": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       }
+      ]
      }
     }
    }

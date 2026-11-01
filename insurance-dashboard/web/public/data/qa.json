@@ -1,5 +1,5 @@
 {
- "built": "2026-10-28T18:31:53+02:00",
+ "built": "2026-11-01T19:26:02+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -15,7 +15,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "15,823 aggregates, 178,065 track-months, 0 differences, 0 component cells with no aggregate"
+   "note": "15,927 aggregates, 179,322 track-months, 0 differences, 0 component cells with no aggregate"
   },
   {
    "id": "additivity",
@@ -167,7 +167,7 @@
    "level": "fail",
    "n": 18386,
    "fail": 0,
-   "note": "warroom: pen B -0.1627 t -1.97 n 5633 low; gemel B +0.0115 t 0.55 n 6948 none; hisht B -0.0489 t -1.32 n 5805 low; rebuild matches; 0 misses"
+   "note": "warroom: pen B -0.1630 t -1.97 n 5633 low; gemel B +0.0179 t 0.84 n 6948 none; hisht B -0.0513 t -1.46 n 5805 low; rebuild matches; 0 misses"
   },
   {
    "id": "warroom_lib",
@@ -197,17 +197,25 @@
    "id": "answers",
    "ok": true,
    "level": "fail",
-   "n": 163,
+   "n": 183,
    "fail": 0,
-   "note": "answers: 163 questions, 163 answered, 0 problems"
+   "note": "answers: 183 questions, 183 answered, 0 problems"
   },
   {
    "id": "answers_lib",
    "ok": true,
    "level": "fail",
-   "n": 3792,
+   "n": 4276,
    "fail": 0,
-   "note": "3792 passed, 0 failed"
+   "note": "4276 passed, 0 failed"
+  },
+  {
+   "id": "brief_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 196,
+   "fail": 0,
+   "note": "196 passed, 0 failed"
   },
   {
    "id": "findings",
@@ -247,15 +255,15 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "nowcast.json matches a rebuild; 2 ledger entries; 99 backtest rows; 0 problems"
+   "note": "nowcast.json matches a rebuild; 3 ledger entries; 99 backtest rows; 0 problems"
   },
   {
    "id": "nowcast_ledger",
    "ok": true,
    "level": "fail",
-   "n": 2,
+   "n": 3,
    "fail": 0,
-   "note": "2 frozen estimates at HEAD unchanged"
+   "note": "3 frozen estimates at HEAD unchanged"
   },
   {
    "id": "positions",
@@ -301,9 +309,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 2164,
+   "n": 3648,
    "fail": 0,
-   "note": "2164 files under contract, 0 failing; 71 contracts; 551 files without a contract"
+   "note": "3648 files under contract, 0 failing; 72 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
@@ -319,7 +327,7 @@
    "level": "fail",
    "n": 302,
    "fail": 0,
-   "note": "302 events, 4716 figures, 0 problems"
+   "note": "302 events, 4732 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -327,7 +335,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "fragility: 15 managers, 62 signals with data, 18 in watch/alert, 30 events, 0 problems"
+   "note": "fragility: 15 managers, 62 signals with data, 17 in watch/alert, 29 events, 0 problems"
   },
   {
    "id": "fragility_lib",
@@ -336,6 +344,14 @@
    "n": 352,
    "fail": 0,
    "note": "352 passed, 0 failed"
+  },
+  {
+   "id": "funds_contract",
+   "ok": true,
+   "level": "fail",
+   "n": 16242,
+   "fail": 0,
+   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16242 checks, 0 problems, 0 warnings; 8 odd history prints"
   },
   {
    "id": "attribution",
@@ -471,7 +487,7 @@
    "level": "warn",
    "n": 223,
    "fail": 0,
-   "note": "223 source URLs checked 2026-10-25 (3 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+   "note": "223 source URLs checked 2026-10-25 (7 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
   },
   {
    "id": "stress",
