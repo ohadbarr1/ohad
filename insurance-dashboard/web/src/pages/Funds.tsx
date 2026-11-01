@@ -4,8 +4,9 @@ import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-r
 import { BasisToggle, CompareAdd, CompareTray, FundsHead, FundsNav } from '../components/FundsNav';
 import { Tip } from '../components/Explain';
 import { useMacro } from '../lib/macro';
-import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, famOf, hasNet, netMonthIn, netProv, netSeries, outlierProv, realProv, toReal, useBasis, useReal, winRet, selfDirected, type FundX, type FundsFile } from '../lib/funds';
+import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, famOf, hasNet, netMonthIn, netProv, netSeries, outlierProv, realProv, toReal, useBasis, useReal, winRet, selfDirected, type CatX, type FundX, type FundsFile } from '../lib/funds';
 import { MgrChip } from '../components/MgrChip';
+import { RankPanel, RiskPanel, WatchStar } from '../components/FundsTime';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
 import { Chart } from '../components/Chart';
@@ -377,7 +378,7 @@ export function FundCard() {
         <span className="chip" title={FAM_F}>{FAM_LABEL[famOf(f.track)]}</span>
         {fx.tx?.src === 'tb' && (fx.tx.spec || fx.tx.type) && <span className={`chip${fx.tx.dis ? ' est' : ''}`} title={`${fx.tx.dis ? 'הסיווג הרשמי שונה מהסיווג לפי שם המסלול. ' : ''}הסיווג ברשות (transfer_bank): ${[fx.tx.type, fx.tx.spec, fx.tx.sub].filter(Boolean).join(' · ')}`}>סיווג רשמי: {[...new Set([fx.tx.spec, fx.tx.sub].filter(Boolean))].join(' · ') || fx.tx.type}</span>}
         {out && <Sourced className="chip est" src={() => outlierProv(fx, out, () => expSrc(f, asof, 'st'))} title="החשיפה למניות רחוקה מהחציון בקטגוריה">{out.z > 0 ? 'מניות מעל הקטגוריה' : 'מניות מתחת לקטגוריה'}</Sourced>}<Tip k="outlier" />
-        <CompareAdd k={f.k} name={f.name} /></div></div></div>
+        <CompareAdd k={f.k} name={f.name} /><WatchStar f={fx} asof={asof} /></div></div></div>
       <Toolbar lead={<FundsNav />}><BasisToggle /></Toolbar>
       <CompareTray />
       <section className="kpis">
@@ -419,6 +420,8 @@ export function FundCard() {
           ]} />
         </Panel>
       </div>
+      {/* F2 TIME: the track's place in its category over time, and its risk over 36 months */}
+      <div className="grid2"><RankPanel f={fx} h={h} data={data} /><RiskPanel f={fx} h={h} asof={asof} cats={cats as Record<string, CatX> | undefined} /></div>
 
         <Panel title="משברים" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
           <DataTable caption="משברים" rows={CRISES.map((c) => ({ c, me: crisis(h, c.base, c.to), ct: cat ? crisis(cat, c.base, c.to) : null }))} rowKey={(r) => r.c.key}

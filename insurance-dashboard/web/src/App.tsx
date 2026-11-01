@@ -42,6 +42,13 @@ const Reader = page(mReader, 'Reader');
 const mFunds = () => import('./pages/Funds');
 const FundCard = page(mFunds, 'FundCard');
 const FundMakers = page(mFunds, 'FundMakers');
+const mFundsTime = () => import('./pages/FundsTime');  // F2 TIME: risk and time views of the section
+const FundsMap = page(mFundsTime, 'FundsMap');
+const FundsRank = page(mFundsTime, 'FundsRank');
+const FundsQuilt = page(mFundsTime, 'FundsQuilt');
+const FundsPersist = page(mFundsTime, 'FundsPersist');
+const FundsGlide = page(mFundsTime, 'FundsGlide');
+const FundsWatch = page(() => import('./pages/FundsWatch'), 'FundsWatch');  // F2 TIME: the watchlist
 const mFundsHub = () => import('./pages/FundsHub');  // F1: the "חיסכון" section's front door
 const FundsHub = page(mFundsHub, 'FundsHub');
 const mFundsScreen = () => import('./pages/FundsScreen');
@@ -179,6 +186,12 @@ export function App() {
         <Route path="funds/compare" element={<FundsCompare />} />
         <Route path="funds/holdings" element={<Navigate to="/holdings" replace />} />
         <Route path="funds/makers" element={<FundMakers />} />
+        <Route path="funds/map" element={<FundsMap />} />
+        <Route path="funds/rank" element={<FundsRank />} />
+        <Route path="funds/quilt" element={<FundsQuilt />} />
+        <Route path="funds/persist" element={<FundsPersist />} />
+        <Route path="funds/glide" element={<FundsGlide />} />
+        <Route path="funds/watch" element={<FundsWatch />} />
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
         <Route path="calendar" element={<Calendar />} />

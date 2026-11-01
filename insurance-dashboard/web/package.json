@@ -24,7 +24,8 @@
     "test:answers": "node scripts/answers-test.mjs",
     "test:brief": "node scripts/brief-test.mjs",
     "test:watch": "node scripts/watch-test.mjs",
-    "test:deliver": "node scripts/deliver-test.mjs"
+    "test:deliver": "node scripts/deliver-test.mjs",
+    "test:fundstime": "node scripts/fundstime-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

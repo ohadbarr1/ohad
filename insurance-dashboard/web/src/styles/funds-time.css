@@ -1,0 +1,79 @@
+/* F2 TIME: the "סיכון וזמן" views (map, rank, quilt, persistence, glide paths), the risk panel, the watch star and "המעקב שלי". */
+
+.ftime-nav { margin: -4px 0 12px; }
+@media (max-width: 760px) { .ftime-nav { display: flex; flex-wrap: nowrap; overflow-x: auto; width: 100%; } .ftime-nav a { flex: 0 0 auto; white-space: nowrap; } }
+.flede { margin: 0 0 12px; color: var(--muted); max-width: 72ch; line-height: 1.7; }
+.wbadge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-inline-start: 6px; padding: 0 5px; border-radius: var(--r-pill); background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; line-height: 1; }
+
+/* ---- the watch star ---- */
+.wstar { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: var(--r-pill); padding: 3px 10px; font: 600 var(--t-2) var(--font-body); cursor: pointer; white-space: nowrap; }
+.wstar.sm { width: 26px; height: 26px; padding: 0; justify-content: center; font-size: 14px; }
+.wstar:hover { color: var(--accent-text); border-color: var(--accent-line); }
+.wstar[aria-pressed="true"] { color: var(--warn); border-color: color-mix(in oklch, var(--warn) 45%, transparent); }
+.fact { display: inline-flex; gap: 6px; align-items: center; }
+
+/* ---- the map ---- */
+.fmap { width: 100%; height: clamp(340px, 52vh, 520px); }
+.fplay { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fplay input[type="range"] { flex: 1 1 160px; min-width: 120px; accent-color: var(--accent); }
+.fplay-at { font-size: var(--t-4); min-width: 52px; text-align: center; }
+.fmapname { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.fmapname a { color: var(--fg); }
+
+/* ---- risk ---- */
+table.frisk { width: 100%; }
+table.frisk td:first-child { white-space: nowrap; }
+table.frisk .fexp { color: var(--muted); font-size: var(--t-1); line-height: 1.5; max-width: 46ch; white-space: normal; }
+
+/* ---- the quilt ---- */
+.fq-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.fq-legend .chip { display: inline-flex; align-items: center; gap: 6px; }
+table.fquilt { border-collapse: separate; border-spacing: 3px; width: 100%; table-layout: fixed; min-width: 640px; }
+table.fquilt th { font-size: var(--t-1); font-weight: 600; text-align: center; }
+table.fquilt thead th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
+table.fquilt .fq-rk { width: 40px; }
+table.fquilt th[scope="row"] { position: static; background: none; box-shadow: none; text-align: center; }
+.fq-n { display: block; font-weight: 400; }
+.fq-c { padding: 4px 6px; border-radius: 4px; background: color-mix(in oklch, var(--idc) 22%, var(--panel)); border-inline-start: 4px solid var(--idc); text-align: start; vertical-align: top; transition: opacity var(--fast); }
+.fq-c .src { font-weight: 700; font-size: var(--t-2); }
+.fq-m { display: block; font-size: 10.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fquilt.hi .fq-c.dim2 { opacity: 0.22; }
+.fquilt.hi .fq-c.on { box-shadow: 0 0 0 2px var(--idc); }
+.fq-gap { text-align: center; color: var(--faint); }
+@media (max-width: 760px) { table.fquilt { min-width: 0; border-spacing: 2px; } .fq-c { padding: 3px 3px; border-inline-start-width: 3px; } .fq-c .src { font-size: 11px; } .fq-m { font-size: 9.5px; } table.fquilt th { font-size: 10px; } .fq-n { display: none; } table.fquilt .fq-rk { width: 24px; font-size: 0; } table.fquilt .fq-rk::after { content: '#'; font-size: 10px; } }
+@media (prefers-reduced-motion: reduce) { .fq-c { transition: none; } }
+
+/* ---- persistence ---- */
+.fverdict { margin: 0 0 10px; line-height: 1.7; }
+table.fpersist { width: 100%; }
+table.fpersist th[scope="row"] { white-space: nowrap; }
+.fp-c { background: linear-gradient(to left, color-mix(in oklch, var(--accent) 16%, transparent) var(--w), transparent var(--w)); }
+.fp-c.diag { font-weight: 700; outline: 1px solid var(--accent-line); outline-offset: -1px; }
+.chip.pos, .chip.neg { color: var(--fg); border-color: var(--up); box-shadow: inset 3px 0 0 var(--up); } .chip.neg { border-color: var(--down); box-shadow: inset 3px 0 0 var(--down); }
+
+/* ---- glide ---- */
+.linkish { border: 0; background: none; padding: 0; font: inherit; color: var(--fg); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; display: inline-flex; align-items: center; gap: 6px; }
+.linkish[aria-pressed="true"] { font-weight: 700; }
+.links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: var(--t-2); }
+.links a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- the watchlist ---- */
+.fwatch { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.fw-card { border: 1px solid var(--line-soft); border-radius: var(--r-3); padding: 12px 14px; background: linear-gradient(180deg, var(--panel), var(--panel2)); box-shadow: var(--e-1); display: grid; gap: 8px; min-width: 0; }
+.fw-card.fresh { border-color: var(--accent-line); }
+.fw-card header { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.fw-card header a { font-weight: 700; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
+.fw-acts { display: inline-flex; gap: 6px; flex: none; }
+.fw-sub { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: var(--t-2); }
+.fw-kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; margin: 0; }
+.fw-kv div { display: grid; gap: 2px; }
+.fw-kv dt { font-size: var(--t-1); color: var(--muted); }
+.fw-kv dd { margin: 0; font-size: var(--t-4); font-weight: 600; }
+.fw-d { display: block; font-size: var(--t-1); font-weight: 600; margin-top: 2px; }
+.fw-d.pos { color: var(--up); } .fw-d.neg { color: var(--down); }
+.fw-flags { display: flex; flex-wrap: wrap; gap: 6px; }
+.fw-foot { font-size: var(--t-1); }
+.fw-io { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fw-imp { position: relative; cursor: pointer; }
+.fw-imp input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.fw-imp:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }

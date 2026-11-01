@@ -2,7 +2,9 @@
 import * as echarts from 'echarts/core';
 import { BarChart, LineChart, PieChart, ScatterChart } from 'echarts/charts';
 import { GridComponent, LegendComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components';
+import { MarkAreaComponent } from 'echarts/components';  // F2 TIME: the quartile bands of the percentile charts
 import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([BarChart, LineChart, PieChart, ScatterChart, TitleComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
+echarts.use([MarkAreaComponent]);
 export { echarts };
