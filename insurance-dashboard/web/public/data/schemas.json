@@ -138,6 +138,10 @@
    "schema": "fundsDefault"
   },
   {
+   "pattern": "funds/decision.json",
+   "schema": "fundsDecision"
+  },
+  {
    "pattern": "funds/trackers.json",
    "schema": "fundsTrackers"
   },
@@ -14410,6 +14414,21 @@
     },
     "end_ap": {
      "$ref": "#/$defs/month"
+    },
+    "act_h": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "$ref": "#/$defs/month"
+       },
+       {
+        "type": "number"
+       }
+      ],
+      "minItems": 2
+     }
     }
    }
   },
@@ -15665,6 +15684,608 @@
         }
        }
       }
+     }
+    }
+   }
+  },
+  "fundsDecision": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "method",
+    "sources",
+    "segments",
+    "companies",
+    "coverage_default",
+    "bm_checklist",
+    "missing"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "asof": {
+     "$ref": "#/$defs/date"
+    },
+    "method": {
+     "type": "string"
+    },
+    "src": {
+     "type": "string"
+    },
+    "sources": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "kind",
+       "title",
+       "url",
+       "retrieved"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+       },
+       "kind": {
+        "enum": [
+         "primary",
+         "issuer",
+         "consumer"
+        ]
+       },
+       "title": {
+        "type": "string"
+       },
+       "url": {
+        "type": "string",
+        "pattern": "^https://"
+       },
+       "retrieved": {
+        "$ref": "#/$defs/date"
+       }
+      }
+     }
+    },
+    "segments": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "label",
+       "year",
+       "n",
+       "weights",
+       "avg",
+       "src",
+       "pg"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "year": {
+        "type": "integer"
+       },
+       "n": {
+        "type": "integer"
+       },
+       "weights": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "number"
+        }
+       },
+       "avg": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "number"
+        }
+       },
+       "src": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+       },
+       "pg": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "labels": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "ins_products": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "label",
+       "year",
+       "n",
+       "avg",
+       "src",
+       "pg"
+      ]
+     }
+    },
+    "market_claims": {
+     "type": "object",
+     "required": [
+      "year",
+      "src",
+      "pg"
+     ]
+    },
+    "complaints": {
+     "type": "object",
+     "required": [
+      "year",
+      "src",
+      "pg"
+     ]
+    },
+    "fund_claims": {
+     "type": "object",
+     "required": [
+      "year",
+      "buckets"
+     ]
+    },
+    "companies": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "grp",
+       "in_funds"
+      ],
+      "properties": {
+       "grp": {
+        "type": "string"
+       },
+       "in_funds": {
+        "type": "boolean"
+       },
+       "mgr": {
+        "type": "object"
+       },
+       "service": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "year",
+          "total",
+          "rank",
+          "of",
+          "src",
+          "pg"
+         ],
+         "properties": {
+          "year": {
+           "type": "integer"
+          },
+          "name": {
+           "type": "string"
+          },
+          "total": {
+           "type": "number"
+          },
+          "rank": {
+           "type": "integer"
+          },
+          "of": {
+           "type": "integer"
+          },
+          "sat": {
+           "type": "number"
+          },
+          "compl": {
+           "type": "number"
+          },
+          "phone": {
+           "type": "number"
+          },
+          "funding": {
+           "type": "number"
+          },
+          "digital": {
+           "type": "number"
+          },
+          "claims": {
+           "type": "number"
+          },
+          "pay": {
+           "type": "number"
+          },
+          "speed": {
+           "type": "number"
+          },
+          "prev": {
+           "type": "number"
+          },
+          "chg": {
+           "type": "number"
+          },
+          "wait_s": {
+           "type": "number"
+          },
+          "src": {
+           "type": "string",
+           "pattern": "^[a-z0-9_]+$"
+          },
+          "pg": {
+           "type": "integer"
+          },
+          "pg_prev": {
+           "type": "integer"
+          },
+          "pg_wait": {
+           "type": "integer"
+          }
+         }
+        }
+       },
+       "ins_service": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "year",
+          "total",
+          "rank",
+          "of",
+          "src",
+          "pg"
+         ],
+         "properties": {
+          "year": {
+           "type": "integer"
+          },
+          "name": {
+           "type": "string"
+          },
+          "total": {
+           "type": "number"
+          },
+          "rank": {
+           "type": "integer"
+          },
+          "of": {
+           "type": "integer"
+          },
+          "sat": {
+           "type": "number"
+          },
+          "compl": {
+           "type": "number"
+          },
+          "phone": {
+           "type": "number"
+          },
+          "funding": {
+           "type": "number"
+          },
+          "digital": {
+           "type": "number"
+          },
+          "claims": {
+           "type": "number"
+          },
+          "pay": {
+           "type": "number"
+          },
+          "speed": {
+           "type": "number"
+          },
+          "prev": {
+           "type": "number"
+          },
+          "chg": {
+           "type": "number"
+          },
+          "wait_s": {
+           "type": "number"
+          },
+          "src": {
+           "type": "string",
+           "pattern": "^[a-z0-9_]+$"
+          },
+          "pg": {
+           "type": "integer"
+          },
+          "pg_prev": {
+           "type": "integer"
+          },
+          "pg_wait": {
+           "type": "integer"
+          }
+         }
+        }
+       },
+       "claims": {
+        "type": "object",
+        "required": [
+         "year",
+         "src"
+        ],
+        "properties": {
+         "year": {
+          "type": "integer"
+         },
+         "src": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+         },
+         "entity": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "pg": {
+          "type": "integer"
+         },
+         "sheet": {
+          "type": "string"
+         },
+         "disability": {
+          "type": "object",
+          "required": [
+           "approved",
+           "rejected",
+           "cancelled",
+           "closed"
+          ],
+          "properties": {
+           "approved": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "rejected": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "settled": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "cancelled": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "closed": {
+            "type": "array",
+            "minItems": 5,
+            "items": {
+             "type": [
+              "number",
+              "null"
+             ]
+            }
+           },
+           "n_closed": {
+            "type": "integer"
+           },
+           "cells": {
+            "type": "string"
+           }
+          }
+         },
+         "death": {
+          "type": "object",
+          "required": [
+           "approved",
+           "rejected",
+           "cancelled",
+           "closed"
+          ],
+          "properties": {
+           "approved": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "rejected": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "settled": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "cancelled": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "closed": {
+            "type": "array",
+            "minItems": 5,
+            "items": {
+             "type": [
+              "number",
+              "null"
+             ]
+            }
+           },
+           "n_closed": {
+            "type": "integer"
+           },
+           "cells": {
+            "type": "string"
+           }
+          }
+         },
+         "survivors": {
+          "type": "object",
+          "required": [
+           "approved",
+           "rejected",
+           "cancelled",
+           "closed"
+          ],
+          "properties": {
+           "approved": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "rejected": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "settled": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "cancelled": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "closed": {
+            "type": "array",
+            "minItems": 5,
+            "items": {
+             "type": [
+              "number",
+              "null"
+             ]
+            }
+           },
+           "n_closed": {
+            "type": "integer"
+           },
+           "cells": {
+            "type": "string"
+           }
+          }
+         }
+        }
+       },
+       "claims_missing": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "coverage_default": {
+     "type": "object",
+     "required": [
+      "src",
+      "rules"
+     ],
+     "properties": {
+      "src": {
+       "type": "string",
+       "pattern": "^[a-z0-9_]+$"
+      },
+      "rules": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "required": [
+         "id",
+         "title",
+         "clause",
+         "pg",
+         "q"
+        ],
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "title": {
+          "type": "string"
+         },
+         "clause": {
+          "type": "string"
+         },
+         "pg": {
+          "type": "integer"
+         },
+         "q": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "bm_checklist": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "title",
+       "detail",
+       "src",
+       "q"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "title": {
+        "type": "string"
+       },
+       "detail": {
+        "type": "string"
+       },
+       "src": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+       },
+       "q": {
+        "type": "string"
+       },
+       "note": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "missing": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "what",
+       "reason"
+      ]
      }
     }
    }
