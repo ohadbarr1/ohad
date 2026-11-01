@@ -1,0 +1,132 @@
+{
+ "v": 1,
+ "asof": 202609,
+ "_fixture": "TOOLS fixture for the funds/default.json contract (F2 DATA contract 4). Shape only: the facts are the funds plan's reading and are NOT verified here (verified=false). The published file comes from F2 DATA.",
+ "method": "fixture",
+ "tenders": [
+  {
+   "id": "2024",
+   "label": "המכרז הרביעי",
+   "from": "2024-11-01",
+   "to": "2028-10-31",
+   "depfee": 1,
+   "fee": 0.22,
+   "fee_years": 10,
+   "src": "https://www.gov.il/",
+   "src_title": "fixture: הודעת רשות שוק ההון על זוכי המכרז (לא אומת)",
+   "verified": false,
+   "note": "fixture",
+   "winners": [
+    {
+     "grp": "אינפיניטי",
+     "k": [
+      "p14037"
+     ]
+    },
+    {
+     "grp": "אלטשולר שחם",
+     "k": [
+      "p9757"
+     ]
+    },
+    {
+     "grp": "מור",
+     "k": [
+      "p13909"
+     ]
+    },
+    {
+     "grp": "מיטב",
+     "k": [
+      "p2155"
+     ]
+    }
+   ],
+   "alloc": "fixture: לפי ספרת הביקורת בתעודת הזהות",
+   "fee_alt": [
+    {
+     "fee": 0.22,
+     "depfee": 1
+    }
+   ]
+  },
+  {
+   "id": "T0",
+   "label": "fixture: מכרז קודם לבדיקת ציר הזמן",
+   "from": "2021-11-01",
+   "to": "2024-10-31",
+   "depfee": null,
+   "fee": null,
+   "src": "https://www.gov.il/",
+   "verified": false,
+   "winners": [
+    {
+     "grp": "מיטב",
+     "fee": 0.05,
+     "depfee": 2.49,
+     "verified": false,
+     "src": "https://www.gov.il/"
+    },
+    {
+     "grp": "fixture-historical"
+    }
+   ]
+  },
+  {
+   "id": "broken",
+   "from": "bad",
+   "to": "2020-01-01",
+   "winners": []
+  }
+ ],
+ "funds": [
+  {
+   "tender": "2024",
+   "grp": "מור",
+   "sel": true,
+   "ks": [
+    "p13909"
+   ],
+   "pre": {
+    "from": 202211,
+    "to": 202410,
+    "a0": 1,
+    "a1": 2,
+    "dep": 10,
+    "nd": 5,
+    "share": 1.5,
+    "ret": 8.1
+   },
+   "post": {
+    "from": 202411,
+    "to": 202609,
+    "a0": 2,
+    "a1": 4,
+    "dep": 30,
+    "nd": 20,
+    "share": 4.0,
+    "ret": 12.3
+   }
+  },
+  {
+   "tender": "2024",
+   "grp": "הראל",
+   "sel": false,
+   "ks": [
+    "p9823"
+   ],
+   "pre": {
+    "from": 202211,
+    "to": 202410,
+    "dep": 100,
+    "share": 20
+   },
+   "post": {
+    "from": 202411,
+    "to": 202609,
+    "dep": 110,
+    "share": 18
+   }
+  }
+ ]
+}

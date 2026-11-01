@@ -9,14 +9,16 @@ import '../styles/funds.css';
 /* The "חיסכון" section (funds plan, IA): two halves under one header and one row of tabs. Products (the hub, the tracks, compare)
    for the people who hold them; the business (the lens, the managers, their holdings) for the people who analyse the companies. */
 const TABS: [string, string, boolean?][] = [['/funds', 'קופות', true], ['/funds/screen', 'מסלולים'], ['/funds/compare', 'השוואה'], ['/savings', 'ענף'], ['/managers', 'מנהלים'], ['/holdings', 'הרכב נכסים']];
+TABS.splice(TABS.findIndex(([t]) => t === '/savings'), 0, ['/funds/tools', 'כלים']);  // F2 TOOLS: the calculators and trackers
 
 export function FundsNav() {
   const loc = useLocation();
   // a track card (/funds/p2009) belongs to the tracks tab
   const card = /^\/funds\/[gip]\d+$/.test(loc.pathname);
+  const tool = /^\/funds\/(tools|default|trackers)(\/|$)/.test(loc.pathname);
   return (
     <nav className="subnav" aria-label="חיסכון">
-      {TABS.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') ? 'active' : '')}>{l}</NavLink>)}
+      {TABS.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') || (tool && to === '/funds/tools') ? 'active' : '')}>{l}</NavLink>)}
     </nav>
   );
 }

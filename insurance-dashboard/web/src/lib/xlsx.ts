@@ -127,13 +127,13 @@ function zipOf(files: { name: Uint8Array; data: Uint8Array; raw: number; crc: nu
   return new Blob([...out, ...central, new Uint8Array(e.buffer)] as BlobPart[], { type: MIME });
 }
 
-export function xlsxBlob(sheets: XSheet[], meta?: { title?: string }): Blob {
+export function xlsxBlob(sheets: XSheet[], meta?: { title?: string; author?: string }): Blob {
   const enc = new TextEncoder();
   return zipOf(parts(sheets, meta).map(([n, t]) => { const d = enc.encode(t); return { name: enc.encode(n), data: d, raw: d.length, crc: crc32(d), method: 0 as const }; }));
 }
 
 /** The same workbook, deflated: a large workbook shrinks about tenfold. Falls back to stored where CompressionStream is missing. */
-export async function xlsxBlobAsync(sheets: XSheet[], meta?: { title?: string }): Promise<Blob> {
+export async function xlsxBlobAsync(sheets: XSheet[], meta?: { title?: string; author?: string }): Promise<Blob> {
   if (typeof CompressionStream === 'undefined') return xlsxBlob(sheets, meta);
   const enc = new TextEncoder();
   const files = await Promise.all(parts(sheets, meta).map(async ([n, t]) => {
@@ -150,4 +150,4 @@ function saveAs(name: string, blob: Blob) {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 export function downloadXlsx(name: string, sheets: XSheet[]): void { saveAs(name, xlsxBlob(sheets)); }
-export async function downloadXlsxAsync(name: string, sheets: XSheet[], meta?: { title?: string }): Promise<void> { saveAs(name, await xlsxBlobAsync(sheets, meta)); }
+export async function downloadXlsxAsync(name: string, sheets: XSheet[], meta?: { title?: string; author?: string }): Promise<void> { saveAs(name, await xlsxBlobAsync(sheets, meta)); }

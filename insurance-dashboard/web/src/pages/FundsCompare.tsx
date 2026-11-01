@@ -138,16 +138,13 @@ export function FundsCompare() {
     formula: `בכמה מחלונות ${n} החודשים המתגלגלים, שבהם לשני המסלולים יש כל התשואות החודשיות (${lbl}), התשואה המצטברת של הראשון הייתה גבוהה יותר`,
     inputs: [{ label: 'חלונות שבהם הראשון ניצח', v: nf(w.won, 0) }, { label: 'חלונות משותפים', v: nf(w.of, 0) }, ...(w.first != null ? [{ label: 'החלון הראשון מסתיים', v: ym(ax[w.first]) }, { label: 'החלון האחרון מסתיים', v: ym(ax[w.last!]) }] : [])] });
 
-  /* ---- export: monthly returns, fee and net with live formulas (the user's own workbook: no site mark) ---- */
+  /* ---- export: the compare pack (plan #22): per track the monthly gross, fee and net as a live formula, indices and drawdowns;
+     a summary of formulas over them; the months side by side; sources. The reader's own workbook: no site mark (lib/fundsPack). ---- */
   const exportPack = async () => {
-    const { downloadXlsx } = await import('../lib/xlsx');
-    const head = ['חודש', ...items.flatMap((it) => [`${it.f.name} · ברוטו`, 'ד"נ מצבירה', 'נטו (אומדן)'])].map((v) => ({ v, head: true }));
-    const months = [...new Set(items.flatMap((it) => it.h.p))].sort((a, b) => a - b);
-    const rows = months.map((p, ri) => [ym(p), ...items.flatMap((it, j) => { const i = it.h.p.indexOf(p), g = i < 0 ? null : it.h.y[i], fe = i < 0 ? null : it.ns ? it.ns.fee[i] : it.h.fee[i];
-      const c = 1 + j * 3, ref = (k: number) => `${String.fromCharCode(65 + ((c + k) % 26))}${ri + 2}`;
-      return [g == null ? null : { v: g, fmt: 'n2' as const }, fe == null ? null : { v: fe, fmt: 'n2' as const }, g == null || fe == null ? null : { v: +(g - fe / 12).toFixed(4), f: `${ref(0)}-${ref(1)}/12`, fmt: 'n2' as const }]; })]);
-    const note = [[`מקור: הרשות לשוק ההון, ביטוח וחיסכון (גמל-נט, פנסיה-נט, ביטוח-נט), עד ${ym(asof)}. תשואה חודשית ודמי ניהול מצבירה (% שנתי) כפי שפורסמו; נטו = ברוטו פחות דמי ניהול ÷ 12 (אומדן). חודש בלי דמי ניהול: האחרון שפורסם.`]];
-    downloadXlsx(`השוואת-מסלולים-${ym(asof).replace('/', '-')}.xlsx`, [{ name: 'חודשי', rows: [head, ...rows], freeze: { rows: 1, cols: 1 }, widths: [9, ...items.flatMap(() => [16, 10, 12])] }, { name: 'מקור', rows: note, widths: [120] }]);
+    const [{ downloadXlsxAsync }, { comparePack, fillFee }] = await Promise.all([import('../lib/xlsx'), import('../lib/fundsPack')]);
+    const ts = items.map((it) => { const ff = fillFee(it.h.fee);
+      return { k: it.f.k, name: it.f.name, mgr: it.f.mgr, grp: it.f.grp, prod: it.f.prod, track: it.f.track, p: it.h.p, y: it.h.y, fee: ff.fee, filled: ff.filled, feeNow: it.f.fee, depfee: it.f.depfee, assets: it.f.assets, gone: it.f.gone, end: it.f.end }; });
+    await downloadXlsxAsync(`השוואת-מסלולים-${ym(asof).replace('/', '-')}.xlsx`, comparePack(ts, asof), { title: 'השוואת מסלולים', author: '' });
   };
 
   /* ---- picker ---- */
@@ -171,7 +168,7 @@ export function FundsCompare() {
                 ...items.map((it, i): Column<KRow> => ({ key: it.f.k, sortable: false, label: it.f.name, value: (r) => r.cells(it).v ?? r.cells(it).t, text: (r) => r.cells(it).t,
                   head: <><span className="fcmp-sw" style={{ background: pal()[i % pal().length] }} aria-hidden="true" /><Link to={`/funds/${it.f.k}`}>{it.f.name}</Link><span className="fcmp-sub"><MgrChip grp={it.f.grp} mgr={it.f.mgr} short /> {it.f.prod} · {it.f.track}{it.f.gone && <span className="chip est">נסגר{it.f.end ? ` ${ym(it.f.end)}` : ''}</span>}</span></>,
                   cell: (r) => { const c = r.cells(it); return c.src && c.v != null ? <Sourced src={c.src}><span className="num">{c.t}</span></Sourced> : <span className={c.t === '–' ? 'muted' : 'num'}>{c.t}</span>; } }))]} />
-            <div className="fnote">{netAsk ? 'נטו: ' + (items.some((it) => it.f.net) ? 'מהקובץ כשפורסם, אחרת ' : '') + 'אומדן מההיסטוריה (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12). ' : 'ברוטו: לפני דמי ניהול, כפי שפורסם. '}תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}.<button type="button" className="chip fpack" onClick={() => void exportPack()}>Excel: תשואות חודשיות ונוסחת נטו</button></div>
+            <div className="fnote">{netAsk ? 'נטו: ' + (items.some((it) => it.f.net) ? 'מהקובץ כשפורסם, אחרת ' : '') + 'אומדן מההיסטוריה (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12). ' : 'ברוטו: לפני דמי ניהול, כפי שפורסם. '}תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}.<button type="button" className="chip fpack" onClick={() => void exportPack()}>Excel: חבילת השוואה (נוסחאות חיות)</button></div>
           </Panel>
 
           {axis.length > 2 && <>

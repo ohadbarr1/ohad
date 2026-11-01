@@ -118,6 +118,14 @@
    "schema": "fundsClosed"
   },
   {
+   "pattern": "funds/default.json",
+   "schema": "fundsDefault"
+  },
+  {
+   "pattern": "funds/trackers.json",
+   "schema": "fundsTrackers"
+  },
+  {
    "pattern": "funds/*.json",
    "schema": "fundHist"
   },
@@ -14425,6 +14433,159 @@
         }
        }
       ]
+     }
+    }
+   }
+  },
+  "fundsDefault": {
+   "type": "object",
+   "required": [
+    "tenders"
+   ],
+   "properties": {
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "tenders": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "from",
+       "to",
+       "src",
+       "verified",
+       "winners"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "from": {
+        "type": "string"
+       },
+       "to": {
+        "type": "string"
+       },
+       "depfee": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "fee": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "src": {
+        "type": "string"
+       },
+       "verified": {
+        "type": "boolean"
+       },
+       "winners": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "grp"
+         ],
+         "properties": {
+          "grp": {
+           "type": "string"
+          },
+          "fee": {
+           "type": [
+            "number",
+            "null"
+           ]
+          },
+          "depfee": {
+           "type": [
+            "number",
+            "null"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "funds": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "tender",
+       "grp",
+       "sel"
+      ],
+      "properties": {
+       "tender": {
+        "type": "string"
+       },
+       "grp": {
+        "type": "string"
+       },
+       "sel": {
+        "type": "boolean"
+       }
+      }
+     }
+    }
+   }
+  },
+  "fundsTrackers": {
+   "type": "object",
+   "required": [
+    "asof",
+    "groups"
+   ],
+   "properties": {
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "groups": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "label",
+       "tracks"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "label": {
+        "type": "string"
+       },
+       "tracks": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "k",
+          "name",
+          "g",
+          "td"
+         ],
+         "properties": {
+          "k": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }

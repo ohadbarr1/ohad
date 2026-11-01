@@ -202,7 +202,7 @@ export function FundsHub() {
       </Panel>
 
       <nav className="ftiles" aria-label="כלי החיסכון">
-        {([['/funds/screen', 'funds', 'כל המסלולים', 'סינון לפי מוצר, משפחה, דמי ניהול וחשיפה; שמירת סינונים'], ['/funds/compare', 'compare', 'השוואה ראש בראש', '2–4 מסלולים: צמיחה נטו, חלונות מתגלגלים, ירידות, שנים'],
+        {([['/funds/screen', 'funds', 'כל המסלולים', 'סינון לפי מוצר, משפחה, דמי ניהול וחשיפה; שמירת סינונים'], ['/funds/compare', 'compare', 'השוואה ראש בראש', '2–4 מסלולים: צמיחה נטו, חלונות מתגלגלים, ירידות, שנים'], ['/funds/tools', 'sliders', 'כלים', 'מה היה לי, דמי ניהול לאורך קריירה, קרנות ברירת מחדל, עוקבי מדד'],
           ['/savings', 'savings', 'הענף', 'נכסים, צבירה, ניוד והכנסות דמי ניהול של הגופים'], ['/managers', 'companies', 'מנהלים', 'החברות המנהלות ודירוגן לאורך זמן'], ['/holdings', 'statement', 'הרכב נכסים', 'מה הגופים מחזיקים, ברמת גוף ומוצר']] as const).map(([to, icon, t, d]) => (
           <Link key={to} to={to} className="ftile"><span className="icotile lg"><Icon name={icon} /></span><b>{t}</b><span>{d}</span></Link>
         ))}
