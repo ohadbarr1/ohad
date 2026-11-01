@@ -15,6 +15,8 @@ import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
+import { useWatchNews } from '../lib/watchLoad';  // S10: the badge on שאלות
+import '../styles/watch.css';
 
 // The five places, the same on the rail and the phone's bottom bar: [route, icon, label, label on the phone (the same word, shortened),
 // other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
@@ -43,6 +45,7 @@ export function Layout() {
   useEffect(() => { window.scrollTo(0, 0); }, [section]);
   const reg = useRegistry();
   const { help, setHelp } = useKeyboard(toggle);
+  const news = useWatchNews();  // S10: followed answers that changed since the last look at /watch (0 when nothing is followed)
   useEffect(() => {
     const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
     // while the list loads a name is unknown (undefined); once it has loaded, an id that is not on it is a page that does not exist (null)
@@ -57,7 +60,7 @@ export function Layout() {
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox" title="fox · דף הבית"><Logo size={40} /></NavLink>
         <nav aria-label="ראשי">
-          {NAV.map(([to, icon, label, short, also]) => <NavLink key={to} to={to} end={to === '/'} aria-label={label} className={({ isActive }) => `item${isActive || lit(loc.pathname, also) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span></NavLink>)}
+          {NAV.map(([to, icon, label, short, also]) => <NavLink key={to} to={to} end={to === '/'} aria-label={to === '/questions' && news > 0 ? `${label}, ${news} תשובות במעקב השתנו` : label} className={({ isActive }) => `item${isActive || lit(loc.pathname, also) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span>{to === '/questions' && news > 0 && <span className="wt-badge" aria-hidden="true">{news > 99 ? '99+' : news}</span>}</NavLink>)}
           <div className="rail-ev" role="group" aria-labelledby="rail-ev-l">
             <span className="rail-ev-l" id="rail-ev-l">ראיות</span>
             {EVIDENCE.map(([to, icon, label, also]) => <NavLink key={to} to={to} aria-label={label} className={({ isActive }) => `item ev${isActive || lit(loc.pathname, also) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span></NavLink>)}

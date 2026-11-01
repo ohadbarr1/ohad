@@ -88,7 +88,8 @@ Checks
                  reproduces from the two published components (mat x sur) and the stated rule, the top marks follow it, no composite key
   watch          module S10, Watch & Wake: web/public/data/watch.json equals a rebuild from the ledger data/ledger/answers (pipeline/build_watch.py
                  --check), every ledger file is named by its date and well formed; and `watch_ledger`: the ledger is append-only against git
-                 HEAD (a day's snapshot is never rewritten or removed)
+                 HEAD (a day's snapshot is never rewritten or removed); `watch_lib`: the page's subscription matching, morning brief and its
+                 Doc (web/src/lib/watch.ts, watchDoc.ts) on fixtures and the published file (web/tests/watch.unit.ts, run in node)
   fragility      module A10, the Fragility Monitor: web/public/data/fragility.json equals a rebuild (pipeline/build_fragility.py --check);
                  every signal in a data state carries provenance and an as-of date and follows its stated rule; no composite field (score,
                  rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
@@ -523,6 +524,16 @@ def watch():
     m = re.search(r"(\d+) snapshots", out[0])
     add("watch", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
     append_only("watch_ledger", "data/ledger/answers", "answer snapshots")
+    # `watch_lib`: the page's subscription matching, brief and Doc (web/src/lib/watch.ts, watchDoc.ts) on fixtures and the published file
+    node = gate_s3.NODE
+    if not node:
+        return add("watch_lib", False, 0, 1, "node not found: watch.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/watch-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("watch_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("watch: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
 def nowcast():

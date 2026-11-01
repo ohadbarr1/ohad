@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { Empty, ErrorBox, Loading, Pick } from '../components/ui';
 import { AnswerDetail, Tokens } from '../components/Answer';
+import { WatchToggle } from '../components/WatchToggle';  // S10
 import { useStored } from '../lib/local';
 import { pubLabel } from '../lib/format';
 import { isOk, qScore, RUNGS, topFirst, type Answer, type Finding, type IndexFile, type IndexRow, type Rung } from '../lib/answers';
@@ -103,7 +104,7 @@ export function Questions() {
     <div className="qi">
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="questions" /></span>שאלות</h1>
         <div className="sub"><span><span className="num">{I.n}</span> שאלות</span><span>·</span><span><span className="num">{I.ok}</span> עם תשובה</span>
-          {tripped > 0 && <><span>·</span><span><span className="num">{tripped}</span> שהסף שלהן נחצה</span></>}<span>·</span><span>מחושב מחדש בכל בנייה, כל מספר נפתח במקור</span><span>·</span><Link to="/findings">ממצאים</Link></div></div></div>
+          {tripped > 0 && <><span>·</span><span><span className="num">{tripped}</span> שהסף שלהן נחצה</span></>}<span>·</span><span>מחושב מחדש בכל בנייה, כל מספר נפתח במקור</span><span>·</span><Link to="/findings">ממצאים</Link><span>·</span><Link to="/watch">מה השתנה</Link></div></div></div>
 
       <section className="qi-ctl" aria-label="סינון">
         <div className="qi-chairs" role="group" aria-label="מי שואל">
@@ -114,6 +115,7 @@ export function Questions() {
           <label className="qi-search"><span className="sr-only">סינון השאלות</span><Icon name="search" />
             <input type="search" value={text} placeholder="סינון: מילה מהשאלה, חברה, Q-001" onChange={(e) => setText(e.target.value)} onBlur={() => set('q', text.trim())} onKeyDown={(e) => { if (e.key === 'Enter') set('q', text.trim()); }} /></label>
           <Pick label="נושא" cap="נושא" value={tp} onChange={(v) => set('t', v)} options={[['', 'כל הנושאים'], ...Object.entries(I.topics).map(([k, l]) => [k, l] as [string, string])]} />
+          {tp && I.topics[tp] && <WatchToggle k="t" id={tp} what={`הנושא ${I.topics[tp]}`} />}
         </div>
       </section>
 
@@ -147,7 +149,8 @@ export function QuestionPage() {
         <span className="eyebrow"><span className="mono">{row.id}</span> · {I.topics[row.topic] ?? row.topic}</span>
         <h1 className="qp-h1">{row.q}</h1>
         <div className="sub"><span>שואלים: {row.chairs.map((c) => I.chairs[c] ?? c).join(' · ')}</span>{row.asof && <><span>·</span><span>נכון ל-<span className="num">{row.asof}</span></span></>}
-          {row.h && <><span>·</span><span className="dim" title="חתימת התשובה: משתנה כשהפסיקה או המשפט משתנים">גרסה <span className="mono">{row.h}</span></span></>}</div>
+          {row.h && <><span>·</span><span className="dim" title="חתימת התשובה: משתנה כשהפסיקה או המשפט משתנים">גרסה <span className="mono">{row.h}</span></span></>}
+          <span>·</span><WatchToggle k="q" id={row.id} what={`השאלה ${row.id}`} /></div>
       </div></div>
       {row.st !== 'ok' ? <Empty title="אין תשובה כרגע" icon="questions">{row.why}</Empty>
         : !bodies ? <Loading what="התשובה" />
@@ -167,6 +170,7 @@ function FindingItem({ f, det, open, toggle, names }: { f: Finding; det?: string
         {f.top && <span className="fd-top">מוביל</span>}
         {det && <span className="dim">{det}</span>}
         {f.c && <span className="fd-co">{names[f.c] ?? f.c}</span>}
+        <WatchToggle k="f" id={f.id} what={`הממצא ${f.id}`} compact />
       </div>
       {ok ? <p className="fd-corr"><Tokens text={ok.corr} figs={ok.figs} /></p> : <p className="fd-corr qi-nd">{f.st === 'nodata' ? f.why : ''}</p>}
       <div className="fd-comp" aria-label="רכיבי הדירוג, כל אחד בנפרד">

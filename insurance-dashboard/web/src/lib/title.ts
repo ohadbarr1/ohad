@@ -36,6 +36,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'search': return t('חיפוש');
     case 'questions': return p[2] ? null : p[1] ? t(p[1], 'שאלות') : t('שאלות');  // S1 / S6
     case 'findings': return p[1] ? null : t('ממצאים');  // S2
+    case 'watch': return p[1] ? null : t('מה השתנה בתשובות');  // S10
     case 'feed': return p[1] ? null : t('מה השתנה');  // module M2
     case 'attribution': return p[1] ? null : t('גשר ROE');  // module A4
     case 'positions': return p[2] ? null : p[1] ? t('עמדה', 'ספר העמדות') : t('ספר העמדות');  // module A6

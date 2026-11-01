@@ -40,6 +40,8 @@ const EXP_KEYS = ['expectations', 'implied', 'reverse', 'priced', 'ציפיות'
 const CONS_KEYS = ['consolidation', 'merger', 'acquisition', 'synergy', 'bolt-on', 'm&a', 'איחוד', 'איחודים', 'מיזוג', 'מיזוגים', 'רכישה', 'רכישות', 'סינרגיה', 'סינרגיות', 'רוכשת', 'יעד', 'יעדים'].map(normalize);
 /** words that reach the Question Index (/questions, S1) and the findings (/findings, S2) */
 const QI_KEYS = ['questions', 'question', 'ask', 'שאלה', 'שאלות', 'שואלים', 'תשובה', 'תשובות', 'אינדקס'].map(normalize);
+/** words that reach the morning brief (/watch, S10) */
+const WT_KEYS = ['watch', 'changes', 'brief', 'מעקב', 'עוקב', 'השתנה', 'שינויים', 'תקציר', 'בוקר'].map(normalize);
 const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 'הפתעה', 'הפתעות', 'חריג', 'חריגים'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
@@ -171,6 +173,9 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   }
   if (!p.company && words.length && words.every((w) => FD_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'ממצאים · הפתעות בבסיס העובדות', meta: 'מהותיות והפתעה כשני רכיבים, בלי ציון מצרפי', to: '/findings', score: 96 });
+  }
+  if (!p.company && words.length && words.every((w) => WT_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'מה השתנה בתשובות · תקציר הבוקר', meta: 'מה שבמעקב שינה פסיקה מאז הביקור הקודם, ספים שנחצו, והבאים בלוח', to: '/watch', score: 96 });
   }
   // questions: a question id ("Q-001"), or every word left after the company starts a word of the question (within that company's questions)
   if (words.length) {

@@ -37,6 +37,7 @@ export const ROUTES: [string, string][] = [
   ['question-exhibit', '/questions/Q-001?r=ex'],
   ['question-missing', '/questions/Q-999'],
   ['findings', '/findings'],
+  ['watch', '/watch'],
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

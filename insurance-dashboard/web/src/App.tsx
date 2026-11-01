@@ -97,6 +97,7 @@ const mQuestions = () => import('./pages/Questions');  // S1 + S2 + S6: the Ques
 const Questions = page(mQuestions, 'Questions');
 const QuestionPage = page(mQuestions, 'QuestionPage');
 const Findings = page(mQuestions, 'Findings');
+const Watch = page(() => import('./pages/Watch'), 'Watch');  // S10: Watch & Wake, the morning brief (from the שאלות badge, the home line and search)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -195,6 +196,7 @@ export function App() {
         <Route path="questions" element={<Questions />} />{/* S1: a main place (nav: שאלות, which also lights /findings) */}
         <Route path="questions/:id" element={<QuestionPage />} />{/* S6: one answer on the ladder */}
         <Route path="findings" element={<Findings />} />{/* S2 */}
+        <Route path="watch" element={<Watch />} />{/* S10 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

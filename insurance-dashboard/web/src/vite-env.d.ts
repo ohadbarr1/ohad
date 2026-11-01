@@ -3,3 +3,4 @@
 declare const __BUILD__: { commit: string; built: string };
 /** public/data/findings.json existed when this build ran (vite.config.ts) */
 declare const __HAS_FINDINGS__: boolean;
+declare const __HAS_WATCH__: boolean;
