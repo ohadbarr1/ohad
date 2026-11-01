@@ -234,6 +234,15 @@ STEPS = [
          [D + "funds/stats", D + "funds/rank", D + "funds/persist.json", D + "funds/default.json", D + "funds/trackers.json", D + "funds/glide.json"],
          code=["pipeline/fund_stats_lib.py", "pipeline/funds_lib.py"], groups={"deploy"},
          note="F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)"),
+    # W2: the decision data for recommending a pension fund (CMA service index, the funds' claims annex B3, default coverage, the
+    # managers'-insurance switching checklist). extract_decision reads the raw files on the drive and verifies the register (manual);
+    # build_decision is standard library; gate `decision` (rebuild byte-equal + rules)
+    step("extract_decision", "pipeline/extract_decision.py", ["data/regulation/decision_src.json", "data/raw/regulator"],
+         ["data/regulation/decision_claims.json"], {"drive", "pdftotext"},
+         note="W2: annex B3 from the companies' Excel files; re-finds every transcribed figure and quoted rule in its raw file"),
+    step("build_decision", "pipeline/build_decision.py",
+         ["data/regulation/decision_src.json", "data/regulation/decision_claims.json", D + "funds.json"], [D + "funds/decision.json"],
+         groups={"deploy"}, note="W2: funds/decision.json (python3 pipeline/build_decision.py --check)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
