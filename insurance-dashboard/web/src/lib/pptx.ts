@@ -12,15 +12,15 @@ import { pdfPage } from './sources';
    only when a reader exports. */
 
 export type DeckTheme = 'phoenix' | 'dark';
-interface Tone { bg: string; ink: string; muted: string; faint: string; line: string; accent: string; accentText: string; cover: string; coverInk: string; panel: string }
-const TONES: Record<DeckTheme, Tone> = {
+export interface Tone { bg: string; ink: string; muted: string; faint: string; line: string; accent: string; accentText: string; cover: string; coverInk: string; panel: string }
+export const TONES: Record<DeckTheme, Tone> = {
   // the site's tokens: navy ink, ember accent (phoenix); obsidian with a warm accent (dark)
   phoenix: { bg: 'FFFFFF', ink: '111C3F', muted: '4F5668', faint: '687086', line: 'D3D7DF', accent: 'FF4E31', accentText: 'C2391C', cover: '111C3F', coverInk: 'FFFFFF', panel: 'F1F2F6' },
   dark: { bg: '161310', ink: 'F7F4F0', muted: 'BDB4A9', faint: '9E968C', line: '3D3631', accent: 'F59A4B', accentText: 'F7AE6E', cover: '0E0C0A', coverInk: 'F7F4F0', panel: '221E1A' },
 };
-const FONT = 'Arial';  // installed with every copy of PowerPoint and Keynote and carries Hebrew; a web font would be substituted on the reader's machine
-const W = 13.333, H = 7.5, M = 0.5;
-const HE = { lang: 'he-IL', rtlMode: true } as const;
+export const FONT = 'Arial';  // installed with every copy of PowerPoint and Keynote and carries Hebrew; a web font would be substituted on the reader's machine
+export const W = 13.333, H = 7.5, M = 0.5;
+export const HE = { lang: 'he-IL', rtlMode: true } as const;
 
 /** a CSS colour (oklch, rgb, #hex) as PowerPoint hex, through the browser's own colour parser */
 function hexOf(css: string): string {
@@ -106,7 +106,7 @@ function chartOpts(spec: ChartSpec, t: Tone, theme: DeckTheme, x: number, y: num
   } as PptxGenJS.IChartOpts;
 }
 
-function addChart(pptx: PptxGenJS, slide: PptxGenJS.Slide, spec: ChartSpec, t: Tone, theme: DeckTheme, box: [number, number, number, number]) {
+export function addChart(pptx: PptxGenJS, slide: PptxGenJS.Slide, spec: ChartSpec, t: Tone, theme: DeckTheme, box: [number, number, number, number]) {
   const [x, y, w, h] = box;
   const C = pptx.ChartType, base = chartOpts(spec, t, theme, x, y, w, h);
   if (spec.kind === 'pie') {
@@ -164,7 +164,7 @@ function addChart(pptx: PptxGenJS, slide: PptxGenJS.Slide, spec: ChartSpec, t: T
 }
 
 /** a table exhibit: the first row is the header; right to left, the first column drawn rightmost */
-function addTable(slide: PptxGenJS.Slide, rows: (string | number | null)[][], t: Tone, box: [number, number, number, number]) {
+export function addTable(slide: PptxGenJS.Slide, rows: (string | number | null)[][], t: Tone, box: [number, number, number, number]) {
   const [x, y, w, h] = box, n = Math.max(...rows.map((r) => r.length));
   const cell = (v: string | number | null, head: boolean, first: boolean): PptxGenJS.TableCell => ({ text: v == null ? '–' : typeof v === 'number' ? v.toLocaleString('he-IL') : String(v),
     options: { fontFace: FONT, fontSize: rows.length > 14 ? 9 : 11, color: head ? t.muted : t.ink, bold: head || first, align: first ? 'right' : 'center', valign: 'middle', ...HE, ...(head ? { fill: { color: t.panel } } : {}) } });
@@ -247,7 +247,9 @@ function sourcesSlides(pptx: PptxGenJS, items: ChartSpec[], meta: DeckMeta, firs
 }
 
 /** Remove the fill of spacer series and drop empty points, so PowerPoint draws gaps instead of asking to repair the file. */
-async function finish(buf: ArrayBuffer): Promise<Blob> {
+export function finish(buf: ArrayBuffer): Promise<Blob>;
+export function finish(buf: ArrayBuffer, as: 'uint8array'): Promise<Uint8Array>;
+export async function finish(buf: ArrayBuffer, as: 'blob' | 'uint8array' = 'blob'): Promise<Blob | Uint8Array> {
   const { default: JSZip } = await import('jszip');
   const zip = await JSZip.loadAsync(buf);
   const charts = Object.keys(zip.files).filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f));
@@ -257,6 +259,7 @@ async function finish(buf: ArrayBuffer): Promise<Blob> {
     x = x.replace(new RegExp(`<a:solidFill>\\s*<a:srgbClr val="${HIDDEN}"\\s*(?:/>|>[\\s\\S]*?</a:srgbClr>)\\s*</a:solidFill>`, 'g'), '<a:noFill/>');
     zip.file(f, x);
   }));
+  if (as === 'uint8array') return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
   return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
 }
 

@@ -503,6 +503,14 @@ def answers():
     fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
     add("answers_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
         (tail.replace("answers: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+    # `deliver_lib` (S4): every answer and finding as each of the six deliverables; every figure sourced, no stray digit, no site name in
+    # the text, the print page, the Word and the PowerPoint files (web/tests/deliver.unit.ts)
+    d = subprocess.run([node, "scripts/deliver-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    dl = [l for l in d.stdout.strip().splitlines() if l.strip()]
+    dt = next((l for l in dl if " passed, " in l), (d.stderr.strip() or "no output")[-160:])
+    nf = re.search(r"(\d+) failed", dt)
+    add("deliver_lib", d.returncode == 0, int(re.search(r"(\d+) passed", dt).group(1)) if " passed" in dt else 0, int(nf.group(1)) if nf else (0 if d.returncode == 0 else 1),
+        (dt.replace("deliver: ", "") + (f"; e.g. {dl[dl.index(dt) + 1]}" if d.returncode and dt in dl and dl.index(dt) + 1 < len(dl) else ""))[:200])
 
 
 def findings():

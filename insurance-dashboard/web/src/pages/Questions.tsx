@@ -5,8 +5,11 @@ import { Empty, ErrorBox, Loading, Pick } from '../components/ui';
 import { AnswerDetail, Tokens } from '../components/Answer';
 import { useStored } from '../lib/local';
 import { pubLabel } from '../lib/format';
-import { isOk, qScore, RUNGS, topFirst, type Answer, type Finding, type IndexFile, type IndexRow, type Rung } from '../lib/answers';
+import { isOk, qScore, RUNGS, topFirst, type Answer, type Finding, type FindingsFile, type IndexFile, type IndexRow, type Rung, type TopicFile } from '../lib/answers';
 import { useAnswerIndex, useBodies, useFindings, useNames } from '../lib/answersLoad';
+import { load } from '../lib/useData';
+import type { DocKind } from '../lib/doc';
+import { DeliverMenu, usePick } from '../components/Deliver';
 import '../styles/answers.css';
 
 /* S1 · /questions, the Question Index: the standing questions of the industry, filtered by who asks (chair) and topic, with a fast text
@@ -18,12 +21,21 @@ import '../styles/answers.css';
 const set1 = (sp: URLSearchParams, k: string, v: string) => { const x = new URLSearchParams(sp); if (v) x.set(k, v); else x.delete(k); return x; };
 const readRung = (v: string | null): Rung => (RUNGS as readonly string[]).includes(v ?? '') ? (v as Rung) : 'corr';
 
+/** S4: the answered bodies of the questions asked for, in the order asked (their topic files, loaded on demand) */
+async function bodiesOf(I: IndexFile, ids: string[]): Promise<Answer[]> {
+  const topics = [...new Set(ids.map((id) => I.rows.find((r) => r.id === id)?.topic).filter((t): t is string => !!t))];
+  const files = await Promise.all(topics.map((t) => load<TopicFile>(`answers/${t}.json`).catch(() => null)));
+  const by = new Map<string, Answer>();
+  files.forEach((f) => f?.rows.forEach((a) => by.set(a.id, a)));
+  return ids.map((id) => by.get(id)).filter((a): a is Answer => !!a);
+}
+
 /** one row of the index: the question, its corridor answer, as-of, chairs, the falsifier when tripped, or the reason there is no answer */
-function QRow({ r, a, I }: { r: IndexRow; a?: Answer; I: IndexFile }) {
+function QRow({ r, a, I, picked, onPick }: { r: IndexRow; a?: Answer; I: IndexFile; picked?: boolean; onPick?: (on: boolean) => void }) {
   const ok = a && isOk(a) ? a : null;
   return (
     <li className={`qi-row st-${r.st}${r.chg === 'tripped' ? ' tripped' : ''}`}>
-      <div className="qi-q"><span className="qi-id mono">{r.id}</span><Link to={`/questions/${r.id}`}>{r.q}</Link></div>
+      <div className="qi-q">{onPick && r.st === 'ok' && <label className="qi-pick" title="לבחירה למסמך אחד עם שאלות נוספות"><input type="checkbox" checked={!!picked} onChange={(e) => onPick(e.target.checked)} aria-label={`בחירת ${r.id} למסמך`} /></label>}<span className="qi-id mono">{r.id}</span><Link to={`/questions/${r.id}`}>{r.q}</Link></div>
       {r.st === 'ok'
         ? <p className="qi-a">{r.cs && r.cf ? <Tokens text={r.cs} figs={r.cf} /> : ok ? <Tokens text={ok.corr} figs={ok.figs} /> : r.corr}</p>
         : <p className="qi-a qi-nd"><span className="an-st nodata">אין תשובה כרגע</span> {r.why}</p>}
@@ -86,6 +98,7 @@ export function Questions() {
   useEffect(() => setText(q), [q]);
   const set = (k: string, v: string) => setSp((p) => set1(p, k, v), { replace: true });
   const names = useNames();
+  const [pick, setPick] = usePick();
   const topics = useMemo(() => (I ? Object.keys(I.topics) : null), [I]);
   // the index rows carry their corridor figure (cs / cf): the topic files load only for an index written before that
   const bodies = useBodies(I && I.rows.some((r) => r.st === 'ok' && !r.cf) ? topics : null);
@@ -118,7 +131,12 @@ export function Questions() {
       </section>
 
       {!rows.length ? <Empty title="אין שאלה שמתאימה לסינון" icon="questions">אפשר לרשום אותה למטה, ב"השאלות שלי", בדפדפן הזה בלבד.</Empty>
-        : <ol className="qi-list" aria-label={`${rows.length} שאלות`}>{rows.map((r) => <QRow key={r.id} r={r} a={bodies?.get(r.id)} I={I} />)}</ol>}
+        : <ol className="qi-list" aria-label={`${rows.length} שאלות`}>{rows.map((r) => <QRow key={r.id} r={r} a={bodies?.get(r.id)} I={I} picked={pick.includes(r.id)} onPick={(on) => setPick(on ? [...pick.filter((x) => x !== r.id), r.id] : pick.filter((x) => x !== r.id))} />)}</ol>}
+      {pick.length > 0 && <div className="dv-pack" role="region" aria-label="שאלות שנבחרו למסמך">
+        <b>נבחרו <span className="num">{pick.length}</span> שאלות</b><span className="dim mono">{pick.join(' · ')}</span>
+        <DeliverMenu label="הפק מסמך מהנבחרות" make={async (kind: DocKind) => { const [m, as] = await Promise.all([import('../lib/deliver'), bodiesOf(I, pick)]); return m.packDoc(as, kind, { chairs: I.chairs, topics: I.topics, names }); }} />
+        <button type="button" className="an-btn quiet" onClick={() => setPick([])}>ניקוי הבחירה</button>
+      </div>}
       <p className="src">כל תשובה מחושבת מהקבצים שהאתר מפרסם, בכל בנייה מחדש · אין ציון מצרפי · יעד, צפי ואומדן מסומנים ליד כל נתון</p>
       <MyQuestions I={I} />
     </div>
@@ -129,6 +147,7 @@ export function Questions() {
 export function QuestionPage() {
   const { id = '' } = useParams();
   const { data: I, error } = useAnswerIndex();
+  const names = useNames();
   const row = I?.rows.find((r) => r.id === id) ?? null;
   const bodies = useBodies(row ? [row.topic] : null);
   const [sp, setSp] = useSearchParams();
@@ -152,13 +171,14 @@ export function QuestionPage() {
       {row.st !== 'ok' ? <Empty title="אין תשובה כרגע" icon="questions">{row.why}</Empty>
         : !bodies ? <Loading what="התשובה" />
         : !a || !isOk(a) ? <Empty title="התשובה לא נטענה" icon="questions">{a && a.st === 'nodata' ? a.why : `קובץ הנושא ${row.topic} לא נטען`}</Empty>
-        : <AnswerDetail b={a} bookKey={`/questions/${row.id}|${a.ex?.title ?? row.id}`} route={`/questions/${row.id}`} rung={rung} onRung={onRung} rel={rel} />}
+        : <AnswerDetail b={a} bookKey={`/questions/${row.id}|${a.ex?.title ?? row.id}`} route={`/questions/${row.id}`} rung={rung} onRung={onRung} rel={rel}
+            deliver={async (kind) => { const [m, rb] = await Promise.all([import('../lib/deliver'), bodiesOf(I, a.rel ?? [])]); return m.answerDoc(a, kind, { rel: rb, chairs: I.chairs, topics: I.topics, names }); }} />}
     </div>
   );
 }
 
 /* ---------------------------------------------------------------------------------------------------------- findings */
-function FindingItem({ f, det, open, toggle, names }: { f: Finding; det?: string; open: boolean; toggle: () => void; names: Record<string, string> }) {
+function FindingItem({ f, det, open, toggle, names, dets }: { f: Finding; det?: string; open: boolean; toggle: () => void; names: Record<string, string>; dets?: FindingsFile['dets'] }) {
   const ok = isOk(f) ? f : null;
   return (
     <li className={`fd-row${f.top ? ' fd-lead' : ''}${open ? ' fd-open' : ''}`} id={`f-${f.id}`}>
@@ -176,7 +196,8 @@ function FindingItem({ f, det, open, toggle, names }: { f: Finding; det?: string
       </div>
       {open && ok && <div className="fd-body">
         <p className="fd-why">{f.mat?.why && <><b>מהותיות:</b> {f.mat.why}</>}{f.sur?.why && <> · <b>הפתעה:</b> {f.sur.why}</>}</p>
-        <AnswerDetail b={ok} bookKey={`/findings?f=${f.id}|${ok.ex?.title ?? f.id}`} route={`/findings?f=${f.id}`} />
+        <AnswerDetail b={ok} bookKey={`/findings?f=${f.id}|${ok.ex?.title ?? f.id}`} route={`/findings?f=${f.id}`}
+          deliver={async (kind) => (await import('../lib/deliver')).findingDoc(f, kind, { dets, names })} />
       </div>}
     </li>
   );
@@ -207,12 +228,12 @@ export function Findings() {
       {head}
       <p className="fd-rule"><b>סדר:</b> {F.order_rule} · <span className="num">{F.rows.length}</span> ממצאים · נכון ל-<span className="num">{asof}</span></p>
       {top.length > 0 && <section className="panel fd-sec"><h2 className="an-h">המובילים</h2>
-        <ol className="fd-list">{top.map((f) => <FindingItem key={f.id} f={f} det={F.dets[f.det]?.he ?? f.det} open={sel === f.id} toggle={() => toggle(f.id)} names={names} />)}</ol></section>}
+        <ol className="fd-list">{top.map((f) => <FindingItem key={f.id} f={f} det={F.dets[f.det]?.he ?? f.det} open={sel === f.id} toggle={() => toggle(f.id)} names={names} dets={F.dets} />)}</ol></section>}
       {groups.map(({ d, rows }) => (
         <section key={d} className="panel fd-sec" aria-labelledby={`det-${d}`}>
           <div className="hd"><h2 id={`det-${d}`}>{F.dets[d]?.he ?? d} <span className="num dim">{rows.length}</span></h2></div>
           {F.dets[d]?.rule && <p className="fd-dr">{F.dets[d].rule}</p>}
-          <ol className="fd-list">{rows.map((f) => <FindingItem key={f.id} f={f} open={sel === f.id && !f.top} toggle={() => toggle(f.id)} names={names} />)}</ol>
+          <ol className="fd-list">{rows.map((f) => <FindingItem key={f.id} f={f} open={sel === f.id && !f.top} toggle={() => toggle(f.id)} names={names} dets={F.dets} />)}</ol>
         </section>
       ))}
       {(F.skipped?.length ?? 0) > 0 && <details className="panel fd-skip"><summary><h2 className="an-h">מועמדים שנפסלו <span className="num dim">{F.skipped!.length}</span></h2></summary>
