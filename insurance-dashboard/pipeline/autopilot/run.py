@@ -1,5 +1,6 @@
 """Report-day run: permitted discovery -> fetch the specific new files -> XBRL skeleton -> (LLM hook, off) -> DAG -> gate -> status.json
--> macOS notification with the publish command. Never deploys, never pushes, never commits.
+-> macOS notification with the publish command. Never deploys, never pushes, never commits (the opt-in auto-publish of a scheduled tick
+is publish.py, called by tick.py after this run; ops/autopilot.toml [deploy] auto).
 
 python3 pipeline/autopilot/run.py                     # dry run: data.gov.il probe + local pickup, plan printed; status to $TMPDIR
 python3 pipeline/autopilot/run.py --apply             # do it (what the schedule runs, via tick.py): permitted channels only
@@ -233,7 +234,7 @@ def build_status(paths, mode, poll_res, steps, gate_res, cfg, kpi=None, today=No
         "steps": steps, "gate": gate_res,
         "llm": {"enabled": conf.llm_on(cfg), "approved_by": (cfg.get("llm") or {}).get("approved_by") or None},
         "push": {"enabled": bool((cfg.get("estimates") or {}).get("push", {}).get("enabled"))},
-        "deploy": {"command": DEPLOY, "auto": False},
+        "deploy": {"command": DEPLOY, "auto": conf.deploy_on(cfg)},
         "filings_logged": len(log.get("filings", [])),
         "companies": rows,
     }
@@ -409,7 +410,8 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
         regulator=reg_res if reg_res else prev.get("regulator"),
         runs=([entry] + [r for r in prev.get("runs", []) if r.get("at") != entry["at"]])[:RUNS_KEPT] if substantive and apply else prev.get("runs", []),
         publish={"pending": pend, "commands": publish_commands(paths, landed or [x for r in prev.get("runs", [])[:3] for x in r.get("landed", [])], cfg),
-                 "auto": False, "note": "deploy.sh מפרסם רק commit נקי, דחוף, ש-fox-ci עבר עליו"},
+                 "auto": conf.deploy_on(cfg), "note": "deploy.sh מפרסם רק commit נקי, דחוף, ש-fox-ci עבר עליו"
+                 + ("; פרסום אוטומטי מה-Mac פעיל (ops/autopilot.toml [deploy])" if conf.deploy_on(cfg) else "")},
         llm_budget=(budget or llm.Budget(paths, cfg)).summary() | {"enabled": conf.llm_on(cfg)},
         extracted_pending=llm.pending(paths),
     )
@@ -443,7 +445,8 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
         if notify_on:
             title = "fox · " + ("נחת: " + landed[0] if landed else "דרושה בדיקה")
             body = ("; ".join(landed[1:3]) + " · " if len(landed) > 1 else "") + ("; ".join(problems) + " · " if problems else "") \
-                + ("שער עבר · לפרסום: ./deploy.sh (אחרי commit, push ו-CI ירוק)" if ok else "השער לא עבר: python3 pipeline/gate.py")
+                + (("שער עבר · פרסום אוטומטי: commit, push, ואז deploy אחרי CI ירוק" if conf.deploy_on(cfg) and trigger == "schedule"
+                    else "שער עבר · לפרסום: ./deploy.sh (אחרי commit, push ו-CI ירוק)") if ok else "השער לא עבר: python3 pipeline/gate.py")
             status["_notified"] = notify.show(title, body, subtitle=f"{len(landed)} עדכונים" if landed else None)
     return status
 

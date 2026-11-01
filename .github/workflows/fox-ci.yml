@@ -5,6 +5,9 @@
 # Visual baselines: tests/__screenshots__/linux/ is compared when committed; until then each run uploads the screenshots it took as the
 # `linux-baselines` artifact (commit them to turn the comparison on). Run the workflow by hand with update_baselines to refresh them.
 # A pull request gets a Firebase preview channel when the FIREBASE_SERVICE_ACCOUNT secret is set; nothing here deploys the live site.
+# workflow_call: .github/workflows/fox-data.yml runs this exact job on its data commit (input `ref`, a sha) before it may deploy. A push
+# made with GITHUB_TOKEN triggers no workflow, so that call is the one fox-ci run for an automated data commit. Push and pull_request
+# behave as before (inputs.ref is empty there, so checkout takes the event's commit).
 name: fox-ci
 on:
   push:
@@ -17,6 +20,19 @@ on:
         description: 'Re-take every Linux visual baseline (uploaded as the linux-baselines artifact; nothing is committed)'
         type: boolean
         default: false
+      ref:
+        description: 'Commit, branch or tag to check (empty = the selected branch)'
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      ref:
+        description: 'The commit to check (fox-data.yml passes its data commit sha)'
+        type: string
+        required: true
+      update_baselines:
+        type: boolean
+        default: false
 defaults:
   run:
     working-directory: insurance-dashboard
@@ -26,6 +42,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+        with: { ref: '${{ inputs.ref }}' }
       - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm, cache-dependency-path: insurance-dashboard/web/package-lock.json }
       # one Python for CI: the version in insurance-dashboard/.python-version (3.12; the deploy path itself needs the standard library only)

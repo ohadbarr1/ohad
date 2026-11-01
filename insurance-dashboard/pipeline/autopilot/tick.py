@@ -6,10 +6,15 @@
 
 A tick that acts runs run.run(apply=True, trigger="schedule") over the permitted channels: the data.gov.il probe when it is due (daily),
 local pickup, and MAYA only when ops/autopilot.toml carries TASE's permission (conf.maya_scheduled). It also sends at most one reminder a
-day per company whose report is due and not yet in fox, with the manual command. It never deploys, pushes or commits.
+day per company whose report is due and not yet in fox, with the manual command. By default it never deploys, pushes or commits.
+
+Opt-in auto-publish (ops/autopilot.toml [deploy] auto = true; publish.py): an acting tick first syncs with origin (pull --ff-only when
+origin is ahead and the tree is clean), and after a regulator month landed with the gate green it commits, pushes and, on later ticks,
+runs ./deploy.sh once fox-ci is green on that commit. If GitHub Actions published the month first, it pulls and skips.
 
 Skips (logged, exit 0): another tick still running (lock), a merge/rebase in progress or a held index.lock, the checkout on another
-branch than [repo] branch. Local state (not in the repo): $FOX_AUTOPILOT_HOME or ~/.cache/fox/autopilot/state.json.
+branch than [repo] branch (the deploy branch: a feature-branch checkout simply skips every tick, auto-publish included). Local state (not
+in the repo): $FOX_AUTOPILOT_HOME or ~/.cache/fox/autopilot/state.json.
 """
 import argparse
 import datetime as dt
@@ -25,6 +30,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import conf  # noqa: E402
 import notify  # noqa: E402
+import publish  # noqa: E402
 import schedule as sch  # noqa: E402
 from common import Paths, read_json, write_json  # noqa: E402
 
@@ -60,7 +66,7 @@ def guard(root, cfg):
     want = (cfg.get("repo") or {}).get("branch") or ""
     have = git_out(root, "rev-parse", "--abbrev-ref", "HEAD")
     if want and have != want:
-        return f"on branch {have}, the autopilot runs on {want}"
+        return f"on branch {have}, the autopilot runs on {want} (the deploy branch) only"
     return None
 
 
@@ -94,8 +100,8 @@ def sch_period(p):
     return "" if not p else f"FY'{p[2:4]}" if p.endswith("FY") else f"{p[4:]}'{p[2:4]}"
 
 
-def tick(paths=None, cfg=None, now=None, force=False, log=print, runner=None, http=None, transport=None):
-    """One tick. Returns the record kept in the local state (tests call this with a pinned clock and fakes)."""
+def tick(paths=None, cfg=None, now=None, force=False, log=print, runner=None, http=None, transport=None, ops=None):
+    """One tick. Returns the record kept in the local state (tests call this with a pinned clock and fakes; ops: publish.Ops fakes)."""
     cfg = cfg or conf.load()
     paths = paths or Paths()
     calendar = read_json(paths.data / "calendar.json", {}) or {}
@@ -104,6 +110,12 @@ def tick(paths=None, cfg=None, now=None, force=False, log=print, runner=None, ht
     dec = sch.decide(cfg, calendar, st, nowil)
     rec = {"at": nowil.isoformat(timespec="seconds"), "decision": dec, "acted": False}
     why = guard(paths.root, cfg)
+    auto = publish.on(cfg)
+    if auto and not why:  # a pending deploy moves on every tick, whatever the cadence
+        ops = ops or publish.Ops(log=log)
+        adv = publish.advance(paths.root, cfg, st, now=nowil.replace(tzinfo=None), ops=ops)
+        if adv:
+            rec["publish"] = adv
     if why:
         rec["skipped"] = why
         log(f"skip: {why}")
@@ -116,9 +128,14 @@ def tick(paths=None, cfg=None, now=None, force=False, log=print, runner=None, ht
         if maya and tr is None:
             from common import Live  # noqa: PLC0415
             tr = Live(interval=max(2.0, float(cfg["discovery"]["maya_interval_seconds"])), log=log)
+        pre = publish.preflight(paths.root, cfg, ops=ops) if auto and not (st.get("deploy") or {}).get("pending") else None
         res = (runner or runmod.run)(paths, tr, apply=True, do_poll=maya, regulator=dec["regulator"], http=http, cfg=cfg,
                                      trigger="schedule", today=nowil.date(), log=log)
         rec.update(acted=True, landed=res.get("_landed", []), problems=res.get("_problems", []), written=res.get("_written"))
+        if pre is not None:
+            pub = publish.land(paths.root, cfg, res, pre, st, now=nowil.replace(tzinfo=None), ops=ops)
+            if pub:
+                rec["publish"] = pub
         st["last_run"] = rec["at"]
         reg = res.get("regulator") if dec["regulator"] else None
         if dec["regulator"] and reg and not reg.get("errors"):
@@ -151,7 +168,7 @@ def main(argv=None):
             return 0
         try:
             rec = tick(force=a.force)
-            print(json.dumps({k: rec[k] for k in ("at", "acted", "skipped", "landed", "problems", "reminded") if k in rec}, ensure_ascii=False))
+            print(json.dumps({k: rec[k] for k in ("at", "acted", "skipped", "landed", "problems", "reminded", "publish") if k in rec}, ensure_ascii=False))
         except Exception as e:  # noqa: BLE001  a crash is logged and notified once, launchd keeps the schedule
             traceback.print_exc()
             st = load_state()

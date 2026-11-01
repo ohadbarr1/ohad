@@ -4,7 +4,10 @@
 #   ./ops/install-autopilot.sh --print    print the rendered plist and stop (nothing installed)
 #   ./ops/install-autopilot.sh --kick     after installing, run one tick now (launchctl kickstart) and show the log
 # Undo: ./ops/uninstall-autopilot.sh. What runs: pipeline/autopilot/tick.py every quarter hour; the cadence and every switch live in
-# ops/autopilot.toml. Nothing it runs deploys, pushes or commits; MAYA is never called on a schedule without TASE's written permission.
+# ops/autopilot.toml. MAYA is never called on a schedule without TASE's written permission.
+# The job acts only while the checkout is on ops/autopilot.toml [repo] branch (the deploy branch); on any other branch every tick skips.
+# By default nothing it runs deploys, pushes or commits. [deploy] auto = true (opt-in, docs/AUTOPILOT.md) lets a tick commit, push and run
+# ./deploy.sh after a regulator month lands with the gate green; it then needs git push without a prompt, `gh auth login`, `firebase login`.
 set -euo pipefail
 REPO="${0:A:h:h}"                      # insurance-dashboard/ of the checkout this script sits in
 LABEL=com.fox.autopilot
@@ -35,6 +38,19 @@ fi
 
 echo "== autopilot tests (fixtures, no network)"
 ( cd "$REPO" && FOX_NO_NOTIFY=1 /usr/bin/python3 -m unittest discover -s pipeline/autopilot/tests ) || { echo "tests failed: not installing"; exit 1; }
+
+echo "== branch and auto-publish"
+WANT=$(/usr/bin/python3 -c "import sys; sys.path.insert(0, '$REPO/pipeline/autopilot'); import conf; c = conf.load('$REPO/ops/autopilot.toml'); print(c['repo']['branch'] or '')")
+AUTO=$(/usr/bin/python3 -c "import sys; sys.path.insert(0, '$REPO/pipeline/autopilot'); import conf; print('on' if conf.deploy_on(conf.load('$REPO/ops/autopilot.toml')) else 'off')")
+HAVE=$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+echo "checkout on $HAVE; the job runs on ${WANT:-any branch}; auto-publish ([deploy] auto): $AUTO"
+if [[ -n "$WANT" && "$HAVE" != "$WANT" ]]; then
+  echo "NOTE: every tick will skip until this checkout is on $WANT (git checkout $WANT)."
+fi
+if [[ "$AUTO" == on ]]; then
+  command -v gh >/dev/null && gh auth status >/dev/null 2>&1 || echo "WARNING: auto-publish is on but gh is not logged in (gh auth login): pending deploys will wait, then fail"
+  [[ -x "$HOME/.nvm/versions/node/v20.20.0/bin/firebase" ]] || command -v firebase >/dev/null || echo "WARNING: auto-publish is on but the firebase CLI was not found"
+fi
 
 echo "== what the next tick would do"
 ( cd "$REPO" && /usr/bin/python3 pipeline/autopilot/tick.py --status | /usr/bin/python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d['next_tick_would'], ensure_ascii=False)); print('maya_scheduled:', d['maya_scheduled'], '· llm:', d['llm'])" )

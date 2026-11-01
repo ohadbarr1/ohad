@@ -4,23 +4,30 @@
 # the assembled site is complete, and every route renders without sideways scroll at 390 px, without ISO dates and with its own title
 # (web/scripts/route-check.mjs).
 # Deploy gate (docs/PIPELINE.md): no uncommitted tracked change (and no untracked file under web/src or web/public) when it starts;
-# HEAD is on origin; the latest fox-ci run for HEAD succeeded. --force-unverified skips the gate, loudly. The data files the build
-# steps regenerate are committed (fixed message) before the app is built and deployed, so the live site is exactly a commit.
-# usage: ./deploy.sh [--check-only] [--force-unverified]
+# HEAD is on origin and NOT behind it (an older checkout would put older data back over what CI or another machine published); the
+# latest fox-ci run for HEAD succeeded (or, for a data commit built by .github/workflows/fox-data.yml, its commit status
+# "fox-ci (fox-data)" is success: fox-ci ran there through workflow_call). --force-unverified skips the gate, loudly. The data files the
+# build steps regenerate are committed (fixed message) before the app is built and deployed, so the live site is exactly a commit.
+# --ci (fox-data.yml only): HEAD must equal $FOX_CI_SHA, the commit the workflow's fox-ci job verified, clean and at the tip of
+# origin/$FOX_DEPLOY_BRANCH. The DAG and gate are not rerun (the workflow ran them on this commit and fox-ci reran the gate), nothing is
+# committed, so live = that commit byte for byte; firebase deploys with the service account in GOOGLE_APPLICATION_CREDENTIALS.
+# usage: ./deploy.sh [--check-only] [--force-unverified] [--ci]
 # The data files are copied in parallel (reads from the synced folder can take seconds each) and the app is bundled without them.
 set -euo pipefail
 ROOT="${0:A:h}"
 OUT="${TMPDIR:-/tmp}/fox-dist"
 export PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH"
 PY=/usr/bin/python3  # the .venv on the synced drive takes minutes to import; the gate needs the standard library only
-CHECK_ONLY=0; FORCE=0
+CHECK_ONLY=0; FORCE=0; CI_MODE=0
 for a in "$@"; do
   case "$a" in
     --check-only) CHECK_ONLY=1 ;;
     --force-unverified) FORCE=1 ;;
-    *) echo "unknown option: $a (usage: ./deploy.sh [--check-only] [--force-unverified])"; exit 2 ;;
+    --ci) CI_MODE=1 ;;
+    *) echo "unknown option: $a (usage: ./deploy.sh [--check-only] [--force-unverified] [--ci])"; exit 2 ;;
   esac
 done
+(( CI_MODE && FORCE )) && { echo "--ci and --force-unverified do not mix"; exit 2; }
 DATA_MSG="Deploy: commit the data files the deploy build regenerated"
 
 cd "$ROOT"
@@ -29,9 +36,26 @@ gate_fail() { echo "deploy gate: $1"; echo "not deploying (./deploy.sh --check-o
 HEAD_SHA=$(git rev-parse HEAD)
 PRE_UNTRACKED=$(git ls-files --others --exclude-standard -- .)
 PRE_DIRTY=$(git status --porcelain --untracked-files=no -- .)
-if (( CHECK_ONLY )); then
+# the branch HEAD is compared with: its upstream, else origin/<current branch> ($FOX_DEPLOY_BRANCH in --ci)
+BRANCH=${FOX_DEPLOY_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}
+behind() {  # commits on origin's copy of the branch that HEAD lacks ("" when origin has no such branch)
+  local up; up=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null) || up="origin/$BRANCH"
+  git rev-parse --verify --quiet "$up" >/dev/null || return 0
+  echo "$(git rev-list --count "HEAD..$up") $up"
+}
+if (( CI_MODE )); then
+  [[ -n "${FOX_CI_SHA:-}" && -n "${FOX_DEPLOY_BRANCH:-}" ]] || gate_fail "--ci needs FOX_CI_SHA and FOX_DEPLOY_BRANCH (set by .github/workflows/fox-data.yml)"
+  [[ "$HEAD_SHA" == "$FOX_CI_SHA" ]] || gate_fail "--ci: HEAD ${HEAD_SHA:0:8} is not the fox-ci verified commit ${FOX_CI_SHA:0:8}"
+  [[ -z "$PRE_DIRTY" ]] || gate_fail "--ci: uncommitted changes to tracked files:
+$PRE_DIRTY"
+  git fetch --quiet origin "$FOX_DEPLOY_BRANCH" || gate_fail "--ci: cannot fetch origin/$FOX_DEPLOY_BRANCH"
+  [[ "$(git rev-parse FETCH_HEAD)" == "$HEAD_SHA" ]] || gate_fail "--ci: origin/$FOX_DEPLOY_BRANCH is $(git rev-parse --short FETCH_HEAD), not ${HEAD_SHA:0:8} (push the verified commit first; a newer one is deployed by whoever pushed it)"
+  echo "deploy gate (--ci): HEAD ${HEAD_SHA:0:8} = the fox-ci verified commit = origin/$FOX_DEPLOY_BRANCH, clean"
+elif (( CHECK_ONLY )); then
   echo "deploy gate: skipped (--check-only deploys nothing)"
 elif (( FORCE )); then
+  git fetch --quiet origin 2>/dev/null && read -r nb up <<< "$(behind)" && (( ${nb:-0} > 0 )) \
+    && echo "WARNING: HEAD is $nb commit(s) behind $up: this deploy may put older data or code back over the live site"
   print -P "%F{red}%B"
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   echo "!!  --force-unverified: DEPLOYING WITHOUT THE DEPLOY GATE."
@@ -49,14 +73,21 @@ $dirty"
 $stray"
   git fetch --quiet origin || gate_fail "cannot reach origin to check that HEAD is pushed"
   [[ -n "$(git branch -r --contains "$HEAD_SHA" 2>/dev/null)" ]] || gate_fail "HEAD ${HEAD_SHA:0:8} is not on origin (git push first, then wait for fox-ci)"
+  read -r nb up <<< "$(behind)"
+  (( ${nb:-0} == 0 )) || gate_fail "HEAD ${HEAD_SHA:0:8} is $nb commit(s) behind $up (CI or another machine published newer data: git pull --ff-only first)"
   command -v gh >/dev/null || gate_fail "gh (GitHub CLI) not found: cannot read the fox-ci result for HEAD"
   run=$(gh run list --commit "$HEAD_SHA" --workflow fox-ci --limit 1 --event push --json databaseId,status,conclusion --jq '.[0] // empty | "\(.databaseId) \(.status) \(.conclusion)"' 2>/dev/null) \
     || gate_fail "gh could not list the fox-ci runs (gh auth status?)"
-  [[ -n "$run" ]] || gate_fail "no fox-ci run for HEAD ${HEAD_SHA:0:8} yet (pushed just now? wait for it: gh run list --workflow fox-ci)"
+  if [[ -z "$run" ]]; then
+    # a data commit of .github/workflows/fox-data.yml: fox-ci ran on it through workflow_call, recorded as a commit status
+    cs=$(gh api "repos/{owner}/{repo}/commits/$HEAD_SHA/status" --jq '[.statuses[] | select(.context == "fox-ci (fox-data)")][0].state // empty' 2>/dev/null || true)
+    [[ "$cs" == success ]] || gate_fail "no fox-ci run for HEAD ${HEAD_SHA:0:8} yet (pushed just now? wait for it: gh run list --workflow fox-ci)"
+    run="fox-data success success"
+  fi
   read -r run_id run_status run_conclusion <<< "$run"
-  [[ "$run_status" == completed ]] || gate_fail "fox-ci run $run_id for HEAD ${HEAD_SHA:0:8} is $run_status (gh run watch $run_id)"
+  [[ "$run_status" == completed || "$run_status" == success ]] || gate_fail "fox-ci run $run_id for HEAD ${HEAD_SHA:0:8} is $run_status (gh run watch $run_id)"
   [[ "$run_conclusion" == success ]] || gate_fail "fox-ci run $run_id for HEAD ${HEAD_SHA:0:8} concluded '$run_conclusion' (gh run view $run_id --log-failed)"
-  echo "deploy gate: HEAD ${HEAD_SHA:0:8} is clean, on origin, fox-ci run $run_id green"
+  echo "deploy gate: HEAD ${HEAD_SHA:0:8} is clean, on origin, not behind it, fox-ci ${run_id/fox-data/(via fox-data)} green"
 fi
 
 cd "$ROOT"
@@ -79,13 +110,19 @@ trap cleanup EXIT
 # peers registry (follows the canon), home slice of the regulator file, /data coverage. In dependency order; a step whose inputs, code and
 # outputs are unchanged since its last run here is skipped (calendar and coverage rerun every day). Upstream builders are not run here
 # (--no-deps); the DAG names any that are stale. `python3 pipeline/dag.py --dry-run` shows the plan.
-"$PY" pipeline/dag.py --only deploy --no-deps || { echo "pipeline step failed: not deploying"; exit 1; }
-"$PY" pipeline/gate.py || { echo "data gate failed: not deploying"; exit 1; }
+if (( CI_MODE )); then
+  echo "--ci: the DAG and the gate ran on ${HEAD_SHA:0:8} in the workflow (and fox-ci reran the gate): not rerun, so live = the commit"
+else
+  "$PY" pipeline/dag.py --only deploy --no-deps || { echo "pipeline step failed: not deploying"; exit 1; }
+  "$PY" pipeline/gate.py || { echo "data gate failed: not deploying"; exit 1; }
+fi
 
 # the files the build steps regenerated (tracked changes, and new files that were not lying around before) go into one commit, so the
 # bundle's commit stamp and the deployed data are both that commit. --check-only leaves them in the working tree.
 DATA_COMMIT=""
-if (( ! CHECK_ONLY )) && [[ -n "$PRE_DIRTY" ]]; then
+if (( CI_MODE )); then
+  :  # nothing was regenerated
+elif (( ! CHECK_ONLY )) && [[ -n "$PRE_DIRTY" ]]; then
   echo "data commit: skipped: the tree was dirty before the build (--force-unverified), so live will not match a commit"
 elif (( ! CHECK_ONLY )); then
   git add -u -- .
@@ -118,6 +155,10 @@ sleep 1
 node --experimental-websocket scripts/route-check.mjs http://127.0.0.1:4173 2>/dev/null || { echo "route check failed: not deploying"; exit 1; }
 
 (( CHECK_ONLY )) && { echo "checks passed; --check-only: not deploying"; exit 0; }
-firebase deploy --only hosting --public "$OUT" | grep -E "found|Deploy complete|rror"
+if (( CI_MODE )); then
+  firebase deploy --only hosting --public "$OUT" --project fox-research-il --non-interactive -m "fox-data ${HEAD_SHA:0:8}"
+else
+  firebase deploy --only hosting --public "$OUT" -m "deploy.sh $(git rev-parse --short HEAD)" | grep -E "found|Deploy complete|rror"
+fi
 curl -s -o /dev/null -w "live: %{http_code}\n" https://fox-research-il.web.app/
 echo "live = commit $(git rev-parse --short HEAD)${DATA_COMMIT:+ (data commit on top of ${HEAD_SHA:0:8}: git push it, so origin matches live)}"
