@@ -22,7 +22,8 @@
     "test:fragility": "node scripts/fragility-test.mjs",
     "test:consolidation": "node scripts/consolidation-test.mjs",
     "test:answers": "node scripts/answers-test.mjs",
-    "test:brief": "node scripts/brief-test.mjs"
+    "test:brief": "node scripts/brief-test.mjs",
+    "test:watch": "node scripts/watch-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

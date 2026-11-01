@@ -100,6 +100,7 @@ const Findings = page(mQuestions, 'Findings');
 const mBrief = () => import('./pages/Brief');  // S3: the Briefing Builder (private meeting registry + one-page brief)
 const Brief = page(mBrief, 'Brief');
 const BriefPage = page(mBrief, 'BriefPage');
+const Watch = page(() => import('./pages/Watch'), 'Watch');  // S10: Watch & Wake, the morning brief (from the שאלות badge, the home line and search)
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -200,6 +201,7 @@ export function App() {
         <Route path="findings" element={<Findings />} />{/* S2 */}
         <Route path="brief" element={<Brief />} />{/* S3: the meeting registry (nav: lights שאלות) */}
         <Route path="brief/:id" element={<BriefPage />} />{/* S3: one brief; /brief/demo is the built-in demo */}
+        <Route path="watch" element={<Watch />} />{/* S10 */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

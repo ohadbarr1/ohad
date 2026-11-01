@@ -17,6 +17,7 @@ import { MacroPanel } from '../components/MacroPanel';
 import { FeedBlock } from '../components/home/FeedBlock';
 import { AdvisoryHub } from '../components/home/AdvisoryHub';
 import { AskStrip } from '../components/home/AskStrip';
+import { WatchLine } from '../components/home/WatchLine';
 import '../styles/market.css';
 import '../styles/home.css';
 
@@ -94,6 +95,7 @@ export function Home() {
   return (
     <div className="wide-page home">
       <h1 className="sr-only">fox · ביטוח, פנסיה וגמל</h1>
+      <WatchLine />
       <AdvisoryHub />
       <AskStrip />
       <SeasonStrip />

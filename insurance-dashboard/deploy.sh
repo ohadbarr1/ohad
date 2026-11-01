@@ -89,6 +89,9 @@ if (( ! CHECK_ONLY )) && [[ -n "$PRE_DIRTY" ]]; then
   echo "data commit: skipped: the tree was dirty before the build (--force-unverified), so live will not match a commit"
 elif (( ! CHECK_ONLY )); then
   git add -u -- .
+  # S10: the answer-snapshot ledger is committed even when its file was already lying around (left by a --check-only run the same day),
+  # so the committed watch.json always rebuilds from committed snapshots (gate `watch`)
+  git add -- data/ledger/answers
   comm -13 <(print -r -- "$PRE_UNTRACKED" | sort) <(git ls-files --others --exclude-standard -- . | sort) | while read -r f; do [[ -n "$f" ]] && git add -- "$f"; done
   if ! git diff --cached --quiet; then
     git commit --quiet -m "$DATA_MSG" -m "Built by deploy.sh on top of ${HEAD_SHA:0:8} (fox-ci verified unless --force-unverified)."

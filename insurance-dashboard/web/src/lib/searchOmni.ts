@@ -41,6 +41,8 @@ const CONS_KEYS = ['consolidation', 'merger', 'acquisition', 'synergy', 'bolt-on
 /** words that reach the Question Index (/questions, S1) and the findings (/findings, S2) */
 const QI_KEYS = ['questions', 'question', 'ask', 'שאלה', 'שאלות', 'שואלים', 'תשובה', 'תשובות', 'אינדקס'].map(normalize);
 const BR_KEYS = ['brief', 'briefing', 'meeting', 'תדריך', 'תדריכים', 'תדרוך', 'פגישה', 'פגישות', 'ישיבה', 'דירקטוריון'].map(normalize);  // S3
+/** words that reach the morning brief (/watch, S10) */
+const WT_KEYS = ['watch', 'changes', 'brief', 'מעקב', 'עוקב', 'השתנה', 'שינויים', 'תקציר', 'בוקר'].map(normalize);
 const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 'הפתעה', 'הפתעות', 'חריג', 'חריגים'].map(normalize);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
@@ -175,6 +177,9 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   }
   if (!p.company && words.length && words.every((w) => BR_KEYS.some((k) => k.startsWith(w)))) {  // S3
     out.push({ kind: 'פונקציה', label: 'תדריכים · תדריך של עמוד אחד לכל פגישה', meta: 'מאז הפגישה הקודמת, שלושה מספרים, שאלות צפויות, דגל · פרטי לדפדפן', to: '/brief', score: 96 });
+  }
+  if (!p.company && words.length && words.every((w) => WT_KEYS.some((k) => k.startsWith(w)))) {
+    out.push({ kind: 'פונקציה', label: 'מה השתנה בתשובות · תקציר הבוקר', meta: 'מה שבמעקב שינה פסיקה מאז הביקור הקודם, ספים שנחצו, והבאים בלוח', to: '/watch', score: 96 });
   }
   // questions: a question id ("Q-001"), or every word left after the company starts a word of the question (within that company's questions)
   if (words.length) {
