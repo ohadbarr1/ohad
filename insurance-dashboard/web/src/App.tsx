@@ -6,6 +6,7 @@ import { Layout } from './components/Layout';
 const page = <M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M) => lazy(async () => ({ default: (await load())[name] as ComponentType }));
 const mHome = () => import('./pages/Home');
 const Home = page(mHome, 'Home');
+const ProPage = page(mHome, 'ProPage');  // W1-shell: the Pro home at /pro
 const mLens = () => import('./pages/SavingsLens');
 const SavingsPage = page(mLens, 'SavingsPage');
 const mCompany = () => import('./pages/Company');
@@ -146,6 +147,9 @@ export function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
+        {/* W1-shell */}
+        <Route path="pro" element={<ProPage />} />{/* the Pro home (today's home) at a fixed address, whatever door is chosen */}
+        {/* /W1-shell */}
         <Route path="market">
           <Route index element={<LensRedirect view="market" />} />
           <Route path="overview" element={<LensRedirect view="market" />} />

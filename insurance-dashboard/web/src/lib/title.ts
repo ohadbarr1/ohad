@@ -13,12 +13,15 @@ const VALUATION_TAB: Record<string, string> = { '': 'P/B מוצדק', ri: 'הכ�
 const FUNDS_TIME: Record<string, string> = { map: 'מפת סיכון ותשואה', rank: 'אחוזון לאורך זמן', quilt: 'תשואה לפי שנה', persist: 'התמדה', glide: 'מסלולי גיל', watch: 'המעקב שלי' };
 const MARKET_TAB: Record<string, string> = { overview: 'סקירת שוק', ranking: 'דירוג חברות', funds: 'קופות' };
 
-/** `name` returns undefined while the company list loads and null for an id that is not on it (the page does not exist). */
-export function titleFor(path: string, name: (id: string) => string | null | undefined): string | null {
+/** `name` returns undefined while the company list loads and null for an id that is not on it (the page does not exist).
+ *  `door` (W1, the three doors): `/` is the door picker until one is chosen, then that door's home. */
+export function titleFor(path: string, name: (id: string) => string | null | undefined, door?: 'saver' | 'agent' | 'pro' | null): string | null {
   const p = path.replace(/\/+$/, '').split('/').slice(1).map(decodeURIComponent);
   const t = (...parts: (string | undefined)[]) => [...parts.filter(Boolean), 'fox'].join(' · ');
   switch (p[0] ?? '') {
-    case '': return 'fox · ביטוח, פנסיה וגמל';
+    case '': return door === 'saver' ? t('החיסכון שלי') : door === 'agent' ? t('מסלולים, השוואה ודמי ניהול', 'סוכן') : door == null ? 'fox · כל מסלולי החיסכון, נטו ובמקור' : 'fox · ביטוח, פנסיה וגמל';
+    case 'pro': return p[1] ? null : t('Pro', 'ביטוח, פנסיה וגמל');  // W1: the Pro home at a fixed address
+    case 'my': return p[1] ? null : t('המוצרים שלי');  // W1: the saver's products (lane w1-saver)
     case 'companies': return t('חברות');
     case 'company': {
       if (!((p[2] ?? '') in COMPANY_TAB) || name(p[1]) === null) return null;
