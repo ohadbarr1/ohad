@@ -8,7 +8,7 @@ import { median } from './fundsCalc';
 /* ---------- default funds (קרנות ברירת מחדל) ---------- */
 /** a winner: `grp` is funds.json's group when the manager still exists as one (else the historical name, and no `k`). In a tender
  *  where winners bid different prices (2018) the price is per winner: read the winner's fee first, then the tender's. */
-export interface Winner { grp: string; fund?: string; k?: string[]; src?: string; verified?: boolean; fee?: number | null; depfee?: number | null }
+export interface Winner { grp: string; fund?: string; k?: string[]; ks?: string[]; src?: string; verified?: boolean; fee?: number | null; depfee?: number | null }
 export interface Tender {
   id: string; label?: string;
   /** ISO dates: the period in force */
