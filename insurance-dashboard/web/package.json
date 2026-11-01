@@ -23,7 +23,8 @@
     "test:consolidation": "node scripts/consolidation-test.mjs",
     "test:answers": "node scripts/answers-test.mjs",
     "test:brief": "node scripts/brief-test.mjs",
-    "test:watch": "node scripts/watch-test.mjs"
+    "test:watch": "node scripts/watch-test.mjs",
+    "test:deliver": "node scripts/deliver-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

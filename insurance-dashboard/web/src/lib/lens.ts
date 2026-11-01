@@ -160,6 +160,11 @@ export function warmRep(c: string | undefined | null) {
   pend.add(c);
   fetch(`${import.meta.env.BASE_URL}data/lts_prov/${c}.json`).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) provCache.set(c, j); }).catch(() => {}).finally(() => pend.delete(c));
 }
+/** the same, awaited: an export (S4) needs the printed components before it writes a figure's source documents */
+export function readyRep(c: string): Promise<void> {
+  if (provCache.has(c)) return Promise.resolve();
+  return fetch(`${import.meta.env.BASE_URL}data/lts_prov/${c}.json`).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) provCache.set(c, j); }).catch(() => {});
+}
 const unitHe = (u: string) => u.replace('NIS thousands', 'אלפי ש"ח').replace('NIS thousand', 'אלפי ש"ח').replace('NIS millions', 'מיליוני ש"ח').replace('NIS billions', 'מיליארדי ש"ח');
 const WIN_HE: Record<string, string> = { q: 'רבעון', ytd: 'YTD', fy: 'FY', h1: 'H1', instant: '' };
 export function ltsProv(c: string, metric: string, period: string, title: string, unit: string, note?: string, value?: string): Prov {

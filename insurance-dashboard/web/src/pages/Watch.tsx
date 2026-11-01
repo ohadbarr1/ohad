@@ -4,11 +4,13 @@ import { Icon } from '../components/Icon';
 import { Empty, Loading } from '../components/ui';
 import { Tokens } from '../components/Answer';
 import { WatchToggle } from '../components/WatchToggle';
+import { DeliverMenu } from '../components/Deliver';
 import { pubLabel } from '../lib/format';
 import { useAnswerIndex, useFindings, useNames } from '../lib/answersLoad';
 import type { IndexFile } from '../lib/answers';
 import { KIND_HE, SEV_HE, brief, isFinding, matchSub, normSubs, prepQueue, subCount, type PrepItem, type Subs, type WChange, type WSide } from '../lib/watch';
 import { todayIso, useMeetings, useSeen, useSubs, useWatch } from '../lib/watchLoad';
+import { watchDoc } from '../lib/watchDoc';
 import '../styles/answers.css';
 import '../styles/watch.css';
 
@@ -75,7 +77,7 @@ function Prep({ items, names, meetings }: { items: PrepItem[]; names: Record<str
             <span className="wt-when"><b className="num">{pubLabel(p.d)}</b><span className="dim">{daysText(p.days)}</span></span>
             <span className={`wt-tag k-${p.kind}`}>{KIND_UP[p.kind]}</span>
             <span className="wt-what">
-              {p.c ? <><Link to={`/company/${p.c}`}>{names[p.c] ?? p.c}</Link> · </> : null}{p.what}
+              {p.c ? <><Link to={`/company/${p.c}`}>{names[p.c] ?? p.c}</Link> · </> : null}{p.kind === 'meeting' ? <Link to={`/brief/${p.id.slice(2)}`}>{p.what}</Link> : p.what}
               {p.est && <span className="chip est">אומדן</span>}
               {p.lo && p.hi && p.lo !== p.hi && <span className="dim"> · חלון <span className="num">{pubLabel(p.lo)}–{pubLabel(p.hi)}</span></span>}
               {p.src && p.kind !== 'report' && <span className="wt-src">{p.src}</span>}
@@ -152,7 +154,8 @@ export function Watch() {
         {w && <><span>·</span><span><span className="num">{w.snaps.length}</span> תמונות מצב{w.asof && <>, האחרונה <span className="num">{pubLabel(w.asof)}</span></>}</span></>}
         <span>·</span><Link to="/questions">שאלות</Link><span>·</span><Link to="/findings">ממצאים</Link>
       </div>
-    </div></div>
+    </div>
+    {w && b && <div className="aside"><DeliverMenu label="הפק תקציר" make={async () => watchDoc({ w, b, prep, index: I ?? null, author: '', today: todayIso(), names })} /></div>}</div>
   );
   if (!done) return <Loading what="מה השתנה" />;
   if (!w || !b) return <div className="qi wt">{head}<Empty title="אין עדיין יומן תשובות בבנייה הזו" icon="inbox">הקובץ שמשווה בין בניות לא פורסם. <Link to="/questions">לאינדקס השאלות</Link></Empty></div>;

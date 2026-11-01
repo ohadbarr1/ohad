@@ -12,6 +12,8 @@ import {
   type Fig, type OkBody, type Rung,
 } from '../lib/answers';
 import { aprov, exhibitSpec, ltsCite, useNames, warmBody } from '../lib/answersLoad';
+import type { Doc, DocKind } from '../lib/doc';
+import { DeliverMenu } from './Deliver';
 import '../styles/answers.css';
 
 /* S6 · the Answer Ladder: one answer (an S1 question or an S2 finding) at three altitudes one click apart. Corridor = the sentence, one
@@ -142,11 +144,13 @@ export function FigTable({ b }: { b: OkBody }) {
   );
 }
 
-/** the whole answer: the ladder, then what would change it, its figures, its basis mix, the related questions and the detail pages */
-export function AnswerDetail({ b, bookKey, route, rung, onRung, rel }: { b: OkBody; bookKey: string; route: string; rung?: Rung; onRung?: (r: Rung) => void; rel?: { id: string; q: string }[] }) {
+/** the whole answer: the ladder, then what would change it, its figures, its basis mix, the related questions and the detail pages.
+ *  `deliver` (S4) builds the answer as a document of a kind: the "הפק מסמך" menu under the ladder */
+export function AnswerDetail({ b, bookKey, route, rung, onRung, rel, deliver }: { b: OkBody; bookKey: string; route: string; rung?: Rung; onRung?: (r: Rung) => void; rel?: { id: string; q: string }[]; deliver?: (kind: DocKind) => Promise<Doc | null> }) {
   return (
     <div className="an">
       <Ladder b={b} bookKey={bookKey} route={route} rung={rung} onRung={onRung} />
+      {deliver && <div className="an-tools an-deliver"><DeliverMenu make={deliver} /></div>}
       <Falsifier b={b} />
       {b.note && <p className="an-note">{b.note}</p>}
       <section className="an-sec" aria-labelledby={`ft-${bookKey}`}>
