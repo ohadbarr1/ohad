@@ -1,0 +1,98 @@
+/* W1 · agent door: the client document (/funds/compare/print). On screen a white A4 sheet under its settings bar; in print the sheet
+   alone, navy ink on white, dense and footnoted, whatever theme the reader has. */
+.adoc-wrap { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.adoc-tools { width: 100%; max-width: 210mm; display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--line-soft); border-radius: var(--r-3); background: var(--panel); box-shadow: var(--e-1); }
+.adoc-tools label { display: inline-flex; gap: 6px; align-items: center; font-size: var(--t-2); color: var(--muted); }
+.adoc-tools input:not([type="checkbox"]), .adoc-tools select { border: 1px solid var(--line); border-radius: var(--r-1); background: var(--panel); padding: 5px 8px; font-size: var(--t-3); color: var(--fg); min-width: 0; width: 150px; }
+.adoc-tools .chk { color: var(--fg); font-weight: 600; }
+.adoc-priv { flex-basis: 100%; margin: 0; font-size: var(--t-1); color: var(--muted); }
+.adoc-tags { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.adoc-tags label span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+.adoc-tags select { width: auto !important; }
+
+/* the sheet: fixed light ink in both themes, it is paper */
+.adoc { width: 210mm; max-width: 100%; background: #FFFFFF; color: #111C3F; padding: 14mm 12mm 16mm; box-shadow: 0 1px 2px rgb(17 28 63 / 0.06), 0 12px 32px rgb(17 28 63 / 0.12); border-radius: 4px;
+  font: 400 9.5pt/1.5 var(--font-body); font-variant-numeric: tabular-nums lining-nums; display: flex; flex-direction: column; gap: 5mm; color-scheme: light; }
+.adoc h1 { margin: 0; font-size: 18pt; font-weight: 800; letter-spacing: -0.01em; }
+.adoc h2 { margin: 0 0 2mm; font-size: 11.5pt; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+.adoc h2::before { content: ""; width: 3px; height: 1em; background: #D4451F; border-radius: 2px; }
+.adoc h3 { margin: 4mm 0 1.5mm; font-size: 10.5pt; font-weight: 800; border-bottom: 1.5px solid #111C3F; padding-bottom: 1mm; }
+.adoc h4 { margin: 2.5mm 0 1mm; font-size: 9.5pt; font-weight: 700; }
+.adoc-h { display: flex; justify-content: space-between; align-items: flex-end; gap: 8mm; border-bottom: 2px solid #111C3F; padding-bottom: 3mm; }
+.adoc-sub { margin: 1mm 0 0; color: #3F4656; font-size: 9pt; }
+.adoc-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0.5mm 3mm; font-size: 9pt; align-items: baseline; }
+.adoc-meta dt { color: #3F4656; } .adoc-meta dd { margin: 0; font-weight: 700; min-width: 40mm; }
+.adoc-meta.grid { grid-template-columns: auto 1fr auto 1fr; }
+.adoc-t { width: 100%; border-collapse: collapse; font-size: 8pt; }
+.adoc-t th, .adoc-t td { padding: 1.6mm 0.9mm; border-bottom: 0.5pt solid #C9CDD6; text-align: center; vertical-align: top; }
+.adoc-t thead th { font-weight: 700; color: #3F4656; border-bottom: 1pt solid #111C3F; font-size: 7.5pt; line-height: 1.25; vertical-align: bottom; }
+.adoc-t tbody th { text-align: start; font-weight: 400; width: 36mm; min-width: 30mm; }
+.adoc-t td .q { white-space: normal; direction: rtl; }
+.adoc-t th, .adoc-t td { overflow-wrap: anywhere; }
+.adoc-t tbody th b { display: block; font-weight: 700; }
+.adoc-t tbody th span, .adoc-t .q { display: block; color: #5B6273; font-size: 7pt; line-height: 1.3; }
+.adoc-t td { direction: ltr; unicode-bidi: plaintext; white-space: nowrap; }
+.adoc-t.rules td, .adoc-t.annex-t td { white-space: normal; direction: rtl; text-align: start; }
+.adoc-t.rules td { font-size: 8pt; line-height: 1.45; }
+.adoc-t.rules td.src span { display: block; font-size: 6.8pt; color: #5B6273; margin-bottom: 1mm; }
+.adoc-t.rules th { width: 24mm; }
+.adoc-t.small { width: 60%; }
+.adoc .fn { font-size: 6.5pt; color: #B5361A; margin-inline-start: 1px; }
+.adoc-cap { margin: 1.5mm 0 0; font-size: 7.5pt; color: #3F4656; }
+.adoc-bl { margin: 0; padding-inline-start: 5mm; display: grid; gap: 1mm; }
+.adoc-notes ol { margin: 0; padding-inline-start: 5mm; font-size: 7.5pt; color: #3F4656; display: grid; gap: 0.6mm; }
+.adoc-notes p { font-size: 7.5pt; color: #3F4656; margin: 1.5mm 0 0; }
+.adoc-notes .disc { border: 0.5pt solid #C9CDD6; border-radius: 2mm; padding: 2mm 3mm; background: #F3F4F7; color: #111C3F; }
+
+/* the הנמקה worksheet */
+.annex { break-before: page; display: flex; flex-direction: column; gap: 1mm; }
+.annex-h { border-bottom: 2px solid #111C3F; padding-bottom: 2mm; margin-bottom: 1mm; }
+.annex-h p { margin: 1mm 0 2mm; font-size: 8pt; color: #3F4656; }
+.annex-t { font-size: 7.2pt; }
+.annex-t thead th { font-size: 6.8pt; }
+.annex-t td { min-width: 12mm; }
+.annex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 4mm; }
+.annex-grid label, .annex-wide { display: flex; flex-direction: column; gap: 0.6mm; font-size: 8pt; color: #3F4656; }
+.annex-grid .wide { grid-column: 1 / -1; }
+.annex-q { display: flex; flex-wrap: wrap; gap: 1mm 4mm; font-size: 8pt; margin-top: 1.5mm; }
+.annex-q > span { flex-basis: 100%; color: #3F4656; }
+.annex-sig { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; margin: 4mm 0 1mm; }
+.annex-sig span { border-top: 0.75pt solid #111C3F; padding-top: 1mm; font-size: 7.5pt; color: #3F4656; min-height: 10mm; }
+.annex-list { margin: 0; padding-inline-start: 4mm; font-size: 8pt; }
+
+.a1s { display: grid; gap: 2.5mm; }
+.a1 { border: 0.5pt solid #C9CDD6; border-radius: 1.5mm; padding: 1.5mm 2.5mm 2mm; break-inside: avoid; }
+.a1-h { font-size: 8.5pt; border-bottom: 0.5pt solid #DDE0E6; padding-bottom: 0.8mm; margin-bottom: 1mm; }
+.a1-g { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 5mm; }
+.a1-g > div { display: grid; grid-template-columns: 34mm 1fr; gap: 2mm; align-items: baseline; font-size: 8pt; }
+.a1-g dt { color: #3F4656; font-size: 7.3pt; } .a1-g dd { margin: 0; }
+.a1-g .q { display: block; color: #5B6273; font-size: 6.8pt; }
+/* a field to type in */
+.fill { border: 0.5pt solid #C9CDD6; border-radius: 1.5mm; padding: 1mm 1.5mm; background: #FBFAF7; color: #111C3F; font-size: 8.5pt; line-height: 1.5; outline: none; white-space: pre-wrap; overflow-wrap: anywhere; direction: rtl; text-align: start; }
+.fill.in { min-height: 5.5mm; border-width: 0 0 0.5pt; border-radius: 0; background: transparent; padding: 0.4mm 0.6mm; }
+.fill:focus { border-color: #D4451F; background: #FFF8F5; }
+.fill:empty::before { content: attr(data-ph); color: #9AA0AC; font-size: 7pt; }
+
+@media screen and (max-width: 820px) {
+  .a1-g { grid-template-columns: 1fr; }
+  .adoc { padding: 16px 12px; font-size: 9pt; }
+  .adoc-h { flex-direction: column; align-items: flex-start; }
+  .adoc section { overflow-x: auto; }
+  .annex-grid, .adoc-meta.grid { grid-template-columns: 1fr; }
+  .adoc-tools input:not([type="checkbox"]) { width: 120px; }
+}
+
+@media print {
+  @page { size: A4; margin: 12mm 11mm 14mm; }
+  body:has(.adoc-wrap) .page > *:not(.adoc-wrap), body:has(.adoc-wrap) .cmptray, body:has(.adoc-wrap) .print-foot { display: none !important; }
+  .adoc-tools { display: none !important; }
+  .adoc-wrap { display: block; }
+  .adoc { width: auto; padding: 0; box-shadow: none; border-radius: 0; gap: 4mm; }
+  .adoc section { break-inside: auto; }
+  .adoc-t tr, .annex-grid label, .annex-sig { break-inside: avoid; }
+  .adoc h2, .adoc h3, .adoc h4 { break-after: avoid; }
+  .fill { background: transparent; }
+  .fill:empty::before { content: none; }
+  .fill.in { min-height: 5mm; }
+  .annex-q input { display: inline-block !important; }
+}

@@ -9,7 +9,10 @@ import type { Prov } from '../lib/prov';
 import '../styles/prov-market.css';
 import { cls, fmt, nf, pct, sn } from '../lib/format';
 import { DataTable } from '../components/DataTable';
-import { useMarketData } from '../lib/useData';
+import { useFunds, useMarketData } from '../lib/useData';
+import { useDoor } from '../lib/door';
+import type { FundX } from '../lib/funds';
+import { FeeBench, ManagerCards } from '../components/agent/FeeBench';  // W1-agent
 import type { Family, Fund } from '../lib/types';
 
 type Fam = 'all' | Family;
@@ -18,21 +21,44 @@ const sum = (fs: Fund[], k: keyof Fund) => fs.reduce((s, f) => s + ((f[k] as num
 
 const LensRank = lazy(async () => ({ default: (await import('./SavingsLens')).LensRank }));
 const Makers = lazy(async () => ({ default: (await import('./Funds')).MakersBody }));
-type View = '' | 'rank' | 'makers';
-const VIEWS: [View, string][] = [['', 'לפי חברה מנהלת'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק']];
+type View = '' | 'rank' | 'makers' | 'fees' | 'all';
+const VIEWS: [View, string][] = [['', 'לפי חברה מנהלת'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק'], ['fees', 'התפלגות דמי ניהול']];
+/* W1-agent: in the agent door the first view is the fee benchmark and the managers as cards; the full table is one tab away */
+const AGENT_VIEWS: [View, string][] = [['', 'דמי ניהול ומנהלים'], ['all', 'כל החברות'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק']];
 
 /** The managers' ranking, one home for it: the managing companies today (regulator snapshot), their rank over time (savings lens),
  *  and each manager's biggest track against its category (fund ranks). /funds/makers and the lens's old ?v=rank land here. */
 export function Managers() {
   const [sp, setSp] = useSearchParams();
-  const view = (VIEWS.map(([v]) => v).find((v) => v && v === sp.get('v')) ?? '') as View;
-  const pick = (v: View) => setSp(() => { const n = new URLSearchParams(); if (v) n.set('v', v); return n; }, { replace: true });
-  const views = <Seg<View> label="דירוג מנהלים" value={view} onChange={pick} options={VIEWS} />;
-  if (view === '') return <ManagersTable views={views} />;
+  const [door] = useDoor();
+  const agent = door === 'agent';
+  const opts = agent ? AGENT_VIEWS : VIEWS;
+  // a link to a product's fee benchmark (?fd=, from the pension pack) opens it in every door
+  const asked = sp.get('v') ?? (sp.get('fd') && !agent ? 'fees' : '');
+  const view = (opts.map(([v]) => v).find((v) => v && v === asked) ?? '') as View;
+  const pick = (v: View) => setSp(() => { const n = new URLSearchParams(); if (v) n.set('v', v); const fd = sp.get('fd'); if (fd && (v === 'fees' || (agent && v === ''))) n.set('fd', fd); return n; }, { replace: true });
+  const views = <Seg<View> label="דירוג מנהלים" value={view} onChange={pick} options={opts} />;
+  if ((agent && view === '') || view === 'fees') return <AgentManagers views={views} cards={agent} />;
+  if (view === '' || view === 'all') return <ManagersTable views={views} />;
   return (
     <>
       <FundsHead sub={view === 'rank' ? 'דירוג מנהלים · לאורך זמן · רשות שוק ההון ודוחות החברות המנהלות' : 'דירוג מנהלים · המסלול הגדול של כל יצרן מול הקטגוריה שלו'} tools={views} />
       <Suspense fallback={<Loading what="הדירוג" />}>{view === 'rank' ? <LensRank /> : <Makers />}</Suspense>
+    </>
+  );
+}
+
+/** W1-agent: the fee benchmark, and (agent door) the managers of the product as cards */
+function AgentManagers({ views, cards }: { views: React.ReactNode; cards: boolean }) {
+  const { data, error } = useFunds();
+  if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
+  if (!data) return <Loading what="דמי ניהול" />;
+  const funds = data.funds as FundX[];
+  return (
+    <>
+      <FundsHead sub={<>מנהלים · דמי ניהול ממוצע בפועל מול השוק · <span className="num">{`${String(data.asof).slice(4)}/${String(data.asof).slice(2, 4)}`}</span></>} tools={views} />
+      <FeeBench funds={funds} asof={data.asof} />
+      {cards && <ManagerCards funds={funds} asof={data.asof} />}
     </>
   );
 }

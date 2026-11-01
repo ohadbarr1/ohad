@@ -53,6 +53,7 @@ const mFundsScreen = () => import('./pages/FundsScreen');
 const FundsScreen = page(mFundsScreen, 'FundsScreen');
 const mFundsCompare = () => import('./pages/FundsCompare');
 const FundsCompare = page(mFundsCompare, 'FundsCompare');
+/* W1-agent */ const FundsComparePrint = page(() => import('./pages/FundsComparePrint'), 'FundsComparePrint');
 const FundsTools = page(() => import('./pages/FundsTools'), 'FundsTools');  // F2 TOOLS: the calculators and trackers
 const FundsFees = page(() => import('./pages/FundsFees'), 'FundsFees');
 const FundsDefault = page(() => import('./pages/FundsDefault'), 'FundsDefault');
@@ -191,6 +192,7 @@ export function App() {
         <Route path="funds" element={<FundsRoot />} />
         <Route path="funds/screen" element={<FundsScreen />} />
         <Route path="funds/compare" element={<FundsCompare />} />
+        {/* W1-agent */}<Route path="funds/compare/print" element={<FundsComparePrint />} />
         <Route path="funds/tools" element={<FundsTools />} />
         <Route path="funds/tools/hindsight" element={<Navigate to="/funds/tools" replace />} />{/* removed by owner decision 01.11.26 */}
         <Route path="funds/tools/fees" element={<FundsFees />} />

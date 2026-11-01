@@ -19,12 +19,26 @@ import {
   GROSS_LABEL, NET_LABEL, NET_NOTE, PERIODS, PER_LABEL, TRAY_MAX, byYear, catKey, cpiFactor, growth, netMonthIn, netProv, netSeries, onAxis, pc, perMonths, refOf, rolling, stats,
   underwater, useBasis, useReal, useTray, winRate, winRet, ym, grossProv, type CatX, type FundX, type FundsFile, type HistX, type Per,
 } from '../lib/funds';
+import { usePhone } from '../lib/useMedia';
+import { useOptional } from '../lib/fundsLoad';
+import type { DefaultFile } from '../lib/fundsTools';
+import { Icon } from '../components/Icon';
+import { compareSummary, type CmpSummary, type Lead } from '../lib/compareSummary';
+import { defaultNow, isPension, periodText } from '../lib/pensionPack';
+import { rulesOf, RULES_NOTE } from '../lib/productRules';
+import { actProv, ruleProv, tenderProv, pc2 } from '../lib/agentProv';
+import { TIE_NOTE } from '../lib/fundsTie';
+import '../components/agent/glossary';
 import '../styles/lens.css';
 import '../styles/market.css';
+import '../styles/agent.css';
 
-/* /funds/compare?k=p2009,g103 (funds plan #5, head-to-head v1): two to four tracks, one column each. KPI strip, growth of ₪100 net of
+/* /funds/compare?k=p2009,g103 (funds plan #5, head-to-head v1; W1-agent: compare 2.0): two to eight tracks, one column each. KPI strip, growth of ₪100 net of
    fee, rolling 12/36-month returns, the fall from the peak, calendar years side by side, and how often one beat the other over every
-   rolling 36-month window. All derived from the published monthly returns (net: minus each month's fee ÷ 12), every figure sourced. */
+   rolling 36-month window. All derived from the published monthly returns (net: minus each month's fee ÷ 12), every figure sourced.
+   W1-agent (compare 2.0): a descriptive bottom line first (cheapest fee, the shared best 5Y place inside the tie band, the highest
+   Sharpe), the tax and liquidity rule of each product (lib/productRules), the pension decision rows (actuarial balance, default
+   fund), the client document with its הנמקה annex (/funds/compare/print), and on a phone one card per track instead of the table. */
 
 type Win = '12' | '36' | '60' | '120' | 'max';
 const WINDOWS: [Win, string][] = [['12', '1Y'], ['36', '3Y'], ['60', '5Y'], ['120', '10Y'], ['max', 'הכול']];
@@ -42,6 +56,10 @@ export function FundsCompare() {
   const [basis] = useBasis();
   const [real] = useReal();
   const { open } = useSource();
+  const phone = usePhone();
+  const dfile = useOptional<DefaultFile>('funds/default.json');
+  const [edit, setEdit] = useState(false);
+  const [more, setMore] = useState(false);
   const keys = useMemo(() => (sp.get('k') ?? '').split(',').filter((k) => /^[gip]\d+$/.test(k)).slice(0, TRAY_MAX), [sp]);
   const winQ = sp.get('win') as Win | null;
   const win: Win = WINDOWS.some(([w]) => w === winQ) ? winQ! : '60';
@@ -105,6 +123,11 @@ export function FundsCompare() {
     inputs: monthsBack(axis[di], n).map((p) => monthRow(it, p)) });
   const ddSrc = (it: Item, di: number, v: number): Prov => ({ k: 'calc', est: netAsk, title: `מתחת לשיא · ${it.f.name} · ${ym(axis[di])}`, value: pc(v), formula: `מדד התשואה המצטברת (${lbl}) חלקי השיא שלפניו בחלון, פחות 1`, inputs: axis.slice(1, di + 1).map((p) => monthRow(it, p)) });
 
+  const anyPension = items.some((it) => isPension(it.f));
+  /** a left-to-right figure inside a Hebrew line, isolated so its order holds (LRI … PDI) */
+  const iso = (x: string) => `\u2066${x}\u2069`;
+  // a Sharpe ratio over a series with no volatility (personally managed tracks report sd 0) says nothing
+  const sharpeOf = (f: FundX) => (f.sd != null && f.sd > 0 ? f.sharpe : null);
   /* ---- KPI strip: the published figures, or (net, no published net) the same windows built from the track's net months ---- */
   const kret = (it: Item, per: Per): { v: number | null; src: () => Prov } => {
     if (real) { const nom = netAsk ? winRet(it.h, it.ns!.y, per, asof) : it.f[per], c = cpiFactor(cpi, asof, perMonths(per, asof));
@@ -117,7 +140,7 @@ export function FundsCompare() {
     const v = winRet(it.h, it.ns!.y, per, asof);
     return { v, src: () => ({ k: 'calc', est: true, title: `${PER_LABEL[per]}, ${NET_LABEL} · ${it.f.name}`, value: pc(v), formula: `${per === 'a3' || per === 'a5' ? 'שנתי: ' : ''}ריבית דריבית על התשואות החודשיות נטו של החלון`, note: NET_NOTE, inputs: monthsBack(asof, perMonths(per, asof)).map((p) => monthRow(it, p)) }) };
   };
-  type KRow = { key: string; label: string; tip?: string; cells: (it: Item) => { v: number | null; t: string; src?: () => Prov } };
+  type KRow = { key: string; label: string; tip?: string; cells: (it: Item) => { v: number | null; t: string; src?: () => Prov; txt?: boolean } };
   const KROWS: KRow[] = [
     ...PERIODS.map(([per, l]): KRow => ({ key: per, label: `${l}${per === 'a3' || per === 'a5' ? ', שנתי' : ''}`, tip: netAsk ? 'net' : 'gross', cells: (it) => { const r = kret(it, per); return { v: r.v, t: pc(r.v, per === 'm1' ? 2 : 1), src: r.src }; } })),
     { key: 'fee', label: 'ד"נ מצבירה, ממוצע בפועל', tip: 'fee', cells: (it) => ({ v: it.f.fee, t: it.f.fee == null ? '–' : nf(it.f.fee, 2) + '%', src: () => fundP(refOf(it.f), it.f.end ?? asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(it.f.fee ?? 0, 2) + '%') }) },
@@ -127,7 +150,22 @@ export function FundsCompare() {
     { key: 'vol', label: 'תנודתיות בחלון', tip: 'vol', cells: (it) => { const s = stats(ser(it), axis.length - 1); return { v: s?.vol ?? null, t: s ? nf(s.vol, 1) + '%' : '–', src: s ? () => ({ k: 'calc', title: `תנודתיות שנתית · ${it.f.name}`, value: nf(s.vol, 1) + '%', formula: 'סטיית תקן של התשואות החודשיות בחלון כפול שורש 12', inputs: axis.slice(1).map((p) => monthRow(it, p)) }) : undefined }; } },
     { key: 'dd', label: 'ירידה מרבית בחלון', tip: 'dd', cells: (it) => { const s = stats(ser(it), axis.length - 1); return { v: s?.dd ?? null, t: pc(s?.dd, 1), src: s ? () => ({ k: 'calc', est: netAsk, title: `ירידה מרבית · ${it.f.name}`, value: pc(s.dd), formula: 'הירידה הגדולה ביותר ממדד התשואה המצטברת, משיאו לשפל שאחריו', inputs: axis.slice(1).map((p) => monthRow(it, p)) }) : undefined }; } },
     { key: 'age', label: 'מועד הקמה', cells: (it) => ({ v: null, t: it.f.since ? pubLabel(it.f.since) : '–' }) },
+    // W1-agent: the regulator's own risk figures, and the pension decision rows
+    { key: 'sharpe', label: 'שארפ (הרשות)', tip: 'sharpe', cells: (it) => { const v = sharpeOf(it.f); return { v, t: v == null ? '–' : nf(v, 2), src: () => fundP(refOf(it.f), it.f.end ?? asof, 'SHARPE_RATIO', 'שארפ', nf(v ?? 0, 2)) }; } },
+    { key: 'sd', label: 'סטיית תקן (הרשות)', tip: 'sd', cells: (it) => ({ v: it.f.sd, t: it.f.sd == null ? '–' : nf(it.f.sd, 2), src: () => fundP(refOf(it.f), it.f.end ?? asof, 'STANDARD_DEVIATION', 'סטיית תקן', nf(it.f.sd ?? 0, 2)) }) },
+    ...(anyPension ? [
+      { key: 'act', label: 'איזון אקטוארי, רבעון אחרון', tip: 'actuarial', cells: (it: Item) => (isPension(it.f) && it.f.act != null ? { v: it.f.act, t: `${iso(pc2(it.f.act))} · ${iso(ym(it.f.act_p ?? asof))}`, src: () => actProv(it.f), txt: true } : { v: null, t: isPension(it.f) ? 'לא דווח' : '–' }) },
+      { key: 'dflt', label: 'קרן ברירת מחדל', tip: 'default', cells: (it: Item) => { if (!isPension(it.f)) return { v: null, t: '–' }; const d = defaultNow(it.f.k, dfile, asof); return d ? { v: null, t: `כן · ${iso(periodText(d.t))} · ${iso(pc2(d.depfee))} מהפקדה, ${iso(pc2(d.fee))} מצבירה`, src: () => tenderProv(d.t, 'קרן ברירת מחדל', `${pc2(d.depfee)} / ${pc2(d.fee)}`), txt: true } : { v: null, t: dfile ? 'לא' : '–' }; } },
+    ] as KRow[] : []),
   ];
+  /* ---- the bottom line (descriptive): on the basis shown, the regulator's Sharpe, fees average actual ---- */
+  const summary: CmpSummary = compareSummary(items.map((it) => ({ k: it.f.k, name: it.f.name, prod: it.f.prod, fee: it.f.fee, depfee: it.f.depfee, r5: kret(it, 'a5').v, sharpe: sharpeOf(it.f) })));
+  const leadOf: Record<string, Lead | null> = { fee: summary.fee, depfee: summary.depfee, a5: summary.r5, sharpe: summary.sharpe };
+  const isLead = (row: string, k: string) => { const l = leadOf[row]; return !!l && !l.all && l.ks.includes(k); };
+  const colorOf = (k: string) => pal()[Math.max(0, items.findIndex((it) => it.f.k === k)) % pal().length];
+  const nameOf = (k: string) => items.find((it) => it.f.k === k)?.f.name ?? k;
+  const rules = rulesOf(items.map((it) => it.f.prod));
+  const printHref = `/funds/compare/print?k=${keys.join(',')}&b=${basis}${real ? '&real=1' : ''}`;
 
   /* ---- calendar years and win-rate ---- */
   const yrs = items.map((it) => byYear(it.h.p, it.y));
@@ -148,11 +186,78 @@ export function FundsCompare() {
     await downloadXlsxAsync(`השוואת-מסלולים-${ym(asof).replace('/', '-')}.xlsx`, comparePack(ts, asof), { title: 'השוואת מסלולים', author: '' });
   };
 
+  /* ---- the bottom line: one tile per measure; ties shared, never crowned ---- */
+  const who = (l: Lead) => l.ks.map((k) => <span key={k} className="cmpn"><i className="sw" style={{ background: colorOf(k) }} aria-hidden="true" />{nameOf(k)}</span>);
+  const outOf = (l: Lead) => `${l.of} מסלולים${l.missing.length ? `; ${l.missing.length} בלי נתון` : ''}`;
+  const tile = (key: string, label: string, l: Lead | null, val: (l: Lead) => ReactNode, src?: (l: Lead) => () => Prov) => (
+    <div className={`cmp-bl-i${l && l.ks.length > 1 ? ' tie' : ''}`} key={key}>
+      <span className="l">{label}</span>
+      {!l ? <span className="s">אין נתון לשני מסלולים לפחות</span> : l.all ? <><span className="w">צמודים: כל {l.of} המסלולים</span><span className="s">{val(l)}</span></> : <>
+        <span className="w">{l.ks.length > 1 && <span className="chip">צמודים</span>}{who(l)}</span>
+        <span className="s">{src ? <Sourced src={src(l)}>{val(l)}</Sourced> : val(l)} · מתוך {outOf(l)}</span>
+      </>}
+    </div>
+  );
+  const itemOf = (k: string) => items.find((it) => it.f.k === k)!;
+  const BottomLine = (
+    <Panel title="השורה התחתונה" aside={<><span className={`chip${netAsk || real ? ' est' : ''}`}>{lbl}</span><span className="num">{ym(asof)}</span></>}>
+      <div className="cmp-bl">
+        {tile('fee', 'דמי ניהול מצבירה הנמוכים, ממוצע בפועל', summary.fee, (l) => <span className="num">{pc2(l.v)}</span>, (l) => () => fundP(refOf(itemOf(l.ks[0]).f), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', pc2(l.v)))}
+        {tile('depfee', 'דמי ניהול מהפקדה הנמוכים, ממוצע בפועל', summary.depfee, (l) => <span className="num">{pc2(l.v)}</span>, (l) => () => fundP(refOf(itemOf(l.ks[0]).f), asof, 'AVG_DEPOSIT_FEE', 'דמי ניהול מהפקדה, ממוצע בפועל', pc2(l.v)))}
+        {tile('a5', `5Y שנתי, המקום הראשון המשותף (${lbl})`, summary.r5, (l) => <><span className="num">{pc(l.v, 1)}</span>{summary.r5?.gap != null && <> · לפני הבא ב-<span className="num">{nf(summary.r5.gap * 100, 0)}</span> נ"ב לשנה</>}</>, (l) => kret(itemOf(l.ks[0]), 'a5').src)}
+        {tile('sharpe', 'שארפ הגבוה (הרשות)', summary.sharpe, (l) => <span className="num">{nf(l.v, 2)}</span>, (l) => () => fundP(refOf(itemOf(l.ks[0]).f), asof, 'SHARPE_RATIO', 'שארפ', nf(l.v, 2)))}
+      </div>
+      <div className="cmp-bl-note">תיאור עובדתי של הנתונים, לא המלצה. {TIE_NOTE}. דמי ניהול: הממוצע בפועל של המסלול, לא של חוסך מסוים. {summary.mixed ? 'מוצרים שונים: המיסוי והנזילות שונים (בטבלה למטה), וההשוואה אינה דירוג. ' : ''}</div>
+      <div className="cmp-actions">
+        <Link className="cmp-doc" to={printHref}><Icon name="statement" />הפק מסמך ללקוח</Link>
+        <button type="button" className="chip fpack" onClick={() => void exportPack()}><Icon name="download" /> Excel: חבילת השוואה (נוסחאות חיות)</button>
+        <span className="cmp-bl-note">מסמך A4 עם נספח הנמקה; שם הלקוח והסוכן נשארים בדפדפן הזה.</span>
+      </div>
+    </Panel>
+  );
+  const Cards = (
+    <div className="cmp-cards">
+      {items.map((it) => { const d = isPension(it.f) ? defaultNow(it.f.k, dfile, asof) : null; const fig = (row: string, label: string, c: ReturnType<KRow['cells']>) => (
+        <div key={row}><dt>{label}</dt><dd className={isLead(row, it.f.k) ? 'lead' : undefined}>{c.src && (c.v != null || c.txt) ? <Sourced src={c.src}><span className="num">{c.t}</span></Sourced> : <span className="muted">{c.t}</span>}</dd></div>);
+        const K = (key: string) => KROWS.find((r) => r.key === key)!.cells(it);
+        return (
+          <article className="cmp-card" key={it.f.k}>
+            <div className="cmp-card-h"><i className="sw" style={{ background: colorOf(it.f.k) }} aria-hidden="true" /><Link to={`/funds/${it.f.k}`} style={{ flex: 1 }}>{it.f.name}</Link><button type="button" className="cmp-card-x" aria-label={`הסרה: ${it.f.name}`} onClick={() => setKeys(keys.filter((k) => k !== it.f.k))}>×</button></div>
+            <div className="cmp-card-sub"><MgrChip grp={it.f.grp} mgr={it.f.mgr} short /><span>{it.f.prod} · {it.f.track}</span>{d && <Sourced className="chip pass" src={() => tenderProv(d.t, 'קרן ברירת מחדל', periodText(d.t))}>ברירת מחדל</Sourced>}{it.f.gone && <span className="chip est">נסגר</span>}</div>
+            <dl>
+              {fig('a5', '5Y שנתי', K('a5'))}{fig('a3', '3Y שנתי', K('a3'))}{fig('y12', 'LTM', K('y12'))}
+              {fig('fee', 'ד"נ מצבירה*', K('fee'))}{fig('depfee', 'ד"נ מהפקדה*', K('depfee'))}{fig('sharpe', 'שארפ', K('sharpe'))}
+              {isPension(it.f) && fig('act', 'איזון אקטוארי', { ...K('act'), t: it.f.act == null ? 'לא דווח' : pc2(it.f.act) })}
+            </dl>
+          </article>
+        ); })}
+      <div className="fnote">* ממוצע בפועל של המסלול. תשואות: {lbl}; 3Y ו-5Y שנתי ממוצע. מסומן: הנמוך או הגבוה בשורה (צמודים מסומנים יחד).</div>
+    </div>
+  );
+  const TaxLiq = rules.length > 0 && (
+    <Panel title={<>מיסוי ונזילות <Tip k="taxliq" /></>} aside={<><span className="chip est">כללי, לא ייעוץ מס</span><span>כלל עיקרי לכל מוצר</span></>}>
+      <div className="taxliq">
+        {rules.map((r) => (
+          <div className="taxliq-r" key={r.key}>
+            <div className="n">{r.name}<span className="k">{items.filter((it) => rulesOf([it.f.prod]).some((x) => x.key === r.key)).map((it) => it.f.grp).filter((g, i, a) => a.indexOf(g) === i).join(' · ')}</span></div>
+            <div><span className="k">נזילות</span><Sourced src={() => ruleProv(r, 'liq')}>{r.liq}</Sourced></div>
+            <div><span className="k">מיסוי · {r.year}</span><Sourced src={() => ruleProv(r, 'tax')}>{r.tax}</Sourced>{r.watch && <span className="chip est" title={r.watch}>שינוי מוצע</span>}</div>
+          </div>
+        ))}
+      </div>
+      <div className="fnote">{RULES_NOTE}. כל שורה פותחת את מקורותיה. {items.some((it) => !rulesOf([it.f.prod]).length) ? `ל${[...new Set(items.filter((it) => !rulesOf([it.f.prod]).length).map((it) => it.f.prod))].join(', ')} אין כאן שורה מאומתת.` : ''}</div>
+    </Panel>
+  );
+
   /* ---- picker ---- */
+  const pickerOpen = !phone || edit || keys.length === 0;
   return (
     <>
       <FundsHead sub={<>השוואה ראש בראש · עד {TRAY_MAX} מסלולים · {ym(asof)}</>} tools={<BasisToggle />} />
-      <Picker data={data} keys={keys} setKeys={setKeys} win={<Seg label="חלון" value={win} onChange={(w) => set({ win: w })} options={WINDOWS} />} />
+      {pickerOpen ? <Picker data={data} keys={keys} setKeys={setKeys} win={<Seg label="חלון" value={win} onChange={(w) => set({ win: w })} options={WINDOWS} />} />
+        : null}
+      {pickerOpen && phone && keys.length > 0 && <div className="cmp-actions"><button type="button" className="chip" onClick={() => setEdit(false)}>סיום הבחירה</button></div>}
+      {!pickerOpen && <div className="cmp-actions"><button type="button" className="chip" onClick={() => setEdit(true)} aria-expanded={false}>עריכת הבחירה · <span className="num">{keys.length}</span> מסלולים</button><Seg label="חלון" value={win} onChange={(w) => set({ win: w })} options={WINDOWS} /></div>}
       {keys.length === 0 ? <Empty title="בחרו מסלולים להשוואה" icon="compare">הוסיפו מסלולים בחיפוש למעלה, או בכפתור "+" בטבלת המסלולים ובכרטיס המסלול.</Empty> : items.length === 0 && unknown.length < keys.length ? <Loading what="היסטוריות" /> : (
         <>
           {(mixedProd || !sameCat || loadingN > 0 || unknown.length > 0 || real) && <div className="fwarn">
@@ -163,14 +268,18 @@ export function FundsCompare() {
             {real && <span className="chip est">ריאלי: מדד המחירים בקובץ מכסה {cpi?.points.length ?? 0} חודשים, והחלון מתקצר בהתאם</span>}
           </div>}
 
-          <Panel title="השורה התחתונה" aside={<><span className={`chip${netAsk || real ? ' est' : ''}`}>{lbl}</span><span>{ym(asof)}</span></>}>
-            <DataTable<KRow> caption="השורה התחתונה" className="fcmp" rows={KROWS} rowKey={(r) => r.key} export={{ name: `השוואת-מסלולים-${ym(asof).replace('/', '-')}`, title: 'השוואת מסלולים', note: `${lbl} · ${ym(asof)} · רשות שוק ההון` }}
+          {BottomLine}
+          {phone ? Cards : (
+            <Panel title="זה מול זה" aside={<><span className={`chip${netAsk || real ? ' est' : ''}`}>{lbl}</span><span>● הנמוך או הגבוה בשורה</span></>}>
+            <DataTable<KRow> caption="מדדים זה מול זה" className="fcmp" rows={KROWS} rowKey={(r) => r.key} export={{ name: `השוואת-מסלולים-${ym(asof).replace('/', '-')}`, title: 'השוואת מסלולים', note: `${lbl} · ${ym(asof)} · רשות שוק ההון` }}
               columns={[{ key: 'm', head: 'מדד', sortable: false, value: (r) => r.label, cell: (r) => <>{r.label}{r.tip && <Tip k={r.tip} />}</> },
                 ...items.map((it, i): Column<KRow> => ({ key: it.f.k, sortable: false, label: it.f.name, value: (r) => r.cells(it).v ?? r.cells(it).t, text: (r) => r.cells(it).t,
                   head: <><span className="fcmp-sw" style={{ background: pal()[i % pal().length] }} aria-hidden="true" /><Link to={`/funds/${it.f.k}`}>{it.f.name}</Link><span className="fcmp-sub"><MgrChip grp={it.f.grp} mgr={it.f.mgr} short /> {it.f.prod} · {it.f.track}{it.f.gone && <span className="chip est">נסגר{it.f.end ? ` ${ym(it.f.end)}` : ''}</span>}</span></>,
-                  cell: (r) => { const c = r.cells(it); return c.src && c.v != null ? <Sourced src={c.src}><span className="num">{c.t}</span></Sourced> : <span className={c.t === '–' ? 'muted' : 'num'}>{c.t}</span>; } }))]} />
-            <div className="fnote">{netAsk ? 'נטו: ' + (items.some((it) => it.f.net) ? 'מהקובץ כשפורסם, אחרת ' : '') + 'אומדן מההיסטוריה (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12). ' : 'ברוטו: לפני דמי ניהול, כפי שפורסם. '}תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}.<button type="button" className="chip fpack" onClick={() => void exportPack()}>Excel: חבילת השוואה (נוסחאות חיות)</button></div>
-          </Panel>
+                  tdClass: (r) => (isLead(r.key, it.f.k) ? 'cmp-best' : undefined), cell: (r) => { const c = r.cells(it); return c.src && (c.v != null || c.txt) ? <Sourced src={c.src}><span className={c.txt ? undefined : 'num'}>{c.t}</span></Sourced> : <span className={c.t === '–' || c.txt === undefined && /[א-ת]/.test(c.t) ? 'muted' : 'num'}>{c.t}</span>; } }))]} />
+              <div className="fnote">{netAsk ? 'נטו: ' + (items.some((it) => it.f.net) ? 'מהקובץ כשפורסם, אחרת ' : '') + 'אומדן מההיסטוריה (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12). ' : 'ברוטו: לפני דמי ניהול, כפי שפורסם. '}תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}; שארפ וסטיית תקן: כפי שהרשות מפרסמת.</div>
+            </Panel>
+          )}
+          {TaxLiq}
 
           {axis.length > 2 && <>
             <Panel title={<>צמיחה של 100 ש"ח <Tip k="growth" /></>} aside={<><span>{ym(axis[0])}–{ym(axis[axis.length - 1])}</span><span className={`chip${netAsk ? ' est' : ''}`}>{lbl}</span></>}>
@@ -194,6 +303,7 @@ export function FundsCompare() {
             </div>
           </>}
 
+          {phone && !more ? <button type="button" className="cmp-more" onClick={() => setMore(true)}>פירוט: לפי שנה, מי ניצח בחלונות, סיכון ▾</button> : <>
           <div className="grid2">
             <Panel title="לפי שנה" aside={<span className={`chip${netAsk ? ' est' : ''}`}>{lbl} · ריבית דריבית</span>}>
               <DataTable<YRow> caption="תשואה לפי שנה" rows={years.map((y) => ({ y }))} rowKey={(r) => String(r.y)} export={{ name: `השוואה-לפי-שנה-${ym(asof).replace('/', '-')}`, title: 'תשואה לפי שנה', note: `${lbl} · רשות שוק ההון` }}
@@ -213,6 +323,7 @@ export function FundsCompare() {
             </Panel>
           </div>
           <CompareRisk items={items} cats={cats} />{/* F2 TIME: drawdown, Sortino, beta, capture */}
+          </>}
         </>
       )}
     </>

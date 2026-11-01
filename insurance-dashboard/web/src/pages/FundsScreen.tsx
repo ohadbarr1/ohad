@@ -18,6 +18,11 @@ import {
   retOf, selfDirected, SELF_NOTE, shownProv, useBasis, useReal, ym, type Basis, type FamKey, type FundX, type FundsFile, type Per,
 } from '../lib/funds';
 import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../lib/fundsTie';
+import { useOptional } from '../lib/fundsLoad';
+import type { DefaultFile } from '../lib/fundsTools';
+import { defaultKeys, defaultNow, isPension, periodText } from '../lib/pensionPack';
+import { actProv, pc2, tenderProv } from '../lib/agentProv';
+import '../components/agent/glossary';
 import '../styles/lens.css';
 import '../styles/market.css';
 
@@ -28,18 +33,21 @@ import '../styles/market.css';
 
 const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 const ALL = 'all';
-type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top';
-const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון']];
+type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'act';
+const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['act', 'איזון אקטוארי']];  // act: W1-agent, pension only
 const COL_LABEL = Object.fromEntries(COLS) as Record<ColKey, string>;
 const DEFAULT_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'assets', 'sharpe', 'st', 'top'];
-const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: 'depfee', sharpe: 'sharpe', sd: 'sd', alpha: 'alpha', st: 'equity' };
+/** W1-agent: a pension product opens with its decision columns (both fees, the actuarial balance) */
+const PENSION_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'depfee', 'act', 'assets', 'sharpe', 'st'];
+const isPenProd = (p: string) => /^פנסיה/.test(p);
+const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: 'depfee', sharpe: 'sharpe', sd: 'sd', alpha: 'alpha', st: 'equity', act: 'actuarial' };
 const RET = new Set<ColKey>(['m1', 'ytd', 'y12', 'a3', 'a5']);
 const EXP = { st: ['STOCK_MARKET_EXPOSURE', 'חשיפה למניות'], fo: ['FOREIGN_EXPOSURE', 'חשיפה לחו"ל'], fx: ['FOREIGN_CURRENCY_EXPOSURE', 'חשיפה למט"ח'] } as const;
 interface Saved { name: string; qs: string }
 /** ordinal rank and percentile (rankAll) plus the shared place inside the tie band (lo–hi) */
 type RankInfo = { rank: number; n: number; pct: number | null; lo: number; hi: number };
 /** the fee columns: the regulator's average actual fee of the track, not a quote */
-const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל' };
+const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון' };
 
 const yearsOf = (f: FundX, asof: number) => (f.since ? (Math.floor(asof / 100) + (asof % 100) / 12) - (Number(f.since.slice(0, 4)) + Number(f.since.slice(5, 7)) / 12) : null);
 
@@ -66,7 +74,11 @@ export function FundsScreen() {
   const closed = sp.get('closed') === '1', gone = sp.get('gone') === '1', outOnly = sp.get('out') === '1';
   const F = { fmax: num('fmax'), dmax: num('dmax'), amin: num('amin'), smin: num('smin'), hist: num('hist'), eqmin: num('eqmin'), eqmax: num('eqmax') };
   const colsQ = (sp.get('cols') ?? '').split(',').filter((x): x is ColKey => COLS.some(([k]) => k === x));
-  const cols: ColKey[] = colsQ.length ? colsQ : DEFAULT_COLS;
+  const baseCols = isPenProd(prod) ? PENSION_COLS : DEFAULT_COLS;
+  const cols: ColKey[] = colsQ.length ? colsQ : baseCols;
+  // W1-agent: the default funds (קרנות ברירת מחדל) of the tender in force; `df=1` keeps only them
+  const dfile = useOptional<DefaultFile>('funds/default.json');
+  const dfOnly = sp.get('df') === '1';
   const [open, setOpen] = useState<string[]>([]);
   const [opts, setOpts] = useState(false);
   const [saved, setSaved] = useStored<Saved[]>('funds:screens', []);
@@ -85,6 +97,7 @@ export function FundsScreen() {
   const T = trackQ === ALL || tracks.some(([t]) => t === trackQ) ? trackQ : tracks[0]?.[0] ?? ALL;
   const groupsAll = useMemo(() => [...new Set(all.map((f) => f.grp))].sort((a, b) => a.localeCompare(b, 'he')), [all]);
   const asof = data?.asof ?? 0;
+  const dfKeys = useMemo(() => defaultKeys(dfile, asof), [dfile, asof]);
   const val = (f: FundX, p: Per) => (real ? realOf(f, p, basis, asof, cpi).v : retOf(f, p, basis).v);
 
   const screened = (f: FundX) => {
@@ -100,6 +113,7 @@ export function FundsScreen() {
     if (F.eqmin != null && !(f.st != null && f.st >= F.eqmin)) return false;
     if (F.eqmax != null && !(f.st != null && f.st <= F.eqmax)) return false;
     if (outOnly && !equityOutlier(f, spread)) return false;
+    if (dfOnly && !dfKeys.has(f.k)) return false;
     return true;
   };
   const sortKey = (sp.get('s') ?? '') as ColKey | '';
@@ -120,10 +134,10 @@ export function FundsScreen() {
       });
       return { k, prod: shown[0].prod, track: shown[0].track, list, rk, n: rk.size ? [...rk.values()][0].n : 0, assets: peers.reduce((t, f) => t + (f.assets ?? 0), 0) };
     }).filter((g) => g.list.length).sort((a, b) => b.assets - a.assets);
-  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp, dfKeys]);  // eslint-disable-line react-hooks/exhaustive-deps
   const shownN = groups.reduce((t, g) => t + g.list.length, 0);
   const multi = groups.length > 1 || T === ALL;
-  const nFilters = [q, fams.length ? '1' : '', mk, closed ? '1' : '', gone ? '1' : '', outOnly ? '1' : '', ...Object.values(F).map((v) => (v == null ? '' : '1'))].filter(Boolean).length;
+  const nFilters = [q, fams.length ? '1' : '', mk, closed ? '1' : '', gone ? '1' : '', outOnly ? '1' : '', dfOnly ? '1' : '', ...Object.values(F).map((v) => (v == null ? '' : '1'))].filter(Boolean).length;
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data) return <Loading what="מסלולים" />;
@@ -157,6 +171,7 @@ export function FundsScreen() {
       case 'st': case 'fo': case 'fx': { const v = f[c]; if (v == null) return <span className="muted">–</span>; const o = c === 'st' ? equityOutlier(f, spread) : null;
         return <><Sourced src={() => expP(refOf(f), f.end ?? asof, EXP[c][0], EXP[c][1], v, f.assets)}><span className="num">{nf(v, 0)}%</span></Sourced>{o && <Sourced className="chip est fout" src={() => outlierProv(f, o, () => expP(refOf(f), asof, EXP.st[0], EXP.st[1], f.st, f.assets))} title="חשיפה למניות רחוקה מהחציון בקטגוריה">{o.z > 0 ? '▲' : '▼'}</Sourced>}</>; }
       case 'age': { const y = yearsOf(f, asof); return y == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `ותק · ${f.name}`, value: `${nf(y, 1)} שנים`, formula: `מועד ההקמה שדווח לרשות (${pubLabel(f.since)}) עד ${ym(asof)}`, inputs: [{ label: 'חודשי היסטוריה עם תשואה', v: nf(f.n, 0) }] })}><span className="num">{nf(y, 0)}</span></Sourced>; }
+      case 'act': return !isPension(f) ? <span className="muted">–</span> : f.act == null ? <span className="muted" title="הקרן לא דיווחה איזון אקטוארי לרבעון האחרון">–</span> : <Sourced src={() => actProv(f)} title={`איזון אקטוארי, רבעון ${ym(f.act_p ?? asof)}`}><span className={`num ${f.act < 0 ? 'neg' : f.act > 0 ? 'pos' : ''}`}>{pc2(f.act)}</span></Sourced>;
       case 'top': return f.yrs ? <Sourced src={() => ({ k: 'calc', title: `רבע עליון · ${f.name}`, value: `${f.top}/${f.yrs}`, formula: 'בכמה מהשנים הקלנדריות המלאות מתוך חמש האחרונות תשואת המסלול (ברוטו, ריבית דריבית על 12 תשואות חודשיות) הייתה ברבע העליון של הקטגוריה: מקום ≤ ⌈n÷4⌉, בקטגוריה של 4 מסלולים לפחות', inputs: [{ label: 'שנים ברבע העליון', v: nf(f.top ?? 0, 0) }, { label: 'שנים שנבדקו', v: nf(f.yrs ?? 0, 0) }], note: 'מחושב בבניית הנתונים מתשואות חברי הקטגוריה' })}><span className="num">{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>;
     }
     return null;
@@ -166,6 +181,7 @@ export function FundsScreen() {
     {f.gone && <span className="chip est">נסגר{f.end ? ` ${ym(f.end)}` : ''}</span>}
     {selfDirected(f) && <span className="chip" title={SELF_NOTE}>ניהול אישי</span>}
     {f.n < 60 && !f.gone && <span className="chip" title="פחות מ-60 חודשי היסטוריה: אין 5Y">היסטוריה קצרה</span>}
+    {dfKeys.has(f.k) && (() => { const d = defaultNow(f.k, dfile, asof); return d ? <Sourced className="chip pass" src={() => tenderProv(d.t, 'קרן ברירת מחדל', `${pc2(d.depfee)} / ${pc2(d.fee)}`)} title={`קרן ברירת מחדל ${periodText(d.t)}: ${pc2(d.depfee)} מהפקדה, ${pc2(d.fee)} מצבירה`}>ברירת מחדל</Sourced> : null; })()}
     {f.tx?.dis && <span className="chip est" title={`הסיווג הרשמי (transfer_bank): ${[f.tx.type, f.tx.spec, f.tx.sub].filter(Boolean).join(' · ')}`}>סיווג רשמי שונה</span>}
   </>;
   const CatHead = ({ g }: { g: (typeof groups)[number] }) => (
@@ -194,7 +210,7 @@ export function FundsScreen() {
         <button type="button" className="chip" aria-pressed={closed} onClick={() => set({ closed: closed ? null : '1' })}>כולל קופות ענפיות</button><Tip k="closed" />
         <button type="button" className="chip" aria-pressed={gone} onClick={() => set({ gone: gone ? null : '1' })}>כולל מסלולים שנסגרו</button>
       </div>
-      {!phone && <div className="field"><span>עמודות</span><div className="fchips">{COLS.map(([k, l]) => <button key={k} type="button" className="chip" aria-pressed={cols.includes(k)} onClick={() => { const next = cols.includes(k) ? cols.filter((x) => x !== k) : COLS.map(([x]) => x).filter((x) => cols.includes(x) || x === k); set({ cols: next.join(',') === DEFAULT_COLS.join(',') ? null : next.join(',') }); }}>{l}</button>)}</div></div>}
+      {!phone && <div className="field"><span>עמודות</span><div className="fchips">{COLS.map(([k, l]) => <button key={k} type="button" className="chip" aria-pressed={cols.includes(k)} onClick={() => { const next = cols.includes(k) ? cols.filter((x) => x !== k) : COLS.map(([x]) => x).filter((x) => cols.includes(x) || x === k); set({ cols: next.join(',') === baseCols.join(',') ? null : next.join(',') }); }}>{l}</button>)}</div></div>}
       <div className="field"><span>סינונים שמורים <span className="muted">· בדפדפן הזה בלבד</span></span>
         <div className="fchips">
           {saved.map((s) => <span key={s.name} className="fsaved"><Link className="chip" to={`/funds/screen?${s.qs}`}>{s.name}</Link><button type="button" className="fsaved-x" aria-label={`מחיקת הסינון ${s.name}`} onClick={() => setSaved(saved.filter((x) => x.name !== s.name))}>×</button></span>)}
@@ -209,6 +225,7 @@ export function FundsScreen() {
   const tools = <>
     <Pick label="מוצר" value={prod} onChange={(p) => set({ prod: p, track: null })} options={[[ALL, 'כל המוצרים'], ...prods.map((p) => [p, p] as [string, string])]} />
     <Pick label="מסלול" className="trackpick" value={T} onChange={(t) => set({ track: t })} options={[[ALL, 'כל המסלולים', nf(tracks.reduce((u, [, c]) => u + c, 0), 0)], ...tracks.map(([t, c]) => [t, t, nf(c, 0)] as [string, string, string])]} />
+    {isPenProd(prod) && <button type="button" className="chip" aria-pressed={dfOnly} onClick={() => set({ df: dfOnly ? null : '1' })} title="קרנות שנבחרו בהליך שבתוקף כקרנות ברירת מחדל">ברירת מחדל</button>}
     {!phone && <Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} />}
     <button type="button" className={`btn${opts ? ' primary' : ''}`} aria-expanded={opts} onClick={() => setOpts((v) => !v)}>{phone ? `${PERIODS.find(([k]) => k === per)?.[1]} · ${lbl}${nFilters ? ` · ${nFilters}` : ''}` : `סינון${nFilters ? ` · ${nFilters}` : ''}`}</button>
   </>;
@@ -238,7 +255,7 @@ export function FundsScreen() {
                       <div><span className="l">מקום</span>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num">{rankText(r)}/{r.n}</span></Sourced> : <span className="muted">–</span>}</div>
                       <div><span className="l">אחוזון</span>{cell(f, 'pct', r)}</div>
                       <div><span className="l" title="דמי ניהול מצבירה, הממוצע בפועל של המסלול">ד"נ ממוצע בפועל</span>{cell(f, 'fee', r)}</div>
-                      <div><span className="l">מניות</span>{cell(f, 'st', r)}</div>
+                      {isPension(f) ? <><div><span className="l" title="דמי ניהול מהפקדה, הממוצע בפועל של המסלול">ד"נ מהפקדה</span>{cell(f, 'depfee', r)}</div><div><span className="l">איזון אקטוארי</span>{cell(f, 'act', r)}</div></> : <div><span className="l">מניות</span>{cell(f, 'st', r)}</div>}
                     </div>
                   </article>
                 ); })}
