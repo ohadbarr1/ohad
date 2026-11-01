@@ -28,7 +28,8 @@
     "test:fundscalc": "node scripts/funds-calc-test.mjs",
     "test:search": "node scripts/search-test.mjs",
     "test:fundstie": "node scripts/funds-tie-test.mjs",
-    "test:fundstime": "node scripts/fundstime-test.mjs"
+    "test:fundstime": "node scripts/fundstime-test.mjs",
+    "test:verdict": "node scripts/verdict-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",
