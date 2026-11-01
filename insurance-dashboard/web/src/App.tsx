@@ -43,10 +43,7 @@ const mFunds = () => import('./pages/Funds');
 const FundCard = page(mFunds, 'FundCard');
 const FundMakers = page(mFunds, 'FundMakers');
 const mFundsTime = () => import('./pages/FundsTime');  // F2 TIME: risk and time views of the section
-const FundsMap = page(mFundsTime, 'FundsMap');
 const FundsRank = page(mFundsTime, 'FundsRank');
-const FundsQuilt = page(mFundsTime, 'FundsQuilt');
-const FundsPersist = page(mFundsTime, 'FundsPersist');
 const FundsGlide = page(mFundsTime, 'FundsGlide');
 const FundsWatch = page(() => import('./pages/FundsWatch'), 'FundsWatch');  // F2 TIME: the watchlist
 const mFundsHub = () => import('./pages/FundsHub');  // F1: the "חיסכון" section's front door
@@ -56,7 +53,6 @@ const FundsScreen = page(mFundsScreen, 'FundsScreen');
 const mFundsCompare = () => import('./pages/FundsCompare');
 const FundsCompare = page(mFundsCompare, 'FundsCompare');
 const FundsTools = page(() => import('./pages/FundsTools'), 'FundsTools');  // F2 TOOLS: the calculators and trackers
-const FundsHindsight = page(() => import('./pages/FundsHindsight'), 'FundsHindsight');
 const FundsFees = page(() => import('./pages/FundsFees'), 'FundsFees');
 const FundsDefault = page(() => import('./pages/FundsDefault'), 'FundsDefault');
 const FundsTrackers = page(() => import('./pages/FundsTrackers'), 'FundsTrackers');
@@ -190,16 +186,16 @@ export function App() {
         <Route path="funds/screen" element={<FundsScreen />} />
         <Route path="funds/compare" element={<FundsCompare />} />
         <Route path="funds/tools" element={<FundsTools />} />
-        <Route path="funds/tools/hindsight" element={<FundsHindsight />} />
+        <Route path="funds/tools/hindsight" element={<Navigate to="/funds/tools" replace />} />{/* removed by owner decision 01.11.26 */}
         <Route path="funds/tools/fees" element={<FundsFees />} />
         <Route path="funds/default" element={<FundsDefault />} />
         <Route path="funds/trackers" element={<FundsTrackers />} />
         <Route path="funds/holdings" element={<Navigate to="/holdings" replace />} />
         <Route path="funds/makers" element={<FundMakers />} />
-        <Route path="funds/map" element={<FundsMap />} />
+        <Route path="funds/map" element={<Navigate to="/funds/rank" replace />} />{/* removed by owner decision 01.11.26 */}
         <Route path="funds/rank" element={<FundsRank />} />
-        <Route path="funds/quilt" element={<FundsQuilt />} />
-        <Route path="funds/persist" element={<FundsPersist />} />
+        <Route path="funds/quilt" element={<Navigate to="/funds/rank" replace />} />
+        <Route path="funds/persist" element={<Navigate to="/funds/rank" replace />} />
         <Route path="funds/glide" element={<FundsGlide />} />
         <Route path="funds/watch" element={<FundsWatch />} />
         <Route path="funds/:k" element={<FundCard />} />

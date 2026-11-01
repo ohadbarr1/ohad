@@ -152,7 +152,7 @@ export function Watch() {
       <div className="sub">
         {b && <span>{b.first ? <>מאז הבנייה הקודמת{b.since && <>, <span className="num">{pubLabel(b.since)}</span></>}</> : <>מאז ביקורך הקודם, <span className="num">{pubLabel(b.since)}</span></>}</span>}
         {w && <><span>·</span><span><span className="num">{w.snaps.length}</span> תמונות מצב{w.asof && <>, האחרונה <span className="num">{pubLabel(w.asof)}</span></>}</span></>}
-        <span>·</span><Link to="/questions">שאלות</Link><span>·</span><Link to="/findings">ממצאים</Link>
+        <span>·</span><Link to="/questions">שאלות</Link>
       </div>
     </div>
     {w && b && <div className="aside"><DeliverMenu label="הפק תקציר" make={async () => watchDoc({ w, b, prep, index: I ?? null, author: '', today: todayIso(), names })} /></div>}</div>

@@ -7,7 +7,6 @@ import '../styles/fundsTools.css';
    browser over the published files: nothing typed here leaves the page (the state lives in the address, so a link reproduces it). */
 
 export const TOOLS: [string, string, string, string][] = [
-  ['/funds/tools/hindsight', 'scenarios', 'מה היה לי', 'ההפקדות שלך דרך כל מסלול בקטגוריה: איפה היית היום, מול החציון, הטוב והחלש'],
   ['/funds/tools/fees', 'sliders', 'דמי ניהול לאורך קריירה', 'כמה עולים דמי ניהול מהפקדה ומצבירה עד הפרישה, בשקלים ובקצבה'],
   ['/funds/default', 'shield', 'קרנות ברירת מחדל', 'מכרזי רשות שוק ההון: הזוכות, המחיר, ומה קרה לכסף לפני ואחרי'],
   ['/funds/trackers', 'compare', 'מעבדת עוקבי המדד', 'אותו מדד בעטיפות שונות: הפער בין המסלולים הוא מחיר העטיפה'],

@@ -12,9 +12,9 @@ import { useWatchBadge } from '../lib/fundsTimeLoad';
 const TABS: [string, string, boolean?][] = [['/funds', 'קופות', true], ['/funds/screen', 'מסלולים'], ['/funds/compare', 'השוואה'], ['/savings', 'ענף'], ['/managers', 'מנהלים'], ['/holdings', 'הרכב נכסים']];
 TABS.splice(TABS.findIndex(([t]) => t === '/savings'), 0, ['/funds/tools', 'כלים']);  // F2 TOOLS: the calculators and trackers
 // F2 TIME: "סיכון וזמן" after compare (its views share one tab), and the watchlist at the end
-TABS.splice(TABS.findIndex(([to]) => to === '/funds/compare') + 1, 0, ['/funds/map', 'סיכון וזמן']);
+TABS.splice(TABS.findIndex(([to]) => to === '/funds/compare') + 1, 0, ['/funds/rank', 'סיכון וזמן']);
 TABS.push(['/funds/watch', 'המעקב שלי']);
-const TIME_VIEW = /^\/funds\/(map|rank|quilt|persist|glide)$/;
+const TIME_VIEW = /^\/funds\/(rank|glide)$/;
 
 export function FundsNav() {
   const loc = useLocation();
@@ -24,7 +24,7 @@ export function FundsNav() {
   const time = TIME_VIEW.test(loc.pathname), badge = useWatchBadge();
   return (
     <nav className="subnav" aria-label="חיסכון">
-      {TABS.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') || (tool && to === '/funds/tools') || (time && to === '/funds/map') ? 'active' : '')}>{l}{to === '/funds/watch' && badge > 0 && <span className="wbadge num" aria-label={`${badge} מסלולים עם חודש חדש`}>{badge}</span>}</NavLink>)}
+      {TABS.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') || (tool && to === '/funds/tools') || (time && to === '/funds/rank') ? 'active' : '')}>{l}{to === '/funds/watch' && badge > 0 && <span className="wbadge num" aria-label={`${badge} מסלולים עם חודש חדש`}>{badge}</span>}</NavLink>)}
     </nav>
   );
 }

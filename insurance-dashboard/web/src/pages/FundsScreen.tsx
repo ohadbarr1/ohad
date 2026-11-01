@@ -25,7 +25,7 @@ import '../styles/market.css';
    Saved screens live in this browser. The rank and the percentile are always among the tracks of the category on screen (open to the
    public unless the reader includes the closed ones); filters hide rows without changing a rank. */
 
-const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
+const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 const ALL = 'all';
 type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top';
 const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון']];
@@ -217,7 +217,7 @@ export function FundsScreen() {
       <Panel title={<>{prod === ALL ? 'כל המוצרים' : prod} · {T === ALL ? 'כל המסלולים' : T}</>} aside={<>
         {multi && groups.length > 2 && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.k))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}
         <span className={`chip${basis === 'net' || real ? ' est' : ''}`}>{lbl}</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>
-        {prod === 'פוליסות חיסכון' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}
+        {prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">מסלול משותף לשני המוצרים</span>}
       </>}>
         {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה">{nFilters > 0 && 'נסו לנקות חלק מהסינונים.'}</Empty> : phone ? (
           <div className="fcards">

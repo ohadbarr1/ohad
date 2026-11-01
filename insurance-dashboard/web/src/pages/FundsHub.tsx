@@ -19,7 +19,7 @@ import '../styles/market.css';
    largest categories; where choosing a track mattered most; the tracks that moved most in their category; the fee changes; and the
    doors to every tool. Net of fee by default when the file carries it. Every figure opens its source; nothing is a score. */
 
-const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'פנסיה מקיפה', 'פוליסות חיסכון', 'פנסיה כללית', 'חיסכון לילד', 'מרכזית לפיצויים'];
+const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'פנסיה מקיפה', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'פנסיה כללית', 'חיסכון לילד', 'מרכזית לפיצויים'];
 const HUB_WIN: [Per, string][] = [['m1', 'החודש'], ['y12', 'LTM'], ['a3', '3Y']];
 const MIN_N = 5;
 

@@ -117,7 +117,7 @@ export function Questions() {
     <div className="qi">
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="questions" /></span>שאלות</h1>
         <div className="sub"><span><span className="num">{I.n}</span> שאלות</span><span>·</span><span><span className="num">{I.ok}</span> עם תשובה</span>
-          {tripped > 0 && <><span>·</span><span><span className="num">{tripped}</span> שהסף שלהן נחצה</span></>}<span>·</span><span>מחושב מחדש בכל בנייה, כל מספר נפתח במקור</span><span>·</span><Link to="/findings">ממצאים</Link><span>·</span><Link to="/brief">תדריכים</Link><span>·</span><Link to="/watch">מה השתנה</Link></div></div></div>
+          {tripped > 0 && <><span>·</span><span><span className="num">{tripped}</span> שהסף שלהן נחצה</span></>}<span>·</span><span>מחושב מחדש בכל בנייה, כל מספר נפתח במקור</span><span>·</span><Link to="/brief">תדריכים</Link><span>·</span><Link to="/watch">מה השתנה</Link></div></div></div>
 
       <section className="qi-ctl" aria-label="סינון">
         <div className="qi-chairs" role="group" aria-label="מי שואל">

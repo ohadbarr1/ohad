@@ -96,7 +96,7 @@ def ival(x):
 def product_of(cls, name):
     p = PRODUCT.get(cls, cls) if isinstance(cls, str) else cls
     if p == SHARED:
-        return "ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים" if MANAGERS_ONLY.search(str(name)) else "פוליסות חיסכון"
+        return "ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים" if MANAGERS_ONLY.search(str(name)) else "פוליסות חיסכון וביטוחי מנהלים (מ-2004)"  # one bituach-net track pool: savings policies and managers' insurance from 2004 (owner, 01.11.26)
     return p
 
 

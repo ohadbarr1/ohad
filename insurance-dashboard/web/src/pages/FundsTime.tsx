@@ -379,7 +379,7 @@ export function FundsPersist() {
 }
 
 /* ======================================================================================== glide paths (#15) */
-const GLIDE_PRODS = ['גמל', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון'];
+const GLIDE_PRODS = ['גמל', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)'];
 type GRow = { grp: string; t: Partial<Record<Band, FundX>>; step: number | null };
 export function FundsGlide() {
   const { data, error } = useFile();
