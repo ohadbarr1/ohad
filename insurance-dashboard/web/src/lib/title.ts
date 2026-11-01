@@ -21,7 +21,8 @@ export function titleFor(path: string, name: (id: string) => string | null | und
   switch (p[0] ?? '') {
     case '': return door === 'saver' ? t('החיסכון שלי') : door === 'agent' ? t('מסלולים, השוואה ודמי ניהול', 'סוכן') : door == null ? 'fox · כל מסלולי החיסכון, נטו ובמקור' : 'fox · ביטוח, פנסיה וגמל';
     case 'pro': return p[1] ? null : t('Pro', 'ביטוח, פנסיה וגמל');  // W1: the Pro home at a fixed address
-    case 'my': return p[1] ? null : t('המוצרים שלי');  // W1: the saver's products (lane w1-saver)
+    case 'my': return p[1] === 'statement' && !p[2] ? t('איך קוראים את הדוח השנתי', 'החיסכון שלי') : p[1] ? null : t('המוצרים שלי');  // W1: the saver's products; W3: the statement guide
+    case 'clients': return p[1] ? null : t('תיקי לקוחות', 'סוכן');  // W3: the agent's client folders (private: no client name in the title)
     case 'companies': return t('חברות');
     case 'company': {
       if (!((p[2] ?? '') in COMPANY_TAB) || name(p[1]) === null) return null;

@@ -199,3 +199,39 @@ td.cmp-best::after { content: "●"; color: var(--accent); font-size: 8px; verti
 .ppk-s.w2d { color: var(--muted); }
 .ppk-clm tbody th { border-top: 1px solid var(--line-soft); vertical-align: middle; }
 .ppk-tracks td:last-child { width: auto; }
+/* ---- W3: client folders (שמור ללקוח, /clients, the agent home's panel) ---- */
+.csave { display: inline-flex; flex-direction: column; gap: 6px; min-width: 0; }
+.csave-row { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.csave-btn { font-size: var(--t-3); padding: 6px 12px; border-radius: var(--r-pill); cursor: pointer; }
+.csave-btn svg.ico { width: 15px; height: 15px; }
+.csave-msg { font-size: var(--t-2); color: var(--muted); }
+.csave-msg a { color: var(--link); }
+.csave-form { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); min-width: min(100%, 320px); max-width: 520px; }
+.csave-form label { font-size: var(--t-2); font-weight: 600; color: var(--muted); }
+.csave-form input, .csave-form textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; }
+.csave-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.csave-priv { margin: 0; font-size: var(--t-1); color: var(--muted); line-height: 1.5; }
+.csave-priv a, .csave-msg a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+.clients { display: flex; flex-direction: column; gap: 16px; max-width: 1040px; }
+.cl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cl-item { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--panel); min-width: 0; }
+.cl-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.cl-h b { font-size: var(--t-4); }
+.cl-meta { font-size: var(--t-2); color: var(--muted); }
+.cl-tracks { display: flex; flex-wrap: wrap; gap: 6px; }
+.cl-tracks .chip { white-space: normal; text-decoration: none; }
+.cl-note { margin: 0; font-size: var(--t-3); color: var(--muted); white-space: pre-line; }
+.cl-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cl-acts .chip { cursor: pointer; font-size: var(--t-2); padding: 5px 10px; }
+.cl-imp { position: relative; overflow: hidden; cursor: pointer; }
+.cl-imp input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cl-panel { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.cl-empty { margin: 0; font-size: var(--t-2); color: var(--muted); }
+.cl-mini { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; }
+.cl-mini button { width: 100%; text-align: start; font: inherit; display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: var(--r-2); border: 1px solid var(--line-soft); background: var(--panel2); color: var(--fg); cursor: pointer; }
+.cl-mini button:hover { border-color: var(--accent-line); }
+.cl-mini b { font-size: var(--t-3); }
+.cl-mini span { font-size: var(--t-1); color: var(--muted); }
+.cmp-folder { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: var(--t-2); color: var(--muted); }
+.cmp-folder b { color: var(--fg); }
+.cl-io { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { BasisToggle, FundsHead } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
 import { CompareRisk } from '../components/FundsTime';
@@ -29,6 +29,8 @@ import { rulesOf, RULES_NOTE } from '../lib/productRules';
 import { actProv, ruleProv, tenderProv, pc2 } from '../lib/agentProv';
 import { TIE_NOTE } from '../lib/fundsTie';
 import { DECISION_PATH, clmCell, svcCell, type DecisionFile } from '../lib/decision';  // W2
+import { ClientSave } from '../components/agent/ClientSave';
+import { folderOfState, useClients } from '../lib/clients';
 import '../components/agent/glossary';
 import '../styles/lens.css';
 import '../styles/market.css';
@@ -61,6 +63,11 @@ export function FundsCompare() {
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index and the claims rows
   const [edit, setEdit] = useState(false);
+  // W3: opened from a client folder (the router's state carries its id, never the URL)
+  const loc = useLocation();
+  const [clients] = useClients();
+  const [folderId, setFolderId] = useState<string | null>(() => folderOfState(loc.state));
+  const folder = folderId ? clients.folders.find((f) => f.id === folderId) ?? null : null;
   const [more, setMore] = useState(false);
   const keys = useMemo(() => (sp.get('k') ?? '').split(',').filter((k) => /^[gip]\d+$/.test(k)).slice(0, TRAY_MAX), [sp]);
   const winQ = sp.get('win') as Win | null;
@@ -214,9 +221,13 @@ export function FundsCompare() {
       </div>
       <div className="cmp-bl-note">תיאור עובדתי של הנתונים, לא המלצה. {TIE_NOTE}. דמי ניהול: הממוצע בפועל של המסלול, לא של חוסך מסוים. {summary.mixed ? 'מוצרים שונים: המיסוי והנזילות שונים (בטבלה למטה), וההשוואה אינה דירוג. ' : ''}</div>
       <div className="cmp-actions">
-        <Link className="cmp-doc" to={printHref}><Icon name="statement" />הפק מסמך ללקוח</Link>
+        <Link className="cmp-doc" to={printHref} state={folder ? { folder: folder.id } : undefined}><Icon name="statement" />הפק מסמך ללקוח</Link>
         <button type="button" className="chip fpack" onClick={() => void exportPack()}><Icon name="download" /> Excel: חבילת השוואה (נוסחאות חיות)</button>
         <span className="cmp-bl-note">מסמך A4 עם נספח הנמקה; שם הלקוח והסוכן נשארים בדפדפן הזה.</span>
+      </div>
+      {/* W3 */}<div className="cmp-actions">
+        {folder && <span className="cmp-folder">תיק: <b>{folder.label}</b></span>}
+        <ClientSave keys={keys} b={basis} folder={folder} onSaved={(f) => setFolderId(f.id)} />
       </div>
     </Panel>
   );

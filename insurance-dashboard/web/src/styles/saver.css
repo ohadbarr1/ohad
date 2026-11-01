@@ -149,3 +149,93 @@
   .sv-big { font-size: 16.5px !important; }
   .sv-fold { padding: 12px 14px; }
 }
+
+/* ---- W3: the clearing-house import (בטא), what changed since the last visit, the statement link ---- */
+.sv-done { margin: 0; padding: 10px 12px; border-radius: var(--r-2); background: color-mix(in oklch, var(--up) 9%, var(--panel)); border: 1px solid color-mix(in oklch, var(--up) 30%, transparent); font-size: var(--t-3); }
+.mk .hd h2 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mk-intro { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.mk-intro p, .mk-steps { margin: 0; font-size: var(--t-4); line-height: 1.6; }
+.mk-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.mk-priv { align-items: flex-start; line-height: 1.55; }
+.mk-steps { padding-inline-start: 20px; display: flex; flex-direction: column; gap: 4px; }
+.mk-steps a, .mk-spec a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.mk-file { position: relative; align-self: flex-start; overflow: hidden; }
+.mk-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.mk-file:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mk-review { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 12px; min-width: 0; }
+.mk-review h3 { margin: 0; font-size: var(--t-4); }
+.mk-review h4 { margin: 4px 0 0; font-size: var(--t-3); color: var(--muted); }
+.mk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.mk-row { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 10px 12px; background: var(--panel2); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mk-row.none { background: var(--panel); border-style: dashed; }
+.mk-row-h { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.mk-row-h input[type="checkbox"] { width: 20px; height: 20px; margin: 2px 0 0; flex: none; }
+.mk-row-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 200px; }
+.mk-row-t b { font-size: var(--t-4); }
+.mk-row-t b a { color: var(--fg); }
+.mk-sub, .mk-how, .mk-asof { font-size: var(--t-3); color: var(--muted); }
+.mk-how { display: block; }
+.mk-asof { margin: 0; }
+.mk-by { font-size: var(--t-3); color: var(--muted); white-space: nowrap; }
+.mk-by.warn { color: var(--warn); }
+.mk-why, .mk-warn, .mk-err { margin: 0; font-size: var(--t-3); line-height: 1.5; }
+.mk-warn { color: var(--warn); }
+.mk-err { color: var(--down); }
+.mk-kv { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mk-kv > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mk-kv dt { font-size: var(--t-3); color: var(--muted); }
+.mk-kv dd { margin: 0; font-size: var(--t-4); font-weight: 600; }
+.mk-manual { display: grid; gap: 4px; font-size: var(--t-3); color: var(--muted); min-width: 0; }
+.mk-manual select { width: 100%; max-width: 100%; font-size: 16px; min-width: 0; }
+.mk-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.mk-spec { margin: 0; }
+
+.ms .hd .aside { font-size: var(--t-3); }
+.ms-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.ms-item { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ms-item + .ms-item { border-top: 1px solid var(--line-soft); padding-top: 10px; }
+.ms-name { font-size: var(--t-4); font-weight: 700; color: var(--fg); text-decoration: none; }
+.ms-name:hover { color: var(--accent-text); }
+.ms-item > .sv-muted { margin: 0; }
+.ms-lines li { font-size: var(--t-4); display: flex; align-items: flex-start; }
+.ms-lines li > .sv-dot { transform: none; margin-top: 0.62em; flex: none; }
+.ms-lines li > span:not(.sv-dot) { display: block; min-width: 0; flex: 1 1 0; }
+.ms-lines .src { font-weight: 500; }
+main .ms-lines button.src:not(.bar) { padding: 4px 0; margin: -4px 0; display: block; width: 100%; text-align: start; white-space: normal; line-height: 1.6; height: auto; vertical-align: top; }
+.ms-quiet { margin: 0; }
+
+.sv-stmt { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 18px; color: var(--fg); text-decoration: none; }
+.sv-stmt:hover { border-color: var(--accent-line); text-decoration: none; }
+.sv-stmt-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sv-stmt-t b { font-size: var(--t-4); }
+.sv-stmt-t span { font-size: var(--t-3); color: var(--muted); line-height: 1.5; }
+.sv-stmt-go { color: var(--faint); font-size: 20px; }
+
+@media (max-width: 760px) {
+  .mk-kv { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ms-lines li { font-size: 14.5px; }
+}
+
+/* ---- W3: /my/statement, the annual report field by field ---- */
+.st-page .eyebrow a { color: inherit; text-decoration: none; }
+.st-toc { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.st-toc a { text-decoration: none; }
+.st-sec { scroll-margin-top: 80px; }
+.st-h { margin: 0; font-size: var(--t-5); display: flex; align-items: center; gap: 10px; line-height: 1.3; }
+.st-lead { margin: 0; font-size: var(--t-4); line-height: 1.6; color: var(--muted); }
+.st-fields { margin: 0; display: flex; flex-direction: column; gap: 0; }
+.st-f { display: grid; grid-template-columns: minmax(0, 15em) minmax(0, 1fr); gap: 6px 18px; padding: 12px 0; border-top: 1px solid var(--line-soft); }
+.st-f dt { font-size: var(--t-4); font-weight: 700; line-height: 1.5; }
+.st-f dd { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.st-f dd p { margin: 0; font-size: var(--t-4); line-height: 1.65; }
+.st-f dd a, .st-diff a, .st-next a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.st-check { background: var(--panel2); border-radius: var(--r-2); padding: 8px 10px; }
+.st-cite { font-size: var(--t-3) !important; color: var(--muted); }
+.st-src { color: var(--muted) !important; font-size: var(--t-3); }
+.st-diff { border-top: 1px solid var(--line-soft); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.st-diff p { margin: 0; font-size: var(--t-4); line-height: 1.65; }
+@media (max-width: 760px) {
+  .st-f { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .st-f dd p, .st-diff p { font-size: 14.5px; }
+}
+.sv-note a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }

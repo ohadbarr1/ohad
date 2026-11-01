@@ -61,6 +61,8 @@ const FundsDefault = page(() => import('./pages/FundsDefault'), 'FundsDefault');
 const FundsTrackers = page(() => import('./pages/FundsTrackers'), 'FundsTrackers');
 const About = page(() => import('./pages/About'), 'About');  // Wave 0: who, sources, not advice
 const My = page(() => import('./pages/My'), 'My');  // W1-saver: "המוצרים שלי"
+const MyStatement = page(() => import('./pages/MyStatement'), 'MyStatement');  // W3: the annual-statement guide
+const Clients = page(() => import('./pages/Clients'), 'Clients');  // W3: the agent's client folders
 const mValuation = () => import('./pages/Valuation');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
@@ -249,6 +251,8 @@ export function App() {
         <Route path="watch" element={<Watch />} />{/* S10 */}
         {/* W1-saver */}
         <Route path="my" element={<My />} />
+        {/* W3 */}<Route path="my/statement" element={<MyStatement />} />
+        {/* W3 */}<Route path="clients" element={<Clients />} />
         <Route path="about" element={<About />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />

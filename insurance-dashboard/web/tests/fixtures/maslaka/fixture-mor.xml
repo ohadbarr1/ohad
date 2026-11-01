@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FIXTURE · synthetic, built from the holdings-interface XSD v008. No real person: the names, ID and amounts are invented. -->
+<Mimshak>
+  <KoteretKovetz><SUG-MIMSHAK>1</SUG-MIMSHAK><MISPAR-GIRSAT-XML>009</MISPAR-GIRSAT-XML><TAARICH-BITZUA>20261015093000</TAARICH-BITZUA></KoteretKovetz>
+  <YeshutYatzran>
+    <KOD-MEZAHE-YATZRAN>514956465</KOD-MEZAHE-YATZRAN>
+    <SHEM-YATZRAN>מור גמל ופנסיה בע"מ</SHEM-YATZRAN>
+    <Mutzarim>
+      <Mutzar>
+        <NetuneiMutzar><SUG-MUTZAR>4</SUG-MUTZAR><KOD-MEZAHE-YATZRAN>514956465</KOD-MEZAHE-YATZRAN></NetuneiMutzar>
+        <HeshbonotOPolisot><HeshbonOPolisa>
+          <MISPAR-POLISA-O-HESHBON>55500123</MISPAR-POLISA-O-HESHBON>
+          <SHEM-TOCHNIT>מור קרן השתלמות</SHEM-TOCHNIT>
+          <TAARICH-NECHONUT>20260930</TAARICH-NECHONUT>
+          <STATUS-POLISA-O-CHESHBON>1</STATUS-POLISA-O-CHESHBON>
+          <PirteiTaktziv>
+            <BlockItrot><Yitrot><TAARICH-ERECH-TZVIROT>20260930</TAARICH-ERECH-TZVIROT>
+              <PerutYitrot><KOD-SUG-ITRA>1</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>8</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>21000</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+              <PerutYitrot><KOD-SUG-ITRA>1</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>9</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>63000</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+            </Yitrot></BlockItrot>
+            <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260810</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>8</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>437.50</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+            <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260810</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>9</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1312.50</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+            <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260910</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>8</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>437.50</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+            <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260910</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>9</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1312.50</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+            <PerutHotzaot><HotzaotBafoalLehodeshDivoach>
+              <SHEUR-DMEI-NIHUL-HAFKADA>0</SHEUR-DMEI-NIHUL-HAFKADA>
+              <SHEUR-DMEI-NIHUL-TZVIRA>0.05</SHEUR-DMEI-NIHUL-TZVIRA>
+            </HotzaotBafoalLehodeshDivoach></PerutHotzaot>
+            <PerutMasluleiHashkaa>
+              <KOD-MASLUL-HASHKAA>514956465000000000125350000000</KOD-MASLUL-HASHKAA>
+              <SHEM-MASLUL-HASHKAA>מור קרן השתלמות - כללי</SHEM-MASLUL-HASHKAA>
+              <KOD-SUG-MASLUL>1</KOD-SUG-MASLUL>
+              <SCHUM-TZVIRA-BAMASLUL>84000</SCHUM-TZVIRA-BAMASLUL>
+            </PerutMasluleiHashkaa>
+          </PirteiTaktziv>
+        </HeshbonOPolisa></HeshbonotOPolisot>
+      </Mutzar>
+      <Mutzar>
+        <NetuneiMutzar><SUG-MUTZAR>3</SUG-MUTZAR><KOD-MEZAHE-YATZRAN>514956465</KOD-MEZAHE-YATZRAN></NetuneiMutzar>
+        <HeshbonotOPolisot>
+          <HeshbonOPolisa>
+            <MISPAR-POLISA-O-HESHBON>55500456</MISPAR-POLISA-O-HESHBON>
+            <SHEM-TOCHNIT>מור קופת גמל</SHEM-TOCHNIT>
+            <TAARICH-NECHONUT>20260930</TAARICH-NECHONUT>
+            <STATUS-POLISA-O-CHESHBON>1</STATUS-POLISA-O-CHESHBON>
+            <PirteiTaktziv>
+              <BlockItrot><Yitrot><PerutYitrot><TOTAL-CHISACHON-MTZBR>40000</TOTAL-CHISACHON-MTZBR></PerutYitrot></Yitrot></BlockItrot>
+              <PerutHotzaot><MivneDmeiNihul><PerutMivneDmeiNihul><SUG-HOTZAA>1</SUG-HOTZAA><SHEUR-DMEI-NIHUL>0.6</SHEUR-DMEI-NIHUL></PerutMivneDmeiNihul></MivneDmeiNihul></PerutHotzaot>
+              <PerutMasluleiHashkaa>
+                <KOD-MASLUL-HASHKAA>514956465000000000086940000000</KOD-MASLUL-HASHKAA>
+                <SHEM-MASLUL-HASHKAA>מור גמל - לבני 50 ומטה</SHEM-MASLUL-HASHKAA>
+                <KOD-SUG-MASLUL>1</KOD-SUG-MASLUL>
+                <SCHUM-TZVIRA-BAMASLUL>40000</SCHUM-TZVIRA-BAMASLUL>
+              </PerutMasluleiHashkaa>
+            </PirteiTaktziv>
+          </HeshbonOPolisa>
+          <HeshbonOPolisa>
+            <MISPAR-POLISA-O-HESHBON>55500789</MISPAR-POLISA-O-HESHBON>
+            <SHEM-TOCHNIT>מור קופת גמל</SHEM-TOCHNIT>
+            <TAARICH-NECHONUT>20260930</TAARICH-NECHONUT>
+            <STATUS-POLISA-O-CHESHBON>2</STATUS-POLISA-O-CHESHBON>
+            <PirteiTaktziv>
+              <BlockItrot><Yitrot><PerutYitrot><TOTAL-CHISACHON-MTZBR>9100</TOTAL-CHISACHON-MTZBR></PerutYitrot></Yitrot></BlockItrot>
+              <PerutMasluleiHashkaa>
+                <KOD-MASLUL-HASHKAA>514956465000000000999990000000</KOD-MASLUL-HASHKAA>
+                <SHEM-MASLUL-HASHKAA>מסלול שנסגר לדוגמה</SHEM-MASLUL-HASHKAA>
+                <SCHUM-TZVIRA-BAMASLUL>9100</SCHUM-TZVIRA-BAMASLUL>
+              </PerutMasluleiHashkaa>
+            </PirteiTaktziv>
+          </HeshbonOPolisa>
+        </HeshbonotOPolisot>
+      </Mutzar>
+    </Mutzarim>
+  </YeshutYatzran>
+</Mimshak>
