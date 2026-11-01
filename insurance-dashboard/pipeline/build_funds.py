@@ -60,6 +60,13 @@ SHARED = "ביטוח 2004 ואילך: מנהלים וחיסכון"
 SOURCE = "הרשות לשוק ההון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il)"
 BASIS = "תשואות נומינליות ברוטו (לפני דמי ניהול), כפי שהרשות מפרסמת; net ו-realn: אומדן נטו"
 WINS = ("m1", "ytd", "y12", "a3", "a5")
+# Self-directed tracks (IRA, "בניהול אישי", funds_lib.IRA): the saver picks the securities, so the track has no return of its own. Most
+# managers report MONTHLY_YIELD = 0.00 and period returns of 0.00 every month (a placeholder, not a return); taken at face value, the net
+# estimate then showed -fee for every window (W0, 01.11.26). In these tracks a 0.00 month is "not reported", and a published period
+# figure is kept only when every month of its window carries a reported (non-zero) return. Tracks that do report (e.g. Menora IRA) keep
+# their figures.
+IRA_WIN = (("YEAR_TO_DATE_YIELD", None), ("YIELD_TRAILING_3_YRS", 36), ("AVG_ANNUAL_YIELD_TRAILING_3YRS", 36), ("YIELD_TRAILING_5_YRS", 60),
+           ("AVG_ANNUAL_YIELD_TRAILING_5YRS", 60), ("STANDARD_DEVIATION", 36), ("SHARPE_RATIO", 36), ("ALPHA", 36))
 _tcache = {}
 
 
@@ -108,6 +115,24 @@ def load_funds():
         d["fam"], d["key"] = fam, letter + d["FUND_ID"].astype(int).astype(str)
         frames.append(d)
     return pd.concat(frames, ignore_index=True).sort_values(["key", "REPORT_PERIOD"]).reset_index(drop=True)
+
+
+def blank_ira(d, tb):
+    """IRA tracks (name, or the register's type "IRA"): a 0.00 monthly return becomes missing, and a published window figure whose
+    window has a missing month becomes missing (funds_lib.IRA). In place; returns the number of tracks touched."""
+    reg_ira = {letter + str(t) for (dom, t), r in tb.items() if r.get("type") == "IRA"
+               for fam, letter in (("gemel", "g"), ("pensia", "p"), ("insurance", "i")) if FL.DOMAIN[fam] == dom}
+    m = d["FUND_NAME"].astype(str).str.contains(FL.IRA) | d["key"].isin(reg_ira)
+    d.loc[m & (d["MONTHLY_YIELD"] == 0), "MONTHLY_YIELD"] = np.nan
+    cols = [c for c, _ in IRA_WIN if c in d.columns]
+    for _, g in d[m].groupby("key"):
+        ok = {FL.mi(int(p)) for p, y in zip(g["REPORT_PERIOD"], g["MONTHLY_YIELD"]) if pd.notna(y)}
+        for ix, p in zip(g.index, g["REPORT_PERIOD"].astype(int)):
+            t = FL.mi(p)
+            for c, k in IRA_WIN:
+                if c in cols and not all(t - j in ok for j in range(k or p % 100)):
+                    d.at[ix, c] = np.nan
+    return int(d.loc[m, "key"].nunique())
 
 
 def load_tb():
@@ -200,6 +225,7 @@ def main():
     prev = FL.madd(latest, -1)
     tb, tb_doc = load_tb()
     cpi, cpi_src = load_cpi()
+    n_ira = blank_ira(d, tb)
 
     # point-in-time attributes of every row: product, track, category as that month's row says (closed tracks included). A track the
     # regulator's register names gets its official label in every month (the register is current; the label is the track's own).
@@ -397,7 +423,7 @@ def main():
     print("taxonomy:", {k: x for k, x in tx.items() if k in ("live", "joined", "mapped", "dis")})
     print("net:", sum(1 for f in funds if "y12" in f["net"]), "of", len(funds), "with net y12;", sum(1 for f in funds if "a5" in f["net"]), "with net a5;",
           "real y12:", sum(1 for f in funds if "y12" in f["real"]))
-    print("track 'אחר':", int((cur["track"] == "אחר").sum()))
+    print("track 'אחר':", int((cur["track"] == "אחר").sum()), "; IRA tracks (0.00 months read as not reported):", n_ira)
 
 
 if __name__ == "__main__":

@@ -56,6 +56,7 @@ const FundsTools = page(() => import('./pages/FundsTools'), 'FundsTools');  // F
 const FundsFees = page(() => import('./pages/FundsFees'), 'FundsFees');
 const FundsDefault = page(() => import('./pages/FundsDefault'), 'FundsDefault');
 const FundsTrackers = page(() => import('./pages/FundsTrackers'), 'FundsTrackers');
+const About = page(() => import('./pages/About'), 'About');  // Wave 0: who, sources, not advice
 const mValuation = () => import('./pages/Valuation');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
@@ -237,6 +238,7 @@ export function App() {
         <Route path="brief" element={<Brief />} />{/* S3: the meeting registry (nav: lights שאלות) */}
         <Route path="brief/:id" element={<BriefPage />} />{/* S3: one brief; /brief/demo is the built-in demo */}
         <Route path="watch" element={<Watch />} />{/* S10 */}
+        <Route path="about" element={<About />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

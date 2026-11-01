@@ -1,0 +1,22 @@
+/* /about and the site footer (Wave 0) */
+.about { max-width: 720px; display: flex; flex-direction: column; gap: 22px; }
+.about-hd { display: flex; gap: 14px; align-items: center; }
+.about-hd h1 { margin: 0 0 4px; font-size: var(--t-6, 26px); }
+.about-hd p { margin: 0; }
+.about h2 { font-size: var(--t-3, 17px); margin: 0 0 6px; }
+.about section p, .about li { line-height: 1.65; max-width: 68ch; }
+.about ul { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 6px; }
+.about-go { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.site-foot { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: var(--t-1, 12.5px); color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.site-foot .disc { flex-basis: 100%; line-height: 1.55; max-width: 80ch; }
+.site-foot a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
+/* the brand on the phone's top bar: the rail (with the mark) is the bottom bar there */
+.brand-m { display: none; }
+@media (max-width: 760px) {
+  .brand-m { display: inline-flex; align-items: center; gap: 4px; flex: none; color: var(--fg); font-weight: 700; font-size: 17px; letter-spacing: -0.03em; direction: ltr; }
+  .brand-m:hover { text-decoration: none; }
+  .brand-m span { color: var(--accent); }
+}
+@media print { .site-foot { display: none; } }

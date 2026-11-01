@@ -12,6 +12,7 @@ import { useMacro } from '../lib/macro';
 import { nf, sn } from '../lib/format';
 import { useFunds } from '../lib/useData';
 import { GROSS_LABEL, NET_LABEL, PER_LABEL, catKey, hasNet, pc, rankAll, realOf, refOf, retOf, shownProv, useBasis, useReal, ym, ytdPrev, type Basis, type FundX, type FundsFile, type Per, prevMonth, selfDirected, SELF_NOTE } from '../lib/funds';
+import { DEFAULT_PER, TIE_F, TIE_NOTE, edges, tieBand } from '../lib/fundsTie';
 import '../styles/lens.css';
 import '../styles/market.css';
 
@@ -20,7 +21,7 @@ import '../styles/market.css';
    doors to every tool. Net of fee by default when the file carries it. Every figure opens its source; nothing is a score. */
 
 const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'פנסיה מקיפה', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'פנסיה כללית', 'חיסכון לילד', 'מרכזית לפיצויים'];
-const HUB_WIN: [Per, string][] = [['m1', 'החודש'], ['y12', 'LTM'], ['a3', '3Y']];
+const HUB_WIN: [Per, string][] = [['m1', 'החודש'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']];
 const MIN_N = 5;
 
 type Row = { f: FundX; v: number };
@@ -66,7 +67,7 @@ export function FundsHub() {
   const [basisAsked] = useBasis();
   const [real] = useReal();
   const [prod, setProd] = useState('השתלמות');
-  const [per, setPer] = useState<Per>('y12');
+  const [per, setPer] = useState<Per>(DEFAULT_PER);
   const live = useMemo(() => (data?.funds ?? []).filter((f) => f.assets && !f.closed && !f.gone && !selfDirected(f)), [data]);
   const netOk = useMemo(() => hasNet(data?.funds ?? []), [data]);
   const basis: Basis = basisAsked === 'net' && netOk ? 'net' : 'gross';
@@ -122,8 +123,8 @@ export function FundsHub() {
   const totalA = live.reduce((t, f) => t + (f.assets ?? 0), 0);
   const prods = PRODUCTS.filter((p) => live.some((f) => f.prod === p));
   const medProv = (c: (typeof board)[number], m: number): Prov => listP(`חציון ${PER_LABEL[per]} · ${c.k}`, pc(m), undefined, 'החציון של תשואות המסלולים המדורגים בקטגוריה', c.r.map((x) => ({ label: x.f.name, v: pc(x.v), src: () => shownProv(x.f, per, basis, real, asof, C, data) })));
-  const spreadProv = (c: (typeof spread)[number]): Prov => ({ k: 'calc', title: `פער בין המסלול המוביל למאסף · ${catKey(c.fs[0])} · ${PER_LABEL[per]}`, value: `${nf(c.d, 2)} נ"א`, formula: 'התשואה הגבוהה בקטגוריה פחות הנמוכה',
-    inputs: [{ label: `מוביל: ${c.r[0].f.name}`, v: pc(c.r[0].v), src: () => shownProv(c.r[0].f, per, basis, real, asof, C, data) }, { label: `מאסף: ${c.r[c.r.length - 1].f.name}`, v: pc(c.r[c.r.length - 1].v), src: () => shownProv(c.r[c.r.length - 1].f, per, basis, real, asof, C, data) }, { label: 'מסלולים מדורגים', v: nf(c.r.length, 0) }] });
+  const spreadProv = (c: (typeof spread)[number]): Prov => ({ k: 'calc', title: `פער בין התשואה הגבוהה לנמוכה · ${catKey(c.fs[0])} · ${PER_LABEL[per]}`, value: `${nf(c.d, 2)} נ"א`, formula: 'התשואה הגבוהה בקטגוריה פחות הנמוכה',
+    inputs: [{ label: `הגבוהה: ${c.r[0].f.name}`, v: pc(c.r[0].v), src: () => shownProv(c.r[0].f, per, basis, real, asof, C, data) }, { label: `הנמוכה: ${c.r[c.r.length - 1].f.name}`, v: pc(c.r[c.r.length - 1].v), src: () => shownProv(c.r[c.r.length - 1].f, per, basis, real, asof, C, data) }, { label: 'מסלולים מדורגים', v: nf(c.r.length, 0) }] });
   const feeProv = (x: (typeof fees)[number]): Prov => ({ k: 'calc', title: `שינוי בדמי הניהול מצבירה · ${x.f.name}`, value: `${sn(x.a - x.b, 2)} נ"א`, formula: `דמי הניהול הממוצעים ב-${ym(asof)} פחות דמי הניהול בחודש הקודם (AVG_ANNUAL_MANAGEMENT_FEE)`,
     inputs: [{ label: ym(asof), v: nf(x.a, 2) + '%', src: () => fundP(refOf(x.f), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(x.a, 2) + '%') }, { label: ym(prevMonth(asof)), v: nf(x.b, 2) + '%', src: () => fundP(refOf(x.f), prevMonth(asof), 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(x.b, 2) + '%') }] });
   const moverProv = (x: (typeof movers)[number]): Prov => x.how === 'pct'
@@ -131,6 +132,11 @@ export function FundsHub() {
     : { k: 'calc', title: `מקום YTD, שינוי מהחודש הקודם · ${x.f.name}`, value: `${x.from} → ${x.to}`, formula: 'המקום בקטגוריה לפי תשואת YTD בסוף החודש הקודם מול היום. YTD של החודש הקודם: (1 + YTD) ÷ (1 + תשואת החודש) − 1',
       inputs: [{ label: 'תשואה YTD', v: pc(retOf(x.f, 'ytd', basis).v), src: () => shownProv(x.f, 'ytd', basis, false, asof, C, data) }, { label: 'תשואת החודש', v: pc(retOf(x.f, 'm1', basis).v), src: () => shownProv(x.f, 'm1', basis, false, asof, C, data) }, { label: 'מסלולים מדורגים', v: nf(x.n, 0) }] };
   const big = board[0];
+  // ties: an edge inside the band crowns no one (lib/fundsTie)
+  const band = tieBand(per, asof), win = HUB_WIN.find(([k]) => k === per)?.[1];
+  const tieProv = (ck: string, rs: Row[], where: string): Prov => listP(`${where} · ${ck} · ${PER_LABEL[per]}`, nf(rs.length, 0), 'מסלולים', TIE_F, rs.map((x) => ({ label: x.f.name, v: pc(x.v), src: () => shownProv(x.f, per, basis, real, asof, C, data) })));
+  const Ties = ({ ck, rs, where }: { ck: string; rs: Row[]; where: string }) => (rs.length > 1 ? <Sourced className="chip" src={() => tieProv(ck, rs, where)}>{`+${rs.length - 1} צמודים`}</Sourced> : null);
+  const bigE = big ? edges(big.r, (x) => x.v, band) : null;
 
   return (
     <>
@@ -146,8 +152,10 @@ export function FundsHub() {
       {big && big.r.length > 1 && (
         <Panel title="בקצרה" className="fhub-brief">
           <ul className="fbrief">
-            <li>ב{prod} {big.track}, הקטגוריה הגדולה במוצר, <Link to={`/funds/${big.r[0].f.k}`}>{big.r[0].f.name}</Link> מוביל עם <V f={big.r[0].f} v={big.r[0].v} /> ב{HUB_WIN.find(([k]) => k === per)?.[1]}; המאסף, <Link to={`/funds/${big.r[big.r.length - 1].f.k}`}>{big.r[big.r.length - 1].f.name}</Link>, עם <V f={big.r[big.r.length - 1].f} v={big.r[big.r.length - 1].v} />.</li>
-            {spread[0] && <li>הבחירה השפיעה הכי הרבה ב{spread[0].fs[0].prod} {spread[0].fs[0].track}: פער של <Sourced src={() => spreadProv(spread[0])}><span className="num">{nf(spread[0].d, 1)}</span></Sourced> נקודות אחוז בין המוביל למאסף.</li>}
+            <li>ב{prod} {big.track}, הקטגוריה הגדולה במוצר, {bigE!.all
+              ? <>כל <Sourced src={() => tieProv(big.k, big.r, 'צמודים')}><span className="num">{big.r.length}</span></Sourced> המסלולים המדורגים בפער של פחות מ-0.10 נ"א ב{win}.</>
+              : <><Link to={`/funds/${big.r[0].f.k}`}>{big.r[0].f.name}</Link> {bigE!.top.length > 1 ? <>ועוד <Sourced src={() => tieProv(big.k, bigE!.top, 'צמודים בראש')}><span className="num">{bigE!.top.length - 1}</span></Sourced> צמודים בראש</> : 'מוביל'} עם <V f={big.r[0].f} v={big.r[0].v} /> ב{win}; {bigE!.low.length > 1 ? 'בתחתית' : 'המאסף'}, <Link to={`/funds/${big.r[big.r.length - 1].f.k}`}>{big.r[big.r.length - 1].f.name}</Link>{bigE!.low.length > 1 && <> ועוד <Sourced src={() => tieProv(big.k, bigE!.low, 'צמודים בתחתית')}><span className="num">{bigE!.low.length - 1}</span></Sourced> צמודים</>}, עם <V f={big.r[big.r.length - 1].f} v={big.r[big.r.length - 1].v} />.</>}</li>
+            {spread[0] && <li>הבחירה השפיעה הכי הרבה ב{spread[0].fs[0].prod} {spread[0].fs[0].track}: פער של <Sourced src={() => spreadProv(spread[0])}><span className="num">{nf(spread[0].d, 1)}</span></Sourced> נקודות אחוז בין התשואה הגבוהה לנמוכה.</li>}
             {fees.length > 0 && <li>ב{prod}, <Sourced src={() => listP(`שינויי דמי ניהול · ${prod}`, nf(fees.length, 0), undefined, 'המסלולים שדמי הניהול מצבירה שלהם השתנו מהחודש הקודם', fees.map((x) => ({ label: x.f.name, v: `${nf(x.b, 2)}% → ${nf(x.a, 2)}%`, src: () => feeProv(x) })))}><span className="num">{fees.length}</span></Sourced> מסלולים שינו את דמי הניהול מצבירה מהחודש הקודם.</li>}
           </ul>
         </Panel>
@@ -156,23 +164,25 @@ export function FundsHub() {
       <Panel title={<>מובילים ומאספים · {prod}</>} aside={<><Pick label="מוצר" value={prod} onChange={setProd} options={prods.map((p) => [p, p] as [string, string])} /><Seg label="חלון" value={per} onChange={setPer} options={HUB_WIN} /><span className={`chip${basis === 'net' || real ? ' est' : ''}`}>{lbl}</span></>}>
         {board.length === 0 ? <Empty title="אין קטגוריות מדורגות במוצר הזה בחלון שנבחר" /> : (
           <div className="fcats">
-            {board.map((c) => { const m = median(c.r.map((x) => x.v)); const top = c.r[0], low = c.r[c.r.length - 1];
+            {board.map((c) => { const m = median(c.r.map((x) => x.v)); const e = edges(c.r, (x) => x.v, band), miss = c.fs.length - c.r.length;
+              // a head or a tail of more than one is a tie: "צמודים", never a single leader or laggard
+              const lines: [string, Row[], string][] = e.all ? [['כולם צמודים', c.r, '']] : [[e.top.length > 1 ? 'צמודים בראש' : 'מוביל', e.top, 'up'], [e.low.length > 1 ? 'צמודים בתחתית' : 'מאסף', [...e.low].reverse(), 'down']];
               return (
                 <article className="fcat" key={c.k}>
                   <header><Link to={`/funds/screen?prod=${encodeURIComponent(prod)}&track=${encodeURIComponent(c.track)}&per=${per}`} className="fcat-t">{c.track}</Link>
-                    <span className="muted"><Sourced src={() => countP(`מסלולים מדורגים · ${c.k}`, c.r.length, 'המסלולים בקטגוריה שיש להם תשואה בחלון')}><span className="num">{c.r.length}</span></Sourced> מסלולים · חציון {m == null ? '–' : <Sourced src={() => medProv(c, m)}><span className="num">{pc(m, per === 'm1' ? 2 : 1)}</span></Sourced>}</span></header>
-                  {[['מוביל', top, 'up'], ['מאסף', low, 'down']].map(([l, x, t]) => { const r = x as Row; return (
-                    <div className={`fline ${t}`} key={l as string}><span className="fl-l">{l as string}</span><span className="fl-n"><Link to={`/funds/${r.f.k}`}>{r.f.name}</Link><MgrChip grp={r.f.grp} mgr={r.f.mgr} short /></span><span className="fl-v"><V f={r.f} v={r.v} /></span><CompareAdd k={r.f.k} name={r.f.name} small /></div>
+                    <span className="muted"><Sourced src={() => countP(`מסלולים מדורגים · ${c.k}`, c.r.length, 'המסלולים בקטגוריה שיש להם תשואה בחלון')}><span className="num">{c.r.length}</span></Sourced> מסלולים{miss > 0 && <> · <Sourced src={() => listP(`בלי ${win} · ${c.k}`, nf(miss, 0), 'מסלולים', 'מסלולים בקטגוריה בלי תשואה בחלון (היסטוריה קצרה ממנו), ולכן מחוץ לדירוג', c.fs.filter((f) => !c.r.some((x) => x.f.k === f.k)).map((f) => ({ label: f.name, v: '–', src: () => countP(`חודשי היסטוריה · ${f.name}`, f.n, 'החודשים שבהם פורסמה תשואה חודשית למסלול') })))}><span className="num">{miss}</span></Sourced> בלי {win}</>} · חציון {m == null ? '–' : <Sourced src={() => medProv(c, m)}><span className="num">{pc(m, per === 'm1' ? 2 : 1)}</span></Sourced>}</span></header>
+                  {lines.map(([l, rs, t]) => { const r = rs[0]; return (
+                    <div className={`fline ${t}`} key={l}><span className="fl-l">{l}</span><span className="fl-n"><Link to={`/funds/${r.f.k}`}>{r.f.name}</Link><span style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}><MgrChip grp={r.f.grp} mgr={r.f.mgr} short /><Ties ck={c.k} rs={rs} where={l} /></span></span><span className="fl-v"><V f={r.f} v={r.v} /></span><CompareAdd k={r.f.k} name={r.f.name} small /></div>
                   ); })}
                 </article>
               ); })}
           </div>
         )}
-        <div className="fnote">הקטגוריות הגדולות במוצר לפי נכסים; מדורגים מסלולים פתוחים לציבור עם נכסים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה.' : 'התשואות לפני דמי ניהול, כפי שהרשות מפרסמת.'} {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.series.cpi?.points.length ?? 0} חודשים.` : ''} 3Y: שנתי ממוצע. {SELF_NOTE}.</div>
+        <div className="fnote">הקטגוריות הגדולות במוצר לפי נכסים; מדורגים מסלולים פתוחים לציבור עם נכסים; מסלול בלי היסטוריה לחלון מחוץ לדירוג. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה.' : 'התשואות לפני דמי ניהול, כפי שהרשות מפרסמת.'} {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.series.cpi?.points.length ?? 0} חודשים.` : ''} 3Y ו-5Y: שנתי ממוצע. {TIE_NOTE}. {SELF_NOTE}.</div>
       </Panel>
 
       <div className="grid2">
-        <Panel title="איפה הבחירה שינתה הכי הרבה" aside={<span>פער בין המוביל למאסף · {HUB_WIN.find(([k]) => k === per)?.[1]}</span>}>
+        <Panel title="איפה הבחירה שינתה הכי הרבה" aside={<span>פער בין התשואה הגבוהה לנמוכה · {win}</span>}>
           {spread.length === 0 ? <Empty title="אין קטגוריות עם 5 מסלולים מדורגים לפחות" /> : (
             <div className="scroll"><table className="fsimple">
               <thead><tr><th>קטגוריה</th><th>מסלולים</th><th>פער, נ"א</th></tr></thead>
@@ -191,7 +201,7 @@ export function FundsHub() {
         </Panel>
       </div>
 
-      <Panel title={<>שינויי דמי ניהול · {prod}</>} aside={<><span>מצבירה · {ym(asof)} מול החודש הקודם</span><Tip k="fee" /></>}>
+      <Panel title={<>שינויי דמי ניהול · {prod}</>} aside={<><span>מצבירה, ממוצע בפועל · {ym(asof)} מול החודש הקודם</span><Tip k="fee" /></>}>
         {!hasFee1 && !regFees ? <Loading what="דמי ניהול" /> : fees.length === 0 ? <Empty title="דמי הניהול מצבירה לא השתנו החודש במוצר הזה" /> : (
           <div className="scroll"><table className="fsimple">
             <thead><tr><th>מסלול</th><th>קטגוריה</th><th>קודם</th><th>{ym(asof)}</th><th>שינוי, נ"א</th></tr></thead>

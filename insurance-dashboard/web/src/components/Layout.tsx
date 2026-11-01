@@ -17,6 +17,7 @@ import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 import { useWatchNews } from '../lib/watchLoad';  // S10: the badge on שאלות
 import '../styles/watch.css';
+import '../styles/about.css';  // Wave 0: the site footer and the phone's brand
 
 // The six places, the same on the rail and the phone's bottom bar (חיסכון joined in F1: the funds section left the evidence group): [route, icon, label, label on the phone (the same word, shortened),
 // other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
@@ -74,16 +75,30 @@ export function Layout() {
         <header className="top">
           <div className="top-in">
             <NavLink to="/" className="wordmark">fox<span>.</span></NavLink>
+            <NavLink to="/" className="brand-m" aria-label="fox · דף הבית"><Logo size={24} />fox<span>.</span></NavLink>
             <Search />
             <ChartBookLink />
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
-        <main className="page" id="main" tabIndex={-1} key={section}><ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary></main>
+        <main className="page" id="main" tabIndex={-1} key={section}><ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary><SiteFoot path={loc.pathname} /></main>
       </div>
     </div>
     {help && <ShortcutsHelp onClose={() => setHelp(false)} />}
     <div className="print-foot">fox · {location.host}{loc.pathname} · כל מספר מקושר לעמוד המקור בדוח · הודפס {pubLabel(new Date().toISOString())}</div>
     </SourceProvider>
+  );
+}
+
+/** Wave 0 (red team 01.11.26): every page says who is behind it and links /about; the savings pages also say what they are not */
+const SAVINGS = ['/funds', '/savings', '/managers', '/holdings', '/questions'];
+function SiteFoot({ path }: { path: string }) {
+  const savings = SAVINGS.some((s) => path === s || path.startsWith(`${s}/`));
+  return (
+    <footer className="site-foot">
+      {savings && <span className="disc">המידע עובדתי ומשווה, ואינו ייעוץ השקעות או שיווק פנסיוני ואינו מתחשב בנתונים האישיים שלכם. תשואות עבר אינן מבטיחות תשואות בעתיד. ״נטו״ הוא אומדן לפי דמי הניהול הממוצעים בפועל.</span>}
+      <NavLink to="/about">על fox ומקורות הנתונים</NavLink>
+      <span>חינם, בלי פרסומות ובלי עמלות</span>
+    </footer>
   );
 }

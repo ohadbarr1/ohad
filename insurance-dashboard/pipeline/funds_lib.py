@@ -17,6 +17,10 @@ ANNUITANT = re.compile(r"מקבלי קצבה|זכאים קיימים|פנסיו�
 DOMAIN = {"gemel": "גמל", "pensia": "פנסיה", "insurance": "ביטוח"}
 FEE_FILL = 12  # a month with no published fee: the track's last published fee of the previous 12 months, else its next one within 12
 MIN_PEERS = 5
+# Self-directed tracks (IRA, "בניהול אישי"): the saver picks the securities, so the track has no return of its own; most managers report
+# MONTHLY_YIELD 0.00 and period returns of 0.00 every month, a placeholder. build_funds.py reads a 0.00 month of these tracks as not
+# reported (and drops a published window figure whose window has such a month); check_funds_contract.py expects the same.
+IRA = re.compile(r"ניהול אישי|\bIRA\b|איי\.אר\.איי", re.I)
 
 NET_METHOD = ("נטו, אומדן: תשואה חודשית ברוטו כפי שפורסמה פחות שיעור דמי הניהול מהצבירה של אותו חודש ÷ 12 (AVG_ANNUAL_MANAGEMENT_FEE; "
               "חודש בלי שיעור מפורסם: השיעור האחרון ב-12 החודשים שקדמו, ואם אין, הראשון ב-12 החודשים שאחרי). תקופות: התשואה המצטברת שפורסמה × מכפלת (1 + נטו) ÷ מכפלת (1 + ברוטו) "

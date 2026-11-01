@@ -17,7 +17,7 @@ Published files (standard library; always run):
 Upstream (needs pandas and data/raw; skipped with a warning otherwise, e.g. in CI without the regulator files):
   asof         funds.asof = the latest REPORT_PERIOD of every family (a family that lags fails: its tracks would look closed)
   no drops     every track in the raw files is live (in funds.json) or closed (in funds/closed.json), and live = the latest month's rows
-  values       m1 and assets of every live track equal the raw row
+  values       m1 and assets of every live track equal the raw row (an IRA track's 0.00 month is published as no return, funds_lib.IRA)
   fields       the fields the build reads exist in every parquet (a CMA format change fails closed)
   churn        tracks closing or opening in the latest month: warn above 3% of the previous month's live count, and list closures above
                NIS 1bn (a merger moves money between tracks without a transfer)
@@ -238,6 +238,8 @@ def upstream(R, F, C):
             if f is None:
                 continue
             m1 = None if pd.isna(r.MONTHLY_YIELD) else round(float(r.MONTHLY_YIELD), 2)
+            if m1 == 0 and (FL.IRA.search(str(r.FUND_NAME)) or f.get("tx", {}).get("type") == "IRA"):
+                m1 = None  # a self-directed track's placeholder 0.00: not a return
             a = None if pd.isna(r.TOTAL_ASSETS) else round(float(r.TOTAL_ASSETS), 1)
             if f.get("m1") != m1 or f.get("assets") != a:
                 bad.append(f"{f['k']}: m1 {f.get('m1')} / {m1}, assets {f.get('assets')} / {a}")

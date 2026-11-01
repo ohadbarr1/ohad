@@ -5,7 +5,7 @@ import { Sheet } from '../components/Sheet';
 import { sheetName } from '../lib/company';
 import { expandSynonyms, findTerms } from '../lib/hebrew';
 import { DOC_TYPE_HE, loadCorpus, pageText, readerHref, rememberQuery, searchText, snippet, yearOf, type Corpus, type DocType, type FtHit, type FtQuery } from '../lib/search';
-import { buildPool, docLabel, parse, periodText, rank, type Pool } from '../lib/searchOmni';
+import { buildPool, docLabel, parse, periodText, rank, type FundEnt, type Pool } from '../lib/searchOmni';
 import { pubLabel } from '../lib/format';
 import { useLoad, useRegistry } from '../lib/useData';
 import { usePhone } from '../lib/useMedia';
@@ -220,7 +220,7 @@ function Facet({ title, items, value, onPick }: { title: string; items: [string,
 
 /** Companies, screens and statement lines of the query, as one row of links above the filing hits. */
 function Quick({ q, reg }: { q: string; reg: RegistryCompany[] }) {
-  const ent = useLoad<{ groups: string[]; funds: [string, string][] }>('search/entities.json');
+  const ent = useLoad<{ groups: string[]; funds: FundEnt[] }>('search/entities.json');
   const rows = useLoad<[string, string, string, number][]>('search/rows.json');
   const [corpus, setCorpus] = useState<Corpus | null>(null);
   useEffect(() => { loadCorpus().then(setCorpus, () => {}); }, []);

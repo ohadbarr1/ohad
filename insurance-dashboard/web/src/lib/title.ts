@@ -41,6 +41,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'credibility': return p[1] ? null : t('אמינות יעדים');  // lane S3
     case 'nowcast': return p[1] ? null : t('אומדנים לפני הדוח', 'טיוטה');  // module M1, unpublished
     case 'search': return t('חיפוש');
+    case 'about': return p[1] ? null : t('על fox');  // Wave 0
     case 'questions': return p[2] ? null : p[1] ? t(p[1], 'שאלות') : t('שאלות');  // S1 / S6
     case 'findings': return p[1] ? null : t('ממצאים');  // S2
     case 'brief': return p[2] ? null : p[1] ? t('תדריך', 'תדריכים') : t('תדריכים');  // S3 (a meeting's name is private: never in the tab title)

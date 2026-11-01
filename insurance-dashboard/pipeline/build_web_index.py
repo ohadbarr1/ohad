@@ -1,17 +1,20 @@
 """Small files the site shell reads on every route, so no route has to download a large one to draw its header.
 
-web/public/data/search/entities.json  the search index's names: market groups and every fund (name, group), from market.json
+web/public/data/search/entities.json  the search index's names: market groups (market.json) and every live fund of funds.json as
+                                      [name, group, key, track]: the key (g|p|i + the regulator's fund number) finds a track by its
+                                      number and links it to /funds/<key>; the track ranks the default track first
                                       (the shell used to download all of market.json, 1.8 MB, for these names)
 web/public/data/filings_latest.json   the newest filings of every company, one request instead of one per company
 
-Run after build_market.py and after the companies' docs files change.
+Run after build_market.py, build_funds.py and after the companies' docs files change.
 """
 import json
 from pathlib import Path
 
 DATA = Path(__file__).resolve().parent.parent / "web" / "public" / "data"
 m = json.loads((DATA / "market.json").read_text(encoding="utf-8"))
-ent = {"asof": m.get("meta", {}).get("asof"), "groups": m["groups"], "funds": [[f["name"], f["grp"]] for f in m["funds"]]}
+fj = json.loads((DATA / "funds.json").read_text(encoding="utf-8"))
+ent = {"asof": m.get("meta", {}).get("asof"), "groups": m["groups"], "funds": [[f["name"], f["grp"], f["k"], f["track"]] for f in fj["funds"]]}
 (DATA / "search").mkdir(exist_ok=True)
 (DATA / "search" / "entities.json").write_text(json.dumps(ent, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 

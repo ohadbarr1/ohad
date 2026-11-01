@@ -104,10 +104,11 @@ def f_fee(f, label=None):
     return fig(label or f"דמי ניהול מהצבירה, {f['name']}", f["fee"], "pct", p_pub(f, "fee", "דמי ניהול מהצבירה"), AS(), d=2)
 
 
-def f_calc(label, v, unit, title, formula, inputs, d=2, b="actual", signed=False, est=False, unit_txt=None):
+def f_calc(label, v, unit, title, formula, inputs, d=2, b="actual", signed=False, est=False, unit_txt=None, asof=None):
+    """a calculated figure; `asof` = the month of its inputs when they are not the funds file's month (e.g. a quarterly field)"""
     text = {"pct": f"{nf(v, d)}%", "pp": f"{nf(v, d)} נק׳", "n": nf(v, 0), "bn": f"₪{nf(v, 1)} מיליארד", "m": f"₪{nf(v, 0)} מיליון"}.get(unit, nf(v, d))
     return fig(label, v, unit, P_calc(title, text, unit_txt or {"pct": "%", "pp": "נק׳ אחוז", "n": "", "bn": "מיליארד ש\"ח", "m": "מיליון ש\"ח"}.get(unit, ""),
-                                      formula, inputs, est=est), AS(), b=b, d=d, signed=signed)
+                                      formula, inputs, est=est), asof or AS(), b=b, d=d, signed=signed)
 
 
 def med_fig(xs, w, label, net=True):
@@ -527,7 +528,7 @@ def q214(A):
     figs = {"lo": af(*lo), "hi": af(*hi)}
     neg = sum(1 for _, f in rows if f["act"] < 0)
     figs["neg"] = f_calc(f"קרנות עם איזון אקטוארי שלילי, {ym(q)}", neg, "n", "ספירה", "קרנות (המסלול הגדול של כל קבוצה) עם איזון שלילי",
-                         [(g, f"{nf(f['act'], 2)}%", None) for g, f in rows], d=0)
+                         [(g, f"{nf(f['act'], 2)}%", None) for g, f in rows], d=0, asof=ym(q))  # the quarter of the field, not the funds month
     corr = f"באיזון האקטוארי של {ym(q)} {lo[0]} בתחתית, עם {{lo}}."
     email = (f"האיזון האקטוארי (הרווח או ההפסד של העמיתים מעבר לתשואה, מדווח פעם ברבעון) ב-{ym(q)}: הגבוה {hi[0]}, {{hi}}; הנמוך {lo[0]}, {{lo}}. "
              f"ב-{{neg}} קרנות הוא שלילי.")

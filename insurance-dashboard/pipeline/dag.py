@@ -122,7 +122,7 @@ STEPS = [
     step("build_pagefacts", "pipeline/build_pagefacts.py", [*WB, D + "ifrs", D + "ifrs.json", D + "savings_econ.json", D + "lts_prov"],
          [D + "search/facts"]),
     # ---------------------------------------------------------------- the steps deploy.sh runs before the gate (group "deploy")
-    step("build_web_index", "pipeline/build_web_index.py", [D + "market.json", D + "companies/*.docs.json"], [D + "search/entities.json", D + "filings_latest.json"],
+    step("build_web_index", "pipeline/build_web_index.py", [D + "market.json", D + "funds.json", D + "companies/*.docs.json"], [D + "search/entities.json", D + "filings_latest.json"],
          groups={"deploy"}),
     step("build_calendar", "pipeline/build_calendar.py", [REG + "companies.json", REG + "documents.csv"], [D + "calendar.json", D + "calendar.ics"],
          daily=True, groups={"deploy"}, note="projections from today's date"),

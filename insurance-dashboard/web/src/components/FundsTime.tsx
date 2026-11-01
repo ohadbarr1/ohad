@@ -164,7 +164,8 @@ export const rankProv = (name: string, p: number, v: number | null, n: number | 
 
 export function RankPanel({ f, h, data }: { f: FundX; h: HistX; data: { funds: FundX[] } }) {
   const [basisAsked] = useBasis();
-  const [metric, setMetric] = useState<RankMetric>('y12');
+  // the longest window the rank files carry (no 5Y there): not the last 12 months
+  const [metric, setMetric] = useState<RankMetric>('a3');
   const [own, setOwn] = useState(false);
   const { open } = useSource();
   const cat = catKey(f);

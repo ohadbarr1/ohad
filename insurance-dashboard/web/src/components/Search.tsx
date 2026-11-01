@@ -6,11 +6,11 @@ import { sheetName } from '../lib/company';
 import { SinceDot } from './SinceBadge';
 import { usePhone } from '../lib/useMedia';
 import { loadCorpus, recentQueries, readerHref, rememberQuery, searchText, type Corpus } from '../lib/search';
-import { buildPool, docLabel, FUNCS, parse, rank, type Item, type Kind } from '../lib/searchOmni';
+import { buildPool, docLabel, FUNCS, orderFor, ordered, parse, rank, type FundEnt, type Item, type Kind } from '../lib/searchOmni';
 import '../styles/search.css';
 
 /** Names the search needs from the regulator data, in a file a fraction of market.json: the shell loads it only when the search opens. */
-interface Entities { groups: string[]; funds: [string, string][] }
+interface Entities { groups: string[]; funds: FundEnt[] }
 
 /** The entity and line pool, loaded the first time the search opens. */
 function usePool(enabled: boolean) {
@@ -54,15 +54,14 @@ function useFullText(q: string, pool: ReturnType<typeof usePool>['pool'], corpus
 
 /** the word to type after a company for a function: its Hebrew badge when it is a search key, else its first Hebrew key (CSM and DCF stay) */
 const word = (f: (typeof FUNCS)[number]) => (/^[A-Z]+$/.test(f.badge) && !['CSM', 'DCF'].includes(f.badge) ? f.keys.find((k) => /[\u0590-\u05FF]/.test(k)) ?? f.badge : f.badge.split(' ')[0]);
-const ORDER: Kind[] = ['חיפושים', 'אחרונים', 'חברה', 'פונקציה', 'שאלה', 'קופה', 'שורה בדוח', 'מסמך'];
-/** a company with a screen code ("הראל csm"): the screen leads */
-const orderFor = (list: Item[]): Kind[] => (list.some((x) => x.kind === 'פונקציה' && x.score >= 90) ? ['פונקציה', ...ORDER.filter((k) => k !== 'פונקציה')] : ORDER);
 const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'שאלה': 'שאלות', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
 
 export function Search({ big = false }: { big?: boolean }) {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const [hl, setHl] = useState(0);
+  // the highlighted item, by identity: the list grows while the index and the filings answer, and the highlight stays on its item
+  // (none chosen: the first, so Enter opens the first item listed)
+  const [hlKey, setHlKey] = useState<string | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const nav = useNavigate();
@@ -90,18 +89,18 @@ export function Search({ big = false }: { big?: boolean }) {
     return [...out, ...docs, ...(ft.q === s ? ft.items : []), all];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ranked, ft, s]);
-  const shown = useMemo(() => {
-    const list = s.length >= 2 ? hits : recent;
-    return orderFor(list).flatMap((k) => list.filter((h) => h.kind === k));
-  }, [hits, recent, s]);
+  const shown = useMemo(() => ordered(s.length >= 2 ? hits : recent), [hits, recent, s]);
   const order = useMemo(() => orderFor(shown), [shown]);
+  const keyOf = (it: Item) => `${it.to}|${it.label}`;
+  const hl = Math.max(0, hlKey ? shown.findIndex((x) => keyOf(x) === hlKey) : 0);
+  const setHl = (i: number) => { const it = shown[i]; if (it) setHlKey(keyOf(it)); };
 
   useEffect(() => {
     const close = (e: MouseEvent) => { if (!full && !box.current?.contains(e.target as Node)) setOpen(false); };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, [full]);
-  useEffect(() => setHl(0), [q]);
+  useEffect(() => setHlKey(null), [q]);
   useEffect(() => {
     if (big) return;
     const key = (e: KeyboardEvent) => {
@@ -130,8 +129,8 @@ export function Search({ big = false }: { big?: boolean }) {
   };
   const optId = (i: number) => `sr-opt-${i}`;
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); setHl((h) => Math.min(h + 1, shown.length - 1)); }
-    if (e.key === 'ArrowUp') { e.preventDefault(); setHl((h) => Math.max(h - 1, 0)); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHl(Math.min(hl + 1, shown.length - 1)); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setHl(Math.max(hl - 1, 0)); }
     if (e.key === 'Enter') { e.preventDefault(); if (shown[hl]) go(shown[hl]); else if (s.length >= 2) go(all); }
     if (e.key === 'Escape') { setOpen(false); input.current?.blur(); }
   };
@@ -155,7 +154,7 @@ export function Search({ big = false }: { big?: boolean }) {
             {items.map((it) => {
               const i = shown.indexOf(it);
               return (
-                <Link key={it.to + it.label} to={it.to} id={optId(i)} role="option" aria-selected={hl === i} className={hl === i ? 'on' : ''} onMouseEnter={() => setHl(i)}
+                <Link key={it.to + it.label} to={it.to} id={optId(i)} role="option" aria-selected={hl === i} className={hl === i ? 'on' : ''} onMouseMove={() => { if (hl !== i) setHl(i); }}
                   onClick={(e) => { e.preventDefault(); go(it); }}>
                   <span className="lbl">{it.score === -1 ? <><span className="muted">חיפוש בכל הדוחות: </span><bdi>{s}</bdi></> : it.label}{it.sub && <span className="sub">{it.sub}</span>}{it.kind === 'חברה' && <SinceDot id={it.to.split('/')[2]} n />}</span><span className="meta num">{it.meta}</span>
                 </Link>

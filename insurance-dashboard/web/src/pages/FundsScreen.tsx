@@ -17,6 +17,7 @@ import {
   FAMS, FAM_F, FAM_LABEL, GROSS_LABEL, NET_LABEL, PCT_F, PERIODS, PER_LABEL, catKey, equityOutlier, equitySpread, famOf, hasNet, outlierProv, pc, rankAll, realOf, refOf,
   retOf, selfDirected, SELF_NOTE, shownProv, useBasis, useReal, ym, type Basis, type FamKey, type FundX, type FundsFile, type Per,
 } from '../lib/funds';
+import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import '../styles/lens.css';
 import '../styles/market.css';
 
@@ -35,7 +36,10 @@ const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: '
 const RET = new Set<ColKey>(['m1', 'ytd', 'y12', 'a3', 'a5']);
 const EXP = { st: ['STOCK_MARKET_EXPOSURE', 'חשיפה למניות'], fo: ['FOREIGN_EXPOSURE', 'חשיפה לחו"ל'], fx: ['FOREIGN_CURRENCY_EXPOSURE', 'חשיפה למט"ח'] } as const;
 interface Saved { name: string; qs: string }
-type RankInfo = { rank: number; n: number; pct: number | null };
+/** ordinal rank and percentile (rankAll) plus the shared place inside the tie band (lo–hi) */
+type RankInfo = { rank: number; n: number; pct: number | null; lo: number; hi: number };
+/** the fee columns: the regulator's average actual fee of the track, not a quote */
+const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל' };
 
 const yearsOf = (f: FundX, asof: number) => (f.since ? (Math.floor(asof / 100) + (asof % 100) / 12) - (Number(f.since.slice(0, 4)) + Number(f.since.slice(5, 7)) / 12) : null);
 
@@ -55,8 +59,8 @@ export function FundsScreen() {
   const q = sp.get('q') ?? '';
   const hit = !sp.get('prod') && q ? data?.funds.find((f) => f.name.includes(q.trim())) : undefined;
   const prod = sp.get('prod') ?? hit?.prod ?? 'השתלמות';
-  const perRaw = sp.get('per') ?? sp.get('win') ?? 'y12';
-  const per: Per = (PERIODS.some(([k]) => k === perRaw) ? perRaw : 'y12') as Per;
+  const perRaw = sp.get('per') ?? sp.get('win') ?? DEFAULT_PER;
+  const per: Per = (PERIODS.some(([k]) => k === perRaw) ? perRaw : DEFAULT_PER) as Per;
   const fams = (sp.get('fam') ?? '').split(',').filter((x): x is FamKey => FAMS.some(([k]) => k === x));
   const mk = sp.get('mk') ?? '';
   const closed = sp.get('closed') === '1', gone = sp.get('gone') === '1', outOnly = sp.get('out') === '1';
@@ -105,7 +109,8 @@ export function FundsScreen() {
     if (gone && goneRows) goneRows.filter((f) => inProd(f) && (T === ALL || f.track === T)).forEach((f) => { if (keys.has(catKey(f)) || T !== ALL) keys.set(catKey(f), [...(keys.get(catKey(f)) ?? []), f]); });
     return [...keys.entries()].map(([k, shown]) => {
       const peers = shown.filter((f) => !f.gone && !selfDirected(f));
-      const rk = rankAll(peers, (f) => val(f, per));
+      const ord = rankAll(peers, (f) => val(f, per)), tie = tieRanks(peers, (f) => val(f, per), tieBand(per, asof));
+      const rk = new Map<string, RankInfo>([...ord].map(([k, r]) => [k, { ...r, lo: tie.get(k)?.lo ?? r.rank, hi: tie.get(k)?.hi ?? r.rank }]));
       const by = sortKey && sortKey !== 'pct' ? sortKey : null;
       const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : (f as unknown as Record<string, number | null>)[by] ?? null);
       const list = shown.filter(screened).sort((a, b) => {
@@ -125,11 +130,11 @@ export function FundsScreen() {
   const lbl = real ? `ריאלי${basis === 'net' ? ', נטו' : ''}` : basis === 'net' ? NET_LABEL : GROSS_LABEL;
 
   /* ---- cells: every figure opens its source ---- */
-  const rankSrc = (f: FundX, r: RankInfo): Prov => ({ k: 'calc', title: `מקום לפי ${PER_LABEL[per]} (${lbl}) · ${f.name}`, value: `${r.rank} מתוך ${r.n}`,
-    formula: 'מקום = מספר המסלולים בקטגוריה (אותו מוצר ומסלול) עם תשואה גבוהה יותר בחלון, ועוד 1. מדורגים המסלולים שעל המסך שיש להם תשואה בחלון; סינונים מסתירים שורות ולא משנים מקום',
-    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מסלולים מדורגים', v: nf(r.n, 0) }] });
+  const rankSrc = (f: FundX, r: RankInfo): Prov => ({ k: 'calc', title: `מקום לפי ${PER_LABEL[per]} (${lbl}) · ${f.name}`, value: `${rankText(r)} מתוך ${r.n}`,
+    formula: `מקום = מספר המסלולים בקטגוריה (אותו מוצר ומסלול) עם תשואה גבוהה יותר בחלון, ועוד 1. ${TIE_F}. מדורגים המסלולים שעל המסך שיש להם תשואה בחלון; סינונים מסתירים שורות ולא משנים מקום`,
+    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מסלולים מדורגים', v: nf(r.n, 0) }, { label: 'צמודים למסלול', v: nf(r.hi - r.lo, 0) }] });
   const pctSrc = (f: FundX, r: RankInfo): Prov => ({ k: 'calc', title: `אחוזון · ${PER_LABEL[per]} (${lbl}) · ${f.name}`, value: r.pct == null ? '–' : nf(r.pct, 0), formula: PCT_F,
-    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מקום', v: `${r.rank} מתוך ${r.n}`, src: () => rankSrc(f, r) }] });
+    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מקום', v: `${rankText(r)} מתוך ${r.n}`, src: () => rankSrc(f, r) }] });
   const plain = (f: FundX, col: string, label: string, v: string, unit?: string) => () => fundP(refOf(f), f.end ?? asof, col, label, v, unit);
   const Ret = ({ f, p }: { f: FundX; p: Per }) => {
     const v = val(f, p);
@@ -142,8 +147,8 @@ export function FundsScreen() {
     if (RET.has(c)) return <Ret f={f} p={c as Per} />;
     switch (c) {
       case 'pct': return r?.pct == null ? <span className="muted">–</span> : <Sourced src={() => pctSrc(f, r)}><span className="num">{nf(r.pct, 0)}</span></Sourced>;
-      case 'fee': return f.fee == null ? <span className="muted">–</span> : <Sourced src={plain(f, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(f.fee, 2) + '%')}><span className="num">{nf(f.fee, 2)}%</span></Sourced>;
-      case 'depfee': return f.depfee == null ? <span className="muted">–</span> : <Sourced src={plain(f, 'AVG_DEPOSIT_FEE', 'דמי ניהול מהפקדה', nf(f.depfee, 2) + '%')}><span className="num">{nf(f.depfee, 2)}%</span></Sourced>;
+      case 'fee': return f.fee == null ? <span className="muted">–</span> : <Sourced src={plain(f, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(f.fee, 2) + '%')}><span className="num">{nf(f.fee, 2)}%</span></Sourced>;
+      case 'depfee': return f.depfee == null ? <span className="muted">–</span> : <Sourced src={plain(f, 'AVG_DEPOSIT_FEE', 'דמי ניהול מהפקדה, ממוצע בפועל', nf(f.depfee, 2) + '%')}><span className="num">{nf(f.depfee, 2)}%</span></Sourced>;
       case 'assets': return f.assets == null ? <span className="muted">–</span> : <Sourced src={plain(f, 'TOTAL_ASSETS', 'נכסים', nf(f.assets, 1), 'מיליוני ש"ח')}><span className="num">{nf(f.assets, 0)}</span></Sourced>;
       case 'sharpe': return f.sharpe == null ? <span className="muted">–</span> : <Sourced src={plain(f, 'SHARPE_RATIO', 'שארפ', nf(f.sharpe, 2))}><span className="num">{nf(f.sharpe, 2)}</span></Sourced>;
       case 'sd': return f.sd == null ? <span className="muted">–</span> : <Sourced src={plain(f, 'STANDARD_DEVIATION', 'סטיית תקן', nf(f.sd, 2))}><span className="num">{nf(f.sd, 2)}</span></Sourced>;
@@ -230,9 +235,9 @@ export function FundsScreen() {
                     <div className="fcard-meta"><MgrChip grp={f.grp} mgr={f.mgr} short /><Flags f={f} /></div>
                     <div className="fcard-fig">
                       <div className="big"><span className="l">{PERIODS.find(([k]) => k === per)?.[1]} · {lbl}</span><Ret f={f} p={per} /></div>
-                      <div><span className="l">מקום</span>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num">{r.rank}/{r.n}</span></Sourced> : <span className="muted">–</span>}</div>
+                      <div><span className="l">מקום</span>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num">{rankText(r)}/{r.n}</span></Sourced> : <span className="muted">–</span>}</div>
                       <div><span className="l">אחוזון</span>{cell(f, 'pct', r)}</div>
-                      <div><span className="l">ד"נ</span>{cell(f, 'fee', r)}</div>
+                      <div><span className="l" title="דמי ניהול מצבירה, הממוצע בפועל של המסלול">ד"נ ממוצע בפועל</span>{cell(f, 'fee', r)}</div>
                       <div><span className="l">מניות</span>{cell(f, 'st', r)}</div>
                     </div>
                   </article>
@@ -242,7 +247,7 @@ export function FundsScreen() {
           </div>
         ) : (
           <div className="scroll" style={{ maxHeight: 720 }}><table className="rank fscreen">
-            <thead><tr><th>מסלול</th><th>#</th>{cols.map((c) => <th key={c} aria-sort={sortKey === c ? 'descending' : undefined}><button type="button" className="thbtn" onClick={() => set({ s: sortKey === c ? null : c })}>{RET.has(c) && c === per ? <b>{COL_LABEL[c]}</b> : COL_LABEL[c]}</button>{TIP[c] && <Tip k={TIP[c]!} />}</th>)}<th><span className="sr-only">השוואה</span></th></tr></thead>
+            <thead><tr><th>מסלול</th><th>#</th>{cols.map((c) => <th key={c} aria-sort={sortKey === c ? 'descending' : undefined}><button type="button" className="thbtn" onClick={() => set({ s: sortKey === c ? null : c })}>{RET.has(c) && c === per ? <b>{COL_LABEL[c]}</b> : COL_LABEL[c]}{FEE_SUB[c] && <span className="dim">{FEE_SUB[c]}</span>}</button>{TIP[c] && <Tip k={TIP[c]!} />}</th>)}<th><span className="sr-only">השוואה</span></th></tr></thead>
             <tbody>
               {groups.map((g) => (
                 <Fragment key={g.k}>
@@ -251,7 +256,7 @@ export function FundsScreen() {
                   {shown(g) && g.list.map((f) => { const r = g.rk.get(f.k); return (
                     <tr key={f.k} className={f.gone ? 'gone' : undefined}>
                       <td><span className="fname"><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link><span className="fund-mgr"><MgrChip grp={f.grp} mgr={f.mgr} short /><Flags f={f} /></span></span></td>
-                      <td>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num muted">{r.rank}</span></Sourced> : <span className="muted">–</span>}</td>
+                      <td>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num muted">{rankText(r)}</span></Sourced> : <span className="muted">–</span>}</td>
                       {cols.map((c) => <td key={c} className={c === per ? 'lead' : undefined}>{cell(f, c, r)}</td>)}
                       <td>{!f.gone && <CompareAdd k={f.k} name={f.name} small />}</td>
                     </tr>
@@ -261,7 +266,7 @@ export function FundsScreen() {
             </tbody>
           </table></div>
         )}
-        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה; מסלול בלי נטו לחלון מוצג ברוטו ואינו מדורג.' : basisAsked === 'net' ? 'נטו עוד לא נכלל בקובץ הנתונים, ולכן מוצג ברוטו.' : 'ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת.'} ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {SELF_NOTE}.</div>
+        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה; מסלול בלי נטו לחלון מוצג ברוטו ואינו מדורג.' : basisAsked === 'net' ? 'נטו עוד לא נכלל בקובץ הנתונים, ולכן מוצג ברוטו.' : 'ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת.'} ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {SELF_NOTE}.</div>
       </Panel>
     </>
   );
