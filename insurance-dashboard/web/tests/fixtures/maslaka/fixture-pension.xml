@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FIXTURE · synthetic, built from the holdings-interface XSD v008. No real person: the names, ID and amounts are invented. -->
+<Mimshak xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <KoteretKovetz>
+    <SUG-MIMSHAK>1</SUG-MIMSHAK>
+    <MISPAR-GIRSAT-XML>009</MISPAR-GIRSAT-XML>
+    <TAARICH-BITZUA>20261015093000</TAARICH-BITZUA>
+    <KIVUN-MIMSHAK-XML>3</KIVUN-MIMSHAK-XML>
+    <KOD-MEZAHE-METAFEL>000000000</KOD-MEZAHE-METAFEL>
+  </KoteretKovetz>
+  <YeshutYatzran>
+    <KOD-MEZAHE-YATZRAN>512245812</KOD-MEZAHE-YATZRAN>
+    <SHEM-YATZRAN>מנורה מבטחים פנסיה וגמל בע"מ</SHEM-YATZRAN>
+    <Mutzarim>
+      <Mutzar>
+        <NetuneiMutzar>
+          <SUG-MUTZAR>2</SUG-MUTZAR>
+          <KOD-MEZAHE-YATZRAN>512245812</KOD-MEZAHE-YATZRAN>
+          <STATUS-RESHOMA>1</STATUS-RESHOMA>
+          <YeshutLakoach>
+            <MISPAR-ZIHUY-LAKOACH>000000018</MISPAR-ZIHUY-LAKOACH>
+            <SHEM-PRATI>ישראלה</SHEM-PRATI>
+            <SHEM-MISHPACHA>בדיקתית</SHEM-MISHPACHA>
+          </YeshutLakoach>
+          <YeshutMaasik><SHEM-MAASIK>מעסיק לדוגמה בע"מ</SHEM-MAASIK></YeshutMaasik>
+        </NetuneiMutzar>
+        <HeshbonotOPolisot>
+          <HeshbonOPolisa>
+            <MISPAR-POLISA-O-HESHBON>000000018</MISPAR-POLISA-O-HESHBON>
+            <SHEM-TOCHNIT>מנורה מבטחים פנסיה</SHEM-TOCHNIT>
+            <KIDOD-ACHID>512245812000000000001682184000</KIDOD-ACHID>
+            <TAARICH-NECHONUT>20260930</TAARICH-NECHONUT>
+            <STATUS-POLISA-O-CHESHBON>1</STATUS-POLISA-O-CHESHBON>
+            <SUG-KEREN-PENSIA>2</SUG-KEREN-PENSIA>
+            <PENSIA-VATIKA-O-HADASHA>2</PENSIA-VATIKA-O-HADASHA>
+            <PirteiTaktziv>
+              <BlockItrot>
+                <Yitrot>
+                  <TAARICH-ERECH-TZVIROT>20260930</TAARICH-ERECH-TZVIROT>
+                  <PerutYitrot><KOD-SUG-ITRA>2</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>2</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>61200.10</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+                  <PerutYitrot><KOD-SUG-ITRA>2</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>3</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>66300.20</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+                  <PerutYitrot><KOD-SUG-ITRA>2</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>1</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>54950.07</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+                </Yitrot>
+              </BlockItrot>
+              <PerutHafrashotLePolisa><SUG-HAFRASHA>2</SUG-HAFRASHA><ACHUZ-HAFRASHA>6</ACHUZ-HAFRASHA></PerutHafrashotLePolisa>
+              <PerutHafrashotLePolisa><SUG-HAFRASHA>3</SUG-HAFRASHA><ACHUZ-HAFRASHA>6.5</ACHUZ-HAFRASHA></PerutHafrashotLePolisa>
+              <PerutHafrashotLePolisa><SUG-HAFRASHA>1</SUG-HAFRASHA><ACHUZ-HAFRASHA>8</ACHUZ-HAFRASHA></PerutHafrashotLePolisa>
+              <PirteiHafkadaAchrona>
+                <PerutPirteiHafkadaAchrona>
+                  <TAARICH-HAFKADA-ACHARON>20260915</TAARICH-HAFKADA-ACHARON>
+                  <TOTAL-HAFKADA-ACHRONA>3512.10</TOTAL-HAFKADA-ACHRONA>
+                  <PerutHafkadaAchrona><SUG-HAFRASHA>2</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1050.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadaAchrona>
+                  <PerutHafkadaAchrona><SUG-HAFRASHA>3</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1137.50</SCHUM-HAFKADA-SHESHULAM></PerutHafkadaAchrona>
+                  <PerutHafkadaAchrona><SUG-HAFRASHA>1</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1400.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadaAchrona>
+                </PerutPirteiHafkadaAchrona>
+              </PirteiHafkadaAchrona>
+              <PirteiHaasaka><SACHAR-POLISA>17500</SACHAR-POLISA></PirteiHaasaka>
+              <PerutHotzaot>
+                <HotzaotBafoalLehodeshDivoach>
+                  <SHEUR-DMEI-NIHUL-HAFKADA>1.49</SHEUR-DMEI-NIHUL-HAFKADA>
+                  <SHEUR-DMEI-NIHUL-TZVIRA>0.0183</SHEUR-DMEI-NIHUL-TZVIRA>
+                  <MEMOTZA-SHEUR-DMEI-NIHUL-HAFKADA>1.49</MEMOTZA-SHEUR-DMEI-NIHUL-HAFKADA>
+                </HotzaotBafoalLehodeshDivoach>
+                <MivneDmeiNihul>
+                  <PerutMivneDmeiNihul><SUG-HOTZAA>1</SUG-HOTZAA><SHEUR-DMEI-NIHUL>0.22</SHEUR-DMEI-NIHUL></PerutMivneDmeiNihul>
+                  <PerutMivneDmeiNihul><SUG-HOTZAA>2</SUG-HOTZAA><SHEUR-DMEI-NIHUL>1.49</SHEUR-DMEI-NIHUL></PerutMivneDmeiNihul>
+                </MivneDmeiNihul>
+              </PerutHotzaot>
+              <PerutMasluleiHashkaa>
+                <KOD-MASLUL-HASHKAA>512245812000000000001682184000</KOD-MASLUL-HASHKAA>
+                <SHEM-MASLUL-HASHKAA>מנורה מבטחים פנסיה - מסלול לבני 50 ומטה</SHEM-MASLUL-HASHKAA>
+                <KOD-SUG-MASLUL>1</KOD-SUG-MASLUL>
+                <SCHUM-TZVIRA-BAMASLUL>182450.37</SCHUM-TZVIRA-BAMASLUL>
+                <TSUA-NETO>9.12</TSUA-NETO>
+              </PerutMasluleiHashkaa>
+              <PerutMasluleiHashkaa>
+                <KOD-MASLUL-HASHKAA>512245812000000000001682184000</KOD-MASLUL-HASHKAA>
+                <SHEM-MASLUL-HASHKAA>מנורה מבטחים פנסיה - מסלול לבני 50 ומטה</SHEM-MASLUL-HASHKAA>
+                <KOD-SUG-MASLUL>2</KOD-SUG-MASLUL>
+                <SCHUM-TZVIRA-BAMASLUL xsi:nil="true"/>
+              </PerutMasluleiHashkaa>
+            </PirteiTaktziv>
+            <Tsua><SHEUR-TSUA-NETO>9.12</SHEUR-TSUA-NETO></Tsua>
+          </HeshbonOPolisa>
+          <HeshbonOPolisa>
+            <MISPAR-POLISA-O-HESHBON>000000018</MISPAR-POLISA-O-HESHBON>
+            <SHEM-TOCHNIT>מנורה מבטחים פנסיה</SHEM-TOCHNIT>
+            <TAARICH-NECHONUT>20260930</TAARICH-NECHONUT>
+            <STATUS-POLISA-O-CHESHBON>2</STATUS-POLISA-O-CHESHBON>
+            <SUG-KEREN-PENSIA>2</SUG-KEREN-PENSIA>
+            <PENSIA-VATIKA-O-HADASHA>2</PENSIA-VATIKA-O-HADASHA>
+            <PirteiTaktziv>
+              <BlockItrot><Yitrot><TAARICH-ERECH-TZVIROT>20260930</TAARICH-ERECH-TZVIROT>
+                <PerutYitrot><KOD-SUG-ITRA>2</KOD-SUG-ITRA><TOTAL-CHISACHON-MTZBR>23410.55</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+              </Yitrot></BlockItrot>
+              <PirteiHafkadaAchrona><PerutPirteiHafkadaAchrona>
+                <TAARICH-HAFKADA-ACHARON>20220131</TAARICH-HAFKADA-ACHARON>
+                <TOTAL-HAFKADA-ACHRONA>1210.00</TOTAL-HAFKADA-ACHRONA>
+              </PerutPirteiHafkadaAchrona></PirteiHafkadaAchrona>
+              <PerutHotzaot><MivneDmeiNihul>
+                <PerutMivneDmeiNihul><SUG-HOTZAA>1</SUG-HOTZAA><SHEUR-DMEI-NIHUL>0.5</SHEUR-DMEI-NIHUL></PerutMivneDmeiNihul>
+                <PerutMivneDmeiNihul><SUG-HOTZAA>2</SUG-HOTZAA><SHEUR-DMEI-NIHUL>6</SHEUR-DMEI-NIHUL></PerutMivneDmeiNihul>
+              </MivneDmeiNihul></PerutHotzaot>
+              <PerutMasluleiHashkaa>
+                <KOD-MASLUL-HASHKAA>512245812000000000001680002000</KOD-MASLUL-HASHKAA>
+                <SHEM-MASLUL-HASHKAA>מסלול לבני 50-60</SHEM-MASLUL-HASHKAA>
+                <KOD-SUG-MASLUL>1</KOD-SUG-MASLUL>
+                <SCHUM-TZVIRA-BAMASLUL>23410.55</SCHUM-TZVIRA-BAMASLUL>
+              </PerutMasluleiHashkaa>
+            </PirteiTaktziv>
+          </HeshbonOPolisa>
+        </HeshbonotOPolisot>
+      </Mutzar>
+      <Mutzar>
+        <NetuneiMutzar><SUG-MUTZAR>6</SUG-MUTZAR><KOD-MEZAHE-YATZRAN>512245812</KOD-MEZAHE-YATZRAN></NetuneiMutzar>
+        <HeshbonotOPolisot><HeshbonOPolisa>
+          <MISPAR-POLISA-O-HESHBON>7700001</MISPAR-POLISA-O-HESHBON>
+          <SHEM-TOCHNIT>ריסק לדוגמה</SHEM-TOCHNIT>
+          <STATUS-POLISA-O-CHESHBON>1</STATUS-POLISA-O-CHESHBON>
+        </HeshbonOPolisa></HeshbonotOPolisot>
+      </Mutzar>
+    </Mutzarim>
+  </YeshutYatzran>
+</Mimshak>

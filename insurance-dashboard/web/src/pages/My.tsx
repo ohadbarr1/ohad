@@ -10,6 +10,8 @@ import type { DefaultFile } from '../lib/fundsTools';
 import { Picker } from '../components/saver/Picker';
 import { ProductCard } from '../components/saver/ProductCard';
 import { GlossBar } from '../components/saver/Gloss';
+import { MaslakaImport } from '../components/saver/MaslakaImport';
+import { SinceVisit } from '../components/saver/SinceVisit';
 import '../styles/saver.css';
 
 /* /my, "המוצרים שלי" (W1 saver door, plan 01.11.26 Exhibit 4): what you have → a report card per product, in plain Hebrew and in ₪.
@@ -25,6 +27,7 @@ export function My() {
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const [mine, setMine] = useMine();
   const [adding, setAdding] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
   const loc = useLocation();
   const byK = useMemo(() => new Map(((data?.funds ?? []) as FundX[]).map((f) => [f.k, f])), [data]);
   const list = (Array.isArray(mine) ? mine : []).filter((m) => m && typeof m.k === 'string');
@@ -51,6 +54,9 @@ export function My() {
       </div></div>
 
       <p className="sv-privacy"><Icon name="shield" /> הרשימה נשמרת רק בדפדפן הזה. שום נתון לא נשלח, ואין צורך בהרשמה.</p>
+      {msg && <p className="sv-done" role="status">{msg}</p>}
+
+      {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
 
       {shown.length > 0 && <div className="sv-list">
         {shown.map(({ m, f }) => f
@@ -63,6 +69,14 @@ export function My() {
         {shown.length && !adding ? <button type="button" className="btn" onClick={() => setAdding(true)}>+ הוספת מוצר</button>
           : <Picker funds={data.funds as FundX[]} have={list.map((m) => m.k)} onPick={add} />}
       </section>
+
+      <MaslakaImport funds={data.funds as FundX[]} mine={list} today={today()} onSave={(next, m) => { setMine(next); setMsg(m); requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' })); }} />
+
+      <Link to="/my/statement" className="panel sv-stmt">
+        <span className="icotile"><Icon name="statement" /></span>
+        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>שדה אחר שדה: יתרה, הפקדות, שני סוגי דמי הניהול, כיסויים, מוטבים והקצבה הצפויה, ומה לבדוק כאן באתר.</span></span>
+        <span className="sv-stmt-go" aria-hidden="true">←</span>
+      </Link>
 
       {shown.length === 0 && ex && <section className="sv-exwrap" aria-label="דוגמה">
         <p className="sv-exlead">כך נראה כרטיס של מוצר. <b>זו דוגמה, לא המוצר שלך:</b> קרן פנסיה אמיתית מהנתונים, עם דמי הניהול הממוצעים בה.</p>

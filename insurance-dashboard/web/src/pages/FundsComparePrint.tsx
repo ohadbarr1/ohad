@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ErrorBox, Loading } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { useFunds } from '../lib/useData';
@@ -13,6 +13,8 @@ import { compareSummary, type Lead } from '../lib/compareSummary';
 import { ACT_F, defaultNow, isPension, periodText } from '../lib/pensionPack';
 import { RULES_NOTE, rulesOf } from '../lib/productRules';
 import { PENSION_MISSING } from '../components/agent/PensionPack';
+import { ClientSave } from '../components/agent/ClientSave';
+import { folderOfState, useClients, type Folder } from '../lib/clients';
 import '../styles/agentDoc.css';
 
 /* W1 · agent door: the client document, /funds/compare/print?k=…&b=net|gross. An A4 page set, right to left, unbranded: the tracks
@@ -31,10 +33,20 @@ const pct = (v: number | null | undefined, d = 2) => (v == null ? '–' : `${nf(
 const spct = (v: number | null | undefined, d = 1) => (v == null ? '–' : `${sn(v, d)}%`);
 const today = () => { const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`; };
 
+/** W3: the typed fields of a client folder, by field id; a field with an id (`fk`) is saved by "שמור ללקוח" and refilled on load */
+const Draft = createContext<Record<string, string>>({});
 /** a field the agent types into: it grows with its text and prints as typed (an empty one prints as a ruled box) */
-function Fill({ label, lines = 2, inline = false, value }: { label: string; lines?: number; inline?: boolean; value?: string }) {
-  return <div className={`fill${inline ? ' in' : ''}`} style={{ minHeight: inline ? undefined : `${lines * 1.6}em` }} contentEditable suppressContentEditableWarning role="textbox" aria-multiline={!inline} aria-label={label} data-ph={label}>{value}</div>;
+function Fill({ label, lines = 2, inline = false, value, fk }: { label: string; lines?: number; inline?: boolean; value?: string; fk?: string }) {
+  const draft = useContext(Draft);
+  return <div className={`fill${inline ? ' in' : ''}`} style={{ minHeight: inline ? undefined : `${lines * 1.6}em` }} contentEditable suppressContentEditableWarning role="textbox" aria-multiline={!inline} aria-label={label} data-ph={label} data-fk={fk}>{(fk && draft[fk]) || value}</div>;
 }
+/** the typed text of every saved field on the page, over what the folder had (a field not on the page now, e.g. with the annex
+ *  hidden, keeps its stored text; a field emptied on the page is dropped) */
+const collectFields = (had: Record<string, string> = {}): Record<string, string> => {
+  const out = { ...had };
+  document.querySelectorAll<HTMLElement>('.adoc [data-fk]').forEach((el) => { const k = el.dataset.fk; if (!k) return; const t = (el.innerText ?? el.textContent ?? '').trim(); if (t) out[k] = t; else delete out[k]; });
+  return out;
+};
 
 export function FundsComparePrint() {
   const { data: raw, error } = useFunds();
@@ -50,6 +62,17 @@ export function FundsComparePrint() {
   const [annex, setAnnex] = useState(true);
   const [tags, setTags] = useState<Record<string, Tag>>({});
   const tagOf = (k: string): Tag => tags[k] ?? 'נבחן';
+  // W3: a client folder opened from /clients or the compare page (its id rides in the router's state, never in the URL)
+  const loc = useLocation();
+  const [clients] = useClients();
+  const [folderId, setFolderId] = useState<string | null>(() => folderOfState(loc.state));
+  const folder: Folder | null = folderId ? clients.folders.find((f) => f.id === folderId) ?? null : null;
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [gen, setGen] = useState(0);
+  useEffect(() => {
+    if (!folder) return;
+    setTags(folder.tags); setClient(folder.fields['doc:client'] ?? ''); setDraft(folder.fields); setGen((g) => g + 1);
+  }, [folder?.id]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data) return <Loading what="המסמך" />;
@@ -90,11 +113,14 @@ export function FundsComparePrint() {
         <label>מס' רישיון <input value={lic} onChange={(e) => setLic(e.target.value)} placeholder="לא חובה" maxLength={20} inputMode="numeric" /></label>
         <label className="chk"><input type="checkbox" checked={annex} onChange={(e) => setAnnex(e.target.checked)} /> נספח הנמקה</label>
         <button type="button" className="cmp-doc" onClick={() => window.print()}><Icon name="download" />הדפסה / PDF</button>
-        <p className="adoc-priv">שם הלקוח והשדות שתקלידו נשארים בעמוד הזה בלבד ולא נשמרים. שם הסוכן ומספר הרישיון נשמרים בדפדפן הזה בלבד. המסמך יוצא בלי שם האתר. {pending > 0 ? `טוען היסטוריה ל-${pending} מסלולים…` : ''}</p>
+        <ClientSave keys={fs.map((f) => f.k)} b={net ? 'net' : 'gross'} folder={folder} onSaved={(f) => setFolderId(f.id)}
+          collect={() => ({ tags: Object.fromEntries(fs.map((f) => [f.k, tagOf(f.k)])), fields: (() => { const x = collectFields(folder?.fields); if (client.trim()) x['doc:client'] = client.trim(); else delete x['doc:client']; return x; })() })} />
+        <p className="adoc-priv">שם הלקוח והשדות שתקלידו נשארים בעמוד הזה ולא נשמרים, אלא אם לוחצים "שמור ללקוח": אז הם נשמרים בדפדפן הזה בלבד (בלי תעודת זהות), עד שתמחקו אותם ב<Link to="/clients">תיקי לקוחות</Link>. שם הסוכן ומספר הרישיון נשמרים בדפדפן הזה בלבד. המסמך יוצא בלי שם האתר. {pending > 0 ? `טוען היסטוריה ל-${pending} מסלולים…` : ''}</p>
         {annex && <div className="adoc-tags" role="group" aria-label="סיווג המסלולים בנספח">{fs.map((f) => <label key={f.k}><span>{f.name}</span><select value={tagOf(f.k)} onChange={(e) => setTags({ ...tags, [f.k]: e.target.value as Tag })} aria-label={`סיווג: ${f.name}`}>{TAGS.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>)}</div>}
       </div>
 
-      <article className="adoc" dir="rtl" lang="he">
+      <Draft.Provider value={draft}>
+      <article className="adoc" dir="rtl" lang="he" key={gen}>
         <header className="adoc-h">
           <div><h1>השוואת מסלולי חיסכון</h1>
             <p className="adoc-sub">{fs.length} מסלולים · נתוני {ym(asof)} · תשואות {lbl} · הופק {today()}</p></div>
@@ -150,6 +176,7 @@ export function FundsComparePrint() {
 
         {annex && <Annex fs={fs} tagOf={tagOf} ret3={(f) => f.a3} client={client.trim()} agent={agent.trim()} lic={lic.trim()} asof={asof} />}
       </article>
+      </Draft.Provider>
     </div>
   );
 }
@@ -162,16 +189,16 @@ function Annex({ fs, tagOf, ret3, client, agent, lic, asof }: { fs: FundX[]; tag
     <div className="a1" key={f.k}>
       <div className="a1-h"><b>{tagOf(f.k)}</b> · {f.name}</div>
       <dl className="a1-g">
-        <div><dt>המלצה</dt><dd><Fill label={`המלצה: ${f.name}`} inline /></dd></div>
+        <div><dt>המלצה</dt><dd><Fill label={`המלצה: ${f.name}`} inline fk={`a1:${f.k}:rec`} /></dd></div>
         <div><dt>שם המוצר הפנסיוני ומספרו</dt><dd>{f.prod} · {f.mgr}<span className="q">מס' {f.id}</span></dd></div>
         <div><dt>השם המסחרי של מסלול ההשקעה ומספרו</dt><dd>{f.name}<span className="q">מס' {f.id}</span></dd></div>
-        <div><dt>הבטחת תשואה</dt><dd><Fill label="הבטחת תשואה" inline /></dd></div>
+        <div><dt>הבטחת תשואה</dt><dd><Fill label="הבטחת תשואה" inline fk={`a1:${f.k}:guar`} /></dd></div>
         <div><dt>תשואה ברוטו</dt><dd><bdi dir="ltr">{ret3(f) == null ? '–' : `${sn(ret3(f)!, 2)}%`}</bdi><span className="q">ממוצע שנתי, 36 חודשים (הרשות, {ym(asof)})</span></dd></div>
-        <div><dt>דמי ניהול מהפקדות</dt><dd><Fill label="דמי ניהול מהפקדות ללקוח" inline /><span className="q">ממוצע בפועל במסלול: <bdi dir="ltr">{f.depfee == null ? '–' : `${nf(f.depfee, 2)}%`}</bdi></span></dd></div>
-        <div><dt>דמי ניהול מחיסכון מצטבר</dt><dd><Fill label="דמי ניהול מחיסכון מצטבר ללקוח" inline /><span className="q">ממוצע בפועל במסלול: <bdi dir="ltr">{f.fee == null ? '–' : `${nf(f.fee, 2)}%`}</bdi></span></dd></div>
-        <div><dt>רמת הסיכון של מסלול ההשקעה</dt><dd><Fill label="רמת הסיכון של המסלול" inline /><span className="q">חשיפה למניות: <bdi dir="ltr">{f.st == null ? '–' : `${nf(f.st, 0)}%`}</bdi></span></dd></div>
-        <div><dt>סכום צפוי (יתרת חיסכון ואומדן קצבה)</dt><dd><Fill label="סכום צפוי" inline /></dd></div>
-        <div><dt>השיקולים העיקריים</dt><dd><Fill label={`השיקולים העיקריים: ${f.name}`} inline /></dd></div>
+        <div><dt>דמי ניהול מהפקדות</dt><dd><Fill label="דמי ניהול מהפקדות ללקוח" inline fk={`a1:${f.k}:dep`} /><span className="q">ממוצע בפועל במסלול: <bdi dir="ltr">{f.depfee == null ? '–' : `${nf(f.depfee, 2)}%`}</bdi></span></dd></div>
+        <div><dt>דמי ניהול מחיסכון מצטבר</dt><dd><Fill label="דמי ניהול מחיסכון מצטבר ללקוח" inline fk={`a1:${f.k}:acc`} /><span className="q">ממוצע בפועל במסלול: <bdi dir="ltr">{f.fee == null ? '–' : `${nf(f.fee, 2)}%`}</bdi></span></dd></div>
+        <div><dt>רמת הסיכון של מסלול ההשקעה</dt><dd><Fill label="רמת הסיכון של המסלול" inline fk={`a1:${f.k}:risk`} /><span className="q">חשיפה למניות: <bdi dir="ltr">{f.st == null ? '–' : `${nf(f.st, 0)}%`}</bdi></span></dd></div>
+        <div><dt>סכום צפוי (יתרת חיסכון ואומדן קצבה)</dt><dd><Fill label="סכום צפוי" inline fk={`a1:${f.k}:exp`} /></dd></div>
+        <div><dt>השיקולים העיקריים</dt><dd><Fill label={`השיקולים העיקריים: ${f.name}`} inline fk={`a1:${f.k}:why`} /></dd></div>
       </dl>
     </div>
   );
@@ -182,7 +209,7 @@ function Annex({ fs, tagOf, ret3, client, agent, lic, asof }: { fs: FundX[]; tag
         <h2>נספח: טיוטת עבודה למסמך ההנמקה</h2>
         <p>לפי המבנה של נספח א' ל{HNM_SRC.title}, מכוח {LAW}. החוזר קובע נוסח וסדר מחייבים ואוסר לשנותם; זהו דף עבודה לאיסוף הנתונים בפגישה, ומסמך ההנמקה עצמו יופק בנוסח המחייב. הנתונים שמולאו: רשות שוק ההון, {ym(asof)}.</p>
         <dl className="adoc-meta">
-          <dt>תאריך מתן ההמלצה</dt><dd><Fill label="תאריך מתן ההמלצה" inline value={today()} /></dd>
+          <dt>תאריך מתן ההמלצה</dt><dd><Fill label="תאריך מתן ההמלצה" inline value={today()} fk="m:date" /></dd>
           <dt>שם הלקוח</dt><dd><Fill label="שם הלקוח" inline value={client || undefined} /></dd>
           <dt>ת"ז</dt><dd><Fill label="תעודת זהות" inline /></dd>
         </dl>
@@ -195,16 +222,16 @@ function Annex({ fs, tagOf, ret3, client, agent, lic, asof }: { fs: FundX[]; tag
       <h4>א.2 הכיסויים הביטוחיים המומלצים עבורך</h4>
       <table className="adoc-t annex-t">
         <thead><tr><th>המלצה</th><th>שם המוצר</th><th>סוג הכיסוי הביטוחי / מסלול הביטוח</th><th>סכום הכיסוי הביטוחי</th><th>עלות חודשית</th><th>כיסוי כלול במוצר פנסיוני קיים</th><th>השיקולים העיקריים</th></tr></thead>
-        <tbody>{[0, 1, 2].map((i) => <tr key={i}>{Array.from({ length: 7 }, (_, j) => <td key={j}><Fill label={`כיסוי ${i + 1}, שדה ${j + 1}`} inline /></td>)}</tr>)}</tbody>
+        <tbody>{[0, 1, 2].map((i) => <tr key={i}>{Array.from({ length: 7 }, (_, j) => <td key={j}><Fill label={`כיסוי ${i + 1}, שדה ${j + 1}`} inline fk={`a2:${i}:${j}`} /></td>)}</tr>)}</tbody>
       </table>
       <p className="adoc-cap">נתוני הכיסויים הביטוחיים אינם במאגרים הפתוחים של הרשות: יש למלא מהמסלקה ומהגוף המנהל.</p>
       <h4>נימוקי ההמלצה</h4>
       <div className="annex-grid">
-        <label><span>התאמת המוצר ללקוח, יתרונותיו וחסרונותיו</span><Fill label="התאמת המוצר ללקוח" lines={3} /></label>
-        <label><span>בחירת הגוף המנהל: יישוב תביעות, שירות, תפעול</span><Fill label="בחירת הגוף המנהל" lines={3} /></label>
-        <label><span>שינויים בחיתום בהחלפת כיסוי ביטוחי</span><Fill label="שינויים בחיתום" lines={2} /></label>
-        <label><span>השלכות משיכת כספים</span><Fill label="השלכות משיכה" lines={2} /></label>
-        <label className="wide"><span>בהעברת כספים (ניוד): יתרונות וחסרונות של המוצר החדש לעומת הקיים</span><Fill label="ניוד: יתרונות וחסרונות" lines={3} /></label>
+        <label><span>התאמת המוצר ללקוח, יתרונותיו וחסרונותיו</span><Fill label="התאמת המוצר ללקוח" lines={3} fk="r:fit" /></label>
+        <label><span>בחירת הגוף המנהל: יישוב תביעות, שירות, תפעול</span><Fill label="בחירת הגוף המנהל" lines={3} fk="r:mgr" /></label>
+        <label><span>שינויים בחיתום בהחלפת כיסוי ביטוחי</span><Fill label="שינויים בחיתום" lines={2} fk="r:uw" /></label>
+        <label><span>השלכות משיכת כספים</span><Fill label="השלכות משיכה" lines={2} fk="r:wd" /></label>
+        <label className="wide"><span>בהעברת כספים (ניוד): יתרונות וחסרונות של המוצר החדש לעומת הקיים</span><Fill label="ניוד: יתרונות וחסרונות" lines={3} fk="r:port" /></label>
       </div>
       <div className="annex-q">
         <span>בניוד, לסמן רק כשהתשובה "כן", ולפרט:</span>
@@ -212,13 +239,13 @@ function Annex({ fs, tagOf, ret3, client, agent, lic, asof }: { fs: FundX[]; tag
       </div>
       <h4>סך עלות דמי הניהול והביטוח</h4>
       <table className="adoc-t annex-t small"><thead><tr><th /><th>מצב קיים</th><th>מצב מומלץ</th></tr></thead>
-        <tbody><tr><th scope="row">סך עלות דמי ניהול</th><td><Fill label="סך דמי ניהול, קיים" inline /></td><td><Fill label="סך דמי ניהול, מומלץ" inline /></td></tr>
-          <tr><th scope="row">סך עלות ביטוח</th><td><Fill label="סך עלות ביטוח, קיים" inline /></td><td><Fill label="סך עלות ביטוח, מומלץ" inline /></td></tr></tbody></table>
+        <tbody><tr><th scope="row">סך עלות דמי ניהול</th><td><Fill label="סך דמי ניהול, קיים" inline fk="t:fee0" /></td><td><Fill label="סך דמי ניהול, מומלץ" inline fk="t:fee1" /></td></tr>
+          <tr><th scope="row">סך עלות ביטוח</th><td><Fill label="סך עלות ביטוח, קיים" inline fk="t:ins0" /></td><td><Fill label="סך עלות ביטוח, מומלץ" inline fk="t:ins1" /></td></tr></tbody></table>
       <p className="adoc-cap">לפי נספח ב' לחוזר (אופן החישוב).</p>
 
       <h3>חלק ב – המאפיינים שלך לפיהם נקבעו ההמלצות</h3>
       <div className="annex-grid">
-        {['גיל', 'מצב משפחתי', 'מצב תעסוקתי', 'הכנסות קבועות נוספות בפרישה', 'מידת הסיכון המועדפת', 'מטרות החיסכון', 'מטרות הביטוח'].map((x) => <label key={x}><span>{x}</span><Fill label={x} lines={1} /></label>)}
+        {['גיל', 'מצב משפחתי', 'מצב תעסוקתי', 'הכנסות קבועות נוספות בפרישה', 'מידת הסיכון המועדפת', 'מטרות החיסכון', 'מטרות הביטוח'].map((x, i) => <label key={x}><span>{x}</span><Fill label={x} lines={1} fk={`b:${i}`} /></label>)}
       </div>
       <div className="annex-sig">
         <span>הצהרת בעל הרישיון על שמירת סודיות</span><span>הצהרת הלקוח על מידע שלא נמסר</span><span>הצהרת בעל הרישיון לעניין המידע שלא נמסר</span>
@@ -228,10 +255,10 @@ function Annex({ fs, tagOf, ret3, client, agent, lic, asof }: { fs: FundX[]; tag
       <dl className="adoc-meta grid">
         <dt>שם מלא</dt><dd><Fill label="שם בעל הרישיון" inline value={agent || undefined} /></dd>
         <dt>מספר רישיון</dt><dd><Fill label="מספר רישיון" inline value={lic || undefined} /></dd>
-        <dt>טלפון</dt><dd><Fill label="טלפון" inline /></dd><dt>כתובת</dt><dd><Fill label="כתובת" inline /></dd><dt>דוא"ל</dt><dd><Fill label="דואר אלקטרוני" inline /></dd>
-        <dt>פועל באמצעות חברה (שם, ח.פ.)</dt><dd><Fill label="שם החברה ומספרה" inline /></dd>
+        <dt>טלפון</dt><dd><Fill label="טלפון" inline fk="c:tel" /></dd><dt>כתובת</dt><dd><Fill label="כתובת" inline fk="c:addr" /></dd><dt>דוא"ל</dt><dd><Fill label="דואר אלקטרוני" inline fk="c:mail" /></dd>
+        <dt>פועל באמצעות חברה (שם, ח.פ.)</dt><dd><Fill label="שם החברה ומספרה" inline fk="c:co" /></dd>
       </dl>
-      <label className="annex-wide"><span>גילוי נאות: עמלות (סוכן: עד שלושה גופים מוסדיים לכל סוג מוצר לפי חלקם בעמלות; יועץ: עמלת הפצה או שכר טרחה), תמריצים, ומוצרים לא פנסיוניים שנמכרו בפגישה</span><Fill label="גילוי נאות" lines={3} /></label>
+      <label className="annex-wide"><span>גילוי נאות: עמלות (סוכן: עד שלושה גופים מוסדיים לכל סוג מוצר לפי חלקם בעמלות; יועץ: עמלת הפצה או שכר טרחה), תמריצים, ומוצרים לא פנסיוניים שנמכרו בפגישה</span><Fill label="גילוי נאות" lines={3} fk="c:disc" /></label>
 
       <h3>חלק ד – טבלת סיכום</h3>
       <div className="annex-grid">

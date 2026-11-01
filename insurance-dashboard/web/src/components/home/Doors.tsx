@@ -4,6 +4,7 @@ import { Sourced } from '../Source';
 import { Ico } from './glyphs';
 import { FundFacts, ProdFigs, screenHref, useFundFacts, useProducts } from './fundFacts';
 import { useActiveDoor } from './doorState';
+import { ClientsPanel } from './ClientsPanel';
 import { useMine, type MyProduct } from '../../lib/mine';
 import { nf } from '../../lib/format';
 import { fundP } from '../../lib/market';
@@ -182,6 +183,7 @@ export function AgentHome() {
           ))}
         </ul>
       </section>
+      {/* W3 */}<ClientsPanel />
       <Cards cards={AGENT_CARDS} label="כלים לסוכן" />
     </div>
   );
