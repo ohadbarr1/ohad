@@ -135,7 +135,9 @@ test('funds hub, screener and compare work on the phone in WebKit', async ({ pag
   await tray.getByRole('link').click();
   await expect(page).toHaveURL(/\/funds\/compare\?k=[gip]\d+,[gip]\d+/);
   await settle(page);
-  await expect(page.locator('.fcmp')).toBeVisible();
+  // on a phone compare shows one card per track (W1 agent door), not the wide table
+  await expect(page.locator('.cmp-cards')).toBeVisible();
+  expect(await page.locator('.cmp-cards > *').count()).toBeGreaterThanOrEqual(2);
   await flat('/funds/compare');
   // closed tracks (funds/closed.json, F1 data) join their category when asked, flagged and unranked
   if ((await page.request.get('/data/funds/closed.json')).ok()) {
