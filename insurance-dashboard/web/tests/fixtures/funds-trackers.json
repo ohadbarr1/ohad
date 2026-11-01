@@ -1,0 +1,16 @@
+{
+ "v": 1,
+ "asof": 202609,
+ "_fixture": "TOOLS fixture for the funds/trackers.json contract (F2 DATA contract 5). Made-up tracks: shape only.",
+ "method": "fixture",
+ "groups": [
+  {"id": "sp500", "label": "S&P 500", "n": 3, "med": {"y12": 20, "a3": 15, "a5": 12}, "med_n": {"y12": 19.6, "a3": 14.6, "a5": 11.6},
+   "tracks": [
+    {"k": "g1", "name": "fixture A S&P 500", "grp": "A", "prod": "השתלמות", "fee": 0.3, "depfee": 0, "assets": 1000, "fx": 95, "g": {"y12": 21, "a3": 15.5, "a5": 12.5}, "nt": {"y12": 20.7, "a3": 15.2, "a5": 12.2}, "td": {"y12": 1, "a3": 0.5, "a5": 0.5}},
+    {"k": "g2", "name": "fixture B S&P 500", "grp": "B", "prod": "השתלמות", "fee": 0.6, "depfee": 0, "assets": 500, "fx": 10, "g": {"y12": 20, "a3": 15, "a5": 12}, "nt": {"y12": 19.4, "a3": 14.4, "a5": 11.4}, "td": {"y12": 0, "a3": 0, "a5": 0}},
+    {"k": "i3", "name": "fixture C S&P 500", "grp": "C", "prod": "פוליסות חיסכון", "fee": 1.0, "assets": 200, "fx": 50, "g": {"y12": 18, "a3": 14, "a5": null}, "nt": {"y12": 17, "a3": 13, "a5": null}, "td": {"y12": -2, "a3": -1, "a5": null}, "gone": true}
+   ]},
+  {"id": "bonds", "label": "מדדי אג\"ח", "n": 1, "med": {"y12": 5, "a3": 3, "a5": 2}, "tracks": [
+    {"k": "g4", "name": "fixture D bonds", "grp": "D", "prod": "גמל", "fee": 0.5, "assets": 50, "g": {"y12": 5, "a3": 3, "a5": 2}, "td": {"y12": 0, "a3": 0, "a5": 0}}]}
+ ]
+}

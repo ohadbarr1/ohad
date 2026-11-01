@@ -15,6 +15,11 @@ export const ROUTES: [string, string][] = [
   ['funds-screen-all', '/funds/screen?prod=all&track=all&fam=index'],
   ['funds-compare', '/funds/compare?k=p2009,g12531,i2081&b=net'],
   ['fund', '/funds/p2009'],
+  ['funds-tools', '/funds/tools'],                                                  // F2 TOOLS
+  ['funds-hindsight', '/funds/tools/hindsight?cat=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA%20%7C%20%D7%9B%D7%9C%D7%9C%D7%99&a=1000&y=10'],
+  ['funds-fees', '/funds/tools/fees'],
+  ['funds-default', '/funds/default'],
+  ['funds-trackers', '/funds/trackers?g=sp500&w=a3'],
   ['managers', '/managers'],
   ['valuation', '/valuation/phoenix'],
   ['calendar', '/calendar'],

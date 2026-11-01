@@ -44,6 +44,13 @@ const BR_KEYS = ['brief', 'briefing', 'meeting', 'תדריך', 'תדריכים',
 /** words that reach the morning brief (/watch, S10) */
 const WT_KEYS = ['watch', 'changes', 'brief', 'מעקב', 'עוקב', 'השתנה', 'שינויים', 'תקציר', 'בוקר'].map(normalize);
 const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 'הפתעה', 'הפתעות', 'חריג', 'חריגים'].map(normalize);
+// the funds tools (F2 TOOLS): each tool answers to its own words
+const FTOOLS = ([
+  [['מה', 'היה', 'לי', 'אילו', 'הייתי', 'בדיעבד', 'hindsight', 'מחשבון', 'הפקדות', 'הפקדה'], 'מה היה לי · ההפקדות שלך דרך כל מסלול', 'איפה היית היום בכל מסלול בקטגוריה: חציון, טוב, חלש, הפער בשקלים', '/funds/tools/hindsight'],
+  [['דמי', 'ניהול', 'קריירה', 'פרישה', 'קצבה', 'עלות', 'מחשבון', 'fees', 'fee'], 'דמי ניהול לאורך קריירה', 'כמה עולים דמי ניהול מהפקדה ומצבירה עד הפרישה, בשקלים ובקצבה', '/funds/tools/fees'],
+  [['קרנות', 'ברירת', 'מחדל', 'נבחרות', 'מכרז', 'מכרזים', 'default'], 'קרנות ברירת מחדל · המכרזים והזוכות', 'המחיר, הזוכות, ומה קרה לכסף לפני ואחרי', '/funds/default'],
+  [['עוקב', 'עוקבי', 'מדד', 'מדדים', 's&p', '500', 'פסיבי', 'tracker', 'index'], 'מעבדת עוקבי המדד', 'אותו מדד בעטיפות שונות: הפער הוא מחיר העטיפה', '/funds/trackers'],
+] as [string[], string, string, string][]).map(([w, l, m, to]): [string[], string, string, string] => [w.map(normalize), l, m, to]);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -172,6 +179,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   if (!p.company && words.length && words.every((w) => QI_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'שאלות · אינדקס השאלות של הענף', meta: 'לפי מי ששואל ולפי נושא, כל תשובה מחושבת ומקושרת למקור', to: '/questions', score: 96 });
   }
+  for (const [keys, label, meta, to] of FTOOLS) if (!p.company && words.length && words.every((w) => keys.some((k) => k.startsWith(w)))) out.push({ kind: 'פונקציה', label, meta, to, score: 95 });
   if (!p.company && words.length && words.every((w) => FD_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'ממצאים · הפתעות בבסיס העובדות', meta: 'מהותיות והפתעה כשני רכיבים, בלי ציון מצרפי', to: '/findings', score: 96 });
   }

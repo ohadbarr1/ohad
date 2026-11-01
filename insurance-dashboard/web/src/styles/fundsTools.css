@@ -1,0 +1,51 @@
+/* The "חיסכון" tools (wave F2, TOOLS): the tool links, the input forms, the outcome strip, the sensitivity grid, the tender timeline. */
+
+.ftools-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.ftools-nav a { padding: 5px 12px; border-radius: var(--r-pill); border: 1px solid var(--line-soft); background: var(--panel); color: var(--muted); font-size: var(--t-2); font-weight: 600; text-decoration: none; }
+.ftools-nav a:hover { color: var(--accent-text); border-color: var(--accent-line); }
+.ftools-nav a.active { background: var(--sel-bg); color: var(--sel-fg); border-color: transparent; }
+
+/* ---- inputs ---- */
+.fform { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 10px 14px; align-items: end; }
+.fform label { display: grid; gap: 4px; font-size: var(--t-2); color: var(--muted); min-width: 0; }
+.fform label > span { font-weight: 600; }
+.fform input, .fform select { width: 100%; min-width: 0; box-sizing: border-box; }
+.fform .wide { grid-column: 1 / -1; }
+.fpresets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+.fpresets > span { font-size: var(--t-2); color: var(--muted); }
+.fprivacy { font-size: var(--t-1); color: var(--muted); margin-top: 8px; }
+.fpair { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel2); }
+.fpair h3 { margin: 0; font-size: var(--t-3); display: flex; align-items: center; gap: 6px; }
+.fpair .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.fpairs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin-top: 12px; }
+
+/* ---- the outcome strip (hindsight) ---- */
+.fdots { width: 100%; height: auto; display: block; overflow: visible; }
+.fdots .dot { fill: color-mix(in oklch, var(--accent) 35%, transparent); stroke: var(--accent); stroke-width: 1; }
+.fdots .dot.gone { fill: var(--panel); stroke: var(--muted); stroke-dasharray: 2 1.5; }
+.fdots .dot.me { fill: var(--warn); stroke: var(--fg); stroke-width: 1.5; }
+.fdots .med { stroke: var(--fg); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.fdots .ax { stroke: var(--line); }
+.fdots text { fill: var(--muted); font: 500 10px var(--font-body); }
+.fdots text.me { fill: var(--fg); font-weight: 700; }
+table.fsimple tbody th { display: table-cell; text-align: start; }
+tr.fme td { font-weight: 700; border-top: 1px solid var(--warn); border-bottom: 1px solid var(--warn); }
+tr.fme td:first-child { box-shadow: inset -4px 0 0 var(--warn); }
+.fgap { font-size: var(--t-4); font-weight: 700; }
+
+/* ---- the sensitivity grid (fees) ---- */
+table.fgrid { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: var(--t-2); }
+table.fgrid th { display: table-cell; font-weight: 600; color: var(--muted); padding: 4px; text-align: center; }
+table.fgrid td { text-align: center; padding: 6px 4px; border-radius: 4px; }
+table.fgrid td.hit { outline: 2px solid var(--fg); outline-offset: -2px; }
+.fread { font-size: var(--t-4); line-height: 1.6; margin: 0 0 6px; }
+
+/* ---- tenders ---- */
+.ftenders { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.ftender { border: 1px solid var(--line-soft); border-radius: var(--r-3); padding: 12px 14px; background: linear-gradient(180deg, var(--panel), var(--panel2)); display: grid; gap: 6px; box-shadow: var(--e-1); }
+.ftender.now { border-color: var(--accent-line); }
+.ftender h3 { margin: 0; font-size: var(--t-4); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ftender ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 3px; }
+.ftender a { text-decoration: underline; text-underline-offset: 3px; }
+.ftender .src { font-size: var(--t-1); }
+tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }

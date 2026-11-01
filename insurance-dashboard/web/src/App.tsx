@@ -48,6 +48,11 @@ const mFundsScreen = () => import('./pages/FundsScreen');
 const FundsScreen = page(mFundsScreen, 'FundsScreen');
 const mFundsCompare = () => import('./pages/FundsCompare');
 const FundsCompare = page(mFundsCompare, 'FundsCompare');
+const FundsTools = page(() => import('./pages/FundsTools'), 'FundsTools');  // F2 TOOLS: the calculators and trackers
+const FundsHindsight = page(() => import('./pages/FundsHindsight'), 'FundsHindsight');
+const FundsFees = page(() => import('./pages/FundsFees'), 'FundsFees');
+const FundsDefault = page(() => import('./pages/FundsDefault'), 'FundsDefault');
+const FundsTrackers = page(() => import('./pages/FundsTrackers'), 'FundsTrackers');
 const mValuation = () => import('./pages/Valuation');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
@@ -177,6 +182,11 @@ export function App() {
         <Route path="funds" element={<FundsRoot />} />
         <Route path="funds/screen" element={<FundsScreen />} />
         <Route path="funds/compare" element={<FundsCompare />} />
+        <Route path="funds/tools" element={<FundsTools />} />
+        <Route path="funds/tools/hindsight" element={<FundsHindsight />} />
+        <Route path="funds/tools/fees" element={<FundsFees />} />
+        <Route path="funds/default" element={<FundsDefault />} />
+        <Route path="funds/trackers" element={<FundsTrackers />} />
         <Route path="funds/holdings" element={<Navigate to="/holdings" replace />} />
         <Route path="funds/makers" element={<FundMakers />} />
         <Route path="funds/:k" element={<FundCard />} />
