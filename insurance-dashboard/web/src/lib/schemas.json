@@ -114,6 +114,10 @@
    "schema": "fundCats"
   },
   {
+   "pattern": "funds/closed.json",
+   "schema": "fundsClosed"
+  },
+  {
    "pattern": "funds/*.json",
    "schema": "fundHist"
   },
@@ -300,10 +304,6 @@
   {
    "pattern": "answers/*.json",
    "schema": "answersTopic"
-  },
-  {
-   "pattern": "funds/closed.json",
-   "schema": "fundsClosed"
   }
  ],
  "$defs": {
