@@ -97,6 +97,9 @@ const mQuestions = () => import('./pages/Questions');  // S1 + S2 + S6: the Ques
 const Questions = page(mQuestions, 'Questions');
 const QuestionPage = page(mQuestions, 'QuestionPage');
 const Findings = page(mQuestions, 'Findings');
+const mBrief = () => import('./pages/Brief');  // S3: the Briefing Builder (private meeting registry + one-page brief)
+const Brief = page(mBrief, 'Brief');
+const BriefPage = page(mBrief, 'BriefPage');
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -195,6 +198,8 @@ export function App() {
         <Route path="questions" element={<Questions />} />{/* S1: a main place (nav: שאלות, which also lights /findings) */}
         <Route path="questions/:id" element={<QuestionPage />} />{/* S6: one answer on the ladder */}
         <Route path="findings" element={<Findings />} />{/* S2 */}
+        <Route path="brief" element={<Brief />} />{/* S3: the meeting registry (nav: lights שאלות) */}
+        <Route path="brief/:id" element={<BriefPage />} />{/* S3: one brief; /brief/demo is the built-in demo */}
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

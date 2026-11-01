@@ -31,7 +31,7 @@ export function AskStrip() {
         <p className="hub-sub">מהותיות <b className="num">{top.mat?.t ?? '–'}</b> · הפתעה <b className="num">{top.sur?.t ?? '–'}</b> · שני רכיבים נפרדים, בלי ציון מצרפי{tf.asof && <> · נכון ל-<span className="num">{tf.asof}</span></>}</p>
       </div>}
       {I && <div className="ask-cell ask-q">
-        <div className="hub-hd"><h2><Link className="hub-t" to="/questions"><span className="icotile sm"><Icon name="questions" /></span>שאלות</Link></h2><Link className="hub-more" to="/questions">כל השאלות · <span className="num">{I.n}</span></Link></div>
+        <div className="hub-hd"><h2><Link className="hub-t" to="/questions"><span className="icotile sm"><Icon name="questions" /></span>שאלות</Link></h2><span className="ask-more" style={{ display: 'inline-flex', gap: 12 }}><Link className="hub-more" to="/brief">תדריכים</Link><Link className="hub-more" to="/questions">כל השאלות · <span className="num">{I.n}</span></Link></span></div>
         <form role="search" aria-label="חיפוש שאלה" onSubmit={(e) => { e.preventDefault(); if (hits[0]) nav(`/questions/${hits[0].id}`); else if (text.trim()) nav(`/questions?q=${encodeURIComponent(text.trim())}`); }}>
           <label className="qi-search"><span className="sr-only">חיפוש שאלה באינדקס</span><Icon name="search" /><input type="search" value={text} onChange={(e) => setText(e.target.value)} placeholder="מה שואלים אותך? מילה, חברה, Q-001" /></label>
         </form>

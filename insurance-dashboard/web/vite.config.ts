@@ -14,7 +14,9 @@ export default defineConfig({
   base: single ? './' : '/',
   // __HAS_FINDINGS__: the Finding Engine (S2) wrote public/data/findings.json before this build (deploy builds the data first, then the
   // app): without it the page asks for no file at all, so a build without findings logs no 404 (lib/answersLoad.ts useFindings); HAS_FINDINGS=1 forces it on (a test build that adds a fixture)
-  define: { __BUILD__: JSON.stringify({ commit, built: new Date().toISOString() }), __HAS_FINDINGS__: JSON.stringify(process.env.HAS_FINDINGS === '1' || existsSync(new URL('./public/data/findings.json', import.meta.url))) },
+  define: { __BUILD__: JSON.stringify({ commit, built: new Date().toISOString() }), __HAS_FINDINGS__: JSON.stringify(process.env.HAS_FINDINGS === '1' || existsSync(new URL('./public/data/findings.json', import.meta.url))),
+    // __HAS_WATCH__: S10's watch.json was built before this build (S3's briefs read it; without it no request, no 404)
+    __HAS_WATCH__: JSON.stringify(process.env.HAS_WATCH === '1' || existsSync(new URL('./public/data/watch.json', import.meta.url))) },
   plugins: [react(), ...(single ? [viteSingleFile()] : [])],
   build: {
     outDir: single ? 'dist-single' : 'dist', chunkSizeWarningLimit: 1800,

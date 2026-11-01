@@ -37,6 +37,8 @@ export const ROUTES: [string, string][] = [
   ['question-exhibit', '/questions/Q-001?r=ex'],
   ['question-missing', '/questions/Q-999'],
   ['findings', '/findings'],
+  ['brief', '/brief'],            // S3: the registry, empty in a fresh browser (private: nothing to seed)
+  ['brief-demo', '/brief/demo'],  // S3: the built-in demo meeting's brief
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

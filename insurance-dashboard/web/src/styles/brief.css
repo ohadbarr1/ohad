@@ -1,0 +1,63 @@
+/* S3 · the Briefing Builder: /brief (the private meeting registry) and /brief/<id> (the one-page brief). Builds on answers.css (qi-*, an-*). */
+.br-form { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.br-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.br-form legend { font-size: 11.5px; color: var(--muted); font-weight: 500; margin-bottom: 6px; padding: 0; }
+.br-types { display: flex; flex-wrap: wrap; gap: 4px; }
+.br-types legend { flex-basis: 100%; }
+.br-types .an-btn[aria-pressed="true"] { color: var(--fg); font-weight: 700; border-color: var(--accent-line); background: color-mix(in oklch, var(--accent) 8%, var(--panel)); }
+.br-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; min-width: 0; }
+.br-row .field { flex: 0 1 180px; }
+.br-row .field.br-wide { flex: 1 1 300px; }
+.br-row .field.br-n { flex: 0 1 110px; }
+.br-form input, .br-form select, .br-form textarea { width: 100%; min-width: 0; font: inherit; font-size: var(--t-3); color: var(--fg); }
+.br-form input[type="date"], .br-form input[type="number"], .br-form select, .br-form textarea { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-2); padding: 6px 9px; min-height: 36px; }
+.br-form textarea { resize: vertical; line-height: 1.5; }
+.br-checks { display: flex; flex-wrap: wrap; gap: 4px; }
+.br-checks legend { flex-basis: 100%; }
+.br-checks label { display: inline-flex; flex: none; white-space: nowrap; align-items: center; gap: 6px; min-height: 32px; font-size: var(--t-2); padding: 4px 10px; border: 1px solid var(--line-soft); border-radius: var(--r-2); cursor: pointer; color: var(--muted); }
+.br-checks label.on { color: var(--fg); font-weight: 600; border-color: var(--accent-line); background: color-mix(in oklch, var(--accent) 7%, transparent); }
+.br-checks input { margin: 0; accent-color: var(--accent); }
+.br-import { cursor: pointer; }
+.br-import:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.br-list .an-tools { margin-top: 4px; }
+
+.br-agenda { font-size: var(--t-3); color: var(--muted); }
+.br-agenda b { color: var(--fg); font-weight: 600; }
+.br-agenda ul { margin: 4px 0 0; padding-inline-start: 20px; display: flex; flex-wrap: wrap; gap: 2px 24px; }
+.br-tools { align-items: center; }
+.br-sec { padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.br-hd { display: flex; align-items: center; gap: 6px; }
+.br-hd .an-h { margin: 0; }
+.br-rule { font: inherit; display: inline-grid; place-items: center; min-width: 28px; min-height: 28px; font-size: 14px; color: var(--faint); background: transparent; border: 0; cursor: pointer; border-radius: 50%; }
+.br-rule:hover, .br-rule:focus-visible, .br-rule[aria-expanded="true"] { color: var(--accent-text); }
+.br-why { padding: 6px 10px; border-inline-start: 2px solid var(--accent-line); background: var(--panel2); border-radius: var(--r-1); }
+.br-sub { margin: 0; font-size: var(--t-2); color: var(--muted); line-height: 1.6; }
+.br-none { margin: 0; font-size: var(--t-3); color: var(--muted); padding: 6px 0; }
+.br-h3 { margin: 8px 0 0; font-size: var(--t-3); font-weight: 700; color: var(--fg); }
+.br-ev { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.br-ev li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 10px; padding: 7px 0; border-top: 1px solid var(--line-soft); font-size: var(--t-3); min-width: 0; overflow-wrap: anywhere; }
+.br-ev li:first-child { border-top: 0; }
+.br-ev li.focus { box-shadow: inset -3px 0 0 var(--accent); padding-inline-start: 8px; }
+.br-ev a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.br-ev a:hover { color: var(--accent-text); }
+.br-d { min-width: 62px; font-size: var(--t-2); }
+.br-co { font-weight: 600; }
+.br-fig { margin-inline-start: auto; font-weight: 700; }
+.br-now { flex-basis: 100%; color: var(--muted); font-size: var(--t-2); }
+.br-three { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.br-three li { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel2); min-width: 0; }
+.br-big { font-size: var(--t-6); font-weight: 700; line-height: 1.2; color: var(--accent-text); }
+.br-l { font-size: var(--t-2); color: var(--fg); line-height: 1.4; overflow-wrap: anywhere; }
+.br-three .dim { font-size: var(--t-1); }
+.br-three a, .br-sub a, .br-none a, .br-flag a, .br-qs .qi-meta a { text-decoration: underline; text-underline-offset: 3px; }
+.br-qs { box-shadow: none; }
+.br-lead { font-size: var(--t-5) !important; }
+.br-flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.br-flag { padding: 7px 0; border-top: 1px solid var(--line-soft); font-size: var(--t-3); line-height: 1.6; overflow-wrap: anywhere; }
+.br-flag:first-child { border-top: 0; }
+.br-flag.warn { box-shadow: inset -3px 0 0 var(--warn); padding-inline-start: 8px; }
+.br-flag a { color: var(--fg); }
+@media print {
+  .brp .br-tools, .brp .qi-back { display: none; }
+  .br-sec { break-inside: avoid; box-shadow: none; }
+}

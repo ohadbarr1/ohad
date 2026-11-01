@@ -20,7 +20,7 @@ import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 // other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
 const NAV: [string, string, string, string, string[]][] = [
   ['/', 'home', 'בית', 'בית', ['/company/']],
-  ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings']],
+  ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', []],
   ['/warroom', 'warroom', 'חדר מלחמה', 'חדר מלחמה', ['/capital', '/consolidation', '/fragility']],
   ['/positions', 'positions', 'עמדות', 'עמדות', []],

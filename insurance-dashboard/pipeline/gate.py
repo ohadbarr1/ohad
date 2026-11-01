@@ -83,6 +83,7 @@ Checks
                  figure sourced, no number outside a figure token, corridor = one figure, email = two or more, no first-person framing
                  And `answers_lib`: the page's renderer (web/src/lib/answers.ts) shows every token as its figure, the pasted email keeps no
                  digit outside a figure and carries a source line, findings keep their two components (web/tests/answers.unit.ts, run in node)
+                 And `brief_lib` (S3): the meeting brief's section builders and its Doc (web/tests/brief.unit.ts): every token a sourced figure
   findings       module S2, the Finding Engine: web/public/data/findings.json equals a rebuild (pipeline/build_findings.py --check); every
                  finding obeys the answer rules (answer_core.body_problems), every figure re-derives from the file its `src` names, the order
                  reproduces from the two published components (mat x sur) and the stated rule, the top marks follow it, no composite key
@@ -503,6 +504,13 @@ def answers():
     fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
     add("answers_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
         (tail.replace("answers: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
+    # `brief_lib` (S3): the Briefing Builder's section builders and its Doc on fixtures and on the published data (web/tests/brief.unit.ts)
+    q = subprocess.run([node, "scripts/brief-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if l.startswith("brief: ")), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("brief_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("brief: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
 def findings():
