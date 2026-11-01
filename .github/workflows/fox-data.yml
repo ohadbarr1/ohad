@@ -1,0 +1,346 @@
+# fox-data: a new regulator month (data.gov.il: gemel-net, pensia-net, bituach-net) reaches fox-research-il.web.app with no owner action,
+# only as a commit that passed the same checks as a manual deploy, with an automatic rollback. Runbook: insurance-dashboard/docs/AUTOPILOT.md.
+#
+#   probe    3x a day, ~06:17 / 12:17 / 18:17 Israel time: 6 read-only CKAN requests (pipeline/autopilot/regulator.py). Nothing new: stop.
+#   build    incremental fetch (frozen 1999-2022 / 2023 resources from actions/cache) -> the same DAG steps as a manual month ->
+#            month check -> funds contract -> pipeline/gate.py -> commit -> push to branch autodata/<yyyymm>
+#   checks   fox-ci itself (workflow_call) on that exact commit
+#   verified commit status "fox-ci (fox-data)" = success on it (deploy.sh on the Mac accepts it in place of a fox-ci push run)
+#   deploy   only when repository variable FOX_AUTODEPLOY == 'on' (environment `production`, secret FIREBASE_SERVICE_ACCOUNT):
+#            fast-forward the deploy branch, record the live version, ./deploy.sh --ci, verify the live site serves the month and this
+#            commit's qa.json; on any failure clone the previous version back to live and fail
+#   alert    any failed job opens (or comments on) the issue "fox-data: automated data run failed"
+#
+# Time: GitHub cron is UTC and has no time zones. Israel is UTC+3 in summer (IDT, from the Friday before the last Sunday of March) and
+# UTC+2 in winter (IST, from the last Sunday of October). Both UTC schedules below are registered; the probe job lets through only the one
+# whose offset is in force today (TZ=Asia/Jerusalem date +%z), so runs start at 06:17, 12:17 and 18:17 Israel time all year. The other
+# three daily events end in a few seconds as "skipped". GitHub may start a scheduled run 5-30 minutes late, occasionally drops one; three
+# slots a day make a dropped one harmless. Schedules run only from the default branch (the deploy branch, once the owner switched it).
+#
+# Manual: Actions > fox-data > Run workflow. dry_run (default ON) = probe + fetch + build + gate, the result uploaded as an artifact, nothing
+# pushed or deployed. force = rebuild (and, not dry, check + deploy) even when no new month is upstream: the way to retry after a rollback.
+# A run on any branch other than the deploy branch is always a dry run.
+#
+# Who else publishes: the owner's ./deploy.sh (refuses a HEAD behind origin) and the opt-in Mac autopilot (ops/autopilot.toml [deploy]).
+# Whoever pushes the month first wins; this workflow skips when the deploy branch already has it.
+name: fox-data
+on:
+  schedule:
+    - cron: '17 3,9,15 * * *'    # summer, IDT = UTC+3 -> 06:17 / 12:17 / 18:17 Israel
+    - cron: '17 4,10,16 * * *'   # winter, IST = UTC+2 -> 06:17 / 12:17 / 18:17 Israel
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run: probe, fetch, build and gate only (nothing pushed or deployed)'
+        type: boolean
+        default: true
+      force:
+        description: 'Run even when no new month is upstream (rebuild; when not a dry run, check and deploy the result)'
+        type: boolean
+        default: false
+permissions: {}
+concurrency:
+  group: fox-live
+  cancel-in-progress: false
+env:
+  DEPLOY_BRANCH: claude/festive-ramanujan-7f9ihj
+  SITE: fox-research-il
+  FIREBASE_TOOLS: '15.14.0'   # the owner's local firebase CLI version
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+defaults:
+  run:
+    shell: bash
+    working-directory: insurance-dashboard
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      go: ${{ steps.slot.outputs.go }}
+      dry: ${{ steps.slot.outputs.dry }}
+      new: ${{ steps.probe.outputs.new }}
+      month: ${{ steps.probe.outputs.month }}
+      label: ${{ steps.probe.outputs.label }}
+      frozen_key: ${{ steps.probe.outputs.frozen_key }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Israel-time slot and mode
+        id: slot
+        env:
+          EVENT: ${{ github.event_name }}
+          SCHED: ${{ github.event.schedule }}
+          DRY_INPUT: ${{ inputs.dry_run }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          off=$(TZ=Asia/Jerusalem date +%z)
+          go=true
+          if [ "$EVENT" = schedule ]; then
+            case "$SCHED" in
+              '17 3,9,15 * * *') [ "$off" = "+0300" ] || go=false ;;
+              '17 4,10,16 * * *') [ "$off" = "+0200" ] || go=false ;;
+            esac
+          fi
+          dry=false
+          if [ "$EVENT" = workflow_dispatch ] && [ "$DRY_INPUT" = true ]; then dry=true; fi
+          if [ "$REF_NAME" != "$DEPLOY_BRANCH" ]; then dry=true; fi
+          echo "Israel offset $off, event $EVENT ${SCHED:+($SCHED)}, branch $REF_NAME: go=$go dry=$dry"
+          { echo "go=$go"; echo "dry=$dry"; } >> "$GITHUB_OUTPUT"
+      - name: Probe data.gov.il (6 read-only requests)
+        id: probe
+        if: steps.slot.outputs.go == 'true'
+        run: |
+          python3 pipeline/autopilot/regulator.py --github-output "$GITHUB_OUTPUT" --json probe.json
+          python3 - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          p = json.load(open("probe.json"))
+          print("### data.gov.il probe\n\n| dataset | upstream | fox | new |\n|---|---|---|---|")
+          for d in p["datasets"]:
+              print(f"| {d['package']} | {d.get('upstream') or '?'} | {d.get('fox') or '-'} | {'yes' if d['new'] else ''} |")
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.slot.outputs.go == 'true'
+        with: { name: probe, path: insurance-dashboard/probe.json, if-no-files-found: ignore }
+
+  build:
+    needs: probe
+    if: needs.probe.outputs.go == 'true' && (needs.probe.outputs.new == 'true' || inputs.force)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    permissions:
+      contents: write   # push the data commit to autodata/<yyyymm>
+    env:
+      TZ: Asia/Jerusalem   # dates the builders stamp (calendar, generated) are Israel dates, as on the owner's Mac
+      MONTH: ${{ needs.probe.outputs.month }}
+      LABEL: ${{ needs.probe.outputs.label }}
+      DRY: ${{ needs.probe.outputs.dry }}
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22, cache: npm, cache-dependency-path: insurance-dashboard/web/package-lock.json }
+      - uses: actions/setup-python@v6
+        with: { python-version-file: insurance-dashboard/.python-version, cache: pip, cache-dependency-path: insurance-dashboard/pipeline/requirements.txt }
+      - name: Python dependencies (pandas + pyarrow for the regulator files)
+        run: python --version && pip install -r pipeline/requirements.txt
+      # the gate's stress check bundles tests/stress.unit.ts with esbuild from web/node_modules
+      - name: Install
+        working-directory: insurance-dashboard/web
+        run: npm ci --no-audit --no-fund
+      # data/raw is not in git (on the Mac it is a symlink into Google Drive): here it is a plain folder of this checkout, which every
+      # builder already reads as ROOT/data/raw. Only the resources that never change are cached; the 2024-today ones are re-stamped daily.
+      - name: Regulator resources that did not change (cache)
+        uses: actions/cache@v4
+        with:
+          path: insurance-dashboard/data/raw/_cache
+          key: regraw-v1-${{ needs.probe.outputs.frozen_key }}
+      - name: Fetch and rebuild (the steps of a manual month)
+        env:
+          FOX_REGRAW_CACHE: ${{ github.workspace }}/insurance-dashboard/data/raw/_cache
+        run: |
+          steps=fetch_regulator,fetch_macro,build_market,build_funds,build_recon,build_lens,build_flow_npv,build_roster,build_nowcast
+          # the official track taxonomy (data.gov.il transfer_bank), when this checkout's DAG has the step
+          graph=$(python pipeline/dag.py --graph)
+          if grep -q '^fetch_transfer_bank ' <<< "$graph"; then steps="fetch_transfer_bank,$steps"; fi
+          python pipeline/dag.py --only "$steps" --no-deps --manual
+          python pipeline/dag.py --only deploy --no-deps
+      - name: The month landed (fail closed)
+        run: |
+          python - <<'EOF'
+          import json, os, sys
+          m = int(os.environ["MONTH"])
+          got = {"funds.json": json.load(open("web/public/data/funds.json")).get("asof"),
+                 "lens.json": json.load(open("web/public/data/lens.json"))["meta"].get("asof")}
+          print(got)
+          sys.exit(0 if all(v == m for v in got.values()) else f"expected as-of {m} in every file, got {got}")
+          EOF
+      - name: Funds contract
+        run: if [ -f pipeline/check_funds_contract.py ]; then python pipeline/check_funds_contract.py; else echo "not in this checkout yet (the gate runs it once wired)"; fi
+      - name: Data gate (as in fox-ci; page-text checks are skipped where the page texts are not in git)
+        run: python pipeline/gate.py
+      - name: Commit the data
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git status --porcelain -- . > "$RUNNER_TEMP/status.txt"
+          echo "$(wc -l < "$RUNNER_TEMP/status.txt") path(s) changed"; head -40 "$RUNNER_TEMP/status.txt"
+          git add -A -- .
+          if git diff --cached --quiet; then
+            echo "the rebuild changed no tracked file"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit --quiet -m "data: regulator $LABEL (gemel-net, pensia-net, bituach-net), automated rebuild" \
+              -m "fox-data run $RUN_URL: incremental fetch, DAG rebuild, funds contract, pipeline/gate.py."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git show --stat --format='%h %s' HEAD | tail -3 | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Push to autodata/${{ needs.probe.outputs.month }}
+        if: needs.probe.outputs.dry != 'true' && steps.commit.outputs.changed == 'true'
+        run: git push --force origin "HEAD:refs/heads/autodata/$MONTH"
+      - name: Dry-run evidence
+        if: always()
+        run: git diff --stat HEAD~1 HEAD -- . > dry-run-diffstat.txt 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build
+          path: |
+            insurance-dashboard/dry-run-diffstat.txt
+            insurance-dashboard/web/public/data/qa.json
+            insurance-dashboard/data/raw/_meta.json
+          if-no-files-found: ignore
+
+  checks:
+    needs: [probe, build]
+    if: needs.probe.outputs.dry != 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/fox-ci.yml
+    with:
+      ref: ${{ needs.build.outputs.sha }}
+
+  verified:
+    needs: [build, checks]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      statuses: write
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Commit status "fox-ci (fox-data)" on the data commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.build.outputs.sha }}
+        run: |
+          gh api --method POST "repos/${{ github.repository }}/statuses/$SHA" -f state=success -f context="fox-ci (fox-data)" \
+            -f description="fox-ci passed on this commit (workflow_call from fox-data)" -f target_url="$RUN_URL" --jq .state
+
+  deploy:
+    needs: [probe, build, checks, verified]
+    if: needs.probe.outputs.dry != 'true' && vars.FOX_AUTODEPLOY == 'on'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment:
+      name: production
+      url: https://fox-research-il.web.app
+    permissions:
+      contents: write   # fast-forward the deploy branch
+    env:
+      SHA: ${{ needs.build.outputs.sha }}
+      MONTH: ${{ needs.probe.outputs.month }}
+      LABEL: ${{ needs.probe.outputs.label }}
+      FORCE: ${{ inputs.force == true }}
+    outputs:
+      skipped: ${{ steps.ff.outputs.skip }}
+      prev: ${{ steps.prev.outputs.prev }}
+      rolled_back: ${{ steps.rollback.outputs.rolled_back }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: '${{ env.DEPLOY_BRANCH }}', fetch-depth: 0 }
+      - name: Already published, or the branch moved?
+        id: ff
+        run: |
+          git fetch --quiet --no-tags origin "$SHA" "+refs/heads/$DEPLOY_BRANCH:refs/remotes/origin/$DEPLOY_BRANCH"
+          tip=$(git rev-parse "origin/$DEPLOY_BRANCH")
+          if [ "$tip" != "$SHA" ]; then
+            have=$(git show "$tip:insurance-dashboard/web/public/data/funds.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["asof"])')
+            if [ "$have" -ge "$MONTH" ] && [ "$FORCE" != true ]; then
+              echo "::notice::$DEPLOY_BRANCH already has $LABEL (the Mac autopilot or the owner got there first): not deploying from here"
+              echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            git merge-base --is-ancestor "$tip" "$SHA" \
+              || { echo "::error::$DEPLOY_BRANCH moved to ${tip:0:8} since the build (not a fast-forward of ${SHA:0:8}); the next run rebuilds on top"; exit 1; }
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+      - name: Fast-forward the deploy branch to the verified commit
+        if: steps.ff.outputs.skip != 'true'
+        run: |
+          git push origin "$SHA:refs/heads/$DEPLOY_BRANCH"
+          git checkout --quiet "$SHA"
+      - uses: actions/setup-node@v5
+        if: steps.ff.outputs.skip != 'true'
+        with: { node-version: 22, cache: npm, cache-dependency-path: insurance-dashboard/web/package-lock.json }
+      - name: Tools (zsh for deploy.sh, firebase-tools, the app's packages)
+        if: steps.ff.outputs.skip != 'true'
+        run: |
+          sudo apt-get install -y -qq zsh >/dev/null
+          npm install -g --no-audit --no-fund "firebase-tools@$FIREBASE_TOOLS"
+          (cd web && npm ci --no-audit --no-fund)
+      - name: Deploy identity (service account, Firebase Hosting Admin)
+        if: steps.ff.outputs.skip != 'true'
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          [ -n "$SA" ] || { echo "::error::secret FIREBASE_SERVICE_ACCOUNT is missing in environment production"; exit 1; }
+          umask 077
+          printf '%s' "$SA" > "$RUNNER_TEMP/fox-sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/fox-sa.json" >> "$GITHUB_ENV"
+      - name: Record the live version (the rollback point; no rollback point, no deploy)
+        id: prev
+        if: steps.ff.outputs.skip != 'true'
+        run: |
+          firebase hosting:channel:list --project "$SITE" --json > "$RUNNER_TEMP/channels.json"
+          prev=$(python3 pipeline/autopilot/live.py prev --channels "$RUNNER_TEMP/channels.json")
+          echo "live serves version $prev"
+          echo "prev=$prev" >> "$GITHUB_OUTPUT"
+      - name: Deploy (./deploy.sh --ci)
+        if: steps.ff.outputs.skip != 'true'
+        env:
+          CHROME: /usr/bin/google-chrome
+          FOX_CI_SHA: ${{ needs.build.outputs.sha }}
+          FOX_DEPLOY_BRANCH: ${{ env.DEPLOY_BRANCH }}
+        run: ./deploy.sh --ci
+      - name: Verify the live site serves the month and this commit
+        if: steps.ff.outputs.skip != 'true'
+        run: python3 pipeline/autopilot/live.py verify --month "$MONTH"
+      - name: Roll back to the recorded version
+        id: rollback
+        if: failure() && steps.prev.outputs.prev != ''
+        env:
+          PREV: ${{ steps.prev.outputs.prev }}
+        run: |
+          firebase hosting:channel:list --project "$SITE" --json > "$RUNNER_TEMP/now.json" || true
+          now=$(python3 pipeline/autopilot/live.py prev --channels "$RUNNER_TEMP/now.json" || echo unknown)
+          if [ "$now" = "$PREV" ]; then
+            echo "::error::deploy of ${SHA:0:8} failed before it changed the live site (still version $PREV): nothing to roll back"
+            exit 0
+          fi
+          firebase hosting:clone "$SITE@$PREV" "$SITE:live" --project "$SITE"
+          echo "rolled_back=true" >> "$GITHUB_OUTPUT"
+          echo "::error::deploy of ${SHA:0:8} ($LABEL) failed the live check: the site was rolled back to version $PREV. $DEPLOY_BRANCH still carries ${SHA:0:8}; fix, then run fox-data with force (dry_run off) or ./deploy.sh"
+      - name: Remove the key file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/fox-sa.json" "$RUNNER_TEMP/channels.json" "$RUNNER_TEMP/now.json"
+
+  alert:
+    needs: [probe, build, checks, verified, deploy]
+    if: always() && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BODY: |
+            fox-data run failed: ${{ env.RUN_URL }}
+            month: ${{ needs.probe.outputs.label || 'unknown' }} · data commit: ${{ needs.build.outputs.sha || '-' }}
+            jobs: probe ${{ needs.probe.result }} · build ${{ needs.build.result }} · checks (fox-ci) ${{ needs.checks.result }} · verified ${{ needs.verified.result }} · deploy ${{ needs.deploy.result }}
+            rolled back to the previous live version: ${{ needs.deploy.outputs.rolled_back == 'true' && format('yes ({0})', needs.deploy.outputs.prev) || 'no' }}
+            Runbook: insurance-dashboard/docs/AUTOPILOT.md ("When a run fails").
+        run: |
+          title="fox-data: automated data run failed"
+          n=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$n" ]; then gh issue comment "$n" --body "$BODY"; else gh issue create --title "$title" --body "$BODY"; fi

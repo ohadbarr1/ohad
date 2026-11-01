@@ -1,7 +1,9 @@
 # Report-Day autopilot (lane AP, Phase 3 wave 1; on a schedule since lane S4, season-ready wave)
 
 Spec: `research/program_2026-10/README.md` §4 Phase 3 (W7-R1, W3-R1/R4, W5-R4); scheduling, channels, install and budget:
-**`docs/AUTOPILOT.md`**. Nothing here deploys, pushes or commits; publishing is `./deploy.sh` by a human.
+**`docs/AUTOPILOT.md`**. By default nothing here deploys, pushes or commits; publishing is `./deploy.sh` by a human, or
+`.github/workflows/fox-data.yml` in CI. Opt-in: `ops/autopilot.toml [deploy] auto = true` lets a scheduled tick commit, push and run
+`./deploy.sh` after a regulator month lands with the gate green (`publish.py`; off by default).
 
 ```
 tick.py      launchd entry (ops/com.fox.autopilot.plist, every quarter hour) -> schedule.py decides -> run.run(apply, trigger=schedule)
@@ -39,7 +41,7 @@ the debt-ladder lane's `fetch_liabilities.py` reads.
 `ops/autopilot.toml` (the owner's, committed): schedule, `[discovery]` (regulator on; MAYA scheduling off and needing
 `maya_permission_ref`), `[notify]`, `[llm]` (off; `enabled` + `approved_by`; season budget 1,000,000 tokens, per-filing and per-run caps,
 `--max-budget-usd` backstop). `config.json`: token estimates per document type, `push.enabled` (off: the sender below is not built),
-`deploy.auto` (stays false).
+(the deploy switch moved to `ops/autopilot.toml [deploy] auto`, default false).
 
 ## Web Push / FCM: design note (not implemented)
 

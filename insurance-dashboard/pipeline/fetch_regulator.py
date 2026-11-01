@@ -1,9 +1,17 @@
 """Download Gemel-Net, Pensia-Net and Insurance-Net from data.gov.il (Capital Market Authority).
 
-Usage: python3 pipeline/fetch_regulator.py            # all datasets
+Usage: python3 pipeline/fetch_regulator.py                 # all datasets
+       python3 pipeline/fetch_regulator.py --incremental   # reuse cached resources that did not change upstream
 Writes data/raw/<dataset>.parquet (one file per dataset, all years concatenated, raw columns).
+
+Incremental mode (CI: .github/workflows/fox-data.yml; also FOX_REGRAW_CACHE=<dir>, which the DAG passes through): each CSV resource's
+records are cached as <cache>/<resource_id>.json.gz with the resource's last_modified. A resource whose last_modified upstream equals the
+cached one is read from the cache instead of the datastore API (the frozen 1999-2022 and 2023 resources; the 2024-today resource is
+re-stamped daily and is always downloaded). The records are the API's own JSON, so the parquet is identical to a full fetch.
 """
+import gzip
 import json
+import os
 import sys
 import time
 import urllib.parse
@@ -17,6 +25,7 @@ UA = {"User-Agent": "fox-research/1.0 (+https://fox-research-il.web.app; fundame
 RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
 DATASETS = {"gemel": "gemelnet", "pensia": "pensia-net", "insurance": "insurance"}
 PAGE = 30000
+CACHE = os.environ.get("FOX_REGRAW_CACHE")  # incremental mode when set (or --incremental: data/raw/_cache)
 
 
 def get(url, retries=4):
@@ -38,7 +47,7 @@ def resources(package):
     return [r for r in pkg["resources"] if r["format"] == "CSV" and r.get("datastore_active")]
 
 
-def download(resource_id):
+def download_records(resource_id):
     rows, offset = [], 0
     while True:
         q = urllib.parse.urlencode({"resource_id": resource_id, "limit": PAGE, "offset": offset})
@@ -46,7 +55,36 @@ def download(resource_id):
         rows += res["records"]
         offset += PAGE
         if offset >= res["total"]:
-            return pd.DataFrame(rows)
+            return rows
+
+
+def download(resource_id):
+    return pd.DataFrame(download_records(resource_id))
+
+
+def cached_download(r, cache):
+    """The records of resource r: from <cache>/<id>.json.gz when its last_modified is unchanged upstream, else downloaded (and cached).
+    Returns (DataFrame, 'cache' | 'api')."""
+    if not cache:
+        return download(r["id"]), "api"
+    f = Path(cache) / f"{r['id']}.json.gz"
+    mod = r.get("last_modified") or ""
+    if mod and f.exists():
+        try:
+            with gzip.open(f, "rt", encoding="utf-8") as fh:
+                c = json.load(fh)
+            if c.get("modified") == mod:
+                return pd.DataFrame(c["records"]), "cache"
+        except (OSError, ValueError, KeyError):
+            pass  # a damaged cache file is downloaded again
+    rows = download_records(r["id"])
+    if mod:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_suffix(".tmp")
+        with gzip.open(tmp, "wt", encoding="utf-8") as fh:
+            json.dump({"id": r["id"], "modified": mod, "records": rows}, fh, ensure_ascii=False)
+        tmp.replace(f)
+    return pd.DataFrame(rows), "api"
 
 
 TEXT = {"FUND_NAME", "PARENT_COMPANY_NAME", "FUND_CLASSIFICATION", "CONTROLLING_CORPORATION", "MANAGING_CORPORATION",
@@ -68,17 +106,19 @@ def normalise_types(df, key):
     return df
 
 
-def main():
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    cache = CACHE or (str(RAW / "_cache") if "--incremental" in argv else None)
     RAW.mkdir(parents=True, exist_ok=True)
     # what was fetched and when: every figure built from these files names its dataset, resource and fetch date
     meta = {"fetched": pd.Timestamp.today().date().isoformat(), "resources": {}, "packages": DATASETS}
     for key, package in DATASETS.items():
         frames = []
         for r in resources(package):
-            df = download(r["id"])
+            df, via = cached_download(r, cache)
             df["_resource"] = r["name"]
             meta["resources"].setdefault(key, []).append({"id": r["id"], "name": r["name"], "modified": r.get("last_modified")})
-            print(f"{key}: {r['name']}: {len(df):,} rows")
+            print(f"{key}: {r['name']}: {len(df):,} rows" + (f" ({via})" if cache else ""))
             frames.append(df)
         out = pd.concat(frames, ignore_index=True)
         out = normalise_types(out, key)

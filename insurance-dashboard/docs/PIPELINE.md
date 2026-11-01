@@ -136,20 +136,22 @@ artifact. To turn the Linux comparison on (or refresh it after an intended chang
 `gh run download <run-id> -n linux-baselines -D insurance-dashboard/web/tests/__screenshots__/linux` → review → commit.
 
 **Deploy gate** (`deploy.sh`): refuses unless, before anything runs, (1) no tracked file under `insurance-dashboard/` has uncommitted
-changes and no untracked file sits under `web/src` or `web/public`; (2) HEAD is on origin (`git branch -r --contains`); (3) the
-latest `fox-ci` push run for HEAD (`gh run list --commit <sha> --workflow fox-ci --event push`; a hand-run `update_baselines` run
-never counts) is completed and succeeded. `--force-unverified`
+changes and no untracked file sits under `web/src` or `web/public`; (2) HEAD is on origin (`git branch -r --contains`) and **not
+behind** origin's copy of its branch (after `git fetch`: an older checkout would put older data back over what CI or the Mac autopilot
+published; `git pull --ff-only` first); (3) the latest `fox-ci` push run for HEAD (`gh run list --commit <sha> --workflow fox-ci --event push`; a hand-run `update_baselines` run
+never counts) is completed and succeeded, or, for a data commit built by `.github/workflows/fox-data.yml` (fox-ci ran on it through
+`workflow_call`, not on a push), its commit status `fox-ci (fox-data)` is success. `--force-unverified`
 skips the gate with a loud warning (restore service only). `--check-only` runs every check and deploys nothing (gate skipped).
 After the pipeline steps and the data gate, the files they regenerated are committed (`Deploy: commit the data files the deploy
 build regenerated`) before the app is built, so the bundle's commit stamp and the deployed data are that commit; the script prints
 it — push it afterwards so origin matches live. On any exit without a data commit (`--check-only`, a failed check or deploy) the
 regenerated tracked files are restored to HEAD (only when the tree was clean at the start), so the next run still passes the gate. Typical flow: commit → push → wait for green (`gh run watch`) → `./deploy.sh`.
 
-**Optional next step (owner, not implemented): deploy from CI.** Create a Firebase service account with the *Firebase Hosting Admin*
-role (Firebase console → Project settings → Service accounts, or `firebase init hosting:github`), store its JSON as the repository
-secret `FIREBASE_SERVICE_ACCOUNT`. That alone turns on the PR preview channel already in fox-ci. To deploy live from CI, add a job
-that `needs: check`, runs only on pushes to the trunk branch, rebuilds and calls `FirebaseExtended/action-hosting-deploy@v0` with
-`channelId: live`; then deploy.sh becomes the fallback. Protect the trunk branch (required check: `fox-ci / check`) first.
+**Deploy from CI: `.github/workflows/fox-data.yml`** (docs/AUTOPILOT.md). Three times a day it probes data.gov.il; on a new regulator
+month it fetches, rebuilds, gates, commits to `autodata/<yyyymm>`, runs fox-ci on that commit (`workflow_call`) and, with the
+repository variable `FOX_AUTODEPLOY = on`, fast-forwards the deploy branch and runs `./deploy.sh --ci` with the service account of the
+`production` environment, checks the live site and rolls back to the previous Firebase version on failure. `--ci` requires HEAD = the
+verified commit = the tip of origin's deploy branch, skips the DAG and gate (already run on that commit) and commits nothing.
 
 **Cache contract** (`web/firebase.json`, `public/sw.js`, `src/lib/reload.ts`; checked by `web/scripts/hosting-check.mjs`):
 

@@ -3,5 +3,5 @@
  "llm": {"est_tokens": {"solvency": 7000, "presentation": 3500, "quarterly": null, "annual": null, "liabilities": 0},
          "est_basis": "אומדן: README §4/§8 ו-ws5 (דוחות סולבנסי ≈0.5M ל-70 דוחות; מצגות ≈60k לרבעון); מצבת התחייבויות נקראת בקוד (htm), ללא טוקנים"},
  "push": {"enabled": false},
- "deploy": {"auto": false}
+ "_deploy": "the auto-publish switch is ops/autopilot.toml [deploy] auto (default false), read by conf.deploy_on"
 }

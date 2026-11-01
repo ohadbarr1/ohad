@@ -4,7 +4,8 @@
 [repo]
 # the checkout the scheduled job runs in (the owner's local working copy; data/raw etc. are symlinks to the synced drive)
 path = "~/code/ohad/insurance-dashboard"
-# the job runs only while this branch is checked out (empty = any branch); a merge, rebase or held index.lock always skips the tick
+# the job runs only while this branch is checked out (empty = any branch); a merge, rebase or held index.lock always skips the tick.
+# This is the DEPLOY branch: with the owner's checkout on a feature branch every tick simply skips (logged "on branch X"), by design.
 branch = "claude/festive-ramanujan-7f9ihj"
 
 [schedule]
@@ -47,3 +48,16 @@ per_filing_max_usd = 4.0           # hard stop passed to the CLI (--max-budget-u
 max_turns = 40
 model = ""                         # empty = the CLI's default model
 claude_bin = "claude"
+
+[deploy]
+# OPT-IN auto-publish from this Mac (pipeline/autopilot/publish.py; docs/AUTOPILOT.md). OFF. GitHub Actions (.github/workflows/fox-data.yml)
+# is the main path; with this on, the Mac can publish too, and whoever is first wins: the other sees origin ahead and skips.
+# When on, and only on the [repo] branch above with a tree that was clean before the tick:
+#   a regulator month lands and the gate passes -> git fetch; origin ahead (CI first)? pull --ff-only and skip; local commits not on
+#   origin? skip (never pushes your work); else commit the data, push, wait for fox-ci on that commit (later ticks, up to
+#   ci_wait_minutes), then ./deploy.sh (which re-checks everything). macOS notification on success and on failure.
+# It needs, on this Mac: git push rights to origin without a prompt, `gh auth login`, `firebase login`.
+auto = false
+remote = "origin"
+ci_wait_minutes = 120          # give up waiting for fox-ci on the pushed commit after this long (notified)
+deploy_timeout_minutes = 30    # ./deploy.sh is stopped after this long (notified)

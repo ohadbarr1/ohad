@@ -6,9 +6,17 @@ pensia-net, insurance-net) two requests: package_show (the current-years resourc
 REPORT_PERIOD desc, limit 1 (the latest month upstream). When a month is newer than the latest month in market.json, --apply runs the
 existing fetcher and builders through the DAG: fetch_regulator -> build_market, build_funds (manual steps, run on purpose) -> the
 deploy group with its stale upstream (automatic). A revision of an old month (last_modified moves daily) is reported, not fetched.
+
+CLI (the probe job of .github/workflows/fox-data.yml; also handy by hand, read-only, 6 requests):
+    python3 pipeline/autopilot/regulator.py [--json PATH] [--github-output PATH] [--retries 3]
+prints one line per dataset; --github-output appends new=, month=, label=, fox=, frozen_key= for the workflow. Exit 1 when a dataset could
+not be probed after the retries (an unknown month is never "nothing new": the run fails loudly instead).
 """
+import argparse
+import hashlib
 import json
 import os
+import sys
 import time
 import urllib.parse
 import urllib.request
@@ -72,7 +80,9 @@ def probe(http, data_dir, log=print):
             res = current_resource(pkg)
             if not res:
                 raise ValueError("no live CSV resource")
-            row.update(resource=res["id"], last_modified=(res.get("last_modified") or "")[:19])
+            row.update(resource=res["id"], last_modified=(res.get("last_modified") or "")[:19],
+                       resources=[{"id": r["id"], "name": r.get("name"), "last_modified": r.get("last_modified")}
+                                  for r in pkg.get("resources", []) if r.get("format") == "CSV" and r.get("datastore_active")])
             q = urllib.parse.urlencode({"resource_id": res["id"], "limit": 1, "fields": "REPORT_PERIOD", "sort": "REPORT_PERIOD desc"})
             recs = http.get_json(f"{API}/datastore_search?{q}")["result"]["records"]
             row["upstream"] = int(recs[0]["REPORT_PERIOD"]) if recs else None
@@ -90,3 +100,51 @@ def month_label(m):
     """202609 -> 09/26 (the regulator-month grammar)."""
     s = str(m)
     return f"{s[4:6]}/{s[2:4]}" if len(s) == 6 else s
+
+
+def frozen_key(res):
+    """A short hash of every CSV resource except each dataset's current one (id + last_modified): the actions/cache key of the
+    resources fetch_regulator.py --incremental can reuse. It changes only when the regulator re-issues a frozen resource."""
+    parts = sorted(f"{r['id']}@{r.get('last_modified') or ''}" for d in res["datasets"] for r in d.get("resources", [])
+                   if r["id"] != d.get("resource"))
+    return hashlib.sha1("\n".join(parts).encode()).hexdigest()[:16] if parts else "none"
+
+
+def outputs(res):
+    """The workflow outputs: new (true/false), month (latest upstream yyyymm), label (09/26), fox (latest month fox has), frozen_key."""
+    up = [d["upstream"] for d in res["datasets"] if d.get("upstream")]
+    fx = [d["fox"] for d in res["datasets"] if d.get("fox")]
+    m = max(up) if up else ""
+    return {"new": "true" if res["new"] else "false", "month": str(m), "label": month_label(m) if m else "",
+            "fox": str(max(fx)) if fx else "", "frozen_key": frozen_key(res), "errors": str(len(res["errors"]))}
+
+
+def main(argv=None, http=None, sleep=time.sleep):
+    ap = argparse.ArgumentParser(description="data.gov.il probe: is there a regulator month fox does not have?")
+    ap.add_argument("--data", default=str(Path(__file__).resolve().parents[2] / "web" / "public" / "data"))
+    ap.add_argument("--json", help="write the probe result here")
+    ap.add_argument("--github-output", help="append key=value lines (GitHub Actions $GITHUB_OUTPUT)")
+    ap.add_argument("--retries", type=int, default=3, help="probe again (30 s apart) while a dataset errors")
+    a = ap.parse_args(argv)
+    http = http or Http()
+    for i in range(max(1, a.retries)):
+        res = probe(http, a.data)
+        if not res["errors"]:
+            break
+        if i < a.retries - 1:
+            print(f"probe errors ({', '.join(e['id'] for e in res['errors'])}); again in 30 s", file=sys.stderr)
+            sleep(30)
+    out = outputs(res)
+    if a.json:
+        Path(a.json).write_text(json.dumps({**res, "outputs": out}, ensure_ascii=False, indent=1), encoding="utf-8")
+    if a.github_output:
+        with open(a.github_output, "a", encoding="utf-8") as fh:
+            fh.writelines(f"{k}={v}\n" for k, v in out.items())
+    print(" ".join(f"{k}={v}" for k, v in out.items()))
+    for e in res["errors"]:
+        print(f"ERROR {e['id']}: {e['error']}", file=sys.stderr)
+    return 1 if res["errors"] else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

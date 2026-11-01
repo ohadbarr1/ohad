@@ -20,6 +20,8 @@ DEFAULTS = {
     "llm": {"enabled": False, "approved_by": "", "approved_on": "", "season": "", "season_budget_tokens": 1_000_000,
             "per_filing_tokens": 120_000, "per_run_tokens": 300_000, "per_filing_max_usd": 4.0, "max_turns": 40, "model": "",
             "claude_bin": "claude"},
+    # opt-in auto-publish on the Mac (publish.py): off unless the owner sets auto = true; it acts only on the [repo] branch
+    "deploy": {"auto": False, "remote": "origin", "ci_wait_minutes": 120, "deploy_timeout_minutes": 30},
 }
 
 
@@ -90,3 +92,9 @@ def maya_scheduled(cfg):
 def llm_on(cfg):
     llm = cfg.get("llm", {})
     return bool(llm.get("enabled")) and bool(str(llm.get("approved_by") or "").strip()) and int(llm.get("season_budget_tokens") or 0) > 0
+
+
+def deploy_on(cfg):
+    """The Mac may commit, push and run ./deploy.sh only with [deploy] auto = true AND a [repo] branch named (the deploy branch): a
+    checkout of any other branch skips every tick (tick.guard), so a feature branch is never published."""
+    return bool((cfg.get("deploy") or {}).get("auto")) and bool(str((cfg.get("repo") or {}).get("branch") or "").strip())
