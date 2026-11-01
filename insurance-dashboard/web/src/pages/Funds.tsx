@@ -21,6 +21,7 @@ import { DataTable, type Column } from '../components/DataTable';
 import '../styles/market.css';
 import '../styles/prov-market.css';
 import { load, useFundCats, useFundHist, useFunds, useRegistry, type Fund, type FundCats, type FundHist } from '../lib/useData';
+import { SaverFold, SaverVerdict } from '../components/saver';  // W1-saver
 
 const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 type Per = 'm1' | 'ytd' | 'y12' | 'a3' | 'a5';
@@ -385,6 +386,8 @@ export function FundCard() {
         <CompareAdd k={f.k} name={f.name} /><WatchStar f={fx} asof={asof} /></div></div></div>
       <Toolbar lead={<FundsNav />}><BasisToggle /></Toolbar>
       <CompareTray />
+      <SaverVerdict f={fx} data={data as FundsFile} />
+      <SaverFold>
       <section className="kpis">
         <Kpi label={<>5Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a5'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('a5') ? <RK k="a5" /> : ' '} />
         <Kpi label={<>3Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a3'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('a3') ? <RK k="a3" /> : ' '} />
@@ -481,6 +484,7 @@ export function FundCard() {
           </section>
         </Panel>
       )}
+      </SaverFold>
     </>
   );
 }
