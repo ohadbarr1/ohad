@@ -16,19 +16,19 @@ import { titleFor } from '../lib/title';
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 
-// The five places, the same on the rail and the phone's bottom bar: [route, icon, label, label on the phone (the same word, shortened),
+// The six places, the same on the rail and the phone's bottom bar (חיסכון joined in F1: the funds section left the evidence group): [route, icon, label, label on the phone (the same word, shortened),
 // other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
 const NAV: [string, string, string, string, string[]][] = [
   ['/', 'home', 'בית', 'בית', ['/company/']],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
+  // the long-term savings section: the funds hub, the tracks, compare, the lens, the managers and their holdings (and the old /market links)
+  ['/funds', 'market', 'חיסכון', 'חיסכון', ['/savings', '/managers', '/holdings', '/market']],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', []],
   ['/warroom', 'warroom', 'חדר מלחמה', 'חדר מלחמה', ['/capital', '/consolidation', '/fragility']],
   ['/positions', 'positions', 'עמדות', 'עמדות', []],
 ];
 /** the evidence layer under the four places: on the desktop rail only (the phone reaches it from the home hub and from search) */
 const EVIDENCE: [string, string, string, string[]][] = [
-  // the long-term savings section: the lens, the tracks, the managers and their holdings (and the old /market links)
-  ['/savings', 'market', 'חיסכון ארוך טווח', ['/funds', '/managers', '/holdings', '/market']],
   ['/industry', 'compare', 'השוואה ענפית', []],
   ['/valuation', 'value', 'שווי', []],
 ];

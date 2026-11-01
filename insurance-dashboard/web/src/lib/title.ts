@@ -23,9 +23,10 @@ export function titleFor(path: string, name: (id: string) => string | null | und
       return t(name(p[1]) ?? p[1], COMPANY_TAB[p[2] ?? '']);
     }
     case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'השוואה ענפית') : null;
-    case 'savings': return p[1] ? null : t('עדשת חיסכון', 'חיסכון ארוך טווח');
-    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון ארוך טווח') : p[1] ? t('מסלול', 'חיסכון ארוך טווח') : t('מסלולים', 'חיסכון ארוך טווח');
-    case 'managers': return t('דירוג מנהלים', 'חיסכון ארוך טווח');
+    case 'savings': return p[1] ? null : t('עדשת חיסכון', 'חיסכון');
+    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון') : p[1] === 'screen' ? t('מסלולים', 'חיסכון') : p[1] === 'compare' ? t('השוואת מסלולים', 'חיסכון')
+      : p[1] === 'holdings' ? t('הרכב נכסים', 'חיסכון') : p[1] ? (p[2] ? null : t('מסלול', 'חיסכון')) : t('החודש בקופות', 'חיסכון');
+    case 'managers': return t('דירוג מנהלים', 'חיסכון');
     case 'calendar': return t('לוח דיווחים');
     case 'book': return t('ספר הגרפים');
     case 'data': return p[1] === 'autopilot' && !p[2] ? t('טייס אוטומטי', 'נתונים ואיכות') : p[1] ? null : t('נתונים ואיכות');
@@ -50,7 +51,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'debt': return p[1] ? (name(p[1]) === null || p[2] ? null : t(name(p[1]) ?? p[1], 'חוב ופירעונות')) : t('חוב ופירעונות');
     case 'facts': return p[1] && !p[2] && name(p[1]) !== null ? t('עובדות', name(p[1]) ?? p[1]) : null;
     case 'ownership': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'בעלות')) : t('בעלות');  // lane OW
-    case 'holdings': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'הרכב נכסים')) : t('הרכב נכסים');  // lane AL
+    case 'holdings': return p[1] ? (p[2] || name(p[1]) === null ? null : t(name(p[1]) ?? p[1], 'הרכב נכסים')) : t('הרכב נכסים', 'חיסכון');  // lane AL
     case 'doc': return p[1] ? t('קורא מסמכים') : null;
     case 'card': return p[1] && p[2] && !p[3] && name(p[1]) !== null ? t('כרטיס דוח', name(p[1]) ?? p[1], p[2].endsWith('FY') ? `FY'${p[2].slice(2, 4)}` : `${p[2].slice(4)}'${p[2].slice(2, 4)}`) : null;  // lane S2
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;

@@ -6,7 +6,8 @@ import { Chart } from '../components/Chart';
 import { DataTable, type Column } from '../components/DataTable';
 import { Sheet } from '../components/Sheet';
 import { Sourced } from '../components/Source';
-import { Empty, ErrorBox, Loading, Seg } from '../components/ui';
+import { Empty, ErrorBox, Loading, Seg, Toolbar } from '../components/ui';
+import { CompareTray, FundsNav } from '../components/FundsNav';
 import { foxOption } from '../lib/foxchart';
 import { nf, pubLabel } from '../lib/format';
 import { idColor, idCss } from '../lib/identity';
@@ -76,6 +77,8 @@ function AssetsIndexPage({ idx }: { idx: AssetsIndex }) {
           </div>
         </div>
       </div>
+      <Toolbar lead={<FundsNav />}>{null}</Toolbar>
+      <CompareTray />
 
       <section className="panel">
         <div className="hd"><h2>הרכב לפי מנהל <span className="ast-h2s">{idx.asof_label}</span></h2><div className="aside">% מהנכסים (ללא יתרות שליליות) · לחצו על מנהל לפירוט</div></div>

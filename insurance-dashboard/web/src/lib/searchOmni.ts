@@ -193,7 +193,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     let n = 0;
     for (const f of pool.funds) {
       const s = wordScore(f.words, words);
-      if (s) { out.push({ kind: 'קופה', label: f.label, meta: f.grp, to: `/funds?q=${encodeURIComponent(f.label)}`, score: 55 + s - f.label.length / 200 }); if (++n > 60) break; }
+      if (s) { out.push({ kind: 'קופה', label: f.label, meta: f.grp, to: `/funds/screen?q=${encodeURIComponent(f.label)}`, score: 55 + s - f.label.length / 200 }); if (++n > 60) break; }
     }
   }
   // statement lines: the words left after the company, within that company when one was named

@@ -1,7 +1,10 @@
 import { foxOption } from '../lib/foxchart';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
-import { FundsHead, FundsNav } from '../components/FundsNav';
+import { BasisToggle, CompareAdd, CompareTray, FundsHead, FundsNav } from '../components/FundsNav';
+import { Tip } from '../components/Explain';
+import { useMacro } from '../lib/macro';
+import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, famOf, hasNet, netMonthIn, netProv, netSeries, outlierProv, realProv, toReal, useBasis, useReal, winRet, selfDirected, type FundX, type FundsFile } from '../lib/funds';
 import { MgrChip } from '../components/MgrChip';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
@@ -223,7 +226,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
             <tbody>
               {groups.map((g) => (
                 <tr key={g.tr}>
-                  <td><Link className="name" to={`/funds?prod=${encodeURIComponent(prod)}&track=${encodeURIComponent(g.tr)}`}>{g.tr}</Link> <span className="muted num">{g.n}</span></td>
+                  <td><Link className="name" to={`/funds/screen?prod=${encodeURIComponent(prod)}&track=${encodeURIComponent(g.tr)}`}>{g.tr}</Link> <span className="muted num">{g.n}</span></td>
                   {makers.names.map((n) => { const x = makers.cell(g, n); const q4 = x && g.n >= 4 ? (x.rank! <= Math.ceil(g.n / 4) ? 'pos' : x.rank! > g.n - Math.floor(g.n / 4) ? 'neg' : '') : '';
                     return <td key={n} className={`${n === maker ? 'on' : ''} ${q4 ? 'q-' + q4 : ''}`}>{x ? <Sourced className="num" href={`/funds/${x.f.k}`} title={`${x.f.name} · ${pct(x.f[per]!, 1, true)} · מקום ${x.rank} מתוך ${g.n}`} src={() => rankSrc(x.f, per, asof, x.rank!, g.n)}>{x.rank}</Sourced> : <span className="muted">·</span>}</td>; })}
                 </tr>
@@ -307,8 +310,13 @@ export function FundCard() {
   const h = hist.data;
   const cat = f && cats ? cats[catKey(f)] : undefined;
   const company = useRegistry().data?.find((c) => f && c.market_group === f.grp);
+  const [basisAsked] = useBasis();
+  const [real] = useReal();
+  const cpi = useMacro().data?.series.cpi;
+  const netOk = useMemo(() => hasNet((data?.funds ?? []) as FundX[]), [data]);
+  const spread = useMemo(() => equitySpread(((data?.funds ?? []) as FundX[]).filter((x) => !x.closed && x.assets)), [data]);
   // ranked against the tracks open to everyone, as in the table
-  const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed) && x.assets !== 0) : []), [data, f]);
+  const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed) && x.assets !== 0 && !selfDirected(x)) : []), [data, f]);
   const years = useMemo(() => {
     if (!h) return [];
     const by = (s: { p: number[]; y: (number | null)[] }) => { const m = new Map<number, { r: number[]; p: number[] }>(); s.p.forEach((p, i) => { const r = s.y[i], y = Math.floor(p / 100); if (r != null) { const e = m.get(y) ?? { r: [], p: [] }; e.r.push(r); e.p.push(p); m.set(y, e); } }); return m; };
@@ -317,18 +325,37 @@ export function FundCard() {
     return [...mine.keys()].sort((a, b) => b - a).map((y) => ({ y, n: mine.get(y)!.r.length, ps: mine.get(y)!.p, cps: theirs.get(y)?.p ?? [], me: comp(mine.get(y)?.r), cat: theirs.get(y)?.r.length === mine.get(y)!.r.length ? comp(theirs.get(y)?.r) : null }));
   }, [h, cat]);
 
-  if (!valid) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds">לכל המסלולים</Link></Empty>;
+  if (!valid) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds/screen">לכל המסלולים</Link></Empty>;
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data || (!h && !hist.error)) return <Loading what="מסלול" />;
-  if (!f || !h) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds">לכל המסלולים</Link></Empty>;
+  if (!f || !h) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds/screen">לכל המסלולים</Link></Empty>;
   const n = win === 'max' ? h.p.length - 1 : Math.min(Number(win), h.p.length - 1);
   const axis = h.p.slice(-(n + 1));
   const s = stats(h.y, n), cs = cat ? stats(cat.y.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), n) : null;
   seedHist(ref(f), h);
-  const asof = data.asof, R0 = ref(f);
-  const rankOf = (key: Per) => { const r = peers.filter((x) => x[key] != null).sort((a, b) => b[key]! - a[key]!); const i = r.findIndex((x) => x.k === f.k); return i < 0 ? null : `${i + 1} מתוך ${r.length}`; };
+  const asof = data.asof, R0 = ref(f), fx = f as FundX;
+  // net of fee: the build's net figures when the file has them, else the track's own history (gross minus each month's fee ÷ 12)
+  const net = basisAsked === 'net', ns = net ? netSeries(h) : null, yB = ns ? ns.y : h.y;
+  const rankNet = net && netOk;
+  const pv = (x: Fund, key: Per) => (rankNet ? (x as FundX).net?.[key] ?? null : x[key]);
+  const rankOf = (key: Per) => { const r = peers.filter((x) => pv(x, key) != null).sort((a, b) => pv(b, key)! - pv(a, key)!); const i = r.findIndex((x) => x.k === f.k); return i < 0 ? null : `${i + 1} מתוך ${r.length}`; };
   /** "מקום 3 מתוך 40" as a figure that opens its calculation */
-  const RK = ({ k }: { k: Per }) => { const t = rankOf(k); if (!t) return <>{' '}</>; const [a, b] = t.split(' מתוך ').map(Number); return <>מקום <Sourced src={() => rankSrc(f, k, asof, a, b)}>{t}</Sourced></>; };
+  const RK = ({ k }: { k: Per }) => { const t = rankOf(k); if (!t) return <>{' '}</>; const [a, b] = t.split(' מתוך ').map(Number); return <>מקום <Sourced src={() => (rankNet ? { ...rankSrc(f, k, asof, a, b), title: `מקום לפי ${PER_LABEL[k]}, ${NET_LABEL} · ${f.name}`, inputs: [{ label: `${PER_LABEL[k]}, ${NET_LABEL}`, v: pc(pv(f, k)), src: () => netProv(fx, k, asof, pv(f, k)) }, { label: 'מסלולים מדורגים', v: nf(b, 0) }] } : rankSrc(f, k, asof, a, b))}>{t}</Sourced>{net && !rankNet ? ' (ברוטו)' : ''}</>; };
+  /** a window on the chosen basis: published, or built from the monthly series; real when asked */
+  const KV = (per: Per): { v: number | null; src: () => Prov } => {
+    let nom: number | null, nomSrc: () => Prov;
+    if (!net) { nom = f[per]; nomSrc = () => perSrc(f, per, asof); }
+    else if (fx.net?.[per] != null) { nom = fx.net[per]!; nomSrc = () => netProv(fx, per, asof, nom); }
+    else { nom = winRet(h, yB, per, asof); const ms = monthsBack(asof, per === 'm1' ? 1 : per === 'ytd' ? asof % 100 : per === 'y12' ? 12 : per === 'a3' ? 36 : 60);
+      nomSrc = () => ({ k: 'calc', est: true, title: `${PER_LABEL[per]}, ${NET_LABEL} · ${f.name}`, value: pc(nom), formula: `${per === 'a3' || per === 'a5' ? 'שנתי: ' : ''}ריבית דריבית על התשואות החודשיות נטו של החלון`, note: NET_NOTE, inputs: ms.map((p) => netMonthIn(R0, h, p, ns!)) }); }
+    if (!real) return { v: nom, src: nomSrc };
+    const pub = (net ? fx.realn : fx.real)?.[per];
+    if (pub != null) return { v: pub, src: () => realProv(fx, per, net ? 'net' : 'gross', asof, cpi, (data as FundsFile).real_method) };
+    const v = toReal(nom, per, asof, cpi);
+    return { v, src: () => ({ k: 'calc', est: net, title: `${PER_LABEL[per]}, ריאלי${net ? ', נטו' : ''} · ${f.name}`, value: pc(v), formula: 'התשואה הנומינלית מנוכה במדד המחירים לצרכן של חודשי החלון (שינוי חודשי, הלמ"ס)', inputs: [{ label: 'נומינלי', v: pc(nom), src: nomSrc }] }) };
+  };
+  const out = equityOutlier(fx, spread);
+  const basisLbl = real ? `ריאלי${net ? ', נטו' : ''}` : net ? NET_LABEL : 'ברוטו';
   const SRC = (src: () => Prov, child: React.ReactNode) => <Sourced src={src}>{child}</Sourced>;
   const catYear = (r: (typeof years)[number]): Prov => catSrc(`תשואה ${r.y}, ממוצע ${f.track}`, { p: r.cps, y: r.cps.map((p) => cat!.y[cat!.p.indexOf(p)]), n: r.cps.map((p) => cat!.n[cat!.p.indexOf(p)]) }, r.cps.length, pc(r.cat));
   const catRows = cat ? { p: cat.p.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), y: cat.y.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), n: cat.n.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1) } : null;
@@ -340,29 +367,39 @@ export function FundCard() {
     inputs: [{ label: 'שפל', v: x ? ym(x.trough) : '–' }, { label: 'חודשים להתאוששות', v: x?.rec == null ? 'טרם' : nf(x.rec, 0) }, ...(x ? x.months.map((p) => own ? monthIn(R0, 'y', p, h.y[h.p.indexOf(p)]) : { label: `ממוצע הקטגוריה · ${ym(p)}`, v: cat && cat.p.includes(p) ? sn(cat.y[cat.p.indexOf(p)], 2) + '%' : '–' }) : [])] });
   const expo = (k: keyof typeof EXP, v: number | null | undefined) => (v == null ? '–' : <Sourced src={() => expSrc(f, asof, k)}>{`${nf(v, 0)}%`}</Sourced>);
   const last = <T,>(xs: T[]) => xs.slice(-121);
-  const net = h.dep ? [h.dep, h.wd!, h.tr!].reduce((t, xs, i) => t + (i === 1 ? -1 : 1) * xs.slice(-12).reduce((u: number, x) => u + (x ?? 0), 0), 0) : 0;
+  const netFlow = h.dep ? [h.dep, h.wd!, h.tr!].reduce((t, xs, i) => t + (i === 1 ? -1 : 1) * xs.slice(-12).reduce((u: number, x) => u + (x ?? 0), 0), 0) : 0;
   const flow12 = (c: 'dep' | 'wd' | 'tr', l: string, shown: number): Prov => c === 'tr' ? flowP(R0, h.p[h.p.length - 1], 'tr', nf(shown, 0))
     : { k: 'calc', title: `${l}, LTM · ${f.name}`, value: nf(shown, 0), unit: 'מיליוני ש"ח', formula: `סכום ${c === 'dep' ? 'DEPOSITS' : 'WITHDRAWLS'} על 12 החודשים האחרונים`, inputs: monthsBack(h.p[h.p.length - 1], 12).map((p) => monthIn(R0, c, p)) };
 
   return (
     <>
-      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span></div></div></div>
-      <FundsNav />
+      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds/screen?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span>
+        <span className="chip" title={FAM_F}>{FAM_LABEL[famOf(f.track)]}</span>
+        {fx.tx?.src === 'tb' && (fx.tx.spec || fx.tx.type) && <span className={`chip${fx.tx.dis ? ' est' : ''}`} title={`${fx.tx.dis ? 'הסיווג הרשמי שונה מהסיווג לפי שם המסלול. ' : ''}הסיווג ברשות (transfer_bank): ${[fx.tx.type, fx.tx.spec, fx.tx.sub].filter(Boolean).join(' · ')}`}>סיווג רשמי: {[...new Set([fx.tx.spec, fx.tx.sub].filter(Boolean))].join(' · ') || fx.tx.type}</span>}
+        {out && <Sourced className="chip est" src={() => outlierProv(fx, out, () => expSrc(f, asof, 'st'))} title="החשיפה למניות רחוקה מהחציון בקטגוריה">{out.z > 0 ? 'מניות מעל הקטגוריה' : 'מניות מתחת לקטגוריה'}</Sourced>}<Tip k="outlier" />
+        <CompareAdd k={f.k} name={f.name} /></div></div></div>
+      <Toolbar lead={<FundsNav />}><BasisToggle /></Toolbar>
+      <CompareTray />
       <section className="kpis">
-        <Kpi label="LTM" value={f.y12 == null ? '–' : SRC(() => perSrc(f, 'y12', asof), pct(f.y12, 1, true))}  sub={rankOf('y12') ? <RK k="y12" /> : ' '} />
-        <Kpi label="3Y, שנתי" value={f.a3 == null ? '–' : SRC(() => perSrc(f, 'a3', asof), pct(f.a3, 1, true))} sub={rankOf('a3') ? <RK k="a3" /> : ' '} />
-        <Kpi label="5Y, שנתי" value={f.a5 == null ? '–' : SRC(() => perSrc(f, 'a5', asof), pct(f.a5, 1, true))} sub={rankOf('a5') ? <RK k="a5" /> : ' '} />
-        <Kpi label="YTD" value={f.ytd == null ? '–' : SRC(() => perSrc(f, 'ytd', asof), pct(f.ytd, 1, true))} sub={rankOf('ytd') ? <RK k="ytd" /> : ' '} />
-        <Kpi label="דמי ניהול מצבירה" value={f.fee == null ? '–' : SRC(() => plain(f, asof, 'fee'), `${nf(f.fee, 2)}%`)} sub={f.depfee != null ? <>מהפקדה {SRC(() => plain(f, asof, 'depfee'), `${nf(f.depfee!, 2)}%`)}</> : ' '} />
+        <Kpi label={<>LTM <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('y12'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()}  sub={rankOf('y12') ? <RK k="y12" /> : ' '} />
+        <Kpi label={<>3Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a3'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('a3') ? <RK k="a3" /> : ' '} />
+        <Kpi label={<>5Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a5'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('a5') ? <RK k="a5" /> : ' '} />
+        <Kpi label={<>YTD <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('ytd'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('ytd') ? <RK k="ytd" /> : ' '} />
+        <Kpi label={<>דמי ניהול מצבירה <Tip k="fee" /></>} value={f.fee == null ? '–' : SRC(() => plain(f, asof, 'fee'), `${nf(f.fee, 2)}%`)} sub={f.depfee != null ? <>מהפקדה {SRC(() => plain(f, asof, 'depfee'), `${nf(f.depfee!, 2)}%`)}</> : ' '} />
         <Kpi label="נכסים" value={f.assets == null ? '–' : SRC(() => plain(f, asof, 'assets'), nf(f.assets, 0))} sub={'מיליוני ש"ח'} />
-        <Kpi label="שארפ" value={f.sharpe == null ? '–' : SRC(() => plain(f, asof, 'sharpe'), nf(f.sharpe, 2))} sub={f.yrs ? <>רבע עליון ב-{SRC(() => topSrc(f), `${f.top} מתוך ${f.yrs}`)} שנים</> : f.sd != null ? <>סטיית תקן {SRC(() => plain(f, asof, 'sd'), nf(f.sd!, 2))}</> : ' '} />
-        <Kpi label="חשיפה למניות" value={expo('st', f.st)} sub={f.fo != null ? <>חו"ל {expo('fo', f.fo)} · מט"ח {expo('fx', f.fx)}</> : ' '} />
+        <Kpi label={<>שארפ <Tip k="sharpe" /></>} value={f.sharpe == null ? '–' : SRC(() => plain(f, asof, 'sharpe'), nf(f.sharpe, 2))} sub={f.yrs ? <>רבע עליון ב-{SRC(() => topSrc(f), `${f.top} מתוך ${f.yrs}`)} שנים</> : f.sd != null ? <>סטיית תקן {SRC(() => plain(f, asof, 'sd'), nf(f.sd!, 2))}</> : ' '} />
+        <Kpi label={<>חשיפה למניות <Tip k="equity" /></>} value={expo('st', f.st)} sub={f.fo != null ? <>חו"ל {expo('fo', f.fo)} · מט"ח {expo('fx', f.fx)}</> : ' '} />
       </section>
 
       <div className="grid21">
-        <Panel title="תשואה מצטברת, בסיס 100" aside={<Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} />}>
-          <Growth periods={axis} deps={[k, win, h.p.length, !!cat]} lines={[{ name: f.name, data: rebased(axis, h) }, ...(cat ? [{ name: `ממוצע ${f.track}`, data: rebased(axis, cat), dash: true }] : [])]}
-            onPoint={(si, di) => { if (di < 1) return; const v = rebased(axis, si === 0 ? h : cat!)[di]; if (v != null) open(si === 0 ? idxSrc(f.name, axis, di, v, R0) : idxSrc(`ממוצע ${f.track}`, axis, di, v, undefined, cat!)); }} />
+        <Panel title={<>תשואה מצטברת, בסיס 100 <Tip k={net ? 'net' : 'growth'} /></>} aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} />{net && <span className="chip est">{NET_LABEL}</span>}</>}>
+          <Growth periods={axis} deps={[k, win, h.p.length, !!cat, net]} lines={net
+            ? [{ name: `${f.name} · נטו`, data: rebased(axis, { p: h.p, y: yB }) }, { name: `${f.name} · ברוטו`, data: rebased(axis, h), dash: true }]
+            : [{ name: f.name, data: rebased(axis, h) }, ...(cat ? [{ name: `ממוצע ${f.track}`, data: rebased(axis, cat), dash: true }] : [])]}
+            onPoint={(si, di) => { if (di < 1) return;
+              if (net && si === 0) { const v = rebased(axis, { p: h.p, y: yB })[di]; if (v != null) open({ k: 'calc', est: true, title: `תשואה מצטברת נטו, בסיס 100 · ${f.name} · ${ym(axis[di])}`, value: nf(v, 1), formula: `100 × (1 + r₁) × … × (1 + rₙ) על התשואות החודשיות נטו מ-${ym(axis[1])} עד ${ym(axis[di])}`, note: NET_NOTE, inputs: axis.slice(1, di + 1).map((p) => netMonthIn(R0, h, p, ns!)) }); return; }
+              const gross = net ? si === 1 : si === 0; const v = rebased(axis, gross ? h : cat!)[di]; if (v != null) open(gross ? idxSrc(f.name, axis, di, v, R0) : idxSrc(`ממוצע ${f.track}`, axis, di, v, undefined, cat!)); }} />
+          {net && <div className="fnote">קו מלא: נטו, אומדן (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12{ns && !ns.pub && ns.filled > 0 ? `; ב-${ns.filled} חודשים בלי דמי ניהול שפורסמו נלקחו האחרונים שלפניהם` : ''}). מקווקו: ברוטו. הפער ביניהם הוא דמי הניהול. הטבלאות למטה: ברוטו, כפי שפורסם.</div>}
           <div className="scroll"><table>
             <thead><tr><th>{ym(axis[0])} עד {ym(axis[axis.length - 1])} <span className="chip est">נגזר</span></th><th>תשואה</th><th>שנתי</th><th>תנודתיות, שנתי</th><th>ירידה מרבית</th><th>חודש טוב</th><th>חודש גרוע</th></tr></thead>
             <tbody>
@@ -432,8 +469,8 @@ export function FundCard() {
         <Panel title="תזרים, LTM" aside={<span>מיליוני ש"ח</span>}>
           <section className="kpis" style={{ border: 0, boxShadow: 'none', background: 'none' }}>
             {([['הפקדות', h.dep, 'dep'], ['משיכות', h.wd!, 'wd'], ['העברות נטו', h.tr!, 'tr']] as const).map(([l, xs, c]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0); return <Kpi key={l} label={l} value={SRC(() => flow12(c, l, l === 'משיכות' ? -v : v), nf(l === 'משיכות' ? -v : v, 0))} tone={l === 'העברות נטו' ? (v < 0 ? 'neg' : 'pos') : undefined} />; })}
-            <Kpi label="צבירה נטו" value={SRC(() => ({ k: 'calc', title: `צבירה נטו, LTM · ${f.name}`, value: nf(net, 0), unit: 'מיליוני ש"ח', formula: 'הפקדות פחות משיכות ועוד העברות נטו, 12 החודשים האחרונים',
-              inputs: ([['הפקדות', 'dep', h.dep!], ['משיכות', 'wd', h.wd!], ['העברות נטו', 'tr', h.tr!]] as const).map(([l, c, xs]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0), shown = c === 'wd' ? -v : v; return { label: l, v: nf(shown, 0), src: () => flow12(c, l, shown) }; }) }), nf(net, 0))} />
+            <Kpi label="צבירה נטו" value={SRC(() => ({ k: 'calc', title: `צבירה נטו, LTM · ${f.name}`, value: nf(netFlow, 0), unit: 'מיליוני ש"ח', formula: 'הפקדות פחות משיכות ועוד העברות נטו, 12 החודשים האחרונים',
+              inputs: ([['הפקדות', 'dep', h.dep!], ['משיכות', 'wd', h.wd!], ['העברות נטו', 'tr', h.tr!]] as const).map(([l, c, xs]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0), shown = c === 'wd' ? -v : v; return { label: l, v: nf(shown, 0), src: () => flow12(c, l, shown) }; }) }), nf(netFlow, 0))} />
           </section>
         </Panel>
       )}

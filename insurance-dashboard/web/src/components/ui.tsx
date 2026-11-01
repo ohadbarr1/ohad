@@ -24,7 +24,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   return <label className="field"><span>{label}</span>{children}</label>;
 }
 
-export function Kpi({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: 'pos' | 'neg' }) {
+export function Kpi({ label, value, sub, tone }: { label: ReactNode; value: ReactNode; sub?: ReactNode; tone?: 'pos' | 'neg' }) {
   return (
     <div className="kpi">
       <div className="l">{label}</div>

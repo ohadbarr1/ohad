@@ -42,7 +42,12 @@ const Reader = page(mReader, 'Reader');
 const mFunds = () => import('./pages/Funds');
 const FundCard = page(mFunds, 'FundCard');
 const FundMakers = page(mFunds, 'FundMakers');
-const Funds = page(mFunds, 'Funds');
+const mFundsHub = () => import('./pages/FundsHub');  // F1: the "חיסכון" section's front door
+const FundsHub = page(mFundsHub, 'FundsHub');
+const mFundsScreen = () => import('./pages/FundsScreen');
+const FundsScreen = page(mFundsScreen, 'FundsScreen');
+const mFundsCompare = () => import('./pages/FundsCompare');
+const FundsCompare = page(mFundsCompare, 'FundsCompare');
 const mValuation = () => import('./pages/Valuation');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
@@ -107,11 +112,19 @@ const NotFound = page(mNotFound, 'NotFound');
 function LensRedirect({ to, view }: { to?: 'funds'; view?: string }) {
   const loc = useLocation(), { name } = useParams();
   const q = new URLSearchParams(loc.search);
-  if (to === 'funds') return <Navigate to={`/funds${loc.search}`} replace />;
+  if (to === 'funds') return <Navigate to={`/funds/screen${loc.search}`} replace />;
   if (view) q.set('v', view);
   if (name) q.set('g', name);
   const qs = q.toString();
   return <Navigate to={`/savings${qs ? '?' + qs : ''}`} replace />;
+}
+/** /funds is the hub now: an old table link (?prod= &track= &q= &per= …) opens the screener with its pickers; ?sel= (the old compare) opens compare */
+function FundsRoot() {
+  const loc = useLocation(), q = new URLSearchParams(loc.search);
+  const sel = q.get('sel');
+  if (sel && !q.get('prod') && !q.get('q')) return <Navigate to={`/funds/compare?k=${sel}`} replace />;
+  if (['prod', 'track', 'q', 'per', 'fmax', 'smin', 'amin', 'mk'].some((k) => q.has(k))) { q.delete('sel'); return <Navigate to={`/funds/screen?${q}`} replace />; }
+  return <FundsHub />;
 }
 /** the report day lives under "numbers" now (the thesis is the company home): an old link keeps its report, window and row (?p=&w=&row=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`../numbers${loc.search}${loc.hash}`} replace />; }
@@ -160,7 +173,10 @@ export function App() {
           <Route path="search" element={<DocSearchRedirect />} />
         </Route>
         <Route path="savings" element={<SavingsPage />} />
-        <Route path="funds" element={<Funds />} />
+        <Route path="funds" element={<FundsRoot />} />
+        <Route path="funds/screen" element={<FundsScreen />} />
+        <Route path="funds/compare" element={<FundsCompare />} />
+        <Route path="funds/holdings" element={<Navigate to="/holdings" replace />} />
         <Route path="funds/makers" element={<FundMakers />} />
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />

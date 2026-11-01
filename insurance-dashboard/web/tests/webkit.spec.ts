@@ -41,19 +41,22 @@ test('company page survives reloads and place switches in WebKit', async ({ page
   expect(seen.length).toBe(13);
 });
 
-/* The phone's bottom bar (the owner's iPhone): the five places only (שאלות added with the Question Index, S1), each label whole on one line, the evidence group off the bar,
-   the active place lit for a company page, and the bar inside the screen. */
-test('phone bottom bar shows the five places in WebKit', async ({ page }) => {
+/* The phone's bottom bar (the owner's iPhone): the six places (שאלות added with the Question Index, S1; חיסכון with the funds module, F1),
+   each label whole on one line at 375 px (the narrowest iPhone in use), the evidence group off the bar, the active place lit for a
+   company page, and the bar inside the screen. */
+const PLACES = ['בית', 'שאלות', 'חיסכון', 'תרחישים', 'חדר מלחמה', 'עמדות'];
+test('phone bottom bar shows the six places in WebKit', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   await open(page, '/company/phoenix', 'phoenix');
   const bar = page.getByRole('navigation', { name: 'ראשי' });
   const items = bar.locator('a.item:visible');
-  await expect(items).toHaveCount(5);
-  expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(['בית', 'שאלות', 'תרחישים', 'חדר מלחמה', 'עמדות']);
+  await expect(items).toHaveCount(6);
+  expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(PLACES);
   await expect(bar.locator('.rail-ev')).toBeHidden();
   await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'בית');
-  const fit = await items.evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(); return { cut: l.scrollWidth > l.clientWidth + 1 || l.getBoundingClientRect().height > 20, out: r.left < -1 || r.right > innerWidth + 1 }; }));
+  const fit = await items.evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1 }; }));
   expect(fit.filter((f) => f.cut || f.out), 'a bottom-bar label wraps, is cut or leaves the screen').toEqual([]);
-  for (const [name, url] of [['שאלות', /\/questions/], ['תרחישים', /\/scenarios/], ['חדר מלחמה', /\/warroom/], ['עמדות', /\/positions/], ['בית', /\/$/]] as const) {
+  for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/funds$/], ['תרחישים', /\/scenarios/], ['חדר מלחמה', /\/warroom/], ['עמדות', /\/positions/], ['בית', /\/$/]] as const) {
     await bar.getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(url);
     await settle(page);
@@ -61,6 +64,49 @@ test('phone bottom bar shows the five places in WebKit', async ({ page }) => {
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     expect(sideways, `${name} scrolls sideways`).toBeLessThanOrEqual(1);
   }
+  // the section lights its place on every page of it
+  for (const route of ['/funds/screen', '/funds/p2009', '/savings', '/managers', '/holdings']) {
+    await page.goto(route); await settle(page);
+    await expect(bar.locator('a.item.active:visible'), `חיסכון lit on ${route}`).toHaveAttribute('aria-label', 'חיסכון');
+  }
+});
+
+/* F1 · the funds section on the phone: hub, screener cards, the compare tray into the head-to-head; no error, no sideways scroll. */
+test('funds hub, screener and compare work on the phone in WebKit', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 375, height: 812 });
+  const flat = async (where: string) => {
+    await expect(boundary(page), `error boundary on ${where}`).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), `${where} scrolls sideways`).toBeLessThanOrEqual(1);
+  };
+  await open(page, '/funds', 'phoenix');
+  await expect(page.locator('.fcat').first()).toBeVisible();
+  await flat('/funds');
+  await page.goto('/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99'); await settle(page);
+  const cards = page.locator('.fcard');
+  expect(await cards.count()).toBeGreaterThan(5);
+  await flat('/funds/screen');
+  // two tracks into the tray, then the tray opens compare with both
+  await cards.nth(0).locator('.cmpadd').click();
+  await cards.nth(1).locator('.cmpadd').click();
+  const tray = page.getByRole('region', { name: 'מגש השוואה' });
+  await expect(tray).toContainText('2');
+  await tray.getByRole('link').click();
+  await expect(page).toHaveURL(/\/funds\/compare\?k=[gip]\d+,[gip]\d+/);
+  await settle(page);
+  await expect(page.locator('.fcmp')).toBeVisible();
+  await flat('/funds/compare');
+  // closed tracks (funds/closed.json, F1 data) join their category when asked, flagged and unranked
+  if ((await page.request.get('/data/funds/closed.json')).ok()) {
+    await page.goto('/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99&gone=1'); await settle(page);
+    expect(await page.locator('.fcard.gone').count()).toBeGreaterThan(0);
+    await flat('/funds/screen?gone=1');
+  }
+  // the old table link lands on the screener with its pickers
+  await page.goto('/funds?prod=%D7%92%D7%9E%D7%9C&track=%D7%9E%D7%A0%D7%99%D7%95%D7%AA'); await settle(page);
+  await expect(page).toHaveURL(/\/funds\/screen\?prod=/);
+  expect(errors).toEqual([]);
 });
 
 /* Sticky-column lint (r2-ws3 #2). iOS WebKit paints a position:sticky cell inside an RTL horizontal scroller off its scroll origin
@@ -69,7 +115,7 @@ test('phone bottom bar shows the five places in WebKit', async ({ page }) => {
    under an always-true condition (same sheet, same index: the real cascade and specificity) and fails on any element that is still
    sticky on the inline axis inside an RTL overflow-x scroller. */
 const STICKY_ROUTES = ['/', '/company/phoenix/financials', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?pin=0', '/industry/csm', '/industry/csm?view=sens',
-  '/industry/csm?view=econ', '/industry/csm?view=curve', '/ownership', '/holdings', '/presentations', '/restatements', '/funds', '/managers', '/data', '/scenarios?e=-25&cr=150'];
+  '/industry/csm?view=econ', '/industry/csm?view=curve', '/ownership', '/holdings', '/presentations', '/restatements', '/funds', '/funds/screen?prod=%D7%92%D7%9E%D7%9C&track=all', '/funds/compare?k=p2009,g12531', '/funds/p2009', '/managers', '/data', '/scenarios?e=-25&cr=150'];
 
 test('sticky columns in RTL scrollers are all covered by the iOS override', async ({ page }) => {
   test.setTimeout(240_000);

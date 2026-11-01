@@ -10,7 +10,10 @@ export const ROUTES: [string, string][] = [
   ['peers', '/industry/peers'],
   ['csm', '/industry/csm'],
   ['savings', '/savings'],
-  ['funds', '/funds'],
+  ['funds', '/funds'],                                   // F1: the "חיסכון" hub
+  ['funds-screen', '/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99'],
+  ['funds-screen-all', '/funds/screen?prod=all&track=all&fam=index'],
+  ['funds-compare', '/funds/compare?k=p2009,g12531,i2081&b=net'],
   ['fund', '/funds/p2009'],
   ['managers', '/managers'],
   ['valuation', '/valuation/phoenix'],
