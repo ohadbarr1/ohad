@@ -39,7 +39,7 @@ defaults:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45  # the Playwright suite grew past 30 min with the funds routes (01.11.26)
     steps:
       - uses: actions/checkout@v5
         with: { ref: '${{ inputs.ref }}' }
