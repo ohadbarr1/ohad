@@ -1,5 +1,5 @@
 {
- "built": "2026-10-28T18:31:53+02:00",
+ "built": "2026-11-01T19:35:37+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -15,7 +15,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "15,823 aggregates, 178,065 track-months, 0 differences, 0 component cells with no aggregate"
+   "note": "15,927 aggregates, 179,322 track-months, 0 differences, 0 component cells with no aggregate"
   },
   {
    "id": "additivity",
@@ -210,12 +210,52 @@
    "note": "3792 passed, 0 failed"
   },
   {
+   "id": "brief_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 205,
+   "fail": 0,
+   "note": "205 passed, 0 failed"
+  },
+  {
+   "id": "deliver_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 27905,
+   "fail": 0,
+   "note": "27905 passed, 0 failed · 1068 docs, 8 files of each kind built"
+  },
+  {
    "id": "findings",
    "ok": true,
    "level": "fail",
    "n": 14,
    "fail": 0,
    "note": "findings: 14 findings (div:5 brk:1 peer:3 sd:1 disc:1 rank:3), 5 top, 26 suppressed, 0 problems"
+  },
+  {
+   "id": "watch",
+   "ok": true,
+   "level": "fail",
+   "n": 2,
+   "fail": 0,
+   "note": "watch: 2 snapshots, 16 changes (answer 14, new 1, gone 1), 17 upcoming, 0 problems"
+  },
+  {
+   "id": "watch_ledger",
+   "ok": true,
+   "level": "fail",
+   "n": 2,
+   "fail": 0,
+   "note": "2 answer snapshots at HEAD unchanged"
+  },
+  {
+   "id": "watch_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 63,
+   "fail": 0,
+   "note": "63 passed, 0 failed"
   },
   {
    "id": "capital",
@@ -247,15 +287,15 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "nowcast.json matches a rebuild; 2 ledger entries; 99 backtest rows; 0 problems"
+   "note": "nowcast.json matches a rebuild; 3 ledger entries; 99 backtest rows; 0 problems"
   },
   {
    "id": "nowcast_ledger",
    "ok": true,
    "level": "fail",
-   "n": 2,
+   "n": 3,
    "fail": 0,
-   "note": "2 frozen estimates at HEAD unchanged"
+   "note": "3 frozen estimates at HEAD unchanged"
   },
   {
    "id": "positions",
@@ -301,9 +341,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 2164,
+   "n": 2171,
    "fail": 0,
-   "note": "2164 files under contract, 0 failing; 71 contracts; 551 files without a contract"
+   "note": "2171 files under contract, 0 failing; 72 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
@@ -319,7 +359,7 @@
    "level": "fail",
    "n": 302,
    "fail": 0,
-   "note": "302 events, 4716 figures, 0 problems"
+   "note": "302 events, 4732 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -327,7 +367,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "fragility: 15 managers, 62 signals with data, 18 in watch/alert, 30 events, 0 problems"
+   "note": "fragility: 15 managers, 62 signals with data, 17 in watch/alert, 29 events, 0 problems"
   },
   {
    "id": "fragility_lib",
@@ -471,7 +511,7 @@
    "level": "warn",
    "n": 223,
    "fail": 0,
-   "note": "223 source URLs checked 2026-10-25 (3 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+   "note": "223 source URLs checked 2026-10-25 (7 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
   },
   {
    "id": "stress",
