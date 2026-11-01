@@ -9,6 +9,8 @@ import { listP, fundP } from '../../lib/market';
 import { refOf, ym, type FundX } from '../../lib/funds';
 import { BAND_HE, MIN_N, bandOf, categoriesOf, counted, feeDist, wmean, type FeeKey, type FeeUnit, type FeeSide } from '../../lib/feeDist';
 import { feeLabel, obsProv, pc2, pctProv } from '../../lib/agentProv';
+import { useOptional } from '../../lib/fundsLoad';
+import { DECISION_PATH, segOf, svcOf, svcProv, type DecisionFile } from '../../lib/decision';  // W2
 import './glossary';
 import '../../styles/agent.css';
 
@@ -92,6 +94,9 @@ export function ManagerCards({ funds, asof }: { funds: FundX[]; asof: number }) 
     return [...by].map(([grp, l]) => ({ grp, l, assets: l.reduce((t, f) => t + (f.assets ?? 0), 0), r5: wmean(l.filter((f) => f.net?.a5 != null).map((f) => ({ v: f.net!.a5!, w: f.assets ?? 0 }))) })).sort((a, b) => b.assets - a.assets);
   }, [funds, prod]);
   const obsOf = (k: FeeKey, grp: string) => d[k].obs.find((o) => o.grp === grp);
+  // W2: the company's place in the regulator's service index for the product's segment
+  const dec = useOptional<DecisionFile>(DECISION_PATH);
+  const seg = segOf(funds.find((f) => f.prod === prod) ?? { prod });
   return (
     <Panel title={`המנהלים ב${prod}`} aside={<span>לפי נכסים · דמי ניהול ממוצע בפועל · 5Y נטו, אומדן, משוקלל בנכסים</span>}>
       <div className="mg-digest">
@@ -104,6 +109,7 @@ export function ManagerCards({ funds, asof }: { funds: FundX[]; asof: number }) 
               <div><dt>ד"נ מהפקדה</dt><dd>{dob ? <Sourced src={() => obsProv(dob, 'depfee', asof, funds)}><span className="num">{pc2(dob.v)}</span></Sourced> : '–'}</dd></div>
             </dl>
             <div className="dim">{fo && d.fee.pcts ? `מצבירה: ${BAND_HE[bandOf(fo.v, d.fee.pcts)]}` : ''}{dob && d.depfee.pcts ? ` · מהפקדה: ${BAND_HE[bandOf(dob.v, d.depfee.pcts)]}` : ''}{g.r5 != null ? ` · 5Y ${nf(g.r5, 1)}%` : ''}</div>
+            {dec && seg && (() => { const r = svcOf(dec, g.grp, seg); return r ? <div className="dim">מדד השירות {r.year}: <Sourced src={() => svcProv(dec, g.grp, seg, 'rank')}>מקום {r.rank}/{r.of}</Sourced>, ציון <Sourced src={() => svcProv(dec, g.grp, seg, 'total')}><span className="num">{r.total}</span></Sourced></div> : null; })()}
           </article>); })}
       </div>
       <div className="fnote">כל קבוצה: מסלוליה הפתוחים במוצר. דמי ניהול: ממוצע בפועל משוקלל בנכסים, מול חציון הקבוצות במוצר. 5Y: ממוצע שנתי נטו (אומדן) משוקלל בנכסים, לא דירוג. הטבלה המלאה של כל החברות המנהלות: "כל החברות".</div>

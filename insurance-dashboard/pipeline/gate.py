@@ -104,6 +104,9 @@ Checks
                  track files byte for byte, and hold their rules: drawdowns ≤ 0, ranks 0-100 with at least 5 peers, transition rows that
                  sum, every default-fund tender sourced (verified only on a gov.il page), tracking differences that re-derive
                  (pipeline/build_fund_stats.py --check)
+  decision       W2: web/public/data/funds/decision.json equals a rebuild (pipeline/build_decision.py --check): every service-index row's
+                 total = the published weights x its components within rounding, every claims block sums to 100%, every company is a
+                 fox group, every figure has a source with a URL and a retrieval date, every coverage rule and checklist item a quoted phrase
   attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
                  every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
                  from the facts it cites, and every contribution has inputs that open down to a report and page
@@ -672,6 +675,14 @@ def fund_stats():  # module F2
         (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
 
 
+def decision():  # W2
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_decision.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) companies", out[0])
+    add("decision", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[0] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def attribution():  # module A4
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -762,6 +773,7 @@ def main():
     fragility()
     funds_contract()
     fund_stats()
+    decision()
     attribution()
     facts()
     assets()

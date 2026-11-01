@@ -21,6 +21,7 @@ import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../li
 import { useOptional } from '../lib/fundsLoad';
 import type { DefaultFile } from '../lib/fundsTools';
 import { defaultKeys, defaultNow, isPension, periodText } from '../lib/pensionPack';
+import { DECISION_PATH, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2
 import { actProv, pc2, tenderProv } from '../lib/agentProv';
 import '../components/agent/glossary';
 import '../styles/lens.css';
@@ -33,21 +34,21 @@ import '../styles/market.css';
 
 const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 const ALL = 'all';
-type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'act';
-const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['act', 'איזון אקטוארי']];  // act: W1-agent, pension only
+type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'act' | 'svc';
+const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['act', 'איזון אקטוארי'], ['svc', 'מדד שירות']];  // act: W1-agent, svc: W2, pension only
 const COL_LABEL = Object.fromEntries(COLS) as Record<ColKey, string>;
 const DEFAULT_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'assets', 'sharpe', 'st', 'top'];
 /** W1-agent: a pension product opens with its decision columns (both fees, the actuarial balance) */
-const PENSION_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'depfee', 'act', 'assets', 'sharpe', 'st'];
+const PENSION_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'depfee', 'act', 'svc', 'assets', 'sharpe', 'st'];
 const isPenProd = (p: string) => /^פנסיה/.test(p);
-const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: 'depfee', sharpe: 'sharpe', sd: 'sd', alpha: 'alpha', st: 'equity', act: 'actuarial' };
+const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: 'depfee', sharpe: 'sharpe', sd: 'sd', alpha: 'alpha', st: 'equity', act: 'actuarial', svc: 'svcidx' };
 const RET = new Set<ColKey>(['m1', 'ytd', 'y12', 'a3', 'a5']);
 const EXP = { st: ['STOCK_MARKET_EXPOSURE', 'חשיפה למניות'], fo: ['FOREIGN_EXPOSURE', 'חשיפה לחו"ל'], fx: ['FOREIGN_CURRENCY_EXPOSURE', 'חשיפה למט"ח'] } as const;
 interface Saved { name: string; qs: string }
 /** ordinal rank and percentile (rankAll) plus the shared place inside the tie band (lo–hi) */
 type RankInfo = { rank: number; n: number; pct: number | null; lo: number; hi: number };
 /** the fee columns: the regulator's average actual fee of the track, not a quote */
-const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון' };
+const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון', svc: 'הרשות, 2025' };
 
 const yearsOf = (f: FundX, asof: number) => (f.since ? (Math.floor(asof / 100) + (asof % 100) / 12) - (Number(f.since.slice(0, 4)) + Number(f.since.slice(5, 7)) / 12) : null);
 
@@ -79,6 +80,7 @@ export function FundsScreen() {
   // W1-agent: the default funds (קרנות ברירת מחדל) of the tender in force; `df=1` keeps only them
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dfOnly = sp.get('df') === '1';
+  const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index column (pension)
   const [open, setOpen] = useState<string[]>([]);
   const [opts, setOpts] = useState(false);
   const [saved, setSaved] = useStored<Saved[]>('funds:screens', []);
@@ -126,7 +128,7 @@ export function FundsScreen() {
       const ord = rankAll(peers, (f) => val(f, per)), tie = tieRanks(peers, (f) => val(f, per), tieBand(per, asof));
       const rk = new Map<string, RankInfo>([...ord].map(([k, r]) => [k, { ...r, lo: tie.get(k)?.lo ?? r.rank, hi: tie.get(k)?.hi ?? r.rank }]));
       const by = sortKey && sortKey !== 'pct' ? sortKey : null;
-      const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : (f as unknown as Record<string, number | null>)[by] ?? null);
+      const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : by === 'svc' ? (isPension(f) ? svcOf(dec, f.grp, 'pension')?.total ?? null : null) : (f as unknown as Record<string, number | null>)[by] ?? null);
       const list = shown.filter(screened).sort((a, b) => {
         if (a.gone !== b.gone) return a.gone ? 1 : -1;
         if (by) { const x = sv(a), y = sv(b); if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1; return by === 'fee' || by === 'depfee' || by === 'sd' ? x - y : y - x; }
@@ -134,7 +136,7 @@ export function FundsScreen() {
       });
       return { k, prod: shown[0].prod, track: shown[0].track, list, rk, n: rk.size ? [...rk.values()][0].n : 0, assets: peers.reduce((t, f) => t + (f.assets ?? 0), 0) };
     }).filter((g) => g.list.length).sort((a, b) => b.assets - a.assets);
-  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp, dfKeys]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp, dfKeys, dec]);  // eslint-disable-line react-hooks/exhaustive-deps
   const shownN = groups.reduce((t, g) => t + g.list.length, 0);
   const multi = groups.length > 1 || T === ALL;
   const nFilters = [q, fams.length ? '1' : '', mk, closed ? '1' : '', gone ? '1' : '', outOnly ? '1' : '', dfOnly ? '1' : '', ...Object.values(F).map((v) => (v == null ? '' : '1'))].filter(Boolean).length;
@@ -172,6 +174,7 @@ export function FundsScreen() {
         return <><Sourced src={() => expP(refOf(f), f.end ?? asof, EXP[c][0], EXP[c][1], v, f.assets)}><span className="num">{nf(v, 0)}%</span></Sourced>{o && <Sourced className="chip est fout" src={() => outlierProv(f, o, () => expP(refOf(f), asof, EXP.st[0], EXP.st[1], f.st, f.assets))} title="חשיפה למניות רחוקה מהחציון בקטגוריה">{o.z > 0 ? '▲' : '▼'}</Sourced>}</>; }
       case 'age': { const y = yearsOf(f, asof); return y == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `ותק · ${f.name}`, value: `${nf(y, 1)} שנים`, formula: `מועד ההקמה שדווח לרשות (${pubLabel(f.since)}) עד ${ym(asof)}`, inputs: [{ label: 'חודשי היסטוריה עם תשואה', v: nf(f.n, 0) }] })}><span className="num">{nf(y, 0)}</span></Sourced>; }
       case 'act': return !isPension(f) ? <span className="muted">–</span> : f.act == null ? <span className="muted" title="הקרן לא דיווחה איזון אקטוארי לרבעון האחרון">–</span> : <Sourced src={() => actProv(f)} title={`איזון אקטוארי, רבעון ${ym(f.act_p ?? asof)}`}><span className={`num ${f.act < 0 ? 'neg' : f.act > 0 ? 'pos' : ''}`}>{pc2(f.act)}</span></Sourced>;
+      case 'svc': { const r = isPension(f) && dec ? svcOf(dec, f.grp, 'pension') : null; return !r ? <span className="muted" title={isPension(f) ? 'החברה אינה במדד השירות לקרנות פנסיה' : 'מדד השירות לקרנות פנסיה'}>–</span> : <Sourced src={() => svcProv(dec!, f.grp, 'pension', 'total')} title={`מדד השירות 2025: ${r.total}, מקום ${r.rank} מתוך ${r.of} (ברמת החברה המנהלת)`}><span className="num">{r.total}</span><span className="dim num"> · {r.rank}/{r.of}</span></Sourced>; }
       case 'top': return f.yrs ? <Sourced src={() => ({ k: 'calc', title: `רבע עליון · ${f.name}`, value: `${f.top}/${f.yrs}`, formula: 'בכמה מהשנים הקלנדריות המלאות מתוך חמש האחרונות תשואת המסלול (ברוטו, ריבית דריבית על 12 תשואות חודשיות) הייתה ברבע העליון של הקטגוריה: מקום ≤ ⌈n÷4⌉, בקטגוריה של 4 מסלולים לפחות', inputs: [{ label: 'שנים ברבע העליון', v: nf(f.top ?? 0, 0) }, { label: 'שנים שנבדקו', v: nf(f.yrs ?? 0, 0) }], note: 'מחושב בבניית הנתונים מתשואות חברי הקטגוריה' })}><span className="num">{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>;
     }
     return null;

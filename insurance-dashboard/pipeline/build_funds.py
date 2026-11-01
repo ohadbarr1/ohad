@@ -326,6 +326,10 @@ def main():
             j = next((j for j in range(i, -1, -1) if tr.act[j] is not None and tr.p[j] > FL.madd(T, -4)), None)
             if j is not None:
                 opt["act"], opt["act_p"] = round(tr.act[j], 2), tr.p[j]
+                # W2: the last 8 reported quarters up to month T, oldest first, [[yyyymm, percent], ...]: the same values as the track
+                # history (funds/<key>.json `act`), inline so the agent's fund card needs no second fetch
+                h = [[tr.p[k], round(tr.act[k], 2)] for k in range(j + 1) if tr.act[k] is not None]
+                opt["act_h"] = h[-8:] or None
         f.update({k: x for k, x in opt.items() if x is not None})
         o = off.get(r.key)
         if o:

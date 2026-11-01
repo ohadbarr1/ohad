@@ -13,6 +13,7 @@ import { useFunds, useMarketData } from '../lib/useData';
 import { useDoor } from '../lib/door';
 import type { FundX } from '../lib/funds';
 import { FeeBench, ManagerCards } from '../components/agent/FeeBench';  // W1-agent
+import { ServiceClaims } from '../components/agent/ServicePanel';  // W2
 import type { Family, Fund } from '../lib/types';
 
 type Fam = 'all' | Family;
@@ -21,10 +22,10 @@ const sum = (fs: Fund[], k: keyof Fund) => fs.reduce((s, f) => s + ((f[k] as num
 
 const LensRank = lazy(async () => ({ default: (await import('./SavingsLens')).LensRank }));
 const Makers = lazy(async () => ({ default: (await import('./Funds')).MakersBody }));
-type View = '' | 'rank' | 'makers' | 'fees' | 'all';
-const VIEWS: [View, string][] = [['', 'לפי חברה מנהלת'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק'], ['fees', 'התפלגות דמי ניהול']];
+type View = '' | 'rank' | 'makers' | 'fees' | 'all' | 'svc';
+const VIEWS: [View, string][] = [['', 'לפי חברה מנהלת'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק'], ['fees', 'התפלגות דמי ניהול'], ['svc', 'שירות ותביעות']];  // svc: W2
 /* W1-agent: in the agent door the first view is the fee benchmark and the managers as cards; the full table is one tab away */
-const AGENT_VIEWS: [View, string][] = [['', 'דמי ניהול ומנהלים'], ['all', 'כל החברות'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק']];
+const AGENT_VIEWS: [View, string][] = [['', 'דמי ניהול ומנהלים'], ['svc', 'שירות ותביעות'], ['all', 'כל החברות'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק']];  // svc: W2
 
 /** The managers' ranking, one home for it: the managing companies today (regulator snapshot), their rank over time (savings lens),
  *  and each manager's biggest track against its category (fund ranks). /funds/makers and the lens's old ?v=rank land here. */
@@ -39,6 +40,8 @@ export function Managers() {
   const pick = (v: View) => setSp(() => { const n = new URLSearchParams(); if (v) n.set('v', v); const fd = sp.get('fd'); if (fd && (v === 'fees' || (agent && v === ''))) n.set('fd', fd); return n; }, { replace: true });
   const views = <Seg<View> label="דירוג מנהלים" value={view} onChange={pick} options={opts} />;
   if ((agent && view === '') || view === 'fees') return <AgentManagers views={views} cards={agent} />;
+  // W2: the service index and the claims reports
+  if (view === 'svc') return <><FundsHead sub="מנהלים · שירות ותביעות · מדד השירות של רשות שוק ההון 2025 ודוחות התביעות של החברות" tools={views} /><ServiceClaims /></>;
   if (view === '' || view === 'all') return <ManagersTable views={views} />;
   return (
     <>

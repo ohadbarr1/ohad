@@ -7,6 +7,7 @@ import { TIE_F } from '../../lib/fundsTie';
 import { annualised } from '../../lib/fundsCalc';
 import type { Tender } from '../../lib/fundsTools';
 import { pcf, pcr, rankLabel, tenderSpan, type Fig, type Part, type Verdict } from '../../lib/verdict';
+import { svcProv, type DecisionFile } from '../../lib/decision';  // W2
 
 /* The sources of the report card's figures: each figure key of lib/verdict opens the regulator record or the calculation behind it,
    exactly as the fund pages do (Sourced + Prov). The reader's own numbers say so. */
@@ -21,7 +22,7 @@ export function tenderProv(t: Tender, what: string, v: string): Prov {
 }
 
 /** The Prov of each figure of a verdict. */
-export function figsOf(f: FundX, v: Verdict, asof: number, file?: FundsFile): Record<Fig, () => Prov> {
+export function figsOf(f: FundX, v: Verdict, asof: number, file?: FundsFile, dec?: DecisionFile | null): Record<Fig, () => Prov> {
   const R = refOf(f);
   const retSrc = (x: FundX) => () => (v.ret?.basis === 'net' ? netProv(x, v.ret.per, asof, x.net?.[v.ret.per] ?? null, file?.net_method) : grossProv(x, v.ret!.per, asof));
   const val = (x: FundX) => (v.ret?.basis === 'net' ? x.net?.[v.ret.per] ?? null : x[v.ret!.per as 'a5']);
@@ -49,6 +50,9 @@ export function figsOf(f: FundX, v: Verdict, asof: number, file?: FundsFile): Re
     eq: () => ({ k: 'fund', title: `חשיפה למניות · ${f.name}`, value: pcr(f.st, 1), ds: R.ds, id: R.id, period: asof, col: 'STOCK_MARKET_EXPOSURE' }),
     eqMed: () => ({ k: 'calc', title: `חשיפה למניות, חציון · ${v.prod} | ${v.track}`, value: pcr(v.eq?.med, 1), formula: 'החציון של החשיפה למניות של המסלולים הפתוחים בקטגוריה. מסומן כשהמסלול רחוק ממנו ביותר מ-1.5 סטיות תקן',
       inputs: (v.peers as FundX[]).filter((x) => x.st != null && !x.closed).sort((a, b) => b.st! - a.st!).map((x) => ({ label: x.name, v: pcr(x.st, 1) })) }),
+    // W2: the regulator's service index (the company, not the track)
+    svc: () => (dec ? svcProv(dec, f.grp, 'pension', 'rank') : { k: 'none', title: 'מדד השירות', why: 'קובץ נתוני ההחלטה לא נטען' }),
+    svcTot: () => (dec ? svcProv(dec, f.grp, 'pension', 'total') : { k: 'none', title: 'מדד השירות', why: 'קובץ נתוני ההחלטה לא נטען' }),
   };
 }
 

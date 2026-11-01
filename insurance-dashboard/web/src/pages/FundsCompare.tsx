@@ -28,6 +28,7 @@ import { defaultNow, isPension, periodText } from '../lib/pensionPack';
 import { rulesOf, RULES_NOTE } from '../lib/productRules';
 import { actProv, ruleProv, tenderProv, pc2 } from '../lib/agentProv';
 import { TIE_NOTE } from '../lib/fundsTie';
+import { DECISION_PATH, clmCell, svcCell, type DecisionFile } from '../lib/decision';  // W2
 import '../components/agent/glossary';
 import '../styles/lens.css';
 import '../styles/market.css';
@@ -58,6 +59,7 @@ export function FundsCompare() {
   const { open } = useSource();
   const phone = usePhone();
   const dfile = useOptional<DefaultFile>('funds/default.json');
+  const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index and the claims rows
   const [edit, setEdit] = useState(false);
   const [more, setMore] = useState(false);
   const keys = useMemo(() => (sp.get('k') ?? '').split(',').filter((k) => /^[gip]\d+$/.test(k)).slice(0, TRAY_MAX), [sp]);
@@ -156,6 +158,9 @@ export function FundsCompare() {
     ...(anyPension ? [
       { key: 'act', label: 'איזון אקטוארי, רבעון אחרון', tip: 'actuarial', cells: (it: Item) => (isPension(it.f) && it.f.act != null ? { v: it.f.act, t: `${iso(pc2(it.f.act))} · ${iso(ym(it.f.act_p ?? asof))}`, src: () => actProv(it.f), txt: true } : { v: null, t: isPension(it.f) ? 'לא דווח' : '–' }) },
       { key: 'dflt', label: 'קרן ברירת מחדל', tip: 'default', cells: (it: Item) => { if (!isPension(it.f)) return { v: null, t: '–' }; const d = defaultNow(it.f.k, dfile, asof); return d ? { v: null, t: `כן · ${iso(periodText(d.t))} · ${iso(pc2(d.depfee))} מהפקדה, ${iso(pc2(d.fee))} מצבירה`, src: () => tenderProv(d.t, 'קרן ברירת מחדל', `${pc2(d.depfee)} / ${pc2(d.fee)}`), txt: true } : { v: null, t: dfile ? 'לא' : '–' }; } },
+      // W2: the company's service index (the regulator's, 2025) and its own claims report
+      { key: 'svc', label: 'מדד השירות 2025 (החברה)', tip: 'svcidx', cells: (it: Item) => (isPension(it.f) ? svcCell(dec, it.f) : { v: null, t: '–' }) },
+      { key: 'clm', label: 'תביעות נכות שאושרו, דיווח החברה 2025', tip: 'claims', cells: (it: Item) => (isPension(it.f) ? clmCell(dec, it.f.grp) : { v: null, t: '–' }) },
     ] as KRow[] : []),
   ];
   /* ---- the bottom line (descriptive): on the basis shown, the regulator's Sharpe, fees average actual ---- */
@@ -228,6 +233,7 @@ export function FundsCompare() {
               {fig('a5', '5Y שנתי', K('a5'))}{fig('a3', '3Y שנתי', K('a3'))}{fig('y12', 'LTM', K('y12'))}
               {fig('fee', 'ד"נ מצבירה*', K('fee'))}{fig('depfee', 'ד"נ מהפקדה*', K('depfee'))}{fig('sharpe', 'שארפ', K('sharpe'))}
               {isPension(it.f) && fig('act', 'איזון אקטוארי', { ...K('act'), t: it.f.act == null ? 'לא דווח' : pc2(it.f.act) })}
+              {isPension(it.f) && <>{fig('svc', 'מדד השירות', K('svc'))}{fig('clm', 'נכות אושרו', K('clm'))}</>}{/* W2 */}
             </dl>
           </article>
         ); })}

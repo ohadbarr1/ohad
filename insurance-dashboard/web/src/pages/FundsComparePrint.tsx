@@ -13,6 +13,7 @@ import { compareSummary, type Lead } from '../lib/compareSummary';
 import { ACT_F, defaultNow, isPension, periodText } from '../lib/pensionPack';
 import { RULES_NOTE, rulesOf } from '../lib/productRules';
 import { PENSION_MISSING } from '../components/agent/PensionPack';
+import { DECISION_PATH, SELF_REPORT, claimsWhy, companyOf, pc1, srcOf, svcOf, type DecisionFile } from '../lib/decision';  // W2
 import '../styles/agentDoc.css';
 
 /* W1 · agent door: the client document, /funds/compare/print?k=…&b=net|gross. An A4 page set, right to left, unbranded: the tracks
@@ -44,6 +45,7 @@ export function FundsComparePrint() {
   const net = sp.get('b') !== 'gross';
   const { hist } = useHists(keys);
   const dfile = useOptional<DefaultFile>('funds/default.json');
+  const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index and claims columns
   const [client, setClient] = useState('');
   const [agent, setAgent] = useStored<string>('agent:name', '');
   const [lic, setLic] = useStored<string>('agent:lic', '');
@@ -78,6 +80,9 @@ export function FundsComparePrint() {
     `ירידה מרבית: מחושבת מ-60 התשואות החודשיות האחרונות (${lbl}), מהשיא לשפל שאחריו.`,
     `חשיפה למניות: STOCK_MARKET_EXPOSURE כאחוז מהנכסים, ${ym(asof)}.`,
     ...(anyPen ? [`${ACT_F}.`, `קרן ברירת מחדל: ההליך שבתוקף ב-${ym(asof)} לפי הודעות רשות שוק ההון (funds/default.json); דמי הניהול בהליך: מהפקדה / מצבירה, לעמית שהצטרף דרכו.`] : []),
+    // W2
+    ...(anyPen ? [(() => { const g = dec?.segments.pension, s = g ? srcOf(dec, g.src) : null; return `מדד השירות: ${s?.title ?? 'רשות שוק ההון, מדד השירות 2025'}, ${g?.label ?? 'קרנות פנסיה'}, עמ' ${g?.pg ?? '–'} (${s?.url ?? ''}). ציון 0-100 ומקום מתוך החברות במדד, ברמת החברה המנהלת; מודד שירות, לא תשואה.`; })(),
+      `תביעות נכות שאושרו: ${SELF_REPORT}, נספח ב3 לחוזר איסוף מידע סטטיסטי ${dec?.fund_claims?.year ?? 2025}; שולמו ושולמו חלקית, באחוזים מהתביעות שנסגרו בשנה, כל קרנות הפנסיה של החברה יחד; לא נבדק על ידי הרשות.${[...new Set(fs.filter(isPension).map((f) => f.grp))].map((g) => { const c = companyOf(dec, g)?.claims, s = c ? srcOf(dec, c.src) : null; return c ? ` ${g}: ${s?.url ?? ''}${c.pg != null ? `, עמ' ${c.pg}` : c.sheet ? `, גיליון "${c.sheet}"` : ''}.` : dec ? ` ${g}: ${claimsWhy(dec, g)}.` : ''; }).join('')}`] : []),
   ];
   const N = (i: number) => <sup className="fn">{i}</sup>;
 
@@ -108,14 +113,16 @@ export function FundsComparePrint() {
           <h2>המסלולים</h2>
           <table className="adoc-t">
             <thead><tr><th>מסלול</th><th>LTM{N(1)}</th><th>3Y{N(1)}</th><th>5Y{N(1)}</th><th>ד"נ מצבירה{N(2)}</th><th>ד"נ מהפקדה{N(2)}</th><th>שארפ{N(3)}</th><th>סטיית תקן{N(3)}</th><th>ירידה מרבית{N(4)}</th><th>מניות{N(5)}</th>
-              {anyPen && <><th>איזון אקטוארי{N(6)}</th><th>ברירת מחדל{N(7)}</th></>}</tr></thead>
+              {anyPen && <><th>איזון אקטוארי{N(6)}</th><th>ברירת מחדל{N(7)}</th><th>מדד שירות{N(8)}</th><th>נכות אושרו{N(9)}</th></>}</tr></thead>
             <tbody>{fs.map((f) => { const d = isPension(f) ? defaultNow(f.k, dfile, asof) : null; return (
               <tr key={f.k}>
                 <th scope="row"><b>{f.name}</b><span>{f.prod} · {f.track} · מס' {f.id}</span></th>
                 <td>{spct(ret(f, 'y12'))}</td><td>{spct(ret(f, 'a3'))}</td><td>{spct(ret(f, 'a5'))}</td>
                 <td>{pct(f.fee)}</td><td>{pct(f.depfee)}</td><td>{sharpe(f) == null ? '–' : nf(sharpe(f)!, 2)}</td><td>{f.sd == null ? '–' : nf(f.sd, 2)}</td><td>{spct(mdd(f))}</td><td>{f.st == null ? '–' : `${nf(f.st, 0)}%`}</td>
                 {anyPen && <><td>{!isPension(f) ? '–' : f.act == null ? 'לא דווח' : <>{spct(f.act, 2)}<span className="q">{ym(f.act_p ?? asof)}</span></>}</td>
-                  <td>{!isPension(f) ? '–' : d ? <>כן<span className="q"><bdi dir="ltr">{periodText(d.t)}</bdi></span><span className="q"><bdi dir="ltr">{pct(d.depfee)} / {pct(d.fee)}</bdi></span></> : dfile ? 'לא' : '–'}</td></>}
+                  <td>{!isPension(f) ? '–' : d ? <>כן<span className="q"><bdi dir="ltr">{periodText(d.t)}</bdi></span><span className="q"><bdi dir="ltr">{pct(d.depfee)} / {pct(d.fee)}</bdi></span></> : dfile ? 'לא' : '–'}</td>
+                  {/* W2 */}<td>{!isPension(f) ? '–' : (() => { const r = svcOf(dec, f.grp, 'pension'); return r ? <>{r.total}<span className="q">מקום {r.rank} מתוך {r.of}</span></> : dec ? 'לא במדד' : '–'; })()}</td>
+                  <td>{!isPension(f) ? '–' : (() => { const c = companyOf(dec, f.grp)?.claims; return c ? <><bdi dir="ltr">{pc1(c.disability.approved)}</bdi><span className="q">{SELF_REPORT}</span></> : dec ? 'לא פורסם' : '–'; })()}</td></>}
               </tr>); })}</tbody>
           </table>
           <p className="adoc-cap">3Y ו-5Y: תשואה שנתית ממוצעת. {net ? 'נטו: אומדן אחרי דמי ניהול מצבירה בלבד; דמי ניהול מהפקדה פועלים על ההפקדות ואינם נכללים.' : 'ברוטו: לפני דמי ניהול.'} "–": אין נתון לחלון.</p>
@@ -143,7 +150,7 @@ export function FundsComparePrint() {
 
         <section className="adoc-notes">
           <h2>מקורות והערות</h2>
-          <ol>{notes.map((n, i) => <li key={i}>{n}</li>)}</ol>
+          <ol style={{ overflowWrap: 'anywhere', gridTemplateColumns: 'minmax(0, 1fr)' }}>{notes.map((n, i) => <li key={i}>{n}</li>)}</ol>{/* W2: the notes carry source URLs */}
           {anyPen && <p>{PENSION_MISSING}.</p>}
           <p className="disc">המסמך מציג נתונים שפרסמה רשות שוק ההון, ביטוח וחיסכון, כפי שהם, ותיאור עובדתי שלהם. אין בו ייעוץ השקעות, ייעוץ פנסיוני, שיווק פנסיוני או ייעוץ מס, ואין בו התחשבות בנתונים ובצרכים של לקוח מסוים. תשואות העבר אינן מבטיחות תשואות בעתיד. דמי הניהול המוצגים הם ממוצע בפועל של המסלול. לפני החלטה יש לבדוק את תנאי המוצר מול הגוף המנהל ואת המידע האישי במסלקה הפנסיונית.</p>
         </section>
