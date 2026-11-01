@@ -43,6 +43,15 @@ const QI_KEYS = ['questions', 'question', 'ask', 'שאלה', 'שאלות', 'שו
 const BR_KEYS = ['brief', 'briefing', 'meeting', 'תדריך', 'תדריכים', 'תדרוך', 'פגישה', 'פגישות', 'ישיבה', 'דירקטוריון'].map(normalize);  // S3
 /** words that reach the morning brief (/watch, S10) */
 const WT_KEYS = ['watch', 'changes', 'brief', 'מעקב', 'עוקב', 'השתנה', 'שינויים', 'תקציר', 'בוקר'].map(normalize);
+// F2 TIME: the risk and time views of the funds section and the funds watchlist
+const FT_PAGES: [string[], string, string, string][] = ([
+  [['map', 'risk', 'מפה', 'מפת', 'סיכון', 'תנודתיות', 'פיזור'], 'מפת סיכון ותשואה · קופות', 'כל מסלול בקטגוריה: תשואה נטו מול סיכון, שנה אחר שנה', '/funds/map'],
+  [['rank', 'percentile', 'אחוזון', 'אחוזונים', 'דירוג', 'מקום'], 'אחוזון לאורך זמן · קופות', 'המקום של כל מסלול בקטגוריה, חודש אחר חודש', '/funds/rank'],
+  [['quilt', 'years', 'שנים', 'שנה', 'קלנדרי', 'טבלת'], 'תשואה לפי שנה · קופות', 'כל שנה ממוינת מהגבוה לנמוך, בצבע המנהל', '/funds/quilt'],
+  [['persistence', 'התמדה', 'מנצחים', 'נמשכים', 'עקביות'], 'התמדה · האם המנצחים נשארים מנצחים', 'מטריצות מעבר בין רבעים מול מטבע', '/funds/persist'],
+  [['glide', 'age', 'גיל', 'תלוי', 'מסלולי'], 'מסלולי גיל · קופות', 'עד 50, 50–60, 60 ומעלה: החשיפה למניות בפועל', '/funds/glide'],
+  [['watchlist', 'מעקב', 'שלי', 'כוכב', 'עוקב'], 'המעקב שלי · קופות', 'מה השתנה במסלולים שבמעקב מאז הביקור הקודם · פרטי לדפדפן', '/funds/watch'],
+] as [string[], string, string, string][]).map(([k, l, m, to]) => [(k as string[]).map(normalize), l, m, to] as [string[], string, string, string]);
 const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 'הפתעה', 'הפתעות', 'חריג', 'חריגים'].map(normalize);
 // the funds tools (F2 TOOLS): each tool answers to its own words
 const FTOOLS = ([
@@ -189,6 +198,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   if (!p.company && words.length && words.every((w) => WT_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'מה השתנה בתשובות · תקציר הבוקר', meta: 'מה שבמעקב שינה פסיקה מאז הביקור הקודם, ספים שנחצו, והבאים בלוח', to: '/watch', score: 96 });
   }
+  if (!p.company && words.length) for (const [keys, label, meta, to] of FT_PAGES) if (words.every((w) => keys.some((k) => k.startsWith(w)))) out.push({ kind: 'פונקציה', label, meta, to, score: 94 });  // F2 TIME
   // questions: a question id ("Q-001"), or every word left after the company starts a word of the question (within that company's questions)
   if (words.length) {
     const idq = /^q-?\d{1,3}$/i.test(q.trim()) ? q.trim().toLowerCase().replace('-', '') : null;

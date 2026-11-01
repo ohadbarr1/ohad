@@ -9,6 +9,8 @@ const INDUSTRY_TAB: Record<string, string> = {
   econ: 'רווחיות פנסיה וגמל', savings: 'עדשת חיסכון', headline: 'לאורך זמן', search: 'חיפוש בדוחות', matrix: 'מטריצת עמיתים',
 };
 const VALUATION_TAB: Record<string, string> = { '': 'P/B מוצדק', ri: 'הכנסה שיורית', expectations: 'ציפיות השוק', csm: 'הון ו-CSM', sotp: 'סכום החלקים', dcf: 'DCF' };
+/** F2 TIME: the risk and time views and the watchlist */
+const FUNDS_TIME: Record<string, string> = { map: 'מפת סיכון ותשואה', rank: 'אחוזון לאורך זמן', quilt: 'תשואה לפי שנה', persist: 'התמדה', glide: 'מסלולי גיל', watch: 'המעקב שלי' };
 const MARKET_TAB: Record<string, string> = { overview: 'סקירת שוק', ranking: 'דירוג חברות', funds: 'קופות' };
 
 /** `name` returns undefined while the company list loads and null for an id that is not on it (the page does not exist). */
@@ -28,6 +30,8 @@ export function titleFor(path: string, name: (id: string) => string | null | und
       if (p[1] === 'default' || p[1] === 'trackers') return p[2] ? null : t(p[1] === 'default' ? 'קרנות ברירת מחדל' : 'מעבדת עוקבי המדד', 'חיסכון');
       return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון') : p[1] === 'screen' ? t('מסלולים', 'חיסכון') : p[1] === 'compare' ? t('השוואת מסלולים', 'חיסכון')
       : p[1] === 'holdings' ? t('הרכב נכסים', 'חיסכון') : p[1] ? (p[2] ? null : t('מסלול', 'חיסכון')) : t('החודש בקופות', 'חיסכון');
+    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון') : p[1] === 'screen' ? t('מסלולים', 'חיסכון') : p[1] === 'compare' ? t('השוואת מסלולים', 'חיסכון')
+      : p[1] === 'holdings' ? t('הרכב נכסים', 'חיסכון') : p[1] && FUNDS_TIME[p[1]] ? (p[2] ? null : t(FUNDS_TIME[p[1]], 'חיסכון')) : p[1] ? (p[2] ? null : t('מסלול', 'חיסכון')) : t('החודש בקופות', 'חיסכון');
     case 'managers': return t('דירוג מנהלים', 'חיסכון');
     case 'calendar': return t('לוח דיווחים');
     case 'book': return t('ספר הגרפים');

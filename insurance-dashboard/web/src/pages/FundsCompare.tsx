@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BasisToggle, FundsHead } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
+import { CompareRisk } from '../components/FundsTime';
 import { Sourced } from '../components/Source';
 import { Chart } from '../components/Chart';
 import { DataTable, type Column } from '../components/DataTable';
@@ -211,6 +212,7 @@ export function FundsCompare() {
               <div className="fnote">"61%": המסלול הראשון השיג יותר מהשני ב-61% מחלונות 36 החודשים המשותפים. עובדה היסטורית, לא תחזית.</div>
             </Panel>
           </div>
+          <CompareRisk items={items} cats={cats} />{/* F2 TIME: drawdown, Sortino, beta, capture */}
         </>
       )}
     </>
