@@ -93,7 +93,7 @@ eq(prep.map((p) => [p.kind, p.d, p.days]), [['report', '2026-11-03', -1], ['meet
   'prep queue: a report whose window is still open stays; past quarter ends go; meetings first on a shared day');
 
 // ---------- the Doc
-const ALLOWED = /(Q[1-4]'\d\d|H[12]'\d\d|FY'\d\d|\b\d\d\/\d\d\b|\b\d{1,2}\.\d{1,2}\.\d{2,4}\b|\b(19|20)\d\d\b|\b[QF]-\d{3}\b|F-[a-z]+-[a-z0-9_-]+|\(\d{1,2}\.\d{2}\.\d{2}\)|ועוד \d+ שינויים)/g;
+const ALLOWED = /(Q[1-4]'\d\d|H[12]'\d\d|FY'\d\d|\b\d\d\/\d\d\b|\b\d{1,2}\.\d{1,2}\.\d{2,4}\b|\b(19|20)\d\d\b|\b[QF]-\d{3}\b|F-[a-z]+-[a-z0-9_-]+|\(\d{1,2}\.\d{2}\.\d{2}\)|ועוד \d+ שינויים|\b\d{1,2} ה?(רבעונים|רבעונים רצופים|חודשים|שנים|מנהלים|חברות|קבוצות|מתחרים|עמיתים|מסלולים|רבעון|חודש|שנה|מוצרים|קטגוריות)(?![\u0590-\u05FF])|(?<![\u0590-\u05FF])(ב|ל|מ|ה)-\d{1,2} ה?(רבעונים|חודשים|שנים|מנהלים|חברות)(?![\u0590-\u05FF]))/g;  // counts of periods, as answer_core ALLOWED
 const richTexts = (bs: Block[]): string[] => bs.flatMap((x) => (x.k === 'p' || x.k === 'callout' ? [x.rich.text] : x.k === 'bullets' ? x.items.map((i) => i.text) : []));
 function checkDoc(where: string, w: WatchFile, s: ReturnType<typeof normSubs>, since: string | null) {
   const d = watchDoc({ w, b: brief(w, s, since), prep: prepQueue(w.upcoming, meetings, '2026-11-04'), author: 'א. כותב', today: '2026-11-04', names: { phoenix: 'הפניקס' } });
