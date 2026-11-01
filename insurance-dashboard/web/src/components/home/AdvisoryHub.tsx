@@ -162,7 +162,7 @@ function Cell({ cls, icon, title, to, more, children }: { cls: string; icon: str
   );
 }
 
-const EVIDENCE: [string, string][] = [['/savings', 'חיסכון ארוך טווח'], ['/industry', 'השוואה ענפית'], ['/valuation', 'שווי'], ['/capital', 'הון'], ['/consolidation', 'מסך האיחודים'], ['/drivers', 'מנגנונים'], ['/feed', 'מה השתנה']];
+const EVIDENCE: [string, string][] = [['/funds', 'החודש בקופות'], ['/savings', 'ענף החיסכון'], ['/industry', 'השוואה ענפית'], ['/valuation', 'שווי'], ['/capital', 'הון'], ['/consolidation', 'מסך האיחודים'], ['/drivers', 'מנגנונים'], ['/feed', 'מה השתנה']];
 
 export function AdvisoryHub() {
   return (
