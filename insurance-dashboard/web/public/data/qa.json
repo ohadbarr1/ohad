@@ -1,5 +1,5 @@
 {
- "built": "2026-11-01T19:35:37+02:00",
+ "built": "2026-11-01T20:34:34+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -167,7 +167,7 @@
    "level": "fail",
    "n": 18386,
    "fail": 0,
-   "note": "warroom: pen B -0.1627 t -1.97 n 5633 low; gemel B +0.0115 t 0.55 n 6948 none; hisht B -0.0489 t -1.32 n 5805 low; rebuild matches; 0 misses"
+   "note": "warroom: pen B -0.1630 t -1.97 n 5633 low; gemel B +0.0179 t 0.84 n 6948 none; hisht B -0.0513 t -1.46 n 5805 low; rebuild matches; 0 misses"
   },
   {
    "id": "warroom_lib",
@@ -197,17 +197,17 @@
    "id": "answers",
    "ok": true,
    "level": "fail",
-   "n": 163,
+   "n": 183,
    "fail": 0,
-   "note": "answers: 163 questions, 163 answered, 0 problems"
+   "note": "answers: 183 questions, 183 answered, 0 problems"
   },
   {
    "id": "answers_lib",
    "ok": true,
    "level": "fail",
-   "n": 3792,
+   "n": 4276,
    "fail": 0,
-   "note": "3792 passed, 0 failed"
+   "note": "4276 passed, 0 failed"
   },
   {
    "id": "brief_lib",
@@ -221,9 +221,9 @@
    "id": "deliver_lib",
    "ok": true,
    "level": "fail",
-   "n": 27905,
+   "n": 31058,
    "fail": 0,
-   "note": "27905 passed, 0 failed · 1068 docs, 8 files of each kind built"
+   "note": "31058 passed, 0 failed · 1188 docs, 8 files of each kind built"
   },
   {
    "id": "findings",
@@ -341,9 +341,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 2171,
+   "n": 3649,
    "fail": 0,
-   "note": "2171 files under contract, 0 failing; 72 contracts; 551 files without a contract"
+   "note": "3649 files under contract, 0 failing; 73 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
@@ -376,6 +376,14 @@
    "n": 352,
    "fail": 0,
    "note": "352 passed, 0 failed"
+  },
+  {
+   "id": "funds_contract",
+   "ok": true,
+   "level": "fail",
+   "n": 16242,
+   "fail": 0,
+   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16242 checks, 0 problems, 0 warnings; 8 odd history prints"
   },
   {
    "id": "attribution",
