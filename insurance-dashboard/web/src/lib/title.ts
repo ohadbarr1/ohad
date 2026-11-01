@@ -29,8 +29,6 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'funds': if (p[1] === 'tools') return p[2] === 'hindsight' ? t('מה היה לי', 'חיסכון') : p[2] === 'fees' ? t('דמי ניהול לאורך קריירה', 'חיסכון') : p[2] ? null : t('כלים', 'חיסכון');
       if (p[1] === 'default' || p[1] === 'trackers') return p[2] ? null : t(p[1] === 'default' ? 'קרנות ברירת מחדל' : 'מעבדת עוקבי המדד', 'חיסכון');
       return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון') : p[1] === 'screen' ? t('מסלולים', 'חיסכון') : p[1] === 'compare' ? t('השוואת מסלולים', 'חיסכון')
-      : p[1] === 'holdings' ? t('הרכב נכסים', 'חיסכון') : p[1] ? (p[2] ? null : t('מסלול', 'חיסכון')) : t('החודש בקופות', 'חיסכון');
-    case 'funds': return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון') : p[1] === 'screen' ? t('מסלולים', 'חיסכון') : p[1] === 'compare' ? t('השוואת מסלולים', 'חיסכון')
       : p[1] === 'holdings' ? t('הרכב נכסים', 'חיסכון') : p[1] && FUNDS_TIME[p[1]] ? (p[2] ? null : t(FUNDS_TIME[p[1]], 'חיסכון')) : p[1] ? (p[2] ? null : t('מסלול', 'חיסכון')) : t('החודש בקופות', 'חיסכון');
     case 'managers': return t('דירוג מנהלים', 'חיסכון');
     case 'calendar': return t('לוח דיווחים');
