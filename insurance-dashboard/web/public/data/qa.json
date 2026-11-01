@@ -1,5 +1,5 @@
 {
- "built": "2026-11-02T00:36:00+02:00",
+ "built": "2026-11-02T01:15:32+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -341,9 +341,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3895,
+   "n": 3896,
    "fail": 0,
-   "note": "3895 files under contract, 0 failing; 80 contracts; 551 files without a contract"
+   "note": "3896 files under contract, 0 failing; 81 contracts; 551 files without a contract"
   },
   {
    "id": "cards",
@@ -392,6 +392,14 @@
    "n": 1257,
    "fail": 0,
    "note": "fund_stats ok: 132 categories with stats (1257 tracks), 109 rank files, 52 persistence rows, 4 default-fund tenders, 248 trackers, 21 glide managers"
+  },
+  {
+   "id": "decision",
+   "ok": true,
+   "level": "fail",
+   "n": 15,
+   "fail": 0,
+   "note": "decision: 15 companies, 7 with fund claims, 12 coverage rules, 10 checklist items; 0 failures"
   },
   {
    "id": "attribution",

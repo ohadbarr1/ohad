@@ -42,7 +42,7 @@
 .sv-tile-v { font-size: var(--t-6); font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
 .sv-tile-v .src b { font-weight: 700; }
 .sv-tile-w { font-size: var(--t-3); line-height: 1.4; }
-.sv-tile.t-good .sv-tile-w { color: var(--up); } .sv-tile.t-bad .sv-tile-w { color: var(--down); } .sv-tile.t-mid .sv-tile-w, .sv-tile.t-info .sv-tile-w { color: var(--muted); }
+.sv-tile.t-good .sv-tile-w { color: color-mix(in oklch, var(--up) 72%, var(--fg)); } .sv-tile.t-bad .sv-tile-w { color: color-mix(in oklch, var(--down) 80%, var(--fg)); } .sv-tile.t-mid .sv-tile-w, .sv-tile.t-info .sv-tile-w { color: var(--muted); }
 .sv-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .sv-lines li { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: var(--t-4); line-height: 1.6; }
 .sv-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); transform: translateY(-1px); }
