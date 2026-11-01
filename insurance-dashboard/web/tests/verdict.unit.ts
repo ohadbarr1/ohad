@@ -8,6 +8,7 @@ import { headline, peersOf, placeTone, textOf, verdictOf, type VFund } from '../
 import { feeGap, ilsRound, project, refPair, type Plan } from '../src/lib/retire';
 import { scriptOf } from '../src/lib/script';
 import type { DefaultFile } from '../src/lib/fundsTools';
+import type { DecisionFile } from '../src/lib/decision';
 
 let fail = 0, pass = 0;
 const bad: string[] = [];
@@ -109,14 +110,39 @@ const dfile: DefaultFile = { tenders: [
   ok(!BANNED.test(s) && !BANNED.test(s2), 'the note recommends nothing');
 }
 
+/* ---- W2: the service-index line (pension) and the managers'-insurance line ---- */
+{
+  const dec = { segments: { pension: { label: 'קרנות פנסיה', year: 2025, n: 9, weights: {}, avg: { total: 79 }, src: 'si25', pg: 28 } },
+    companies: { 'גוף p7': { grp: 'גוף p7', in_funds: true, service: { pension: { year: 2025, name: 'החברה של p7', total: 81, rank: 4, of: 9, src: 'si25', pg: 28 } } } } } as unknown as DecisionFile;
+  const v = verdictOf(cat[6], cat, 202609, dfile, null, dec);
+  const l = v.lines.find((x) => x.key === 'svc');
+  const t = l ? textOf(l.parts) : '';
+  ok(v.svc?.row.rank === 4 && t.includes('במדד השירות של רשות שוק ההון ל-2025, החברה של p7 במקום 4 מתוך 9 בקרנות הפנסיה (ציון 81 מ-100)'), `svc line: ${t}`);
+  ok(l?.tone === 'info' && !BANNED.test(t) && t.includes('ולא תשואה או דמי ניהול'), 'svc line is descriptive, says what it does not measure');
+  ok(l!.parts.some((p) => typeof p !== 'string' && p.fig === 'svc') && l!.parts.some((p) => typeof p !== 'string' && p.fig === 'svcTot'), 'svc figures are sourced');
+  ok(!verdictOf(cat[6], cat, 202609, dfile).lines.some((x) => x.key === 'svc'), 'no decision file: no svc line');
+  ok(!verdictOf(cat[0], cat, 202609, dfile, null, dec).lines.some((x) => x.key === 'svc'), 'a company not in the index: no svc line');
+  const gm = verdictOf({ ...cat[6], k: 'g7', prod: 'גמל', fam: 'gemel' }, [{ ...cat[6], k: 'g7', prod: 'גמל', fam: 'gemel' }], 202609, dfile, null, dec);
+  ok(!gm.lines.some((x) => x.key === 'svc'), 'gemel: no pension svc line');
+  ok(!v.lines.some((x) => x.key === 'bm'), 'pension: no managers\' insurance line');
+  const ins = (prod: string, k: string): VFund => ({ ...cat[0], k, prod, track: 'כללי', fam: 'insurance' });
+  const old = verdictOf(ins('ביטוחי מנהלים 1992-2003', 'i1'), [ins('ביטוחי מנהלים 1992-2003', 'i1')], 202609, dfile);
+  const ob = old.lines.find((x) => x.key === 'bm');
+  ok(old.bm === 'old' && ob?.href === '/funds/bm' && textOf(ob.parts).includes('מקדם קצבה מובטח') && !BANNED.test(textOf(ob.parts)), `old managers' insurance: ${ob ? textOf(ob.parts) : '–'}`);
+  const nw = verdictOf(ins('פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'i2'), [ins('פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'i2')], 202609, dfile);
+  const nt = textOf(nw.lines.find((x) => x.key === 'bm')?.parts ?? []);
+  ok(nw.bm === 'new' && nt.includes('ביטוח מנהלים (ולא פוליסת חיסכון)') && nt.includes('2013') && nt.includes('2012') && !BANNED.test(nt), `2004+ pool, conditional, both cutoffs: ${nt}`);
+}
+
 /* ---- smoke over the published data ---- */
 const root = join(process.cwd(), 'public', 'data');
 if (existsSync(join(root, 'funds.json')) && existsSync(join(root, 'funds', 'default.json'))) {
   const d = JSON.parse(readFileSync(join(root, 'funds.json'), 'utf8')) as { asof: number; funds: VFund[] };
   const df = JSON.parse(readFileSync(join(root, 'funds', 'default.json'), 'utf8')) as DefaultFile;
+  const dec = existsSync(join(root, 'funds', 'decision.json')) ? JSON.parse(readFileSync(join(root, 'funds', 'decision.json'), 'utf8')) as DecisionFile : null;
   const f = d.funds.find((x) => x.k === 'p9757');
   if (f) {
-    const v = verdictOf(f, d.funds, d.asof, df);
+    const v = verdictOf(f, d.funds, d.asof, df, null, dec);
     const all = v.lines.map((l) => textOf(l.parts));
     console.log('  p9757: ' + headline(v));
     all.forEach((t) => console.log('    · ' + t));
@@ -124,11 +150,12 @@ if (existsSync(join(root, 'funds.json')) && existsSync(join(root, 'funds', 'defa
     ok(v.dflt?.winner === true && v.dflt.tender.id === '2024', 'p9757: a winner of the fourth default-fund tender');
     ok(all.some((t) => t.includes('אינו אומר דבר על התשואה')), 'p9757: the cheap-price ≠ return line');
     ok(all.every((t) => !BANNED.test(t)), 'no advice words in p9757');
+    if (dec) { const r = dec.companies[f.grp]?.service?.pension; ok(!!r && all.some((t) => t.includes(`במקום ${r.rank} מתוך ${r.of} בקרנות הפנסיה`)), `p9757: the service-index line from decision.json`); }
   }
   const g = d.funds.find((x) => x.k === 'g1093') ?? d.funds.find((x) => x.prod === 'השתלמות' && x.track === 'כללי' && !x.closed);
   if (g) { const v = verdictOf(g, d.funds, d.asof, df); console.log(`  ${g.k} (${g.name}): ` + headline(v)); v.lines.forEach((l) => console.log('    · ' + textOf(l.parts))); ok(v.dflt == null, `${g.k}: no default line`); }
   let n = 0;
-  for (const x of d.funds) { if (x.closed || !x.assets) continue; const v = verdictOf(x, d.funds, d.asof, df); n++; if (v.lines.some((l) => BANNED.test(textOf(l.parts)) || /undefined|NaN/.test(textOf(l.parts)))) { ok(false, `bad text for ${x.k}`); break; } }
+  for (const x of d.funds) { if (x.closed || !x.assets) continue; const v = verdictOf(x, d.funds, d.asof, df, null, dec); n++; if (v.lines.some((l) => BANNED.test(textOf(l.parts)) || /undefined|NaN/.test(textOf(l.parts)))) { ok(false, `bad text for ${x.k}`); break; } }
   ok(n > 500, `smoke: ${n} open tracks read without NaN, undefined or advice`);
 }
 

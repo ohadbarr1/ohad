@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Prov } from '../../lib/prov';
 import { Tip } from '../Explain';
 import { headline, type Fig, type Verdict } from '../../lib/verdict';
@@ -22,7 +23,7 @@ export function Report({ v, figs }: { v: Verdict; figs: Record<Fig, () => Prov> 
         ))}
       </div>}
       <ul className="sv-lines">
-        {v.lines.map((l) => <li key={l.key} className={`t-${l.tone}`}><span className="sv-dot" role="img" aria-label={TONE_HE[l.tone]} /><span><Parts parts={l.parts} figs={figs} /></span></li>)}
+        {v.lines.map((l) => <li key={l.key} className={`t-${l.tone}`}><span className="sv-dot" role="img" aria-label={TONE_HE[l.tone]} /><span><Parts parts={l.parts} figs={figs} />{l.href && <> <Link className="sv-link" to={l.href}>{l.link ?? 'עוד'}</Link></>}</span></li>)}
       </ul>
     </div>
   );

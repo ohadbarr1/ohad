@@ -35,6 +35,8 @@ export interface FundX extends Fund {
   pr1?: PerSet | null; pn1?: PerSet | null; fee1?: number | null;
   alpha?: number | null; act?: number | null; act_p?: number | null; end_ap?: number | null; nd?: number | null; nd12?: number | null; pid?: number | string | null; mgr_id?: number | string | null;
   tx?: Tx | null; gone?: boolean; end?: number; end_assets?: number | null;
+  /** W2: the last eight published quarters of the actuarial balance, [yyyymm, %] oldest first (pension only) */
+  act_h?: [number, number][] | null;
 }
 export interface FundsFile { asof: number; source: string; funds: FundX[]; net_method?: string; real_method?: string; cpi_asof?: number; closed_n?: number }
 export interface HistX extends FundHist { yn?: (number | null)[]; act?: (number | null)[]; nd?: (number | null)[]; cat?: (string | null)[] }

@@ -8,6 +8,7 @@ import { RULES, RULES_NOTE, rulesFor, rulesOf } from '../src/lib/productRules';
 import { actCompound, actHistory, defaultHits, defaultKeys, defaultNow, isPension, periodText } from '../src/lib/pensionPack';
 import { compareSummary, type CmpIn } from '../src/lib/compareSummary';
 import type { DefaultFile } from '../src/lib/fundsTools';
+import { bmKind, bmProv, claimProv, claimsWhy, clmCell, coverProv, segOf, svcCell, svcProv, type DecisionFile } from '../src/lib/decision';
 
 let fail = 0, pass = 0;
 const bad: string[] = [];
@@ -95,6 +96,34 @@ if (existsSync(fj)) {
     const df = JSON.parse(readFileSync(dj, 'utf8')) as DefaultFile;
     const ks = defaultKeys(df, d.asof), live = d.funds.filter((f) => ks.has(f.k));
     ok(live.length > 0 && live.every((f) => isPension(f)), `smoke: ${live.length} live tracks in a default fund at ${d.asof}, all pension`);
+  }
+  /* W2: every decision figure opens a page-cited source; self-reports say so; missing reports give their reason */
+  const dj2 = join(data, 'funds/decision.json');
+  if (existsSync(dj2)) {
+    const dec = JSON.parse(readFileSync(dj2, 'utf8')) as DecisionFile;
+    const pens = d.funds.filter((f) => isPension(f) && !f.closed);
+    const grps = [...new Set(pens.map((f) => f.grp))];
+    const inIdx = grps.filter((g) => dec.companies[g]?.service?.pension);
+    ok(inIdx.length >= 8, `smoke: ${inIdx.length} pension groups of funds.json found in the service index`);
+    for (const g of inIdx) {
+      const pv = svcProv(dec, g, 'pension', 'total');
+      ok(pv.k === 'report' && pv.pg === dec.companies[g].service!.pension!.pg && !!pv.url, `svc ${g}: report with page`);
+      ok(svcProv(dec, g, 'pension', 'prev').k === 'report', `svc prev ${g}`);
+    }
+    for (const g of grps) {
+      const c = dec.companies[g];
+      if (c?.claims) { const cp = claimProv(dec, g, 'disability', 'approved'); ok(cp.k === 'report' && cp.srcType === 'דיווח החברה' && /לא נבדק/.test(cp.note ?? ''), `claims ${g}: a labelled self-report`); ok(clmCell(dec, g).v === c.claims.disability.approved, `claims cell ${g}`); }
+      else if (c?.service?.pension) ok(claimsWhy(dec, g).length > 10 && clmCell(dec, g).t === 'לא פורסם', `claims ${g}: missing with a reason`);
+    }
+    ok(/נמצא/.test(claimsWhy(dec, 'כלל')) && /captcha|חסום/.test(claimsWhy(dec, 'מנורה מבטחים')), 'Clal and Menora: the recorded reasons');
+    ok(svcCell(dec, pens[0]).txt === true && svcCell(undefined, pens[0]).t === '…' && svcCell(null, pens[0]).t === '–', 'svc cell: loading, absent, present');
+    ok(dec.coverage_default.rules.every((r) => { const cp = coverProv(dec, r); return cp.k === 'report' && cp.pg === r.pg; }), 'every coverage rule cites its page');
+    ok(dec.bm_checklist.length === 10 && dec.bm_checklist.every((it) => bmProv(dec, it).k === 'report'), 'the checklist: 10 sourced items');
+    ok(dec.bm_checklist.some((it) => /2012/.test(it.note ?? '') && /2013/.test(it.note ?? '')), 'the 2012/2013 discrepancy is in the file');
+    ok(segOf({ fam: 'pensia' }) === 'pension' && segOf({ fam: 'gemel' }) === 'gemel' && segOf({ fam: 'insurance' }) === 'life_savings', 'segments by family');
+    ok(bmKind('ביטוחי מנהלים 1992-2003') === 'old' && bmKind('ביטוחי מנהלים 1990-1991') === 'old' && bmKind('פוליסות חיסכון וביטוחי מנהלים (מ-2004)') === 'new' && bmKind('גמל') === null, 'managers\' insurance generations');
+    const withH = d.funds.filter((f) => (f as { act_h?: unknown[] }).act_h?.length);
+    ok(withH.length > 100 && withH.every((f) => isPension(f) && ((f as { act_h: unknown[] }).act_h.length <= 8)), `smoke: ${withH.length} pension tracks carry act_h (≤ 8 quarters)`);
   }
   const pj = join(data, 'funds/p2009.json');
   if (existsSync(pj)) ok(actHistory(JSON.parse(readFileSync(pj, 'utf8'))).length === 8, 'smoke: a pension history has 8 quarters to show');

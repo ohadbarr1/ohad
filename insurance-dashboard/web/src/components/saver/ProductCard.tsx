@@ -15,6 +15,8 @@ import { dsName, scriptOf } from '../../lib/script';
 import type { FeePair } from '../../lib/fundsCalc';
 import { Est, cat10, cat10Prov, figsOf, tenderProv, ymOf } from './figs';
 import { Report } from './Report';
+import { useOptional } from '../../lib/fundsLoad';
+import { DECISION_PATH, type DecisionFile } from '../../lib/decision';  // W2
 
 /* One product of "המוצרים שלי": the report card, what the fees cost in ₪ by 67, a note to the agent, a rough pension estimate
    (pension only), the השתלמות facts, and the next pages. Everything that is not the reader's or the regulator's is labelled. */
@@ -28,8 +30,9 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   my?: MyProduct; example?: boolean; onChange?: (patch: Partial<MyProduct>) => void; onRemove?: () => void; onAdd?: () => void;
 }) {
   const asof = data.asof;
-  const v = useMemo(() => verdictOf(f, data.funds as FundX[], asof, dfile, my), [f, data, asof, dfile, my]);
-  const figs = figsOf(f, v, asof, data);
+  const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service-index line
+  const v = useMemo(() => verdictOf(f, data.funds as FundX[], asof, dfile, my, dec), [f, data, asof, dfile, my, dec]);
+  const figs = figsOf(f, v, asof, data, dec);
   const [age, setAge] = useStored<number>('my:age', AGE_DEFAULT);
   const cat = `${f.prod} | ${f.track}`, c = cats?.[cat], r10 = cat10(c);
   // the return assumption: a conservative 4% by default (the fees tool's fallback), the category's 10-year average on request, or the reader's own

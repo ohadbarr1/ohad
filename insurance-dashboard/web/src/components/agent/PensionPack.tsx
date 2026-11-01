@@ -11,6 +11,8 @@ import { nf, sn } from '../../lib/format';
 import { ACT_F, actHistory, defaultHits, isPension, periodText, type ActPoint } from '../../lib/pensionPack';
 import { BAND_HE, bandOf, feeDist } from '../../lib/feeDist';
 import { actProv, actQProv, actSumProv, pc2, pctProv, tenderProv } from '../../lib/agentProv';
+import { ClaimsCell, CoverDefault, SvcCell } from './Decision';  // W2
+import { DECISION_PATH, type DecisionFile } from '../../lib/decision';
 import './glossary';
 import '../../styles/agent.css';
 
@@ -19,7 +21,8 @@ import '../../styles/agent.css';
    whether the fund is a default fund now (the tender, its period and the price it set), and both fees, average actual, against the
    product's median manager. What the regulator's open files do not carry is named, not guessed. Renders nothing for other products. */
 
-export const PENSION_MISSING = 'לא במאגרים הפתוחים של הרשות ולכן לא מוצגים: מקדמי ההמרה לקצבה, הכיסויים הביטוחיים (נכות ושאירים) ועלותם, מדד השירות ויחס התביעות';
+/* W2: the service index (the regulator's) and the claims report (the company's own) are here now, at the managing company's level */
+export const PENSION_MISSING = 'לא במאגרים הפתוחים ולכן לא מוצגים: מקדמי ההמרה לקצבה של הקרן ועלות הכיסוי הביטוחי (נכות ושאירים) בפועל. מדד השירות (רשות שוק ההון, 2025) ודוח התביעות (דיווח החברה, 2025) הם ברמת החברה המנהלת, לא ברמת הקרן או המסלול';
 
 /** the actuarial history as a strip of bars, quarter by quarter (a picture; the figures are the buttons under it) */
 function ActBars({ xs }: { xs: ActPoint[] }) {
@@ -38,9 +41,11 @@ export function PensionPack({ f, h, asof, funds, compact = false }: { f: FundX; 
   const pension = isPension(f);
   const hits = useMemo(() => (pension ? defaultHits(f.k, dfile, asof) : []), [pension, f.k, dfile, asof]);
   const bench = useMemo(() => (pension && funds?.length ? feeDist(funds, f.prod, null, 'mgr') : null), [pension, funds, f.prod]);
+  const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2
   if (!pension) return null;
   const now = hits.find((x) => x.current) ?? null, past = hits.filter((x) => !x.current);
-  const hx = actHistory(h, 8);
+  // W2: the last eight published quarters from funds.json (act_h) when the build has them, else from the track's own history
+  const hx: ActPoint[] = f.act_h?.length ? f.act_h.slice(-8).map(([p, v]) => ({ p, v })) : actHistory(h, 8);
   const tone = (v: number) => (v > 0 ? 'pos' : v < 0 ? 'neg' : '');
   const feeSrc = (c: 'fee' | 'depfee') => () => fundP(refOf(f), f.end ?? asof, c === 'fee' ? 'AVG_ANNUAL_MANAGEMENT_FEE' : 'AVG_DEPOSIT_FEE', c === 'fee' ? 'דמי ניהול מצבירה, ממוצע בפועל' : 'דמי ניהול מהפקדה, ממוצע בפועל', pc2(f[c]));
   const Bench = ({ c }: { c: 'fee' | 'depfee' }) => {
@@ -84,7 +89,13 @@ export function PensionPack({ f, h, asof, funds, compact = false }: { f: FundX; 
           {!compact && <Link className="ppk-more" to={`/managers?fd=${encodeURIComponent(f.prod)}`}>התפלגות דמי הניהול</Link>}
         </div>
       </div>
-      {!compact && <div className="fnote">{ACT_F}. {PENSION_MISSING}.</div>}
+      {/* W2: the company's service and claims, then the default coverage of a comprehensive fund */}
+      <div className="ppk-grid ppk-row2">
+        <SvcCell d={dec} grp={f.grp} />
+        <ClaimsCell d={dec} grp={f.grp} />
+      </div>
+      {!compact && dec && f.prod === 'פנסיה מקיפה' && <CoverDefault d={dec} />}
+      {!compact && <div className="fnote">{ACT_F}. {PENSION_MISSING}.{dec && <> <Link to="/managers?v=svc">מדד השירות ודוחות התביעות של כל החברות</Link>.</>}</div>}
     </section>
   );
 }

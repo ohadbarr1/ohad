@@ -18,6 +18,7 @@ import type { Per } from './funds';
 import { median } from './fundsCalc';
 import { DEFAULT_PER, rankText, tieBand, tieRanks, type TieRank } from './fundsTie';
 import { isoYm, priceOf, tenderAt, tendersOf, type DefaultFile, type Tender } from './fundsTools';
+import { BM_CUTOFF, BM_HREF, bmKind, segOf, svcOf, type DecisionFile, type SvcRow } from './decision';  // W2
 
 /** the fields of a funds.json row the report card reads */
 export interface VFund {
@@ -28,10 +29,12 @@ export interface VFund {
 }
 export interface MyFees { fee?: number | null; depfee?: number | null }
 
-export type Fig = 'ret' | 'rank' | 'med' | 'fee' | 'feeMed' | 'feePct' | 'dep' | 'depMed' | 'tender' | 'tfee' | 'tdep' | 'eq' | 'eqMed';
+export type Fig = 'ret' | 'rank' | 'med' | 'fee' | 'feeMed' | 'feePct' | 'dep' | 'depMed' | 'tender' | 'tfee' | 'tdep' | 'eq' | 'eqMed' | 'svc' | 'svcTot';
 export type Part = string | { t: string; fig: Fig };
 export type Tone = 'good' | 'bad' | 'mid' | 'info';
-export interface Line { key: 'rank' | 'ret' | 'fee' | 'dflt' | 'dfltRet' | 'eq' | 'self' | 'none'; tone: Tone; parts: Part[] }
+export interface Line { key: 'rank' | 'ret' | 'fee' | 'dflt' | 'dfltRet' | 'eq' | 'self' | 'none' | 'svc' | 'bm'; tone: Tone; parts: Part[];
+  /** W2: a page the line points to (the managers'-insurance checklist), and the link's words */
+  href?: string; link?: string }
 /** one tile of the card: a plain word and its figure */
 export interface Tile { key: 'ret' | 'rank' | 'fee' | 'dflt' | 'dep'; label: string; value: Part; word: string; tone: Tone }
 
@@ -44,6 +47,10 @@ export interface Verdict {
   dep: { own: boolean; v: number | null; med: number | null } | null;
   dflt: { tender: Tender; winner: boolean; fee: number | null; depfee: number | null; years: number | null; above: boolean } | null;
   eq: { st: number; med: number; z: number; n: number } | null;
+  /** W2: the company's place in the regulator's service index 2025 (pension products), when the decision file is given */
+  svc: { row: SvcRow; label: string } | null;
+  /** W2: a managers'-insurance product of bituach-net: an old generation (1990-2003), or the 2004+ products */
+  bm: 'old' | 'new' | null;
   tiles: Tile[];
   lines: Line[];
 }
@@ -68,8 +75,10 @@ export function peersOf<T extends VFund>(f: VFund, all: T[]): T[] {
 /** net when the file publishes net returns (the site's default basis), else gross */
 const valOf = (x: VFund, per: Per, net: boolean) => (net ? x.net?.[per] ?? null : (x[per as 'a5' | 'a3' | 'y12'] ?? null));
 
-/** The report card of one track. `mine`: the reader's own fees (from their statement), when entered. */
-export function verdictOf(f: VFund, all: VFund[], asof: number, dfile: DefaultFile | null | undefined, mine?: MyFees | null): Verdict {
+/** W2: the parts of the decision file the verdict reads */
+export type DecLite = Pick<DecisionFile, 'companies' | 'segments'>;
+/** The report card of one track. `mine`: the reader's own fees (from their statement), when entered. `dec` (W2): the decision file. */
+export function verdictOf(f: VFund, all: VFund[], asof: number, dfile: DefaultFile | null | undefined, mine?: MyFees | null, dec?: DecLite | null): Verdict {
   const peers = peersOf(f, all);
   const self = selfDir(f);
   const net = all.some((x) => x.net && Object.values(x.net).some((v) => v != null));
@@ -123,7 +132,12 @@ export function verdictOf(f: VFund, all: VFund[], asof: number, dfile: DefaultFi
     if (Math.abs(z) > 1.5) eq = { st: f.st, med: m, z, n: sts.length };
   }
 
-  const v: Verdict = { cat: catOf(f), prod: f.prod, track: f.track, peers, self, ret, fee, dep, dflt, eq, tiles: [], lines: [] };
+  /* ---- W2: the service index (pension products) and the managers'-insurance checklist ---- */
+  const seg = segOf(f), row = seg === 'pension' ? svcOf(dec, f.grp, 'pension') : null;
+  const svc: Verdict['svc'] = row ? { row, label: dec?.segments.pension?.label ?? 'קרנות פנסיה' } : null;
+  const bm = f.fam === 'insurance' || /ביטוח|פוליסות/.test(f.prod) ? bmKind(f.prod) : null;
+
+  const v: Verdict = { cat: catOf(f), prod: f.prod, track: f.track, peers, self, ret, fee, dep, dflt, eq, svc, bm, tiles: [], lines: [] };
   v.tiles = tilesOf(v);
   v.lines = linesOf(v);
   return v;
@@ -187,7 +201,13 @@ function linesOf(v: Verdict): Line[] {
     if (d.winner && v.ret?.rank && placeTone(v.ret.rank) === 'bad') L.push({ key: 'dfltRet', tone: 'bad', parts: ['המחיר של קרן ברירת מחדל נקבע במכרז ואינו אומר דבר על התשואה: ', PER_HE[v.ret.per], ' המסלול הזה במקום ', { t: rankLabel(v.ret.rank), fig: 'rank' }, ' בקטגוריה.'] });
   }
 
+  // W2: the company's service, in its own words: a description of the regulator's index, not a judgement of the track
+  if (v.svc) { const r = v.svc.row; L.push({ key: 'svc', tone: 'info', parts: [`במדד השירות של רשות שוק ההון ל-${r.year}, ${r.name ?? 'החברה המנהלת'} במקום `, { t: `${r.rank} מתוך ${r.of}`, fig: 'svc' }, ' בקרנות הפנסיה (ציון ', { t: String(r.total), fig: 'svcTot' }, ' מ-100). המדד בודק שירות: שביעות רצון, תלונות, מענה טלפוני, שיוך כספים ושירות דיגיטלי, ולא תשואה או דמי ניהול.'] }); }
+
   if (v.eq) L.push({ key: 'eq', tone: 'info', parts: ['החשיפה למניות של המסלול (', { t: pcr(v.eq.st, 1), fig: 'eq' }, `) ${v.eq.z > 0 ? 'גבוהה' : 'נמוכה'} בהרבה מהמקובל בקטגוריה (חציון `, { t: pcr(v.eq.med, 1), fig: 'eqMed' }, '). שם המסלול לא מספר את כל הסיפור.'] });
+  // W2: an old managers'-insurance policy may carry terms a move does not keep
+  if (v.bm === 'old') L.push({ key: 'bm', tone: 'info', href: BM_HREF, link: 'מה בודקים לפני שעוזבים', parts: ['פוליסת ביטוח מנהלים מהדור הזה עשויה לכלול מקדם קצבה מובטח ותנאים נוספים שלא נשמרים אחרי מעבר, ומעבר אינו הפיך.'] });
+  else if (v.bm === 'new') L.push({ key: 'bm', tone: 'info', href: BM_HREF, link: 'מה בודקים לפני שעוזבים', parts: [`אם המוצר שלך הוא ביטוח מנהלים (ולא פוליסת חיסכון) שהתחיל ${BM_CUTOFF}, ייתכן שיש בו מקדם קצבה מובטח שלא נשמר אחרי מעבר.`] });
   return L;
 }
 

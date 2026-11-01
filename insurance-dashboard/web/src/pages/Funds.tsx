@@ -8,6 +8,7 @@ import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, fam
 import { MgrChip } from '../components/MgrChip';
 import { DEFAULT_PER, TIE_F, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import { PensionPack } from '../components/agent/PensionPack';  // W1-agent
+import { BmNote } from '../components/agent/Decision';  // W2
 import { RankPanel, RiskPanel, WatchStar } from '../components/FundsTime';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
@@ -400,6 +401,7 @@ export function FundCard() {
         <Kpi label={<>חשיפה למניות <Tip k="equity" /></>} value={expo('st', f.st)} sub={f.fo != null ? <>חו"ל {expo('fo', f.fo)} · מט"ח {expo('fx', f.fx)}</> : ' '} />
       </section>
       <PensionPack f={fx} h={h} asof={asof} funds={data.funds as FundX[]} />{/* W1-agent: renders only on pension tracks */}
+      <BmNote f={fx} />{/* W2: managers'-insurance tracks of bituach-net only */}
 
       <div className="grid21">
         <Panel title={<>תשואה מצטברת, בסיס 100 <Tip k={net ? 'net' : 'growth'} /></>} aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} />{net && <span className="chip est">{NET_LABEL}</span>}</>}>

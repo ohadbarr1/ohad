@@ -120,3 +120,82 @@ td.cmp-best::after { content: "●"; color: var(--accent); font-size: 8px; verti
   .cmp-actions .cmp-bl-note { display: none; }
 }
 .cmp-card .lead { outline: 0; background: var(--accent-soft); border-radius: 4px; padding: 0 4px; margin-inline: -4px; }
+
+/* ---- W2 · the decision pack's second row (service index, claims), the default coverage, the managers' service panel ---- */
+.ppk-row2 { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 10px; }
+.ppk-src { font-size: var(--t-1); color: var(--faint, var(--muted)); line-height: 1.5; margin-top: auto; padding-top: 4px; }
+.ppk-src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.ppk-s.warn { color: var(--warn); }
+.ppk-det > summary { cursor: pointer; font-size: var(--t-2); color: var(--link); font-weight: 600; width: fit-content; }
+.ppk-det[open] > summary { margin-bottom: 6px; }
+.ppk-comp { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; font-size: var(--t-2); }
+.ppk-comp li { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(50px, 1fr) 34px; gap: 8px; align-items: center; }
+.ppk-cl { min-width: 0; }
+.ppk-cbar { position: relative; height: 7px; border-radius: 4px; background: var(--panel3, var(--panel2)); }
+.ppk-cbar i { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 4px; background: color-mix(in oklch, var(--accent) 55%, transparent); }
+.ppk-cbar b { position: absolute; top: -3px; width: 2px; height: 13px; margin-inline-start: -1px; background: var(--fg); border-radius: 1px; }
+.ppk-clm { border-collapse: collapse; font-size: var(--t-2); width: 100%; }
+.ppk-clm th, .ppk-clm td { padding: 4px 6px; border-top: 1px solid var(--line-soft); text-align: start; font-weight: 500; }
+.ppk-clm thead th { position: static; box-shadow: none; border-top: 0; font-size: var(--t-1); color: var(--muted); background: none; }
+.ppk-clm tbody th { font-weight: 600; white-space: nowrap; }
+.ppk-stacks { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: center; font-size: var(--t-1); }
+.ppk-stack { display: flex; height: 9px; border-radius: 5px; overflow: hidden; background: var(--panel2); }
+.ppk-stack i, .ppk-key { display: block; height: 100%; }
+.ppk-key { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-inline-end: 6px; vertical-align: -1px; }
+.b0 { background: color-mix(in oklch, var(--up) 80%, transparent); } .b1 { background: color-mix(in oklch, var(--up) 45%, transparent); }
+.b2 { background: color-mix(in oklch, var(--warn) 45%, transparent); } .b3 { background: color-mix(in oklch, var(--down) 50%, transparent); } .b4 { background: color-mix(in oklch, var(--down) 85%, transparent); }
+.ppk-cov { margin-top: 10px; border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 10px 14px; }
+.ppk-cov > summary { cursor: pointer; font-weight: 700; font-size: var(--t-3); }
+.ppk-cov > summary .dim { font-weight: 500; font-size: var(--t-2); }
+.ppk-cov[open] > summary { margin-bottom: 8px; }
+.ppk-rules { margin: 0; padding-inline-start: 18px; display: grid; gap: 8px; font-size: var(--t-2); line-height: 1.6; }
+.ppk-cite { font-size: var(--t-1); white-space: nowrap; }
+.ppk-tracks { border-collapse: collapse; font-size: var(--t-1); margin-top: 6px; min-width: 100%; }
+.ppk-tracks th, .ppk-tracks td { padding: 3px 6px; border-top: 1px solid var(--line-soft); text-align: start; }
+.ppk-tracks thead th { position: static; box-shadow: none; background: none; }
+.bm-note { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-color: color-mix(in oklch, var(--warn) 35%, var(--line-soft)); }
+.bm-note p { margin: 0; font-size: var(--t-3); line-height: 1.6; }
+.bm-note .icotile { flex: none; font-weight: 800; color: var(--warn); }
+.svc-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 10px; }
+.svc-t .chip { margin-inline-start: 4px; }
+.svc-t td.miss { color: var(--muted); white-space: normal; min-width: 220px; }
+.svc-avg { font-size: var(--t-2); color: var(--muted); }
+@media (max-width: 900px) { .ppk-row2 { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  .ppk-src, .ppk-stacks, .ppk-cite, .ppk-tracks, .ppk-clm thead th { font-size: 13px; }
+  .ppk-comp, .ppk-clm, .ppk-rules, .ppk-det > summary, .ppk-cov > summary .dim { font-size: 13.5px; }
+  .ppk-comp li { grid-template-columns: minmax(0, 1.6fr) minmax(40px, 1fr) 30px; }
+}
+
+/* ---- W2 · /funds/bm: the old managers'-insurance checklist ---- */
+.bm-intro { display: grid; gap: 8px; font-size: var(--t-3); line-height: 1.7; max-width: 82ch; }
+.bm-intro p { margin: 0; }
+.bm-disc { padding: 8px 12px; border-radius: var(--r-2); background: color-mix(in oklch, var(--warn) 9%, transparent); border: 1px solid color-mix(in oklch, var(--warn) 30%, transparent); }
+.bm-list { margin: 0; padding-inline-start: 22px; display: grid; gap: 12px; counter-reset: none; }
+.bm-list > li { padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); display: grid; gap: 6px; font-size: var(--t-3); line-height: 1.65; }
+.bm-list > li::marker { font-weight: 700; color: var(--muted); }
+.bm-list > li.done { background: color-mix(in oklch, var(--up) 6%, var(--panel)); border-color: color-mix(in oklch, var(--up) 30%, var(--line-soft)); }
+.bm-list p { margin: 0; }
+.bm-chk { display: flex; gap: 8px; align-items: center; cursor: pointer; font-size: var(--t-4); }
+.bm-chk input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.bm-q { margin: 0; padding: 2px 12px; border-inline-start: 3px solid var(--line); color: var(--muted); font-style: italic; }
+.bm-n { color: var(--warn); }
+.bm-src { font-size: var(--t-2); color: var(--muted); }
+.bm-svc { border-collapse: collapse; font-size: var(--t-3); min-width: min(100%, 420px); }
+.bm-svc th, .bm-svc td { padding: 5px 10px; text-align: start; border-top: 1px solid var(--line-soft); }
+.bm-svc thead th { position: static; }
+.bm-srcs { margin: 0; padding-inline-start: 18px; display: grid; gap: 6px; font-size: var(--t-3); }
+@media (max-width: 760px) { .bm-src { font-size: 13px; } .bm-list { padding-inline-start: 18px; } .bm-list > li { padding: 9px 10px; } }
+.ppk-cov, .ppk-rules > li, .ppk-det, .ppk-cell { min-width: 0; }
+.ppk-rules { grid-template-columns: minmax(0, 1fr); }
+.ppk-cite { white-space: normal; }
+.bm-intro a, .bm-note a, .bm-src a, .bm-srcs a, .ppk .fnote a { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .bm-src .dim, .ppk-cell .dim, .svc-t .dim { font-size: 13px; } }
+.ppk-tracks { width: 100%; table-layout: auto; }
+.ppk-tracks th, .ppk-tracks td, .ppk-clm th, .ppk-clm td { white-space: normal; min-width: 0; }
+.ppk-tracks td:last-child { width: 55%; }
+.panel table.ppk-tracks td, .panel table.ppk-tracks th, .panel table.ppk-clm td, .panel table.ppk-clm th, .panel table.bm-svc td, .panel table.bm-svc th { min-width: 0; }
+.w2d { color: var(--muted); }
+.ppk-s.w2d { color: var(--muted); }
+.ppk-clm tbody th { border-top: 1px solid var(--line-soft); vertical-align: middle; }
+.ppk-tracks td:last-child { width: auto; }
