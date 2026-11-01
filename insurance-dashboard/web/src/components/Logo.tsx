@@ -1,13 +1,16 @@
 /** The fox mark: a phoenix rising. Wings, body and tail are separate groups so the mark can animate. */
+import { useId } from 'react';
+
 export function Logo({ size = 28, animated = false }: { size?: number; animated?: boolean }) {
+  const gid = `fox-g${useId().replace(/:/g, '')}`;  // one gradient per mark: a shared id resolves to the first copy, which is hidden on the phone
   return (
     <svg className={`logo${animated ? ' logo-live' : ''}`} viewBox="0 0 64 64" width={size} height={size} role="img" aria-label="fox">
       <defs>
-        <linearGradient id="fox-g" x1="0.15" y1="0" x2="0.85" y2="1">
+        <linearGradient id={gid} x1="0.15" y1="0" x2="0.85" y2="1">
           <stop offset="0" stopColor="#ffcf5c" /><stop offset="0.42" stopColor="#ff7a2f" /><stop offset="1" stopColor="#e0218a" />
         </linearGradient>
       </defs>
-      <g fill="url(#fox-g)">
+      <g fill={`url(#${gid})`}>
         <path className="wing wl" d="M30.5 31 C24 29 15 23 7 8 C14 13 20 15 26 17 C22 17 18 16.5 14.5 15.5 C19 20 24 22 28.5 23.5 C25.5 24 22.5 23.8 20 23.2 C23.5 27 27 29 30.5 31 Z" />
         <path className="wing wr" d="M33.5 31 C40 29 49 23 57 8 C50 13 44 15 38 17 C42 17 46 16.5 49.5 15.5 C45 20 40 22 35.5 23.5 C38.5 24 41.5 23.8 44 23.2 C40.5 27 37 29 33.5 31 Z" />
         <g className="body">
