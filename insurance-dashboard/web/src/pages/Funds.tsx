@@ -7,6 +7,7 @@ import { useMacro } from '../lib/macro';
 import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, famOf, hasNet, netMonthIn, netProv, netSeries, outlierProv, realProv, toReal, useBasis, useReal, winRet, selfDirected, type CatX, type FundX, type FundsFile } from '../lib/funds';
 import { MgrChip } from '../components/MgrChip';
 import { DEFAULT_PER, TIE_F, rankText, tieBand, tieRanks } from '../lib/fundsTie';
+import { PensionPack } from '../components/agent/PensionPack';  // W1-agent
 import { RankPanel, RiskPanel, WatchStar } from '../components/FundsTime';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
@@ -395,6 +396,7 @@ export function FundCard() {
         <Kpi label={<>שארפ <Tip k="sharpe" /></>} value={f.sharpe == null ? '–' : SRC(() => plain(f, asof, 'sharpe'), nf(f.sharpe, 2))} sub={f.yrs ? <>רבע עליון ב-{SRC(() => topSrc(f), `${f.top} מתוך ${f.yrs}`)} שנים</> : f.sd != null ? <>סטיית תקן {SRC(() => plain(f, asof, 'sd'), nf(f.sd!, 2))}</> : ' '} />
         <Kpi label={<>חשיפה למניות <Tip k="equity" /></>} value={expo('st', f.st)} sub={f.fo != null ? <>חו"ל {expo('fo', f.fo)} · מט"ח {expo('fx', f.fx)}</> : ' '} />
       </section>
+      <PensionPack f={fx} h={h} asof={asof} funds={data.funds as FundX[]} />{/* W1-agent: renders only on pension tracks */}
 
       <div className="grid21">
         <Panel title={<>תשואה מצטברת, בסיס 100 <Tip k={net ? 'net' : 'growth'} /></>} aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} />{net && <span className="chip est">{NET_LABEL}</span>}</>}>

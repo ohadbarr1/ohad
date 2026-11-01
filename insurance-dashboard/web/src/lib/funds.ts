@@ -72,9 +72,9 @@ export function useReal(): [boolean, (r: boolean) => void] {
 }
 
 const TRAY = 'fox:cmp', TRAY_EVENT = 'fox:cmp';
-export const TRAY_MAX = 4;
+export const TRAY_MAX = 8;  // W1-agent: up to eight tracks (was four)
 const readTray = (): string[] => { try { const v = JSON.parse(sessionStorage.getItem(TRAY) ?? '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string').slice(0, TRAY_MAX) : []; } catch { return []; } };
-/** The compare tray: up to four tracks, kept for this tab (sessionStorage) while the reader moves between pages. */
+/** The compare tray: up to TRAY_MAX tracks, kept for this tab (sessionStorage) while the reader moves between pages. */
 export function useTray(): { keys: string[]; has: (k: string) => boolean; toggle: (k: string) => void; set: (ks: string[]) => void; clear: () => void } {
   const [keys, setKeys] = useState<string[]>(readTray);
   useEffect(() => { const on = () => setKeys(readTray()); addEventListener(TRAY_EVENT, on); return () => removeEventListener(TRAY_EVENT, on); }, []);
