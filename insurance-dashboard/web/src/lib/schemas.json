@@ -118,6 +118,34 @@
    "schema": "fundsClosed"
   },
   {
+   "pattern": "funds/stats/index.json",
+   "schema": "fundStatsIndex"
+  },
+  {
+   "pattern": "funds/stats/*.json",
+   "schema": "fundStats"
+  },
+  {
+   "pattern": "funds/rank/*.json",
+   "schema": "fundRank"
+  },
+  {
+   "pattern": "funds/persist.json",
+   "schema": "fundsPersist"
+  },
+  {
+   "pattern": "funds/default.json",
+   "schema": "fundsDefault"
+  },
+  {
+   "pattern": "funds/trackers.json",
+   "schema": "fundsTrackers"
+  },
+  {
+   "pattern": "funds/glide.json",
+   "schema": "fundsGlide"
+  },
+  {
    "pattern": "funds/*.json",
    "schema": "fundHist"
   },
@@ -14425,6 +14453,1218 @@
         }
        }
       ]
+     }
+    }
+   }
+  },
+  "fundStatTrack": {
+   "type": "object",
+   "required": [
+    "k",
+    "name",
+    "n_months",
+    "basis"
+   ],
+   "properties": {
+    "k": {
+     "type": "string",
+     "pattern": "^[gpi][0-9]+$"
+    },
+    "name": {
+     "type": "string"
+    },
+    "mgr": {
+     "type": "string"
+    },
+    "grp": {
+     "type": "string"
+    },
+    "n_months": {
+     "type": "integer"
+    },
+    "basis": {
+     "enum": [
+      "net",
+      "gross",
+      null
+     ]
+    },
+    "gone": {
+     "type": "boolean"
+    },
+    "vol36": {
+     "$ref": "#/$defs/num"
+    },
+    "dd_max": {
+     "$ref": "#/$defs/num"
+    },
+    "dd_cur": {
+     "$ref": "#/$defs/num"
+    },
+    "sharpe36": {
+     "$ref": "#/$defs/num"
+    },
+    "sortino36": {
+     "$ref": "#/$defs/num"
+    },
+    "beta36_vs_cat": {
+     "$ref": "#/$defs/num"
+    },
+    "te36_vs_cat": {
+     "$ref": "#/$defs/num"
+    },
+    "up_cap36": {
+     "$ref": "#/$defs/num"
+    },
+    "down_cap36": {
+     "$ref": "#/$defs/num"
+    },
+    "worst_m": {
+     "$ref": "#/$defs/num"
+    },
+    "best_m": {
+     "$ref": "#/$defs/num"
+    },
+    "pct_pos_m": {
+     "$ref": "#/$defs/num"
+    },
+    "a36": {
+     "$ref": "#/$defs/num"
+    },
+    "dd_max_all": {
+     "$ref": "#/$defs/num"
+    },
+    "dd_len": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "rec_months": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "dd_peak": {
+     "$ref": "#/$defs/month"
+    },
+    "dd_trough": {
+     "$ref": "#/$defs/month"
+    },
+    "dd_all_from": {
+     "$ref": "#/$defs/month"
+    },
+    "self_dir": {
+     "type": "boolean"
+    },
+    "sector": {
+     "type": "boolean"
+    }
+   }
+  },
+  "fundStats": {
+   "type": "object",
+   "required": [
+    "v",
+    "cat",
+    "label",
+    "prod",
+    "asof",
+    "rf",
+    "tracks",
+    "cat_median"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "cat": {
+     "type": "string"
+    },
+    "label": {
+     "type": "string"
+    },
+    "prod": {
+     "type": "string"
+    },
+    "slug": {
+     "type": "string",
+     "pattern": "^c[0-9a-f]{10}$"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "win": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/month"
+     }
+    },
+    "rf": {
+     "type": "object",
+     "required": [
+      "src",
+      "method"
+     ],
+     "properties": {
+      "src": {
+       "type": "string"
+      },
+      "method": {
+       "type": "string"
+      },
+      "series": {
+       "type": "string"
+      },
+      "a36": {
+       "$ref": "#/$defs/num"
+      },
+      "filled": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/month"
+       }
+      }
+     }
+    },
+    "src": {
+     "type": "string"
+    },
+    "method": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "tracks": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/fundStatTrack"
+     }
+    },
+    "cat_median": {
+     "type": "object",
+     "required": [
+      "n"
+     ],
+     "properties": {
+      "n": {
+       "type": "integer"
+      }
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/num"
+     }
+    }
+   }
+  },
+  "fundStatsIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "cats"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "slug": {
+     "type": "string"
+    },
+    "cats": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "slug",
+       "cat",
+       "prod",
+       "track",
+       "n",
+       "stats",
+       "rank"
+      ],
+      "properties": {
+       "slug": {
+        "type": "string",
+        "pattern": "^c[0-9a-f]{10}$"
+       },
+       "cat": {
+        "type": "string"
+       },
+       "prod": {
+        "type": "string"
+       },
+       "track": {
+        "type": "string"
+       },
+       "n": {
+        "type": "integer"
+       },
+       "stats": {
+        "type": "boolean"
+       },
+       "rank": {
+        "type": "boolean"
+       }
+      }
+     }
+    }
+   }
+  },
+  "fundRankSet": {
+   "type": "object",
+   "required": [
+    "metric",
+    "basis",
+    "tracks",
+    "n"
+   ],
+   "properties": {
+    "metric": {
+     "enum": [
+      "y12",
+      "a3"
+     ]
+    },
+    "basis": {
+     "enum": [
+      "net",
+      "gross"
+     ]
+    },
+    "tracks": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      }
+     }
+    },
+    "n": {
+     "type": "array",
+     "items": {
+      "type": "integer"
+     }
+    }
+   }
+  },
+  "fundRank": {
+   "type": "object",
+   "required": [
+    "v",
+    "cat",
+    "months",
+    "metric",
+    "basis",
+    "tracks",
+    "n"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "cat": {
+     "type": "string"
+    },
+    "label": {
+     "type": "string"
+    },
+    "prod": {
+     "type": "string"
+    },
+    "slug": {
+     "type": "string"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "months": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/month"
+     }
+    },
+    "metric": {
+     "enum": [
+      "y12",
+      "a3"
+     ]
+    },
+    "basis": {
+     "enum": [
+      "net",
+      "gross"
+     ]
+    },
+    "tracks": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      }
+     }
+    },
+    "n": {
+     "type": "array",
+     "items": {
+      "type": "integer"
+     }
+    },
+    "sets": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/fundRankSet"
+     }
+    },
+    "method": {
+     "type": "string"
+    },
+    "src": {
+     "type": "string"
+    }
+   }
+  },
+  "fundsPersist": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "method",
+    "cols",
+    "rows"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "src": {
+     "type": "string"
+    },
+    "method": {
+     "type": "string"
+    },
+    "note": {
+     "type": "string"
+    },
+    "cols": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "rows": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "fam",
+       "win",
+       "basis",
+       "rows",
+       "top",
+       "stay",
+       "stay_pct",
+       "coin",
+       "ci90",
+       "wilson90"
+      ],
+      "properties": {
+       "fam": {
+        "type": "string"
+       },
+       "win": {
+        "enum": [
+         "12",
+         "36"
+        ]
+       },
+       "basis": {
+        "enum": [
+         "net",
+         "gross"
+        ]
+       },
+       "from": {
+        "$ref": "#/$defs/month"
+       },
+       "to": {
+        "$ref": "#/$defs/month"
+       },
+       "starts": {
+        "type": "integer"
+       },
+       "cats": {
+        "type": "integer"
+       },
+       "rows": {
+        "type": "array",
+        "minItems": 4,
+        "items": {
+         "type": "object",
+         "required": [
+          "q",
+          "n",
+          "to",
+          "gone"
+         ],
+         "properties": {
+          "q": {
+           "type": "integer"
+          },
+          "n": {
+           "type": "integer"
+          },
+          "to": {
+           "type": "array",
+           "minItems": 4,
+           "items": {
+            "type": "integer"
+           }
+          },
+          "gone": {
+           "type": "integer"
+          },
+          "pct": {
+           "$ref": "#/$defs/nums"
+          }
+         }
+        }
+       },
+       "gap": {
+        "type": "integer"
+       },
+       "top": {
+        "type": "integer"
+       },
+       "stay": {
+        "type": "integer"
+       },
+       "stay_pct": {
+        "$ref": "#/$defs/num"
+       },
+       "top_surv": {
+        "type": "integer"
+       },
+       "stay_surv_pct": {
+        "$ref": "#/$defs/num"
+       },
+       "coin": {
+        "type": "number"
+       },
+       "gone_pct": {
+        "$ref": "#/$defs/num"
+       },
+       "gone_q4_pct": {
+        "$ref": "#/$defs/num"
+       },
+       "ci90": {
+        "$ref": "#/$defs/nums"
+       },
+       "ci90_surv": {
+        "$ref": "#/$defs/nums"
+       },
+       "eff": {
+        "$ref": "#/$defs/num"
+       },
+       "thin": {
+        "type": "boolean"
+       },
+       "wilson90": {
+        "type": "object",
+        "required": [
+         "k",
+         "n",
+         "lo",
+         "hi"
+        ],
+        "properties": {
+         "k": {
+          "type": "integer"
+         },
+         "n": {
+          "type": "integer"
+         },
+         "starts": {
+          "type": "integer"
+         },
+         "lo": {
+          "$ref": "#/$defs/num"
+         },
+         "hi": {
+          "$ref": "#/$defs/num"
+         },
+         "pct": {
+          "$ref": "#/$defs/num"
+         }
+        }
+       },
+       "rho": {
+        "$ref": "#/$defs/num"
+       },
+       "rho_n": {
+        "type": "integer"
+       }
+      }
+     }
+    }
+   }
+  },
+  "fundsDefaultWin": {
+   "type": "object",
+   "required": [
+    "from",
+    "to",
+    "m"
+   ],
+   "properties": {
+    "from": {
+     "$ref": "#/$defs/month"
+    },
+    "to": {
+     "$ref": "#/$defs/month"
+    },
+    "m": {
+     "type": "integer"
+    },
+    "a0": {
+     "$ref": "#/$defs/num"
+    },
+    "a1": {
+     "$ref": "#/$defs/num"
+    },
+    "dep": {
+     "$ref": "#/$defs/num"
+    },
+    "nd": {
+     "$ref": "#/$defs/num"
+    },
+    "tr": {
+     "$ref": "#/$defs/num"
+    },
+    "share": {
+     "$ref": "#/$defs/num"
+    },
+    "ret": {
+     "$ref": "#/$defs/num"
+    },
+    "resid": {
+     "$ref": "#/$defs/num"
+    }
+   }
+  },
+  "fundsDefault": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "tenders"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "method": {
+     "type": "string"
+    },
+    "src": {
+     "type": "string"
+    },
+    "reg": {
+     "type": "string"
+    },
+    "sources": {
+     "type": "array",
+     "items": {
+      "type": "object"
+     }
+    },
+    "tenders": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "from",
+       "to",
+       "fee",
+       "depfee",
+       "src",
+       "verified",
+       "winners"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "label": {
+        "type": "string"
+       },
+       "announced": {
+        "type": "string"
+       },
+       "from": {
+        "$ref": "#/$defs/date"
+       },
+       "to": {
+        "$ref": "#/$defs/date"
+       },
+       "fee": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "depfee": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "fee_years": {
+        "type": "integer"
+       },
+       "alloc": {
+        "type": "string"
+       },
+       "fee_alt": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "fee",
+          "depfee"
+         ],
+         "properties": {
+          "fee": {
+           "type": "number"
+          },
+          "depfee": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "note": {
+        "type": "string"
+       },
+       "src": {
+        "type": "string",
+        "pattern": "^https://"
+       },
+       "src_title": {
+        "type": "string"
+       },
+       "ver": {
+        "type": "object",
+        "additionalProperties": {
+         "enum": [
+          "primary",
+          "derived",
+          "issuer",
+          "press"
+         ]
+        }
+       },
+       "verified": {
+        "type": "boolean"
+       },
+       "sources": {
+        "type": "array",
+        "items": {
+         "type": "integer"
+        }
+       },
+       "sel_share": {
+        "type": "object",
+        "properties": {
+         "pre": {
+          "$ref": "#/$defs/num"
+         },
+         "post": {
+          "$ref": "#/$defs/num"
+         },
+         "d": {
+          "$ref": "#/$defs/num"
+         },
+         "aft": {
+          "$ref": "#/$defs/num"
+         }
+        }
+       },
+       "winners": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "type": "object",
+         "required": [
+          "co",
+          "grp",
+          "src",
+          "ver",
+          "verified"
+         ],
+         "properties": {
+          "co": {
+           "type": "string"
+          },
+          "fund": {
+           "type": "string"
+          },
+          "grp": {
+           "type": "string"
+          },
+          "fee": {
+           "$ref": "#/$defs/num"
+          },
+          "depfee": {
+           "$ref": "#/$defs/num"
+          },
+          "pid": {
+           "type": "integer"
+          },
+          "ks": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          },
+          "src": {
+           "type": "string",
+           "pattern": "^https://"
+          },
+          "ver": {
+           "enum": [
+            "primary",
+            "issuer",
+            "press"
+           ]
+          },
+          "verified": {
+           "type": "boolean"
+          },
+          "map": {
+           "type": "string"
+          },
+          "map_note": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "funds": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "tender",
+       "grp",
+       "sel"
+      ],
+      "properties": {
+       "tender": {
+        "type": "string"
+       },
+       "grp": {
+        "type": "string"
+       },
+       "sel": {
+        "type": "boolean"
+       },
+       "pid": {
+        "type": "integer"
+       },
+       "ks": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "all": {
+        "type": "boolean"
+       },
+       "rest": {
+        "type": "boolean"
+       },
+       "pre": {
+        "$ref": "#/$defs/fundsDefaultWin"
+       },
+       "post": {
+        "$ref": "#/$defs/fundsDefaultWin"
+       },
+       "aft": {
+        "$ref": "#/$defs/fundsDefaultWin"
+       }
+      }
+     }
+    }
+   }
+  },
+  "fundsTrackers": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "groups"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "src": {
+     "type": "string"
+    },
+    "method": {
+     "type": "string"
+    },
+    "basis_note": {
+     "type": "string"
+    },
+    "groups": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "label",
+       "n",
+       "med",
+       "tracks"
+      ],
+      "properties": {
+       "id": {
+        "enum": [
+         "sp500",
+         "eq_idx",
+         "bond_idx",
+         "flex_idx"
+        ]
+       },
+       "label": {
+        "type": "string"
+       },
+       "track": {
+        "type": "string"
+       },
+       "n": {
+        "type": "integer"
+       },
+       "same_index": {
+        "type": "boolean"
+       },
+       "med": {
+        "type": "object",
+        "properties": {
+         "y12": {
+          "$ref": "#/$defs/num"
+         },
+         "a3": {
+          "$ref": "#/$defs/num"
+         },
+         "a5": {
+          "$ref": "#/$defs/num"
+         }
+        }
+       },
+       "med_n": {
+        "type": "object",
+        "properties": {
+         "y12": {
+          "$ref": "#/$defs/num"
+         },
+         "a3": {
+          "$ref": "#/$defs/num"
+         },
+         "a5": {
+          "$ref": "#/$defs/num"
+         }
+        }
+       },
+       "n_w": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "integer"
+        }
+       },
+       "tracks": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "k",
+          "name",
+          "grp",
+          "prod",
+          "g",
+          "nt",
+          "td"
+         ],
+         "properties": {
+          "k": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          },
+          "grp": {
+           "type": "string"
+          },
+          "prod": {
+           "type": "string"
+          },
+          "fee": {
+           "$ref": "#/$defs/num"
+          },
+          "depfee": {
+           "$ref": "#/$defs/num"
+          },
+          "assets": {
+           "$ref": "#/$defs/num"
+          },
+          "fx": {
+           "$ref": "#/$defs/num"
+          },
+          "g": {
+           "type": "object",
+           "properties": {
+            "y12": {
+             "$ref": "#/$defs/num"
+            },
+            "a3": {
+             "$ref": "#/$defs/num"
+            },
+            "a5": {
+             "$ref": "#/$defs/num"
+            }
+           }
+          },
+          "nt": {
+           "type": "object",
+           "properties": {
+            "y12": {
+             "$ref": "#/$defs/num"
+            },
+            "a3": {
+             "$ref": "#/$defs/num"
+            },
+            "a5": {
+             "$ref": "#/$defs/num"
+            }
+           }
+          },
+          "td": {
+           "type": "object",
+           "properties": {
+            "y12": {
+             "$ref": "#/$defs/num"
+            },
+            "a3": {
+             "$ref": "#/$defs/num"
+            },
+            "a5": {
+             "$ref": "#/$defs/num"
+            }
+           }
+          },
+          "tdn": {
+           "type": "object",
+           "properties": {
+            "y12": {
+             "$ref": "#/$defs/num"
+            },
+            "a3": {
+             "$ref": "#/$defs/num"
+            },
+            "a5": {
+             "$ref": "#/$defs/num"
+            }
+           }
+          },
+          "tx_dis": {
+           "type": "boolean"
+          },
+          "sector": {
+           "type": "boolean"
+          },
+          "gone": {
+           "type": "boolean"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "fundsGlide": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "months",
+    "ages",
+    "prods"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "src": {
+     "type": "string"
+    },
+    "method": {
+     "type": "string"
+    },
+    "months": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/month"
+     }
+    },
+    "ages": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "prods": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "prod",
+       "mgrs"
+      ],
+      "properties": {
+       "prod": {
+        "type": "string"
+       },
+       "mgrs": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "grp",
+          "tracks",
+          "gap"
+         ],
+         "properties": {
+          "grp": {
+           "type": "string"
+          },
+          "tracks": {
+           "type": "object",
+           "additionalProperties": {
+            "type": "object",
+            "required": [
+             "k",
+             "name",
+             "st"
+            ],
+            "properties": {
+             "k": {
+              "type": "string"
+             },
+             "name": {
+              "type": "string"
+             },
+             "assets": {
+              "$ref": "#/$defs/num"
+             },
+             "st": {
+              "$ref": "#/$defs/nums"
+             },
+             "fo": {
+              "$ref": "#/$defs/nums"
+             },
+             "net": {
+              "type": "object",
+              "properties": {
+               "y12": {
+                "$ref": "#/$defs/num"
+               },
+               "a3": {
+                "$ref": "#/$defs/num"
+               },
+               "a5": {
+                "$ref": "#/$defs/num"
+               }
+              }
+             },
+             "gross": {
+              "type": "object",
+              "properties": {
+               "y12": {
+                "$ref": "#/$defs/num"
+               },
+               "a3": {
+                "$ref": "#/$defs/num"
+               },
+               "a5": {
+                "$ref": "#/$defs/num"
+               }
+              }
+             },
+             "st_now": {
+              "$ref": "#/$defs/num"
+             },
+             "fo_now": {
+              "$ref": "#/$defs/num"
+             }
+            }
+           }
+          },
+          "gap": {
+           "type": "object",
+           "additionalProperties": {
+            "$ref": "#/$defs/num"
+           }
+          }
+         }
+        }
+       },
+       "med": {
+        "type": "object"
+       },
+       "gap_med": {
+        "type": "object",
+        "additionalProperties": {
+         "$ref": "#/$defs/num"
+        }
+       }
+      }
      }
     }
    }

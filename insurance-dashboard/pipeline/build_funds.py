@@ -220,8 +220,9 @@ def main():
 
     # histories: every track, live or closed
     (OUT / "funds").mkdir(parents=True, exist_ok=True)
-    for old in (OUT / "funds").glob("*.json"):
-        old.unlink()
+    for old in (OUT / "funds").glob("*.json"):  # the track histories only: funds/<F2 analytics>.json belong to build_fund_stats.py
+        if re.fullmatch(r"[gpi]\d+\.json", old.name):
+            old.unlink()
     months, tracks = {}, {}
     for key, g in d.groupby("key", sort=True):
         tr = Track(g)

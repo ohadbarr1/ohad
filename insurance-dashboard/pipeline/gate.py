@@ -100,6 +100,10 @@ Checks
                  closed, every family at the same latest month, the CMA's field set unchanged), the latest month's returns in bounds, and
                  every derived figure re-derives from the published files: net of fees, percentile ranks, the point-in-time category
                  returns (pipeline/check_funds_contract.py). Without data/raw or pandas only the published-file half runs: a warning.
+  fund_stats     the funds analytics (F2: funds/stats, funds/rank, persist, default, trackers, glide) equal a rebuild from the published
+                 track files byte for byte, and hold their rules: drawdowns ≤ 0, ranks 0-100 with at least 5 peers, transition rows that
+                 sum, every default-fund tender sourced (verified only on a gov.il page), tracking differences that re-derive
+                 (pipeline/build_fund_stats.py --check)
   attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
                  every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
                  from the facts it cites, and every contribution has inputs that open down to a report and page
@@ -660,6 +664,14 @@ def funds_contract():  # module F1
     add("funds_contract", True, R.n, 0, (summary + (f"; warn: {R.warn[0]}" if R.warn else ""))[:200])
 
 
+def fund_stats():  # module F2
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_fund_stats.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"\((\d+) tracks\)", out[-1])
+    add("fund_stats", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def attribution():  # module A4
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -749,6 +761,7 @@ def main():
     feed()
     fragility()
     funds_contract()
+    fund_stats()
     attribution()
     facts()
     assets()

@@ -23,6 +23,7 @@ Upstream (needs pandas and data/raw; skipped with a warning otherwise, e.g. in C
                NIS 1bn (a merger moves money between tracks without a transfer)
 """
 import json
+import re
 import math
 import sys
 from pathlib import Path
@@ -80,8 +81,9 @@ def published(R):
     R.check(C.get("asof") == asof and C.get("n") == len(closed) and F.get("closed_n") == len(closed), "closed.json: asof / n disagree with funds.json")
     for f in live + closed:
         R.check(f["k"] == LETTER.get(f["fam"], "?") + str(f["id"]), f"{f['k']}: key is not family letter + id")
-    files = {p.stem for p in (DATA / "funds").glob("*.json")} - {"cat", "closed"}
-    R.check(files == set(keys_l) | set(keys_c), f"history files: {len(set(keys_l) | set(keys_c) - files)} missing, "
+    # the track histories (funds/<g|p|i><id>.json); cat.json, closed.json and the F2 analytics files (persist, default, ...) are not histories
+    files = {p.stem for p in (DATA / "funds").glob("*.json") if re.fullmatch(r"[gpi]\d+", p.stem)}
+    R.check(files == set(keys_l) | set(keys_c), f"history files: {len((set(keys_l) | set(keys_c)) - files)} missing, "
                                                 f"{len(files - set(keys_l) - set(keys_c))} orphan")
     H = {k: jl(DATA / "funds" / f"{k}.json") for k in sorted(files & (set(keys_l) | set(keys_c)))}
 

@@ -75,7 +75,7 @@ STEPS = [
     step("build_documents", "pipeline/build_documents.py", ["data/warehouse.duckdb"], [D + "companies/*.docs.json"], {"duckdb"}),
     step("build_market", "pipeline/build_market.py", ["data/raw/_meta.json"], ["data/market.json", D + "market.json", D + "prov/reg"], {"pandas", "drive"}),
     step("build_funds", "pipeline/build_funds.py", ["data/raw/_meta.json", "data/raw/macro", "data/regulation/transfer_bank.json"],
-         [D + "funds.json", D + "funds"], {"pandas", "drive"}, code=["pipeline/funds_lib.py"],
+         [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/cat.json", D + "funds/closed.json"], {"pandas", "drive"}, code=["pipeline/funds_lib.py"],
          note="also: the official track taxonomy (transfer_bank) and CPI for real returns"),
     step("build_macro", "pipeline/build_macro.py", ["data/raw/macro"], [D + "macro/macro.json"], {"drive"}),
     step("build_boi_curve", "pipeline/build_boi_curve.py", ["data/raw/boi"], [D + "macro/boi_curve.json"], {"drive"}),
@@ -210,7 +210,8 @@ STEPS = [
     step("build_answers", "pipeline/build_answers.py",
          [D + "lens.json", D + "market.json", D + "companies/index.json", D + "fragility.json", D + "targets.json", D + "kpi.json", D + "csm",
           D + "capital", D + "consolidation", D + "expectations", D + "warroom", D + "regulation", D + "attribution", D + "drivers", D + "funds.json",
-          D + "nowcast.json", D + "flow_npv.json"],
+          D + "nowcast.json", D + "flow_npv.json", D + "funds/closed.json", D + "funds/persist.json", D + "funds/default.json", D + "funds/trackers.json",
+          D + "funds/glide.json", D + "funds/stats"],
          [D + "answers"], code=["pipeline/answer_core.py", "pipeline/questions"], groups={"deploy"},
          note="S1: answers/index.json + answers/<topic>.json; every figure a token with provenance (answer_core rules)"),
     # module S2: the Finding Engine (six detectors over the published files, ranked by materiality x surprise, top 3-5 per build); gate `findings`
@@ -225,6 +226,14 @@ STEPS = [
          [D + "answers", D + "findings.json", D + "calendar.json", D + "feed.json", D + "nowcast.json"],
          [D + "watch.json"], code=["pipeline/answer_core.py"], edits=["data/ledger/answers"], daily=True, groups={"deploy"},
          note="S10: data/ledger/answers/<day>.json (append-only) -> watch.json: changes (answer / tripped / finding / new / gone) + upcoming"),
+    # module F2: the funds analytics (risk panel, ranks over time, persistence, default funds, trackers, glide paths) from the published
+    # track files and the BoI curve; standard library; gate `fund_stats` (rebuild byte-equal + rules)
+    step("build_fund_stats", "pipeline/build_fund_stats.py",
+         [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/cat.json", D + "funds/closed.json", D + "macro/boi_curve.json",
+          "data/regulation/default_funds.json"],
+         [D + "funds/stats", D + "funds/rank", D + "funds/persist.json", D + "funds/default.json", D + "funds/trackers.json", D + "funds/glide.json"],
+         code=["pipeline/fund_stats_lib.py", "pipeline/funds_lib.py"], groups={"deploy"},
+         note="F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

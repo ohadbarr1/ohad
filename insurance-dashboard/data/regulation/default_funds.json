@@ -1,0 +1,75 @@
+{
+ "$comment": "F2 · the default-fund register (קרנות פנסיה נבחרות / ברירת מחדל), hand-curated. Every fact carries `src` (indices into sources[]) and `ver`: primary = read on the regulator's own document (gov.il PDF, page pg); issuer = the winning company's own TASE filing quoting the regulator's award notice; press = reported by the press only, the regulator's notice not found; derived = follows from a primary rule (e.g. the end of a period from the next determining date). Nothing is inferred beyond that: a figure no source prints is left out. `pid` = the fund's id in pensia-net (PARENT_COMPANY_ID) and is the site's mapping, labelled `map`: the regulator's files carry today's fund names on their whole history, so a winner is matched to the fund id whose tracks bore its name (inferred, stated in `map_note`). pipeline/build_fund_stats.py reads this file and writes web/public/data/funds/default.json.",
+ "retrieved": "2026-11-01",
+ "sources": [
+  {"id": 0, "kind": "primary", "url": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/regulation-1092/he/regulation_h_2016-9-8.pdf", "title": "חוזר גופים מוסדיים 2016-9-8: הוראות לעניין בחירת קופת גמל", "doc": "רשות שוק ההון, ביטוח וחיסכון, חוזר 2016-9-8", "pg": 2, "retrieved": "2026-11-01"},
+  {"id": 1, "kind": "press", "url": "https://www.calcalist.co.il/money/articles/0,7340,L-3694499,00.html", "title": "כלכליסט: נבחרו קרנות ברירת המחדל (01.08.16)", "doc": "כלכליסט, 01.08.2016", "pg": null, "retrieved": "2026-11-01"},
+  {"id": 2, "kind": "press", "url": "https://www.ynet.co.il/articles/0,7340,L-4835767,00.html", "title": "ynet: קרנות הפנסיה שנבחרו כברירת מחדל (01.08.16)", "doc": "ynet, 01.08.2016", "pg": null, "retrieved": "2026-11-01"},
+  {"id": 3, "kind": "primary", "url": "https://www.gov.il/BlobFolder/generalpage/pension-default-funds/he/Pension_hm_2018-14772.pdf", "title": "תוצאות הליך קביעת קרנות פנסיה נבחרות", "doc": "רשות שוק ההון, שה.2018-14772, 14.10.2018", "pg": 1, "retrieved": "2026-11-01"},
+  {"id": 4, "kind": "primary", "url": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/reg_06092021/he/%D7%94%D7%9C%D7%99%D7%9A%20%D7%A7%D7%91%D7%99%D7%A2%D7%AA%20%D7%A7%D7%A8%D7%A0%D7%95%D7%AA%20%D7%A0%D7%91%D7%97%D7%A8%D7%95%D7%AA%20-%20%D7%98%D7%99%D7%95%D7%98%D7%94.pdf", "title": "הליך קביעת קרנות נבחרות (2021)", "doc": "רשות שוק ההון, הליך קביעת קרנות נבחרות, 2021", "pg": 1, "retrieved": "2026-11-01"},
+  {"id": 5, "kind": "issuer", "url": "https://ir.as-invest.co.il/wp-content/uploads/2021/09/%D7%96%D7%9B%D7%99%D7%99%D7%94-%D7%91%D7%94%D7%9C%D7%99%D7%9A-%D7%9C%D7%A0%D7%99%D7%94%D7%95%D7%9C-%D7%A7%D7%A8%D7%9F-%D7%A4%D7%A0%D7%A1%D7%99%D7%94-%D7%A0%D7%91%D7%97%D7%A8%D7%AA.pdf", "title": "אלטשולר שחם גמל ופנסיה: זכייה בהליך לניהול קרן פנסיה נבחרת (דיווח, 14.09.21)", "doc": "אלטשולר שחם גמל ופנסיה בע\"מ, דיווח מיידי 14.09.2021, מצטט את הודעת הזכייה של הרשות", "pg": 1, "retrieved": "2026-11-01"},
+  {"id": 6, "kind": "press", "url": "https://www.globes.co.il/news/article.aspx?did=1001384730", "title": "גלובס: קרנות ברירת המחדל שנבחרו (09.21)", "doc": "גלובס, 14.09.2021", "pg": null, "retrieved": "2026-11-01"},
+  {"id": 7, "kind": "press", "url": "https://www.funder.co.il/article/123147", "title": "פאנדר: ארבע קרנות ברירת המחדל החדשות (09.21)", "doc": "פאנדר, 09.2021", "pg": null, "retrieved": "2026-11-01"},
+  {"id": 8, "kind": "primary", "url": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/notice-2024-101/he/Results_of_the_fourth_procedure_for_determining_selected_funds_pdf.pdf", "title": "תוצאות ההליך הרביעי לקביעת קרנות פנסיה נבחרות", "doc": "רשות שוק ההון, שה.2024-2531, 19.09.2024", "pg": 1, "retrieved": "2026-11-01"},
+  {"id": 9, "kind": "primary", "url": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/notice-2025-26/he/clarification_regarding_the_selected_funds_procedure_pdf.pdf", "title": "הבהרה בעניין הליך קביעת קרנות נבחרות", "doc": "רשות שוק ההון, 2025", "pg": 1, "retrieved": "2026-11-01"}
+ ],
+ "tenders": [
+  {"id": "2016", "label": "ההליך הראשון", "announced": "2016-08-01", "announced_src": [1, 2], "announced_ver": "press",
+   "from": "2016-11-01", "from_src": [0], "from_ver": "primary",
+   "to": "2018-10-31", "to_src": [0], "to_ver": "derived", "to_note": "המועד הקובע הבא בחוזר: \"ואחת לשלוש שנים החל מיום 1 בנובמבר 2018\"",
+   "fee_years": 10, "fee_years_src": [0], "fee_years_ver": "primary", "fee_years_pg": 3,
+   "note": "הודעת התוצאות של הרשות לא אותרה; הזוכות ודמי הניהול מפי העיתונות בלבד",
+   "winners": [
+    {"co": "מיטב דש גמל ופנסיה", "grp": "מיטב", "fee": 0.01, "depfee": 1.31, "src": [1, 2], "ver": "press", "pid": 163, "map": "inferred",
+     "map_note": "קרן הפנסיה המקיפה של קבוצת מיטב שפעילה ברציפות מ-2012 (pensia-net, PARENT_COMPANY_ID 163)"},
+    {"co": "הלמן אלדובי קופות גמל ופנסיה", "grp": "הלמן אלדובי", "fee": 0.001, "depfee": 1.49, "src": [1, 2], "ver": "press", "pid": 1032, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 1032: מסלוליה נשאו את השם הלמן אלדובי עד 01/16; הקרן נמכרה למיטב ב-2021 ומדווחת היום בשם מיטב דש, עד 10/21"}
+   ]},
+  {"id": "2018", "label": "ההליך השני", "announced": "2018-10-14", "announced_src": [3], "announced_ver": "primary",
+   "from": "2018-11-01", "from_src": [3], "from_ver": "primary", "to": "2021-10-31", "to_src": [3], "to_ver": "primary",
+   "fee_years": 10, "fee_years_src": [3], "fee_years_ver": "primary",
+   "note": "דמי ניהול שונים לכל זוכה; מקבלי קצבת זקנה חדשים: עד 0.3%",
+   "winners": [
+    {"co": "אלטשולר שחם גמל ופנסיה", "fund": "אלטשולר שחם פנסיה מקיפה", "grp": "אלטשולר שחם", "fee": 0.1, "depfee": 1.49, "src": [3], "ver": "primary", "pid": 1328, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 1328: אלטשולר שחם פנסיה מקיפה"},
+    {"co": "הלמן אלדובי קופות גמל ופנסיה", "fund": "הלמן אלדובי קרן פנסיה מקיפה", "grp": "הלמן אלדובי", "fee": 0.1, "depfee": 1.49, "src": [3], "ver": "primary", "pid": 1032, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 1032: מסלוליה נשאו את השם הלמן אלדובי עד 01/16; הקרן נמכרה למיטב ב-2021 ומדווחת היום בשם מיטב דש, עד 10/21"},
+    {"co": "מיטב דש גמל ופנסיה", "fund": "איילון מיטב פנסיה מקיפה", "grp": "מיטב", "fee": 0.05, "depfee": 2.49, "src": [3], "ver": "primary", "pid": 163, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 163: קרן הפנסיה המקיפה של מיטב שפעילה ברציפות (קרן איילון, 131, הפסיקה לדווח ב-12/16)"},
+    {"co": "פסגות קופות גמל ופנסיה", "fund": "פסגות פנסיה מקיפה", "grp": "פסגות", "fee": 0.0905, "depfee": 1.68, "src": [3], "ver": "primary", "pid": 1531, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 1531: פסגות פנסיה מקיפה; נמכרה להראל ומדווחת עד 09/21"}
+   ]},
+  {"id": "2021", "label": "ההליך השלישי", "announced": "2021-09-14", "announced_src": [5], "announced_ver": "issuer",
+   "from": "2021-11-01", "from_src": [4], "from_ver": "primary", "to": "2024-10-31", "to_src": [4], "to_ver": "primary",
+   "fee": 0.22, "depfee": 1.0, "fee_src": [5, 6, 7], "fee_ver": "issuer",
+   "note": "הודעת התוצאות של הרשות לא אותרה. דמי הניהול: מצוטטים מהודעת הזכייה בדיווח של אלטשולר שחם, ולשאר הזוכות מפי העיתונות. ההליך (2021) קבע טווחי הצעה לפי נתח השוק של החברה; אינפיניטי ומור החלו לקבל עמיתים עם הקמת הקרנות החדשות שלהן",
+   "winners": [
+    {"co": "אלטשולר שחם גמל ופנסיה", "grp": "אלטשולר שחם", "fee": 0.22, "depfee": 1.0, "src": [5], "ver": "issuer", "pid": 1328, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 1328: אלטשולר שחם פנסיה מקיפה"},
+    {"co": "מיטב דש גמל ופנסיה", "fund": "איילון מיטב פנסיה מקיפה", "grp": "מיטב", "fee": 0.22, "depfee": 1.0, "src": [6, 7], "ver": "press", "pid": 163, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 163"},
+    {"co": "אינפיניטי ניהול השתלמות וגמל", "grp": "אינפיניטי", "fee": 0.22, "depfee": 1.0, "src": [6, 7], "ver": "press", "pid": 14036, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 14036: אינפיניטי פנסיה מקיפה, מדווחת מ-04/22"},
+    {"co": "מור קופות גמל", "grp": "מור", "fee": 0.22, "depfee": 1.0, "src": [6, 7], "ver": "press", "pid": 13908, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 13908: מור פנסיה מקיפה, מדווחת מ-05/22"}
+   ]},
+  {"id": "2024", "label": "ההליך הרביעי", "announced": "2024-09-19", "announced_src": [8], "announced_ver": "primary",
+   "from": "2024-11-01", "from_src": [8], "from_ver": "primary", "to": "2028-10-31", "to_src": [8], "to_ver": "primary",
+   "fee": 0.22, "depfee": 1.0, "fee_src": [8], "fee_ver": "primary", "fee_years": 10, "fee_years_src": [8], "fee_years_ver": "primary",
+   "alloc": "חלוקה לפי ספרת הביקורת בתעודת הזהות: 7,8,9 אינפיניטי · 4,5,6 מור · 2,3 אלטשולר שחם · 0,1 מיטב; חלה על מעסיק של 50 עובדים ומעלה מ-01.06.25",
+   "alloc_src": [8, 9], "alloc_ver": "primary",
+   "fee_alt": [{"fee": 0.2, "depfee": 1.2}, {"fee": 0.15, "depfee": 1.7}, {"fee": 0.12, "depfee": 2.0}, {"fee": 0.1, "depfee": 2.2}, {"fee": 0.05, "depfee": 2.7}],
+   "fee_alt_src": [8], "fee_alt_ver": "primary", "fee_alt_pg": 2,
+   "note": "תקופה של ארבע שנים; העמית רשאי להמיר חלק מדמי הניהול מהצבירה לדמי ניהול מהפקדה לפי הטבלה",
+   "winners": [
+    {"co": "אינפיניטי השתלמות גמל ופנסיה", "grp": "אינפיניטי", "fee": 0.22, "depfee": 1.0, "src": [8], "ver": "primary", "pid": 14036, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 14036"},
+    {"co": "אלטשולר שחם גמל ופנסיה", "grp": "אלטשולר שחם", "fee": 0.22, "depfee": 1.0, "src": [8], "ver": "primary", "pid": 1328, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 1328"},
+    {"co": "מור קופות גמל", "grp": "מור", "fee": 0.22, "depfee": 1.0, "src": [8], "ver": "primary", "pid": 13908, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 13908"},
+    {"co": "מיטב גמל ופנסיה", "grp": "מיטב", "fee": 0.22, "depfee": 1.0, "src": [8], "ver": "primary", "pid": 163, "map": "inferred",
+     "map_note": "pensia-net, PARENT_COMPANY_ID 163"}
+   ]}
+ ]
+}
