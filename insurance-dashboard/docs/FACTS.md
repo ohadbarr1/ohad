@@ -194,3 +194,45 @@ const raw = (mi: number | null, pi: number): number | null => {
 //   and in the class list: `${f?.re && !vin.facts ? ' re' : ''}`
 // OWN (the set of URL keys the page owns) gains 'vin'.
 ```
+
+---
+
+## Regulator fund returns: gross of fees (settled 01.11.26, funds module F1)
+
+**Finding.** The monthly and period returns the Capital Market Authority publishes in Gemel-Net, Pensia-Net and Bituach-Net
+(`MONTHLY_YIELD`, `YEAR_TO_DATE_YIELD`, `YIELD_TRAILING_3_YRS`, `YIELD_TRAILING_5_YRS`, `AVG_ANNUAL_YIELD_TRAILING_3YRS`,
+`AVG_ANNUAL_YIELD_TRAILING_5YRS`) are **nominal and gross: before management fees**. Every return fox shows from these files is gross
+unless it is labelled "נטו, אומדן".
+
+**Source (primary).** The CMA's own field documentation, published with each dataset on data.gov.il as "פירוט שינויים פורמט חדש"
+(2018, XLSX, datastore-readable), field `DESCRIPTION2`:
+
+| Dataset | Resource | `DESCRIPTION2` |
+|---|---|---|
+| gemelnet | `76ad9eed-d076-46d6-96e2-a4eb8e045444` (פירוט שינויים פורמט חדש גמל, 08.08.18) | "תשואות נומינליות ברוטו" |
+| pensia-net | `b58b5a80-84b7-490d-ab02-bff12f1941b2` (פירוט שינויים פורמט חדש פנסיה, 04.09.18) | "כלל התשואות הפיננסיות הינן נומינליות ברוטו" |
+| insurance (bituach-net) | `388992c7-0280-48d8-b147-13e636bd804d` (פירוט שינויים פורמט חדש ביטוח, 08.08.18) | "תשואות נומינליות ברוטו" |
+
+Read 01.11.26 through `https://data.gov.il/api/3/action/datastore_search?resource_id=<resource>` (the `/download/` links of the XLSX
+return 403 to scripts). The same sheets define the other fields fox uses: `AVG_ANNUAL_MANAGEMENT_FEE` = "שיעור דמי ניהול ממוצע שנתי –
+נכסים" (annual %, of assets), `ALPHA` = annual alpha on the last 60 monthly returns, `SHARPE_RATIO` = annual Sharpe against a risk-free
+rate on the last 60 months, `STANDARD_DEVIATION` = 5 trailing years, `NET_MONTHLY_DEPOSITS` = deposits − withdrawals ± transfers (₪m),
+`ACTUARIAL_ADJUSTMENT` (pension) = "איזון אקטוארי (דווח פעם ברבעון)", in percent; pension: from 01/17 returns are published only at
+track level (`DESCRIPTION3`). Amounts are NIS millions (`DESCRIPTION1`).
+
+**Consistency check (fox, 01.11.26; supporting, not the source).** If the published returns were net, two tracks of the same manager
+with the same specialization (a gemel and a hishtalmut "twin", often one portfolio) would differ month by month by their fee gap ÷ 12.
+Over 54 such pairs since 01/20 the correlation between the mean monthly return gap and the mean monthly fee gap is 0.06, and the
+money-market twins (lowest noise) print identical monthly returns in more than half of the months in 5 of 8 pairs (Menora 85%) despite
+fee gaps of up to 0.09 points a year. Consistent with gross.
+
+**What fox does with it.**
+- `net` (funds.json) and `yn` (funds/<k>.json): **estimate**, label "נטו, אומדן". Monthly net = published gross − that month's
+  `AVG_ANNUAL_MANAGEMENT_FEE` ÷ 12 (a month with no published fee uses the last fee of the previous 12 months, else the next one within
+  12). Period net = published period return × Π(1 + net) ÷ Π(1 + gross) over its months, so net = gross exactly where the fee is zero;
+  12M = compounded 12 net months; annualised = (1 + cumulative net)^(1/years) − 1. It is the track's **average actual** asset fee, not
+  a given saver's; the deposit fee is not deducted (it acts on flows). Method string: `funds.json net_method`; code: `pipeline/funds_lib.py`.
+- `real` / `realn`: CPI-real, deflated by the 12-month CPI change (CBS, as the BoI republishes it, PRI `CP_PCHYTY`) for the end month;
+  3Y / 5Y use the product of the annual changes ending in that month (`real_method`).
+- Coverage 09/26: net 12M for 1,155 of the 1,173 live tracks with a gross 12M; net 5Y for 747 of 757.
+- Gate: `funds_contract` (pipeline/check_funds_contract.py) re-derives net ≤ gross, net 12M from the history, and every `yn`.
