@@ -290,6 +290,10 @@
    "schema": "findings"
   },
   {
+   "pattern": "watch.json",
+   "schema": "watch"
+  },
+  {
    "pattern": "answers/index.json",
    "schema": "answersIndex"
   },
@@ -13760,6 +13764,347 @@
      "items": {
       "$ref": "#/$defs/ansRow"
      }
+    }
+   }
+  },
+  "watchSide": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "required": [
+    "vk",
+    "corr",
+    "cs",
+    "cf",
+    "h",
+    "chg"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "vk": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "corr": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "cs": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "cf": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "l",
+       "v",
+       "u",
+       "t",
+       "b",
+       "asof"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "l": {
+        "type": "string"
+       },
+       "v": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "u": {
+        "type": "string"
+       },
+       "t": {
+        "type": "string"
+       },
+       "b": {
+        "type": "string",
+        "enum": [
+         "actual",
+         "target",
+         "forward",
+         "estimate"
+        ]
+       },
+       "asof": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "h": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "chg": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "holds",
+      "tripped",
+      null
+     ]
+    }
+   }
+  },
+  "watchChange": {
+   "type": "object",
+   "required": [
+    "d",
+    "pd",
+    "id",
+    "kind",
+    "sev",
+    "from",
+    "to",
+    "topic",
+    "cos",
+    "q",
+    "det"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "d": {
+     "$ref": "#/$defs/date"
+    },
+    "pd": {
+     "$ref": "#/$defs/date"
+    },
+    "id": {
+     "type": "string",
+     "pattern": "^(Q-\\d{3}|F-[a-z]+-[a-z0-9_-]+)$"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "answer",
+      "tripped",
+      "finding",
+      "new",
+      "gone"
+     ]
+    },
+    "sev": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "verdict",
+      "figure",
+      "falsifier",
+      "top",
+      null
+     ]
+    },
+    "from": {
+     "$ref": "#/$defs/watchSide"
+    },
+    "to": {
+     "$ref": "#/$defs/watchSide"
+    },
+    "topic": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "cos": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "q": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "det": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "watchUp": {
+   "type": "object",
+   "required": [
+    "d",
+    "lo",
+    "hi",
+    "c",
+    "kind",
+    "per",
+    "what",
+    "src",
+    "est"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "d": {
+     "$ref": "#/$defs/date"
+    },
+    "lo": {
+     "$ref": "#/$defs/date"
+    },
+    "hi": {
+     "$ref": "#/$defs/date"
+    },
+    "c": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "report",
+      "regmonth",
+      "qend"
+     ]
+    },
+    "per": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "what": {
+     "type": "string"
+    },
+    "src": {
+     "type": "string"
+    },
+    "est": {
+     "type": "boolean"
+    },
+    "n": {
+     "type": "integer"
+    }
+   }
+  },
+  "watch": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "snaps",
+    "snapsrc",
+    "n",
+    "changes",
+    "upcoming",
+    "latest_regmonth",
+    "rule"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer",
+     "enum": [
+      1
+     ]
+    },
+    "asof": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "snaps": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/date"
+     }
+    },
+    "snapsrc": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "n": {
+     "type": "object",
+     "required": [
+      "answer",
+      "tripped",
+      "finding",
+      "new",
+      "gone"
+     ],
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "changes": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/watchChange"
+     }
+    },
+    "upcoming": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/watchUp"
+     }
+    },
+    "latest_regmonth": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "required": [
+      "per",
+      "label",
+      "d",
+      "dk"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "per": {
+       "type": "string"
+      },
+      "label": {
+       "type": "string"
+      },
+      "d": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "dk": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     }
+    },
+    "rule": {
+     "type": "string"
     }
    }
   }

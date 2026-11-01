@@ -86,6 +86,9 @@ Checks
   findings       module S2, the Finding Engine: web/public/data/findings.json equals a rebuild (pipeline/build_findings.py --check); every
                  finding obeys the answer rules (answer_core.body_problems), every figure re-derives from the file its `src` names, the order
                  reproduces from the two published components (mat x sur) and the stated rule, the top marks follow it, no composite key
+  watch          module S10, Watch & Wake: web/public/data/watch.json equals a rebuild from the ledger data/ledger/answers (pipeline/build_watch.py
+                 --check), every ledger file is named by its date and well formed; and `watch_ledger`: the ledger is append-only against git
+                 HEAD (a day's snapshot is never rewritten or removed)
   fragility      module A10, the Fragility Monitor: web/public/data/fragility.json equals a rebuild (pipeline/build_fragility.py --check);
                  every signal in a data state carries provenance and an as-of date and follows its stated rule; no composite field (score,
                  rating, index, total, rank ...) exists anywhere in the file; every event figure equals the history it cites. And
@@ -513,6 +516,15 @@ def findings():
     add("findings", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
 
 
+def watch():
+    """module S10: watch.json rebuilds equal from the ledger; the answer-snapshot ledger is append-only against git HEAD"""
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_watch.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) snapshots", out[0])
+    add("watch", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1), " · ".join(out[:2])[:200])
+    append_only("watch_ledger", "data/ledger/answers", "answer snapshots")
+
+
 def nowcast():
     """module M1: the rebuild check plus the append-only ledger, compared with the committed files at HEAD"""
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_nowcast.py"), "--check"], capture_output=True, text=True)
@@ -685,6 +697,7 @@ def main():
     consolidation()
     answers()
     findings()
+    watch()
     capital()
     expectations()
     nowcast()

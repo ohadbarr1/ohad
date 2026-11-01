@@ -215,6 +215,12 @@ STEPS = [
           D + "facts", D + "restatements.json"],
          [D + "findings.json"], code=["pipeline/answer_core.py"], groups={"deploy"},
          note="S2: div / brk / peer / sd / disc / rank findings, each an answer body (answer_core rules), every figure with `src` re-derived"),
+    # module S10: Watch & Wake. The day's snapshot of what every answer and finding says is appended to the ledger (once per build day,
+    # never rewritten; gate `watch_ledger`), then the build-to-build diff and the prep calendar are written; gate `watch`
+    step("build_watch", [["pipeline/snapshot_answers.py"], ["pipeline/build_watch.py"]],
+         [D + "answers", D + "findings.json", D + "calendar.json", D + "feed.json", D + "nowcast.json"],
+         [D + "watch.json"], code=["pipeline/answer_core.py"], edits=["data/ledger/answers"], daily=True, groups={"deploy"},
+         note="S10: data/ledger/answers/<day>.json (append-only) -> watch.json: changes (answer / tripped / finding / new / gone) + upcoming"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]
