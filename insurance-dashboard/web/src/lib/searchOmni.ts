@@ -111,9 +111,15 @@ export function parse(q: string, names: ReturnType<typeof companyNames>): Parsed
   return { words: all, company, period, type, rest, restText: rest.join(' ') };
 }
 
-/** a fund of search/entities.json: name, group, key (g|p|i + the regulator's fund number: /funds/<key>), track (funds.json `track`) */
-export type FundEnt = [string, string, string?, string?];
-export interface Pool { reg: RegistryCompany[]; names: ReturnType<typeof companyNames>; groups: { label: string; words: string[] }[]; funds: { label: string; grp: string; k?: string; id?: string; track?: string; words: string[] }[]; rows: { c: string; sheet: string; label: string; i: number; words: string[] }[];
+/** a fund of search/entities.json: name, group, key (g|p|i + the regulator's fund number: /funds/<key>), track (funds.json `track`),
+ *  product type (funds.json `prod`, W5) */
+export type FundEnt = [string, string, string?, string?, string?];
+/** W5 · a fund as both fund searches see it (the omnibox and the compare page's "חיפוש מסלול להוספה"): its words are its name, its
+ *  company, its product type and its track, so "אלטשולר גמל להשקעה" finds the track named "חיסכון פלוס" */
+export interface FundIdx { label: string; grp: string; k?: string; id?: string; track?: string; prod?: string; words: string[] }
+export const fundIdx = (label: string, grp: string, k?: string, track?: string, prod?: string): FundIdx =>
+  ({ label, grp, k, id: k?.slice(1), track, prod, words: terms(canon([label, grp, prod ?? '', track ?? ''].join(' '))) });
+export interface Pool { reg: RegistryCompany[]; names: ReturnType<typeof companyNames>; groups: { label: string; words: string[] }[]; funds: FundIdx[]; rows: { c: string; sheet: string; label: string; i: number; words: string[] }[];
   /** the Question Index (S1): id, question, the companies it is about */
   questions: { id: string; q: string; cos: string[]; words: string[] }[] }
 
@@ -122,7 +128,7 @@ export function buildPool(reg: RegistryCompany[], groups: string[], funds: FundE
     reg, names: companyNames(reg),
     questions: questions.map((x) => ({ id: x.id, q: x.q, cos: x.cos, words: terms(x.q) })),
     groups: groups.map((g) => ({ label: g, words: terms(g) })),
-    funds: funds.map(([label, grp, k, track]) => ({ label, grp, k, id: k?.slice(1), track, words: terms(canon(label)) })),
+    funds: funds.map(([label, grp, k, track, prod]) => fundIdx(label, grp, k, track, prod)),
     rows: rows.map(([c, sheet, label, i]) => ({ c, sheet, label, i, words: terms(label) })),
   };
 }
@@ -145,6 +151,26 @@ function wordScore(caption: string[], qs: string[]): number {
 const TRACK_RANK: Record<string, number> = { 'כללי': 1.5, 'עד 50': 1.3, '50-60': 1.2, '60 ומעלה': 1.1, 'מקבלי קצבה': 0.6 };
 /** a fund found by its number; a fund named by the company and every other word of the query (see orderFor) */
 const FUND_ID_SCORE = 99, FUND_LEAD = 90;
+
+/** W5 · the one fund matcher. A query is a fund number (3–6 digits: the regulator's, "2155"), the site's key ("p9757"), or words, every
+ *  one of which must start a word of the fund's name, company, product type or track. */
+export interface FundQ { words: string[]; num: string | null; key: string | null }
+export const fundQuery = (q: string, words?: string[]): FundQ => {
+  const t = q.trim();
+  return { words: words ?? terms(canon(t)), num: /^\d{3,6}$/.test(t) ? t : null, key: /^[gpi]\d{1,6}$/i.test(t) ? t.toLowerCase() : null };
+};
+/** FUND_ID_SCORE for the number or the key; else the word score (0: no match) */
+export const fundMatch = (fq: FundQ, f: FundIdx): number => ((fq.num && f.id === fq.num) || (fq.key && f.k === fq.key) ? FUND_ID_SCORE : wordScore(f.words, fq.words));
+export const isIdHit = (s: number) => s >= FUND_ID_SCORE;
+/** what a fund result says under its name: company · product · the fund's number */
+export const fundMeta = (f: FundIdx) => [f.grp, f.prod, f.id ? `מס' ${f.id}` : ''].filter(Boolean).join(' · ');
+/** The compare page's search: the funds that match, the number first, then the best word match, the default track, and size. */
+export function fundHits<T extends { assets?: number | null }>(q: string, list: { f: T; x: FundIdx }[], n = 8): { f: T; x: FundIdx; s: number }[] {
+  const fq = fundQuery(q);
+  if (!fq.num && !fq.key && (!fq.words.length || q.trim().length < 2)) return [];
+  return list.map((it) => ({ ...it, s: fundMatch(fq, it.x) })).filter((it) => it.s > 0)
+    .sort((a, b) => b.s - a.s || (TRACK_RANK[b.x.track ?? ''] ?? 0) - (TRACK_RANK[a.x.track ?? ''] ?? 0) || (b.f.assets ?? 0) - (a.f.assets ?? 0)).slice(0, n);
+}
 
 /** The order of the kinds in the list (Enter opens the first item): a fund typed by its number leads, then a company with a screen
  *  code ("הראל csm"), then a track named in full after its company ("אלטשולר שחם פנסיה מקיפה"); else the fixed order. */
@@ -241,18 +267,17 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   }
   // market groups and funds (no company filter: a fund's name carries its maker). A fund number: 3-6 digits ("1093"), or the site's key
   // of any length ("p9757", "i50": a word too short for the word index)
-  const qt = q.trim();
-  const num = /^\d{3,6}$/.test(qt) ? qt : null, key = /^[gpi]\d{1,6}$/i.test(qt) ? qt.toLowerCase() : null;
-  if (words.length || key) {
+  const fq = fundQuery(q, words);
+  if (words.length || fq.key) {
     pool.groups.forEach((g) => { const s = wordScore(g.words, words); if (s) out.push({ kind: 'קופה', label: g.label, meta: 'קבוצה · פנסיה, גמל וביטוח', to: `/savings?g=${encodeURIComponent(g.label)}`, score: 70 + s }); });
     // a company and more words ("אלטשולר שחם פנסיה מקיפה"): a track that carries every word is what was asked for, and leads
     const named = !!p.company && p.rest.length > 0;
     for (const f of pool.funds) {
       const to = f.k ? `/funds/${f.k}` : `/funds/screen?q=${encodeURIComponent(f.label)}`, tb = TRACK_RANK[f.track ?? ''] ?? 0;
       // the regulator's fund number ("1093") or the site's key ("p9757"): that track, first of all
-      if ((num && f.id === num) || (key && f.k === key)) { out.push({ kind: 'קופה', label: f.label, meta: `${f.grp} · קופה ${f.id}`, to, score: FUND_ID_SCORE + tb / 10 }); continue; }
-      const s = wordScore(f.words, words);
-      if (s) out.push({ kind: 'קופה', label: f.label, meta: f.grp, to, score: (named ? FUND_LEAD : 55) + s + tb - f.label.length / 200 });
+      const s = fundMatch(fq, f);
+      if (isIdHit(s)) { out.push({ kind: 'קופה', label: f.label, meta: fundMeta(f), to, score: FUND_ID_SCORE + tb / 10 }); continue; }
+      if (s) out.push({ kind: 'קופה', label: f.label, meta: fundMeta(f), to, score: (named ? FUND_LEAD : 55) + s + tb - f.label.length / 200 });
     }
   }
   // statement lines: the words left after the company, within that company when one was named

@@ -33,6 +33,7 @@ import { TIE_NOTE } from '../lib/fundsTie';
 import { BM_HREF, DECISION_PATH, OLD_FEE_HE, OLD_WARN, clmCell, isOldGen, svcCell, type DecisionFile } from '../lib/decision';  // W2
 import { ClientSave } from '../components/agent/ClientSave';
 import { folderOfState, useClients } from '../lib/clients';
+import { fundHits, fundIdx, fundMeta } from '../lib/searchOmni';
 import { today as todayIso } from '../lib/visits';
 import '../components/agent/glossary';
 import '../styles/lens.css';
@@ -395,7 +396,9 @@ function Picker({ data, keys, setKeys, win }: { data: FundsFile; keys: string[];
   const [q, setQ] = useState('');
   const [mode, setMode] = useState<'track' | 'mgr'>('track');
   const live = useMemo(() => data.funds.filter((f) => f.assets), [data]);
-  const hits = useMemo(() => { const t = q.trim(); if (t.length < 2) return []; const ws = t.split(/\s+/); return live.filter((f) => ws.every((w) => `${f.name} ${f.grp} ${f.prod} ${f.track}`.includes(w))).sort((a, b) => (b.assets ?? 0) - (a.assets ?? 0)).slice(0, 8); }, [q, live]);
+  // W5: the omnibox's matcher (lib/searchOmni): the fund number, the name, the company, the product type and the track
+  const idx = useMemo(() => live.map((f) => ({ f, x: fundIdx(f.name, f.grp, f.k, f.track, f.prod) })), [live]);
+  const hits = useMemo(() => fundHits(q, idx), [q, idx]);
   const prods = useMemo(() => [...new Set(live.map((f) => f.prod))], [live]);
   const [prod, setProd] = useState('השתלמות');
   const tracks = useMemo(() => { const m = new Map<string, number>(); live.filter((f) => f.prod === prod && !f.closed).forEach((f) => m.set(f.track, (m.get(f.track) ?? 0) + (f.assets ?? 0))); return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t); }, [live, prod]);
@@ -409,8 +412,9 @@ function Picker({ data, keys, setKeys, win }: { data: FundsFile; keys: string[];
         <div className="fpick-chosen">{chosen.map((f) => <span key={f.k} className="chip fpick-c">{f.name}<button type="button" aria-label={`הסרה: ${f.name}`} onClick={() => setKeys(keys.filter((k) => k !== f.k))}>×</button></span>)}{keys.length > 0 && <button type="button" className="linkbtn" onClick={() => setKeys([])}>ניקוי</button>}</div></div>
       {mode === 'track' ? (
         <div className="fpick-s">
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="חיפוש מסלול: למשל הראל השתלמות מניות" aria-label="חיפוש מסלול להוספה" disabled={keys.length >= TRAY_MAX} />
-          {hits.length > 0 && <ul className="fpick-hits">{hits.map((f) => <li key={f.k}><button type="button" disabled={keys.includes(f.k) || keys.length >= TRAY_MAX} onClick={() => { setKeys([...keys, f.k]); setQ(''); }}><span>+ {f.name}</span><span className="muted">{f.prod} · {f.track} · {nf(f.assets ?? 0, 0)} מ׳ ש"ח</span></button></li>)}</ul>}
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="חיפוש מסלול: מספר קופה, שם, חברה או מוצר (למשל 2155, הראל השתלמות מניות)" aria-label="חיפוש מסלול להוספה" disabled={keys.length >= TRAY_MAX} />
+          {hits.length > 0 && <ul className="fpick-hits">{hits.map(({ f, x }) => <li key={f.k}><button type="button" disabled={keys.includes(f.k) || keys.length >= TRAY_MAX} onClick={() => { setKeys([...keys, f.k]); setQ(''); }}><span>+ {f.name}</span><span className="muted">{fundMeta(x)} · {f.track} · {nf(f.assets ?? 0, 0)} מ׳ ש"ח</span></button></li>)}</ul>}
+          {q.trim().length >= 2 && !hits.length && <p className="muted fpick-none" role="status">לא נמצא מסלול פעיל ל"{q.trim()}"</p>}
         </div>
       ) : (
         <div className="fpick-m">

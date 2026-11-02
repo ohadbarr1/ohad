@@ -4,7 +4,7 @@
    web/public/data when it is there. Run: npm run test:search */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPool, canon, ordered, rank, type FundEnt } from '../src/lib/searchOmni';
+import { buildPool, canon, fundHits, fundIdx, ordered, rank, type FundEnt } from '../src/lib/searchOmni';
 import type { RegistryCompany } from '../src/lib/types';
 
 let fail = 0, pass = 0;
@@ -86,6 +86,30 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
   const c = list('הראל');
   ok(c[0]?.kind === 'חברה' && c[0].to === '/company/harel', `"הראל": the company leads (got ${c[0]?.to})`);
 }
+// 3b. W5 · red team 3: one matcher for the omnibox and the compare page; the product type is searchable; the fund number is shown
+{
+  const P: FundEnt[] = [
+    ['אלטשולר שחם חיסכון פלוס כללי', 'אלטשולר שחם', 'g7798', 'כללי', 'גמל להשקעה'],
+    ['אלטשולר שחם חיסכון פלוס מניות', 'אלטשולר שחם', 'g7799', 'מניות', 'גמל להשקעה'],
+    ['אלטשולר שחם גמל כללי', 'אלטשולר שחם', 'g1020', 'כללי', 'גמל'],
+    ['מיטב פנסיה מקיפה לבני 50 ומטה', 'מיטב', 'p2155', 'עד 50', 'פנסיה מקיפה'],
+    ['אלטשולר שחם פנסיה מקיפה מסלול לבני 50 ומטה', 'אלטשולר שחם', 'p9757', 'עד 50', 'פנסיה מקיפה'],
+  ];
+  const pp = buildPool(reg, ['אלטשולר שחם'], P, [], []);
+  const fl = (q: string) => ordered(rank(q, pp, (s) => s)).filter((x) => x.kind === 'קופה');
+  const g = fl('אלטשולר גמל להשקעה');
+  ok(g.length === 2 && g.every((x) => /חיסכון פלוס/.test(x.label)) && g[0].to === '/funds/g7798', `omnibox: "אלטשולר גמל להשקעה" finds the חיסכון פלוס tracks by product type, the general one first (got ${g.map((x) => x.to).join()})`);
+  ok(fl('2155')[0]?.to === '/funds/p2155' && /מס' 2155/.test(fl('2155')[0].meta) && /פנסיה מקיפה/.test(fl('2155')[0].meta), `omnibox: the result shows the fund number and product (${fl('2155')[0]?.meta})`);
+  ok(fl('פנסיה מקיפה עד 50').length === 2, 'omnibox: the track words are searchable too ("עד 50")');
+  // the compare page's search runs the same matcher over funds.json rows
+  const rows = P.map(([name, grp, k, track, prod], i) => ({ f: { k: k!, name, assets: 100 - i }, x: fundIdx(name, grp, k, track, prod) }));
+  const h = (q: string) => fundHits(q, rows).map((x) => x.f.k);
+  ok(h('2155').join() === 'p2155' && h('9757').join() === 'p9757', `compare: a fund number finds its track (2155 → ${h('2155').join()}, 9757 → ${h('9757').join()})`);
+  ok(h('p9757').join() === 'p9757' && h('215').length === 0 && h('21550').length === 0, 'compare: the key works; no prefix match on a number');
+  ok(h('אלטשולר גמל להשקעה').join() === 'g7798,g7799', `compare: product type, general track first (${h('אלטשולר גמל להשקעה').join()})`);
+  ok(h('מיטב').join() === 'p2155' && h('ה').length === 0, 'compare: the company; one letter is not a search');
+  ok(h('אלטשולר גמל').includes('g1020') && h('אלטשולר גמל').includes('g7798'), 'compare: "גמל" matches גמל and גמל להשקעה');
+}
 // 4. smoke over the published files: every fund number of funds.json finds its own track first
 {
   const D = join(process.cwd(), 'public', 'data') + '/';
@@ -103,6 +127,14 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
     ok(hs.length >= 3 && hs.every((x) => /s&p|S&P/i.test(x.label) && /השתלמות/.test(x.label)), `published data: "השתלמות S&P" lists S&P השתלמות tracks only (got ${hs.map((x) => x.label).join(' | ')})`);
     const mk = ordered(rank('מחקה S&P 500', real, (s) => s)).filter((x) => x.kind === 'קופה');
     ok(mk.length >= 3 && mk.every((x) => /s&p|S&P/i.test(x.label)), `published data: "מחקה S&P 500" finds S&P tracks (${mk.length})`);
+    ok(ent.funds.every((x) => typeof x[4] === 'string' && x[4].length > 1), 'W5: entities.json carries every fund\'s product type');
+    const ag = ordered(rank('אלטשולר גמל להשקעה', real, (s) => s)).filter((x) => x.kind === 'קופה');
+    ok(ag.length > 0 && ag.every((x) => /אלטשולר/.test(x.label) && /גמל להשקעה/.test(x.meta)), `W5 published data: "אלטשולר גמל להשקעה" finds Altshuler's גמל להשקעה tracks (${ag.map((x) => x.label).join(' | ')})`);
+    for (const n of ['2155', '9757']) { const r = ordered(rank(n, real, (s) => s)); ok(r[0]?.kind === 'קופה' && r[0].to.endsWith(n) && r[0].meta.includes(`מס' ${n}`), `W5 published data: "${n}" opens its track and shows the number (${r[0]?.to} ${r[0]?.meta})`); }
+    const fj = JSON.parse(readFileSync(D + 'funds.json', 'utf8')) as { funds: { k: string; name: string; grp: string; track: string; prod: string; assets: number | null }[] };
+    const cmp = fj.funds.filter((f) => f.assets).map((f) => ({ f, x: fundIdx(f.name, f.grp, f.k, f.track, f.prod) }));
+    for (const n of ['2155', '9757']) ok(fundHits(n, cmp).some((x) => x.f.k.slice(1) === n), `W5 published data: the compare search finds ${n}`);
+    ok(fundHits('אלטשולר גמל להשקעה', cmp).length > 0, 'W5 published data: the compare search finds אלטשולר גמל להשקעה');
     const alt = ordered(rank('אלטשולר שחם פנסיה מקיפה', real, (s) => s));
     ok(alt[0]?.to === '/funds/p9757', `published data: "אלטשולר שחם פנסיה מקיפה" opens p9757 (got ${alt[0]?.to})`);
   } else console.log('search: web/public/data absent, smoke run skipped');
