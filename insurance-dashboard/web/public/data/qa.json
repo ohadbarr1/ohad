@@ -1,5 +1,5 @@
 {
- "built": "2026-11-02T02:05:47+02:00",
+ "built": "2026-11-02T06:09:40+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -85,17 +85,17 @@
    "id": "ifrs_page",
    "ok": true,
    "level": "fail",
-   "n": 0,
+   "n": 16366,
    "fail": 0,
-   "note": "0/0 on the cited page; 0 new misses; 16366 facts without page text (not checked)"
+   "note": "16340/16366 on the cited page; 0 new misses; 0 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
-   "ok": true,
+   "ok": false,
    "level": "warn",
-   "n": 0,
-   "fail": 0,
-   "note": "known misses, extraction layer (graphics, image pages, targets in words): {}"
+   "n": 16366,
+   "fail": 26,
+   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'hachshara': 16, 'clal': 8, 'phoenix': 2}"
   },
   {
    "id": "balance",
@@ -379,11 +379,11 @@
   },
   {
    "id": "funds_contract",
-   "ok": false,
-   "level": "warn",
-   "n": 16203,
-   "fail": 1,
-   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16203 checks, 0 problems, 0 warnings; 8 odd history prints; no data/raw parquet: upstream checks skipped"
+   "ok": true,
+   "level": "fail",
+   "n": 16216,
+   "fail": 0,
+   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16216 checks, 0 problems, 0 warnings; 8 odd history prints"
   },
   {
    "id": "fund_stats",
@@ -423,7 +423,7 @@
    "level": "warn",
    "n": 38,
    "fail": 1,
-   "note": "38 manager-quarters; rebuild skipped (no data/work/asset_lists)"
+   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: Deserializing page header failed.)"
   },
   {
    "id": "solvency",
