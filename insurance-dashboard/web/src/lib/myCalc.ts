@@ -8,7 +8,8 @@ import { AGE_DEFAULT, BALANCE_EX, GROWTH_DEFAULT, INFL_DEFAULT, LIQ_YEARS, RETIR
 import type { CareerOut } from './fundsCalc';
 
 export interface MyIn extends MyFees { balance?: number | null; monthly?: number | null }
-export interface CalcOpts { age: number; coef: number; ret: number }
+/** `retire` (W5): the retirement age (lib/retire retireAgeOf, or the reader's); 67 when not given */
+export interface CalcOpts { age: number; coef: number; ret: number; retire?: number }
 export interface CardCalc {
   v: Verdict; plan: Plan;
   /** the fee pair used: the reader's own where entered, else the track's average */
@@ -19,17 +20,20 @@ export interface CardCalc {
   tPairs: FeePair[]; tBest: { p: FeePair; g: FeeGap } | null;
   out: CareerOut;
   annual: { acc: number; dep: number; total: number };
+  /** W5: the part of the reader's own fees that costs more against the default-fund price, in ₪ by retirement (pension) */
+  lever: 'fee' | 'dep' | null;
   /** השתלמות: the same gaps at the 6-year liquidity horizon */
   liq: { years: number; gMed: FeeGap | null } | null;
 }
 
-export const clampAge = (a: number | null | undefined) => Math.min(Math.max(a || AGE_DEFAULT, 16), RETIRE_AGE - 1);
+export const clampAge = (a: number | null | undefined, retire = RETIRE_AGE) => Math.min(Math.max(a || AGE_DEFAULT, 16), Math.max(retire, RETIRE_AGE) - 1);
 
 export function cardCalc(f: VFund, all: VFund[], asof: number, dfile: DefaultFile | null | undefined, my: MyIn | null | undefined, dec: DecLite | null | undefined, o: CalcOpts): CardCalc {
   const v = verdictOf(f, all, asof, dfile, my, dec);
   const ex = exampleMonthly(f.prod);
   const exBalance = my?.balance == null, exMonthly = my?.monthly == null;
-  const plan: Plan = { age: clampAge(o.age), retire: RETIRE_AGE, balance: my?.balance ?? BALANCE_EX, monthly: my?.monthly ?? ex.v, growth: GROWTH_DEFAULT, ret: o.ret, infl: INFL_DEFAULT, coef: o.coef };
+  const age = clampAge(o.age), retire = Math.max(o.retire ?? RETIRE_AGE, age + 1);
+  const plan: Plan = { age, retire, balance: my?.balance ?? BALANCE_EX, monthly: my?.monthly ?? ex.v, growth: GROWTH_DEFAULT, ret: o.ret, infl: INFL_DEFAULT, coef: o.coef };
   const mine: FeePair = { fee: v.fee.v ?? 0, depfee: v.dep?.v ?? f.depfee ?? 0 };
   const ownAny = v.fee.own || !!v.dep?.own;
   const medDep = v.dep?.med ?? null;
@@ -37,9 +41,15 @@ export function cardCalc(f: VFund, all: VFund[], asof: number, dfile: DefaultFil
   const gMed = med ? feeGap(plan, mine, med) : null;
   const tPairs: FeePair[] = v.dflt && v.dflt.fee != null && v.dflt.depfee != null ? [{ fee: v.dflt.fee, depfee: v.dflt.depfee }, ...(v.dflt.tender.fee_alt ?? [])] : [];
   const tBest = tPairs.length ? tPairs.map((p) => ({ p, g: feeGap(plan, mine, p) })).sort((a, b) => b.g.balReal - a.g.balReal)[0] : null;
+  // which part costs more by retirement against the base price: each part alone moved to the price, the larger gap wins
+  let lever: CardCalc['lever'] = v.lever === 'both' || v.lever === 'fee' || v.lever === 'dep' ? (v.lever === 'both' ? null : v.lever) : null;
+  if (v.lever === 'both' && v.dflt?.fee != null && v.dflt.depfee != null) {
+    const gF = feeGap(plan, mine, { fee: v.dflt.fee, depfee: mine.depfee }).balReal, gD = feeGap(plan, mine, { fee: mine.fee, depfee: v.dflt.depfee }).balReal;
+    lever = gD >= gF ? 'dep' : 'fee';
+  }
   const liq = f.prod === 'השתלמות' ? { years: LIQ_YEARS, gMed: med ? feeGap(horizon(plan, LIQ_YEARS), mine, med) : null } : null;
   return { v, plan, mine, ownAny, exBalance, exMonthly, exWhy: ex.why, med, med0: med != null && medDep == null, gMed, tPairs, tBest, out: project(plan, mine),
-    annual: annualFees(plan.balance, plan.monthly, mine), liq };
+    annual: annualFees(plan.balance, plan.monthly, mine), lever, liq };
 }
 
 /** the gap a product's fees leave against the closest reference, at its own horizon (השתלמות: 6 years), and what it is against */
@@ -50,7 +60,9 @@ export function gapOf(c: CardCalc): { v: number; ref: 'med' | 'dflt'; years: num
     if (c.gMed && c.gMed.balReal > 0) opts.push({ v: c.gMed.balReal, ref: 'med', years: c.gMed.years });
     if (c.tBest && c.tBest.g.balReal > 0) opts.push({ v: c.tBest.g.balReal, ref: 'dflt', years: c.tBest.g.years });
   }
-  // the median first when both: it is the comparison every product has; the default-fund terms are for new members only
+  // W5 (red team 3): the reader's own pension fees are read against the default-fund price, what a member can actually get, never
+  // against the median of the other tracks' averages; otherwise the median first: it is the comparison every product has
+  if (c.v.fee.basis === 'tender' || c.v.dep?.basis === 'tender') return opts.find((x) => x.ref === 'dflt') ?? null;
   return opts.find((x) => x.ref === 'med') ?? opts[0] ?? null;
 }
 

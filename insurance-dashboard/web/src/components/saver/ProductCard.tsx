@@ -4,12 +4,12 @@ import { Sourced } from '../Source';
 import { Tip } from '../Explain';
 import { copyText } from '../ui';
 import { WatchStar } from '../FundsTime';
-import { useMyAge, useMySex, type MyProduct } from '../../lib/mine';
+import { useMyAge, useMySex, useRetire, type MyProduct } from '../../lib/mine';
 import type { Prov } from '../../lib/prov';
 import type { CatX, FundX, FundsFile } from '../../lib/funds';
 import type { DefaultFile } from '../../lib/fundsTools';
 import { brief, isPension, pcf, pcr, singleIndex, type Verdict } from '../../lib/verdict';
-import { AGE_DEFAULT, GROWTH_DEFAULT, INFL_DEFAULT, RETIRE_AGE, RET_FALLBACK, coefOf, ilsRound, type FeeGap, type Plan } from '../../lib/retire';
+import { AGE_DEFAULT, GROWTH_DEFAULT, INFL_DEFAULT, KZ_RETIRE, RETIRE_AGE, RET_FALLBACK, ageText, coefOf, ilsRound, type FeeGap, type Plan } from '../../lib/retire';
 import { cardCalc } from '../../lib/myCalc';
 import { capOf, feeError, KZ_CAPS } from '../../lib/feeCaps';
 import { RULE } from '../../lib/productRules';
@@ -37,6 +37,9 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service-index line
   const [ageS] = useMyAge(), [sex] = useMySex();
   const age = ageS ?? AGE_DEFAULT;
+  const R = useRetire();
+  /** a word by the reader's sex: she, he, or the plural when not given */
+  const g = (fm: string, m: string, n: string) => (sex === 'f' ? fm : sex === 'm' ? m : n);
   const cat = `${f.prod} | ${f.track}`, c = cats?.[cat];
   const r10 = singleIndex(f) ? null : cat10(c);
   // the return: a conservative 4% by default; the category's 10-year past on request (not for single-index tracks); or the reader's own
@@ -45,7 +48,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const [coefQ, setCoefQ] = useState<number | null>(null);
   const coef = coefQ ?? cf.v;
   const ret = retQ ?? RET_FALLBACK;
-  const C = useMemo(() => cardCalc(f, data.funds as FundX[], asof, dfile, my, dec, { age, coef, ret }), [f, data, asof, dfile, my, dec, age, coef, ret]);
+  const C = useMemo(() => cardCalc(f, data.funds as FundX[], asof, dfile, my, dec, { age, coef, ret, retire: R.v }), [f, data, asof, dfile, my, dec, age, coef, ret, R.v]);
   const { v, plan, mine, ownAny, med, gMed, tBest, out, annual, liq } = C;
   const figs = figsOf(f, v, asof, data, dec);
   const [open, setOpen] = useState(false);
@@ -58,7 +61,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const retWhy = retQ == null ? 'הנחה שמרנית' : onCat ? 'תשואת עבר של הקטגוריה ב-10 שנים, לא תחזית' : 'ההנחה שלך';
   const who = ownAny ? 'שלך' : 'ממוצע המסלול';
   const assumptions = (p: Plan = plan) => [
-    { label: ageS != null ? 'גיל היום (שלך)' : 'גיל היום (לדוגמה)', v: String(p.age) }, { label: p.retire === RETIRE_AGE ? 'גיל פרישה (הנחה)' : 'אופק (שנים מהיום)', v: String(p.retire === RETIRE_AGE ? RETIRE_AGE : p.retire - p.age) },
+    { label: ageS != null ? 'גיל היום (שלך)' : 'גיל היום (לדוגמה)', v: String(p.age) }, { label: p === plan ? `גיל פרישה (${R.own ? 'שלך' : R.why})` : 'אופק (שנים מהיום)', v: p === plan ? ageText(p.retire) : String(p.retire - p.age) },
     { label: my?.balance != null ? 'יתרה היום (שלך)' : 'יתרה היום (הנחה לדוגמה)', v: ilsRound(p.balance) },
     { label: my?.monthly != null ? 'הפקדה חודשית (שלך)' : `הפקדה חודשית (הנחה: ${C.exWhy})`, v: ilsRound(p.monthly) },
     { label: 'עליית ההפקדה בשנה (הנחה)', v: pcf(GROWTH_DEFAULT) },
@@ -67,7 +70,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   ];
   const F = 'כל חודש: ההפקדה פחות דמי הניהול מהפקדה נכנסת ליתרה; היתרה גדלה ב-(1 + תשואה שנתית)^(1/12) − 1; דמי הניהול מצבירה (שנתי ÷ 12) יורדים מהיתרה. ההפקדה עולה כל 12 חודשים. בשקלי היום: חלקי (1 + אינפלציה) בחזקת השנים. השיטה של מחשבון דמי הניהול (/funds/tools/fees)';
   const pairIn = (p: FeePair, w: string) => [{ label: `${w}: דמי ניהול מצבירה`, v: pcf(p.fee) }, { label: `${w}: דמי ניהול מהפקדה`, v: pcf(p.depfee) }];
-  const gapProv = (ref: FeePair, w: string, g: FeeGap, src?: () => Prov, p: Plan = plan): Prov => ({ k: 'calc', est: true, title: `הפער בחיסכון ${p.retire === RETIRE_AGE ? `בגיל ${RETIRE_AGE}` : `בעוד ${p.retire - p.age} שנים`}, בשקלי היום · ${w}`, value: ilsRound(Math.abs(g.balReal)),
+  const gapProv = (ref: FeePair, w: string, g: FeeGap, src?: () => Prov, p: Plan = plan): Prov => ({ k: 'calc', est: true, title: `כמה פחות בחיסכון ${p === plan ? `בגיל הפרישה (${ageText(p.retire)})` : `בעוד ${p.retire - p.age} שנים`}, בשקלי היום · מול ${w}`, value: ilsRound(Math.abs(g.balReal)),
     formula: `${F}. הפער = החיסכון עם דמי הניהול של ${w} פחות החיסכון עם דמי הניהול ${ownAny ? 'שלך' : 'הממוצעים במסלול'}${g.balReal < 0 ? ' (שלילי: דמי הניהול שלך משאירים יותר)' : ''}`,
     note: `אומדן על הנחות, לא תחזית. לא כולל מס, ובפנסיה לא כולל את עלות הכיסוי הביטוחי${C.med0 && ref === med ? '. בקטגוריה לא מתפרסמים דמי ניהול מהפקדה: ההשוואה מניחה 0% מהפקדה (הנחה)' : ''}`,
     inputs: [...assumptions(p), ...pairIn(mine, who), ...pairIn(ref, w).map((x) => ({ ...x, src })), { label: 'חודשים', v: String(g.mine.months) }] });
@@ -76,13 +79,13 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
     note: ownAny ? undefined : 'לפי דמי הניהול הממוצעים במסלול; מה שאתם משלמים בפועל כתוב בדוח השנתי',
     inputs: [{ label: my?.balance != null ? 'יתרה (שלך)' : 'יתרה (לדוגמה)', v: ilsRound(plan.balance) }, { label: my?.monthly != null ? 'הפקדה חודשית (שלך)' : 'הפקדה חודשית (לדוגמה)', v: ilsRound(plan.monthly) },
       ...pairIn(mine, who), { label: 'מצבירה בשנה', v: ilsRound(annual.acc) }, { label: 'מהפקדה בשנה', v: ilsRound(annual.dep) }] });
-  const penProv = (what: 'bal' | 'pen'): Prov => ({ k: 'calc', est: true, title: what === 'bal' ? `חיסכון בגיל ${RETIRE_AGE}, בשקלי היום · אומדן` : 'קצבה חודשית, בשקלי היום · אומדן', value: ilsRound(what === 'bal' ? out.balReal : out.pensionReal),
+  const penProv = (what: 'bal' | 'pen'): Prov => ({ k: 'calc', est: true, title: what === 'bal' ? `חיסכון בגיל ${ageText(plan.retire)}, בשקלי היום · אומדן` : 'קצבה חודשית, בשקלי היום · אומדן', value: ilsRound(what === 'bal' ? out.balReal : out.pensionReal),
     formula: `${F}.${what === 'pen' ? ' קצבה = החיסכון ÷ מקדם ההמרה.' : ''}`, note: 'אומדן גס על הנחות. לא מנכה את עלות הכיסוי הביטוחי (נכות ושארים) שהקרן גובה מההפקדות, ולכן נוטה להיות גבוה. המקדם בפועל נקבע בתקנון הקרן',
     inputs: [...assumptions(), ...pairIn(mine, who), ...(what === 'pen' ? [{ label: `מקדם המרה (הנחה: ${coefQ != null ? 'שלך' : cf.why})`, v: String(coef) }] : [])] });
   const medSrc = () => figs.feeMed();
   const tSrc = (p: FeePair) => () => tenderProv(v.dflt!.tender, 'צירוף דמי ניהול שההליך מתיר', `${pcf(p.depfee)} / ${pcf(p.fee)} (מהפקדה / מצבירה)`);
 
-  const script = scriptOf({ name: f.name, id: f.id, prod: f.prod, track: f.track, src: `${dsName(f.fam)}, ${ymOf(asof)}`, v });
+  const script = scriptOf({ name: f.name, id: f.id, prod: f.prod, track: f.track, src: `${dsName(f.fam)}, ${ymOf(asof)}`, v, sex });
   const peersLink = useMemo(() => {
     const rk = [...(v.ret?.ranked ?? [])].filter((x) => x.k !== f.k);
     const top = rk[0], cheap = [...v.peers].filter((x) => x.k !== f.k && x.fee != null).sort((a, b) => a.fee! - b.fee!)[0];
@@ -90,20 +93,26 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
     return ks.length > 1 ? `/funds/compare?k=${ks.join(',')}` : null;
   }, [v, f.k]);
 
-  /** one sentence on a gap against the median, its sign read the right way round (never "no gap" next to a figure) */
-  const medLine = (g: FeeGap | null, when: string, src: () => Prov) => {
-    if (!med || !g) return null;
-    if (Math.abs(g.balReal) < 500) return <>דמי הניהול {ownAny ? 'שלך' : 'במסלול'} קרובים לחציון בקטגוריה: הפער {when} קטן מ-500 ש"ח.</>;
-    return <>לעומת החציון בקטגוריה: <span className="sv-nw">כ-<Est src={src}>{ilsRound(Math.abs(g.balReal))}</Est></span> {g.balReal > 0 ? 'פחות' : 'יותר'} {when}.</>;
+  /** one sentence on a gap, its sign read the right way round: money the reader will HAVE less (or more) of, never "no gap" next to a
+   *  figure (W5, red team 3: "~2,050 ₪ פחות בגיל 67" read as money paid). `vs`: what it is against; `when`: the horizon in words */
+  const gapLine = (gp: FeeGap | null, vs: string, when: string, src: () => Prov) => {
+    if (!gp) return null;
+    if (Math.abs(gp.balReal) < 500) return <>{vs}: דמי הניהול {ownAny ? 'שלך' : 'במסלול'} כמעט לא משנים את החיסכון {when} (פחות מ-500 ש"ח).</>;
+    return <>{vs}: יהיו לך <span className="sv-nw">כ-<Est src={src}>{ilsRound(Math.abs(gp.balReal))}</Est></span> {gp.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון {when}.</>;
   };
-  const at67 = `בגיל ${RETIRE_AGE}`;
+  const medLine = (gp: FeeGap | null, when: string, src: () => Prov) => (med ? gapLine(gp, ownAny ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה', when, src) : null);
+  const atRet = `בגיל הפרישה (${ageText(plan.retire)})`;
   const liqPlan = liq ? { ...plan, retire: plan.age + liq.years } : plan;
+  // W5: the reader's own pension fees are read against the default-fund price (what a member can get), not the others' averages
+  const vsT = isPension(f.prod) && (v.fee.basis === 'tender' || v.dep?.basis === 'tender');
+  const tLine = tBest && v.dflt ? gapLine(tBest.g, 'לעומת תנאי קרנות ברירת המחדל', atRet, () => gapProv(tBest.p, 'תנאי ברירת המחדל', tBest.g, tSrc(tBest.p))) : null;
   const fold = liq
-    ? medLine(liq.gMed, `בתוך ${liq.years} שנים, כשהכסף נזיל`, () => gapProv(med!, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))
-    : medLine(gMed, at67, () => gapProv(med!, 'החציון בקטגוריה', gMed!, medSrc));
+    ? medLine(liq.gMed, `בעוד ${liq.years} שנים, כשהכסף נזיל`, () => gapProv(med!, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))
+    : vsT ? null : medLine(gMed, atRet, () => gapProv(med!, 'החציון בקטגוריה', gMed!, medSrc));
+  const paid = tBest && tBest.g.feesReal > 500 ? <> {g('תשלמי', 'תשלם', 'תשלמו')} <span className="sv-nw">כ-<Est src={() => gapProv(tBest.p, 'תנאי ברירת המחדל', tBest.g, tSrc(tBest.p))}>{ilsRound(tBest.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
 
   const copy = () => copyText(script, (ok) => { if (ok) setCopied('ok'); else { setCopied('manual'); setOpen(true); } });
-  const B = brief(v);
+  const B = brief(v, C.lever);
 
   return (
     <article className={`panel sv-card${example ? ' sv-example' : ''}`} id={example ? undefined : f.k} aria-label={example ? `דוגמה: ${f.name}` : f.name}>
@@ -122,7 +131,8 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
 
       <div className="sv-money">
         <p className="sv-big">דמי הניהול {ownAny ? 'שלך' : 'במסלול'}: <span className="sv-nw">כ-<Est src={annualProv}>{ilsRound(annual.total)}</Est> בשנה</span>{(C.exBalance || C.exMonthly) && <span className="sv-a">על {C.exBalance && C.exMonthly ? 'יתרה והפקדה' : C.exBalance ? 'יתרה' : 'הפקדה'} לדוגמה</span>}</p>
-        {fold && <p>{fold}{liq && gMed && Math.abs(gMed.balReal) >= 500 && <> אם הכסף נשאר עד {RETIRE_AGE}: <span className="sv-nw">כ-<Est src={() => gapProv(med!, 'החציון בקטגוריה', gMed, medSrc)}>{ilsRound(Math.abs(gMed.balReal))}</Est></span> {gMed.balReal > 0 ? 'פחות' : 'יותר'}.</>} <span className="sv-a">אומדן, בשקלי היום</span></p>}
+        {fold && <p>{fold}{liq && gMed && Math.abs(gMed.balReal) >= 500 && <> אם הכסף נשאר עד גיל הפרישה: <span className="sv-nw">כ-<Est src={() => gapProv(med!, 'החציון בקטגוריה', gMed, medSrc)}>{ilsRound(Math.abs(gMed.balReal))}</Est></span> {gMed.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון.</>} <span className="sv-a">אומדן, בשקלי היום</span></p>}
+        {tLine && <p>{tLine}{tBest!.g.balReal > 0 && paid} <span className="sv-a">אומדן, בשקלי היום; התנאים חלים על מי שמצטרף דרך ברירת המחדל</span></p>}
       </div>
 
       {!example && onChange && <Mine my={my} f={f} onChange={onChange} />}
@@ -139,15 +149,15 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
 
         <Sec title="כמה זה עולה בשקלים" tag="אומדן">
           <p>בשנה: <Est src={annualProv}>{ilsRound(annual.acc)}</Est> מצבירה (היתרה × {pcf(mine.fee)}){mine.depfee > 0 && <>, ועוד <Est src={annualProv}>{ilsRound(annual.dep)}</Est> מהפקדות (12 הפקדות × {pcf(mine.depfee)})</>}.</p>
-          {med && gMed && <p>{liq ? <>{medLine(liq.gMed, `בתוך ${liq.years} שנים`, () => gapProv(med, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))} {medLine(gMed, `אם הכסף נשאר עד גיל ${RETIRE_AGE}`, () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}</> : medLine(gMed, at67, () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}
+          {med && gMed && <p>{liq ? <>{medLine(liq.gMed, `בעוד ${liq.years} שנים`, () => gapProv(med, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))} {medLine(gMed, 'אם הכסף נשאר עד גיל הפרישה', () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}</> : medLine(gMed, atRet, () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}
             {' '}החציון: <Est src={medSrc}>{pcf(med.fee)}</Est> מצבירה{v.dep?.med != null ? <>, <Est src={() => figs.depMed()}>{pcf(med.depfee)}</Est> מהפקדה</> : null}.</p>}
           {C.med0 && mine.depfee > 0 && <p className="sv-note">בקטגוריה לא מתפרסמים דמי ניהול מהפקדה, ולכן ההשוואה מניחה 0% מהפקדה (הנחה).</p>}
-          {tBest && v.dflt && <p>לעומת תנאי ברירת המחדל: {tBest.g.balReal > 0 ? <><span className="sv-nw">כ-<Est src={() => gapProv(tBest.p, 'תנאי ברירת המחדל', tBest.g, tSrc(tBest.p))}>{ilsRound(tBest.g.balReal)}</Est></span> פחות {at67}.</> : 'אף צירוף שההליך מתיר לא היה משאיר יותר בהנחות האלה.'}
+          {tBest && v.dflt && <p>{tBest.g.balReal > 0 ? tLine : 'לעומת תנאי ברירת המחדל: אף צירוף שההליך מתיר לא היה משאיר יותר בהנחות האלה.'}
             {' '}מחיר הבסיס של ההליך הוא <Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.depfee)}</Est> מהפקדה ו-<Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.fee)}</Est> מצבירה{C.tPairs.length > 1 ? ', ואפשר להמיר אותו לצירוף שווה ערך מטבלת ההמרה' : ''}.
             {tBest.g.balReal > 0 && <> החישוב לפי <Est src={tSrc(tBest.p)}>{`${pcf(tBest.p.depfee)} מהפקדה ו-${pcf(tBest.p.fee)} מצבירה`}</Est>, הצירוף שמשאיר הכי הרבה בהנחות האלה.</>}
             {' '}התנאים חלים על מי שמצטרף דרך ברירת המחדל{v.dflt.years ? `, ל-${v.dflt.years} שנים` : ''}.</p>}
           {!ownAny && <p className="sv-note">החישוב לפי דמי הניהול <b>הממוצעים</b> במסלול. מה שאתם משלמים בפועל כתוב בדוח השנתי; {example ? 'אחרי הוספת המוצר שלכם אפשר להזין אותו.' : 'אפשר להזין אותו למעלה.'}</p>}
-          <Assume plan={plan} my={my} ex={C.exWhy} ageSet={ageS != null} retSrc={retSrc} retWhy={retWhy} r10={r10} idx={singleIndex(f)} retQ={retQ} setRetQ={setRetQ} />
+          <Assume plan={plan} rWhy={R.own ? 'שלך, מראש העמוד' : R.why} my={my} ex={C.exWhy} ageSet={ageS != null} retSrc={retSrc} retWhy={retWhy} r10={r10} idx={singleIndex(f)} retQ={retQ} setRetQ={setRetQ} />
         </Sec>
 
         <Sec title="ההודעה לסוכן או לחברה" tag="להעתקה">
@@ -155,10 +165,10 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         </Sec>
 
         {isPension(f.prod) && <Sec title="כמה פנסיה זה יכול להיות" tag="אומדן גס">
-          <p className="sv-big">בגיל {RETIRE_AGE}: <span className="sv-nw">כ-<Est src={() => penProv('bal')}>{ilsRound(out.balReal)}</Est></span> בחיסכון, וקצבה של <span className="sv-nw">כ-<Est src={() => penProv('pen')}>{ilsRound(out.pensionReal)}</Est></span> לחודש. בשקלי היום, לפני מס.</p>
+          <p className="sv-big">בגיל {ageText(plan.retire)}: <span className="sv-nw">כ-<Est src={() => penProv('bal')}>{ilsRound(out.balReal)}</Est></span> בחיסכון, וקצבה של <span className="sv-nw">כ-<Est src={() => penProv('pen')}>{ilsRound(out.pensionReal)}</Est></span> לחודש. בשקלי היום, לפני מס.</p>
           <p className="sv-note">רק מהמוצר הזה, על אותן הנחות (תשואה {pcf(ret)} ברוטו בשנה). האומדן לא מנכה את עלות הכיסוי הביטוחי (נכות ושארים) שהקרן גובה מההפקדות, ולכן הוא נוטה להיות גבוה.</p>
           <NumIn label={`מקדם המרה (${coefQ != null ? 'שלך' : cf.why})`} value={coef} min={100} max={400} step={1} onCommit={setCoefQ} />
-          <p className="sv-note">הקצבה = החיסכון ÷ המקדם. המקדם נקבע בתקנון הקרן לפי גיל, מין ומסלול הקצבה. לפי <a href={COEF_SRC} target="_blank" rel="noreferrer">ביזפורטל (22.07.26)</a>, בגיל 67 הוא כ-180 לגבר בלי שארים, כ-188 עם פנסיית שארים, וכ-204 לאישה עם הבטחת תשלומים ושארים. {sex == null ? '200 הוא הנחה עגולה; אפשר לבחור מין למעלה.' : ''}</p>
+          <p className="sv-note">הקצבה = החיסכון ÷ המקדם. המקדם נקבע בתקנון הקרן לפי גיל, מין ומסלול הקצבה. לפי <a href={COEF_SRC} target="_blank" rel="noreferrer">ביזפורטל (22.07.26)</a>, בגיל 67 הוא כ-180 לגבר בלי שארים, כ-188 עם פנסיית שארים, וכ-204 לאישה עם הבטחת תשלומים ושארים. {plan.retire < RETIRE_AGE ? `בפרישה בגיל ${ageText(plan.retire)} המקדם בדרך כלל גבוה יותר, ולכן הקצבה בפועל נמוכה מהאומדן הזה. ` : ''}{sex == null ? '200 הוא הנחה עגולה; אפשר לבחור מין למעלה.' : ''}</p>
         </Sec>}
 
         {f.prod === 'השתלמות' && <Sec title="מה כדאי לדעת על השתלמות" tag="עובדות">
@@ -231,13 +241,13 @@ function NumIn({ label, value, min, max, step, onCommit, small }: { label: strin
   return <label className={small ? 'sv-num-in sm' : 'sv-num-in'}><span>{label}</span><input type="number" inputMode="decimal" min={min} max={max} step={step} value={raw} onChange={(e) => go(e.target.value)} onBlur={() => setRaw(String(value))} /></label>;
 }
 
-function Assume({ plan, my, ex, ageSet, retSrc, retWhy, r10, idx, retQ, setRetQ }: { plan: Plan; my?: MyProduct; ex: string; ageSet: boolean; retSrc?: () => Prov; retWhy: string; r10: number | null; idx: boolean; retQ: number | null; setRetQ: (v: number | null) => void }) {
+function Assume({ plan, rWhy, my, ex, ageSet, retSrc, retWhy, r10, idx, retQ, setRetQ }: { plan: Plan; rWhy: string; my?: MyProduct; ex: string; ageSet: boolean; retSrc?: () => Prov; retWhy: string; r10: number | null; idx: boolean; retQ: number | null; setRetQ: (v: number | null) => void }) {
   const r10v = r10 != null ? +r10.toFixed(2) : null;
   return (
     <div className="sv-assume">
       <div className="sv-assume-h">ההנחות <span className="sv-muted">· אפשר לשנות</span></div>
       <dl>
-        <div><dt>גיל היום</dt><dd>{plan.age}<span className="sv-a">{ageSet ? 'שלך, מראש העמוד' : 'לדוגמה: אפשר לשנות בראש העמוד'}</span> <span>פרישה ב-{RETIRE_AGE}</span></dd></div>
+        <div><dt>גיל היום</dt><dd>{plan.age}<span className="sv-a">{ageSet ? 'שלך, מראש העמוד' : 'לדוגמה: אפשר לשנות בראש העמוד'}</span> <span>פרישה בגיל {ageText(plan.retire)}</span><span className="sv-a">{rWhy}{!rWhy.startsWith('שלך') && <> · <a href={KZ_RETIRE} target="_blank" rel="noreferrer">כל זכות</a></>}</span></dd></div>
         <div><dt>יתרה היום</dt><dd>{ilsRound(plan.balance)}{my?.balance == null && <span className="sv-a">לדוגמה</span>}</dd></div>
         <div><dt>הפקדה לחודש</dt><dd>{ilsRound(plan.monthly)}{my?.monthly == null && <span className="sv-a">לדוגמה: {ex}</span>}</dd></div>
         <div><dt>עליית ההפקדה</dt><dd>{pcf(GROWTH_DEFAULT)} בשנה<span className="sv-a">הנחה</span></dd></div>

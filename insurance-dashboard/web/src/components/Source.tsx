@@ -129,7 +129,7 @@ function FundSheet({ p }: { p: Extract<Prov, { k: 'fund' }> }) {
       <Head title={p.title} value={p.value} unit={p.unit} sub={<>{DS_LABEL[p.ds]} · קופה <span className="num">{p.id}</span> · <span className="num">{p.period}</span></>} />
       <dl className="srcfacts">
         <dt>סוג מקור</dt><dd>רשות שוק ההון, נתוני קופות פתוחים (data.gov.il)</dd>
-        <dt>שדה</dt><dd className="mono ltr">{p.col}</dd>
+        <dt>שם השדה במקור</dt><dd className="mono ltr">{p.col}</dd>
         <dt>נמשך</dt><dd className="num">{market?.d.meta.fetched ?? '–'}</dd>
       </dl>
       {res && <a className="srcgo" href={ckanQuery(res.id, { REPORT_PERIOD: p.period, FUND_ID: p.id }, undefined, 5)} target="_blank" rel="noreferrer">הרשומה ב-data.gov.il</a>}

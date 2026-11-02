@@ -70,7 +70,7 @@ const mor = parseMaslaka(xmlTree(decodeXml(read('fixture-mor.xml'))));
 /* ---- not a clearing-house file ---- */
 {
   let msg = ''; try { parseMaslaka(xmlTree('<Other><x/></Other>')); } catch (e) { msg = String(e); }
-  ok(msg.includes('Mimshak'), 'another XML is refused, in Hebrew, naming the expected root');
+  ok(msg.includes('זה לא נראה כמו קובץ מהמסלקה הפנסיונית') && !/Mimshak|Root|Other/.test(msg), 'another XML is refused in plain Hebrew, without the XML root names (W5)');
 }
 
 /* ---- matching against the published data ---- */

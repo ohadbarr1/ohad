@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import type { FundX } from '../../lib/funds';
 import { buildPool, rank, type FundEnt } from '../../lib/searchOmni';
 import { pcf, selfDir } from '../../lib/verdict';
+import { useMyAge } from '../../lib/mine';
+import { AGE_DEFAULT } from '../../lib/retire';
 
 /* "מה יש לך?": product → manager → track in three taps, or type a name or a fund number. Picks only; the parent saves. */
 export const MAIN_PRODS: [string, string][] = [
@@ -11,6 +13,9 @@ export const MAIN_PRODS: [string, string][] = [
 const MORE_PRODS = ['פנסיה כללית', 'חיסכון לילד', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991'];
 /** within a manager, the tracks a saver usually lands in first (the search's order), then by size */
 const TRACK_FIRST: Record<string, number> = { 'כללי': 5, 'עד 50': 4, '50-60': 3, '60 ומעלה': 2 };
+/** W5 (red team 3): the tracks for members already drawing a pension, hidden from a reader under 60 unless they ask for every track */
+export const PAYOUT = (f: Pick<FundX, 'track'>) => f.track === 'מקבלי קצבה';
+const PAYOUT_AGE = 60;
 
 export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]; onPick: (k: string) => void }) {
   const open = useMemo(() => funds.filter((f) => !f.closed && f.assets && !selfDir(f)), [funds]);
@@ -18,6 +23,10 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
   const [grp, setGrp] = useState<string | null>(null);
   const [more, setMore] = useState(false);
   const [q, setQ] = useState('');
+  const [ageS] = useMyAge();
+  const [all, setAll] = useState(false);
+  const hidePay = !all && (ageS ?? AGE_DEFAULT) < PAYOUT_AGE;
+  const shownT = (f: FundX) => !hidePay || !PAYOUT(f);
 
   const groups = useMemo(() => {
     if (!prod) return [];
@@ -25,7 +34,8 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
     open.filter((f) => f.prod === prod && f.grp !== 'קרנות ענפיות ואחרות').forEach((f) => m.set(f.grp, (m.get(f.grp) ?? 0) + (f.assets ?? 0)));
     return [...m].sort((a, b) => b[1] - a[1]).map(([g]) => g);
   }, [open, prod]);
-  const tracks = useMemo(() => (prod && grp ? open.filter((f) => f.prod === prod && f.grp === grp).sort((a, b) => (TRACK_FIRST[b.track] ?? 0) - (TRACK_FIRST[a.track] ?? 0) || (b.assets ?? 0) - (a.assets ?? 0)) : []), [open, prod, grp]);
+  const tracksAll = useMemo(() => (prod && grp ? open.filter((f) => f.prod === prod && f.grp === grp).sort((a, b) => (TRACK_FIRST[b.track] ?? 0) - (TRACK_FIRST[a.track] ?? 0) || (b.assets ?? 0) - (a.assets ?? 0)) : []), [open, prod, grp]);
+  const tracks = tracksAll.filter(shownT), hiddenN = tracksAll.length - tracks.length;
 
   // type-ahead: the site's own search ranking (lib/searchOmni), funds only
   const pool = useMemo(() => buildPool([], [], open.map((f): FundEnt => [f.name, f.grp, f.k, f.track]), []), [open]);
@@ -33,8 +43,8 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
     const t = q.trim();
     if (t.length < 2) return [];
     return rank(t, pool, (s) => s).filter((x) => x.kind === 'קופה' && x.to.startsWith('/funds/')).slice(0, 6)
-      .map((x) => open.find((f) => `/funds/${f.k}` === x.to)).filter((f): f is FundX => !!f);
-  }, [q, pool, open]);
+      .map((x) => open.find((f) => `/funds/${f.k}` === x.to)).filter((f): f is FundX => !!f && shownT(f));
+  }, [q, pool, open, hidePay]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const Row = ({ f, sub }: { f: FundX; sub: string }) => {
     const on = have.includes(f.k);
@@ -66,6 +76,7 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
       {prod && grp && <div className="sv-step">
         <div className="sv-step-h"><span className="sv-num" aria-hidden="true">3</span>איזה מסלול? <span className="sv-step-note">שם המסלול ומספר הקופה כתובים בדוח השנתי</span></div>
         <ul className="sv-pick-list">{tracks.map((f) => <Row key={f.k} f={f} sub={`${f.track} · דמי ניהול ${pcf(f.fee)} · מספר קופה ${f.id}`} />)}</ul>
+        {hiddenN > 0 && <p className="sv-muted">{hiddenN === 1 ? 'מסלול אחד למקבלי קצבה מוסתר' : `${hiddenN} מסלולים למקבלי קצבה מוסתרים`} (למי שכבר מקבל פנסיה). <button type="button" className="linkbtn" onClick={() => setAll(true)}>הצגת כל המסלולים</button></p>}
       </div>}
       <div className="sv-step sv-search">
         <label className="sv-step-h" htmlFor="sv-q"><span className="sv-num" aria-hidden="true">⌕</span>או חיפוש לפי שם או מספר קופה</label>
