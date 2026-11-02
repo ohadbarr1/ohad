@@ -210,6 +210,10 @@
    "schema": "targets"
   },
   {
+   "pattern": "consensus.json",
+   "schema": "consensus"
+  },
+  {
    "pattern": "adjusted.json",
    "schema": "adjusted"
   },
@@ -3810,6 +3814,22 @@
       }
      }
     }
+   }
+  },
+  "consensus": {
+   "type": "object",
+   "required": ["v", "fetched", "window", "searched", "none", "rows"],
+   "properties": {
+    "v": {"type": "integer"},
+    "fetched": {"$ref": "#/$defs/date"},
+    "window": {"type": "array", "items": {"$ref": "#/$defs/date"}},
+    "searched": {"type": "array", "items": {"type": "string"}},
+    "none": {"type": "array", "items": {"type": "string"}},
+    "rows": {"type": "array", "items": {"type": "object", "required": ["c", "broker", "date", "rating", "rating_norm", "target", "outlet", "kind", "src"], "properties": {
+     "c": {"type": "string"}, "broker": {"type": "string"}, "broker_he": {"type": ["string", "null"]}, "date": {"$ref": "#/$defs/date"},
+     "date_kind": {"enum": ["report", "article"]}, "rating": {"type": "string"}, "rating_norm": {"enum": ["buy", "outperform", "hold", "neutral", "underperform", "sell", "none"]},
+     "target": {"type": ["number", "null"]}, "target_printed": {"type": ["string", "null"]}, "prev_target": {"type": ["number", "null"]}, "outlet": {"type": "string"},
+     "kind": {"enum": ["press", "aggregator"]}, "src": {"type": "string", "pattern": "^https://"}, "alt": {"type": ["array", "null"]}}}}
    }
   },
   "targets": {

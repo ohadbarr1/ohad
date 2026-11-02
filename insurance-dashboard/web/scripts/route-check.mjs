@@ -23,7 +23,7 @@ const ROUTES = [
   '/company/phoenix/thesis', '/company/phoenix/numbers', '/company/phoenix/numbers?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/report?p=2025Q3', '/company/more', '/company/more/numbers', '/company/more/review', '/company/idi', '/company/idi/numbers',
   '/scenarios', '/warroom', '/positions', '/fragility', '/capital',
   // lane AP: the report-day autopilot's status page
-  '/data/autopilot',
+  '/data/autopilot', '/data/api',
   // lane DL: debt ladder (industry wall, a group with a capital-raising subsidiary, a fund house, a pinned date and view)
   '/debt', '/debt?k=fund', '/debt/phoenix', '/debt/meitav', '/debt/harel?d=2025-12-31&v=group&by=link',
   // lane FT: the fact table with the vintage toggle

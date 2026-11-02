@@ -89,6 +89,8 @@ date (reruns once a day). Groups: `deploy` (deploy.sh), `facts`. Paths without a
 | `build_digest` | auto, daily | build_feed | data/digest/digest.html, digest.txt (the last 7 days as an email body; untracked, no sender) |
 | `build_watch` | auto, daily · deploy | build_calendar, build_nowcast, build_feed, build_answers, build_findings | appends data/ledger/answers/<day>.json (once per build day, never rewritten), then watch.json (module S10 Watch & Wake: the build-to-build answer diff + the prep calendar; gate `watch` + `watch_ledger`) |
 | `build_flows` | auto · deploy | build_funds, build_fund_stats, build_market | flows.json, flows/<prod>.json, flows/m/<yyyymm>.json, flows/sig.json, flows/fees.json (gate `flows`) |
+| `build_model_xlsx` | auto · deploy | facts, build_series, build_csm, build_solvency, build_savings, build_lens, build_kpi, canon_kpi, build_targets, build_company_index, build_search | xlsx/<company>.xlsx (Wave 5: one model-ready workbook per company, P&L · Balance sheet · IFRS 17 · Solvency · Savings · KPIs · Sources, every value with its document, page and link; standard library via pipeline/xlsx_lib.py; `build_model_xlsx.py --check` = gate `model_xlsx`: byte-equal rebuild, every file opens, every value cell sourced, < 1 MB) |
+| `build_consensus` | auto · deploy | data/registry/consensus.json (hand-curated) | consensus.json (Wave 5: published sell-side targets and ratings, each confirmed on its page; no share price; `build_consensus.py --check` = gate `consensus`) |
 | `build_coverage` | auto, daily · deploy | every step that writes JSON | coverage.json (reads qa.json from the last gate) |
 
 After the build: `python3 pipeline/gate.py` (all checks; writes qa.json, consistency.json). It is not a step: deploy.sh runs it after

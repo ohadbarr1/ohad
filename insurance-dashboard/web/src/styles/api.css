@@ -1,0 +1,22 @@
+/* /data/api (Wave 5): the open files as an API */
+.api-two { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 22px; align-items: start; }
+@media (max-width: 980px) { .api-two { grid-template-columns: 1fr; } }
+table.api-t { width: 100%; border-collapse: collapse; font-size: var(--t-2); }
+table.api-t th { text-align: start; font-weight: 600; color: var(--muted); font-size: var(--t-1); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.api-t td { padding: 7px 8px; border-bottom: 1px solid var(--line-soft); vertical-align: top; text-align: start; white-space: nowrap; }
+table.api-t td.wrap { white-space: normal; min-width: 180px; }
+table.api-t.fam td:first-child { min-width: 210px; }
+.api .chips .chip { font-size: var(--t-1); padding: 0 6px; }
+.api-ex { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 420px; }
+.api-ex pre { margin: 0; padding: 8px 10px; max-height: 260px; overflow: auto; font-family: var(--font-mono); font-size: var(--t-1); line-height: 1.45; background: var(--panel2); border: 1px solid var(--line-soft); border-radius: var(--r-2); white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
+.api-ex .chip { cursor: pointer; }
+.api-xl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
+.api-xl .chip { display: inline-flex; gap: 4px; align-items: center; }
+.api-xl .chip svg { width: 14px; height: 14px; }
+.api-prov { display: grid; gap: 6px; margin: 0; }
+.api-prov > div { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: 10px; align-items: baseline; }
+.api-prov dt { color: var(--fg); }
+.api-prov dd { margin: 0; color: var(--muted); font-size: var(--t-2); }
+.api-filter { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: end; margin-bottom: 10px; }
+.api-filter .field input { min-width: 220px; }
+.api .src[dir="ltr"] { text-align: left; }

@@ -1,0 +1,258 @@
+{
+ "fetched": "2026-11-02",
+ "window": [
+  "2025-11-01",
+  "2026-11-02"
+ ],
+ "method": "Public press and IR pages searched for sell-side price targets and recommendations on the ten listed insurers and managers; every row was confirmed on the fetched page (check = a short excerpt kept for re-verification, not published). Rows found only in a page's embedded data, or with no named broker, were dropped.",
+ "searched": [
+  "harel",
+  "phoenix",
+  "migdal",
+  "clal",
+  "menora",
+  "ayalon",
+  "altshuler",
+  "meitav",
+  "more",
+  "ibi"
+ ],
+ "rows": [
+  {
+   "c": "clal",
+   "broker": "Jefferies",
+   "broker_he": "ג'פריס",
+   "date": "2026-03-12",
+   "date_kind": "article",
+   "rating": "קנייה (initiation)",
+   "rating_norm": "buy",
+   "target": 290.0,
+   "target_printed": "כ-290 שקל",
+   "prev_target": null,
+   "action": null,
+   "outlet": "Bizportal",
+   "kind": "press",
+   "title": "ג'פריס בסיקור ראשוני לכלל: \"אפסייד של 16%\"",
+   "src": "https://www.bizportal.co.il/capitalmarket/news/article/20028886",
+   "alt": null,
+   "check": "פותחים סיקור עם המלצת קנייה ומחיר יעד של כ-290 שקל",
+   "note": "Same call in TheMarker 12.03.2026 (paywalled): https://www.themarker.com/markets/2026-03-12/ty-article/.premium/0000019c-e272-da17-a3be-f3f31cd60000 — 'מחיר יעד של 290 שקל'"
+  },
+  {
+   "c": "harel",
+   "broker": "Barclays",
+   "broker_he": null,
+   "date": "2025-11-25",
+   "date_kind": "report",
+   "rating": "buy (Overweight)",
+   "rating_norm": "buy",
+   "target": 150.0,
+   "target_printed": "ILA 15,000 (agorot)",
+   "prev_target": 138.0,
+   "action": null,
+   "outlet": "TipRanks (analyst ratings table)",
+   "kind": "aggregator",
+   "title": "Harel (IL:HARL) analyst forecast — Tavy Rosner, Barclays, Reiterated",
+   "src": "https://www.tipranks.com/stocks/il:harl/forecast",
+   "alt": null,
+   "check": "Tavy Rosner, Barclays, buy, ILA 13,800→ILA 15,000, Reiterated, 11/25/25",
+   "note": "Investing.com ratings table shows same action dated 2025-11-26: Barclays Buy 150.00, prev 138.00, Maintain (https://www.investing.com/equities/harel-ins---inv-consensus-estimates)"
+  },
+  {
+   "c": "harel",
+   "broker": "Jefferies",
+   "broker_he": "ג'פריס",
+   "date": "2026-01-19",
+   "date_kind": "article",
+   "rating": "Buy (upgraded from Hold)",
+   "rating_norm": "buy",
+   "target": 150.0,
+   "target_printed": "ILs150.00",
+   "prev_target": 105.0,
+   "action": null,
+   "outlet": "Investing.com",
+   "kind": "press",
+   "title": "Jefferies upgrades Harel Insurance stock rating to Buy on catalyst-rich outlook",
+   "src": "https://www.investing.com/news/analyst-ratings/jefferies-upgrades-harel-insurance-stock-rating-to-buy-on-catalystrich-outlook-93CH-4453323",
+   "alt": null,
+   "check": "while significantly raising its price target to ILs150.00 from ILs105.00",
+   "note": "Hebrew version: https://il.investing.com/news/analyst-ratings/article-93CH-731371 (updated 19.01.2026)"
+  },
+  {
+   "c": "meitav",
+   "broker": "Jefferies",
+   "broker_he": "ג'פריס",
+   "date": "2026-02-17",
+   "date_kind": "article",
+   "rating": "המלצת קנייה",
+   "rating_norm": "buy",
+   "target": 159.0,
+   "target_printed": "159 שקל",
+   "prev_target": null,
+   "action": "initiation",
+   "outlet": "TheMarker",
+   "kind": "press",
+   "title": "בנק ההשקעות ג'פריס פירסם המלצת קנייה על מיטב בית השקעות במחיר יעד של 159 שקל (live blog entry)",
+   "src": "https://www.themarker.com/markets/2026-02-17/ty-article-live/0000019c-6a46-d759-a7bf-fede301d0000",
+   "alt": [
+    {
+     "outlet": "Globes",
+     "src": "https://www.globes.co.il/news/article.aspx?did=1001535290"
+    },
+    {
+     "outlet": "Sponser (analyst-recs table)",
+     "src": "https://finance.sponser.co.il/finance/recommendation/index.php?symbol=1081843"
+    }
+   ],
+   "check": "ג'פריס פירסם המלצת קנייה על מיטב בית השקעות במחיר יעד של 159 שקל",
+   "note": ""
+  },
+  {
+   "c": "meitav",
+   "broker": "Jefferies",
+   "broker_he": null,
+   "date": "2026-10-06",
+   "date_kind": "report",
+   "rating": "Buy (maintained)",
+   "rating_norm": "buy",
+   "target": 153.0,
+   "target_printed": "ILs153.00",
+   "prev_target": 167.0,
+   "action": "reiterated, target cut",
+   "outlet": "TipRanks",
+   "kind": "press",
+   "title": "Meitav Invest (MTAV) Receives a Rating Update from a Top Analyst",
+   "src": "https://www.tipranks.com/news/blurbs/meitav-invest-mtav-receives-a-rating-update-from-a-top-analyst-blurbs-news",
+   "alt": [
+    {
+     "outlet": "TipRanks forecast page",
+     "src": "https://www.tipranks.com/stocks/il:mtav/forecast"
+    }
+   ],
+   "check": "Daniel Fannon maintained a Buy rating on Meitav Invest ... price target of ILs153.00",
+   "note": "prev_target 167 comes from the StockAnalysis.com visible row (16,700 → 15,300), not from the TipRanks blurb."
+  },
+  {
+   "c": "menora",
+   "broker": "Jefferies",
+   "broker_he": "ג'פריס",
+   "date": "2026-07-10",
+   "date_kind": "article",
+   "rating": "קנייה (initiation)",
+   "rating_norm": "buy",
+   "target": 565.0,
+   "target_printed": "565 שקל",
+   "prev_target": null,
+   "action": null,
+   "outlet": "Bizportal",
+   "kind": "press",
+   "title": "אפסייד של 23% במניית מנורה - האנליסט שלא רואה סיכון בחקירה",
+   "src": "https://www.bizportal.co.il/capitalmarket/news/article/20035554",
+   "alt": null,
+   "check": "פותח סיקור ראשוני על מנורה מבטחים בהמלצת קנייה ומחיר יעד של 565 שקל",
+   "note": "Also Ice 10/7/2026: https://www.ice.co.il/finance/news/article/1120399"
+  },
+  {
+   "c": "menora",
+   "broker": "Jefferies",
+   "broker_he": "ג'פריס",
+   "date": "2026-08-27",
+   "date_kind": "article",
+   "rating": "קנייה (BUY), reiterated",
+   "rating_norm": "buy",
+   "target": 565.0,
+   "target_printed": "565 שקל",
+   "prev_target": null,
+   "action": null,
+   "outlet": "Sponser",
+   "kind": "press",
+   "title": "מנורה תרכוש 40% מחברת קרנות הגידור אג'יליטי בתמורה לכ-200 מיליון שקל",
+   "src": "https://www.sponser.co.il/Article.aspx?ArticleId=123129",
+   "alt": null,
+   "check": "המלצת \"קנייה\" (BUY) עם מחיר יעד של 565 שקל",
+   "note": "Sponser recommendations table also lists 27/08/26 Jefferies/Philip Kett קניה, target 56,500 (agorot): https://finance.sponser.co.il/finance/recommendation/rec.php?symbol=566018"
+  },
+  {
+   "c": "menora",
+   "broker": "Jefferies",
+   "broker_he": "ג׳פריס",
+   "date": "2026-10-05",
+   "date_kind": "article",
+   "rating": "קנייה (Buy), maintained",
+   "rating_norm": "buy",
+   "target": 600.0,
+   "target_printed": "600 שקלים",
+   "prev_target": 565.0,
+   "action": null,
+   "outlet": "Funder",
+   "kind": "press",
+   "title": "ג׳פריס מעלה את מחיר היעד למניית מנורה מבטחים",
+   "src": "https://funder.co.il/article/210941",
+   "alt": null,
+   "check": "ל-600 שקלים למניה (לעומת 565 שקלים בהמלצה הקודמת)",
+   "note": "Bull case 635 ₪ printed. TheMarker ran it 04.10.2026 (https://www.themarker.com/markets/2026-10-04/ty-article/.premium/000001a1-05ea-d75d-a1e7-2feb49630000); TipRanks dates the note 09/30/26 (Philip Kett, Buy, ILA 60,000)."
+  }
+ ],
+ "dropped": [
+  {
+   "c": "phoenix",
+   "what": "Consensus 12m target 21,500 agorot (215 ₪), 1 analyst, Strong Buy — broker not named",
+   "src": "https://www.investing.com/equities/phoenix-ord1-consensus-estimates",
+   "why": "Aggregator only; no article/broker identifies the target. MarketScreener also shows 1 analyst at 215 ILS, unnamed."
+  },
+  {
+   "c": "phoenix",
+   "what": "Jefferies Buy 150 ₪ (prev 68) and Barclays Overweight 100 ₪",
+   "src": "https://en.globes.co.il/en/article-1001517390 ; https://www.bizportal.co.il/capitalmarket/news/article/20018373",
+   "why": "Confirmed but outside window (28.07.2025 and 19.06.2025). No in-window named Phoenix target found."
+  },
+  {
+   "c": "harel",
+   "what": "Consensus 12m target 21,500 agorot (215 ₪), 1 analyst in past 3 months — broker not named",
+   "src": "https://www.investing.com/equities/harel-ins---inv-consensus-estimates",
+   "why": "Aggregator only; implies a newer target above Jefferies/Barclays 150 but no source names it."
+  },
+  {
+   "c": "clal",
+   "what": "Consensus 12m target 32,000 agorot (320 ₪), 1 analyst — broker not named (possibly a Jefferies raise from 290)",
+   "src": "https://www.investing.com/equities/clal-insurance-consensus-estimates",
+   "why": "Aggregator only; no article confirming broker/date."
+  },
+  {
+   "c": "migdal",
+   "what": "No published sell-side target found in window",
+   "src": "https://www.investing.com/equities/migdal-insurance-consensus-estimates",
+   "why": "Investing analyst block paywalled; TipRanks shows only AI-model ratings; press search found nothing post-2021."
+  },
+  {
+   "c": "ayalon",
+   "what": "Bank Leumi (Eyal Dvi/אייל דבי) Buy, target 3,330 (=33.3 NIS)",
+   "src": "https://finance.sponser.co.il/finance/recommendation/index.php?symbol=209015",
+   "why": "Confirmed on page but dated 06/11/24 — outside the 2025-11-01..2026-11-02 window; stale (stock ~180-190 NIS). Not published."
+  },
+  {
+   "c": "altshuler",
+   "what": "TipRanks 'Moderate Buy, 1 Buy, avg PT 757.00' (search-snippet only)",
+   "src": "https://www.tipranks.com/stocks/il:altf/forecast",
+   "why": "Live page now shows only AI-generated entries and 'no analyst ratings in last 3 months'; broker/date not identifiable. Dropped."
+  },
+  {
+   "c": "meitav",
+   "what": "MarketScreener consensus 1 analyst Buy, 153/167 ILS",
+   "src": "https://www.marketscreener.com/quote/stock/MEITAV-INVESTMENT-HOUSE-L-56536993/consensus/",
+   "why": "Unnamed broker (almost certainly Jefferies, duplicate); not fetched/used."
+  },
+  {
+   "c": "more",
+   "what": "No published broker target found",
+   "src": "https://www.tipranks.com/stocks/il:mrin/forecast",
+   "why": "Only AI-generated TipRanks entries; no press article with target in window; Sponser/Globes/Bizportal rec tables empty or JS-only."
+  },
+  {
+   "c": "ibi",
+   "what": "No published broker target found",
+   "src": "https://www.tipranks.com/stocks/il:ibi/forecast",
+   "why": "Only AI-generated TipRanks entries; Investing.com analyst block paywalled; no press article found."
+  }
+ ]
+}

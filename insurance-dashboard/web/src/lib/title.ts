@@ -38,7 +38,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'managers': return t('דירוג מנהלים', 'חיסכון');
     case 'calendar': return t('לוח דיווחים');
     case 'book': return t('ספר הגרפים');
-    case 'data': return p[1] === 'autopilot' && !p[2] ? t('טייס אוטומטי', 'נתונים ואיכות') : p[1] ? null : t('נתונים ואיכות');
+    case 'data': return p[1] === 'autopilot' && !p[2] ? t('טייס אוטומטי', 'נתונים ואיכות') : p[1] === 'api' && !p[2] ? t('API נתונים', 'נתונים ואיכות') : p[1] ? null : t('נתונים ואיכות');
     case 'restatements': return p[1] ? null : t('הצגות מחדש', 'השוואה ענפית');
     case 'presentations': return p[1] ? null : t('מצגות משקיעים');
     case 'credibility': return p[1] ? null : t('אמינות יעדים');  // lane S3
