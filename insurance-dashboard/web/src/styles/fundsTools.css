@@ -87,3 +87,9 @@ tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
 .ffees-assume > summary { cursor: pointer; font-weight: 600; padding: 10px 2px; color: var(--muted); }
 .ffees-assume[open] > summary { color: var(--fg); }
 @media (max-width: 640px) { .ffees-ans .fans-big { font-size: 17px; } }
+
+/* W6 doors: the professional's nominal rows and sensitivity grid, folded (agent and Pro) */
+.ffees-pro { margin: 0 0 14px; }
+.ffees-pro > summary { cursor: pointer; color: var(--muted); font-size: var(--t-2); padding: 8px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel2); }
+.ffees-pro > summary:hover { color: var(--fg); }
+.ffees-pro[open] > summary { margin-bottom: 12px; }

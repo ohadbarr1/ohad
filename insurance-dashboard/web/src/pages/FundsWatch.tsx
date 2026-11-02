@@ -10,7 +10,9 @@ import { useFunds } from '../lib/useData';
 import type { Prov } from '../lib/prov';
 import { nf, sn } from '../lib/format';
 import { fundP, monthIn } from '../lib/market';
-import { NET_LABEL, NET_NOTE, grossProv, netProv, pc, refOf, useBasis, type FundX, type FundsFile } from '../lib/funds';
+import { NET_LABEL, NET_NOTE, catKey, grossProv, netProv, pc, refOf, selfDirected, useBasis, type FundX, type FundsFile } from '../lib/funds';
+import { rankText, tieBand, tieRanks, TIE_NOTE } from '../lib/fundsTie';  // W6 doors: the saver's place in words
+import { isOldGen } from '../lib/decision';
 import { deltaOf, markSeen, mergeWatch, normWatch, outflowStreak, retBetween, ddNow, toggleWatch, ymL, type WSnap, type WatchStore } from '../lib/fundsTime';
 import { snapOf, useClosed, useHists, useWatch, yOf } from '../lib/fundsTimeLoad';
 import { today } from '../lib/visits';
@@ -72,13 +74,24 @@ export function FundsWatch() {
     file.text().then((t) => { const before = w.items.length, next = mergeWatch(w, JSON.parse(t)); setW(next); setMsg(`נוספו ${next.items.length - before} מסלולים`); }).catch(() => setMsg('הקובץ אינו רשימת מעקב תקינה'));
   };
   const fresh = w.items.filter((i) => now.get(i.k) && i.base && now.get(i.k)!.asof > i.base.asof).length;
+  // W6 doors (saver red team 02.11.26): "אחוזון LTM 63 מתוך 9" read as nonsense; the saver gets a sentence with the shared place of the
+  // track among the open tracks of its category on the last 12 months (lib/fundsTie), on the basis chosen
+  const y12Of = (x: FundX) => (b === 'net' ? x.net?.y12 ?? null : x.y12);
+  const placeOf = (f: FundX) => {
+    if (!data || isOldGen(f)) return null;
+    const peers = (data.funds as FundX[]).filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed) && x.assets !== 0 && !selfDirected(x) && !isOldGen(x));
+    return tieRanks(peers, y12Of, tieBand('y12', asof)).get(f.k) ?? null;
+  };
+  const placeP = (f: FundX, t: NonNullable<ReturnType<typeof placeOf>>): Prov => ({ k: 'calc', est: b === 'net', title: `מקום ב-12 החודשים${b === 'net' ? ', נטו' : ''} · ${f.name}`, value: `${rankText(t)} מתוך ${t.n}`,
+    formula: `מקום = מספר המסלולים בקטגוריה (אותו מוצר ומסלול, פתוחים לציבור, עם נכסים) עם תשואת 12 חודשים גבוהה יותר, ועוד 1. ${TIE_NOTE}`,
+    inputs: [{ label: '12 חודשים', v: pc(y12Of(f)), src: () => (b === 'net' ? netProv(f, 'y12', asof, y12Of(f)) : grossProv(f, 'y12', asof)) }, { label: 'מסלולים בקטגוריה', v: nf(t.n, 0) }, { label: 'צמודים למסלול', v: nf(t.hi - t.lo, 0) }] });
   return (
     <>
       <FundsHead title="המעקב שלי" sub={<>מה השתנה במסלולים שבמעקב מאז הביקור הקודם{data ? <> · נתוני <span className="num">{ymL(asof)}</span></> : null} · פרטי לדפדפן הזה</>} tools={<BasisToggle real={false} />} />
       <section className="kpis">
         <div className="kpi"><div className="l">במעקב</div><div className="v num">{w.items.length}</div><div className="s">מסלולים</div></div>
         <div className="kpi"><div className="l">עם חודש חדש</div><div className="v num">{fresh}</div><div className="s">מאז הביקור הקודם</div></div>
-        <div className="kpi"><div className="l">בסיס</div><div className="v">{b === 'net' ? NET_LABEL : 'ברוטו'}</div><div className="s">אחוזון ותשואה</div></div>
+        <div className="kpi"><div className="l">בסיס</div><div className="v">{b === 'net' ? NET_LABEL : 'ברוטו'}</div><div className="s">{saver ? 'מקום ותשואה' : 'אחוזון ותשואה'}</div></div>
       </section>
       {!w.items.length ? (
         <Empty title="עוד אין מסלולים במעקב" icon="funds">{saver ? <>מוסיפים מוצרים ב<Link to="/my">המוצרים שלי</Link>, והם יופיעו כאן. </> : null}בכרטיס של כל מסלול, במפה ובאחוזונים יש כפתור ☆ מעקב. הרשימה נשמרת רק בדפדפן הזה, ואפשר לייבא קובץ שיוצא ממכשיר אחר.</Empty>
@@ -93,7 +106,7 @@ export function FundsWatch() {
               const tail = h ? ddNow(y!) : null;
               const out = h ? outflowStreak(h) : 0;
               const flags: [string, string, () => Prov][] = [];
-              if (d?.qMove) flags.push([d.qMove[1] < d.qMove[0] ? 'pos' : 'neg', `רבעון LTM: ${d.qMove[0]} → ${d.qMove[1]}`, () => pctP(f, i.base!, cur!)]);
+              if (d?.qMove) flags.push([d.qMove[1] < d.qMove[0] ? 'pos' : 'neg', saver ? `עבר מהרבע ה-${d.qMove[0]} לרבע ה-${d.qMove[1]} בקטגוריה` : `רבעון LTM: ${d.qMove[0]} → ${d.qMove[1]}`, () => pctP(f, i.base!, cur!)]);
               if (d?.bottom3) flags.push(['neg', 'ברבע התחתון ב-3Y', () => ({ k: 'calc', title: `אחוזון 3Y${b === 'net' ? ', נטו' : ''} · ${f.name}`, value: nf(cur!.pct3!, 0), formula: 'אחוזון בקטגוריה על התשואה השנתית ל-3 שנים, מחושב בבניית הנתונים (funds.json pr/pn). רבע תחתון: מתחת ל-25', inputs: [] })]);
               if (tail?.dd_cur != null && tail.dd_cur <= DD_FLAG) flags.push(['neg', `${nf(tail.dd_cur, 1)}% מתחת לשיא`, () => ({ k: 'calc', est: b === 'net', title: `מתחת לשיא · ${f.name}`, value: pc(tail.dd_cur), formula: 'המרחק של מדד התשואה המצטברת מהשיא הגבוה בהיסטוריה. מסומן מ-10% ומעלה', note: b === 'net' ? NET_NOTE : undefined, inputs: monthsIn(R, h!, h!.p.slice(-Math.max(1, (tail.dd_len ?? 0) + 1)), b) })]);
               if (out >= 3) flags.push(['neg', `${out} חודשי יציאה נטו`, () => ({ k: 'calc', title: `חודשים רצופים של תזרים שלילי · ${f.name}`, value: nf(out, 0), unit: 'חודשים', formula: 'הפקדות − משיכות + העברות נטו < 0, בחודשים האחרונים ברצף (DEPOSITS, WITHDRAWLS, INTERNAL_TRANSFERS)',
@@ -107,7 +120,8 @@ export function FundsWatch() {
                     <div><dt>מאז הביקור</dt><dd>{since ? <Sourced src={() => ({ k: 'calc', est: b === 'net', title: `תשואה מאז הביקור הקודם${b === 'net' ? ', נטו' : ''} · ${f.name}`, value: pc(since.r), formula: '(1 + r₁) × … × (1 + rₙ) − 1 על החודשים שפורסמו מאז החודש שנראה בביקור הקודם', note: b === 'net' ? NET_NOTE : undefined, inputs: monthsIn(R, h!, since.ps, b) })}><span className="num">{pc(since.r, 2)}</span></Sourced> : <span className="muted">–</span>}</dd></div>
                     {saver ? <div><dt>12 חודשים</dt><dd>{(b === 'net' ? f.net?.y12 : f.y12) == null ? <span className="muted">–</span> : <Sourced src={() => (b === 'net' ? netProv(f, 'y12', asof, f.net?.y12 ?? null) : grossProv(f, 'y12', asof))}><span className="num">{pc((b === 'net' ? f.net?.y12 : f.y12) ?? null, 2)}</span></Sourced>}</dd></div> :
                     <div><dt>החודש האחרון</dt><dd>{cur?.m1 == null ? <span className="muted">–</span> : <Sourced src={() => (b === 'net' ? netProv(f, 'm1', asof, cur.m1) : fundP(R, asof, 'MONTHLY_YIELD', 'תשואה חודשית', pc(cur.m1)))}><span className="num">{pc(cur.m1, 2)}</span></Sourced>}</dd></div>}
-                    <div><dt>אחוזון LTM</dt><dd>{cur?.pct == null ? <span className="muted">–</span> : <Sourced src={() => (i.base ? pctP(f, i.base, cur) : pctP(f, cur, cur))}><span className="num">{nf(cur.pct, 0)}</span></Sourced>}{cur?.pctN ? <span className="dim"> מתוך <span className="num">{cur.pctN}</span></span> : null}{d?.dPct ? <span className={`fw-d ${d.dPct > 0 ? 'pos' : 'neg'}`}>{d.dPct > 0 ? '▲' : '▼'} <span className="num">{nf(Math.abs(d.dPct), 0)}</span> מאז</span> : null}</dd></div>
+                    {saver ? (() => { const t = placeOf(f); return <div className="fw-wide"><dt>מול מסלולים דומים</dt><dd className="fw-sent">{isOldGen(f) ? <span className="muted">סגור להצטרפות: אין דירוג</span> : t ? <>ב-12 החודשים: מקום <Sourced src={() => placeP(f, t)}><span className="num">{rankText(t)}</span></Sourced> מתוך <span className="num">{t.n}</span> בקטגוריה</> : <span className="muted">אין עדיין תשואה ל-12 חודשים</span>}</dd></div>; })() :
+                    <div><dt>אחוזון LTM</dt><dd>{cur?.pct == null ? <span className="muted">–</span> : <Sourced src={() => (i.base ? pctP(f, i.base, cur) : pctP(f, cur, cur))}><span className="num">{nf(cur.pct, 0)}</span></Sourced>}{cur?.pctN ? <span className="dim"> מתוך <span className="num">{cur.pctN}</span></span> : null}{d?.dPct ? <span className={`fw-d ${d.dPct > 0 ? 'pos' : 'neg'}`}>{d.dPct > 0 ? '▲' : '▼'} <span className="num">{nf(Math.abs(d.dPct), 0)}</span> מאז</span> : null}</dd></div>}
                     <div><dt>דמי ניהול</dt><dd>{cur?.fee == null ? <span className="muted">–</span> : <Sourced src={() => (d?.dFee ? feeP(f, i.base!, cur) : fundP(R, asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(cur.fee!, 2) + '%'))}><span className="num">{nf(cur.fee, 2)}%</span></Sourced>}{d?.dFee ? <span className={`fw-d ${d.dFee < 0 ? 'pos' : 'neg'}`}>{d.dFee > 0 ? '▲' : '▼'} <span className="num">{nf(Math.abs(d.dFee), 2)}</span> נ"א</span> : null}</dd></div>
                   </dl>
                   {flags.length > 0 && <div className="fw-flags">{flags.map(([t, l, src]) => <Sourced key={l} className={`chip ${t}`} src={src}>{l}</Sourced>)}</div>}
@@ -116,7 +130,7 @@ export function FundsWatch() {
               );
             })}
           </div>
-          <div className="fnote">אחוזון: בקטגוריה של המסלול, על תשואת LTM {b === 'net' ? 'נטו' : 'ברוטו'}, מחושב בבניית הנתונים; שינוי מוצג רק מול ביקור על אותו בסיס. סימונים: מעבר רבעון, רבע תחתון ב-3Y, 10% ומעלה מתחת לשיא, שלושה חודשים ויותר של תזרים שלילי. אין כאן המלצה: אלה עובדות על המסלולים שבחרתם לעקוב אחריהם.</div>
+          <div className="fnote">{saver ? <>המקום: בין המסלולים הפתוחים באותו מוצר ומסלול, לפי תשואת 12 החודשים {b === 'net' ? 'נטו' : 'ברוטו'}; מקום משותף (למשל 2–3) כשהפער קטן מאוד. סימונים: מעבר רבע, רבע תחתון ב-3 שנים, 10% ומעלה מתחת לשיא, שלושה חודשים ויותר של יציאת כספים. אין כאן המלצה: אלה עובדות על המסלולים שבחרתם לעקוב אחריהם.</> : <>אחוזון: בקטגוריה של המסלול, על תשואת LTM {b === 'net' ? 'נטו' : 'ברוטו'}, מחושב בבניית הנתונים; שינוי מוצג רק מול ביקור על אותו בסיס. סימונים: מעבר רבעון, רבע תחתון ב-3Y, 10% ומעלה מתחת לשיא, שלושה חודשים ויותר של תזרים שלילי. אין כאן המלצה: אלה עובדות על המסלולים שבחרתם לעקוב אחריהם.</>}</div>
         </Panel>
       )}
       <Panel title="הרשימה שלי" aside={<span>נשמרת רק בדפדפן הזה</span>}>

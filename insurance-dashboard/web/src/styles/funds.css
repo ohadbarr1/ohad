@@ -104,3 +104,19 @@ table.fscreen tr.gone td { opacity: 0.72; }
 .fpick-c { white-space: normal; max-width: 100%; text-align: start; }
 .fpick, .fpick-hd, .fpick-s, .fpick-m { min-width: 0; max-width: 100%; }
 .fpick-hits button span { min-width: 0; overflow-wrap: anywhere; }
+
+/* W6 doors: the agent's "עוד" on the section's row of tabs: a native disclosure styled as a tab, its menu a small panel below */
+.subnav .snmore { position: relative; }
+.subnav .snmore summary { list-style: none; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: var(--muted); padding: 5px 10px 5px 12px; font-weight: 500; border-radius: 6px; white-space: nowrap; line-height: 1.5; transition: color var(--fast), background var(--fast); }
+.subnav .snmore summary::-webkit-details-marker { display: none; }
+.subnav .snmore summary:hover { color: var(--fg); background: color-mix(in oklch, var(--panel) 55%, transparent); }
+.subnav .snmore summary.active, .subnav .snmore[open] summary { color: var(--fg); font-weight: 700; background: var(--panel); box-shadow: 0 0 0 1px var(--line-soft), 0 1px 2px rgb(17 28 63 / 0.08); }
+.subnav .snmore summary svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: transform var(--fast); }
+.subnav .snmore[open] summary svg { transform: rotate(180deg); }
+.subnav .snmore-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; z-index: 40; min-width: 200px; padding: 4px; display: flex; flex-direction: column; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-2); box-shadow: var(--e-2); animation: pop var(--mid) var(--spring); }
+.subnav .snmore-menu a { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; }
+.subnav .snmore-menu a .chip { font-size: var(--t-1); padding: 0 6px; min-height: 0; line-height: 1.6; }
+@media (max-width: 760px) {
+  .subnav .snmore summary { padding: 9px 12px 9px 14px; min-height: 36px; }
+  .subnav:has(.snmore[open]) { overflow: visible; mask-image: none; }
+}

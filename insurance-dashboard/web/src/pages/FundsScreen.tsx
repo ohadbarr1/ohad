@@ -21,7 +21,7 @@ import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../li
 import { useOptional } from '../lib/fundsLoad';
 import type { DefaultFile } from '../lib/fundsTools';
 import { defaultKeys, defaultNow, isPension, periodText } from '../lib/pensionPack';
-import { DECISION_PATH, isOldGen, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2
+import { claimProv, claimsWhy, companyOf, DECISION_PATH, isOldGen, pc1, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2, W6 claims
 import { actProv, pc2, tenderProv } from '../lib/agentProv';
 import '../components/agent/glossary';
 import { useDoor } from '../lib/door';
@@ -35,22 +35,24 @@ import '../styles/market.css';
 
 const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 const ALL = 'all';
-type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'act' | 'svc';
-const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['act', 'איזון אקטוארי'], ['svc', 'מדד שירות']];  // act: W1-agent, svc: W2, pension only
+type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'act' | 'svc' | 'clm';
+const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['act', 'איזון אקטוארי'], ['svc', 'מדד שירות'], ['clm', 'תביעות נכות']];  // act: W1-agent, svc: W2, clm: W6 (the company's own claims report), pension only
 const COL_LABEL = Object.fromEntries(COLS) as Record<ColKey, string>;
 const DEFAULT_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'assets', 'sharpe', 'st', 'top'];
 /** W1-agent: a pension product opens with its decision columns (both fees, the actuarial balance) */
-const PENSION_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'depfee', 'act', 'svc', 'assets', 'sharpe', 'st'];
+const PENSION_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'depfee', 'act', 'svc', 'clm', 'assets', 'sharpe', 'st'];
 const isPenProd = (p: string) => /^פנסיה/.test(p);
-const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: 'depfee', sharpe: 'sharpe', sd: 'sd', alpha: 'alpha', st: 'equity', act: 'actuarial', svc: 'svcidx' };
+const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: 'depfee', sharpe: 'sharpe', sd: 'sd', alpha: 'alpha', st: 'equity', act: 'actuarial', svc: 'svcidx', clm: 'claims' };
 const RET = new Set<ColKey>(['m1', 'ytd', 'y12', 'a3', 'a5']);
 const EXP = { st: ['STOCK_MARKET_EXPOSURE', 'חשיפה למניות'], fo: ['FOREIGN_EXPOSURE', 'חשיפה לחו"ל'], fx: ['FOREIGN_CURRENCY_EXPOSURE', 'חשיפה למט"ח'] } as const;
 interface Saved { name: string; qs: string }
 /** ordinal rank and percentile (rankAll) plus the shared place inside the tie band (lo–hi) */
 type RankInfo = { rank: number; n: number; pct: number | null; lo: number; hi: number };
 /** the fee columns: the regulator's average actual fee of the track, not a quote */
-const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון', svc: 'הרשות, 2025' };
+const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון', svc: 'הרשות, 2025', clm: 'אושרו · דיווח החברה' };
 
+/** W6 doors: the IRA note in the agent's words (SELF_NOTE speaks to the saver) */
+const SELF_NOTE_AGENT = 'מסלולי IRA (ניהול אישי) אינם מדורגים: העמית בוחר את ההשקעות בעצמו, והתשואה המפורסמת אינה תוצאה של מנהל';
 const yearsOf = (f: FundX, asof: number) => (f.since ? (Math.floor(asof / 100) + (asof % 100) / 12) - (Number(f.since.slice(0, 4)) + Number(f.since.slice(5, 7)) / 12) : null);
 
 export function FundsScreen() {
@@ -68,7 +70,12 @@ export function FundsScreen() {
   // the old /funds?q= links and the search palette: open the product and track of the first match
   const q = sp.get('q') ?? '';
   const hit = !sp.get('prod') && q ? data?.funds.find((f) => f.name.includes(q.trim())) : undefined;
-  const prod = sp.get('prod') ?? hit?.prod ?? 'השתלמות';
+  // W4: the agent door shows shared ranks and percentiles (facts) but not the "רבע עליון x/5" badge
+  const [door] = useDoor();
+  const agentDoor = door === 'agent';
+  // W6 doors (agent red team 02.11.26): the agent opens on the comprehensive pension, age track up to 50, with the decision columns
+  // (PENSION_COLS: both fees, actuarial balance, service index, claims, the default-fund flag); saver and Pro keep השתלמות · כללי
+  const prod = sp.get('prod') ?? hit?.prod ?? (agentDoor ? 'פנסיה מקיפה' : 'השתלמות');
   const perRaw = sp.get('per') ?? sp.get('win') ?? DEFAULT_PER;
   const per: Per = (PERIODS.some(([k]) => k === perRaw) ? perRaw : DEFAULT_PER) as Per;
   const fams = (sp.get('fam') ?? '').split(',').filter((x): x is FamKey => FAMS.some(([k]) => k === x));
@@ -76,9 +83,6 @@ export function FundsScreen() {
   const closed = sp.get('closed') === '1', gone = sp.get('gone') === '1', outOnly = sp.get('out') === '1';
   const F = { fmax: num('fmax'), dmax: num('dmax'), amin: num('amin'), smin: num('smin'), hist: num('hist'), eqmin: num('eqmin'), eqmax: num('eqmax') };
   const colsQ = (sp.get('cols') ?? '').split(',').filter((x): x is ColKey => COLS.some(([k]) => k === x));
-  // W4: the agent door shows shared ranks and percentiles (facts) but not the "רבע עליון x/5" badge
-  const [door] = useDoor();
-  const agentDoor = door === 'agent';
   const colsAll = agentDoor ? COLS.filter(([k]) => k !== 'top') : COLS;
   const baseCols = (isPenProd(prod) ? PENSION_COLS : DEFAULT_COLS).filter((c) => !agentDoor || c !== 'top');
   const cols: ColKey[] = colsQ.length ? colsQ.filter((c) => !agentDoor || c !== 'top') : baseCols;
@@ -136,7 +140,7 @@ export function FundsScreen() {
       const ord = rankAll(peers, (f) => val(f, per)), tie = tieRanks(peers, (f) => val(f, per), tieBand(per, asof));
       const rk = new Map<string, RankInfo>([...ord].map(([k, r]) => [k, { ...r, lo: tie.get(k)?.lo ?? r.rank, hi: tie.get(k)?.hi ?? r.rank }]));
       const by = sortKey && sortKey !== 'pct' ? sortKey : null;
-      const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : by === 'svc' ? (isPension(f) ? svcOf(dec, f.grp, 'pension')?.total ?? null : null) : (f as unknown as Record<string, number | null>)[by] ?? null);
+      const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : by === 'svc' ? (isPension(f) ? svcOf(dec, f.grp, 'pension')?.total ?? null : null) : by === 'clm' ? (isPension(f) && dec ? companyOf(dec, f.grp)?.claims?.disability.approved ?? null : null) : (f as unknown as Record<string, number | null>)[by] ?? null);
       const list = shown.filter(screened).sort((a, b) => {
         if (a.gone !== b.gone) return a.gone ? 1 : -1;
         if (by) { const x = sv(a), y = sv(b); if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1; return by === 'fee' || by === 'depfee' || by === 'sd' ? x - y : y - x; }
@@ -182,6 +186,8 @@ export function FundsScreen() {
         return <><Sourced src={() => expP(refOf(f), f.end ?? asof, EXP[c][0], EXP[c][1], v, f.assets)}><span className="num">{nf(v, 0)}%</span></Sourced>{o && <Sourced className="chip est fout" src={() => outlierProv(f, o, () => expP(refOf(f), asof, EXP.st[0], EXP.st[1], f.st, f.assets))} title="חשיפה למניות רחוקה מהחציון בקטגוריה">{o.z > 0 ? '▲' : '▼'}</Sourced>}</>; }
       case 'age': { const y = yearsOf(f, asof); return y == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `ותק · ${f.name}`, value: `${nf(y, 1)} שנים`, formula: `מועד ההקמה שדווח לרשות (${pubLabel(f.since)}) עד ${ym(asof)}`, inputs: [{ label: 'חודשי היסטוריה עם תשואה', v: nf(f.n, 0) }] })}><span className="num">{nf(y, 0)}</span></Sourced>; }
       case 'act': return !isPension(f) ? <span className="muted">–</span> : f.act == null ? <span className="muted" title="הקרן לא דיווחה איזון אקטוארי לרבעון האחרון">–</span> : <Sourced src={() => actProv(f)} title={`איזון אקטוארי, רבעון ${ym(f.act_p ?? asof)}`}><span className={`num ${f.act < 0 ? 'neg' : f.act > 0 ? 'pos' : ''}`}>{pc2(f.act)}</span></Sourced>;
+      case 'clm': { const c = isPension(f) && dec ? companyOf(dec, f.grp)?.claims : null; const v = c?.disability.approved ?? null;
+        return !isPension(f) ? <span className="muted">–</span> : v == null ? <span className="muted" title={dec ? claimsWhy(dec, f.grp) : 'קובץ נתוני ההחלטה לא פורסם'}>–</span> : <Sourced src={() => claimProv(dec!, f.grp, 'disability', 'approved')} title={`תביעות נכות שאושרו ב-${c!.year}, מתוך התביעות שנסגרו · דיווח החברה (${c!.entity}), לא נבדק על ידי הרשות`}><span className="num">{pc1(v)}</span></Sourced>; }
       case 'svc': { const r = isPension(f) && dec ? svcOf(dec, f.grp, 'pension') : null; return !r ? <span className="muted" title={isPension(f) ? 'החברה אינה במדד השירות לקרנות פנסיה' : 'מדד השירות לקרנות פנסיה'}>–</span> : <Sourced src={() => svcProv(dec!, f.grp, 'pension', 'total')} title={`מדד השירות 2025: ${r.total}, מקום ${r.rank} מתוך ${r.of} (ברמת החברה המנהלת)`}><span className="num">{r.total}</span><span className="dim num"> · {r.rank}/{r.of}</span></Sourced>; }
       case 'top': return f.yrs ? <Sourced src={() => ({ k: 'calc', title: `רבע עליון · ${f.name}`, value: `${f.top}/${f.yrs}`, formula: 'בכמה מהשנים הקלנדריות המלאות מתוך חמש האחרונות תשואת המסלול (ברוטו, ריבית דריבית על 12 תשואות חודשיות) הייתה ברבע העליון של הקטגוריה: מקום ≤ ⌈n÷4⌉, בקטגוריה של 4 מסלולים לפחות', inputs: [{ label: 'שנים ברבע העליון', v: nf(f.top ?? 0, 0) }, { label: 'שנים שנבדקו', v: nf(f.yrs ?? 0, 0) }], note: 'מחושב בבניית הנתונים מתשואות חברי הקטגוריה' })}><span className="num">{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>;
     }
@@ -295,7 +301,7 @@ export function FundsScreen() {
             </tbody>
           </table></div>
         )}
-        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה; מסלול בלי נטו לחלון מוצג ברוטו ואינו מדורג.' : basisAsked === 'net' ? 'נטו עוד לא נכלל בקובץ הנתונים, ולכן מוצג ברוטו.' : 'ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת.'} ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {SELF_NOTE}.</div>
+        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה; מסלול בלי נטו לחלון מוצג ברוטו ואינו מדורג.' : basisAsked === 'net' ? 'נטו עוד לא נכלל בקובץ הנתונים, ולכן מוצג ברוטו.' : 'ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת.'} ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {agentDoor ? SELF_NOTE_AGENT : SELF_NOTE}.{agentDoor && cols.includes('clm') ? ' תביעות נכות: שיעור התביעות שאושרו מתוך אלה שנסגרו בשנה, מדיווח החברה עצמה (נספח ב3), ברמת החברה המנהלת.' : ''}</div>
       </Panel>
     </>
   );

@@ -137,7 +137,10 @@ function SiteFoot({ path, door }: { path: string; door: Door | null }) {
   const savings = path !== '/my' && (SAVINGS.some((s) => path === s || path.startsWith(`${s}/`)) || (path === '/' && door !== 'pro'));
   return (
     <footer className="site-foot">
-      {savings && <span className="disc">המידע עובדתי ומשווה, ואינו ייעוץ השקעות או שיווק פנסיוני ואינו מתחשב בנתונים האישיים שלכם. תשואות עבר אינן מבטיחות תשואות בעתיד. ״נטו״ הוא אומדן לפי דמי הניהול הממוצעים בפועל.</span>}
+      {/* W6 doors: the agent reads one professional line; the saver's sentences ("שלכם") are the saver's */}
+      {savings && (door === 'agent'
+        ? <span className="disc">נתוני רשות שוק ההון, עובדתיים ומשווים; אינם ייעוץ או שיווק פנסיוני ללקוח מסוים. תשואות עבר אינן מבטיחות תשואות עתיד; ״נטו״: אומדן לפי דמי הניהול הממוצעים בפועל.</span>
+        : <span className="disc">המידע עובדתי ומשווה, ואינו ייעוץ השקעות או שיווק פנסיוני ואינו מתחשב בנתונים האישיים שלכם. תשואות עבר אינן מבטיחות תשואות בעתיד. ״נטו״ הוא אומדן לפי דמי הניהול הממוצעים בפועל.</span>)}
       <NavLink to="/about">על fox ומקורות הנתונים</NavLink>
       <span>חינם, בלי פרסומות ובלי עמלות</span>
     </footer>

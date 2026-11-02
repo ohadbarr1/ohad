@@ -108,3 +108,6 @@ mark.hit.fact { background: color-mix(in oklch, var(--s4) 32%, transparent); box
 .sp-docs li a { font-weight: 700; color: var(--fg); }
 .sp-docs li .m { color: var(--muted); font-size: var(--t-1); }
 .sp-docs li .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; align-self: center; }
+/* W6 doors: the saver's empty state (nothing matched) */
+.omni-none { color: var(--muted); font-size: var(--t-2); line-height: 1.5; }
+.omni-none b { color: var(--fg); margin-inline-end: 4px; }
