@@ -2,131 +2,193 @@ BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//fox//filing calendar//HE
 CALSCALE:GREGORIAN
+METHOD:PUBLISH
 X-WR-CALNAME:fox · דיווחים צפויים
+X-WR-CALDESC:הדוח הבא של כל חברה\, אומדן מהרקורד
+  שלה עצמה (לא מועד סטטוטורי)
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:fox-more_gemel-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261120
 DTEND;VALUE=DATE:20261121
 SUMMARY:מור גמל ופנסיה · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 20.11.26 עד 22.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 20.11.26 עד 22.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/more_gemel
+URL;VALUE=URI:https://fox-research-il.web.app/company/more_gemel
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-meitav-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261122
 DTEND;VALUE=DATE:20261123
 SUMMARY:מיטב · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 18.11.26 עד 25.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 18.11.26 עד 25.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/meitav
+URL;VALUE=URI:https://fox-research-il.web.app/company/meitav
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-altshuler-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261123
 DTEND;VALUE=DATE:20261124
 SUMMARY:אלטשולר שחם · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 21.11.26 עד 27.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 21.11.26 עד 27.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/altshuler
+URL;VALUE=URI:https://fox-research-il.web.app/company/altshuler
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-migdal-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261123
 DTEND;VALUE=DATE:20261124
 SUMMARY:מגדל · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 21.11.26 עד 26.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 21.11.26 עד 26.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/migdal
+URL;VALUE=URI:https://fox-research-il.web.app/company/migdal
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-analyst-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261127
 DTEND;VALUE=DATE:20261128
 SUMMARY:אנליסט · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 27.11.26 עד 30.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 27.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/analyst
+URL;VALUE=URI:https://fox-research-il.web.app/company/analyst
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-ayalon-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261127
 DTEND;VALUE=DATE:20261128
 SUMMARY:איילון · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 23.11.26 עד 27.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 23.11.26 עד 27.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/ayalon
+URL;VALUE=URI:https://fox-research-il.web.app/company/ayalon
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-phoenix-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261127
 DTEND;VALUE=DATE:20261128
 SUMMARY:הפניקס · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 05.11.26 עד 29.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 05.11.26 עד 29.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/phoenix
+URL;VALUE=URI:https://fox-research-il.web.app/company/phoenix
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-yelin-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261127
 DTEND;VALUE=DATE:20261128
 SUMMARY:ילין לפידות · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 26.11.26 עד 27.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 26.11.26 עד 27.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/yelin
+URL;VALUE=URI:https://fox-research-il.web.app/company/yelin
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-clal-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261128
 DTEND;VALUE=DATE:20261129
 SUMMARY:כלל · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 25.11.26 עד 30.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 25.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/clal
+URL;VALUE=URI:https://fox-research-il.web.app/company/clal
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-harel-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261128
 DTEND;VALUE=DATE:20261129
 SUMMARY:הראל · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 25.11.26 עד 28.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 25.11.26 עד 28.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/harel
+URL;VALUE=URI:https://fox-research-il.web.app/company/harel
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-ibi-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261128
 DTEND;VALUE=DATE:20261129
 SUMMARY:אי.בי.אי · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 26.11.26 עד 28.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 26.11.26 עד 28.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/ibi
+URL;VALUE=URI:https://fox-research-il.web.app/company/ibi
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-hachshara-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261129
 DTEND;VALUE=DATE:20261130
 SUMMARY:הכשרה · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 27.11.26 עד 30.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 27.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/hachshara
+URL;VALUE=URI:https://fox-research-il.web.app/company/hachshara
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-more-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261129
 DTEND;VALUE=DATE:20261130
 SUMMARY:מור · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 26.11.26 עד 30.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 26.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/more
+URL;VALUE=URI:https://fox-research-il.web.app/company/more
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-menora-2026Q3@fox-research-il.web.app
-DTSTAMP:20261101T221158Z
+DTSTAMP:20261102T194001Z
 DTSTART;VALUE=DATE:20261130
 DTEND;VALUE=DATE:20261201
 SUMMARY:מנורה מבטחים · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות; חלון 28.11.26 עד 30.11.26. לא מועד סטטוטורי.
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 28.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/menora
+URL;VALUE=URI:https://fox-research-il.web.app/company/menora
 TRANSP:TRANSPARENT
 END:VEVENT
 END:VCALENDAR

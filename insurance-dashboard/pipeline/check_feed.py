@@ -14,6 +14,8 @@ the type counts add up and the estimate slot stays empty. Every figure is re-rea
   count  a whole number
   pos    the value equals the position's metric at that period in positions.json (module A6), and the position is published there
   frag   the value equals the signal's history at that period in fragility.json (module A10), and the manager is there
+The static feeds (pipeline/build_rss.py --check): /feed.xml, /feed/<company>.xml, months, funds (RSS 2.0 + Atom) equal a rebuild from
+feed.json and the ledger data/ledger/feed_seen.json, every event has its received date, every file is well-formed with the required elements.
 """
 import collections
 import json
@@ -214,6 +216,9 @@ def run(quiet=False):
             probs.append(f"types.{t}: n {x['n']} vs {counts.get(t, 0)} events")
     if F["types"].get("est", {}).get("n") or counts.get("est"):
         probs.append("est: the estimate slot carries events (module M1 fills it; nothing may be emitted before)")
+    # the static RSS / Atom feeds and the received-date ledger (pipeline/build_rss.py): equal a rebuild, well-formed, complete
+    import build_rss  # noqa: E402
+    probs += [f"rss: {x}" for x in build_rss.check()]
     for p in probs[:20]:
         print("FAIL", p)
     summary = f"{len(F['events'])} events, {n_fig} figures, {len(probs)} problems"

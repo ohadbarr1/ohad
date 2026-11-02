@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>fox · שינויים בדמי ניהול</title>
+<link>https://fox-research-il.web.app/feed?t=fee</link>
+<description>מסלול שדמי הניהול הממוצעים שלו זזו ב-0.05 נק׳ אחוז (5 נקודות בסיס) ומעלה בחודש, במסלולים של 1,000 מיליוני ש"ח ומעלה (נתוני הרשות). שינויים במכרזי קרנות ברירת המחדל אינם בפיד עדיין.</description>
+<language>he</language>
+<lastBuildDate>Sat, 31 Jan 2026 00:00:00 +0200</lastBuildDate>
+<ttl>360</ttl>
+<atom:link href="https://fox-research-il.web.app/feed/funds.xml" rel="self" type="application/rss+xml"/>
+<generator>fox pipeline/build_rss.py</generator>
+<image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · שינויים בדמי ניהול</title><link>https://fox-research-il.web.app/feed?t=fee</link></image>
+<item>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה לבני 50 ומטה (0.23% → 0.18%)</title>
+<link>https://fox-research-il.web.app/funds/p9453</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p9453:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,095 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 9453 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p9453"&gt;https://fox-research-il.web.app/funds/p9453&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה מניות (0.23% → 0.18%)</title>
+<link>https://fox-research-il.web.app/funds/p2146</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p2146:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,509 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 2146 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p2146"&gt;https://fox-research-il.web.app/funds/p2146&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה כללי (0.23% → 0.18%)</title>
+<link>https://fox-research-il.web.app/funds/p2145</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p2145:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,091 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 2145 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p2145"&gt;https://fox-research-il.web.app/funds/p2145&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה עוקב מדד S1;P500 (0.23% → 0.18%)</title>
+<link>https://fox-research-il.web.app/funds/p13627</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p13627:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,001 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 13627 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p13627"&gt;https://fox-research-il.web.app/funds/p13627&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מסלול לבני 60 ומעלה (0.63% → 0.75%)</title>
+<link>https://fox-research-il.web.app/funds/i9729</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9729:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.75% (01/26), לעומת 0.63% (12/25); שינוי +0.12&lt;/p&gt;&lt;p&gt;נכסי המסלול: 3,658 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9729 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9729"&gt;https://fox-research-il.web.app/funds/i9729&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ מסלול לבני 50 עד 60 (0.80% → 0.91%)</title>
+<link>https://fox-research-il.web.app/funds/i9660</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9660:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.91% (01/26), לעומת 0.80% (12/25); שינוי +0.11&lt;/p&gt;&lt;p&gt;נכסי המסלול: 11,718 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9660 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9660"&gt;https://fox-research-il.web.app/funds/i9660&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מסלול בסיסי למקבלי קצבה (0.54% → 0.97%)</title>
+<link>https://fox-research-il.web.app/funds/i9606</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9606:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.97% (01/26), לעומת 0.54% (12/25); שינוי +0.43&lt;/p&gt;&lt;p&gt;נכסי המסלול: 12,227 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9606 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9606"&gt;https://fox-research-il.web.app/funds/i9606&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מסלול לבני 50 עד 60 (0.67% → 0.81%)</title>
+<link>https://fox-research-il.web.app/funds/i9604</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9604:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.81% (01/26), לעומת 0.67% (12/25); שינוי +0.14&lt;/p&gt;&lt;p&gt;נכסי המסלול: 3,956 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9604 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9604"&gt;https://fox-research-il.web.app/funds/i9604&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס לבני 50 עד 60 (0.72% → 0.77%)</title>
+<link>https://fox-research-il.web.app/funds/i9593</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9593:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.77% (01/26), לעומת 0.72% (12/25); שינוי +0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 4,969 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9593 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9593"&gt;https://fox-research-il.web.app/funds/i9593&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס בסיסי למקבלי קצבה (0.36% → 0.00%)</title>
+<link>https://fox-research-il.web.app/funds/i9587</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9587:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.00% (01/26), לעומת 0.36% (12/25); שינוי −0.36&lt;/p&gt;&lt;p&gt;נכסי המסלול: 6,691 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9587 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9587"&gt;https://fox-research-il.web.app/funds/i9587&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הראל · דמי ניהול: הראל מסלול לבני 60 ומעלה (0.67% → 0.62%)</title>
+<link>https://fox-research-il.web.app/funds/i9564</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9564:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הראל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.62% (01/26), לעומת 0.67% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 3,477 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9564 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9564"&gt;https://fox-research-il.web.app/funds/i9564&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הראל · דמי ניהול: הראל מסלול לבני 50 עד 60 (0.55% → 0.49%)</title>
+<link>https://fox-research-il.web.app/funds/i9563</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9563:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הראל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.49% (01/26), לעומת 0.55% (12/25); שינוי −0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,418 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9563 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9563"&gt;https://fox-research-il.web.app/funds/i9563&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מסלול מניות (0.94% → 1.04%)</title>
+<link>https://fox-research-il.web.app/funds/i76</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i76:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 1.04% (01/26), לעומת 0.94% (12/25); שינוי +0.10&lt;/p&gt;&lt;p&gt;נכסי המסלול: 6,279 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 76 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i76"&gt;https://fox-research-il.web.app/funds/i76&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ אשראי ואג"ח עם מניות (עד 25% מניות) (0.95% → 0.81%)</title>
+<link>https://fox-research-il.web.app/funds/i6</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i6:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.81% (01/26), לעומת 0.95% (12/25); שינוי −0.14&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,468 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 6 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i6"&gt;https://fox-research-il.web.app/funds/i6&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל-אשראי ואג"ח (1.00% → 0.95%)</title>
+<link>https://fox-research-il.web.app/funds/i4</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i4:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.95% (01/26), לעומת 1.00% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,410 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 4 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i4"&gt;https://fox-research-il.web.app/funds/i4&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס לבני 50 ומטה (0.67% → 0.73%)</title>
+<link>https://fox-research-il.web.app/funds/i471</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i471:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.73% (01/26), לעומת 0.67% (12/25); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 7,574 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 471 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i471"&gt;https://fox-research-il.web.app/funds/i471&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים ביטוח בע"מ מניות (0.76% → 0.71%)</title>
+<link>https://fox-research-il.web.app/funds/i44</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i44:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.71% (01/26), לעומת 0.76% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,096 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 44 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i44"&gt;https://fox-research-il.web.app/funds/i44&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס - מסלול השקעה בניהול אישי (0.30% → 3.72%)</title>
+<link>https://fox-research-il.web.app/funds/i2081</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i2081:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 3.72% (01/26), לעומת 0.30% (12/25); שינוי +3.42&lt;/p&gt;&lt;p&gt;נכסי המסלול: 13,185 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 2081 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i2081"&gt;https://fox-research-il.web.app/funds/i2081&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל - כללי (1.01% → 1.11%)</title>
+<link>https://fox-research-il.web.app/funds/i17013</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i17013:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 1.11% (01/26), לעומת 1.01% (12/25); שינוי +0.10&lt;/p&gt;&lt;p&gt;נכסי המסלול: 37,171 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 17013 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i17013"&gt;https://fox-research-il.web.app/funds/i17013&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ עוקב מדד s&amp;p 500 (0.67% → 0.72%)</title>
+<link>https://fox-research-il.web.app/funds/i13346</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i13346:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.72% (01/26), לעומת 0.67% (12/25); שינוי +0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,900 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 13346 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i13346"&gt;https://fox-research-il.web.app/funds/i13346&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>איילון · דמי ניהול: איילון- כללי (0.89% → 0.84%)</title>
+<link>https://fox-research-il.web.app/funds/i116</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i116:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>איילון</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.84% (01/26), לעומת 0.89% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,616 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 116 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i116"&gt;https://fox-research-il.web.app/funds/i116&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים תגמולים ופיצויים מסלול לבני 50 ומטה (0.55% → 0.39%)</title>
+<link>https://fox-research-il.web.app/funds/g9793</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g9793:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.39% (01/26), לעומת 0.55% (12/25); שינוי −0.16&lt;/p&gt;&lt;p&gt;נכסי המסלול: 4,532 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 9793 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g9793"&gt;https://fox-research-il.web.app/funds/g9793&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס גמל להשקעה מניות (0.64% → 0.59%)</title>
+<link>https://fox-research-il.web.app/funds/g7975</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g7975:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.59% (01/26), לעומת 0.64% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,283 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 7975 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g7975"&gt;https://fox-research-il.web.app/funds/g7975&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס גמולה מבטיחת תשואה (1.14% → 2.00%)</title>
+<link>https://fox-research-il.web.app/funds/g528</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g528:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 2.00% (01/26), לעומת 1.14% (12/25); שינוי +0.86&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,130 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 528 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g528"&gt;https://fox-research-il.web.app/funds/g528&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב השתלמות עוקב מדדים גמיש (0.58% → 0.63%)</title>
+<link>https://fox-research-il.web.app/funds/g481</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g481:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.63% (01/26), לעומת 0.58% (12/25); שינוי +0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,286 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 481 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g481"&gt;https://fox-research-il.web.app/funds/g481&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב גמל להשקעה עוקב מדד S&amp;P 500 (0.55% → 0.60%)</title>
+<link>https://fox-research-il.web.app/funds/g13259</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13259:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.60% (01/26), לעומת 0.55% (12/25); שינוי +0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,312 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13259 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13259"&gt;https://fox-research-il.web.app/funds/g13259&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב השתלמות עוקב מדד S&amp;P500 (0.49% → 0.54%)</title>
+<link>https://fox-research-il.web.app/funds/g13245</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13245:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.54% (01/26), לעומת 0.49% (12/25); שינוי +0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 3,626 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13245 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13245"&gt;https://fox-research-il.web.app/funds/g13245&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה לבני 50 ומטה (0.31% → 0.23%)</title>
+<link>https://fox-research-il.web.app/funds/p9453</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p9453:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.23% (01/25), לעומת 0.31% (12/24); שינוי −0.08&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,483 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 9453 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p9453"&gt;https://fox-research-il.web.app/funds/p9453&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים משלימה מסלול לבני 50-60 (0.34% → 0.27%)</title>
+<link>https://fox-research-il.web.app/funds/p1645</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p1645:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.27% (01/25), לעומת 0.34% (12/24); שינוי −0.07&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,316 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 1645 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p1645"&gt;https://fox-research-il.web.app/funds/p1645&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה עוקב מדד S1;P500 (0.31% → 0.23%)</title>
+<link>https://fox-research-il.web.app/funds/p13627</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p13627:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.23% (01/25), לעומת 0.31% (12/24); שינוי −0.08&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,344 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 13627 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p13627"&gt;https://fox-research-il.web.app/funds/p13627&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ כללי (0.83% → 0.92%)</title>
+<link>https://fox-research-il.web.app/funds/i99</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i99:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.92% (01/25), לעומת 0.83% (12/24); שינוי +0.09&lt;/p&gt;&lt;p&gt;נכסי המסלול: 12,167 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 99 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i99"&gt;https://fox-research-il.web.app/funds/i99&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ מסלול לבני 60 ומעלה (0.60% → 0.68%)</title>
+<link>https://fox-research-il.web.app/funds/i9661</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9661:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.68% (01/25), לעומת 0.60% (12/24); שינוי +0.08&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,137 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9661 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9661"&gt;https://fox-research-il.web.app/funds/i9661&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ מסלול לבני 50 עד 60 (0.68% → 0.80%)</title>
+<link>https://fox-research-il.web.app/funds/i9660</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9660:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.80% (01/25), לעומת 0.68% (12/24); שינוי +0.12&lt;/p&gt;&lt;p&gt;נכסי המסלול: 11,179 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9660 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9660"&gt;https://fox-research-il.web.app/funds/i9660&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הראל · דמי ניהול: הראל מסלול לבני 50 עד 60 (0.61% → 0.55%)</title>
+<link>https://fox-research-il.web.app/funds/i9563</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9563:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הראל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.55% (01/25), לעומת 0.61% (12/24); שינוי −0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,931 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9563 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9563"&gt;https://fox-research-il.web.app/funds/i9563&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל-אשראי ואג"ח (1.29% → 1.00%)</title>
+<link>https://fox-research-il.web.app/funds/i4</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i4:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 1.00% (01/25), לעומת 1.29% (12/24); שינוי −0.29&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,494 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 4 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i4"&gt;https://fox-research-il.web.app/funds/i4&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס לבני 50 ומטה (0.61% → 0.67%)</title>
+<link>https://fox-research-il.web.app/funds/i471</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i471:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.67% (01/25), לעומת 0.61% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 8,125 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 471 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i471"&gt;https://fox-research-il.web.app/funds/i471&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הכשרה · דמי ניהול: הכשרה חברה לביטוח בע"מ - קרן י' (0.60% → 0.66%)</title>
+<link>https://fox-research-il.web.app/funds/i35012</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i35012:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הכשרה</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.66% (01/25), לעומת 0.60% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,837 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 35012 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i35012"&gt;https://fox-research-il.web.app/funds/i35012&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הראל · דמי ניהול: הראל מסלול משולב סחיר (0.80% → 0.75%)</title>
+<link>https://fox-research-il.web.app/funds/i14210</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i14210:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הראל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.75% (01/25), לעומת 0.80% (12/24); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,792 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 14210 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i14210"&gt;https://fox-research-il.web.app/funds/i14210&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ עוקב מדד s&amp;p 500 (0.56% → 0.67%)</title>
+<link>https://fox-research-il.web.app/funds/i13346</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i13346:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.67% (01/25), לעומת 0.56% (12/24); שינוי +0.11&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,269 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 13346 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i13346"&gt;https://fox-research-il.web.app/funds/i13346&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס אג"ח סחיר (0.46% → 0.59%)</title>
+<link>https://fox-research-il.web.app/funds/i12881</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i12881:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.59% (01/25), לעומת 0.46% (12/24); שינוי +0.13&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,457 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 12881 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i12881"&gt;https://fox-research-il.web.app/funds/i12881&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>כלל · דמי ניהול: כלל תמר 60 ומעלה (0.51% → 0.57%)</title>
+<link>https://fox-research-il.web.app/funds/g9653</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g9653:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>כלל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.57% (01/25), לעומת 0.51% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 11,494 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 9653 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g9653"&gt;https://fox-research-il.web.app/funds/g9653&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>הפניקס · דמי ניהול: הפניקס גמולה מבטיחת תשואה (0.81% → 1.14%)</title>
+<link>https://fox-research-il.web.app/funds/g528</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g528:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 1.14% (01/25), לעומת 0.81% (12/24); שינוי +0.33&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,099 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 528 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g528"&gt;https://fox-research-il.web.app/funds/g528&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב השתלמות עוקב מדדים גמיש (0.47% → 0.58%)</title>
+<link>https://fox-research-il.web.app/funds/g481</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g481:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.58% (01/25), לעומת 0.47% (12/24); שינוי +0.11&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,946 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 481 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g481"&gt;https://fox-research-il.web.app/funds/g481&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב גמל עוקב מדדי אג"ח (0.47% → 0.57%)</title>
+<link>https://fox-research-il.web.app/funds/g1692</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g1692:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.57% (01/25), לעומת 0.47% (12/24); שינוי +0.10&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,069 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 1692 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g1692"&gt;https://fox-research-il.web.app/funds/g1692&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב גמל עוקב מדדי מניות (0.46% → 0.57%)</title>
+<link>https://fox-research-il.web.app/funds/g1689</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g1689:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.57% (01/25), לעומת 0.46% (12/24); שינוי +0.11&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,805 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 1689 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g1689"&gt;https://fox-research-il.web.app/funds/g1689&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים השתלמות עוקב מדד S&amp;P500 (0.42% → 0.48%)</title>
+<link>https://fox-research-il.web.app/funds/g13873</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13873:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.48% (01/25), לעומת 0.42% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,528 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13873 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13873"&gt;https://fox-research-il.web.app/funds/g13873&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מגדל · דמי ניהול: מגדל לתגמולים ולפיצויים עוקב מדד s&amp;p500 (0.41% → 0.47%)</title>
+<link>https://fox-research-il.web.app/funds/g13565</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13565:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מגדל</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.47% (01/25), לעומת 0.41% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,673 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13565 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13565"&gt;https://fox-research-il.web.app/funds/g13565&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב גמל להשקעה עוקב מדד S&amp;P 500 (0.49% → 0.55%)</title>
+<link>https://fox-research-il.web.app/funds/g13259</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13259:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.55% (01/25), לעומת 0.49% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,470 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13259 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13259"&gt;https://fox-research-il.web.app/funds/g13259&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב גמל עוקב מדד S&amp;P500 (0.43% → 0.49%)</title>
+<link>https://fox-research-il.web.app/funds/g13246</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13246:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.49% (01/25), לעומת 0.43% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,352 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13246 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13246"&gt;https://fox-research-il.web.app/funds/g13246&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מיטב · דמי ניהול: מיטב השתלמות עוקב מדד S&amp;P500 (0.43% → 0.49%)</title>
+<link>https://fox-research-il.web.app/funds/g13245</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13245:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מיטב</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.49% (01/25), לעומת 0.43% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 4,075 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13245 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13245"&gt;https://fox-research-il.web.app/funds/g13245&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+</channel>
+</rss>

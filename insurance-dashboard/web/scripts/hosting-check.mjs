@@ -31,6 +31,9 @@ for (const p of ['/', '/company/harel', '/data/kpi.json', '/sw.js', '/index.html
 check(/max-age=300/.test(cc('/data/kpi.json')), `/data files short-lived: ${cc('/data/kpi.json')}`);
 check(/no-cache/.test(cc('/sw.js')), `/sw.js no-cache`);
 check(!!headersFor(H, '/company/harel')['Content-Security-Policy'], 'CSP on every path');
+// the static feeds (W8): never rewritten to the shell, served with their own media type
+for (const [p, want] of [['/feed.xml', /application\/rss\+xml/], ['/feed/harel.xml', /application\/rss\+xml/], ['/feed/months.atom', /application\/atom\+xml/], ['/data/cal/reminders.ics', /text\/calendar/]])
+  check(rewriteFor(H, p) === null && want.test(headersFor(H, p)['Content-Type'] ?? ''), `${p} not rewritten, Content-Type ${headersFor(H, p)['Content-Type'] ?? '(none)'}`);
 
 // immutable is only safe for content-hashed names
 if (existsSync(join(DIST, 'assets'))) {
@@ -42,7 +45,8 @@ if (existsSync(join(DIST, 'assets'))) {
 if (SERVE) {
   const idx = existsSync(join(DIST, 'assets')) ? readdirSync(join(DIST, 'assets')).find((f) => /^index-.*\.js$/.test(f)) : null;
   const probes = [['/', 200, /text\/html/, /no-cache/], ['/company/harel', 200, /text\/html/, /no-cache/], ['/data/autopilot', 200, /text\/html/, /no-cache/],
-    ['/data/kpi.json', 200, /json/, /max-age=300/], ['/data/companies/nope.json', 404, null, null], ['/assets/index-OLDHASH.js', 404, null, null], ['/sw.js', 200, /javascript/, /no-cache/]];
+    ['/data/kpi.json', 200, /json/, /max-age=300/], ['/data/companies/nope.json', 404, null, null], ['/assets/index-OLDHASH.js', 404, null, null], ['/sw.js', 200, /javascript/, /no-cache/],
+    ['/feed.xml', 200, /application\/rss\+xml/, /max-age=900/], ['/feed/months.atom', 200, /application\/atom\+xml/, /max-age=900/], ['/feed/nope.xml', 404, null, null], ['/feed', 200, /text\/html/, /no-cache/]];
   if (idx) probes.push([`/assets/${idx}`, 200, /javascript/, /immutable/]);
   for (const [p, status, type, cache] of probes) {
     const r = await fetch(SERVE.replace(/\/$/, '') + p, { redirect: 'manual' });

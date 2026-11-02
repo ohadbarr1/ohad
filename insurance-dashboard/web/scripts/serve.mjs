@@ -11,7 +11,7 @@ const HOSTING = loadHosting();
 const [dir = 'dist', port = '4173'] = process.argv.slice(2);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml',
   '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ico': 'image/x-icon', '.txt': 'text/plain',
-  '.ics': 'text/calendar; charset=utf-8', '.pdf': 'application/pdf', '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.gz': 'application/gzip' };
+  '.ics': 'text/calendar; charset=utf-8', '.xml': 'application/xml', '.atom': 'application/atom+xml', '.pdf': 'application/pdf', '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.gz': 'application/gzip' };
 const isFile = (f) => stat(f).then((s) => s.isFile(), () => false);
 
 async function resolve(path) {
@@ -28,6 +28,8 @@ createServer(async (req, res) => {
   const file = await resolve(path);
   const body = file ? await readFile(file).catch(() => null) : null;
   if (!body) { res.writeHead(404, { ...headers, 'content-type': 'text/html; charset=utf-8' }); res.end('<!doctype html><title>404</title>Not Found'); return; }
-  res.writeHead(200, { ...headers, 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
+  // a Content-Type that firebase.json sets for the path (the RSS / Atom feeds) wins over the extension's default, as on Hosting
+  const { 'Content-Type': ct, ...rest } = headers;
+  res.writeHead(200, { ...rest, 'content-type': ct ?? TYPES[extname(file)] ?? 'application/octet-stream' });
   res.end(req.method === 'HEAD' ? undefined : body);
 }).listen(+port, '127.0.0.1', () => console.log(`serving ${dir} on http://127.0.0.1:${port}`));

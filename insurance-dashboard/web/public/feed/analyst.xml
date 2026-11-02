@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>fox · אנליסט</title>
+<link>https://fox-research-il.web.app/feed?co=analyst</link>
+<description>כל שינוי בנתונים של אנליסט ב-fox, עם המקור של כל מספר.</description>
+<language>he</language>
+<lastBuildDate>Thu, 20 Aug 2026 00:00:00 +0300</lastBuildDate>
+<ttl>360</ttl>
+<atom:link href="https://fox-research-il.web.app/feed/analyst.xml" rel="self" type="application/rss+xml"/>
+<generator>fox pipeline/build_rss.py</generator>
+<image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · אנליסט</title><link>https://fox-research-il.web.app/feed?co=analyst</link></image>
+<item>
+<title>אנליסט · דוח: דוח רבעוני Q2'26</title>
+<link>https://fox-research-il.web.app/card/analyst/2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1764739</guid>
+<pubDate>Thu, 20 Aug 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 38.3 מיליוני ש"ח (Q2'26), לעומת 40.5 (Q1'26); שינוי −2.2 (−5.4%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 38.3 מיליוני ש"ח (Q2'26), לעומת 40.5 (Q1'26); שינוי −2.2 (−5.4%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1764001-1765000/P1764739-00.pdf"&gt;אנליסט, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/analyst/2026Q2"&gt;https://fox-research-il.web.app/card/analyst/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · שבריריות: ניוד נטו · גמל והשתלמות: תקין ← מעקב</title>
+<link>https://fox-research-il.web.app/fragility?c=analyst&amp;s=flow</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:analyst:flow:202605</guid>
+<pubDate>Sun, 31 May 2026 00:00:00 +0300</pubDate>
+<category>מוניטור שבריריות</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;העברות נטו, 3 חודשים · גמל והשתלמות: −733.5 מיליוני ש"ח (05/26), לעומת +353.8 (04/26)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 05/26 · תקופה: 05/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=analyst&amp;amp;s=flow"&gt;https://fox-research-il.web.app/fragility?c=analyst&amp;amp;s=flow&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · הצגה מחדש: דוח רבעוני Q1'26 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=analyst&amp;season=2026Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:analyst:1744718</guid>
+<pubDate>Thu, 28 May 2026 00:00:00 +0300</pubDate>
+<category>הצגה מחדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 3&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 3&lt;/p&gt;&lt;p&gt;סך הכול · Q1'25: 22.3 מיליוני ש"ח (לראשונה), לעומת 32.3 (מחדש); שינוי +10.0 (+44.9%)&lt;/p&gt;&lt;p&gt;מזומנים נטו ששימשו לפעילות שוטפת · Q1'25: 24.8 מיליוני ש"ח (לראשונה), לעומת 34.8 (מחדש); שינוי +10.0 (+40.4%)&lt;/p&gt;&lt;p&gt;מזומנים נטו שנבעו מפעולות (ראה נספח א') · Q1'25: 34.6 מיליוני ש"ח (לראשונה), לעומת 44.6 (מחדש); שינוי +10.0 (+28.9%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744718-00.pdf"&gt;אנליסט, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=analyst&amp;amp;season=2026Q1"&gt;https://fox-research-il.web.app/restatements?co=analyst&amp;amp;season=2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · דוח: דוח רבעוני Q1'26</title>
+<link>https://fox-research-il.web.app/card/analyst/2026Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1744718</guid>
+<pubDate>Thu, 28 May 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 40.5 מיליוני ש"ח (Q1'26), לעומת 34.4 (Q4'25); שינוי +6.1 (+17.7%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 40.5 מיליוני ש"ח (Q1'26), לעומת 34.6 (Q4'25); שינוי +5.9 (+17.1%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744718-00.pdf"&gt;אנליסט, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/analyst/2026Q1"&gt;https://fox-research-il.web.app/card/analyst/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · הצגה מחדש: דוח שנתי FY'25 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=analyst&amp;season=2025FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:analyst:1729215</guid>
+<pubDate>Thu, 19 Mar 2026 00:00:00 +0200</pubDate>
+<category>הצגה מחדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 1&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 0&lt;/p&gt;&lt;p&gt;סך רווח כולל לתקופה · FY'24: 63.8 מיליוני ש"ח (לראשונה), לעומת 64.8 (מחדש); שינוי +1.0 (+1.6%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1729001-1730000/P1729215-00.pdf"&gt;אנליסט, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=analyst&amp;amp;season=2025FY"&gt;https://fox-research-il.web.app/restatements?co=analyst&amp;amp;season=2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · דוח: דוח שנתי FY'25</title>
+<link>https://fox-research-il.web.app/card/analyst/2025FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1729215</guid>
+<pubDate>Thu, 19 Mar 2026 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 34.4 מיליוני ש"ח (Q4'25), לעומת 28.9 (Q3'25); שינוי +5.5 (+19.2%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 34.6 מיליוני ש"ח (Q4'25), לעומת 28.9 (Q3'25); שינוי +5.7 (+19.8%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1729001-1730000/P1729215-00.pdf"&gt;אנליסט, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/analyst/2025FY"&gt;https://fox-research-il.web.app/card/analyst/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · דוח: דוח רבעוני Q3'25</title>
+<link>https://fox-research-il.web.app/card/analyst/2025Q3</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1706150</guid>
+<pubDate>Thu, 27 Nov 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 28.9 מיליוני ש"ח (Q3'25), לעומת 32.6 (Q2'25); שינוי −3.7 (−11.4%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 28.9 מיליוני ש"ח (Q3'25), לעומת 32.6 (Q2'25); שינוי −3.7 (−11.4%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1706001-1707000/P1706150-00.pdf"&gt;אנליסט, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 27.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/analyst/2025Q3"&gt;https://fox-research-il.web.app/card/analyst/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · דוח: דוח רבעוני Q2'25</title>
+<link>https://fox-research-il.web.app/card/analyst/2025Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1686580</guid>
+<pubDate>Tue, 19 Aug 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 32.6 מיליוני ש"ח (Q2'25), לעומת 16.8 (Q1'25); שינוי +15.8 (+94.2%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 32.6 מיליוני ש"ח (Q2'25), לעומת 16.8 (Q1'25); שינוי +15.8 (+94.2%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1686001-1687000/P1686580-00.pdf"&gt;אנליסט, דוח רבעוני Q2'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.08.25 · תקופה: Q2'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/analyst/2025Q2"&gt;https://fox-research-il.web.app/card/analyst/2025Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · דוח: דוח רבעוני Q1'25</title>
+<link>https://fox-research-il.web.app/card/analyst/2025Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1668564</guid>
+<pubDate>Thu, 29 May 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 16.8 מיליוני ש"ח (Q1'25), לעומת 27.0 (Q4'24); שינוי −10.2 (−37.7%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 16.8 מיליוני ש"ח (Q1'25), לעומת 27.0 (Q4'24); שינוי −10.2 (−37.7%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1668001-1669000/P1668564-00.pdf"&gt;אנליסט, דוח רבעוני Q1'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: Q1'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/analyst/2025Q1"&gt;https://fox-research-il.web.app/card/analyst/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אנליסט · דוח: דוח שנתי FY'24</title>
+<link>https://fox-research-il.web.app/card/analyst/2024FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1654617</guid>
+<pubDate>Thu, 27 Mar 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 27.0 מיליוני ש"ח (Q4'24), לעומת 18.9 (Q3'24); שינוי +8.1 (+43.0%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 27.0 מיליוני ש"ח (Q4'24), לעומת 18.9 (Q3'24); שינוי +8.1 (+43.0%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1654001-1655000/P1654617-00.pdf"&gt;אנליסט, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 27.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/analyst/2024FY"&gt;https://fox-research-il.web.app/card/analyst/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+</channel>
+</rss>

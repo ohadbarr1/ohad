@@ -6,7 +6,7 @@
 .fd-types { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .fd-types .chip { cursor: pointer; font: inherit; font-size: var(--t-1); }
 .fd-types .chip.on { border-color: color-mix(in oklch, var(--fg) 55%, transparent); color: var(--fg); background: var(--panel); font-weight: 700; }
-.fd-types .chip:disabled { cursor: default; opacity: 0.55; }
+.fd-types .chip:disabled { cursor: default; border-style: dotted; background: transparent; }
 .fd-types .chip.t-est:not(.on) { border-style: dashed; }
 
 .fd-month + .fd-month { margin-top: 6px; }
@@ -22,6 +22,13 @@
 .fd-when { flex: 0 0 64px; color: var(--muted); font-size: var(--t-2); display: inline-flex; flex-direction: column; line-height: 1.15; }
 .fd-when small { font-size: 10.5px; color: var(--faint); font-family: inherit; }
 .fd-t { flex: none; }
+/* W8: the period an event describes, next to the received date; the RSS link of each filter */
+.fd-per { flex: none; color: var(--fg); font-size: var(--t-2); display: inline-flex; flex-direction: column; line-height: 1.15; min-width: 44px; }
+.fd-per small { font-size: 10.5px; color: var(--muted); font-family: inherit; }
+.fd-tw { display: inline-flex; align-items: baseline; gap: 4px; }
+.fd-rss { font-size: var(--t-1); color: var(--link); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.fd-legend { margin: 0 0 6px; font-size: var(--t-2); color: var(--muted); line-height: 1.5; }
+.fd-legend b { color: var(--fg); font-weight: 600; }
 .fd-t.t-filing { color: var(--fg); }
 .fd-t.t-restate, .fd-t.st-missed { color: var(--down); border-color: color-mix(in oklch, var(--down) 30%, transparent); background: color-mix(in oklch, var(--down) 7%, transparent); }
 .fd-t.st-met { color: var(--up); border-color: color-mix(in oklch, var(--up) 30%, transparent); background: color-mix(in oklch, var(--up) 8%, transparent); }

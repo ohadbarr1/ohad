@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="he">
+<title>fox · מגדל</title>
+<subtitle>כל שינוי בנתונים של מגדל ב-fox, עם המקור של כל מספר.</subtitle>
+<id>tag:fox-research-il.web.app,2026:feed/feed/migdal</id>
+<updated>2026-08-17T00:00:00+03:00</updated>
+<link rel="self" type="application/atom+xml" href="https://fox-research-il.web.app/feed/migdal.atom"/>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/feed?co=migdal"/>
+<author><name>fox</name><uri>https://fox-research-il.web.app</uri></author>
+<icon>https://fox-research-il.web.app/icons/icon-192.png</icon>
+<entry>
+<title>מגדל · כושר פירעון: יחס כושר פירעון ליום Q1'26, דוח רבעוני Q2'26 (138.0% → 144.0%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:migdal:2026-03-31</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2026Q2"/>
+<published>2026-08-17T00:00:00+03:00</published>
+<updated>2026-08-17T00:00:00+03:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 144.0% (Q1'26), לעומת 138.0% (Q4'25); שינוי +6.00&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1763001-1764000/P1763684-00.pdf#page=27"&gt;מגדל, דוח רבעוני Q2'26 · עמ׳ 27&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 17.08.26 · תקופה: 2026-03-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2026Q2"&gt;https://fox-research-il.web.app/card/migdal/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · הצגה מחדש: דוח רבעוני Q2'26 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:migdal:1763684</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=migdal&amp;season=2026Q2"/>
+<published>2026-08-17T00:00:00+03:00</published>
+<updated>2026-08-17T00:00:00+03:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 9&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 4&lt;/p&gt;&lt;p&gt;סך הכל נכסים · Q2'25: 236,028 מיליוני ש"ח (לראשונה), לעומת 236,161 (מחדש); שינוי +133.0 (+0.1%)&lt;/p&gt;&lt;p&gt;סך הכל התחייבויות והון · Q2'25: 236,028 מיליוני ש"ח (לראשונה), לעומת 236,161 (מחדש); שינוי +133.0 (+0.1%)&lt;/p&gt;&lt;p&gt;סה''כ התחייבויות · Q2'25: 227,029 מיליוני ש"ח (לראשונה), לעומת 227,162 (מחדש); שינוי +133.0 (+0.1%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1763001-1764000/P1763684-00.pdf"&gt;מגדל, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 17.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q2"&gt;https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דוח: דוח רבעוני Q2'26</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1763684</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2026Q2"/>
+<published>2026-08-17T00:00:00+03:00</published>
+<updated>2026-08-17T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 574.0 מיליוני ש"ח (Q2'26), לעומת 321.0 (Q1'26); שינוי +253.0 (+78.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 574.0 מיליוני ש"ח (Q2'26), לעומת 321.0 (Q1'26); שינוי +253.0 (+78.8%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 466.0 מיליוני ש"ח (Q2'26), לעומת 222.0 (Q1'26); שינוי +244.0 (+109.9%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 10,848 מיליוני ש"ח (Q2'26), לעומת 10,272 (Q1'26); שינוי +576.0 (+5.6%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 144.0% (Q1'26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1763001-1764000/P1763684-00.pdf"&gt;מגדל, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 17.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2026Q2"&gt;https://fox-research-il.web.app/card/migdal/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · כושר פירעון: יחס כושר פירעון ליום Q4'25, דוח רבעוני Q1'26 (124.0% → 138.0%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:migdal:2025-12-31</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2026Q1"/>
+<published>2026-05-20T00:00:00+03:00</published>
+<updated>2026-05-20T00:00:00+03:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 138.0% (Q4'25), לעומת 124.0% (Q2'25); שינוי +14.00&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1742001-1743000/P1742394-00.pdf#page=20"&gt;מגדל, דוח רבעוני Q1'26 · עמ׳ 20&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.05.26 · תקופה: 2025-12-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2026Q1"&gt;https://fox-research-il.web.app/card/migdal/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · הצגה מחדש: דוח רבעוני Q1'26 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:migdal:1742394</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=migdal&amp;season=2026Q1"/>
+<published>2026-05-20T00:00:00+03:00</published>
+<updated>2026-05-20T00:00:00+03:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 7&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 2&lt;/p&gt;&lt;p&gt;סך הכל נכסים · Q1'25: 224,235 מיליוני ש"ח (לראשונה), לעומת 224,298 (מחדש); שינוי +63.0 (0.0%)&lt;/p&gt;&lt;p&gt;סך הכל התחייבויות והון · Q1'25: 224,235 מיליוני ש"ח (לראשונה), לעומת 224,298 (מחדש); שינוי +63.0 (0.0%)&lt;/p&gt;&lt;p&gt;סה''כ התחייבויות · Q1'25: 215,813 מיליוני ש"ח (לראשונה), לעומת 215,876 (מחדש); שינוי +63.0 (0.0%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1742001-1743000/P1742394-00.pdf"&gt;מגדל, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q1"&gt;https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · שבריריות: שחיקת דמי ניהול · פנסיה: תקין ← מעקב</title>
+<id>tag:fox-research-il.web.app,2026:feed/frag:migdal:fee:2026Q1</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/fragility?c=migdal&amp;s=fee"/>
+<published>2026-05-20T00:00:00+03:00</published>
+<updated>2026-05-20T00:00:00+03:00</updated>
+<category term="fragility" label="מוניטור שבריריות"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;שינוי YoY בתשואת דמי הניהול, נק׳ אחוז · פנסיה: −0.03 נק׳ אחוז (Q1'26), לעומת −0.03 (Q4'25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=migdal&amp;amp;s=fee"&gt;https://fox-research-il.web.app/fragility?c=migdal&amp;amp;s=fee&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דוח: דוח רבעוני Q1'26</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1742394</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2026Q1"/>
+<published>2026-05-20T00:00:00+03:00</published>
+<updated>2026-05-20T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 321.0 מיליוני ש"ח (Q1'26), לעומת 473.0 (Q4'25); שינוי −152.0 (−32.1%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 321.0 מיליוני ש"ח (Q1'26), לעומת 431.0 (Q4'25); שינוי −110.0 (−25.5%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 222.0 מיליוני ש"ח (Q1'26), לעומת 251.0 (Q4'25); שינוי −29.0 (−11.6%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 10,272 מיליוני ש"ח (Q1'26), לעומת 9,950 (Q4'25); שינוי +322.0 (+3.2%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 14,538 מיליוני ש"ח (Q1'26), לעומת 14,411 (Q4'25); שינוי +127.0 (+0.9%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 138.0% (Q4'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1742001-1743000/P1742394-00.pdf"&gt;מגדל, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2026Q1"&gt;https://fox-research-il.web.app/card/migdal/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · הצגה מחדש: דוח שנתי FY'25 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:migdal:1730567</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=migdal&amp;season=2025FY"/>
+<published>2026-03-25T00:00:00+02:00</published>
+<updated>2026-03-25T00:00:00+02:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 10&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 5&lt;/p&gt;&lt;p&gt;זכאים ויתרות זכות · FY'24: −1,017 מיליוני ש"ח (לראשונה), לעומת −1,144 (מחדש); שינוי −127.0&lt;/p&gt;&lt;p&gt;שינוי בנכסים והתחייבויות בגין חוזי ביטוח · FY'24: 10,372 מיליוני ש"ח (לראשונה), לעומת 10,496 (מחדש); שינוי +124.0 (+1.2%)&lt;/p&gt;&lt;p&gt;זכאים ויתרות זכות · Q4'24: 2,461 מיליוני ש"ח (לראשונה), לעומת 2,337 (מחדש); שינוי −124.0 (−5.0%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1730001-1731000/P1730567-00.pdf"&gt;מגדל, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2025FY"&gt;https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דוח: דוח שנתי FY'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1730567</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2025FY"/>
+<published>2026-03-25T00:00:00+02:00</published>
+<updated>2026-03-25T00:00:00+02:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 473.0 מיליוני ש"ח (Q4'25), לעומת 535.0 (Q3'25); שינוי −62.0 (−11.6%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 431.0 מיליוני ש"ח (Q4'25), לעומת 535.0 (Q3'25); שינוי −104.0 (−19.4%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 251.0 מיליוני ש"ח (Q4'25), לעומת 354.0 (Q3'25); שינוי −103.0 (−29.1%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 9,950 מיליוני ש"ח (Q4'25), לעומת 9,519 (Q3'25); שינוי +431.0 (+4.5%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 14,411 מיליוני ש"ח (Q4'25)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 124.0% (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1730001-1731000/P1730567-00.pdf"&gt;מגדל, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2025FY"&gt;https://fox-research-il.web.app/card/migdal/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה לבני 50 ומטה (0.23% → 0.18%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:p9453:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/p9453"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,095 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 9453 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p9453"&gt;https://fox-research-il.web.app/funds/p9453&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה מניות (0.23% → 0.18%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:p2146:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/p2146"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,509 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 2146 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p2146"&gt;https://fox-research-il.web.app/funds/p2146&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה כללי (0.23% → 0.18%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:p2145:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/p2145"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,091 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 2145 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p2145"&gt;https://fox-research-il.web.app/funds/p2145&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה עוקב מדד S1;P500 (0.23% → 0.18%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:p13627:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/p13627"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.18% (01/26), לעומת 0.23% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,001 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 13627 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p13627"&gt;https://fox-research-il.web.app/funds/p13627&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מסלול לבני 60 ומעלה (0.63% → 0.75%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i9729:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i9729"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.75% (01/26), לעומת 0.63% (12/25); שינוי +0.12&lt;/p&gt;&lt;p&gt;נכסי המסלול: 3,658 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9729 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9729"&gt;https://fox-research-il.web.app/funds/i9729&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מסלול בסיסי למקבלי קצבה (0.54% → 0.97%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i9606:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i9606"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.97% (01/26), לעומת 0.54% (12/25); שינוי +0.43&lt;/p&gt;&lt;p&gt;נכסי המסלול: 12,227 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9606 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9606"&gt;https://fox-research-il.web.app/funds/i9606&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מסלול לבני 50 עד 60 (0.67% → 0.81%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i9604:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i9604"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.81% (01/26), לעומת 0.67% (12/25); שינוי +0.14&lt;/p&gt;&lt;p&gt;נכסי המסלול: 3,956 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9604 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9604"&gt;https://fox-research-il.web.app/funds/i9604&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מסלול מניות (0.94% → 1.04%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i76:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i76"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 1.04% (01/26), לעומת 0.94% (12/25); שינוי +0.10&lt;/p&gt;&lt;p&gt;נכסי המסלול: 6,279 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 76 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i76"&gt;https://fox-research-il.web.app/funds/i76&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל - כללי (1.01% → 1.11%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i17013:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i17013"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 1.11% (01/26), לעומת 1.01% (12/25); שינוי +0.10&lt;/p&gt;&lt;p&gt;נכסי המסלול: 37,171 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 17013 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i17013"&gt;https://fox-research-il.web.app/funds/i17013&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · כושר פירעון: יחס כושר פירעון ליום Q2'25, דוח רבעוני Q3'25 (131.0% → 124.0%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:migdal:2025-06-30</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2025Q3"/>
+<published>2025-11-26T00:00:00+02:00</published>
+<updated>2025-11-26T00:00:00+02:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 124.0% (Q2'25), לעומת 131.0% (Q4'24); שינוי −7.00&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1705001-1706000/P1705352-00.pdf#page=31"&gt;מגדל, דוח רבעוני Q3'25 · עמ׳ 31&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.11.25 · תקופה: 2025-06-30 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2025Q3"&gt;https://fox-research-il.web.app/card/migdal/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · הצגה מחדש: דוח רבעוני Q3'25 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:migdal:1705352</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=migdal&amp;season=2025Q3"/>
+<published>2025-11-26T00:00:00+02:00</published>
+<updated>2025-11-26T00:00:00+02:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 2&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 2&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1705001-1706000/P1705352-00.pdf"&gt;מגדל, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2025Q3"&gt;https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · שבריריות: שחיקת דמי ניהול · פנסיה: תקין ← מעקב</title>
+<id>tag:fox-research-il.web.app,2026:feed/frag:migdal:fee:2025Q3</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/fragility?c=migdal&amp;s=fee"/>
+<published>2025-11-26T00:00:00+02:00</published>
+<updated>2025-11-26T00:00:00+02:00</updated>
+<category term="fragility" label="מוניטור שבריריות"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;שינוי YoY בתשואת דמי הניהול, נק׳ אחוז · פנסיה: −0.04 נק׳ אחוז (Q3'25), לעומת −0.01 (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=migdal&amp;amp;s=fee"&gt;https://fox-research-il.web.app/fragility?c=migdal&amp;amp;s=fee&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דוח: דוח רבעוני Q3'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1705352</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2025Q3"/>
+<published>2025-11-26T00:00:00+02:00</published>
+<updated>2025-11-26T00:00:00+02:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 535.0 מיליוני ש"ח (Q3'25), לעומת 571.0 (Q2'25); שינוי −36.0 (−6.3%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 535.0 מיליוני ש"ח (Q3'25), לעומת 570.0 (Q2'25); שינוי −35.0 (−6.1%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 354.0 מיליוני ש"ח (Q3'25), לעומת 494.0 (Q2'25); שינוי −140.0 (−28.3%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 9,519 מיליוני ש"ח (Q3'25), לעומת 8,987 (Q2'25); שינוי +532.0 (+5.9%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 124.0% (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1705001-1706000/P1705352-00.pdf"&gt;מגדל, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2025Q3"&gt;https://fox-research-il.web.app/card/migdal/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דוח: דוח רבעוני Q2'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1687016</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2025Q2"/>
+<published>2025-08-21T00:00:00+03:00</published>
+<updated>2025-08-21T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 571.0 מיליוני ש"ח (Q2'25), לעומת 253.0 (Q1'25); שינוי +318.0 (+125.7%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 570.0 מיליוני ש"ח (Q2'25), לעומת 253.0 (Q1'25); שינוי +317.0 (+125.3%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 494.0 מיליוני ש"ח (Q2'25), לעומת 302.0 (Q1'25); שינוי +192.0 (+63.6%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,987 מיליוני ש"ח (Q2'25), לעומת 8,411 (Q1'25); שינוי +576.0 (+6.8%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 131.0% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1687001-1688000/P1687016-00.pdf"&gt;מגדל, דוח רבעוני Q2'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 21.08.25 · תקופה: Q2'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2025Q2"&gt;https://fox-research-il.web.app/card/migdal/2025Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · כושר פירעון: יחס כושר פירעון ליום Q4'24, דוח רבעוני Q1'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:migdal:2024-12-31</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2025Q1"/>
+<published>2025-05-28T00:00:00+03:00</published>
+<updated>2025-05-28T00:00:00+03:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 131.0% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1667001-1668000/P1667890-00.pdf#page=25"&gt;מגדל, דוח רבעוני Q1'25 · עמ׳ 25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.25 · תקופה: 2024-12-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2025Q1"&gt;https://fox-research-il.web.app/card/migdal/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דוח: דוח רבעוני Q1'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1667890</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2025Q1"/>
+<published>2025-05-28T00:00:00+03:00</published>
+<updated>2025-05-28T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 253.0 מיליוני ש"ח (Q1'25), לעומת 178.0 (Q4'24); שינוי +75.0 (+42.1%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 253.0 מיליוני ש"ח (Q1'25), לעומת 173.0 (Q4'24); שינוי +80.0 (+46.2%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 302.0 מיליוני ש"ח (Q1'25), לעומת 107.0 (Q4'24); שינוי +195.0 (+182.2%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,411 מיליוני ש"ח (Q1'25), לעומת 8,157 (Q4'24); שינוי +254.0 (+3.1%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 131.0% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1667001-1668000/P1667890-00.pdf"&gt;מגדל, דוח רבעוני Q1'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.25 · תקופה: Q1'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2025Q1"&gt;https://fox-research-il.web.app/card/migdal/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · שבריריות: שחיקת דמי ניהול · פנסיה: תקין ← מעקב</title>
+<id>tag:fox-research-il.web.app,2026:feed/frag:migdal:fee:2024Q4</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/fragility?c=migdal&amp;s=fee"/>
+<published>2025-03-19T00:00:00+02:00</published>
+<updated>2025-03-19T00:00:00+02:00</updated>
+<category term="fragility" label="מוניטור שבריריות"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;שינוי YoY בתשואת דמי הניהול, נק׳ אחוז · פנסיה: −0.05 נק׳ אחוז (Q4'24), לעומת −0.01 (Q3'24)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.03.25 · תקופה: Q4'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=migdal&amp;amp;s=fee"&gt;https://fox-research-il.web.app/fragility?c=migdal&amp;amp;s=fee&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דוח: דוח שנתי FY'24</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1651969</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/migdal/2024FY"/>
+<published>2025-03-19T00:00:00+02:00</published>
+<updated>2025-03-19T00:00:00+02:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 178.0 מיליוני ש"ח (Q4'24), לעומת 362.0 (Q3'24); שינוי −184.0 (−50.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 173.0 מיליוני ש"ח (Q4'24), לעומת 362.0 (Q3'24); שינוי −189.0 (−52.2%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 107.0 מיליוני ש"ח (Q4'24), לעומת 262.0 (Q3'24); שינוי −155.0 (−59.2%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,157 מיליוני ש"ח (Q4'24), לעומת 8,012 (Q3'24); שינוי +145.0 (+1.8%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (ברוטו · קבוצה): 13,835 מיליוני ש"ח (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1651001-1652000/P1651969-00.pdf"&gt;מגדל, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/migdal/2024FY"&gt;https://fox-research-il.web.app/card/migdal/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה לבני 50 ומטה (0.31% → 0.23%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:p9453:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/p9453"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.23% (01/25), לעומת 0.31% (12/24); שינוי −0.08&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,483 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 9453 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p9453"&gt;https://fox-research-il.web.app/funds/p9453&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל מקפת משלימה עוקב מדד S1;P500 (0.31% → 0.23%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:p13627:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/p13627"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.23% (01/25), לעומת 0.31% (12/24); שינוי −0.08&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,344 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 13627 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p13627"&gt;https://fox-research-il.web.app/funds/p13627&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>מגדל · דמי ניהול: מגדל לתגמולים ולפיצויים עוקב מדד s&amp;p500 (0.41% → 0.47%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:g13565:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/g13565"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.47% (01/25), לעומת 0.41% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,673 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13565 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13565"&gt;https://fox-research-il.web.app/funds/g13565&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+</feed>

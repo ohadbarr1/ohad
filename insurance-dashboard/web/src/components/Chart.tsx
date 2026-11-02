@@ -7,6 +7,7 @@ import { captureSpec, enrich, readBook, routeNow, sameData, sameShape, useBook, 
 import { citeLine } from '../lib/exportProv';
 import { load } from '../lib/useData';
 import { pubLabel } from '../lib/format';
+import { SITE_HOST } from '../lib/news';
 import '../styles/book.css';
 
 // the library (≈150 KB compressed) arrives with the first chart a page draws, not with the shell
@@ -14,12 +15,37 @@ const lib = () => import('../lib/echarts');
 
 type Opt = { xAxis?: { data?: (string | number)[] }[]; series?: { name?: string; data?: (number | null | { value: number | null })[] }[] };
 function save(name: string, href: string) { const a = document.createElement('a'); a.href = href; a.download = name; a.click(); }
+/** text cut into lines no wider than `max` (by `width`), at most `n` lines, the last one ending "…" when the text runs on */
+function wrap(text: string, width: (t: string) => number, max: number, n: number): string[] {
+  const out: string[] = []; let cur = '';
+  for (const w of text.split(' ')) {
+    const t = cur ? `${cur} ${w}` : w;
+    if (width(t) <= max || !cur) cur = t; else { out.push(cur); cur = w; }
+  }
+  if (cur) out.push(cur);
+  if (out.length <= n) return out;
+  const keep = out.slice(0, n);
+  let last = keep[n - 1];
+  while (last && width(`${last} …`) > max) last = last.slice(0, last.lastIndexOf(' ') > 0 ? last.lastIndexOf(' ') : last.length - 1);
+  keep[n - 1] = `${last} …`;
+  return keep;
+}
+/** a CSS colour as rgb()/rgba(), resolved by the browser (the theme's tokens are oklch, which SVG editors do not read) */
+function toRgb(css: string): string {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 1;
+  const x = cv.getContext('2d', { willReadFrequently: true }); if (!x) return css;
+  x.clearRect(0, 0, 1, 1); x.fillStyle = '#000'; x.fillStyle = css; x.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = x.getImageData(0, 0, 1, 1).data;
+  return a === 255 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(3)})`;
+}
 /** build date of the site's data (qa.json), stamped on every export */
 const dataDate = () => load<{ built?: string }>('qa.json').then((q) => q.built?.slice(0, 10) ?? null, () => null);
 
 /** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens.
  *  With `exportName` the chart carries its own export: the picture as PNG and the plotted series as CSV. */
-export function Chart({ build, height = 320, deps, label, exportName: named, onPoint, source, bookable = true, tools = true }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+export function Chart({ build, height = 320, deps, label, exportName: named, onPoint, source, asof, bookable = true, tools = true }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+  /** the period the plotted data runs to ("09/26", "Q2'26"), printed in the exported picture's source bar; without it, the data build date */
+  asof?: string;
   /** false: no toolbar under the chart (the caller carries its own exports: the S6 exhibit, which exports without the site's mark) */
   tools?: boolean;
   /** false: no "add to the chart book" action (the book's own cards) */
@@ -70,28 +96,76 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, theme, ...deps]);
 
-  // the picture carries its title and its source, so it can go straight into a deck
-  const png = async () => {
-    const c = chart.current; if (!c) return;
-    const cs = getComputedStyle(document.body), bg = cs.backgroundColor, fg = cs.color, mu = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || fg;
-    const img = new Image(); img.src = c.getDataURL({ pixelRatio: 2, backgroundColor: bg }); await img.decode();
-    const pad = 36, head = 84, foot = 78, cv = document.createElement('canvas');
-    cv.width = img.width + pad * 2; cv.height = img.height + head + foot;
-    const x = cv.getContext('2d'); if (!x) return;
-    x.fillStyle = bg; x.fillRect(0, 0, cv.width, cv.height);
-    x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = fg; x.font = '700 30px Heebo, Arial, sans-serif';
-    x.fillText(label, cv.width - pad, 52);
-    x.drawImage(img, pad, head);
-    x.font = '400 21px Heebo, Arial, sans-serif'; x.fillStyle = mu;
-    // the source line: the documents and pages behind the plotted points, else the chart's credit
+  // The picture carries its own citation, so it can go straight into an article or a deck: the title on top, and a source bar under the
+  // chart with the source (the documents and pages behind the plotted points, else the chart's credit), the data's as-of, the site and
+  // the page's address, and the day it was made. The same bar is drawn into the PNG and written into the SVG.
+  const stamp = async () => {
+    const c = chart.current; if (!c) return null;
+    const cs = getComputedStyle(document.body), root = getComputedStyle(document.documentElement);
+    const v = (k: string, d: string) => root.getPropertyValue(k).trim() || d;
     const spec = captureSpec(c, { label, credit: source, onPoint: point.current }), cite = spec ? citeLine((await enrich(spec)).sources, 3) : '';
     const dd = await dataDate();
-    x.fillText(`מקור: ${cite || source || 'הדוחות של החברות ונתוני רשות שוק ההון, כל מספר מקושר לעמוד המקור'}`.slice(0, 190), cv.width - pad, cv.height - 30);
-    x.font = '400 17px Heebo, Arial, sans-serif';
-    x.fillText(`\u2066${location.host}${location.pathname}\u2069 · ${dd ? `נתונים ${pubLabel(dd)} · ` : ''}הופק ${pubLabel(new Date().toISOString())}`, cv.width - pad, cv.height - 8);
-    x.direction = 'ltr'; x.textAlign = 'left'; x.font = '700 26px Heebo, Arial, sans-serif'; x.fillStyle = fg; x.fillText('fox', pad, cv.height - 22);
-    const fw = x.measureText('fox').width; x.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#FF4E31'; x.fillText('.', pad + fw, cv.height - 22);
+    return {
+      bg: cs.backgroundColor, fg: cs.color, mu: v('--muted', cs.color), band: v('--panel-2', v('--line-soft', cs.backgroundColor)), line: v('--line', cs.color), accent: v('--accent', '#FF4E31'),
+      src: `מקור: ${cite || source || 'הדוחות של החברות ונתוני רשות שוק ההון, כל מספר מקושר לעמוד המקור'}`.slice(0, 190),
+      asof: asof ? `נתונים נכון ל-${asof}` : dd ? `נתונים מעודכנים ל-${pubLabel(dd)}` : '',
+      url: `${SITE_HOST}${location.pathname}${location.search}`,
+      made: `הופק ${pubLabel(new Date().toISOString())}`,
+    };
+  };
+  const png = async () => {
+    const c = chart.current, st = await stamp(); if (!c || !st) return;
+    const img = new Image(); img.src = c.getDataURL({ pixelRatio: 2, backgroundColor: st.bg }); await img.decode();
+    const pad = 36, head = 84, logo = 96, cv = document.createElement('canvas');
+    const W = img.width + pad * 2, m = document.createElement('canvas').getContext('2d');
+    if (!m) return;
+    // the source wraps to at most three lines within the bar (the mark keeps its corner)
+    m.font = '400 21px Heebo, Arial, sans-serif';
+    const srcLines = wrap(st.src, (t) => m.measureText(t).width, W - pad * 2 - logo, 3);
+    const foot = 30 + srcLines.length * 30 + 40;
+    cv.width = W; cv.height = img.height + head + foot;
+    const x = cv.getContext('2d'); if (!x) return;
+    x.fillStyle = st.bg; x.fillRect(0, 0, cv.width, cv.height);
+    x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = st.fg; x.font = '700 30px Heebo, Arial, sans-serif';
+    x.fillText(label, cv.width - pad, 52);
+    x.drawImage(img, pad, head);
+    // the source bar: a band with a rule on top, the source, then as-of · the page's address · the day it was made
+    const y0 = cv.height - foot + 14;
+    x.fillStyle = st.band; x.fillRect(0, y0, cv.width, cv.height - y0);
+    x.fillStyle = st.line; x.fillRect(0, y0, cv.width, 2);
+    x.fillStyle = st.fg; x.font = '400 21px Heebo, Arial, sans-serif';
+    srcLines.forEach((t, i) => x.fillText(t, cv.width - pad, y0 + 34 + i * 30));
+    x.font = '400 18px Heebo, Arial, sans-serif'; x.fillStyle = st.mu;
+    x.fillText([st.asof, `\u2066${st.url}\u2069`, st.made].filter(Boolean).join(' · '), cv.width - pad, cv.height - 18, W - pad * 2 - logo);
+    x.direction = 'ltr'; x.textAlign = 'left'; x.font = '700 26px Heebo, Arial, sans-serif'; x.fillStyle = st.fg; x.fillText('fox', pad, cv.height - 18);
+    const fw = x.measureText('fox').width; x.fillStyle = st.accent; x.fillText('.', pad + fw, cv.height - 18);
     save(`${exportName}.png`, cv.toDataURL('image/png'));
+  };
+  // SVG: the same option drawn by ECharts' SVG renderer (vector, editable in Illustrator / Figma), framed with the title and the source bar
+  const svg = async () => {
+    const c = chart.current, st = await stamp(); if (!c || !st) return;
+    const { echarts } = await lib();
+    const w = c.getWidth(), h = c.getHeight();
+    const s = echarts.init(null as unknown as HTMLElement, undefined, { renderer: 'svg', ssr: true, width: w, height: h });
+    s.setOption({ ...(c.getOption() as object), animation: false } as EChartsCoreOption);
+    // ECharts writes the theme's font stack ("Heebo", "Inter") unescaped inside style="…": single quotes keep the file well-formed
+    const inner = s.renderToSVGString().replace(/font-family:([^;>]*?);/g, (_m, f: string) => `font-family:${f.replace(/"/g, "'")};`).replace(/^<svg /, `<svg x="${18}" y="${48}" `);
+    s.dispose();
+    const pad = 18, head = 48, W = w + pad * 2;
+    // no text measuring in a file: wrap the source by an average Heebo glyph width (≈0.52 em at 11.5px)
+    const srcLines = wrap(st.src, (t) => t.length * 11.5 * 0.52, W - pad * 2 - 48, 3);
+    const foot = 22 + srcLines.length * 16 + 22, H = h + head + foot, y0 = H - foot + 6;
+    const e = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const T = (y: number, size: number, fill: string, t: string, weight = 400) => `<text x="${W - pad}" y="${y}" direction="rtl" text-anchor="start" font-family="Heebo, Arial, sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}">${e(t)}</text>`;
+    const out = [`<?xml version="1.0" encoding="UTF-8"?>`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`,
+      `<title>${e(label)}</title><desc>${e([st.src, st.asof, st.url, st.made].filter(Boolean).join(' · '))}</desc>`,
+      `<rect width="${W}" height="${H}" fill="${st.bg}"/>`, T(30, 16, st.fg, label, 700), inner,
+      `<rect x="0" y="${y0}" width="${W}" height="${H - y0}" fill="${st.band}"/><rect x="0" y="${y0}" width="${W}" height="1" fill="${st.line}"/>`,
+      ...srcLines.map((t, i) => T(y0 + 20 + i * 16, 11.5, st.fg, t)), T(H - 10, 10, st.mu, [st.asof, st.url, st.made].filter(Boolean).join(' · ')),
+      `<text x="${pad}" y="${H - 10}" font-family="Heebo, Arial, sans-serif" font-size="14" font-weight="700" fill="${st.fg}">fox<tspan fill="${st.accent}">.</tspan></text>`,
+      `</svg>`].join('\n').replace(/(?:oklch|color-mix|lab|lch)\([^()]*(?:\([^()]*\)[^()]*)*\)/g, toRgb);  // editors (Illustrator, Figma, Word) read rgb, not oklch
+    save(`${exportName}.svg`, URL.createObjectURL(new Blob([out], { type: 'image/svg+xml;charset=utf-8' })));
   };
   const csv = () => {
     const o = chart.current?.getOption() as Opt | undefined;
@@ -127,7 +201,8 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
           {bookable && (inBook
             ? <Link className="booked" to="/book" title="הגרף בספר הגרפים">בספר ✓</Link>
             : <button type="button" className="tobook" onClick={() => void addToBook()} title="הוסף לספר הגרפים">{busy ?? '+ לספר'}</button>)}
-          <button type="button" onClick={() => void png()}>PNG</button>
+          <button type="button" onClick={() => void png()} title="תמונה עם כותרת ושורת מקור: מקור, נתונים נכון ל, כתובת העמוד ותאריך">PNG</button>
+          <button type="button" onClick={() => void svg()} title="גרף וקטורי עם שורת מקור">SVG</button>
           <button type="button" onClick={() => void pptx()} title="שקף PowerPoint עם גרף עריך ומקורות">{deck ?? 'PPTX'}</button>
           <button type="button" onClick={csv}>CSV</button>
           <button type="button" onClick={link}>העתקת קישור</button>
