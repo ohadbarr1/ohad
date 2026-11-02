@@ -74,3 +74,6 @@ tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
   .panel table.fcards td, .panel table.fcards th { min-width: 0; max-width: none; }
   .fgrid-c { font-size: 13px; max-width: 4.3em; }
 }
+/* W4: the data file's method note, folded away (the reader sees the figures; the build's notes are one click away) */
+.fmethod > summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.fmethod[open] > summary { margin-bottom: 4px; }

@@ -397,7 +397,7 @@ export function FundCard() {
         <Kpi label={<>YTD <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('ytd'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('ytd') ? <RK k="ytd" /> : ' '} />
         <Kpi label={<>ד"נ מצבירה, ממוצע בפועל <Tip k="fee" /></>} value={f.fee == null ? '–' : SRC(() => plain(f, asof, 'fee'), `${nf(f.fee, 2)}%`)} sub={f.depfee != null ? <>מהפקדה {SRC(() => plain(f, asof, 'depfee'), `${nf(f.depfee!, 2)}%`)}</> : ' '} />
         <Kpi label="נכסים" value={f.assets == null ? '–' : SRC(() => plain(f, asof, 'assets'), nf(f.assets, 0))} sub={'מיליוני ש"ח'} />
-        <Kpi label={<>שארפ <Tip k="sharpe" /></>} value={f.sharpe == null ? '–' : SRC(() => plain(f, asof, 'sharpe'), nf(f.sharpe, 2))} sub={f.yrs ? <>רבע עליון ב-{SRC(() => topSrc(f), `${f.top} מתוך ${f.yrs}`)} שנים</> : f.sd != null ? <>סטיית תקן {SRC(() => plain(f, asof, 'sd'), nf(f.sd!, 2))}</> : ' '} />
+        <Kpi label={<>שארפ (הרשות, כפי שפורסם) <Tip k="sharpe" /></>} value={f.sharpe == null ? '–' : SRC(() => plain(f, asof, 'sharpe'), nf(f.sharpe, 2))} sub={f.yrs ? <>רבע עליון ב-{SRC(() => topSrc(f), `${f.top} מתוך ${f.yrs}`)} שנים</> : f.sd != null ? <>סטיית תקן {SRC(() => plain(f, asof, 'sd'), nf(f.sd!, 2))}</> : ' '} />
         <Kpi label={<>חשיפה למניות <Tip k="equity" /></>} value={expo('st', f.st)} sub={f.fo != null ? <>חו"ל {expo('fo', f.fo)} · מט"ח {expo('fx', f.fx)}</> : ' '} />
       </section>
       <PensionPack f={fx} h={h} asof={asof} funds={data.funds as FundX[]} />{/* W1-agent: renders only on pension tracks */}

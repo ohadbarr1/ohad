@@ -133,7 +133,20 @@ export const MAP = {
   track: 'PerutMasluleiHashkaa', trackCode: 'KOD-MASLUL-HASHKAA', trackName: 'SHEM-MASLUL-HASHKAA', trackRole: 'KOD-SUG-MASLUL',
   trackAmount: 'SCHUM-TZVIRA-BAMASLUL', trackDepFee: 'SHEUR-DMEI-NIHUL-HAFKADA', trackAccFee: 'SHEUR-DMEI-NIHUL-HISACHON',
   ytd: 'SHEUR-TSUA-NETO',                                                                          // …/HeshbonOPolisa/Tsua/SHEUR-TSUA-NETO (from the start of the year)
+  // W4 · insurance cover (…/HeshbonOPolisa/Kisuim/ZihuiKisui/…, XSD v008). Read by name inside its own container only: the cover's
+  // PirteiMevutach (the insured person, with an ID number) is never opened.
+  covers: 'Kisuim', coverId: 'ZihuiKisui', coverName: 'SHEM-KISUI-YATZRAN',
+  coverPart: 'PirteiKisuiBeMutzar', coverKind: 'SUG-KISUY-BITOCHI', coverSum: 'SCHUM-BITUACH',            // …/ZihuiKisui/PirteiKisuiBeMutzar/…
+  coverBase: 'SchumeiBituahYesodi', coverSumTrack: 'SCHUM-BITUACH-LEMASLUL', coverSumDeath: 'SCHUM-BITUAH-LEMAVET', // …/ZihuiKisui/SchumeiBituahYesodi/…
+  coverPension: 'KisuiBKerenPensia', disPension: 'SACH-PENSIAT-NECHUT', disRate: 'SHEUR-KISUY-NECHUT', disCost: 'ALUT-KISUI-NECHUT', // …/ZihuiKisui/KisuiBKerenPensia/…
+  survSpouse: 'KITZBAT-SHEERIM-LEALMAN-O-ALMANA',
+  insTrack: 'MaslulBituach', insTrackName: 'SHEM-MASLUL-HABITUAH',                                  // …/HeshbonOPolisa/MaslulBituach/…
 } as const;
+
+/** SUG-KISUY-BITOCHI (XSD v008 code table) */
+export const COVER_KINDS: Record<number, string> = {
+  1: 'מוות', 2: 'נכות מקצועית', 3: 'מוות מתאונה', 4: 'נכות מתאונה', 5: 'אובדן כושר עבודה', 6: 'שחרור מתשלום', 7: 'מחלות קשות', 8: 'תוכנית משולבת חיסכון', 9: 'מוות ואובדן כושר עבודה', 10: 'אחר',
+};
 
 /** SUG-MUTZAR (XSD v008 code table) */
 export const PRODUCT_TYPES: Record<number, string> = {
@@ -174,6 +187,9 @@ export function code30(s: string | null | undefined): { company: number; product
   return { company, product, track: d.length >= 27 ? +d.slice(23, 27) : null, fee: d.length >= 30 ? +d.slice(27, 30) : null };
 }
 
+/** an insurance cover of an account: its name, kind, sum (₪: a lump sum, or a monthly pension for a pension fund's disability and
+ *  survivors cover), its monthly cost and (a pension fund's disability cover) the % of salary insured */
+export interface MCover { name: string; kind: string | null; sum: number | null; cost: number | null; rate: number | null }
 export interface MTrack { code: string | null; name: string | null; role: 'acc' | 'dep' | null; amount: number | null; fee: number | null; depfee: number | null }
 export type FeeHow = 'terms' | 'track' | 'month12' | 'actual';
 export interface MAccount {
@@ -185,6 +201,7 @@ export interface MAccount {
   fee: number | null; feeHow: FeeHow | null; depfee: number | null; depHow: FeeHow | null;
   ytd: number | null;
   tracks: MTrack[];
+  covers: MCover[]; insTrack: string | null;
   warn: string[];
 }
 export interface MFile { version: string | null; runDate: string | null; providerName: string | null; accounts: MAccount[]; warn: string[] }
@@ -193,6 +210,28 @@ export interface MFile { version: string | null; runDate: string | null; provide
 const FEE_MAX = 3, DEP_MAX = 7;
 const okFee = (v: number | null, max: number) => (v != null && v >= 0 && v <= max ? v : null);
 const months = (a: string, b: string) => (+a.slice(0, 4) - +b.slice(0, 4)) * 12 + (+a.slice(5, 7) - +b.slice(5, 7));
+
+/** the covers of one account (W4): one entry per cover, a pension fund's disability and survivors cover as two */
+export function readCovers(acc: XNode): MCover[] {
+  const out: MCover[] = [];
+  for (const k of desc(acc, MAP.covers)) for (const z of kids(k, MAP.coverId)) {
+    const name = txt(kid(z, MAP.coverName));
+    const parts = kids(z, MAP.coverPart);
+    const kindN = parts.map((p) => int(kid(p, MAP.coverKind))).find((x) => x != null) ?? null;
+    const base = kid(z, MAP.coverBase);
+    const sum = parts.map((p) => num(kid(p, MAP.coverSum))).find((x) => x != null) ?? num(kid(base, MAP.coverSumDeath)) ?? num(kid(base, MAP.coverSumTrack));
+    const pen = kid(z, MAP.coverPension);
+    if (pen) {
+      const dis = num(kid(pen, MAP.disPension)), rate = num(kid(pen, MAP.disRate)), cost = num(kid(pen, MAP.disCost)), sp = num(kid(pen, MAP.survSpouse));
+      if (dis != null || rate != null || cost != null) out.push({ name: name ? `${name} · נכות` : 'נכות', kind: 'נכות (קרן פנסיה), קצבה חודשית', sum: dis, cost, rate });
+      if (sp != null) out.push({ name: name ? `${name} · שאירים` : 'שאירים', kind: 'קצבת שאירים לבן/בת זוג, חודשית', sum: sp, cost: null, rate: null });
+      continue;
+    }
+    if (!name && sum == null) continue;
+    out.push({ name: name ?? (kindN != null ? COVER_KINDS[kindN] ?? 'כיסוי' : 'כיסוי'), kind: kindN != null ? COVER_KINDS[kindN] ?? null : null, sum, cost: null, rate: null });
+  }
+  return out;
+}
 
 function readAccount(acc: XNode, prod: XNode, prov: XNode): MAccount {
   const warn: string[] = [];
@@ -258,7 +297,8 @@ function readAccount(acc: XNode, prod: XNode, prov: XNode): MAccount {
     pensionKind: kind, old: oldNew === 1,
     plan: txt(kid(acc, MAP.plan)), status: int(kid(acc, MAP.status)), asof, balDate, unified: txt(kid(acc, MAP.unified)),
     balance: balance == null ? null : Math.round(balance), monthly: monthly == null ? null : Math.round(monthly), lastDep,
-    fee, feeHow, depfee, depHow, ytd: num(first(acc, MAP.ytd)), tracks, warn,
+    fee, feeHow, depfee, depHow, ytd: num(first(acc, MAP.ytd)), tracks,
+    covers: readCovers(acc), insTrack: txt(kid(kid(acc, MAP.insTrack), MAP.insTrackName)), warn,
   };
 }
 
@@ -311,6 +351,8 @@ export interface Row {
   k: string | null; by: MatchBy | null; why: string; cands: string[];
   balance: number | null; monthly: number | null; fee: number | null; feeHow: FeeHow | null; depfee: number | null; depHow: FeeHow | null;
   asof: string | null; skip: string | null; warn: string[];
+  /** the account's insurance cover, on its first row only (W4) */
+  covers?: MCover[];
 }
 
 function pickByName<T extends MFund>(name: string | null, pool: T[], min: number, margin: number): { f: T | null; ranked: T[] } {
@@ -366,7 +408,7 @@ export function rowsOf(file: MFile, funds: MFund[], fileTag = 'f'): Row[] {
   file.accounts.forEach((a, ai) => {
     const base = { acc: ai, providerName: a.providerName ?? file.providerName, typeHe: a.typeHe, plan: a.plan, fee: a.fee, feeHow: a.feeHow, depfee: a.depfee, depHow: a.depHow, asof: a.asof ?? a.balDate, warn: [...a.warn] };
     const skip = a.type != null && RISK.has(a.type) ? 'ביטוח בלי רכיב חיסכון: אין יתרה או מסלול להשוות' : a.old ? 'קרן פנסיה ותיקה: אין לה מסלולים בנתוני הרשות שבאתר' : a.status === 3 ? 'החשבון מבוטל' : null;
-    if (skip) { out.push({ ...base, key: `${fileTag}:${ai}:x`, trackName: null, code: a.unified, k: null, by: null, why: skip, cands: [], balance: a.balance, monthly: a.monthly, skip }); return; }
+    if (skip) { out.push({ ...base, key: `${fileTag}:${ai}:x`, trackName: null, code: a.unified, k: null, by: null, why: skip, cands: [], balance: a.balance, monthly: a.monthly, skip, covers: a.covers ?? [] }); return; }
     const ts = a.tracks.length ? a.tracks : [null];
     const amounts = ts.map((t) => t?.amount ?? null);
     const split = ts.length > 1 && amounts.every((x) => x != null) && (amounts as number[]).some((x) => x > 0);
@@ -381,7 +423,7 @@ export function rowsOf(file: MFile, funds: MFund[], fileTag = 'f'): Row[] {
         // the account's terms win; else this track's own rate; else what the account was charged
         ...(a.feeHow === 'terms' || t?.fee == null ? { fee: a.fee, feeHow: a.feeHow } : { fee: t.fee, feeHow: 'track' as const }),
         ...(a.depHow === 'terms' || t?.depfee == null ? { depfee: a.depfee, depHow: a.depHow } : { depfee: t.depfee, depHow: 'track' as const }),
-        skip: null };
+        skip: null, covers: ti === 0 ? a.covers ?? [] : [] };
       if (ts.length > 1 && !split) row.warn.push('הקובץ לא מפרט כמה מהיתרה בכל מסלול');
       if (split && Math.round(amounts[ti] as number) === 0) { row.skip = 'אין כסף במסלול הזה (רק הפקדות עתידיות)'; }
       out.push(row);
@@ -419,3 +461,17 @@ export function applyRows(list: Saved[], rows: Row[], today: string): { list: Sa
 export const FEE_HOW: Record<FeeHow, string> = {
   terms: 'מתנאי החשבון בקובץ (שנתי)', track: 'משיעור המסלול בקובץ', month12: 'אומדן: החודש האחרון בקובץ × 12', actual: 'כפי שנגבה בחודש האחרון בקובץ',
 };
+
+/* ---------- W4 · the agent's import: a client folder ---------- */
+
+/** the held products of a client folder (lib/clients `Held`), from the review rows: every row, matched or not, with the balance,
+ *  the fees and the cover the file gives; a row the saver flow skips (risk insurance, an old fund) is kept with its reason, since its
+ *  cover belongs in the הנמקה. `manual` maps a row key to a track the agent picked. No name, ID or account number is in a row. */
+export function heldOf(rows: Row[], manual: Record<string, string> = {}): { k: string | null; typeHe: string; provider: string | null; plan: string | null; track: string | null;
+  balance: number | null; monthly: number | null; fee: number | null; feeHow: string | null; depfee: number | null; depHow: string | null; asof: string | null; covers: MCover[]; note: string | null }[] {
+  return rows.map((r) => ({
+    k: manual[r.key] || r.k, typeHe: r.typeHe, provider: r.providerName, plan: r.plan, track: r.trackName,
+    balance: r.balance, monthly: r.monthly, fee: r.fee, feeHow: r.feeHow ? FEE_HOW[r.feeHow] : null, depfee: r.depfee, depHow: r.depHow ? FEE_HOW[r.depHow] : null,
+    asof: r.asof, covers: r.covers ?? [], note: r.skip ?? (r.k || manual[r.key] ? null : `לא הותאם למסלול: ${r.why}`),
+  }));
+}

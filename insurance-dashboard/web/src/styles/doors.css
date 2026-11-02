@@ -177,3 +177,5 @@
 .door-mods a:hover { border-color: var(--line); color: var(--accent-text); }
 .doors-t p b { color: var(--fg); font-weight: 500; }
 @media (pointer: coarse), (max-width: 760px) { .door-mods a { min-height: 40px; } }
+/* W4: a product row that holds two products says so under its name */
+.dprods-note { display: block; font-size: var(--t-1); font-weight: 400; color: var(--muted); line-height: 1.4; margin-top: 2px; max-width: 44ch; }

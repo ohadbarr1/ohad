@@ -6,6 +6,7 @@ import { Tip } from './Explain';
 import { useBasis, useReal, useTray, TRAY_MAX, type Basis } from '../lib/funds';
 import '../styles/funds.css';
 import { useWatchBadge } from '../lib/fundsTimeLoad';
+import { useActiveDoor } from './home/doorState';
 
 /* The "חיסכון" section (funds plan, IA): two halves under one header and one row of tabs. Products (the hub, the tracks, compare)
    for the people who hold them; the business (the lens, the managers, their holdings) for the people who analyse the companies. */
@@ -16,15 +17,20 @@ TABS.splice(TABS.findIndex(([to]) => to === '/funds/compare') + 1, 0, ['/funds/r
 TABS.push(['/funds/watch', 'המעקב שלי']);
 const TIME_VIEW = /^\/funds\/(rank|glide)$/;
 
+/** W4: the analyst's tabs (the industry's economics, the managers' holdings): shown in the Pro door only */
+const PRO_ONLY = new Set(['/savings', '/holdings']);
+
 export function FundsNav() {
   const loc = useLocation();
+  const [door] = useActiveDoor();
+  const tabs = door === 'pro' ? TABS : TABS.filter(([to]) => !PRO_ONLY.has(to));
   // a track card (/funds/p2009) belongs to the tracks tab
   const card = /^\/funds\/[gip]\d+$/.test(loc.pathname);
   const tool = /^\/funds\/(tools|default|trackers)(\/|$)/.test(loc.pathname);
   const time = TIME_VIEW.test(loc.pathname), badge = useWatchBadge();
   return (
     <nav className="subnav" aria-label="חיסכון">
-      {TABS.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') || (tool && to === '/funds/tools') || (time && to === '/funds/rank') ? 'active' : '')}>{l}{to === '/funds/watch' && badge > 0 && <span className="wbadge num" aria-label={`${badge} מסלולים עם חודש חדש`}>{badge}</span>}</NavLink>)}
+      {tabs.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') || (tool && to === '/funds/tools') || (time && to === '/funds/rank') ? 'active' : '')}>{l}{to === '/funds/watch' && badge > 0 && <span className="wbadge num" aria-label={`${badge} מסלולים עם חודש חדש`}>{badge}</span>}</NavLink>)}
     </nav>
   );
 }

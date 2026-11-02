@@ -166,6 +166,8 @@ const AGENT_CARDS: Card[] = [
   ['/managers', 'companies', 'דמי הניהול של הגופים', 'הגופים המנהלים, נכסים ודמי ניהול בפועל לאורך זמן.'],
   ['/funds/trackers', 'market', 'עוקבי מדד', 'אותו מדד בעטיפות שונות: הפער בין המסלולים הוא מחיר העטיפה.'],
   ['/funds/tools', 'sliders', 'כלים', 'דמי ניהול לאורך קריירה, מכרזי ברירת המחדל וחבילת השוואה ל-Excel.'],
+  // W4: the old managers' insurance policies (1990-2003): what a move would lose, before any comparison
+  ['/funds/bm', 'statement', 'ביטוחי מנהלים ישנים', 'פוליסות 1990-2003: מקדם מובטח, הסדר ריסק ומה נבדק לפני מעבר.'],
 ];
 
 /** the agent's home: a pension-first product picker with each product's sourced figures, then the tools for a client meeting */
@@ -181,7 +183,7 @@ export function AgentHome() {
           {!ready && [0, 1, 2, 3].map((i) => <li key={i} className="dprods-sk" aria-hidden="true" />)}
           {rows.map((r, i) => (
             <li key={r.prod} className={i < 2 ? 'lead' : undefined}>
-              <Link to={screenHref(r.prod)} className="dprods-n">{r.label}</Link>
+              <Link to={screenHref(r.prod)} className="dprods-n">{r.label}{r.note && <span className="dprods-note">{r.note}</span>}</Link>
               <span className="dprods-f"><ProdFigs r={r} asof={asof} full /></span>
               <Link to={screenHref(r.prod)} className="dprods-go" aria-label={`כל המסלולים · ${r.label}`}><Ico name="arrow" /></Link>
             </li>
