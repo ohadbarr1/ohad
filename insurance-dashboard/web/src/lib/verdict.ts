@@ -304,8 +304,8 @@ export function leverLine(v: Verdict, pick?: 'fee' | 'dep' | null): Line | null 
   const which = v.lever === 'both' ? pick ?? null : v.lever;
   const depP: Part[] = [{ t: pcf(v.dep?.v), fig: 'dep' }, ' לעומת ', { t: pcf(d.depfee), fig: 'tdep' }];
   const feeP: Part[] = [{ t: pcf(v.fee.v), fig: 'fee' }, ' לעומת ', { t: pcf(d.fee), fig: 'tfee' }];
-  if (which === 'dep') return { key: 'lever', tone: 'bad', parts: [v.lever === 'both' ? 'רוב הפער בדמי הניהול מהפקדה: ' : 'הפער הוא בדמי הניהול מהפקדה: ', ...depP, ' בקרנות ברירת המחדל.'] };
-  if (which === 'fee') return { key: 'lever', tone: 'bad', parts: [v.lever === 'both' ? 'רוב הפער בדמי הניהול מצבירה: ' : 'הפער הוא בדמי הניהול מצבירה: ', ...feeP, ' בקרנות ברירת המחדל.'] };
+  if (which === 'dep') return { key: 'lever', tone: 'bad', parts: v.lever === 'both' ? ['רוב הפער בדמי הניהול מהפקדה.'] : ['הפער הוא בדמי הניהול מהפקדה: ', ...depP, '.'] };
+  if (which === 'fee') return { key: 'lever', tone: 'bad', parts: v.lever === 'both' ? ['רוב הפער בדמי הניהול מצבירה.'] : ['הפער הוא בדמי הניהול מצבירה: ', ...feeP, '.'] };
   return { key: 'lever', tone: 'bad', parts: ['שני הרכיבים גבוהים מקרנות ברירת המחדל: מהפקדה ', ...depP, ', ומצבירה ', ...feeP, '.'] };
 }
 

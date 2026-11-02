@@ -101,7 +101,7 @@ export function My() {
 
       <p className="sv-privacy"><Icon name="shield" /> הכול נשמר רק בדפדפן הזה. שום נתון לא נשלח, ואין הרשמה.</p>
       <GlossBar />
-      <p className="sv-legal">מידע תיאורי מנתוני רשות שוק ההון, עם מקור לכל מספר. לא ייעוץ השקעות, לא ייעוץ או שיווק פנסיוני, ואין המלצה לעבור או להישאר. האומדנים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
+      <p className="sv-legal">מידע תיאורי מנתוני רשות שוק ההון, עם מקור לכל מספר. לא ייעוץ השקעות, לא ייעוץ או שיווק פנסיוני, ואין המלצה לעבור או להישאר. תשואות עבר אינן מבטיחות תשואות בעתיד. האומדנים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
     </div>
   );
 }
@@ -124,7 +124,7 @@ function AgeRow() {
       <span className="sv-rets" role="group" aria-label="מין, למקדם הקצבה">
         {([['f', 'אישה'], ['m', 'גבר']] as const).map(([k, l]) => <button key={k} type="button" className="sv-chip sm" aria-pressed={sex === k} onClick={() => setSex(sex === k ? null : k)}>{l}</button>)}
       </span>
-      <span className="sv-a">לא חובה, לגיל הפרישה ולמקדם הקצבה</span>
+      <span className="sv-a">לא חובה</span>
       <RetireIn />
     </div>
   );
@@ -144,7 +144,7 @@ function RetireIn() {
         <input type="number" inputMode="decimal" min={50} max={75} step={1} placeholder={ageText(R.v)} value={raw} aria-invalid={bad}
           onChange={(e) => { const t = e.target.value; setRaw(t); const x = Number(t); if (t === '') setOwn(null); else if (Number.isFinite(x) && x >= 50 && x <= 75) setOwn(x); }} />
       </label>
-      {bad ? <span className="sv-err">גיל בין 50 ל-75</span> : <span className="sv-a">{own != null ? <>שלך · <button type="button" className="linkbtn" onClick={() => setOwn(null)}>לגיל בחוק</button></> : <>{R.why} · <a href={KZ_RETIRE} target="_blank" rel="noreferrer">כל זכות</a></>}</span>}
+      {bad ? <span className="sv-err">גיל בין 50 ל-75</span> : <span className="sv-a">{own != null ? <>שלך · <button type="button" className="linkbtn" onClick={() => setOwn(null)}>לגיל בחוק</button></> : <a className="sv-u" href={KZ_RETIRE} target="_blank" rel="noreferrer" title={R.why}>לפי החוק</a>}</span>}
     </span>
   );
 }
@@ -161,7 +161,6 @@ function Strip({ rows, retire }: { rows: SumRow[]; retire: number }) {
     note: 'אומדן גס. לא מנכה את עלות הכיסוי הביטוחי, לא כולל מוצרים שאינם קרן פנסיה, קצבת זקנה מביטוח לאומי או מס',
     inputs: rows.filter((r) => r.prod.startsWith('פנסיה')).map((r) => ({ label: r.name, v: ilsRound(r.c.out.pensionReal) })) });
   const a = s.act;
-  const lev = a.kind === 'fee' && a.ref === 'dflt' ? rows.find((r) => r.k === a.k)?.c.lever ?? null : null;
   return (
     <section className="panel sv-sum" aria-label="התמונה בקצרה">
       <dl className="sv-kpis">
@@ -169,7 +168,7 @@ function Strip({ rows, retire }: { rows: SumRow[]; retire: number }) {
         {s.pension != null && <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><span className="sv-a">{at}, בשקלי היום, תשואה 4%</span></div>}
       </dl>
       <p className="sv-one"><b>דבר אחד לעשות:</b>{' '}
-        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>. {a.ref === 'med' ? (a.own ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה') : 'לעומת תנאי קרנות ברירת המחדל'}, יהיו לך כ-{ilsRound(a.v)} פחות בחיסכון {a.prod === 'השתלמות' ? `בעוד ${a.years} שנים` : 'בגיל הפרישה'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. {lev ? `רוב הפער בדמי הניהול ${lev === 'dep' ? 'מהפקדה' : 'מצבירה'}. ` : ''}ההודעה מוכנה בכרטיס.</>
+        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>. {a.ref === 'med' ? (a.own ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה') : 'לעומת תנאי קרנות ברירת המחדל'}, יהיו לך כ-{ilsRound(a.v)} פחות בחיסכון {a.prod === 'השתלמות' ? `בעוד ${a.years} שנים` : 'בגיל הפרישה'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. ההודעה מוכנה בכרטיס.</>
           : a.kind === 'enter' ? <>להזין את דמי הניהול מהדוח השנתי ב<a href={`#${a.k}`}>{a.name}</a>: בלי זה החישוב לפי הממוצע במסלול.</>
           : <>לבדוק בדוח השנתי שהמוטבים מעודכנים (<Link to="/my/statement#st-ben">איפה זה בדוח</Link>). דמי הניהול שלך לא גבוהים מהחציון באף מוצר.</>}
       </p>

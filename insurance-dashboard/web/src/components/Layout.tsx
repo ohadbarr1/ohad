@@ -134,7 +134,7 @@ export function Layout() {
 const SAVINGS = ['/funds', '/savings', '/managers', '/holdings', '/questions', '/my'];
 function SiteFoot({ path, door }: { path: string; door: Door | null }) {
   // W1: the saver's and the agent's homes (and the picker) show savings figures too
-  const savings = SAVINGS.some((s) => path === s || path.startsWith(`${s}/`)) || (path === '/' && door !== 'pro');
+  const savings = path !== '/my' && (SAVINGS.some((s) => path === s || path.startsWith(`${s}/`)) || (path === '/' && door !== 'pro'));
   return (
     <footer className="site-foot">
       {savings && <span className="disc">המידע עובדתי ומשווה, ואינו ייעוץ השקעות או שיווק פנסיוני ואינו מתחשב בנתונים האישיים שלכם. תשואות עבר אינן מבטיחות תשואות בעתיד. ״נטו״ הוא אומדן לפי דמי הניהול הממוצעים בפועל.</span>}

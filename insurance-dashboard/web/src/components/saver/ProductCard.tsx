@@ -131,8 +131,8 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
 
       <div className="sv-money">
         <p className="sv-big">דמי הניהול {ownAny ? 'שלך' : 'במסלול'}: <span className="sv-nw">כ-<Est src={annualProv}>{ilsRound(annual.total)}</Est> בשנה</span>{(C.exBalance || C.exMonthly) && <span className="sv-a">על {C.exBalance && C.exMonthly ? 'יתרה והפקדה' : C.exBalance ? 'יתרה' : 'הפקדה'} לדוגמה</span>}</p>
-        {fold && <p>{fold}{liq && gMed && Math.abs(gMed.balReal) >= 500 && <> אם הכסף נשאר עד גיל הפרישה: <span className="sv-nw">כ-<Est src={() => gapProv(med!, 'החציון בקטגוריה', gMed, medSrc)}>{ilsRound(Math.abs(gMed.balReal))}</Est></span> {gMed.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון.</>} <span className="sv-a">אומדן, בשקלי היום</span></p>}
-        {tLine && <p>{tLine}{tBest!.g.balReal > 0 && paid} <span className="sv-a">אומדן, בשקלי היום; התנאים חלים על מי שמצטרף דרך ברירת המחדל</span></p>}
+        {fold && <p>{fold}{liq && gMed && Math.abs(gMed.balReal) >= 500 && <> עד הפרישה: <span className="sv-nw">כ-<Est src={() => gapProv(med!, 'החציון בקטגוריה', gMed, medSrc)}>{ilsRound(Math.abs(gMed.balReal))}</Est></span> {gMed.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון.</>} <span className="sv-a">אומדן, בשקלי היום</span></p>}
+        {tLine && <p>{tLine}{tBest!.g.balReal > 0 && paid} <span className="sv-a">אומדן, בשקלי היום</span></p>}
       </div>
 
       {!example && onChange && <Mine my={my} f={f} onChange={onChange} />}
@@ -247,7 +247,7 @@ function Assume({ plan, rWhy, my, ex, ageSet, retSrc, retWhy, r10, idx, retQ, se
     <div className="sv-assume">
       <div className="sv-assume-h">ההנחות <span className="sv-muted">· אפשר לשנות</span></div>
       <dl>
-        <div><dt>גיל היום</dt><dd>{plan.age}<span className="sv-a">{ageSet ? 'שלך, מראש העמוד' : 'לדוגמה: אפשר לשנות בראש העמוד'}</span> <span>פרישה בגיל {ageText(plan.retire)}</span><span className="sv-a">{rWhy}{!rWhy.startsWith('שלך') && <> · <a href={KZ_RETIRE} target="_blank" rel="noreferrer">כל זכות</a></>}</span></dd></div>
+        <div><dt>גיל היום</dt><dd>{plan.age}<span className="sv-a">{ageSet ? 'שלך, מראש העמוד' : 'לדוגמה: אפשר לשנות בראש העמוד'}</span> <span>פרישה בגיל {ageText(plan.retire)}</span><span className="sv-a">{rWhy}{!rWhy.startsWith('שלך') && <> · <a className="sv-u" href={KZ_RETIRE} target="_blank" rel="noreferrer">כל זכות</a></>}</span></dd></div>
         <div><dt>יתרה היום</dt><dd>{ilsRound(plan.balance)}{my?.balance == null && <span className="sv-a">לדוגמה</span>}</dd></div>
         <div><dt>הפקדה לחודש</dt><dd>{ilsRound(plan.monthly)}{my?.monthly == null && <span className="sv-a">לדוגמה: {ex}</span>}</dd></div>
         <div><dt>עליית ההפקדה</dt><dd>{pcf(GROWTH_DEFAULT)} בשנה<span className="sv-a">הנחה</span></dd></div>

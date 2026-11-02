@@ -271,3 +271,4 @@ main .ms-lines button.src:not(.bar) { padding: 4px 0; margin: -4px 0; display: b
 .st-quick { gap: 10px; border-color: var(--accent-line); }
 .st-quick-l { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; font-size: var(--t-4); line-height: 1.55; }
 .st-quick-l a { color: var(--link); text-underline-offset: 3px; }
+.sv-u { text-decoration: underline; text-underline-offset: 2px; }
