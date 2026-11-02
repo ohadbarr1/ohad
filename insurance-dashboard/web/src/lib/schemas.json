@@ -2086,6 +2086,9 @@
     "act": {
      "$ref": "#/$defs/nums"
     },
+    "df": {
+     "$ref": "#/$defs/nums"
+    },
     "ct": {
      "type": "array",
      "minItems": 1,

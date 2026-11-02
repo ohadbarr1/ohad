@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
 import { ErrorBox, Loading, Panel, Pick, Seg } from '../components/ui';
@@ -23,10 +23,11 @@ const sum = (fs: Fund[], k: keyof Fund) => fs.reduce((s, f) => s + ((f[k] as num
 
 const LensRank = lazy(async () => ({ default: (await import('./SavingsLens')).LensRank }));
 const Makers = lazy(async () => ({ default: (await import('./Funds')).MakersBody }));
-type View = '' | 'rank' | 'makers' | 'fees' | 'all' | 'svc';
-const VIEWS: [View, string][] = [['', 'לפי חברה מנהלת'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק'], ['fees', 'התפלגות דמי ניהול'], ['svc', 'שירות ותביעות']];  // svc: W2
+const FeeMovers = lazy(async () => ({ default: (await import('../components/flows/FeeMovers')).FeeMovers }));  // W8 flows
+type View = '' | 'rank' | 'makers' | 'fees' | 'all' | 'svc' | 'feechg';
+const VIEWS: [View, string][] = [['', 'לפי חברה מנהלת'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק'], ['fees', 'התפלגות דמי ניהול'], ['feechg', 'שינויי דמי ניהול'], ['svc', 'שירות ותביעות']];  // svc: W2; feechg: W8
 /* W1-agent: in the agent door the first view is the fee benchmark and the managers as cards; the full table is one tab away */
-const AGENT_VIEWS: [View, string][] = [['', 'דמי ניהול ומנהלים'], ['svc', 'שירות ותביעות'], ['all', 'כל החברות'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק']];  // svc: W2
+const AGENT_VIEWS: [View, string][] = [['', 'דמי ניהול ומנהלים'], ['svc', 'שירות ותביעות'], ['all', 'כל החברות'], ['rank', 'דירוג לאורך זמן'], ['makers', 'יצרן מול השוק'], ['feechg', 'שינויי דמי ניהול']];  // svc: W2; feechg: W8
 
 /** The managers' ranking, one home for it: the managing companies today (regulator snapshot), their rank over time (savings lens),
  *  and each manager's biggest track against its category (fund ranks). /funds/makers and the lens's old ?v=rank land here. */
@@ -43,6 +44,8 @@ export function Managers() {
   if ((agent && view === '') || view === 'fees') return <AgentManagers views={views} cards={agent} />;
   // W2: the service index and the claims reports
   if (view === 'svc') return <><FundsHead sub="מנהלים · שירות ותביעות · מדד השירות של רשות שוק ההון 2025 ודוחות התביעות של החברות" tools={views} /><ServiceClaims /></>;
+  // W8: the fee changes over 12 months (flows/fees.json)
+  if (view === 'feechg') return <><FundsHead sub="מנהלים · שינויי דמי ניהול מצבירה, ממוצע בפועל, 12 חודשים" tools={views} /><Suspense fallback={<Loading what="דמי ניהול" />}><FeeMovers /></Suspense></>;
   if (view === '' || view === 'all') return <ManagersTable views={views} />;
   return (
     <>
@@ -106,6 +109,7 @@ function ManagersTable({ views }: { views: React.ReactNode }) {
       </>} />
       <Panel aside={<span>דמי ניהול ותשואות משוקללים בנכסים · צבירה וניוד: LTM, מיליארדי ש"ח</span>}>
         <FlowDef kinds={['organic', 'transfers']} />
+        <p className="flowdef"><Link to="/flows">מי ניצח החודש: ניוד תחרותי לפי קבוצה ומוצר, חודש אחר חודש, אחרי ניכוי נדידה פנימית וברירת מחדל</Link></p>
         <DataTable caption="חברות מנהלות" rows={rows} rowKey={(r) => r.mgr} export={{ name: `fox-managers-${data.meta.asof}`, title: 'חברות מנהלות', note: `רשות שוק ההון · ${asof} · נכסים, צבירה וניוד: מיליארדי ש"ח` }}
           rowClass={(r) => (open === r.mgr ? 'lead' : undefined)}
           rowProps={(r) => ({ style: { cursor: 'pointer' }, onPointerEnter: () => r.list.slice(0, 40).forEach((f) => warmHist(fundRef(f))), onClick: (e) => stop(e, () => setOpen(open === r.mgr ? null : r.mgr)) })}

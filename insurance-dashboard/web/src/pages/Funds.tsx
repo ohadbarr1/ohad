@@ -4,13 +4,14 @@ import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-r
 import { BasisToggle, CompareAdd, CompareTray, FundsHead, FundsNav } from '../components/FundsNav';
 import { Tip } from '../components/Explain';
 import { useMacro } from '../lib/macro';
-import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, famOf, hasNet, netMonthIn, netProv, netSeries, outlierProv, realProv, toReal, useBasis, useReal, winRet, selfDirected, type CatX, type FundX, type FundsFile } from '../lib/funds';
+import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, famOf, hasNet, netMonthIn, netProv, netSeries, outlierProv, realProv, toReal, useBasis, useReal, winRet, selfDirected, type CatX, type FundX, type FundsFile, type HistX } from '../lib/funds';
 import { MgrChip } from '../components/MgrChip';
 import { DEFAULT_PER, TIE_F, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import { PensionPack } from '../components/agent/PensionPack';  // W1-agent
 import { BmNote } from '../components/agent/Decision';  // W2
 import { isOldGen } from '../lib/decision';  // W6 doors: closed generations get no place
 import { FlowDef, MigChip } from '../components/FlowDef';  // W6 trust: flow definition and the intra-group migration flag
+import { FeeLog, FlowSignal } from '../components/flows/FlowSignal';  // W8 flows: the flow signal and the fee change log
 import { RankPanel, RiskPanel, WatchStar } from '../components/FundsTime';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
@@ -473,6 +474,7 @@ export function FundCard() {
             ((o as { yAxis: { axisLabel: { formatter: unknown }; name?: string }[] }).yAxis).forEach((y) => { y.axisLabel.formatter = (v: number) => `${nf(v, 2)}%`; y.name = 'דמי ניהול מצבירה, %'; });
             return o;
             }} />
+          <FeeLog f={fx} h={h as HistX} R={R0} />
         </Panel>
       </div>
       <Panel title="פרטי המסלול" aside={<span>כפי שמדווח לרשות שוק ההון</span>}>
@@ -494,6 +496,7 @@ export function FundCard() {
             <Kpi label="צבירה נטו" value={SRC(() => ({ k: 'calc', title: `צבירה נטו, LTM · ${f.name}`, value: nf(netFlow, 0), unit: 'מיליוני ש"ח', formula: 'הפקדות פחות משיכות ועוד העברות נטו, 12 החודשים האחרונים',
               inputs: ([['הפקדות', 'dep', h.dep!], ['משיכות', 'wd', h.wd!], ['העברות נטו', 'tr', h.tr!]] as const).map(([l, c, xs]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0), shown = c === 'wd' ? -v : v; return { label: l, v: nf(shown, 0), src: () => flow12(c, l, shown) }; }) }), nf(netFlow, 0))} />
           </section>
+          <FlowSignal f={fx} h={h as HistX} R={R0} asof={asof} funds={data.funds as FundX[]} />
         </Panel>
       )}
       </SaverFold>

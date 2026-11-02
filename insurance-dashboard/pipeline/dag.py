@@ -234,6 +234,12 @@ STEPS = [
          [D + "funds/stats", D + "funds/rank", D + "funds/persist.json", D + "funds/default.json", D + "funds/trackers.json", D + "funds/glide.json"],
          code=["pipeline/fund_stats_lib.py", "pipeline/funds_lib.py"], groups={"deploy"},
          note="F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)"),
+    # Wave 3 flows: who really won, month by month (group x product flows since 2011, the intra-group migration netted, the default-fund
+    # tender effect and closing transfers taken apart), the fund card's flow signal and the fee history; standard library; gate `flows`
+    step("build_flows", "pipeline/build_flows.py",
+         [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/closed.json", D + "funds/default.json", D + "market.json"],
+         [D + "flows.json", D + "flows"], code=["pipeline/funds_lib.py"], groups={"deploy"},
+         note="W8: flows.json + flows/<prod>.json, flows/m/<yyyymm>.json (inputs), flows/sig.json, flows/fees.json (python3 pipeline/build_flows.py --check)"),
     # W2: the decision data for recommending a pension fund (CMA service index, the funds' claims annex B3, default coverage, the
     # managers'-insurance switching checklist). extract_decision reads the raw files on the drive and verifies the register (manual);
     # build_decision is standard library; gate `decision` (rebuild byte-equal + rules)

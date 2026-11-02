@@ -260,6 +260,8 @@ def main():
         if key[0] != "i":  # Insurance-Net carries no flows
             rec.update(dep=[v(x, 1) for x in g["DEPOSITS"]], wd=[v(x, 1) for x in g["WITHDRAWLS"]], tr=[v(x, 1) for x in g["INTERNAL_TRANSFERS"]],
                        nd=[v(x, 1) for x in g["NET_MONTHLY_DEPOSITS"]])
+        if "AVG_DEPOSIT_FEE" in g and g["AVG_DEPOSIT_FEE"].notna().any():  # W8: the deposit fee by month (build_flows.py fee log)
+            rec["df"] = [v(x) for x in g["AVG_DEPOSIT_FEE"]]
         if key[0] == "p":  # pensia-net: the actuarial adjustment, reported once a quarter (percent)
             rec["act"] = [v(x) for x in g["ACTUARIAL_ADJUSTMENT"]]
         rec["yn"] = [FL.rnd(x, 3) for x in tr.yn]

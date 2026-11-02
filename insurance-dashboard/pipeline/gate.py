@@ -110,6 +110,9 @@ Checks
   decision       W2: web/public/data/funds/decision.json equals a rebuild (pipeline/build_decision.py --check): every service-index row's
                  total = the published weights x its components within rounding, every claims block sums to 100%, every company is a
                  fox group, every figure has a source with a URL and a retrieval date, every coverage rule and checklist item a quoted phrase
+  flows          Wave 3: web/public/data/flows.json and flows/ equal a rebuild (pipeline/build_flows.py --check): every group-month cell
+                 equals the sum of its tracks (flows/m/<yyyymm>.json) within 0.5 NIS m, every product total the sum of its groups, net = dep −
+                 wd + tr and comp = tr − dt − cl exactly, mig ≥ 0 and cl ≤ 0, ranks start at 1, every method string present
   attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
                  every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
                  from the facts it cites, and every contribution has inputs that open down to a report and page
@@ -686,6 +689,14 @@ def decision():  # W2
         (out[0] if p.returncode == 0 else " · ".join(out[:2]))[:200])
 
 
+def flows():  # Wave 3: who really won
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_flows.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) group-months", out[-1])
+    add("flows", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def coef():  # W6: the conversion coefficients read from the funds' bylaws
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_coef.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -785,6 +796,7 @@ def main():
     funds_contract()
     fund_stats()
     decision()
+    flows()
     coef()
     attribution()
     facts()

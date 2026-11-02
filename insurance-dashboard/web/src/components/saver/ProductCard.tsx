@@ -7,7 +7,7 @@ import { WatchStar } from '../FundsTime';
 import { useActiveProfile, useMyAge, useMySalary, useMySex, useRetire, type MyProduct } from '../../lib/mine';
 import { thirdPerson } from '../../lib/household';  // W7
 import type { Prov } from '../../lib/prov';
-import type { CatX, FundX, FundsFile } from '../../lib/funds';
+import { refOf, type CatX, type FundX, type FundsFile } from '../../lib/funds';
 import type { DefaultFile } from '../../lib/fundsTools';
 import { brief, isPension, pcf, pcr, singleIndex, type Verdict } from '../../lib/verdict';
 import { AGE_DEFAULT, GROWTH_DEFAULT, INFL_DEFAULT, KZ_RETIRE, RETIRE_AGE, RET_FALLBACK, ageText, ilsRound, type FeeGap, type Plan } from '../../lib/retire';
@@ -25,6 +25,7 @@ import { Script } from './Script';
 import { DepLine, Deposits, useDepAudit } from './Deposits';  // W7
 import { FriendSays } from './FriendSays';  // W7
 import type { MCover } from '../../lib/maslaka';
+import { FlowLine } from '../flows/FlowLine';  // W8 flows: the one flow line, only when it fires
 
 /* One product of "המוצרים שלי" (W4, red team 02.11.26). Folded: the verdict in at most three lines, what the fees cost this year and
    by the horizon in ₪, the reader's own numbers, and the note to the agent. "עוד פרטים" opens the rest: every line of the report card,
@@ -159,6 +160,8 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         {tLine && <p>{tLine}{tBest!.g.balReal > 0 && paid} <span className="sv-a">אומדן, בשקלי היום</span></p>}
       </div>
 
+      {!example && <FlowLine f={f} R={refOf(f)} />}
+      {/* w8: news line — after the w8-feeds merge: <NewsForFund k={f.k} grp={f.grp} door="saver" /> (components/NewsForFund.tsx, null with no event in 90 days) */}
       {!example && isPension(f.prod) && my?.covers?.length ? <CoverLine covers={my.covers} insTrack={my.insTrack} salary={my.salary ?? profSalary} /> : null}
       {!example && <DepLine audit={dep.audit} onOpen={() => { setOpen(true); requestAnimationFrame(() => document.getElementById(`${f.k}-deposits`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })); }} />}
       {!example && onChange && <Mine my={my} f={f} onChange={onChange} />}

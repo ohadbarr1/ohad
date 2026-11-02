@@ -1,0 +1,13 @@
+/* Wave 3 flows: /flows "מי ניצח החודש", the fund card's flow signal and fee log, the saver's one line */
+.flows .flows-line { margin: 4px 0 10px; font-size: 14px; color: var(--fg); line-height: 1.6; }
+.flows .flows-comp { margin-top: -4px; }
+.flows .flows-gap { color: var(--muted); }
+.flows-cov { margin: 0; padding-inline-start: 18px; font-size: 13px; line-height: 1.7; color: var(--fg); }
+.flows-cov li { margin: 2px 0; }
+.flowsig { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; margin: 6px 0 2px; font-size: 13px; line-height: 1.6; color: var(--fg); }
+.flowsig .flowsig-k { color: var(--muted); }
+.flowsig a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.feelog { margin-top: 6px; }
+.feelog table { font-size: 12.5px; }
+.sv-card .sv-flow { margin: 6px 0 0; font-size: 14px; line-height: 1.55; }
+.sv-card .sv-flow a { text-decoration: underline; text-underline-offset: 3px; }
