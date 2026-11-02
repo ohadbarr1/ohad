@@ -40,7 +40,8 @@ const CHECK_HE: Record<string, string> = {
   solvency: 'כושר פירעון: מקור, יחידות וטווח', solvency_page: 'כושר פירעון: כל נתון בעמוד שצוטט', capital_page: 'שימושי הון: נתון בעמוד שצוטט',
   adjusted_page: 'מדדים מותאמים: נתון בעמוד שצוטט', targets_page: 'יעדים: נתון או ציטוט בעמוד', decks_page: 'מצגות: כל נתון בשקף שצוטט',
   image_notes: 'נתונים מתמונה: הערת קריאה וסימון לעמוד', debt: 'חוב (ת126): התאמת טבלאות ומקור', debt_warn: 'חוב: הערות טופס',
-  ownership: 'בעלי עניין: אחוזים, תאריך ומקור', macro: 'מאקרו: מקור, טווח ורצף', links: 'קישורי מקור: בדיקה שבועית', cell_sources: 'כל נתון בדוחות: דוח MAYA ותאריך פרסום',
+  ownership: 'בעלי עניין: אחוזים, תאריך ומקור',
+  model_xlsx: 'חוברות Excel: נפתחות, לכל ערך מקור', consensus: 'מחירי יעד מפורסמים: מקור ותאריך לכל שורה', macro: 'מאקרו: מקור, טווח ורצף', links: 'קישורי מקור: בדיקה שבועית', cell_sources: 'כל נתון בדוחות: דוח MAYA ותאריך פרסום',
 };
 /** a check id the table does not know: its family label plus the variant (known misses, skipped for lack of page text, image page) */
 const checkHe = (id: string) => CHECK_HE[id] ?? (() => { const m = id.match(/^(.*)_(known|skipped|noimgflag)$/); return m && CHECK_HE[m[1]] ? `${CHECK_HE[m[1]]} · ${({ known: 'חריגים ידועים', skipped: 'לא נבדק (אין טקסט)', noimgflag: 'עמוד תמונה ללא סימון' } as Record<string, string>)[m[2]]}` : id; })();
@@ -117,7 +118,7 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
 
   return (
     <div className="dq wide-page">
-      <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>נתונים ואיכות</h1><div className="sub">כיסוי, בדיקות ורעננות לפי מקור · נבנה <span className="num">{pubLabel(c.built)}</span> · <Link to="/data/autopilot">טייס אוטומטי</Link></div></div></div>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>נתונים ואיכות</h1><div className="sub">כיסוי, בדיקות ורעננות לפי מקור · נבנה <span className="num">{pubLabel(c.built)}</span> · <Link to="/data/autopilot">טייס אוטומטי</Link> · <Link to="/data/api">API: תיעוד הקבצים</Link></div></div></div>
 
       <section className="kpis">
         <div className="kpi"><div className="l">כיסוי</div><div className="v num">{fmt((fresh / Math.max(1, applicable)) * 100, 'pct', { d: 0 })}</div><div className="s"><span className="num">{fresh}/{applicable}</span> תאים רלוונטיים עדכניים · {nCo} חברות ושוק × {c.layers.length} שכבות · <span className="num">{nNa}</span> לא רלוונטי</div></div>
@@ -165,7 +166,7 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
 
       <ConsistencyPanel name={name} />
 
-      <Panel title="קבצי נתונים פתוחים" aside={<a href="/data/schemas.json" download>חוזי הנתונים (JSON Schema)</a>}>
+      <Panel title="קבצי נתונים פתוחים" aside={<span><Link to="/data/api">תיעוד ה-API</Link> · <a href="/data/schemas.json" download>חוזי הנתונים (JSON Schema)</a></span>}>
         <div className="licence"><b>נתונים ממקורות ציבוריים; ציטוט עם קישור</b><span className="muted">כל מספר באתר מקושר למסמך או לקובץ שממנו נלקח</span>
           <a href="https://maya.tase.co.il/" target="_blank" rel="noreferrer">MAYA</a><a href="https://data.gov.il/dataset/gemelnet" target="_blank" rel="noreferrer">data.gov.il</a><a href="https://www.boi.org.il/" target="_blank" rel="noreferrer">בנק ישראל</a><a href="https://www.cbs.gov.il/" target="_blank" rel="noreferrer">הלמ"ס</a></div>
         <DataTable caption="קבצי נתונים פתוחים" rows={c.files} rowKey={(f) => f.pattern} sort={{ key: 'bytes', dir: 'desc' }} export={{ name: 'fox-files', title: 'קבצי נתונים פתוחים', note: 'נתונים ממקורות ציבוריים; ציטוט עם קישור' }} columns={[

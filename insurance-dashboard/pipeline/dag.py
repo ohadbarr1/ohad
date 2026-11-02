@@ -253,6 +253,17 @@ STEPS = [
     step("build_decision", "pipeline/build_decision.py",
          ["data/regulation/decision_src.json", "data/regulation/decision_claims.json", D + "funds.json"], [D + "funds/decision.json"],
          groups={"deploy"}, note="W2: funds/decision.json (python3 pipeline/build_decision.py --check)"),
+    # Wave 5 (Pro depth): one model-ready workbook per company (P&L, balance sheet, IFRS 17, solvency, savings, KPIs, a Sources row per
+    # value) from the published JSON; standard library (pipeline/xlsx_lib.py); gate `model_xlsx` (byte-equal rebuild, opens, every cell sourced)
+    step("build_model_xlsx", "pipeline/build_model_xlsx.py",
+         [D + "facts", D + "series", D + "csm/facts", D + "csm/capital.json", D + "csm/solvency.json", D + "savings_econ.json", D + "lens.json",
+          D + "kpi.json", D + "adjusted.json", D + "companies/index.json", D + "search/docs.json", "web/src/lib/labels.ts", "web/src/pages/CompanyIfrs.tsx",
+          "web/src/lib/solvency.ts"],
+         [D + "xlsx"], code=["pipeline/xlsx_lib.py"], groups={"deploy"},
+         note="xlsx/<company>.xlsx, < 1 MB each (python3 pipeline/build_model_xlsx.py --check)"),
+    # Wave 5: published sell-side price targets and recommendations (hand-curated registry, every row confirmed on its page); gate `consensus`
+    step("build_consensus", "pipeline/build_consensus.py", [REG + "consensus.json", D + "companies/index.json"], [D + "consensus.json"],
+         groups={"deploy"}, note="/credibility: dated, sourced targets as published; no share price (python3 pipeline/build_consensus.py --check)"),
     step("build_coverage", "pipeline/build_coverage.py", [D + "**/*.json", "web/src/lib/schemas.json", "data/extracted_pres"], [D + "coverage.json"], daily=True,
          groups={"deploy"}, note="/data page: reads every data file (incl. qa.json from the last gate) and today's date"),
 ]

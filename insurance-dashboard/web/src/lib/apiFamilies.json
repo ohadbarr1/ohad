@@ -1,0 +1,1741 @@
+{
+ "site": "https://fox-research-il.web.app",
+ "terms": "Free to use, including commercially. Cite fox (with a link to the page or file) and the primary source the record names: the MAYA filing and page, or the regulator's dataset. Fundamentals only: no share prices are published (the valuation pages take a manual price input). The files are static and refreshed by the pipeline; there is no key and no rate limit, but please cache: every file is served with a short max-age. No warranty: check the figure against the cited page before relying on it.",
+ "feeds": [
+  [
+   "/feed.xml",
+   "RSS 2.0",
+   "the delta feed: every new filing figure, restatement, target, regulator month (feed.json as RSS)"
+  ],
+  [
+   "/feed.atom",
+   "Atom",
+   "the same feed as Atom"
+  ],
+  [
+   "/feed/<company>.xml",
+   "RSS 2.0",
+   "one company's events (also .atom)"
+  ],
+  [
+   "/feed/months.xml",
+   "RSS 2.0",
+   "the regulator's monthly files as they land (also .atom)"
+  ],
+  [
+   "/feed/funds.xml",
+   "RSS 2.0",
+   "fund and track events (also .atom)"
+  ],
+  [
+   "/feed/market.xml",
+   "RSS 2.0",
+   "market-level events (also .atom)"
+  ],
+  [
+   "/data/calendar.ics",
+   "iCalendar",
+   "every expected filing date (calendar.json as ICS)"
+  ],
+  [
+   "/data/cal/<company>.ics",
+   "iCalendar",
+   "one company's expected filing dates"
+  ],
+  [
+   "/data/xlsx/<company>.xlsx",
+   "XLSX",
+   "the model-ready workbook of a company: metrics x periods Q1'23 ... Q2'26 + FY, every value with its document, page and link (Sources sheet)"
+  ],
+  [
+   "/data/schemas.json",
+   "JSON Schema",
+   "the data contracts: the schema of every contracted family below"
+  ]
+ ],
+ "changelog": [
+  [
+   "2026-11-02",
+   "added",
+   "xlsx/<company>.xlsx: one model-ready workbook per company (P&L, Balance sheet, IFRS 17, Solvency, Savings, KPIs, Sources)."
+  ],
+  [
+   "2026-11-02",
+   "added",
+   "consensus.json: published sell-side price targets and recommendations, each with its source URL (schema `consensus`)."
+  ],
+  [
+   "2026-11-02",
+   "added",
+   "This page and docs/API.md. No changelog was kept before this date: the contracts in schemas.json as of this date are the baseline."
+  ]
+ ],
+ "families": [
+  {
+   "pattern": "adjusted.json",
+   "schema": "adjusted",
+   "example": "adjusted.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_targets",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "pg",
+    "rid",
+    "u"
+   ]
+  },
+  {
+   "pattern": "alerts.json",
+   "schema": null,
+   "example": "alerts.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_rss",
+   "note": "/feed.xml, /feed/<company>.xml, /feed/months.xml, /feed/funds.xml (+ .atom); check: pipeline/check_feed.py",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "answers/*.json",
+   "schema": "answersTopic",
+   "example": "answers/capital.json",
+   "files": 11,
+   "kind": "open",
+   "format": "json",
+   "step": "build_answers",
+   "note": "S1: answers/index.json + answers/<topic>.json; every figure a token with provenance (answer_core rules)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "prov",
+    "u"
+   ]
+  },
+  {
+   "pattern": "answers/index.json",
+   "schema": "answersIndex",
+   "example": "answers/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_answers",
+   "note": "S1: answers/index.json + answers/<topic>.json; every figure a token with provenance (answer_core rules)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "prov",
+    "u"
+   ]
+  },
+  {
+   "pattern": "answers_history.json",
+   "schema": null,
+   "example": "answers_history.json",
+   "files": 1,
+   "kind": "internal",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": []
+  },
+  {
+   "pattern": "assets/*.json",
+   "schema": "assetsManager",
+   "example": "assets/altshuler.json",
+   "files": 5,
+   "kind": "open",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": [
+    "src",
+    "url"
+   ]
+  },
+  {
+   "pattern": "assets/index.json",
+   "schema": "assetsIndex",
+   "example": "assets/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": [
+    "asof",
+    "built"
+   ]
+  },
+  {
+   "pattern": "assets/overlap.json",
+   "schema": "assetsOverlap",
+   "example": "assets/overlap.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": []
+  },
+  {
+   "pattern": "attribution/*.json",
+   "schema": "attribution",
+   "example": "attribution/altshuler.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "build_attribution",
+   "note": "QoQ / YoY / LTM bridges per company and pairwise peer bridges (pipeline/build_attribution.py --check = gate `attribution`)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "der",
+    "doc",
+    "pg",
+    "u",
+    "url"
+   ]
+  },
+  {
+   "pattern": "attribution/index.json",
+   "schema": "attributionIndex",
+   "example": "attribution/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_attribution",
+   "note": "QoQ / YoY / LTM bridges per company and pairwise peer bridges (pipeline/build_attribution.py --check = gate `attribution`)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "attribution/peers_*.json",
+   "schema": "attributionPeers",
+   "example": "attribution/peers_2026Q2.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_attribution",
+   "note": "QoQ / YoY / LTM bridges per company and pairwise peer bridges (pipeline/build_attribution.py --check = gate `attribution`)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "der",
+    "doc",
+    "pg",
+    "u",
+    "url"
+   ]
+  },
+  {
+   "pattern": "autopilot/status.json",
+   "schema": "autopilotStatus",
+   "example": "autopilot/status.json",
+   "files": 1,
+   "kind": "internal",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": [
+    "built",
+    "rid",
+    "source",
+    "src"
+   ]
+  },
+  {
+   "pattern": "cal/*.ics",
+   "schema": null,
+   "example": "cal/altshuler.ics",
+   "files": 15,
+   "kind": "open",
+   "format": "ics",
+   "step": "build_calendar",
+   "note": "projections from today's date",
+   "cadence": "every build (date-dependent)",
+   "prov": []
+  },
+  {
+   "pattern": "calendar.ics",
+   "schema": null,
+   "example": "calendar.ics",
+   "files": 1,
+   "kind": "open",
+   "format": "ics",
+   "step": "build_calendar",
+   "note": "projections from today's date",
+   "cadence": "every build (date-dependent)",
+   "prov": []
+  },
+  {
+   "pattern": "calendar.json",
+   "schema": "calendar",
+   "example": "calendar.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_calendar",
+   "note": "projections from today's date",
+   "cadence": "every build (date-dependent)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "capital/options.json",
+   "schema": "capitalOptions",
+   "example": "capital/options.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_capital",
+   "note": "A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9, consolidation/bolt.json) / hold rows; the A2 overlay runs on the page",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "prov",
+    "src"
+   ]
+  },
+  {
+   "pattern": "cards/*/*.json",
+   "schema": "card",
+   "example": "cards/altshuler/2021FY.json",
+   "files": 302,
+   "kind": "open",
+   "format": "json",
+   "step": "build_cards",
+   "note": "report cards: Report Day roles, csm_resolve, Peer Table cells, targets",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "cmp",
+    "der",
+    "doc",
+    "in",
+    "pages",
+    "pg",
+    "ref",
+    "rid",
+    "src",
+    "std",
+    "u"
+   ]
+  },
+  {
+   "pattern": "cards/index.json",
+   "schema": "cardsIndex",
+   "example": "cards/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_cards",
+   "note": "report cards: Report Day roles, csm_resolve, Peer Table cells, targets",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "u"
+   ]
+  },
+  {
+   "pattern": "companies/*.docs.json",
+   "schema": "docs",
+   "example": "companies/altshuler.docs.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "build_documents",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "docs",
+    "pages",
+    "source",
+    "url"
+   ]
+  },
+  {
+   "pattern": "companies/*.json",
+   "schema": "workbook",
+   "example": "companies/altshuler.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "facts",
+   "note": "the merge + fact table; writes the company workbooks FROM the table (= build_workbook.py). Unlabeled-row captions are read from data/work page texts (drive), cached in ~/.cache/fox/captions.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "url",
+    "urls"
+   ]
+  },
+  {
+   "pattern": "companies/*.notes.json",
+   "schema": "notes",
+   "example": "companies/phoenix.notes.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": []
+  },
+  {
+   "pattern": "companies/*.price.json",
+   "schema": "price",
+   "example": "companies/altshuler.price.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "fetch_prices",
+   "note": "valuation input only (labelled)",
+   "cadence": "manual (valuation input only)",
+   "prov": [
+    "asof",
+    "fetched",
+    "source",
+    "url"
+   ]
+  },
+  {
+   "pattern": "companies/index.json",
+   "schema": "registry",
+   "example": "companies/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_company_index",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "docs",
+    "pages",
+    "url"
+   ]
+  },
+  {
+   "pattern": "consensus.json",
+   "schema": "consensus",
+   "example": "consensus.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_consensus",
+   "note": "/credibility: dated, sourced targets as published; no share price (python3 pipeline/build_consensus.py --check)",
+   "cadence": "by hand, when a target is published",
+   "prov": [
+    "fetched",
+    "src"
+   ]
+  },
+  {
+   "pattern": "consistency.json",
+   "schema": "consistency",
+   "example": "consistency.json",
+   "files": 1,
+   "kind": "internal",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "every deploy (pipeline/gate.py)",
+   "prov": [
+    "built",
+    "page"
+   ]
+  },
+  {
+   "pattern": "consolidation/bolt.json",
+   "schema": "consolidationBolt",
+   "example": "consolidation/bolt.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_consolidation",
+   "note": "A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "prov",
+    "r",
+    "src"
+   ]
+  },
+  {
+   "pattern": "consolidation/matrix.json",
+   "schema": "consolidationMatrix",
+   "example": "consolidation/matrix.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_consolidation",
+   "note": "A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "prov",
+    "r",
+    "url"
+   ]
+  },
+  {
+   "pattern": "consolidation/mix/*.json",
+   "schema": "consolidationMix",
+   "example": "consolidation/mix/altshuler.json",
+   "files": 9,
+   "kind": "open",
+   "format": "json",
+   "step": "build_consolidation",
+   "note": "A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "prov",
+    "r"
+   ]
+  },
+  {
+   "pattern": "consolidation/pairs/*.json",
+   "schema": "consolidationPair",
+   "example": "consolidation/pairs/altshuler__analyst.json",
+   "files": 72,
+   "kind": "open",
+   "format": "json",
+   "step": "build_consolidation",
+   "note": "A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "prov",
+    "r"
+   ]
+  },
+  {
+   "pattern": "coverage.json",
+   "schema": "coverage",
+   "example": "coverage.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_coverage",
+   "note": "/data page: reads every data file (incl. qa.json from the last gate) and today's date",
+   "cadence": "every build (date-dependent)",
+   "prov": [
+    "asof",
+    "built"
+   ]
+  },
+  {
+   "pattern": "csm/capital.json",
+   "schema": "csmCapital",
+   "example": "csm/capital.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_csm",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "pg",
+    "u"
+   ]
+  },
+  {
+   "pattern": "csm/facts/*.json",
+   "schema": "csmFacts",
+   "example": "csm/facts/ayalon.json",
+   "files": 7,
+   "kind": "open",
+   "format": "json",
+   "step": "build_csm",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "files",
+    "pg",
+    "report_id",
+    "url"
+   ]
+  },
+  {
+   "pattern": "csm/rates.json",
+   "schema": "csmRows",
+   "example": "csm/rates.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_csm",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "csm/sens.json",
+   "schema": "csmRows",
+   "example": "csm/sens.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_csm",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "csm/solvency.json",
+   "schema": "csmSolvency",
+   "example": "csm/solvency.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_solvency",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "files",
+    "pg",
+    "r"
+   ]
+  },
+  {
+   "pattern": "csm/summary.json",
+   "schema": "csmSummary",
+   "example": "csm/summary.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_csm",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "files"
+   ]
+  },
+  {
+   "pattern": "debt/*.json",
+   "schema": "debt",
+   "example": "debt/altshuler.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "build_debt",
+   "note": "",
+   "cadence": "on each MAYA form",
+   "prov": [
+    "asof",
+    "built",
+    "files",
+    "pg",
+    "ref",
+    "rid",
+    "source",
+    "url"
+   ]
+  },
+  {
+   "pattern": "debt/index.json",
+   "schema": "debtIndex",
+   "example": "debt/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_debt",
+   "note": "",
+   "cadence": "on each MAYA form",
+   "prov": [
+    "built",
+    "files",
+    "pg",
+    "ref",
+    "rid",
+    "source",
+    "url"
+   ]
+  },
+  {
+   "pattern": "drivers/*.json",
+   "schema": "drivers",
+   "example": "drivers/altshuler.json",
+   "files": 17,
+   "kind": "open",
+   "format": "json",
+   "step": "build_drivers",
+   "note": "A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "pg",
+    "prov",
+    "url"
+   ]
+  },
+  {
+   "pattern": "drivers/graph.json",
+   "schema": "driversGraph",
+   "example": "drivers/graph.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_drivers",
+   "note": "A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "expectations/*.json",
+   "schema": "expectationsCompany",
+   "example": "expectations/altshuler.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "build_expectations",
+   "note": "A3: forward model to FY'28 + terminal at justified P/B; bisection per lever; percentiles against the company's own 24 quarters",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "prov",
+    "ref"
+   ]
+  },
+  {
+   "pattern": "expectations/index.json",
+   "schema": "expectationsIndex",
+   "example": "expectations/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_expectations",
+   "note": "A3: forward model to FY'28 + terminal at justified P/B; bisection per lever; percentiles against the company's own 24 quarters",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "facts/*.json",
+   "schema": "facts",
+   "example": "facts/altshuler.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "facts",
+   "note": "the merge + fact table; writes the company workbooks FROM the table (= build_workbook.py). Unlabeled-row captions are read from data/work page texts (drive), cached in ~/.cache/fox/captions.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "der",
+    "pg",
+    "rid",
+    "std",
+    "u",
+    "urls",
+    "vint"
+   ]
+  },
+  {
+   "pattern": "facts/index.json",
+   "schema": "factsIndex",
+   "example": "facts/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "facts",
+   "note": "the merge + fact table; writes the company workbooks FROM the table (= build_workbook.py). Unlabeled-row captions are read from data/work page texts (drive), cached in ~/.cache/fox/captions.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "facts/taxonomy.json",
+   "schema": "factsTaxonomy",
+   "example": "facts/taxonomy.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "facts",
+   "note": "the merge + fact table; writes the company workbooks FROM the table (= build_workbook.py). Unlabeled-row captions are read from data/work page texts (drive), cached in ~/.cache/fox/captions.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "feed.json",
+   "schema": "feed",
+   "example": "feed.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_feed",
+   "note": "dated, typed, sourced events since 01.01.25 (pipeline/check_feed.py = gate `feed`)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "docs",
+    "files",
+    "fs",
+    "pg",
+    "refs",
+    "rid",
+    "source",
+    "src"
+   ]
+  },
+  {
+   "pattern": "feed_seen.json",
+   "schema": null,
+   "example": "feed_seen.json",
+   "files": 1,
+   "kind": "internal",
+   "format": "json",
+   "step": "build_rss",
+   "note": "/feed.xml, /feed/<company>.xml, /feed/months.xml, /feed/funds.xml (+ .atom); check: pipeline/check_feed.py",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "filings_latest.json",
+   "schema": "filingsLatest",
+   "example": "filings_latest.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_web_index",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "docs"
+   ]
+  },
+  {
+   "pattern": "findings.json",
+   "schema": "findings",
+   "example": "findings.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_findings",
+   "note": "S2: div / brk / peer / sd / disc / rank findings, each an answer body (answer_core rules), every figure with `src` re-derived",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "prov",
+    "src",
+    "u"
+   ]
+  },
+  {
+   "pattern": "flow_npv.json",
+   "schema": "flowNpv",
+   "example": "flow_npv.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_flow_npv",
+   "note": "M3: NPV of net transfers and organic flow per manager x product (assumptions labelled)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "generated"
+   ]
+  },
+  {
+   "pattern": "flows.json",
+   "schema": null,
+   "example": "flows.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_flows",
+   "note": "W8: flows.json + flows/<prod>.json, flows/m/<yyyymm>.json (inputs), flows/sig.json, flows/fees.json (python3 pipeline/build_flows.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "flows/*.json",
+   "schema": null,
+   "example": "flows/bm.json",
+   "files": 12,
+   "kind": "open",
+   "format": "json",
+   "step": "build_flows",
+   "note": "W8: flows.json + flows/<prod>.json, flows/m/<yyyymm>.json (inputs), flows/sig.json, flows/fees.json (python3 pipeline/build_flows.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "flows/m/*.json",
+   "schema": null,
+   "example": "flows/m/201101.json",
+   "files": 189,
+   "kind": "open",
+   "format": "json",
+   "step": "build_flows",
+   "note": "W8: flows.json + flows/<prod>.json, flows/m/<yyyymm>.json (inputs), flows/sig.json, flows/fees.json (python3 pipeline/build_flows.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "fragility.json",
+   "schema": "fragility",
+   "example": "fragility.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fragility",
+   "note": "A10: flow, fee, performance, cost, solvency, CSM runway, A2 scenario headroom; gate `fragility` (rebuild, provenance, no composite)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "fs",
+    "pg",
+    "refs",
+    "rid",
+    "src",
+    "u"
+   ]
+  },
+  {
+   "pattern": "funds.json",
+   "schema": "funds",
+   "example": "funds.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_funds",
+   "note": "also: the official track taxonomy (transfer_bank) and CPI for real returns",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "source",
+    "src"
+   ]
+  },
+  {
+   "pattern": "funds/*.json",
+   "schema": "fundHist",
+   "example": "funds/g1002.json",
+   "files": 2733,
+   "kind": "open",
+   "format": "json",
+   "step": "build_funds",
+   "note": "also: the official track taxonomy (transfer_bank) and CPI for real returns",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "funds/cat.json",
+   "schema": "fundCats",
+   "example": "funds/cat.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_funds",
+   "note": "also: the official track taxonomy (transfer_bank) and CPI for real returns",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "funds/closed.json",
+   "schema": "fundsClosed",
+   "example": "funds/closed.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_funds",
+   "note": "also: the official track taxonomy (transfer_bank) and CPI for real returns",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "source"
+   ]
+  },
+  {
+   "pattern": "funds/coef.json",
+   "schema": "fundsCoef",
+   "example": "funds/coef.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": [
+    "asof",
+    "pages",
+    "src",
+    "url"
+   ]
+  },
+  {
+   "pattern": "funds/decision.json",
+   "schema": "fundsDecision",
+   "example": "funds/decision.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_decision",
+   "note": "W2: funds/decision.json (python3 pipeline/build_decision.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "pg",
+    "src",
+    "url"
+   ]
+  },
+  {
+   "pattern": "funds/default.json",
+   "schema": "fundsDefault",
+   "example": "funds/default.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fund_stats",
+   "note": "F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "src"
+   ]
+  },
+  {
+   "pattern": "funds/glide.json",
+   "schema": "fundsGlide",
+   "example": "funds/glide.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fund_stats",
+   "note": "F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "src"
+   ]
+  },
+  {
+   "pattern": "funds/persist.json",
+   "schema": "fundsPersist",
+   "example": "funds/persist.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fund_stats",
+   "note": "F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "src"
+   ]
+  },
+  {
+   "pattern": "funds/rank/*.json",
+   "schema": "fundRank",
+   "example": "funds/rank/c01a259465a.json",
+   "files": 109,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fund_stats",
+   "note": "F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "src"
+   ]
+  },
+  {
+   "pattern": "funds/stats/*.json",
+   "schema": "fundStats",
+   "example": "funds/stats/c021f371fd0.json",
+   "files": 132,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fund_stats",
+   "note": "F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "src"
+   ]
+  },
+  {
+   "pattern": "funds/stats/index.json",
+   "schema": "fundStatsIndex",
+   "example": "funds/stats/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fund_stats",
+   "note": "F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof"
+   ]
+  },
+  {
+   "pattern": "funds/trackers.json",
+   "schema": "fundsTrackers",
+   "example": "funds/trackers.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_fund_stats",
+   "note": "F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "src"
+   ]
+  },
+  {
+   "pattern": "hist/*.json",
+   "schema": null,
+   "example": "hist/ayalon.json",
+   "files": 8,
+   "kind": "open",
+   "format": "json",
+   "step": "build_hist",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "ifrs.json",
+   "schema": "ifrsIndex",
+   "example": "ifrs.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_ifrs",
+   "note": "also reads data/work/manifest_quarters.json (drive)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "files",
+    "report_id",
+    "url"
+   ]
+  },
+  {
+   "pattern": "ifrs/*/*.json",
+   "schema": "ifrsFacts",
+   "example": "ifrs/ayalon/2025FY.json",
+   "files": 42,
+   "kind": "open",
+   "format": "json",
+   "step": "build_ifrs",
+   "note": "also reads data/work/manifest_quarters.json (drive)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "pg"
+   ]
+  },
+  {
+   "pattern": "ifrs_*.json",
+   "schema": "ifrsFacts",
+   "example": "ifrs_2025FY.json",
+   "files": 6,
+   "kind": "open",
+   "format": "json",
+   "step": "build_ifrs",
+   "note": "also reads data/work/manifest_quarters.json (drive)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "pg"
+   ]
+  },
+  {
+   "pattern": "kpi.json",
+   "schema": "kpi",
+   "example": "kpi.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_kpi",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "rid",
+    "source",
+    "src"
+   ]
+  },
+  {
+   "pattern": "lens.json",
+   "schema": "lens",
+   "example": "lens.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_lens",
+   "note": "",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "generated"
+   ]
+  },
+  {
+   "pattern": "lines.json",
+   "schema": null,
+   "example": "lines.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "facts",
+   "note": "the merge + fact table; writes the company workbooks FROM the table (= build_workbook.py). Unlabeled-row captions are read from data/work page texts (drive), cached in ~/.cache/fox/captions.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "lts.json",
+   "schema": null,
+   "example": "lts.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_lts",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "lts_prov/*.json",
+   "schema": null,
+   "example": "lts_prov/all.json",
+   "files": 14,
+   "kind": "open",
+   "format": "json",
+   "step": "build_lts",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "macro/*.json",
+   "schema": null,
+   "example": "macro/boi_curve.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_boi_curve",
+   "note": "",
+   "cadence": "monthly (Bank of Israel, CBS)",
+   "prov": []
+  },
+  {
+   "pattern": "macro/macro.json",
+   "schema": "macro",
+   "example": "macro/macro.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_macro",
+   "note": "",
+   "cadence": "monthly (Bank of Israel, CBS)",
+   "prov": [
+    "generated",
+    "source",
+    "url"
+   ]
+  },
+  {
+   "pattern": "market.json",
+   "schema": "market",
+   "example": "market.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_market",
+   "note": "",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "fetched",
+    "source"
+   ]
+  },
+  {
+   "pattern": "market_home.json",
+   "schema": "market",
+   "example": "market_home.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_market_home",
+   "note": "",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "fetched",
+    "source"
+   ]
+  },
+  {
+   "pattern": "news.json",
+   "schema": null,
+   "example": "news.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_rss",
+   "note": "/feed.xml, /feed/<company>.xml, /feed/months.xml, /feed/funds.xml (+ .atom); check: pipeline/check_feed.py",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "nowcast.json",
+   "schema": "nowcast",
+   "example": "nowcast.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_nowcast",
+   "note": "append-only ledger data/ledger/nowcast/<quarter>/<stage>.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "ownership/*.json",
+   "schema": "ownCompany",
+   "example": "ownership/harel.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_ownership",
+   "note": "",
+   "cadence": "on each MAYA form",
+   "prov": [
+    "asof",
+    "file",
+    "rid",
+    "src",
+    "url"
+   ]
+  },
+  {
+   "pattern": "ownership/index.json",
+   "schema": "ownIndex",
+   "example": "ownership/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_ownership",
+   "note": "",
+   "cadence": "on each MAYA form",
+   "prov": [
+    "asof",
+    "built",
+    "source",
+    "src"
+   ]
+  },
+  {
+   "pattern": "peers/m/*.json",
+   "schema": "peersMetric",
+   "example": "peers/m/adj-adj_comprehensive_income_before_special_provision.json",
+   "files": 285,
+   "kind": "open",
+   "format": "json",
+   "step": "build_registry",
+   "note": "Peer Table metric registry (follows the canon)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "u"
+   ]
+  },
+  {
+   "pattern": "peers/registry.json",
+   "schema": "peersRegistry",
+   "example": "peers/registry.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_registry",
+   "note": "Peer Table metric registry (follows the canon)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "r",
+    "src",
+    "u"
+   ]
+  },
+  {
+   "pattern": "positions.json",
+   "schema": "positions",
+   "example": "positions.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_positions",
+   "note": "drafts (data/positions/, status draft) only with --drafts, a dev build the gate refuses (check `positions`)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "fs",
+    "pg",
+    "ref",
+    "refs",
+    "rid",
+    "src"
+   ]
+  },
+  {
+   "pattern": "prov/reg/*/*.json",
+   "schema": null,
+   "example": "prov/reg/0/2012.json",
+   "files": 228,
+   "kind": "internal",
+   "format": "json",
+   "step": "build_market",
+   "note": "",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "qa.json",
+   "schema": "qa",
+   "example": "qa.json",
+   "files": 1,
+   "kind": "internal",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "every deploy (pipeline/gate.py)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "recon.json",
+   "schema": null,
+   "example": "recon.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_recon",
+   "note": "",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "regulation/impact.json",
+   "schema": "regulationImpact",
+   "example": "regulation/impact.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_regulation",
+   "note": "A8: low / central / high impact per initiative x manager, the exposure to the whole pipeline (weights labelled)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "built",
+    "doc",
+    "pg",
+    "src",
+    "url"
+   ]
+  },
+  {
+   "pattern": "restatements.json",
+   "schema": null,
+   "example": "restatements.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_restatements",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "roster.json",
+   "schema": null,
+   "example": "roster.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_roster",
+   "note": "",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": []
+  },
+  {
+   "pattern": "savings_econ.json",
+   "schema": null,
+   "example": "savings_econ.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_savings",
+   "note": "also reads data/work/savings_verified.json (drive)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "schemas.json",
+   "schema": null,
+   "example": "schemas.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": []
+  },
+  {
+   "pattern": "search/*.json",
+   "schema": null,
+   "example": "search/rows.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "facts",
+   "note": "the merge + fact table; writes the company workbooks FROM the table (= build_workbook.py). Unlabeled-row captions are read from data/work page texts (drive), cached in ~/.cache/fox/captions.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "search/docs.json",
+   "schema": "searchDocs",
+   "example": "search/docs.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_search",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "docs",
+    "pages"
+   ]
+  },
+  {
+   "pattern": "search/entities.json",
+   "schema": "searchEntities",
+   "example": "search/entities.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_web_index",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof"
+   ]
+  },
+  {
+   "pattern": "search/facts/*.json",
+   "schema": null,
+   "example": "search/facts/1372046.json",
+   "files": 291,
+   "kind": "internal",
+   "format": "json",
+   "step": "build_pagefacts",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "search/ft/*.bin",
+   "schema": null,
+   "example": "search/ft/0.bin",
+   "files": 1536,
+   "kind": "internal",
+   "format": "bin",
+   "step": "build_search",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "search/ft/*.json",
+   "schema": null,
+   "example": "search/ft/meta.json",
+   "files": 1,
+   "kind": "internal",
+   "format": "json",
+   "step": "build_search",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "search/text/*/*.bin",
+   "schema": null,
+   "example": "search/text/1208144/0.bin",
+   "files": 11209,
+   "kind": "internal",
+   "format": "bin",
+   "step": "build_pages",
+   "note": "page text of every PDF (reads the PDFs on the synced drive)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "series/*.json",
+   "schema": "series",
+   "example": "series/ayalon.json",
+   "files": 7,
+   "kind": "open",
+   "format": "json",
+   "step": "build_series",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "pg",
+    "std",
+    "u"
+   ]
+  },
+  {
+   "pattern": "series/index.json",
+   "schema": "rangeIndex",
+   "example": "series/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_series",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "since.json",
+   "schema": "since",
+   "example": "since.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_since",
+   "note": "dated events per company for the \"since you last looked\" marks (last 400 days)",
+   "cadence": "every build (date-dependent)",
+   "prov": [
+    "built",
+    "files",
+    "source"
+   ]
+  },
+  {
+   "pattern": "sop/*.json",
+   "schema": "sop",
+   "example": "sop/ayalon.json",
+   "files": 6,
+   "kind": "open",
+   "format": "json",
+   "step": "build_sop",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "pg",
+    "url"
+   ]
+  },
+  {
+   "pattern": "sop/index.json",
+   "schema": "sopIndex",
+   "example": "sop/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_sop",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "targets.json",
+   "schema": "targets",
+   "example": "targets.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_targets",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built",
+    "docs",
+    "files",
+    "in",
+    "src",
+    "u"
+   ]
+  },
+  {
+   "pattern": "warroom/board.json",
+   "schema": "warroomBoard",
+   "example": "warroom/board.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_warroom",
+   "note": "A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "built"
+   ]
+  },
+  {
+   "pattern": "warroom/elasticity.json",
+   "schema": "warroomElasticity",
+   "example": "warroom/elasticity.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_warroom",
+   "note": "A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "asof",
+    "built",
+    "pg",
+    "prov",
+    "source",
+    "url"
+   ]
+  },
+  {
+   "pattern": "watch.json",
+   "schema": "watch",
+   "example": "watch.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_watch",
+   "note": "S10: data/ledger/answers/<day>.json (append-only) -> watch.json: changes (answer / tripped / finding / new / gone) + upcoming",
+   "cadence": "every build (date-dependent)",
+   "prov": [
+    "asof",
+    "src"
+   ]
+  },
+  {
+   "pattern": "xlsx/*.xlsx",
+   "schema": null,
+   "example": "xlsx/altshuler.xlsx",
+   "files": 13,
+   "kind": "open",
+   "format": "xlsx",
+   "step": "build_model_xlsx",
+   "note": "xlsx/<company>.xlsx, < 1 MB each (python3 pipeline/build_model_xlsx.py --check)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  }
+ ]
+}

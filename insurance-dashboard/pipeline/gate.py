@@ -712,6 +712,22 @@ def attribution():  # module A4
     add("attribution", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else 1, out[-1][:200])
 
 
+def model_xlsx():  # Wave 5: the model-ready workbooks
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_model_xlsx.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) value cells", out[-1])
+    add("model_xlsx", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
+def consensus():  # Wave 5: published sell-side targets
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_consensus.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) published", out[-1])
+    add("consensus", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def facts():
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_facts.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()]
@@ -800,6 +816,8 @@ def main():
     coef()
     attribution()
     facts()
+    model_xlsx()
+    consensus()
     assets()
     gate_layers.run(add)
     gate_s3.run(add)

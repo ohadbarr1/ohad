@@ -78,6 +78,7 @@ const mChartBook = () => import('./pages/ChartBook');
 const ChartBook = page(mChartBook, 'ChartBook');
 const mDataPage = () => import('./pages/DataPage');
 const DataPage = page(mDataPage, 'DataPage');
+const Api = page(() => import('./pages/Api'), 'Api'); // Wave 5: the open files as an API
 const mRestatements = () => import('./pages/Restatements');
 const Restatements = page(mRestatements, 'Restatements');
 const mPresentations = () => import('./pages/Presentations');
@@ -219,6 +220,7 @@ export function App() {
         <Route path="book" element={<ChartBook />} />
         <Route path="data" element={<DataPage />} />
         <Route path="data/autopilot" element={<Autopilot />} />
+        <Route path="data/api" element={<Api />} />
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="credibility" element={<Credibility />} />{/* lane S3 */}
