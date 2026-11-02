@@ -215,7 +215,7 @@ export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; 
       <div className="hd"><h2 id="mk-h">ייבוא מהמסלקה <span className="sv-tag">בטא</span></h2><div className="aside"><span>במקום להקליד</span></div></div>
       {!open ? (
         <div className="mk-intro">
-          <p>טוענים את הדוח מהמסלקה הפנסיונית, ורואים את המוצרים, היתרות, ההפקדות ודמי הניהול <b>שלכם</b> לאישור לפני שמירה. עובד גם בטלפון.</p>
+          <p>טוענים את הדוח מהמסלקה הפנסיונית ורואים את המוצרים, ההפקדות ודמי הניהול <b>שלכם</b> לפני שמירה. עובד גם בטלפון.</p>
           <button type="button" className="btn" onClick={() => setOpen(true)}>לייבוא קובץ מהמסלקה</button>
         </div>
       ) : (
