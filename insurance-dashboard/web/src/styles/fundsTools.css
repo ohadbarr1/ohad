@@ -49,3 +49,6 @@ table.fgrid td.hit { outline: 2px solid var(--fg); outline-offset: -2px; }
 .ftender a { text-decoration: underline; text-underline-offset: 3px; }
 .ftender .src { font-size: var(--t-1); }
 tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
+/* W4: the data file's method note, folded away (the reader sees the figures; the build's notes are one click away) */
+.fmethod > summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.fmethod[open] > summary { margin-bottom: 4px; }

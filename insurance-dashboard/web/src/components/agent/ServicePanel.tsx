@@ -6,7 +6,7 @@ import { MgrChip } from '../MgrChip';
 import { DataTable, type Column } from '../DataTable';
 import { Empty, Loading, Panel, Pick, Seg } from '../ui';
 import { useOptional } from '../../lib/fundsLoad';
-import { BUCKETS_DEFAULT, COMP_HE, COMP_KEYS, DECISION_PATH, INS_HE, INS_KEYS, SELF_REPORT, avgProv, claimProv, claimsWhy, insProv, pc1, sgn, srcOf, svcProv,
+import { BUCKETS_DEFAULT, COMP_HE, COMP_KEYS, DECISION_PATH, INS_HE, INS_KEYS, SELF_REPORT, avgProv, claimProv, claimsWhy, claimsWhyTech, insProv, pc1, sgn, srcOf, svcProv,
   type Claims, type DecisionFile, type InsKey, type SegKey, type SvcRow } from '../../lib/decision';
 import { ClosedBar } from './Decision';
 import './glossary';
@@ -97,6 +97,7 @@ export function ClaimsTable({ d }: { d: DecisionFile }) {
       <DataTable<CRow> caption="תביעות נכות ושאירים שנסגרו, לפי חברה מנהלת" className="svc-t" rows={rows} rowKey={(x) => x.grp} columns={cols}
         export={{ name: `fox-pension-claims-${d.fund_claims?.year ?? 2025}`, title: 'תביעות בקרנות הפנסיה', note: `${SELF_REPORT}: נספח ב3, ${d.fund_claims?.year ?? 2025}; אחוזים מתוך התביעות שנסגרו` }} />
       {miss.length > 0 && <ul className="fnote" aria-label="חברות שהדוח שלהן לא מוצג">{miss.map((c) => <li key={c.grp}><b>{c.grp}</b>: לא מוצג. {claimsWhy(d, c.grp)}</li>)}</ul>}
+      {miss.length > 0 && <details className="fnote fmethod"><summary>מתודולוגיה: איך חיפשנו את הדוחות</summary><ul>{miss.map((c) => <li key={c.grp}><b>{c.grp}</b>: {claimsWhyTech(d, c.grp)}</li>)}</ul></details>}
       <div className="fnote">כל חברה מפרסמת את הדוח באתר שלה; הוא ברמת החברה המנהלת (כל קרנות הפנסיה שלה יחד), לא נבדק על ידי הרשות, ואינו כולל את מספר התביעות. אחוזים מתוך התביעות שנסגרו בשנה; אושרו = שולמו ושולמו חלקית. משך הטיפול, מירוק לאדום: {B.join(', ')}. {general.map((m) => m.reason).join('. ')}.</div>
     </Panel>
   );

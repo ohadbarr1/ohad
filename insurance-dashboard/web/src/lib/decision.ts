@@ -72,10 +72,16 @@ export const companyOf = (d: Pick<DecisionFile, 'companies'> | null | undefined,
 export const svcOf = (d: Pick<DecisionFile, 'companies'> | null | undefined, grp: string, seg: SegKey) => companyOf(d, grp)?.service?.[seg] ?? null;
 export const rankHe = (r: Pick<SvcRow, 'rank' | 'of'>) => `${r.rank} מתוך ${r.of}`;
 
-/** why a company's claims report is not shown: the file's own reason, or the generic one */
-export function claimsWhy(d: Pick<DecisionFile, 'companies' | 'missing'> | null | undefined, grp: string): string {
+/** why a company's claims report is not shown, the data file's own technical reason (the methodology note and Pro) */
+export function claimsWhyTech(d: Pick<DecisionFile, 'companies' | 'missing'> | null | undefined, grp: string): string {
   const c = companyOf(d, grp);
   return c?.claims_missing ?? d?.missing.find((m) => m.what === 'fund_claims' && m.grp === grp)?.reason ?? 'לא נמצא דוח תביעות (נספח ב3) של החברה ל-2025';
+}
+/** W4: the same in a reader's words (no search log, no tool names): the public pages and the client document */
+export function claimsWhy(d: Pick<DecisionFile, 'companies' | 'missing'> | null | undefined, grp: string): string {
+  const t = claimsWhyTech(d, grp);
+  if (/captcha|radware|חסום|נחסם/i.test(t)) return 'אתר החברה לא אפשר לקרוא את דוח התביעות שלה (נספח ב3) ל-2025, ולכן הוא לא נבדק כאן';
+  return 'החברה לא פרסמה דוח תביעות (נספח ב3) ל-2025 שאיתרנו באתר שלה';
 }
 
 /* ---------- sources ---------- */
@@ -148,6 +154,15 @@ export const isOldBm = (prod: string) => /^ביטוחי מנהלים (1990|1992)
 /** a bituach-net product that is, or may be, managers' insurance (the 2004+ pool also holds pure savings policies) */
 export const bmKind = (prod: string): 'old' | 'new' | null => (isOldBm(prod) ? 'old' : /ביטוחי מנהלים/.test(prod) ? 'new' : null);
 export const BM_HREF = '/funds/bm';
+/** W4: an old-generation track, by its regulator product (managers' insurance sold 1990-2003) */
+export const isOldGen = (f: { prod?: string }) => isOldBm(f.prod ?? '');
+/** the fee of a profit-participating policy sold 1989-2003, as the State Comptroller describes regulation 6a (a primary source:
+ *  the report's p. 330, note 4). The regulator's published fee of such a track moves with the year's real return. */
+export const OLD_FEE_SRC = { url: 'https://library.mevaker.gov.il/sites/DigitalLibrary/Documents/1950-2008/2005-55b/2005-55b-206-BituachChayim.pdf', title: 'מבקר המדינה, דוח שנתי 55ב (2005), "הפיקוח על ביטוח חיים משולב בחיסכון"', pg: 330 };
+export const OLD_FEE_HE = 'משתנים (השתתפות ברווחים)';
+export const OLD_FEE_NOTE = 'בפוליסות ביטוח חיים משתתפות ברווחים שהונפקו בשנים 1989-2003 (תקנה 6א) דמי הניהול הם שיעור קבוע ועוד תוספת של 15% מהתשואה הריאלית החיובית של השנה (אחרי הרכיב הקבוע); בשנה של תשואה ריאלית שלילית נצברת "תוספת שלילית" שמקוזזת מהתוספת בשנים הבאות. לכן דמי הניהול שמתפרסמים למסלול כזה משתנים משנה לשנה ואינם מחיר קבוע להשוואה';
+/** the warning a comparison that holds an old-generation track opens with (Kol Zchut, written with the regulator: decision.json) */
+export const OLD_WARN = 'ביטוח מנהלים מדור ישן: פוליסה כזו עשויה לכלול מקדם קצבה מובטח או הבטחת תשואה. מי שעוזב אותה מאבד אותם, והמעבר אינו הפיך. התשואה ודמי הניהול בהשוואה אינם מראים את הערך הזה, ולכן אין כאן שורת "נמוך" או "גבוה" שכוללת את הפוליסה';
 
 /* ---------- compact cells (the compare table, the print document, the screener) ---------- */
 export interface Cell { v: number | null; t: string; src?: () => Prov; txt?: boolean }

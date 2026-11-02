@@ -24,6 +24,7 @@ import { defaultKeys, defaultNow, isPension, periodText } from '../lib/pensionPa
 import { DECISION_PATH, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2
 import { actProv, pc2, tenderProv } from '../lib/agentProv';
 import '../components/agent/glossary';
+import { useDoor } from '../lib/door';
 import '../styles/lens.css';
 import '../styles/market.css';
 
@@ -75,8 +76,12 @@ export function FundsScreen() {
   const closed = sp.get('closed') === '1', gone = sp.get('gone') === '1', outOnly = sp.get('out') === '1';
   const F = { fmax: num('fmax'), dmax: num('dmax'), amin: num('amin'), smin: num('smin'), hist: num('hist'), eqmin: num('eqmin'), eqmax: num('eqmax') };
   const colsQ = (sp.get('cols') ?? '').split(',').filter((x): x is ColKey => COLS.some(([k]) => k === x));
-  const baseCols = isPenProd(prod) ? PENSION_COLS : DEFAULT_COLS;
-  const cols: ColKey[] = colsQ.length ? colsQ : baseCols;
+  // W4: the agent door shows shared ranks and percentiles (facts) but not the "רבע עליון x/5" badge
+  const [door] = useDoor();
+  const agentDoor = door === 'agent';
+  const colsAll = agentDoor ? COLS.filter(([k]) => k !== 'top') : COLS;
+  const baseCols = (isPenProd(prod) ? PENSION_COLS : DEFAULT_COLS).filter((c) => !agentDoor || c !== 'top');
+  const cols: ColKey[] = colsQ.length ? colsQ.filter((c) => !agentDoor || c !== 'top') : baseCols;
   // W1-agent: the default funds (קרנות ברירת מחדל) of the tender in force; `df=1` keeps only them
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dfOnly = sp.get('df') === '1';
@@ -95,7 +100,8 @@ export function FundsScreen() {
   const prods = PRODUCTS.filter((p) => all.some((f) => f.prod === p));
   const inProd = (f: FundX) => prod === ALL || f.prod === prod;
   const tracks = useMemo(() => { const m = new Map<string, number>(); all.filter(inProd).forEach((f) => m.set(f.track, (m.get(f.track) ?? 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [all, prod]);  // eslint-disable-line react-hooks/exhaustive-deps
-  const trackQ = sp.get('track') ?? hit?.track ?? (prod === ALL ? ALL : 'כללי');
+  // W4: a comprehensive pension opens on the age track up to 50, where the default funds and most members are (כללי there holds 5 funds)
+  const trackQ = sp.get('track') ?? hit?.track ?? (prod === ALL ? ALL : prod === 'פנסיה מקיפה' && tracks.some(([t]) => t === 'עד 50') ? 'עד 50' : 'כללי');
   const T = trackQ === ALL || tracks.some(([t]) => t === trackQ) ? trackQ : tracks[0]?.[0] ?? ALL;
   const groupsAll = useMemo(() => [...new Set(all.map((f) => f.grp))].sort((a, b) => a.localeCompare(b, 'he')), [all]);
   const asof = data?.asof ?? 0;
@@ -213,7 +219,7 @@ export function FundsScreen() {
         <button type="button" className="chip" aria-pressed={closed} onClick={() => set({ closed: closed ? null : '1' })}>כולל קופות ענפיות</button><Tip k="closed" />
         <button type="button" className="chip" aria-pressed={gone} onClick={() => set({ gone: gone ? null : '1' })}>כולל מסלולים שנסגרו</button>
       </div>
-      {!phone && <div className="field"><span>עמודות</span><div className="fchips">{COLS.map(([k, l]) => <button key={k} type="button" className="chip" aria-pressed={cols.includes(k)} onClick={() => { const next = cols.includes(k) ? cols.filter((x) => x !== k) : COLS.map(([x]) => x).filter((x) => cols.includes(x) || x === k); set({ cols: next.join(',') === baseCols.join(',') ? null : next.join(',') }); }}>{l}</button>)}</div></div>}
+      {!phone && <div className="field"><span>עמודות</span><div className="fchips">{colsAll.map(([k, l]) => <button key={k} type="button" className="chip" aria-pressed={cols.includes(k)} onClick={() => { const next = cols.includes(k) ? cols.filter((x) => x !== k) : COLS.map(([x]) => x).filter((x) => cols.includes(x) || x === k); set({ cols: next.join(',') === baseCols.join(',') ? null : next.join(',') }); }}>{l}</button>)}</div></div>}
       <div className="field"><span>סינונים שמורים <span className="muted">· בדפדפן הזה בלבד</span></span>
         <div className="fchips">
           {saved.map((s) => <span key={s.name} className="fsaved"><Link className="chip" to={`/funds/screen?${s.qs}`}>{s.name}</Link><button type="button" className="fsaved-x" aria-label={`מחיקת הסינון ${s.name}`} onClick={() => setSaved(saved.filter((x) => x.name !== s.name))}>×</button></span>)}

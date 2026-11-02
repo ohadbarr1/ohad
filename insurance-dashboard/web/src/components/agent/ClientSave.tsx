@@ -7,9 +7,13 @@ import { today } from '../../lib/visits';
 /* W3 · "שמור ללקוח" (agent door): saves what is on screen (the tracks, and on the client document the tags and the typed הנמקה draft)
    under a client label, in this browser only. `folder`: the folder this page was opened from, so a save updates it. `collect` reads the
    page's extra state at the moment of saving. */
-export function ClientSave({ keys, b, folder, collect, onSaved, compact }: {
+export function ClientSave({ keys, b, folder, collect, onSaved, compact, suggest, busy }: {
   keys: string[]; b: 'net' | 'gross'; folder?: Folder | null;
-  collect?: () => Partial<Pick<Folder, 'tags' | 'fields'>>; onSaved?: (f: Folder) => void; compact?: boolean;
+  collect?: () => Partial<Pick<Folder, 'tags' | 'fields' | 'snap' | 'held'>>; onSaved?: (f: Folder) => void; compact?: boolean;
+  /** W4: a name typed elsewhere on the page (the client document's "שם הלקוח"), offered when the form opens */
+  suggest?: string;
+  /** W4: the figures to freeze are still loading */
+  busy?: boolean;
 }) {
   const [file, setFile] = useClients();
   const [open, setOpen] = useState(false);
@@ -24,14 +28,14 @@ export function ClientSave({ keys, b, folder, collect, onSaved, compact }: {
     const inp: FolderIn = { label: lab, keys, b, note, ...(collect?.() ?? {}), ...(folder && folder.label === lab ? { id: folder.id } : {}) };
     const r = upsert(file, inp, today());
     setFile(r.file); setOpen(false);
-    setMsg(`${r.created ? 'נשמר בתיק חדש' : 'התיק עודכן'}: ${r.folder.label} · ${r.folder.keys.length} מסלולים`);
+    setMsg(`${r.created ? 'נשמר בתיק חדש' : 'התיק עודכן'}: ${r.folder.label} · ${r.folder.keys.length} מסלולים${r.folder.snap ? ` · צילום הנתונים מ-${r.folder.snap.at.split('-').reverse().join('.')}` : ''}`);
     onSaved?.(r.folder);
   };
   return (
     <div className={`csave${compact ? ' compact' : ''}`}>
       {!open ? (
         <span className="csave-row">
-          <button type="button" className="chip csave-btn" onClick={() => { setOpen(true); setMsg(null); }} disabled={!keys.length}><Icon name="inbox" /> {folder ? `שמירה בתיק: ${folder.label}` : 'שמור ללקוח'}</button>
+          <button type="button" className="chip csave-btn" onClick={() => { if (!label.trim() && suggest?.trim()) setLabel(suggest.trim().slice(0, 80)); setOpen(true); setMsg(null); }} disabled={!keys.length || busy} title={busy ? 'הנתונים עוד נטענים' : undefined}><Icon name="inbox" /> {folder ? `שמירה בתיק: ${folder.label}` : 'שמור ללקוח'}</button>
           {msg && <span role="status" className="csave-msg">{msg} · <Link to="/clients">תיקי לקוחות</Link></span>}
         </span>
       ) : (
@@ -45,7 +49,7 @@ export function ClientSave({ keys, b, folder, collect, onSaved, compact }: {
             <button type="submit" className="btn primary">שמירה</button>
             <button type="button" className="btn" onClick={() => setOpen(false)}>ביטול</button>
           </div>
-          <p className="csave-priv">נשמר רק בדפדפן הזה (לא נשלח לשום מקום, ולא נכנס לכתובת העמוד). להעברה למכשיר אחר: ייצוא לקובץ ב<Link to="/clients">תיקי לקוחות</Link>. שם קיים: התיק שלו מתעדכן; שם חדש: תיק חדש.</p>
+          <p className="csave-priv">נשמר רק בדפדפן הזה (לא נשלח לשום מקום, ולא נכנס לכתובת העמוד). להעברה למכשיר אחר: ייצוא לקובץ ב<Link to="/clients">תיקי לקוחות</Link>. שם קיים: התיק שלו מתעדכן; שם חדש: תיק חדש. נשמר גם צילום של הנתונים שמוצגים עכשיו, כדי שהתיק יציג בדיוק אותם גם אחרי עדכון הנתונים.</p>
           {msg && <p role="alert" className="csave-msg">{msg}</p>}
         </form>
       )}

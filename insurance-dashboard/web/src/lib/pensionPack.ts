@@ -32,4 +32,15 @@ export function actHistory(h: { p: number[]; act?: (number | null)[] } | null | 
 export const actCompound = (xs: ActPoint[]) => (xs.length ? (xs.reduce((t, x) => t * (1 + x.v / 100), 1) - 1) * 100 : null);
 /** a pension product (pensia-net) */
 export const isPension = (f: { fam?: string; prod?: string; k?: string }) => f.fam === 'pensia' || /^פנסיה/.test(f.prod ?? '') || /^p\d/.test(f.k ?? '');
-export const ACT_F = 'איזון אקטוארי (ACTUARIAL_ADJUSTMENT), באחוזים מהעתודות, כפי שהקרן דיווחה לפנסיה-נט; מדווח פעם ברבעון. חיובי: הקרן מגדילה את הזכויות; שלילי: מקטינה. משקף סטיות בתוחלת חיים, נכות, שאירים וריבית, לא את תשואת ההשקעות';
+export const ACT_F = 'איזון אקטוארי, באחוזים מהעתודות, כפי שהקרן דיווחה לפנסיה-נט; מדווח פעם ברבעון. חיובי: הקרן מגדילה את הזכויות; שלילי: מקטינה. משקף סטיות בתוחלת חיים, נכות, שאירים וריבית, לא את תשואת ההשקעות';
+
+/** W4: the track a tender winner links to. A winner lists every track key of its fund over the years (`ks`), some of them closed or no
+ *  longer published; the link goes to the largest open track (by assets) that exists in funds.json, comprehensive pension first, or
+ *  nowhere (null) when none does. */
+export function winnerTrack<F extends { k: string; prod?: string; assets?: number | null; closed?: boolean; gone?: boolean }>(w: Pick<Winner, 'k'> & { ks?: string[] }, funds: F[]): F | null {
+  const ks = new Set(w.ks ?? w.k ?? []);
+  const live = funds.filter((f) => ks.has(f.k) && !f.closed && !f.gone && (f.assets ?? 0) > 0);
+  if (!live.length) return null;
+  const rank = (f: F) => (f.prod === 'פנסיה מקיפה' ? 1 : 0);
+  return [...live].sort((a, b) => rank(b) - rank(a) || (b.assets ?? 0) - (a.assets ?? 0))[0];
+}

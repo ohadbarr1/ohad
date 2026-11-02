@@ -8,7 +8,12 @@ import { RULES, RULES_NOTE, rulesFor, rulesOf } from '../src/lib/productRules';
 import { actCompound, actHistory, defaultHits, defaultKeys, defaultNow, isPension, periodText } from '../src/lib/pensionPack';
 import { compareSummary, type CmpIn } from '../src/lib/compareSummary';
 import type { DefaultFile } from '../src/lib/fundsTools';
-import { bmKind, bmProv, claimProv, claimsWhy, clmCell, coverProv, segOf, svcCell, svcProv, type DecisionFile } from '../src/lib/decision';
+import { bmKind, bmProv, claimProv, claimsWhy, claimsWhyTech, clmCell, coverProv, isOldGen, segOf, svcCell, svcProv, type DecisionFile } from '../src/lib/decision';
+import { bottomLines, cmpOf, docRow, metricsOf, pagesOf, shortUrl, snapDiff, snapOf, DOC_METRICS } from '../src/lib/compareDoc';
+import { CLIENTS_V, normClients, normHeld, normSnap, upsert, type SnapRow } from '../src/lib/clients';
+import { winnerTrack } from '../src/lib/pensionPack';
+import { heldOf, parseMaslaka, readCovers, rowsOf, xmlTree, type MFund } from '../src/lib/maslaka';
+import { folderFromImport } from '../src/components/agent/ClientImport';
 
 let fail = 0, pass = 0;
 const bad: string[] = [];
@@ -74,8 +79,76 @@ ok(s.depfee === null, 'no deposit fees: no line');
 ok(s.r5?.ks.join() === 'a,b' && !s.r5.all && near(s.r5.gap!, 0.45), '5Y: a 5bp lead is a shared head; gap to the rest');
 ok(s.sharpe?.ks.join() === 'b,c' && !s.mixed, 'Sharpe: a tie');
 const s2 = compareSummary([C('a', 0.5, 1, 9.0, 1, 'גמל'), C('b', 0.4, 2, 9.05, 1)]);
-ok(s2.r5?.all && s2.r5.gap === null && s2.mixed && s2.depfee?.ks.join() === 'a', 'all tied on 5Y; mixed products flagged');
+ok(s2.mixed && s2.cross && s2.r5 === null && s2.fee === null && s2.depfee === null && s2.cats.length === 0 && s2.alone.join() === 'a,b', 'W4: two products: no line compares them');
+const s2b = compareSummary([C('a', 0.5, 1, 9.0, 1), C('b', 0.4, 2, 9.05, 1)]);
+ok(s2b.r5?.all && s2b.r5.gap === null && !s2b.mixed && s2b.depfee?.ks.join() === 'a', 'all tied on 5Y within one category');
 ok(compareSummary([C('a', 0.5, 1, 9, 1)]).fee === null, 'one track: no bottom line');
+
+
+/* ---- W4: no crowning across categories; old-generation policies out of every line ---- */
+{
+  const X = (k: string, track: string, r5: number, fee: number, st: number, prod = 'פנסיה מקיפה', old = false): CmpIn => ({ k, name: k, prod, track, cat: `${prod} | ${track}`, fee, depfee: null, r5, sharpe: 1, st, old });
+  const m = compareSummary([X('a', 'עד 50', 9, 0.2, 60), X('b', 'עד 50', 8, 0.1, 58), X('c', 'מניות', 14, 0.3, 95), X('d', 'כללי', 7, 0.05, 40)]);
+  ok(m.cross && m.fee === null && m.r5 === null && m.cats.length === 1 && m.cats[0].ks.join() === 'a,b' && m.cats[0].r5?.ks.join() === 'a' && m.cats[0].fee?.ks.join() === 'b', 'W4: across categories only the same-category pair is compared');
+  ok(m.alone.join() === 'c,d' && m.stRange?.[0] === 40 && m.stRange?.[1] === 95, 'W4: tracks alone in their category are listed apart; the equity range is reported');
+  ok(!m.cats.some((c) => c.ks.includes('c')), 'W4: the equity track (14%) is never "the highest" next to the age track');
+  const o = compareSummary([X('y', 'כללי', 7, 2.2, 50, 'ביטוחי מנהלים 1992-2003', true), X('z', 'כללי', 6, 0.6, 50, 'ביטוחי מנהלים 1992-2003', true), X('p', 'עד 50', 10, 0.1, 58)]);
+  ok(o.old && o.oldKs.join() === 'y,z' && o.cats.length === 0 && o.fee === null, 'W4: old-generation tracks are in no comparison line, not even against each other');
+  ok(isOldGen({ prod: 'ביטוחי מנהלים 1992-2003' }) && isOldGen({ prod: 'ביטוחי מנהלים 1990-1991' }) && !isOldGen({ prod: 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים' }), 'W4: old generation = policies of 1990-2003');
+}
+
+/* ---- W4: the client document's rows, pages, bottom line and snapshot ---- */
+const R = (k: string, o: Partial<SnapRow> = {}): SnapRow => ({ k, name: `מסלול ${k}`, prod: 'פנסיה מקיפה', track: 'עד 50', id: 1, mgr: 'm', grp: 'g', pen: true, old: false, y12: 12, a3: 11, a5: 9, a3g: 11.2, fee: 0.2, depfee: 1.5, sharpe: 1.2, sd: 5, mdd: -8, st: 58, act: -0.05, act_p: 202606, dflt: null, svc: { total: 80, rank: 2, of: 9 }, clm: 71, feeRange: null, ...o });
+ok(pagesOf([1, 2, 3]).map((p) => p.length).join() === '3' && pagesOf([1, 2, 3, 4, 5]).map((p) => p.length).join() === '3,2' && pagesOf([1, 2, 3, 4, 5, 6, 7, 8]).map((p) => p.length).join() === '4,4', 'W4: pages of ≤ 4 tracks, even (3 | 3+2 | 4+4)');
+ok([1, 2, 3, 4, 5, 6, 7, 8].every((n) => pagesOf(Array.from({ length: n }, (_, i) => i)).every((p) => p.length <= 4 && p.length > 0) && pagesOf(Array.from({ length: n }, (_, i) => i)).flat().length === n), 'W4: every count 1–8 pages into ≤ 4 columns, none lost');
+ok(metricsOf([R('a', { pen: false })]).length === DOC_METRICS.filter((m) => !m.pen).length && metricsOf([R('a')]).length === DOC_METRICS.length, 'W4: pension rows only with a pension track');
+const BAD = /מקום ראשון|המקום הראשון|מוביל|ניצח|מנצח|זוכה|הטוב ביותר/;
+const bl1 = bottomLines([R('a'), R('b', { a5: 8.5, fee: 0.1 }), R('c', { track: 'מניות', a5: 14, st: 95 })], true);
+ok(bl1.some((t) => /קטגוריות שונות/.test(t)) && bl1.some((t) => /באותה קטגוריה \(פנסיה מקיפה · עד 50\)/.test(t)) && !bl1.some((t) => /מסלול c/.test(t) && /הגבוהה/.test(t)), 'W4: bottom line: cross-category sentence, the same-category lines, the equity track uncrowned');
+ok(bl1.every((t) => !BAD.test(t)), 'W4: no winner / first-place words in the bottom line');
+const bl2 = bottomLines([R('a', { prod: 'ביטוחי מנהלים 1992-2003', track: 'כללי', old: true, pen: false }), R('b')], true);
+ok(/דור ישן|1990-2003/.test(bl2[0]) && bl2.every((t) => !/מסלול a,/.test(t)), 'W4: an old-generation policy opens the bottom line and is in no comparison');
+const sn0 = snapOf([R('a'), R('b')], ['שורה'], '2026-11-02', 202609, 'net');
+const ns = normSnap(JSON.parse(JSON.stringify(sn0)), ['a', 'b']);
+ok(!!ns && ns.rows.length === 2 && ns.rows[0].a5 === 9 && ns.rows[0].svc?.rank === 2 && ns.bottom[0] === 'שורה' && ns.at === '2026-11-02' && ns.asof === 202609, 'W4: a snapshot survives storage as saved');
+ok(normSnap({ ...sn0, asof: 'x' }, ['a']) === null && normSnap(sn0, ['zz']) === null, 'W4: a malformed snapshot, or one of other tracks, is dropped');
+ok(snapDiff(R('a'), R('a', { fee: 0.25, a5: 9.4 }), 202609).map((d) => d.label).join() === '5Y, שנתי,ד"נ מצבירה' && snapDiff(R('a'), R('a'), 202609).length === 0, 'W4: what changed since the snapshot, figure by figure');
+const v1 = { kind: 'fox-clients', v: 1, folders: [{ id: 'abcd1234', label: 'ד.כ.', keys: ['p2155', 'p9654'], b: 'net', tags: { p2155: 'קיים' }, fields: { 'r:fit': 'טקסט' }, note: '', created: '2026-10-01', updated: '2026-10-02' }] };
+const mig = normClients(v1);
+ok(mig.v === CLIENTS_V && mig.v === 2 && mig.folders[0].snap === null && mig.folders[0].held.length === 0 && mig.folders[0].fields['r:fit'] === 'טקסט' && mig.folders[0].tags.p2155 === 'קיים', 'W4: a v1 folder migrates to v2, keeping all it had, with no snapshot');
+const up1 = upsert(mig, { label: 'ד.כ.', keys: ['p2155', 'p9654'], snap: snapOf([R('p2155'), R('p9654')], [], '2026-11-02', 202609, 'net') }, '2026-11-02');
+ok(up1.folder.snap?.rows.length === 2 && !up1.created, 'W4: saving the same tracks stores the snapshot');
+const up2 = upsert(up1.file, { label: 'ד.כ.', keys: ['p2155', 'p13909'] }, '2026-11-03');
+ok(up2.folder.snap === null && up2.folder.keys.join() === 'p2155,p13909', 'W4: new tracks without a new snapshot drop the old one');
+ok(normHeld({ typeHe: 'קרן פנסיה', provider: 'מור', plan: '039123456 חשבון', balance: 100, covers: [{ name: 'נכות', sum: 5000 }] })?.plan === null && normHeld({ typeHe: 'x', covers: [{ name: 'נכות', sum: 5000 }] })?.covers[0].sum === 5000, 'W4: a held product: an ID-shaped string is dropped, the cover kept');
+
+/* ---- W4: the default funds' links go to a published open track or nowhere ---- */
+{
+  const FF = [{ k: 'p1', prod: 'פנסיה מקיפה', assets: 10, closed: false }, { k: 'p2', prod: 'פנסיה מקיפה', assets: 500, closed: true }, { k: 'p3', prod: 'פנסיה כללית', assets: 900, closed: false }, { k: 'p4', prod: 'פנסיה מקיפה', assets: 50, closed: false }];
+  ok(winnerTrack({ ks: ['p9', 'p2', 'p1', 'p4', 'p3'] }, FF)?.k === 'p4', 'W4: the largest open comprehensive track; a closed or absent key is skipped');
+  ok(winnerTrack({ ks: ['p9', 'p2'] }, FF) === null && winnerTrack({ k: ['p3'] }, FF)?.k === 'p3', 'W4: no open published track: no link');
+}
+
+/* ---- W4: insurance cover from a clearing-house account, never the insured person ---- */
+{
+  const xml = `<Mimshak><KoteretKovetz><MISPAR-GIRSAT-XML>009</MISPAR-GIRSAT-XML></KoteretKovetz><YeshutYatzran><KOD-MEZAHE-YATZRAN>512245812</KOD-MEZAHE-YATZRAN><SHEM-YATZRAN>מבטחים</SHEM-YATZRAN><Mutzarim><Mutzar><NetuneiMutzar><SUG-MUTZAR>2</SUG-MUTZAR><YeshutLakoach><MISPAR-ZIHUY-LAKOACH>039999999</MISPAR-ZIHUY-LAKOACH></YeshutLakoach></NetuneiMutzar><HeshbonotOPolisot><HeshbonOPolisa><SUG-KEREN-PENSIA>2</SUG-KEREN-PENSIA>
+    <Kisuim><ZihuiKisui><SHEM-KISUI-YATZRAN>כיסוי בקרן</SHEM-KISUI-YATZRAN><PirteiMevutach><SUG-TEUDA>1</SUG-TEUDA><MISPAR-ZIHUY-LAKOACH>039999999</MISPAR-ZIHUY-LAKOACH></PirteiMevutach>
+      <KisuiBKerenPensia><ALUT-KISUI-NECHUT>45.5</ALUT-KISUI-NECHUT><SHEUR-KISUY-NECHUT>75</SHEUR-KISUY-NECHUT><SACH-PENSIAT-NECHUT>9000</SACH-PENSIAT-NECHUT><KITZBAT-SHEERIM-LEALMAN-O-ALMANA>6000</KITZBAT-SHEERIM-LEALMAN-O-ALMANA></KisuiBKerenPensia></ZihuiKisui>
+      <ZihuiKisui><SHEM-KISUI-YATZRAN>ריסק</SHEM-KISUI-YATZRAN><PirteiKisuiBeMutzar><SUG-KISUY-BITOCHI>1</SUG-KISUY-BITOCHI><SCHUM-BITUACH>500000</SCHUM-BITUACH></PirteiKisuiBeMutzar></ZihuiKisui></Kisuim>
+    </HeshbonOPolisa></HeshbonotOPolisot></Mutzar></Mutzarim></YeshutYatzran></Mimshak>`;
+  const t = xmlTree(xml), acc = t.c[1].c[2].c[0].c[1].c[0];
+  const cv = readCovers(acc);
+  ok(cv.length === 3 && cv[0].rate === 75 && cv[0].sum === 9000 && cv[0].cost === 45.5 && cv[1].sum === 6000 && cv[2].kind === 'מוות' && cv[2].sum === 500000, 'W4: covers: a pension fund\'s disability and survivors, a death cover with its sum');
+  const file = parseMaslaka(t);
+  const rows = rowsOf(file, [] as MFund[]);
+  const held = heldOf(rows);
+  ok(held.length === 1 && held[0].covers.length === 3 && !JSON.stringify(held).includes('039999999') && !JSON.stringify(file).includes('039999999'), 'W4: the held product carries the cover; no ID number anywhere in what is read');
+  const fo = folderFromImport('לקוח', [...held, { ...held[0], k: 'p2155', balance: 200 }, { ...held[0], k: 'p9654', balance: 900 }] as never);
+  ok(fo.keys.join() === 'p9654,p2155' && fo.tags.p9654 === 'קיים' && fo.held.length === 3, 'W4: an import makes a folder: matched tracks by balance, tagged "קיים", every product held');
+  const nf2 = normClients({ folders: [{ label: 'ייבוא', keys: [], held: fo.held.slice(0, 1) }] });
+  ok(nf2.folders.length === 1 && nf2.folders[0].keys.length === 0 && nf2.folders[0].held[0].covers.length === 3, 'W4: a folder of imported products alone is a folder');
+}
+ok(shortUrl('https://www.gov.il/BlobFolder/x/%D7%9E%D7%A6%D7%92%D7%AA.pdf') === 'gov.il › מצגת.pdf', 'W4: a source address prints as a short decoded title');
 
 /* ---- smoke on the published data ---- */
 const data = join(process.cwd(), 'public/data');
@@ -115,7 +188,8 @@ if (existsSync(fj)) {
       if (c?.claims) { const cp = claimProv(dec, g, 'disability', 'approved'); ok(cp.k === 'report' && cp.srcType === 'דיווח החברה' && /לא נבדק/.test(cp.note ?? ''), `claims ${g}: a labelled self-report`); ok(clmCell(dec, g).v === c.claims.disability.approved, `claims cell ${g}`); }
       else if (c?.service?.pension) ok(claimsWhy(dec, g).length > 10 && clmCell(dec, g).t === 'לא פורסם', `claims ${g}: missing with a reason`);
     }
-    ok(/נמצא/.test(claimsWhy(dec, 'כלל')) && /captcha|חסום/.test(claimsWhy(dec, 'מנורה מבטחים')), 'Clal and Menora: the recorded reasons');
+    ok(/נמצא/.test(claimsWhyTech(dec, 'כלל')) && /captcha|חסום/.test(claimsWhyTech(dec, 'מנורה מבטחים')), 'Clal and Menora: the recorded reasons (methodology)');
+    ok([...grps, 'כלל', 'מנורה מבטחים'].every((g) => !/Radware|captcha|ניסיונות|\.json|[A-Z]{3,}_[A-Z]/.test(claimsWhy(dec, g))), 'W4: the public reason has no tool names, search log or field names');
     ok(svcCell(dec, pens[0]).txt === true && svcCell(undefined, pens[0]).t === '…' && svcCell(null, pens[0]).t === '–', 'svc cell: loading, absent, present');
     ok(dec.coverage_default.rules.every((r) => { const cp = coverProv(dec, r); return cp.k === 'report' && cp.pg === r.pg; }), 'every coverage rule cites its page');
     ok(dec.bm_checklist.length === 10 && dec.bm_checklist.every((it) => bmProv(dec, it).k === 'report'), 'the checklist: 10 sourced items');
@@ -125,6 +199,17 @@ if (existsSync(fj)) {
     const withH = d.funds.filter((f) => (f as { act_h?: unknown[] }).act_h?.length);
     ok(withH.length > 100 && withH.every((f) => isPension(f) && ((f as { act_h: unknown[] }).act_h.length <= 8)), `smoke: ${withH.length} pension tracks carry act_h (≤ 8 quarters)`);
   }
+  // W4: every tender winner links to a published open track, or to nothing
+  if (existsSync(join(data, 'funds/default.json'))) {
+    const df = JSON.parse(readFileSync(join(data, 'funds/default.json'), 'utf8')) as DefaultFile;
+    const ws = df.tenders.flatMap((t) => t.winners);
+    const tos = ws.map((w) => winnerTrack(w as never, d.funds as never) as { k: string; closed?: boolean } | null);
+    const anyOpen = (w: { k?: string[]; ks?: string[] }) => (w.ks ?? w.k ?? []).some((k) => d.funds.some((f) => f.k === k && !(f as { closed?: boolean }).closed && (f.assets ?? 0) > 0));
+    ok(tos.every((x, i) => (x == null ? !anyOpen(ws[i] as never) : d.funds.some((f) => f.k === x.k) && !x.closed)), `smoke: ${tos.filter(Boolean).length} of ${ws.length} winners link to an open published track; the rest (a fund no longer published) to nothing`);
+  }
+  // W4: a document row of a real old-generation track: no comparison, a variable fee
+  const yod = d.funds.find((f) => f.k === 'i17012') as never;
+  if (yod) { const r = docRow(yod, { net: true, asof: d.asof }); ok(r.old && !r.pen && cmpOf(r).old === true, 'smoke: i17012 (קרן י\') is old generation'); }
   const pj = join(data, 'funds/p2009.json');
   if (existsSync(pj)) ok(actHistory(JSON.parse(readFileSync(pj, 'utf8'))).length === 8, 'smoke: a pension history has 8 quarters to show');
 }

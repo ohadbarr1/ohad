@@ -13,6 +13,7 @@ import { grossProv, netProv, refOf, retOf, ym, type FundX, type FundsFile, type 
 import { addM, median, monthDiff, monthsFromTo } from '../lib/fundsCalc';
 import { isoYm, priceOf, tenderAt, tendersOf, type DefaultFile, type DfRow, type Tender } from '../lib/fundsTools';
 import { useHists, useOptional } from '../lib/fundsLoad';
+import { winnerTrack } from '../lib/pensionPack';
 import { ToolLinks } from './FundsTools';
 import '../styles/lens.css';
 import '../styles/fundsTools.css';
@@ -68,7 +69,7 @@ export function FundsDefault() {
 
   /* ---- sources ---- */
   const sumProv = (x: Agg, grp: string, c: 'dep' | 'tr', w: number[]): Prov => ({ k: 'calc', title: `${c === 'dep' ? 'הפקדות' : 'העברות נטו'} · ${grp} · ${ym(w[0])}–${ym(w[1])}`, value: mn(x[c]), unit: 'מיליוני ש"ח',
-    formula: `סכום ${c === 'dep' ? 'DEPOSITS' : 'INTERNAL_TRANSFERS'} על החודשים ועל המסלולים התלויי גיל של הקרן (עד 50, 50–60, 60+)`,
+    formula: `סכום ${c === 'dep' ? 'ההפקדות החודשיות' : 'ההעברות נטו החודשיות (ניוד פנימה פחות החוצה)'} על החודשים ועל המסלולים התלויי גיל של הקרן (עד 50, 50–60, 60+)`,
     inputs: x.ks.flatMap((f) => monthsFromTo(w[0], w[1]).map((p) => ({ ...monthIn(refOf(f), c, p), label: `${f.track} · ${c === 'dep' ? 'הפקדות' : 'העברות'} · ${ym(p)}` }))) });
   const growProv = (x: Agg, grp: string): Prov => ({ k: 'calc', title: `צמיחת נכסים · ${grp} · ${post ? ym(post[0]) + '–' + ym(post[1]) : ''}`, value: x.a0 && x.a1 ? pc((x.a1 / x.a0 - 1) * 100, 1) : '–', formula: 'נכסי המסלולים התלויי גיל בסוף החלון ÷ בחודש שלפני תחילתו − 1',
     inputs: x.ks.flatMap((f) => [{ ...monthIn(refOf(f), 'a', addM(post![0], -1)), label: `${f.track} · נכסים · ${ym(addM(post![0], -1))}` }, { ...monthIn(refOf(f), 'a', post![1]), label: `${f.track} · נכסים · ${ym(post![1])}` }]) });
@@ -87,7 +88,7 @@ export function FundsDefault() {
       <ToolLinks />
 
       {!ts.length ? (
-        <Empty title="קובץ המכרזים עוד לא פורסם" icon="shield">רשימת המכרזים, הזוכות והמחירים (funds/default.json) נבנית בשכבת הנתונים מתוך הודעות הרשות ב-gov.il. עד שתפורסם, ההשוואה למטה אינה יודעת מי זכתה.</Empty>
+        <Empty title="רשימת המכרזים עוד לא פורסמה" icon="shield">רשימת המכרזים, הזוכות והמחירים נבנית מתוך הודעות הרשות ב-gov.il. עד שתפורסם, ההשוואה למטה אינה יודעת מי זכתה.</Empty>
       ) : (
         <>
           {now && <section className="kpis">
@@ -103,12 +104,14 @@ export function FundsDefault() {
                 <h3><span>{t.label ?? `מכרז ${t.id}`}</span><span className="muted num">{dateHe(t.from)}–{dateHe(t.to)}</span></h3>
                 <div>{t.depfee != null && t.fee != null ? <>מחיר: <Sourced src={() => tenderProv(t, 'המחיר במכרז', `${pc(t.depfee)} / ${pc(t.fee)}`)}><span className="num">{pc(t.depfee)} מהפקדה · {pc(t.fee)} מצבירה</span></Sourced></> : 'מחיר לפי זוכה'}</div>
                 <ul>{t.winners.map((w) => { const p = priceOf(t, w), wv = w.verified ?? t.verified;
-                  return <li key={w.grp}>{(w.ks ?? w.k)?.[0] ? <Link to={`/funds/${(w.ks ?? w.k)![0]}`}>{w.grp}</Link> : w.grp}{(w.fee != null || w.depfee != null) && <> · <Sourced src={() => tenderProv({ ...t, src: w.src ?? t.src, verified: wv }, `המחיר של ${w.grp}`, `${pc(p.depfee)} / ${pc(p.fee)}`)}><span className="num">{pc(p.depfee)} / {pc(p.fee)}</span></Sourced></>}{!wv && <span className="chip est">לא אומת</span>}</li>; })}</ul>
+                  // W4: the winner's largest open track that is published today (a closed or retired key gave "המסלול לא נמצא"), else no link
+                  const to = winnerTrack(w, data.funds as FundX[]);
+                  return <li key={w.grp}>{to ? <Link to={`/funds/${to.k}`} title={to.name}>{w.grp}</Link> : w.grp}{(w.fee != null || w.depfee != null) && <> · <Sourced src={() => tenderProv({ ...t, src: w.src ?? t.src, verified: wv }, `המחיר של ${w.grp}`, `${pc(p.depfee)} / ${pc(p.fee)}`)}><span className="num">{pc(p.depfee)} / {pc(p.fee)}</span></Sourced></>}{!wv && <span className="chip est">לא אומת</span>}</li>; })}</ul>
                 {t.alloc && <div className="muted">שיבוץ עמיתים: {t.alloc}</div>}
                 {t.fee_alt && t.fee_alt.length > 0 && <div className="muted">חלופות מחיר: {t.fee_alt.map((x) => `${nf(x.depfee, 2)}% / ${nf(x.fee, 2)}%`).join(' · ')}</div>}
                 <div className="src"><a href={t.src} target="_blank" rel="noreferrer">{t.src_title ?? 'המקור ב-gov.il'}</a>{!t.verified && <span className="chip est">לא אומת</span>}</div>
               </article>))}</div>
-            {dfile?.method && <div className="fnote">{dfile.method}</div>}
+            {dfile?.method && <details className="fnote fmethod"><summary>מתודולוגיה</summary>{dfile.method}</details>}
           </Panel>
         </>
       )}
@@ -125,7 +128,7 @@ export function FundsDefault() {
                 <td><Sourced src={feeSrc(f, 'fee')}><span className="num">{pc(f.fee)}</span></Sourced></td>
                 {PERS.map(([per]) => { const r = retOf(f, per, f.net?.[per] != null ? 'net' : 'gross'); return <td key={per}>{r.v == null ? <span className="muted">–</span> : <Sourced src={retSrc(f, per)}><span className="num">{pc(r.v, 1)}</span></Sourced>}</td>; })}
                 <td><Sourced src={() => fundP(refOf(f), asof, 'TOTAL_ASSETS', 'נכסים', nf(f.assets ?? 0, 1), 'מיליוני ש"ח')}><span className="num">{mn(f.assets)}</span></Sourced></td>
-                <td>{f.nd12 == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `הפקדות נטו, 12 חודשים · ${f.name}`, value: mn(f.nd12), unit: 'מיליוני ש"ח', formula: 'סכום NET_MONTHLY_DEPOSITS על 12 החודשים האחרונים (מחושב בבניית הנתונים)', inputs: [] })}><span className={`num ${f.nd12 >= 0 ? 'pos' : 'neg'}`}>{mn(f.nd12)}</span></Sourced>}</td>
+                <td>{f.nd12 == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `הפקדות נטו, 12 חודשים · ${f.name}`, value: mn(f.nd12), unit: 'מיליוני ש"ח', formula: 'סכום ההפקדות נטו החודשיות (הפקדות פחות משיכות והעברות החוצה, כפי שדווח לרשות) על 12 החודשים האחרונים (מחושב בבניית הנתונים)', inputs: [] })}><span className={`num ${f.nd12 >= 0 ? 'pos' : 'neg'}`}>{mn(f.nd12)}</span></Sourced>}</td>
               </tr>))}
             {sel.size > 0 && groups.map(([l, fs]) => fs.length > 0 && (
               <tr key={l} className="muted"><th scope="row">חציון · {l} ({fs.length})</th>
@@ -136,7 +139,7 @@ export function FundsDefault() {
               </tr>))}
           </tbody>
         </table></div>
-        <div className="fnote">דמי הניהול: הממוצע בפועל של המסלול ב-{ym(asof)}, על כל העמיתים בו (גם הוותיקים), ולכן אינם מחיר המכרז שמשלם עמית חדש. נטו: אומדן, תשואה פחות דמי ניהול מצבירה ÷ 12. הפקדות נטו: NET_MONTHLY_DEPOSITS. {!sel.size && 'בלי קובץ המכרזים אין סימון זוכות.'}</div>
+        <div className="fnote">דמי הניהול: הממוצע בפועל של המסלול ב-{ym(asof)}, על כל העמיתים בו (גם הוותיקים), ולכן אינם מחיר המכרז שמשלם עמית חדש. נטו: אומדן, תשואה פחות דמי ניהול מצבירה ÷ 12. הפקדות נטו: ההפקדות החודשיות נטו כפי שדווחו לרשות, 12 חודשים. {!sel.size && 'בלי קובץ המכרזים אין סימון זוכות.'}</div>
       </Panel>
 
       {now && post && pre && (
@@ -145,7 +148,7 @@ export function FundsDefault() {
             <div className="scroll"><table className="fsimple">
               <caption className="sr-only">לפני ואחרי המכרז, מקובץ הנתונים</caption>
               <thead><tr><th scope="col">קרן</th><th scope="col">הפקדות לפני</th><th scope="col">הפקדות אחרי</th><th scope="col">נתח מההפקדות לפני</th><th scope="col">אחרי</th><th scope="col">תשואה נטו לפני</th><th scope="col">אחרי</th></tr></thead>
-              <tbody>{dataRows.map((r) => { const cp = (v: number | null | undefined, w: string, d = 0, u = '') => (v == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `${w} · ${r.grp}`, value: u ? pc(v, d) : mn(v), unit: u ? undefined : 'מיליוני ש"ח', formula: `מחושב בבניית הנתונים (funds/default.json) על מסלולי הפנסיה המקיפה של הקרן${r.ks?.length ? ` (${r.ks.length} מסלולים)` : ''}. ${dfile?.method ?? ''}`, inputs: (r.ks ?? []).map((k) => ({ label: k, v: '' })) })}><span className="num">{u ? pc(v, d) : mn(v)}</span></Sourced>);
+              <tbody>{dataRows.map((r) => { const cp = (v: number | null | undefined, w: string, d = 0, u = '') => (v == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `${w} · ${r.grp}`, value: u ? pc(v, d) : mn(v), unit: u ? undefined : 'מיליוני ש"ח', formula: `מחושב בבניית הנתונים (קובץ המכרזים של האתר) על מסלולי הפנסיה המקיפה של הקרן${r.ks?.length ? ` (${r.ks.length} מסלולים)` : ''}. ${dfile?.method ?? ''}`, inputs: (r.ks ?? []).map((k) => ({ label: k, v: '' })) })}><span className="num">{u ? pc(v, d) : mn(v)}</span></Sourced>);
                 return <tr key={r.grp} className={r.sel ? 'fsel' : undefined}><td>{r.grp}{r.sel && <span className="chip">זוכה</span>}</td><td>{cp(r.pre?.dep, 'הפקדות לפני')}</td><td>{cp(r.post?.dep, 'הפקדות אחרי')}</td><td>{cp(r.pre?.share, 'נתח הפקדות לפני', 1, '%')}</td><td>{cp(r.post?.share, 'נתח הפקדות אחרי', 1, '%')}</td><td>{cp(r.pre?.ret, 'תשואה נטו לפני', 1, '%')}</td><td>{cp(r.post?.ret, 'תשואה נטו אחרי', 1, '%')}</td></tr>; })}</tbody>
             </table></div>
           ) : pending > 0 ? <Loading what={`היסטוריות (${ageTracks.length - pending} מתוך ${ageTracks.length})`} /> : (
@@ -166,7 +169,7 @@ export function FundsDefault() {
                     <td><Sourced src={() => sumProv(x.post, x.grp, 'tr', post)}><span className={`num ${(x.post.tr ?? 0) >= 0 ? 'pos' : 'neg'}`}>{mn(x.post.tr)}</span></Sourced></td>
                     <td><Sourced src={() => growProv(x.post, x.grp)}><span className="num">{x.post.a0 && x.post.a1 ? pc((x.post.a1 / x.post.a0 - 1) * 100, 1) : '–'}</span></Sourced></td></tr>; })}</tbody>
               </table></div>
-              <div className="fnote">מיליוני ש"ח, במסלולים התלויי גיל של כל קרן (עד 50, 50–60, 60+): לשם מצטרפים עמיתים חדשים כברירת מחדל. "לפני" = אותו מספר חודשים ({n}) שקדם לתחילת המכרז. הפקדות: DEPOSITS; העברות נטו: INTERNAL_TRANSFERS (ניוד פנימה פחות החוצה). צמיחת הנכסים כוללת תשואה. עובדות, לא ייחוס סיבתי: גם שוק העבודה, הריבית והתשואות השתנו.</div>
+              <div className="fnote">מיליוני ש"ח, במסלולים התלויי גיל של כל קרן (עד 50, 50–60, 60+): לשם מצטרפים עמיתים חדשים כברירת מחדל. "לפני" = אותו מספר חודשים ({n}) שקדם לתחילת המכרז. הפקדות: ההפקדות החודשיות; העברות נטו: ניוד פנימה פחות ניוד החוצה, כפי שדווחו לרשות. צמיחת הנכסים כוללת תשואה. עובדות, לא ייחוס סיבתי: גם שוק העבודה, הריבית והתשואות השתנו.</div>
             </>
           )}
         </Panel>

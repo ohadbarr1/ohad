@@ -66,7 +66,7 @@ export const RISK_F: Record<StatKey, string> = {
 };
 export const RISK_LABEL: Record<StatKey, string> = {
   a36: 'תשואה שנתית', vol36: 'תנודתיות שנתית', dd_max: 'ירידה מרבית', dd_cur: 'מתחת לשיא היום', dd_len: 'חודשים משיא לשפל', rec_months: 'חודשי התאוששות', dd_max_all: 'ירידה מרבית, כל ההיסטוריה',
-  sharpe36: 'שארפ', sortino36: 'סורטינו', beta36_vs_cat: 'בטא מול הקטגוריה', te36_vs_cat: 'סטיית מעקב', up_cap36: 'לכידת עליות', down_cap36: 'לכידת ירידות', worst_m: 'החודש הגרוע', best_m: 'החודש הטוב', pct_pos_m: 'חודשים חיוביים',
+  sharpe36: 'שארפ (חישוב האתר, 36 ח׳)', sortino36: 'סורטינו', beta36_vs_cat: 'בטא מול הקטגוריה', te36_vs_cat: 'סטיית מעקב', up_cap36: 'לכידת עליות', down_cap36: 'לכידת ירידות', worst_m: 'החודש הגרוע', best_m: 'החודש הטוב', pct_pos_m: 'חודשים חיוביים',
 };
 /** unit of each statistic: % (a return or a share), pp (a percent-point spread), x (a ratio), n (months) */
 export const RISK_UNIT: Record<StatKey, '%' | 'x' | 'n'> = {

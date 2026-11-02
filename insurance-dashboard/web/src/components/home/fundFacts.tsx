@@ -49,9 +49,11 @@ export const PRODUCTS: [string, string][] = [
   ['פנסיה מקיפה', 'פנסיה מקיפה'], ['פנסיה כללית', 'פנסיה כללית'], ['השתלמות', 'קרנות השתלמות'], ['גמל', 'קופות גמל'], ['גמל להשקעה', 'גמל להשקעה'],
   ['פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'פוליסות חיסכון וביטוחי מנהלים, מ-2004'], ['חיסכון לילד', 'חיסכון לילד'],
 ];
+/** W4: a product row that is not one product: the 2004+ bituach-net track is shared by pure savings policies and managers' insurance */
+export const PROD_NOTE: Record<string, string> = { 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)': 'מסלול השקעה משותף לשני מוצרים: פוליסת חיסכון (חיסכון בלבד) וביטוח מנהלים (עם רכיב ביטוחי). התשואה זהה; הנכסים ודמי הניהול כוללים את שניהם' };
 export const screenHref = (prod: string) => `/funds/screen?prod=${encodeURIComponent(prod)}`;
 
-export interface ProdRow { prod: string; label: string; fs: FundX[]; fee: number | null; dep: number | null }
+export interface ProdRow { prod: string; label: string; fs: FundX[]; fee: number | null; dep: number | null; note?: string }
 export function useProducts(): { rows: ProdRow[]; asof: number; ready: boolean } {
   const { data, live, asof } = useFundFacts();
   const rows = useMemo(() => PRODUCTS.map(([prod, label]) => {
@@ -60,7 +62,7 @@ export function useProducts(): { rows: ProdRow[]; asof: number; ready: boolean }
     // a deposit fee median only where most of the product publishes one and it is a real charge (pension, policies); a median of
     // zero or near it (gemel, hishtalmut) says nothing an agent needs and would read as a figure
     const dep = deps.length * 2 > fs.length ? median(deps.map((f) => f.depfee!)) : null;
-    return { prod, label, fs, fee: median(fs.filter((f) => f.fee != null).map((f) => f.fee!)), dep: dep != null && dep >= 0.05 ? dep : null };
+    return { prod, label, note: PROD_NOTE[prod], fs, fee: median(fs.filter((f) => f.fee != null).map((f) => f.fee!)), dep: dep != null && dep >= 0.05 ? dep : null };
   }).filter((r) => r.fs.length > 0), [live]);
   return { rows, asof, ready: !!data };
 }
