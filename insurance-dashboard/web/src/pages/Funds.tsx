@@ -10,6 +10,7 @@ import { DEFAULT_PER, TIE_F, rankText, tieBand, tieRanks } from '../lib/fundsTie
 import { PensionPack } from '../components/agent/PensionPack';  // W1-agent
 import { BmNote } from '../components/agent/Decision';  // W2
 import { isOldGen } from '../lib/decision';  // W6 doors: closed generations get no place
+import { FlowDef, MigChip } from '../components/FlowDef';  // W6 trust: flow definition and the intra-group migration flag
 import { RankPanel, RiskPanel, WatchStar } from '../components/FundsTime';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
@@ -486,7 +487,8 @@ export function FundCard() {
         <div className="fnote">הרכב נכסים מפורט ומדיניות השקעה מוצהרת אינם במאגרי הרשות הפתוחים; הם מתפרסמים באתר של כל גוף מנהל.</div>
       </Panel>
       {h.dep && (
-        <Panel title="תזרים, LTM" aside={<span>מיליוני ש"ח</span>}>
+        <Panel title="תזרים, LTM" aside={<><MigChip f={f} />{' '}<span>מיליוני ש"ח</span></>}>
+          <FlowDef kinds={['netflow']} />
           <section className="kpis" style={{ border: 0, boxShadow: 'none', background: 'none' }}>
             {([['הפקדות', h.dep, 'dep'], ['משיכות', h.wd!, 'wd'], ['העברות נטו', h.tr!, 'tr']] as const).map(([l, xs, c]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0); return <Kpi key={l} label={l} value={SRC(() => flow12(c, l, l === 'משיכות' ? -v : v), nf(l === 'משיכות' ? -v : v, 0))} tone={l === 'העברות נטו' ? (v < 0 ? 'neg' : 'pos') : undefined} />; })}
             <Kpi label="צבירה נטו" value={SRC(() => ({ k: 'calc', title: `צבירה נטו, LTM · ${f.name}`, value: nf(netFlow, 0), unit: 'מיליוני ש"ח', formula: 'הפקדות פחות משיכות ועוד העברות נטו, 12 החודשים האחרונים',
