@@ -151,7 +151,8 @@ class Contract(unittest.TestCase):
             cats["גמל | כללי"]["y"].append(round(sum(y * a for y, a in xs) / sum(a for _, a in xs), 3))
             cats["גמל | כללי"]["n"].append(len(xs))
         self.F = {"asof": 202609, "source": "s", "funds": live, "closed_n": 1,
-                  "tx": {"live": 5, "joined": 0, "mapped": 0, "dis": 0}}
+                  "tx": {"live": 5, "joined": 0, "mapped": 0, "dis": 0},
+                  "mig_method": FL.MIG_METHOD, "exp_method": FL.EXP_METHOD}
         self.C = {"asof": 202609, "source": "s", "n": 1, "funds": closed}
         self.cats, self.hist = cats, hist
         self.write()
@@ -224,7 +225,7 @@ class Published(unittest.TestCase):
     @unittest.skipUnless((CF.DATA / "funds" / "closed.json").exists(), "funds files not built")
     def test_methods_are_stated(self):
         F = json.loads((CF.DATA / "funds.json").read_text(encoding="utf-8"))
-        for k in ("net_method", "real_method", "pr_method", "basis"):
+        for k in ("net_method", "real_method", "pr_method", "basis", "mig_method", "exp_method"):
             self.assertTrue(F.get(k), k)
         self.assertIn("ברוטו", F["basis"])
 
