@@ -15,7 +15,7 @@ export const PROFILE_LABEL: Record<ProfileId, string> = { me: 'אני', spouse: 
 /** the "add" chips */
 export const PROFILE_ADD: Record<Exclude<ProfileId, 'me'>, string> = { spouse: '+בן/בת זוג', parent: '+הורה' };
 /** the per-profile keys (without the prefix): what a removed profile drops */
-export const PER_PROFILE_KEYS = ['mine', 'my:age', 'my:sex', 'my:retire', 'my:salary', 'my:seen'];
+export const PER_PROFILE_KEYS = ['mine', 'my:age', 'my:sex', 'my:retire', 'my:salary', 'my:seen', 'my:iddigit'];
 export const EMPTY_PROFILES: Profiles = { v: 1, active: 'me', list: ['me'] };
 
 const isId = (x: unknown): x is ProfileId => typeof x === 'string' && (PROFILE_IDS as string[]).includes(x);
