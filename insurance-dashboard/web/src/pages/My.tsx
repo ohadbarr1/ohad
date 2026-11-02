@@ -186,7 +186,7 @@ function Strip({ rows, retire, coefF }: { rows: SumRow[]; retire: number; coefF:
   const s = summaryOf(rows);
   const [salary] = useStored<number | null>(SALARY_KEY, null);
   const nReal = rows.filter((r) => r.prod.startsWith('פנסיה') && r.coefReal).length, nPen = rows.filter((r) => r.prod.startsWith('פנסיה')).length;
-  const coefWhy = nPen === 0 ? '' : nReal === nPen ? 'המקדם של כל קרן מהתקנון שלה' : nReal === 0 ? 'המקדם לפי הנחה (אין טבלה לקרן, או שלא נבחר מין)' : `המקדם מהתקנון ב-${nReal} מתוך ${nPen} קרנות, בשאר לפי הנחה`;
+  const coefWhy = nPen === 0 ? '' : nReal === nPen ? 'מקדם מהתקנון' : nReal === 0 ? 'מקדם לפי הנחה' : `מקדם מהתקנון ב-${nReal} מתוך ${nPen}`;
   const rep = salary != null && s.pension != null && s.penBal > 0 && coefF ? replacementOf(s.pension, salary, coefF) : null;
   const firstPen = rows.find((r) => r.prod.startsWith('פנסיה'));
   const feesProv = (): Prov => ({ k: 'calc', est: true, title: 'דמי ניהול בשנה, כל המוצרים', value: ilsRound(s.fees), formula: 'לכל מוצר: היתרה × דמי הניהול מצבירה, ועוד 12 הפקדות × דמי הניהול מהפקדה. דמי הניהול שלך כשהזנת, אחרת הממוצע במסלול',

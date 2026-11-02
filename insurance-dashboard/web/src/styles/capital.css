@@ -83,5 +83,6 @@
 a.cap-bolt { text-decoration: underline; text-underline-offset: 2px; }
 
 /* W6 trust: a stress row whose solvency sensitivity is older than two reports before the capital base is muted */
-.cap-t .tr.old > div, .cap-rank > li.old > div:not(.who) { opacity: 0.55; }
+/* older sensitivity vintages: a tinted row, never dimmed text (axe color-contrast) */
+.cap-t .tr.old > div, .cap-rank > li.old > div:not(.who) { background: color-mix(in oklch, var(--fg) 5%, transparent); }
 .cap-rank > li.old .who .s::after, .cap-t .tr.old .lbl::after { content: ''; }
