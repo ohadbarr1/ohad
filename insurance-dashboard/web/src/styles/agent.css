@@ -286,3 +286,15 @@ td.cmp-best::after { content: "●"; color: var(--accent); font-size: 8px; verti
 .cl-backup.nudge { border-color: var(--accent-line); background: var(--accent-soft); }
 .cl-backup .cl-bk-msg { flex-basis: 100%; }
 .cl-held tfoot th, .cl-held tfoot td { font-weight: 700; border-top: 1px solid var(--line); }
+
+/* W5 · /funds/bm: the guaranteed-coefficient calculator */
+.bm-calc { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 16px 24px; align-items: start; }
+.bm-calc-in { display: grid; gap: 10px; }
+.bm-calc-in .field { display: grid; gap: 4px; }
+.bm-calc-in input { width: 100%; font-variant-numeric: tabular-nums; direction: ltr; text-align: end; }
+.bm-calc-in small { font-size: var(--t-1); line-height: 1.4; }
+.bm-calc-out { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.bm-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.bm-line { margin: 0; font-size: var(--t-4); line-height: 1.6; }
+.bm-fee { margin: 0; font-size: var(--t-3); color: var(--muted); line-height: 1.6; }
+@media (max-width: 760px) { .bm-calc { grid-template-columns: 1fr; } }

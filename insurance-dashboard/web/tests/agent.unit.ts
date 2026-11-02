@@ -14,6 +14,7 @@ import { CLIENTS_V, normClients, normHeld, normSnap, upsert, type SnapRow } from
 import { winnerTrack } from '../src/lib/pensionPack';
 import { heldOf, parseMaslaka, readCovers, rowsOf, xmlTree, type MFund } from '../src/lib/maslaka';
 import { folderFromImport } from '../src/components/agent/ClientImport';
+import { bmCompare, bmLine, coefOk, newCoefDefault } from '../src/lib/bmCalc';
 
 let fail = 0, pass = 0;
 const bad: string[] = [];
@@ -147,6 +148,17 @@ ok(normHeld({ typeHe: 'קרן פנסיה', provider: 'מור', plan: '039123456 
   ok(fo.keys.join() === 'p9654,p2155' && fo.tags.p9654 === 'קיים' && fo.held.length === 3, 'W4: an import makes a folder: matched tracks by balance, tagged "קיים", every product held');
   const nf2 = normClients({ folders: [{ label: 'ייבוא', keys: [], held: fo.held.slice(0, 1) }] });
   ok(nf2.folders.length === 1 && nf2.folders[0].keys.length === 0 && nf2.folders[0].held[0].covers.length === 3, 'W4: a folder of imported products alone is a folder');
+}
+/* ---- W5: an old managers' policy, the guaranteed coefficient against a new fund on the same balance ---- */
+{
+  const o = bmCompare({ balance: 640000, coefG: 160, coefNew: 200, fee: 1.05, feeNew: 0.22 })!;
+  ok(near(o.annG, 4000) && near(o.annNew, 3200) && near(o.diff, 800) && near(o.pct, 25), `W5: 640,000 ÷ 160 = 4,000 vs ÷ 200 = 3,200 a month: +25% (${o.annG}, ${o.annNew}, ${o.pct})`);
+  ok(near(o.feeG!, 6720) && near(o.feeN!, 1408), 'W5: the fees on today\'s balance, a year');
+  ok(/גבוהה ב-25%/.test(bmLine(o, 160, 200)) && /800 ש"ח/.test(bmLine(o, 160, 200)), `W5: the line states the gap: ${bmLine(o, 160, 200)}`);
+  const lo = bmCompare({ balance: 100000, coefG: 220, coefNew: 200 })!;
+  ok(lo.diff < 0 && /נמוכה ב-9%/.test(bmLine(lo, 220, 200)) && lo.feeG === null, `W5: a coefficient above the new fund's gives less: ${bmLine(lo, 220, 200)}`);
+  ok(bmCompare({ balance: 100000, coefG: 16, coefNew: 200 }) === null && !coefOk(16) && coefOk(160) && bmCompare({ balance: 0, coefG: 160, coefNew: 200 }) === null, 'W5: a typo coefficient or no balance: no result');
+  ok(newCoefDefault('m').v === 188 && newCoefDefault('f').v === 204 && newCoefDefault(null).v === 200, 'W5: the new-fund default is the site\'s assumption (lib/retire)');
 }
 ok(shortUrl('https://www.gov.il/BlobFolder/x/%D7%9E%D7%A6%D7%92%D7%AA.pdf') === 'gov.il › מצגת.pdf', 'W4: a source address prints as a short decoded title');
 

@@ -21,7 +21,7 @@ import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../li
 import { useOptional } from '../lib/fundsLoad';
 import type { DefaultFile } from '../lib/fundsTools';
 import { defaultKeys, defaultNow, isPension, periodText } from '../lib/pensionPack';
-import { DECISION_PATH, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2
+import { DECISION_PATH, isOldGen, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2
 import { actProv, pc2, tenderProv } from '../lib/agentProv';
 import '../components/agent/glossary';
 import { useDoor } from '../lib/door';
@@ -130,7 +130,9 @@ export function FundsScreen() {
     all.filter((f) => inProd(f) && (T === ALL || f.track === T) && (closed || !f.closed)).forEach((f) => keys.set(catKey(f), [...(keys.get(catKey(f)) ?? []), f]));
     if (gone && goneRows) goneRows.filter((f) => inProd(f) && (T === ALL || f.track === T)).forEach((f) => { if (keys.has(catKey(f)) || T !== ALL) keys.set(catKey(f), [...(keys.get(catKey(f)) ?? []), f]); });
     return [...keys.entries()].map(([k, shown]) => {
-      const peers = shown.filter((f) => !f.gone && !selfDirected(f));
+      // W5 (red team 3): a generation closed to new members (managers' insurance sold 1990-2003, e.g. קרן י') is no choice a client can
+      // make: it gets no rank and no percentile, and does not move the others'
+      const peers = shown.filter((f) => !f.gone && !selfDirected(f) && !isOldGen(f));
       const ord = rankAll(peers, (f) => val(f, per)), tie = tieRanks(peers, (f) => val(f, per), tieBand(per, asof));
       const rk = new Map<string, RankInfo>([...ord].map(([k, r]) => [k, { ...r, lo: tie.get(k)?.lo ?? r.rank, hi: tie.get(k)?.hi ?? r.rank }]));
       const by = sortKey && sortKey !== 'pct' ? sortKey : null;
@@ -138,7 +140,7 @@ export function FundsScreen() {
       const list = shown.filter(screened).sort((a, b) => {
         if (a.gone !== b.gone) return a.gone ? 1 : -1;
         if (by) { const x = sv(a), y = sv(b); if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1; return by === 'fee' || by === 'depfee' || by === 'sd' ? x - y : y - x; }
-        const ra = rk.get(a.k)?.rank, rb = rk.get(b.k)?.rank; return ra == null || rb == null ? (ra == null ? (rb == null ? 0 : 1) : -1) : ra - rb;
+        const ra = rk.get(a.k)?.rank, rb = rk.get(b.k)?.rank; return ra == null || rb == null ? (ra == null ? (rb == null ? (b.assets ?? 0) - (a.assets ?? 0) : 1) : -1) : ra - rb;
       });
       return { k, prod: shown[0].prod, track: shown[0].track, list, rk, n: rk.size ? [...rk.values()][0].n : 0, assets: peers.reduce((t, f) => t + (f.assets ?? 0), 0) };
     }).filter((g) => g.list.length).sort((a, b) => b.assets - a.assets);
@@ -187,6 +189,7 @@ export function FundsScreen() {
   };
   const Flags = ({ f }: { f: FundX }) => <>
     {f.closed && <span className="chip">ענפית</span>}
+    {isOldGen(f) && <span className="chip est" title="דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון">סגור להצטרפות</span>}
     {f.gone && <span className="chip est">נסגר{f.end ? ` ${ym(f.end)}` : ''}</span>}
     {selfDirected(f) && <span className="chip" title={SELF_NOTE}>ניהול אישי</span>}
     {f.n < 60 && !f.gone && <span className="chip" title="פחות מ-60 חודשי היסטוריה: אין 5Y">היסטוריה קצרה</span>}
@@ -261,7 +264,7 @@ export function FundsScreen() {
                     <div className="fcard-meta"><MgrChip grp={f.grp} mgr={f.mgr} short /><Flags f={f} /></div>
                     <div className="fcard-fig">
                       <div className="big"><span className="l">{PERIODS.find(([k]) => k === per)?.[1]} · {lbl}</span><Ret f={f} p={per} /></div>
-                      <div><span className="l">מקום</span>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num">{rankText(r)}/{r.n}</span></Sourced> : <span className="muted">–</span>}</div>
+                      <div><span className="l">מקום</span>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num">{rankText(r)}/{r.n}</span></Sourced> : isOldGen(f) ? <span className="muted">סגור להצטרפות</span> : <span className="muted">–</span>}</div>
                       <div><span className="l">אחוזון</span>{cell(f, 'pct', r)}</div>
                       <div><span className="l" title="דמי ניהול מצבירה, הממוצע בפועל של המסלול">ד"נ ממוצע בפועל</span>{cell(f, 'fee', r)}</div>
                       {isPension(f) ? <><div><span className="l" title="דמי ניהול מהפקדה, הממוצע בפועל של המסלול">ד"נ מהפקדה</span>{cell(f, 'depfee', r)}</div><div><span className="l">איזון אקטוארי</span>{cell(f, 'act', r)}</div></> : <div><span className="l">מניות</span>{cell(f, 'st', r)}</div>}
@@ -282,7 +285,7 @@ export function FundsScreen() {
                   {shown(g) && g.list.map((f) => { const r = g.rk.get(f.k); return (
                     <tr key={f.k} className={f.gone ? 'gone' : undefined}>
                       <td><span className="fname"><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link><span className="fund-mgr"><MgrChip grp={f.grp} mgr={f.mgr} short /><Flags f={f} /></span></span></td>
-                      <td>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num muted">{rankText(r)}</span></Sourced> : <span className="muted">–</span>}</td>
+                      <td>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num muted">{rankText(r)}</span></Sourced> : <span className="muted" title={isOldGen(f) ? 'סגור להצטרפות: לא מדורג' : undefined}>–</span>}</td>
                       {cols.map((c) => <td key={c} className={c === per ? 'lead' : undefined}>{cell(f, c, r)}</td>)}
                       <td>{!f.gone && <CompareAdd k={f.k} name={f.name} small />}</td>
                     </tr>
@@ -292,7 +295,7 @@ export function FundsScreen() {
             </tbody>
           </table></div>
         )}
-        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה; מסלול בלי נטו לחלון מוצג ברוטו ואינו מדורג.' : basisAsked === 'net' ? 'נטו עוד לא נכלל בקובץ הנתונים, ולכן מוצג ברוטו.' : 'ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת.'} ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {SELF_NOTE}.</div>
+        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה; מסלול בלי נטו לחלון מוצג ברוטו ואינו מדורג.' : basisAsked === 'net' ? 'נטו עוד לא נכלל בקובץ הנתונים, ולכן מוצג ברוטו.' : 'ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת.'} ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {SELF_NOTE}.</div>
       </Panel>
     </>
   );

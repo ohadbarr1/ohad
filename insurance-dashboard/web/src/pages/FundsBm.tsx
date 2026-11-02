@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
 import { Sourced } from '../components/Source';
 import { MgrChip } from '../components/MgrChip';
-import { Empty, Loading, Panel } from '../components/ui';
+import { Empty, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
+import { NEW_COEF_SRC, bmCompare, bmLine, coefOk, newCoefDefault, COEF_MIN, COEF_MAX } from '../lib/bmCalc';
+import type { Sex } from '../lib/retire';
 import { useOptional } from '../lib/fundsLoad';
 import { BM_CUTOFF, DECISION_PATH, bmProv, rankHe, srcOf, svcProv, type DecisionFile } from '../lib/decision';
 import '../styles/agent.css';
@@ -16,6 +18,55 @@ import '../styles/agent.css';
 const OLD_PRODS = ['ביטוחי מנהלים 1990-1991', 'ביטוחי מנהלים 1992-2003'];
 const screen = (p: string) => `/funds/screen?prod=${encodeURIComponent(p)}&track=all`;
 const dateHe = (iso?: string) => (iso ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : '');
+
+const numIn = (s: string): number | null => { const t = s.replace(/[,\s₪%]/g, ''); if (t === '') return null; const x = Number(t); return Number.isFinite(x) ? x : null; };
+const ilsF = (v: number) => `${Math.round(v).toLocaleString('en-US')} ש"ח`;
+
+/** W5 · red team 3: the guaranteed coefficient of an old policy against a new pension fund, on the same balance. The policy's numbers
+ *  are the reader's; the new fund's coefficient is an assumption (the site's, by sex), editable. Nothing is stored. */
+function BmCalc() {
+  const [bal, setBal] = useState('');
+  const [cg, setCg] = useState('');
+  const [sex, setSex] = useState<Sex | 'x'>('x');
+  const [cn, setCn] = useState('');
+  const [fee, setFee] = useState('');
+  const [feeN, setFeeN] = useState('');
+  const dflt = newCoefDefault(sex === 'x' ? null : sex);
+  const B = numIn(bal), G = numIn(cg), N = numIn(cn) ?? dflt.v;
+  const o = B != null && G != null ? bmCompare({ balance: B, coefG: G, coefNew: N, fee: numIn(fee), feeNew: numIn(feeN) }) : null;
+  const bad = G != null && !coefOk(G) ? `מקדם ${G} מחוץ לטווח הסביר (${COEF_MIN}–${COEF_MAX}): לבדוק בפוליסה` : numIn(cn) != null && !coefOk(numIn(cn)) ? `מקדם ${numIn(cn)} לקרן חדשה מחוץ לטווח הסביר (${COEF_MIN}–${COEF_MAX})` : null;
+  return (
+    <Panel title="מחשבון: המקדם המובטח מול קרן פנסיה חדשה" aside={<span>הנתונים שלכם · לא נשמרים</span>}>
+      <div className="bm-calc">
+        <div className="bm-calc-in">
+          <Field label="יתרה צבורה בפוליסה (ש&quot;ח)"><input inputMode="decimal" value={bal} onChange={(e) => setBal(e.target.value)} placeholder="למשל 640,000" /></Field>
+          <Field label="מקדם המרה מובטח בפוליסה"><input inputMode="decimal" value={cg} onChange={(e) => setCg(e.target.value)} placeholder="מהפוליסה, למשל 160" /></Field>
+          <div className="field"><span>מקדם בקרן פנסיה חדשה (הנחה)</span>
+            <Seg label="מין, לברירת המחדל של המקדם" value={sex} onChange={(v) => { setSex(v); setCn(''); }} options={[['x', 'לא צוין'], ['m', 'גבר'], ['f', 'אישה']]} />
+            <input inputMode="decimal" value={cn} onChange={(e) => setCn(e.target.value)} placeholder={`${dflt.v}`} aria-label="מקדם בקרן פנסיה חדשה" />
+            <small className="muted">ברירת מחדל {dflt.v}: {dflt.why}; אפשר להקליד מקדם אחר</small></div>
+          <Field label="ד&quot;נ מצבירה בפוליסה, % (לא חובה)"><input inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="למשל 1.05" /></Field>
+          <Field label="ד&quot;נ מצבירה בקרן החדשה, % (לא חובה)"><input inputMode="decimal" value={feeN} onChange={(e) => setFeeN(e.target.value)} placeholder="למשל 0.22" /></Field>
+        </div>
+        <div className="bm-calc-out" aria-live="polite">
+          {bad ? <p className="bm-n">{bad}</p> : !o ? <p className="muted">מקלידים יתרה ומקדם מובטח מהפוליסה, ומקבלים את הקצבה החודשית בשני המקדמים על אותה יתרה.</p> : <>
+            <div className="kpis bm-kpis">
+              <Kpi label="קצבה חודשית, המקדם המובטח" value={<span className="num">{ilsF(o.annG)}</span>} sub={<>יתרה ÷ <span className="num">{G}</span></>} />
+              <Kpi label="קצבה חודשית, קרן חדשה (הנחה)" value={<span className="num">{ilsF(o.annNew)}</span>} sub={<>יתרה ÷ <span className="num">{N}</span></>} />
+              <Kpi label="ההפרש בחודש" value={<span className="num">{o.diff >= 0 ? '+' : '−'}{ilsF(Math.abs(o.diff))}</span>} sub={<span className="num">{o.pct >= 0 ? '+' : '−'}{Math.abs(o.pct).toFixed(1)}%</span>} tone={o.diff >= 0 ? 'pos' : 'neg'} />
+            </div>
+            <p className="bm-line"><b>{bmLine(o, G!, N)}</b></p>
+            {(o.feeG != null || o.feeN != null) && <p className="bm-fee">דמי ניהול על היתרה של היום, בשנה: {o.feeG != null && <>בפוליסה <span className="num">{ilsF(o.feeG)}</span></>}{o.feeG != null && o.feeN != null && ' · '}{o.feeN != null && <>בקרן החדשה <span className="num">{ilsF(o.feeN)}</span></>}{o.feeG != null && o.feeN != null && <> · הפרש <span className="num">{ilsF(Math.abs(o.feeG - o.feeN))}</span> {o.feeG > o.feeN ? 'לטובת הקרן החדשה' : 'לטובת הפוליסה'}</>}. דמי הניהול אינם משנים את המקדם; הם מקטינים את היתרה עד הפרישה.</p>}
+          </>}
+        </div>
+      </div>
+      <div className="fnote">
+        <b>איפה מוצאים את המקדם המובטח:</b> בתנאי הפוליסה (דף פרטי הביטוח), ובחלק מחברות הביטוח גם בדוח השנתי למבוטח. אם אינו מופיע, מבקשים אותו בכתב מחברת הביטוח, ובאותה פנייה שואלים לאיזה גיל פרישה ולאיזה מסלול קצבה הוא מובטח (שארים, תקופת הבטחת תשלומים), והאם הוא חל על כל הכספים בפוליסה.
+        {' '}<b>החישוב:</b> קצבה חודשית = יתרה ÷ מקדם, על היתרה של היום, בלי תשואה ודמי ניהול עד הפרישה ובלי הבדלי מסלול הקצבה. המקדם בקרן חדשה אינו מובטח: הקרן קובעת אותו בפרישה לפי התקנון ולוחות תוחלת החיים. ברירת המחדל כאן היא הנחה של האתר בגיל 67, לפי <a href={NEW_COEF_SRC.url} target="_blank" rel="noreferrer">{NEW_COEF_SRC.title}</a>. חישוב, לא ייעוץ: ההחלטה תלויה גם ביתר הפריטים ברשימה למטה.
+      </div>
+    </Panel>
+  );
+}
 
 export function FundsBm() {
   const d = useOptional<DecisionFile>(DECISION_PATH);
@@ -40,6 +91,8 @@ export function FundsBm() {
           {disc?.note && <p className="bm-disc"><b>אי-התאמה במקור:</b> {disc.note}</p>}
         </div>
       </Panel>
+
+      <BmCalc />
 
       <Panel title={<>מה עלול ללכת לאיבוד <span className="w2d num">· {items.length} פריטים</span></>} aside={<span aria-live="polite">סימנתם <span className="num">{n}</span> מתוך <span className="num">{items.length}</span> · נשאר בעמוד בלבד</span>}>
         <ol className="bm-list">
