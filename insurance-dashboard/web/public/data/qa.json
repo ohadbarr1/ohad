@@ -1,5 +1,5 @@
 {
- "built": "2026-11-02T12:39:48+02:00",
+ "built": "2026-11-02T14:09:49+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -85,17 +85,17 @@
    "id": "ifrs_page",
    "ok": true,
    "level": "fail",
-   "n": 0,
+   "n": 16366,
    "fail": 0,
-   "note": "0/0 on the cited page; 0 new misses; 16366 facts without page text (not checked)"
+   "note": "16340/16366 on the cited page; 0 new misses; 0 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
-   "ok": true,
+   "ok": false,
    "level": "warn",
-   "n": 0,
-   "fail": 0,
-   "note": "known misses, extraction layer (graphics, image pages, targets in words): {}"
+   "n": 16366,
+   "fail": 26,
+   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'hachshara': 16, 'clal': 8, 'phoenix': 2}"
   },
   {
    "id": "balance",
@@ -341,9 +341,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3896,
+   "n": 3897,
    "fail": 0,
-   "note": "3896 files under contract, 0 failing; 81 contracts; 552 files without a contract"
+   "note": "3897 files under contract, 0 failing; 82 contracts; 552 files without a contract"
   },
   {
    "id": "cards",
@@ -402,6 +402,14 @@
    "note": "decision: 15 companies, 7 with fund claims, 12 coverage rules, 10 checklist items; 0 failures"
   },
   {
+   "id": "coef",
+   "ok": true,
+   "level": "fail",
+   "n": 187,
+   "fail": 0,
+   "note": "coef: 9 funds, 187 tables, 18397 cells, 9 coverage gaps; 0 failures"
+  },
+  {
    "id": "attribution",
    "ok": true,
    "level": "fail",
@@ -423,7 +431,7 @@
    "level": "warn",
    "n": 38,
    "fail": 1,
-   "note": "38 manager-quarters; rebuild skipped (no data/work/asset_lists)"
+   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: Deserializing page header failed.)"
   },
   {
    "id": "solvency",
@@ -535,7 +543,7 @@
    "level": "warn",
    "n": 223,
    "fail": 0,
-   "note": "223 source URLs checked 2026-10-25 (7 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+   "note": "223 source URLs checked 2026-10-25 (8 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
   },
   {
    "id": "stress",
