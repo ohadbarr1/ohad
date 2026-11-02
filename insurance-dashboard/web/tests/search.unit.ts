@@ -160,7 +160,8 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
   const pro = (q: string) => ordered(forDoor(rank(q, pool2, (s) => s), 'pro'));
   const kinds = (l: ReturnType<typeof saver>) => [...new Set(l.map((x) => x.kind))];
   ok(pro('עזיבת עבודה').some((x) => x.kind === 'שורה בדוח') && pro('עזיבת עבודה').some((x) => x.kind === 'שאלה'), `pro: "עזיבת עבודה" lists the statement line and the question (${kinds(pro('עזיבת עבודה')).join()})`);
-  ok(saver('עזיבת עבודה').length === 0, `saver: "עזיבת עבודה" lists nothing (the empty state), got ${kinds(saver('עזיבת עבודה')).join()}`);
+  // W9: the words of a life moment now answer with the moment page, and only with it (still no filing page, line or question)
+  ok(saver('עזיבת עבודה').length === 1 && saver('עזיבת עבודה')[0].to === '/my/moment/job', `saver: "עזיבת עבודה" lists the job moment only, got ${kinds(saver('עזיבת עבודה')).join()}`);
   ok(saver('Q-031').length === 0 && pro('Q-031').some((x) => x.kind === 'שאלה'), 'saver: a Q-xxx id finds no question; pro still does');
   const s1093 = saver('1093');
   ok(s1093.length > 0 && s1093.every((x) => x.kind === 'קופה') && s1093[0].to === '/funds/g1093', `saver: "1093" lists the fund only (${kinds(s1093).join()})`);
@@ -170,6 +171,35 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
   ok(saver('דמי ניהול').some((x) => x.to === '/funds/tools/fees') && saver('ברירת מחדל').some((x) => x.to === '/funds/default'), 'saver: the fee tool and the default funds are found');
   ok(saver('תרחישים').length === 0 && saver('חדר מלחמה').length === 0 && saver('שאלות').length === 0, 'saver: the Pro screens (scenarios, war room, questions) are not offered');
   ok(forDoor(pro('עזיבת עבודה'), 'agent').length === pro('עזיבת עבודה').length && forDoor(pro('עזיבת עבודה'), null).length === pro('עזיבת עבודה').length, 'agent and no-door: unchanged');
+}
+
+/* W9 · life moments: a saver's phrase opens its moment page, listed first in the saver's door; the other doors never list them */
+{
+  const pool3 = buildPool(reg, ['אלטשולר שחם', 'הראל'], funds, [['harel', 'pl', 'הוצאות בגין עזיבת עבודה', 3]], [{ id: 'Q-031', q: 'מה קורה לכסף בעזיבת עבודה?', cos: ['harel'] }]);
+  const saver = (q: string) => ordered(forDoor(rank(q, pool3, (s) => s), 'saver'), true);
+  const agent = (q: string) => ordered(forDoor(rank(q, pool3, (s) => s), 'agent'), true);
+  const pro = (q: string) => ordered(forDoor(rank(q, pool3, (s) => s), 'pro'));
+  const first = (q: string) => saver(q)[0]?.to;
+  const cases: [string, string][] = [
+    ['עזבתי עבודה', 'job'], ['פיטורים', 'job'], ['פוטרתי', 'job'], ['החלפתי עבודה', 'job'], ['פיצויים', 'job'], ['משיכת פיצויים', 'job'], ['טופס 161', 'job'], ['מה קורה כשעוזבים עבודה', 'job'],
+    ['משיכת השתלמות', 'hishtalmut'], ['מתי אפשר למשוך השתלמות', 'hishtalmut'], ['השתלמות נזילה', 'hishtalmut'],
+    ['העלאה', 'raise'], ['קיבלתי העלאה בשכר', 'raise'],
+    ['פרישה', 'sixty'], ['גיל 60', 'sixty'], ['פרישה בגיל 67', 'sixty'], ['קיבוע זכויות', 'sixty'], ['161ד', 'sixty'], ['מקדם המרה', 'sixty'],
+    ['ניוד', 'switch'], ['לעבור קרן', 'switch'], ['הציעו לי לעבור קרן', 'switch'], ['מעבר קרן', 'switch'],
+    ['ברירת מחדל', 'default'], ['קרן ברירת מחדל', 'default'], ['ספרת ביקורת', 'default'],
+  ];
+  for (const [q, id] of cases) ok(first(q) === `/my/moment/${id}`, `saver: "${q}" → /my/moment/${id} first, got ${first(q)} (${saver(q).map((x) => x.kind).join()})`);
+  ok(saver('ברירת מחדל').some((x) => x.to === '/funds/default'), 'saver: "ברירת מחדל" still lists the default-funds page after the moment');
+  ok(saver('פרישה').some((x) => x.to === '/funds/tools/fees'), 'saver: "פרישה" still lists the fee tool after the moment');
+  // not a moment: a fund, a company, a product word alone
+  ok(saver('1093')[0]?.to === '/funds/g1093' && !saver('1093').some((x) => x.kind === 'רגע'), 'saver: a fund number is not a moment');
+  ok(!saver('הראל').some((x) => x.kind === 'רגע'), 'saver: a company name is not a moment');
+  for (const q of ['השתלמות', 'קרן השתלמות', 'פנסיה', 'גמל', 'אלטשולר פנסיה', 'מניות', 'הראל ניוד']) ok(!saver(q).some((x) => x.kind === 'רגע'), `saver: "${q}" is not a moment (${saver(q).filter((x) => x.kind === 'רגע').map((x) => x.to).join()})`);
+  // the type-ahead of a moment word, three letters on
+  ok(first('פיטו') === '/my/moment/job' && first('ניו') === '/my/moment/switch', 'saver: a moment is found while it is typed');
+  // the other doors
+  ok(!agent('עזבתי עבודה').some((x) => x.kind === 'רגע') && !pro('פיצויים').some((x) => x.kind === 'רגע'), 'agent and pro: no moments listed');
+  ok(agent('ברירת מחדל').some((x) => x.to === '/funds/default'), 'agent: "ברירת מחדל" still lists the default-funds page');
 }
 
 console.log(`search: ${pass} passed, ${fail} failed`);

@@ -56,8 +56,8 @@ function useFullText(q: string, pool: ReturnType<typeof usePool>['pool'], corpus
 /** the word to type after a company for a function: its Hebrew badge when it is a search key, else its first Hebrew key (CSM and DCF stay) */
 const word = (f: (typeof FUNCS)[number]) => (/^[A-Z]+$/.test(f.badge) && !['CSM', 'DCF'].includes(f.badge) ? f.keys.find((k) => /[\u0590-\u05FF]/.test(k)) ?? f.badge : f.badge.split(' ')[0]);
 /** W6 doors: the saver's four pages, offered when nothing is typed (SAVER_TO, lib/searchOmni) */
-const SAVER_HINTS: [string, string][] = [['המוצרים שלי', '/my'], ['איך קוראים את הדוח השנתי', '/my/statement'], ['דמי ניהול לאורך קריירה', '/funds/tools/fees'], ['קרנות ברירת מחדל', '/funds/default']].filter(([, to]) => SAVER_TO.has(to)) as [string, string][];
-const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'שאלה': 'שאלות', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
+const SAVER_HINTS: [string, string][] = [['המוצרים שלי', '/my'], ['רגעים: עזבתי עבודה, פרישה…', '/my/moment'], ['איך קוראים את הדוח השנתי', '/my/statement'], ['דמי ניהול לאורך קריירה', '/funds/tools/fees'], ['קרנות ברירת מחדל', '/funds/default']].filter(([, to]) => SAVER_TO.has(to)) as [string, string][];
+const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'רגע': 'רגעים בשנה', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'שאלה': 'שאלות', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
 
 export function Search({ big = false }: { big?: boolean }) {
   const [q, setQ] = useState('');
@@ -144,7 +144,7 @@ export function Search({ big = false }: { big?: boolean }) {
 
   const field = (auto: boolean) => (
     <input ref={input} autoFocus={auto}
-      type="search" value={q} placeholder={saver ? 'שם הקופה או מספר הקופה · למשל 2155' : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
+      type="search" value={q} placeholder={saver ? 'קופה, מספר קופה, או "עזבתי עבודה"' : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
       role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
       enterKeyHint="search" autoComplete="off" spellCheck={false}
       onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKey}
@@ -153,7 +153,7 @@ export function Search({ big = false }: { big?: boolean }) {
   const list = open && (s.length >= 2 || !s) && (
     <div className="results omni" role="listbox" id="search-results" aria-label="תוצאות חיפוש">
       {s.length >= 2 && !ready && <div className="muted omni-empty">טוען אינדקס…</div>}
-      {saver && s.length >= 2 && ready && shown.length === 0 && <div className="omni-empty omni-none" role="status"><b>לא נמצא.</b> נסו את מספר הקופה מהדוח השנתי, או את שם החברה המנהלת.</div>}
+      {saver && s.length >= 2 && ready && shown.length === 0 && <div className="omni-empty omni-none" role="status"><b>לא נמצא.</b> נסו את מספר הקופה מהדוח השנתי, את שם החברה המנהלת, או מה קרה: "עזבתי עבודה", "פרישה", "ניוד".</div>}
       {order.map((k) => {
         const items = shown.filter((h) => h.kind === k);
         return items.length ? (
@@ -171,7 +171,7 @@ export function Search({ big = false }: { big?: boolean }) {
           </div>
         ) : null;
       })}
-      {!s && saver && <div className="codes"><h4>מה אפשר לחפש</h4><div>{SAVER_HINTS.map(([l, to]) => <Link key={to} to={to} className="chip" onClick={(e) => { e.preventDefault(); go({ kind: 'פונקציה', label: l, meta: '', to, score: 0 }); }}>{l}</Link>)}</div><div className="muted omni-tip">לדוגמה: <bdi>2155</bdi> · <bdi>הראל השתלמות</bdi> · <bdi>אלטשולר פנסיה</bdi></div></div>}
+      {!s && saver && <div className="codes"><h4>מה אפשר לחפש</h4><div>{SAVER_HINTS.map(([l, to]) => <Link key={to} to={to} className="chip" onClick={(e) => { e.preventDefault(); go({ kind: 'פונקציה', label: l, meta: '', to, score: 0 }); }}>{l}</Link>)}</div><div className="muted omni-tip">לדוגמה: <bdi>2155</bdi> · <bdi>הראל השתלמות</bdi> · <bdi>עזבתי עבודה</bdi> · <bdi>פיצויים</bdi></div></div>}
       {!s && !saver && <div className="codes"><h4>חברה + נושא · לדוגמה: הראל סקירה</h4><div>{FUNCS.map((f) => <span key={f.code} className="chip" title={`${f.label} · גם באנגלית: ${f.code}`}><b>{word(f)}</b> {f.label !== word(f) && <span className="muted">{f.label}</span>}</span>)}</div><div className="muted omni-tip">לדוגמה: <bdi>הראל CSM</bdi> · <bdi>כלל מצגת Q2'26</bdi> · <bdi>רכיב הפסד</bdi> · <bdi>17,717</bdi>{!phone && <> · מקש <kbd>?</kbd> לכל הקיצורים</>}</div></div>}
     </div>
   );

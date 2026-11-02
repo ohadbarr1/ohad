@@ -42,7 +42,7 @@ export function SinceVisit({ data, dfile, list }: { data: FundsFile; dfile: Defa
   if (!rows.length) return null;
   const base = baselineOf(seen, asof);
   if (!base) {
-    return <p className="sv-muted ms-quiet">{first.current.cur ? `מה השתנה: אין נתונים חדשים מאז הביקור הקודם (${ym(asof)}).` : 'מה השתנה: כשהרשות תפרסם חודש חדש, יופיע כאן מה זז במוצרים שלך.'}</p>;
+    return <p className="sv-muted ms-quiet">{first.current.cur ? `מה השתנה: אין נתונים חדשים מאז הביקור הקודם (${ym(asof)}).` : 'מה השתנה: יופיע כאן בעדכון הנתונים הבא.'}</p>;
   }
   const gap = monthsBetween(base.asof, asof);
   return (

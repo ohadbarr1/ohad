@@ -27,8 +27,9 @@ const KZ_HISH = 'https://www.kolzchut.org.il/he/%D7%A7%D7%A8%D7%9F_%D7%94%D7%A9%
 const REG_MOVE = 'https://www.gov.il/BlobFolder/news/news_0031/he/Regulation_13_02_2025_pdf.pdf';
 const KZ_GEMEL_INVEST = RULE.gemelInvest.src[2]?.url ?? KZ_MOVE;
 
-export function FriendSays({ f, data, dfile, dec, C, sex }: { f: FundX; data: FundsFile; dfile: DefaultFile | null | undefined; dec: DecisionFile | null | undefined; C: CardCalc; sex: 'm' | 'f' | null }) {
-  const [open, setOpen] = useState(false);
+export function FriendSays({ f, data, dfile, dec, C, sex, startOpen = false }: { f: FundX; data: FundsFile; dfile: DefaultFile | null | undefined; dec: DecisionFile | null | undefined; C: CardCalc; sex: 'm' | 'f' | null;
+  /** W9: open on arrival (the `switch` moment page lists one per product) */ startOpen?: boolean }) {
+  const [open, setOpen] = useState(startOpen);
   const [q, setQ] = useState('');
   const [pick, setPick] = useState<string | null>(null);
   const funds = data.funds as FundX[], asof = data.asof;
@@ -50,12 +51,12 @@ export function FriendSays({ f, data, dfile, dec, C, sex }: { f: FundX; data: Fu
       </ul>}
       {q.trim().length >= 2 && !other && hits.length === 0 && <p className="sv-muted">לא נמצא מסלול כזה בנתוני הרשות. אפשר לנסות את מספר הקופה מהדוח של החבר.</p>}
       {other && !sameCat.has(other.k) && <p className="sv-note sv-friend-no"><b>{other.name}</b> ({other.prod}, {other.track}) הוא מקטגוריה אחרת מ{f.prod}, {f.track}. השוואה הוגנת היא רק בין מסלולים מאותו מוצר ומאותו סוג מסלול: תשואה של מסלול מניות מול מסלול כללי אומרת על הסיכון, לא על המנהל. <Link to={`/funds/${other.k}`}>כרטיס המסלול</Link>.</p>}
-      {other && sameCat.has(other.k) && <Compare f={f} o={other} funds={funds} asof={asof} dfile={dfile} dec={dec} C={C} data={data} sex={sex} />}
+      {other && sameCat.has(other.k) && <Compare f={f} o={other} funds={funds} asof={asof} dfile={dfile} dec={dec} C={C} data={data} sex={sex} startOpen={startOpen} />}
     </section>
   );
 }
 
-function Compare({ f, o, funds, asof, dfile, dec, C, data, sex }: { f: FundX; o: FundX; funds: FundX[]; asof: number; dfile: DefaultFile | null | undefined; dec: DecisionFile | null | undefined; C: CardCalc; data: FundsFile; sex: 'm' | 'f' | null }) {
+function Compare({ f, o, funds, asof, dfile, dec, C, data, sex, startOpen }: { f: FundX; o: FundX; funds: FundX[]; asof: number; dfile: DefaultFile | null | undefined; dec: DecisionFile | null | undefined; C: CardCalc; data: FundsFile; sex: 'm' | 'f' | null; startOpen?: boolean }) {
   const pen = isPension(f.prod), hish = f.prod === 'השתלמות';
   const vO: Verdict = useMemo(() => verdictOf(o, funds, asof, dfile, null, dec), [o, funds, asof, dfile, dec]);
   const vM = C.v;
@@ -116,7 +117,7 @@ function Compare({ f, o, funds, asof, dfile, dec, C, data, sex }: { f: FundX; o:
         {!hish && <li>מי שיש לו פוליסת מנהלים ישנה עם מקדם קצבה מובטח מאבד אותו בניוד; אי אפשר לחזור. <a href={KZ_MOVE} target="_blank" rel="noreferrer">כל זכות</a></li>}
         <li>לא ניתן לנייד כשיש הלוואה מהקרן שלא הוחזרה, כשהכסף משועבד או מעוקל, או כשכבר מקבלים קצבה. <a href={KZ_MOVE} target="_blank" rel="noreferrer">כל זכות</a></li>
       </ul>
-      <p className="sv-note">עובדות על ההליך, לא המלצה לעבור או להישאר. מה שחבר קיבל במסלול שלו תלוי בדמי הניהול שסוכמו איתו ובשנים שבהן היה שם.</p>
+      <p className="sv-note">עובדות על ההליך, לא המלצה לעבור או להישאר. מה שחבר קיבל במסלול שלו תלוי בדמי הניהול שסוכמו איתו ובשנים שבהן היה שם.{!startOpen && <> <Link to="/my/moment/switch">מה עוד לבדוק ולשאול לפני מעבר</Link>.</>}</p>
     </div>
   );
 }

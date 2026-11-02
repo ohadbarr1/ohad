@@ -1,0 +1,43 @@
+/* W9 saver · the moment pages (/my/moment/<id>) and the chip row on /my. Phone first; the site's tokens only. Links inside text are
+   underlined (axe link-in-text-block); muted text is tinted, never dimmed with opacity. */
+
+.sv-moments { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.mo-chip { text-decoration: none; display: inline-flex; align-items: center; }
+.mo-chip:hover { text-decoration: none; }
+.mo-chip[aria-current="page"] { background: var(--sel-bg); color: var(--sel-fg); border-color: transparent; font-weight: 700; }
+
+.mo-page .eyebrow a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.mo-page p a, .mo-page li a, .mo-page td a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.mo-page .sv-legal a { color: var(--muted); }
+.mo-sec { gap: 12px; }
+.mo-sec > h2 { margin: 0; font-size: var(--t-5); letter-spacing: -0.01em; }
+.mo-h3 { margin: 6px 0 0; font-size: var(--t-4); }
+.mo-src { white-space: normal; font-size: var(--t-3); }
+.mo-law li { line-height: 1.65; }
+.mo-ask { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 6px; font-size: var(--t-4); line-height: 1.55; }
+
+.mo-box { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 12px 14px; background: var(--panel2); display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow-wrap: anywhere; }
+.mo-box > p { margin: 0; font-size: var(--t-4); line-height: 1.6; }
+.mo-box-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.mo-form { grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr)); }
+.mo-form input[type="number"], .mo-form input[type="text"] { font-size: 16px; }
+.mo-save { display: flex !important; align-items: center; gap: 8px; grid-auto-flow: column; color: var(--fg) !important; font-weight: 500 !important; }
+.mo-fs { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--t-4); }
+.mo-fs legend { font-size: var(--t-3); color: var(--muted); font-weight: 600; padding: 0; margin-bottom: 4px; }
+.mo-fs label { display: inline-flex; align-items: center; gap: 6px; }
+.mo-inline { display: inline-flex; flex-basis: auto; vertical-align: middle; }
+.mo-t { font-size: var(--t-3); }
+.mo-t th, .mo-t td { display: table-cell; white-space: nowrap; padding: 6px 4px; vertical-align: top; }
+.mo-t thead th { white-space: normal; }
+.mo-t tbody th { white-space: normal; }
+.mo-t td .sv-a { display: block; }
+.mo-t td .sv-a::before { content: none; }
+.mo-dflt .sv-facts { font-size: var(--t-4); }
+
+.mo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.mo-item { text-decoration: none; }
+/* the site's phone rule gives a panel table's first column 46vw; these tables are four short columns */
+.mo-page .mo-t th:first-child, .mo-page .mo-t td:first-child { min-width: 0; max-width: none; width: auto; }
+.mo-save input[type="checkbox"] { width: 18px; height: 18px; flex: none; margin: 0; }
+.mo-save span { flex: 1 1 auto; min-width: 0; }
+.mo-form .mo-save { align-self: end; }

@@ -5,8 +5,9 @@
 import { matches, normalize, startsWord, stems, terms } from './hebrew';
 import type { RegistryCompany } from './types';
 import { DOC_TYPE_HE, type Corpus, type DocMeta, type DocType } from './search';
+import { MOMENTS, momentHits, momentPath } from './moments';  // W9: life moments
 
-export type Kind = 'אחרונים' | 'חיפושים' | 'חברה' | 'פונקציה' | 'שאלה' | 'קופה' | 'שורה בדוח' | 'מסמך';
+export type Kind = 'אחרונים' | 'חיפושים' | 'רגע' | 'חברה' | 'פונקציה' | 'שאלה' | 'קופה' | 'שורה בדוח' | 'מסמך';
 export interface Item { kind: Kind; label: string; meta: string; to: string; score: number; sub?: string }
 
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
@@ -62,12 +63,12 @@ const SAVER_PAGES: [string[], string, string, string][] = ([
   [['statement', 'דוח', 'הדוח', 'שנתי', 'השנתי', 'רבעוני', 'מסלקה', 'לקרוא', 'קוראים', 'איך'], 'איך קוראים את הדוח השנתי', 'מה כל שורה בדוח אומרת, ומה לבדוק', '/my/statement'],
 ] as [string[], string, string, string][]).map(([k, l, m, to]) => [k.map(normalize), l, m, to] as [string[], string, string, string]);
 /** the pages a saver's search may open besides funds and companies: their own two pages, the fee tool and the default funds */
-export const SAVER_TO = new Set(['/my', '/my/statement', '/funds/tools/fees', '/funds/default']);
+export const SAVER_TO = new Set(['/my', '/my/statement', '/my/moment', '/funds/tools/fees', '/funds/default']);
 /** W6 doors · what the saver's door lists: funds, companies and the saver's pages. No filing pages, statement lines or Pro questions
  *  ("עזיבת עבודה" used to answer with an annual report, page 192); the other doors see everything. */
 export function forDoor(list: Item[], door: 'saver' | 'agent' | 'pro' | null | undefined): Item[] {
-  if (door !== 'saver') return list;
-  return list.filter((x) => x.kind === 'חיפושים' || x.kind === 'אחרונים' || x.kind === 'חברה' || x.kind === 'קופה' || (x.kind === 'פונקציה' && SAVER_TO.has(x.to.split('?')[0])));
+  if (door !== 'saver') return list.filter((x) => x.kind !== 'רגע');  // W9: the life moments are the saver's
+  return list.filter((x) => x.kind === 'חיפושים' || x.kind === 'אחרונים' || x.kind === 'רגע' || x.kind === 'חברה' || x.kind === 'קופה' || (x.kind === 'פונקציה' && SAVER_TO.has(x.to.split('?')[0])));
 }
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
@@ -189,10 +190,12 @@ export function fundHits<T extends { assets?: number | null }>(q: string, list: 
  *  code ("הראל csm"), then a track named in full after its company ("אלטשולר שחם פנסיה מקיפה"); else the fixed order. */
 export const ORDER: Kind[] = ['חיפושים', 'אחרונים', 'חברה', 'פונקציה', 'שאלה', 'קופה', 'שורה בדוח', 'מסמך'];
 /** The saver and agent doors look for funds: funds come before questions, and report pages and lines drop out once a fund matched. */
-const ORDER_FUNDS: Kind[] = ['חיפושים', 'אחרונים', 'קופה', 'חברה', 'פונקציה', 'שאלה', 'שורה בדוח', 'מסמך'];
+const ORDER_FUNDS: Kind[] = ['חיפושים', 'אחרונים', 'רגע', 'קופה', 'חברה', 'פונקציה', 'שאלה', 'שורה בדוח', 'מסמך'];
 export function orderFor(list: Item[], fundsFirst = false): Kind[] {
   const base = fundsFirst ? ORDER_FUNDS : ORDER;
+  // W9: in the saver's door a life moment ("עזבתי עבודה") leads everything but a fund typed by its number
   const lead: Kind | null = list.some((x) => x.kind === 'קופה' && x.score >= FUND_ID_SCORE) ? 'קופה'
+    : fundsFirst && list.some((x) => x.kind === 'רגע') ? 'רגע'
     : list.some((x) => x.kind === 'פונקציה' && x.score >= 90) ? 'פונקציה'
     : list.some((x) => x.kind === 'קופה' && x.score >= FUND_LEAD) ? 'קופה' : null;
   const order = lead ? [lead, ...base.filter((k) => k !== lead)] : base;
@@ -268,6 +271,8 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   }
   if (!p.company && words.length) for (const [keys, label, meta, to] of FT_PAGES) if (words.every((w) => keys.some((k) => k.startsWith(w)))) out.push({ kind: 'פונקציה', label, meta, to, score: 94 });  // F2 TIME
   if (!p.company && words.length) for (const [keys, label, meta, to] of SAVER_PAGES) if (words.every((w) => keys.some((k) => k.startsWith(w)))) out.push({ kind: 'פונקציה', label, meta, to, score: 93 });  // W6 doors
+  // W9: the life moments, by the words a saver types for them ("עזבתי עבודה", "פיצויים", "גיל 60"); the doors other than the saver's drop them
+  if (!p.company) for (const h of momentHits(q)) out.push({ kind: 'רגע', label: MOMENTS[h.id].title, meta: MOMENTS[h.id].meta, to: momentPath(h.id), score: h.score });
   // questions: a question id ("Q-001"), or every word left after the company starts a word of the question (within that company's questions)
   if (words.length) {
     const idq = /^q-?\d{1,3}$/i.test(q.trim()) ? q.trim().toLowerCase().replace('-', '') : null;
@@ -308,7 +313,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     docs.docs.filter((d) => d.company === p.company!.id && (!p.type || d.type === p.type) && (!p.period || d.period === p.period))
       .slice(0, 5).forEach((d, i) => out.push({ kind: 'מסמך', label: docLabel(d, name), meta: `${d.pages} עמ׳`, to: `/doc/${d.id}`, score: 90 - i }));
   }
-  const cap: Partial<Record<Kind, number>> = { 'חברה': 5, 'פונקציה': 9, 'שאלה': 5, 'קופה': 6, 'שורה בדוח': 7, 'מסמך': 5 };
+  const cap: Partial<Record<Kind, number>> = { 'רגע': 3, 'חברה': 5, 'פונקציה': 9, 'שאלה': 5, 'קופה': 6, 'שורה בדוח': 7, 'מסמך': 5 };
   const by = new Map<Kind, Item[]>();
   out.sort((a, b) => b.score - a.score).forEach((it) => { const l = by.get(it.kind) ?? []; if (l.length < (cap[it.kind] ?? 6)) { l.push(it); by.set(it.kind, l); } });
   return [...by.values()].flat();

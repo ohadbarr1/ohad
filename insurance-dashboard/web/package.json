@@ -39,7 +39,8 @@
     "test:flows": "node scripts/flows-test.mjs",
     "test:coef": "node scripts/coef-test.mjs",
     "test:nyud": "node scripts/nyud-test.mjs",
-    "test:news": "node scripts/news-test.mjs"
+    "test:news": "node scripts/news-test.mjs",
+    "test:moments": "node scripts/moments-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

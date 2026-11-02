@@ -22,6 +22,8 @@ import { ProductCard } from '../components/saver/ProductCard';
 import { GlossBar } from '../components/saver/Gloss';
 import { MaslakaImport } from '../components/saver/MaslakaImport';
 import { SinceVisit } from '../components/saver/SinceVisit';
+import { MomentChips } from '../components/saver/MomentChips';  // W9: life moments
+import '../styles/moments.css';
 import '../styles/saver.css';
 
 /* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26): the reader's age once, a strip that adds up what they
@@ -35,7 +37,8 @@ import '../styles/saver.css';
    W7 (wave 2): household profiles ("אני", "+ בן/בת זוג", "+ הורה"; lib/household) in one chip row, each with its own products, age, sex,
    retirement age, salary and "what changed" snapshot; "אני" keeps the keys the page always used, so nothing is lost. The deposit
    watchdog, the coverage line and "חבר אמר לעבור ל…" live on the card (components/saver). /my#deposits opens the first pension or
-   השתלמות card on its watchdog (the link from /my/statement). */
+   השתלמות card on its watchdog (the link from /my/statement).
+   W9: a row of five chips, the life moments (/my/moment/<id>, pages/Moments), the labels only (the page's 400-word budget). */
 export { SALARY_KEY };
 const EXAMPLE = 'p9757';
 const today = () => new Date().toISOString().slice(0, 10);
@@ -83,13 +86,14 @@ export function My() {
       <div className="pagehead"><div>
         <span className="eyebrow">החיסכון שלי</span>
         <h1><span className="icotile"><Icon name="mine" /></span>המוצרים שלי</h1>
-        <div className="sub sv-sub">כמה אתם משלמים ואיפה המסלול עומד מול דומיו, בשקלים. נתוני רשות שוק ההון עד {asof}.</div>
+        <div className="sub sv-sub">כמה אתם משלמים ואיפה המסלול עומד, בשקלים. נתוני רשות שוק ההון עד {asof}.</div>
       </div></div>
 
       <Household />
       <AgeRow />
       {msg && <p className="sv-done" role="status">{msg}</p>}
       {rows.length > 0 && <Strip rows={rows} retire={R.v} coefF={coefF} />}
+      <MomentChips />
 
       {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
 
@@ -109,7 +113,7 @@ export function My() {
 
       <Link to="/my/statement" className="panel sv-stmt">
         <span className="icotile"><Icon name="statement" /></span>
-        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>שתי דקות, ואחריה שדה אחר שדה.</span></span>
+        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>שדה אחר שדה.</span></span>
         <span className="sv-stmt-go" aria-hidden="true">←</span>
       </Link>
 

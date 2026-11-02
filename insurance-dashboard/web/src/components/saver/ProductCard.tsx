@@ -146,7 +146,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         <div className="sv-card-t">
           <h2><Link to={`/funds/${f.k}`}>{f.name}</Link></h2>
           <p className="sv-card-s">{f.prod} · <span className="sv-nw">קופה {f.id}</span></p>
-          {ageNote && <p className="sv-card-s sv-agenote">{ageNote.text}{pick.src && <> <a className="sv-u" href={pick.src.url} target="_blank" rel="noreferrer">תקנון הקרן</a></>}</p>}
+          {ageNote && <p className="sv-card-s sv-agenote">{ageNote.text}{pick.src && <> <a className="sv-u" href={pick.src.url} target="_blank" rel="noreferrer">תקנון הקרן</a></>} <Link className="sv-u" to="/my/moment/sixty">מתקרבים ל-60</Link></p>}
         </div>
         {onRemove && <button type="button" className="sv-x" onClick={onRemove} aria-label={`הסרה: ${f.name}`}>הסרה</button>}
       </header>
@@ -210,6 +210,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
           <ul className="sv-facts">
             <li>הכסף נזיל אחרי 6 שנים מתחילת ההפקדות, בכל גיל ולכל מטרה. אחרי 3 שנים: למימון לימודים או השתלמות, או למי שהגיע לגיל פרישה. לכן הפער בשקלים מוצג גם לאופק של 6 שנים. <a href={KOLZCHUT_HISHTALMUT} target="_blank" rel="noreferrer">כל זכות</a></li>
             <li>תקרת ההפקדה הפטורה ({RULE.hishtalmut.year}): {HISH_CEIL} <a href={RULE.hishtalmut.src[1]?.url ?? RULE.hishtalmut.src[0].url} target="_blank" rel="noreferrer">רשות המסים</a></li>
+            <li>מתי למשוך, מה המס, ומה עולה המשיכה בשקלים: <Link to="/my/moment/hishtalmut">משיכת השתלמות</Link></li>
             <li>מסלולים שעוקבים אחרי אותו מדד מחזיקים בעיקר את אותם נכסים, ולכן ההבדל ביניהם הוא בעיקר בעלות: דמי הניהול ועלות המעקב. <Link to="/funds/trackers">השוואת המסלולים העוקבים</Link></li>
           </ul>
         </Sec>}
