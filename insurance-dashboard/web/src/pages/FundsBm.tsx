@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
 import { Sourced } from '../components/Source';
 import { MgrChip } from '../components/MgrChip';
 import { Empty, Field, Kpi, Loading, Panel, Seg } from '../components/ui';
 import { NEW_COEF_SRC, bmCompare, bmLine, coefOk, newCoefDefault, COEF_MIN, COEF_MAX } from '../lib/bmCalc';
-import type { Sex } from '../lib/retire';
+import { RETIRE_AGE, type Sex } from '../lib/retire';
+import { COEF_PATH, fundChoices, type CoefFile, type CoefPick } from '../lib/coef';  // W6
 import { useOptional } from '../lib/fundsLoad';
 import { BM_CUTOFF, DECISION_PATH, bmProv, rankHe, srcOf, svcProv, type DecisionFile } from '../lib/decision';
 import '../styles/agent.css';
@@ -23,16 +24,25 @@ const numIn = (s: string): number | null => { const t = s.replace(/[,\s₪%]/g, 
 const ilsF = (v: number) => `₪${Math.round(v).toLocaleString('en-US')}`;
 
 /** W5 · red team 3: the guaranteed coefficient of an old policy against a new pension fund, on the same balance. The policy's numbers
- *  are the reader's; the new fund's coefficient is an assumption (the site's, by sex), editable. Nothing is stored. */
-function BmCalc() {
+ *  are the reader's. W6: the new fund's coefficient is chosen from the funds' own bylaws tables (lib/coef, funds/coef.json: by sex, a
+ *  retirement age of 67 and the birth year), the site's assumption as the last option, or a typed figure. The result names the fund and
+ *  the page. Nothing is stored. */
+function BmCalc({ coefF }: { coefF: CoefFile | null | undefined }) {
   const [bal, setBal] = useState('');
   const [cg, setCg] = useState('');
   const [sex, setSex] = useState<Sex | 'x'>('x');
+  const [by, setBy] = useState('1960');
+  const [grpQ, setGrp] = useState<string | null>(null);  // null: not chosen yet (the first fund with a table); '' the assumption; '*' a typed coefficient; else a fund group
   const [cn, setCn] = useState('');
   const [fee, setFee] = useState('');
   const [feeN, setFeeN] = useState('');
   const dflt = newCoefDefault(sex === 'x' ? null : sex);
-  const B = numIn(bal), G = numIn(cg), N = numIn(cn) ?? dflt.v;
+  const byN = numIn(by);
+  const choices = useMemo(() => fundChoices(coefF, sex === 'x' ? null : sex, RETIRE_AGE, byN != null && byN >= 1940 && byN <= 1980 ? Math.round(byN) : null), [coefF, sex, byN]);
+  const grp = grpQ ?? (choices[0]?.grp ?? '');
+  const chosen: CoefPick | null = grp && grp !== '*' ? choices.find((c) => c.grp === grp)?.pick ?? null : null;
+  const B = numIn(bal), G = numIn(cg), N = grp === '*' ? numIn(cn) ?? dflt.v : chosen ? chosen.v : dflt.v;
+  const newWhy = grp === '*' ? 'מקדם שהקלדת' : chosen ? chosen.why : `הנחה: ${dflt.why}`;
   const o = B != null && G != null ? bmCompare({ balance: B, coefG: G, coefNew: N, fee: numIn(fee), feeNew: numIn(feeN) }) : null;
   const bad = G != null && !coefOk(G) ? `מקדם ${G} מחוץ לטווח הסביר (${COEF_MIN}–${COEF_MAX}): לבדוק בפוליסה` : numIn(cn) != null && !coefOk(numIn(cn)) ? `מקדם ${numIn(cn)} לקרן חדשה מחוץ לטווח הסביר (${COEF_MIN}–${COEF_MAX})` : null;
   return (
@@ -41,10 +51,16 @@ function BmCalc() {
         <div className="bm-calc-in">
           <Field label="יתרה צבורה בפוליסה (ש&quot;ח)"><input inputMode="decimal" value={bal} onChange={(e) => setBal(e.target.value)} placeholder="למשל 640,000" /></Field>
           <Field label="מקדם המרה מובטח בפוליסה"><input inputMode="decimal" value={cg} onChange={(e) => setCg(e.target.value)} placeholder="מהפוליסה, למשל 160" /></Field>
-          <div className="field"><span>מקדם בקרן פנסיה חדשה (הנחה)</span>
-            <Seg label="מין, לברירת המחדל של המקדם" value={sex} onChange={(v) => { setSex(v); setCn(''); }} options={[['x', 'לא צוין'], ['m', 'גבר'], ['f', 'אישה']]} />
-            <input inputMode="decimal" value={cn} onChange={(e) => setCn(e.target.value)} placeholder={`${dflt.v}`} aria-label="מקדם בקרן פנסיה חדשה" />
-            <small className="muted">ברירת מחדל {dflt.v}: {dflt.why}; אפשר להקליד מקדם אחר</small></div>
+          <div className="field"><span>מקדם בקרן פנסיה חדשה</span>
+            <Seg label="מין, למקדם" value={sex} onChange={(v) => { setSex(v); setCn(''); }} options={[['x', 'לא צוין'], ['m', 'גבר'], ['f', 'אישה']]} />
+            <label className="field"><span className="muted">שנת לידה (לעמודת המקדם בתקנון)</span><input inputMode="numeric" value={by} onChange={(e) => setBy(e.target.value)} placeholder="1960" aria-label="שנת לידה" /></label>
+            <select value={grp} onChange={(e) => setGrp(e.target.value)} aria-label="קרן הפנסיה החדשה, למקדם מהתקנון">
+              {choices.map((c) => <option key={c.grp} value={c.grp}>{c.name} · מקדם {c.pick.v} ({c.pick.label})</option>)}
+              <option value="">הנחת האתר · {dflt.v} ({dflt.why})</option>
+              <option value="*">מקדם אחר (להקליד)</option>
+            </select>
+            {grp === '*' && <input inputMode="decimal" value={cn} onChange={(e) => setCn(e.target.value)} placeholder={`${dflt.v}`} aria-label="מקדם בקרן פנסיה חדשה" />}
+            <small className="muted">{coefF === undefined ? 'טוען את טבלאות התקנונים…' : choices.length ? `${choices.length} קרנות עם טבלה בתקנון לפרישה בגיל ${RETIRE_AGE}, לפי מין ושנת לידה; קצבה לבן/בת זוג 60% בלי הבטחת תשלומים. ` : sex === 'x' ? 'בחרו מין כדי לקרוא מקדם מהתקנון של קרן. ' : 'אין טבלה זמינה. '}{newWhy}</small></div>
           <Field label="ד&quot;נ מצבירה בפוליסה, % (לא חובה)"><input inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="למשל 1.05" /></Field>
           <Field label="ד&quot;נ מצבירה בקרן החדשה, % (לא חובה)"><input inputMode="decimal" value={feeN} onChange={(e) => setFeeN(e.target.value)} placeholder="למשל 0.22" /></Field>
         </div>
@@ -52,17 +68,17 @@ function BmCalc() {
           {bad ? <p className="bm-n">{bad}</p> : !o ? <p className="muted">מקלידים יתרה ומקדם מובטח מהפוליסה, ומקבלים את הקצבה החודשית בשני המקדמים על אותה יתרה.</p> : <>
             <div className="kpis bm-kpis">
               <Kpi label="קצבה חודשית, המקדם המובטח" value={<span className="num">{ilsF(o.annG)}</span>} sub={<>יתרה ÷ <span className="num">{G}</span></>} />
-              <Kpi label="קצבה חודשית, קרן חדשה (הנחה)" value={<span className="num">{ilsF(o.annNew)}</span>} sub={<>יתרה ÷ <span className="num">{N}</span></>} />
+              <Kpi label={chosen ? `קצבה חודשית, ${chosen.src?.fund ?? grp}` : 'קצבה חודשית, קרן חדשה (הנחה)'} value={<span className="num">{ilsF(o.annNew)}</span>} sub={<>יתרה ÷ {chosen ? <Sourced src={chosen.prov}><span className="num">{N}</span></Sourced> : <span className="num">{N}</span>}{chosen ? ` · ${chosen.label}` : ''}</>} />
               <Kpi label="ההפרש בחודש" value={<span className="num">{o.diff >= 0 ? '+' : '−'}{ilsF(Math.abs(o.diff))}</span>} sub={<span className="num">{o.pct >= 0 ? '+' : '−'}{Math.abs(o.pct).toFixed(1)}%</span>} tone={o.diff >= 0 ? 'pos' : 'neg'} />
             </div>
-            <p className="bm-line"><b>{bmLine(o, G!, N)}</b></p>
+            <p className="bm-line"><b>{bmLine(o, G!, N)}</b>{chosen && <> <span className="muted">המקדם החדש: {chosen.why}.</span></>}</p>
             {(o.feeG != null || o.feeN != null) && <p className="bm-fee">דמי ניהול על היתרה של היום, בשנה: {o.feeG != null && <>בפוליסה <span className="num">{ilsF(o.feeG)}</span></>}{o.feeG != null && o.feeN != null && ' · '}{o.feeN != null && <>בקרן החדשה <span className="num">{ilsF(o.feeN)}</span></>}{o.feeG != null && o.feeN != null && <> · הפרש <span className="num">{ilsF(Math.abs(o.feeG - o.feeN))}</span> {o.feeG > o.feeN ? 'לטובת הקרן החדשה' : 'לטובת הפוליסה'}</>}. דמי הניהול אינם משנים את המקדם; הם מקטינים את היתרה עד הפרישה.</p>}
           </>}
         </div>
       </div>
       <div className="fnote">
         <b>איפה מוצאים את המקדם המובטח:</b> בתנאי הפוליסה (דף פרטי הביטוח), ובחלק מחברות הביטוח גם בדוח השנתי למבוטח. אם אינו מופיע, מבקשים אותו בכתב מחברת הביטוח, ובאותה פנייה שואלים לאיזה גיל פרישה ולאיזה מסלול קצבה הוא מובטח (שארים, תקופת הבטחת תשלומים), והאם הוא חל על כל הכספים בפוליסה.
-        {' '}<b>החישוב:</b> קצבה חודשית = יתרה ÷ מקדם, על היתרה של היום, בלי תשואה ודמי ניהול עד הפרישה ובלי הבדלי מסלול הקצבה. המקדם בקרן חדשה אינו מובטח: הקרן קובעת אותו בפרישה לפי התקנון ולוחות תוחלת החיים. ברירת המחדל כאן היא הנחה של האתר בגיל 67, לפי <a href={NEW_COEF_SRC.url} target="_blank" rel="noreferrer">{NEW_COEF_SRC.title}</a>. חישוב, לא ייעוץ: ההחלטה תלויה גם ביתר הפריטים ברשימה למטה.
+        {' '}<b>החישוב:</b> קצבה חודשית = יתרה ÷ מקדם, על היתרה של היום, בלי תשואה ודמי ניהול עד הפרישה ובלי הבדלי מסלול הקצבה. המקדם בקרן חדשה אינו מובטח: הקרן קובעת אותו בפרישה לפי התקנון שבתוקף אז ולוחות תוחלת החיים. המקדמים ברשימה נקראו מנספח מקדמי ההמרה בתקנון של כל קרן (פרישה בגיל 67, קצבה לבן/בת זוג 60% בלי הבטחת תשלומים, דמי ניהול 0.3%), והעמוד מצוין; הנחת האתר, האפשרות האחרונה, לפי <a href={NEW_COEF_SRC.url} target="_blank" rel="noreferrer">{NEW_COEF_SRC.title}</a>. חישוב, לא ייעוץ: ההחלטה תלויה גם ביתר הפריטים ברשימה למטה.
       </div>
     </Panel>
   );
@@ -70,6 +86,7 @@ function BmCalc() {
 
 export function FundsBm() {
   const d = useOptional<DecisionFile>(DECISION_PATH);
+  const coefF = useOptional<CoefFile>(COEF_PATH);  // W6
   const [done, setDone] = useState<Record<string, boolean>>({});
   const head = <FundsHead title="ביטוחי מנהלים ישנים: מה בודקים לפני שעוזבים" sub="רשימת בדיקה לפני ניוד או פדיון של פוליסת ביטוח מנהלים ישנה · לפי כל זכות (נכתב בסיוע רשות שוק ההון) ותקנון קרן הפנסיה · מידע כללי, לא ייעוץ" />;
   if (d === undefined) return <>{head}<Loading what="רשימת הבדיקה" /></>;
@@ -92,7 +109,7 @@ export function FundsBm() {
         </div>
       </Panel>
 
-      <BmCalc />
+      <BmCalc coefF={coefF} />
 
       <Panel title={<>מה עלול ללכת לאיבוד <span className="w2d num">· {items.length} פריטים</span></>} aside={<span aria-live="polite">סימנתם <span className="num">{n}</span> מתוך <span className="num">{items.length}</span> · נשאר בעמוד בלבד</span>}>
         <ol className="bm-list">

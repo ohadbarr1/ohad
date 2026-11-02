@@ -104,6 +104,9 @@ Checks
                  track files byte for byte, and hold their rules: drawdowns ≤ 0, ranks 0-100 with at least 5 peers, transition rows that
                  sum, every default-fund tender sourced (verified only on a gov.il page), tracking differences that re-derive
                  (pipeline/build_fund_stats.py --check)
+  coef           W6: web/public/data/funds/coef.json equals a rebuild (pipeline/build_coef.py --check): every conversion-coefficient table
+                 has a source page and heading, cells in [145, 260], falls with the retirement age and never with the birth year, women never
+                 below men without survivors, every pension company group has a coverage row
   decision       W2: web/public/data/funds/decision.json equals a rebuild (pipeline/build_decision.py --check): every service-index row's
                  total = the published weights x its components within rounding, every claims block sums to 100%, every company is a
                  fox group, every figure has a source with a URL and a retrieval date, every coverage rule and checklist item a quoted phrase
@@ -683,6 +686,14 @@ def decision():  # W2
         (out[0] if p.returncode == 0 else " · ".join(out[:2]))[:200])
 
 
+def coef():  # W6: the conversion coefficients read from the funds' bylaws
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_coef.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) tables", out[0])
+    add("coef", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[0] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def attribution():  # module A4
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -774,6 +785,7 @@ def main():
     funds_contract()
     fund_stats()
     decision()
+    coef()
     attribution()
     facts()
     assets()

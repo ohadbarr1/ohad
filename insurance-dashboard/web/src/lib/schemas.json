@@ -142,6 +142,10 @@
    "schema": "fundsDecision"
   },
   {
+   "pattern": "funds/coef.json",
+   "schema": "fundsCoef"
+  },
+  {
    "pattern": "funds/trackers.json",
    "schema": "fundsTrackers"
   },
@@ -16313,6 +16317,286 @@
        "what",
        "reason"
       ]
+     }
+    }
+   }
+  },
+  "fundsCoef": {
+   "type": "object",
+   "required": [
+    "v",
+    "asof",
+    "method",
+    "ages",
+    "options",
+    "funds",
+    "coverage",
+    "assumption",
+    "btl",
+    "target"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "asof": {
+     "$ref": "#/$defs/date"
+    },
+    "method": {
+     "type": "string"
+    },
+    "basis_note": {
+     "type": "string"
+    },
+    "src": {
+     "type": "string"
+    },
+    "ages": {
+     "type": "array",
+     "minItems": 11,
+     "items": {
+      "type": "integer"
+     }
+    },
+    "year_from": {
+     "type": "integer"
+    },
+    "options": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "survivors",
+       "guarantee",
+       "label"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "funds": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "src",
+       "tables",
+       "excluded"
+      ],
+      "properties": {
+       "src": {
+        "type": "object",
+        "required": [
+         "id",
+         "kind",
+         "title",
+         "url",
+         "edition",
+         "retrieved",
+         "sha256",
+         "pages"
+        ],
+        "properties": {
+         "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+         },
+         "kind": {
+          "enum": [
+           "primary",
+           "mirror"
+          ]
+         },
+         "title": {
+          "type": "string"
+         },
+         "url": {
+          "type": "string",
+          "pattern": "^https://"
+         },
+         "edition": {
+          "type": "string"
+         },
+         "retrieved": {
+          "$ref": "#/$defs/date"
+         },
+         "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+         },
+         "pages": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+           "type": "integer"
+          }
+         }
+        }
+       },
+       "tables": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "opt",
+          "sex",
+          "pages",
+          "quote",
+          "years",
+          "ages",
+          "v"
+         ],
+         "properties": {
+          "opt": {
+           "type": "string",
+           "pattern": "^s(0|30|60|100|x)_g(0|60|120|180|240|to87)$"
+          },
+          "sex": {
+           "enum": [
+            "m",
+            "f"
+           ]
+          },
+          "pages": {
+           "type": "array",
+           "minItems": 1,
+           "items": {
+            "type": "integer"
+           }
+          },
+          "quote": {
+           "type": "string"
+          },
+          "years": {
+           "type": "array",
+           "minItems": 1,
+           "items": {
+            "type": "integer"
+           }
+          },
+          "ages": {
+           "type": "array",
+           "minItems": 1,
+           "items": {
+            "type": "integer"
+           }
+          },
+          "v": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": {
+             "type": [
+              "number",
+              "null"
+             ]
+            }
+           }
+          }
+         }
+        }
+       },
+       "excluded": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "opt",
+          "pages",
+          "why"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "coverage": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "grp",
+       "prod",
+       "status"
+      ],
+      "properties": {
+       "status": {
+        "enum": [
+         "table",
+         "missing"
+        ]
+       }
+      }
+     }
+    },
+    "assumption": {
+     "type": "object",
+     "required": [
+      "coef",
+      "m",
+      "f",
+      "url"
+     ],
+     "properties": {
+      "coef": {
+       "type": "number"
+      },
+      "m": {
+       "type": "number"
+      },
+      "f": {
+       "type": "number"
+      },
+      "url": {
+       "type": "string",
+       "pattern": "^https://"
+      }
+     }
+    },
+    "btl": {
+     "type": "object",
+     "required": [
+      "single",
+      "single_80",
+      "couple",
+      "from",
+      "url",
+      "retrieved",
+      "quote"
+     ],
+     "properties": {
+      "single": {
+       "type": "number"
+      },
+      "from": {
+       "$ref": "#/$defs/date"
+      },
+      "url": {
+       "type": "string",
+       "pattern": "^https://"
+      }
+     }
+    },
+    "target": {
+     "type": "object",
+     "required": [
+      "rate",
+      "title",
+      "url",
+      "retrieved"
+     ],
+     "properties": {
+      "rate": {
+       "type": "number"
+      },
+      "url": {
+       "type": "string",
+       "pattern": "^https://"
+      }
      }
     }
    }
