@@ -1,0 +1,64 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fox//filing calendar//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:fox · מור גמל ופנסיה
+X-WR-CALDESC:הדוחות הבאים של מור גמל ופנסיה במא
+ יה\, אומדן מהרקורד של החברה
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fox-more_gemel-2026Q3@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20261120
+DTEND;VALUE=DATE:20261121
+SUMMARY:מור גמל ופנסיה · דוח Q3'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 20.11.26 עד 22.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/more_gemel
+URL;VALUE=URI:https://fox-research-il.web.app/company/more_gemel
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-more_gemel-2026FY@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270322
+DTEND;VALUE=DATE:20270323
+SUMMARY:מור גמל ופנסיה · דוח FY'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 20.03.27 עד 22.03.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/more_gemel
+URL;VALUE=URI:https://fox-research-il.web.app/company/more_gemel
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-more_gemel-2027Q1@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270521
+DTEND;VALUE=DATE:20270522
+SUMMARY:מור גמל ופנסיה · דוח Q1'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 20.05.27 עד 23.05.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/more_gemel
+URL;VALUE=URI:https://fox-research-il.web.app/company/more_gemel
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-more_gemel-2027Q2@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270813
+DTEND;VALUE=DATE:20270814
+SUMMARY:מור גמל ופנסיה · דוח Q2'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 12.08.27 עד 15.08.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/more_gemel
+URL;VALUE=URI:https://fox-research-il.web.app/company/more_gemel
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

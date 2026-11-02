@@ -1,0 +1,64 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fox//filing calendar//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:fox · הכשרה
+X-WR-CALDESC:הדוחות הבאים של הכשרה במאיה\, אומד
+ ן מהרקורד של החברה
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fox-hachshara-2026Q3@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20261129
+DTEND;VALUE=DATE:20261130
+SUMMARY:הכשרה · דוח Q3'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 27.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/hachshara
+URL;VALUE=URI:https://fox-research-il.web.app/company/hachshara
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-hachshara-2026FY@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270331
+DTEND;VALUE=DATE:20270401
+SUMMARY:הכשרה · דוח FY'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 20.03.27 עד 01.04.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/hachshara
+URL;VALUE=URI:https://fox-research-il.web.app/company/hachshara
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-hachshara-2027Q1@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270530
+DTEND;VALUE=DATE:20270531
+SUMMARY:הכשרה · דוח Q1'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 30.05.27 עד 31.05.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/hachshara
+URL;VALUE=URI:https://fox-research-il.web.app/company/hachshara
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-hachshara-2027Q2@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270828
+DTEND;VALUE=DATE:20270829
+SUMMARY:הכשרה · דוח Q2'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 26.08.27 עד 31.08.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/hachshara
+URL;VALUE=URI:https://fox-research-il.web.app/company/hachshara
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

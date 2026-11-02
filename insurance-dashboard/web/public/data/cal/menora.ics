@@ -1,0 +1,64 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fox//filing calendar//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:fox · מנורה מבטחים
+X-WR-CALDESC:הדוחות הבאים של מנורה מבטחים במאי
+ ה\, אומדן מהרקורד של החברה
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fox-menora-2026Q3@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20261130
+DTEND;VALUE=DATE:20261201
+SUMMARY:מנורה מבטחים · דוח Q3'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 28.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/menora
+URL;VALUE=URI:https://fox-research-il.web.app/company/menora
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-menora-2026FY@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270330
+DTEND;VALUE=DATE:20270331
+SUMMARY:מנורה מבטחים · דוח FY'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 16.03.27 עד 01.04.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/menora
+URL;VALUE=URI:https://fox-research-il.web.app/company/menora
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-menora-2027Q1@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270529
+DTEND;VALUE=DATE:20270530
+SUMMARY:מנורה מבטחים · דוח Q1'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 26.05.27 עד 30.05.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/menora
+URL;VALUE=URI:https://fox-research-il.web.app/company/menora
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-menora-2027Q2@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270829
+DTEND;VALUE=DATE:20270830
+SUMMARY:מנורה מבטחים · דוח Q2'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 25.08.27 עד 31.08.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/menora
+URL;VALUE=URI:https://fox-research-il.web.app/company/menora
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

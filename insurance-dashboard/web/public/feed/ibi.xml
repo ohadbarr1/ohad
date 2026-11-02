@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>fox · אי.בי.אי</title>
+<link>https://fox-research-il.web.app/feed?co=ibi</link>
+<description>כל שינוי בנתונים של אי.בי.אי ב-fox, עם המקור של כל מספר.</description>
+<language>he</language>
+<lastBuildDate>Thu, 20 Aug 2026 00:00:00 +0300</lastBuildDate>
+<ttl>360</ttl>
+<atom:link href="https://fox-research-il.web.app/feed/ibi.xml" rel="self" type="application/rss+xml"/>
+<generator>fox pipeline/build_rss.py</generator>
+<image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · אי.בי.אי</title><link>https://fox-research-il.web.app/feed?co=ibi</link></image>
+<item>
+<title>אי.בי.אי · הצגה מחדש: דוח רבעוני Q2'26 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=ibi&amp;season=2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:ibi:1764704</guid>
+<pubDate>Thu, 20 Aug 2026 00:00:00 +0300</pubDate>
+<category>הצגה מחדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 4&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 4&lt;/p&gt;&lt;p&gt;נכסים בלתי מוחשיים · Q2'25: 58.5 מיליוני ש"ח (לראשונה), לעומת 71.7 (מחדש); שינוי +13.2 (+22.6%)&lt;/p&gt;&lt;p&gt;נכסים בלתי מוחשיים · H1'25: 58.5 מיליוני ש"ח (לראשונה), לעומת 71.7 (מחדש); שינוי +13.2 (+22.6%)&lt;/p&gt;&lt;p&gt;התחייבויות תמורה מותנית בגין צירוף עסקים · Q2'25: −15.0 מיליוני ש"ח (לראשונה), לעומת −15.5 (מחדש); שינוי −0.5&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1764001-1765000/P1764704-00.pdf"&gt;אי.בי.אי, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=ibi&amp;amp;season=2026Q2"&gt;https://fox-research-il.web.app/restatements?co=ibi&amp;amp;season=2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · דוח: דוח רבעוני Q2'26</title>
+<link>https://fox-research-il.web.app/card/ibi/2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1764704</guid>
+<pubDate>Thu, 20 Aug 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 64.9 מיליוני ש"ח (Q2'26), לעומת 94.4 (Q1'26); שינוי −29.5 (−31.2%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 64.6 מיליוני ש"ח (Q2'26), לעומת 93.9 (Q1'26); שינוי −29.3 (−31.2%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1764001-1765000/P1764704-00.pdf"&gt;אי.בי.אי, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/ibi/2026Q2"&gt;https://fox-research-il.web.app/card/ibi/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · דוח: דוח רבעוני Q1'26</title>
+<link>https://fox-research-il.web.app/card/ibi/2026Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1744455</guid>
+<pubDate>Thu, 28 May 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 94.4 מיליוני ש"ח (Q1'26), לעומת 61.3 (Q4'25); שינוי +33.2 (+54.2%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 93.9 מיליוני ש"ח (Q1'26), לעומת 61.5 (Q4'25); שינוי +32.5 (+52.9%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744455-00.pdf"&gt;אי.בי.אי, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/ibi/2026Q1"&gt;https://fox-research-il.web.app/card/ibi/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · דוח: דוח שנתי FY'25</title>
+<link>https://fox-research-il.web.app/card/ibi/2025FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1729786</guid>
+<pubDate>Mon, 23 Mar 2026 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 61.3 מיליוני ש"ח (Q4'25), לעומת 45.5 (Q3'25); שינוי +15.8 (+34.7%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 61.5 מיליוני ש"ח (Q4'25), לעומת 45.3 (Q3'25); שינוי +16.1 (+35.5%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1729001-1730000/P1729786-00.pdf"&gt;אי.בי.אי, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 23.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/ibi/2025FY"&gt;https://fox-research-il.web.app/card/ibi/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · דוח: דוח רבעוני Q3'25</title>
+<link>https://fox-research-il.web.app/card/ibi/2025Q3</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1705600</guid>
+<pubDate>Wed, 26 Nov 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 45.5 מיליוני ש"ח (Q3'25), לעומת 36.9 (Q2'25); שינוי +8.6 (+23.3%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 45.3 מיליוני ש"ח (Q3'25), לעומת 36.8 (Q2'25); שינוי +8.6 (+23.2%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1705001-1706000/P1705600-00.pdf"&gt;אי.בי.אי, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/ibi/2025Q3"&gt;https://fox-research-il.web.app/card/ibi/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · דוח: דוח רבעוני Q2'25</title>
+<link>https://fox-research-il.web.app/card/ibi/2025Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1686893</guid>
+<pubDate>Wed, 20 Aug 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 36.9 מיליוני ש"ח (Q2'25), לעומת 31.0 (Q1'25); שינוי +5.9 (+19.1%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 36.8 מיליוני ש"ח (Q2'25), לעומת 31.4 (Q1'25); שינוי +5.4 (+17.1%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1686001-1687000/P1686893-00.pdf"&gt;אי.בי.אי, דוח רבעוני Q2'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 20.08.25 · תקופה: Q2'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/ibi/2025Q2"&gt;https://fox-research-il.web.app/card/ibi/2025Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · דוח: דוח רבעוני Q1'25</title>
+<link>https://fox-research-il.web.app/card/ibi/2025Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1668092</guid>
+<pubDate>Thu, 29 May 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 31.0 מיליוני ש"ח (Q1'25), לעומת 32.8 (Q4'24); שינוי −1.8 (−5.6%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 31.4 מיליוני ש"ח (Q1'25), לעומת 32.6 (Q4'24); שינוי −1.2 (−3.6%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1668001-1669000/P1668092-00.pdf"&gt;אי.בי.אי, דוח רבעוני Q1'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: Q1'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/ibi/2025Q1"&gt;https://fox-research-il.web.app/card/ibi/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · הצגה מחדש: דוח שנתי FY'24 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=ibi&amp;season=2024FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:ibi:1653260</guid>
+<pubDate>Mon, 24 Mar 2025 00:00:00 +0200</pubDate>
+<category>הצגה מחדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 6&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 3&lt;/p&gt;&lt;p&gt;עלייה בלקוחות · FY'22: 45.0 מיליוני ש"ח (לראשונה), לעומת 33.4 (מחדש); שינוי −11.6 (−25.8%)&lt;/p&gt;&lt;p&gt;סך הכול · FY'22: 111.8 מיליוני ש"ח (לראשונה), לעומת 123.4 (מחדש); שינוי +11.6 (+10.4%)&lt;/p&gt;&lt;p&gt;מזומנים, נטו, מפעילות שוטפת · FY'22: 49.5 מיליוני ש"ח (לראשונה), לעומת 61.1 (מחדש); שינוי +11.6 (+23.4%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1653001-1654000/P1653260-00.pdf"&gt;אי.בי.אי, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 24.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=ibi&amp;amp;season=2024FY"&gt;https://fox-research-il.web.app/restatements?co=ibi&amp;amp;season=2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אי.בי.אי · דוח: דוח שנתי FY'24</title>
+<link>https://fox-research-il.web.app/card/ibi/2024FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1653260</guid>
+<pubDate>Mon, 24 Mar 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>אי.בי.אי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 32.8 מיליוני ש"ח (Q4'24), לעומת 32.0 (Q3'24); שינוי +0.8 (+2.5%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 32.6 מיליוני ש"ח (Q4'24), לעומת 32.1 (Q3'24); שינוי +0.5 (+1.5%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1653001-1654000/P1653260-00.pdf"&gt;אי.בי.אי, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 24.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/ibi/2024FY"&gt;https://fox-research-il.web.app/card/ibi/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+</channel>
+</rss>

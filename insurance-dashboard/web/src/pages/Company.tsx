@@ -14,6 +14,7 @@ import { foxOption, type FoxSeries } from '../lib/foxchart';
 import { CompanyStore, shiftYear, sheetName } from '../lib/company';
 import { useStored } from '../lib/local';
 import { useMarkVisit } from '../lib/visits';
+import { useCompanyFeedAlternate } from '../lib/news';
 import { SinceChip } from '../components/SinceBadge';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
@@ -56,6 +57,7 @@ export function CompanyLayout() {
   const kpi = useKpiData(!!entry);
   const phone = usePhone();
   const [noteOpen, setNoteOpen] = useState(false);
+  useCompanyFeedAlternate(entry?.id);  // W8: the company's own RSS feed in <head>
   useMarkVisit(entry?.id);  // lane S2: the visit date moves when the reader leaves the company
   const [tools, setTools] = useState<HTMLElement | null>(null);
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;

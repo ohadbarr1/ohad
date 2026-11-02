@@ -1,0 +1,64 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fox//filing calendar//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:fox · מיטב
+X-WR-CALDESC:הדוחות הבאים של מיטב במאיה\, אומדן 
+ מהרקורד של החברה
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fox-meitav-2026Q3@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20261122
+DTEND;VALUE=DATE:20261123
+SUMMARY:מיטב · דוח Q3'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 18.11.26 עד 25.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/meitav
+URL;VALUE=URI:https://fox-research-il.web.app/company/meitav
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-meitav-2026FY@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270318
+DTEND;VALUE=DATE:20270319
+SUMMARY:מיטב · דוח FY'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 15.03.27 עד 19.03.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/meitav
+URL;VALUE=URI:https://fox-research-il.web.app/company/meitav
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-meitav-2027Q1@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270527
+DTEND;VALUE=DATE:20270528
+SUMMARY:מיטב · דוח Q1'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 26.05.27 עד 27.05.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/meitav
+URL;VALUE=URI:https://fox-research-il.web.app/company/meitav
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-meitav-2027Q2@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270817
+DTEND;VALUE=DATE:20270818
+SUMMARY:מיטב · דוח Q2'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 17.08.27 עד 19.08.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/meitav
+URL;VALUE=URI:https://fox-research-il.web.app/company/meitav
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

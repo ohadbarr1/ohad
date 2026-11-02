@@ -38,13 +38,22 @@ function Rows({ F, e, name }: { F: FeedFile; e: FeedEvent; name: string }) {
 }
 
 /** One event: when, what, who, the headline (a link to the page that shows it), its document, then its figures. */
-export function FeedItem({ F, e, byId, compact }: { F: FeedFile; e: FeedEvent; byId?: Map<string, FeedEvent>; compact?: boolean }) {
+/** the period an event describes: a quarter or year of a filing, a data month, a solvency date */
+export const perText = (e: FeedEvent) => (/^\d{6}$/.test(e.per) ? ymLabel(Number(e.per)) : /^\d{4}FY$/.test(e.per) ? `FY'${e.per.slice(2, 4)}` : /^\d{4}Q\d$/.test(e.per) ? `${e.per.slice(4)}'${e.per.slice(2, 4)}` : /^\d{4}-\d{2}-\d{2}$/.test(e.per) ? pubLabel(e.per) : e.per);
+
+/** `got`: the day fox received the event (data/feed_seen.json, pipeline/build_rss.py): [date, r] is shown as "התקבל" next to the period;
+ *  [date, b] (before the ledger began) keeps the event's own date. Without it (the home block) the item shows the event's date only. */
+export function FeedItem({ F, e, byId, compact, got }: { F: FeedFile; e: FeedEvent; byId?: Map<string, FeedEvent>; compact?: boolean; got?: [string, 'r' | 'b'] }) {
   const name = F.cos[e.c] ?? e.c;
   const src = eventSource(F, e);
   return (
     <li className={`fd-ev t-${e.t}`} id={compact ? undefined : `ev-${e.id.replace(/[^a-zA-Z0-9_-]/g, '_')}`}>
       <div className="fd-hd">
-        <span className="fd-when num" title={`${DK_HE[e.dk]}${e.dk === 'month' ? ' (יום הפרסום של הרשות אינו נשמר)' : ''}`}>{e.dk === 'month' ? <>{ymLabel(Number(e.per))}<small>חודש נתונים</small></> : <>{pubLabel(e.d)}{e.dk === 'fetched' && <small>התקבל</small>}</>}</span>
+        {got?.[1] === 'r'
+          ? <span className="fd-when num" title="היום שבו fox קלטה את השינוי">{pubLabel(got[0])}<small>התקבל</small></span>
+          : <span className="fd-when num" title={`${DK_HE[e.dk]}${e.dk === 'month' ? ' (יום הפרסום של הרשות אינו נשמר)' : ''}`}>{e.dk === 'month' ? <>{ymLabel(Number(e.per))}<small>חודש נתונים</small></> : <>{pubLabel(e.d)}<small>{e.dk === 'fetched' ? 'התקבל' : 'פורסם'}</small></>}</span>}
+        {/* the period, unless the date column already is it (a data month shown as its own date): an empty cell keeps the column */}
+        {got && (got[1] !== 'r' && e.dk === 'month' ? <span className="fd-per" aria-hidden="true" /> : <span className="fd-per num" title="התקופה שהנתון מתאר"><small>תקופה</small>{perText(e)}</span>)}
         <span className={`chip fd-t t-${e.t}${e.st ? ` st-${e.st}` : ''}${e.fs ? ` fs-${e.fs}` : ''}`}>{TYPE_SHORT[e.t]}{e.fs ? ` · ${e.fs === 'alert' ? 'התראה' : 'מעקב'}` : ''}</span>
         {e.c === 'market' ? <span className="fd-co">{name}</span> : <Link className="fd-co" to={`/company/${e.c}`}><i className="pdot" style={{ background: idCss(e.c) }} />{name}</Link>}
         <Link className="fd-h" to={e.to}>{e.h}</Link>

@@ -1,0 +1,47 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fox//filing calendar//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:fox · תזכורות לחוסך
+X-WR-CALDESC:חודש חדש של נתוני הרשות (אומדן) והד
+ וח השנתי מהקרן (עד 31 במרץ)
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fox-regmonth@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20261201
+DTEND;VALUE=DATE:20261202
+RRULE:FREQ=MONTHLY;COUNT=12
+SUMMARY:fox · חודש חדש של הרשות (אומדן)
+DESCRIPTION:אומדן\, לא מועד רשמי: רשות שוק ההון 
+ אינה מפרסמת לוח זמנים לגמל-נט\, פנסיה-נט ו
+ ביטוח-נט. החודש האחרון\, 09/26\, נקלט ב-fox ב-01.1
+ 1.26\; האומדן חוזר על אותו פער (2 חודשים\, יום
+  1) לכל חודש. fox בודקת את data.gov.il שלוש פעמים 
+ ביום\, והחודש מופיע באתר ביום שהוא נקלט. ht
+ tps://fox-research-il.web.app/feed?t=regmonth
+URL;VALUE=URI:https://fox-research-il.web.app/feed?t=regmonth
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-annual-statement@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270331
+DTEND;VALUE=DATE:20270401
+RRULE:FREQ=YEARLY
+SUMMARY:הדוח השנתי מהקרן אמור להגיע עד היום
+DESCRIPTION:קרן פנסיה\, קופת גמל וקרן השתלמות ש
+ ולחות לכל עמית דוח שנתי על השנה הקודמת עד
+  תום הרבעון הראשון (31 במרץ). מקור: כל זכות\,
+  'דוחות רבעוניים ושנתיים של קרן הפנסיה' (ko
+ lzchut.org.il)\; חוזר רשות שוק ההון 'דוח שנתי ודו
+ ח רבעוני לעמיתים ולמבוטחים בגוף מוסדי'. ל
+ א הגיע? בקשו אותו מהגוף המנהל. לקריאת הדו
+ ח: https://fox-research-il.web.app/my
+URL;VALUE=URI:https://fox-research-il.web.app/my
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

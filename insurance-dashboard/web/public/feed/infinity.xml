@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>fox · אינפיניטי</title>
+<link>https://fox-research-il.web.app/feed?co=infinity</link>
+<description>כל שינוי בנתונים של אינפיניטי ב-fox, עם המקור של כל מספר.</description>
+<language>he</language>
+<lastBuildDate>Fri, 31 Jul 2026 00:00:00 +0300</lastBuildDate>
+<ttl>360</ttl>
+<atom:link href="https://fox-research-il.web.app/feed/infinity.xml" rel="self" type="application/rss+xml"/>
+<generator>fox pipeline/build_rss.py</generator>
+<image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · אינפיניטי</title><link>https://fox-research-il.web.app/feed?co=infinity</link></image>
+<item>
+<title>אינפיניטי · שבריריות: שחיקת ביצועים · פנסיה: תקין ← מעקב</title>
+<link>https://fox-research-il.web.app/fragility?c=infinity&amp;s=perf</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:infinity:perf:202607</guid>
+<pubDate>Fri, 31 Jul 2026 00:00:00 +0300</pubDate>
+<category>מוניטור שבריריות</category>
+<category>אינפיניטי</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;פער שארפ 3Y מול חציון העמיתים · פנסיה: −0.16 (07/26), לעומת −0.07 (06/26)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 07/26 · תקופה: 07/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=infinity&amp;amp;s=perf"&gt;https://fox-research-il.web.app/fragility?c=infinity&amp;amp;s=perf&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,64 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fox//filing calendar//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:fox · הפניקס
+X-WR-CALDESC:הדוחות הבאים של הפניקס במאיה\, אומ
+ דן מהרקורד של החברה
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fox-phoenix-2026Q3@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20261127
+DTEND;VALUE=DATE:20261128
+SUMMARY:הפניקס · דוח Q3'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 05.11.26 עד 29.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/phoenix
+URL;VALUE=URI:https://fox-research-il.web.app/company/phoenix
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-phoenix-2026FY@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270326
+DTEND;VALUE=DATE:20270327
+SUMMARY:הפניקס · דוח FY'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 13.03.27 עד 28.03.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/phoenix
+URL;VALUE=URI:https://fox-research-il.web.app/company/phoenix
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-phoenix-2027Q1@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270529
+DTEND;VALUE=DATE:20270530
+SUMMARY:הפניקס · דוח Q1'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 28.05.27 עד 29.05.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/phoenix
+URL;VALUE=URI:https://fox-research-il.web.app/company/phoenix
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-phoenix-2027Q2@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270825
+DTEND;VALUE=DATE:20270826
+SUMMARY:הפניקס · דוח Q2'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 22.08.27 עד 25.08.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/phoenix
+URL;VALUE=URI:https://fox-research-il.web.app/company/phoenix
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

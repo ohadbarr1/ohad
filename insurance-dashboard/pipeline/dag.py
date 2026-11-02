@@ -124,7 +124,7 @@ STEPS = [
     # ---------------------------------------------------------------- the steps deploy.sh runs before the gate (group "deploy")
     step("build_web_index", "pipeline/build_web_index.py", [D + "market.json", D + "funds.json", D + "companies/*.docs.json"], [D + "search/entities.json", D + "filings_latest.json"],
          groups={"deploy"}),
-    step("build_calendar", "pipeline/build_calendar.py", [REG + "companies.json", REG + "documents.csv"], [D + "calendar.json", D + "calendar.ics"],
+    step("build_calendar", "pipeline/build_calendar.py", [REG + "companies.json", REG + "documents.csv", D + "market.json"], [D + "calendar.json", D + "calendar.ics", D + "cal"],
          daily=True, groups={"deploy"}, note="projections from today's date"),
     # module M1 (unpublished): the nowcast engine; appends the live stage to the frozen ledger (never rewrites an entry)
     step("build_nowcast", "pipeline/build_nowcast.py", [D + "lens.json", D + "market.json", D + "calendar.json", D + "macro/macro.json",
@@ -158,6 +158,10 @@ STEPS = [
           D + "funds", D + "csm/solvency.json", D + "positions.json", D + "fragility.json", "web/src/pages/ReportDay.tsx"],
          [D + "feed.json"], code=["pipeline/reportday.py"], groups={"deploy"},
          note="dated, typed, sourced events since 01.01.25 (pipeline/check_feed.py = gate `feed`)"),
+    # W8 feeds: the delta feed as static RSS 2.0 + Atom (pull-based alerts, no server) and the first-seen ledger behind every pubDate
+    step("build_rss", "pipeline/build_rss.py", [D + "feed.json"],
+         ["web/public/feed.xml", "web/public/feed.atom", "web/public/feed", D + "alerts.json", D + "feed_seen.json", D + "news.json"], edits=["data/ledger/feed_seen.json"],
+         groups={"deploy"}, note="/feed.xml, /feed/<company>.xml, /feed/months.xml, /feed/funds.xml (+ .atom); check: pipeline/check_feed.py"),
     # module A4: the attribution engine (the "why" of every ROE / profit change, and between peers), from the reported facts only
     step("build_attribution", "pipeline/build_attribution.py",
          [*WB, D + "companies/index.json", D + "lens.json", D + "lts_prov", D + "search/docs.json"],

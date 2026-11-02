@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>fox · ילין לפידות</title>
+<link>https://fox-research-il.web.app/feed?co=yelin</link>
+<description>כל שינוי בנתונים של ילין לפידות ב-fox, עם המקור של כל מספר.</description>
+<language>he</language>
+<lastBuildDate>Wed, 30 Sep 2026 00:00:00 +0300</lastBuildDate>
+<ttl>360</ttl>
+<atom:link href="https://fox-research-il.web.app/feed/yelin.xml" rel="self" type="application/rss+xml"/>
+<generator>fox pipeline/build_rss.py</generator>
+<image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · ילין לפידות</title><link>https://fox-research-il.web.app/feed?co=yelin</link></image>
+<item>
+<title>ילין לפידות · שבריריות: שחיקת ביצועים · גמל והשתלמות: תקין ← מעקב</title>
+<link>https://fox-research-il.web.app/fragility?c=yelin&amp;s=perf</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:yelin:perf:202609</guid>
+<pubDate>Wed, 30 Sep 2026 00:00:00 +0300</pubDate>
+<category>מוניטור שבריריות</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;פער שארפ 3Y מול חציון העמיתים · גמל והשתלמות: −0.09 (09/26), לעומת −0.12 (08/26)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 09/26 · תקופה: 09/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=perf"&gt;https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=perf&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · הצגה מחדש: דוח רבעוני Q2'26 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=yelin&amp;season=2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:yelin:1766813</guid>
+<pubDate>Thu, 27 Aug 2026 00:00:00 +0300</pubDate>
+<category>הצגה מחדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 27&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 27&lt;/p&gt;&lt;p&gt;רווח לפני מסים על ההכנסה · FY'25: 306.3 מיליוני ש"ח (לראשונה), לעומת 371.3 (מחדש); שינוי +65.0 (+21.2%)&lt;/p&gt;&lt;p&gt;הוצאות תפעול, שיווק הנהלה וכלליות · FY'25: 594.5 מיליוני ש"ח (לראשונה), לעומת 529.5 (מחדש); שינוי −65.0 (−10.9%)&lt;/p&gt;&lt;p&gt;הוצאות מסים על ההכנסה · FY'25: 79.2 מיליוני ש"ח (לראשונה), לעומת 144.2 (מחדש); שינוי +65.0 (+82.1%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1766001-1767000/P1766813-00.pdf"&gt;ילין לפידות, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 27.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=yelin&amp;amp;season=2026Q2"&gt;https://fox-research-il.web.app/restatements?co=yelin&amp;amp;season=2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · דוח: דוח רבעוני Q2'26</title>
+<link>https://fox-research-il.web.app/card/yelin/2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1766813</guid>
+<pubDate>Thu, 27 Aug 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 60.9 מיליוני ש"ח (Q2'26), לעומת 61.7 (Q1'26); שינוי −0.7 (−1.2%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 60.9 מיליוני ש"ח (Q2'26), לעומת 61.7 (Q1'26); שינוי −0.7 (−1.2%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1766001-1767000/P1766813-00.pdf"&gt;ילין לפידות, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 27.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/yelin/2026Q2"&gt;https://fox-research-il.web.app/card/yelin/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · דוח: דוח רבעוני Q1'26</title>
+<link>https://fox-research-il.web.app/card/yelin/2026Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1745479</guid>
+<pubDate>Sun, 31 May 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 61.7 מיליוני ש"ח (Q1'26), לעומת 57.8 (Q4'25); שינוי +3.9 (+6.7%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 61.7 מיליוני ש"ח (Q1'26), לעומת 59.3 (Q4'25); שינוי +2.3 (+4.0%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1745001-1746000/P1745479-00.pdf"&gt;ילין לפידות, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 31.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/yelin/2026Q1"&gt;https://fox-research-il.web.app/card/yelin/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · דוח: דוח שנתי FY'25</title>
+<link>https://fox-research-il.web.app/card/yelin/2025FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1732095</guid>
+<pubDate>Sun, 29 Mar 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 57.8 מיליוני ש"ח (Q4'25), לעומת 60.9 (Q3'25); שינוי −3.0 (−5.0%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 59.3 מיליוני ש"ח (Q4'25), לעומת 60.9 (Q3'25); שינוי −1.5 (−2.5%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732095-00.pdf"&gt;ילין לפידות, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/yelin/2025FY"&gt;https://fox-research-il.web.app/card/yelin/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · שבריריות: ניוד נטו · גמל והשתלמות: מעקב ← התראה</title>
+<link>https://fox-research-il.web.app/fragility?c=yelin&amp;s=flow</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:yelin:flow:202511</guid>
+<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
+<category>מוניטור שבריריות</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;העברות נטו, 3 חודשים · גמל והשתלמות: −2,385 מיליוני ש"ח (11/25), לעומת −1,969 (10/25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=flow"&gt;https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=flow&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · צבירה נטו: קרנות השתלמות: מצבירה חיובית לשלילית, LTM</title>
+<link>https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/flow:202511:p:hishtalmut:yelin</guid>
+<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
+<category>מעבר בצבירה נטו</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;צבירה נטו כולל ניוד, LTM: −0.16 מיליארד ש"ח (11/25), לעומת 0.85 (10/25); שינוי −1.00&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 11/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA"&gt;https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · צבירה נטו: קופות גמל (תגמולים ואישית לפיצויים): מצבירה חיובית לשלילית, LTM</title>
+<link>https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/flow:202511:p:gemel:yelin</guid>
+<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
+<category>מעבר בצבירה נטו</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;צבירה נטו כולל ניוד, LTM: −0.36 מיליארד ש"ח (11/25), לעומת 0.44 (10/25); שינוי −0.80&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 11/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA"&gt;https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · דוח: דוח רבעוני Q3'25</title>
+<link>https://fox-research-il.web.app/card/yelin/2025Q3</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1706287</guid>
+<pubDate>Thu, 27 Nov 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 60.9 מיליוני ש"ח (Q3'25), לעומת 54.4 (Q2'25); שינוי +6.4 (+11.8%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 60.9 מיליוני ש"ח (Q3'25), לעומת 54.4 (Q2'25); שינוי +6.4 (+11.8%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1706001-1707000/P1706287-00.pdf"&gt;ילין לפידות, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 27.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/yelin/2025Q3"&gt;https://fox-research-il.web.app/card/yelin/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · דוח: דוח רבעוני Q2'25</title>
+<link>https://fox-research-il.web.app/card/yelin/2025Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1689247</guid>
+<pubDate>Thu, 28 Aug 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 54.4 מיליוני ש"ח (Q2'25), לעומת 54.0 (Q1'25); שינוי +0.5 (+0.8%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 54.4 מיליוני ש"ח (Q2'25), לעומת 54.0 (Q1'25); שינוי +0.5 (+0.8%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1689001-1690000/P1689247-00.pdf"&gt;ילין לפידות, דוח רבעוני Q2'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.08.25 · תקופה: Q2'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/yelin/2025Q2"&gt;https://fox-research-il.web.app/card/yelin/2025Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · שבריריות: ניוד נטו · גמל והשתלמות: תקין ← מעקב</title>
+<link>https://fox-research-il.web.app/fragility?c=yelin&amp;s=flow</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:yelin:flow:202505</guid>
+<pubDate>Sat, 31 May 2025 00:00:00 +0300</pubDate>
+<category>מוניטור שבריריות</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;העברות נטו, 3 חודשים · גמל והשתלמות: −43.3 מיליוני ש"ח (05/25), לעומת +309.6 (04/25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 05/25 · תקופה: 05/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=flow"&gt;https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=flow&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · דוח: דוח רבעוני Q1'25</title>
+<link>https://fox-research-il.web.app/card/yelin/2025Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1667905</guid>
+<pubDate>Wed, 28 May 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 54.0 מיליוני ש"ח (Q1'25), לעומת 49.9 (Q4'24); שינוי +4.0 (+8.1%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 54.0 מיליוני ש"ח (Q1'25), לעומת 51.5 (Q4'24); שינוי +2.5 (+4.8%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1667001-1668000/P1667905-00.pdf"&gt;ילין לפידות, דוח רבעוני Q1'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.25 · תקופה: Q1'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/yelin/2025Q1"&gt;https://fox-research-il.web.app/card/yelin/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>ילין לפידות · דוח: דוח שנתי FY'24</title>
+<link>https://fox-research-il.web.app/card/yelin/2024FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1654567</guid>
+<pubDate>Thu, 27 Mar 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>ילין לפידות</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 49.9 מיליוני ש"ח (Q4'24), לעומת 50.8 (Q3'24); שינוי −0.8 (−1.6%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 51.5 מיליוני ש"ח (Q4'24), לעומת 50.8 (Q3'24); שינוי +0.7 (+1.5%). שורת הרווח הכוללת (אין שורת ייחוס בדוח)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1654001-1655000/P1654567-00.pdf"&gt;ילין לפידות, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 27.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/yelin/2024FY"&gt;https://fox-research-il.web.app/card/yelin/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,64 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fox//filing calendar//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:fox · אנליסט
+X-WR-CALDESC:הדוחות הבאים של אנליסט במאיה\, אומ
+ דן מהרקורד של החברה
+X-WR-TIMEZONE:Asia/Jerusalem
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fox-analyst-2026Q3@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20261127
+DTEND;VALUE=DATE:20261128
+SUMMARY:אנליסט · דוח Q3'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 27.11.26 עד 30.11.26. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/analyst
+URL;VALUE=URI:https://fox-research-il.web.app/company/analyst
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-analyst-2026FY@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270327
+DTEND;VALUE=DATE:20270328
+SUMMARY:אנליסט · דוח FY'26 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 19.03.27 עד 29.03.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/analyst
+URL;VALUE=URI:https://fox-research-il.web.app/company/analyst
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-analyst-2027Q1@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270529
+DTEND;VALUE=DATE:20270530
+SUMMARY:אנליסט · דוח Q1'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 28.05.27 עד 29.05.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/analyst
+URL;VALUE=URI:https://fox-research-il.web.app/company/analyst
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-analyst-2027Q2@fox-research-il.web.app
+DTSTAMP:20261102T194001Z
+DTSTART;VALUE=DATE:20270819
+DTEND;VALUE=DATE:20270820
+SUMMARY:אנליסט · דוח Q2'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 14.08.27 עד 20.08.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/analyst
+URL;VALUE=URI:https://fox-research-il.web.app/company/analyst
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

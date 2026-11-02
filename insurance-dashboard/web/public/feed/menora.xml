@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>fox · מנורה מבטחים</title>
+<link>https://fox-research-il.web.app/feed?co=menora</link>
+<description>כל שינוי בנתונים של מנורה מבטחים ב-fox, עם המקור של כל מספר.</description>
+<language>he</language>
+<lastBuildDate>Tue, 25 Aug 2026 00:00:00 +0300</lastBuildDate>
+<ttl>360</ttl>
+<atom:link href="https://fox-research-il.web.app/feed/menora.xml" rel="self" type="application/rss+xml"/>
+<generator>fox pipeline/build_rss.py</generator>
+<image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · מנורה מבטחים</title><link>https://fox-research-il.web.app/feed?co=menora</link></image>
+<item>
+<title>מנורה מבטחים · כושר פירעון: יחס כושר פירעון ליום Q1'26, דוח רבעוני Q2'26 (172.3% → 173.2%)</title>
+<link>https://fox-research-il.web.app/card/menora/2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/solv:menora:2026-03-31</guid>
+<pubDate>Tue, 25 Aug 2026 00:00:00 +0300</pubDate>
+<category>יחס כושר פירעון</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 173.2% (Q1'26), לעומת 172.3% (Q4'25); שינוי +0.90&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1765001-1766000/P1765736-00.pdf#page=11"&gt;מנורה מבטחים, דוח רבעוני Q2'26 · עמ׳ 11&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.08.26 · תקופה: 2026-03-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2026Q2"&gt;https://fox-research-il.web.app/card/menora/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · הצגה מחדש: דוח רבעוני Q2'26 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=menora&amp;season=2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:menora:1765736</guid>
+<pubDate>Tue, 25 Aug 2026 00:00:00 +0300</pubDate>
+<category>הצגה מחדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 34&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 10&lt;/p&gt;&lt;p&gt;רווחים אחרים מהשקעות, נטו · H1'25: 1,004 מיליוני ש"ח (לראשונה), לעומת 896.9 (מחדש); שינוי −107.0 (−10.7%)&lt;/p&gt;&lt;p&gt;הכנסות ריבית שחושבו תוך שימוש בשיטת הריבית האפקטיבית · H1'25: 360.1 מיליוני ש"ח (לראשונה), לעומת 433.5 (מחדש); שינוי +73.4 (+20.4%)&lt;/p&gt;&lt;p&gt;רווחים אחרים מהשקעות, נטו · Q2'25: 852.9 מיליוני ש"ח (לראשונה), לעומת 781.4 (מחדש); שינוי −71.4 (−8.4%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1765001-1766000/P1765736-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2026Q2"&gt;https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דוח: דוח רבעוני Q2'26</title>
+<link>https://fox-research-il.web.app/card/menora/2026Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1765736</guid>
+<pubDate>Tue, 25 Aug 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 789.5 מיליוני ש"ח (Q2'26), לעומת 463.9 (Q1'26); שינוי +325.6 (+70.2%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 785.1 מיליוני ש"ח (Q2'26), לעומת 464.2 (Q1'26); שינוי +320.9 (+69.1%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 526.8 מיליוני ש"ח (Q2'26), לעומת 422.7 (Q1'26); שינוי +104.1 (+24.6%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 9,678 מיליוני ש"ח (Q2'26), לעומת 8,894 (Q1'26); שינוי +783.9 (+8.8%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 6,791 מיליוני ש"ח (Q2'26), לעומת 6,708 (Q1'26); שינוי +83.5 (+1.2%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 173.2% (Q1'26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1765001-1766000/P1765736-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2026Q2"&gt;https://fox-research-il.web.app/card/menora/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · כושר פירעון: יחס כושר פירעון ליום Q4'25, דוח רבעוני Q1'26 (163.6% → 172.3%)</title>
+<link>https://fox-research-il.web.app/card/menora/2026Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/solv:menora:2025-12-31</guid>
+<pubDate>Tue, 26 May 2026 00:00:00 +0300</pubDate>
+<category>יחס כושר פירעון</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 172.3% (Q4'25), לעומת 163.6% (Q2'25); שינוי +8.70&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1743001-1744000/P1743431-00.pdf#page=10"&gt;מנורה מבטחים, דוח רבעוני Q1'26 · עמ׳ 10&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.05.26 · תקופה: 2025-12-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2026Q1"&gt;https://fox-research-il.web.app/card/menora/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · הצגה מחדש: דוח רבעוני Q1'26 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=menora&amp;season=2026Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:menora:1743431</guid>
+<pubDate>Tue, 26 May 2026 00:00:00 +0300</pubDate>
+<category>הצגה מחדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 14&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 9&lt;/p&gt;&lt;p&gt;הכנסות ריבית שחושבו תוך שימוש בשיטת הריבית האפקטיבית · Q1'25: 95.9 מיליוני ש"ח (לראשונה), לעומת 185.3 (מחדש); שינוי +89.4 (+93.3%)&lt;/p&gt;&lt;p&gt;רווח נטו מביטוח ומהשקעה · Q1'25: 427.5 מיליוני ש"ח (לראשונה), לעומת 481.6 (מחדש); שינוי +54.1 (+12.6%)&lt;/p&gt;&lt;p&gt;רווח מהשקעות ומימון, נטו · Q1'25: 90.4 מיליוני ש"ח (לראשונה), לעומת 144.5 (מחדש); שינוי +54.1 (+59.8%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1743001-1744000/P1743431-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2026Q1"&gt;https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דוח: דוח רבעוני Q1'26</title>
+<link>https://fox-research-il.web.app/card/menora/2026Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1743431</guid>
+<pubDate>Tue, 26 May 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 463.9 מיליוני ש"ח (Q1'26), לעומת 642.6 (Q4'25); שינוי −178.8 (−27.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 464.2 מיליוני ש"ח (Q1'26), לעומת 647.9 (Q4'25); שינוי −183.7 (−28.4%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 422.7 מיליוני ש"ח (Q1'26), לעומת 409.3 (Q4'25); שינוי +13.5 (+3.3%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,894 מיליוני ש"ח (Q1'26), לעומת 9,187 (Q4'25); שינוי −292.3 (−3.2%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 6,708 מיליוני ש"ח (Q1'26), לעומת 6,672 (Q4'25); שינוי +35.5 (+0.5%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 172.3% (Q4'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1743001-1744000/P1743431-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2026Q1"&gt;https://fox-research-il.web.app/card/menora/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · יעד: יעד יחס כושר פירעון (חברת הביטוח): הושג</title>
+<link>https://fox-research-il.web.app/credibility?co=menora&amp;v=scored</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/target:menora:target_solvency_ratio:menora_insurance:2024</guid>
+<pubDate>Mon, 30 Mar 2026 00:00:00 +0300</pubDate>
+<category>יעד הנהלה הוכרע</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;יעד: 115.0%&lt;/p&gt;&lt;p&gt;בפועל, FY'24: 161.8%&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732162-00.pdf"&gt;מנורה מבטחים, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 30.03.26 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/credibility?co=menora&amp;amp;v=scored"&gt;https://fox-research-il.web.app/credibility?co=menora&amp;amp;v=scored&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · הצגה מחדש: דוח שנתי FY'25 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=menora&amp;season=2025FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:menora:1732162</guid>
+<pubDate>Mon, 30 Mar 2026 00:00:00 +0300</pubDate>
+<category>הצגה מחדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 21&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 13&lt;/p&gt;&lt;p&gt;הנמדדות בשווי הוגן לרווח והפסד · FY'24: −705.3 מיליוני ש"ח (לראשונה), לעומת −1,135 (מחדש); שינוי −429.8&lt;/p&gt;&lt;p&gt;הנמדדות בעלות מופחתת · FY'24: −1,008 מיליוני ש"ח (לראשונה), לעומת −578.6 (מחדש); שינוי +429.8&lt;/p&gt;&lt;p&gt;הכנסות ריבית שחושבו תוך שימוש בשיטת הריבית האפקטיבית · FY'24: 465.7 מיליוני ש"ח (לראשונה), לעומת 850.1 (מחדש); שינוי +384.4 (+82.5%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732162-00.pdf"&gt;מנורה מבטחים, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 30.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2025FY"&gt;https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דוח: דוח שנתי FY'25</title>
+<link>https://fox-research-il.web.app/card/menora/2025FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1732162</guid>
+<pubDate>Mon, 30 Mar 2026 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 642.6 מיליוני ש"ח (Q4'25), לעומת 589.0 (Q3'25); שינוי +53.7 (+9.1%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 647.9 מיליוני ש"ח (Q4'25), לעומת 587.2 (Q3'25); שינוי +60.7 (+10.3%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 409.3 מיליוני ש"ח (Q4'25), לעומת 423.2 (Q3'25); שינוי −13.9 (−3.3%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 9,187 מיליוני ש"ח (Q4'25), לעומת 8,535 (Q3'25); שינוי +652.0 (+7.6%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 6,672 מיליוני ש"ח (Q4'25)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 163.6% (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732162-00.pdf"&gt;מנורה מבטחים, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 30.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2025FY"&gt;https://fox-research-il.web.app/card/menora/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · צבירה נטו: קופות גמל (תגמולים ואישית לפיצויים): מצבירה שלילית לחיובית, LTM</title>
+<link>https://fox-research-il.web.app/savings?g=%D7%9E%D7%A0%D7%95%D7%A8%D7%94%20%D7%9E%D7%91%D7%98%D7%97%D7%99%D7%9D</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/flow:202601:p:gemel:menora</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>מעבר בצבירה נטו</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;צבירה נטו כולל ניוד, LTM: 0.39 מיליארד ש"ח (01/26), לעומת −0.08 (12/25); שינוי +0.47&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 01/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?g=%D7%9E%D7%A0%D7%95%D7%A8%D7%94%20%D7%9E%D7%91%D7%98%D7%97%D7%99%D7%9D"&gt;https://fox-research-il.web.app/savings?g=%D7%9E%D7%A0%D7%95%D7%A8%D7%94%20%D7%9E%D7%91%D7%98%D7%97%D7%99%D7%9D&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים ביטוח בע"מ מניות (0.76% → 0.71%)</title>
+<link>https://fox-research-il.web.app/funds/i44</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i44:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.71% (01/26), לעומת 0.76% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,096 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 44 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i44"&gt;https://fox-research-il.web.app/funds/i44&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים תגמולים ופיצויים מסלול לבני 50 ומטה (0.55% → 0.39%)</title>
+<link>https://fox-research-il.web.app/funds/g9793</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g9793:202601</guid>
+<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.39% (01/26), לעומת 0.55% (12/25); שינוי −0.16&lt;/p&gt;&lt;p&gt;נכסי המסלול: 4,532 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 9793 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g9793"&gt;https://fox-research-il.web.app/funds/g9793&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · כושר פירעון: יחס כושר פירעון ליום Q2'25, דוח רבעוני Q3'25 (172.3% → 163.6%)</title>
+<link>https://fox-research-il.web.app/card/menora/2025Q3</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/solv:menora:2025-06-30</guid>
+<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
+<category>יחס כושר פירעון</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 163.6% (Q2'25), לעומת 172.3% (Q4'24); שינוי −8.70&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1706001-1707000/P1706474-00.pdf#page=10"&gt;מנורה מבטחים, דוח רבעוני Q3'25 · עמ׳ 10&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 30.11.25 · תקופה: 2025-06-30 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2025Q3"&gt;https://fox-research-il.web.app/card/menora/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · הצגה מחדש: דוח רבעוני Q3'25 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=menora&amp;season=2025Q3</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:menora:1706474</guid>
+<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
+<category>הצגה מחדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 7&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 5&lt;/p&gt;&lt;p&gt;CSM: יתרת סגירה · חיים וחיסכון · ברוטו · Q4'24: 1,928 מיליוני ש"ח (לראשונה), לעומת 1,978 (מחדש); שינוי +50.0 (+2.6%)&lt;/p&gt;&lt;p&gt;תוצאות שירותי ביטוח · כללי · בשייר · FY'24: 707.3 מיליוני ש"ח (לראשונה), לעומת 731.3 (מחדש); שינוי +24.0 (+3.4%)&lt;/p&gt;&lt;p&gt;תוצאות השקעה ומימון, נטו · כללי · FY'24: 174.7 מיליוני ש"ח (לראשונה), לעומת 150.7 (מחדש); שינוי −24.0 (−13.7%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1706001-1707000/P1706474-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 30.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2025Q3"&gt;https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דוח: דוח רבעוני Q3'25</title>
+<link>https://fox-research-il.web.app/card/menora/2025Q3</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1706474</guid>
+<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 589.0 מיליוני ש"ח (Q3'25), לעומת 735.7 (Q2'25); שינוי −146.7 (−19.9%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 587.2 מיליוני ש"ח (Q3'25), לעומת 716.0 (Q2'25); שינוי −128.8 (−18.0%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 423.2 מיליוני ש"ח (Q3'25), לעומת 413.2 (Q2'25); שינוי +10.0 (+2.4%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,535 מיליוני ש"ח (Q3'25), לעומת 8,391 (Q2'25); שינוי +143.8 (+1.7%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 163.6% (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1706001-1707000/P1706474-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 30.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2025Q3"&gt;https://fox-research-il.web.app/card/menora/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דוח: דוח רבעוני Q2'25</title>
+<link>https://fox-research-il.web.app/card/menora/2025Q2</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1689414</guid>
+<pubDate>Sun, 31 Aug 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 735.7 מיליוני ש"ח (Q2'25), לעומת 383.7 (Q1'25); שינוי +351.9 (+91.7%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 716.0 מיליוני ש"ח (Q2'25), לעומת 391.1 (Q1'25); שינוי +324.9 (+83.1%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 413.2 מיליוני ש"ח (Q2'25), לעומת 337.1 (Q1'25); שינוי +76.1 (+22.6%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,391 מיליוני ש"ח (Q2'25), לעומת 7,674 (Q1'25); שינוי +717.0 (+9.3%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 6,444 מיליוני ש"ח (Q2'25), לעומת 6,266 (Q1'25); שינוי +177.9 (+2.8%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 172.3% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1689001-1690000/P1689414-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q2'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 31.08.25 · תקופה: Q2'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2025Q2"&gt;https://fox-research-il.web.app/card/menora/2025Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · שבריריות: ניוד נטו · גמל והשתלמות: תקין ← מעקב</title>
+<link>https://fox-research-il.web.app/fragility?c=menora&amp;s=flow</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:menora:flow:202507</guid>
+<pubDate>Thu, 31 Jul 2025 00:00:00 +0300</pubDate>
+<category>מוניטור שבריריות</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;העברות נטו, 3 חודשים · גמל והשתלמות: −94.3 מיליוני ש"ח (07/25), לעומת −62.0 (06/25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 07/25 · תקופה: 07/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=menora&amp;amp;s=flow"&gt;https://fox-research-il.web.app/fragility?c=menora&amp;amp;s=flow&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · כושר פירעון: יחס כושר פירעון ליום Q4'24, דוח רבעוני Q1'25</title>
+<link>https://fox-research-il.web.app/card/menora/2025Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/solv:menora:2024-12-31</guid>
+<pubDate>Thu, 29 May 2025 00:00:00 +0300</pubDate>
+<category>יחס כושר פירעון</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 172.3% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1668001-1669000/P1668107-00.pdf#page=10"&gt;מנורה מבטחים, דוח רבעוני Q1'25 · עמ׳ 10&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: 2024-12-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2025Q1"&gt;https://fox-research-il.web.app/card/menora/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דוח: דוח רבעוני Q1'25</title>
+<link>https://fox-research-il.web.app/card/menora/2025Q1</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1668107</guid>
+<pubDate>Thu, 29 May 2025 00:00:00 +0300</pubDate>
+<category>דוח כספי חדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 383.7 מיליוני ש"ח (Q1'25), לעומת 609.8 (Q4'24); שינוי −226.0 (−37.1%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 391.1 מיליוני ש"ח (Q1'25), לעומת 649.7 (Q4'24); שינוי −258.6 (−39.8%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 337.1 מיליוני ש"ח (Q1'25), לעומת 371.5 (Q4'24); שינוי −34.4 (−9.3%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 7,674 מיליוני ש"ח (Q1'25), לעומת 7,432 (Q4'24); שינוי +242.0 (+3.3%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 6,266 מיליוני ש"ח (Q1'25), לעומת 6,273 (Q4'24); שינוי −7.5 (−0.1%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 172.3% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1668001-1669000/P1668107-00.pdf"&gt;מנורה מבטחים, דוח רבעוני Q1'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: Q1'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2025Q1"&gt;https://fox-research-il.web.app/card/menora/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · הצגה מחדש: דוח שנתי FY'24 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=menora&amp;season=2024FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:menora:1651191</guid>
+<pubDate>Sun, 16 Mar 2025 00:00:00 +0200</pubDate>
+<category>הצגה מחדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 56&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 15&lt;/p&gt;&lt;p&gt;סך כל השקעות פיננסיות אחרות · Q4'23: 23,966 מיליוני ש"ח (לראשונה), לעומת 23,870 (מחדש); שינוי −96.8 (−0.4%)&lt;/p&gt;&lt;p&gt;מניות · Q4'23: 1,213 מיליוני ש"ח (לראשונה), לעומת 1,116 (מחדש); שינוי −96.8 (−8.0%)&lt;/p&gt;&lt;p&gt;סך כל הנכסים · Q4'23: 70,033 מיליוני ש"ח (לראשונה), לעומת 69,977 (מחדש); שינוי −55.7 (−0.1%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1651001-1652000/P1651191-00.pdf"&gt;מנורה מבטחים, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 16.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2024FY"&gt;https://fox-research-il.web.app/restatements?co=menora&amp;amp;season=2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דוח: דוח שנתי FY'24</title>
+<link>https://fox-research-il.web.app/card/menora/2024FY</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/filing:1651191</guid>
+<pubDate>Sun, 16 Mar 2025 00:00:00 +0200</pubDate>
+<category>דוח כספי חדש</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 609.8 מיליוני ש"ח (Q4'24), לעומת 540.5 (Q3'24); שינוי +69.3 (+12.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 649.7 מיליוני ש"ח (Q4'24), לעומת 532.4 (Q3'24); שינוי +117.3 (+22.0%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 371.5 מיליוני ש"ח (Q4'24), לעומת 392.3 (Q3'24); שינוי −20.8 (−5.3%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 7,432 מיליוני ש"ח (Q4'24), לעומת 6,898 (Q3'24); שינוי +534.1 (+7.7%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 6,273 מיליוני ש"ח (Q4'24), לעומת 6,409 (Q3'24); שינוי −136.0 (−2.1%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1651001-1652000/P1651191-00.pdf"&gt;מנורה מבטחים, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 16.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/menora/2024FY"&gt;https://fox-research-il.web.app/card/menora/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · שבריריות: ניוד נטו · גמל והשתלמות: תקין ← מעקב</title>
+<link>https://fox-research-il.web.app/fragility?c=menora&amp;s=flow</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:menora:flow:202502</guid>
+<pubDate>Fri, 28 Feb 2025 00:00:00 +0200</pubDate>
+<category>מוניטור שבריריות</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;העברות נטו, 3 חודשים · גמל והשתלמות: −76.8 מיליוני ש"ח (02/25), לעומת +8.6 (01/25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 02/25 · תקופה: 02/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=menora&amp;amp;s=flow"&gt;https://fox-research-il.web.app/fragility?c=menora&amp;amp;s=flow&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים משלימה מסלול לבני 50-60 (0.34% → 0.27%)</title>
+<link>https://fox-research-il.web.app/funds/p1645</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:p1645:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.27% (01/25), לעומת 0.34% (12/24); שינוי −0.07&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,316 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/pensia-net"&gt;רשות שוק ההון, פנסיה-נט · קופה 1645 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/p1645"&gt;https://fox-research-il.web.app/funds/p1645&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>מנורה מבטחים · דמי ניהול: מנורה מבטחים השתלמות עוקב מדד S&amp;P500 (0.42% → 0.48%)</title>
+<link>https://fox-research-il.web.app/funds/g13873</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:g13873:202501</guid>
+<pubDate>Fri, 31 Jan 2025 00:00:00 +0200</pubDate>
+<category>שינוי בדמי ניהול</category>
+<category>מנורה מבטחים</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.48% (01/25), לעומת 0.42% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,528 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 13873 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g13873"&gt;https://fox-research-il.web.app/funds/g13873&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+</channel>
+</rss>

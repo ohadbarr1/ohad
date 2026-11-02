@@ -47,3 +47,14 @@ self.addEventListener('fetch', (e) => {
       .catch(() => c.match(req).then((hit) => (hit && !isHtml(hit) ? hit : Response.error())))));
   }
 });
+
+/* W8 feeds: a notification shown by the page (components/Reminders.tsx: a new regulator month since the last visit, on this device only)
+   opens its page: an open fox window is focused and navigated, else a new one opens. fox has no push server: nothing arrives while closed. */
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || '/feed', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ws) => {
+    const w = ws.find((c) => new URL(c.url).origin === self.location.origin);
+    return w ? w.focus().then((f) => (f && 'navigate' in f ? f.navigate(url) : null)) : self.clients.openWindow(url);
+  }));
+});

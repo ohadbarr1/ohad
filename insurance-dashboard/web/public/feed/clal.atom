@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="he">
+<title>fox · כלל</title>
+<subtitle>כל שינוי בנתונים של כלל ב-fox, עם המקור של כל מספר.</subtitle>
+<id>tag:fox-research-il.web.app,2026:feed/feed/clal</id>
+<updated>2026-08-19T00:00:00+03:00</updated>
+<link rel="self" type="application/atom+xml" href="https://fox-research-il.web.app/feed/clal.atom"/>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/feed?co=clal"/>
+<author><name>fox</name><uri>https://fox-research-il.web.app</uri></author>
+<icon>https://fox-research-il.web.app/icons/icon-192.png</icon>
+<entry>
+<title>כלל · כושר פירעון: יחס כושר פירעון ליום Q1'26, דוח רבעוני Q2'26 (164.0% → 180.0%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:clal:2026-03-31</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2026Q2"/>
+<published>2026-08-19T00:00:00+03:00</published>
+<updated>2026-08-19T00:00:00+03:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 180.0% (Q1'26), לעומת 164.0% (Q4'25); שינוי +16.00&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1764001-1765000/P1764359-00.pdf#page=6"&gt;כלל, דוח רבעוני Q2'26 · עמ׳ 6&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.08.26 · תקופה: 2026-03-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2026Q2"&gt;https://fox-research-il.web.app/card/clal/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · הצגה מחדש: דוח רבעוני Q2'26 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:clal:1764359</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=clal&amp;season=2026Q2"/>
+<published>2026-08-19T00:00:00+03:00</published>
+<updated>2026-08-19T00:00:00+03:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 3&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 3&lt;/p&gt;&lt;p&gt;פרמיות ברוטו · חיים וחיסכון · ברוטו · H1'25: 2,223 מיליוני ש"ח (לראשונה), לעומת 2,118 (מחדש); שינוי −105.0 (−4.7%)&lt;/p&gt;&lt;p&gt;פרמיות ברוטו · חיים וחיסכון · ברוטו · Q2'25: 1,099 מיליוני ש"ח (לראשונה), לעומת 1,040 (מחדש); שינוי −59.0 (−5.4%)&lt;/p&gt;&lt;p&gt;פרמיה משונתת, עסק חדש · חיים וחיסכון · ברוטו · FY'25: 147.0 מיליוני ש"ח (לראשונה), לעומת 152.0 (מחדש); שינוי +5.0 (+3.4%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1764001-1765000/P1764359-00.pdf"&gt;כלל, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2026Q2"&gt;https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח רבעוני Q2'26</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1764359</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2026Q2"/>
+<published>2026-08-19T00:00:00+03:00</published>
+<updated>2026-08-19T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 617.0 מיליוני ש"ח (Q2'26), לעומת 437.0 (Q1'26); שינוי +180.0 (+41.2%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 614.0 מיליוני ש"ח (Q2'26), לעומת 436.0 (Q1'26); שינוי +178.0 (+40.8%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 466.0 מיליוני ש"ח (Q2'26), לעומת 316.0 (Q1'26); שינוי +150.0 (+47.5%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 11,542 מיליוני ש"ח (Q2'26), לעומת 10,922 (Q1'26); שינוי +620.0 (+5.7%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · חיים ובריאות): 10,436 מיליוני ש"ח (Q2'26), לעומת 10,293 (Q1'26); שינוי +143.0 (+1.4%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 180.0% (Q1'26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1764001-1765000/P1764359-00.pdf"&gt;כלל, דוח רבעוני Q2'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 19.08.26 · תקופה: Q2'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2026Q2"&gt;https://fox-research-il.web.app/card/clal/2026Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · צבירה נטו: קופות גמל (תגמולים ואישית לפיצויים): מצבירה שלילית לחיובית, LTM</title>
+<id>tag:fox-research-il.web.app,2026:feed/flow:202605:p:gemel:clal</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/savings?g=%D7%9B%D7%9C%D7%9C"/>
+<published>2026-05-31T00:00:00+03:00</published>
+<updated>2026-05-31T00:00:00+03:00</updated>
+<category term="flow" label="מעבר בצבירה נטו"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;צבירה נטו כולל ניוד, LTM: 0.13 מיליארד ש"ח (05/26), לעומת −0.44 (04/26); שינוי +0.57&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 05/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 05/26 · תקופה: 05/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?g=%D7%9B%D7%9C%D7%9C"&gt;https://fox-research-il.web.app/savings?g=%D7%9B%D7%9C%D7%9C&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · כושר פירעון: יחס כושר פירעון ליום Q4'25, דוח רבעוני Q1'26 (160.0% → 164.0%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:clal:2025-12-31</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2026Q1"/>
+<published>2026-05-28T00:00:00+03:00</published>
+<updated>2026-05-28T00:00:00+03:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 164.0% (Q4'25), לעומת 160.0% (Q2'25); שינוי +4.00&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744705-00.pdf#page=19"&gt;כלל, דוח רבעוני Q1'26 · עמ׳ 19&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.26 · תקופה: 2025-12-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2026Q1"&gt;https://fox-research-il.web.app/card/clal/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · הצגה מחדש: דוח רבעוני Q1'26 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:clal:1744705</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=clal&amp;season=2026Q1"/>
+<published>2026-05-28T00:00:00+03:00</published>
+<updated>2026-05-28T00:00:00+03:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 4&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 3&lt;/p&gt;&lt;p&gt;פרמיות ברוטו · חיים וחיסכון · ברוטו · Q1'25: 1,124 מיליוני ש"ח (לראשונה), לעומת 1,078 (מחדש); שינוי −46.0 (−4.1%)&lt;/p&gt;&lt;p&gt;רווחים (הפסדים) אחרים מהשקעות, נטו · Q1'25: 51.0 מיליוני ש"ח (לראשונה), לעומת 96.0 (מחדש); שינוי +45.0 (+88.2%)&lt;/p&gt;&lt;p&gt;תוצאות השקעה ומימון, נטו · חיים וחיסכון · FY'25: 787.0 מיליוני ש"ח (לראשונה), לעומת 795.0 (מחדש); שינוי +8.0 (+1.0%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744705-00.pdf"&gt;כלל, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2026Q1"&gt;https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח רבעוני Q1'26</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1744705</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2026Q1"/>
+<published>2026-05-28T00:00:00+03:00</published>
+<updated>2026-05-28T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 437.0 מיליוני ש"ח (Q1'26), לעומת 739.0 (Q4'25); שינוי −302.0 (−40.9%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 436.0 מיליוני ש"ח (Q1'26), לעומת 735.0 (Q4'25); שינוי −299.0 (−40.7%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 316.0 מיליוני ש"ח (Q1'26), לעומת 427.0 (Q4'25); שינוי −111.0 (−26.0%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 10,922 מיליוני ש"ח (Q1'26), לעומת 10,827 (Q4'25); שינוי +95.0 (+0.9%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · חיים ובריאות): 10,293 מיליוני ש"ח (Q1'26), לעומת 10,264 (Q4'25); שינוי +29.0 (+0.3%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 164.0% (Q4'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744705-00.pdf"&gt;כלל, דוח רבעוני Q1'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 28.05.26 · תקופה: Q1'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2026Q1"&gt;https://fox-research-il.web.app/card/clal/2026Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · הצגה מחדש: דוח שנתי FY'25 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:clal:1731052</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=clal&amp;season=2025FY"/>
+<published>2026-03-26T00:00:00+02:00</published>
+<updated>2026-03-26T00:00:00+02:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 16&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 7&lt;/p&gt;&lt;p&gt;פרמיות ברוטו · חיים וחיסכון · ברוטו · FY'24: 4,661 מיליוני ש"ח (לראשונה), לעומת 4,516 (מחדש); שינוי −145.0 (−3.1%)&lt;/p&gt;&lt;p&gt;רווח כולל לפני מס · חיים וחיסכון · FY'24: 602.0 מיליוני ש"ח (לראשונה), לעומת 552.0 (מחדש); שינוי −50.0 (−8.3%)&lt;/p&gt;&lt;p&gt;עלויות להשגת חוזי שירות ניהול השקעות · Q4'24: 764.0 מיליוני ש"ח (לראשונה), לעומת 742.0 (מחדש); שינוי −22.0 (−2.9%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1731001-1732000/P1731052-00.pdf"&gt;כלל, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2025FY"&gt;https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח שנתי FY'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1731052</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2025FY"/>
+<published>2026-03-26T00:00:00+02:00</published>
+<updated>2026-03-26T00:00:00+02:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 739.0 מיליוני ש"ח (Q4'25), לעומת 592.0 (Q3'25); שינוי +147.0 (+24.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 735.0 מיליוני ש"ח (Q4'25), לעומת 590.0 (Q3'25); שינוי +145.0 (+24.6%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 427.0 מיליוני ש"ח (Q4'25), לעומת 292.0 (Q3'25); שינוי +135.0 (+46.2%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 10,827 מיליוני ש"ח (Q4'25), לעומת 10,084 (Q3'25); שינוי +743.0 (+7.4%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 10,264 מיליוני ש"ח (Q4'25), לעומת 10,323 (Q3'25); שינוי −59.0 (−0.6%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 160.0% (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1731001-1732000/P1731052-00.pdf"&gt;כלל, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2025FY"&gt;https://fox-research-il.web.app/card/clal/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · שבריריות: אורך חיי CSM: תקין ← מעקב</title>
+<id>tag:fox-research-il.web.app,2026:feed/frag:clal:csm:2025FY</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/fragility?c=clal&amp;s=csm"/>
+<published>2026-03-11T00:00:00+02:00</published>
+<updated>2026-03-11T00:00:00+02:00</updated>
+<category term="fragility" label="מוניטור שבריריות"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;אורך חיי CSM, שנים: 11.28 (FY'25), לעומת 12.65 (FY'24)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 11.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=csm"&gt;https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=csm&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · שבריריות: זחילת עלויות · גמל והשתלמות: תקין ← התראה (99.4% → 100.1%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/frag:clal:cost:2025Q4</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/fragility?c=clal&amp;s=cost"/>
+<published>2026-03-11T00:00:00+02:00</published>
+<updated>2026-03-11T00:00:00+02:00</updated>
+<category term="fragility" label="מוניטור שבריריות"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס הוצאות להכנסות, LTM · גמל והשתלמות: 100.1% (Q4'25), לעומת 99.4% (Q3'25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 11.03.26 · תקופה: Q4'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=cost"&gt;https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=cost&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · צבירה נטו: קרנות השתלמות: מצבירה שלילית לחיובית, LTM</title>
+<id>tag:fox-research-il.web.app,2026:feed/flow:202602:p:hishtalmut:clal</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/savings?g=%D7%9B%D7%9C%D7%9C"/>
+<published>2026-02-28T00:00:00+02:00</published>
+<updated>2026-02-28T00:00:00+02:00</updated>
+<category term="flow" label="מעבר בצבירה נטו"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;צבירה נטו כולל ניוד, LTM: 0.29 מיליארד ש"ח (02/26), לעומת −0.02 (01/26); שינוי +0.32&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 02/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 02/26 · תקופה: 02/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?g=%D7%9B%D7%9C%D7%9C"&gt;https://fox-research-il.web.app/savings?g=%D7%9B%D7%9C%D7%9C&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ מסלול לבני 50 עד 60 (0.80% → 0.91%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i9660:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i9660"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.91% (01/26), לעומת 0.80% (12/25); שינוי +0.11&lt;/p&gt;&lt;p&gt;נכסי המסלול: 11,718 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9660 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9660"&gt;https://fox-research-il.web.app/funds/i9660&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ אשראי ואג"ח עם מניות (עד 25% מניות) (0.95% → 0.81%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i6:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i6"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.81% (01/26), לעומת 0.95% (12/25); שינוי −0.14&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,468 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 6 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i6"&gt;https://fox-research-il.web.app/funds/i6&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל-אשראי ואג"ח (1.00% → 0.95%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i4:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i4"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.95% (01/26), לעומת 1.00% (12/25); שינוי −0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,410 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 4 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i4"&gt;https://fox-research-il.web.app/funds/i4&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ עוקב מדד s&amp;p 500 (0.67% → 0.72%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i13346:202601</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i13346"/>
+<published>2026-01-31T00:00:00+02:00</published>
+<updated>2026-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.72% (01/26), לעומת 0.67% (12/25); שינוי +0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 1,900 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 13346 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i13346"&gt;https://fox-research-il.web.app/funds/i13346&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · כושר פירעון: יחס כושר פירעון ליום Q2'25, דוח רבעוני Q3'25 (153.0% → 160.0%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:clal:2025-06-30</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2025Q3"/>
+<published>2025-11-25T00:00:00+02:00</published>
+<updated>2025-11-25T00:00:00+02:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 160.0% (Q2'25), לעומת 153.0% (Q4'24); שינוי +7.00&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1705001-1706000/P1705136-00.pdf#page=22"&gt;כלל, דוח רבעוני Q3'25 · עמ׳ 22&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.11.25 · תקופה: 2025-06-30 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2025Q3"&gt;https://fox-research-il.web.app/card/clal/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · הצגה מחדש: דוח רבעוני Q3'25 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:clal:1705136</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=clal&amp;season=2025Q3"/>
+<published>2025-11-25T00:00:00+02:00</published>
+<updated>2025-11-25T00:00:00+02:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 3&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 1&lt;/p&gt;&lt;p&gt;תוצאות השקעה ומימון, נטו · ביטוח חיים · FY'24: 352.0 מיליוני ש"ח (לראשונה), לעומת 356.0 (מחדש); שינוי +4.0 (+1.1%)&lt;/p&gt;&lt;p&gt;הפסדים מחוזים מכבידים · חיים וחיסכון · ברוטו · FY'24: 9.0 מיליוני ש"ח (לראשונה), לעומת 12.0 (מחדש); שינוי +3.0 (+33.3%)&lt;/p&gt;&lt;p&gt;רווח כולל לפני מס · ביטוח חיים · FY'24: 550.0 מיליוני ש"ח (לראשונה), לעומת 552.0 (מחדש); שינוי +2.0 (+0.4%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1705001-1706000/P1705136-00.pdf"&gt;כלל, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2025Q3"&gt;https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח רבעוני Q3'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1705136</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2025Q3"/>
+<published>2025-11-25T00:00:00+02:00</published>
+<updated>2025-11-25T00:00:00+02:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 592.0 מיליוני ש"ח (Q3'25), לעומת 539.0 (Q2'25); שינוי +53.0 (+9.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 590.0 מיליוני ש"ח (Q3'25), לעומת 531.0 (Q2'25); שינוי +59.0 (+11.1%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 292.0 מיליוני ש"ח (Q3'25), לעומת 343.0 (Q2'25); שינוי −51.0 (−14.9%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 10,084 מיליוני ש"ח (Q3'25), לעומת 9,490 (Q2'25); שינוי +594.0 (+6.3%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · חיים ובריאות): 10,323 מיליוני ש"ח (Q3'25), לעומת 10,058 (Q2'25); שינוי +265.0 (+2.6%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 160.0% (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1705001-1706000/P1705136-00.pdf"&gt;כלל, דוח רבעוני Q3'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2025Q3"&gt;https://fox-research-il.web.app/card/clal/2025Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח רבעוני Q2'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1687694</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2025Q2"/>
+<published>2025-08-25T00:00:00+03:00</published>
+<updated>2025-08-25T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 539.0 מיליוני ש"ח (Q2'25), לעומת 407.0 (Q1'25); שינוי +132.0 (+32.4%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 531.0 מיליוני ש"ח (Q2'25), לעומת 409.0 (Q1'25); שינוי +122.0 (+29.8%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 343.0 מיליוני ש"ח (Q2'25), לעומת 236.0 (Q1'25); שינוי +107.0 (+45.3%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 9,490 מיליוני ש"ח (Q2'25), לעומת 9,154 (Q1'25); שינוי +336.0 (+3.7%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · חיים ובריאות): 10,058 מיליוני ש"ח (Q2'25), לעומת 10,312 (Q1'25); שינוי −254.0 (−2.5%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 153.0% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1687001-1688000/P1687694-00.pdf"&gt;כלל, דוח רבעוני Q2'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 25.08.25 · תקופה: Q2'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2025Q2"&gt;https://fox-research-il.web.app/card/clal/2025Q2&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · כושר פירעון: יחס כושר פירעון ליום Q4'24, דוח רבעוני Q1'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/solv:clal:2024-12-31</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2025Q1"/>
+<published>2025-05-29T00:00:00+03:00</published>
+<updated>2025-05-29T00:00:00+03:00</updated>
+<category term="solv" label="יחס כושר פירעון"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר: 153.0% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1668001-1669000/P1668007-00.pdf#page=17"&gt;כלל, דוח רבעוני Q1'25 · עמ׳ 17&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: 2024-12-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2025Q1"&gt;https://fox-research-il.web.app/card/clal/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · שבריריות: מסלול כושר הפירעון: תקין ← מעקב (178.0% → 153.0%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/frag:clal:solv:2024-12-31</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/fragility?c=clal&amp;s=solv"/>
+<published>2025-05-29T00:00:00+03:00</published>
+<updated>2025-05-29T00:00:00+03:00</updated>
+<category term="fragility" label="מוניטור שבריריות"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס כושר פירעון: 153.0% (31.12.24), לעומת 178.0% (30.06.22)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: 2024-12-31 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=solv"&gt;https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=solv&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · שבריריות: זחילת עלויות · גמל והשתלמות: תקין ← מעקב (97.9% → 98.5%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/frag:clal:cost:2025Q1</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/fragility?c=clal&amp;s=cost"/>
+<published>2025-05-29T00:00:00+03:00</published>
+<updated>2025-05-29T00:00:00+03:00</updated>
+<category term="fragility" label="מוניטור שבריריות"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;יחס הוצאות להכנסות, LTM · גמל והשתלמות: 98.5% (Q1'25), לעומת 97.9% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: Q1'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=cost"&gt;https://fox-research-il.web.app/fragility?c=clal&amp;amp;s=cost&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח רבעוני Q1'25</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1668007</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2025Q1"/>
+<published>2025-05-29T00:00:00+03:00</published>
+<updated>2025-05-29T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 407.0 מיליוני ש"ח (Q1'25), לעומת 202.0 (Q4'24); שינוי +205.0 (+101.5%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 409.0 מיליוני ש"ח (Q1'25), לעומת 198.0 (Q4'24); שינוי +211.0 (+106.6%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 236.0 מיליוני ש"ח (Q1'25), לעומת 323.0 (Q4'24); שינוי −87.0 (−26.9%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 9,154 מיליוני ש"ח (Q1'25), לעומת 8,742 (Q4'24); שינוי +412.0 (+4.7%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · חיים ובריאות): 10,312 מיליוני ש"ח (Q1'25), לעומת 10,148 (Q4'24); שינוי +164.0 (+1.6%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 153.0% (Q4'24)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1668001-1669000/P1668007-00.pdf"&gt;כלל, דוח רבעוני Q1'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 29.05.25 · תקופה: Q1'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2025Q1"&gt;https://fox-research-il.web.app/card/clal/2025Q1&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח שנתי FY'24</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1659069</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2024FY"/>
+<published>2025-04-21T00:00:00+03:00</published>
+<updated>2025-04-21T00:00:00+03:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 202.0 מיליוני ש"ח (Q4'24), לעומת 417.0 (Q3'24); שינוי −215.0 (−51.6%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 198.0 מיליוני ש"ח (Q4'24), לעומת 417.0 (Q3'24); שינוי −219.0 (−52.5%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 323.0 מיליוני ש"ח (Q4'24), לעומת 161.0 (Q3'24); שינוי +162.0 (+100.6%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,742 מיליוני ש"ח (Q4'24), לעומת 8,639 (Q3'24); שינוי +103.0 (+1.2%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1659001-1660000/P1659069-00.pdf"&gt;כלל, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 21.04.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2024FY"&gt;https://fox-research-il.web.app/card/clal/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח שנתי FY'24</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1652711</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2024FY"/>
+<published>2025-03-23T00:00:00+02:00</published>
+<updated>2025-03-23T00:00:00+02:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 202.0 מיליוני ש"ח (Q4'24), לעומת 417.0 (Q3'24); שינוי −215.0 (−51.6%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 198.0 מיליוני ש"ח (Q4'24), לעומת 417.0 (Q3'24); שינוי −219.0 (−52.5%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 323.0 מיליוני ש"ח (Q4'24), לעומת 161.0 (Q3'24); שינוי +162.0 (+100.6%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,742 מיליוני ש"ח (Q4'24), לעומת 8,639 (Q3'24); שינוי +103.0 (+1.2%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1652001-1653000/P1652711-00.pdf"&gt;כלל, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 23.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2024FY"&gt;https://fox-research-il.web.app/card/clal/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · הצגה מחדש: דוח שנתי FY'24 הציג מחדש תקופות קודמות</title>
+<id>tag:fox-research-il.web.app,2026:feed/restate:clal:1651707</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/restatements?co=clal&amp;season=2024FY"/>
+<published>2025-03-18T00:00:00+02:00</published>
+<updated>2025-03-18T00:00:00+02:00</updated>
+<category term="restate" label="הצגה מחדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 2&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 2&lt;/p&gt;&lt;p&gt;רווחים נטו, מהשקעות פיננסיות עבור חוזי ביטוח וחוזי השקעה תלויי תשואה · FY'22: 5,980 מיליוני ש"ח (לראשונה), לעומת 8,038 (מחדש); שינוי +2,058 (+34.4%)&lt;/p&gt;&lt;p&gt;רכישות נטו של השקעות פיננסיות · FY'22: −1,366 מיליוני ש"ח (לראשונה), לעומת −1,646 (מחדש); שינוי −280.3&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1651001-1652000/P1651707-00.pdf"&gt;כלל, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 18.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2024FY"&gt;https://fox-research-il.web.app/restatements?co=clal&amp;amp;season=2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דוח: דוח שנתי FY'24</title>
+<id>tag:fox-research-il.web.app,2026:feed/filing:1651707</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/card/clal/2024FY"/>
+<published>2025-03-18T00:00:00+02:00</published>
+<updated>2025-03-18T00:00:00+02:00</updated>
+<category term="filing" label="דוח כספי חדש"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 202.0 מיליוני ש"ח (Q4'24), לעומת 417.0 (Q3'24); שינוי −215.0 (−51.6%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 198.0 מיליוני ש"ח (Q4'24), לעומת 417.0 (Q3'24); שינוי −219.0 (−52.5%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 323.0 מיליוני ש"ח (Q4'24), לעומת 161.0 (Q3'24); שינוי +162.0 (+100.6%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 8,742 מיליוני ש"ח (Q4'24), לעומת 8,639 (Q3'24); שינוי +103.0 (+1.2%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 10,148 מיליוני ש"ח (Q4'24), לעומת 9,033 (Q3'24); שינוי +1,115 (+12.3%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1651001-1652000/P1651707-00.pdf"&gt;כלל, דוח שנתי FY'24&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 18.03.25 · תקופה: FY'24 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/clal/2024FY"&gt;https://fox-research-il.web.app/card/clal/2024FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ כללי (0.83% → 0.92%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i99:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i99"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.92% (01/25), לעומת 0.83% (12/24); שינוי +0.09&lt;/p&gt;&lt;p&gt;נכסי המסלול: 12,167 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 99 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i99"&gt;https://fox-research-il.web.app/funds/i99&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ מסלול לבני 60 ומעלה (0.60% → 0.68%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i9661:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i9661"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.68% (01/25), לעומת 0.60% (12/24); שינוי +0.08&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,137 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9661 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9661"&gt;https://fox-research-il.web.app/funds/i9661&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ מסלול לבני 50 עד 60 (0.68% → 0.80%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i9660:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i9660"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.80% (01/25), לעומת 0.68% (12/24); שינוי +0.12&lt;/p&gt;&lt;p&gt;נכסי המסלול: 11,179 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9660 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9660"&gt;https://fox-research-il.web.app/funds/i9660&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל-אשראי ואג"ח (1.29% → 1.00%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i4:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i4"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 1.00% (01/25), לעומת 1.29% (12/24); שינוי −0.29&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,494 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 4 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i4"&gt;https://fox-research-il.web.app/funds/i4&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל חברה לביטוח בע"מ עוקב מדד s&amp;p 500 (0.56% → 0.67%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:i13346:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/i13346"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.67% (01/25), לעומת 0.56% (12/24); שינוי +0.11&lt;/p&gt;&lt;p&gt;נכסי המסלול: 2,269 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 13346 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i13346"&gt;https://fox-research-il.web.app/funds/i13346&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+<entry>
+<title>כלל · דמי ניהול: כלל תמר 60 ומעלה (0.51% → 0.57%)</title>
+<id>tag:fox-research-il.web.app,2026:feed/fee:g9653:202501</id>
+<link rel="alternate" type="text/html" href="https://fox-research-il.web.app/funds/g9653"/>
+<published>2025-01-31T00:00:00+02:00</published>
+<updated>2025-01-31T00:00:00+02:00</updated>
+<category term="fee" label="שינוי בדמי ניהול"/>
+<content type="html">&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.57% (01/25), לעומת 0.51% (12/24); שינוי +0.06&lt;/p&gt;&lt;p&gt;נכסי המסלול: 11,494 מיליוני ש"ח (01/25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/gemelnet"&gt;רשות שוק ההון, גמל-נט · קופה 9653 · 01/25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/25 · תקופה: 01/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/g9653"&gt;https://fox-research-il.web.app/funds/g9653&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
+</entry>
+</feed>
