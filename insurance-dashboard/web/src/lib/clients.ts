@@ -10,7 +10,7 @@
                 held: Held[] (the client's own products from a clearing-house file: balances, their fees, insurance cover) }
    v1 folders (no snap, no held) are read as v2 with snap null: they open on today's data and say so. Nothing in a folder is an ID
    number. Pure helpers below (normalise, merge, upsert); the hook is the only part that touches storage. */
-import type { HeldExtra } from './clientTypes';  // W7: deposits, code, salary, guaranteed coefficient
+import type { DepositRow, GuaranteedCoef, HeldExtra } from './clientTypes';  // W7: deposits, code, salary, guaranteed coefficient
 import { useStored } from './local';
 
 export type Tag = 'קיים' | 'מומלץ' | 'נבחן';
@@ -79,17 +79,34 @@ function normCover(x: unknown): Cover | null {
   if (!name) return null;
   return { name, kind: strN(o.kind, 80), sum: numN(o.sum), cost: numN(o.cost), rate: numN(o.rate) };
 }
-/** a held product made safe (an ID-shaped string anywhere is dropped) */
+/** W7 · one deposit row made safe (lib/clientTypes DepositRow): a salary month and numbers, nothing else */
+function normDeposit(x: unknown): DepositRow | null {
+  const o = x as Record<string, unknown>;
+  if (!o || typeof o !== 'object' || typeof o.ym !== 'string' || !/^\d{4}-\d{2}$/.test(o.ym)) return null;
+  const r: DepositRow = { ym: o.ym, paid: isoD(o.paid) || null, employee: numN(o.employee), employer: numN(o.employer), severance: numN(o.severance), total: numN(o.total), salary: numN(o.salary) };
+  return r;
+}
+/** a held product made safe (an ID-shaped string anywhere is dropped; the unified code is digits by design and is kept when it is
+ *  one: 23–34 digits, which no ID number or account number is) */
 export function normHeld(x: unknown): Held | null {
   const o = x as Record<string, unknown>;
   if (!o || typeof o !== 'object') return null;
   const safe = (v: unknown, max: number) => { const t = strN(v, max); return t && /\d{8,}/.test(t) ? null : t; };
   const typeHe = safe(o.typeHe, 80);
   if (!typeHe) return null;
+  const code = typeof o.code === 'string' && /^\d{23,34}$/.test(o.code.replace(/\D/g, '')) ? o.code.replace(/\D/g, '') : null;
+  const cg = o.coefGuaranteed as Record<string, unknown> | null | undefined;
+  const coef: GuaranteedCoef | null = cg && typeof cg === 'object' && numN(cg.v) != null && (cg.v as number) > 0 ? { v: cg.v as number, at: numN(cg.at), src: cg.src === 'agent' ? 'agent' : 'file' } : null;
   return {
     k: typeof o.k === 'string' && KEY_RE.test(o.k) ? o.k : null, typeHe, provider: safe(o.provider, 120), plan: safe(o.plan, 160), track: safe(o.track, 160),
     balance: numN(o.balance), monthly: numN(o.monthly), fee: numN(o.fee), feeHow: safe(o.feeHow, 80), depfee: numN(o.depfee), depHow: safe(o.depHow, 80),
     asof: isoD(o.asof) || null, covers: Array.isArray(o.covers) ? o.covers.map(normCover).filter((c): c is Cover => !!c).slice(0, 40) : [], note: safe(o.note, 300),
+    // W7: the client engine's fields, every one optional (folders saved before W7 have none)
+    ...(code ? { code } : {}),
+    ...(Array.isArray(o.deposits) ? { deposits: o.deposits.map(normDeposit).filter((d): d is DepositRow => !!d).slice(0, 60) } : {}),
+    ...(numN(o.salary) != null ? { salary: numN(o.salary) } : {}),
+    ...(safe(o.insTrack, 120) ? { insTrack: safe(o.insTrack, 120) } : {}),
+    ...(coef ? { coefGuaranteed: coef } : {}),
   };
 }
 const isoD = (x: unknown) => (typeof x === 'string' && /^\d{4}-\d{2}-\d{2}/.test(x) ? x.slice(0, 10) : '');

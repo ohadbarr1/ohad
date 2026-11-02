@@ -55,6 +55,14 @@
                 </PerutPirteiHafkadaAchrona>
               </PirteiHafkadaAchrona>
               <PirteiHaasaka><SACHAR-POLISA>17500</SACHAR-POLISA></PirteiHaasaka>
+              <!-- W7: deposit rows from the start of the year (PerutHafkadotMetchilatShana, v008 schema): two salary months, the
+                   second without CHODESH-SACHAR so the value date's month stands in -->
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260815</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202607</CHODESH-SACHAR><SUG-HAFRASHA>2</SUG-HAFRASHA><SUG-HAMAFKID>1</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>17500.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1050.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260815</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202607</CHODESH-SACHAR><SUG-HAFRASHA>3</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>17500.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1137.50</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260815</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202607</CHODESH-SACHAR><SUG-HAFRASHA>1</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>17500.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1400.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260915</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>2</SUG-HAFRASHA><SUG-HAMAFKID>1</SUG-HAMAFKID><SCHUM-HAFKADA-SHESHULAM>1050.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260915</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>3</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SCHUM-HAFKADA-SHESHULAM>1137.50</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260915</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>1</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SCHUM-HAFKADA-SHESHULAM>1400.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
               <PerutHotzaot>
                 <HotzaotBafoalLehodeshDivoach>
                   <SHEUR-DMEI-NIHUL-HAFKADA>1.49</SHEUR-DMEI-NIHUL-HAFKADA>
@@ -81,6 +89,21 @@
               </PerutMasluleiHashkaa>
             </PirteiTaktziv>
             <Tsua><SHEUR-TSUA-NETO>9.12</SHEUR-TSUA-NETO></Tsua>
+            <!-- W7: the pension fund's insurance track and cover (v008 schema: MaslulBituach, Kisuim/ZihuiKisui/KisuiBKerenPensia).
+                 SHIUR-KISUY-ALMAN-O-ALMANA is the v008 name; version-009 files were seen with SHEUR-KISUY-ALMAN-O-ALMANA. -->
+            <MaslulBituach><SHEM-MASLUL-HABITUAH>ברירת מחדל: 75% נכות, 100% שאירים</SHEM-MASLUL-HABITUAH></MaslulBituach>
+            <Kisuim>
+              <ZihuiKisui>
+                <PirteiMevutach><MISPAR-ZIHUY>000000018</MISPAR-ZIHUY></PirteiMevutach>
+                <KisuiBKerenPensia>
+                  <SACH-PENSIAT-NECHUT>13125.00</SACH-PENSIAT-NECHUT>
+                  <SHEUR-KISUY-NECHUT>75</SHEUR-KISUY-NECHUT>
+                  <ALUT-KISUI-NECHUT>61.20</ALUT-KISUI-NECHUT>
+                  <KITZBAT-SHEERIM-LEALMAN-O-ALMANA>10500.00</KITZBAT-SHEERIM-LEALMAN-O-ALMANA>
+                  <SHEUR-KISUY-ALMAN-O-ALMANA>60</SHEUR-KISUY-ALMAN-O-ALMANA>
+                </KisuiBKerenPensia>
+              </ZihuiKisui>
+            </Kisuim>
           </HeshbonOPolisa>
           <HeshbonOPolisa>
             <MISPAR-POLISA-O-HESHBON>000000018</MISPAR-POLISA-O-HESHBON>

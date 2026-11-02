@@ -28,7 +28,11 @@ export function ClientSave({ keys, b, folder, collect, onSaved, compact, suggest
     const inp: FolderIn = { label: lab, keys, b, note, ...(collect?.() ?? {}), ...(folder && folder.label === lab ? { id: folder.id } : {}) };
     const r = upsert(file, inp, today());
     setFile(r.file); setOpen(false);
-    setMsg(`${r.created ? 'נשמר בתיק חדש' : 'התיק עודכן'}: ${r.folder.label} · ${r.folder.keys.length} מסלולים${r.folder.snap ? ` · צילום הנתונים מ-${r.folder.snap.at.split('-').reverse().join('.')}` : ''}`);
+    // W7: what the folder holds from the clearing-house file, so the agent sees the engine's data went in (deposit months, covers)
+    const held = r.folder.held ?? [];
+    const nDep = held.reduce((t, h) => t + (h.deposits?.length ?? 0), 0), nCov = held.reduce((t, h) => t + h.covers.length, 0);
+    const heldNote = held.length ? ` · ${held.length} מוצרים מהמסלקה${nDep ? `, ${nDep} חודשי הפקדה` : ''}${nCov ? `, ${nCov} כיסויים` : ''}` : '';
+    setMsg(`${r.created ? 'נשמר בתיק חדש' : 'התיק עודכן'}: ${r.folder.label} · ${r.folder.keys.length} מסלולים${heldNote}${r.folder.snap ? ` · צילום הנתונים מ-${r.folder.snap.at.split('-').reverse().join('.')}` : ''}`);
     onSaved?.(r.folder);
   };
   return (

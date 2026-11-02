@@ -1,5 +1,22 @@
-import type { HeldExtra } from './clientTypes';  // W7: deposits, code, salary, guaranteed coefficient
+import type { DepositRow, GuaranteedCoef, HeldExtra } from './clientTypes';  // W7: deposits, code, salary, guaranteed coefficient
 /* W3 · "ייבוא מהמסלקה" (בטא): the pension clearing house's personal file, read in this browser only.
+   W7 (wave 2, the client engine): the zip itself is opened in the browser (lib/zipRead), several provider files merge into one
+   (mergeMFiles), the unified code matches a track before any name (by: 'code'), and deposits, salary, the insurance track, the covers'
+   cost and a guaranteed coefficient are read. Sources checked for W7 (02.11.26):
+   · The regulator's field schema of the holdings interface, version 008, downloaded from gov.il:
+     https://www.gov.il/BlobFolder/dynamiccollectorresultitem/holdings-ver008/he/MivneAchid_Holdings_Excel_008.xlsx
+     (sheet "סכימת השדות - אחזקות", 410 element names; every name in MAP below is in it). Its XSD neighbours
+     (…/holdings-ver008/he/MivneAchid_Holdings_{HevrotBituah,KupotGemel,KarnotPensiaHadashot,KarnotPensiaVatikot}_XSD_Schema_008.xsd)
+     are behind gov.il's bot wall (HTTP 403 to every scripted fetch), as is the "צובר הממשקים" page that the 17.3.25 draft of the
+     circular (https://www.gov.il/BlobFolder/dynamiccollectorresultitem/notice-2025-06/he/uniform_protocol_draft_17.3.25%20[PDF].pdf)
+     names as the home of "כלל קבצי הדיווח לגופים מוסדיים לגרסה 9". So version 009 could not be diffed against a primary source.
+   · What 009 files look like: the 6-file sample set of github.com/meir-pletinsky/israeli-retirement-planning
+     (app/public/sample/sample-clearing-house-report.zip), built by its author from 8 real 009 reports. Every element in it is in the
+     008 schema except two: MIN (gender; never read here) and SHEUR-KISUY-ALMAN-O-ALMANA, a spelling of the 008 name
+     SHIUR-KISUY-ALMAN-O-ALMANA; that one is an alias below, marked inferred. SUG-HAMAFKID 6 (a transfer from another fund) is also
+     from that analysis and not in the 008 code table (1–5): inferred.
+   · The unified code: חוזר גופים מוסדיים 2015-231 "קידוד אחיד", section 3 (quoted at code30 below).
+
    Pure: no React, no fetch, no storage. The page hands it the file's bytes; nothing leaves the device, and the parser never reads the
    holder's name, ID number, account number, employer or beneficiaries (it does not even look at YeshutLakoach / YeshutMaasik /
    MISPAR-POLISA-O-HESHBON: for a new pension fund the "account number" is the holder's ID number).
@@ -22,7 +39,7 @@ import type { HeldExtra } from './clientTypes';  // W7: deposits, code, salary, 
 
 /* ---------- a tiny XML tree ---------- */
 
-export interface XNode { n: string; t: string; c: XNode[]; nil?: boolean }
+export interface XNode { n: string; t: string; c: XNode[]; nil?: boolean; /** attributes, when the element has any (W7: the xlsx reader of lib/harb needs a cell's r / t) */ a?: Record<string, string> }
 
 const ENT: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
 const unent = (s: string) => s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e: string) => {
@@ -63,6 +80,7 @@ export function xmlTree(src: string): XNode {
     if (!m) throw new Error('תגית לא תקינה');
     const node: XNode = { n: local(m[1]), t: '', c: [] };
     if (/\bnil\s*=\s*["']true["']/.test(m[2])) node.nil = true;
+    if (m[2].includes('=')) { const a: Record<string, string> = {}; for (const am of m[2].matchAll(/([^\s=]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) a[local(am[1])] = unent(am[2] ?? am[3] ?? ''); node.a = a; }
     top().c.push(node);
     if (!self) stack.push(node);
   }
@@ -77,6 +95,7 @@ export function fromDom(el: Element): XNode {
   const out: XNode = { n: el.localName, t: '', c: [] };
   const XSI = 'http://www.w3.org/2001/XMLSchema-instance';
   if (el.getAttributeNS(XSI, 'nil') === 'true' || el.getAttribute('xsi:nil') === 'true') out.nil = true;
+  if (el.attributes.length) { const a: Record<string, string> = {}; for (const at of Array.from(el.attributes)) a[at.localName] = at.value; out.a = a; }
   el.childNodes.forEach((ch) => {
     if (ch.nodeType === 1) out.c.push(fromDom(ch as Element));
     else if (ch.nodeType === 3 || ch.nodeType === 4) out.t += ch.nodeValue ?? '';
@@ -142,7 +161,36 @@ export const MAP = {
   coverPension: 'KisuiBKerenPensia', disPension: 'SACH-PENSIAT-NECHUT', disRate: 'SHEUR-KISUY-NECHUT', disCost: 'ALUT-KISUI-NECHUT', // …/ZihuiKisui/KisuiBKerenPensia/…
   survSpouse: 'KITZBAT-SHEERIM-LEALMAN-O-ALMANA',
   insTrack: 'MaslulBituach', insTrackName: 'SHEM-MASLUL-HABITUAH',                                  // …/HeshbonOPolisa/MaslulBituach/…
+  // W7 · deposits (…/PirteiTaktziv/PerutHafkadotMetchilatShana, one row per salary month × deposit type × payer; schema 008 sheet
+  // rows "פירוט הפקדות מתחילת השנה"), the policy salary (…/PirteiTaktziv/PirteiHaasaka) and the covers' cost
+  depositType: 'SUG-HAFRASHA', depositor: 'SUG-HAMAFKID', depositSalaryMonth: 'CHODESH-SACHAR', depositSalary: 'SACHAR-BERAMAT-HAFKADA',
+  salaryBlock: 'PirteiHaasaka', salary: 'SACHAR-POLISA',
+  insCostMonth: 'SACH-DMEI-BITUAH-SHENIGBOO',                                                        // …/PerutHotzaot/HotzaotBafoalLehodeshDivoach (the month's insurance cost)
+  coverCost: 'ALUT-KISUI',                                                                           // …/ZihuiKisui/PirteiKisuiBeMutzar/ALUT-KISUI (₪ a month)
+  survRate: 'SHIUR-KISUY-ALMAN-O-ALMANA',                                                            // …/KisuiBKerenPensia (% of the pension to the widow/er)
+  // W7 · the guaranteed annuity coefficient of an insurance policy: schema 008 "מקדם מובטח לפרישה … עבור מוצרי ביטוח בלבד",
+  // …/HeshbonOPolisa/YitraLefiGilPrisha/MEKADEM-MOVTACH-LEPRISHA, one block per retirement age (GIL-PRISHA)
+  coefBlock: 'YitraLefiGilPrisha', coefAge: 'GIL-PRISHA', coef: 'MEKADEM-MOVTACH-LEPRISHA',
 } as const;
+
+/** W7 · other names the same element was seen under. Only names with a source are here: the 008 schema itself lists both
+ *  TOTAL-HAFKADA and TOTAL-HAFKADA-ACHRONA for the last deposit's total; SHEUR-KISUY-ALMAN-O-ALMANA is the spelling in the 009 sample
+ *  set (inferred: no 009 schema to confirm it). Add a line here if 009 renamed something. */
+export const ALIAS: Partial<Record<string, string[]>> = {
+  [MAP.lastDepositTotal]: ['TOTAL-HAFKADA'],
+  [MAP.survRate]: ['SHEUR-KISUY-ALMAN-O-ALMANA'],  // inferred
+};
+const NAMES = new Map<string, Set<string>>();
+const namesOf = (name: string) => { let s = NAMES.get(name); if (!s) { s = new Set([name, ...(ALIAS[name] ?? [])]); NAMES.set(name, s); } return s; };
+
+/** SUG-HAFRASHA (schema 008 code table): what part of the deposit a row is */
+export const DEPOSIT_TYPES: Record<number, string> = {
+  1: 'פיצויים', 2: 'תגמולי עובד', 3: 'תגמולי מעביד', 4: 'תגמולים 47', 5: 'אובדן כושר עבודה', 6: 'שונות עובד', 7: 'שונות מעביד',
+  8: 'קרן השתלמות עובד', 9: 'קרן השתלמות מעביד', 10: 'תגמולים פרט', 11: 'ריסק מוות', 12: 'חיסכון לכל ילד',
+};
+const EMPLOYEE_TYPES = new Set([2, 6, 8, 10]), EMPLOYER_TYPES = new Set([3, 7, 9]), SEVERANCE_TYPE = 1;
+/** SUG-HAMAFKID 6 = a transfer from another fund (inferred from 009 files; the 008 table ends at 5 = הפקדת הורים): not a deposit */
+const TRANSFER_PAYER = 6;
 
 /** SUG-KISUY-BITOCHI (XSD v008 code table) */
 export const COVER_KINDS: Record<number, string> = {
@@ -157,12 +205,12 @@ export const PRODUCT_TYPES: Record<number, string> = {
 
 /* ---------- reading ---------- */
 
-const kid = (n: XNode | undefined, name: string) => n?.c.find((x) => x.n === name);
-const kids = (n: XNode | undefined, name: string) => (n ? n.c.filter((x) => x.n === name) : []);
-/** every descendant with this name (depth first, document order) */
-function desc(n: XNode | undefined, name: string, out: XNode[] = []): XNode[] {
+const kid = (n: XNode | undefined, name: string) => { const s = namesOf(name); return n?.c.find((x) => s.has(x.n)); };
+const kids = (n: XNode | undefined, name: string) => { const s = namesOf(name); return n ? n.c.filter((x) => s.has(x.n)) : []; };
+/** every descendant with this name (or an alias of it; depth first, document order) */
+function desc(n: XNode | undefined, name: string, out: XNode[] = [], s = namesOf(name)): XNode[] {
   if (!n) return out;
-  for (const c of n.c) { if (c.n === name) out.push(c); desc(c, name, out); }
+  for (const c of n.c) { if (s.has(c.n)) out.push(c); desc(c, name, out, s); }
   return out;
 }
 const first = (n: XNode | undefined, name: string) => desc(n, name)[0];
@@ -179,7 +227,13 @@ export function isoDate(t: string | null): string | null {
   return `${m[1]}-${m[2]}-${m[3] ?? '01'}`;
 }
 
-/** A 30-digit unified code split into its parts (חוזר קידוד אחיד). Non-digits are dropped; shorter codes give what they carry. */
+/** A 30-digit unified code split into its parts. חוזר גופים מוסדיים 2015-231 (קידוד אחיד), section 3: "קופת הגמל תסומן ב-30 ספרות:
+ *  תשע הספרות הראשונות יסמנו את מספר הגוף המוסדי – לפי מספר החברה ברשם החברות; ארבע עשרה ספרות נוספות … יסמנו את מספר המוצר:
+ *  בקופות גמל ובקרנות פנסיה – לפי מספר קופת הגמל, כפי שמופיע באישור מס הכנסה; בתוכניות ביטוח – לפי מספר הזיהוי שקבעה חברת הביטוח;
+ *  ארבע ספרות נוספות יסמנו את מסלול ההשקעה … [כשאין מסלול] 0000; שלוש ספרות נוספות יסמנו את מסלול דמי הניהול בתוכניות ביטוח או את
+ *  מסלול הביטוח בקרן הפנסיה … [כשאין] 000." (The circular's own example: 512205204-00000000000101-1334-000.) In fox's data the
+ *  14-digit product is a fund's own number (`id`: a study or provident fund) or its parent fund (`pid` / `tx.fund`: a pension fund's
+ *  transfer-bank number); the 4-digit track is the track's `id`. Non-digits are dropped; shorter codes give what they carry. */
 export function code30(s: string | null | undefined): { company: number; product: number; track: number | null; fee: number | null } | null {
   const d = (s ?? '').replace(/\D/g, '');
   if (d.length < 23) return null;
@@ -203,9 +257,34 @@ export interface MAccount extends HeldExtra {
   ytd: number | null;
   tracks: MTrack[];
   covers: MCover[]; insTrack: string | null;
+  /** W7: the month's insurance cost as charged (SACH-DMEI-BITUAH-SHENIGBOO), when the file gives it */
+  insCost: number | null;
   warn: string[];
 }
-export interface MFile { version: string | null; runDate: string | null; providerName: string | null; accounts: MAccount[]; warn: string[] }
+export interface MFile {
+  version: string | null; runDate: string | null; providerName: string | null; accounts: MAccount[]; warn: string[];
+  /** W7: when several provider files were merged (one zip): each file's name, provider and its accounts' index range */
+  parts?: { file: string; provider: string | null; from: number; to: number }[];
+}
+
+/** W7 · several files (one per provider, as the clearing house's zip holds them) → one file with per-provider parts. Each account
+ *  already names its provider; `providerName` is the first one. A version or run date is kept when all parts agree. */
+export function mergeMFiles(files: { name: string; file: MFile }[]): MFile {
+  if (files.length === 1) return { ...files[0].file, parts: [{ file: files[0].name, provider: files[0].file.providerName, from: 0, to: files[0].file.accounts.length }] };
+  const out: MFile = { version: null, runDate: null, providerName: null, accounts: [], warn: [], parts: [] };
+  const vs = new Set<string | null>(), ds = new Set<string | null>();
+  for (const { name, file } of files) {
+    const from = out.accounts.length;
+    out.accounts.push(...file.accounts);
+    out.parts!.push({ file: name, provider: file.providerName, from, to: out.accounts.length });
+    out.providerName = out.providerName ?? file.providerName;
+    out.warn.push(...file.warn.map((w) => (file.providerName ? `${file.providerName}: ${w}` : w)));
+    vs.add(file.version); ds.add(file.runDate);
+  }
+  if (vs.size === 1) out.version = [...vs][0];
+  if (ds.size === 1) out.runDate = [...ds][0];
+  return out;
+}
 
 /** fee sanity: annual accumulation fee up to 3%, deposit fee up to 7% (the legal caps are lower; anything above is a misread) */
 const FEE_MAX = 3, DEP_MAX = 7;
@@ -224,14 +303,66 @@ export function readCovers(acc: XNode): MCover[] {
     const pen = kid(z, MAP.coverPension);
     if (pen) {
       const dis = num(kid(pen, MAP.disPension)), rate = num(kid(pen, MAP.disRate)), cost = num(kid(pen, MAP.disCost)), sp = num(kid(pen, MAP.survSpouse));
+      // W7: the widow/er's share of the pension (SHIUR-KISUY-ALMAN-O-ALMANA, %): kept as the survivors row's rate
+      const spRate = num(kid(pen, MAP.survRate));
       if (dis != null || rate != null || cost != null) out.push({ name: name ? `${name} · נכות` : 'נכות', kind: 'נכות (קרן פנסיה), קצבה חודשית', sum: dis, cost, rate });
-      if (sp != null) out.push({ name: name ? `${name} · שאירים` : 'שאירים', kind: 'קצבת שאירים לבן/בת זוג, חודשית', sum: sp, cost: null, rate: null });
+      if (sp != null || spRate != null) out.push({ name: name ? `${name} · שאירים` : 'שאירים', kind: 'קצבת שאירים לבן/בת זוג, חודשית', sum: sp, cost: null, rate: spRate });
       continue;
     }
     if (!name && sum == null) continue;
-    out.push({ name: name ?? (kindN != null ? COVER_KINDS[kindN] ?? 'כיסוי' : 'כיסוי'), kind: kindN != null ? COVER_KINDS[kindN] ?? null : null, sum, cost: null, rate: null });
+    // W7: the cover's monthly cost (ALUT-KISUI in the same block as the kind and sum)
+    const cost = parts.map((p) => num(kid(p, MAP.coverCost))).find((x) => x != null) ?? null;
+    out.push({ name: name ?? (kindN != null ? COVER_KINDS[kindN] ?? 'כיסוי' : 'כיסוי'), kind: kindN != null ? COVER_KINDS[kindN] ?? null : null, sum, cost, rate: null });
   }
   return out;
+}
+
+/** W7 · the deposit rows of an account (PerutHafkadotMetchilatShana, then the last-deposit block when the rows do not reach its
+ *  month): one DepositRow per salary month, the employee / employer / severance parts added up from the typed rows, the insured
+ *  salary when a row states it. A transfer from another fund (SUG-HAMAFKID 6) is not a deposit and is left out with a note. */
+export function readDeposits(acc: XNode, warn: string[]): DepositRow[] {
+  const by = new Map<string, DepositRow>();
+  let transfers = 0;
+  const add = (ym: string, paid: string | null, type: number | null, amount: number | null, salary: number | null) => {
+    let r = by.get(ym);
+    if (!r) { r = { ym, paid, employee: null, employer: null, severance: null, total: null, salary: null }; by.set(ym, r); }
+    if (paid && (!r.paid || paid > r.paid)) r.paid = paid;
+    if (salary != null && salary > 0) r.salary = salary;
+    if (amount == null) return;
+    r.total = (r.total ?? 0) + amount;
+    if (type === SEVERANCE_TYPE) r.severance = (r.severance ?? 0) + amount;
+    else if (type != null && EMPLOYEE_TYPES.has(type)) r.employee = (r.employee ?? 0) + amount;
+    else if (type != null && EMPLOYER_TYPES.has(type)) r.employer = (r.employer ?? 0) + amount;
+  };
+  for (const r of desc(acc, MAP.depositRows)) {
+    if (int(kid(r, MAP.depositor)) === TRANSFER_PAYER) { transfers++; continue; }
+    const paid = isoDate(txt(kid(r, MAP.depositRowDate)));
+    const ym = isoDate(txt(kid(r, MAP.depositSalaryMonth)))?.slice(0, 7) ?? paid?.slice(0, 7);
+    if (!ym) continue;
+    add(ym, paid, int(kid(r, MAP.depositType)), num(kid(r, MAP.depositAmount)), num(kid(r, MAP.depositSalary)));
+  }
+  // the last deposit, when its month is not among the rows (the block's rows are by type, no payer)
+  for (const b of desc(acc, MAP.lastDeposit)) {
+    const raw = txt(kid(b, MAP.lastDepositDate)), d = isoDate(raw);
+    if (!d || by.has(d.slice(0, 7))) continue;
+    const paid = (raw ?? '').replace(/\D/g, '').length >= 8 ? d : null;  // the schema says YYYYMM; a full date is kept when a file gives one
+    const rows = desc(b, MAP.lastDepositRow);
+    if (rows.length) for (const r of rows) add(d.slice(0, 7), paid, int(kid(r, MAP.depositType)), num(kid(r, MAP.depositAmount)), null);
+    else { const t = num(kid(b, MAP.lastDepositTotal)); if (t != null) add(d.slice(0, 7), null, null, t, null); }
+  }
+  if (transfers) warn.push(`${transfers === 1 ? 'שורה אחת' : `${transfers} שורות`} של העברה מקופה אחרת לא נספרו כהפקדה`);
+  const out = [...by.values()].sort((a, b) => a.ym.localeCompare(b.ym));
+  for (const r of out) { for (const k of ['employee', 'employer', 'severance', 'total'] as const) if (r[k] != null) r[k] = +(r[k] as number).toFixed(2); }
+  return out;
+}
+
+/** W7 · the guaranteed coefficient an insurance policy states (MEKADEM-MOVTACH-LEPRISHA per retirement age): the one for age 67
+ *  when given, else the highest age that has one. Null when the file has none (then the agent types it, src 'agent'). */
+export function readCoef(acc: XNode): GuaranteedCoef | null {
+  const got = desc(acc, MAP.coefBlock).map((b) => ({ v: num(kid(b, MAP.coef)), at: int(kid(b, MAP.coefAge)) })).filter((x): x is { v: number; at: number | null } => x.v != null && x.v > 0);
+  if (!got.length) return null;
+  const pick = got.find((x) => x.at === 67) ?? got.sort((a, b) => (b.at ?? 0) - (a.at ?? 0))[0];
+  return { v: pick.v, at: pick.at, src: 'file' };
 }
 
 function readAccount(acc: XNode, prod: XNode, prov: XNode): MAccount {
@@ -292,14 +423,21 @@ function readAccount(acc: XNode, prod: XNode, prov: XNode): MAccount {
   if (fee == null) { const m = num(kid(act, MAP.actualAccFeeMonthly)); const a = m == null ? null : okFee(+(m * 12).toFixed(4), FEE_MAX); if (a != null) { fee = a; feeHow = 'month12'; } }
   if (depfee == null) { const d = okFee(num(kid(act, MAP.actualDepFee)), DEP_MAX); if (d != null) { depfee = d; depHow = 'actual'; } }
 
+  /* W7: deposits by salary month, the policy salary (SACHAR-POLISA, else the latest deposit row's salary), the guaranteed coefficient */
+  const deposits = readDeposits(acc, warn);
+  const salaryTag = num(kid(first(kid(acc, 'PirteiTaktziv') ?? acc, MAP.salaryBlock), MAP.salary));
+  const salary = salaryTag != null && salaryTag > 0 ? salaryTag : [...deposits].reverse().find((d) => d.salary != null)?.salary ?? null;
+  const unified = txt(kid(acc, MAP.unified));
+
   return {
     providerId: pid, providerName: txt(kid(prov, MAP.providerName)),
     type, typeHe: type != null ? PRODUCT_TYPES[type] ?? `סוג מוצר ${type}` : 'סוג מוצר לא ידוע',
     pensionKind: kind, old: oldNew === 1,
-    plan: txt(kid(acc, MAP.plan)), status: int(kid(acc, MAP.status)), asof, balDate, unified: txt(kid(acc, MAP.unified)),
+    plan: txt(kid(acc, MAP.plan)), status: int(kid(acc, MAP.status)), asof, balDate, unified,
     balance: balance == null ? null : Math.round(balance), monthly: monthly == null ? null : Math.round(monthly), lastDep,
     fee, feeHow, depfee, depHow, ytd: num(first(acc, MAP.ytd)), tracks,
-    covers: readCovers(acc), insTrack: txt(kid(kid(acc, MAP.insTrack), MAP.insTrackName)), warn,
+    covers: readCovers(acc), insTrack: txt(kid(kid(acc, MAP.insTrack), MAP.insTrackName)), insCost: num(kid(act, MAP.insCostMonth)), warn,
+    code: unified, deposits, salary, coefGuaranteed: readCoef(acc),
   };
 }
 
@@ -347,7 +485,13 @@ export function sim(a: string[], b: string[]): number {
   return (2 * hit) / (a.length + b.length);
 }
 
-export type MatchBy = 'id' | 'track' | 'name' | 'manual';
+/** how a row was matched: 'code' the full unified code (company, product and track all agree with the data); 'id' the product
+ *  number is the track's own number; 'track' the product is the parent fund and it has one track (or the 4-digit track picked it);
+ *  'name' the track's name decided among the fund's tracks; 'manual' the reader chose */
+export type MatchBy = 'id' | 'code' | 'track' | 'name' | 'manual';
+export const MATCH_BY: Record<MatchBy, string> = {
+  code: 'לפי הקוד האחיד (חברה, קופה ומסלול)', id: 'לפי מספר הקופה', track: 'לפי מספר הקופה והמסלול', name: 'לפי שם המסלול, לבדיקה', manual: 'בחירה ידנית',
+};
 export interface Row {
   key: string; acc: number; providerName: string | null; typeHe: string; plan: string | null; trackName: string | null; code: string | null;
   k: string | null; by: MatchBy | null; why: string; cands: string[];
@@ -355,6 +499,9 @@ export interface Row {
   asof: string | null; skip: string | null; warn: string[];
   /** the account's insurance cover, on its first row only (W4) */
   covers?: MCover[];
+  /** W7: the account's deposit rows and salary, on the row that carries the monthly deposit; the insurance track and the guaranteed
+   *  coefficient with the covers (first row) */
+  deposits?: DepositRow[]; salary?: number | null; insTrack?: string | null; coefGuaranteed?: GuaranteedCoef | null;
 }
 
 function pickByName<T extends MFund>(name: string | null, pool: T[], min: number, margin: number): { f: T | null; ranked: T[] } {
@@ -385,6 +532,11 @@ export function matchTrack(a: MAccount, t: MTrack | null, funds: MFund[]): Pick<
   const scope = byMgr.length ? byMgr : pool;
   const tname = t?.name ?? a.plan;
   if (c) {
+    // W7: the whole unified code first: company (ח"פ = mgr_id), product (= parent fund) and the 4-digit track (= the track's number)
+    if (c.track && byMgr.length) {
+      const full = byMgr.filter((f) => f.id === c.track && ((f.pid != null && +f.pid === c.product) || (f.tx?.fund != null && +f.tx.fund === c.product)));
+      if (full.length === 1) return { k: full[0].k, by: 'code', why: `הקוד האחיד: חברה ${company}, קופה ${c.product}, מסלול ${c.track}`, cands: [] };
+    }
     const exact = scope.filter((f) => f.id === c.product);
     if (exact.length === 1) return { k: exact[0].k, by: 'id', why: `מספר הקופה ${c.product}`, cands: [] };
     if (exact.length > 1) { const p = pickByName(tname, exact, 0, 0.01); if (p.f) return { k: p.f.k, by: 'id', why: `מספר הקופה ${c.product} ושם המסלול`, cands: [] }; }
@@ -410,7 +562,8 @@ export function rowsOf(file: MFile, funds: MFund[], fileTag = 'f'): Row[] {
   file.accounts.forEach((a, ai) => {
     const base = { acc: ai, providerName: a.providerName ?? file.providerName, typeHe: a.typeHe, plan: a.plan, fee: a.fee, feeHow: a.feeHow, depfee: a.depfee, depHow: a.depHow, asof: a.asof ?? a.balDate, warn: [...a.warn] };
     const skip = a.type != null && RISK.has(a.type) ? 'ביטוח בלי רכיב חיסכון: אין יתרה או מסלול להשוות' : a.old ? 'קרן פנסיה ותיקה: אין לה מסלולים בנתוני הרשות שבאתר' : a.status === 3 ? 'החשבון מבוטל' : null;
-    if (skip) { out.push({ ...base, key: `${fileTag}:${ai}:x`, trackName: null, code: a.unified, k: null, by: null, why: skip, cands: [], balance: a.balance, monthly: a.monthly, skip, covers: a.covers ?? [] }); return; }
+    const extra = { insTrack: a.insTrack, coefGuaranteed: a.coefGuaranteed ?? null };
+    if (skip) { out.push({ ...base, key: `${fileTag}:${ai}:x`, trackName: null, code: a.unified, k: null, by: null, why: skip, cands: [], balance: a.balance, monthly: a.monthly, skip, covers: a.covers ?? [], deposits: a.deposits ?? [], salary: a.salary ?? null, ...extra }); return; }
     const ts = a.tracks.length ? a.tracks : [null];
     const amounts = ts.map((t) => t?.amount ?? null);
     const split = ts.length > 1 && amounts.every((x) => x != null) && (amounts as number[]).some((x) => x > 0);
@@ -425,7 +578,9 @@ export function rowsOf(file: MFile, funds: MFund[], fileTag = 'f'): Row[] {
         // the account's terms win; else this track's own rate; else what the account was charged
         ...(a.feeHow === 'terms' || t?.fee == null ? { fee: a.fee, feeHow: a.feeHow } : { fee: t.fee, feeHow: 'track' as const }),
         ...(a.depHow === 'terms' || t?.depfee == null ? { depfee: a.depfee, depHow: a.depHow } : { depfee: t.depfee, depHow: 'track' as const }),
-        skip: null, covers: ti === 0 ? a.covers ?? [] : [] };
+        skip: null, covers: ti === 0 ? a.covers ?? [] : [], ...(ti === 0 ? extra : {}),
+        // W7: the deposit rows and the salary travel with the monthly deposit
+        deposits: ti === depIdx ? a.deposits ?? [] : [], salary: ti === depIdx ? a.salary ?? null : null };
       if (ts.length > 1 && !split) row.warn.push('הקובץ לא מפרט כמה מהיתרה בכל מסלול');
       if (split && Math.round(amounts[ti] as number) === 0) { row.skip = 'אין כסף במסלול הזה (רק הפקדות עתידיות)'; }
       out.push(row);
@@ -434,26 +589,38 @@ export function rowsOf(file: MFile, funds: MFund[], fileTag = 'f'): Row[] {
   return out;
 }
 
-/** the reader's saved product, as /my keeps it (lib/mine) */
-export interface Saved { k: string; balance?: number | null; monthly?: number | null; fee?: number | null; depfee?: number | null; added: string; imp?: string }
+/** the reader's saved product, as /my keeps it (lib/mine). W7 adds, optionally: the unified code, the deposit rows and the salary
+ *  from the file (lib/mine keeps them when it knows them; older lists simply have none). */
+export interface Saved extends Pick<HeldExtra, 'code' | 'deposits' | 'salary' | 'insTrack'> { k: string; balance?: number | null; monthly?: number | null; fee?: number | null; depfee?: number | null; added: string; imp?: string; covers?: MCover[] }
+type SavedExtra = Pick<Saved, 'code' | 'deposits' | 'salary' | 'insTrack' | 'covers'>;
 
 /** Chosen rows → the saved list: one product per track (two accounts in one track add up), an existing product updated in place. */
 export function applyRows(list: Saved[], rows: Row[], today: string): { list: Saved[]; added: number; updated: number } {
   const by = new Map<string, Saved>();
+  // W7: the saver's product keeps what the deposit watchdog and the coverage line need (lib/mine MyProduct has these as optional fields)
+  const extraOf = (r: SavedExtra): SavedExtra => ({
+    ...(r.code ? { code: r.code } : {}), ...(r.deposits?.length ? { deposits: r.deposits } : {}), ...(r.salary != null ? { salary: r.salary } : {}),
+    ...(r.insTrack ? { insTrack: r.insTrack } : {}), ...(r.covers?.length ? { covers: r.covers } : {}),
+  });
   for (const r of rows) {
     if (!r.k || r.skip) continue;
     const p = by.get(r.k);
-    if (!p) { by.set(r.k, { k: r.k, balance: r.balance, monthly: r.monthly, fee: r.fee, depfee: r.depfee, added: today, imp: r.asof ?? today }); continue; }
+    if (!p) { by.set(r.k, { k: r.k, balance: r.balance, monthly: r.monthly, fee: r.fee, depfee: r.depfee, added: today, imp: r.asof ?? today, ...extraOf(r) }); continue; }
     p.balance = r.balance == null ? p.balance : (p.balance ?? 0) + r.balance;
     p.monthly = r.monthly == null ? p.monthly : (p.monthly ?? 0) + r.monthly;
     p.fee = p.fee ?? r.fee; p.depfee = p.depfee ?? r.depfee;
+    if (r.deposits?.length) p.deposits = [...(p.deposits ?? []), ...r.deposits].sort((a, b) => a.ym.localeCompare(b.ym));
+    if (r.covers?.length) p.covers = [...(p.covers ?? []), ...r.covers];
+    if (p.salary == null && r.salary != null) p.salary = r.salary;
+    if (!p.code && r.code) p.code = r.code;
+    if (!p.insTrack && r.insTrack) p.insTrack = r.insTrack;
   }
   let added = 0, updated = 0;
   const out = list.map((m) => {
     const n = by.get(m.k);
     if (!n) return m;
     by.delete(m.k); updated++;
-    return { ...m, balance: n.balance ?? m.balance, monthly: n.monthly ?? m.monthly, fee: n.fee ?? m.fee, depfee: n.depfee ?? m.depfee, imp: n.imp };
+    return { ...m, balance: n.balance ?? m.balance, monthly: n.monthly ?? m.monthly, fee: n.fee ?? m.fee, depfee: n.depfee ?? m.depfee, imp: n.imp, ...extraOf(n) };
   });
   for (const n of by.values()) { out.push(n); added++; }
   return { list: out, added, updated };
@@ -469,11 +636,13 @@ export const FEE_HOW: Record<FeeHow, string> = {
 /** the held products of a client folder (lib/clients `Held`), from the review rows: every row, matched or not, with the balance,
  *  the fees and the cover the file gives; a row the saver flow skips (risk insurance, an old fund) is kept with its reason, since its
  *  cover belongs in the הנמקה. `manual` maps a row key to a track the agent picked. No name, ID or account number is in a row. */
-export function heldOf(rows: Row[], manual: Record<string, string> = {}): { k: string | null; typeHe: string; provider: string | null; plan: string | null; track: string | null;
-  balance: number | null; monthly: number | null; fee: number | null; feeHow: string | null; depfee: number | null; depHow: string | null; asof: string | null; covers: MCover[]; note: string | null }[] {
+export function heldOf(rows: Row[], manual: Record<string, string> = {}): ({ k: string | null; typeHe: string; provider: string | null; plan: string | null; track: string | null;
+  balance: number | null; monthly: number | null; fee: number | null; feeHow: string | null; depfee: number | null; depHow: string | null; asof: string | null; covers: MCover[]; note: string | null } & HeldExtra)[] {
   return rows.map((r) => ({
     k: manual[r.key] || r.k, typeHe: r.typeHe, provider: r.providerName, plan: r.plan, track: r.trackName,
     balance: r.balance, monthly: r.monthly, fee: r.fee, feeHow: r.feeHow ? FEE_HOW[r.feeHow] : null, depfee: r.depfee, depHow: r.depHow ? FEE_HOW[r.depHow] : null,
     asof: r.asof, covers: r.covers ?? [], note: r.skip ?? (r.k || manual[r.key] ? null : `לא הותאם למסלול: ${r.why}`),
+    // W7: the client engine's fields (deposits for the ניוד table and the deposit watchdog; salary; the insurance track; a guaranteed coefficient)
+    code: r.code, deposits: r.deposits ?? [], salary: r.salary ?? null, insTrack: r.insTrack ?? null, coefGuaranteed: r.coefGuaranteed ?? null,
   }));
 }

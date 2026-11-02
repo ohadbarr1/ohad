@@ -32,12 +32,14 @@
     "test:verdict": "node scripts/verdict-test.mjs",
     "test:agent": "node scripts/agent-test.mjs",
     "test:maslaka": "node scripts/maslaka-test.mjs",
+    "test:import": "node scripts/import-test.mjs",
     "test:mysince": "node scripts/mysince-test.mjs",
     "test:flags": "node scripts/flags-test.mjs",
     "test:coef": "node scripts/coef-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",
+    "@zip.js/zip.js": "2.24.0",
     "echarts": "^5.5.1",
     "pdfjs-dist": "4.10.38",
     "pptxgenjs": "4.0.1",

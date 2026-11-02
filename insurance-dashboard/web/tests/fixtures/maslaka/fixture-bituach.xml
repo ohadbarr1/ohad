@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FIXTURE · synthetic, built from the holdings-interface field schema v008 (gov.il, MivneAchid_Holdings_Excel_008.xlsx) and the
+     structure of version-009 files (sample set of github.com/meir-pletinsky/israeli-retirement-planning). No real person: the names, ID,
+     policy numbers and amounts are invented. A managers' insurance policy (SUG-MUTZAR 1) at מגדל (ח"פ 520004896) with a guaranteed
+     coefficient, death and disability covers, salary-month deposit rows, and a risk-only rider (SUG-MUTZAR 6). -->
+<Mimshak xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <KoteretKovetz>
+    <SUG-MIMSHAK>1</SUG-MIMSHAK>
+    <MISPAR-GIRSAT-XML>009</MISPAR-GIRSAT-XML>
+    <TAARICH-BITZUA>20261030110500</TAARICH-BITZUA>
+    <KIVUN-MIMSHAK-XML>3</KIVUN-MIMSHAK-XML>
+  </KoteretKovetz>
+  <YeshutYatzran>
+    <KOD-MEZAHE-YATZRAN>520004896</KOD-MEZAHE-YATZRAN>
+    <SHEM-YATZRAN>מגדל חברה לביטוח בע"מ</SHEM-YATZRAN>
+    <Mutzarim>
+      <Mutzar>
+        <NetuneiMutzar>
+          <SUG-MUTZAR>1</SUG-MUTZAR>
+          <KOD-MEZAHE-YATZRAN>520004896</KOD-MEZAHE-YATZRAN>
+          <YeshutLakoach>
+            <MISPAR-ZIHUY-LAKOACH>000000018</MISPAR-ZIHUY-LAKOACH>
+            <SHEM-PRATI>ישראלה</SHEM-PRATI>
+            <SHEM-MISHPACHA>בדיקתית</SHEM-MISHPACHA>
+          </YeshutLakoach>
+          <YeshutMaasik><SHEM-MAASIK>מעסיק לדוגמה בע"מ</SHEM-MAASIK></YeshutMaasik>
+        </NetuneiMutzar>
+        <HeshbonotOPolisot>
+          <HeshbonOPolisa>
+            <MISPAR-POLISA-O-HESHBON>88112233</MISPAR-POLISA-O-HESHBON>
+            <SHEM-TOCHNIT>מגדל לעתיד - מסלול כללי</SHEM-TOCHNIT>
+            <KIDOD-ACHID>520004896000000000170130000001</KIDOD-ACHID>
+            <SUG-POLISA>3</SUG-POLISA>
+            <TAARICH-NECHONUT>20260930</TAARICH-NECHONUT>
+            <STATUS-POLISA-O-CHESHBON>1</STATUS-POLISA-O-CHESHBON>
+            <PirteiTaktziv>
+              <BlockItrot>
+                <Yitrot>
+                  <TAARICH-ERECH-TZVIROT>20260930</TAARICH-ERECH-TZVIROT>
+                  <PerutYitrot><KOD-SUG-ITRA>2</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>2</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>210500.00</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+                  <PerutYitrot><KOD-SUG-ITRA>2</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>3</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>230100.00</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+                  <PerutYitrot><KOD-SUG-ITRA>2</KOD-SUG-ITRA><KOD-SUG-HAFRASHA>1</KOD-SUG-HAFRASHA><TOTAL-CHISACHON-MTZBR>199400.00</TOTAL-CHISACHON-MTZBR></PerutYitrot>
+                </Yitrot>
+              </BlockItrot>
+              <PirteiHafkadaAchrona>
+                <PerutPirteiHafkadaAchrona>
+                  <TAARICH-HAFKADA-ACHARON>202609</TAARICH-HAFKADA-ACHARON>
+                  <TOTAL-HAFKADA-ACHRONA>4180.00</TOTAL-HAFKADA-ACHRONA>
+                  <PerutHafkadaAchrona><SUG-HAFRASHA>2</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1320.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadaAchrona>
+                  <PerutHafkadaAchrona><SUG-HAFRASHA>3</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1430.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadaAchrona>
+                  <PerutHafkadaAchrona><SUG-HAFRASHA>1</SUG-HAFRASHA><SCHUM-HAFKADA-SHESHULAM>1760.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadaAchrona>
+                </PerutPirteiHafkadaAchrona>
+              </PirteiHafkadaAchrona>
+              <PirteiHaasaka>
+                <SACHAR-POLISA>22000.00</SACHAR-POLISA>
+                <KOD-CHISHUV-SACHAR-POLISA-O-HESHBON>5</KOD-CHISHUV-SACHAR-POLISA-O-HESHBON>
+                <CHODESH-SACHAR>202609</CHODESH-SACHAR>
+              </PirteiHaasaka>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260812</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202607</CHODESH-SACHAR><SUG-HAFRASHA>2</SUG-HAFRASHA><SUG-HAMAFKID>1</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>22000.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1320.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260812</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202607</CHODESH-SACHAR><SUG-HAFRASHA>3</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>22000.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1430.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260812</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202607</CHODESH-SACHAR><SUG-HAFRASHA>1</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>22000.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1760.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260914</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202608</CHODESH-SACHAR><SUG-HAFRASHA>2</SUG-HAFRASHA><SUG-HAMAFKID>1</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>22000.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1320.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260914</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202608</CHODESH-SACHAR><SUG-HAFRASHA>3</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>22000.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1430.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260914</TAARICH-ERECH-HAFKADA><CHODESH-SACHAR>202608</CHODESH-SACHAR><SUG-HAFRASHA>1</SUG-HAFRASHA><SUG-HAMAFKID>2</SUG-HAMAFKID><SACHAR-BERAMAT-HAFKADA>22000.00</SACHAR-BERAMAT-HAFKADA><SCHUM-HAFKADA-SHESHULAM>1760.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <!-- a transfer from another fund in the same month: not a deposit (SUG-HAMAFKID 6, seen in version-009 files; not in the v008 code table) -->
+              <PerutHafkadotMetchilatShana><TAARICH-ERECH-HAFKADA>20260920</TAARICH-ERECH-HAFKADA><SUG-HAFRASHA>2</SUG-HAFRASHA><SUG-HAMAFKID>6</SUG-HAMAFKID><SCHUM-HAFKADA-SHESHULAM>50000.00</SCHUM-HAFKADA-SHESHULAM></PerutHafkadotMetchilatShana>
+              <PerutHotzaot>
+                <HotzaotBafoalLehodeshDivoach>
+                  <SHEUR-DMEI-NIHUL-HAFKADA>3.00</SHEUR-DMEI-NIHUL-HAFKADA>
+                  <SHEUR-DMEI-NIHUL-TZVIRA>0.0875</SHEUR-DMEI-NIHUL-TZVIRA>
+                  <SACH-DMEI-BITUAH-SHENIGBOO>215.40</SACH-DMEI-BITUAH-SHENIGBOO>
+                </HotzaotBafoalLehodeshDivoach>
+                <MivneDmeiNihul>
+                  <PerutMivneDmeiNihul><SUG-HOTZAA>1</SUG-HOTZAA><SHEUR-DMEI-NIHUL>1.05</SHEUR-DMEI-NIHUL></PerutMivneDmeiNihul>
+                  <PerutMivneDmeiNihul><SUG-HOTZAA>2</SUG-HOTZAA><SHEUR-DMEI-NIHUL>3.00</SHEUR-DMEI-NIHUL></PerutMivneDmeiNihul>
+                </MivneDmeiNihul>
+              </PerutHotzaot>
+              <PerutMasluleiHashkaa>
+                <KOD-MASLUL-HASHKAA>520004896000000000170130000001</KOD-MASLUL-HASHKAA>
+                <SHEM-MASLUL-HASHKAA>מגדל - כללי</SHEM-MASLUL-HASHKAA>
+                <KOD-SUG-MASLUL>1</KOD-SUG-MASLUL>
+                <SCHUM-TZVIRA-BAMASLUL>640000.00</SCHUM-TZVIRA-BAMASLUL>
+              </PerutMasluleiHashkaa>
+            </PirteiTaktziv>
+            <YitraLefiGilPrisha>
+              <GIL-PRISHA>60</GIL-PRISHA>
+              <TOTAL-CHISACHON-MITZTABER-TZAFUY>1292048.55</TOTAL-CHISACHON-MITZTABER-TZAFUY>
+              <MEKADEM-MOVTACH-LEPRISHA>175.20</MEKADEM-MOVTACH-LEPRISHA>
+            </YitraLefiGilPrisha>
+            <YitraLefiGilPrisha>
+              <GIL-PRISHA>67</GIL-PRISHA>
+              <TOTAL-CHISACHON-MITZTABER-TZAFUY>1462152.90</TOTAL-CHISACHON-MITZTABER-TZAFUY>
+              <MEKADEM-MOVTACH-LEPRISHA>161.85</MEKADEM-MOVTACH-LEPRISHA>
+            </YitraLefiGilPrisha>
+            <Kisuim>
+              <ZihuiKisui>
+                <SHEM-KISUI-YATZRAN>ריסק למקרה מוות</SHEM-KISUI-YATZRAN>
+                <PirteiMevutach><MISPAR-ZIHUY>000000018</MISPAR-ZIHUY><SHEM-PRATI>ישראלה</SHEM-PRATI></PirteiMevutach>
+                <PirteiKisuiBeMutzar><SUG-KISUY-BITOCHI>1</SUG-KISUY-BITOCHI><SCHUM-BITUACH>1225468.65</SCHUM-BITUACH><ALUT-KISUI>148.30</ALUT-KISUI></PirteiKisuiBeMutzar>
+                <SchumeiBituahYesodi><SCHUM-BITUAH-LEMAVET>1225468.65</SCHUM-BITUAH-LEMAVET></SchumeiBituahYesodi>
+              </ZihuiKisui>
+              <ZihuiKisui>
+                <SHEM-KISUI-YATZRAN>אובדן כושר עבודה</SHEM-KISUI-YATZRAN>
+                <PirteiKisuiBeMutzar><SUG-KISUY-BITOCHI>5</SUG-KISUY-BITOCHI><SCHUM-BITUACH>16500.00</SCHUM-BITUACH><ALUT-KISUI>67.10</ALUT-KISUI></PirteiKisuiBeMutzar>
+              </ZihuiKisui>
+            </Kisuim>
+          </HeshbonOPolisa>
+        </HeshbonotOPolisot>
+      </Mutzar>
+      <Mutzar>
+        <NetuneiMutzar><SUG-MUTZAR>6</SUG-MUTZAR><KOD-MEZAHE-YATZRAN>520004896</KOD-MEZAHE-YATZRAN></NetuneiMutzar>
+        <HeshbonotOPolisot><HeshbonOPolisa>
+          <MISPAR-POLISA-O-HESHBON>88445566</MISPAR-POLISA-O-HESHBON>
+          <SHEM-TOCHNIT>ריסק משכנתא</SHEM-TOCHNIT>
+          <STATUS-POLISA-O-CHESHBON>1</STATUS-POLISA-O-CHESHBON>
+          <Kisuim><ZihuiKisui>
+            <SHEM-KISUI-YATZRAN>ביטוח חיים למשכנתא</SHEM-KISUI-YATZRAN>
+            <PirteiKisuiBeMutzar><SUG-KISUY-BITOCHI>1</SUG-KISUY-BITOCHI><SCHUM-BITUACH>480000.00</SCHUM-BITUACH><ALUT-KISUI>92.00</ALUT-KISUI></PirteiKisuiBeMutzar>
+          </ZihuiKisui></Kisuim>
+        </HeshbonOPolisa></HeshbonotOPolisot>
+      </Mutzar>
+    </Mutzarim>
+  </YeshutYatzran>
+</Mimshak>

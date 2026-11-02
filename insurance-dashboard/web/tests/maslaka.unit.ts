@@ -67,6 +67,39 @@ const mor = parseMaslaka(xmlTree(decodeXml(read('fixture-mor.xml'))));
   ok(h.depfee === 0 && h.depHow === 'actual', 'deposit fee 0 read as 0, not missing');
 }
 
+/* ---- W7 · deposits, salary, covers' cost, the insurance track, the guaranteed coefficient, aliases ---- */
+{
+  const a = pen.accounts[0];
+  const d = a.deposits ?? [];
+  ok(d.length === 2 && d[0].ym === '2026-07' && d[1].ym === '2026-09', `W7: two salary months; CHODESH-SACHAR 202607 first, then the value date's month 2026-09 when the row has no salary month; the last-deposit block's month (2026-09) is not doubled (${d.map((x) => x.ym)})`);
+  ok(d[0].employee === 1050 && d[0].employer === 1137.5 && d[0].severance === 1400 && d[0].total === 3587.5 && d[0].salary === 17500 && d[0].paid === '2026-08-15', `W7: the parts by SUG-HAFRASHA 2/3/1 add up, the insured salary and the value date are kept (${JSON.stringify(d[0])})`);
+  ok(d[1].salary == null && a.salary === 17500, 'W7: the account salary is SACHAR-POLISA (PirteiHaasaka)');
+  ok(a.insTrack === 'ברירת מחדל: 75% נכות, 100% שאירים', 'W7: the insurance track name (SHEM-MASLUL-HABITUAH)');
+  const dis = a.covers.find((c) => c.name.includes('נכות')), sv = a.covers.find((c) => c.name.includes('שאירים'));
+  ok(dis?.sum === 13125 && dis.rate === 75 && dis.cost === 61.2 && dis.kind?.includes('קרן פנסיה'), `W7: disability: ₪13,125 a month, 75% of salary, ₪61.2 a month (${JSON.stringify(dis)})`);
+  ok(sv?.sum === 10500 && sv.rate === 60, `W7: survivors: ₪10,500 and the widow/er's 60% read through the 009 spelling alias SHEUR-KISUY-ALMAN-O-ALMANA (${JSON.stringify(sv)})`);
+  ok(a.coefGuaranteed == null && a.code === '512245812000000000001682184000', 'W7: a pension fund has no guaranteed coefficient; the unified code is carried');
+  // the old-deposit account: its last deposit (2022-01, TOTAL only) becomes one deposit row from the last-deposit block
+  const b = pen.accounts[1];
+  ok(b.deposits?.length === 1 && b.deposits[0].ym === '2022-01' && b.deposits[0].total === 1210 && b.deposits[0].employee == null, `W7: the last-deposit block gives a row when the year rows do not (${JSON.stringify(b.deposits)})`);
+  // the managers' insurance fixture
+  const bit = parseMaslaka(xmlTree(decodeXml(read('fixture-bituach.xml'))));
+  ok(bit.accounts.length === 2 && bit.accounts[0].type === 1, 'bituach: a managers\' policy and a risk rider');
+  const p = bit.accounts[0];
+  ok(p.coefGuaranteed?.v === 161.85 && p.coefGuaranteed.at === 67 && p.coefGuaranteed.src === 'file', `W7: the guaranteed coefficient for age 67 from MEKADEM-MOVTACH-LEPRISHA (${JSON.stringify(p.coefGuaranteed)})`);
+  ok(p.deposits?.length === 3 && p.deposits[2].ym === '2026-09' && p.deposits[2].total === 4510 && p.deposits[2].paid == null && p.deposits[2].employer === 1430, `W7: Jul–Aug from the rows, Sep from the last-deposit block's typed rows (TAARICH-HAFKADA-ACHARON is YYYYMM; the rows, before the insurance cost, not TOTAL 4,180) (${p.deposits?.map((x) => `${x.ym}:${x.total}`)})`);
+  ok(p.deposits![0].total === 4510 && p.warn.some((w) => w.includes('העברה מקופה אחרת')), 'W7: the ₪50,000 transfer row (SUG-HAMAFKID 6) is not a deposit and is noted');
+  ok(p.salary === 22000 && p.insCost === 215.4, 'W7: salary and the month\'s insurance cost');
+  const death = p.covers.find((c) => c.kind === 'מוות'), dis2 = p.covers.find((c) => c.kind === 'אובדן כושר עבודה');
+  ok(death?.sum === 1225468.65 && death.cost === 148.3 && dis2?.sum === 16500 && dis2.cost === 67.1, `W7: insurance covers with kind labels and monthly cost (ALUT-KISUI) (${JSON.stringify(p.covers)})`);
+  ok(bit.accounts[1].covers.length === 1 && bit.accounts[1].covers[0].sum === 480000 && bit.accounts[1].covers[0].cost === 92, 'W7: the risk rider keeps its cover');
+  ok(!JSON.stringify(bit).includes('88112233') && !JSON.stringify(bit).includes('000000018') && !JSON.stringify(bit).includes('ישראלה'), 'W7: no policy number, ID or name in the parsed insurance file');
+  // aliases: the 008 spelling and TOTAL-HAFKADA both read
+  const alt = parseMaslaka(xmlTree('<Mimshak><KoteretKovetz><MISPAR-GIRSAT-XML>008</MISPAR-GIRSAT-XML></KoteretKovetz><YeshutYatzran><KOD-MEZAHE-YATZRAN>512245812</KOD-MEZAHE-YATZRAN><Mutzarim><Mutzar><NetuneiMutzar><SUG-MUTZAR>2</SUG-MUTZAR></NetuneiMutzar><HeshbonotOPolisot><HeshbonOPolisa><TAARICH-NECHONUT>20260930</TAARICH-NECHONUT><PirteiTaktziv><PirteiHafkadaAchrona><PerutPirteiHafkadaAchrona><TAARICH-HAFKADA-ACHARON>202609</TAARICH-HAFKADA-ACHARON><TOTAL-HAFKADA>2500</TOTAL-HAFKADA></PerutPirteiHafkadaAchrona></PirteiHafkadaAchrona></PirteiTaktziv><Kisuim><ZihuiKisui><KisuiBKerenPensia><SHIUR-KISUY-ALMAN-O-ALMANA>40</SHIUR-KISUY-ALMAN-O-ALMANA></KisuiBKerenPensia></ZihuiKisui></Kisuim></HeshbonOPolisa></HeshbonotOPolisot></Mutzar></Mutzarim></YeshutYatzran></Mimshak>'));
+  ok(alt.version === '008' && alt.accounts[0].monthly === 2500 && alt.accounts[0].covers[0].rate === 40, `W7: aliases: TOTAL-HAFKADA and the 008 spelling SHIUR-KISUY-ALMAN-O-ALMANA (${alt.accounts[0].monthly}, ${JSON.stringify(alt.accounts[0].covers)})`);
+  ok(xmlTree('<a r="B2" t="s"><v>1</v></a>').a?.r === 'B2' && xmlTree('<a r="B2" t="s"><v>1</v></a>').a?.t === 's' && xmlTree('<a><b/></a>').a === undefined, 'W7: attributes are read when present');
+}
+
 /* ---- not a clearing-house file ---- */
 {
   let msg = ''; try { parseMaslaka(xmlTree('<Other><x/></Other>')); } catch (e) { msg = String(e); }
@@ -80,7 +113,8 @@ if (existsSync(data)) {
   const rp = rowsOf(pen, d.funds, 'p'), rm = rowsOf(mor, d.funds, 'm');
   const one = (rs: Row[], i: number) => rs[i];
   ok(rp.length === 3, `pension rows: ${rp.length}`);
-  ok(one(rp, 0).k === 'p2184' && one(rp, 0).by === 'track', `fund 168, track 2184 → p2184 by track: ${one(rp, 0).k} ${one(rp, 0).by} (${one(rp, 0).why})`);
+  ok(one(rp, 0).k === 'p2184' && one(rp, 0).by === 'code', `W7: company 512245812, fund 168, track 2184 → p2184 by the full unified code: ${one(rp, 0).k} ${one(rp, 0).by} (${one(rp, 0).why})`);
+  ok(one(rp, 0).deposits?.length === 2 && one(rp, 0).salary === 17500 && one(rp, 0).covers?.length === 2 && one(rp, 0).insTrack?.includes('75%'), `W7: the row carries deposits, salary, covers and the insurance track (${one(rp, 0).deposits?.length}, ${one(rp, 0).salary}, ${one(rp, 0).covers?.length})`);
   ok(one(rp, 0).balance === 182450 && one(rp, 0).monthly === 3588 && near(one(rp, 0).fee, 0.22), 'the row carries the reader\'s numbers');
   ok(one(rp, 1).k === 'p2015' && one(rp, 1).by === 'name', `fund 168, track 0002 "לבני 50-60" → p2015 by name: ${one(rp, 1).k} ${one(rp, 1).by} (${one(rp, 1).why})`);
   ok(one(rp, 2).skip && one(rp, 2).k == null, 'a risk-only policy is skipped with a reason');
@@ -90,6 +124,37 @@ if (existsSync(data)) {
   // a company that is not in the data
   const alien = rowsOf({ ...mor, accounts: [{ ...mor.accounts[0], providerId: '999999999', tracks: [{ ...mor.accounts[0].tracks[0], code: '999999999000000000125350000000' }] }] }, d.funds);
   ok(alien[0].k == null && alien[0].why.includes('999999999'), `unknown company: ${alien[0].why}`);
+
+  /* W7 · the insurance fixture: the product number is the track's own number (by 'id'); the rider is cover only; the client folder
+     keeps deposits, salary, the coefficient and the covers through normHeld */
+  {
+    const bit = parseMaslaka(xmlTree(decodeXml(read('fixture-bituach.xml'))));
+    const rb = rowsOf(bit, d.funds, 'b');
+    ok(rb.length === 2 && rb[0].k === 'i17013' && rb[0].by === 'id', `W7: insurance product 17013 → i17013 by its own number: ${rb[0].k} ${rb[0].by} (${rb[0].why})`);
+    ok(rb[0].balance === 640000 && rb[0].monthly === 4510 && near(rb[0].fee, 1.05) && near(rb[0].depfee, 3), `W7: the policy's figures: balance, the last deposit's rows (before the ₪215 insurance cost), fees (${rb[0].monthly})`);
+    ok(rb[0].deposits?.length === 3 && rb[0].salary === 22000 && rb[0].coefGuaranteed?.v === 161.85 && rb[0].covers?.length === 2, 'W7: deposits, salary, coefficient and covers on the row');
+    ok(rb[1].skip && rb[1].covers?.length === 1 && rb[1].deposits?.length === 0, 'W7: the risk rider is skipped for saving but keeps its cover');
+    const held = heldOf(rb) as Held[];
+    ok(held[0].deposits?.length === 3 && held[0].salary === 22000 && held[0].coefGuaranteed?.v === 161.85 && held[0].code === '520004896000000000170130000001' && held[0].covers.length === 2, 'W7: heldOf carries the client engine\'s fields');
+    const fo = folderFromImport('ב', held);
+    const st = normClients({ folders: [{ ...fo, id: 'abcd0001', b: 'net', fields: {}, note: '', created: '2026-11-02', updated: '2026-11-02', snap: null }] }).folders[0];
+    ok(st.keys.join() === 'i17013' && st.held.length === 2, 'W7: the folder lists the matched track and both products');
+    const h0 = st.held[0];
+    ok(h0.deposits?.length === 3 && h0.deposits[0].ym === '2026-07' && h0.deposits[0].employer === 1430 && h0.salary === 22000 && h0.coefGuaranteed?.v === 161.85 && h0.coefGuaranteed.at === 67 && h0.code === '520004896000000000170130000001', `W7: normHeld keeps deposits, salary, coefficient and the unified code (${JSON.stringify({ d: h0.deposits?.length, s: h0.salary, c: h0.coefGuaranteed, code: h0.code })})`);
+    ok(h0.covers.length === 2 && h0.covers[0].cost === 148.3 && h0.covers[0].kind === 'מוות', 'W7: covers with kind and monthly cost survive storage');
+    const legacy = normClients({ folders: [{ label: 'ישן', keys: [], held: [{ typeHe: 'קרן פנסיה', balance: 1000, covers: [] }] }] }).folders[0].held[0];
+    ok(legacy.deposits === undefined && legacy.code === undefined && legacy.coefGuaranteed === undefined, 'W7: a folder saved before W7 reads without the new fields (no invented values)');
+    ok(normClients({ folders: [{ label: 'x', keys: [], held: [{ typeHe: 'קרן פנסיה', code: '000000018', deposits: [{ ym: 'bad' }, { ym: '2026-01', total: 5 }] }] }] }).folders[0].held[0].code === undefined, 'W7: a 9-digit "code" (an ID number\'s length) is not kept; only 23–34 digits are a unified code');
+    // the saver path: applyRows carries deposits, salary and the code
+    const sv = applyRows([], rb, '2026-11-02');
+    ok(sv.list.length === 1 && sv.list[0].deposits?.length === 3 && sv.list[0].salary === 22000 && sv.list[0].code === '520004896000000000170130000001' && sv.list[0].covers?.length === 2 && sv.list[0].covers![0].cost === 148.3, 'W7: the saver\'s saved product carries deposits, salary, the code and the covers (lib/mine MyProduct)');
+    const svp = applyRows([], rp, '2026-11-02').list.find((m) => m.k === 'p2184')!;
+    ok(svp.insTrack?.includes('75%') && svp.covers?.length === 2 && svp.salary === 17500, 'W7: the pension product carries its insurance track, covers and salary to /my');
+    const sv2 = applyRows([], [rb[0], { ...rb[0], key: 'y', deposits: [{ ym: '2026-10', total: 100 }] }], '2026-11-02');
+    ok(sv2.list[0].deposits?.length === 4 && sv2.list[0].deposits![3].ym === '2026-10', 'W7: two accounts in one track in the same import add their deposit rows, in order');
+    const sv3 = applyRows(sv.list, [{ ...rb[0], deposits: [{ ym: '2026-10', total: 100 }] }], '2026-12-01');
+    ok(sv3.updated === 1 && sv3.list[0].deposits?.length === 1, 'W7: a later import replaces the saved product\'s deposit rows with the new file\'s');
+  }
 
   /* saving: new and updated products, two accounts in one track add up */
   const rows = [...rp, ...rm];
