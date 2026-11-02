@@ -224,10 +224,10 @@ function HeldNow({ held, rowKeys }: { held: Held[]; rowKeys: string[] }) {
           <tr key={i}><th scope="row"><b>{h.typeHe}</b><span>{[h.provider, h.track ?? h.plan].filter(Boolean).join(' · ')}</span>
             {!h.k ? <span className="nomatch">{coverOnly(h) ? 'כיסוי ביטוחי בלבד, בלי חיסכון' : 'לא נמצא מסלול תואם ב-fox: הנתונים מהקובץ בלבד'}</span> : !rowKeys.includes(h.k) ? <span className="nomatch">המסלול לא נכלל בהשוואה</span> : null}</th>
             <td>{ILS(h.balance)}</td><td>{ILS(h.monthly)}</td><td>{PC(h.fee)}</td><td>{PC(h.depfee)}</td>
-            <td>{ILS(c.total)}{c.dep != null && <span className="q">מזה מההפקדות {ILS(c.dep)}</span>}</td></tr>); })}</tbody>
+            <td>{ILS(c.total)}{c.dep != null && c.dep > 0 && <span className="q">מזה מההפקדות {ILS(c.dep)}</span>}</td></tr>); })}</tbody>
         <tfoot><tr><th scope="row">סה"כ</th><td>{ILS(s.balance)}</td><td>{s.monthly ? ILS(s.monthly) : '–'}</td><td /><td /><td>{s.total ? ILS(s.total) : '–'}</td></tr></tfoot>
       </table>
-      <p className="adoc-cap">מקובץ המסלקה הפנסיונית של הלקוח{asof ? `, נכון ל-${dmyIso(asof)}` : ''}: היתרות, ההפקדות ודמי הניהול <b>של הלקוח</b>, כפי שהקובץ מוסר אותם; לא נבדקו מול הגוף המנהל. {COST_HOW}.{s.noFee ? ` ${s.noFee === 1 ? 'מוצר אחד עם יתרה אין לו' : `ל-${s.noFee} מוצרים עם יתרה אין`} דמי ניהול מצבירה בקובץ: לא נכלל בסכום.` : ''}</p>
+      <p className="adoc-cap">מקובץ המסלקה הפנסיונית של הלקוח{asof ? `, נכון ליום ${dmyIso(asof)}` : ''}: היתרות, ההפקדות ודמי הניהול <b>של הלקוח</b>, כפי שהקובץ מוסר אותם; לא נבדקו מול הגוף המנהל. {COST_HOW}.{s.noFee ? ` ${s.noFee === 1 ? 'מוצר אחד עם יתרה אין לו' : `ל-${s.noFee} מוצרים עם יתרה אין`} דמי ניהול מצבירה בקובץ: לא נכלל בסכום.` : ''}</p>
     </section>
   );
 }

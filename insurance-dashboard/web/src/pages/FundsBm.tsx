@@ -20,7 +20,7 @@ const screen = (p: string) => `/funds/screen?prod=${encodeURIComponent(p)}&track
 const dateHe = (iso?: string) => (iso ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : '');
 
 const numIn = (s: string): number | null => { const t = s.replace(/[,\s₪%]/g, ''); if (t === '') return null; const x = Number(t); return Number.isFinite(x) ? x : null; };
-const ilsF = (v: number) => `${Math.round(v).toLocaleString('en-US')} ש"ח`;
+const ilsF = (v: number) => `₪${Math.round(v).toLocaleString('en-US')}`;
 
 /** W5 · red team 3: the guaranteed coefficient of an old policy against a new pension fund, on the same balance. The policy's numbers
  *  are the reader's; the new fund's coefficient is an assumption (the site's, by sex), editable. Nothing is stored. */
