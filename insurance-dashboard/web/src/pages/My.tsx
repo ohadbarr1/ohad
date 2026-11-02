@@ -5,12 +5,12 @@ import { Icon } from '../components/Icon';
 import { Sourced } from '../components/Source';
 import { useFundCats, useFunds } from '../lib/useData';
 import { useOptional } from '../lib/fundsLoad';
-import { useMine, useMyAge, useMySex, type MyProduct } from '../lib/mine';
+import { useMine, useMyAge, useMyRetire, useMySex, useRetire, type MyProduct } from '../lib/mine';
 import { useSaverDoor } from '../lib/door';
 import type { CatX, FundX, FundsFile } from '../lib/funds';
 import type { DefaultFile } from '../lib/fundsTools';
 import type { Prov } from '../lib/prov';
-import { AGE_DEFAULT, RETIRE_AGE, RET_FALLBACK, coefOf, ilsRound } from '../lib/retire';
+import { AGE_DEFAULT, KZ_RETIRE, RET_FALLBACK, ageText, coefOf, ilsRound } from '../lib/retire';
 import { cardCalc, summaryOf, type SumRow } from '../lib/myCalc';
 import { pcf } from '../lib/verdict';
 import { DECISION_PATH, type DecisionFile } from '../lib/decision';
@@ -37,6 +37,7 @@ export function My() {
   const dec = useOptional<DecisionFile>(DECISION_PATH);
   const [mine, setMine] = useMine();
   const [ageS] = useMyAge(), [sex] = useMySex();
+  const R = useRetire();
   const [adding, setAdding] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const loc = useLocation();
@@ -46,8 +47,8 @@ export function My() {
   // a link from the fund card (/my#p9757) lands on that product
   useEffect(() => { if (data && loc.hash) document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' }); }, [data, loc.hash]);
 
-  const rows: SumRow[] = useMemo(() => (!data || dfile === undefined ? [] : list.flatMap((m) => { const f = byK.get(m.k); return f ? [{ k: f.k, name: f.name, prod: f.prod, c: cardCalc(f, data.funds as FundX[], data.asof, dfile, m, dec, { age: ageS ?? AGE_DEFAULT, coef: coefOf(sex).v, ret: RET_FALLBACK }) }] : []; })),
-    [data, dfile, dec, list, byK, ageS, sex]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const rows: SumRow[] = useMemo(() => (!data || dfile === undefined ? [] : list.flatMap((m) => { const f = byK.get(m.k); return f ? [{ k: f.k, name: f.name, prod: f.prod, c: cardCalc(f, data.funds as FundX[], data.asof, dfile, m, dec, { age: ageS ?? AGE_DEFAULT, coef: coefOf(sex).v, ret: RET_FALLBACK, retire: R.v }) }] : []; })),
+    [data, dfile, dec, list, byK, ageS, sex, R.v]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data || dfile === undefined) return <Loading what="המוצרים שלך" />;
@@ -69,7 +70,7 @@ export function My() {
 
       <AgeRow />
       {msg && <p className="sv-done" role="status">{msg}</p>}
-      {rows.length > 0 && <Strip rows={rows} />}
+      {rows.length > 0 && <Strip rows={rows} retire={R.v} />}
 
       {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
 
@@ -123,30 +124,52 @@ function AgeRow() {
       <span className="sv-rets" role="group" aria-label="מין, למקדם הקצבה">
         {([['f', 'אישה'], ['m', 'גבר']] as const).map(([k, l]) => <button key={k} type="button" className="sv-chip sm" aria-pressed={sex === k} onClick={() => setSex(sex === k ? null : k)}>{l}</button>)}
       </span>
-      <span className="sv-a">לא חובה, למקדם הקצבה</span>
+      <span className="sv-a">לא חובה, לגיל הפרישה ולמקדם הקצבה</span>
+      <RetireIn />
     </div>
   );
 }
 
+/** W5: the retirement age, statutory by sex and age (lib/retire), and the reader's own when typed */
+function RetireIn() {
+  const R = useRetire();
+  const [own, setOwn] = useMyRetire();
+  const [raw, setRaw] = useState(own == null ? '' : String(own));
+  const [was, setWas] = useState(own);
+  if (was !== own) { setWas(own); setRaw(own == null ? '' : String(own)); }
+  const bad = raw !== '' && !(Number(raw) >= 50 && Number(raw) <= 75);
+  return (
+    <span className="sv-who-ret">
+      <label className="sv-who-age"><span>גיל פרישה</span>
+        <input type="number" inputMode="decimal" min={50} max={75} step={1} placeholder={ageText(R.v)} value={raw} aria-invalid={bad}
+          onChange={(e) => { const t = e.target.value; setRaw(t); const x = Number(t); if (t === '') setOwn(null); else if (Number.isFinite(x) && x >= 50 && x <= 75) setOwn(x); }} />
+      </label>
+      {bad ? <span className="sv-err">גיל בין 50 ל-75</span> : <span className="sv-a">{own != null ? <>שלך · <button type="button" className="linkbtn" onClick={() => setOwn(null)}>לגיל בחוק</button></> : <>{R.why} · <a href={KZ_RETIRE} target="_blank" rel="noreferrer">כל זכות</a></>}</span>}
+    </span>
+  );
+}
+
 /** the strip at the top: what the reader pays this year, the pension estimate, and the one thing worth asking for */
-function Strip({ rows }: { rows: SumRow[] }) {
+function Strip({ rows, retire }: { rows: SumRow[]; retire: number }) {
+  const at = `בגיל ${ageText(retire)}`;
   const s = summaryOf(rows);
   const feesProv = (): Prov => ({ k: 'calc', est: true, title: 'דמי ניהול בשנה, כל המוצרים', value: ilsRound(s.fees), formula: 'לכל מוצר: היתרה × דמי הניהול מצבירה, ועוד 12 הפקדות × דמי הניהול מהפקדה. דמי הניהול שלך כשהזנת, אחרת הממוצע במסלול',
     note: [s.feesAvg ? 'בחלק מהמוצרים: דמי הניהול הממוצעים במסלול, לא שלך' : null, s.feesEx ? 'בחלק מהמוצרים: יתרה או הפקדה לדוגמה' : null].filter(Boolean).join('. ') || undefined,
     inputs: rows.map((r) => ({ label: `${r.name} (${r.c.v.fee.own ? 'שלך' : 'ממוצע'}: ${pcf(r.c.mine.fee)} / ${pcf(r.c.mine.depfee)})`, v: ilsRound(r.c.annual.total) })) });
-  const penProv = (): Prov => ({ k: 'calc', est: true, title: `קצבה חודשית מקרנות הפנסיה בגיל ${RETIRE_AGE}, בשקלי היום · אומדן`, value: ilsRound(s.pension ?? 0),
-    formula: 'סכום האומדנים של כל קרן פנסיה ברשימה: החיסכון בגיל 67 ÷ מקדם ההמרה. תשואה שמרנית של 4% ברוטו, הפקדה שעולה 2% בשנה, אינפלציה 2%',
+  const penProv = (): Prov => ({ k: 'calc', est: true, title: `קצבה חודשית מקרנות הפנסיה ${at}, בשקלי היום · אומדן`, value: ilsRound(s.pension ?? 0),
+    formula: `סכום האומדנים של כל קרן פנסיה ברשימה: החיסכון ${at} ÷ מקדם ההמרה. תשואה שמרנית של 4% ברוטו, הפקדה שעולה 2% בשנה, אינפלציה 2%`,
     note: 'אומדן גס. לא מנכה את עלות הכיסוי הביטוחי, לא כולל מוצרים שאינם קרן פנסיה, קצבת זקנה מביטוח לאומי או מס',
     inputs: rows.filter((r) => r.prod.startsWith('פנסיה')).map((r) => ({ label: r.name, v: ilsRound(r.c.out.pensionReal) })) });
   const a = s.act;
+  const lev = a.kind === 'fee' && a.ref === 'dflt' ? rows.find((r) => r.k === a.k)?.c.lever ?? null : null;
   return (
     <section className="panel sv-sum" aria-label="התמונה בקצרה">
       <dl className="sv-kpis">
         <div><dt>דמי ניהול בשנה</dt><dd><Sourced src={feesProv}><b className="num">{ilsRound(s.fees)}</b></Sourced></dd><span className="sv-a">{rows.length > 1 ? `כל ${rows.length} המוצרים` : 'המוצר'}{s.feesAvg ? ', חלקם לפי הממוצע במסלול' : ', לפי דמי הניהול שלך'}{s.feesEx ? ', עם נתונים לדוגמה' : ''}</span></div>
-        {s.pension != null && <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><span className="sv-a">בגיל {RETIRE_AGE}, בשקלי היום, תשואה 4%</span></div>}
+        {s.pension != null && <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><span className="sv-a">{at}, בשקלי היום, תשואה 4%</span></div>}
       </dl>
       <p className="sv-one"><b>דבר אחד לעשות:</b>{' '}
-        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>: {a.ref === 'med' ? 'מול החציון בקטגוריה' : 'מול תנאי ברירת המחדל'}, הפער מגיע לכ-{ilsRound(a.v)} {a.prod === 'השתלמות' ? `בתוך ${a.years} שנים` : 'עד הפרישה'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. ההודעה מוכנה בכרטיס.</>
+        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>. {a.ref === 'med' ? (a.own ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה') : 'לעומת תנאי קרנות ברירת המחדל'}, יהיו לך כ-{ilsRound(a.v)} פחות בחיסכון {a.prod === 'השתלמות' ? `בעוד ${a.years} שנים` : 'בגיל הפרישה'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. {lev ? `רוב הפער בדמי הניהול ${lev === 'dep' ? 'מהפקדה' : 'מצבירה'}. ` : ''}ההודעה מוכנה בכרטיס.</>
           : a.kind === 'enter' ? <>להזין את דמי הניהול מהדוח השנתי ב<a href={`#${a.k}`}>{a.name}</a>: בלי זה החישוב לפי הממוצע במסלול.</>
           : <>לבדוק בדוח השנתי שהמוטבים מעודכנים (<Link to="/my/statement#st-ben">איפה זה בדוח</Link>). דמי הניהול שלך לא גבוהים מהחציון באף מוצר.</>}
       </p>

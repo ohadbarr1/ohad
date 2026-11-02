@@ -29,8 +29,10 @@ const S = (asof: number, p: Record<string, Partial<SnapP>> = {}): MySnap => ({ v
 /* ---- the change rules ---- */
 {
   const base: SnapP = { per: 'a5', basis: 'net', lo: 5, hi: 5, n: 12, tone: 'mid', fee: 0.15, depfee: 1.5, m1: 0.4 };
-  const none = changesOf(base, { ...base, m1: 0.6 }, [0.1, 0.5, 0.9]);
-  ok(none.length === 1 && none[0].kind === 'month' && none[0].text.includes('0.60%') && none[0].text.includes('0.50%'), `only the month line when nothing moved: ${none.map((c) => c.text).join(' | ')}`);
+  // W5 (red team 3): no one-month return; the last 12 months instead
+  const none = changesOf(base, { ...base, m1: 0.6, y12: 6.1 }, [5.1, 5.5, 5.9]);
+  ok(none.length === 1 && none[0].kind === 'ltm' && none[0].text.includes('12 החודשים') && none[0].text.includes('6.10%') && none[0].text.includes('5.50%') && !none.some((c) => c.text.includes('בחודש האחרון')), `only the LTM line when nothing moved: ${none.map((c) => c.text).join(' | ')}`);
+  ok(changesOf(base, { ...base, m1: 0.6 }).length === 0, 'a month return alone is not a change to show');
   const down = changesOf(base, { ...base, lo: 10, hi: 11, tone: 'bad' });
   ok(down.some((c) => c.kind === 'rank' && c.tone === 'bad' && c.text.includes('10–11 מתוך 12') && c.text.includes('מ-5 מתוך 12')), 'rank fell, shown as a range');
   ok(down.some((c) => c.kind === 'quart' && c.text === 'ירד לרבע התחתון של הקטגוריה'), 'entering the bottom quarter is called out');

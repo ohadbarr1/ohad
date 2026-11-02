@@ -304,7 +304,8 @@ function readAccount(acc: XNode, prod: XNode, prov: XNode): MAccount {
 
 /** A clearing-house file (its tree) → the accounts in it. Throws, in Hebrew, when it is not a holdings-interface file. */
 export function parseMaslaka(root: XNode): MFile {
-  if (root.n !== MAP.root) throw new Error(`הקובץ אינו קובץ מסלקה במבנה האחיד (השורש הוא ${root.n}, לא ${MAP.root})`);
+  // W5 (red team 3): plain words, not the XML root's name
+  if (root.n !== MAP.root) throw new Error('זה לא נראה כמו קובץ מהמסלקה הפנסיונית. בוחרים את קובצי ה-XML שבחבילה שהגיעה מהמסלקה: קובץ אחד לכל חברה.');
   const head = kid(root, MAP.header);
   const out: MFile = { version: txt(kid(head, MAP.version)), runDate: isoDate(txt(kid(head, MAP.runDate))), providerName: null, accounts: [], warn: [] };
   const provs = desc(root, MAP.provider);

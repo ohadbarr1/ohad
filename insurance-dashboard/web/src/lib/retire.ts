@@ -76,6 +76,25 @@ export function coefOf(sex: Sex | null | undefined): { v: number; why: string } 
   return { v: COEF_DEFAULT, why: 'הנחה עגולה' };
 }
 
+/** Israel's statutory retirement age (W5, red team 3): 67 for men; for women, by birth date, rising from 62 (born to 12/1959) through
+ *  62 and 4 months (1960) … 64 and 9 months (1969) to 65 for women born in 1970 and later (the 2021 amendment, in force from 01/2022).
+ *  Source: Kol Zchut "גיל פרישה" (table checked 02.11.26, page updated 01.10.26) and the National Insurance circular 1632 (2021–2022
+ *  legislation). The birth year is estimated as this year − age (an assumption that can be a year off); the reader can change the age. */
+export const KZ_RETIRE = 'https://www.kolzchut.org.il/he/%D7%92%D7%99%D7%9C_%D7%A4%D7%A8%D7%99%D7%A9%D7%94';
+const WOMEN: [number, number][] = [[1959, 62], [1960, 62 + 4 / 12], [1961, 62 + 8 / 12], [1962, 63], [1963, 63.25], [1964, 63.5], [1965, 63.75], [1966, 64], [1967, 64.25], [1968, 64.5], [1969, 64.75]];
+export function retireAgeOf(sex: Sex | null | undefined, age: number, year = new Date().getFullYear()): { v: number; why: string } {
+  if (sex === 'f') {
+    const by = year - age;
+    const row = by >= 1970 ? null : WOMEN.find(([y]) => by <= y) ?? WOMEN[WOMEN.length - 1];
+    const v = row ? row[1] : 65;
+    return { v, why: `גיל הפרישה בחוק לאישה ילידת ${by} בערך` };
+  }
+  if (sex === 'm') return { v: RETIRE_AGE, why: 'גיל הפרישה בחוק לגבר' };
+  return { v: RETIRE_AGE, why: 'הנחה: גיל הפרישה לגבר; לאישה 62 עד 65 לפי שנת הלידה' };
+}
+/** a retirement age as words: 65, or 64 ו-9 חודשים */
+export const ageText = (a: number) => { const y = Math.floor(a + 1e-9), m = Math.round((a - y) * 12); return m ? `${y} ו-${m} חודשים` : String(y); };
+
 /** a ₪ amount, rounded to the nearest 1,000 when large (an estimate should not look precise) */
 export function ilsRound(v: number): string {
   const a = Math.abs(v), r = a >= 100000 ? Math.round(a / 1000) * 1000 : a >= 10000 ? Math.round(a / 100) * 100 : Math.round(a / 10) * 10;

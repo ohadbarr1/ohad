@@ -10,10 +10,13 @@ import { useFunds } from '../lib/useData';
 import type { Prov } from '../lib/prov';
 import { nf, sn } from '../lib/format';
 import { fundP, monthIn } from '../lib/market';
-import { NET_LABEL, NET_NOTE, netProv, pc, refOf, useBasis, type FundX, type FundsFile } from '../lib/funds';
-import { deltaOf, markSeen, mergeWatch, normWatch, outflowStreak, retBetween, ddNow, ymL, type WSnap } from '../lib/fundsTime';
+import { NET_LABEL, NET_NOTE, grossProv, netProv, pc, refOf, useBasis, type FundX, type FundsFile } from '../lib/funds';
+import { deltaOf, markSeen, mergeWatch, normWatch, outflowStreak, retBetween, ddNow, toggleWatch, ymL, type WSnap, type WatchStore } from '../lib/fundsTime';
 import { snapOf, useClosed, useHists, useWatch, yOf } from '../lib/fundsTimeLoad';
 import { today } from '../lib/visits';
+import { useActiveDoor } from '../components/home/doorState';
+import { useMine } from '../lib/mine';
+import { useStored } from '../lib/local';
 import '../styles/lens.css';
 import '../styles/market.css';
 import '../styles/funds-time.css';
@@ -21,7 +24,9 @@ import '../styles/funds-time.css';
 /* /funds/watch, "המעקב שלי" (funds plan #23): the tracks this browser follows, and what changed since the last look: the return since then,
    the month's return, the LTM percentile, the fee; flags for a quartile move, the bottom quartile on 3Y, a fall from the peak and three
    months of net outflows. Private: kept in this browser only (localStorage), with a JSON file to take it elsewhere. The look ends when the
-   reader leaves the page: the snapshots then become today's. */
+   reader leaves the page: the snapshots then become today's.
+   W5 saver (red team 3): in the saver door, an empty list with products on /my starts from those products, once (fox:watch:seeded),
+   and the month's return gives way to the last 12 months (a one-month move is noise for a saver). Agent and Pro are unchanged. */
 
 const DD_FLAG = -10;
 export function FundsWatch() {
@@ -30,6 +35,17 @@ export function FundsWatch() {
   const [w, setW] = useWatch();
   const [b] = useBasis();
   const [msg, setMsg] = useState<string | null>(null);
+  const [door] = useActiveDoor();
+  const saver = door !== 'agent' && door !== 'pro';
+  const [mine] = useMine();
+  const [seeded, setSeeded] = useStored<boolean>('watch:seeded', false);
+  useEffect(() => {
+    if (!saver || seeded || !data || w.items.length || !Array.isArray(mine) || !mine.length) return;
+    let n: WatchStore = w;
+    mine.forEach((m) => { const f = data.funds.find((x) => x.k === m.k) as FundX | undefined; if (f) n = toggleWatch(n, f.k, f.name, snapOf(f, data.asof, b), today()); });
+    setSeeded(true);
+    if (n.items.length) { setW(n); setMsg(`המוצרים שלך מ"המוצרים שלי" נוספו למעקב (${n.items.length}).`); }
+  }, [saver, seeded, data, w.items.length, mine]);  // eslint-disable-line react-hooks/exhaustive-deps
   const keys = w.items.map((i) => i.k);
   const missing = data ? keys.filter((k) => !data.funds.some((f) => f.k === k)) : [];
   const closed = useClosed(missing.length > 0);
@@ -65,7 +81,7 @@ export function FundsWatch() {
         <div className="kpi"><div className="l">בסיס</div><div className="v">{b === 'net' ? NET_LABEL : 'ברוטו'}</div><div className="s">אחוזון ותשואה</div></div>
       </section>
       {!w.items.length ? (
-        <Empty title="עוד אין מסלולים במעקב" icon="funds">בכרטיס של כל מסלול, במפה ובאחוזונים יש כפתור ☆ מעקב. הרשימה נשמרת רק בדפדפן הזה, ואפשר לייבא קובץ שיוצא ממכשיר אחר.</Empty>
+        <Empty title="עוד אין מסלולים במעקב" icon="funds">{saver ? <>מוסיפים מוצרים ב<Link to="/my">המוצרים שלי</Link>, והם יופיעו כאן. </> : null}בכרטיס של כל מסלול, במפה ובאחוזונים יש כפתור ☆ מעקב. הרשימה נשמרת רק בדפדפן הזה, ואפשר לייבא קובץ שיוצא ממכשיר אחר.</Empty>
       ) : !data ? <Loading what="המסלולים שבמעקב" /> : (
         <Panel title={<>מאז הביקור הקודם <Tip k="rank" /></>} aside={<span>הביקור נרשם כשיוצאים מהעמוד</span>}>
           <div className="fwatch">
@@ -89,7 +105,8 @@ export function FundsWatch() {
                   <div className="fw-sub"><MgrChip grp={f.grp} mgr={f.mgr} short /><span className="muted">{f.prod} · {f.track}</span>{d?.fresh && <span className="chip est">{d.months === 1 ? 'חודש חדש' : `${d.months} חודשים חדשים`}</span>}{!i.base && <span className="chip">ביקור ראשון</span>}</div>
                   <dl className="fw-kv">
                     <div><dt>מאז הביקור</dt><dd>{since ? <Sourced src={() => ({ k: 'calc', est: b === 'net', title: `תשואה מאז הביקור הקודם${b === 'net' ? ', נטו' : ''} · ${f.name}`, value: pc(since.r), formula: '(1 + r₁) × … × (1 + rₙ) − 1 על החודשים שפורסמו מאז החודש שנראה בביקור הקודם', note: b === 'net' ? NET_NOTE : undefined, inputs: monthsIn(R, h!, since.ps, b) })}><span className="num">{pc(since.r, 2)}</span></Sourced> : <span className="muted">–</span>}</dd></div>
-                    <div><dt>החודש האחרון</dt><dd>{cur?.m1 == null ? <span className="muted">–</span> : <Sourced src={() => (b === 'net' ? netProv(f, 'm1', asof, cur.m1) : fundP(R, asof, 'MONTHLY_YIELD', 'תשואה חודשית', pc(cur.m1)))}><span className="num">{pc(cur.m1, 2)}</span></Sourced>}</dd></div>
+                    {saver ? <div><dt>12 חודשים</dt><dd>{(b === 'net' ? f.net?.y12 : f.y12) == null ? <span className="muted">–</span> : <Sourced src={() => (b === 'net' ? netProv(f, 'y12', asof, f.net?.y12 ?? null) : grossProv(f, 'y12', asof))}><span className="num">{pc((b === 'net' ? f.net?.y12 : f.y12) ?? null, 2)}</span></Sourced>}</dd></div> :
+                    <div><dt>החודש האחרון</dt><dd>{cur?.m1 == null ? <span className="muted">–</span> : <Sourced src={() => (b === 'net' ? netProv(f, 'm1', asof, cur.m1) : fundP(R, asof, 'MONTHLY_YIELD', 'תשואה חודשית', pc(cur.m1)))}><span className="num">{pc(cur.m1, 2)}</span></Sourced>}</dd></div>}
                     <div><dt>אחוזון LTM</dt><dd>{cur?.pct == null ? <span className="muted">–</span> : <Sourced src={() => (i.base ? pctP(f, i.base, cur) : pctP(f, cur, cur))}><span className="num">{nf(cur.pct, 0)}</span></Sourced>}{cur?.pctN ? <span className="dim"> מתוך <span className="num">{cur.pctN}</span></span> : null}{d?.dPct ? <span className={`fw-d ${d.dPct > 0 ? 'pos' : 'neg'}`}>{d.dPct > 0 ? '▲' : '▼'} <span className="num">{nf(Math.abs(d.dPct), 0)}</span> מאז</span> : null}</dd></div>
                     <div><dt>דמי ניהול</dt><dd>{cur?.fee == null ? <span className="muted">–</span> : <Sourced src={() => (d?.dFee ? feeP(f, i.base!, cur) : fundP(R, asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(cur.fee!, 2) + '%'))}><span className="num">{nf(cur.fee, 2)}%</span></Sourced>}{d?.dFee ? <span className={`fw-d ${d.dFee < 0 ? 'pos' : 'neg'}`}>{d.dFee > 0 ? '▲' : '▼'} <span className="num">{nf(Math.abs(d.dFee), 2)}</span> נ"א</span> : null}</dd></div>
                   </dl>
@@ -119,7 +136,7 @@ export function FundsWatch() {
       inputs: [{ label: `${ymL(c.asof)}`, v: c.pct == null ? '–' : nf(c.pct, 0) }, ...(a !== c ? [{ label: `בביקור הקודם · ${ymL(a.asof)}`, v: a.pct == null ? '–' : nf(a.pct, 0) }] : []), { label: 'מסלולים מדורגים', v: c.pctN == null ? '–' : nf(c.pctN, 0) }] };
   }
   function feeP(f: FundX, a: WSnap, c: WSnap): Prov {
-    return { k: 'calc', title: `שינוי בדמי הניהול מצבירה מאז הביקור · ${f.name}`, value: `${sn((c.fee ?? 0) - (a.fee ?? 0), 2)} נ"א`, formula: 'דמי הניהול הממוצעים היום פחות דמי הניהול שנראו בביקור הקודם (AVG_ANNUAL_MANAGEMENT_FEE)',
+    return { k: 'calc', title: `שינוי בדמי הניהול מצבירה מאז הביקור · ${f.name}`, value: `${sn((c.fee ?? 0) - (a.fee ?? 0), 2)} נ"א`, formula: 'דמי הניהול מצבירה הממוצעים בפועל היום, פחות אלה שנראו בביקור הקודם',
       inputs: [{ label: ymL(c.asof), v: nf(c.fee ?? 0, 2) + '%', src: () => fundP(refOf(f), c.asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(c.fee ?? 0, 2) + '%') }, { label: ymL(a.asof), v: nf(a.fee ?? 0, 2) + '%', src: () => fundP(refOf(f), a.asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(a.fee ?? 0, 2) + '%') }] };
   }
 }

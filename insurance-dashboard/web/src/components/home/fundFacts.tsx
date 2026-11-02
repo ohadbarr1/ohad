@@ -23,7 +23,7 @@ export function useFundFacts() {
 const LIVE_F = 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים סגורים ומסלולים בניהול אישי';
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; };
 const bn = (fs: FundX[]) => fs.reduce((t, f) => t + (f.assets ?? 0), 0) / 1000;
-const assetsProv = (title: string, fs: FundX[], asof: number): Prov => listP(title, nf(bn(fs), 0), 'מיליארד ש"ח', 'סכום TOTAL_ASSETS של המסלולים, חלקי 1,000',
+const assetsProv = (title: string, fs: FundX[], asof: number): Prov => listP(title, nf(bn(fs), 0), 'מיליארד ש"ח', 'סכום הנכסים של המסלולים (מיליוני ש"ח), חלקי 1,000',
   [...fs].sort((a, b) => (b.assets ?? 0) - (a.assets ?? 0)).slice(0, 40).map((f) => ({ label: f.name, v: nf(f.assets ?? 0, 1), src: () => fundP(refOf(f), asof, 'TOTAL_ASSETS', 'נכסים', nf(f.assets ?? 0, 1), 'מיליוני ש"ח') })),
   fs.length > 40 ? `מוצגים 40 המסלולים הגדולים מתוך ${nf(fs.length, 0)}` : undefined);
 

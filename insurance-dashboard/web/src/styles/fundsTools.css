@@ -77,3 +77,13 @@ tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
 /* W4: the data file's method note, folded away (the reader sees the figures; the build's notes are one click away) */
 .fmethod > summary { cursor: pointer; font-weight: 600; color: var(--muted); }
 .fmethod[open] > summary { margin-bottom: 4px; }
+
+/* W5 saver: the fee tool's answer first, the assumptions folded under it */
+.ffees-ans { display: flex; flex-direction: column; gap: 6px; border-inline-start: 3px solid var(--accent); }
+.ffees-ans .fans-big { font-size: var(--t-6, 18px); font-weight: 700; line-height: 1.45; margin: 0; }
+.ffees-ans .fans-note { font-size: var(--t-3, 13px); color: var(--muted); margin: 0; }
+.ffees-ans p.muted { margin: 0; line-height: 1.55; }
+.ffees-assume { margin-block: 4px 12px; }
+.ffees-assume > summary { cursor: pointer; font-weight: 600; padding: 10px 2px; color: var(--muted); }
+.ffees-assume[open] > summary { color: var(--fg); }
+@media (max-width: 640px) { .ffees-ans .fans-big { font-size: 17px; } }

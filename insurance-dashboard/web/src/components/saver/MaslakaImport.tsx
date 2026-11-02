@@ -17,6 +17,12 @@ const ils = (v: number | null | undefined) => (v == null ? '–' : `₪${Math.ro
 const ymd = (iso: string | null) => (iso ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : '');
 const BY: Record<string, string> = { id: 'לפי מספר הקופה', track: 'לפי מספר הקופה והמסלול', name: 'לפי שם המסלול, לבדיקה', manual: 'בחירה שלך' };
 
+/** an iPhone or iPad (iPadOS reports a Mac with touch) */
+const isIOS = () => typeof navigator !== 'undefined' && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+/** W5 (red team 3): the clearing house sends a password-protected zip, and the iPhone's Files app opens a plain zip but not one with a
+ *  password (no Apple page found that says otherwise, 02.11.26). The honest way: open it on a computer. */
+const IOS_ZIP = 'באייפון, אפליקציית "קבצים" לא פותחת קובץ zip שמוגן בסיסמה. פתחו את הקובץ במחשב, ושם בחרו כאן את קובצי ה-XML; או העבירו את קובצי ה-XML מהמחשב לאייפון (למשל ב-iCloud Drive) ובחרו אותם מ"קבצים".';
+
 interface Read { name: string; rows: Row[]; error?: string; warn: string[] }
 
 export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; mine: MyProduct[]; onSave: (next: MyProduct[], msg: string) => void; today: string }) {
@@ -28,6 +34,7 @@ export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; 
   const inp = useRef<HTMLInputElement>(null);
   const byK = useMemo(() => new Map(funds.map((f) => [f.k, f])), [funds]);
   const have = new Set(mine.map((m) => m.k));
+  const ios = useMemo(isIOS, []);
 
   const readFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -40,9 +47,9 @@ export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; 
         if (file.size > MAX_BYTES) throw new Error('הקובץ גדול מדי לקובץ מסלקה');
         const buf = new Uint8Array(await file.arrayBuffer());
         const kind = sniff(buf);
-        if (kind === 'zip') throw new Error('זה קובץ zip (או Excel). פתחו אותו קודם במכשיר (הסיסמה מגיעה מהמסלקה), ובחרו כאן את קובצי ה-XML שבתוכו');
+        if (kind === 'zip') throw new Error(ios ? `זה קובץ zip (או Excel). ${IOS_ZIP}` : 'זה קובץ zip (או Excel). פתחו אותו קודם במחשב (הסיסמה מגיעה מהמסלקה), ובחרו כאן את קובצי ה-XML שבתוכו.');
         if (kind === 'pdf') throw new Error('זה קובץ PDF. הייבוא קורא רק את קובצי ה-XML שבחבילה מהמסלקה');
-        if (kind !== 'xml') throw new Error('זה לא קובץ XML');
+        if (kind !== 'xml') throw new Error('זה לא נראה כמו קובץ מהמסלקה הפנסיונית: הייבוא קורא את קובצי ה-XML שבחבילה מהמסלקה.');
         const parsed = parseMaslaka(readTree(decodeXml(buf)));
         out.push({ name: file.name, rows: rowsOf(parsed, funds as MFund[], `f${n}`), warn: parsed.warn });
       } catch (e) {
@@ -112,9 +119,10 @@ export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; 
           <p className="sv-privacy mk-priv"><Icon name="shield" /> הקובץ נקרא בדפדפן הזה בלבד ולא יוצא מהמכשיר. לא נשמרים ממנו שם, תעודת זהות, מספר חשבון או מעסיק: רק המסלול, היתרה, ההפקדה ודמי הניהול, וגם זה רק אחרי שתאשרו.</p>
           <ol className="mk-steps">
             <li>מזמינים דוח ב<a href={SWIFTNESS} target="_blank" rel="noreferrer">אתר המסלקה הפנסיונית</a> (<a href={KZ_MASLAKA} target="_blank" rel="noreferrer">איך, בכל זכות</a>).</li>
-            <li>החבילה מגיעה כקובץ zip מוגן בסיסמה. פותחים אותו במכשיר.</li>
+            <li>החבילה מגיעה כקובץ zip מוגן בסיסמה. {ios ? <b>באייפון: פתחו את הקובץ במחשב.</b> : 'פותחים אותו במחשב.'}</li>
             <li>בוחרים כאן את קובצי ה-XML שבתוכו (קובץ לכל חברה; אפשר כמה בבת אחת).</li>
           </ol>
+          {ios && <p className="sv-note mk-ios">{IOS_ZIP}</p>}
           <label className="btn primary mk-file">
             {busy ? 'קורא…' : 'בחירת קובצי XML'}
             <input ref={inp} type="file" accept=".xml,text/xml,application/xml" multiple onChange={(e) => void readFiles(e.target.files)} />

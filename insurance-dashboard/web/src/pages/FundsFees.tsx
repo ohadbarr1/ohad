@@ -14,8 +14,8 @@ import { priceOf, tendersOf, tenderAt, type DefaultFile } from '../lib/fundsTool
 import { numQ, useOptional } from '../lib/fundsLoad';
 import { ToolLinks } from './FundsTools';
 import { useActiveDoor } from '../components/home/doorState';
-import { useMine, useMyAge, useMySex } from '../lib/mine';
-import { AGE_DEFAULT, RET_FALLBACK, coefOf } from '../lib/retire';
+import { useMine, useMyAge, useMySex, useRetire } from '../lib/mine';
+import { AGE_DEFAULT, RET_FALLBACK, ageText, coefOf, ilsRound } from '../lib/retire';
 import { capOf, feeError, KZ_CAPS } from '../lib/feeCaps';
 import { singleIndex } from '../lib/verdict';
 import '../styles/lens.css';
@@ -29,6 +29,7 @@ import '../styles/fundsTools.css';
 const ils = (v: number | null | undefined) => (v == null ? '–' : `${nf(v, 0)} ש"ח`);
 const pc = (v: number | null | undefined, d = 2) => (v == null ? '–' : `${nf(v, d)}%`);
 const DEPS = [0, 1, 2, 3, 4, 6], ACCS = [0.1, 0.2, 0.3, 0.5, 0.75, 1.05];
+const ALL_MAX = 12, TOP_N = 10;
 const BOI = 'הנחה. יעד האינפלציה של בנק ישראל: 1%–3% בשנה';
 
 export function FundsFees() {
@@ -41,9 +42,12 @@ export function FundsFees() {
   const asof = data?.asof ?? 0;
   // W4: in the saver door the tool opens on the reader's first saved product, their age (asked on /my), their balance, deposit and
   // fees, and a conservative 4% return; the agent and Pro doors keep the category defaults (the largest track, 35, the 10-year past)
+  // W5 (red team 3): a visitor with no door chosen gets the saver's conservative defaults too (4%, the reader's age), not the
+  // category's 10-year past (9.12% and a ₪14,311 pension read as a promise); the answer leads, the assumptions fold below
   const [door] = useActiveDoor();
-  const saver = door === 'saver';
+  const saver = door !== 'agent' && door !== 'pro';
   const [myList] = useMine(), [ageS] = useMyAge(), [sex] = useMySex();
+  const RT = useRetire();
   const ownF = useMemo(() => { if (!saver) return undefined; const by = new Map(((data?.funds ?? []) as FundX[]).map((f) => [f.k, f])); return myList.map((m) => by.get(m.k)).find((f): f is FundX => !!f && !!f.assets && !f.closed && f.fee != null); }, [saver, myList, data]);
   const ownM = ownF ? myList.find((m) => m.k === ownF.k) : undefined;
 
@@ -57,6 +61,9 @@ export function FundsFees() {
   const mine = members.find((f) => f.k === (sp.get('k') ?? (ownF && catKey(ownF) === cat ? ownF.k : null))) ?? [...members].sort((a, b) => (b.assets ?? 0) - (a.assets ?? 0))[0];
   const own = ownM && mine?.k === ownM.k ? ownM : undefined;  // the reader's own numbers apply to their own track only
   const cheap = members[0];
+  /** the fees of a row: the reader's own on their own track when entered (W5: the row and the card agree), else the track's average */
+  const pairOf = (f: FundX): FeePair => (own && f.k === own.k ? { depfee: own.depfee ?? f.depfee ?? 0, fee: own.fee ?? f.fee! } : { depfee: f.depfee ?? 0, fee: f.fee! });
+  const ownRow = (f: FundX) => !!own && f.k === own.k && (own.fee != null || own.depfee != null);
 
   // the return assumption: the reader's, else the category's 10-year gross (asset-weighted average of its tracks)
   const c = cats?.[cat];
@@ -66,7 +73,7 @@ export function FundsFees() {
   const retSrc: 'user' | 'cat' | 'default' | 'safe' = retQ != null && retQ !== '' ? 'user' : saver ? 'safe' : cat10 != null ? 'cat' : 'default';
   const rate = numQ(sp.get('rate'), 18.5, 0, 100);
   const salary0 = own?.monthly != null && rate > 0 ? Math.round(own.monthly / (rate / 100) / 10) * 10 : 12000;
-  const C: Career = { age: numQ(sp.get('age'), saver ? ageS ?? AGE_DEFAULT : 35, 15, 80), retire: numQ(sp.get('ra'), 67, 40, 80), salary: numQ(sp.get('sal'), salary0, 0, 1e7), growth: numQ(sp.get('g'), 2, -10, 20), rate,
+  const C: Career = { age: numQ(sp.get('age'), saver ? ageS ?? AGE_DEFAULT : 35, 15, 80), retire: numQ(sp.get('ra'), saver ? RT.v : 67, 40, 80), salary: numQ(sp.get('sal'), salary0, 0, 1e7), growth: numQ(sp.get('g'), 2, -10, 20), rate,
     ret, infl: numQ(sp.get('inf'), 2, -5, 20), start: numQ(sp.get('b0'), own?.balance ?? 0, 0, 1e9), coef: numQ(sp.get('coef'), saver ? coefOf(sex).v : 200, 50, 500) };
   const cap = capOf(prod);
   const ts = tendersOf(dfile), tender = asof ? tenderAt(ts, asof) : null;
@@ -84,7 +91,7 @@ export function FundsFees() {
 
   /* ---- sources ---- */
   const assumptions = () => [
-    { label: saver && sp.get('age') == null ? (ageS != null ? 'גיל היום (שלך, מ"המוצרים שלי")' : 'גיל היום (לדוגמה)') : 'גיל היום (קלט שלך)', v: nf(C.age, 0) }, { label: 'גיל פרישה (קלט שלך)', v: nf(C.retire, 0) }, { label: 'שכר ברוטו חודשי היום (קלט שלך)', v: ils(C.salary) },
+    { label: saver && sp.get('age') == null ? (ageS != null ? 'גיל היום (שלך, מ"המוצרים שלי")' : 'גיל היום (לדוגמה)') : 'גיל היום (קלט שלך)', v: nf(C.age, 0) }, { label: saver && sp.get('ra') == null ? `גיל פרישה (${RT.own ? 'שלך, מ"המוצרים שלי"' : RT.why})` : 'גיל פרישה (קלט שלך)', v: ageText(C.retire) }, { label: 'שכר ברוטו חודשי היום (קלט שלך)', v: ils(C.salary) },
     { label: 'עליית שכר בשנה, נומינלי (הנחה)', v: pc(C.growth, 1) }, { label: 'שיעור הפקדה מהשכר (קלט שלך)', v: pc(C.rate, 1) },
     { label: retSrc === 'user' ? 'תשואה שנתית ברוטו (הנחה שלך)' : retSrc === 'cat' ? `תשואה שנתית ברוטו: ${cat}, 10Y (הנחה: העבר כאומדן)` : retSrc === 'safe' ? 'תשואה שנתית ברוטו (הנחה שמרנית)' : 'תשואה שנתית ברוטו (הנחת ברירת מחדל)', v: pc(C.ret), src: retSrc === 'cat' ? retProv : undefined },
     { label: 'אינפלציה בשנה (הנחה)', v: pc(C.infl, 1) }, { label: 'יתרה היום (קלט שלך)', v: ils(C.start) }, { label: 'מקדם המרה לקצבה (הנחה)', v: nf(C.coef, 0) },
@@ -134,12 +141,29 @@ export function FundsFees() {
   const tone = (v: number) => { const t = gmax > gmin ? (v - gmin) / (gmax - gmin) : 1; return `color-mix(in oklch, var(--down) ${Math.round((1 - t) * 42)}%, var(--panel))`; };
   const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
   const read = tenth.pensionReal - oa.pensionReal;
+  // every open track when they fit (the header counts what the table shows), else the cheapest TOP_N and the reader's own
+  const rowsT = members.length <= ALL_MAX ? members : [...members.slice(0, TOP_N), ...(mine && !members.slice(0, TOP_N).includes(mine) ? [mine] : [])];
+
+  /* ---- W5: the answer first (saver door and no door): what the cheapest track would change, in a sentence ---- */
+  const bDefault = sp.get('db') == null && sp.get('fb') == null;
+  const dPen = ob.pensionReal - oa.pensionReal, dBal = ob.balReal - oa.balReal, dFees = oa.feesReal - ob.feesReal;
+  const answer = saver && cheap && mine ? (
+    <section className="panel ffees-ans" aria-label="התשובה בקצרה">
+      <p className="fans-big">{bDefault && cheap.k === mine.k ? <>המסלול {own ? 'שלך' : 'שבחרת'} הוא הזול בקטגוריה ({cat}).</>
+        : Math.abs(dPen) < 10 ? <>בהנחות האלה, {bDefault ? `המסלול הזול בקטגוריה (${cheap.name})` : 'זוג ב'} כמעט לא משנה את הקצבה.</>
+        : <>{bDefault ? <>במסלול הזול בקטגוריה, <Link to={`/funds/${cheap.k}`}>{cheap.name}</Link>,</> : 'עם דמי הניהול של זוג ב'} הקצבה הייתה <Sourced src={() => diffProv('pensionReal')}><b className="num">{dPen > 0 ? 'גבוהה' : 'נמוכה'} בכ-{ilsRound(Math.abs(dPen))}</b></Sourced> לחודש, ויהיו <Sourced src={() => diffProv('balReal')}><b className="num">כ-{ilsRound(Math.abs(dBal))}</b></Sourced> {dBal > 0 ? 'יותר' : 'פחות'} בחיסכון בגיל הפרישה ({ageText(C.retire)}).</>}</p>
+      {!(bDefault && cheap.k === mine.k) && Math.abs(dPen) >= 10 && <p className="muted">{dFees > 0 ? <>עם דמי הניהול {own ? 'שלך' : 'של המסלול'} ({pc(A.depfee)} מהפקדה, {pc(A.fee)} מצבירה) {sex === 'f' ? 'תשלמי' : sex === 'm' ? 'תשלם' : 'תשלמו'} <b className="num">כ-{ilsRound(dFees)}</b> יותר בדמי ניהול עד הפרישה. </> : null}בשקלי היום, על הנחות: תשואה {pc(C.ret)} ברוטו בשנה, {saver && sp.get('age') == null && ageS == null ? 'גיל 38 לדוגמה' : `גיל ${nf(C.age, 0)}`}, שכר {ils(C.salary)}. ההנחות למטה, ואפשר לשנות.</p>}
+      <p className="fans-note">{own ? <>לפי המוצר והנתונים שלך מ<Link to="/my">"המוצרים שלי"</Link>.</> : ownF ? <>לפי המוצר הראשון ב<Link to="/my">"המוצרים שלי"</Link>, עם דמי הניהול הממוצעים במסלול.</> : <>לפי המסלול הגדול בקטגוריה, עם דמי הניהול הממוצעים בו. את המוצר שלך מוסיפים ב<Link to="/my">"המוצרים שלי"</Link>.</>} אין כאן המלצה לעבור.</p>
+    </section>
+  ) : null;
 
   return (
     <>
       <FundsHead title="דמי ניהול לאורך קריירה" sub={<>כמה עולים דמי ניהול עד הפרישה · מחשבון על הנחות, עם דמי הניהול של מסלולים אמיתיים · נתונים עד {ym(asof)}</>} />
-      <ToolLinks />
+      {!saver && <ToolLinks />}
+      {answer}
 
+      <Assumptions fold={saver}>
       <Panel title="ההנחות" aside={<span className="chip est">הנחות וקלט שלך · לא נשלח</span>}>
         <div className="fform">
           <label><span>גיל היום</span><input type="number" inputMode="numeric" min={15} max={80} value={C.age} onChange={(e) => set({ age: e.target.value })} /></label>
@@ -162,6 +186,7 @@ export function FundsFees() {
           {' '}אינפלציה: {BOI}. מקדם המרה {nf(C.coef, 0)}: {saver && sex != null && sp.get('coef') == null ? coefOf(sex).why : 'הנחה עגולה'}; המקדם בפועל תלוי בגיל, במין, במסלול הקצבה ובתקנון. החישוב רץ בדפדפן ולא נשלח.
         </div>
       </Panel>
+      </Assumptions>
 
       <div className="fpairs">
         <PairBox who="זוג א" f={A} o={oa} keys={['da', 'fa']} color="var(--warn)" />
@@ -192,18 +217,24 @@ export function FundsFees() {
         <div className="fnote">כל תא: אותן הנחות, דמי ניהול אחרים. ככל שהתא כהה יותר, הקצבה נמוכה יותר. תא ממוסגר = אחד הזוגות למעלה.</div>
       </Panel>
 
-      <Panel title={<>דמי הניהול שלך מול הזול בקטגוריה · {cat}</>} aside={<span>{members.length} מסלולים פתוחים · {ym(asof)}</span>}>
+      <Panel title={<>דמי הניהול שלך מול הזול בקטגוריה · {cat}</>} aside={<span>{rowsT.length === members.length ? `${members.length} מסלולים פתוחים` : `${TOP_N} הזולים מתוך ${members.length} מסלולים פתוחים${mine && !members.slice(0, TOP_N).includes(mine) ? ', ועוד שלך' : ''}`} · {ym(asof)}</span>}>
         <div className="scroll"><table className="fsimple fcards">
           <caption className="sr-only">דמי ניהול בקטגוריה והקצבה בהנחות למעלה</caption>
           <thead><tr><th scope="col">מסלול</th><th scope="col">מהפקדה</th><th scope="col">מצבירה</th><th scope="col">קצבה, שקלי היום</th><th scope="col">מול שלך</th></tr></thead>
-          <tbody>{[...members.slice(0, 8), ...(mine && !members.slice(0, 8).includes(mine) ? [mine] : [])].map((f) => { const p = { depfee: f.depfee ?? 0, fee: f.fee! }, o = career(C, p), base = mine ? career(C, { depfee: mine.depfee ?? 0, fee: mine.fee! }) : null;
+          <tbody>{rowsT.map((f) => { const p = pairOf(f), o = career(C, p), base = mine ? career(C, pairOf(mine)) : null;
             return <tr key={f.k} className={f === mine ? 'fme' : undefined}><td><Link to={`/funds/${f.k}`}>{f.name}</Link>{f === cheap && <span className="chip">הזול</span>}{f === mine && <span className="chip">שלך</span>}</td>
-              <td data-label="מהפקדה"><Sourced src={feeP(f, 'depfee')}><span className="num">{pc(f.depfee)}</span></Sourced></td><td data-label="מצבירה"><Sourced src={feeP(f, 'fee')}><span className="num">{pc(f.fee)}</span></Sourced></td>
-              <td data-label="קצבה, שקלי היום"><Sourced src={() => ({ ...outProv(o, p, f.name, 'pensionReal'), inputs: [...assumptions(), { label: 'דמי ניהול מהפקדה', v: pc(f.depfee), src: feeP(f, 'depfee') }, { label: 'דמי ניהול מצבירה', v: pc(f.fee), src: feeP(f, 'fee') }] })}><span className="num">{ils(o.pensionReal)}</span></Sourced></td>
+              <td data-label="מהפקדה">{ownRow(f) ? <span className="num">{pc(p.depfee)}<span className="dim"> שלך</span></span> : <Sourced src={feeP(f, 'depfee')}><span className="num">{pc(f.depfee)}</span></Sourced>}</td><td data-label="מצבירה">{ownRow(f) ? <span className="num">{pc(p.fee)}<span className="dim"> שלך</span></span> : <Sourced src={feeP(f, 'fee')}><span className="num">{pc(f.fee)}</span></Sourced>}</td>
+              <td data-label="קצבה, שקלי היום"><Sourced src={() => ({ ...outProv(o, p, f.name, 'pensionReal'), inputs: [...assumptions(), ...(ownRow(f) ? pairInputs(p, 'שלך') : [{ label: 'דמי ניהול מהפקדה', v: pc(f.depfee), src: feeP(f, 'depfee') }, { label: 'דמי ניהול מצבירה', v: pc(f.fee), src: feeP(f, 'fee') }])] })}><span className="num">{ils(o.pensionReal)}</span></Sourced></td>
               <td data-label="מול שלך">{base ? <span className={`num ${o.pensionReal >= base.pensionReal ? 'pos' : 'neg'}`}>{o.pensionReal >= base.pensionReal ? '+' : '−'}{nf(Math.abs(o.pensionReal - base.pensionReal), 0)}</span> : '–'}</td></tr>; })}</tbody>
         </table></div>
-        <div className="fnote">דמי הניהול: הממוצע בפועל של כל מסלול ב-{ym(asof)} (AVG_ANNUAL_MANAGEMENT_FEE, AVG_DEPOSIT_FEE). חוסך מסוים משלם את מה שסיכם; עמית חדש בקרן ברירת מחדל משלם את מחיר המכרז. ממוין מהזול. {mine && <>מהלך: <Link to={`/funds/compare?k=${[mine.k, cheap?.k].filter(Boolean).join(',')}`}>השוואת המסלול שלך לזול</Link>.</>}</div>
+        <div className="fnote">דמי הניהול: הממוצע בפועל של כל מסלול ב-{ym(asof)}, מנתוני רשות שוק ההון{own && ownRow(mine!) ? '; בשורה שלך, דמי הניהול שהזנת' : ''}. חוסך מסוים משלם את מה שסיכם; עמית חדש בקרן ברירת מחדל משלם את מחיר המכרז. ממוין מהזול. {mine && <>מהלך: <Link to={`/funds/compare?k=${[mine.k, cheap?.k].filter(Boolean).join(',')}`}>השוואת המסלול שלך לזול</Link>.</>}</div>
       </Panel>
     </>
   );
+}
+
+/** W5: the assumptions panel, folded under the answer in the saver door (and for a visitor with no door); open as it was elsewhere */
+function Assumptions({ fold, children }: { fold: boolean; children: React.ReactNode }) {
+  if (!fold) return <>{children}</>;
+  return <details className="ffees-assume"><summary>ההנחות והקלט: גיל, שכר, תשואה, מוצר ומסלול</summary>{children}</details>;
 }

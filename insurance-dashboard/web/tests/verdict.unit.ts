@@ -5,10 +5,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { brief, headline, peersOf, placeTone, textOf, verdictOf, type VFund } from '../src/lib/verdict';
-import { annualFees, coefOf, feeGap, horizon, ilsRound, project, refPair, type Plan } from '../src/lib/retire';
+import { ageText, annualFees, coefOf, feeGap, horizon, ilsRound, project, refPair, retireAgeOf, type Plan } from '../src/lib/retire';
 import { cardCalc, gapOf, summaryOf } from '../src/lib/myCalc';
 import { capOf, feeError } from '../src/lib/feeCaps';
 import { scriptOf } from '../src/lib/script';
+import { compareKeys } from '../src/lib/saverCompare';
 import type { DefaultFile } from '../src/lib/fundsTools';
 import type { DecisionFile } from '../src/lib/decision';
 
@@ -53,7 +54,8 @@ const dfile: DefaultFile = { tenders: [
   const own = verdictOf(cat[4], cat, 202609, dfile, { fee: 0.1, depfee: 2 });
   ok(own.fee.own && own.fee.word === 'low' && own.fee.pct === 100, 'own fee 0.10: lower than every other track');
   const to = textOf(own.lines.find((l) => l.key === 'fee')!.parts);
-  ok(to.includes('דמי הניהול שלך מצבירה') && to.includes('מהדוח שלך') && to.includes('2%'), `fee line (own): ${to}`);
+  // W5: an own pension fee is read against the default-fund price (0.22% / 1%), not placed among the other tracks' averages
+  ok(own.fee.basis === 'tender' && to.includes('דמי הניהול שלך') && to.includes('מהדוח שלך') && to.includes('2% מהפקדה') && to.includes('בקרנות ברירת המחדל') && !to.includes('אף מסלול'), `fee line (own): ${to}`);
   const same = verdictOf(cat[1], cat, 202609, dfile);
   ok(same.fee.word === 'same', '0.15 against a median of 0.15: same');
 }
@@ -152,7 +154,7 @@ const dfile: DefaultFile = { tenders: [
   const s = summaryOf(rows);
   ok(Math.abs(s.fees - rows[0].c.annual.total - rows[1].c.annual.total) < 1e-6 && Math.abs(rows[0].c.annual.total - (180000 * 0.0025 + 48000 * 0.015)) < 1e-6, `strip: fees add up (${Math.round(s.fees)})`);
   ok(s.feesAvg && s.feesEx && s.penN === 2 && s.pension! > 0, 'strip: labelled when a fee is an average or an amount an example; two pension funds add up');
-  ok(s.act.kind === 'fee' && s.act.k === 'p5' && s.act.ref === 'med' && s.act.own, `strip: the one action is the biggest gap (${JSON.stringify(s.act).slice(0, 120)})`);
+  ok(s.act.kind === 'fee' && s.act.k === 'p5' && s.act.ref === 'dflt' && s.act.own, `strip: the one action is the biggest gap, an own pension fee against the default-fund terms (W5) (${JSON.stringify(s.act).slice(0, 120)})`);
   ok(gapOf(rows[1].c) == null || gapOf(rows[1].c)!.v > 0, 'gapOf: only a positive gap');
   ok(coefOf('f').v === 204 && coefOf('m').v === 188 && coefOf(null).v === 200, 'coefficient by sex');
 }
@@ -161,11 +163,68 @@ const dfile: DefaultFile = { tenders: [
 {
   const v = verdictOf(cat[4], cat, 202609, dfile, { fee: 0.25, depfee: 1.8 });
   const s = scriptOf({ name: 'קרן p5', id: 5, prod: 'פנסיה מקיפה', track: 'עד 50', src: 'פנסיה-נט, 09/26', v });
-  ok(s.includes('אני משלם/ת 0.25% דמי ניהול מהצבירה ו-1.80% מההפקדות') && s.includes('החציון בקטגוריה (פנסיה מקיפה, עד 50) הוא 0.15%') && s.includes('אשמח לקבל הצעה מעודכנת'), `note: ${s}`);
+  ok(s.includes('אני משלם/ת 0.25% דמי ניהול מהצבירה ו-1.80% מההפקדות') && s.includes('חציון דמי הניהול הממוצעים בפועל בקטגוריה (פנסיה מקיפה, עד 50) הוא 0.15%') && s.includes('אשמח לקבל הצעה מעודכנת'), `note: ${s}`);
   ok(s.includes('מוגבלים ל-1% מההפקדה ו-0.22% מהצבירה'), 'the default-fund terms in the note');
   const s2 = scriptOf({ name: 'קרן p5', prod: 'פנסיה מקיפה', track: 'עד 50', src: 'פנסיה-נט, 09/26', v: verdictOf(cat[4], cat, 202609, dfile) });
   ok(s2.includes('אשמח לדעת כמה אני משלם/ת בפועל'), 'without own fees it asks');
   ok(!BANNED.test(s) && !BANNED.test(s2), 'the note recommends nothing');
+}
+
+/* ---- W5 (red team 3): Dana, 38, pension, own 0.22% from savings and 1.5% from deposits ----
+   The averages actually paid in her category run 0.11%–0.19%; the default-fund tender price is 0.22% / 1%. The old card said "the most
+   expensive in the category, no other track costs more" (her own fee against the others' averages), and the next line said the default
+   funds charge exactly 0.22%. The deposit fee, 1.5% against 1%, was never flagged, and the ₪ gap to the default terms was folded away. */
+{
+  const dana = [mk('d1', 10.2, 0.15, { depfee: 1.73 }), mk('d2', 10.0, 0.14, { depfee: 1.53 }), mk('d3', 9.9, 0.16, { depfee: 1.47 }), mk('d4', 9.8, 0.14, { depfee: 1.52 }),
+    mk('d5', 9.6, 0.14, { depfee: 1.56 }), mk('d6', 9.4, 0.11, { depfee: 1.25 }), mk('d7', 9.0, 0.15, { depfee: 1.24 }), mk('d8', 8.9, 0.19, { depfee: 1.05 }), mk('d9', 8.8, 0.18, { depfee: 1.0 })];
+  const my = { fee: 0.22, depfee: 1.5 };
+  const v = verdictOf(dana[3], dana, 202609, dfile, my);
+  const all = [...v.lines.map((l) => textOf(l.parts)), ...brief(v).map((l) => textOf(l.parts)), ...v.tiles.map((t) => `${t.label} ${typeof t.value === 'string' ? t.value : t.value.t} ${t.word}`), headline(v)];
+  const MOST = /היקרים בקטגוריה|הגבוהים בקטגוריה|אף מסלול אחר לא יקר|יקרים מהחציון|גבוהים מ-\d+% מהמסלולים/;
+  ok(all.every((t) => !MOST.test(t)), `Dana: her own fee is never "the most expensive" against the others' averages: ${all.filter((t) => MOST.test(t)).join(' | ')}`);
+  ok(v.fee.basis === 'tender' && v.fee.ref === 0.22 && v.fee.word === 'same', 'Dana: 0.22% from savings is the default-fund price, read as the same');
+  ok(v.dep?.basis === 'tender' && v.dep.ref === 1 && v.dep.word === 'high' && v.lever === 'dep', 'Dana: 1.5% from deposits is above the 1% price: the deposit fee is the lever');
+  const b = brief(v).map((l) => textOf(l.parts));
+  ok(b.some((t) => t.includes('0.22% מצבירה ו-1.50% מהפקדה') && t.includes('בקרנות ברירת המחדל: 0.22% מצבירה ו-1% מהפקדה')), `Dana brief: both parts against the price: ${b.join(' | ')}`);
+  ok(b.some((t) => t.includes('הפער הוא בדמי הניהול מהפקדה: 1.50% לעומת 1%')), `Dana brief: the deposit fee is flagged on the card face: ${b.join(' | ')}`);
+  const tile = v.tiles.find((t) => t.key === 'dep');
+  ok(tile?.tone === 'bad' && tile.word.includes('מעל קרנות ברירת המחדל (1%)'), `Dana tile: the deposit fee (${tile?.word})`);
+  ok(textOf(v.lines.find((l) => l.key === 'fee')!.parts).includes('ממוצע בפועל') || textOf(v.lines.find((l) => l.key === 'fee')!.parts).includes('משלמים בפועל'), 'Dana: the others\' figures are labelled as averages actually paid');
+  const c = cardCalc(dana[3], dana, 202609, dfile, { balance: 150000, monthly: 2220, ...my }, null, { age: 38, coef: 204, ret: 4, retire: 65 });
+  const gF = feeGap(c.plan, c.mine, { fee: 0.22, depfee: c.mine.depfee }).balReal, gD = feeGap(c.plan, c.mine, { fee: c.mine.fee, depfee: 1 }).balReal;
+  ok(gF === 0 && gD > 0 && c.lever === 'dep', `Dana ₪: the deposit fee is all of the gap (${Math.round(gD)})`);
+  ok(c.tBest != null && c.tBest.g.balReal > 0 && gapOf(c)?.ref === 'dflt', `Dana ₪: the gap to the default terms (${Math.round(c.tBest?.g.balReal ?? 0)}) is the card's figure, not the median's`);
+  ok(c.plan.retire === 65 && c.tBest!.g.mine.months === 27 * 12, 'Dana: retires at 65 (a woman born after 1970), 27 years');
+  const sn = scriptOf({ name: 'קרן d4', prod: 'פנסיה מקיפה', track: 'עד 50', src: 'פנסיה-נט, 09/26', v, sex: 'f' });
+  ok(sn.includes('אני חוסכת') && sn.includes('אני משלמת') && !sn.includes('/ת') && sn.includes('מההפקדה (1.50% לעומת 1%)'), `Dana's note is in her voice and names the deposit fee: ${sn}`);
+  ok(scriptOf({ name: 'x', prod: 'פנסיה מקיפה', track: 'עד 50', src: 's', v, sex: 'm' }).includes('אני חוסך ב'), 'a man\'s note');
+  // not her own fee: the track's average against the others' averages is apples to apples, and keeps its place
+  ok(verdictOf(dana[7], dana, 202609, dfile).fee.basis === 'avg' && verdictOf(dana[7], dana, 202609, dfile).fee.pct === 100, 'the track average 0.19% is still the highest average');
+  // outside pension: own fee against the median and the cheapest quarter of the averages actually paid, and the legal ceiling
+  const hs = dana.map((x) => ({ ...x, prod: 'השתלמות', track: 'כללי' }));
+  const vh = verdictOf(hs[3], hs, 202609, dfile, { fee: 0.7, depfee: 0 });
+  const th = textOf(vh.lines.find((l) => l.key === 'fee')!.parts);
+  ok(vh.fee.basis === 'avg' && th.includes('מעל חציון הממוצע בפועל') && th.includes('התקרה בחוק: 1.05%') && th.includes('ברבע המסלולים הזולים') && !MOST.test(th), `השתלמות, own: ${th}`);
+  // W5: a gemel on /my with no monthly deposit: no deposit-fee line
+  const gm = dana.map((x) => ({ ...x, prod: 'גמל', track: 'כללי' }));
+  const vg = verdictOf(gm[3], gm, 202609, dfile, { fee: 0.5, monthly: null });
+  ok(vg.dep?.quiet === true && !brief(vg).some((l) => l.key === 'dep') && !vg.tiles.some((t) => t.key === 'dep'), 'gemel with no deposit: the deposit fee is quiet');
+  ok(verdictOf(gm[3], gm, 202609, dfile, { fee: 0.5, monthly: 500 }).dep?.quiet === false, 'gemel with a deposit: shown');
+}
+
+/* ---- W5: the saver's compare tab opens on their tracks and the cheapest of the category ---- */
+{
+  const hs = cat.map((x) => ({ ...x, k: 'h' + x.k.slice(1), prod: 'השתלמות', track: 'כללי' }));
+  const ks = compareKeys([{ k: 'h1' }, { k: 'p7' }], [...cat, ...hs]);
+  ok(ks[0] === 'p7' && ks.length === 4 && ks.includes('p3') && !ks.some((k) => k.startsWith('h')), `pension first, then the 3 cheapest of its category by fee (${ks.join(',')})`);
+  ok(compareKeys([], cat).length === 0 && compareKeys([{ k: 'nope' }], cat).length === 0, 'nothing saved: no keys');
+}
+
+/* ---- W5: the statutory retirement age (Kol Zchut "גיל פרישה", the 2021 amendment) ---- */
+{
+  ok(retireAgeOf('f', 38, 2026).v === 65 && retireAgeOf('m', 38, 2026).v === 67 && retireAgeOf(null, 38, 2026).v === 67, 'women born 1970+: 65; men: 67; unknown: 67 (labelled)');
+  ok(retireAgeOf('f', 60, 2026).v === 64 && Math.abs(retireAgeOf('f', 57, 2026).v - 64.75) < 1e-9 && Math.abs(retireAgeOf('f', 66, 2026).v - (62 + 4 / 12)) < 1e-9, 'born 1966: 64; 1969: 64 and 9 months; 1960: 62 and 4 months');
+  ok(ageText(64.75) === '64 ו-9 חודשים' && ageText(65) === '65', 'the age in words');
 }
 
 /* ---- W2: the service-index line (pension) and the managers'-insurance line ---- */

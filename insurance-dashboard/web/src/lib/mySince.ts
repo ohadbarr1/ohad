@@ -10,24 +10,27 @@
      the way out of each), on the card's own quarter rule (verdict.placeTone).
    - Fees: the track's average actually paid (AVG_ANNUAL_MANAGEMENT_FEE / AVG_DEPOSIT_FEE), from accumulation and from deposits; a
      change of 0.01pp or more (the published precision) is reported. The reader's own fees are theirs and do not move with the data.
-   - The latest month: the track's return in the new data month (net when the file carries net), with the category's median that month. */
+   - The last 12 months: the track's LTM return in the new data month (net when the file carries net), with the category's median.
+     W5 (red team 3): a one-month return is noise for a saver and is no longer shown; nothing shorter than 12 months. */
 import type { Per } from './funds';
 import { median } from './fundsCalc';
 import { placeTone, type Tone, type VFund, type Verdict } from './verdict';
 
-export interface SnapP { per: Per | null; basis: 'net' | 'gross' | null; lo: number | null; hi: number | null; n: number | null; tone: Tone | null; fee: number | null; depfee: number | null; m1: number | null }
+export interface SnapP { per: Per | null; basis: 'net' | 'gross' | null; lo: number | null; hi: number | null; n: number | null; tone: Tone | null; fee: number | null; depfee: number | null; m1: number | null; y12?: number | null }
 export interface MySnap { v: 1; asof: number; at: string; p: Record<string, SnapP> }
 export interface MySeen { cur: MySnap | null; prev: MySnap | null }
 export const SEEN_KEY = 'my:seen';
 export const EMPTY_SEEN: MySeen = { cur: null, prev: null };
 
-/** the month's return of a track on the card's basis */
+/** the LTM return of a track on the card's basis */
+export const y12Of = (f: VFund, basis: 'net' | 'gross') => (basis === 'net' ? f.net?.y12 ?? null : f.y12 ?? null);
+/** the month's return of a track on the card's basis (kept in the snapshot; not shown) */
 export const m1Of = (f: VFund & { m1?: number | null }, basis: 'net' | 'gross') => (basis === 'net' ? f.net?.m1 ?? null : f.m1 ?? null);
 
 /** what the card shows today, as a snapshot */
 export function snapOf(f: VFund & { m1?: number | null }, v: Verdict): SnapP {
   const r = v.ret, basis = r?.basis ?? (f.net ? 'net' : 'gross');
-  return { per: r?.per ?? null, basis, lo: r?.rank?.lo ?? null, hi: r?.rank?.hi ?? null, n: r?.rank?.n ?? null, tone: r?.rank ? placeTone(r.rank) : null, fee: f.fee, depfee: f.depfee, m1: m1Of(f, basis) };
+  return { per: r?.per ?? null, basis, lo: r?.rank?.lo ?? null, hi: r?.rank?.hi ?? null, n: r?.rank?.n ?? null, tone: r?.rank ? placeTone(r.rank) : null, fee: f.fee, depfee: f.depfee, m1: m1Of(f, basis), y12: y12Of(f, basis) };
 }
 
 /** a well-formed stored value, or empty (the store is the reader's: anything can be there) */
@@ -51,15 +54,15 @@ export function nextSeen(seen: MySeen, now: MySnap): MySeen {
   return seen; // the stored month is newer than the data (an old cached file): keep it
 }
 
-export type CKind = 'rank' | 'quart' | 'fee' | 'dep' | 'month';
+export type CKind = 'rank' | 'quart' | 'fee' | 'dep' | 'ltm';
 export interface Change { kind: CKind; tone: 'good' | 'bad' | 'info'; text: string }
 const r2 = (v: number) => v.toFixed(2);
 const pctS = (v: number) => `${v < 0 ? '-' : ''}${Math.abs(v).toFixed(2)}%`;
 const rangeT = (lo: number, hi: number) => (lo === hi ? String(lo) : `${lo}–${hi}`);
 const WIN: Partial<Record<Per, string>> = { a5: '5Y', a3: '3Y', y12: 'LTM' };
 
-/** The changes of one product between a baseline and today. `catM1`: the category's month returns (for the median). */
-export function changesOf(base: SnapP | undefined, cur: SnapP, catM1: number[] = []): Change[] {
+/** The changes of one product between a baseline and today. `catY12`: the category's LTM returns (for the median). */
+export function changesOf(base: SnapP | undefined, cur: SnapP, catY12: number[] = []): Change[] {
   const out: Change[] = [];
   if (!base) return out;
   const same = base.per === cur.per && base.basis === cur.basis;
@@ -77,9 +80,9 @@ export function changesOf(base: SnapP | undefined, cur: SnapP, catM1: number[] =
     out.push({ kind: 'fee', tone: cur.fee > base.fee ? 'bad' : 'good', text: `דמי הניהול מצבירה במסלול (ממוצע בפועל): ${r2(cur.fee)}%, ${cur.fee > base.fee ? 'עלו' : 'ירדו'} מ-${r2(base.fee)}%` });
   if (base.depfee != null && cur.depfee != null && Math.abs(cur.depfee - base.depfee) >= 0.005)
     out.push({ kind: 'dep', tone: cur.depfee > base.depfee ? 'bad' : 'good', text: `דמי הניהול מהפקדה במסלול (ממוצע בפועל): ${r2(cur.depfee)}%, ${cur.depfee > base.depfee ? 'עלו' : 'ירדו'} מ-${r2(base.depfee)}%` });
-  if (cur.m1 != null) {
-    const med = median(catM1);
-    out.push({ kind: 'month', tone: 'info', text: `התשואה בחודש האחרון${cur.basis === 'net' ? ' (נטו, אומדן)' : ''}: ${pctS(cur.m1)}${med != null ? `; חציון הקטגוריה: ${pctS(med)}` : ''}` });
+  if (cur.y12 != null) {
+    const med = median(catY12);
+    out.push({ kind: 'ltm', tone: 'info', text: `התשואה ב-12 החודשים האחרונים${cur.basis === 'net' ? ' (נטו, אומדן)' : ''}: ${pctS(cur.y12)}${med != null ? `; חציון הקטגוריה: ${pctS(med)}` : ''}` });
   }
   return out;
 }
