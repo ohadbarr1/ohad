@@ -239,3 +239,33 @@ main .ms-lines button.src:not(.bar) { padding: 4px 0; margin: -4px 0; display: b
   .st-f dd p, .st-diff p { font-size: 14.5px; }
 }
 .sv-note a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- W4 (red team 02.11.26): the age once, the strip, the folded card ---- */
+.sv-who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: var(--t-4); }
+.sv-who-age { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.sv-who-age input { width: 72px; min-width: 0; padding: 6px 8px; font-size: 16px; }
+.sv-who .sv-rets { flex-basis: auto; }
+.sv-who-ex { font-weight: 600; }
+.sv-sum { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; border-color: var(--accent-line); }
+.sv-kpis { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px 18px; }
+.sv-kpis > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sv-kpis dt { font-size: var(--t-3); color: var(--muted); font-weight: 600; }
+.sv-kpis dd { margin: 0; font-size: var(--t-4); }
+.sv-kpis dd b { font-size: var(--t-6); font-weight: 800; letter-spacing: -0.01em; }
+.sv-kpis .sv-a::before { content: none; }
+.sv-one { margin: 0; font-size: var(--t-4); line-height: 1.6; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.sv-one a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.sv-brief li { font-size: var(--t-4); line-height: 1.55; }
+.sv-money { display: flex; flex-direction: column; gap: 4px; }
+.sv-money p { margin: 0; font-size: var(--t-4); line-height: 1.55; }
+.sv-money .sv-a { margin-inline-start: 6px; }
+.sv-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.sv-more:not([hidden]) { display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.sv-err { display: block; font-size: var(--t-3); font-weight: 600; color: color-mix(in oklch, var(--down) 85%, var(--fg)); line-height: 1.45; }
+.sv-form label.bad input { border-color: color-mix(in oklch, var(--down) 60%, transparent); }
+.sv-mine .sv-note a { color: var(--link); text-decoration: underline; }
+.mk-tech summary { cursor: pointer; font-size: var(--t-3); color: var(--muted); }
+.mk-tech[open] summary { margin-bottom: 6px; }
+.st-quick { gap: 10px; border-color: var(--accent-line); }
+.st-quick-l { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; font-size: var(--t-4); line-height: 1.55; }
+.st-quick-l a { color: var(--link); text-underline-offset: 3px; }

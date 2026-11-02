@@ -135,9 +135,12 @@
 .dmine-n { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .dmine-n a { font-weight: 700; font-size: var(--t-4); color: var(--fg); }
 .dmine-n a:hover { color: var(--accent-text); text-decoration: none; }
-.dmine-l .dim { color: var(--muted); font-size: var(--t-1); display: inline; }
-.dmine-f { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--t-2); color: var(--muted); }
+.dmine-l .dim { color: var(--muted); font-size: var(--t-3); display: inline; }
+.dmine-f { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--t-3); color: var(--muted); }
 .dmine-f .src { font-size: var(--t-4); color: var(--fg); font-weight: 700; }
+/* W4: the saver's own fee is the figure; the track's average sits beside it, small */
+.dmine-own, .dmine-own .src { font-size: var(--t-5) !important; color: var(--fg); font-weight: 800; }
+.dmine-f .dim .src { font-size: var(--t-3); color: var(--muted); font-weight: 600; }
 .dmine-sk, .dprods-sk { height: 44px; border-radius: var(--r-2); background: var(--panel2); margin-block: 6px; }
 .dprods-l li { display: grid; grid-template-columns: minmax(150px, 1fr) auto 36px; align-items: center; gap: 6px 18px; min-height: 52px; padding: 6px 0; border-top: 1px solid var(--line-soft); }
 .dprods-n { position: relative; font-size: var(--t-4); font-weight: 700; color: var(--fg); }

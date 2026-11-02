@@ -140,13 +140,18 @@ function MineSummary({ mine }: { mine: MyProduct[] }) {
         {mine.map((p) => { const f = by.get(p.k) as FundX | undefined;
           if (!data) return <li key={p.k} className="dmine-sk" aria-hidden="true" />;
           if (!f) return <li key={p.k}><span className="dmine-n">מסלול {p.k}</span><span className="dim">לא נמצא בנתוני {asof ? ym(asof) : 'החודש'}</span></li>;
-          const r5 = retOf(f, 'a5', 'net').v;
+          // W4: the 5Y net, else the 3Y with the reason (a השתלמות S&P track has 5 years gross but no 5-year net)
+          const r5 = retOf(f, 'a5', 'net').v, r3 = r5 == null ? retOf(f, 'a3', 'net').v : null;
+          const avg = f.fee != null ? <Sourced className="num" src={() => fundP(refOf(f), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(f.fee!, 2) + '%')}>{nf(f.fee, 2)}%</Sourced> : null;
           return (
             <li key={p.k}>
-              <span className="dmine-n"><Link to={`/funds/${f.k}`}>{f.name}</Link><span className="dim">{f.prod} · {f.track}</span></span>
+              <span className="dmine-n"><Link to={`/my#${f.k}`}>{f.name}</Link><span className="dim">{f.prod} · {f.track}</span></span>
               <span className="dmine-f">
-                {f.fee != null && <span>דמי ניהול מצבירה <Sourced className="num" src={() => fundP(refOf(f), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(f.fee!, 2) + '%')}>{nf(f.fee, 2)}%</Sourced> <span className="dim">ממוצע במסלול</span>{p.fee != null && <> · <span className="num">{nf(p.fee, 2)}%</span> <span className="dim">שלכם, כפי שהזנתם</span></>}</span>}
+                {p.fee != null
+                  ? <span>דמי הניהול שלכם מצבירה <b className="num dmine-own">{nf(p.fee, 2)}%</b>{avg && <span className="dim"> · ממוצע במסלול {avg}</span>}</span>
+                  : avg && <span>דמי ניהול מצבירה <b className="dmine-own">{avg}</b> <span className="dim">ממוצע במסלול · <Link to={`/my#${f.k}`}>להזין את שלכם</Link></span></span>}
                 {r5 != null && <span>{NET_LABEL}, 5Y בשנה <Sourced className="num" src={() => netProv(f, 'a5', asof, r5, data.net_method)}>{nf(r5, 1)}%</Sourced></span>}
+                {r3 != null && <span>{NET_LABEL}, 3Y בשנה <Sourced className="num" src={() => netProv(f, 'a3', asof, r3, data.net_method)}>{nf(r3, 1)}%</Sourced> <span className="dim">({f.a5 != null ? 'אין נתון נטו ל-5 שנים' : 'אין 5 שנות היסטוריה'})</span></span>}
               </span>
             </li>
           ); })}

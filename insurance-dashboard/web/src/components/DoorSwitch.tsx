@@ -43,7 +43,7 @@ function DoorMenu({ door, setDoor, pick }: { door: Door | null; setDoor: (d: Doo
   return (
     <div className="door-m">
       <button ref={btn} type="button" className="door-pill" aria-haspopup="menu" aria-expanded={open} aria-controls={id} aria-label={`דלת: ${cur ? cur[1] : 'לא נבחרה'}. החלפה`} onClick={() => setOpen((o) => !o)}>
-        <span>{cur ? cur[1] : 'דלת'}</span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" /></svg>
+        <span>{cur ? cur[1] : 'בחירת דלת'}</span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" /></svg>
       </button>
       {open && (
         <div ref={menu} id={id} className="door-menu" role="menu" aria-label="דלת" onKeyDown={onKey}>

@@ -6,3 +6,9 @@ import { useStored } from './local';
 export interface MyProduct { k: string; balance?: number | null; monthly?: number | null; fee?: number | null; depfee?: number | null; added: string; imp?: string }
 export const MINE_KEY = 'mine';
 export const useMine = () => useStored<MyProduct[]>(MINE_KEY, []);
+
+/** The reader's age and sex, asked once at the top of /my and used on every card and in the fee tool (this browser only).
+ *  null until the reader sets them: the page then shows the example age as an example ("לדוגמה, שנו"), never silently. */
+export const AGE_KEY = 'my:age', SEX_KEY = 'my:sex';
+export const useMyAge = () => useStored<number | null>(AGE_KEY, null);
+export const useMySex = () => useStored<'m' | 'f' | null>(SEX_KEY, null);

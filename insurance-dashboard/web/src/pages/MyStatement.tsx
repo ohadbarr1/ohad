@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
+import { useSaverDoor } from '../lib/door';
 import '../styles/saver.css';
 
 /* W3 · /my/statement, "איך קוראים את הדוח השנתי": the saver's annual report, field by field, in plain Hebrew. Every rule is the
@@ -41,7 +42,18 @@ function Sec({ id, letter, title, lead, fields, children }: { id: string; letter
   );
 }
 
+/** the 2-minute version: the six things to look at, each a jump to its part of the reference below */
+const QUICK: [string, string, ReactNode][] = [
+  ['st-b', 'היתרה בסוף השנה', 'בטבלה ב. זה המספר להזין בכרטיס המוצר.'],
+  ['st-c', 'שני אחוזי דמי הניהול', 'בטבלה ג: מהפקדה ומחיסכון. מה שנגבה ממך בפועל; בכרטיס רואים אותם מול החציון.'],
+  ['st-e', 'ההפקדות', 'בטבלה ה: שורה לכל חודש משכורת. חודש חסר מול התלוש: פונים למעסיק ולקרן.'],
+  ['st-a', 'הקצבה הצפויה', 'בטבלה א: אומדן מהכסף שכבר נצבר, בלי הפקדות עתידיות. לא "כמה תקבל".'],
+  ['st-d', 'המסלול והתשואה', 'בטבלה ד: התשואה לפני דמי ניהול (ברוטו). מספר הקופה מוביל לכרטיס המסלול.'],
+  ['st-ben', 'מוטבים וכיסויים', 'אם כתוב "לא נקבעו מוטבים", או שהמשפחה השתנתה: מעדכנים מול החברה.'],
+];
+
 export function MyStatement() {
+  useSaverDoor();
   return (
     <div className="sv-page st-page">
       <div className="pagehead"><div>
@@ -49,6 +61,14 @@ export function MyStatement() {
         <h1><span className="icotile"><Icon name="statement" /></span>איך קוראים את הדוח השנתי</h1>
         <div className="sub sv-sub">הדוח השנתי המקוצר שמגיע מקרן הפנסיה, מקופת הגמל, מקרן ההשתלמות או מחברת הביטוח, שדה אחר שדה. המבנה והנוסח קבועים בחוזר של רשות שוק ההון, ולכן הם זהים בכל החברות. הסדר כאן הוא של דוח קרן פנסיה חדשה; ההבדלים בגמל, בהשתלמות ובביטוח מסומנים.</div>
       </div></div>
+
+      <section className="panel sv-card st-quick" aria-labelledby="st-quick-h">
+        <h2 id="st-quick-h" className="st-h">הגרסה של שתי דקות</h2>
+        <ol className="st-quick-l">
+          {QUICK.map(([id, t, d]) => <li key={id}><a href={`#${id}`}><b>{t}</b></a> <span>{d}</span></li>)}
+        </ol>
+        <p className="sv-note">ומשם: מקלידים את המספרים ב<Link to="/my">המוצרים שלי</Link>. למטה, המדריך המלא שדה אחר שדה, עם המקור בחוזר של הרשות.</p>
+      </section>
 
       <nav className="st-toc" aria-label="חלקי הדוח">
         {[['st-kinds', 'איזה דוח'], ['st-a', 'א. תשלומים צפויים'], ['st-b', 'ב. תנועות'], ['st-c', 'ג. דמי ניהול'], ['st-d', 'ד. מסלולים ותשואות'], ['st-e', 'ה. הפקדות'], ['st-ben', 'מוטבים'], ['st-more', 'סוכן, דוח מפורט ומס']].map(([id, l]) => <a key={id} href={`#${id}`} className="sv-chip sm">{l}</a>)}

@@ -47,10 +47,33 @@ export function feeGap(p: Plan, mine: FeePair, ref: FeePair): FeeGap {
   return { mine: a, ref: b, years: a.months / 12, balReal: b.balReal - a.balReal, bal: b.bal - a.bal, pensionReal: b.pensionReal - a.pensionReal, feesReal: a.feesReal - b.feesReal };
 }
 
-/** the reference pair for a fee comparison: the category median, with the reader's own deposit fee where the category publishes none */
-export function refPair(mine: FeePair, medFee: number | null, medDep: number | null): FeePair | null {
+/** The reference pair for a fee comparison: the category median. Where the category publishes no deposit fee (השתלמות, most gemel:
+ *  the regulator's AVG_DEPOSIT_FEE is empty), the reference charges none: 0% from deposits, an assumption the page labels. It never
+ *  copies the reader's own deposit fee, which would hide that fee from the comparison and make a higher fee look cheaper (red team
+ *  02.11.26: a 7% deposit fee shrank the gap). */
+export function refPair(medFee: number | null, medDep: number | null): FeePair | null {
   if (medFee == null) return null;
-  return { fee: medFee, depfee: medDep ?? mine.depfee };
+  return { fee: medFee, depfee: medDep ?? 0 };
+}
+
+/** What the fees cost this year, in ₪: the balance × the accumulation fee, plus a year of deposits × the deposit fee. */
+export function annualFees(balance: number, monthly: number, f: FeePair): { acc: number; dep: number; total: number } {
+  const acc = balance * f.fee / 100, dep = monthly * 12 * f.depfee / 100;
+  return { acc, dep, total: acc + dep };
+}
+
+/** The money in a השתלמות is free to draw after 6 years (Income Tax Ordinance 3(ה), lib/productRules): the horizon of its ₪ figure. */
+export const LIQ_YEARS = 6;
+/** a plan cut at a horizon of `years` from today */
+export const horizon = (p: Plan, years: number): Plan => ({ ...p, retire: p.age + years });
+
+/** The conversion coefficient by the reader's sex, at 67 (Bizportal, 22.07.26, COEF_SRC on the card): about 188 for a man with a
+ *  survivors' pension, about 204 for a woman with guaranteed payments and survivors; 200 when not given. All assumptions. */
+export type Sex = 'm' | 'f';
+export function coefOf(sex: Sex | null | undefined): { v: number; why: string } {
+  if (sex === 'm') return { v: 188, why: 'גבר, עם פנסיית שארים, בגיל 67 (ביזפורטל)' };
+  if (sex === 'f') return { v: 204, why: 'אישה, עם הבטחת תשלומים ושארים, בגיל 67 (ביזפורטל)' };
+  return { v: COEF_DEFAULT, why: 'הנחה עגולה' };
 }
 
 /** a ₪ amount, rounded to the nearest 1,000 when large (an estimate should not look precise) */

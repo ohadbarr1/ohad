@@ -11,7 +11,7 @@ import { verdictOf } from '../../lib/verdict';
 import { EMPTY_SEEN, SEEN_KEY, baselineOf, changesOf, m1Of, monthsBetween, nextSeen, normSeen, snapOf, type Change, type MySnap, type SnapP } from '../../lib/mySince';
 
 /* W3 · "מה השתנה מאז הביקור הקודם" on /my: rank, quarter, fees and the latest month per product, against the snapshot this browser kept
-   (fox:my:seen). Fires only on a new data month (lib/mySince). The visit is recorded when the reader leaves the page. */
+   (fox:my:seen). Fires only on a new data month (lib/mySince). The visit is recorded on arrival, and again on leaving. */
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -31,18 +31,19 @@ export function SinceVisit({ data, dfile, list }: { data: FundsFile; dfile: Defa
   }, [funds, list, asof, dfile]);
   const now: MySnap = useMemo(() => ({ v: 1, asof, at: today(), p: Object.fromEntries(rows.map((r) => [r.f.k, r.s])) }), [rows, asof]);
 
-  // the visit ends when the reader leaves: what was shown is stored (the baseline of this month stays, lib/mySince.nextSeen)
+  // W4: the visit is recorded on arrival (and again whenever the list changes), not only on leaving: iOS Safari often never fires
+  // pagehide or the unmount, and then the baseline never started (red team 02.11.26). nextSeen keeps this month's baseline, so writing
+  // early loses nothing: on a new month the old snapshot becomes `prev` and baselineOf still compares against it.
+  const first = useRef(seen);  // what this browser had before this visit: the quiet line reads it, not the snapshot just written
   const ref = useRef({ raw, now }); ref.current = { raw, now };
-  useEffect(() => {
-    const mark = () => { const { raw: r, now: n } = ref.current; if (Object.keys(n.p).length) setRaw(nextSeen(normSeen(r), n)); };
-    addEventListener('pagehide', mark);
-    return () => { removeEventListener('pagehide', mark); mark(); };
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  const mark = () => { const { raw: r, now: n } = ref.current; if (!Object.keys(n.p).length) return; const nx = nextSeen(normSeen(r), n); if (JSON.stringify(nx) !== JSON.stringify(normSeen(r))) setRaw(nx); };
+  useEffect(() => { mark(); }, [now]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { addEventListener('pagehide', mark); return () => { removeEventListener('pagehide', mark); mark(); }; }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!rows.length) return null;
   const base = baselineOf(seen, asof);
   if (!base) {
-    return <p className="sv-muted ms-quiet">{seen.cur ? `מה השתנה: אין נתונים חדשים מאז הביקור הקודם (נתוני ${ym(asof)}). כשהרשות תפרסם חודש חדש, יופיע כאן מה זז במוצרים שלך.` : 'מהביקור הבא: כשהרשות תפרסם חודש חדש, יופיע כאן מה השתנה במוצרים שלך (מקום, דמי ניהול ותשואת החודש). נשמר בדפדפן הזה בלבד.'}</p>;
+    return <p className="sv-muted ms-quiet">{first.current.cur ? `מה השתנה: אין נתונים חדשים מאז הביקור הקודם (${ym(asof)}).` : 'מה השתנה: כשהרשות תפרסם חודש חדש, יופיע כאן מה זז במוצרים שלך.'}</p>;
   }
   const gap = monthsBetween(base.asof, asof);
   return (

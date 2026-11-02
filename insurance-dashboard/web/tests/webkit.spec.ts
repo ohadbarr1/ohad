@@ -227,3 +227,50 @@ test('scenario studio reprices in WebKit without sideways scroll', async ({ page
   await expect(boundary(page)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+/* W4 · the saver's /my on the owner's engine (red team 02.11.26): the picker's "מה יש לי" enters the saver door; the visit's baseline
+   is stored on arrival (iOS may never fire pagehide); a "?" opens on a tap; a deposit fee above the legal ceiling is refused inline;
+   two products fold to under 400 words with nothing sideways; and the fee tool opens on the saver's own track and a 4% return. */
+test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards in WebKit', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/'); await settle(page);
+  await expect(page.locator('.door-pill span').first()).toHaveText('בחירת דלת');
+  await page.locator('a.door-go.primary', { hasText: 'מה יש לי' }).first().click();
+  await expect(page).toHaveURL(/\/my$/);
+  expect(await page.evaluate(() => localStorage.getItem('fox:door'))).toBe('"saver"');
+  await expect(page.locator('.door-pill span').first()).toHaveText('חוסך');
+  await page.evaluate(() => localStorage.setItem('fox:mine', JSON.stringify([
+    { k: 'p9757', added: '2026-11-01', balance: 180000, monthly: 4000, fee: 0.25, depfee: 1.5 },
+    { k: 'g13502', added: '2026-11-01', balance: 120000, monthly: 1570, fee: 0.6 }])));
+  await page.goto('/my'); await settle(page);
+  await expect(page.locator('article#p9757')).toBeVisible();
+  const seen = await page.evaluate(() => JSON.parse(localStorage.getItem('fox:my:seen') ?? 'null'));
+  expect(seen?.cur?.p?.p9757, 'baseline stored on arrival').toBeTruthy();
+  // the folded page
+  const m = await page.evaluate(() => ({ words: (document.querySelector('main')!.innerText.match(/\S+/g) ?? []).length, side: document.documentElement.scrollWidth - innerWidth }));
+  expect(m.words, '/my with two products, folded').toBeLessThan(400);
+  expect(m.side, 'page scrolls sideways').toBeLessThanOrEqual(1);
+  await expect(page.locator('.sv-sum')).toContainText('דבר אחד לעשות');
+  // a "?" opens on a tap and closes on a tap elsewhere
+  const tip = page.locator('.sv-gloss .tip-b').first();
+  await tip.scrollIntoViewIfNeeded(); await tip.tap();
+  await expect(tip).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('.tip-p')).toBeVisible();
+  await page.locator('.sv-legal').tap();
+  await expect(tip).toHaveAttribute('aria-expanded', 'false');
+  // a 7% deposit fee in a השתלמות is refused (the ceiling is 4%)
+  const card = page.locator('article#g13502');
+  await card.locator('.sv-mine summary').click();
+  await card.locator('.sv-mine input').nth(3).fill('7');
+  await expect(card.locator('.sv-err')).toContainText('עד 4%');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fox:mine')!)[1].depfee ?? null)).toBeNull();
+  // the fee tool opens on the saver's first product, at 4%
+  await page.goto('/funds/tools/fees'); await settle(page);
+  await expect(page.locator('.fform select').nth(2)).toHaveValue('p9757');
+  await expect(page.locator('.fprivacy')).toContainText('הנחה שמרנית');
+  const tools = await page.evaluate(() => [...document.querySelectorAll('.scroll')].map((s) => s.scrollWidth - s.clientWidth));
+  expect(Math.max(...tools), 'a fee-tool table wider than the phone').toBeLessThanOrEqual(1);
+  await expect(boundary(page)).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

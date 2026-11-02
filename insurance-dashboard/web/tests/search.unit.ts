@@ -4,7 +4,7 @@
    web/public/data when it is there. Run: npm run test:search */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPool, ordered, rank, type FundEnt } from '../src/lib/searchOmni';
+import { buildPool, canon, ordered, rank, type FundEnt } from '../src/lib/searchOmni';
 import type { RegistryCompany } from '../src/lib/types';
 
 let fail = 0, pass = 0;
@@ -27,6 +27,12 @@ const funds: FundEnt[] = [
   ['הראל גמל מסלול לגילאי 50 ומטה', 'הראל', 'g9744', 'עד 50'],
   ['מיטב גמל לבני 50 עד 60', 'מיטב', 'g103', '50-60'],
   ['הפניקס-אקסלנס אינווסט תיק מנוהל אג"ח 2', 'הפניקס', 'i103', 'אג"ח'],
+  // W4: the index tracks, as the regulator spells them (s&p 500, S&P500, "עוקב S&P 500")
+  ['הראל השתלמות - עוקב מדד s&p 500', 'הראל', 'g13502', 'עוקב מדד S&P 500'],
+  ['הראל השתלמות כללי', 'הראל', 'g13500', 'כללי'],
+  ['אלטשולר שחם השתלמות עוקב S&P 500', 'אלטשולר שחם', 'g14862', 'עוקב מדד S&P 500'],
+  ['מיטב השתלמות עוקב מדד S&P500', 'מיטב', 'g13245', 'עוקב מדד S&P 500'],
+  ['הראל פנסיה עוקב מדד s&p 500', 'הראל', 'p13415', 'עוקב מדד S&P 500'],
 ];
 // a statement line and a question that carry the number, so the fund has to win on order, not on being alone
 const rows: [string, string, string, number][] = [['harel', 'bs', 'יתרה 1093 לסוף התקופה', 0]];
@@ -58,6 +64,21 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
   const full = list('אלטשולר שחם פנסיה מקיפה מסלול לבני 50 ומטה');
   ok(full[0]?.to === '/funds/p9757', `the full name: that track first (got ${full[0]?.to})`);
 }
+// 2b. W4 · S&P and passive synonyms (red team 02.11.26): "S&P" used to vanish (one-letter words and "&" are not indexed)
+{
+  ok(canon('S&P') === 'snp 500' && canon('s&p500') === 'snp 500' && canon('SP500') === 'snp 500' && canon('S & P 500') === 'snp 500' && canon('אס אנד פי') === 'snp 500', `canon: the spellings of S&P 500 meet (${canon('S&P')}, ${canon('SP500')}, ${canon('אס אנד פי')})`);
+  ok(canon('מחקה S&P 500') === 'עוקב snp 500' && canon('מסלול פסיבי') === 'מסלול עוקב', 'canon: מחקה / פסיבי → עוקב');
+  ok(canon('speed') === 'speed' && canon('spa 500') === 'spa 500', 'canon: other words untouched');
+  const snp = (q: string) => list(q).filter((x) => x.kind === 'קופה').map((x) => x.to);
+  const h = snp('השתלמות S&P');
+  ok(h.length >= 3 && h.slice(0, 3).every((t) => ['/funds/g13502', '/funds/g14862', '/funds/g13245'].includes(t)) && !h.includes('/funds/g1093') && !h.includes('/funds/g13500'), `"השתלמות S&P": the S&P השתלמות tracks, no general track (got ${h.join()})`);
+  const hr = list('הראל השתלמות S&P');
+  ok(hr[0]?.to === '/funds/g13502', `"הראל השתלמות S&P": Harel's S&P השתלמות first (got ${hr[0]?.to})`);
+  const m = snp('מחקה S&P 500');
+  ok(m.length >= 4 && m.every((t) => ['/funds/g13502', '/funds/g14862', '/funds/g13245', '/funds/p13415'].includes(t)), `"מחקה S&P 500": the S&P tracks (got ${m.join()})`);
+  for (const q of ['SP500', 'אס אנד פי', 's&p500', 'השתלמות sp500']) ok(snp(q).includes('/funds/g13502'), `"${q}" finds the S&P tracks`);
+  ok(list('עוקב S&P').some((x) => x.to === '/funds/trackers') || snp('עוקב S&P').length > 0, '"עוקב S&P": tracks or the trackers lab');
+}
 // 3. the old leads: a company and a screen code; a company alone
 {
   const l = list('הראל csm');
@@ -76,6 +97,12 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
     let miss = 0;
     for (const [, , k] of withKey) { const l = ordered(rank(k!.length >= 4 ? k!.slice(1) : k!, real, (s) => s)); /* a 1-2 digit number by its key (i50) */ const n = l.findIndex((x) => x.to === `/funds/${k}`); if (n < 0 || n > 2 || l[0].kind !== 'קופה') miss++; }
     ok(miss === 0, `every fund number (3-6 digits; shorter ones by key) lists its track first (${miss} misses)`);
+    const sh = ordered(rank('הראל השתלמות S&P', real, (s) => s));
+    ok(sh[0]?.to === '/funds/g13502', `published data: "הראל השתלמות S&P" opens g13502 (got ${sh[0]?.to})`);
+    const hs = ordered(rank('השתלמות S&P', real, (s) => s)).filter((x) => x.kind === 'קופה');
+    ok(hs.length >= 3 && hs.every((x) => /s&p|S&P/i.test(x.label) && /השתלמות/.test(x.label)), `published data: "השתלמות S&P" lists S&P השתלמות tracks only (got ${hs.map((x) => x.label).join(' | ')})`);
+    const mk = ordered(rank('מחקה S&P 500', real, (s) => s)).filter((x) => x.kind === 'קופה');
+    ok(mk.length >= 3 && mk.every((x) => /s&p|S&P/i.test(x.label)), `published data: "מחקה S&P 500" finds S&P tracks (${mk.length})`);
     const alt = ordered(rank('אלטשולר שחם פנסיה מקיפה', real, (s) => s));
     ok(alt[0]?.to === '/funds/p9757', `published data: "אלטשולר שחם פנסיה מקיפה" opens p9757 (got ${alt[0]?.to})`);
   } else console.log('search: web/public/data absent, smoke run skipped');

@@ -54,7 +54,7 @@ const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 
 const FTOOLS = ([
   [['דמי', 'ניהול', 'קריירה', 'פרישה', 'קצבה', 'עלות', 'מחשבון', 'fees', 'fee'], 'דמי ניהול לאורך קריירה', 'כמה עולים דמי ניהול מהפקדה ומצבירה עד הפרישה, בשקלים ובקצבה', '/funds/tools/fees'],
   [['קרנות', 'ברירת', 'מחדל', 'נבחרות', 'מכרז', 'מכרזים', 'default'], 'קרנות ברירת מחדל · המכרזים והזוכות', 'המחיר, הזוכות, ומה קרה לכסף לפני ואחרי', '/funds/default'],
-  [['עוקב', 'עוקבי', 'מדד', 'מדדים', 's&p', '500', 'פסיבי', 'tracker', 'index'], 'מעבדת עוקבי המדד', 'אותו מדד בעטיפות שונות: הפער הוא מחיר העטיפה', '/funds/trackers'],
+  [['עוקב', 'עוקבי', 'מדד', 'מדדים', 'snp', '500', 'tracker', 'index'], 'מעבדת עוקבי המדד', 'אותו מדד בעטיפות שונות: הפער הוא מחיר העטיפה', '/funds/trackers'],
 ] as [string[], string, string, string][]).map(([w, l, m, to]): [string[], string, string, string] => [w.map(normalize), l, m, to]);
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
@@ -62,6 +62,15 @@ const TYPE_WORDS: [DocType, string[]][] = [
   ['presentation', ['מצגת', 'מצגות', 'presentation', 'deck', 'מצגת משקיעים']], ['solvency', ['סולבנסי', 'סולבנצי', 'פירעון', 'solvency', 'כושר', 'sii', 'סולבנסי2']],
   ['annual', ['שנתי', 'תקופתי', 'annual']], ['quarterly', ['רבעוני', 'רבעון', 'quarterly']],
 ];
+
+/** W4 · the names a saver types for an index track, in one form on both sides (the query and the fund names): "S&P 500", "s&p500",
+ *  "S&P", "SP500", "SPX", "אס אנד פי" → "snp 500" (the word index drops one-letter words and "&", so "S&P" alone used to vanish);
+ *  and the words for a passive track, "מחקה", "פסיבי", "פאסיבי" → "עוקב" (the regulator names them עוקב / עוקבי מדדים). */
+const SNP = /(?:\bs\s*&\s*p(?![a-z])|\bs\s*and\s*p\b|\bsp(?=\s*-?\s*500)|\bspx\b|אס\s*[-&.]?\s*(?:אנד|אנ'ד|ו|&)\s*[-&.]?\s*פי)\s*-?\s*(?:500\b)?/giu;
+const PASSIVE = /(^|[\s\-־])[ו]?(?:מחקה|מחקי|מחקים|פסיבי|פאסיבי|פסיביים|פאסיביים)(?=$|[\s\-־.,])/gu;
+export function canon(q: string): string {
+  return q.replace(SNP, ' snp 500 ').replace(PASSIVE, '$1עוקב').replace(/\s+/g, ' ').trim();
+}
 
 export interface Parsed { words: string[]; company: RegistryCompany | null; period: string | null; type: DocType | null; rest: string[]; restText: string }
 
@@ -87,7 +96,7 @@ export function companyNames(reg: RegistryCompany[]): { c: RegistryCompany; name
 
 /** The query split into a company, a period, a document kind and the words left to search. */
 export function parse(q: string, names: ReturnType<typeof companyNames>): Parsed {
-  const { period, text } = parsePeriod(q);
+  const { period, text } = parsePeriod(canon(q));
   const all = terms(text);
   // the longest company name found among the words, also behind prefix letters ("בהראל")
   let company: RegistryCompany | null = null, at = -1, len = 0;
@@ -113,7 +122,7 @@ export function buildPool(reg: RegistryCompany[], groups: string[], funds: FundE
     reg, names: companyNames(reg),
     questions: questions.map((x) => ({ id: x.id, q: x.q, cos: x.cos, words: terms(x.q) })),
     groups: groups.map((g) => ({ label: g, words: terms(g) })),
-    funds: funds.map(([label, grp, k, track]) => ({ label, grp, k, id: k?.slice(1), track, words: terms(label) })),
+    funds: funds.map(([label, grp, k, track]) => ({ label, grp, k, id: k?.slice(1), track, words: terms(canon(label)) })),
     rows: rows.map(([c, sheet, label, i]) => ({ c, sheet, label, i, words: terms(label) })),
   };
 }

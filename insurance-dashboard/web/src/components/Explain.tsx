@@ -38,7 +38,9 @@ export function Tip({ k }: { k: keyof typeof EXPLAIN | string }) {
   }, [open]);
   if (!e) return null;
   return (
-    <span className="tip" ref={ref} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    // hover opens it only for a real mouse: on a phone the tap's emulated mouseenter opened it and the click then closed it again (the
+    // iPhone red team, 02.11.26: aria-expanded stayed false), and iOS may skip the click when hover changes the page
+    <span className="tip" ref={ref} onPointerEnter={(e) => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={(e) => { if (e.pointerType === 'mouse') setOpen(false); }}>
       <button type="button" className="tip-b" aria-label={`מה זה ${e[0]}`} aria-expanded={open} aria-describedby={open ? id : undefined} onClick={(ev) => { ev.stopPropagation(); setOpen((o) => !o); }}>?</button>
       {open && <span className="tip-p" role="tooltip" id={id}><b>{e[0]}</b> {e[1]}</span>}
     </span>

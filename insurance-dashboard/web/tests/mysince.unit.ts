@@ -82,5 +82,20 @@ const S = (asof: number, p: Record<string, Partial<SnapP>> = {}): MySnap => ({ v
   ok(removeFolder(file, file.folders[0].id).folders.length === 0, 'remove');
 }
 
+/* W4 · the visit is written on arrival at /my (iOS often never fires pagehide): writing first and reading after must still show the
+   changes of a new month, and writing again in the same visit (a reload, a product added) must not move the baseline */
+{
+  const july = S(202607, { a: { lo: 3, hi: 3, n: 7, tone: 'mid', fee: 0.2 } });
+  let seen = nextSeen({ cur: null, prev: null }, july);   // first visit, written on arrival
+  ok(baselineOf(seen, 202607) === null && seen.cur?.asof === 202607, 'arrival, first visit: stored at once, nothing to compare yet');
+  const aug = S(202608, { a: { lo: 7, hi: 7, n: 7, tone: 'bad', fee: 0.25 } });
+  seen = nextSeen(seen, aug);                              // next month: written on arrival, before the section reads it
+  const base = baselineOf(seen, 202608);
+  ok(base?.asof === 202607 && changesOf(base.p.a, aug.p.a).some((c) => c.kind === 'quart' && c.text.includes('ירד לרבע התחתון')), 'arrival on a new month: written first, the July snapshot is still the baseline');
+  seen = nextSeen(seen, S(202608, { a: { lo: 7, hi: 7, n: 7, tone: 'bad', fee: 0.25 }, b: {} }));
+  seen = nextSeen(seen, aug);
+  ok(baselineOf(seen, 202608)?.asof === 202607 && !!seen.cur?.p.b, 'written again in the same month (a product added, a reload): same baseline, the new product kept');
+}
+
 console.log(`mysince: ${pass} passed, ${fail} failed`);
 if (fail) { bad.forEach((b) => console.log('  ✗ ' + b)); process.exit(1); }

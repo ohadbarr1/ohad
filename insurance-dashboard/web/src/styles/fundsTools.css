@@ -49,3 +49,28 @@ table.fgrid td.hit { outline: 2px solid var(--fg); outline-offset: -2px; }
 .ftender a { text-decoration: underline; text-underline-offset: 3px; }
 .ftender .src { font-size: var(--t-1); }
 tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
+
+/* ---- W4: the fee tool on a phone (red team 02.11.26): no table wider than the screen ---- */
+.ferr { margin: 0; font-size: var(--t-3); font-weight: 600; color: color-mix(in oklch, var(--down) 85%, var(--fg)); line-height: 1.45; }
+.ferr a { color: var(--link); }
+.fpair input[aria-invalid="true"] { border-color: color-mix(in oklch, var(--down) 60%, transparent); }
+.fgrid-c { display: inline-block; max-width: 7em; line-height: 1.25; }
+@media (max-width: 640px) {
+  /* a row is a card: its name on top, each figure on a line with its column's name */
+  table.fcards, table.fcards tbody, table.fcards tr, table.fcards td, table.fcards tbody th { display: block; width: 100%; box-sizing: border-box; }
+  table.fcards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.fcards tr { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 8px 10px; margin-bottom: 8px; background: var(--panel); }
+  table.fcards tbody th, table.fcards td:first-child:not([data-label]) { font-weight: 700; padding: 0 0 4px; border: 0; font-size: var(--t-4); }
+  table.fcards td[data-label] { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 3px 0; border: 0; font-size: var(--t-4); text-align: start; }
+  table.fcards td[data-label]::before { content: attr(data-label); color: var(--muted); font-size: var(--t-3); font-weight: 600; }
+  table.fcards tr.fme { border-color: var(--warn); box-shadow: none; }
+  table.fcards tr.fme td { border: 0; }
+  table.fcards tr.fme td:first-child { box-shadow: none; }
+  table.fgrid { font-size: 13px; border-spacing: 1px; }
+  .panel table.fgrid th, .panel table.fgrid td { padding: 5px 1px; min-width: 0; max-width: none; white-space: nowrap; }
+  .panel table.fgrid th { font-size: 13px; }
+  .panel table.fgrid thead th:first-child { white-space: normal; }
+  .panel table.fgrid .src { padding-inline: 0; margin-inline: 0; min-width: 0; }
+  .panel table.fcards td, .panel table.fcards th { min-width: 0; max-width: none; }
+  .fgrid-c { font-size: 13px; max-width: 4.3em; }
+}

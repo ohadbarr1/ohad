@@ -2,11 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ErrorBox, Loading } from '../components/ui';
 import { Icon } from '../components/Icon';
+import { Sourced } from '../components/Source';
 import { useFundCats, useFunds } from '../lib/useData';
 import { useOptional } from '../lib/fundsLoad';
-import { useMine, type MyProduct } from '../lib/mine';
+import { useMine, useMyAge, useMySex, type MyProduct } from '../lib/mine';
+import { useSaverDoor } from '../lib/door';
 import type { CatX, FundX, FundsFile } from '../lib/funds';
 import type { DefaultFile } from '../lib/fundsTools';
+import type { Prov } from '../lib/prov';
+import { AGE_DEFAULT, RETIRE_AGE, RET_FALLBACK, coefOf, ilsRound } from '../lib/retire';
+import { cardCalc, summaryOf, type SumRow } from '../lib/myCalc';
+import { pcf } from '../lib/verdict';
+import { DECISION_PATH, type DecisionFile } from '../lib/decision';
 import { Picker } from '../components/saver/Picker';
 import { ProductCard } from '../components/saver/ProductCard';
 import { GlossBar } from '../components/saver/Gloss';
@@ -14,18 +21,22 @@ import { MaslakaImport } from '../components/saver/MaslakaImport';
 import { SinceVisit } from '../components/saver/SinceVisit';
 import '../styles/saver.css';
 
-/* /my, "המוצרים שלי" (W1 saver door, plan 01.11.26 Exhibit 4): what you have → a report card per product, in plain Hebrew and in ₪.
-   The list lives in this browser only (lib/mine). Descriptive, never advice: no "move", no "stay". With nothing saved yet: the picker,
-   and one example card clearly marked "דוגמה" (the red team's story: a default pension fund last on 5Y). */
+/* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26): the reader's age once, a strip that adds up what they
+   pay and what the pension funds may pay, the one thing worth asking for, then a folded card per product. The list lives in this
+   browser only (lib/mine). Descriptive, never advice: no "move", no "stay". With nothing saved yet: the picker, and one example card
+   clearly marked "דוגמה". Entering /my with no door chosen is entering the saver door. */
 const EXAMPLE = 'p9757';
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function My() {
+  useSaverDoor();
   const { data: raw, error } = useFunds();
   const data = raw as FundsFile | undefined;
   const cats = useFundCats().data as Record<string, CatX> | undefined;
   const dfile = useOptional<DefaultFile>('funds/default.json');
+  const dec = useOptional<DecisionFile>(DECISION_PATH);
   const [mine, setMine] = useMine();
+  const [ageS] = useMyAge(), [sex] = useMySex();
   const [adding, setAdding] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const loc = useLocation();
@@ -34,6 +45,9 @@ export function My() {
 
   // a link from the fund card (/my#p9757) lands on that product
   useEffect(() => { if (data && loc.hash) document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' }); }, [data, loc.hash]);
+
+  const rows: SumRow[] = useMemo(() => (!data || dfile === undefined ? [] : list.flatMap((m) => { const f = byK.get(m.k); return f ? [{ k: f.k, name: f.name, prod: f.prod, c: cardCalc(f, data.funds as FundX[], data.asof, dfile, m, dec, { age: ageS ?? AGE_DEFAULT, coef: coefOf(sex).v, ret: RET_FALLBACK }) }] : []; })),
+    [data, dfile, dec, list, byK, ageS, sex]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data || dfile === undefined) return <Loading what="המוצרים שלך" />;
@@ -50,11 +64,12 @@ export function My() {
       <div className="pagehead"><div>
         <span className="eyebrow">החיסכון שלי</span>
         <h1><span className="icotile"><Icon name="mine" /></span>המוצרים שלי</h1>
-        <div className="sub sv-sub">כמה אתם משלמים, איפה המסלול שלכם עומד מול דומיו, ומה לבקש. במילים ובשקלים. נתוני הרשות לשוק ההון עד {asof}.</div>
+        <div className="sub sv-sub">כמה אתם משלמים ואיפה המסלול עומד מול דומיו, במילים ובשקלים. נתוני הרשות לשוק ההון עד {asof}.</div>
       </div></div>
 
-      <p className="sv-privacy"><Icon name="shield" /> הרשימה נשמרת רק בדפדפן הזה. שום נתון לא נשלח, ואין צורך בהרשמה.</p>
+      <AgeRow />
       {msg && <p className="sv-done" role="status">{msg}</p>}
+      {rows.length > 0 && <Strip rows={rows} />}
 
       {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
 
@@ -74,7 +89,7 @@ export function My() {
 
       <Link to="/my/statement" className="panel sv-stmt">
         <span className="icotile"><Icon name="statement" /></span>
-        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>שדה אחר שדה: יתרה, הפקדות, שני סוגי דמי הניהול, כיסויים, מוטבים והקצבה הצפויה, ומה לבדוק כאן באתר.</span></span>
+        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>הגרסה של שתי דקות, ואחריה שדה אחר שדה.</span></span>
         <span className="sv-stmt-go" aria-hidden="true">←</span>
       </Link>
 
@@ -83,8 +98,62 @@ export function My() {
         <ProductCard f={ex} data={data} cats={cats} dfile={dfile} example onAdd={() => add(EXAMPLE)} />
       </section>}
 
+      <p className="sv-privacy"><Icon name="shield" /> הכול נשמר רק בדפדפן הזה. שום נתון לא נשלח, ואין הרשמה.</p>
       <GlossBar />
-      <p className="sv-legal">המידע כאן תיאורי: מקום, דמי ניהול ותנאים, מתוך נתוני רשות שוק ההון ומקורות שמסומנים לצד כל מספר. אין כאן ייעוץ השקעות, ייעוץ פנסיוני או שיווק פנסיוני, ואין המלצה לעבור או להישאר. האומדנים מבוססים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
+      <p className="sv-legal">מידע תיאורי מנתוני רשות שוק ההון, עם מקור לכל מספר. לא ייעוץ השקעות, לא ייעוץ או שיווק פנסיוני, ואין המלצה לעבור או להישאר. האומדנים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
     </div>
   );
+}
+
+/** the reader's age (and, for the conversion coefficient, sex), asked once and used on every card and in the fee tool */
+function AgeRow() {
+  const [age, setAge] = useMyAge();
+  const [sex, setSex] = useMySex();
+  const [raw, setRaw] = useState(age == null ? '' : String(age));
+  const [was, setWas] = useState(age);
+  if (was !== age) { setWas(age); setRaw(age == null ? '' : String(age)); }
+  const bad = raw !== '' && !(Number(raw) >= 16 && Number(raw) <= 66);
+  return (
+    <div className="sv-who" role="group" aria-label="הגיל שלך">
+      <label className="sv-who-age"><span>גיל</span>
+        <input type="number" inputMode="numeric" min={16} max={66} step={1} placeholder={String(AGE_DEFAULT)} value={raw} aria-invalid={bad}
+          onChange={(e) => { const t = e.target.value; setRaw(t); const x = Number(t); if (t !== '' && Number.isInteger(x) && x >= 16 && x <= 66) setAge(x); }} />
+      </label>
+      {age == null ? <span className="sv-a sv-who-ex">{AGE_DEFAULT} לדוגמה, שנו</span> : bad ? <span className="sv-err">גיל בין 16 ל-66</span> : null}
+      <span className="sv-rets" role="group" aria-label="מין, למקדם הקצבה">
+        {([['f', 'אישה'], ['m', 'גבר']] as const).map(([k, l]) => <button key={k} type="button" className="sv-chip sm" aria-pressed={sex === k} onClick={() => setSex(sex === k ? null : k)}>{l}</button>)}
+      </span>
+      <span className="sv-a">לא חובה, למקדם הקצבה</span>
+    </div>
+  );
+}
+
+/** the strip at the top: what the reader pays this year, the pension estimate, and the one thing worth asking for */
+function Strip({ rows }: { rows: SumRow[] }) {
+  const s = summaryOf(rows);
+  const feesProv = (): Prov => ({ k: 'calc', est: true, title: 'דמי ניהול בשנה, כל המוצרים', value: ilsRound(s.fees), formula: 'לכל מוצר: היתרה × דמי הניהול מצבירה, ועוד 12 הפקדות × דמי הניהול מהפקדה. דמי הניהול שלך כשהזנת, אחרת הממוצע במסלול',
+    note: [s.feesAvg ? 'בחלק מהמוצרים: דמי הניהול הממוצעים במסלול, לא שלך' : null, s.feesEx ? 'בחלק מהמוצרים: יתרה או הפקדה לדוגמה' : null].filter(Boolean).join('. ') || undefined,
+    inputs: rows.map((r) => ({ label: `${r.name} (${r.c.v.fee.own ? 'שלך' : 'ממוצע'}: ${pcf(r.c.mine.fee)} / ${pcf(r.c.mine.depfee)})`, v: ilsRound(r.c.annual.total) })) });
+  const penProv = (): Prov => ({ k: 'calc', est: true, title: `קצבה חודשית מקרנות הפנסיה בגיל ${RETIRE_AGE}, בשקלי היום · אומדן`, value: ilsRound(s.pension ?? 0),
+    formula: 'סכום האומדנים של כל קרן פנסיה ברשימה: החיסכון בגיל 67 ÷ מקדם ההמרה. תשואה שמרנית של 4% ברוטו, הפקדה שעולה 2% בשנה, אינפלציה 2%',
+    note: 'אומדן גס. לא מנכה את עלות הכיסוי הביטוחי, לא כולל מוצרים שאינם קרן פנסיה, קצבת זקנה מביטוח לאומי או מס',
+    inputs: rows.filter((r) => r.prod.startsWith('פנסיה')).map((r) => ({ label: r.name, v: ilsRound(r.c.out.pensionReal) })) });
+  const a = s.act;
+  return (
+    <section className="panel sv-sum" aria-label="התמונה בקצרה">
+      <dl className="sv-kpis">
+        <div><dt>דמי ניהול בשנה</dt><dd><Sourced src={feesProv}><b className="num">{ilsRound(s.fees)}</b></Sourced></dd><span className="sv-a">{rows.length > 1 ? `כל ${rows.length} המוצרים` : 'המוצר'}{s.feesAvg ? ', חלקם לפי הממוצע במסלול' : ', לפי דמי הניהול שלך'}{s.feesEx ? ', עם נתונים לדוגמה' : ''}</span></div>
+        {s.pension != null && <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><span className="sv-a">בגיל {RETIRE_AGE}, בשקלי היום, תשואה 4%</span></div>}
+      </dl>
+      <p className="sv-one"><b>דבר אחד לעשות:</b>{' '}
+        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>: {a.ref === 'med' ? 'מול החציון בקטגוריה' : 'מול תנאי ברירת המחדל'}, הפער מגיע לכ-{ilsRound(a.v)} {a.prod === 'השתלמות' ? `בתוך ${a.years} שנים` : 'עד הפרישה'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. ההודעה מוכנה בכרטיס.</>
+          : a.kind === 'enter' ? <>להזין את דמי הניהול מהדוח השנתי ב<a href={`#${a.k}`}>{a.name}</a>: בלי זה החישוב לפי הממוצע במסלול.</>
+          : <>לבדוק בדוח השנתי שהמוטבים מעודכנים (<Link to="/my/statement#st-ben">איפה זה בדוח</Link>). דמי הניהול שלך לא גבוהים מהחציון באף מוצר.</>}
+      </p>
+    </section>
+  );
+}
+/** "קרן הפנסיה" / "קרן ההשתלמות" when the reader has one of each; the full name otherwise */
+function shortName(name: string, prod: string) {
+  return prod === 'פנסיה מקיפה' || prod === 'פנסיה כללית' ? 'קרן הפנסיה' : prod === 'השתלמות' ? 'קרן ההשתלמות' : name;
 }
