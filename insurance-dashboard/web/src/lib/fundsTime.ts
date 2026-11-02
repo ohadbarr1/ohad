@@ -414,3 +414,16 @@ export function retBetween(p: number[], y: (number | null)[], from: number, to: 
   for (const x of ps) { const v = y[p.indexOf(x)]; if (v == null) return null; g *= 1 + v / 100; }
   return { r: (g - 1) * 100, ps };
 }
+
+/** W5 · the head-to-head's full-history drawdown on one window (red team 3: "ירידה מרבית, כל ההיסטוריה" compared tracks over histories
+ *  of different lengths). The common window is the overlap of every track's consecutive run of published months ending at `end`: from
+ *  the latest first month to `end`. Each track's drawdown is then measured over that window only. Null when a track has no run. */
+export function commonDd(items: { p: number[]; y: (number | null)[] }[], end: number): { months: number[]; dd: (number | null)[] } | null {
+  if (!items.length) return null;
+  const starts = items.map((it) => { const m = new Map(it.p.map((x, i) => [x, it.y[i]])); let p = end; if (m.get(p) == null) return null; while (m.get(addM(p, -1)) != null) p = addM(p, -1); return p; });
+  if (starts.some((s) => s == null)) return null;
+  const from = Math.max(...(starts as number[]));
+  const months: number[] = []; for (let p = from; p <= end; p = addM(p, 1)) months.push(p);
+  if (months.length < 2) return null;
+  return { months, dd: items.map((it) => { const r = alignOn(it.p, it.y, months); return r.some((x) => x == null) ? null : drawdown(r as number[]).max; }) };
+}

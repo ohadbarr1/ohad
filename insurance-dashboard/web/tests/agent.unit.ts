@@ -15,6 +15,8 @@ import { winnerTrack } from '../src/lib/pensionPack';
 import { heldOf, parseMaslaka, readCovers, rowsOf, xmlTree, type MFund } from '../src/lib/maslaka';
 import { folderFromImport } from '../src/components/agent/ClientImport';
 import { bmCompare, bmLine, coefOk, newCoefDefault } from '../src/lib/bmCalc';
+import { commonDd } from '../src/lib/fundsTime';
+import { RULE } from '../src/lib/productRules';
 
 let fail = 0, pass = 0;
 const bad: string[] = [];
@@ -159,6 +161,17 @@ ok(normHeld({ typeHe: 'קרן פנסיה', provider: 'מור', plan: '039123456 
   ok(lo.diff < 0 && /נמוכה ב-9%/.test(bmLine(lo, 220, 200)) && lo.feeG === null, `W5: a coefficient above the new fund's gives less: ${bmLine(lo, 220, 200)}`);
   ok(bmCompare({ balance: 100000, coefG: 16, coefNew: 200 }) === null && !coefOk(16) && coefOk(160) && bmCompare({ balance: 0, coefG: 160, coefNew: 200 }) === null, 'W5: a typo coefficient or no balance: no result');
   ok(newCoefDefault('m').v === 188 && newCoefDefault('f').v === 204 && newCoefDefault(null).v === 200, 'W5: the new-fund default is the site\'s assumption (lib/retire)');
+}
+/* ---- W5: the head-to-head drawdown on the common window; the tax note cites the report it dates ---- */
+{
+  // A: 6 months, a −20% crash in its first months; B: the last 3 months only
+  const A = { p: [202601, 202602, 202603, 202604, 202605, 202606], y: [-10, -11.111111, 5, 1, -2, 1] as (number | null)[] };
+  const B = { p: [202604, 202605, 202606], y: [2, -3, 1] as (number | null)[] };
+  const c = commonDd([A, B], 202606)!;
+  ok(c.months.join() === '202604,202605,202606', `W5: the common window is the overlap (${c.months.join()})`);
+  ok(c.dd[0] != null && c.dd[0] > -3 && near(c.dd[1]!, -3, 1e-9), `W5: A's drawdown is measured on the window, not on its crash before it (${c.dd[0]?.toFixed(2)}, ${c.dd[1]})`);
+  ok(commonDd([A, { p: [202605], y: [null] }], 202606) === null, 'W5: a track with no run ending at the last month: no common window');
+  ok(!/02\.2025/.test(RULE.gemelInvest.watch ?? '') && /07\.2026/.test(RULE.gemelInvest.watch ?? '') && /סעיפים 5\.1/.test(RULE.policy.watch ?? ''), 'W5: the pending change is dated and cited to the July 2026 report');
 }
 ok(shortUrl('https://www.gov.il/BlobFolder/x/%D7%9E%D7%A6%D7%92%D7%AA.pdf') === 'gov.il › מצגת.pdf', 'W4: a source address prints as a short decoded title');
 

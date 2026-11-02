@@ -21,7 +21,7 @@ export interface FeeDist { prod: string; track: string | null; unit: FeeUnit; fe
 
 export const MIN_N = 5;
 export const Q = [0.1, 0.25, 0.5, 0.75, 0.9] as const;
-export const FEE_DIST_F = 'אחוזונים בשיטת אינטרפולציה לינארית בין ערכי הסדר (כמו PERCENTILE.INC באקסל): p = x₍ⱼ₎ + (h − j)(x₍ⱼ₊₁₎ − x₍ⱼ₎), h = (n − 1)·q';
+export const FEE_DIST_F = 'אחוזונים בשיטת אינטרפולציה לינארית בין ערכי הסדר (השיטה הרגילה של אקסל): p = x₍ⱼ₎ + (h − j)(x₍ⱼ₊₁₎ − x₍ⱼ₎), h = (n − 1)·q';
 const selfDirected = (name: string) => /בניהול אישי|\bIRA\b/.test(name);
 
 /** p10…p90 of a set of values, or null below MIN_N */

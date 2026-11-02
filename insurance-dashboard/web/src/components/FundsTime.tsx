@@ -11,7 +11,7 @@ import { monthIn, type TrackRef } from '../lib/market';
 import { useSource, type Prov } from '../lib/prov';
 import { GROUP_ID, idColor } from '../lib/identity';
 import { NET_LABEL, NET_NOTE, PCT_F, catKey, netMonthIn, netSeries, pc, refOf, useBasis, type Basis, type CatX, type FundX, type HistX } from '../lib/funds';
-import { RISK_F, RISK_LABEL, RISK_UNIT, STAT_KEYS, backM, pickSet, rankSeries, riskFromHist, toggleWatch, isWatched, type RankMetric, type StatKey, type StatVals } from '../lib/fundsTime';
+import { RISK_F, RISK_LABEL, RISK_UNIT, STAT_KEYS, backM, commonDd, pickSet, rankSeries, riskFromHist, toggleWatch, isWatched, type RankMetric, type StatKey, type StatVals } from '../lib/fundsTime';
 import { membersOf, useCatFiles, useClosed, useHists, useRf, useWatch, snapOf, yOf } from '../lib/fundsTimeLoad';
 import { today } from '../lib/visits';
 import '../styles/funds-time.css';
@@ -131,18 +131,23 @@ export function CompareRisk({ items, cats }: { items: { f: FundX; h: HistX }[]; 
   const end = items.length ? Math.min(...items.map((it) => it.h.p[it.h.p.length - 1])) : 0;
   const rf = useRf(end);
   const rows = useMemo(() => items.map((it) => { const c = cats?.[catKey(it.f)]; const cs = c ? { p: c.p, y: (b === 'net' ? c.yn : null) ?? c.y } : null; return { ...it, c: c ?? null, s: riskFromHist(it.h, yOf(it.h, b), end, cs, rf) }; }), [items, cats, b, end, rf]);
+  // W5: the full-history drawdown on the window all the tracks share, not on each track's own history
+  const cdd = useMemo(() => commonDd(items.map((it) => ({ p: it.h.p, y: yOf(it.h, b) })), end), [items, b, end]);
+  const ddRows = useMemo(() => rows.map((r, i) => ({ ...r, s: r.s ? { ...r.s, dd_max_all: cdd?.dd[i] ?? null } : r.s })), [rows, cdd]);
   if (!items.length) return null;
   const months = backM(end, 36);
+  const mmyy = (p: number) => `${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`;
+  const cw = cdd ? `${mmyy(cdd.months[0])}–${mmyy(cdd.months[cdd.months.length - 1])}` : null;
   return (
     <Panel title={<>סיכון, 36 חודשים <Tip k="sd" /></>} aside={<><span className="num">עד {String(end % 100).padStart(2, '0')}/{String(Math.floor(end / 100)).slice(2)}</span><span className={`chip${b === 'net' ? ' est' : ''}`}>{b === 'net' ? NET_LABEL : 'ברוטו'}</span><span className="chip">נומינלי</span></>}>
       <div className="scroll"><table className="frisk">
         <thead><tr><th>מדד</th>{rows.map((r) => <th key={r.f.k} title={r.f.name}>{r.f.name.length > 26 ? r.f.name.slice(0, 24) + '…' : r.f.name}</th>)}</tr></thead>
         <tbody>{STAT_KEYS.map((k) => (
-          <tr key={k}><td>{RISK_LABEL[k]} {TIPS[k] && <Tip k={TIPS[k]!} />}</td>
-            {rows.map((r) => <td key={r.f.k}>{r.s?.[k] == null ? <span className="muted">–</span> : <Sourced src={() => statProv(r.f.name, refOf(r.f), r.h, k, r.s![k], months, b, 'browser', { label: catKey(r.f), c: r.c })}><span className="num">{statText(k, r.s[k])}</span></Sourced>}</td>)}</tr>
+          <tr key={k}><td>{k === 'dd_max_all' ? <>ירידה מרבית, בחלון המשותף{cw && <span className="dim num"> {cw}</span>}</> : RISK_LABEL[k]} {TIPS[k] && <Tip k={TIPS[k]!} />}</td>
+            {ddRows.map((r) => <td key={r.f.k}>{r.s?.[k] == null ? <span className="muted">–</span> : <Sourced src={() => statProv(r.f.name, refOf(r.f), r.h, k, r.s![k], k === 'dd_max_all' && cdd ? cdd.months : months, b, 'browser', { label: catKey(r.f), c: r.c })}><span className="num">{statText(k, r.s[k])}</span></Sourced>}</td>)}</tr>
         ))}</tbody>
       </table></div>
-      <div className="fnote">אותו חלון לכל המסלולים (36 החודשים שמסתיימים בחודש האחרון המשותף). בטא, סטיית מעקב ולכידה: כל מסלול מול ממוצע הקטגוריה שלו, לכן מסלולים מקטגוריות שונות אינם מושווים על אותו בסיס. מסלול בלי 36 חודשים רצופים: ריק.</div>
+      <div className="fnote">אותו חלון לכל המסלולים (36 החודשים שמסתיימים בחודש האחרון המשותף). ירידה מרבית בחלון המשותף: על החודשים שיש לכל המסלולים ברצף{cw ? ` (${cw}, ${cdd!.months.length} חודשים)` : ''}, כדי שמסלול עם היסטוריה ארוכה לא יושווה על תקופה אחרת. בטא, סטיית מעקב ולכידה: כל מסלול מול ממוצע הקטגוריה שלו, לכן מסלולים מקטגוריות שונות אינם מושווים על אותו בסיס. מסלול בלי 36 חודשים רצופים: ריק.</div>
     </Panel>
   );
 }

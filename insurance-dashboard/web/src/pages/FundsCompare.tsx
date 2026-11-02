@@ -122,6 +122,9 @@ export function FundsCompare() {
   }, [items, win]);
   const sameCat = items.length > 0 && items.every((it) => catKey(it.f) === catKey(items[0].f));
   const mixedProd = new Set(items.map((it) => it.f.prod)).size > 1;
+  // W5 (red team 3): each caveat only when its product is on the page
+  const mixedWhy = [items.some((it) => isPension(it.f)) && 'פנסיה כוללת אג"ח מיועדות', items.some((it) => it.f.prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)') && 'פוליסות חיסכון חולקות מסלול עם ביטוחי מנהלים'].filter(Boolean);
+  const mixedNote = mixedWhy.length ? `מוצרים שונים: ${mixedWhy.join('; ')}` : 'מוצרים שונים';
   const cat = sameCat && cats ? cats[catKey(items[0].f)] : undefined;
   // the category line: net only when the build publishes the category's net (yn); never a gross average against net tracks
   const catY = cat ? (netAsk ? (cat.yn && cat.yn.length === cat.p.length ? cat.yn : null) : cat.y) : null;
@@ -313,7 +316,7 @@ export function FundsCompare() {
   const pickerOpen = !phone || edit || keys.length === 0;
   return (
     <>
-      <FundsHead sub={<>השוואה ראש בראש · עד {TRAY_MAX} מסלולים · {ym(asof)}</>} tools={<BasisToggle />} />
+      <FundsHead title="השוואת מסלולים" sub={<>השוואה ראש בראש · עד {TRAY_MAX} מסלולים · {ym(asof)}</>} tools={<BasisToggle />} />
       {pickerOpen ? <Picker data={data} keys={keys} setKeys={setKeys} win={<Seg label="חלון" value={win} onChange={(w) => set({ win: w })} options={WINDOWS} />} />
         : null}
       {pickerOpen && phone && keys.length > 0 && <div className="cmp-actions"><button type="button" className="chip" onClick={() => setEdit(false)}>סיום הבחירה</button></div>}
@@ -323,7 +326,7 @@ export function FundsCompare() {
           {(mixedProd || !sameCat || loadingN > 0 || unknown.length > 0 || real || dropped > 0) && <div className="fwarn">
             {dropped > 0 && <span className="chip est" role="status">עד {TRAY_MAX} מסלולים; {dropped === 1 ? 'מסלול אחד הושמט' : `${dropped} מסלולים הושמטו`} ({askedKeys.slice(TRAY_MAX).map((k) => fundOf(k)?.name ?? k).join(', ')})</span>}
             {unknown.map((k) => <span key={k} className="chip est">המסלול {k} לא נמצא בנתונים</span>)}
-            {mixedProd && <span className="chip est">מוצרים שונים: פנסיה כוללת אג"ח מיועדות, ופוליסות חולקות מסלול עם ביטוחי מנהלים. ההשוואה עובדתית, לא דירוג</span>}
+            {mixedProd && <span className="chip est">{mixedNote}. ההשוואה עובדתית, לא דירוג</span>}
             {!mixedProd && !sameCat && <span className="chip">מסלולים מקטגוריות שונות: אין השוואה ביניהם בשורה התחתונה</span>}
             {loadingN > 0 && <span className="chip">טוען {loadingN}…</span>}
             {real && <span className="chip est">ריאלי: מדד המחירים בקובץ מכסה {cpi?.points.length ?? 0} חודשים, והחלון מתקצר בהתאם</span>}

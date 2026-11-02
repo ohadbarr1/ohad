@@ -18,6 +18,10 @@ import { ToolLinks } from './FundsTools';
 import '../styles/lens.css';
 import '../styles/fundsTools.css';
 
+/** W5 (red team 3): the method in words. The data file's own note (trackers.json `method`) names its fields (med, tdn, same_index,
+ *  sector); the page says the same in Hebrew. */
+const TRK_METHOD = 'מסלולים פעילים שהקטגוריה שלהם עוקבת אחרי מדד, בקבוצה לפי המדד (בלי חלוקה למוצר). החציון: חציון התשואה ברוטו של המסלולים בקבוצה. הפער בביצוע: התשואה ברוטו של המסלול פחות החציון. עלות העטיפה: התשואה נטו (אומדן) פחות חציון הברוטו, כלומר מה שהעטיפה עולה לחוסך מעבר לתשואת הקבוצה. LTM: 12 חודשים בריבית דריבית; 3Y ו-5Y: ממוצע שנתי כפי שפורסם. מט"ח: חשיפה למטבע חוץ באחוזי נכסים (הבדלי גידור מסבירים חלק מהפער). רק בקבוצת S&P 500 כל המסלולים עוקבים אחרי אותו מדד; בשאר הקבוצות המדדים שונים (ת"א 35, עולמי, אג"ח ממשלתי או קונצרני), והפער משקף גם את בחירת המדד. מסלול ענפי: פתוח רק לאוכלוסייה מסוימת';
+
 /* /funds/trackers (funds plan #17): the index-tracker lab. Tracks that follow the same index hold the same thing, so the spread of
    their returns is the price of the wrapper: the fee, currency hedging, execution and timing. For each tracker: its gross return
    against the group's median gross (the gap), its net return, its fee and its dollar exposure; a scatter of fee against the gap.
@@ -78,7 +82,7 @@ export function FundsTrackers() {
         <Seg label="קבוצה" value={g.id} onChange={(v) => set({ g: v, prod: null })} options={tf.groups.map((x) => [x.id, `${x.label} (${x.n})`] as [string, string])} />
         <Seg label="חלון" value={w} onChange={(v) => set({ w: v })} options={W3S} />
         <Pick label="מוצר" value={prodQ} onChange={(v) => set({ prod: v === 'all' ? null : v })} options={[['all', 'כל המוצרים'], ...prods.map((p) => [p, p] as [string, string])]} />
-        {!fromFile && <span className="chip est" title={tf.method}>מחושב בדפדפן מ-funds.json</span>}
+        {!fromFile && <span className="chip est" title={TRK_METHOD}>מחושב בדפדפן מ-funds.json</span>}
         {!singleIndex(g.label) && <span className="chip est">הקבוצה כוללת מדדים שונים: הפער אינו רק מחיר העטיפה</span>}
         {tracks.some((t) => t.prod.startsWith('פנסיה')) && <span className="chip est">קרנות פנסיה מחזיקות גם אג"ח מיועדות, ולכן אינן עוקבות טהורות: סננו לפי מוצר להשוואה נקייה</span>}
       </div>
@@ -122,7 +126,7 @@ export function FundsTrackers() {
             { key: 'a', head: 'נכסים, מ׳ ש"ח', value: (t) => t.assets, className: 'wide-only', unit: 'n', d: 0 },
             { key: 'cmp', head: '', sortable: false, noExport: true, cell: (t) => (f(t) ? <CompareAdd k={t.k} name={t.name} small /> : null) },
           ]} />
-        <div className="fnote">עובדה, לא המלצה: מסלולים בעלי אותו מדד שונים גם בגידור המט"ח, במועד ההשקעה ובמבנה המוצר (פוליסה, גמל, פנסיה). {fromFile ? tf.method : 'הקבוצות לפי שם המסלול ברשות ("עוקב מדד S&P 500" וכו׳); קובץ עוקבי המדד של שכבת הנתונים טרם פורסם.'} מסלולים בניהול אישי (IRA) אינם נכללים.</div>
+        <div className="fnote">עובדה, לא המלצה: מסלולים בעלי אותו מדד שונים גם בגידור המט"ח, במועד ההשקעה ובמבנה המוצר (פוליסה, גמל, פנסיה). {fromFile ? TRK_METHOD : 'הקבוצות לפי שם המסלול ברשות ("עוקב מדד S&P 500" וכו׳); קובץ עוקבי המדד של שכבת הנתונים טרם פורסם.'} מסלולים בניהול אישי (IRA) אינם נכללים.</div>
       </Panel>
     </>
   );

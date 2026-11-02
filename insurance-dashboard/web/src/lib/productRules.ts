@@ -33,7 +33,7 @@ export const RULES_NOTE = 'כללי, לא ייעוץ מס. כלל עיקרי ב�
 
 const KZ = (page: string, title: string): RuleSrc => ({ title: `כל זכות: ${title}`, url: `https://www.kolzchut.org.il/he/${encodeURIComponent(page)}`, kind: 'reference' });
 const MOF_2025: RuleSrc = { title: 'משרד האוצר, הצוות לצמצום הפערים במכשירי השקעה בחיסכון לטווח קצר ובינוני: דו"ח ביניים (02.2025), עמ\' 11–15', url: 'https://www.gov.il/BlobFolder/news/press_13022025/he/press_13022025_file.pdf', kind: 'primary' };
-const MOF_2026: RuleSrc = { title: 'משרד האוצר, הצוות לצמצום הפערים: דו"ח מסכם (07.2026), סעיפים 4–6, המלצות שטרם נחקקו', url: 'https://www.gov.il/BlobFolder/news/press020726/he/%D7%93%D7%95%D7%97%20%D7%9E%D7%A1%D7%9B%D7%9D%20%D7%95%D7%A2%D7%93%D7%AA%20%D7%94%D7%90%D7%A8%D7%91%D7%99%D7%98%D7%A8%D7%90%D7%96%20-%D7%99%D7%95%D7%9C%D7%99%202026%20%D7%97%D7%AA%D7%95%D7%9D.pdf', kind: 'primary' };
+const MOF_2026: RuleSrc = { title: 'משרד האוצר, הצוות לצמצום הפערים: דו"ח מסכם (07.2026), סעיפים 5.1–5.3 ו-6.1, עמ\' 13–14, המלצות שטרם נחקקו', url: 'https://www.gov.il/BlobFolder/news/press020726/he/%D7%93%D7%95%D7%97%20%D7%9E%D7%A1%D7%9B%D7%9D%20%D7%95%D7%A2%D7%93%D7%AA%20%D7%94%D7%90%D7%A8%D7%91%D7%99%D7%98%D7%A8%D7%90%D7%96%20-%D7%99%D7%95%D7%9C%D7%99%202026%20%D7%97%D7%AA%D7%95%D7%9D.pdf', kind: 'primary' };
 /** the Tax Authority's 2026 withholding booklet: ch. ג (amounts for tax year 2026: 9,430 / 5,422 / 188,544 / 20,566 / 13,750 / 34,423),
  *  the 9א(ז) schedule under amendment 275 (57% 2025, 57.5% 2026, 62.5% 2027, 67% 2028), ch. ז (47% on hishtalmut, 35% on improper payments) */
 const TAX_2026: RuleSrc = { title: 'רשות המסים: לוח עזר לחישוב מס הכנסה ממשכורת לינואר 2026 ואילך, סכומים מתואמים לשנת המס 2026 ותיקון 275 (סעיף 9א(ז))', url: 'https://www.gov.il/BlobFolder/generalpage/income-tax-monthly-deductions-booklet/he/generalInformation_income-tax-monthly-deductions-booklet_monthly-deductions-booklet-2026.pdf', kind: 'primary' };
@@ -42,7 +42,10 @@ const PKUDA: RuleSrc = { title: 'פקודת מס הכנסה [נוסח חדש]: �
 const KZ_CREDIT = KZ('זיכוי_ממס_הכנסה_בגין_הפרשות_לביטוח_פנסיוני', 'זיכוי ממס הכנסה בגין הפרשות לביטוח פנסיוני');
 const KZ_EMPLOYER = KZ('פטור_ממס_הכנסה_על_הפרשות_המעסיק_לביטוח_פנסיוני_ולביטוח_אובדן_כושר_עבודה', 'פטור ממס על הפרשות המעסיק לביטוח פנסיוני');
 const KZ_SEVERANCE = KZ('משיכת_כספי_פיצויי_פיטורים_מקופת_גמל_או_מהביטוח_הפנסיוני', 'משיכת כספי פיצויים מקופת גמל או מהביטוח הפנסיוני');
-const PENDING = 'הצוות של משרד האוצר (07.2026) המליץ להגביל את הטבות המס (דחיית המס, מעבר בלי אירוע מס והפטור בקצבה מגיל 60) להפקדות של עד 200 אלף ש"ח לחוסך, במצטבר ובלי תקרה שנתית; מעל התקרה ההטבות יבוטלו. המלצה, לא חוק';
+/** W5 (red team 3): the recommendation is dated and cited to the report that makes it (the July 2026 final report, checked 02.11.26
+ *  against the PDF at MOF_2026.url: §5.1 the 200 thousand ₪ cap, cumulative, no annual cap, CPI-linked; §5.3 the benefits cancelled
+ *  above it; §6.1 the exemption on an annuity from 60), never to the February 2025 interim report */
+const PENDING = 'הצוות לצמצום הפערים במשרד האוצר המליץ בדו"ח המסכם (07.2026, סעיפים 5.1–5.3, עמ\' 13–14) להגביל את הטבות המס (דחיית המס, מעבר בלי אירוע מס והפטור בקצבה מגיל 60) להפקדות של עד 200 אלף ש"ח לחוסך, במצטבר ובלי תקרה שנתית; מעל התקרה ההטבות יבוטלו. המלצה, לא חוק';
 const ANNUITY = 'בקצבה: פטור עד 5,422 ש"ח לחודש, 57.5% מתקרת הקצבה המזכה של 9,430 ש"ח (2026; עולה ל-62.5% ב-2027 ול-67% מ-2028)';
 
 const HISH_CEIL = 'שכיר: הפקדת מעסיק עד 7.5% משכר של עד 188,544 ש"ח בשנה, והפקדת העובד עד 2.5% או שליש מהפקדת המעסיק; עצמאי: עד 20,566 ש"ח בשנה';
