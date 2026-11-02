@@ -15,6 +15,8 @@ import { isoYm, priceOf, tenderAt, tendersOf, type DefaultFile, type DfRow, type
 import { useHists, useOptional } from '../lib/fundsLoad';
 import { winnerTrack } from '../lib/pensionPack';
 import { ToolLinks } from './FundsTools';
+import { useDoor } from '../lib/door';  // W7
+import { EmployerOnboard } from '../components/agent/EmployerOnboard';  // W7: the agent's employer-onboarding mode
 import '../styles/lens.css';
 import '../styles/fundsTools.css';
 
@@ -34,6 +36,7 @@ export function FundsDefault() {
   const data = raw as FundsFile | undefined;
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const [sp, setSp] = useSearchParams();
+  const [door] = useDoor();  // W7
   const age = AGE.some(([a]) => a === sp.get('age')) ? sp.get('age')! : 'עד 50';
   const asof = data?.asof ?? 0;
   const ts = tendersOf(dfile);
@@ -115,6 +118,8 @@ export function FundsDefault() {
           </Panel>
         </>
       )}
+
+      {door === 'agent' && <EmployerOnboard funds={data.funds as FundX[]} now={now} asof={asof} />}
 
       <Panel title={<>היום: הזוכות מול שאר הקרנות · {PROD}</>} aside={<><Seg label="מסלול גיל" value={age} onChange={(a) => { const q = new URLSearchParams(sp); q.set('age', a); setSp(q, { replace: true }); }} options={AGE} /><span className="chip est">נטו, אומדן</span></>}>
         <div className="scroll"><table className="fsimple">

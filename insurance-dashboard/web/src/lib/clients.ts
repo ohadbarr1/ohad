@@ -157,8 +157,10 @@ export const removeFolder = (file: ClientsFile, id: string): ClientsFile => ({ .
 /** the folders, newest first */
 export const sorted = (file: ClientsFile) => [...file.folders].sort((a, b) => b.updated.localeCompare(a.updated) || a.label.localeCompare(b.label, 'he'));
 
-/** the export file's text */
-export const exportText = (file: ClientsFile, today: string) => JSON.stringify({ ...normClients(file), exported: today, note: 'תיקי לקוחות של סוכן: מסלולים להשוואה, צילום הנתונים שהוצגו ללקוח, מוצרים מקובץ מסלקה וטיוטת הנמקה. נשמר בדפדפן בלבד; הקובץ פרטי.' }, null, 1);
+/** the export file's text; W7: the agent's branding (lib/branding) rides along under `brand` so a second device gets it with the folders */
+export const exportText = (file: ClientsFile, today: string, brand?: unknown) => JSON.stringify({ ...normClients(file), exported: today, ...(brand ? { brand } : {}), note: 'תיקי לקוחות של סוכן: מסלולים להשוואה, צילום הנתונים שהוצגו ללקוח, מוצרים מקובץ מסלקה וטיוטת הנמקה. נשמר בדפדפן בלבד; הקובץ פרטי.' }, null, 1);
+/** W7: the branding carried in a backup file, raw (lib/branding normalises it), or null */
+export const brandOfFile = (x: unknown): unknown => (x && typeof x === 'object' && (x as { brand?: unknown }).brand && typeof (x as { brand?: unknown }).brand === 'object' ? (x as { brand: unknown }).brand : null);
 
 /** the hook: the folders of this browser, always well-formed */
 export function useClients(): [ClientsFile, (f: ClientsFile) => void] {
@@ -239,4 +241,47 @@ export function backupState(file: ClientsFile, last: string | null | undefined, 
   if (!at) return { days: null, changed: n, nudge: n > 0 };
   const days = Math.max(0, daysBetween(at, today)), changed = file.folders.filter((f) => f.updated > at).length;
   return { days, changed, nudge: n > 0 && ((changed > 0 && days >= 7) || days >= 30) };
+}
+
+/* ---------- W7 · "שיתוף תיק": one folder as an encrypted file (Web Crypto AES-GCM, a passphrase the agent types; nothing leaves the browser) ---------- */
+/** the file: { kind, v, kdf: PBKDF2-SHA-256 with `iter` rounds over `salt`, alg: AES-256-GCM with `iv`, ct: ciphertext+tag }, all base64 */
+export interface ShareFile { kind: 'fox-client-share'; v: 1; kdf: 'PBKDF2-SHA-256'; iter: number; salt: string; alg: 'AES-GCM'; iv: string; ct: string; label?: string; exported: string }
+export const SHARE_ITER = 310_000;
+export const LAST_FOLDER_KEY = 'clients:last';
+const subtle = () => (globalThis.crypto?.subtle ?? null);
+const b64 = (u: Uint8Array) => { let s = ''; u.forEach((b) => { s += String.fromCharCode(b); }); return btoa(s); };
+const unb64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+async function shareKey(pass: string, salt: Uint8Array, iter: number): Promise<CryptoKey> {
+  const sc = subtle();
+  if (!sc) throw new Error('הדפדפן אינו תומך בהצפנה (Web Crypto)');
+  const base = await sc.importKey('raw', new TextEncoder().encode(pass.normalize('NFKC')), 'PBKDF2', false, ['deriveKey']);
+  return sc.deriveKey({ name: 'PBKDF2', salt: salt as BufferSource, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+/** one folder, encrypted under a passphrase (8 characters or more), as the file's text */
+export async function encryptFolder(folder: Folder, pass: string, today: string): Promise<string> {
+  if (pass.length < 8) throw new Error('סיסמה של 8 תווים לפחות');
+  const sc = subtle();
+  if (!sc) throw new Error('הדפדפן אינו תומך בהצפנה (Web Crypto)');
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await shareKey(pass, salt, SHARE_ITER);
+  const plain = new TextEncoder().encode(JSON.stringify({ kind: 'fox-clients', v: CLIENTS_V, folders: [normFolder(folder)] }));
+  const ct = new Uint8Array(await sc.encrypt({ name: 'AES-GCM', iv: iv as BufferSource }, key, plain as BufferSource));
+  const out: ShareFile = { kind: 'fox-client-share', v: 1, kdf: 'PBKDF2-SHA-256', iter: SHARE_ITER, salt: b64(salt), alg: 'AES-GCM', iv: b64(iv), ct: b64(ct), label: folder.label.slice(0, 80), exported: today };
+  return JSON.stringify(out);
+}
+export const isShareFile = (x: unknown): x is ShareFile => !!x && typeof x === 'object' && (x as ShareFile).kind === 'fox-client-share' && (x as ShareFile).v === 1 && typeof (x as ShareFile).ct === 'string' && typeof (x as ShareFile).salt === 'string' && typeof (x as ShareFile).iv === 'string';
+/** the folder inside a share file; throws (in Hebrew) on a wrong passphrase or a damaged file */
+export async function decryptShare(text: string, pass: string): Promise<Folder> {
+  let x: unknown;
+  try { x = JSON.parse(text); } catch { throw new Error('הקובץ אינו קובץ שיתוף תיק'); }
+  if (!isShareFile(x)) throw new Error('הקובץ אינו קובץ שיתוף תיק');
+  const sc = subtle();
+  if (!sc) throw new Error('הדפדפן אינו תומך בהצפנה (Web Crypto)');
+  const iter = Number.isInteger(x.iter) && x.iter >= 100_000 && x.iter <= 2_000_000 ? x.iter : SHARE_ITER;
+  const key = await shareKey(pass, unb64(x.salt), iter);
+  let plain: ArrayBuffer;
+  try { plain = await sc.decrypt({ name: 'AES-GCM', iv: unb64(x.iv) as BufferSource }, key, unb64(x.ct) as BufferSource); } catch { throw new Error('הסיסמה שגויה או שהקובץ ניזוק'); }
+  const f = normClients(JSON.parse(new TextDecoder().decode(plain))).folders[0];
+  if (!f) throw new Error('בקובץ אין תיק תקין');
+  return f;
 }

@@ -12,6 +12,9 @@ import { feeLabel, obsProv, pc2, pctProv } from '../../lib/agentProv';
 import { useOptional } from '../../lib/fundsLoad';
 import { DECISION_PATH, segOf, svcOf, svcProv, type DecisionFile } from '../../lib/decision';  // W2
 import './glossary';
+import { useStored } from '../../lib/local';
+import { LAST_FOLDER_KEY, heldSum, useClients, type Held } from '../../lib/clients';
+import { BALANCE_EX, exampleMonthly } from '../../lib/retire';
 import '../../styles/agent.css';
 
 /* W1 · agent door: the fee benchmark for a negotiation, and the managers as cards instead of a 67-row wall.
@@ -77,9 +80,42 @@ export function FeeBench({ funds, asof }: { funds: FundX[]; asof: number }) {
         <Side side={d.fee} k="fee" d={d} asof={asof} funds={funds} unit={unit} />
         <Side side={d.depfee} k="depfee" d={d} asof={asof} funds={funds} unit={unit} />
       </div>
+      <Typical d={d} prod={prod} />
       <div className="fnote fd-who"><b>ממוצע על כל העמיתים, גם הוותיקים:</b> אינו המחיר שמשלם מצטרף חדש. הרשות אינה מפרסמת דמי ניהול לפי מועד הצטרפות או לפי הפקדות חדשות; {/^פנסיה/.test(prod) ? <>המחיר לעמית חדש בקרן ברירת מחדל נקבע במכרז (<Link to="/funds/default">קרנות ברירת מחדל</Link>).</> : 'המחיר לעמית חדש נקבע מול הגוף המנהל.'}</div>
       <div className="fnote">דמי הניהול הממוצעים בפועל שגבו המנהלים מעמיתיהם, מצבירה ומהפקדה (רשות שוק ההון, {ym(asof)}), לא מחיר מחירון ולא דמי הניהול של חוסך מסוים. {unit === 'mgr' ? 'לפי קבוצה: כל קבוצה מנהלת נספרת פעם אחת, דמי הניהול של מסלוליה משוקללים בנכסיהם.' : 'לפי מסלול: כל מסלול נספר פעם אחת.'} מסלולים פתוחים עם נכסים, בלי ניהול אישי וקופות ענפיות. אחוזונים בשיטת האינטרפולציה הלינארית (השיטה הרגילה של אקסל), רק עם {MIN_N} תצפיות לפחות. P10 ו-P90: הערך ש-10% ו-90% מהתצפיות נמוכים ממנו. ירוק: עד P25; אדום: מעל P75.</div>
     </Panel>
+  );
+}
+
+/** W7 · "what a saver with balance X and monthly Y typically pays": the P25 / median / P75 fee pairs of the benchmark applied to the
+ *  amounts, ₪ a year; the amounts come from a client folder's imported products of this family when one is chosen (the folder last
+ *  opened from /clients by default), else the example amounts. Track averages, not any member's fee: labelled "ממוצע בפועל". */
+const FAM: [RegExp, RegExp][] = [[/^פנסיה/, /פנסיה/], [/^השתלמות/, /השתלמות/], [/^גמל להשקעה/, /להשקעה/], [/^גמל$/, /גמל(?! להשקעה)/], [/^חיסכון לילד/, /לילד/], [/ביטוח|פוליס/, /ביטוח|פוליס/]];
+const famOf = (prod: string, h: Held) => { const f = FAM.find(([p]) => p.test(prod)); return f ? f[1].test(h.typeHe) && !(prod === 'גמל' && /להשקעה|השתלמות/.test(h.typeHe)) : false; };
+const ILS = (v: number) => `₪${Math.round(v).toLocaleString('en-US')}`;
+function Typical({ d, prod }: { d: ReturnType<typeof feeDist>; prod: string }) {
+  const [file] = useClients();
+  const [last] = useStored<string>(LAST_FOLDER_KEY, '');
+  const [sel, setSel] = useState<string>(() => (file.folders.some((f) => f.id === last) ? last : ''));
+  const [bal, setBal] = useState(String(BALANCE_EX));
+  const [mon, setMon] = useState(String(exampleMonthly(prod).v));
+  const folder = file.folders.find((f) => f.id === sel) ?? null;
+  const own = folder ? heldSum(folder.held.filter((h) => famOf(prod, h))) : null;
+  const num = (s: string) => { const v = Number(s.replace(/[^\d.]/g, '')); return Number.isFinite(v) ? v : 0; };
+  const balance = own && own.balance > 0 ? own.balance : num(bal), monthly = own && own.n ? own.monthly : num(mon);
+  const p = d.fee.pcts, q = d.depfee.pcts;
+  if (!p) return null;
+  const cost = (fee: number, dep: number | null) => (balance * fee + monthly * 12 * (dep ?? 0)) / 100;
+  const at = (k: 'p25' | 'p50' | 'p75') => cost(p[k], q ? q[k] : null);
+  return (
+    <div className="fd-typ" role="group" aria-label="מה חוסך משלם בדרך כלל">
+      <div className="fd-typ-in">
+        {file.folders.length > 0 && <label>תיק לקוח <select value={sel} onChange={(e) => setSel(e.target.value)}><option value="">סכומים לדוגמה</option>{file.folders.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}</select></label>}
+        {!own && <><label>יתרה (₪) <input inputMode="numeric" value={bal} onChange={(e) => setBal(e.target.value)} /></label><label>הפקדה חודשית (₪) <input inputMode="numeric" value={mon} onChange={(e) => setMon(e.target.value)} /></label></>}
+      </div>
+      <p className="fd-typ-line"><b>חוסך עם יתרה {ILS(balance)} והפקדה {ILS(monthly)} לחודש</b>{own ? ` (${own.n} מוצרים מסוג ${prod} בתיק "${folder!.label}", מקובץ המסלקה)` : ' (סכומים לדוגמה)'} משלם לפי הממוצע בפועל של הקבוצות בין <span className="num">{ILS(at('p25'))}</span> (P25) ל-<span className="num">{ILS(at('p75'))}</span> (P75) לשנה, חציון <span className="num">{ILS(at('p50'))}</span>.
+        <span className="dim"> ממוצע בפועל של {d.unit === 'mgr' ? 'הקבוצות' : 'המסלולים'} ב{prod}{d.track ? ` · ${d.track}` : ''}, לא דמי הניהול של עמית מסוים{q ? '' : '; אין התפלגות לדמי ניהול מהפקדה בקטגוריה: חושב 0% מהפקדה'}. יתרה × ד"נ מצבירה + 12 × הפקדה × ד"נ מהפקדה, לשנה אחת.</span></p>
+    </div>
   );
 }
 

@@ -298,3 +298,61 @@ td.cmp-best::after { content: "●"; color: var(--accent); font-size: 8px; verti
 .bm-line { margin: 0; font-size: var(--t-4); line-height: 1.6; }
 .bm-fee { margin: 0; font-size: var(--t-3); color: var(--muted); line-height: 1.6; }
 @media (max-width: 760px) { .bm-calc { grid-template-columns: 1fr; } }
+
+/* ---- W7 · the agent's branding (/clients) ---- */
+.abrand { display: grid; gap: 8px; }
+.abrand-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.abrand-logo { height: 40px; max-width: 160px; object-fit: contain; border-radius: var(--r-1); background: #fff; padding: 2px; }
+.abrand-line { font-size: var(--t-2); color: var(--fg); }
+.abrand-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 8px 12px; align-items: end; }
+.abrand-form label { display: grid; gap: 3px; font-size: var(--t-2); font-weight: 600; color: var(--muted); }
+.abrand-form input:not([type="file"]) { font: inherit; font-size: 16px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r-1); background: var(--panel); color: var(--fg); min-width: 0; }
+.abrand-form .chip, .brand-form .ci-err, .brand-form .csave-priv { align-self: center; }
+.abrand-form .csave-priv { grid-column: 1 / -1; }
+.abrand-up svg.ico { width: 14px; height: 14px; }
+
+/* ---- W7 · share a folder (encrypted) ---- */
+.share { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.share .chip svg.ico, .share-imp .chip svg.ico { width: 14px; height: 14px; }
+.share-form { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel2); min-width: min(100%, 300px); max-width: 480px; flex-basis: 100%; }
+.share-form label { font-size: var(--t-2); font-weight: 600; color: var(--muted); }
+.share-form input { font: inherit; font-size: 16px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r-1); background: var(--panel); color: var(--fg); }
+.share-imp { display: grid; gap: 6px; justify-items: start; }
+
+/* ---- W7 · the ניוד table on /clients ---- */
+.cl-nyud > summary { cursor: pointer; font-size: var(--t-2); font-weight: 600; }
+.cl-nyud .nyud.screen { font-size: var(--t-2); display: grid; gap: 8px; }
+.cl-nyud .nyud.screen h2 { font-size: var(--t-3); margin: 0; }
+.cl-nyud .nyud.screen h3 { font-size: var(--t-2); margin: 8px 0 0; }
+.cl-nyud .nyud.screen .adoc-cap, .cl-nyud .nyud.screen .nyud-notes { font-size: var(--t-1); color: var(--muted); margin: 0; }
+.cl-nyud .nyud.screen table { width: 100%; border-collapse: collapse; font-size: var(--t-1); }
+.cl-nyud .nyud.screen th, .cl-nyud .nyud.screen td { padding: 5px 6px; border-bottom: 1px solid var(--line-soft); text-align: start; vertical-align: top; }
+.cl-nyud .nyud.screen tbody th span, .cl-nyud .nyud.screen .q { display: block; color: var(--muted); font-weight: 400; }
+.cl-nyud .nyud.screen td.pos b { color: var(--up); } .cl-nyud .nyud.screen td.neg b { color: var(--down); }
+.cl-nyud .nyud-a1 { overflow-x: auto; }
+.cl-nyud .a1x { min-width: 980px; }
+.nyud-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.nyud-basis { display: inline-flex; gap: 6px; }
+.nyud-basis .chip { cursor: pointer; }
+.nyud-basis .chip[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-fg); }
+
+/* ---- W7 · the fee benchmark: what a saver typically pays ---- */
+.fd-typ { border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 10px 12px; display: grid; gap: 6px; background: var(--panel2); }
+.fd-typ-in { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: var(--t-2); color: var(--muted); }
+.fd-typ-in label { display: inline-flex; gap: 6px; align-items: center; }
+.fd-typ-in input, .fd-typ-in select { font: inherit; font-size: var(--t-2); padding: 3px 6px; border: 1px solid var(--line); border-radius: var(--r-1); background: var(--panel); color: var(--fg); width: 110px; }
+.fd-typ-in select { width: auto; max-width: 220px; }
+.fd-typ-line { margin: 0; font-size: var(--t-2); line-height: 1.6; }
+.fd-typ-line .dim { color: var(--muted); }
+
+/* ---- W7 · employer onboarding (/funds/default, agent door) ---- */
+.onb-in { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 8px 14px; align-items: end; margin-bottom: 10px; }
+.onb-in fieldset { grid-column: 1 / -1; border: 1px solid var(--line-soft); border-radius: var(--r-2); padding: 6px 10px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--t-2); }
+.onb-in fieldset legend { font-weight: 600; color: var(--muted); padding: 0 4px; }
+.onb-in > label { display: grid; gap: 3px; font-size: var(--t-2); font-weight: 600; color: var(--muted); }
+.onb-in input, .onb-in select { font: inherit; font-size: 16px; padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--r-1); background: var(--panel); color: var(--fg); min-width: 0; }
+.onb-t td { vertical-align: top; }
+.onb-save { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.onb-save input { font: inherit; font-size: 16px; padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--r-1); background: var(--panel); color: var(--fg); }
+.onb-save .chip { cursor: pointer; }
+.onb-save .chip svg.ico { width: 14px; height: 14px; }

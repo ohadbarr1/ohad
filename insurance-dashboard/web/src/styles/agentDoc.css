@@ -130,3 +130,48 @@
   .fill.in { min-height: 5mm; }
   .annex-q input { display: inline-block !important; }
 }
+
+/* ---- W7 · branding in the header and the signature block ---- */
+.adoc-brand { display: flex; align-items: center; gap: 4mm; }
+.adoc-brand img { max-height: 16mm; max-width: 45mm; object-fit: contain; }
+.adoc-sig-brand { display: flex; align-items: center; gap: 3mm; margin-top: 2mm; font-size: 7.5pt; color: #3F4656; }
+.adoc-sig-brand img { max-height: 10mm; max-width: 30mm; object-fit: contain; }
+.adoc-foot { border-top: 0.75pt solid #111C3F; padding-top: 1.5mm; margin-top: 2mm; font-size: 7pt; color: #3F4656; display: flex; flex-wrap: wrap; gap: 1mm 4mm; justify-content: space-between; }
+
+/* ---- W7 · the ניוד table ---- */
+.nyud { break-inside: auto; }
+.nyud h3 { margin-top: 3mm; }
+.nyud-t tbody th { width: 40mm; }
+.nyud-t td { white-space: normal; direction: rtl; text-align: start; font-size: 7.6pt; }
+.nyud-t td.pos b { color: #1F6B3A; } .nyud-t td.neg b { color: #B5361A; }
+.nyud-t td.src, .nyud-t tfoot td.src { font-size: 7pt; color: #5B6273; }
+.nyud-t tfoot th, .nyud-t tfoot td { border-top: 1pt solid #111C3F; border-bottom: 0; font-weight: 700; text-align: start; }
+.nyud-notes { margin: 1.5mm 0 0; padding-inline-start: 4mm; font-size: 7.3pt; color: #3F4656; display: grid; gap: 0.8mm; }
+.nyud-notes ul { margin: 0.5mm 0 0; padding-inline-start: 4mm; }
+.a1x { table-layout: fixed; font-size: 6.6pt; }
+.a1x thead th { font-size: 6.3pt; white-space: normal; }
+.a1x th:first-child { width: 9mm; }
+.a1x td { font-size: 6.6pt; min-width: 0; padding: 1mm 0.6mm; }
+.a1x tr.before th { color: #5B6273; } .a1x tr.after th { color: #111C3F; font-weight: 700; }
+.a1x tr.after td { border-bottom: 1pt solid #8A90A0; }
+.a1x .blank { display: inline-block; min-width: 10mm; border-bottom: 0.5pt solid #9AA0AC; height: 3.5mm; }
+
+/* ---- W7 · the הנמקה in the binding wording ---- */
+.hnm-q { quotes: none; margin: 0; }
+.hnm-sec { font-size: 6.5pt; color: #8A2812; margin-inline-start: 1.5mm; font-weight: 600; white-space: nowrap; }
+.hnm-letter { margin: 1mm 0 2mm; font-size: 8.6pt; line-height: 1.55; display: grid; gap: 0.8mm; }
+.hnm-letter .em { font-weight: 700; }
+.hnm-why { background: #F3F4F7; border-inline-start: 2px solid #D4451F; padding: 1.2mm 2.5mm; margin: 1mm 0; font-size: 7.8pt; color: #111C3F; display: grid; gap: 0.6mm; }
+.hnm-warn { border: 1pt solid #B5361A; border-radius: 1.5mm; padding: 1.5mm 2.5mm; margin: 1.5mm 0; font-size: 8pt; color: #8A2812; font-weight: 600; background: #FFF5F1; }
+.hnm-kind { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: var(--t-2); }
+.hnm-kind select { width: auto !important; }
+.hnm-kind .why { flex-basis: 100%; font-size: var(--t-1); color: var(--muted); }
+.annex-t.c-list td { min-width: 0; }
+.docb { break-before: page; display: flex; flex-direction: column; gap: 1.5mm; }
+.docb ol, .docb ul { margin: 0; padding-inline-start: 4mm; font-size: 8pt; display: grid; gap: 0.8mm; }
+.docb .q { margin: 0; font-size: 8pt; }
+.docb dl { margin: 0; }
+@media print {
+  .nyud-t tr, .a1x tr { break-inside: avoid; }
+  .hnm-why, .hnm-warn { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
