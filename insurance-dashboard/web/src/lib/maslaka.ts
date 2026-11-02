@@ -1,3 +1,4 @@
+import type { HeldExtra } from './clientTypes';  // W7: deposits, code, salary, guaranteed coefficient
 /* W3 · "ייבוא מהמסלקה" (בטא): the pension clearing house's personal file, read in this browser only.
    Pure: no React, no fetch, no storage. The page hands it the file's bytes; nothing leaves the device, and the parser never reads the
    holder's name, ID number, account number, employer or beneficiaries (it does not even look at YeshutLakoach / YeshutMaasik /
@@ -192,7 +193,7 @@ export function code30(s: string | null | undefined): { company: number; product
 export interface MCover { name: string; kind: string | null; sum: number | null; cost: number | null; rate: number | null }
 export interface MTrack { code: string | null; name: string | null; role: 'acc' | 'dep' | null; amount: number | null; fee: number | null; depfee: number | null }
 export type FeeHow = 'terms' | 'track' | 'month12' | 'actual';
-export interface MAccount {
+export interface MAccount extends HeldExtra {
   providerId: string | null; providerName: string | null;
   type: number | null; typeHe: string; pensionKind: number | null; old: boolean;
   plan: string | null; status: number | null; asof: string | null; balDate: string | null; unified: string | null;

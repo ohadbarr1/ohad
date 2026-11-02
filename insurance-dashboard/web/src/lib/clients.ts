@@ -10,6 +10,7 @@
                 held: Held[] (the client's own products from a clearing-house file: balances, their fees, insurance cover) }
    v1 folders (no snap, no held) are read as v2 with snap null: they open on today's data and say so. Nothing in a folder is an ID
    number. Pure helpers below (normalise, merge, upsert); the hook is the only part that touches storage. */
+import type { HeldExtra } from './clientTypes';  // W7: deposits, code, salary, guaranteed coefficient
 import { useStored } from './local';
 
 export type Tag = 'קיים' | 'מומלץ' | 'נבחן';
@@ -33,7 +34,7 @@ export interface Snap { at: string; asof: number; b: 'net' | 'gross'; rows: Snap
 /** an insurance cover read from a clearing-house file (no insured person's details) */
 export interface Cover { name: string; kind: string | null; sum: number | null; cost: number | null; rate: number | null }
 /** a product of the client's, from a clearing-house file: the provider's, as the file gives it */
-export interface Held {
+export interface Held extends HeldExtra {
   k: string | null; typeHe: string; provider: string | null; plan: string | null; track: string | null;
   balance: number | null; monthly: number | null; fee: number | null; feeHow: string | null; depfee: number | null; depHow: string | null;
   asof: string | null; covers: Cover[]; note: string | null;
