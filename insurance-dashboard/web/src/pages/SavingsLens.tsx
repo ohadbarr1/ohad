@@ -6,6 +6,7 @@ import { Sheet } from '../components/Sheet';
 import { BreakChip, Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg as SegCtl } from '../components/ui';
 import { IdDot } from '../components/MgrChip';
 import { FundsHead } from '../components/FundsNav';
+import { FlowDef } from '../components/FlowDef';  // W6 trust
 import { foxOption } from '../lib/foxchart';
 import { identify } from '../lib/idmarks';
 import { placeLabels } from '../lib/labelPlace';
@@ -163,6 +164,7 @@ function LensView({ d, src, seg, q, g, set }: { d: LensData; src: LensSrc; seg: 
       {seg === 'hish' && <div className="lens-note"><span className="chip">נתוני רשות בלבד</span> {NO_REP.hish}.</div>}
 
       <Panel title={`${SEG_LONG[seg]} · ${ql(q)}`} aside={<><span>נכסים ותזרימים: מיליארדי ש"ח · יחסים שנתיים</span><button type="button" className="btn" onClick={() => void xlsx()}>Excel</button></>}>
+        {flows && <FlowDef kinds={['netflow', 'transfers', 'organic']} />}
         <div className="scroll"><table className="lens-tbl">
           <thead><tr>
             <th>מנהל</th><th>נכסים</th><th className="wide-only">נתח</th>

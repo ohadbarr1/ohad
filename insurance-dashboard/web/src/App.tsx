@@ -60,6 +60,7 @@ const FundsFees = page(() => import('./pages/FundsFees'), 'FundsFees');
 const FundsDefault = page(() => import('./pages/FundsDefault'), 'FundsDefault');
 const FundsTrackers = page(() => import('./pages/FundsTrackers'), 'FundsTrackers');
 const About = page(() => import('./pages/About'), 'About');  // Wave 0: who, sources, not advice
+const Methodology = page(() => import('./pages/Methodology'), 'Methodology');  // W6 trust: how the figures are computed
 const My = page(() => import('./pages/My'), 'My');  // W1-saver: "המוצרים שלי"
 const MyStatement = page(() => import('./pages/MyStatement'), 'MyStatement');  // W3: the annual-statement guide
 const Clients = page(() => import('./pages/Clients'), 'Clients');  // W3: the agent's client folders
@@ -254,6 +255,17 @@ export function App() {
         {/* W3 */}<Route path="my/statement" element={<MyStatement />} />
         {/* W3 */}<Route path="clients" element={<Clients />} />
         <Route path="about" element={<About />} />
+        <Route path="methodology" element={<Methodology />} />{/* W6 trust */}
+        {/* W6 trust: addresses that were linked as if they were pages of their own (a review found nine landing on "not found"): each goes to the page that holds it */}
+        <Route path="regulation" element={<Navigate to="/warroom/regulation" replace />} />
+        <Route path="csm" element={<Navigate to="/industry/csm" replace />} />
+        <Route path="ifrs17" element={<Navigate to="/industry/csm?view=facts" replace />} />
+        <Route path="numbers" element={<Navigate to="/industry/peers" replace />} />
+        <Route path="history" element={<Navigate to="/industry/headline" replace />} />
+        <Route path="thesis" element={<Navigate to="/pro" replace />} />
+        <Route path="report" element={<Navigate to="/calendar" replace />} />
+        <Route path="filings" element={<Navigate to="/feed" replace />} />
+        <Route path="funds/risk" element={<Navigate to="/funds/rank" replace />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
         <Route path="valuation" element={<ValuationLayout />} />

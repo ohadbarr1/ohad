@@ -4,7 +4,7 @@ import { readerHref, ridOf } from '../lib/search';
 import { nf, pubLabel } from '../lib/format';
 import { METRIC_BY_KEY, WIN_LABEL, type Market } from '../lib/market';
 import { liveCheck, loadTracks, parseRegKey, recompute, regKey, SourceCtx, useSource, type LiveResult, type Prov, type RegCol, type Track } from '../lib/prov';
-import { ckanQuery, ckanResourcePage, DS_LABEL, mayaReport, pdfPage, resourceOf, type RegDs } from '../lib/sources';
+import { ckanDataset, ckanQuery, ckanResourcePage, DS_LABEL, mayaReport, pdfPage, REG_SITE, resourceOf, type RegDs } from '../lib/sources';
 import { useMarket } from '../lib/useData';
 import { Recon } from './Recon';
 import { captured } from '../lib/exportProv';
@@ -111,6 +111,9 @@ function Sheet({ prov, market, depth, onBack, onClose }: { prov: Prov; market: M
         </div>
         <div className="srcbody">
           {prov.k === 'reg' ? (market ? <RegSheet key={regKey(prov, market)} p={prov} m={market} /> : <p className="muted">טוען…</p>) : prov.k === 'fund' ? <FundSheet p={prov} /> : <PlainSheet p={prov} />}
+          <footer className="srcfoot">{/* W6 trust: the definitions behind every figure are one click from the figure */}
+            <Link to="/methodology" onClick={onClose}>איך המספרים מחושבים: מתודולוגיה</Link><span>·</span><Link to="/about#contact" onClick={onClose}>תיקונים</Link>
+          </footer>
         </div>
       </div>
     </div>
@@ -123,16 +126,20 @@ const Head = ({ title, value, unit, sub }: { title: string; value: string; unit?
 
 function FundSheet({ p }: { p: Extract<Prov, { k: 'fund' }> }) {
   const { market } = useMarket();
-  const res = resourceOf(market?.d.meta.resources?.[p.ds], p.period);
+  const res = resourceOf(market?.d.meta.resources?.[p.ds], p.period), pkg = market?.d.meta.packages?.[p.ds];
+  const site = REG_SITE[p.ds];
   return (
     <>
       <Head title={p.title} value={p.value} unit={p.unit} sub={<>{DS_LABEL[p.ds]} · קופה <span className="num">{p.id}</span> · <span className="num">{p.period}</span></>} />
       <dl className="srcfacts">
-        <dt>סוג מקור</dt><dd>רשות שוק ההון, נתוני קופות פתוחים (data.gov.il)</dd>
+        {/* W6 trust: the source line is the link, to the dataset and to the regulator's own site, not a name */}
+        <dt>סוג מקור</dt><dd>רשות שוק ההון, נתוני קופות פתוחים: {pkg ? <a href={ckanDataset(pkg)} target="_blank" rel="noreferrer">מאגר {DS_LABEL[p.ds]} ב-data.gov.il</a> : 'data.gov.il'}{res && pkg && <> · <a href={ckanResourcePage(pkg, res.id)} target="_blank" rel="noreferrer">{res.name}</a></>} · <a href={site.url} target="_blank" rel="noreferrer">אתר {site.name}</a></dd>
         <dt>שם השדה במקור</dt><dd className="mono ltr">{p.col}</dd>
+        <dt>מזהה הקופה</dt><dd className="mono ltr">FUND_ID = {p.id} · REPORT_PERIOD = {p.period}</dd>
         <dt>נמשך</dt><dd className="num">{market?.d.meta.fetched ?? '–'}</dd>
       </dl>
-      {res && <a className="srcgo" href={ckanQuery(res.id, { REPORT_PERIOD: p.period, FUND_ID: p.id }, undefined, 5)} target="_blank" rel="noreferrer">הרשומה ב-data.gov.il</a>}
+      {res ? <a className="srcgo" href={ckanQuery(res.id, { REPORT_PERIOD: p.period, FUND_ID: p.id }, undefined, 5)} target="_blank" rel="noreferrer">הרשומה ב-data.gov.il</a>
+        : <p className="srcnote">קובץ מקור: {DS_LABEL[p.ds]}, קובץ השנה של {Math.floor(p.period / 100)} ב-data.gov.il (רשימת הקבצים נטענת עם קובץ השוק).</p>}
       {p.note && <p className="srcnote">{p.note}</p>}
     </>
   );
@@ -148,7 +155,8 @@ function PlainSheet({ p }: { p: Exclude<Prov, { k: 'reg' | 'fund' }> }) {
         {p.doc && <><dt>מסמך</dt><dd>{p.doc}</dd></>}
         <dt>{p.srcType?.startsWith('מצגת') ? 'שקף' : 'עמוד'}</dt><dd className="num">{p.pg ?? 'לא סומן'}</dd>
       </dl>
-      {p.url ? <a className="srcgo" href={pdfPage(p.url, p.pg)} target="_blank" rel="noreferrer">פתיחת הדוח{p.pg ? `, עמ׳ ${p.pg}` : ''}</a> : !p.srcType && <p className="muted">אין קישור למסמך.</p>}
+      {p.url ? <a className="srcgo" href={pdfPage(p.url, p.pg)} target="_blank" rel="noreferrer">פתיחת הדוח{p.pg ? `, עמ׳ ${p.pg}` : ''}</a>
+        : <p className="srcnote">קובץ מקור: {p.doc ?? p.srcType ?? 'לא נרשם'}{p.pg ? <>, עמ׳ <span className="num">{p.pg}</span></> : ''}. אין קישור ישיר למסמך הזה; המסמכים של החברה: <Link to="/calendar" onClick={() => {}}>לוח הדיווחים</Link>.</p>}
       {ridOf(p.url) && <Link className="srcgo alt" to={readerHref(ridOf(p.url)!, p.pg)}>פתח בקורא{p.pg ? `, עמ׳ ${p.pg}` : ''}</Link>}
       <Link className="srcgo alt" to={citeHref(undefined, p.title)}>ציטוט</Link>
       {p.der && <p className="srcnote"><span className="chip est">נגזר</span> {p.der === 'stock' ? 'יתרה שלא הודפסה כשורה אחת: חושבה מרכיבים שהודפסו (מגזרים שחוברו, או פתיחה ותנועות).' : 'לא הודפס בדוח: חושב מהפרש בין תקופות מצטברות של אותו דוח (Q4 = FY פחות 9M, H2 = FY פחות H1).'}</p>}
@@ -260,8 +268,8 @@ function RegSheet({ p, m }: { p: Reg; m: Market }) {
     <>
       <Head title={`${def.short} · ${group}`} value={shown == null ? '–' : nf(shown, dec)} unit={def.unit === '%' ? '%' : 'מיליארד ש"ח'} sub={<>{set} · {span}</>} />
       <dl className="srcfacts">
-        <dt>סוג מקור</dt><dd>רשות שוק ההון, נתוני קופות פתוחים (data.gov.il)</dd>
-        <dt>חישוב</dt><dd>{FORMULA[p.metric] ?? def.label}</dd>
+        <dt>סוג מקור</dt><dd>רשות שוק ההון, נתוני קופות פתוחים: {(['gemel', 'pensia', 'insurance'] as RegDs[]).filter((ds) => meta.packages?.[ds]).map((ds, i) => <span key={ds}>{i ? ' · ' : ''}<a href={ckanDataset(meta.packages![ds])} target="_blank" rel="noreferrer">{DS_LABEL[ds]}</a></span>)} ב-data.gov.il</dd>
+        <dt>חישוב</dt><dd>{FORMULA[p.metric] ?? def.label}{(p.metric === 'organic' || p.metric === 'netflow' || p.metric === 'transfers') && <> · <Link to="/methodology#flows">הגדרות התזרימים</Link></>}</dd>
         <dt>רכיבים</dt><dd>{ts ? <><span className="num">{rows.length}</span> מסלולים{n > 1 ? <>, <span className="num">{n}</span> חודשים</> : ''}</> : 'טוען…'}</dd>
         <dt>נמשך</dt><dd className="num">{meta.fetched ?? meta.generated}</dd>
       </dl>

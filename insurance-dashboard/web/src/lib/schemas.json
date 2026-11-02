@@ -1788,6 +1788,12 @@
     "pr_method": {
      "type": "string"
     },
+    "mig_method": {
+     "type": "string"
+    },
+    "exp_method": {
+     "type": "string"
+    },
     "cpi_asof": {
      "type": [
       "integer",
@@ -5952,6 +5958,9 @@
        },
        "multi": {
         "type": "integer"
+       },
+       "note": {
+        "type": "string"
        }
       },
       "additionalProperties": false
@@ -14428,6 +14437,24 @@
        }
       ],
       "minItems": 2
+     }
+    },
+    "mig": {
+     "type": "object",
+     "required": ["grp", "n"],
+     "properties": {
+      "grp": {
+       "type": "number"
+      },
+      "n": {
+       "type": "integer"
+      }
+     }
+    },
+    "chk": {
+     "type": "array",
+     "items": {
+      "enum": ["st", "fo", "fx"]
      }
     }
    }

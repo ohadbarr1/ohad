@@ -173,7 +173,10 @@ export function Scenarios() {
   const act = active(scn);
   const cur = P.find((p) => p.ok && sameScn(p.sc, scn) && (act.length > 0 || p.sc.nc === 1));
   const label = cur ? `תחת "${cur.he}"` : act.length || scn.nc ? 'תחת התרחיש' : 'ללא זעזוע';
-  const head = act.length || scn.nc ? headline(rank(res, 'vul'), label) : 'הזיזו מחוון או בחרו תרחיש: 17 החברות מתומחרות מחדש מיד';
+  // W6: the registry carries companies that no longer report (no financials); the count names the active ones
+  // (the Pro home's rule: a company reports, or is the subsidiary of a listed holding on the registry)
+  const R = reg.data!, activeN = R.filter((c) => c.has_financials || R.some((x) => x.id !== c.id && c.id.startsWith(`${x.id}_`) && x.market_group === c.market_group)).length, dormantN = ctx.length - activeN;
+  const head = act.length || scn.nc ? headline(rank(res, 'vul'), label) : `הזיזו מחוון או בחרו תרחיש: ${activeN} החברות הפעילות מתומחרות מחדש מיד`;
   const below = res.filter((r) => r.tier === 0);
   const shown = ranked.filter((r) => r.tier < 2), none = ranked.filter((r) => r.tier === 2);
   const list = all || phone === false && shown.length <= 10 ? shown : shown.slice(0, phone ? 6 : 10);
@@ -218,7 +221,7 @@ export function Scenarios() {
     <div className="scn">
       <div className="pagehead"><div>
         <h1><span className="icotile"><Icon name="sliders" /></span>חדר תרחישים</h1>
-        <div className="sub"><span><span className="num">{ctx.length}</span> חברות</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/drivers">המנגנונים</Link><Link to="/industry/csm?view=stress">מעבדת הרגישויות</Link><Link to="/capital">הון ואפשרויות הקצאה</Link><Link to="/fragility?s=scen">מוניטור שבריריות</Link></div>
+        <div className="sub"><span><span className="num">{activeN}</span> חברות פעילות{dormantN > 0 && <span className="dim"> (<span className="num">{dormantN}</span> לא פעילות בדיווח)</span>}</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/drivers">המנגנונים</Link><Link to="/industry/csm?view=stress">מעבדת הרגישויות</Link><Link to="/capital">הון ואפשרויות הקצאה</Link><Link to="/fragility?s=scen">מוניטור שבריריות</Link></div>
       </div></div>
 
       {presetBar}

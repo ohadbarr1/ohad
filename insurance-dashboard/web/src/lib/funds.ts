@@ -37,6 +37,8 @@ export interface FundX extends Fund {
   tx?: Tx | null; gone?: boolean; end?: number; end_assets?: number | null;
   /** W2: the last eight published quarters of the actuarial balance, [yyyymm, %] oldest first (pension only) */
   act_h?: [number, number][] | null;
+  /** W6 trust flags (lib/flags.ts): intra-group migration (the group's product total and its track count), exposures to check */
+  mig?: { grp: number; n: number } | null; chk?: ('st' | 'fo' | 'fx')[] | null;
 }
 export interface FundsFile { asof: number; source: string; funds: FundX[]; net_method?: string; real_method?: string; cpi_asof?: number; closed_n?: number }
 export interface HistX extends FundHist { yn?: (number | null)[]; act?: (number | null)[]; nd?: (number | null)[]; cat?: (string | null)[] }
@@ -269,7 +271,8 @@ export const FAM_F = 'משפחה לפי שם המסלול ברשות (כללי, 
 /** Equity exposure of a category: median and standard deviation over its tracks (n ≥ 5), to flag a track whose label hides its risk. */
 export function equitySpread(fs: FundX[]): Map<string, { med: number; sd: number; n: number }> {
   const by = new Map<string, number[]>();
-  fs.forEach((f) => { if (f.st != null && f.assets) { const k = catKey(f); by.set(k, [...(by.get(k) ?? []), f.st]); } });
+  // W6: a share published outside the plausible range (funds.json `chk`, lib/flags.ts) is not part of the category's spread
+  fs.forEach((f) => { if (f.st != null && f.assets && !(f.chk ?? []).includes('st') && f.st <= 120 && f.st >= -20) { const k = catKey(f); by.set(k, [...(by.get(k) ?? []), f.st]); } });
   const out = new Map<string, { med: number; sd: number; n: number }>();
   by.forEach((xs, k) => {
     if (xs.length < 5) return;

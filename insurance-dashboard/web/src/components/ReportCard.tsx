@@ -14,7 +14,8 @@ export type Tok = string | { f: string } | { p: string } | { d: string } | { pl:
 export interface CardSrc { k: 'pg' | 'calc' | 'xbrl' | 'count'; u?: number | null; pg?: number | null; dp?: string | null; dt?: string; fl?: string[]; l?: string | null; late?: string;
   op?: string; in?: string[]; fx?: string; rid?: number | null; ref?: { l: string; q?: string } }
 export interface CardFact { v: number; u: 'm' | 'pct' | 'pp' | 'dpct' | 'dm' | 'x' | 'n' | 'tpct'; t: string; s: CardSrc; std?: '17' | '4' }
-export interface CardRow { k: string; l: string; cur: string; yoy?: string; dy?: string | null; qoq?: string; dq?: string | null; y0?: string; alt?: 1; der?: 1; dyx?: string; dqx?: string; basis?: string; at?: string; multi?: 1 }
+export interface CardRow { k: string; l: string; cur: string; yoy?: string; dy?: string | null; qoq?: string; dq?: string | null; y0?: string; alt?: 1; der?: 1; dyx?: string; dqx?: string; basis?: string; at?: string; multi?: 1;
+  /** W6: why the basis differs from another page's (no digit: the card's text is validated by pipeline/check_cards.py) */ note?: string }
 export interface CardTarget { i: number; l: string; e: string; src?: string | null; v?: string; lo?: string; hi?: string; h?: number | null; act?: string; st?: string | null; y?: number }
 export interface Card {
   v: number; c: string; name: string; kind: 'ins' | 'fund'; p: string; end: string; w: 'Q' | 'FY'; st: 'verified' | 'unverified';
@@ -124,7 +125,8 @@ export function ReportCardView({ card, actions, tiles }: { card: Card; actions?:
                 <span role="rowheader" className="rc-l">{r.l}
                   {r.alt && <span className="chip est" title="אין בדוח שורת ייחוס לבעלי המניות; מוצגת שורת הרווח לתקופה">שורת הרווח</span>}
                   {r.der && <span className="chip est">נגזר</span>}
-                  {r.basis && <span className="chip">{r.basis}</span>}
+                  {r.basis && <span className={r.note ? 'chip est' : 'chip'} title={r.note}>{r.basis}</span>}
+                  {r.note && <Link className="dim" to="/industry/csm" title={r.note}>בגשר ה-CSM</Link>}
                   {r.at && r.at !== card.end && <span className="chip est">ליום <span className="num">{pubLabel(r.at)}</span></span>}
                   {r.multi && <span className="chip est">כמה ערכים</span>}
                   {card.f[r.cur]?.s.late && <span className="chip est" title="הנתון כפי שהודפס מחדש בדוח מאוחר יותר">לפי <span className="num">{repName(card.f[r.cur].s.late!)}</span></span>}

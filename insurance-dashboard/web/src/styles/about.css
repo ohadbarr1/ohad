@@ -20,3 +20,14 @@
   .brand-m span { color: var(--accent); }
 }
 @media print { .site-foot { display: none; } }
+
+/* /methodology (W6 trust): one screen per section, plain text, definitions in a list */
+.about.method { max-width: 760px; }
+.about.method nav.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.about.method section { padding-top: 6px; border-top: 1px solid var(--line-soft); scroll-margin-top: 72px; }
+.about.method dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 6px 0 0; }
+.about.method dt { color: var(--muted); }
+.about.method dd { margin: 0; line-height: 1.6; }
+.about.method code { font-size: 12px; direction: ltr; unicode-bidi: isolate; }
+.about.method .src-list li { margin: 0; }
+@media (max-width: 600px) { .about.method dl { grid-template-columns: 1fr; gap: 2px; } .about.method dt { margin-top: 8px; } }

@@ -169,6 +169,7 @@ export function QuestionPage() {
         <h1 className="qp-h1">{row.q}</h1>
         <div className="sub"><span>שואלים: {row.chairs.map((c) => I.chairs[c] ?? c).join(' · ')}</span>{row.asof && <><span>·</span><span>נכון ל-<span className="num">{row.asof}</span></span></>}
           {row.h && <><span>·</span><span className="dim" title="חתימת התשובה: משתנה כשהפסיקה או המשפט משתנים">גרסה <span className="mono">{row.h}</span></span></>}
+          {row.prev && <><span>·</span><span className="qp-prev" title={`הגרסה הקודמת ${row.prev.h}: "${row.prev.corr}"`}>השתנה מ-<q>{row.prev.corr}</q> ב-<span className="num">{pubLabel(row.prev.at)}</span></span></>}
           <span>·</span><WatchToggle k="q" id={row.id} what={`השאלה ${row.id}`} /></div>
       </div></div>
       {row.st !== 'ok' ? <Empty title="אין תשובה כרגע" icon="questions">{row.why}</Empty>

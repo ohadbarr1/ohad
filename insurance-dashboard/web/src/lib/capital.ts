@@ -135,8 +135,21 @@ export interface Stressed {
   /** stressed distributable = the lowest stressed constraint − the buffer */ v: number | null;
   /** v ÷ the base distributable × 100 */ survive: number | null; /** v ÷ SCR of the binding basis × 100 */ pctScr: number | null;
   gap: string[]; est: string[]; prov: () => Prov;
+  /** W6: the balance-sheet date of the solvency sensitivity disclosure the Δ ratio comes from (drivers lines.solv.d), and whether it is
+   *  older than two reports (more than two quarters) before the capital base's date */
+  vint: string | null; old: boolean;
 }
 const SOLV_INPUTS = (p: Preset) => p.sc.y10 !== 0 || p.sc.eq !== 0;
+/** "Q4'21" / "FY'25"-style label of a disclosure date */
+export const vintLabel = (d: string | null): string => {
+  if (!d) return '–';
+  const y = d.slice(2, 4), m = Number(d.slice(5, 7));
+  return m === 12 ? `FY'${y}` : `Q${Math.ceil(m / 3)}'${y}`;
+};
+/** months between two ISO dates (b − a) */
+const monthsBetween = (a: string, b: string) => (Number(b.slice(0, 4)) - Number(a.slice(0, 4))) * 12 + Number(b.slice(5, 7)) - Number(a.slice(5, 7));
+/** a sensitivity disclosure older than two reports before the base (A7 rule: more than six months) */
+export const vintOld = (vint: string | null, base: string): boolean => vint != null && monthsBetween(vint, base) > 6;
 export function stressOf(c: CapOk, f: DriverFile, presets: Preset[], nc: Map<string, NcRowJ>, ncAt: NcBase, lts: LtsResolver, pp: number, mode: 'clamp' | 'linear' = 'clamp'): Stressed[] {
   const ctx = makeCtx(c.id, c.name, f, nc, lts);
   const buf = c.bases[bindingOf(c).basis]!.scr.v! * pp / 100;
@@ -177,7 +190,8 @@ export function stressOf(c: CapOk, f: DriverFile, presets: Preset[], nc: Map<str
           { label: 'התרחיש', v: p.he, src: () => p.prov },
         ] };
     };
-    return { id: p.id, he: p.he, preset: p, dW, dWo, cons, binding: low?.id ?? null, v, survive, pctScr, gap: [...new Set(gap)], est: [...new Set(est)], prov };
+    const vint = SOLV_INPUTS(p) ? f.lines.solv?.d ?? null : null;
+    return { id: p.id, he: p.he, preset: p, dW, dWo, cons, binding: low?.id ?? null, v, survive, pctScr, gap: [...new Set(gap)], est: [...new Set(est)], prov, vint, old: vintOld(vint, c.date) };
   });
 }
 /** the worst preset that was computed (the lowest stressed distributable) */

@@ -14,6 +14,9 @@ Published files (standard library; always run):
   categories   funds/cat.json y and n re-derive from the histories (point-in-time membership: each track in the category its `ct` gives for
                that month, closed tracks included, assets > 0), asset-weighted, within rounding
   taxonomy     every disagreement flag carries the name-rule label; the coverage counts in funds.json tx equal the rows
+  flags        W6 trust flags re-derive from the published rows: mig (intra-group migration: the track's nd12 against its group's product
+               total, funds_lib.migration) and chk (an exposure share outside [EXP_LO, EXP_HI], funds_lib.exposure_checks); the methods
+               are printed in funds.json (mig_method, exp_method)
 Upstream (needs pandas and data/raw; skipped with a warning otherwise, e.g. in CI without the regulator files):
   asof         funds.asof = the latest REPORT_PERIOD of every family (a family that lags fails: its tracks would look closed)
   no drops     every track in the raw files is live (in funds.json) or closed (in funds/closed.json), and live = the latest month's rows
@@ -197,6 +200,15 @@ def published(R):
     extra = {(c, p) for (c, p), x in acc.items() if x[2]} - {(c, p) for c, rec in cats.items() for p in rec["p"]}
     R.check(not bad_c, f"{len(bad_c)} category months that do not re-derive, e.g. {bad_c[:2]}")
     R.check(not extra, f"{len(extra)} category months in the histories missing from cat.json, e.g. {sorted(extra)[:2]}")
+
+    # W6 trust flags: migration and exposure checks re-derive from the rows themselves
+    want = FL.migration(live)
+    got = {f["k"]: f["mig"] for f in live if "mig" in f}
+    diff = sorted(set(want) ^ set(got)) + sorted(k for k in want if k in got and want[k] != got[k])
+    R.check(not diff, f"{len(diff)} migration flags that do not re-derive, e.g. {diff[:3]}")
+    bad_x = [f["k"] for f in live + closed if (f.get("chk") or []) != FL.exposure_checks(f)]
+    R.check(not bad_x, f"{len(bad_x)} exposure flags that do not re-derive, e.g. {bad_x[:3]}")
+    R.check(F.get("mig_method") == FL.MIG_METHOD and F.get("exp_method") == FL.EXP_METHOD, "funds.json: mig_method / exp_method missing or stale")
 
     # taxonomy
     tx = F.get("tx", {})

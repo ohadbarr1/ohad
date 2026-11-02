@@ -10,6 +10,7 @@ import { useStored } from '../../lib/local';
 import { SinceDot } from '../SinceBadge';
 import { usePhone } from '../../lib/useMedia';
 import { SeasonStrip } from './SeasonStrip';
+import { FlowDef } from '../FlowDef';  // W6 trust
 import { CompanyList, type ListRow } from './CompanyList';
 import { DataTable } from '../DataTable';
 import { periodLabelShort, periodTag } from '../../lib/kpi';
@@ -136,6 +137,7 @@ export function ProHome() {
                 ]} />)}
             {inactive.length > 0 && <div className="src cos-inactive">לא פעילות בדיווח, מחוץ לטבלה: {inactive.map(({ c, q }, i) => <span key={c.id}>{i ? ' · ' : ''}<Link to={`/company/${c.id}`}>{c.name_he}</Link>{q ? <span className="num"> (נתון אחרון {periodTag(q.period)})</span> : ''}</span>)}</div>}
             <div className="src">רווח, הון ו-ROE: XBRL של הדוחות התקופתיים (ילין לפידות: הדוחות הכספיים שלה, 100%) · נכסים, צבירה ודמי ניהול: רשות שוק ההון (פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון; צבירה: פנסיה וגמל)</div>
+            {view === 'mkt' && <FlowDef kinds={['organic']} className="src" />}
           </section>
           <FeedBlock />
         </div>

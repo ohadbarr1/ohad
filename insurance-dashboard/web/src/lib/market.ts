@@ -194,7 +194,10 @@ export function retP(f: TrackRef, periods: number[], value: string, title: strin
 /** Exposure as % of the track's assets. The regulator publishes the amount; the percentage is ours. */
 export function expP(f: TrackRef, period: number, col: string, label: string, pctV: number | null, assets: number | null): Prov {
   const amt = pctV != null && assets != null ? pctV * assets / 100 : null;
-  return { k: 'calc', title: `${label} · ${f.name}`, value: pctV == null ? '–' : nf(pctV, 1) + '%', formula: `${col} חלקי TOTAL_ASSETS`,
+  // W6: a share above 120% or below −20% of assets is shown as published and marked for checking with the manager (lib/flags.ts)
+  const odd = pctV != null && (pctV > 120 || pctV < -20);
+  return { k: 'calc', title: `${label} · ${f.name}${odd ? ' · לבדיקה מול המנהל' : ''}`, value: pctV == null ? '–' : nf(pctV, 1) + '%', formula: `${col} חלקי TOTAL_ASSETS`,
+    note: odd ? 'לבדיקה מול המנהל: חשיפה מעל 120% או מתחת ל-20%− מהנכסים, כפי שפורסמה ברשות. אינה נכללת בפיזור הקטגוריה ובממוצעים' : undefined,
     inputs: [{ label: `${col} (גולמי)`, v: amt == null ? '–' : `≈ ${nf(amt, 0)}`, src: () => fundP(f, period, col, label, amt == null ? '–' : `≈ ${nf(amt, 0)}`, 'מיליוני ש"ח', 'הערך הגולמי מוצג מעוגל, כפי שנגזר מהאחוז; הרשומה במאגר מציגה אותו במדויק') },
       { label: 'נכסים', v: assets == null ? '–' : nf(assets, 0), src: () => fundP(f, period, 'TOTAL_ASSETS', 'נכסים', assets == null ? '–' : nf(assets, 1), 'מיליוני ש"ח') }] };
 }

@@ -7,7 +7,7 @@ import { ltsProv } from '../lib/lens';
 import { driversPath, fmt, fmtS, type DriverFile, type LtsResolver } from '../lib/drivers';
 import { ncRows, presets, type CatFile, type CurveFile, type MacroFile, type NowcastFile, type Preset } from '../lib/scenarios';
 import {
-  BASIS_HE, CAPITAL_PATH, KIND_HE, OPT_HE, bindingOf, boltOf, cprov, distAt, isBolt, isOk, optionsAt, stressOf, worstOf,
+  BASIS_HE, CAPITAL_PATH, KIND_HE, OPT_HE, bindingOf, boltOf, cprov, distAt, isBolt, isOk, optionsAt, stressOf, vintLabel, worstOf,
   type CapFile, type CapOk, type CFig, type OptRow, type Rows, type Stressed,
 } from '../lib/capital';
 import '../styles/capital.css';
@@ -124,13 +124,13 @@ export function StressTable({ c, S: xs, base, sel, onSel }: { c: CapOk; S: Stres
       {xs.map((s) => {
         const d = bind.basis === 'w' ? s.dW : s.dWo, w = s.survive == null ? 0 : Math.max(0, Math.min(100, s.survive));
         return (
-          <div key={s.id} className={`tr ${sel === s.id ? 'sel' : ''}`}>
+          <div key={s.id} className={`tr ${sel === s.id ? 'sel' : ''}${s.old ? ' old' : ''}`}>
             <div className="lbl">{onSel ? <button type="button" className="lnk" aria-pressed={sel === s.id} onClick={() => onSel(s.id)}>{s.he}</button> : s.he}<Sourced className="dim" src={() => s.preset.prov}>הגדרה</Sourced></div>
             <div data-l="Δ יחס, נ״א">{!(s.preset.sc.y10 || s.preset.sc.eq) ? <span className="na" title="דמי ניהול, ניוד, מדד ואשראי אינם מגולגלים ליחס (אין גילוי)">אין ערוץ ליחס</span> : <span className={`v num ${d != null && d < 0 ? 'neg' : ''}`}>{d == null ? '–' : sign(d)}</span>}</div>
             <div data-l="הון בר-חלוקה">{s.v == null ? <span className="na">לא חושב</span> : <Sourced className={`v num ${s.v < 0 ? 'neg' : ''}`} src={s.prov}>{amt(s.v)}</Sourced>}</div>
             <div data-l="נשאר מהעודף">{s.survive == null ? <span className="na">{base <= 0 ? 'אין עודף בבסיס' : '–'}</span> : <><span className="v num">{`⁦${fmt(s.survive, 0)}%⁩`}</span><span className={`cap-bar ${s.survive <= 0 ? 'gone' : s.survive < 50 ? 'low' : ''}`} aria-hidden="true"><i style={{ width: `${w}%` }} /></span></>}</div>
             <div data-l="% מה-SCR"><span className={`v num ${s.pctScr != null && s.pctScr < 0 ? 'neg' : ''}`}>{s.pctScr == null ? '–' : signP(s.pctScr)}</span></div>
-            <div data-l="סימונים" className="cap-mk">{s.gap.length > 0 && <Gap t={s.gap.join('\n')} />}{s.est.length > 0 && <Est t={s.est.join('\n')} />}{!s.gap.length && !s.est.length && <span className="na">–</span>}</div>
+            <div data-l="סימונים" className="cap-mk">{s.vint && <span className={`chip${s.old ? ' est' : ''}`} title={s.old ? `רגישות היחס מגילוי ליום ${s.vint}, ישן ביותר משני דוחות מבסיס ההון (${c.period}); מוצג מעומעם` : `רגישות היחס מגילוי ליום ${s.vint}`}>רגישות <span className="num">{vintLabel(s.vint)}</span></span>}{s.gap.length > 0 && <Gap t={s.gap.join('\n')} />}{s.est.length > 0 && <Est t={s.est.join('\n')} />}{!s.gap.length && !s.est.length && !s.vint && <span className="na">–</span>}</div>
           </div>
         );
       })}

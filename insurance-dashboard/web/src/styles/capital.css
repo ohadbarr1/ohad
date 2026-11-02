@@ -81,3 +81,7 @@
 
 /* the bolt-on target sits in running text: underlined, not colour alone (WCAG 1.4.1) */
 a.cap-bolt { text-decoration: underline; text-underline-offset: 2px; }
+
+/* W6 trust: a stress row whose solvency sensitivity is older than two reports before the capital base is muted */
+.cap-t .tr.old > div, .cap-rank > li.old > div:not(.who) { opacity: 0.55; }
+.cap-rank > li.old .who .s::after, .cap-t .tr.old .lbl::after { content: ''; }

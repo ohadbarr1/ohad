@@ -7,7 +7,7 @@ import { BufferInput, OptionTable, StressTable, lts, useBufferParam, useCapitalB
 import { load } from '../lib/useData';
 import { idCss } from '../lib/identity';
 import { driversPath, fmt, fmtS, type DriverFile } from '../lib/drivers';
-import { BASIS_HE, bindingOf, cprov, distAt, isOk, optionsAt, stressOf, worstOf, type CapOk, type Rows, type Stressed } from '../lib/capital';
+import { BASIS_HE, bindingOf, cprov, distAt, isOk, optionsAt, stressOf, vintLabel, worstOf, type CapOk, type Rows, type Stressed } from '../lib/capital';
 import '../styles/scenarios.css';
 import '../styles/capital.css';
 
@@ -98,13 +98,13 @@ export function Capital() {
             const b = bindingOf(l.c), dist = distAt(l.c, l.R), s = l.pick;
             const ke = l.c.pnl.ke.v!;
             return (
-              <li key={l.c.id} className={s?.v == null ? 'incomplete' : ''}>
+              <li key={l.c.id} className={`${s?.v == null ? 'incomplete' : ''}${s?.old ? ' old' : ''}`.trim()}>
                 <div className="n sp">{s?.v == null ? '–' : i + 1}</div>
                 <div className="who"><i className="scn-dot" style={{ background: idCss(l.c.id) }} aria-hidden="true" /><Link to={`/company/${l.c.id}`}>{l.c.name}</Link>
                   <span className="s">{b.he} {fmt(b.t, b.t % 1 ? 1 : 0)}% · {l.c.period}{(b.kind === 'reg' || b.stated == null) && <> <span className="chip est" title={b.kind === 'reg' ? 'לא הודפס יעד דירקטוריון לחברת הביטוח: נמדד מול הדרישה הרגולטורית, 100%' : 'בסיס היעד לא צוין: מוחל על שני הבסיסים, המחמיר קובע'}>אומדן</span></>}</span></div>
                 <div data-l="הון בר-חלוקה"><Sourced className={`v num ${dist.v! < 0 ? 'neg' : ''}`} src={() => cprov(l.c, dist.prov, lts)}>{amt(dist.v)}</Sourced><span className="s">מרווח {fmt(l.R.pp, 1)} נ״א</span></div>
                 <div data-l="אחרי התרחיש">{s?.v != null ? <Sourced className={`v num ${s.v < 0 ? 'neg' : ''}`} src={s.prov}>{amt(s.v)}</Sourced> : <span className="na">לא חושב</span>}
-                  <span className="s">{s ? s.he : l.incomplete.length ? <>אין רגישויות: {l.incomplete.join(', ')} <span className="chip gap" title={l.St.find((x) => x.v == null)?.gap.join('\n')}>חסר</span></> : '–'}{s && s.est.length > 0 && <> <span className="chip est" title={s.est.join('\n')}>אומדן</span></>}</span></div>
+                  <span className="s">{s ? s.he : l.incomplete.length ? <>אין רגישויות: {l.incomplete.join(', ')} <span className="chip gap" title={l.St.find((x) => x.v == null)?.gap.join('\n')}>חסר</span></> : '–'}{s && s.est.length > 0 && <> <span className="chip est" title={s.est.join('\n')}>אומדן</span></>}{s?.vint && <> <span className={`chip${s.old ? ' est' : ''}`} title={s.old ? `רגישות היחס מגילוי ליום ${s.vint}: ישן ביותר משני דוחות מבסיס ההון (${l.c.period}), מוצג מעומעם` : `רגישות היחס מגילוי ליום ${s.vint}`}>רגישות <span className="num">{vintLabel(s.vint)}</span></span></>}</span></div>
                 <div data-l="% מה-SCR"><span className={`v num ${s?.pctScr != null && s.pctScr < 0 ? 'neg' : ''}`}>{s?.pctScr == null ? '–' : signP(s.pctScr)}</span><span className="s">{BASIS_HE[b.basis]}</span></div>
                 <div data-l="נשאר מהעודף"><span className="v num">{s?.survive == null ? '–' : `⁦${fmt(s.survive, 0)}%⁩`}</span>{s?.survive != null && <span className={`cap-bar ${s.survive <= 0 ? 'gone' : s.survive < 50 ? 'low' : ''}`} aria-hidden="true"><i style={{ width: `${Math.max(0, Math.min(100, s.survive))}%` }} /></span>}</div>
                 <div className="opts" data-l="אפשרויות"><span className="s">דיבידנד / רכישה: <bdi>ke {fmt(ke, 1)}%</bdi> · צמיחה: <bdi>ROE {fmt(l.R.org.roic.v, 1)}%</bdi> <span className="chip est" title="ROE LTM כאומדן לתשואה השולית">אומדן</span></span>

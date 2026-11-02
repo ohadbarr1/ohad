@@ -14,7 +14,8 @@ import { periodTag, type CompanyKpi } from '../lib/kpi';
 import type { Prov } from '../lib/prov';
 import type { RegistryCompany } from '../lib/types';
 import { useStored } from '../lib/local';
-import { load, useIfrsData, useKpis, useRegistry } from '../lib/useData';
+import { load, useIfrsData, useKpis, useLoad, useRegistry } from '../lib/useData';
+import { expectationsPath, type EMeta } from '../lib/expectations';
 import { useMacro, mLabel } from '../lib/macro';
 import { ASSUME0, csmMultiples, impliedKe, justifiedPb, keOf, keProv, marketOf, mil, requiredRoe, rfProv, useCsm, useInsurers, xS, pctS, MM,
   type Assume, type Mkt, type Rf, type TasePrice, type CsmOf } from '../lib/valuation';
@@ -58,6 +59,8 @@ export function ValuationLayout() {
   const [a0, setA] = useStored<Assume>('val.assume', ASSUME0);
   const a = { ...ASSUME0, ...a0 };
   const [manual, setManual] = useStored<number | null>(`val.px.${id ?? ''}`, null);
+  // W6: the expectations decoder (A3) is solved in the pipeline on a dated manual price; the date is said in this header too
+  const exp = useLoad<{ meta: EMeta }>(id && has ? expectationsPath(id) : null);
   const insurers = useInsurers(reg.data, kpis);
   if (error) return <ErrorBox what="נתוני החברות" error={error} />;
   if (reg.data && !known) return <NotFound />;
@@ -90,7 +93,8 @@ export function ValuationLayout() {
     <div className="wide-page valuation">
       <div className="pagehead">
         <div><h1><span className="icotile"><Icon name="value" /></span>הערכת שווי · {entry.name_he}</h1>
-          <div className="sub">מודלים על נתוני הדוחות; המחיר והשווי בשוק הם קלט בלבד · {k.latest('equity') && <>הון לפי {periodTag(k.latest('equity')!.period)}</>}</div></div>
+          <div className="sub">מודלים על נתוני הדוחות; המחיר והשווי בשוק הם קלט בלבד · {k.latest('equity') && <>הון לפי {periodTag(k.latest('equity')!.period)}</>}
+            {exp.data?.meta.price_label && <> · <span className="chip est" title="ציפיות השוק (A3) נפתרו במערכת הנתונים על מחיר ידני ליום זה; המחיר שמוזן כאן לא משנה את הלוח ההוא">ציפיות השוק: <span className="num">{exp.data.meta.price_label}</span></span></>}</div></div>
       </div>
       {/* one toolbar row: the models as tabs, the company at the end (design lane) */}
       <Toolbar lead={<nav className="subnav" aria-label="מודל">{TABS.map(([to, l, adv]) => <NavLink key={to} to={to ? to : '.'} end={!to} className={adv ? 'adv' : undefined}>{l}</NavLink>)}</nav>}>

@@ -349,6 +349,15 @@ def main():
         funds.append(row_of(r, latest, st, fo, fx))
     funds.sort(key=lambda f: -(f["assets"] or 0))
 
+    # W6 trust flags: an exposure share the regulator published outside the plausible range (chk), and a 12-month flow that points
+    # against the group's own total for the product (mig): money that moved between the group's tracks (funds_lib.MIG_METHOD)
+    for f in funds:
+        chk = FL.exposure_checks(f)
+        if chk:
+            f["chk"] = chk
+    for k, m in FL.migration(funds).items():
+        next(f for f in funds if f["k"] == k)["mig"] = m
+
     # percentiles in category: this month (live tracks, today's category) and last month (the members as they were then)
     rows_g = [(f["k"], f["prod"] + " | " + f["track"], {w: f[w] for w in WINS}) for f in funds if (f["assets"] or 0) > 0]
     rows_n = [(f["k"], f["prod"] + " | " + f["track"], f["net"]) for f in funds if (f["assets"] or 0) > 0]
@@ -383,6 +392,9 @@ def main():
         f["gone"], f["end"] = True, T
         if pos:
             f["end_assets"], f["end_ap"] = round(pos[-1][1], 1), pos[-1][0]
+        chk = FL.exposure_checks(f)
+        if chk:
+            f["chk"] = chk
         closed.append(f)
     closed.sort(key=lambda f: (-f["end"], -(f.get("end_assets") or 0), f["k"]))
 
@@ -419,7 +431,8 @@ def main():
     if tb_doc:
         tx.update(source=tb_doc["source"], url=tb_doc["url"], modified=tb_doc.get("modified"), fetched=tb_doc.get("fetched"))
     doc = {"asof": latest, "source": SOURCE, "funds": funds, "basis": BASIS, "net_method": FL.NET_METHOD, "real_method": FL.REAL_METHOD,
-           "cpi_asof": max(cpi) if cpi else None, "cpi_src": cpi_src, "pr_method": FL.PR_METHOD, "closed_n": len(closed), "tx": tx}
+           "cpi_asof": max(cpi) if cpi else None, "cpi_src": cpi_src, "pr_method": FL.PR_METHOD, "closed_n": len(closed), "tx": tx,
+           "mig_method": FL.MIG_METHOD, "exp_method": FL.EXP_METHOD}
     (OUT / "funds.json").write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (OUT / "funds" / "closed.json").write_text(json.dumps({"asof": latest, "source": SOURCE, "basis": BASIS, "n": len(closed), "funds": closed},
                                                           ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -428,6 +441,7 @@ def main():
     print("net:", sum(1 for f in funds if "y12" in f["net"]), "of", len(funds), "with net y12;", sum(1 for f in funds if "a5" in f["net"]), "with net a5;",
           "real y12:", sum(1 for f in funds if "y12" in f["real"]))
     print("track 'אחר':", int((cur["track"] == "אחר").sum()), "; IRA tracks (0.00 months read as not reported):", n_ira)
+    print("flags:", sum(1 for f in funds if "mig" in f), "intra-group migration;", sum(1 for f in funds if "chk" in f), "exposures to check")
 
 
 if __name__ == "__main__":

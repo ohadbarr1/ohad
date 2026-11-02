@@ -46,3 +46,12 @@ td .src, .mval .src { font-variant-numeric: tabular-nums; }
 }
 @keyframes srcup { from { transform: translateY(40px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .srcwrap, .srcsheet { animation: none; } }
+
+/* W6 trust: the definitions and the corrections channel, at the foot of every source sheet */
+.srcfoot { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--line-soft); font-size: 12px; color: var(--muted); }
+.srcfoot a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.srcfacts dd a { color: var(--link, var(--accent-text)); text-decoration: underline; text-underline-offset: 2px; }
+/* the flow measure named under a table header (components/FlowDef.tsx) */
+.flowdef { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin: 0 0 8px; line-height: 1.5; }
+.flowdef a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.chip.mig { white-space: nowrap; }

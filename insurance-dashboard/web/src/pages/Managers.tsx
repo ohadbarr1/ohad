@@ -12,6 +12,7 @@ import { DataTable } from '../components/DataTable';
 import { useFunds, useMarketData } from '../lib/useData';
 import { useDoor } from '../lib/door';
 import type { FundX } from '../lib/funds';
+import { FlowDef, MigChip } from '../components/FlowDef';  // W6 trust
 import { FeeBench, ManagerCards } from '../components/agent/FeeBench';  // W1-agent
 import { ServiceClaims } from '../components/agent/ServicePanel';  // W2
 import type { Family, Fund } from '../lib/types';
@@ -68,6 +69,10 @@ function AgentManagers({ views, cards }: { views: React.ReactNode; cards: boolea
 
 function ManagersTable({ views }: { views: React.ReactNode }) {
   const { data, error } = useMarketData();
+  // W6: the trust flags live on funds.json rows (build_funds.py `mig`): joined to the snapshot's tracks by family letter + id
+  const FX = useFunds().data;
+  const flagged = useMemo(() => { const m = new Map<string, FundX>(); (FX?.funds as FundX[] | undefined)?.forEach((f) => { if (f.mig) m.set(f.k, f); }); return m; }, [FX]);
+  const flagOf = (f: Fund) => flagged.get(`${f.fam === 'pension' ? 'p' : f.fam === 'gemel' ? 'g' : 'i'}${f.id}`);
   const [fam, setFam] = useState<Fam>('all');
   const [grp, setGrp] = useState('all');
   const [open, setOpen] = useState<string | null>(null);
@@ -100,6 +105,7 @@ function ManagersTable({ views }: { views: React.ReactNode }) {
         <Pick label="קבוצה" cap="קבוצה" value={grp} onChange={setGrp} options={[['all', 'כל הקבוצות'], ...groups.map((g) => [g, g] as [string, string])]} />
       </>} />
       <Panel aside={<span>דמי ניהול ותשואות משוקללים בנכסים · צבירה וניוד: LTM, מיליארדי ש"ח</span>}>
+        <FlowDef kinds={['organic', 'transfers']} />
         <DataTable caption="חברות מנהלות" rows={rows} rowKey={(r) => r.mgr} export={{ name: `fox-managers-${data.meta.asof}`, title: 'חברות מנהלות', note: `רשות שוק ההון · ${asof} · נכסים, צבירה וניוד: מיליארדי ש"ח` }}
           rowClass={(r) => (open === r.mgr ? 'lead' : undefined)}
           rowProps={(r) => ({ style: { cursor: 'pointer' }, onPointerEnter: () => r.list.slice(0, 40).forEach((f) => warmHist(fundRef(f))), onClick: (e) => stop(e, () => setOpen(open === r.mgr ? null : r.mgr)) })}
@@ -110,7 +116,7 @@ function ManagersTable({ views }: { views: React.ReactNode }) {
               <td>{f.stock == null ? '' : <S src={() => fundCell(A, f, 'stock')!}><span className="num muted">{`מניות ${fmt(f.stock, 'int')}%`}</span></S>}</td>
               <td>{f.fee == null ? '–' : <S src={() => fundCell(A, f, 'fee')!}><span className="num">{fmt(f.fee, 'pct', { d: 2 })}</span></S>}</td><td>{f.depfee == null ? '–' : <S src={() => fundCell(A, f, 'depfee')!}><span className="num">{fmt(f.depfee, 'pct', { d: 2 })}</span></S>}</td>
               <td onPointerEnter={() => warmHist(fundRef(f))}>{f.y12 == null ? '–' : <S src={() => fundCell(A, f, 'y12')!}><span className="num">{fmt(f.y12, 'pct', { signed: true })}</span></S>}</td><td>{f.a5 == null ? '–' : <S src={() => fundCell(A, f, 'a5')!}><span className="num">{fmt(f.a5, 'pct')}</span></S>}</td>
-              <td onPointerEnter={() => warmHist(fundRef(f))}>{f.net12 == null ? '–' : <S src={() => fundCell(A, f, 'net12')!}><span className={`num ${cls(f.net12)}`}>{fmt(f.net12 / 1000, 'n', { d: 2 })}</span></S>}</td><td onPointerEnter={() => warmHist(fundRef(f))}>{f.tr12 == null ? '–' : <S src={() => fundCell(A, f, 'tr12')!}><span className={`num ${cls(f.tr12)}`}>{fmt(f.tr12 / 1000, 'n', { d: 2 })}</span></S>}</td>
+              <td onPointerEnter={() => warmHist(fundRef(f))}>{f.net12 == null ? '–' : <S src={() => fundCell(A, f, 'net12')!}><span className={`num ${cls(f.net12)}`}>{fmt(f.net12 / 1000, 'n', { d: 2 })}</span></S>}{flagOf(f) && <> <MigChip f={flagOf(f)!} flowSrc={() => fundCell(A, f, 'net12')!} /></>}</td><td onPointerEnter={() => warmHist(fundRef(f))}>{f.tr12 == null ? '–' : <S src={() => fundCell(A, f, 'tr12')!}><span className={`num ${cls(f.tr12)}`}>{fmt(f.tr12 / 1000, 'n', { d: 2 })}</span></S>}</td>
             </tr>
           ))}
           columns={[
@@ -122,10 +128,10 @@ function ManagersTable({ views }: { views: React.ReactNode }) {
             { key: 'dep', head: 'מהפקדה', value: (r) => r.dep, unit: 'pct', d: 2, src: (r) => agg(r, 'depfee', 'דמי ניהול מהפקדה', 'AVG_DEPOSIT_FEE משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.dep, 2), undefined, (f) => pct(f.depfee, 2), true) },
             { key: 'y12', head: 'תשואה, LTM', value: (r) => r.y12, unit: 'pct', signed: true, src: (r) => agg(r, 'y12', 'תשואה LTM', 'תשואת LTM של כל מסלול, משוקללת ב-TOTAL_ASSETS', pct(r.y12, 1), undefined, (f) => pct(f.y12, 1), true) },
             { key: 'a5', head: '5 שנים, שנתי', value: (r) => r.a5, unit: 'pct', src: (r) => agg(r, 'a5', 'תשואה שנתית ממוצעת, 5 שנים', 'AVG_ANNUAL_YIELD_TRAILING_5YRS משוקלל ב-TOTAL_ASSETS, רק מסלולים עם נתון', pct(r.a5, 1), undefined, (f) => pct(f.a5, 1), true) },
-            { key: 'net', head: 'צבירה נטו', value: (r) => r.net, d: 2, tone: true, src: (r) => agg(r, 'net12', 'צבירה נטו, LTM', 'סכום צבירה אורגנית LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.net!, 2), 'מיליארד ש"ח', (f) => sn(f.net12!, 1)) },
+            { key: 'net', head: 'צבירה אורגנית', value: (r) => r.net, d: 2, tone: true, src: (r) => agg(r, 'net12', 'צבירה אורגנית, LTM', 'סכום DEPOSITS פחות WITHDRAWLS ב-12 החודשים האחרונים של המסלולים (מיליוני ש"ח), חלקי 1,000; בלי העברות. ביטוח-נט אינו מפרסם תזרימים', nf(r.net!, 2), 'מיליארד ש"ח', (f) => sn(f.net12!, 1)) },
             { key: 'tr', head: 'ניוד נטו', value: (r) => r.tr, d: 2, tone: true, src: (r) => agg(r, 'tr12', 'ניוד נטו, LTM', 'סכום העברות נטו LTM של המסלולים (מיליוני ש"ח), חלקי 1,000. ביטוח-נט אינו מפרסם תזרימים', nf(r.tr!, 2), 'מיליארד ש"ח', (f) => sn(f.tr12!, 1)) },
           ]} />
-        <div className="fnote">מקור: רשות שוק ההון, גמל-נט, פנסיה-נט וביטוח-נט. למסלולי הביטוח (ביטוחי מנהלים ופוליסות חיסכון) אין נתוני צבירה.</div>
+        <div className="fnote">מקור: רשות שוק ההון, גמל-נט, פנסיה-נט וביטוח-נט. למסלולי הביטוח (ביטוחי מנהלים ופוליסות חיסכון) אין נתוני צבירה. מסלול שמסומן "נדידה בתוך הקבוצה": הצבירה שלו הפוכה בסימנה לסך הקבוצה באותו מוצר.</div>
       </Panel>
     </>
   );

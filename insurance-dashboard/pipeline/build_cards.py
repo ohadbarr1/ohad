@@ -392,6 +392,13 @@ def build_card(c, e, kind, P, bk, rep_docs, per_of_url, rs, led_url, peer, ifrs_
                 flows[(fid, "b")] = ent.get("b")
             if (fid, ".c") in flows:
                 r = {"k": fid, "l": lab, "cur": flows[(fid, ".c")]}
+                # W6: the CSM ledger (csm_resolve) reads the group's figure on the cleaned basis (`cl`: the report's own footnote adjusts the
+                # opening data), so /industry/csm shows another number for the same cell; the card keeps the printed one and says so
+                adj = next((f for _, F in rs for f in F if f.get("m") == k and f.get("g") == "group" and f.get("d", "")[:10] == end
+                            and f.get("cl") == 1 and f.get("dv") is not None and f.get("v0") is not None and f["dv"] != f["v0"]), None)
+                if adj:
+                    r["basis"] = "כפי שהודפס"
+                    r["note"] = "בטבלת התנועה הודפס הסכום הזה; גשר ה-CSM באתר מציג לאותו רבעון את הסכום לפי הבסיס המותאם של הדוח (הערת שוליים: נתוני הפתיחה הותאמו). שני הבסיסים מסומנים"
                 if (fid, ".y") in flows:
                     r["yoy"] = flows[(fid, ".y")]
                     r["dy"], _ = delta(card, f"{fid}.dy", r["cur"], r["yoy"], cur_l, yoy_l)

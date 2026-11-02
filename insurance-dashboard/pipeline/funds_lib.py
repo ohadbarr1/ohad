@@ -192,3 +192,52 @@ def _bisect_right(a, x):
 
 def rnd(x, nd=2):
     return None if x is None or (isinstance(x, float) and not math.isfinite(x)) else round(float(x), nd)
+
+
+# ------------------------------------------------------------------------------------------------ trust flags (Wave 0, W6)
+# Intra-group migration: a track's 12-month net accrual (nd12 = NET_MONTHLY_DEPOSITS over 12 months: deposits − withdrawals + net
+# transfers) is strongly negative while its management group's total for the same product is positive, or the reverse. Money moved
+# between the group's own tracks (an age-based default re-sorting savers, a merger of tracks) reads as an outflow of the track, not of the
+# group. "Strongly": at least MIG_ABS NIS millions and MIG_PCT of the track's assets. The group total counts every live track of the group in
+# the product (the track itself included) and needs at least MIG_PEERS tracks with a flow.
+MIG_ABS, MIG_PCT, MIG_PEERS = 250.0, 1.0, 2
+MIG_METHOD = ("נדידה בתוך הקבוצה: צבירה נטו LTM של המסלול (הפקדות פחות משיכות ועוד העברות נטו, NET_MONTHLY_DEPOSITS) שלילית לפחות "
+              f"{MIG_ABS:.0f} מיליון ש\"ח ו-{MIG_PCT:.0f}% מנכסיו, בעוד סך הצבירה נטו של כל מסלולי הקבוצה באותו מוצר חיובי (או להפך). "
+              "הכסף עבר בין מסלולי הקבוצה, לא יצא ממנה")
+# Exposure plausibility: a share of assets (stocks, foreign, foreign currency) above EXP_HI or below EXP_LO percent is published as such by
+# the regulator but cannot be read at face value (a leveraged or mislabelled figure): marked for checking with the manager and left out of
+# category spreads and averages.
+EXP_HI, EXP_LO = 120.0, -20.0
+EXP_METHOD = (f"חשיפה מעל {EXP_HI:.0f}% או מתחת ל-{EXP_LO:.0f}% מהנכסים מסומנת 'לבדיקה מול המנהל' ואינה נכללת בפיזור הקטגוריה ובממוצעים; "
+              "הערך מוצג כפי שפורסם")
+EXP_KEYS = ("st", "fo", "fx")
+
+
+def exposure_checks(f):
+    """the exposure keys of a track row whose published share is outside [EXP_LO, EXP_HI]; [] when all are plausible"""
+    return [k for k in EXP_KEYS if f.get(k) is not None and (f[k] > EXP_HI or f[k] < EXP_LO)]
+
+
+def migration(funds):
+    """{key: {"grp": group total, "n": tracks with a flow}} for every live track whose nd12 points against its group's product total
+    (funds: the live rows, each with grp, prod, assets and, where the regulator publishes flows, nd12)"""
+    tot, cnt = {}, {}
+    for f in funds:
+        x = f.get("nd12")
+        if x is None:
+            continue
+        g = (f["grp"], f["prod"])
+        tot[g] = tot.get(g, 0.0) + x
+        cnt[g] = cnt.get(g, 0) + 1
+    out = {}
+    for f in funds:
+        x = f.get("nd12")
+        if x is None or (f.get("assets") or 0) <= 0:
+            continue
+        g = (f["grp"], f["prod"])
+        if cnt[g] < MIG_PEERS or abs(x) < MIG_ABS or abs(x) < MIG_PCT / 100 * f["assets"]:
+            continue
+        t = round(math.fsum(f2["nd12"] for f2 in funds if f2.get("nd12") is not None and (f2["grp"], f2["prod"]) == g), 1)
+        if (x < 0 < t) or (x > 0 > t):
+            out[f["k"]] = {"grp": t, "n": cnt[g]}
+    return out
