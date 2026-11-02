@@ -108,5 +108,15 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
   } else console.log('search: web/public/data absent, smoke run skipped');
 }
 
+/* W4: in the saver and agent doors a fund comes before questions, and report pages drop out once a fund matched */
+{
+  const mk = (kind: Parameters<typeof ordered>[0][number]['kind'], score = 50) => ({ kind, label: kind, to: '/', score }) as Parameters<typeof ordered>[0][number];
+  const list = [mk('מסמך'), mk('שאלה'), mk('קופה', 60), mk('שורה בדוח')];
+  const pro = ordered(list).map((x) => x.kind), saver = ordered(list, true).map((x) => x.kind);
+  ok(pro.includes('מסמך') && pro.includes('שורה בדוח'), 'pro keeps report pages');
+  ok(saver.indexOf('קופה') < saver.indexOf('שאלה'), 'fund door: fund before question');
+  ok(!saver.includes('מסמך') && !saver.includes('שורה בדוח'), 'fund door: report pages dropped when a fund matched');
+}
+
 console.log(`search: ${pass} passed, ${fail} failed`);
 if (fail) { bad.forEach((b) => console.log('  FAIL', b)); process.exit(1); }

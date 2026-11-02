@@ -149,14 +149,18 @@ const FUND_ID_SCORE = 99, FUND_LEAD = 90;
 /** The order of the kinds in the list (Enter opens the first item): a fund typed by its number leads, then a company with a screen
  *  code ("הראל csm"), then a track named in full after its company ("אלטשולר שחם פנסיה מקיפה"); else the fixed order. */
 export const ORDER: Kind[] = ['חיפושים', 'אחרונים', 'חברה', 'פונקציה', 'שאלה', 'קופה', 'שורה בדוח', 'מסמך'];
-export function orderFor(list: Item[]): Kind[] {
+/** The saver and agent doors look for funds: funds come before questions, and report pages and lines drop out once a fund matched. */
+const ORDER_FUNDS: Kind[] = ['חיפושים', 'אחרונים', 'קופה', 'חברה', 'פונקציה', 'שאלה', 'שורה בדוח', 'מסמך'];
+export function orderFor(list: Item[], fundsFirst = false): Kind[] {
+  const base = fundsFirst ? ORDER_FUNDS : ORDER;
   const lead: Kind | null = list.some((x) => x.kind === 'קופה' && x.score >= FUND_ID_SCORE) ? 'קופה'
     : list.some((x) => x.kind === 'פונקציה' && x.score >= 90) ? 'פונקציה'
     : list.some((x) => x.kind === 'קופה' && x.score >= FUND_LEAD) ? 'קופה' : null;
-  return lead ? [lead, ...ORDER.filter((k) => k !== lead)] : ORDER;
+  const order = lead ? [lead, ...base.filter((k) => k !== lead)] : base;
+  return fundsFirst && list.some((x) => x.kind === 'קופה') ? order.filter((k) => k !== 'מסמך' && k !== 'שורה בדוח') : order;
 }
 /** The items in the order they are listed: by kind (orderFor), best first within a kind. */
-export const ordered = (list: Item[]): Item[] => orderFor(list).flatMap((k) => list.filter((h) => h.kind === k));
+export const ordered = (list: Item[], fundsFirst = false): Item[] => orderFor(list, fundsFirst).flatMap((k) => list.filter((h) => h.kind === k));
 
 /** The entity, function and statement-line results of a query, best first within each kind. */
 export function rank(q: string, pool: Pool, sheetName: (s: string) => string, docs?: Corpus | null): Item[] {

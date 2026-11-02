@@ -7,6 +7,7 @@ import { SinceDot } from './SinceBadge';
 import { usePhone } from '../lib/useMedia';
 import { loadCorpus, recentQueries, readerHref, rememberQuery, searchText, type Corpus } from '../lib/search';
 import { buildPool, docLabel, FUNCS, orderFor, ordered, parse, rank, type FundEnt, type Item, type Kind } from '../lib/searchOmni';
+import { useDoor } from '../lib/door';
 import '../styles/search.css';
 
 /** Names the search needs from the regulator data, in a file a fraction of market.json: the shell loads it only when the search opens. */
@@ -89,8 +90,10 @@ export function Search({ big = false }: { big?: boolean }) {
     return [...out, ...docs, ...(ft.q === s ? ft.items : []), all];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ranked, ft, s]);
-  const shown = useMemo(() => ordered(s.length >= 2 ? hits : recent), [hits, recent, s]);
-  const order = useMemo(() => orderFor(shown), [shown]);
+  const [door] = useDoor();
+  const fundsFirst = door === 'saver' || door === 'agent';  // W4: savers and agents look for funds, not report pages
+  const shown = useMemo(() => ordered(s.length >= 2 ? hits : recent, fundsFirst), [hits, recent, s, fundsFirst]);
+  const order = useMemo(() => orderFor(shown, fundsFirst), [shown, fundsFirst]);
   const keyOf = (it: Item) => `${it.to}|${it.label}`;
   const hl = Math.max(0, hlKey ? shown.findIndex((x) => keyOf(x) === hlKey) : 0);
   const setHl = (i: number) => { const it = shown[i]; if (it) setHlKey(keyOf(it)); };
