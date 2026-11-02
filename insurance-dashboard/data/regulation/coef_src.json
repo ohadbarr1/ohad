@@ -1,0 +1,209 @@
+{
+ "$comment": "W6 · the annuity conversion coefficients (מקדם המרה לקצבה) of the new comprehensive pension funds, hand-curated register. Each managing company publishes the coefficient tables as an appendix of its fund bylaws (תקנון); the table cells are read by pipeline/extract_coef.py from the PDF's own text layer (pdftotext -tsv, word coordinates) into data/regulation/coef_tables.json, and pipeline/build_coef.py publishes web/public/data/funds/coef.json. Only cells printed in the bylaws are published; nothing is filled by analogy between funds. `pages` are PDF page numbers (1-based) of the coefficient appendix; `raw` is the file name under the raw folder (the PDFs are not in git: see pipeline/extract_coef.py --raw). A fund whose bylaws could not be read is listed under `missing` with the reason.",
+ "retrieved": "2026-11-02",
+ "basis_note": "כל הטבלאות מחושבות לפי דמי ניהול של 0.3% מהצבירה (הקרנות מציינות זאת בשולי הטבלה); טבלאות עם בן/בת זוג לפי הפרש גיל של 3 שנים (הגבר מבוגר). שיעור הקצבה לבן הזוג ניתן לבחירה בפרישה (30%–100%); הטבלאות מציגות את השיעור שכתוב בכותרתן.",
+ "sources": [
+  {
+   "id": "more",
+   "grp": "מור",
+   "kind": "primary",
+   "publisher": "מור גמל ופנסיה בע\"מ",
+   "fund": "מור פנסיה מקיפה",
+   "title": "תקנון קרן פנסיה נבחרת | מור פנסיה מקיפה, מהדורת יוני 2025",
+   "edition": "יוני 2025",
+   "url": "https://www.moreinvest.co.il/media/ckfdk24k/%D7%AA%D7%A7%D7%A0%D7%95%D7%9F-%D7%A7%D7%A8%D7%9F-%D7%A4%D7%A0%D7%A1%D7%99%D7%94-%D7%9E%D7%A7%D7%99%D7%A4%D7%94-6-2025.pdf",
+   "retrieved": "2026-11-02",
+   "raw": "more_makifa_2025-06.pdf",
+   "appendix": "נספח יא",
+   "pages": [
+    101,
+    110
+   ],
+   "note": "the June 2025 PDF prints appendices יא6 and יא8 (married, 10 and 15 years' guarantee) with repeated cells in the first birth-year columns (e.g. p. 106, age 60: 221.12, 220.36, 221.84, 221.12 …); those two tables fail the monotonicity check and are not published"
+  },
+  {
+   "id": "altshuler",
+   "grp": "אלטשולר שחם",
+   "kind": "primary",
+   "publisher": "אלטשולר שחם גמל ופנסיה בע\"מ",
+   "fund": "אלטשולר שחם פנסיה מקיפה",
+   "title": "תקנון של קרן הפנסיה אלטשולר שחם פנסיה מקיפה, מהדורת אפריל 2026",
+   "edition": "אפריל 2026",
+   "url": "https://www.as-invest.co.il/media/yokjfpbv/%D7%90%D7%9C%D7%98%D7%A9%D7%95%D7%9C%D7%A8-%D7%A9%D7%97%D7%9D-%D7%A4%D7%A0%D7%A1%D7%99%D7%94-%D7%9E%D7%A7%D7%99%D7%A4%D7%94-%D7%AA%D7%A7%D7%A0%D7%95%D7%9F-2026.pdf",
+   "page_url": "https://www.as-invest.co.il/interstedin/pension/%D7%AA%D7%A7%D7%A0%D7%95%D7%9F-%D7%A7%D7%95%D7%A4%D7%94/",
+   "retrieved": "2026-11-02",
+   "raw": "altshuler_2026-04.pdf",
+   "appendix": "נספח יא'",
+   "pages": [
+    110,
+    129
+   ],
+   "note": "the site answers a plain fetch with 'Request Rejected'; the file is served to a browser request"
+  },
+  {
+   "id": "meitav",
+   "grp": "מיטב",
+   "kind": "primary",
+   "publisher": "מיטב גמל ופנסיה בע\"מ",
+   "fund": "מיטב פנסיה מקיפה",
+   "title": "תקנון של קרן פנסיה מיטב פנסיה מקיפה, מהדורה 26, 06/2025",
+   "edition": "06/2025 (מהדורה 26)",
+   "url": "https://www.meitav.co.il/media/22xfgygw/1750072197_%D7%97%D7%95%D7%91%D7%A8%D7%AA_%D7%AA%D7%A7%D7%A0%D7%95%D7%9F_%D7%A4%D7%A0%D7%A1%D7%99%D7%94_%D7%9E%D7%A7%D7%99%D7%A4%D7%94_2025.pdf",
+   "retrieved": "2026-11-02",
+   "raw": "meitav_2025-06.pdf",
+   "appendix": "נספח יב'",
+   "pages": [
+    107,
+    126
+   ]
+  },
+  {
+   "id": "phoenix",
+   "grp": "הפניקס",
+   "kind": "mirror",
+   "publisher": "הפניקס פנסיה וגמל בע\"מ",
+   "fund": "הפניקס פנסיה מקיפה",
+   "title": "תקנון של קרן פנסיה - הפניקס פנסיה מקיפה, מהדורת יוני 2025 (עותק באתר prisha.co.il)",
+   "edition": "יוני 2025",
+   "url": "https://www.prisha.co.il/UserFiles/File/pdf/takanon/phoenix1.pdf",
+   "page_url": "https://www.fnx.co.il/pension-savings/fnx-all-embracing-pension/regulations-mekifa/",
+   "retrieved": "2026-11-02",
+   "raw": "phoenix_prisha_2025-06.pdf",
+   "appendix": "נספח ח'",
+   "pages": [
+    131,
+    144
+   ],
+   "note": "the fund's regulations page on fnx.co.il (page_url) links no PDF; the company's content server holds the July 2024 edition (official_url), whose coefficient pages carry no readable text layer, so the cells are read from the June 2025 edition as mirrored by prisha.co.il, a third party. The reader should confirm against the fund's own copy",
+   "official_url": "https://digital-content.fnx.co.il/sites/docs/genery/takanonimpensia/%D7%AA%D7%A7%D7%A0%D7%95%D7%9F-%D7%94%D7%A4%D7%A0%D7%99%D7%A7%D7%A1-%D7%9E%D7%A7%D7%99%D7%A4%D7%94-1-7-2024.pdf",
+   "official_edition": "יולי 2024"
+  },
+  {
+   "id": "menora",
+   "grp": "מנורה מבטחים",
+   "kind": "primary",
+   "publisher": "מנורה מבטחים פנסיה וגמל בע\"מ",
+   "fund": "מנורה מבטחים פנסיה",
+   "title": "תקנון קרן הפנסיה המקיפה מנורה מבטחים, מהדורת ינואר 2026",
+   "edition": "ינואר 2026",
+   "url": "https://cdn.menoramivt.co.il/public/docs/20260201/1768084863_%D7%AA%D7%A7%D7%A0%D7%95%D7%9F_%D7%9E%D7%A7%D7%99%D7%A4%D7%94.pdf",
+   "page_url": "https://www.menoramivt.co.il/general/pension/pension-regulations",
+   "retrieved": "2026-11-02",
+   "raw": "menora_2026-01.pdf",
+   "appendix": "נספח ו'",
+   "pages": [
+    94,
+    103
+   ],
+   "note": "the regulations page itself answers bots with a challenge page; the PDF link was found through search and the file is served"
+  },
+  {
+   "id": "clal",
+   "grp": "כלל",
+   "kind": "primary",
+   "publisher": "כלל פנסיה וגמל בע\"מ",
+   "fund": "כלל פנסיה",
+   "title": "תקנון של קרן פנסיה כלל פנסיה, מהדורת מאי 2026",
+   "edition": "מאי 2026",
+   "url": "https://www.clalbit.co.il/media/1r3nyivr/%D7%AA%D7%A7%D7%A0%D7%95%D7%9F-%D7%9B%D7%9C%D7%9C-%D7%A4%D7%A0%D7%A1%D7%99%D7%94-%D7%9E%D7%A7%D7%99%D7%A4%D7%94-y703-5-2026.pdf",
+   "page_url": "https://www.clalbit.co.il/pension/",
+   "retrieved": "2026-11-02",
+   "raw": "clal_2026-05.pdf",
+   "appendix": "נספח ז'",
+   "pages": [
+    95,
+    116
+   ]
+  },
+  {
+   "id": "harel",
+   "grp": "הראל",
+   "kind": "primary",
+   "publisher": "הראל פנסיה וגמל בע\"מ",
+   "fund": "הראל פנסיה",
+   "title": "תקנון של קרן פנסיה \"הראל פנסיה\", מהדורה 20, 06/2025",
+   "edition": "06/2025 (מהדורה 20)",
+   "url": "https://media.harel-group.co.il/media/slyhz2yj/%D7%AA%D7%A7%D7%A0%D7%95%D7%9F-%D7%94%D7%A8%D7%90%D7%9C-%D7%A4%D7%A0%D7%A1%D7%99%D7%94-%D7%99%D7%95%D7%A0%D7%99-2025.pdf",
+   "retrieved": "2026-11-02",
+   "raw": "harel_2025-06.pdf",
+   "appendix": "נספח ה'",
+   "pages": [
+    139,
+    149
+   ],
+   "note": "the bylaws call these 'example tables' (טבלאות לדוגמא) for given choices of the survivors' share and the guarantee period; any other choice is priced by the fund (p. 138)"
+  },
+  {
+   "id": "migdal",
+   "grp": "מגדל",
+   "kind": "primary",
+   "publisher": "מגדל מקפת קרנות פנסיה וקופות גמל בע\"מ",
+   "fund": "מגדל מקפת אישית",
+   "title": "תקנון של קרן פנסיה \"מגדל מקפת אישית\", מהדורת יוני 2025 (נוסח 03/06/2025)",
+   "edition": "יוני 2025",
+   "url": "https://my.migdal.co.il/media/27887/regulations-makefet-ishit-062025-mungash.pdf",
+   "page_url": "https://www.migdal.co.il/makefet/additional-regulation-pages",
+   "retrieved": "2026-11-02",
+   "raw": "migdal_ishit_2025-06.pdf",
+   "appendix": "נספח ה",
+   "pages": [
+    93,
+    103
+   ]
+  },
+  {
+   "id": "infinity",
+   "grp": "אינפיניטי",
+   "kind": "primary",
+   "publisher": "אינפיניטי השתלמות, גמל ופנסיה בע\"מ",
+   "fund": "אינפיניטי פנסיה מקיפה",
+   "title": "תקנון קרן פנסיה אינפיניטי פנסיה מקיפה, מהדורת 1.6.2025",
+   "edition": "1.6.2025",
+   "url": "https://infinity.co.il/wp-content/uploads/2025/07/%D7%AA%D7%A7%D7%A0%D7%95%D7%9F-%D7%A4%D7%A0%D7%A1%D7%99%D7%94-%D7%9E%D7%A7%D7%99%D7%A4%D7%94-%D7%9E%D7%90%D7%99-2025-%D7%A0%D7%95%D7%A1%D7%97-%D7%A0%D7%A7%D7%99.pdf",
+   "page_url": "https://infinity.co.il/%D7%AA%D7%A7%D7%A0%D7%95%D7%A0%D7%99%D7%9D/",
+   "retrieved": "2026-11-02",
+   "raw": "infinity_2025-05.pdf",
+   "appendix": "נספח ה'",
+   "pages": [
+    99,
+    101
+   ],
+   "note": "the headings of appendices ה'1 and ה'2 name no guarantee period (read as none; ה'3 names 120 months) and the tables with survivors do not state the spouse's share; the bylaws' default applies (recorded as unspecified, not as 60%)",
+   "guarantee_default0": true
+  }
+ ],
+ "missing": [
+  {
+   "what": "general_fund_bylaws",
+   "reason": "תקנוני קרנות הפנסיה הכלליות (משלימות) לא נקראו בגל הזה; מסלול של פנסיה כללית מוצג לפי הנחה גם כשלחברה יש טבלה בקרן המקיפה"
+  }
+ ],
+ "assumption": {
+  "coef": 200,
+  "m": 188,
+  "f": 204,
+  "title": "ביזפורטל, 22.07.26",
+  "url": "https://www.bizportal.co.il/longtermsavings/news/article/20036400",
+  "note": "הנחת האתר כשאין טבלה לקרן: 188 לגבר עם פנסיית שארים ו-204 לאישה עם הבטחת תשלומים ושארים בגיל 67; 200 כשלא צוין מין"
+ },
+ "btl": {
+  "single": 1838,
+  "single_80": 1941,
+  "couple": 2762,
+  "from": "2026-01-01",
+  "title": "המוסד לביטוח לאומי, סכומי הקצבה לפי המצב המשפחתי",
+  "url": "https://www.btl.gov.il/benefits/old_age/Shum/Pages/Shum.aspx",
+  "retrieved": "2026-11-02",
+  "quote": "1,838 ש\"ח (החל ב- 01.01.2026)",
+  "note": "הסכום הבסיסי ליחיד, לפני תוספת ותק (עד 50%) ולפני ניכוי דמי ביטוח בריאות"
+ },
+ "target": {
+  "rate": 70,
+  "title": "משרד האוצר, אגף הכלכלן הראשי: זאב קריל, \"מהי רמת החיים הצפויה בפנסיה לחוסכים הצעירים של היום?\" (23.03.2016)",
+  "url": "https://www.gov.il/BlobFolder/reports/article_23032016/he/economy_and_research_Articles_Article_23032016.pdf",
+  "retrieved": "2026-11-02",
+  "pg": 1,
+  "quote": "יחסי תחלופה נמוכים מ-100%, בד\"כ 70% ומעלה, הם הולמים",
+  "note": "70% הוא רף מקובל בספרות ובתכנון (\"המינימום המקובל\" במאמר), לא יעד רשמי של רגולטור; יחס התחלופה במאמר הוא נטו, מול ההכנסה הפנויה"
+ }
+}

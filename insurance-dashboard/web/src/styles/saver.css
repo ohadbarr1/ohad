@@ -272,3 +272,9 @@ main .ms-lines button.src:not(.bar) { padding: 4px 0; margin: -4px 0; display: b
 .st-quick-l { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; font-size: var(--t-4); line-height: 1.55; }
 .st-quick-l a { color: var(--link); text-underline-offset: 3px; }
 .sv-u { text-decoration: underline; text-underline-offset: 2px; }
+
+/* W6: the conversion coefficient on the pension card, the age-track note, the replacement-rate lines */
+.sv-coef { margin: 6px 0 2px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.sv-coef .chip { font-size: var(--t-1); }
+.sv-agenote { color: var(--warn); margin-top: 4px; }
+.sv-rep { margin: 0; }

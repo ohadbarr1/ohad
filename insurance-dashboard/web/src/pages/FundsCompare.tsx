@@ -30,6 +30,8 @@ import { defaultNow, isPension, periodText } from '../lib/pensionPack';
 import { rulesOf, RULES_NOTE } from '../lib/productRules';
 import { actProv, ruleProv, tenderProv, pc2 } from '../lib/agentProv';
 import { TIE_NOTE } from '../lib/fundsTie';
+import { COEF_PATH, birthYearOf, coefFor, type CoefFile } from '../lib/coef';  // W6
+import { AGE_DEFAULT, BALANCE_EX, GROWTH_DEFAULT, INFL_DEFAULT, RETIRE_AGE, RET_FALLBACK, exampleMonthly, ilsRound, project, type Plan } from '../lib/retire';
 import { BM_HREF, DECISION_PATH, OLD_FEE_HE, OLD_WARN, clmCell, isOldGen, svcCell, type DecisionFile } from '../lib/decision';  // W2
 import { ClientSave } from '../components/agent/ClientSave';
 import { folderOfState, useClients } from '../lib/clients';
@@ -49,7 +51,10 @@ import '../styles/agent.css';
    W4 (doors): the bottom line compares within a category only (lib/compareSummary), an old-generation managers' insurance track opens a
    warning and stays out of every comparison line; the agent door keeps the pairwise windows behind a disclosure, in neutral words; the
    saver door gets a plain bottom line without the agent's tools (client document, Excel pack, client folder, Sharpe, LTM, pairs). Pro
-   keeps the rest as it was. Saving to a client folder freezes the figures shown (lib/compareDoc). */
+   keeps the rest as it was. Saving to a client folder freezes the figures shown (lib/compareDoc).
+   W6: pension tracks get two rows of "קצבה חודשית, אומדן" (a man, a woman): one uniform projection (the fee tool's example plan: 100,000 ₪
+   today, the example deposit, 4% gross, retirement at 67) with each track's own fees, divided by the fund's own conversion coefficient
+   from its bylaws (lib/coef) or the assumption; the cell says which and the popover opens the bylaws page. */
 
 type Win = '12' | '36' | '60' | '120' | 'max';
 const WINDOWS: [Win, string][] = [['12', '1Y'], ['36', '3Y'], ['60', '5Y'], ['120', '10Y'], ['max', 'הכול']];
@@ -70,6 +75,7 @@ export function FundsCompare() {
   const phone = usePhone();
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index and the claims rows
+  const coefF = useOptional<CoefFile>(COEF_PATH);  // W6: the funds' conversion coefficients
   const [edit, setEdit] = useState(false);
   // W4: the door in force: Pro as it was; the agent's tools; the saver's plain page (no door chosen yet reads as the saver's, as the nav does)
   const [door] = useActiveDoor();
@@ -167,6 +173,20 @@ export function FundsCompare() {
     return { v, src: () => ({ k: 'calc', est: true, title: `${PER_LABEL[per]}, ${NET_LABEL} · ${it.f.name}`, value: pc(v), formula: `${per === 'a3' || per === 'a5' ? 'שנתי: ' : ''}ריבית דריבית על התשואות החודשיות נטו של החלון`, note: NET_NOTE, inputs: monthsBack(asof, perMonths(per, asof)).map((p) => monthRow(it, p)) }) };
   };
   type KRow = { key: string; label: string; tip?: string; cells: (it: Item) => { v: number | null; t: string; src?: () => Prov; txt?: boolean; sub?: string } };
+  // W6: one projection for every pension track (the fee tool's example plan), each with its own fees, ÷ the fund's own coefficient
+  const uniPlan: Omit<Plan, 'coef'> = { age: AGE_DEFAULT, retire: RETIRE_AGE, balance: BALANCE_EX, monthly: exampleMonthly('פנסיה מקיפה').v, growth: GROWTH_DEFAULT, ret: RET_FALLBACK, infl: INFL_DEFAULT };
+  const annuityCell = (it: Item, sex: 'm' | 'f'): ReturnType<KRow['cells']> => {
+    if (!isPension(it.f)) return { v: null, t: '–' };
+    const pick = coefFor(coefF, it.f.grp, sex, RETIRE_AGE, birthYearOf(AGE_DEFAULT));
+    const out = project({ ...uniPlan, coef: pick.v }, { fee: it.f.fee ?? 0, depfee: it.f.depfee ?? 0 });
+    const src = (): Prov => ({ k: 'calc', est: true, title: `קצבה חודשית בגיל ${RETIRE_AGE}, בשקלי היום · ${sex === 'f' ? 'אישה' : 'גבר'} · ${it.f.name}`, value: ilsRound(out.pensionReal),
+      formula: `החיסכון בגיל ${RETIRE_AGE} על הנחות אחידות לכל המסלולים (היתרה והפקדה לדוגמה של מחשבון דמי הניהול, תשואה ${RET_FALLBACK}% ברוטו, הפקדה שעולה ${GROWTH_DEFAULT}% בשנה, אינפלציה ${INFL_DEFAULT}%) עם דמי הניהול הממוצעים של המסלול, ÷ מקדם ההמרה של הקרן. ${pick.why}`,
+      note: 'אומדן על הנחות אחידות, לא תחזית ולא ייעוץ: ההבדל בין המסלולים נובע מדמי הניהול וממקדם ההמרה של הקרן בלבד. לא מנכה את עלות הכיסוי הביטוחי',
+      inputs: [{ label: 'יתרה היום (לדוגמה)', v: ilsRound(uniPlan.balance) }, { label: 'הפקדה חודשית (לדוגמה)', v: ilsRound(uniPlan.monthly) }, { label: 'גיל היום / פרישה (הנחה)', v: `${uniPlan.age} / ${uniPlan.retire}` },
+        { label: 'דמי ניהול מצבירה / מהפקדה (ממוצע המסלול)', v: `${pc2(it.f.fee)} / ${pc2(it.f.depfee)}` }, { label: `חיסכון בגיל ${RETIRE_AGE}, בשקלי היום`, v: ilsRound(out.balReal) },
+        { label: pick.real ? `מקדם המרה (${pick.label})` : 'מקדם המרה (הנחה)', v: String(pick.v), src: pick.prov }] });
+    return { v: out.pensionReal, t: ilsRound(out.pensionReal), src, sub: `מקדם ${pick.v} · ${pick.label}` };
+  };
   const KROWS: KRow[] = [
     ...PERIODS.map(([per, l]): KRow => ({ key: per, label: `${l}${per === 'a3' || per === 'a5' ? ', שנתי' : ''}`, tip: netAsk ? 'net' : 'gross', cells: (it) => { const r = kret(it, per); return { v: r.v, t: pc(r.v, per === 'm1' ? 2 : 1), src: r.src }; } })),
     { key: 'fee', label: 'ד"נ מצבירה, ממוצע בפועל', tip: 'fee', cells: (it) => ({ v: it.f.fee, t: it.f.fee == null ? '–' : nf(it.f.fee, 2) + '%' + (isOldGen(it.f) ? ` · ${OLD_FEE_HE}` : ''), txt: isOldGen(it.f) || undefined, src: () => fundP(refOf(it.f), it.f.end ?? asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(it.f.fee ?? 0, 2) + '%') }) },
@@ -185,6 +205,9 @@ export function FundsCompare() {
       // W2: the company's service index (the regulator's, 2025) and its own claims report
       { key: 'svc', label: 'מדד השירות 2025 (החברה)', tip: 'svcidx', cells: (it: Item) => (isPension(it.f) ? svcCell(dec, it.f) : { v: null, t: '–' }) },
       { key: 'clm', label: 'תביעות נכות שאושרו, דיווח החברה 2025', tip: 'claims', cells: (it: Item) => (isPension(it.f) ? clmCell(dec, it.f.grp) : { v: null, t: '–' }) },
+      // W6: the annuity on one projection, by the fund's own coefficient
+      { key: 'annM', label: `קצבה חודשית בגיל ${RETIRE_AGE}, גבר, אומדן`, cells: (it: Item) => annuityCell(it, 'm') },
+      { key: 'annF', label: `קצבה חודשית בגיל ${RETIRE_AGE}, אישה, אומדן`, cells: (it: Item) => annuityCell(it, 'f') },
     ] as KRow[] : []),
   ];
   // W4: the saver's table leaves out the agent's and the analyst's rows (LTM, the regulator's Sharpe and standard deviation)
@@ -291,10 +314,11 @@ export function FundsCompare() {
               {fig('fee', 'ד"נ מצבירה*', K('fee'))}{fig('depfee', 'ד"נ מהפקדה*', K('depfee'))}{saver ? fig('st', 'מניות', K('st')) : fig('sharpe', 'שארפ', K('sharpe'))}
               {isPension(it.f) && fig('act', 'איזון אקטוארי', { ...K('act'), t: it.f.act == null ? 'לא דווח' : pc2(it.f.act) })}
               {isPension(it.f) && <>{fig('svc', 'מדד השירות', K('svc'))}{fig('clm', 'נכות אושרו', K('clm'))}</>}{/* W2 */}
+              {isPension(it.f) && <>{fig('annM', 'קצבה, גבר*', K('annM'))}{fig('annF', 'קצבה, אישה*', K('annF'))}</>}{/* W6 */}
             </dl>
           </article>
         ); })}
-      <div className="fnote">* ממוצע בפועל של המסלול. תשואות: {lbl}; 3Y ו-5Y שנתי ממוצע. מסומן: הנמוך או הגבוה בשורה, רק בין מסלולים מאותה קטגוריה (צמודים מסומנים יחד).</div>
+      <div className="fnote">* ממוצע בפועל של המסלול. תשואות: {lbl}; 3Y ו-5Y שנתי ממוצע. מסומן: הנמוך או הגבוה בשורה, רק בין מסלולים מאותה קטגוריה (צמודים מסומנים יחד).{anyPension ? ` קצבה: אומדן בגיל ${RETIRE_AGE} על הנחות אחידות, ÷ מקדם ההמרה של הקרן מהתקנון (או הנחה), בשקלי היום.` : ''}</div>
     </div>
   );
   const TaxLiq = rules.length > 0 && (
@@ -340,7 +364,7 @@ export function FundsCompare() {
                 ...items.map((it, i): Column<KRow> => ({ key: it.f.k, sortable: false, label: it.f.name, value: (r) => r.cells(it).v ?? r.cells(it).t, text: (r) => r.cells(it).t,
                   head: <><span className="fcmp-sw" style={{ background: pal()[i % pal().length] }} aria-hidden="true" /><Link to={`/funds/${it.f.k}`} className="fcmp-n" title={it.f.name}>{it.f.name}</Link><span className="fcmp-sub"><MgrChip grp={it.f.grp} mgr={it.f.mgr} short /> {it.f.prod} · {it.f.track}{it.f.gone && <span className="chip est">נסגר{it.f.end ? ` ${ym(it.f.end)}` : ''}</span>}</span></>,
                   tdClass: (r) => (isLead(r.key, it.f.k) ? 'cmp-best' : undefined), cell: (r) => { const c = r.cells(it); return <>{c.src && (c.v != null || c.txt) ? <Sourced src={c.src}><span className={c.txt ? undefined : 'num'}>{c.t}</span></Sourced> : <span className={c.t === '–' || c.txt === undefined && /[א-ת]/.test(c.t) ? 'muted' : 'num'}>{c.t}</span>}{c.sub && <span className="fcmp-q num" title="דמי הניהול בהליך: מהפקדה / מצבירה">{c.sub}</span>}</>; } }))]} />
-              <div className="fnote">{netAsk ? 'נטו: ' + (items.some((it) => it.f.net) ? 'מהקובץ כשפורסם, אחרת ' : '') + 'אומדן מההיסטוריה (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12). ' : 'ברוטו: לפני דמי ניהול, כפי שפורסם. '}תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}{saver ? '.' : '; שארפ וסטיית תקן: כפי שהרשות מפרסמת, לא על החלון כאן.'}</div>
+              <div className="fnote">{netAsk ? 'נטו: ' + (items.some((it) => it.f.net) ? 'מהקובץ כשפורסם, אחרת ' : '') + 'אומדן מההיסטוריה (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12). ' : 'ברוטו: לפני דמי ניהול, כפי שפורסם. '}תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}{saver ? '.' : '; שארפ וסטיית תקן: כפי שהרשות מפרסמת, לא על החלון כאן.'}{anyPension ? ` קצבה חודשית: אומדן בגיל ${RETIRE_AGE} על הנחות אחידות לכל המסלולים (יתרה והפקדה לדוגמה, תשואה ${RET_FALLBACK}%), עם דמי הניהול של המסלול, ÷ מקדם ההמרה של הקרן מהתקנון שלה ("לפי מקדם מהתקנון, עמ'") או לפי הנחה; בשקלי היום, לא תחזית.` : ''}</div>
             </Panel>
           )}
           {TaxLiq}

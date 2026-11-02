@@ -9,7 +9,8 @@ import type { Prov } from '../../lib/prov';
 import type { CatX, FundX, FundsFile } from '../../lib/funds';
 import type { DefaultFile } from '../../lib/fundsTools';
 import { brief, isPension, pcf, pcr, singleIndex, type Verdict } from '../../lib/verdict';
-import { AGE_DEFAULT, GROWTH_DEFAULT, INFL_DEFAULT, KZ_RETIRE, RETIRE_AGE, RET_FALLBACK, ageText, coefOf, ilsRound, type FeeGap, type Plan } from '../../lib/retire';
+import { AGE_DEFAULT, GROWTH_DEFAULT, INFL_DEFAULT, KZ_RETIRE, RETIRE_AGE, RET_FALLBACK, ageText, ilsRound, type FeeGap, type Plan } from '../../lib/retire';
+import { COEF_PATH, birthYearOf, coefFor, coverageOf, trackAgeNote, type CoefFile } from '../../lib/coef';  // W6
 import { cardCalc } from '../../lib/myCalc';
 import { capOf, feeError, KZ_CAPS } from '../../lib/feeCaps';
 import { RULE } from '../../lib/productRules';
@@ -23,7 +24,10 @@ import { DECISION_PATH, type DecisionFile } from '../../lib/decision';  // W2
 /* One product of "המוצרים שלי" (W4, red team 02.11.26). Folded: the verdict in at most three lines, what the fees cost this year and
    by the horizon in ₪, the reader's own numbers, and the note to the agent. "עוד פרטים" opens the rest: every line of the report card,
    the ₪ figures with their assumptions, the note's text, the pension estimate (pension only), the השתלמות facts, and the next pages.
-   Everything that is not the reader's or the regulator's is labelled. The numbers come from lib/myCalc, as the strip at the top does. */
+   Everything that is not the reader's or the regulator's is labelled. The numbers come from lib/myCalc, as the strip at the top does.
+   W6: the pension estimate divides by the fund's own conversion coefficient from its bylaws (lib/coef) when the file has one, labelled
+   "לפי מקדם מהתקנון, עמ' X", else by the site's assumption, labelled "לפי הנחה"; an age-track mismatch (a reader of 60 in "עד 50") is one
+   line under the title. */
 
 export const KOLZCHUT_HISHTALMUT = 'https://www.kolzchut.org.il/he/%D7%A7%D7%A8%D7%9F_%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA';
 export const COEF_SRC = 'https://www.bizportal.co.il/longtermsavings/news/article/20036400';
@@ -35,6 +39,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
 }) {
   const asof = data.asof;
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service-index line
+  const coefF = useOptional<CoefFile>(COEF_PATH);  // W6: the funds' conversion coefficients
   const [ageS] = useMyAge(), [sex] = useMySex();
   const age = ageS ?? AGE_DEFAULT;
   const R = useRetire();
@@ -44,9 +49,13 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const r10 = singleIndex(f) ? null : cat10(c);
   // the return: a conservative 4% by default; the category's 10-year past on request (not for single-index tracks); or the reader's own
   const [retQ, setRetQ] = useState<number | null>(null);
-  const cf = coefOf(sex);
+  // W6: the fund's own coefficient for this reader (sex, retirement age, birth year), else the assumption; the reader may type their own
+  const pick = useMemo(() => coefFor(coefF, f.grp, sex, R.v, birthYearOf(age)), [coefF, f.grp, sex, R.v, age]);
+  const cf = { v: pick.v, why: pick.real ? pick.label : 'הנחה' };
   const [coefQ, setCoefQ] = useState<number | null>(null);
   const coef = coefQ ?? cf.v;
+  const ageNote = isPension(f.prod) ? trackAgeNote(f.track, ageS) : null;
+  const cov = isPension(f.prod) ? coverageOf(coefF, f.grp, f.prod) : null;
   const ret = retQ ?? RET_FALLBACK;
   const C = useMemo(() => cardCalc(f, data.funds as FundX[], asof, dfile, my, dec, { age, coef, ret, retire: R.v }), [f, data, asof, dfile, my, dec, age, coef, ret, R.v]);
   const { v, plan, mine, ownAny, med, gMed, tBest, out, annual, liq } = C;
@@ -81,7 +90,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
       ...pairIn(mine, who), { label: 'מצבירה בשנה', v: ilsRound(annual.acc) }, { label: 'מהפקדה בשנה', v: ilsRound(annual.dep) }] });
   const penProv = (what: 'bal' | 'pen'): Prov => ({ k: 'calc', est: true, title: what === 'bal' ? `חיסכון בגיל ${ageText(plan.retire)}, בשקלי היום · אומדן` : 'קצבה חודשית, בשקלי היום · אומדן', value: ilsRound(what === 'bal' ? out.balReal : out.pensionReal),
     formula: `${F}.${what === 'pen' ? ' קצבה = החיסכון ÷ מקדם ההמרה.' : ''}`, note: 'אומדן גס על הנחות. לא מנכה את עלות הכיסוי הביטוחי (נכות ושארים) שהקרן גובה מההפקדות, ולכן נוטה להיות גבוה. המקדם בפועל נקבע בתקנון הקרן',
-    inputs: [...assumptions(), ...pairIn(mine, who), ...(what === 'pen' ? [{ label: `מקדם המרה (הנחה: ${coefQ != null ? 'שלך' : cf.why})`, v: String(coef) }] : [])] });
+    inputs: [...assumptions(), ...pairIn(mine, who), ...(what === 'pen' ? [{ label: coefQ != null ? 'מקדם המרה (שלך)' : pick.real ? `מקדם המרה (${pick.label})` : 'מקדם המרה (הנחה)', v: String(coef), src: coefQ != null ? undefined : pick.prov }] : [])] });
   const medSrc = () => figs.feeMed();
   const tSrc = (p: FeePair) => () => tenderProv(v.dflt!.tender, 'צירוף דמי ניהול שההליך מתיר', `${pcf(p.depfee)} / ${pcf(p.fee)} (מהפקדה / מצבירה)`);
 
@@ -121,6 +130,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         <div className="sv-card-t">
           <h2><Link to={`/funds/${f.k}`}>{f.name}</Link></h2>
           <p className="sv-card-s">{f.prod} · <span className="sv-nw">קופה {f.id}</span></p>
+          {ageNote && <p className="sv-card-s sv-agenote">{ageNote.text}{pick.src && <> <a className="sv-u" href={pick.src.url} target="_blank" rel="noreferrer">תקנון הקרן</a></>}</p>}
         </div>
         {onRemove && <button type="button" className="sv-x" onClick={onRemove} aria-label={`הסרה: ${f.name}`}>הסרה</button>}
       </header>
@@ -167,8 +177,11 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         {isPension(f.prod) && <Sec title="כמה פנסיה זה יכול להיות" tag="אומדן גס">
           <p className="sv-big">בגיל {ageText(plan.retire)}: <span className="sv-nw">כ-<Est src={() => penProv('bal')}>{ilsRound(out.balReal)}</Est></span> בחיסכון, וקצבה של <span className="sv-nw">כ-<Est src={() => penProv('pen')}>{ilsRound(out.pensionReal)}</Est></span> לחודש. בשקלי היום, לפני מס.</p>
           <p className="sv-note">רק מהמוצר הזה, על אותן הנחות (תשואה {pcf(ret)} ברוטו בשנה). האומדן לא מנכה את עלות הכיסוי הביטוחי (נכות ושארים) שהקרן גובה מההפקדות, ולכן הוא נוטה להיות גבוה.</p>
+          <p className="sv-coef">קצבה חודשית, אומדן: <Est src={() => penProv('pen')}>{ilsRound(out.pensionReal)}</Est> · מקדם <Sourced src={coefQ != null ? () => penProv('pen') : pick.prov}><b className="num">{coef}</b></Sourced> <span className={pick.real && coefQ == null ? 'chip pass' : 'chip est'}>{coefQ != null ? 'מקדם שלך' : pick.label}</span></p>
           <NumIn label={`מקדם המרה (${coefQ != null ? 'שלך' : cf.why})`} value={coef} min={100} max={400} step={1} onCommit={setCoefQ} />
-          <p className="sv-note">הקצבה = החיסכון ÷ המקדם. המקדם נקבע בתקנון הקרן לפי גיל, מין ומסלול הקצבה. לפי <a href={COEF_SRC} target="_blank" rel="noreferrer">ביזפורטל (22.07.26)</a>, בגיל 67 הוא כ-180 לגבר בלי שארים, כ-188 עם פנסיית שארים, וכ-204 לאישה עם הבטחת תשלומים ושארים. {plan.retire < RETIRE_AGE ? `בפרישה בגיל ${ageText(plan.retire)} המקדם בדרך כלל גבוה יותר, ולכן הקצבה בפועל נמוכה מהאומדן הזה. ` : ''}{sex == null ? '200 הוא הנחה עגולה; אפשר לבחור מין למעלה.' : ''}</p>
+          {pick.real
+            ? <p className="sv-note">{pick.why}. הקצבה = החיסכון ÷ המקדם. {pick.src?.kind === 'mirror' ? 'הטקסט נקרא מעותק של התקנון באתר צד שלישי; ' : ''}המקדם בפועל נקבע בפרישה לפי התקנון שבתוקף אז ולפי מסלול הקצבה שתבחרו (שיעור לבן/בת הזוג, תקופת הבטחה); הטבלאות מחושבות לדמי ניהול של 0.3%.</p>
+            : <p className="sv-note">{cov?.status === 'missing' ? `אין מקדם זמין לקרן זו; מוצג לפי הנחה (${cov.reason}). ` : `${pick.why}. `}הקצבה = החיסכון ÷ המקדם. לפי <a href={COEF_SRC} target="_blank" rel="noreferrer">ביזפורטל (22.07.26)</a>, בגיל 67 הוא כ-188 לגבר עם פנסיית שארים וכ-204 לאישה עם הבטחת תשלומים ושארים. {plan.retire < RETIRE_AGE ? `בפרישה בגיל ${ageText(plan.retire)} המקדם בדרך כלל גבוה יותר, ולכן הקצבה בפועל נמוכה מהאומדן הזה. ` : ''}{sex == null ? '200 הוא הנחה עגולה; בחירת מין למעלה מאפשרת לקרוא את המקדם מהתקנון של הקרן.' : ''}</p>}
         </Sec>}
 
         {f.prod === 'השתלמות' && <Sec title="מה כדאי לדעת על השתלמות" tag="עובדות">

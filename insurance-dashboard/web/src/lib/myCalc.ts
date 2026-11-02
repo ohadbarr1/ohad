@@ -66,12 +66,16 @@ export function gapOf(c: CardCalc): { v: number; ref: 'med' | 'dflt'; years: num
   return opts.find((x) => x.ref === 'med') ?? opts[0] ?? null;
 }
 
-export interface SumRow { k: string; name: string; prod: string; c: CardCalc }
+/** `coefReal` (W6): the pension estimate of this row used the fund's own coefficient from its bylaws (true) or the assumption */
+export interface SumRow { k: string; name: string; prod: string; c: CardCalc; coefReal?: boolean }
 export interface Summary {
   /** this year's fees in ₪, all products; `ex`: at least one balance or deposit is an example, `avg`: at least one fee is the track's average */
   fees: number; feesEx: boolean; feesAvg: boolean;
-  /** the monthly pension estimate from the pension funds, today's ₪, and how many funds it adds up */
-  pension: number | null; penN: number; penEx: boolean;
+  /** the monthly pension estimate from the pension funds, today's ₪, and how many funds it adds up; `penBal`: how many of them carry
+   *  the reader's own balance (W6: with none, the strip shows "הזינו יתרה" instead of a headline built on example amounts) */
+  pension: number | null; penN: number; penEx: boolean; penBal: number;
+  /** W6: the pension estimate with each fund's own conversion coefficient where the file has one (`penReal`: all of them do) */
+  penReal: boolean;
   /** the single most valuable descriptive action */
   act: { kind: 'fee'; k: string; name: string; prod: string; v: number; ref: 'med' | 'dflt'; years: number; own: boolean } | { kind: 'enter'; k: string; name: string } | { kind: 'none' };
 }
@@ -86,5 +90,5 @@ export function summaryOf(rows: SumRow[]): Summary {
   const act: Summary['act'] = top ? { kind: 'fee', k: top.r.k, name: top.r.name, prod: top.r.prod, v: top.g.v, ref: top.g.ref, years: top.g.years, own: top.r.c.v.fee.own }
     : noFees ? { kind: 'enter', k: noFees.k, name: noFees.name } : { kind: 'none' };
   return { fees, feesEx: rows.some((r) => r.c.exBalance || r.c.exMonthly), feesAvg: rows.some((r) => !r.c.v.fee.own || (r.c.v.dep != null && !r.c.v.dep.own && (r.c.v.dep.v ?? 0) > 0)),
-    pension, penN: pens.length, penEx: pens.some((r) => r.c.exBalance || r.c.exMonthly), act };
+    pension, penN: pens.length, penEx: pens.some((r) => r.c.exBalance || r.c.exMonthly), penBal: pens.filter((r) => !r.c.exBalance).length, penReal: pens.length > 0 && pens.every((r) => r.coefReal === true), act };
 }

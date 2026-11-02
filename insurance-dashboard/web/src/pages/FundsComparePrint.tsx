@@ -7,7 +7,7 @@ import { useStored } from '../lib/local';
 import { useHists, useOptional } from '../lib/fundsLoad';
 import type { DefaultFile } from '../lib/fundsTools';
 import { nf, sn } from '../lib/format';
-import { NET_LABEL, TRAY_MAX, ym, type FundX, type FundsFile, type HistX } from '../lib/funds';
+import { TRAY_MAX, ym, type FundX, type FundsFile, type HistX } from '../lib/funds';
 import { ACT_F } from '../lib/pensionPack';
 import { RULES_NOTE, rulesOf } from '../lib/productRules';
 import { PENSION_MISSING } from '../components/agent/PensionPack';
@@ -16,6 +16,8 @@ import { BOTTOM_CAP, bottomLines, dmyIso, docRow, metricsOf, pagesOf, shortUrl, 
 import { ClientSave } from '../components/agent/ClientSave';
 import { coverOnly, folderOfState, heldCost, heldForDoc, heldOne, heldSum, useClients, type Folder, type Held, type SnapRow } from '../lib/clients';
 import { today as todayIso } from '../lib/visits';
+import { COEF_PATH, birthYearOf, coefFor, type CoefFile } from '../lib/coef';  // W6
+import { AGE_DEFAULT, BALANCE_EX, GROWTH_DEFAULT, INFL_DEFAULT, RETIRE_AGE, RET_FALLBACK, exampleMonthly, project } from '../lib/retire';
 import '../styles/agentDoc.css';
 
 /* W1 · agent door: the client document, /funds/compare/print?k=…&b=net|gross. An A4 page set, right to left, unbranded: the tracks
@@ -26,7 +28,12 @@ import '../styles/agentDoc.css';
    PDF.
    W4: the table is transposed (metrics down, tracks across, at most four tracks a table) so it fits A4 portrait with 8 tracks; the
    bottom line compares only within a category (lib/compareDoc); an old-generation managers' insurance track opens a warning and is kept
-   out of every comparison line; a folder opens on the figures frozen when it was saved ("צילום"), with today's data one click away. */
+   out of every comparison line; a folder opens on the figures frozen when it was saved ("צילום"), with today's data one click away.
+   W6: pension tracks get a table of "קצבה חודשית, אומדן" (a man, a woman) on one uniform projection, ÷ each fund's own conversion
+   coefficient from its bylaws (page cited) or the assumption; and the word "אומדן" is no longer stamped on every cell: one methodology
+   line at the bottom (EST_LINE) names every figure the site computes. */
+/** the one line that replaces the "אומדן" badges: what in this document is computed by the site and what is as published */
+const EST_LINE = 'אומדנים: תשואה נטו (ברוטו פחות דמי ניהול מצבירה ÷ 12), ירידה מרבית, עלות דמי הניהול לשנה וקצבה חודשית הם חישובים של האתר על ההנחות שבהערות ובטבלת הקצבה; כל שאר הנתונים כפי שפרסמה הרשות או הגוף המנהל.';
 
 type Tag = 'קיים' | 'מומלץ' | 'נבחן';
 const TAGS: Tag[] = ['קיים', 'מומלץ', 'נבחן'];
@@ -61,6 +68,7 @@ export function FundsComparePrint() {
   const { hist, pending } = useHists(keys);
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index and claims columns
+  const coefF = useOptional<CoefFile>(COEF_PATH);  // W6
   const [client, setClient] = useState('');
   const [agent, setAgent] = useStored<string>('agent:name', '');
   const [lic, setLic] = useStored<string>('agent:lic', '');
@@ -98,14 +106,14 @@ export function FundsComparePrint() {
   const olds = rows.filter((r) => r.old);
   const bottom = useSnap ? snap!.bottom : bottomLines(rows, net);
   const rules = rulesOf(rows.map((r) => r.prod));
-  const lbl = net ? NET_LABEL : 'ברוטו';
+  const lbl = net ? 'נטו' : 'ברוטו';  // W6: "אומדן" moves to EST_LINE
   const metrics = metricsOf(rows);
   const pages = pagesOf(rows, 4);
   const diffs = snap && live ? snap.rows.map((t) => { const n = liveRows.find((r) => r.k === t.k); return n ? { r: n, d: snapDiff(t, n, data.asof) } : null; }).filter((x): x is { r: SnapRow; d: ReturnType<typeof snapDiff> } => !!x && x.d.length > 0) : [];
 
   // the notes: one per metric group, numbered as the table cites them; plain words, no field names, no %-encoded addresses
   const notes: string[] = [
-    `${data.source}, נתוני ${ym(asof)}. תשואות ${net ? 'נטו, אומדן: התשואה החודשית שפורסמה (ברוטו) פחות דמי הניהול מצבירה של אותו חודש ÷ 12, בריבית דריבית' : 'ברוטו (לפני דמי ניהול), כפי שפורסמו'}; 3Y ו-5Y: ממוצע שנתי; LTM: 12 החודשים האחרונים.`,
+    `${data.source}, נתוני ${ym(asof)}. תשואות ${net ? 'נטו: התשואה החודשית שפורסמה (ברוטו) פחות דמי הניהול מצבירה של אותו חודש ÷ 12, בריבית דריבית' : 'ברוטו (לפני דמי ניהול), כפי שפורסמו'}; 3Y ו-5Y: ממוצע שנתי; LTM: 12 החודשים האחרונים.`,
     `דמי ניהול: הממוצע בפועל שגבה המסלול מכלל עמיתיו, מצבירה ומהפקדה, ${ym(asof)}; דמי הניהול של הלקוח יכולים להיות שונים.${olds.length ? ` ${OLD_FEE_NOTE} (${OLD_FEE_SRC.title}, עמ' ${OLD_FEE_SRC.pg}).` : ''}`,
     'שארפ וסטיית תקן: כפי שהרשות מפרסמת למסלול. מסלול בניהול אישי או בלי תנודתיות: אין שארפ.',
     `ירידה מרבית: מחושבת מ-60 התשואות החודשיות האחרונות (${lbl}), מהשיא לשפל שאחריו.`,
@@ -182,6 +190,8 @@ export function FundsComparePrint() {
           <p className="adoc-cap">{BOTTOM_CAP}</p>
         </section>}
 
+        {anyPen && <AnnuityTable rows={rows.filter((r) => r.pen)} coefF={coefF} />}
+
         {rules.length > 0 && <section>
           <h2>מיסוי ונזילות</h2>
           <table className="adoc-t rules">
@@ -195,6 +205,7 @@ export function FundsComparePrint() {
           <h2>מקורות והערות</h2>
           <ol style={{ overflowWrap: 'anywhere', gridTemplateColumns: 'minmax(0, 1fr)' }}>{notes.map((n, i) => <li key={i}>{n}</li>)}</ol>
           {anyPen && <p>{PENSION_MISSING}.</p>}
+          <p>{EST_LINE}</p>
           <p className="disc">המסמך מציג נתונים שפרסמה רשות שוק ההון, ביטוח וחיסכון, כפי שהם, ותיאור עובדתי שלהם. אין בו ייעוץ השקעות, ייעוץ פנסיוני, שיווק פנסיוני או ייעוץ מס, ואין בו התחשבות בנתונים ובצרכים של לקוח מסוים. תשואות העבר אינן מבטיחות תשואות בעתיד. דמי הניהול המוצגים הם ממוצע בפועל של המסלול. לפני החלטה יש לבדוק את תנאי המוצר מול הגוף המנהל ואת המידע האישי במסלקה הפנסיונית.</p>
         </section>
 
@@ -219,7 +230,7 @@ function HeldNow({ held, rowKeys }: { held: Held[]; rowKeys: string[] }) {
     <section className="adoc-held">
       <h2>מצב קיים: המוצרים של הלקוח</h2>
       <table className="adoc-t held">
-        <thead><tr><th scope="col">מוצר</th><th scope="col">יתרה</th><th scope="col">הפקדה חודשית</th><th scope="col">ד"נ מצבירה</th><th scope="col">ד"נ מהפקדה</th><th scope="col">עלות ד"נ לשנה (אומדן)</th></tr></thead>
+        <thead><tr><th scope="col">מוצר</th><th scope="col">יתרה</th><th scope="col">הפקדה חודשית</th><th scope="col">ד"נ מצבירה</th><th scope="col">ד"נ מהפקדה</th><th scope="col">עלות ד"נ לשנה</th></tr></thead>
         <tbody>{held.map((h, i) => { const c = heldCost(h); return (
           <tr key={i}><th scope="row"><b>{h.typeHe}</b><span>{[h.provider, h.track ?? h.plan].filter(Boolean).join(' · ')}</span>
             {!h.k ? <span className="nomatch">{coverOnly(h) ? 'כיסוי ביטוחי בלבד, בלי חיסכון' : 'לא נמצא מסלול תואם ב-fox: הנתונים מהקובץ בלבד'}</span> : !rowKeys.includes(h.k) ? <span className="nomatch">המסלול לא נכלל בהשוואה</span> : null}</th>
@@ -228,6 +239,32 @@ function HeldNow({ held, rowKeys }: { held: Held[]; rowKeys: string[] }) {
         <tfoot><tr><th scope="row">סה"כ</th><td>{ILS(s.balance)}</td><td>{s.monthly ? ILS(s.monthly) : '–'}</td><td /><td /><td>{s.total ? ILS(s.total) : '–'}</td></tr></tfoot>
       </table>
       <p className="adoc-cap">מקובץ המסלקה הפנסיונית של הלקוח{asof ? `, נכון ליום ${dmyIso(asof)}` : ''}: היתרות, ההפקדות ודמי הניהול <b>של הלקוח</b>, כפי שהקובץ מוסר אותם; לא נבדקו מול הגוף המנהל. {COST_HOW}.{s.noFee ? ` ${s.noFee === 1 ? 'מוצר אחד עם יתרה אין לו' : `ל-${s.noFee} מוצרים עם יתרה אין`} דמי ניהול מצבירה בקובץ: לא נכלל בסכום.` : ''}</p>
+    </section>
+  );
+}
+
+/** W6 · the monthly annuity each pension track would pay on one uniform projection (the fee tool's example plan, each track's own
+ *  average fees), divided by the fund's own conversion coefficient from its bylaws, a man and a woman, with the page cited; the
+ *  assumption where the fund has no table. Facts of the arithmetic, not a recommendation. */
+function AnnuityTable({ rows, coefF }: { rows: SnapRow[]; coefF: CoefFile | null | undefined }) {
+  const plan = { age: AGE_DEFAULT, retire: RETIRE_AGE, balance: BALANCE_EX, monthly: exampleMonthly('פנסיה מקיפה').v, growth: GROWTH_DEFAULT, ret: RET_FALLBACK, infl: INFL_DEFAULT };
+  const cell = (r: SnapRow, sex: 'm' | 'f') => {
+    const pick = coefFor(coefF, r.grp, sex, RETIRE_AGE, birthYearOf(AGE_DEFAULT));
+    const out = project({ ...plan, coef: pick.v }, { fee: r.fee ?? 0, depfee: r.depfee ?? 0 });
+    return { ann: out.pensionReal, bal: out.balReal, pick };
+  };
+  const cells = rows.map((r) => ({ r, m: cell(r, 'm'), f: cell(r, 'f') }));
+  const srcs = [...new Map(cells.filter((c) => c.m.pick.src).map((c) => [c.r.grp, c.m.pick.src!])).values()];
+  return (
+    <section>
+      <h2>קצבה חודשית בגיל {RETIRE_AGE}, על הנחות אחידות</h2>
+      <table className="adoc-t annex-t small">
+        <thead><tr><th scope="col">מסלול</th><th scope="col">חיסכון בגיל {RETIRE_AGE}</th><th scope="col">מקדם, גבר</th><th scope="col">קצבה, גבר</th><th scope="col">מקדם, אישה</th><th scope="col">קצבה, אישה</th><th scope="col">המקור למקדם</th></tr></thead>
+        <tbody>{cells.map(({ r, m, f }) => <tr key={r.k}><th scope="row"><b>{r.name}</b></th><td>{ILS(m.bal)}</td><td><bdi dir="ltr">{m.pick.v}</bdi></td><td>{ILS(m.ann)}</td><td><bdi dir="ltr">{f.pick.v}</bdi></td><td>{ILS(f.ann)}</td>
+          <td className="src">{m.pick.real ? <span>{m.pick.label}{m.pick.src ? ` (${m.pick.src.edition})` : ''}</span> : <span>לפי הנחה: {m.pick.why}</span>}</td></tr>)}</tbody>
+      </table>
+      <p className="adoc-cap">הנחות אחידות לכל המסלולים: יתרה של {ILS(plan.balance)} היום והפקדה של {ILS(plan.monthly)} לחודש (סכומי הדוגמה של מחשבון דמי הניהול), גיל {plan.age} היום ופרישה בגיל {plan.retire}, תשואה {plan.ret}% ברוטו, הפקדה שעולה {plan.growth}% בשנה, אינפלציה {plan.infl}%; דמי הניהול הממוצעים של כל מסלול. קצבה = החיסכון ÷ מקדם ההמרה של הקרן לפרישה בגיל {plan.retire}, ילידי {birthYearOf(plan.age)} בקירוב, קצבה לבן/בת זוג 60% בלי הבטחת תשלומים (או הטבלה הקרובה שהקרן מפרסמת); הטבלאות מחושבות לדמי ניהול של 0.3%. ההבדל בין המסלולים נובע מדמי הניהול וממקדם ההמרה בלבד; לא תחזית ולא ייעוץ. המקדם בפועל נקבע בפרישה לפי התקנון שבתוקף אז ומסלול הקצבה שנבחר.
+        {srcs.length > 0 && <> מקורות המקדמים: {srcs.map((s) => `${s.title}${s.kind === 'mirror' ? ' (עותק באתר צד שלישי)' : ''} (${shortUrl(s.url)})`).join('; ')}.</>}</p>
     </section>
   );
 }
@@ -323,7 +360,7 @@ function Annex({ rows, tagOf, client, agent, lic, asof, held }: { rows: SnapRow[
       </div>
       <h4>סך עלות דמי הניהול והביטוח</h4>
       <table className="adoc-t annex-t small"><thead><tr><th /><th>מצב קיים</th><th>מצב מומלץ</th></tr></thead>
-        <tbody><tr><th scope="row">סך עלות דמי ניהול</th><td><Fill label="סך דמי ניהול, קיים" inline fk="t:fee0" value={held.length && sum.total ? `${ilsv(sum.total)} לשנה (אומדן)` : undefined} /></td><td><Fill label="סך דמי ניהול, מומלץ" inline fk="t:fee1" /></td></tr>
+        <tbody><tr><th scope="row">סך עלות דמי ניהול</th><td><Fill label="סך דמי ניהול, קיים" inline fk="t:fee0" value={held.length && sum.total ? `${ilsv(sum.total)} לשנה` : undefined} /></td><td><Fill label="סך דמי ניהול, מומלץ" inline fk="t:fee1" /></td></tr>
           <tr><th scope="row">סך עלות ביטוח</th><td><Fill label="סך עלות ביטוח, קיים" inline fk="t:ins0" value={sum.ins ? `${ilsv(sum.ins)} לשנה` : undefined} /></td><td><Fill label="סך עלות ביטוח, מומלץ" inline fk="t:ins1" /></td></tr></tbody></table>
       {held.length > 0 && <p className="adoc-cap">מצב קיים מולא מקובץ המסלקה של הלקוח ({sum.n} מוצרים, יתרה כוללת {ilsv(sum.balance)}): {COST_HOW}.{sum.noFee ? ` ${sum.noFee} מוצרים עם יתרה בלי דמי ניהול בקובץ לא נכללו.` : ''}{sum.ins ? ` עלות הביטוח: עלות חודשית × 12, רק לכיסויים שהקובץ מפרט להם עלות${sum.noCost ? ` (ל-${sum.noCost} כיסויים אין עלות בקובץ)` : ''}.` : ''} לבדוק מול אופן החישוב שבנספח ב' לחוזר ולתקן לפי הצורך.</p>}
       <p className="adoc-cap">לפי נספח ב' לחוזר (אופן החישוב).</p>

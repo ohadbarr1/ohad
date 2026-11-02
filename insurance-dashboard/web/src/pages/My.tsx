@@ -6,11 +6,13 @@ import { Sourced } from '../components/Source';
 import { useFundCats, useFunds } from '../lib/useData';
 import { useOptional } from '../lib/fundsLoad';
 import { useMine, useMyAge, useMyRetire, useMySex, useRetire, type MyProduct } from '../lib/mine';
+import { useStored } from '../lib/local';
 import { useSaverDoor } from '../lib/door';
 import type { CatX, FundX, FundsFile } from '../lib/funds';
 import type { DefaultFile } from '../lib/fundsTools';
 import type { Prov } from '../lib/prov';
-import { AGE_DEFAULT, KZ_RETIRE, RET_FALLBACK, ageText, coefOf, ilsRound } from '../lib/retire';
+import { AGE_DEFAULT, KZ_RETIRE, RET_FALLBACK, ageText, ilsRound } from '../lib/retire';
+import { COEF_PATH, birthYearOf, coefFor, pct0, replacementOf, type CoefFile } from '../lib/coef';  // W6
 import { cardCalc, summaryOf, type SumRow } from '../lib/myCalc';
 import { pcf } from '../lib/verdict';
 import { DECISION_PATH, type DecisionFile } from '../lib/decision';
@@ -24,7 +26,13 @@ import '../styles/saver.css';
 /* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26): the reader's age once, a strip that adds up what they
    pay and what the pension funds may pay, the one thing worth asking for, then a folded card per product. The list lives in this
    browser only (lib/mine). Descriptive, never advice: no "move", no "stay". With nothing saved yet: the picker, and one example card
-   clearly marked "דוגמה". Entering /my with no door chosen is entering the saver door. */
+   clearly marked "דוגמה". Entering /my with no door chosen is entering the saver door.
+   W6: the pension estimate of each fund divides by that fund's own conversion coefficient from its bylaws (lib/coef, funds/coef.json)
+   when the file has one, else by the site's assumption, and the strip says which; a salary (optional, this browser only) adds the
+   replacement rate without and with the National Insurance old-age pension against the 70% benchmark. No headline pension figure is
+   shown before a balance is entered. */
+/** the reader's gross monthly salary, for the replacement rate (this browser only) */
+export const SALARY_KEY = 'my:salary';
 const EXAMPLE = 'p9757';
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -35,6 +43,7 @@ export function My() {
   const cats = useFundCats().data as Record<string, CatX> | undefined;
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dec = useOptional<DecisionFile>(DECISION_PATH);
+  const coefF = useOptional<CoefFile>(COEF_PATH);  // W6
   const [mine, setMine] = useMine();
   const [ageS] = useMyAge(), [sex] = useMySex();
   const R = useRetire();
@@ -47,8 +56,11 @@ export function My() {
   // a link from the fund card (/my#p9757) lands on that product
   useEffect(() => { if (data && loc.hash) document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' }); }, [data, loc.hash]);
 
-  const rows: SumRow[] = useMemo(() => (!data || dfile === undefined ? [] : list.flatMap((m) => { const f = byK.get(m.k); return f ? [{ k: f.k, name: f.name, prod: f.prod, c: cardCalc(f, data.funds as FundX[], data.asof, dfile, m, dec, { age: ageS ?? AGE_DEFAULT, coef: coefOf(sex).v, ret: RET_FALLBACK, retire: R.v }) }] : []; })),
-    [data, dfile, dec, list, byK, ageS, sex, R.v]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const rows: SumRow[] = useMemo(() => (!data || dfile === undefined ? [] : list.flatMap((m) => { const f = byK.get(m.k); if (!f) return [];
+    // W6: the fund's own coefficient (its bylaws) for the reader's sex, retirement age and birth year; the assumption where there is none
+    const pick = coefFor(coefF, f.grp, sex, R.v, birthYearOf(ageS ?? AGE_DEFAULT));
+    return [{ k: f.k, name: f.name, prod: f.prod, coefReal: pick.real, c: cardCalc(f, data.funds as FundX[], data.asof, dfile, m, dec, { age: ageS ?? AGE_DEFAULT, coef: pick.v, ret: RET_FALLBACK, retire: R.v }) }]; })),
+    [data, dfile, dec, coefF, list, byK, ageS, sex, R.v]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data || dfile === undefined) return <Loading what="המוצרים שלך" />;
@@ -70,7 +82,7 @@ export function My() {
 
       <AgeRow />
       {msg && <p className="sv-done" role="status">{msg}</p>}
-      {rows.length > 0 && <Strip rows={rows} retire={R.v} />}
+      {rows.length > 0 && <Strip rows={rows} retire={R.v} coefF={coefF} />}
 
       {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
 
@@ -126,6 +138,7 @@ function AgeRow() {
       </span>
       <span className="sv-a">לא חובה</span>
       <RetireIn />
+      <SalaryIn />
     </div>
   );
 }
@@ -149,30 +162,75 @@ function RetireIn() {
   );
 }
 
+/** W6: the reader's gross monthly salary, for the replacement rate (optional; this browser only) */
+function SalaryIn() {
+  const [sal, setSal] = useStored<number | null>(SALARY_KEY, null);
+  const [raw, setRaw] = useState(sal == null ? '' : String(sal));
+  const [was, setWas] = useState(sal);
+  if (was !== sal) { setWas(sal); setRaw(sal == null ? '' : String(sal)); }
+  const bad = raw !== '' && !(Number(raw) >= 1000 && Number(raw) <= 200000);
+  return (
+    <span className="sv-who-ret">
+      <label className="sv-who-age"><span>שכר ברוטו לחודש</span>
+        <input type="number" inputMode="numeric" min={1000} max={200000} step={100} placeholder="למשל 15000" value={raw} aria-invalid={bad} style={{ width: 124 }}
+          onChange={(e) => { const t = e.target.value; setRaw(t); const x = Number(t); if (t === '') setSal(null); else if (Number.isFinite(x) && x >= 1000 && x <= 200000) setSal(Math.round(x)); }} />
+      </label>
+      {bad ? <span className="sv-err">סכום בין 1,000 ל-200,000</span> : <span className="sv-a">לא חובה</span>}
+    </span>
+  );
+}
+
 /** the strip at the top: what the reader pays this year, the pension estimate, and the one thing worth asking for */
-function Strip({ rows, retire }: { rows: SumRow[]; retire: number }) {
+function Strip({ rows, retire, coefF }: { rows: SumRow[]; retire: number; coefF: CoefFile | null | undefined }) {
   const at = `בגיל ${ageText(retire)}`;
   const s = summaryOf(rows);
+  const [salary] = useStored<number | null>(SALARY_KEY, null);
+  const nReal = rows.filter((r) => r.prod.startsWith('פנסיה') && r.coefReal).length, nPen = rows.filter((r) => r.prod.startsWith('פנסיה')).length;
+  const coefWhy = nPen === 0 ? '' : nReal === nPen ? 'המקדם של כל קרן מהתקנון שלה' : nReal === 0 ? 'המקדם לפי הנחה (אין טבלה לקרן, או שלא נבחר מין)' : `המקדם מהתקנון ב-${nReal} מתוך ${nPen} קרנות, בשאר לפי הנחה`;
+  const rep = salary != null && s.pension != null && s.penBal > 0 && coefF ? replacementOf(s.pension, salary, coefF) : null;
+  const firstPen = rows.find((r) => r.prod.startsWith('פנסיה'));
   const feesProv = (): Prov => ({ k: 'calc', est: true, title: 'דמי ניהול בשנה, כל המוצרים', value: ilsRound(s.fees), formula: 'לכל מוצר: היתרה × דמי הניהול מצבירה, ועוד 12 הפקדות × דמי הניהול מהפקדה. דמי הניהול שלך כשהזנת, אחרת הממוצע במסלול',
     note: [s.feesAvg ? 'בחלק מהמוצרים: דמי הניהול הממוצעים במסלול, לא שלך' : null, s.feesEx ? 'בחלק מהמוצרים: יתרה או הפקדה לדוגמה' : null].filter(Boolean).join('. ') || undefined,
     inputs: rows.map((r) => ({ label: `${r.name} (${r.c.v.fee.own ? 'שלך' : 'ממוצע'}: ${pcf(r.c.mine.fee)} / ${pcf(r.c.mine.depfee)})`, v: ilsRound(r.c.annual.total) })) });
   const penProv = (): Prov => ({ k: 'calc', est: true, title: `קצבה חודשית מקרנות הפנסיה ${at}, בשקלי היום · אומדן`, value: ilsRound(s.pension ?? 0),
-    formula: `סכום האומדנים של כל קרן פנסיה ברשימה: החיסכון ${at} ÷ מקדם ההמרה. תשואה שמרנית של 4% ברוטו, הפקדה שעולה 2% בשנה, אינפלציה 2%`,
-    note: 'אומדן גס. לא מנכה את עלות הכיסוי הביטוחי, לא כולל מוצרים שאינם קרן פנסיה, קצבת זקנה מביטוח לאומי או מס',
+    formula: `סכום האומדנים של כל קרן פנסיה ברשימה: החיסכון ${at} ÷ מקדם ההמרה של הקרן. ${coefWhy}. תשואה שמרנית של 4% ברוטו, הפקדה שעולה 2% בשנה, אינפלציה 2%`,
+    note: 'אומדן גס. לא מנכה את עלות הכיסוי הביטוחי, לא כולל מוצרים שאינם קרן פנסיה, קצבת זקנה מביטוח לאומי או מס. המקדם של כל קרן: בכרטיס שלה, עם העמוד בתקנון',
     inputs: rows.filter((r) => r.prod.startsWith('פנסיה')).map((r) => ({ label: r.name, v: ilsRound(r.c.out.pensionReal) })) });
   const a = s.act;
   return (
     <section className="panel sv-sum" aria-label="התמונה בקצרה">
       <dl className="sv-kpis">
         <div><dt>דמי ניהול בשנה</dt><dd><Sourced src={feesProv}><b className="num">{ilsRound(s.fees)}</b></Sourced></dd><span className="sv-a">{rows.length > 1 ? `כל ${rows.length} המוצרים` : 'המוצר'}{s.feesAvg ? ', חלקם לפי הממוצע במסלול' : ', לפי דמי הניהול שלך'}{s.feesEx ? ', עם נתונים לדוגמה' : ''}</span></div>
-        {s.pension != null && <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><span className="sv-a">{at}, בשקלי היום, תשואה 4%</span></div>}
+        {s.pension != null && (s.penBal > 0
+          ? <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><span className="sv-a">{at}, בשקלי היום, תשואה 4%; {coefWhy}</span></div>
+          : <div><dt>קצבה מהפנסיה, אומדן</dt><dd><a href={firstPen ? `#${firstPen.k}` : '#'} className="sv-u">הזינו יתרה</a></dd><span className="sv-a">בלי היתרה שלך מהדוח אין מה לאמוד; {coefWhy}</span></div>)}
       </dl>
+      {rep && coefF && <ReplaceLines rep={rep} coefF={coefF} salary={salary!} pension={s.pension!} />}
       <p className="sv-one"><b>דבר אחד לעשות:</b>{' '}
         {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>. {a.ref === 'med' ? (a.own ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה') : 'לעומת תנאי קרנות ברירת המחדל'}, יהיו לך כ-{ilsRound(a.v)} פחות בחיסכון {a.prod === 'השתלמות' ? `בעוד ${a.years} שנים` : 'בגיל הפרישה'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. ההודעה מוכנה בכרטיס.</>
           : a.kind === 'enter' ? <>להזין את דמי הניהול מהדוח השנתי ב<a href={`#${a.k}`}>{a.name}</a>: בלי זה החישוב לפי הממוצע במסלול.</>
           : <>לבדוק בדוח השנתי שהמוטבים מעודכנים (<Link to="/my/statement#st-ben">איפה זה בדוח</Link>). דמי הניהול שלך לא גבוהים מהחציון באף מוצר.</>}
       </p>
     </section>
+  );
+}
+/** W6: the replacement rate in three lines: pension ÷ last salary, the same with the National Insurance basic old-age pension, and the
+ *  benchmark the literature uses (70%). Facts of the arithmetic on the estimate above, not a recommendation. */
+function ReplaceLines({ rep, coefF, salary, pension }: { rep: NonNullable<ReturnType<typeof replacementOf>>; coefF: CoefFile; salary: number; pension: number }) {
+  const b = coefF.btl, t = coefF.target;
+  const from = `${b.from.slice(8, 10)}.${b.from.slice(5, 7)}.${b.from.slice(0, 4)}`;
+  const btlProv = (): Prov => ({ k: 'report', title: 'קצבת אזרח ותיק (זקנה) בסיסית ליחיד', value: `${b.single.toLocaleString('en-US')} ש"ח לחודש`, url: b.url, pg: null, doc: b.title, period: `מ-${from}`, note: `${b.quote}. ${b.note ?? ''} נקרא ${b.retrieved}` });
+  const tgtProv = (): Prov => ({ k: 'report', title: 'יחס תחלופה מקובל', value: `${t.rate}%`, url: t.url, pg: t.pg ?? null, doc: t.title, note: `${t.quote ? `"${t.quote}". ` : ''}${t.note ?? ''}` });
+  const rateProv = (withBtl: boolean) => (): Prov => ({ k: 'calc', est: true, title: `יחס תחלופה ${withBtl ? 'עם' : 'בלי'} קצבת זקנה מביטוח לאומי`, value: pct0(withBtl ? rep.withBtl : rep.noBtl),
+    formula: withBtl ? '(אומדן הקצבה מהפנסיה + קצבת אזרח ותיק בסיסית ליחיד) ÷ השכר ברוטו לחודש' : 'אומדן הקצבה מהפנסיה ÷ השכר ברוטו לחודש שהזנת',
+    note: 'הקצבה באומדן לפני מס ובשקלי היום; השכר ברוטו. יחס התחלופה במאמר האוצר הוא נטו, מול ההכנסה הפנויה, ולכן אינו זהה',
+    inputs: [{ label: 'קצבה מהפנסיה, אומדן', v: ilsRound(pension) }, ...(withBtl ? [{ label: `קצבת אזרח ותיק בסיסית ליחיד (מ-${from})`, v: ilsRound(rep.btl), src: btlProv }] : []), { label: 'שכר ברוטו לחודש (שלך)', v: ilsRound(salary) }] });
+  return (
+    <ul className="sv-lines sv-rep" aria-label="יחס תחלופה">
+      <li><span className="sv-dot" aria-hidden="true" /><span>יחס תחלופה בלי ביטוח לאומי: <Sourced src={rateProv(false)}><b className="num">{pct0(rep.noBtl)}</b></Sourced> מהשכר ברוטו.</span></li>
+      <li><span className="sv-dot" aria-hidden="true" /><span>עם קצבת אזרח ותיק בסיסית ליחיד (<Sourced src={btlProv}><span className="num">{b.single.toLocaleString('en-US')} ש"ח</span></Sourced>, מ-{from}): <Sourced src={rateProv(true)}><b className="num">{pct0(rep.withBtl)}</b></Sourced>.</span></li>
+      <li><span className="sv-dot" aria-hidden="true" /><span>יעד מקובל: <Sourced src={tgtProv}><span className="num">{t.rate}%</span></Sourced> ומעלה (משרד האוצר, 2016: "המינימום המקובל"; יחס נטו, לא יעד רשמי). תיאור, לא המלצה.</span></li>
+    </ul>
   );
 }
 /** "קרן הפנסיה" / "קרן ההשתלמות" when the reader has one of each; the full name otherwise */
