@@ -3,7 +3,8 @@
    Run: npm run test:maslaka */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { applyRows, code30, decodeXml, isoDate, parseMaslaka, rowsOf, sim, sniff, words, xmlTree, type MFund, type Row } from '../src/lib/maslaka';
+import { applyRows, code30, decodeXml, heldOf, isoDate, parseMaslaka, rowsOf, sim, sniff, words, xmlTree, type MFund, type Row } from '../src/lib/maslaka';
+import { backupState, coverOnly, folderFromImport, heldCost, heldForDoc, heldOne, heldSum, normClients, type Held } from '../src/lib/clients';
 
 let fail = 0, pass = 0;
 const bad: string[] = [];
@@ -100,6 +101,50 @@ if (existsSync(data)) {
   const dup = applyRows([], [{ ...rp[0] }, { ...rp[0], key: 'x', balance: 100, monthly: 10 }], '2026-11-02');
   ok(dup.list.length === 1 && dup.list[0].balance === 182550 && dup.list[0].monthly === 3598, 'two accounts in one track add up');
   ok(!JSON.stringify(r1.list).includes('000000018'), 'nothing personal beyond the numbers is saved');
+  /* W5 · red team 3: the client document keeps the client's money. Every imported product reaches the current state, matched or
+     not; the annual fee cost is the balance × the client's fee from savings, plus 12 × the monthly deposit × the fee from deposits. */
+  {
+    const held = heldOf([...rp, ...rm]) as Held[];
+    // an old managers' policy with no fox track, the client's largest asset (the red team's case): added as the file would give it
+    const bm: Held = { k: null, typeHe: 'ביטוח מנהלים (ביטוח חיים משולב חיסכון)', provider: 'חברת ביטוח לדוגמה', plan: 'פוליסה 1995', track: null, balance: 640000, monthly: null, fee: 1.05, feeHow: 'מתנאי החשבון בקובץ (שנתי)', depfee: null, depHow: null, asof: '2026-09-30', covers: [], note: 'לא הותאם למסלול' };
+    const all = [...held, bm];
+    const fo = folderFromImport('לקוח', all);
+    ok(fo.held.length === all.length && fo.held.some((h) => h.balance === 640000), `W5: the folder keeps every product, the unmatched policy too (${fo.held.length})`);
+    const pen0 = all.find((h) => h.k === 'p2184')!;
+    const c0 = heldCost(pen0);
+    ok(near(c0.acc, 182450 * 0.22 / 100, 1e-6) && near(c0.dep, 3588 * 12 * 1.49 / 100, 1e-6) && near(c0.total, 401.39 + 641.5344, 1e-6), `W5: the pension's annual fee cost: balance × 0.22% + 12 × 3,588 × 1.49% (${c0.total})`);
+    const st = all.find((h) => h.k === 'g12535')!;
+    ok(near(heldCost(st).acc, 504) && heldCost(st).dep === 0, `W5: the study fund: 84,000 × 0.6% = ₪504; its deposit fee is 0 (${heldCost(st).acc}, ${heldCost(st).dep})`);
+    ok(near(heldCost(bm).total, 6720) && heldCost(bm).dep == null, 'W5: the unmatched policy: 640,000 × 1.05% = ₪6,720 a year; no deposit, no deposit cost');
+    ok(heldCost({ balance: null, monthly: null, fee: 0.5, depfee: 2 }).total === null, 'W5: no balance and no deposit: no cost (not zero)');
+    const s = heldSum(all);
+    const expBal = all.reduce((t, h) => t + (h.balance ?? 0), 0);
+    ok(s.balance === expBal && s.balance >= 640000 + 182450 + 84000 && s.n === all.length, `W5: the total balance counts every product, matched or not (${s.balance})`);
+    ok(near(s.total, all.reduce((t, h) => t + (heldCost(h).total ?? 0), 0), 1e-6) && s.total > 6720, `W5: the annual fee total includes the unmatched policy (${s.total.toFixed(2)})`);
+    // the document: the matched tracks as "קיים" carry their product; everything else is listed on its own
+    const { onRow, loose } = heldForDoc(all, fo.keys, fo.keys.filter((k) => fo.tags[k] === 'קיים'));
+    ok(onRow.has('p2184') && heldOne(onRow.get('p2184')!).balance === 182450, 'W5: a matched existing track carries the client\'s balance (סכום צפוי)');
+    ok(loose.some((x) => x.h.balance === 640000 && x.why === 'לא נמצא מסלול תואם ב-fox'), 'W5: the unmatched policy is in the current state, marked "לא נמצא מסלול תואם ב-fox"');
+    ok(loose.some((x) => x.h.k == null && x.h.balance !== 640000 && x.why === 'לא נמצא מסלול תואם ב-fox') && onRow.size + loose.length <= all.length && [...onRow.values()].flat().length + loose.length === all.length, 'W5: every product is either on its track or listed on its own; none dropped');
+    const risk = all.find((h) => h.typeHe === 'ביטוח ריסק');
+    ok(!risk || coverOnly(risk) === (risk.balance == null && risk.covers.length > 0), 'W5: a risk-only policy is cover only (kept out of the savings composition, still in the current state)');
+    // a matched track the agent tags "מומלץ": its product is still listed as current
+    const re = heldForDoc(all, fo.keys, []);
+    ok(re.onRow.size === 0 && re.loose.length === all.length && re.loose.find((x) => x.h.k === 'p2184')?.why === 'המסלול מופיע במסמך בסיווג אחר', 'W5: retagging a track does not drop the client\'s product from the current state');
+    ok(normClients({ folders: [{ label: 'x', keys: [], held: [bm] }] }).folders[0].held[0].balance === 640000, 'W5: a folder of one unmatched product survives storage');
+  }
+  /* W5 · the backup reminder */
+  {
+    const f = normClients({ folders: [{ id: 'abcd1234', label: 'א', keys: ['p2184'], created: '2026-10-01', updated: '2026-10-20' }, { id: 'abcd5678', label: 'ב', keys: ['p2184'], created: '2026-10-01', updated: '2026-10-01' }] });
+    const never = backupState(f, '', '2026-11-02');
+    ok(never.days === null && never.nudge && never.changed === 2, 'W5: never exported: nudge');
+    const fresh = backupState(f, '2026-10-25', '2026-11-02');
+    ok(fresh.days === 8 && fresh.changed === 0 && !fresh.nudge, `W5: exported after the last change: no nudge (${JSON.stringify(fresh)})`);
+    const stale = backupState(f, '2026-10-10', '2026-11-02');
+    ok(stale.days === 23 && stale.changed === 1 && stale.nudge, `W5: a folder changed since a 23-day-old export: nudge (${JSON.stringify(stale)})`);
+    ok(!backupState(normClients({}), null, '2026-11-02').nudge, 'W5: no folders: nothing to back up');
+    ok(backupState(f, '2026-09-01', '2026-11-02').nudge, 'W5: a month without a backup: nudge');
+  }
 } else console.log('  (no web/public/data/funds.json: matching skipped)');
 
 console.log(`maslaka: ${pass} passed, ${fail} failed`);

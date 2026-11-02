@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Icon } from '../Icon';
 import type { FundX } from '../../lib/funds';
 import { decodeXml, heldOf, parseMaslaka, readTree, rowsOf, sniff, type MFund, type Row } from '../../lib/maslaka';
-import { upsert, useClients, type Folder, type Held } from '../../lib/clients';
+import { folderFromImport, upsert, useClients, type Folder, type Held } from '../../lib/clients';
 import { today } from '../../lib/visits';
 import { nf } from '../../lib/format';
 
@@ -17,13 +17,8 @@ const ils = (v: number | null | undefined) => (v == null ? '–' : `₪${Math.ro
 const pc = (v: number | null | undefined) => (v == null ? '–' : `${nf(v, 2)}%`);
 interface Read { name: string; rows: Row[]; error?: string; warn: string[] }
 
-/** the folder an import makes: the matched tracks (≤ 8, largest balance first) tagged "קיים", and every product as held */
-export function folderFromImport(label: string, held: Held[]): Pick<Folder, 'label' | 'keys' | 'tags' | 'held'> {
-  const by = new Map<string, number>();
-  held.forEach((h) => { if (h.k) by.set(h.k, (by.get(h.k) ?? 0) + (h.balance ?? 0)); });
-  const keys = [...by.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k).slice(0, 8);
-  return { label, keys, tags: Object.fromEntries(keys.map((k) => [k, 'קיים' as const])), held };
-}
+/** the folder an import makes (W5: the pure helper moved to lib/clients, node-testable) */
+export { folderFromImport };
 
 export function ClientImport({ funds, onDone }: { funds: FundX[]; onDone: (f: Folder, msg: string) => void }) {
   const [file, setFile] = useClients();

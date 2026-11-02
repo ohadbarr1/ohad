@@ -14,7 +14,7 @@ import { PENSION_MISSING } from '../components/agent/PensionPack';
 import { BM_HREF, DECISION_PATH, OLD_FEE_NOTE, OLD_FEE_SRC, OLD_WARN, SELF_REPORT, claimsWhy, companyOf, srcOf, type DecisionFile } from '../lib/decision';  // W2
 import { BOTTOM_CAP, bottomLines, dmyIso, docRow, metricsOf, pagesOf, shortUrl, snapDiff, snapOf } from '../lib/compareDoc';
 import { ClientSave } from '../components/agent/ClientSave';
-import { folderOfState, useClients, type Folder, type Held, type SnapRow } from '../lib/clients';
+import { coverOnly, folderOfState, heldCost, heldForDoc, heldOne, heldSum, useClients, type Folder, type Held, type SnapRow } from '../lib/clients';
 import { today as todayIso } from '../lib/visits';
 import '../styles/agentDoc.css';
 
@@ -90,7 +90,9 @@ export function FundsComparePrint() {
   const asof = useSnap ? snap!.asof : data.asof;
   const liveRows: SnapRow[] = fs.map((f) => docRow(f, { net, asof: data.asof, hist: hist[f.k] as HistX | undefined, dfile, dec }));
   const rows: SnapRow[] = useSnap ? keys.map((k) => snap!.rows.find((r) => r.k === k)!).filter(Boolean) : liveRows;
-  if (!rows.length) return <div className="adoc-wrap"><p>אין מסלולים במסמך. <Link to="/funds/compare">חזרה להשוואה</Link></p></div>;
+  const held = folder?.held ?? [];
+  // W5: a folder of imported products alone (none matched a published track) still makes a document: the current state and the annex
+  if (!rows.length && !held.length) return <div className="adoc-wrap"><p>אין מסלולים במסמך. <Link to="/funds/compare">חזרה להשוואה</Link></p></div>;
 
   const anyPen = rows.some((r) => r.pen);
   const olds = rows.filter((r) => r.old);
@@ -146,7 +148,7 @@ export function FundsComparePrint() {
       <article className="adoc" dir="rtl" lang="he" key={gen}>
         <header className="adoc-h">
           <div><h1>השוואת מסלולי חיסכון</h1>
-            <p className="adoc-sub">{rows.length} מסלולים · נתוני {ym(asof)} · תשואות {lbl} · {useSnap ? <>צילום מ-{dmyIso(snap!.at)}, נתונים עד {ym(snap!.asof)}</> : <>הופק {todayHe()}</>}</p></div>
+            <p className="adoc-sub">{rows.length} מסלולים{held.length ? ` · ${held.length} מוצרים קיימים מהמסלקה` : ''} · נתוני {ym(asof)} · תשואות {lbl} · {useSnap ? <>צילום מ-{dmyIso(snap!.at)}, נתונים עד {ym(snap!.asof)}</> : <>הופק {todayHe()}</>}</p></div>
           <dl className="adoc-meta">
             {client.trim() && <><dt>עבור</dt><dd>{client.trim()}</dd></>}
             {agent.trim() && <><dt>הוכן על ידי</dt><dd>{agent.trim()}{lic.trim() ? `, רישיון ${lic.trim()}` : ''}</dd></>}
@@ -160,7 +162,9 @@ export function FundsComparePrint() {
           <p className="adoc-cap">רשימת בדיקה לפני מעבר (מקדם מובטח, הסדר ריסק, חיתום, ותק, כספים הוניים): <Link to={BM_HREF}>ביטוחי מנהלים ישנים</Link>, לפי כל זכות (נכתב בסיוע רשות שוק ההון). מקדמי הקצבה של פוליסה מסוימת אינם פומביים: יש לקבל אותם מחברת הביטוח.</p>
         </section>}
 
-        <section>
+        {held.length > 0 && <HeldNow held={held} rowKeys={rows.map((r) => r.k)} />}
+
+        {rows.length > 0 && <section>
           <h2>המסלולים</h2>
           {pages.map((pg, pi) => (
             <table className="adoc-t tx" key={pi} aria-label={`המסלולים ${pi + 1} מתוך ${pages.length}`}>
@@ -170,13 +174,13 @@ export function FundsComparePrint() {
             </table>
           ))}
           <p className="adoc-cap">3Y ו-5Y: תשואה שנתית ממוצעת. {net ? 'נטו: אומדן אחרי דמי ניהול מצבירה בלבד; דמי ניהול מהפקדה פועלים על ההפקדות ואינם נכללים.' : 'ברוטו: לפני דמי ניהול.'} "–": אין נתון.</p>
-        </section>
+        </section>}
 
-        <section>
+        {rows.length > 0 && <section>
           <h2>בשורה התחתונה</h2>
           <ul className="adoc-bl">{bottom.map((t, i) => <li key={i}>{t}</li>)}</ul>
           <p className="adoc-cap">{BOTTOM_CAP}</p>
-        </section>
+        </section>}
 
         {rules.length > 0 && <section>
           <h2>מיסוי ונזילות</h2>
@@ -194,10 +198,37 @@ export function FundsComparePrint() {
           <p className="disc">המסמך מציג נתונים שפרסמה רשות שוק ההון, ביטוח וחיסכון, כפי שהם, ותיאור עובדתי שלהם. אין בו ייעוץ השקעות, ייעוץ פנסיוני, שיווק פנסיוני או ייעוץ מס, ואין בו התחשבות בנתונים ובצרכים של לקוח מסוים. תשואות העבר אינן מבטיחות תשואות בעתיד. דמי הניהול המוצגים הם ממוצע בפועל של המסלול. לפני החלטה יש לבדוק את תנאי המוצר מול הגוף המנהל ואת המידע האישי במסלקה הפנסיונית.</p>
         </section>
 
-        {annex && <Annex rows={rows.map(docFor)} tagOf={tagOf} client={client.trim()} agent={agent.trim()} lic={lic.trim()} asof={asof} held={folder?.held ?? []} />}
+        {annex && <Annex rows={rows.map(docFor)} tagOf={tagOf} client={client.trim()} agent={agent.trim()} lic={lic.trim()} asof={asof} held={held} />}
       </article>
       </Draft.Provider>
     </div>
+  );
+}
+
+const ILS = (v: number | null | undefined) => (v == null ? '–' : `₪${Math.round(v).toLocaleString('en-US')}`);
+const PC = (v: number | null | undefined) => (v == null ? '–' : `${nf(v, 2)}%`);
+/** the fee-cost method, in words (the same on the current-state table and in the annex) */
+const COST_HOW = 'עלות דמי הניהול לשנה, אומדן: יתרה × דמי ניהול מצבירה, ועוד הפקדה חודשית × 12 × דמי ניהול מהפקדה (כשההפקדה ידועה); בלי תשואה עתידית ובלי שינוי בהפקדות';
+
+/** W5 · the client's products as the clearing-house file gives them, every one, matched to a published track or not: the balance, the
+ *  client's own fees and their cost a year in ₪ (red team 3: the client's largest asset, an old managers' policy with no fox track,
+ *  used to be missing from the document). */
+function HeldNow({ held, rowKeys }: { held: Held[]; rowKeys: string[] }) {
+  const s = heldSum(held), asof = held.find((h) => h.asof)?.asof;
+  return (
+    <section className="adoc-held">
+      <h2>מצב קיים: המוצרים של הלקוח</h2>
+      <table className="adoc-t held">
+        <thead><tr><th scope="col">מוצר</th><th scope="col">יתרה</th><th scope="col">הפקדה חודשית</th><th scope="col">ד"נ מצבירה</th><th scope="col">ד"נ מהפקדה</th><th scope="col">עלות ד"נ לשנה (אומדן)</th></tr></thead>
+        <tbody>{held.map((h, i) => { const c = heldCost(h); return (
+          <tr key={i}><th scope="row"><b>{h.typeHe}</b><span>{[h.provider, h.track ?? h.plan].filter(Boolean).join(' · ')}</span>
+            {!h.k ? <span className="nomatch">{coverOnly(h) ? 'כיסוי ביטוחי בלבד, בלי חיסכון' : 'לא נמצא מסלול תואם ב-fox: הנתונים מהקובץ בלבד'}</span> : !rowKeys.includes(h.k) ? <span className="nomatch">המסלול לא נכלל בהשוואה</span> : null}</th>
+            <td>{ILS(h.balance)}</td><td>{ILS(h.monthly)}</td><td>{PC(h.fee)}</td><td>{PC(h.depfee)}</td>
+            <td>{ILS(c.total)}{c.dep != null && <span className="q">מזה מההפקדות {ILS(c.dep)}</span>}</td></tr>); })}</tbody>
+        <tfoot><tr><th scope="row">סה"כ</th><td>{ILS(s.balance)}</td><td>{s.monthly ? ILS(s.monthly) : '–'}</td><td /><td /><td>{s.total ? ILS(s.total) : '–'}</td></tr></tfoot>
+      </table>
+      <p className="adoc-cap">מקובץ המסלקה הפנסיונית של הלקוח{asof ? `, נכון ל-${dmyIso(asof)}` : ''}: היתרות, ההפקדות ודמי הניהול <b>של הלקוח</b>, כפי שהקובץ מוסר אותם; לא נבדקו מול הגוף המנהל. {COST_HOW}.{s.noFee ? ` ${s.noFee === 1 ? 'מוצר אחד עם יתרה אין לו' : `ל-${s.noFee} מוצרים עם יתרה אין`} דמי ניהול מצבירה בקובץ: לא נכלל בסכום.` : ''}</p>
+    </section>
   );
 }
 
@@ -206,13 +237,19 @@ export function FundsComparePrint() {
  *  the annex's parts, for the agent's file. */
 function Annex({ rows, tagOf, client, agent, lic, asof, held }: { rows: SnapRow[]; tagOf: (k: string) => Tag; client: string; agent: string; lic: string; asof: number; held: Held[] }) {
   // W4: a folder imported from the clearing house fills the client's own fees (A.1) and the existing cover (A.2), editable
-  const own = (k: string) => held.find((h) => h.k === k);
+  const own = (k: string) => { const hs = held.filter((h) => h.k === k); return hs.length ? heldOne(hs) : undefined; };
   const pcv = (v: number | null | undefined) => (v == null ? undefined : `${nf(v, 2)}%`);
   const ilsv = (v: number | null | undefined) => (v == null ? undefined : `₪${Math.round(v).toLocaleString('en-US')}`);
   const covers = held.flatMap((h) => h.covers.map((c) => ({ c, h })));
   const a2 = Math.max(3, covers.length);
   const exist = rows.filter((r) => tagOf(r.k) === 'קיים'), next = rows.filter((r) => tagOf(r.k) === 'מומלץ'), seen = rows.filter((r) => tagOf(r.k) === 'נבחן');
   const order = [...exist, ...next];
+  // W5: every imported product is in the current state: folded into its "קיים" track, or listed on its own from the file
+  const { onRow, loose } = heldForDoc(held, rows.map((r) => r.k), exist.map((r) => r.k));
+  const looseA1 = loose.filter((x) => !coverOnly(x.h));
+  const sum = heldSum(held);
+  const expOf = (b: number | null | undefined, at: string | null | undefined) => (b == null ? undefined : `יתרת חיסכון ${ilsv(b)}${at ? ` (${dmyIso(at)})` : ''}`);
+  const heldName = (h: Held) => [h.typeHe, h.provider].filter(Boolean).join(' · ');
   /** A.1, one block per product (existing first): Annex A's ten fields in its order, two to a line so the page stays portrait */
   const row = (f: SnapRow): ReactNode => (
     <div className="a1" key={f.k}>
@@ -226,8 +263,26 @@ function Annex({ rows, tagOf, client, agent, lic, asof, held }: { rows: SnapRow[
         <div><dt>דמי ניהול מהפקדות</dt><dd><Fill label="דמי ניהול מהפקדות ללקוח" inline fk={`a1:${f.k}:dep`} value={tagOf(f.k) === 'קיים' ? pcv(own(f.k)?.depfee) : undefined} /><span className="q">ממוצע בפועל במסלול: <bdi dir="ltr">{f.depfee == null ? '–' : `${nf(f.depfee, 2)}%`}</bdi></span></dd></div>
         <div><dt>דמי ניהול מחיסכון מצטבר</dt><dd><Fill label="דמי ניהול מחיסכון מצטבר ללקוח" inline fk={`a1:${f.k}:acc`} value={tagOf(f.k) === 'קיים' ? pcv(own(f.k)?.fee) : undefined} /><span className="q">{f.old ? 'משתנים (השתתפות ברווחים); ' : ''}ממוצע בפועל במסלול: <bdi dir="ltr">{f.fee == null ? '–' : `${nf(f.fee, 2)}%`}</bdi></span></dd></div>
         <div><dt>רמת הסיכון של מסלול ההשקעה</dt><dd><Fill label="רמת הסיכון של המסלול" inline fk={`a1:${f.k}:risk`} /><span className="q">חשיפה למניות: <bdi dir="ltr">{f.st == null ? '–' : `${nf(f.st, 0)}%`}</bdi></span></dd></div>
-        <div><dt>סכום צפוי (יתרת חיסכון ואומדן קצבה)</dt><dd><Fill label="סכום צפוי" inline fk={`a1:${f.k}:exp`} /></dd></div>
+        <div><dt>סכום צפוי (יתרת חיסכון ואומדן קצבה)</dt><dd><Fill label="סכום צפוי" inline fk={`a1:${f.k}:exp`} value={tagOf(f.k) === 'קיים' ? expOf(own(f.k)?.balance, own(f.k)?.asof) : undefined} />{tagOf(f.k) === 'קיים' && onRow.has(f.k) && <span className="q">היתרה מקובץ המסלקה; אומדן הקצבה: להשלים</span>}</dd></div>
         <div><dt>השיקולים העיקריים</dt><dd><Fill label={`השיקולים העיקריים: ${f.name}`} inline fk={`a1:${f.k}:why`} /></dd></div>
+      </dl>
+    </div>
+  );
+  /** W5 · A.1 for a product with no fox track (or one the document leaves out): the fields the file gives, the rest to type */
+  const looseRow = ({ h, i, why }: { h: Held; i: number; why: string }): ReactNode => (
+    <div className="a1 loose" key={`h${i}`}>
+      <div className="a1-h"><b>קיים</b> · {heldName(h)}{h.track ?? h.plan ? ` · ${h.track ?? h.plan}` : ''} <span className="nomatch">{why}</span></div>
+      <dl className="a1-g">
+        <div><dt>המלצה</dt><dd><Fill label={`המלצה: ${heldName(h)}`} inline fk={`a1:h${i}:rec`} /></dd></div>
+        <div><dt>שם המוצר הפנסיוני ומספרו</dt><dd>{heldName(h)}{h.plan && <span className="q">{h.plan}</span>}<span className="q">מספר המוצר: להשלים מהדוח השנתי</span></dd></div>
+        <div><dt>השם המסחרי של מסלול ההשקעה ומספרו</dt><dd><Fill label={`מסלול ההשקעה: ${heldName(h)}`} inline fk={`a1:h${i}:trk`} value={h.track ?? undefined} /></dd></div>
+        <div><dt>הבטחת תשואה</dt><dd><Fill label="הבטחת תשואה" inline fk={`a1:h${i}:guar`} />{/ביטוח מנהלים/.test(h.typeHe) && <span className="q">ביטוח מנהלים: לבדוק בפוליסה מקדם מובטח והבטחת תשואה</span>}</dd></div>
+        <div><dt>תשואה ברוטו</dt><dd><Fill label="תשואה ברוטו" inline fk={`a1:h${i}:ret`} /><span className="q">אין נתון באתר למוצר הזה</span></dd></div>
+        <div><dt>דמי ניהול מהפקדות</dt><dd><Fill label="דמי ניהול מהפקדות ללקוח" inline fk={`a1:h${i}:dep`} value={pcv(h.depfee)} />{h.depfee != null && <span className="q">של הלקוח, מהקובץ{h.depHow ? ` (${h.depHow})` : ''}</span>}</dd></div>
+        <div><dt>דמי ניהול מחיסכון מצטבר</dt><dd><Fill label="דמי ניהול מחיסכון מצטבר ללקוח" inline fk={`a1:h${i}:acc`} value={pcv(h.fee)} />{h.fee != null && <span className="q">של הלקוח, מהקובץ{h.feeHow ? ` (${h.feeHow})` : ''}</span>}</dd></div>
+        <div><dt>רמת הסיכון של מסלול ההשקעה</dt><dd><Fill label="רמת הסיכון של המסלול" inline fk={`a1:h${i}:risk`} /></dd></div>
+        <div><dt>סכום צפוי (יתרת חיסכון ואומדן קצבה)</dt><dd><Fill label="סכום צפוי" inline fk={`a1:h${i}:exp`} value={expOf(h.balance, h.asof)} />{h.balance != null && <span className="q">היתרה מקובץ המסלקה; אומדן הקצבה: להשלים</span>}</dd></div>
+        <div><dt>השיקולים העיקריים</dt><dd><Fill label={`השיקולים העיקריים: ${heldName(h)}`} inline fk={`a1:h${i}:why`} /></dd></div>
       </dl>
     </div>
   );
@@ -245,7 +300,7 @@ function Annex({ rows, tagOf, client, agent, lic, asof, held }: { rows: SnapRow[
 
       <h3>חלק א – ההמלצה</h3>
       <h4>א.1 הרכב החיסכון הפנסיוני המומלץ עבורך</h4>
-      {order.length ? <div className="a1s">{order.map(row)}</div> : <p className="adoc-cap">אין מסלול שסומן "קיים" או "מומלץ". הסיווג נקבע בסרגל שמעל המסמך.</p>}
+      {order.length || looseA1.length ? <div className="a1s">{exist.map(row)}{looseA1.map(looseRow)}{next.map(row)}</div> : <p className="adoc-cap">אין מסלול שסומן "קיים" או "מומלץ". הסיווג נקבע בסרגל שמעל המסמך.</p>}
       <p className="adoc-cap">בחלק הזה, לפי החוזר: המוצרים הקיימים, ואחריהם המוצרים המומלצים. מוצר שמשתנה: שורה לפני ושורה אחרי, ו"לא שונה" בשדה שלא השתנה. דמי ניהול: יש להקליד את דמי הניהול של הלקוח; הממוצע בפועל במסלול מוצג להשוואה בלבד.</p>
       <h4>א.2 הכיסויים הביטוחיים המומלצים עבורך</h4>
       <table className="adoc-t annex-t">
@@ -268,8 +323,9 @@ function Annex({ rows, tagOf, client, agent, lic, asof, held }: { rows: SnapRow[
       </div>
       <h4>סך עלות דמי הניהול והביטוח</h4>
       <table className="adoc-t annex-t small"><thead><tr><th /><th>מצב קיים</th><th>מצב מומלץ</th></tr></thead>
-        <tbody><tr><th scope="row">סך עלות דמי ניהול</th><td><Fill label="סך דמי ניהול, קיים" inline fk="t:fee0" /></td><td><Fill label="סך דמי ניהול, מומלץ" inline fk="t:fee1" /></td></tr>
-          <tr><th scope="row">סך עלות ביטוח</th><td><Fill label="סך עלות ביטוח, קיים" inline fk="t:ins0" /></td><td><Fill label="סך עלות ביטוח, מומלץ" inline fk="t:ins1" /></td></tr></tbody></table>
+        <tbody><tr><th scope="row">סך עלות דמי ניהול</th><td><Fill label="סך דמי ניהול, קיים" inline fk="t:fee0" value={held.length && sum.total ? `${ilsv(sum.total)} לשנה (אומדן)` : undefined} /></td><td><Fill label="סך דמי ניהול, מומלץ" inline fk="t:fee1" /></td></tr>
+          <tr><th scope="row">סך עלות ביטוח</th><td><Fill label="סך עלות ביטוח, קיים" inline fk="t:ins0" value={sum.ins ? `${ilsv(sum.ins)} לשנה` : undefined} /></td><td><Fill label="סך עלות ביטוח, מומלץ" inline fk="t:ins1" /></td></tr></tbody></table>
+      {held.length > 0 && <p className="adoc-cap">מצב קיים מולא מקובץ המסלקה של הלקוח ({sum.n} מוצרים, יתרה כוללת {ilsv(sum.balance)}): {COST_HOW}.{sum.noFee ? ` ${sum.noFee} מוצרים עם יתרה בלי דמי ניהול בקובץ לא נכללו.` : ''}{sum.ins ? ` עלות הביטוח: עלות חודשית × 12, רק לכיסויים שהקובץ מפרט להם עלות${sum.noCost ? ` (ל-${sum.noCost} כיסויים אין עלות בקובץ)` : ''}.` : ''} לבדוק מול אופן החישוב שבנספח ב' לחוזר ולתקן לפי הצורך.</p>}
       <p className="adoc-cap">לפי נספח ב' לחוזר (אופן החישוב).</p>
 
       <h3>חלק ב – המאפיינים שלך לפיהם נקבעו ההמלצות</h3>
@@ -291,7 +347,7 @@ function Annex({ rows, tagOf, client, agent, lic, asof, held }: { rows: SnapRow[
 
       <h3>חלק ד – טבלת סיכום</h3>
       <div className="annex-grid">
-        <div><h4>מצב קיים</h4><ul className="annex-list">{exist.length ? exist.map((f) => <li key={f.k}>{f.prod} · {f.name}{f.id != null ? ` · מס' ${f.id}` : ''}</li>) : <li><Fill label="מצב קיים" inline /></li>}</ul></div>
+        <div><h4>מצב קיים</h4><ul className="annex-list">{exist.length || loose.length ? <>{exist.map((f) => { const o = onRow.has(f.k) ? own(f.k) : undefined; return <li key={f.k}>{f.prod} · {f.name}{f.id != null ? ` · מס' ${f.id}` : ''}{o?.balance != null ? ` · ${ilsv(o.balance)}` : ''}</li>; })}{loose.map(({ h, i }) => <li key={`h${i}`}>{heldName(h)}{h.track ?? h.plan ? ` · ${h.track ?? h.plan}` : ''}{h.balance != null ? ` · ${ilsv(h.balance)}` : ''}{!h.k ? <span className="nomatch"> (לא נמצא מסלול תואם ב-fox)</span> : null}</li>)}</> : <li><Fill label="מצב קיים" inline /></li>}</ul></div>
         <div><h4>מצב חדש</h4><ul className="annex-list">{next.length ? next.map((f) => <li key={f.k}>{f.prod} · {f.name}{f.id != null ? ` · מס' ${f.id}` : ''}</li>) : <li><Fill label="מצב חדש" inline /></li>}</ul></div>
       </div>
 

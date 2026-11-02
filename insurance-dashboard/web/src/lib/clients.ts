@@ -168,3 +168,74 @@ export function useClients(): [ClientsFile, (f: ClientsFile) => void] {
 /** the state a router link carries to open a folder (never the URL) */
 export interface FolderNav { folder: string }
 export const folderOfState = (s: unknown): string | null => (s && typeof s === 'object' && typeof (s as FolderNav).folder === 'string' ? (s as FolderNav).folder : null);
+
+/** the folder a clearing-house import makes: the matched tracks (≤ 8, largest balance first) tagged "קיים", and every product as
+ *  held, matched or not (moved here from components/agent/ClientImport in W5) */
+export function folderFromImport(label: string, held: Held[]): Pick<Folder, 'label' | 'keys' | 'tags' | 'held'> {
+  const by = new Map<string, number>();
+  held.forEach((h) => { if (h.k) by.set(h.k, (by.get(h.k) ?? 0) + (h.balance ?? 0)); });
+  const keys = [...by.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k).slice(0, 8);
+  return { label, keys, tags: Object.fromEntries(keys.map((k) => [k, 'קיים' as const])), held };
+}
+
+/* ---------- W5 · the client's current state, in shekels, from the clearing-house file ---------- */
+
+/** the annual fee cost of one held product, ₪, from the file's own figures: the balance × its fee from savings; and, when the monthly
+ *  deposit is known, 12 × that deposit × its fee from deposits (an estimate: this month's deposit taken for a whole year). Null where
+ *  the file gives neither pair. */
+export interface HeldCost { acc: number | null; dep: number | null; total: number | null }
+export function heldCost(h: Pick<Held, 'balance' | 'monthly' | 'fee' | 'depfee'>): HeldCost {
+  const acc = h.balance != null && h.fee != null ? (h.balance * h.fee) / 100 : null;
+  const dep = h.monthly != null && h.depfee != null ? (h.monthly * 12 * h.depfee) / 100 : null;
+  return { acc, dep, total: acc == null && dep == null ? null : (acc ?? 0) + (dep ?? 0) };
+}
+/** a product held only for its insurance cover (risk, no savings): it belongs in the cover table, not in the savings composition */
+export const coverOnly = (h: Held) => h.balance == null && !h.k && h.covers.length > 0;
+
+/** the totals of a client's held products: balances, deposits, the annual fee cost (from savings and from deposits) and the
+ *  insurance cost a year (Σ monthly cost × 12, where the file gives a cost). `noFee`: products with a balance but no fee from
+ *  savings in the file (left out of the fee total); `noCost`: covers with no cost in the file. */
+export interface HeldSum { n: number; balance: number; monthly: number; acc: number; dep: number; total: number; noFee: number; ins: number | null; noCost: number }
+export function heldSum(held: Held[]): HeldSum {
+  const s: HeldSum = { n: held.length, balance: 0, monthly: 0, acc: 0, dep: 0, total: 0, noFee: 0, ins: null, noCost: 0 };
+  for (const h of held) {
+    const c = heldCost(h);
+    s.balance += h.balance ?? 0; s.monthly += h.monthly ?? 0;
+    s.acc += c.acc ?? 0; s.dep += c.dep ?? 0; s.total += c.total ?? 0;
+    if (h.balance != null && h.balance > 0 && h.fee == null) s.noFee++;
+    for (const cv of h.covers) { if (cv.cost == null) s.noCost++; else s.ins = (s.ins ?? 0) + cv.cost * 12; }
+  }
+  return s;
+}
+
+/** How the client document lists the held products. A product matched to a track the document shows as "קיים" is folded into that
+ *  track's block (`onRow`, by key, balances summed); every other product is listed on its own as "קיים", from the file (`loose`):
+ *  unmatched, or matched to a track the document leaves out or tags otherwise. Nothing imported is dropped. */
+export interface Loose { h: Held; i: number; why: string }
+export function heldForDoc(held: Held[], rowKeys: string[], existKeys: string[]): { onRow: Map<string, Held[]>; loose: Loose[] } {
+  const onRow = new Map<string, Held[]>(), loose: Loose[] = [];
+  held.forEach((h, i) => {
+    if (h.k && existKeys.includes(h.k)) { onRow.set(h.k, [...(onRow.get(h.k) ?? []), h]); return; }
+    loose.push({ h, i, why: !h.k ? 'לא נמצא מסלול תואם ב-fox' : rowKeys.includes(h.k) ? 'המסלול מופיע במסמך בסיווג אחר' : 'המסלול לא נכלל במסמך' });
+  });
+  return { onRow, loose };
+}
+/** the held products of one track, as one: balances and deposits summed, the first fee given */
+export function heldOne(hs: Held[]): Pick<Held, 'balance' | 'monthly' | 'fee' | 'depfee' | 'asof'> {
+  const sum = (f: (h: Held) => number | null) => (hs.some((h) => f(h) != null) ? hs.reduce((t, h) => t + (f(h) ?? 0), 0) : null);
+  return { balance: sum((h) => h.balance), monthly: sum((h) => h.monthly), fee: hs.find((h) => h.fee != null)?.fee ?? null, depfee: hs.find((h) => h.depfee != null)?.depfee ?? null, asof: hs.find((h) => h.asof)?.asof ?? null };
+}
+
+/* ---------- W5 · the backup reminder (/clients): the folders live in this browser only, so the page says when they were last exported ---------- */
+export const BACKUP_KEY = 'clients:backup';
+/** days between two ISO dates (b − a) */
+const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b.slice(0, 10)}T00:00:00Z`) - Date.parse(`${a.slice(0, 10)}T00:00:00Z`)) / 86_400_000);
+/** the last export against the folders: how long ago, how many folders changed since, and whether to nudge (never exported, a
+ *  folder changed since and the export is a week old or more, or a month without one) */
+export function backupState(file: ClientsFile, last: string | null | undefined, today: string): { days: number | null; changed: number; nudge: boolean } {
+  const at = typeof last === 'string' && /^\d{4}-\d{2}-\d{2}/.test(last) ? last.slice(0, 10) : null;
+  const n = file.folders.length;
+  if (!at) return { days: null, changed: n, nudge: n > 0 };
+  const days = Math.max(0, daysBetween(at, today)), changed = file.folders.filter((f) => f.updated > at).length;
+  return { days, changed, nudge: n > 0 && ((changed > 0 && days >= 7) || days >= 30) };
+}

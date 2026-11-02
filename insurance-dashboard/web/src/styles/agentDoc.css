@@ -56,6 +56,14 @@
 .adoc-t.tx tbody th { width: auto; min-width: 0; font-weight: 600; color: #3F4656; font-size: 7.6pt; }
 .adoc-t.tx td { white-space: normal; text-align: center; font-size: 8.4pt; }
 .adoc-t.tx td .q { direction: rtl; }
+/* W5: the client's current state from the clearing-house file, every product, matched or not */
+.adoc-t.held tbody th { width: 46mm; }
+.adoc-t.held tbody th .nomatch, .nomatch { color: #8A2812; font-weight: 600; }
+.adoc-t.held tfoot th, .adoc-t.held tfoot td { font-weight: 700; border-top: 1pt solid #111C3F; border-bottom: 0; text-align: center; padding: 1.6mm 0.9mm; }
+.adoc-t.held tfoot th { text-align: start; }
+.adoc-t.held td { font-variant-numeric: tabular-nums; }
+.a1.loose { border-style: dashed; border-color: #B9A08F; }
+.a1-h .nomatch { font-size: 7pt; margin-inline-start: 2mm; }
 .adoc-old { border: 1pt solid #B5361A; border-radius: 2mm; padding: 2.5mm 3.5mm; background: #FFF5F1; break-inside: avoid; }
 .adoc-old h2 { color: #8A2812; }
 .adoc-old p { margin: 1mm 0 0; font-size: 8.6pt; }

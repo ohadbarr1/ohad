@@ -278,3 +278,11 @@ td.cmp-best::after { content: "●"; color: var(--accent); font-size: 8px; verti
 .cl-held > summary { cursor: pointer; font-size: var(--t-2); font-weight: 600; }
 .cl-held { display: grid; gap: 6px; }
 .cl-snap { font-size: var(--t-1); }
+
+/* W5 · /clients: the backup reminder (folders live in this browser only) */
+.cl-backup { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); font-size: var(--t-2); margin-bottom: 12px; }
+.cl-backup > span { flex: 1 1 320px; color: var(--muted); }
+.cl-backup > span b { color: var(--fg); }
+.cl-backup.nudge { border-color: var(--accent-line); background: var(--accent-soft); }
+.cl-backup .cl-bk-msg { flex-basis: 100%; }
+.cl-held tfoot th, .cl-held tfoot td { font-weight: 700; border-top: 1px solid var(--line); }

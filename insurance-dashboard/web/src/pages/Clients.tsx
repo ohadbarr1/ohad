@@ -4,7 +4,8 @@ import { Empty, Panel } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { useFunds } from '../lib/useData';
 import type { FundsFile } from '../lib/funds';
-import { exportText, mergeClients, removeFolder, sorted, useClients, type Folder } from '../lib/clients';
+import { BACKUP_KEY, backupState, exportText, heldCost, heldSum, mergeClients, removeFolder, sorted, useClients, type Folder } from '../lib/clients';
+import { useStored } from '../lib/local';
 import { today } from '../lib/visits';
 import { ClientImport } from '../components/agent/ClientImport';
 import { nf } from '../lib/format';
@@ -22,15 +23,17 @@ const pc = (v: number | null | undefined) => (v == null ? '–' : `${nf(v, 2)}%`
 function HeldList({ f }: { f: Folder }) {
   if (!f.held.length) return null;
   const covers = f.held.flatMap((h) => h.covers.map((c) => ({ ...c, of: `${h.typeHe}${h.provider ? ` · ${h.provider}` : ''}` })));
+  const sum = heldSum(f.held);
   return (
     <details className="cl-held">
       <summary>{f.held.length} מוצרים מהמסלקה{covers.length ? ` · ${covers.length} כיסויים ביטוחיים` : ''}{f.held[0]?.asof ? ` · נכון ל-${dmy(f.held[0].asof)}` : ''}</summary>
       <div className="scroll"><table className="fsimple">
-        <thead><tr><th>מוצר</th><th>יתרה</th><th>הפקדה חודשית</th><th>ד"נ מצבירה</th><th>ד"נ מהפקדה</th></tr></thead>
-        <tbody>{f.held.map((h, i) => <tr key={i}><td><b>{h.typeHe}</b><span className="ci-sub">{[h.provider, h.track ?? h.plan].filter(Boolean).join(' · ')}{h.note ? ` · ${h.note}` : ''}</span></td><td><span className="num">{ils(h.balance)}</span></td><td><span className="num">{ils(h.monthly)}</span></td><td title={h.feeHow ?? undefined}><span className="num">{pc(h.fee)}</span></td><td title={h.depHow ?? undefined}><span className="num">{pc(h.depfee)}</span></td></tr>)}</tbody>
+        <thead><tr><th>מוצר</th><th>יתרה</th><th>הפקדה חודשית</th><th>ד"נ מצבירה</th><th>ד"נ מהפקדה</th><th>עלות ד"נ לשנה (אומדן)</th></tr></thead>
+        <tbody>{f.held.map((h, i) => <tr key={i}><td><b>{h.typeHe}</b><span className="ci-sub">{[h.provider, h.track ?? h.plan].filter(Boolean).join(' · ')}{h.note ? ` · ${h.note}` : ''}</span></td><td><span className="num">{ils(h.balance)}</span></td><td><span className="num">{ils(h.monthly)}</span></td><td title={h.feeHow ?? undefined}><span className="num">{pc(h.fee)}</span></td><td title={h.depHow ?? undefined}><span className="num">{pc(h.depfee)}</span></td><td><span className="num">{ils(heldCost(h).total)}</span></td></tr>)}</tbody>
+        <tfoot><tr><th scope="row">סה"כ</th><td><span className="num">{ils(sum.balance)}</span></td><td><span className="num">{sum.monthly ? ils(sum.monthly) : '–'}</span></td><td /><td /><td><span className="num">{sum.total ? ils(sum.total) : '–'}</span></td></tr></tfoot>
       </table></div>
       {covers.length > 0 && <ul className="ci-cov">{covers.map((c, i) => <li key={i}><b>{c.name}</b> ({c.of}){c.sum != null && <> · <span className="num">{ils(c.sum)}</span></>}{c.rate != null && <> · <span className="num">{nf(c.rate, 0)}%</span> מהשכר</>}{c.cost != null && <> · עלות <span className="num">{ils(c.cost)}</span></>}</li>)}</ul>}
-      <p className="cl-note">של הלקוח, כפי שהקובץ מהמסלקה מסר אותם; לא נבדק מול הגוף המנהל.</p>
+      <p className="cl-note">של הלקוח, כפי שהקובץ מהמסלקה מסר אותם; לא נבדק מול הגוף המנהל. עלות דמי הניהול לשנה, אומדן: יתרה × ד"נ מצבירה, ועוד הפקדה חודשית × 12 × ד"נ מהפקדה.</p>
     </details>
   );
 }
@@ -45,10 +48,15 @@ export function Clients() {
   const list = sorted(file);
   const openCmp = (f: Folder) => nav(`/funds/compare?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } });
   const openDoc = (f: Folder) => nav(`/funds/compare/print?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } });
+  // W5: the folders live in this browser only; the page says when they were last exported (no cloud copy: owner decision pending)
+  const [lastBackup, setLastBackup] = useStored<string>(BACKUP_KEY, '');
+  const bk = backupState(file, lastBackup, today());
   const exportFile = () => {
     const blob = new Blob([exportText(file, today())], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fox-clients-${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    setLastBackup(today());
   };
+  const bkText = bk.days == null ? 'עוד לא נשמר גיבוי של התיקים' : `גיבוי אחרון: ${bk.days === 0 ? 'היום' : bk.days === 1 ? 'אתמול' : `לפני ${bk.days} ימים`} (${dmy(lastBackup)})${bk.changed ? ` · ${bk.changed === 1 ? 'תיק אחד השתנה' : `${bk.changed} תיקים השתנו`} מאז` : ''}`;
   const importFile = (f: File | undefined) => {
     if (!f) return;
     if (f.size > 2_000_000) { setMsg('הקובץ גדול מדי לתיקי לקוחות'); return; }
@@ -61,6 +69,12 @@ export function Clients() {
         <h1><span className="icotile"><Icon name="inbox" /></span>תיקי לקוחות</h1>
         <div className="sub">השוואות ששמרתם ללקוחות: המסלולים, הסיווג בנספח וטיוטת ההנמקה. נשמר בדפדפן הזה בלבד.</div>
       </div></div>
+      {list.length > 0 && <div className={`cl-backup${bk.nudge ? ' nudge' : ''}`} role="status">
+        <Icon name="download" /><span><b>{bkText}.</b> התיקים שמורים רק בדפדפן הזה: ניקוי נתוני הגלישה או מכשיר אחר מוחקים אותם. גיבוי הוא קובץ JSON שנשמר אצלכם.</span>
+        <button type="button" className={`btn${bk.nudge ? ' primary' : ''}`} onClick={exportFile}>גיבוי עכשיו</button>
+        <label className="chip cl-imp">שחזור מגיבוי<input type="file" accept="application/json,.json" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} /></label>
+        {msg && <span className="muted cl-bk-msg">{msg}</span>}
+      </div>}
       <Panel title={`${list.length} תיקים`} aside={<span>פרטי לדפדפן הזה</span>}>
         {!list.length ? (
           <Empty title="עוד אין תיקים" icon="inbox">בהשוואת מסלולים ובמסמך ללקוח יש כפתור "שמור ללקוח". אפשר גם לייבא קובץ שיוצא ממכשיר אחר.</Empty>
@@ -75,7 +89,7 @@ export function Clients() {
                 <HeldList f={f} />
                 <div className="cl-acts">
                   <button type="button" className="cmp-doc" onClick={() => openCmp(f)} disabled={!f.keys.length}><Icon name="compare" />להשוואה</button>
-                  <button type="button" className="chip" onClick={() => openDoc(f)} disabled={!f.keys.length}><Icon name="statement" /> {f.snap ? 'מסמך ללקוח (הצילום)' : 'מסמך ללקוח'}</button>
+                  <button type="button" className="chip" onClick={() => openDoc(f)} disabled={!f.keys.length && !f.held.length}><Icon name="statement" /> {f.snap ? 'מסמך ללקוח (הצילום)' : 'מסמך ללקוח'}</button>
                   <button type="button" className="chip" onClick={() => { if (confirm(`למחוק את התיק "${f.label}" מהדפדפן הזה?`)) setFile(removeFolder(file, f.id)); }}>מחיקה</button>
                 </div>
               </li>
@@ -89,8 +103,8 @@ export function Clients() {
       </Panel>
       <Panel title="העברה בין מכשירים" aside={<span>קובץ JSON</span>}>
         <div className="cl-io">
-          <button type="button" className="chip" onClick={exportFile} disabled={!list.length}><Icon name="download" /> ייצוא לקובץ</button>
-          <label className="chip cl-imp">ייבוא מקובץ<input type="file" accept="application/json,.json" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} /></label>
+          <button type="button" className="chip" onClick={exportFile} disabled={!list.length}><Icon name="download" /> ייצוא לקובץ (גיבוי)</button>
+          <label className="chip cl-imp">ייבוא מקובץ / שחזור<input type="file" accept="application/json,.json" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} /></label>
           {msg && <span role="status" className="muted">{msg}</span>}
         </div>
         <div className="fnote">שום דבר מהתיקים לא נשלח לשרת ולא נכנס לכתובת העמוד. הקובץ כולל את שמות הלקוחות כפי שהקלדתם ואת טיוטות ההנמקה: שמרו אותו כמו כל מסמך לקוח. בייבוא, תיק שכבר קיים מתעדכן רק כשהעותק בקובץ חדש יותר.</div>
