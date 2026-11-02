@@ -56,6 +56,19 @@ const FTOOLS = ([
   [['קרנות', 'ברירת', 'מחדל', 'נבחרות', 'מכרז', 'מכרזים', 'default'], 'קרנות ברירת מחדל · המכרזים והזוכות', 'המחיר, הזוכות, ומה קרה לכסף לפני ואחרי', '/funds/default'],
   [['עוקב', 'עוקבי', 'מדד', 'מדדים', 'snp', '500', 'tracker', 'index'], 'מעבדת עוקבי המדד', 'אותו מדד בעטיפות שונות: הפער הוא מחיר העטיפה', '/funds/trackers'],
 ] as [string[], string, string, string][]).map(([w, l, m, to]): [string[], string, string, string] => [w.map(normalize), l, m, to]);
+/** W6 doors · the saver's own pages, by the words a saver types for them (the fee tool and the default funds are in FTOOLS) */
+const SAVER_PAGES: [string[], string, string, string][] = ([
+  [['my', 'mine', 'שלי', 'המוצרים', 'מוצרים', 'שלי', 'הפנסיה', 'הקרן', 'היתרה', 'יתרה', 'צבירה', 'הצבירה'], 'המוצרים שלי', 'מה יש לך, כמה זה עולה ואיפה זה עומד · נשמר רק בדפדפן', '/my'],
+  [['statement', 'דוח', 'הדוח', 'שנתי', 'השנתי', 'רבעוני', 'מסלקה', 'לקרוא', 'קוראים', 'איך'], 'איך קוראים את הדוח השנתי', 'מה כל שורה בדוח אומרת, ומה לבדוק', '/my/statement'],
+] as [string[], string, string, string][]).map(([k, l, m, to]) => [k.map(normalize), l, m, to] as [string[], string, string, string]);
+/** the pages a saver's search may open besides funds and companies: their own two pages, the fee tool and the default funds */
+export const SAVER_TO = new Set(['/my', '/my/statement', '/funds/tools/fees', '/funds/default']);
+/** W6 doors · what the saver's door lists: funds, companies and the saver's pages. No filing pages, statement lines or Pro questions
+ *  ("עזיבת עבודה" used to answer with an annual report, page 192); the other doors see everything. */
+export function forDoor(list: Item[], door: 'saver' | 'agent' | 'pro' | null | undefined): Item[] {
+  if (door !== 'saver') return list;
+  return list.filter((x) => x.kind === 'חיפושים' || x.kind === 'אחרונים' || x.kind === 'חברה' || x.kind === 'קופה' || (x.kind === 'פונקציה' && SAVER_TO.has(x.to.split('?')[0])));
+}
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -254,6 +267,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     out.push({ kind: 'פונקציה', label: 'מה השתנה בתשובות · תקציר הבוקר', meta: 'מה שבמעקב שינה פסיקה מאז הביקור הקודם, ספים שנחצו, והבאים בלוח', to: '/watch', score: 96 });
   }
   if (!p.company && words.length) for (const [keys, label, meta, to] of FT_PAGES) if (words.every((w) => keys.some((k) => k.startsWith(w)))) out.push({ kind: 'פונקציה', label, meta, to, score: 94 });  // F2 TIME
+  if (!p.company && words.length) for (const [keys, label, meta, to] of SAVER_PAGES) if (words.every((w) => keys.some((k) => k.startsWith(w)))) out.push({ kind: 'פונקציה', label, meta, to, score: 93 });  // W6 doors
   // questions: a question id ("Q-001"), or every word left after the company starts a word of the question (within that company's questions)
   if (words.length) {
     const idq = /^q-?\d{1,3}$/i.test(q.trim()) ? q.trim().toLowerCase().replace('-', '') : null;

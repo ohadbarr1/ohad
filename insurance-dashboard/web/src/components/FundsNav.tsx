@@ -19,18 +19,32 @@ const TIME_VIEW = /^\/funds\/(rank|glide)$/;
 
 /** W4: the analyst's tabs (the industry's economics, the managers' holdings): shown in the Pro door only */
 const PRO_ONLY = new Set(['/savings', '/holdings']);
+/** W6 doors (agent red team 02.11.26): the agent's row keeps the six places; the time views, the trackers lab and the Pro tabs sit
+ *  behind one "עוד" */
+const AGENT_MORE: [string, string, string?][] = [['/funds/rank', 'אחוזון לאורך זמן'], ['/funds/glide', 'מסלולי גיל'], ['/funds/trackers', 'מעבדת עוקבי המדד'], ['/savings', 'ענף', 'Pro'], ['/holdings', 'הרכב נכסים', 'Pro']];
+const AGENT_HIDE = new Set(['/funds/rank']);
 
 export function FundsNav() {
   const loc = useLocation();
   const [door] = useActiveDoor();
-  const tabs = door === 'pro' ? TABS : TABS.filter(([to]) => !PRO_ONLY.has(to));
+  const agent = door === 'agent';
+  // W6 doors: the saver (and a visitor with no door yet) has the five places of the rail; the section's nine chips are not theirs
+  if (!agent && door !== 'pro') return null;
+  const tabs = door === 'pro' ? TABS : TABS.filter(([to]) => !PRO_ONLY.has(to) && !AGENT_HIDE.has(to));
   // a track card (/funds/p2009) belongs to the tracks tab
   const card = /^\/funds\/[gip]\d+$/.test(loc.pathname);
   const tool = /^\/funds\/(tools|default|trackers)(\/|$)/.test(loc.pathname);
   const time = TIME_VIEW.test(loc.pathname), badge = useWatchBadge();
+  const inMore = agent && AGENT_MORE.some(([to]) => loc.pathname === to || (to === '/funds/rank' && time));
   return (
     <nav className="subnav" aria-label="חיסכון">
-      {tabs.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') || (tool && to === '/funds/tools') || (time && to === '/funds/rank') ? 'active' : '')}>{l}{to === '/funds/watch' && badge > 0 && <span className="wbadge num" aria-label={`${badge} מסלולים עם חודש חדש`}>{badge}</span>}</NavLink>)}
+      {tabs.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') || (tool && to === '/funds/tools' && !(agent && loc.pathname.startsWith('/funds/trackers'))) || (!agent && time && to === '/funds/rank') ? 'active' : '')}>{l}{to === '/funds/watch' && badge > 0 && <span className="wbadge num" aria-label={`${badge} מסלולים עם חודש חדש`}>{badge}</span>}</NavLink>)}
+      {agent && <details className="snmore" key={loc.pathname}>
+        <summary className={inMore ? 'active' : ''} aria-label="עוד עמודים בחיסכון">עוד<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg></summary>
+        <div className="snmore-menu" role="group" aria-label="עוד">
+          {AGENT_MORE.map(([to, l, tag]) => <NavLink key={to} to={to} className={({ isActive }) => (isActive || (to === '/funds/rank' && time) ? 'active' : '')}>{l}{tag && <span className="chip">{tag}</span>}</NavLink>)}
+        </div>
+      </details>}
     </nav>
   );
 }

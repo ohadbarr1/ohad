@@ -198,7 +198,7 @@ export function FundsFees() {
         <div className="scroll"><table className="fsimple fcards">
           <caption className="sr-only">זוג א מול זוג ב בפרישה</caption>
           <thead><tr><th scope="col">בפרישה</th><th scope="col">זוג א</th><th scope="col">זוג ב</th><th scope="col">ב פחות א</th></tr></thead>
-          <tbody>{([['יתרה, נומינלי', 'bal'], ['יתרה, בשקלי היום', 'balReal'], ['סך דמי ניהול, נומינלי', 'fees'], ['סך דמי ניהול, בשקלי היום', 'feesReal'], ['קצבה חודשית, בשקלי היום', 'pensionReal']] as const).map(([l, w]) => (
+          <tbody>{([['יתרה, בשקלי היום', 'balReal'], ['סך דמי ניהול, בשקלי היום', 'feesReal'], ['קצבה חודשית, בשקלי היום', 'pensionReal']] as const).map(([l, w]) => (
             <tr key={w}><th scope="row">{l}</th>
               <td data-label="זוג א"><Sourced src={() => outProv(oa, A, 'זוג א', w)}><span className="num">{ils(oa[w])}</span></Sourced></td>
               <td data-label="זוג ב"><Sourced src={() => outProv(ob, B, 'זוג ב', w)}><span className="num">{ils(ob[w])}</span></Sourced></td>
@@ -207,7 +207,22 @@ export function FundsFees() {
         <div className="fnote">סך ההפקדות: <span className="num">{ils(oa.dep)}</span> על פני <span className="num">{nf(oa.months, 0)}</span> חודשים. ההפקדה מחושבת על כל השכר שהוקלד; בפועל ההפקדה לפנסיה מוגבלת בתקרות.</div>
       </Panel>
 
-      <Panel title="רגישות: דמי ניהול מהפקדה × מצבירה" aside={<span>קצבה חודשית בשקלי היום</span>}>
+      {/* W6 doors (saver red team 02.11.26): the nominal rows and the 6×6 grid are the professional's; the saver and a visitor with no
+          door see the real-₪ rows and the answer above. Agent and Pro open them here. */}
+      {!saver && <details className="ffees-pro">
+        <summary>נומינלי ורגישות: יתרה ודמי ניהול במונחים נומינליים, ורשת דמי ניהול מהפקדה × מצבירה</summary>
+        <Panel title="בפרישה, נומינלי" aside={<span className="chip est">הנחות · לפני ניכוי אינפלציה</span>}>
+          <div className="scroll"><table className="fsimple fcards">
+            <caption className="sr-only">זוג א מול זוג ב בפרישה, נומינלי</caption>
+            <thead><tr><th scope="col">בפרישה</th><th scope="col">זוג א</th><th scope="col">זוג ב</th><th scope="col">ב פחות א</th></tr></thead>
+            <tbody>{([['יתרה, נומינלי', 'bal'], ['סך דמי ניהול, נומינלי', 'fees']] as const).map(([l, w]) => (
+              <tr key={w}><th scope="row">{l}</th>
+                <td data-label="זוג א"><Sourced src={() => outProv(oa, A, 'זוג א', w)}><span className="num">{ils(oa[w])}</span></Sourced></td>
+                <td data-label="זוג ב"><Sourced src={() => outProv(ob, B, 'זוג ב', w)}><span className="num">{ils(ob[w])}</span></Sourced></td>
+                <td data-label="ב פחות א"><Sourced src={() => diffProv(w)}><span className={`num ${(ob[w] - oa[w]) * (w === 'fees' ? -1 : 1) >= 0 ? 'pos' : 'neg'}`}>{ob[w] - oa[w] >= 0 ? '+' : '−'}{nf(Math.abs(ob[w] - oa[w]), 0)}</span></Sourced></td></tr>))}</tbody>
+          </table></div>
+        </Panel>
+        <Panel title="רגישות: דמי ניהול מהפקדה × מצבירה" aside={<span>קצבה חודשית בשקלי היום</span>}>
         <div className="scroll"><table className="fgrid">
           <caption className="sr-only">קצבה חודשית לפי דמי ניהול מהפקדה (שורות) ומצבירה (עמודות)</caption>
           <thead><tr><th scope="col"><span className="fgrid-c">מהפקדה ↓ מצבירה ←</span></th>{ACCS.map((a) => <th key={a} scope="col" className="num">{nf(a, 2)}%</th>)}</tr></thead>
@@ -215,7 +230,9 @@ export function FundsFees() {
             return <td key={a} className={hit ? 'hit' : undefined} style={{ background: tone(o.pensionReal) }}><Sourced src={() => outProv(o, { depfee: dd, fee: a }, `${nf(dd, 1)}% / ${nf(a, 2)}%`, 'pensionReal')}><span className="num">{nf(o.pensionReal, 0)}</span></Sourced></td>; })}</tr>)}</tbody>
         </table></div>
         <div className="fnote">כל תא: אותן הנחות, דמי ניהול אחרים. ככל שהתא כהה יותר, הקצבה נמוכה יותר. תא ממוסגר = אחד הזוגות למעלה.</div>
-      </Panel>
+        </Panel>
+
+      </details>}
 
       <Panel title={<>דמי הניהול שלך מול הזול בקטגוריה · {cat}</>} aside={<span>{rowsT.length === members.length ? `${members.length} מסלולים פתוחים` : `${TOP_N} הזולים מתוך ${members.length} מסלולים פתוחים${mine && !members.slice(0, TOP_N).includes(mine) ? ', ועוד שלך' : ''}`} · {ym(asof)}</span>}>
         <div className="scroll"><table className="fsimple fcards">

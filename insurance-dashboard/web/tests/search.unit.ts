@@ -4,7 +4,7 @@
    web/public/data when it is there. Run: npm run test:search */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPool, canon, fundHits, fundIdx, ordered, rank, type FundEnt } from '../src/lib/searchOmni';
+import { buildPool, canon, forDoor, fundHits, fundIdx, ordered, rank, type FundEnt } from '../src/lib/searchOmni';
 import type { RegistryCompany } from '../src/lib/types';
 
 let fail = 0, pass = 0;
@@ -148,6 +148,28 @@ const list = (q: string) => ordered(rank(q, pool, (s) => s));
   ok(pro.includes('מסמך') && pro.includes('שורה בדוח'), 'pro keeps report pages');
   ok(saver.indexOf('קופה') < saver.indexOf('שאלה'), 'fund door: fund before question');
   ok(!saver.includes('מסמך') && !saver.includes('שורה בדוח'), 'fund door: report pages dropped when a fund matched');
+}
+
+/* W6 doors (saver red team 02.11.26): the saver's door lists funds, companies and the saver's pages only. "עזיבת עבודה" used to answer
+   with "כלל · דוח שנתי FY'24 עמ' 192"; a statement line and a Q-xxx question must not appear either; the other doors are unchanged. */
+{
+  const rows2: [string, string, string, number][] = [['harel', 'pl', 'הוצאות בגין עזיבת עבודה', 3], ['harel', 'bs', 'יתרה 1093 לסוף התקופה', 0]];
+  const qs2 = [{ id: 'Q-031', q: 'מה קורה לכסף בעזיבת עבודה?', cos: ['harel'] }, { id: 'Q-214', q: 'מה האיזון האקטוארי 1093 בפנסיה?', cos: ['altshuler'] }];
+  const pool2 = buildPool(reg, ['אלטשולר שחם', 'הראל'], funds, rows2, qs2);
+  const saver = (q: string) => ordered(forDoor(rank(q, pool2, (s) => s), 'saver'), true);
+  const pro = (q: string) => ordered(forDoor(rank(q, pool2, (s) => s), 'pro'));
+  const kinds = (l: ReturnType<typeof saver>) => [...new Set(l.map((x) => x.kind))];
+  ok(pro('עזיבת עבודה').some((x) => x.kind === 'שורה בדוח') && pro('עזיבת עבודה').some((x) => x.kind === 'שאלה'), `pro: "עזיבת עבודה" lists the statement line and the question (${kinds(pro('עזיבת עבודה')).join()})`);
+  ok(saver('עזיבת עבודה').length === 0, `saver: "עזיבת עבודה" lists nothing (the empty state), got ${kinds(saver('עזיבת עבודה')).join()}`);
+  ok(saver('Q-031').length === 0 && pro('Q-031').some((x) => x.kind === 'שאלה'), 'saver: a Q-xxx id finds no question; pro still does');
+  const s1093 = saver('1093');
+  ok(s1093.length > 0 && s1093.every((x) => x.kind === 'קופה') && s1093[0].to === '/funds/g1093', `saver: "1093" lists the fund only (${kinds(s1093).join()})`);
+  ok(saver('הראל').some((x) => x.kind === 'חברה') && saver('הראל').every((x) => x.kind === 'חברה' || x.kind === 'קופה'), `saver: "הראל" lists the company and its funds only (${kinds(saver('הראל')).join()})`);
+  ok(saver('הראל csm').every((x) => x.kind !== 'פונקציה'), 'saver: a Pro screen code after a company is not offered');
+  ok(saver('המוצרים שלי').some((x) => x.to === '/my') && saver('דוח שנתי').some((x) => x.to === '/my/statement'), 'saver: the saver pages answer to their words');
+  ok(saver('דמי ניהול').some((x) => x.to === '/funds/tools/fees') && saver('ברירת מחדל').some((x) => x.to === '/funds/default'), 'saver: the fee tool and the default funds are found');
+  ok(saver('תרחישים').length === 0 && saver('חדר מלחמה').length === 0 && saver('שאלות').length === 0, 'saver: the Pro screens (scenarios, war room, questions) are not offered');
+  ok(forDoor(pro('עזיבת עבודה'), 'agent').length === pro('עזיבת עבודה').length && forDoor(pro('עזיבת עבודה'), null).length === pro('עזיבת עבודה').length, 'agent and no-door: unchanged');
 }
 
 console.log(`search: ${pass} passed, ${fail} failed`);

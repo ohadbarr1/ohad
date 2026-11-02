@@ -9,6 +9,7 @@ import { MgrChip } from '../components/MgrChip';
 import { DEFAULT_PER, TIE_F, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import { PensionPack } from '../components/agent/PensionPack';  // W1-agent
 import { BmNote } from '../components/agent/Decision';  // W2
+import { isOldGen } from '../lib/decision';  // W6 doors: closed generations get no place
 import { RankPanel, RiskPanel, WatchStar } from '../components/FundsTime';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
@@ -157,10 +158,12 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
     const t = q.trim();
     return (T === ALL ? tracks.map(([x]) => x) : [T]).map((tr) => {
       const shown = all.filter((f) => f.prod === prod && f.track === tr && (closed || !f.closed));  // the rank is among the tracks on screen
-      const ranked = shown.filter((f) => f[per] != null).sort((a, b) => b[per]! - a[per]!);
+      // W6 doors (agent red team 02.11.26): a generation closed to new members (managers' insurance 1990-2003, קרן י') is no choice a
+      // client can make: listed, flagged "סגור להצטרפות", never ranked, and it does not move the others' places (as the screener does)
+      const ranked = shown.filter((f) => f[per] != null && !isOldGen(f)).sort((a, b) => b[per]! - a[per]!);
       // the place is shared inside the tie band: rank = its best end (lo), hi = its worst
       const tie = tieRanks(ranked, (f) => f[per], tieBand(per, data?.asof ?? 0));
-      const list = [...ranked, ...shown.filter((f) => f[per] == null)].filter((f) => (!t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)) && screened(f)).map((f) => ({ f, rank: tie.get(f.k)?.lo ?? null, hi: tie.get(f.k)?.hi ?? null }));
+      const list = [...ranked, ...shown.filter((f) => f[per] == null || isOldGen(f)).sort((a, b) => (b[per] ?? -Infinity) - (a[per] ?? -Infinity))].filter((f) => (!t || f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t)) && screened(f)).map((f) => ({ f, rank: tie.get(f.k)?.lo ?? null, hi: tie.get(f.k)?.hi ?? null }));
       return { tr, list, n: ranked.length, assets: shown.reduce((u, f) => u + (f.assets ?? 0), 0), cat: cats?.[`${prod} | ${tr}`] };
     }).filter((g) => g.list.length).sort((x, y) => y.assets - x.assets);
   }, [all, tracks, T, prod, per, closed, q, cats, feeMax, sharpeMin, assetsMin, data?.asof]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -247,7 +250,7 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
         </Panel>
       )}
 
-      {!makersOnly && <Panel title={`${prod} · ${T === ALL ? 'כל המסלולים' : T}`} aside={<>{T === ALL && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.tr))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}<span><Sourced src={() => countP('מסלולים מדורגים', rows.n, 'המסלולים בטבלה שיש להם תשואה בתקופה שנבחרה')}>{rows.n}</Sourced> מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}{T === ALL && <span>שורת קבוצה: ממוצע המסלול, משוקלל נכסים</span>}<span>סמן עד 6 להשוואה</span></>}>
+      {!makersOnly && <Panel title={`${prod} · ${T === ALL ? 'כל המסלולים' : T}`} aside={<>{T === ALL && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.tr))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}<span><Sourced src={() => countP('מסלולים מדורגים', rows.n, 'המסלולים בטבלה שיש להם תשואה בתקופה שנבחרה')}>{rows.n}</Sourced> מדורגים</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>{/ביטוחי מנהלים 199/.test(prod) && <span className="chip est" title="פוליסות שהונפקו 1990-2003 סגורות להצטרפות: מוצגות בלי מקום, ואינן משנות את מקומם של האחרים">סגור להצטרפות: בלי דירוג</span>}{prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">תשואת המסלול; נכסים ודמי ניהול כוללים גם ביטוחי מנהלים מ-2004</span>}{T === ALL && <span>שורת קבוצה: ממוצע המסלול, משוקלל נכסים</span>}<span>סמן עד 6 להשוואה</span></>}>
         {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה" /> : (
           <div className="scroll" style={{ maxHeight: 640 }}><table className="rank">
             <thead><tr><th>מסלול</th><th>#</th>{PERIODS.map(([k, l]) => <th key={k} className={k === per ? '' : 'wide-only'}>{l}</th>)}<th>ד"נ מצבירה<span className="dim">ממוצע בפועל</span></th><th className="wide-only">נכסים, מיליוני ש"ח</th><th className="wide-only">שארפ</th><th className="wide-only">מניות</th><th className="wide-only" title="בכמה מחמש השנים הקלנדריות המלאות האחרונות המסלול סיים ברבע העליון של המסלולים בקטגוריה">רבע עליון <span className="chip est">נגזר</span></th></tr></thead>
@@ -265,8 +268,8 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
               {(T !== ALL || open.includes(g.tr)) && g.list.map(({ f, rank, hi }) => (
                 <tr key={f.k} onPointerEnter={() => warmHist(ref(f))}>
                   <td><span style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}><label className="fund-pick" title={`השוואה: ${f.name}`}><input type="checkbox" checked={sel.includes(f.k)} onChange={() => toggle(f.k)} aria-label={`השווה את ${f.name}`} style={{ marginTop: 4, accentColor: 'var(--accent)' }} /></label>
-                    <span><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link>{f.closed && <span className="chip" style={{ marginInlineStart: 6 }}>סגורה</span>}<span className="fund-mgr"><MgrChip grp={f.grp} mgr={f.mgr} short /></span></span></span></td>
-                  <td>{rank == null ? <span className="num muted">–</span> : <Sourced src={() => rankSrc(f, per, asof, { lo: rank, hi: hi! }, g.n)}><span className="num muted">{rankText({ lo: rank, hi: hi! })}</span></Sourced>}</td>
+                    <span><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link>{f.closed && <span className="chip" style={{ marginInlineStart: 6 }}>סגורה</span>}{isOldGen(f) && <span className="chip est" style={{ marginInlineStart: 6 }} title="דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון">סגור להצטרפות</span>}<span className="fund-mgr"><MgrChip grp={f.grp} mgr={f.mgr} short /></span></span></span></td>
+                  <td>{isOldGen(f) ? <span className="muted" title="סגור להצטרפות: לא מדורג">–</span> : rank == null ? <span className="num muted">–</span> : <Sourced src={() => rankSrc(f, per, asof, { lo: rank, hi: hi! }, g.n)}><span className="num muted">{rankText({ lo: rank, hi: hi! })}</span></Sourced>}</td>
                   {PERIODS.map(([k]) => <td key={k} className={k === per ? '' : 'wide-only'}>{f[k] == null ? <P v={null} /> : <Sourced src={() => perSrc(f, k, asof)}><P v={f[k]} /></Sourced>}</td>)}
                   <td>{f.fee == null ? <span className="muted">–</span> : <Sourced src={() => plain(f, asof, 'fee')}><span className="num">{nf(f.fee, 2)}%</span></Sourced>}</td>
                   <td className="wide-only">{f.assets == null ? <span className="num">–</span> : <Sourced src={() => plain(f, asof, 'assets')}><span className="num">{nf(f.assets, 0)}</span></Sourced>}</td>
@@ -324,7 +327,7 @@ export function FundCard() {
   const netOk = useMemo(() => hasNet((data?.funds ?? []) as FundX[]), [data]);
   const spread = useMemo(() => equitySpread(((data?.funds ?? []) as FundX[]).filter((x) => !x.closed && x.assets)), [data]);
   // ranked against the tracks open to everyone, as in the table
-  const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed) && x.assets !== 0 && !selfDirected(x)) : []), [data, f]);
+  const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed) && x.assets !== 0 && !selfDirected(x) && !isOldGen(x)) : []), [data, f]);
   const years = useMemo(() => {
     if (!h) return [];
     const by = (s: { p: number[]; y: (number | null)[] }) => { const m = new Map<number, { r: number[]; p: number[] }>(); s.p.forEach((p, i) => { const r = s.y[i], y = Math.floor(p / 100); if (r != null) { const e = m.get(y) ?? { r: [], p: [] }; e.r.push(r); e.p.push(p); m.set(y, e); } }); return m; };
@@ -346,7 +349,10 @@ export function FundCard() {
   const net = basisAsked === 'net', ns = net ? netSeries(h) : null, yB = ns ? ns.y : h.y;
   const rankNet = net && netOk;
   const pv = (x: Fund, key: Per) => (rankNet ? (x as FundX).net?.[key] ?? null : x[key]);
-  const rankOf = (key: Per) => tieRanks(peers, (x) => pv(x, key), tieBand(key, data.asof)).get(f.k) ?? null;
+  // W6 doors: a closed generation (managers' insurance 1990-2003) has no place among tracks a member could join today
+  const oldGen = isOldGen(f);
+  const rankOf = (key: Per) => (oldGen ? null : tieRanks(peers, (x) => pv(x, key), tieBand(key, data.asof)).get(f.k) ?? null);
+  const CLOSED_SUB = <span className="muted" title="דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון">סגור להצטרפות</span>;
   /** "מקום 3 מתוך 40", or "מקום 2–3 מתוך 40" inside the tie band, as a figure that opens its calculation */
   const RK = ({ k }: { k: Per }) => { const t = rankOf(k); if (!t) return <>{' '}</>; const b = t.n; return <>מקום <Sourced src={() => (rankNet ? { ...rankSrc(f, k, asof, t, b), title: `מקום לפי ${PER_LABEL[k]}, ${NET_LABEL} · ${f.name}`, inputs: [{ label: `${PER_LABEL[k]}, ${NET_LABEL}`, v: pc(pv(f, k)), src: () => netProv(fx, k, asof, pv(f, k)) }, { label: 'מסלולים מדורגים', v: nf(b, 0) }, { label: 'צמודים למסלול', v: nf(t.hi - t.lo, 0) }] } : rankSrc(f, k, asof, t, b))}>{`${rankText(t)} מתוך ${b}`}</Sourced>{net && !rankNet ? ' (ברוטו)' : ''}</>; };
   /** a window on the chosen basis: published, or built from the monthly series; real when asked */
@@ -381,7 +387,7 @@ export function FundCard() {
 
   return (
     <>
-      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds/screen?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}<span className="chip">{ym(data.asof)}</span>
+      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds/screen?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}{oldGen && <span className="chip est" title="דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון">סגור להצטרפות</span>}<span className="chip">{ym(data.asof)}</span>
         <span className="chip" title={FAM_F}>{FAM_LABEL[famOf(f.track)]}</span>
         {fx.tx?.src === 'tb' && (fx.tx.spec || fx.tx.type) && <span className={`chip${fx.tx.dis ? ' est' : ''}`} title={`${fx.tx.dis ? 'הסיווג הרשמי שונה מהסיווג לפי שם המסלול. ' : ''}הסיווג ברשות (transfer_bank): ${[fx.tx.type, fx.tx.spec, fx.tx.sub].filter(Boolean).join(' · ')}`}>סיווג רשמי: {[...new Set([fx.tx.spec, fx.tx.sub].filter(Boolean))].join(' · ') || fx.tx.type}</span>}
         {out && <Sourced className="chip est" src={() => outlierProv(fx, out, () => expSrc(f, asof, 'st'))} title="החשיפה למניות רחוקה מהחציון בקטגוריה">{out.z > 0 ? 'מניות מעל הקטגוריה' : 'מניות מתחת לקטגוריה'}</Sourced>}<Tip k="outlier" />
@@ -391,10 +397,10 @@ export function FundCard() {
       <SaverVerdict f={fx} data={data as FundsFile} />
       <SaverFold>
       <section className="kpis">
-        <Kpi label={<>5Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a5'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('a5') ? <RK k="a5" /> : ' '} />
-        <Kpi label={<>3Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a3'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('a3') ? <RK k="a3" /> : ' '} />
-        <Kpi label={<>LTM <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('y12'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()}  sub={rankOf('y12') ? <RK k="y12" /> : ' '} />
-        <Kpi label={<>YTD <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('ytd'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={rankOf('ytd') ? <RK k="ytd" /> : ' '} />
+        <Kpi label={<>5Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a5'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={oldGen ? CLOSED_SUB : rankOf('a5') ? <RK k="a5" /> : ' '} />
+        <Kpi label={<>3Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a3'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={oldGen ? CLOSED_SUB : rankOf('a3') ? <RK k="a3" /> : ' '} />
+        <Kpi label={<>LTM <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('y12'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()}  sub={oldGen ? CLOSED_SUB : rankOf('y12') ? <RK k="y12" /> : ' '} />
+        <Kpi label={<>YTD <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('ytd'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={oldGen ? CLOSED_SUB : rankOf('ytd') ? <RK k="ytd" /> : ' '} />
         <Kpi label={<>ד"נ מצבירה, ממוצע בפועל <Tip k="fee" /></>} value={f.fee == null ? '–' : SRC(() => plain(f, asof, 'fee'), `${nf(f.fee, 2)}%`)} sub={f.depfee != null ? <>מהפקדה {SRC(() => plain(f, asof, 'depfee'), `${nf(f.depfee!, 2)}%`)}</> : ' '} />
         <Kpi label="נכסים" value={f.assets == null ? '–' : SRC(() => plain(f, asof, 'assets'), nf(f.assets, 0))} sub={'מיליוני ש"ח'} />
         <Kpi label={<>שארפ (הרשות, כפי שפורסם) <Tip k="sharpe" /></>} value={f.sharpe == null ? '–' : SRC(() => plain(f, asof, 'sharpe'), nf(f.sharpe, 2))} sub={f.yrs ? <>רבע עליון ב-{SRC(() => topSrc(f), `${f.top} מתוך ${f.yrs}`)} שנים</> : f.sd != null ? <>סטיית תקן {SRC(() => plain(f, asof, 'sd'), nf(f.sd!, 2))}</> : ' '} />
@@ -432,7 +438,7 @@ export function FundCard() {
         </Panel>
       </div>
       {/* F2 TIME: the track's place in its category over time, and its risk over 36 months */}
-      <div className="grid2"><RankPanel f={fx} h={h} data={data} /><RiskPanel f={fx} h={h} asof={asof} cats={cats as Record<string, CatX> | undefined} /></div>
+      <div className="grid2">{oldGen ? <Panel title="אחוזון בקטגוריה לאורך זמן"><Empty title="סגור להצטרפות: אין אחוזון" icon="funds">דור ישן של ביטוח מנהלים (פוליסות 1990-2003). אי אפשר להצטרף אליו היום, ולכן אין לו מקום או אחוזון מול מסלולים שפתוחים להצטרפות; התשואות והחשיפות מוצגות כפי שפורסמו.</Empty></Panel> : <RankPanel f={fx} h={h} data={data} />}<RiskPanel f={fx} h={h} asof={asof} cats={cats as Record<string, CatX> | undefined} /></div>
 
         <Panel title="משברים" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
           <DataTable caption="משברים" rows={CRISES.map((c) => ({ c, me: crisis(h, c.base, c.to), ct: cat ? crisis(cat, c.base, c.to) : null }))} rowKey={(r) => r.c.key}

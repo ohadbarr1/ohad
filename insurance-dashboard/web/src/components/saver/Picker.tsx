@@ -17,8 +17,19 @@ const TRACK_FIRST: Record<string, number> = { 'כללי': 5, 'עד 50': 4, '50-6
 export const PAYOUT = (f: Pick<FundX, 'track'>) => f.track === 'מקבלי קצבה';
 const PAYOUT_AGE = 60;
 
+/** W6 doors (saver red team 02.11.26): employer-only and special-purpose funds are no saver's product. The regulator marks central
+ *  severance funds and "other purpose" funds by class and product; sick-pay and holiday funds hide inside גמל and are known by name
+ *  (e.g. "הראל דקל גמל לדמי מחלה", classed תגמולים · כללי); sectoral funds carry `closed`. Offered only when typed for explicitly. */
+const SPECIAL_CLS = new Set(['מרכזית לפיצויים', 'מטרה אחרת']);
+const SPECIAL_PROD = new Set(['מרכזית לפיצויים', 'גמל, מטרה אחרת']);
+const SPECIAL_NAME = /דמי מחלה|למחלה|לדמי מחלה|חופשה|הבראה|מטרה אחרת|מרכזית לפיצויים|קופה מרכזית|מרכזית ל|פנסיה תקציבית|פיצויים בלבד/;
+export const isSpecial = (f: Pick<FundX, 'cls' | 'prod' | 'name' | 'closed' | 'grp'>) => !!f.closed || SPECIAL_CLS.has(f.cls ?? '') || SPECIAL_PROD.has(f.prod) || SPECIAL_NAME.test(f.name) || f.grp === 'קרנות ענפיות ואחרות';
+/** the query names such a fund on purpose: one of its words, or a fund number / key */
+const ASKS_SPECIAL = /מחלה|חופשה|הבראה|פיצויים|מרכזית|מטרה אחרת|תקציבית|ענפי|מפעלי|^\s*\d{3,6}\s*$|^\s*[gpi]\d{1,6}\s*$/i;
+
 export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]; onPick: (k: string) => void }) {
-  const open = useMemo(() => funds.filter((f) => !f.closed && f.assets && !selfDir(f)), [funds]);
+  const live = useMemo(() => funds.filter((f) => f.assets && !selfDir(f)), [funds]);
+  const open = useMemo(() => live.filter((f) => !isSpecial(f)), [live]);
   const [prod, setProd] = useState<string | null>(null);
   const [grp, setGrp] = useState<string | null>(null);
   const [more, setMore] = useState(false);
@@ -37,14 +48,15 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
   const tracksAll = useMemo(() => (prod && grp ? open.filter((f) => f.prod === prod && f.grp === grp).sort((a, b) => (TRACK_FIRST[b.track] ?? 0) - (TRACK_FIRST[a.track] ?? 0) || (b.assets ?? 0) - (a.assets ?? 0)) : []), [open, prod, grp]);
   const tracks = tracksAll.filter(shownT), hiddenN = tracksAll.length - tracks.length;
 
-  // type-ahead: the site's own search ranking (lib/searchOmni), funds only
-  const pool = useMemo(() => buildPool([], [], open.map((f): FundEnt => [f.name, f.grp, f.k, f.track]), []), [open]);
+  // type-ahead: the site's own search ranking (lib/searchOmni), funds only; a special-purpose fund only when asked for by name or number
+  const pool = useMemo(() => buildPool([], [], live.map((f): FundEnt => [f.name, f.grp, f.k, f.track, f.prod]), []), [live]);
   const hits = useMemo(() => {
     const t = q.trim();
     if (t.length < 2) return [];
-    return rank(t, pool, (s) => s).filter((x) => x.kind === 'קופה' && x.to.startsWith('/funds/')).slice(0, 6)
-      .map((x) => open.find((f) => `/funds/${f.k}` === x.to)).filter((f): f is FundX => !!f && shownT(f));
-  }, [q, pool, open, hidePay]);  // eslint-disable-line react-hooks/exhaustive-deps
+    const explicit = ASKS_SPECIAL.test(t);
+    return rank(t, pool, (s) => s).filter((x) => x.kind === 'קופה' && x.to.startsWith('/funds/'))
+      .map((x) => live.find((f) => `/funds/${f.k}` === x.to)).filter((f): f is FundX => !!f && shownT(f) && (explicit || !isSpecial(f))).slice(0, 6);
+  }, [q, pool, live, hidePay]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const Row = ({ f, sub }: { f: FundX; sub: string }) => {
     const on = have.includes(f.k);
@@ -81,7 +93,7 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
       <div className="sv-step sv-search">
         <label className="sv-step-h" htmlFor="sv-q"><span className="sv-num" aria-hidden="true">⌕</span>או חיפוש לפי שם או מספר קופה</label>
         <input id="sv-q" type="search" inputMode="search" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} placeholder="למשל: הראל השתלמות, או 9757" />
-        {hits.length > 0 && <ul className="sv-pick-list">{hits.map((f) => <Row key={f.k} f={f} sub={`${f.prod} · ${f.track} · מספר קופה ${f.id}`} />)}</ul>}
+        {hits.length > 0 && <ul className="sv-pick-list">{hits.map((f) => <Row key={f.k} f={f} sub={`${f.prod} · ${f.track} · מספר קופה ${f.id}${isSpecial(f) ? (f.closed ? ' · קופה ענפית או מפעלית' : ' · קופה למטרה מיוחדת') : ''}`} />)}</ul>}
         {q.trim().length >= 2 && !hits.length && <p className="sv-muted">לא נמצא מסלול פתוח בשם הזה. אפשר לנסות את מספר הקופה מהדוח.</p>}
       </div>
     </div>
