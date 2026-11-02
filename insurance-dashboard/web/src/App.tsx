@@ -122,6 +122,7 @@ const mBrief = () => import('./pages/Brief');  // S3: the Briefing Builder (priv
 const Brief = page(mBrief, 'Brief');
 const BriefPage = page(mBrief, 'BriefPage');
 const Watch = page(() => import('./pages/Watch'), 'Watch');  // S10: Watch & Wake, the morning brief (from the שאלות badge, the home line and search)
+const Flows = page(() => import('./pages/Flows'), 'Flows');  // W8 flows: who really won the month
 const mNotFound = () => import('./pages/NotFound');
 const NotFound = page(mNotFound, 'NotFound');
 
@@ -213,6 +214,7 @@ export function App() {
         <Route path="funds/watch" element={<FundsWatch />} />
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
+        <Route path="flows" element={<Flows />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="book" element={<ChartBook />} />
         <Route path="data" element={<DataPage />} />

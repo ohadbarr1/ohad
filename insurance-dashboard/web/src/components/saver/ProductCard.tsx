@@ -26,6 +26,7 @@ import { DepLine, Deposits, useDepAudit } from './Deposits';  // W7
 import { FriendSays } from './FriendSays';  // W7
 import type { MCover } from '../../lib/maslaka';
 import { FlowLine } from '../flows/FlowLine';  // W8 flows: the one flow line, only when it fires
+import { NewsForFund } from '../NewsForFund';  // W8 feeds: one line per event that concerns this fund, 90 days
 
 /* One product of "המוצרים שלי" (W4, red team 02.11.26). Folded: the verdict in at most three lines, what the fees cost this year and
    by the horizon in ₪, the reader's own numbers, and the note to the agent. "עוד פרטים" opens the rest: every line of the report card,
@@ -161,7 +162,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
       </div>
 
       {!example && <FlowLine f={f} R={refOf(f)} />}
-      {/* w8: news line — after the w8-feeds merge: <NewsForFund k={f.k} grp={f.grp} door="saver" /> (components/NewsForFund.tsx, null with no event in 90 days) */}
+      <NewsForFund k={f.k} grp={f.grp} door="saver" />
       {!example && isPension(f.prod) && my?.covers?.length ? <CoverLine covers={my.covers} insTrack={my.insTrack} salary={my.salary ?? profSalary} /> : null}
       {!example && <DepLine audit={dep.audit} onOpen={() => { setOpen(true); requestAnimationFrame(() => document.getElementById(`${f.k}-deposits`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })); }} />}
       {!example && onChange && <Mine my={my} f={f} onChange={onChange} />}

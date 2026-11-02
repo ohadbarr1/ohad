@@ -1,3 +1,4 @@
+import { Reminders } from '../components/Reminders';  // W8 feeds
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Empty, Panel } from '../components/ui';
@@ -142,6 +143,7 @@ export function Clients() {
         <ShareImport />
         <div className="fnote">שום דבר מהתיקים לא נשלח לשרת ולא נכנס לכתובת העמוד. הקובץ כולל את שמות הלקוחות כפי שהקלדתם, את טיוטות ההנמקה ואת פרטי בעל הרישיון: שמרו אותו כמו כל מסמך לקוח. "שיתוף תיק" (בכל תיק) מייצא תיק אחד כקובץ מוצפן בסיסמה, לסוכן אחר או למכשיר אחר. בייבוא, תיק שכבר קיים מתעדכן רק כשהעותק בקובץ חדש יותר.</div>
       </Panel>
+      <Reminders door="agent" />
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { useActiveDoor } from './home/doorState';
 
 /* The "חיסכון" section (funds plan, IA): two halves under one header and one row of tabs. Products (the hub, the tracks, compare)
    for the people who hold them; the business (the lens, the managers, their holdings) for the people who analyse the companies. */
-const TABS: [string, string, boolean?][] = [['/funds', 'קופות', true], ['/funds/screen', 'מסלולים'], ['/funds/compare', 'השוואה'], ['/savings', 'ענף'], ['/managers', 'מנהלים'], ['/holdings', 'הרכב נכסים']];
+const TABS: [string, string, boolean?][] = [['/funds', 'קופות', true], ['/funds/screen', 'מסלולים'], ['/funds/compare', 'השוואה'], ['/savings', 'ענף'], ['/managers', 'מנהלים'], ['/flows', 'זרימות'], ['/holdings', 'הרכב נכסים']];
 TABS.splice(TABS.findIndex(([t]) => t === '/savings'), 0, ['/funds/tools', 'כלים']);  // F2 TOOLS: the calculators and trackers
 // F2 TIME: "סיכון וזמן" after compare (its views share one tab), and the watchlist at the end
 TABS.splice(TABS.findIndex(([to]) => to === '/funds/compare') + 1, 0, ['/funds/rank', 'סיכון וזמן']);

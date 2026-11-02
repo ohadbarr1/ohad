@@ -1,3 +1,4 @@
+import { Reminders } from '../Reminders';  // W8 feeds
 import { Link } from 'react-router-dom';
 import { Sourced } from '../Source';
 import { Seg } from '../ui';
@@ -157,6 +158,7 @@ export function ProHome() {
           <nav className="hm-jump" aria-label="מעבר מהיר">{JUMP.map(([to, l]) => <Link key={to} to={to}>{l}</Link>)}</nav>
         </div>
       </div>
+      <Reminders door="pro" />
     </div>
   );
 }

@@ -24,6 +24,7 @@ import { doorFromSearch, doorLabel, isProPage, useActiveDoor } from './home/door
 import type { Door } from '../lib/door';
 import '../styles/doors.css';
 import { useSaverCompareHref } from '../lib/saverLinks';  // W5 saver: the compare tab opens on the reader's products
+import { MonthNotifier } from './Reminders';  // W8 feeds: a notification on this device when a new regulator month arrived
 
 // The six places, the same on the rail and the phone's bottom bar (חיסכון joined in F1: the funds section left the evidence group): [route, icon, label, label on the phone (the same word, shortened),
 // other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
@@ -31,7 +32,7 @@ const NAV: [string, string, string, string, string[]][] = [
   ['/', 'home', 'בית', 'בית', ['/company/', '/pro']],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
   // the long-term savings section: the funds hub, the tracks, compare, the lens, the managers and their holdings (and the old /market links)
-  ['/funds', 'market', 'חיסכון', 'חיסכון', ['/savings', '/managers', '/holdings', '/market']],
+  ['/funds', 'market', 'חיסכון', 'חיסכון', ['/savings', '/managers', '/flows', '/holdings', '/market']],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', []],
   ['/warroom', 'warroom', 'חדר מלחמה', 'חדר מלחמה', ['/capital', '/consolidation', '/fragility']],
   ['/positions', 'positions', 'עמדות', 'עמדות', []],
@@ -121,7 +122,7 @@ export function Layout() {
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
-        <main className="page" id="main" tabIndex={-1} key={section}>{!pro && isProPage(loc.pathname) && <ProChip door={door} />}<ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary><SiteFoot path={loc.pathname} door={door} /></main>
+        <main className="page" id="main" tabIndex={-1} key={section}>{!pro && isProPage(loc.pathname) && <ProChip door={door} />}<ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary><SiteFoot path={loc.pathname} door={door} /><MonthNotifier /></main>
       </div>
     </div>
     {help && <ShortcutsHelp onClose={() => setHelp(false)} />}
@@ -131,7 +132,7 @@ export function Layout() {
 }
 
 /** Wave 0 (red team 01.11.26): every page says who is behind it and links /about; the savings pages also say what they are not */
-const SAVINGS = ['/funds', '/savings', '/managers', '/holdings', '/questions', '/my'];
+const SAVINGS = ['/funds', '/savings', '/managers', '/flows', '/holdings', '/questions', '/my'];
 function SiteFoot({ path, door }: { path: string; door: Door | null }) {
   // W1: the saver's and the agent's homes (and the picker) show savings figures too
   const savings = path !== '/my' && (SAVINGS.some((s) => path === s || path.startsWith(`${s}/`)) || (path === '/' && door !== 'pro'));

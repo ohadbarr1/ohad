@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { CONTACT } from '../lib/contact';
 import '../styles/about.css';
+import { Subscriptions } from '../components/Subscriptions';  // W8 feeds: RSS and calendar subscriptions
 
 /** /about (Wave 0, red team 01.11.26): who the site is for, where the numbers come from, what it is not. Savers and agents asked "who is behind this, and is it selling me something?" */
 export function About() {
@@ -55,6 +56,7 @@ export function About() {
           <Link className="chip" to="/funds/compare">השוואת מסלולים</Link>
         </div>
       </section>
+      <Subscriptions />
     </article>
   );
 }
