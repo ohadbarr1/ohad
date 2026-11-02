@@ -4,8 +4,18 @@ import { Empty, Panel } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { useFunds } from '../lib/useData';
 import type { FundsFile } from '../lib/funds';
-import { BACKUP_KEY, backupState, exportText, heldCost, heldSum, mergeClients, removeFolder, sorted, useClients, type Folder } from '../lib/clients';
-import { useStored } from '../lib/local';
+import { BACKUP_KEY, LAST_FOLDER_KEY, backupState, brandOfFile, exportText, heldCost, heldSum, mergeClients, removeFolder, sorted, useClients, type Folder, type SnapRow } from '../lib/clients';
+import { useStored, writeStored } from '../lib/local';
+import { BrandPanel } from '../components/agent/BrandPanel';  // W7
+import { ShareFolder, ShareImport } from '../components/agent/ShareFolder';  // W7
+import { NyudTable } from '../components/agent/NyudTable';  // W7
+import { nyudTable, type Basis } from '../lib/nyud';
+import { hasBrand, normBranding, useBranding } from '../lib/branding';
+import { useOptional } from '../lib/fundsLoad';
+import { COEF_PATH, type CoefFile } from '../lib/coef';
+import type { DefaultFile } from '../lib/fundsTools';
+import { docRow } from '../lib/compareDoc';
+import type { FundX } from '../lib/funds';
 import { today } from '../lib/visits';
 import { ClientImport } from '../components/agent/ClientImport';
 import { nf } from '../lib/format';
@@ -38,21 +48,35 @@ function HeldList({ f }: { f: Folder }) {
   );
 }
 
+/** W7 · the ניוד before/after of a folder on /clients: the folder's snapshot rows (or today's rows) against its imported products */
+function NyudDetails({ f, data, dfile, coefF }: { f: Folder; data: FundsFile | undefined; dfile: DefaultFile | null | undefined; coefF: CoefFile | null | undefined }) {
+  const [basis, setBasis] = useState<Basis>('fox');
+  if (!f.held.length || !f.keys.some((k) => f.tags[k] === 'מומלץ' || f.tags[k] === 'נבחן')) return null;
+  const rows: SnapRow[] = f.snap?.rows.length ? f.snap.rows : (data ? f.keys.map((k) => data.funds.find((x) => x.k === k)).filter((x): x is FundX => !!x).map((x) => docRow(x, { net: f.b === 'net', asof: data.asof, dfile })) : []);
+  if (!rows.length) return null;
+  const asof = f.snap?.asof ?? data?.asof ?? 0;
+  const out = nyudTable(f.held, rows, f.tags, coefF, { basis }, ym(asof));
+  return <details className="cl-nyud"><summary>ניוד: לפני ואחרי ({out.rows.length} זוגות) · {f.snap ? 'על הצילום' : 'על נתוני היום'}</summary><NyudTable out={out} basis={basis} onBasis={setBasis} asofText={ym(asof)} /></details>;
+}
+
 export function Clients() {
   const [file, setFile] = useClients();
   const data = useFunds().data as FundsFile | undefined;
+  const dfile = useOptional<DefaultFile>('funds/default.json');  // W7
+  const coefF = useOptional<CoefFile>(COEF_PATH);  // W7
+  const [brand, setBrand] = useBranding();  // W7
   const nav = useNavigate();
   const [msg, setMsg] = useState<string | null>(null);
   const [impMsg, setImpMsg] = useState<string | null>(null);
   const nameOf = (k: string) => data?.funds.find((f) => f.k === k)?.name ?? k;
   const list = sorted(file);
-  const openCmp = (f: Folder) => nav(`/funds/compare?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } });
-  const openDoc = (f: Folder) => nav(`/funds/compare/print?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } });
+  const openCmp = (f: Folder) => { writeStored(LAST_FOLDER_KEY, f.id); nav(`/funds/compare?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } }); };
+  const openDoc = (f: Folder) => { writeStored(LAST_FOLDER_KEY, f.id); nav(`/funds/compare/print?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } }); };
   // W5: the folders live in this browser only; the page says when they were last exported (no cloud copy: owner decision pending)
   const [lastBackup, setLastBackup] = useStored<string>(BACKUP_KEY, '');
   const bk = backupState(file, lastBackup, today());
   const exportFile = () => {
-    const blob = new Blob([exportText(file, today())], { type: 'application/json' });
+    const blob = new Blob([exportText(file, today(), hasBrand(brand) ? brand : undefined)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fox-clients-${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     setLastBackup(today());
   };
@@ -60,7 +84,10 @@ export function Clients() {
   const importFile = (f: File | undefined) => {
     if (!f) return;
     if (f.size > 2_000_000) { setMsg('הקובץ גדול מדי לתיקי לקוחות'); return; }
-    f.text().then((t) => { const r = mergeClients(file, JSON.parse(t)); setFile(r.file); setMsg(r.added || r.updated ? `נוספו ${r.added} תיקים, עודכנו ${r.updated}` : 'לא נמצאו בקובץ תיקים חדשים'); }).catch(() => setMsg('הקובץ אינו קובץ תיקי לקוחות תקין'));
+    f.text().then((t) => { const x = JSON.parse(t); const r = mergeClients(file, x); setFile(r.file);
+      // W7: the branding in the file fills an empty one here (never overwrites what this browser has)
+      const b = brandOfFile(x); const gotBrand = b && !hasBrand(brand) && hasBrand(normBranding(b)); if (gotBrand) setBrand(normBranding(b));
+      setMsg(`${r.added || r.updated ? `נוספו ${r.added} תיקים, עודכנו ${r.updated}` : 'לא נמצאו בקובץ תיקים חדשים'}${gotBrand ? ' · פרטי בעל הרישיון נקלטו מהקובץ' : ''}`); }).catch(() => setMsg('הקובץ אינו קובץ תיקי לקוחות תקין'));
   };
   return (
     <div className="clients">
@@ -87,15 +114,20 @@ export function Clients() {
                 <div className="cl-tracks">{f.keys.map((k) => <Link key={k} to={`/funds/${k}`} className="chip">{f.tags[k] ? `${f.tags[k]} · ` : ''}{nameOf(k)}</Link>)}</div>
                 {f.note && <p className="cl-note">{f.note}</p>}
                 <HeldList f={f} />
+                <NyudDetails f={f} data={data} dfile={dfile} coefF={coefF} />
                 <div className="cl-acts">
                   <button type="button" className="cmp-doc" onClick={() => openCmp(f)} disabled={!f.keys.length}><Icon name="compare" />להשוואה</button>
                   <button type="button" className="chip" onClick={() => openDoc(f)} disabled={!f.keys.length && !f.held.length}><Icon name="statement" /> {f.snap ? 'מסמך ללקוח (הצילום)' : 'מסמך ללקוח'}</button>
+                  <ShareFolder f={f} />
                   <button type="button" className="chip" onClick={() => { if (confirm(`למחוק את התיק "${f.label}" מהדפדפן הזה?`)) setFile(removeFolder(file, f.id)); }}>מחיקה</button>
                 </div>
               </li>
             ))}
           </ul>
         )}
+      </Panel>
+      <Panel title="פרטי בעל הרישיון במסמך ללקוח" aside={<span>כותרת, חתימה ולוגו · בדפדפן בלבד</span>}>
+        <BrandPanel />
       </Panel>
       <Panel title="ייבוא מהמסלקה ללקוח" aside={<span>בטא · בדפדפן בלבד</span>}>
         {data ? <ClientImport funds={data.funds} onDone={(_, m) => setImpMsg(m)} /> : <span className="muted">טוען…</span>}
@@ -107,7 +139,8 @@ export function Clients() {
           <label className="chip cl-imp">ייבוא מקובץ / שחזור<input type="file" accept="application/json,.json" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} /></label>
           {msg && <span role="status" className="muted">{msg}</span>}
         </div>
-        <div className="fnote">שום דבר מהתיקים לא נשלח לשרת ולא נכנס לכתובת העמוד. הקובץ כולל את שמות הלקוחות כפי שהקלדתם ואת טיוטות ההנמקה: שמרו אותו כמו כל מסמך לקוח. בייבוא, תיק שכבר קיים מתעדכן רק כשהעותק בקובץ חדש יותר.</div>
+        <ShareImport />
+        <div className="fnote">שום דבר מהתיקים לא נשלח לשרת ולא נכנס לכתובת העמוד. הקובץ כולל את שמות הלקוחות כפי שהקלדתם, את טיוטות ההנמקה ואת פרטי בעל הרישיון: שמרו אותו כמו כל מסמך לקוח. "שיתוף תיק" (בכל תיק) מייצא תיק אחד כקובץ מוצפן בסיסמה, לסוכן אחר או למכשיר אחר. בייבוא, תיק שכבר קיים מתעדכן רק כשהעותק בקובץ חדש יותר.</div>
       </Panel>
     </div>
   );
