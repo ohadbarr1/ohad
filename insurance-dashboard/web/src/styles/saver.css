@@ -278,3 +278,47 @@ main .ms-lines button.src:not(.bar) { padding: 4px 0; margin: -4px 0; display: b
 .sv-coef .chip { font-size: var(--t-1); }
 .sv-agenote { color: var(--warn); margin-top: 4px; }
 .sv-rep { margin: 0; }
+
+/* ---- W7 (wave 2): household chips, the deposit watchdog, the coverage line, "חבר אמר לעבור ל…" ---- */
+.sv-hh { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: var(--t-4); }
+.sv-hh-l { font-weight: 700; }
+.sv-hh .linkbtn { margin-inline-start: 0; font-size: var(--t-3); }
+.sv-cov { margin: 0; font-size: var(--t-4); line-height: 1.55; }
+.sv-cov .sv-a { margin-inline-start: 6px; }
+.sv-dep-line { margin: 0; display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: var(--t-4); line-height: 1.55; }
+.sv-dep-line .linkbtn { margin-inline-start: 0; color: var(--link); }
+.sv-deps .sv-tag { margin-inline-end: 2px; }
+.sv-dep-rates { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; }
+.sv-dep-f { display: grid; gap: 4px; font-size: var(--t-3); color: var(--muted); font-weight: 600; }
+.sv-dep-f input { width: 130px; min-width: 0; padding: 6px 8px; font-size: 16px; }
+.sv-dep-f.sm input { width: 72px; }
+.sv-dep-rates .linkbtn { margin-inline-start: 0; font-size: var(--t-3); align-self: center; }
+.sv-dep-grid { border-collapse: collapse; font-size: var(--t-3); width: 100%; min-width: 0; }
+.sv-dep-grid th, .sv-dep-grid td { padding: 3px 4px; text-align: start; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+.sv-dep-grid thead th { color: var(--muted); font-weight: 600; }
+.sv-dep-grid tbody th { font-weight: 600; }
+.sv-dep-grid input[type="number"] { width: 74px; min-width: 0; padding: 4px 6px; font-size: 16px; }
+.sv-dep-grid input[type="date"] { width: 132px; min-width: 0; padding: 4px 6px; font-size: 14px; }
+.sv-dep-st { color: var(--muted); max-width: 9em; white-space: normal !important; }
+.sv-dep-grid tr.st-missing .sv-dep-st, .sv-dep-grid tr.st-short .sv-dep-st { color: color-mix(in oklch, var(--down) 85%, var(--fg)); font-weight: 600; }
+.sv-dep-grid tr.late .sv-dep-st { color: var(--warn); }
+.sv-dep-out { display: flex; flex-direction: column; gap: 8px; }
+.sv-dep-h4 { margin: 4px 0 0; font-size: var(--t-4); }
+.sv-friend-b { align-self: flex-start; }
+.sv-friend-q { display: flex; align-items: center; gap: 10px; }
+.sv-friend-q input { flex: 1 1 auto; min-width: 0; font-size: 16px; }
+.sv-friend-q .linkbtn { margin-inline-start: 0; font-size: var(--t-3); }
+.sv-friend-out { display: flex; flex-direction: column; gap: 10px; }
+.sv-friend-t { border-collapse: collapse; width: 100%; font-size: var(--t-3); }
+.sv-friend-t th, .sv-friend-t td { padding: 6px 8px; text-align: start; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+.sv-friend-t thead th { color: var(--muted); font-weight: 600; }
+.sv-friend-t thead th a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.sv-friend-t tbody th { font-weight: 600; min-width: 9em; }
+.sv-friend-t td .sv-a { display: block; }
+.sv-friend-no { padding: 8px 10px; border-radius: var(--r-2); background: var(--panel2); }
+.sv-friend-no a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) {
+  .sv-dep-grid input[type="number"] { width: 64px; }
+  .sv-dep-grid input[type="date"] { width: 124px; }
+  .sv-friend-t tbody th { min-width: 7em; }
+}

@@ -34,6 +34,7 @@
     "test:maslaka": "node scripts/maslaka-test.mjs",
     "test:import": "node scripts/import-test.mjs",
     "test:mysince": "node scripts/mysince-test.mjs",
+    "test:deposits": "node scripts/deposits-test.mjs",
     "test:flags": "node scripts/flags-test.mjs",
     "test:coef": "node scripts/coef-test.mjs",
     "test:nyud": "node scripts/nyud-test.mjs"

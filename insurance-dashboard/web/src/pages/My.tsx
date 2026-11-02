@@ -5,8 +5,9 @@ import { Icon } from '../components/Icon';
 import { Sourced } from '../components/Source';
 import { useFundCats, useFunds } from '../lib/useData';
 import { useOptional } from '../lib/fundsLoad';
-import { useMine, useMyAge, useMyRetire, useMySex, useRetire, type MyProduct } from '../lib/mine';
-import { useStored } from '../lib/local';
+import { SALARY_KEY, useMine, useMyAge, useMyRetire, useMySalary, useMySex, useProfiles, useRetire, type MyProduct } from '../lib/mine';
+import { writeStored } from '../lib/local';
+import { PROFILE_ADD, PROFILE_LABEL, addProfile, removeProfile, setActive, type ProfileId } from '../lib/household';  // W7
 import { useSaverDoor } from '../lib/door';
 import type { CatX, FundX, FundsFile } from '../lib/funds';
 import type { DefaultFile } from '../lib/fundsTools';
@@ -30,9 +31,12 @@ import '../styles/saver.css';
    W6: the pension estimate of each fund divides by that fund's own conversion coefficient from its bylaws (lib/coef, funds/coef.json)
    when the file has one, else by the site's assumption, and the strip says which; a salary (optional, this browser only) adds the
    replacement rate without and with the National Insurance old-age pension against the 70% benchmark. No headline pension figure is
-   shown before a balance is entered. */
-/** the reader's gross monthly salary, for the replacement rate (this browser only) */
-export const SALARY_KEY = 'my:salary';
+   shown before a balance is entered.
+   W7 (wave 2): household profiles ("אני", "+ בן/בת זוג", "+ הורה"; lib/household) in one chip row, each with its own products, age, sex,
+   retirement age, salary and "what changed" snapshot; "אני" keeps the keys the page always used, so nothing is lost. The deposit
+   watchdog, the coverage line and "חבר אמר לעבור ל…" live on the card (components/saver). /my#deposits opens the first pension or
+   השתלמות card on its watchdog (the link from /my/statement). */
+export { SALARY_KEY };
 const EXAMPLE = 'p9757';
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -50,11 +54,13 @@ export function My() {
   const [adding, setAdding] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const loc = useLocation();
+  const focusDep = loc.hash === '#deposits';
   const byK = useMemo(() => new Map(((data?.funds ?? []) as FundX[]).map((f) => [f.k, f])), [data]);
   const list = (Array.isArray(mine) ? mine : []).filter((m) => m && typeof m.k === 'string');
 
   // a link from the fund card (/my#p9757) lands on that product
-  useEffect(() => { if (data && loc.hash) document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' }); }, [data, loc.hash]);
+  useEffect(() => { if (data && loc.hash && !focusDep) document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' }); }, [data, loc.hash, focusDep]);
+  const firstDep = shownDepKey(list, byK);
 
   const rows: SumRow[] = useMemo(() => (!data || dfile === undefined ? [] : list.flatMap((m) => { const f = byK.get(m.k); if (!f) return [];
     // W6: the fund's own coefficient (its bylaws) for the reader's sex, retirement age and birth year; the assumption where there is none
@@ -77,9 +83,10 @@ export function My() {
       <div className="pagehead"><div>
         <span className="eyebrow">החיסכון שלי</span>
         <h1><span className="icotile"><Icon name="mine" /></span>המוצרים שלי</h1>
-        <div className="sub sv-sub">כמה אתם משלמים ואיפה המסלול עומד מול דומיו, במילים ובשקלים. נתוני הרשות לשוק ההון עד {asof}.</div>
+        <div className="sub sv-sub">כמה אתם משלמים ואיפה המסלול עומד מול דומיו, בשקלים. נתוני רשות שוק ההון עד {asof}.</div>
       </div></div>
 
+      <Household />
       <AgeRow />
       {msg && <p className="sv-done" role="status">{msg}</p>}
       {rows.length > 0 && <Strip rows={rows} retire={R.v} coefF={coefF} />}
@@ -88,7 +95,7 @@ export function My() {
 
       {shown.length > 0 && <div className="sv-list">
         {shown.map(({ m, f }) => f
-          ? <ProductCard key={m.k} f={f} data={data} cats={cats} dfile={dfile} my={m} onChange={patch(m.k)} onRemove={() => remove(m.k)} />
+          ? <ProductCard key={m.k} f={f} data={data} cats={cats} dfile={dfile} my={m} onChange={patch(m.k)} onRemove={() => remove(m.k)} focus={focusDep && m.k === firstDep ? 'deposits' : undefined} />
           : <div key={m.k} className="panel sv-card sv-gone"><p>המסלול {m.k} כבר לא מופיע בנתוני הרשות ({asof}). ייתכן שנסגר או מוזג.</p><button type="button" className="btn" onClick={() => remove(m.k)}>הסרה מהרשימה</button></div>)}
       </div>}
 
@@ -102,7 +109,7 @@ export function My() {
 
       <Link to="/my/statement" className="panel sv-stmt">
         <span className="icotile"><Icon name="statement" /></span>
-        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>הגרסה של שתי דקות, ואחריה שדה אחר שדה.</span></span>
+        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>שתי דקות, ואחריה שדה אחר שדה.</span></span>
         <span className="sv-stmt-go" aria-hidden="true">←</span>
       </Link>
 
@@ -111,9 +118,33 @@ export function My() {
         <ProductCard f={ex} data={data} cats={cats} dfile={dfile} example onAdd={() => add(EXAMPLE)} />
       </section>}
 
-      <p className="sv-privacy"><Icon name="shield" /> הכול נשמר רק בדפדפן הזה. שום נתון לא נשלח, ואין הרשמה.</p>
+      <p className="sv-privacy"><Icon name="shield" /> הכול נשמר רק בדפדפן הזה, בלי הרשמה; שום נתון לא נשלח.</p>
       <GlossBar />
       <p className="sv-legal">מידע תיאורי מנתוני רשות שוק ההון, עם מקור לכל מספר. לא ייעוץ השקעות, לא ייעוץ או שיווק פנסיוני, ואין המלצה לעבור או להישאר. תשואות עבר אינן מבטיחות תשואות בעתיד. האומדנים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
+    </div>
+  );
+}
+
+/** W7: the first product the deposit watchdog reads (pension or השתלמות), for the link from /my/statement */
+function shownDepKey(list: MyProduct[], byK: Map<string, FundX>): string | null {
+  const pen = list.find((m) => { const p = byK.get(m.k)?.prod; return p === 'פנסיה מקיפה' || p === 'פנסיה כללית'; });
+  return (pen ?? list.find((m) => byK.get(m.k)?.prod === 'השתלמות'))?.k ?? null;
+}
+
+/** W7: the household's profiles in one chip row. Each profile keeps its own products, age, sex, retirement age, salary and snapshot
+ *  in this browser; no names are stored, and the note to the agent calls anyone but "אני" simply "החוסך/ת". */
+function Household() {
+  const [P, setP] = useProfiles();
+  const others = (['spouse', 'parent'] as const).filter((id) => !P.list.includes(id));
+  const drop = (id: ProfileId) => {
+    if (!confirm(`להסיר את הפרופיל "${PROFILE_LABEL[id]}" ומה שנשמר בו בדפדפן הזה?`)) return;
+    const r = removeProfile(P, id); r.drop.forEach((k) => writeStored(k, undefined)); setP(r.profiles);
+  };
+  return (
+    <div className="sv-hh" role="group" aria-label="של מי המוצרים: כל פרופיל עם המוצרים והגיל שלו, בדפדפן הזה בלבד" title="כל פרופיל עם המוצרים והגיל שלו, בדפדפן הזה בלבד">
+      {P.list.map((id) => <button key={id} type="button" className="sv-chip sm" aria-pressed={P.active === id} onClick={() => setP(setActive(P, id))}>{PROFILE_LABEL[id]}</button>)}
+      {others.map((id) => <button key={id} type="button" className="sv-chip sm ghost" onClick={() => setP(addProfile(P, id))} aria-label={`הוספת פרופיל: ${PROFILE_LABEL[id]}`}>{PROFILE_ADD[id]}</button>)}
+      {P.active !== 'me' && <button type="button" className="linkbtn" onClick={() => drop(P.active)}>הסרת הפרופיל</button>}
     </div>
   );
 }
@@ -164,7 +195,7 @@ function RetireIn() {
 
 /** W6: the reader's gross monthly salary, for the replacement rate (optional; this browser only) */
 function SalaryIn() {
-  const [sal, setSal] = useStored<number | null>(SALARY_KEY, null);
+  const [sal, setSal] = useMySalary();
   const [raw, setRaw] = useState(sal == null ? '' : String(sal));
   const [was, setWas] = useState(sal);
   if (was !== sal) { setWas(sal); setRaw(sal == null ? '' : String(sal)); }
@@ -184,7 +215,7 @@ function SalaryIn() {
 function Strip({ rows, retire, coefF }: { rows: SumRow[]; retire: number; coefF: CoefFile | null | undefined }) {
   const at = `בגיל ${ageText(retire)}`;
   const s = summaryOf(rows);
-  const [salary] = useStored<number | null>(SALARY_KEY, null);
+  const [salary] = useMySalary();
   const nReal = rows.filter((r) => r.prod.startsWith('פנסיה') && r.coefReal).length, nPen = rows.filter((r) => r.prod.startsWith('פנסיה')).length;
   const coefWhy = nPen === 0 ? '' : nReal === nPen ? 'מקדם מהתקנון' : nReal === 0 ? 'מקדם לפי הנחה' : `מקדם מהתקנון ב-${nReal} מתוך ${nPen}`;
   const rep = salary != null && s.pension != null && s.penBal > 0 && coefF ? replacementOf(s.pension, salary, coefF) : null;

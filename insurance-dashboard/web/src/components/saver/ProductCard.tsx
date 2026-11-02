@@ -1,10 +1,11 @@
-import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Sourced } from '../Source';
 import { Tip } from '../Explain';
 import { copyText } from '../ui';
 import { WatchStar } from '../FundsTime';
-import { useMyAge, useMySex, useRetire, type MyProduct } from '../../lib/mine';
+import { useActiveProfile, useMyAge, useMySalary, useMySex, useRetire, type MyProduct } from '../../lib/mine';
+import { thirdPerson } from '../../lib/household';  // W7
 import type { Prov } from '../../lib/prov';
 import type { CatX, FundX, FundsFile } from '../../lib/funds';
 import type { DefaultFile } from '../../lib/fundsTools';
@@ -20,6 +21,10 @@ import { Est, Parts, cat10, cat10Prov, figsOf, tenderProv, ymOf } from './figs';
 import { Report } from './Report';
 import { useOptional } from '../../lib/fundsLoad';
 import { DECISION_PATH, type DecisionFile } from '../../lib/decision';  // W2
+import { Script } from './Script';
+import { DepLine, Deposits, useDepAudit } from './Deposits';  // W7
+import { FriendSays } from './FriendSays';  // W7
+import type { MCover } from '../../lib/maslaka';
 
 /* One product of "המוצרים שלי" (W4, red team 02.11.26). Folded: the verdict in at most three lines, what the fees cost this year and
    by the horizon in ₪, the reader's own numbers, and the note to the agent. "עוד פרטים" opens the rest: every line of the report card,
@@ -27,15 +32,20 @@ import { DECISION_PATH, type DecisionFile } from '../../lib/decision';  // W2
    Everything that is not the reader's or the regulator's is labelled. The numbers come from lib/myCalc, as the strip at the top does.
    W6: the pension estimate divides by the fund's own conversion coefficient from its bylaws (lib/coef) when the file has one, labelled
    "לפי מקדם מהתקנון, עמ' X", else by the site's assumption, labelled "לפי הנחה"; an age-track mismatch (a reader of 60 in "עד 50") is one
-   line under the title. */
+   line under the title.
+   W7 (wave 2): the deposit watchdog (components/saver/Deposits) and "חבר אמר לעבור ל…" (components/saver/FriendSays) open from the card;
+   a pension card with imported covers shows one plain coverage line; the note to the agent says "החוסך/ת" for a household profile
+   other than "אני". */
 
 export const KOLZCHUT_HISHTALMUT = 'https://www.kolzchut.org.il/he/%D7%A7%D7%A8%D7%9F_%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA';
 export const COEF_SRC = 'https://www.bizportal.co.il/longtermsavings/news/article/20036400';
 const num = (s: string): number | null => { const t = s.replace(/[,\s₪%]/g, ''); if (t === '') return null; const x = Number(t); return Number.isFinite(x) ? x : null; };
 
-export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRemove, onAdd }: {
+export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRemove, onAdd, focus }: {
   f: FundX; data: FundsFile; cats: Record<string, CatX> | undefined; dfile: DefaultFile | null | undefined;
   my?: MyProduct; example?: boolean; onChange?: (patch: Partial<MyProduct>) => void; onRemove?: () => void; onAdd?: () => void;
+  /** W7: open the card on its deposit watchdog (a link from /my/statement) */
+  focus?: 'deposits';
 }) {
   const asof = data.asof;
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service-index line
@@ -60,8 +70,12 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const C = useMemo(() => cardCalc(f, data.funds as FundX[], asof, dfile, my, dec, { age, coef, ret, retire: R.v }), [f, data, asof, dfile, my, dec, age, coef, ret, R.v]);
   const { v, plan, mine, ownAny, med, gMed, tBest, out, annual, liq } = C;
   const figs = figsOf(f, v, asof, data, dec);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!focus);
   const [copied, setCopied] = useState<'idle' | 'ok' | 'manual'>('idle');
+  // W7: the household profile (the note names anyone but "אני" as "החוסך/ת"), the profile's salary for the watchdog, the deposit audit
+  const third = thirdPerson(useActiveProfile());
+  const [profSalary] = useMySalary();
+  const dep = useDepAudit(f, my, profSalary);
   const moreId = useId();
 
   /* ---- sources of the estimates ---- */
@@ -94,7 +108,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const medSrc = () => figs.feeMed();
   const tSrc = (p: FeePair) => () => tenderProv(v.dflt!.tender, 'צירוף דמי ניהול שההליך מתיר', `${pcf(p.depfee)} / ${pcf(p.fee)} (מהפקדה / מצבירה)`);
 
-  const script = scriptOf({ name: f.name, id: f.id, prod: f.prod, track: f.track, src: `${dsName(f.fam)}, ${ymOf(asof)}`, v, sex });
+  const script = scriptOf({ name: f.name, id: f.id, prod: f.prod, track: f.track, src: `${dsName(f.fam)}, ${ymOf(asof)}`, v, sex, third });
   const peersLink = useMemo(() => {
     const rk = [...(v.ret?.ranked ?? [])].filter((x) => x.k !== f.k);
     const top = rk[0], cheap = [...v.peers].filter((x) => x.k !== f.k && x.fee != null).sort((a, b) => a.fee! - b.fee!)[0];
@@ -145,6 +159,8 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         {tLine && <p>{tLine}{tBest!.g.balReal > 0 && paid} <span className="sv-a">אומדן, בשקלי היום</span></p>}
       </div>
 
+      {!example && isPension(f.prod) && my?.covers?.length ? <CoverLine covers={my.covers} insTrack={my.insTrack} salary={my.salary ?? profSalary} /> : null}
+      {!example && <DepLine audit={dep.audit} onOpen={() => { setOpen(true); requestAnimationFrame(() => document.getElementById(`${f.k}-deposits`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })); }} />}
       {!example && onChange && <Mine my={my} f={f} onChange={onChange} />}
 
       <div className="sv-acts">
@@ -184,6 +200,8 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
             : <p className="sv-note">{cov?.status === 'missing' ? `אין מקדם זמין לקרן זו; מוצג לפי הנחה (${cov.reason}). ` : `${pick.why}. `}הקצבה = החיסכון ÷ המקדם. לפי <a href={COEF_SRC} target="_blank" rel="noreferrer">ביזפורטל (22.07.26)</a>, בגיל 67 הוא כ-188 לגבר עם פנסיית שארים וכ-204 לאישה עם הבטחת תשלומים ושארים. {plan.retire < RETIRE_AGE ? `בפרישה בגיל ${ageText(plan.retire)} המקדם בדרך כלל גבוה יותר, ולכן הקצבה בפועל נמוכה מהאומדן הזה. ` : ''}{sex == null ? '200 הוא הנחה עגולה; בחירת מין למעלה מאפשרת לקרוא את המקדם מהתקנון של הקרן.' : ''}</p>}
         </Sec>}
 
+        {!example && onChange && dep.kind && <Deposits f={f} my={my} onChange={onChange} profileSalary={profSalary} third={third} focus={focus === 'deposits'} />}
+
         {f.prod === 'השתלמות' && <Sec title="מה כדאי לדעת על השתלמות" tag="עובדות">
           <ul className="sv-facts">
             <li>הכסף נזיל אחרי 6 שנים מתחילת ההפקדות, בכל גיל ולכל מטרה. אחרי 3 שנים: למימון לימודים או השתלמות, או למי שהגיע לגיל פרישה. לכן הפער בשקלים מוצג גם לאופק של 6 שנים. <a href={KOLZCHUT_HISHTALMUT} target="_blank" rel="noreferrer">כל זכות</a></li>
@@ -191,6 +209,8 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
             <li>מסלולים שעוקבים אחרי אותו מדד מחזיקים בעיקר את אותם נכסים, ולכן ההבדל ביניהם הוא בעיקר בעלות: דמי הניהול ועלות המעקב. <Link to="/funds/trackers">השוואת המסלולים העוקבים</Link></li>
           </ul>
         </Sec>}
+
+        {!example && <FriendSays f={f} data={data} dfile={dfile} dec={dec} C={C} sex={sex} />}
 
         <footer className="sv-links">
           <Link className="sv-go" to={`/funds/${f.k}`}>כרטיס המסלול</Link>
@@ -277,26 +297,20 @@ function Assume({ plan, rWhy, my, ex, ageSet, retSrc, retWhy, r10, idx, retQ, se
   );
 }
 
-/** the note, with a copy button and a fallback for browsers that block the clipboard (select the text, execCommand, else ask to copy by hand) */
-function Script({ text }: { text: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [st, setSt] = useState<'idle' | 'ok' | 'manual'>('idle');
-  const fallback = () => {
-    const el = ref.current, sel = window.getSelection();
-    if (!el || !sel) return setSt('manual');
-    const r = document.createRange(); r.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(r);
-    let ok = false; try { ok = document.execCommand('copy'); } catch { ok = false; }
-    setSt(ok ? 'ok' : 'manual');
-  };
-  return (
-    <div className="sv-script">
-      <div ref={ref} className="sv-script-t" role="textbox" aria-readonly="true" aria-multiline="true" aria-label="הודעה לסוכן או לחברה המנהלת" tabIndex={0}>{text}</div>
-      <div className="sv-script-a">
-        <button type="button" className="btn" onClick={() => copyText(text, (ok) => (ok ? setSt('ok') : fallback()))}>{st === 'ok' ? 'הועתק ✓' : 'העתקה'}</button>
-        <span className="sv-muted" role="status">{st === 'manual' ? 'הדפדפן חסם העתקה: הטקסט מסומן, אפשר להעתיק ידנית.' : 'עובדות ומספרים בלבד, בלי המלצה. כדאי לבדוק מול הדוח לפני השליחה.'}</span>
-      </div>
-    </div>
-  );
+/** W7: one plain line on the pension fund's insurance covers from the clearing-house file (lib/maslaka readCovers): disability as a
+ *  share of the salary and ₪ a month, survivors in ₪ a month, and what the covers cost a month out of the deposit. Nothing judgmental:
+ *  whether the covers fit is the saver's and the agent's question; the "?" says what each is. */
+function CoverLine({ covers, insTrack, salary }: { covers: MCover[]; insTrack?: string | null; salary: number | null }) {
+  const dis = covers.find((c) => /נכות/.test(`${c.name} ${c.kind ?? ''}`));
+  const sur = covers.find((c) => /שא[י]?רים/.test(`${c.name} ${c.kind ?? ''}`));
+  const cost = covers.reduce((s, c) => s + (c.cost ?? 0), 0);
+  const disRate = dis?.rate ?? (dis?.sum != null && salary ? Math.round((dis.sum / salary) * 100) : null);
+  const bits: ReactNode[] = [];
+  if (dis && (dis.sum != null || disRate != null)) bits.push(<span key="d">ביטוח נכות: {disRate != null ? `${disRate}% מהשכר` : ''}{disRate != null && dis.sum != null ? ', ' : ''}{dis.sum != null ? <>כ-<span className="num">{ilsRound(dis.sum)}</span> לחודש</> : null}</span>);
+  if (sur?.sum != null) bits.push(<span key="s">שארים: <span className="num">{ilsRound(sur.sum)}</span> לחודש</span>);
+  if (cost > 0) bits.push(<span key="c">עלות הכיסויים כ-<span className="num">{ilsRound(cost)}</span> בחודש (מתוך ההפקדה)</span>);
+  if (!bits.length) return null;
+  return <p className="sv-cov">{bits.map((b, i) => <span key={i}>{i ? '; ' : ''}{b}</span>)}{insTrack ? <> · מסלול ביטוח: {insTrack}</> : null} <Tip k="covers" /><span className="sv-a">מקובץ המסלקה</span></p>;
 }
 
 export type { Verdict };

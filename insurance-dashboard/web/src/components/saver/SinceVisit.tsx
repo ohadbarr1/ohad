@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Sourced } from '../Source';
-import { useStored } from '../../lib/local';
-import type { MyProduct } from '../../lib/mine';
+import { useMy, type MyProduct } from '../../lib/mine';
 import type { Prov } from '../../lib/prov';
 import { fundP } from '../../lib/market';
 import { grossProv, netProv, refOf, ym, type FundX, type FundsFile } from '../../lib/funds';
@@ -16,7 +15,7 @@ import { EMPTY_SEEN, SEEN_KEY, baselineOf, changesOf, monthsBetween, y12Of, next
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function SinceVisit({ data, dfile, list }: { data: FundsFile; dfile: DefaultFile | null | undefined; list: MyProduct[] }) {
-  const [raw, setRaw] = useStored<unknown>(SEEN_KEY, EMPTY_SEEN);
+  const [raw, setRaw] = useMy<unknown>(SEEN_KEY, EMPTY_SEEN);  // W7: per household profile
   const seen = normSeen(raw);
   const asof = data.asof;
   const funds = data.funds as FundX[];
