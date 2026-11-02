@@ -6,12 +6,12 @@ import { pubLabel } from '../lib/format';
 import '../styles/alerts.css';
 
 /** One short factual line per event of the last `days` days that concerns this track: a change in its own average management fee, or a
- *  company-level event of its manager (restatement; merger, tender, service-index and regulator decisions once the feed carries them), each
+ *  company-level event of its manager (restatement: agent door only; merger, tender, service-index and regulator decisions once the feed carries them), each
  *  with its source. Renders nothing when there is none, and nothing while data/news.json (≈15 KB) is on its way.
  *  Usage (saver card, agent views): <NewsForFund k={f.k} grp={f.grp} /> */
 export function NewsForFund({ k, grp, c, days = 90, max = 3, door = 'saver' }: { k: string; grp?: string | null; c?: string | null; days?: number; max?: number; door?: 'saver' | 'agent' }) {
   const { data } = useLoad<NewsFile>('news.json');
-  const lines = useMemo(() => (data ? newsForFund(data, { k, grp, c }, { days, max }) : []), [data, k, grp, c, days, max]);
+  const lines = useMemo(() => (data ? newsForFund(data, { k, grp, c }, { days, max, door }) : []), [data, k, grp, c, days, max, door]);
   if (!lines.length) return null;
   return (
     <ul className={`nff nff-${door}`} aria-label="חדשות על המסלול ועל הגוף המנהל">

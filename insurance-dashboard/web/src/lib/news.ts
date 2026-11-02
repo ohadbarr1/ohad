@@ -41,8 +41,10 @@ const MONTHS_HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי
 export const monthHe = (ym: number | string) => { const n = Number(ym); return `${MONTHS_HE[(n % 100) - 1] ?? ''} ${Math.floor(n / 100)}`; };
 const TK: Record<string, string> = { pensia: 'p', gemel: 'g', insurance: 'i' };
 const DS_HE: Record<string, string> = { gemel: 'גמל-נט', pensia: 'פנסיה-נט', insurance: 'ביטוח-נט' };
-/** company-level types that concern every track of the manager (the last four once feed.json carries them) */
+/** company-level types that concern every track of the manager (the last four once feed.json carries them). A restatement of the
+ *  manager's financial reports is agent / Pro material: the saver door shows the track's own fee and the manager-level decisions only. */
 const CO_TYPES = new Set(['restate', 'merger', 'tender', 'service', 'regdec']);
+const SAVER_SKIP = new Set(['restate']);
 
 export interface NewsLine {
   id: string;
@@ -87,13 +89,13 @@ function line(F: Pick<FeedFile, 'cos' | 'docs' | 'files'>, e: FeedEvent, kind: '
 /** The events of the last `days` days (by the day fox received them, else the event's own date) that concern one track, newest first.
  *  [] when there are none: the caller renders nothing. */
 export function newsForFund(F: Pick<FeedFile, 'cos' | 'docs' | 'files' | 'events'> & { seen?: SeenFile['seen'] }, f: FundRef,
-  opts: { now?: Date; days?: number; seen?: SeenFile | null; max?: number } = {}): NewsLine[] {
+  opts: { now?: Date; days?: number; seen?: SeenFile | null; max?: number; door?: 'saver' | 'agent' } = {}): NewsLine[] {
   const now = opts.now ?? new Date(), days = opts.days ?? 90, max = opts.max ?? 3;
   const from = new Date(now.getTime() - days * 864e5).toISOString().slice(0, 10), to = now.toISOString().slice(0, 10);
   const out: NewsLine[] = [];
   for (const e of F.events) {
     const kind = concerns(F, e, f);
-    if (!kind) continue;
+    if (!kind || (opts.door === 'saver' && SAVER_SKIP.has(e.t))) continue;
     const s = (opts.seen?.seen ?? F.seen)?.[e.id], got = s && s[1] === 'r' ? s[0] : null, when = got ?? e.d;
     if (when < from || when > to) continue;
     out.push(line(F, e, kind, got));

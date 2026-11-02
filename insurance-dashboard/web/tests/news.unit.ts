@@ -46,6 +46,13 @@ ok(N.events.every((e) => e.src.k !== 'doc' || !!N.docs[String(e.src.rid)]), 'new
 const anyCo = N.events.find((e) => e.t === 'restate');
 if (anyCo) ok(newsForFund(N, { k: 'x', c: anyCo.c }, { now: new Date(`${N.built}T12:00:00Z`), days: N.days }).length > 0, 'news.json: a restatement reaches its manager\'s tracks');
 
+// the saver door: the track's own fee, never the manager's restatement (agent / Pro material)
+const sv = newsForFund(F, { k: 'p9453', grp: 'מגדל' }, { now, door: 'saver' });
+ok(sv.length === 1 && sv[0].kind === 'fund', `saver door: the fee line only, got ${sv.length}`);
+ok(newsForFund(F, { k: 'g99999', grp: 'מגדל' }, { now, door: 'saver' }).length === 0, 'saver door: a restatement alone renders nothing');
+// the /my webkit fixture (p9757 altshuler, g13502 harel) stays silent on the saver door with today's news.json (the 400-word budget)
+for (const [k, grp] of [['p9757', 'אלטשולר שחם'], ['g13502', 'הראל']]) ok(newsForFund(N, { k, grp }, { now: new Date(`${N.built}T12:00:00Z`), door: 'saver' }).length === 0, `saver door: ${k} silent`);
+
 // helpers
 ok(monthHe(202609) === 'ספטמבר 2026' && monthHe('202601') === 'ינואר 2026', 'monthHe');
 ok(feedPath({}).rss === '/feed.xml' && feedPath({ co: 'harel' }).rss === '/feed/harel.xml' && feedPath({ t: 'regmonth' }).atom === '/feed/months.atom' && feedPath({ t: 'fee' }).rss === '/feed/funds.xml' && feedPath({ t: 'filing' }).rss === '/feed.xml', 'feedPath');
