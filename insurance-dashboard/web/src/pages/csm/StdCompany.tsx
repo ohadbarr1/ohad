@@ -1,3 +1,4 @@
+import { pubLabel } from '../../lib/format';  // never an ISO date on screen
 import { cssColor } from '../../lib/theme';
 import { Chart } from '../../components/Chart';
 import { Sourced } from '../../components/Source';
@@ -55,7 +56,7 @@ export function StdCompanyPanel({ id }: { id: string }) {
       {S.rfs.length === 0 ? <Empty title="לא הודפס גשר CSM" /> : (
         <div className="scroll"><table className="std-grid">
           <thead><tr><th>דוח</th><th>חלון</th><th>היקף · בסיס</th><th className="num">פתיחה</th><th className="num">תנועות</th><th className="num">סגירה</th><th className="num">הפרש</th></tr></thead>
-          <tbody>{S.rfs.filter((r) => !r.partial).slice(-14).reverse().map((r, i) => <tr key={i}><th>{r.rp}</th><td>{r.w === 'q' ? 'רבעון' : r.w === 'ytd' ? 'מצטבר' : 'שנה'} · {r.d}</td>
+          <tbody>{S.rfs.filter((r) => !r.partial).slice(-14).reverse().map((r, i) => <tr key={i}><th>{r.rp}</th><td>{r.w === 'q' ? 'רבעון' : r.w === 'ytd' ? 'מצטבר' : 'שנה'} · {pubLabel(r.d)}</td>
             <td>{M.segs[r.seg] ?? (r.seg === 'group' ? 'קבוצה' : r.seg)} · {r.b === 'net' ? 'נטו' : r.b === 'gross' ? 'ברוטו' : r.b === 'reinsurance' ? 'ביטוח משנה' : 'לא צוין'}{r.chart ? ' · גרף' : ''}</td>
             <td className="num"><StdCell c={[r.open[0], r.open[1], r.open[2]]} title={`פתיחה · ${name} · ${r.rp}`} /></td>
             <td className="num"><Sourced src={() => ({ k: 'calc', title: `תנועות CSM · ${name} · ${r.rp}`, value: amt(r.rows.reduce((s, x) => s + x[2], 0)), unit: 'מיליוני ש"ח', formula: 'סכום התנועות שהודפסו', inputs: r.rows.map((x) => ({ label: `${M.rf_he[x[0]] ?? x[0]} · ${x[1]}`, v: amt(x[2]), src: () => cellProv([x[2], x[3], x[4], x[5]], `${x[1]} · ${name}`) })) })}>{amt(r.rows.reduce((s, x) => s + x[2], 0))}</Sourced></td>
