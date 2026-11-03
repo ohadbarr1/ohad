@@ -81,7 +81,7 @@ ok(!b.lines.some((l) => /טוב|רע|מומלץ|עדיף/.test(l.title + l.sub))
 }
 
 /* ---- the cover price ---- */
-ok(near(adjust(10, { approved: 50, fast: 20, n: null }), 100) && adjust(10, { approved: 50, fast: 0, n: null }) === null && adjust(null, { approved: 50, fast: 50, n: null }) === null, 'adjust: cost ÷ (approved × fast); a zero or missing share gives null');
+ok(near(adjust(10, { approved: 50, fast: 20, n: null }), 20) && near(adjust(10, { approved: 50, fast: 0, n: null })!, 20) && adjust(10, { approved: 0, fast: 50, n: null }) === null && adjust(null, { approved: 50, fast: 50, n: null }) === null, 'adjust: cost ÷ approved; the 30-day share never divides; a zero or missing approval gives null');
 const cov = JSON.parse(readFileSync(join(process.cwd(), 'public/data/funds/covers.json'), 'utf8')) as CoversFile;
 const dec = JSON.parse(readFileSync(join(process.cwd(), 'public/data/funds/decision.json'), 'utf8')) as DecisionFile;
 {
@@ -89,7 +89,7 @@ const dec = JSON.parse(readFileSync(join(process.cwd(), 'public/data/funds/decis
   ok(rows.length === 9, 'nine comprehensive funds with a table');
   const more = rows.find((r) => r.grp === 'מור')!;
   const cl = dec.companies['מור'].claims!;
-  ok(near(more.eff!, more.dis! / (cl.disability.approved! / 100 * cl.disability.closed[0]! / 100) + more.surv! / (cl.survivors.approved! / 100 * cl.survivors.closed[0]! / 100), 1e-9), 'effective price = each part ÷ its own approval × 30-day share');
+  ok(near(more.eff!, more.dis! / (cl.disability.approved! / 100) + more.surv! / (cl.survivors.approved! / 100), 1e-9), 'effective price = each part ÷ its own approval share (speed shown apart)');
   ok(near(more.raw!, more.dis! + more.surv!, 0.002) && more.mult! > 1, 'raw = disability + survivors; the effective price is never below the raw one');
   const clal = rows.find((r) => r.grp === 'כלל')!;
   ok(clal.raw != null && clal.eff === null && /נספח ב3|דוח תביעות/.test(clal.why ?? ''), 'no annex B3 (Clal): the raw price stands, the effective is null with the reason');
@@ -99,7 +99,7 @@ const dec = JSON.parse(readFileSync(join(process.cwd(), 'public/data/funds/decis
   const nn = s.filter((r) => r.eff != null).length;
   ok(nn >= 5 && s.slice(0, nn).every((r, i, a) => i === 0 || a[i - 1].eff! <= r.eff!) && s.slice(nn).every((r) => r.eff === null), 'sort by effective price ascending, nulls last');
   const inf = rows.find((r) => r.grp === 'אינפיניטי')!;
-  ok(inf.s?.fast === 0 && inf.eff === null && /אפס/.test(inf.why ?? ''), 'Infinity: no survivors claim closed within 30 days (1 claim), so no effective price, with the reason');
+  ok(inf.s?.fast === 0 && inf.eff != null && inf.s?.approved != null && inf.s.approved > 0, 'Infinity: no survivors claim closed within 30 days, but approval is reported, so the effective price stands (speed is shown, not divided)');
   ok(sortEff(rows, 'raw', -1)[0].raw! >= sortEff(rows, 'raw', -1)[1].raw!, 'sort descending');
   const p = rawProv(cov, more.fund, more.cell!);
   ok(p.k === 'calc' && p.inputs.some((i) => /מקדם עלות נכות/.test(i.label)) && p.inputs.every((i) => !i.src || i.src().k === 'report'), 'raw price provenance: every table cell links to the bylaws page');

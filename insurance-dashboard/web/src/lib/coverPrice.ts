@@ -1,9 +1,10 @@
 /* W11 · the claims-adjusted cover price (agent door). funds/covers.json (pipeline/build_covers.py) prices the disability and survivors
    cover of each new comprehensive pension fund per ₪1,000 of insured salary, for a standard member at 30/40/50, man or woman, from the
    tables the fund prints in its bylaws (page-cited). Here each part is divided by the share of that kind of claim the fund's managing
-   company reports as approved AND the share it closed within 30 days (annex B3, funds/decision.json, a company self-report):
-     effective = disability ÷ (disability approved × disability closed ≤ 30 days) + survivors ÷ (survivors approved × survivors ≤ 30 days)
-   "₪ of bylaws price per ₪ of claims paid and paid fast", a description of two published figures side by side, never a ranking or a
+   company reports as approved (annex B3, funds/decision.json, a company self-report):
+     effective = disability ÷ disability approved + survivors ÷ survivors approved
+   The 30-day share is speed, not payment: a claim closed on day 40 is still paid, so it is shown beside the price and never divides it.
+   "₪ of bylaws price per ₪ of claims approved", a description of published figures side by side, never a ranking or a
    recommendation: the B3 shares are company-wide, include claims the cover does not owe, and say nothing of the amounts paid.
    Pure: no React, no fetch (the node test runs it). */
 import type { Prov } from './prov';
@@ -27,7 +28,7 @@ export interface CoversFile {
   coverage: { grp: string; id?: string; status: 'table' | 'missing'; cells?: number; of?: number; reason?: string }[];
 }
 
-export const EFF_METHOD = 'מחיר אפקטיבי = עלות הנכות ÷ (שיעור תביעות הנכות שאושרו × שיעור תביעות הנכות שנסגרו עד 30 יום) + עלות השאירים ÷ (אותו דבר לתביעות השאירים). '
+export const EFF_METHOD = 'מחיר אפקטיבי = עלות הנכות ÷ שיעור תביעות הנכות שאושרו + עלות השאירים ÷ שיעור תביעות השאירים שאושרו. שיעור התביעות שנסגרו עד 30 יום מוצג לצד המחיר כמדד מהירות, ואינו נכנס לחישוב: תביעה שנסגרה אחרי 30 יום עדיין שולמה. '
   + 'השיעורים מנספח ב3 של החברה המנהלת ל-2025 (דיווח עצמי, ברמת החברה ולא הקרן, כולל תביעות שהכיסוי אינו חב בהן, בלי סכומים). '
   + 'זה תיאור של שני נתונים שפורסמו זה לצד זה, לא דירוג ולא המלצה: מחיר נמוך יותר אינו "טוב יותר".';
 export const SEX_HE: Record<CSex, string> = { m: 'גבר', f: 'אישה' };
@@ -53,8 +54,8 @@ const pair = (x: { approved: number | null; closed: (number | null)[]; n_closed?
   x ? { approved: x.approved, fast: x.closed?.[0] ?? null, n: x.n_closed ?? null } : null;
 /** one part divided by approved × fast (shares in %); null when a share is missing or zero */
 export function adjust(cost: number | null, p: ClaimPair | null): number | null {
-  if (cost == null || !p || p.approved == null || p.fast == null || p.approved <= 0 || p.fast <= 0) return null;
-  return cost / ((p.approved / 100) * (p.fast / 100));
+  if (cost == null || !p || p.approved == null || p.approved <= 0) return null;
+  return cost / (p.approved / 100);
 }
 /** every fund with a table, at one age and sex, with its claims shares and the effective price */
 export function effRows(c: CoversFile | null | undefined, d: DecisionFile | null | undefined, sex: CSex, age: number): EffRow[] {
@@ -70,7 +71,7 @@ export function effRows(c: CoversFile | null | undefined, d: DecisionFile | null
     if (!cell) why = 'אין תא לגיל ולמין';
     else if (raw == null) why = cell.surv_why ?? cell.dis_why ?? 'חסר חלק מהמחיר';
     else if (!cl) why = d ? claimsWhy(d, f.grp) : 'נתוני התביעות לא נטענו';
-    else if (eff == null) why = 'אחד השיעורים בדוח התביעות חסר או אפס';
+    else if (eff == null) why = 'שיעור האישור בדוח התביעות חסר או אפס';
     return { id, grp: f.grp, fund: f, cell, raw, dis, surv, d: dp, s: sp, effDis, effSurv, eff, mult: eff != null && raw ? eff / raw : null, why };
   });
 }
@@ -112,7 +113,7 @@ export function effProv(c: CoversFile, d: DecisionFile, r: EffRow): Prov {
   const sh = (side: 'disability' | 'survivors', what: 'approved' | 'closed0') => () => claimProv(d, r.grp, side, what);
   const pc = (v: number | null | undefined) => (v == null ? '–' : `${v.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`);
   return { k: 'calc', title: `מחיר אפקטיבי · ${r.fund.src.fund ?? r.grp}, ${SEX_HE[r.cell?.sex ?? 'm']} ${r.cell?.age ?? ''}`, value: r.eff == null ? '–' : `₪${n2(r.eff)}`, unit: 'לחודש ל-₪1,000 שכר', est: true,
-    formula: 'נכות ÷ (אושרו × עד 30 יום) + שאירים ÷ (אושרו × עד 30 יום)',
+    formula: 'נכות ÷ שיעור האישור + שאירים ÷ שיעור האישור (מהירות: מוצגת בנפרד, לא בחישוב)',
     inputs: [
       { label: 'עלות נכות לפי התקנון', v: r.dis == null ? '–' : `₪${n2(r.dis)}`, src: r.cell ? () => rawProv(c, r.fund, r.cell!, 'dis') : undefined },
       { label: 'תביעות נכות שאושרו', v: pc(r.d?.approved), src: sh('disability', 'approved') },
