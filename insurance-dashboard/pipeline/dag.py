@@ -68,7 +68,7 @@ STEPS = [
                                 "data/extracted_savings", "data/extracted_solvency", "data/extracted_sop"], {"llm"},
          note="LLM extraction waves (owner approval each, EXTRACT_SPEC.md); not a script"),
     # ---------------------------------------------------------------- builders that need duckdb / pandas (manual on this machine)
-    step("build_ifrs", "pipeline/build_ifrs.py", ["data/extracted", REG + "documents.csv", REG + "presentations.json", "data/warehouse.duckdb"],
+    step("build_ifrs", "pipeline/build_ifrs.py", ["data/extracted", "data/extracted_ifrs_std", REG + "documents.csv", REG + "presentations.json", "data/warehouse.duckdb"],
          [D + "ifrs.json", D + "ifrs_*.json", D + "ifrs"], {"duckdb", "drive"}, note="also reads data/work/manifest_quarters.json (drive)"),
     step("build_kpi", "pipeline/build_kpi.py", ["data/extracted", REG + "kpi_verified.json", REG + "kpi_windows.json", REG + "kpi_windows_manual.json",
                                                 "data/warehouse.duckdb"], [D + "kpi.json"], {"duckdb"}, code=["pipeline/autopilot/t0.py"]),
@@ -111,6 +111,11 @@ STEPS = [
           "web/src/pages/CompanyIfrs.tsx", "web/src/pages/IndustryIfrs.tsx"], [D + "restatements.json"], groups={"facts"}),
     step("build_csm", "pipeline/build_csm.py", [D + "ifrs.json", D + "ifrs_*.json", D + "series/*.json", D + "csm/solvency.json"],
          [D + "csm/facts", D + "csm/summary.json", D + "csm/sens.json", D + "csm/rates.json", D + "csm/capital.json"]),
+    # W10: the standardised IFRS 17 layer (portfolio-group note, CSM / RA / loss-component movements, expected CSM release); gate `ifrs_std`
+    step("build_ifrs_std", "pipeline/build_ifrs_std.py", ["data/extracted_ifrs_std"], [D + "ifrs17"], code=["pipeline/bridge.py"],
+         note="every cell page-cited or a labelled difference of printed figures; CSM roll-forward identity per insurer-quarter"),
+    # W10: investment houses by activity (segment note, AUM) and the regulator -> reported revenue bridge; gate `houses`
+    step("build_houses", "pipeline/build_houses.py", ["data/extracted_houses", D + "lens.json"], [D + "houses.json"]),
     step("build_targets", "pipeline/build_targets.py", ["data/extracted_pres", D + "ifrs.json", D + "ifrs_*.json", D + "csm/capital.json", D + "search/docs.json"],
          [D + "targets.json", D + "adjusted.json"]),
     step("lts_norm", [[f"pipeline/lts_norm_{c}.py"] for c in LTS_COS] + [["pipeline/lts_norm_all.py"]], ["data/extracted_lts"], ["data/lts_norm"],

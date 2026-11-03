@@ -210,3 +210,42 @@ A deck repeats the statements: do NOT re-extract statement figures already in th
 Find candidate slides by text search ("יעד", "יעדים", "תכנית אסטרטגית", "אסטרטגי", "2026", "2027", "2028", "תחזית", "מתואם", "ליבה", "target",
 "guidance", "adjusted"). Image-only slides: read the slide image only if the text layer is empty AND the slide title suggests targets/KPIs.
 Chart-read values follow v1 rule 8. Never infer a target from a chart trend.
+
+## IFRS 17 by portfolio group (v10): the regulator-format note in every report from 2025
+
+Purpose: the standardised IFRS 17 layer (`pipeline/build_ifrs_std.py` -> `web/public/data/ifrs_std.json`). Source: the note every insurer prints
+under the Capital Market Authority format, "מידע נוסף אודות פעילויות החברה לפי קבוצות תיקים עיקריות" (Phoenix: inside the operating-segments
+note, "פירוט התוצאות" / "פירוט נכסים והתחייבויות"), in each quarterly and annual report, for life, health and general insurance.
+Output: `data/extracted_ifrs_std/<company>/<period>.json`:
+`{"company", "period", "report_id_he", "unit" (as printed: "NIS millions" | "NIS thousands"), "facts": [...], "not_found": [...]}`.
+Each fact: `{"metric", "segment": "life"|"health"|"pc", "portfolio": "total" | <portfolio as printed in Hebrew>, "basis": "gross"|"net"|"reinsurance"|"na",
+"window": "q"|"ytd"|"fy"|"instant", "date", "value", "page_he", "doc": "he_<report_id>", "label": <row label as printed>, "model"?: "PAA"|"GMM"|"VFA"
+(only when the column or table header itself says so), "source": "table"|"text"|"chart", "note"?}`.
+Values **exactly as printed, in the printed unit**, sign as printed (parentheses = negative); nothing calculated. Every column printed
+(the period, the comparative period, the prior year) is its own fact with its own date and window.
+
+Metrics, results table ("פירוט התוצאות"): `insurance_revenue`, `insurance_service_expenses`, `isr_before_reinsurance`, `reinsurance_expenses`,
+`reinsurance_income`, `reinsurance_result` (net result of reinsurance held), `insurance_service_result`, `incurred_claims` and `past_service_lic`
+(the "of which" rows), `losses_onerous` / `losses_onerous_reversal` when a row prints them, `investment_income`, `insurance_finance`,
+`reinsurance_finance`, `investment_finance_result`, `profit_before_tax`, `oci_before_tax`, `comprehensive_before_tax`.
+Balances table ("פירוט נכסים והתחייבויות"): `lrc_excl_lc`, `loss_component`, `lic`, `total_by_coverage` (the total of those rows),
+`receivables_net`, `total_liabilities`, `be`, `ra`, `csm`, `total_by_components`, `insurance_contract_assets`, `reinsurance_net_assets`,
+and the "additional information" rows when printed: `gross_premiums`, `savings_component`, `new_business_annualized_premiums`, `single_premiums`,
+`acquisition_expenses`, `variable_fees`, `fixed_fees`.
+Movement tables of the period's board report or notes, when printed (net, gross or reinsurance as stated): the CSM roll-forward with the v2 names
+(`csm_opening` ... `csm_closing`, `csm_other:<label>`), `ra_opening`/`ra_release`/`ra_closing`, `loss_component` recognised and reversed as
+`lc_recognised` / `lc_reversed`, and the expected CSM release table as `csm_expected_release` with the printed `bucket`.
+`not_found`: every metric × segment the report does not print, with `why` (for example "the interim note prints no quarter column",
+"no VFA/GMM split: the note separates PAA from GMM/VFA combined"). Check with `python3 pipeline/verify_ifrs_std.py <file> --txt <page text>`.
+
+## Investment houses by activity (v11)
+
+Output: `data/extracted_houses/<company>/<period>.json`, same envelope as v10. Source: the operating-segments note ("מגזרי פעילות") of the
+consolidated statements, the board report's activity sections and the income statement. Each fact: `{"metric", "segment", "segment_he"
+(the printed name), "window", "date", "value", "page_he", "doc", "label", "source", "note"?}` with `segment` one of `provident_pension`
+(gemel, hishtalmut, pension), `mutual_funds`, `etf`, `portfolio_management`, `brokerage` (trading, TASE membership), `alternatives`
+(private markets, real estate, hedge funds), `credit` (lending, non-bank credit), `insurance_agency`, `investment_banking`, `other`,
+`adjustments` (inter-segment / unallocated), `total`, or the printed name when none fits.
+Metrics: `segment_revenue` (as the note labels revenue), `segment_profit` (the segment result as printed), `segment_expenses`, `management_fees`,
+`aum` (per activity, end of period), `revenue_total`, `operating_profit`, `profit_before_tax`, `net_profit`, `profit_attributable`,
+`selling_marketing`, `g_and_a`, `amortisation_intangibles`, `finance_expense`, `share_of_associates`. Every printed window and comparative.

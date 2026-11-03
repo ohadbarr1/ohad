@@ -8,8 +8,6 @@ import re
 from datetime import date, timedelta
 from pathlib import Path
 
-import duckdb
-
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bridge import solve  # noqa: E402
@@ -52,17 +50,60 @@ def opening_date(d, w):
 
 
 try:
+    import duckdb
     con = duckdb.connect(str(ROOT / "data" / "warehouse.duckdb"), read_only=True)
     pdf = dict(con.execute("select report_id, min(url) from documents where file_type='pdf1' group by 1").fetchall())
-except duckdb.IOException:  # warehouse busy: the exported registry has the same links
+except Exception:  # no duckdb on this python, or the warehouse is busy: the exported registry has the same links
     import csv
     pdf = {int(r["report_id"]): r["url"] for r in csv.DictReader(open(ROOT / "data" / "registry" / "documents.csv", encoding="utf-8")) if r["file_type"] == "pdf1"}
+# The CSM movement of the board report's net waterfall, read for the standardised layer (data/extracted_ifrs_std, EXTRACT_SPEC v10),
+# completes the group bridge of the filers whose first extraction stopped at the balances: rows the first extraction did not take are added
+# (never a row it has), each with its page and `source` (a chart value when read from the labelled chart).
+SUPPLEMENT = ("ayalon", "migdal", "hachshara")
+STD = ROOT / "data" / "extracted_ifrs_std"
+UNITS = {"NIS millions": 1.0, "NIS thousands": 0.001, "NIS billions": 1000.0}
+
+
+def supplement(comp, period, d):
+    f = STD / comp / f"{period}.json"
+    if comp not in SUPPLEMENT or not f.exists():
+        return []
+    s = json.loads(f.read_text(encoding="utf-8"))
+    have = {(x["metric"], x["segment"], x.get("basis") or "na", x["window"], x["date"]) for x in d["facts"]}
+    # a row the first extraction named differently ("csm_other:<label>") is the same row when the amount is the same
+    others = {(x["segment"], x.get("basis") or "na", x["window"], x["date"], round(abs(x["value"]), 1)) for x in d["facts"]
+              if x["metric"].startswith("csm_other") and isinstance(x.get("value"), (int, float))}
+    add = []
+    whole = {(x["metric"], x.get("segment"), x.get("basis") or "na", x["window"], x["date"]) for x in s["facts"] if (x.get("portfolio") or "total") == "total"}
+    for x in s["facts"]:
+        m, seg = x["metric"], x.get("segment")
+        if not m.startswith("csm_") or m.startswith(("csm_expected", "csm_subtotal")) or x.get("transition") or x.get("bucket") or x.get("value") is None:
+            continue
+        if seg not in ("group", "life", "health", "life_health") or (x.get("basis") or "na") not in ("net", "na"):
+            continue
+        sub = (x.get("portfolio") or "total") != "total"
+        if sub and m != "csm_release":
+            continue  # a sub-book's own table; only the release printed by book (growth / run-off) enters the whole book's bridge
+        key = (m, seg, x.get("basis") or "na", x["window"], x["date"])
+        if key in have and not sub or sub and (key in whole or key in have and not any(a["metric"] == m and a.get("doc") == x.get("doc") for a in add)):
+            continue  # a release printed for the whole book is never added again by its parts
+        u = UNITS.get(x.get("unit") or s.get("unit"), 1.0)
+        if m.startswith("csm_other") and (seg, x.get("basis") or "na", x["window"], x["date"], round(abs(x["value"] * u), 1)) in others:
+            continue
+        label = (x.get("label") or "") + (f" ({x['portfolio']})" if sub else "")
+        add.append({**{k: x[k] for k in ("metric", "segment", "basis", "window", "date", "page_he", "source", "note") if x.get(k) is not None},
+                    "value": round(x["value"] * u, 3), "label": label, "doc": x.get("doc")})
+        have.add(key)
+    return add
+
+
 out, files = [], []
 MANIFEST = json.loads((ROOT / "data" / "work" / "manifest_quarters.json").read_text(encoding="utf-8")) if (ROOT / "data" / "work" / "manifest_quarters.json").exists() else {}
 PRES = json.loads((ROOT / "data" / "registry" / "presentations.json").read_text(encoding="utf-8"))
 for f in sorted((ROOT / "data" / "extracted").glob("*/*.json")):
     d = json.loads(f.read_text(encoding="utf-8"))
     comp, period = f.parent.name, f.stem
+    d["facts"] = d["facts"] + supplement(comp, period, d)
     url = pdf.get(d.get("report_id_he"))
     files.append({"company": comp, "period": period, "report_id": d.get("report_id_he"), "url": FILES + url if url else None, "facts": len(d["facts"])})
     for x in d["facts"]:
