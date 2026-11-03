@@ -34,6 +34,7 @@ const FromHeadline = page(mPeersRedirect, 'FromHeadline');
 const FromSectors = page(mPeersRedirect, 'FromSectors');
 const mIndustryCsm = () => import('./pages/IndustryCsm');
 const IndustryCsm = page(mIndustryCsm, 'IndustryCsm');
+const IndustryPnc = page(() => import('./pages/IndustryPnc'), 'IndustryPnc'); // W10: P&C loss / expense / combined ratios by line, gross and net of reinsurance
 const mDocSearch = () => import('./pages/DocSearch');
 const DocSearchRedirect = page(mDocSearch, 'DocSearchRedirect');
 const mSearchPage = () => import('./pages/SearchPage');
@@ -188,6 +189,7 @@ export function App() {
           <Route path="matrix" element={<FromMatrix />} />
           <Route path="lines" element={<FromLines />} />
           <Route path="csm" element={<IndustryCsm />} />
+          <Route path="pnc" element={<IndustryPnc />} />
           <Route path="econ" element={<LensRedirect view="econ" />} />
           <Route path="capital" element={<CsmRedirect view="capital" />} />
           <Route path="headline" element={<FromHeadline />} />

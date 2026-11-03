@@ -90,13 +90,13 @@ for (const [id, f] of files) {
   }
 }
 
-// 6 · the owner's check on Phoenix (as printed, FY'21 solvency report): rates −50bp → −18pp (range −13 to −18), equities −25% → −15pp,
-//     morbidity +5% → −12pp, mortality −5% → −14pp; and the employer flag
+// 6 · the owner's check on Phoenix (as printed, FY'25 solvency report, attached to the Q1'26 filing): rates −50bp → −7pp (range over the
+//     disclosures −18 to −7), equities −25% → −14pp, morbidity +5% → −6pp, mortality −5% → −7pp; and the employer flag
 const ph = files.get('phoenix')!;
 const pe = (k: string) => ph.edges.find((e) => e.id === k)!;
-ok(pe('y10.solv_w').v === -18 && pe('y10.solv_w').x === -50 && pe('y10.solv_w').range?.[0] === -18 && pe('y10.solv_w').range?.[1] === -13, 'phoenix rates −50bp → −18pp, range −18 to −13');
-ok(pe('eq.solv_w').v === -15 && pe('morbidity.solv_w').v === -12 && pe('mortality.solv_w').v === -14, 'phoenix equities −15, morbidity −12, mortality −14');
-ok(pe('y10.solv_w').quality === 'low', 'phoenix solvency sensitivities are stale (FY\'21 against an FY\'25 ratio): quality low');
+ok(pe('y10.solv_w').v === -7 && pe('y10.solv_w').x === -50 && pe('y10.solv_w').range?.[0] === -18 && pe('y10.solv_w').range?.[1] === -7, 'phoenix rates −50bp → −7pp, range −18 to −7');
+ok(pe('eq.solv_w').v === -14 && pe('morbidity.solv_w').v === -6 && pe('mortality.solv_w').v === -7, 'phoenix equities −14, morbidity −6, mortality −7');
+ok(pe('y10.solv_w').quality !== 'low', 'phoenix solvency sensitivities are current (FY\'25 report against the FY\'25 ratio): not low');
 ok(ph.meta.flag === 'employer', 'phoenix carries the employer flag');
 
 // 7 · clamp vs linear beyond the disclosed range
@@ -106,7 +106,7 @@ ok(readLine(one, -100, 'linear')!.v === -36, 'linear continues the outer segment
 ok(readLine(one, -25)!.v === -9 && !readLine(one, -25)!.extra, 'interpolated from the origin');
 const r100 = propagate(ph, { y10: -100 }), r50 = propagate(ph, { y10: -50 });
 ok(r100.out.solv_w.d === r50.out.solv_w.d && r100.flags.some((x) => x.includes('מחוץ לטווח')), 'a −100bp shock is held at the −50bp disclosure and tagged');
-ok(propagate(ph, { y10: -100 }, { extrapolate: 'linear' }).out.solv_w.d === -36, 'linear option: −100bp = 2 × −18');
+ok(propagate(ph, { y10: -100 }, { extrapolate: 'linear' }).out.solv_w.d === -14, 'linear option: −100bp = 2 × −7');
 
 // 8 · targets: the builder's pick (ported) = stress.ts targetsAt on the same facts
 for (const [id, f] of files) {

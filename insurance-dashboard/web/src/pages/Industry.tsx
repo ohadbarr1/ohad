@@ -23,6 +23,7 @@ export function IndustryLayout() {
         <nav className="subnav" aria-label="השוואה ענפית">
           <NavLink to="peers">טבלת עמיתים</NavLink>
           <NavLink to="csm">IFRS 17 · CSM · הון</NavLink>
+          <NavLink to="pnc">ביטוח כללי: יחסים</NavLink>
           <NavLink to="/restatements">הצגות מחדש</NavLink>
           <NavLink to="/presentations">מצגות</NavLink>
           <NavLink to="/debt">חוב ופירעונות</NavLink>

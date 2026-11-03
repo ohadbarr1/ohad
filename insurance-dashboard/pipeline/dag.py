@@ -93,6 +93,8 @@ STEPS = [
     step("build_hist", "pipeline/build_hist.py", ["data/extracted_hist", REG + "documents.csv", REG + "presentations.json"], [D + "hist"]),
     step("build_sop", "pipeline/build_sop.py", ["data/extracted_sop", REG + "documents.csv", REG + "presentations.json"], [D + "sop"]),
     step("build_solvency", "pipeline/build_solvency.py", ["data/extracted_solvency", REG + "documents.csv"], [D + "csm/solvency.json"]),
+    # W10: P&C loss / expense / combined ratios by line, gross and net of reinsurance (page /industry/pnc); extract_pnc.py is the manual extraction
+    step("build_pnc", "pipeline/build_pnc.py", ["data/extracted_pnc", REG + "documents.csv"], [D + "pnc.json"], groups={"deploy"}),
     step("facts", "pipeline/build_facts.py",
          ["data/extracted_fs", "data/workbook_base", REG + "companies.json", REG + "documents.csv", D + "series/*.json", D + "search/docs.json",
           "web/src/lib/labels.ts", "web/src/pages/CompanyIfrs.tsx", "web/src/pages/IndustryIfrs.tsx"],
@@ -194,8 +196,9 @@ STEPS = [
          note="A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components"),
     # module A7: capital and strategic options per insurer (distributable capital, the option set, its ranking); gate `capital`
     step("build_capital", "pipeline/build_capital.py",
-         [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json", D + "consolidation/bolt.json"],
-         [D + "capital/options.json"], groups={"deploy"},
+         [D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "drivers", D + "companies/index.json", D + "consolidation/bolt.json",
+          "data/extracted_capital", REG + "documents.csv"],
+         [D + "capital/options.json", D + "capital/forward.json"], groups={"deploy"},
          note="A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9, consolidation/bolt.json) / hold rows; the A2 overlay runs on the page"),
     # module A10: the Fragility Monitor (/fragility): seven signals per manager, each with its value, trend, peer percentile, stated rule and
     # state, no composite; its crossings feed M2 and mark A6 positions for review (so it runs before build_positions and build_feed)

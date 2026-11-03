@@ -56,7 +56,7 @@
 .cap-rank .who { flex-direction: row !important; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 700; }
 .cap-rank .v { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cap-rank .s { font-size: 11px; color: var(--muted); line-height: 1.35; }
-.cap-rank > li.incomplete .n { opacity: .5; }
+.cap-rank > li.incomplete .n { color: var(--muted); }
 .cap-rank > li > .opts { align-items: flex-start; }
 .cap-rank > li > .opts .chip { white-space: normal; }
 
@@ -86,3 +86,22 @@ a.cap-bolt { text-decoration: underline; text-underline-offset: 2px; }
 /* older sensitivity vintages: a tinted row, never dimmed text (axe color-contrast) */
 .cap-t .tr.old > div, .cap-rank > li.old > div:not(.who) { background: color-mix(in oklch, var(--fg) 5%, transparent); }
 .cap-rank > li.old .who .s::after, .cap-t .tr.old .lbl::after { content: ''; }
+
+/* W10 · the latest solvency report: forward capacity, the ratio walk, the disclosed sensitivities (components/CapitalForward.tsx) */
+.cap table.fwd { width: 100%; border-collapse: collapse; font-size: var(--t-2); }
+.cap table.fwd th, .cap table.fwd td { padding: 7px 8px; border-bottom: 1px solid var(--line-soft, var(--line)); text-align: start; vertical-align: middle; }
+.cap table.fwd thead th { font-size: var(--t-1); color: var(--muted); font-weight: 600; white-space: nowrap; }
+.cap table.fwd th.who { font-weight: 700; white-space: nowrap; }
+.cap table.fwd th.who a { color: var(--fg); }
+.cap table.fwd th.who .s a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+.cap table.fwd th.who .scn-dot { margin-inline-end: 6px; }
+.cap table.fwd .v { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cap table.fwd .s { display: block; font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1.35; }
+.cap table.fwd .neg { color: var(--down); }
+.cap table.fwd .na { color: var(--muted); font-size: var(--t-1); }
+.cap table.fwd .chip { font-size: 11px; padding: 1px 7px; white-space: nowrap; }
+.cap table.fwd tr.sub > td { background: color-mix(in oklch, var(--panel2) 55%, transparent); }
+.cap table.fwd .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.fwd-cons { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--t-1); color: var(--muted); padding: 2px 0; }
+.fwd-cons b { color: var(--fg); font-weight: 600; }
+.fwd-cons .bind b { color: var(--accent); }

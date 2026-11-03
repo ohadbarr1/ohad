@@ -1,0 +1,35 @@
+{
+ "company": "harel",
+ "period": "2026Q2",
+ "report_id": 1766123,
+ "entity": "הראל חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its 31.12.2025 solvency report was published (the report already deducts those declared before)",
+ "facts": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-21",
+   "value": 500,
+   "page_he": 160,
+   "label": "ביום 21 ביוני 2026 אישר דירקטוריון הראל ביטוח חלוקת דיבידנד בסך של 500 מיליוני ש\"ח",
+   "source": "text",
+   "note": ""
+  },
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-08-25",
+   "value": 150,
+   "page_he": 160,
+   "label": "ביום 25 באוגוסט 2026, לאחר תקופת הדוח ... אישר דירקטוריון הראל ביטוח חלוקת דיבידנד במזומן ... בסך של 150 מיליוני ש\"ח",
+   "source": "text",
+   "note": ""
+  }
+ ],
+ "not_found": []
+}

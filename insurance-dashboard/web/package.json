@@ -19,6 +19,8 @@
     "test:regulation": "node scripts/regulation-test.mjs",
     "test:warroom": "node scripts/warroom-test.mjs",
     "test:capital": "node scripts/capital-test.mjs",
+    "test:forward": "node scripts/forward-test.mjs",
+    "test:pnc": "node scripts/pnc-test.mjs",
     "test:fragility": "node scripts/fragility-test.mjs",
     "test:consolidation": "node scripts/consolidation-test.mjs",
     "test:answers": "node scripts/answers-test.mjs",

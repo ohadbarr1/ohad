@@ -298,6 +298,14 @@
    "schema": "capitalOptions"
   },
   {
+   "pattern": "capital/forward.json",
+   "schema": "capitalForward"
+  },
+  {
+   "pattern": "pnc.json",
+   "schema": "pnc"
+  },
+  {
    "pattern": "fragility.json",
    "schema": "fragility"
   },
@@ -13733,6 +13741,25 @@
      "additionalProperties": {
       "$ref": "#/$defs/ansFig"
      }
+    },
+    "prev": {
+     "type": "object",
+     "required": [
+      "h",
+      "corr",
+      "at"
+     ],
+     "properties": {
+      "h": {
+       "type": "string"
+      },
+      "corr": {
+       "type": "string"
+      },
+      "at": {
+       "type": "string"
+      }
+     }
     }
    }
   },
@@ -14448,7 +14475,10 @@
     },
     "mig": {
      "type": "object",
-     "required": ["grp", "n"],
+     "required": [
+      "grp",
+      "n"
+     ],
      "properties": {
       "grp": {
        "type": "number"
@@ -14461,7 +14491,11 @@
     "chk": {
      "type": "array",
      "items": {
-      "enum": ["st", "fo", "fx"]
+      "enum": [
+       "st",
+       "fo",
+       "fx"
+      ]
      }
     }
    }
@@ -16599,6 +16633,214 @@
       "url": {
        "type": "string",
        "pattern": "^https://"
+      }
+     }
+    }
+   }
+  },
+  "capitalForward": {
+   "type": "object",
+   "required": [
+    "meta",
+    "companies"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "v",
+      "built",
+      "formula"
+     ],
+     "properties": {
+      "v": {
+       "type": "integer",
+       "enum": [
+        1
+       ]
+      }
+     }
+    },
+    "companies": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name",
+       "status"
+      ],
+      "properties": {
+       "status": {
+        "enum": [
+         "ok",
+         "partial",
+         "na"
+        ]
+       },
+       "date": {
+        "type": "string"
+       },
+       "pub": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "constraints": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "id",
+          "basis",
+          "t",
+          "head",
+          "rem",
+          "pp"
+         ],
+         "properties": {
+          "basis": {
+           "enum": [
+            "w",
+            "wo"
+           ]
+          },
+          "t": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "walk": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "step",
+          "he"
+         ]
+        }
+       },
+       "sens": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "l",
+          "risk",
+          "b",
+          "v",
+          "prov"
+         ],
+         "properties": {
+          "v": {
+           "type": "number"
+          },
+          "prov": {
+           "type": "object",
+           "required": [
+            "k"
+           ],
+           "properties": {
+            "k": {
+             "enum": [
+              "report",
+              "calc",
+              "none",
+              "ref"
+             ]
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "pnc": {
+   "type": "object",
+   "required": [
+    "meta",
+    "reports",
+    "cos"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": [
+      "v",
+      "periods",
+      "lines",
+      "gaps",
+      "defs"
+     ],
+     "properties": {
+      "v": {
+       "type": "integer",
+       "enum": [
+        1
+       ]
+      }
+     }
+    },
+    "reports": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "rid",
+       "f",
+       "pub",
+       "period"
+      ],
+      "properties": {
+       "rid": {
+        "type": "integer"
+       },
+       "f": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "cos": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "required": [
+       "name",
+       "lines"
+      ],
+      "properties": {
+       "lines": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "base",
+          "per"
+         ],
+         "properties": {
+          "per": {
+           "type": "object",
+           "additionalProperties": {
+            "type": "object",
+            "required": [
+             "x",
+             "r"
+            ]
+           }
+          }
+         }
+        }
+       }
       }
      }
     }

@@ -1,0 +1,35 @@
+{
+ "company": "phoenix",
+ "period": "2026Q2",
+ "report_id": 1765739,
+ "entity": "הפניקס חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its 31.12.2025 solvency report was published (the report already deducts those declared before)",
+ "facts": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-08-24",
+   "value": 360,
+   "page_he": 24,
+   "label": "ביום 24 באוגוסט 2026 ... החליט דירקטוריון הפניקס ביטוח לאשר חלוקת דיבידנד בעין של החזקותיה במספר חברות אינשורטק ... כ-133 מיליון ש\"ח. בנוסף, הוחלט על חלוקת דיבידנד במזומן בסך של 227 מיליון ש\"ח. סך הדיבידנד (בעין ובמזומן) שיחולק הינו בסך של 360",
+   "source": "text",
+   "note": "NIS m (133 in kind + 227 cash); the report says it is included in the estimated ratio at 31.3.2026, i.e. not in the 31.12.2025 report"
+  },
+  {
+   "metric": "pending_in_kind_distribution",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 574,
+   "page_he": 24,
+   "label": "מבין הנכסים שהוחלט לחלק, טרם חולקו זכויותיה של הפניקס ביטוח בנכסים: גוש 6154 חלקות 931 ו-932 בגבעתיים (\"בית הורד\") בשווי של כ-574 מיליון ש\"ח ... ככל שהדירקטוריון יחליט לחלק את בית הורד, הנושא יובא לאישור מחדש",
+   "source": "text",
+   "note": "approved December 2024, not executed; being reconsidered (Q2'26 board report 4.7.4)"
+  }
+ ],
+ "not_found": []
+}
