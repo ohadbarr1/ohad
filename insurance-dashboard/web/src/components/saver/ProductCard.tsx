@@ -27,6 +27,7 @@ import { FriendSays } from './FriendSays';  // W7
 import type { MCover } from '../../lib/maslaka';
 import { FlowLine } from '../flows/FlowLine';  // W8 flows: the one flow line, only when it fires
 import { NewsForFund } from '../NewsForFund';  // W8 feeds: one line per event that concerns this fund, 90 days
+import { UnderLine } from './UnderLine';  // W11 under: the gap to the category median, only bottom-quartile and ≥25bp
 
 /* One product of "המוצרים שלי" (W4, red team 02.11.26). Folded: the verdict in at most three lines, what the fees cost this year and
    by the horizon in ₪, the reader's own numbers, and the note to the agent. "עוד פרטים" opens the rest: every line of the report card,
@@ -175,6 +176,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
       {copied === 'manual' && <p className="sv-muted" role="status">הדפדפן חסם העתקה: ההודעה מופיעה למטה, אפשר לסמן ולהעתיק.</p>}
 
       <div id={moreId} className="sv-more" hidden={!open}>{open && <>
+        {!example && <UnderLine f={f} balance={my?.balance} />}
         <Report v={v} figs={figs} />
 
         <Sec title="כמה זה עולה בשקלים" tag="אומדן">

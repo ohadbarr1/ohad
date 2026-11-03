@@ -290,6 +290,20 @@
    ]
   },
   {
+   "pattern": "capital/forward.json",
+   "schema": "capitalForward",
+   "example": "capital/forward.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_capital",
+   "note": "A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9, consolidation/bolt.json) / hold rows; the A2 overlay runs on the page",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "prov"
+   ]
+  },
+  {
    "pattern": "capital/options.json",
    "schema": "capitalOptions",
    "example": "capital/options.json",
@@ -766,6 +780,18 @@
    "format": "json",
    "step": "facts",
    "note": "the merge + fact table; writes the company workbooks FROM the table (= build_workbook.py). Unlabeled-row captions are read from data/work page texts (drive), cached in ~/.cache/fox/captions.json",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "feebook.json",
+   "schema": null,
+   "example": "feebook.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_feebook",
+   "note": "wave 11: fee-book embedded value per manager x product (/feebook; python3 pipeline/build_feebook.py --check)",
    "cadence": "quarterly, on each filing (MAYA)",
    "prov": []
   },
@@ -1302,7 +1328,31 @@
    "kind": "open",
    "format": "json",
    "step": "build_nowcast",
-   "note": "append-only ledger data/ledger/nowcast/<quarter>/<stage>.json",
+   "note": "append-only ledgers data/ledger/nowcast/<quarter>/<stage>.json and data/ledger/nowcast_f2e/<quarter>/stage2.json (wave 11 flow-to-earnings)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "nowcast_depfee.json",
+   "schema": null,
+   "example": "nowcast_depfee.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "nowcast_depfee",
+   "note": "wave 11: monthly Σ deposits x deposit fee per group x segment from the regulator parquet (the per-track files carry no monthly deposit fee)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "nowcast_f2e.json",
+   "schema": null,
+   "example": "nowcast_f2e.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_nowcast",
+   "note": "append-only ledgers data/ledger/nowcast/<quarter>/<stage>.json and data/ledger/nowcast_f2e/<quarter>/stage2.json (wave 11 flow-to-earnings)",
    "cadence": "quarterly, on each filing (MAYA)",
    "prov": []
   },
@@ -1370,6 +1420,20 @@
     "r",
     "src",
     "u"
+   ]
+  },
+  {
+   "pattern": "pnc.json",
+   "schema": "pnc",
+   "example": "pnc.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_pnc",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "rid"
    ]
   },
   {
@@ -1675,6 +1739,30 @@
     "src",
     "u"
    ]
+  },
+  {
+   "pattern": "under.json",
+   "schema": null,
+   "example": "under.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_under",
+   "note": "W11: under.json + under/m/<yyyymm>.json (python3 pipeline/build_under.py --check)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "under/m/*.json",
+   "schema": null,
+   "example": "under/m/201601.json",
+   "files": 129,
+   "kind": "open",
+   "format": "json",
+   "step": "build_under",
+   "note": "W11: under.json + under/m/<yyyymm>.json (python3 pipeline/build_under.py --check)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
   },
   {
    "pattern": "warroom/board.json",

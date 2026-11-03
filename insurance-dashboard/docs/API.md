@@ -178,6 +178,18 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 {"built":"2026-11-02","basis":"חציון הימים מסוף התקופה לפרסום, אותו דוח, שלוש השנים האחרונות","companies":[{"id":"more_gemel","name":"מור גמל ופנסיה","last":{"period":"2026Q2","date":"2026-08-12","type":"quarterly","rid":1763070},"next":{"period":"2026Q3","end":"2026-09-30","expected":"2026-11-20","lo":"2026-11-20","hi":"2026-11-22","n":3,"lags":[53,51,51]},"history":[{"period":"2023Q3","date":"2023-11-22","lag":53}],"ics":"/data/cal/more_gemel.ics"}]}
 ```
 
+### `capital/forward.json`
+
+- schema: `capitalForward` · files: 1 · format: json
+- written by: `build_capital` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/capital/forward.json](https://fox-research-il.web.app/data/capital/forward.json)
+- provenance fields: `prov`
+- note: A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9, consolidation/bolt.json) / hold rows; the A2 overlay runs on the page
+
+```json
+{"companies":[{"id":"phoenix","name":"הפניקס","status":"ok","date":"2025-12-31","period":"FY'25","pub":"2026-05-28","rid":1744461,"doc":"הפניקס חברה לביטוח בע\"מ"}]}
+```
+
 ### `capital/options.json`
 
 - schema: `capitalOptions` · files: 1 · format: json
@@ -187,7 +199,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: A7: own funds − SCR × board target − buffer per basis; dividend / organic / bolt-on (A9, consolidation/bolt.json) / hold rows; the A2 overlay runs on the page
 
 ```json
-{"companies":[{"id":"phoenix","name":"הפניקס","kind":"insurance_group","flag":"employer","status":"ok","date":"2025-12-31","period":"FY'25","bases":{"w":{"of":{"v":17093.72,"prov":{"k":"report","title":"הון עצמי לעניין SCR, עם הוראות מעבר · הפניקס · FY'25","value":"17,094","unit":"מיליוני ש\"ח","url":"https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744461-00.pdf","pg":16,"doc":"דוח כספי","period":"Q1'26","note":"הון עצמי לעניין הון נדרש לכושר פירעון"}},"scr":{"v":9748.049,"prov":{"k":"report","title":"SCR, עם הוראות מעבר · הפניקס · FY'25","value":"9,748","unit":"מיליוני ש\"ח","url":"https:…
+{"companies":[{"id":"phoenix","name":"הפניקס","kind":"insurance_group","flag":"employer","status":"ok","date":"2025-12-31","period":"FY'25","bases":{"w":{"of":{"v":17093.72,"prov":{"k":"report","title":"הון עצמי לעניין SCR, עם הוראות מעבר · הפניקס · FY'25","value":"17,094","unit":"מיליוני ש\"ח","url":"https://mayafiles.tase.co.il/rpdf/1744001-1745000/P1744461-00.pdf","pg":195,"doc":"הפניקס חברה לביטוח בע\"מ, דוח כושר פירעון כלכלי ליום Q4'25","period":"FY'25","note":"הון עצמי לעניין הון נדרש לכושר פירעון - ראה סעיף 3","srcType":"דוח כושר פירעון כלכלי (MAYA)"}},"scr":{"v":9748.049,"prov":{"k":"r…
 ```
 
 ### `cards/*/*.json`
@@ -339,7 +351,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: /data page: reads every data file (incl. qa.json from the last gate) and today's date
 
 ```json
-{"built":"2026-11-02T14:08:37+02:00","layers":[{"id":"fs","label":"דוחות כספיים","cadence":"quarterly","source":"maya"}]}
+{"built":"2026-11-02T22:39:38+02:00","layers":[{"id":"fs","label":"דוחות כספיים","cadence":"quarterly","source":"maya"}]}
 ```
 
 ### `csm/capital.json`
@@ -350,7 +362,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `pg`, `u`
 
 ```json
-{"built":"2026-10-25","source":"דוחות כספיים של החברות, MAYA (סדרה רבעונית רציפה, build_series.py)","companies":{"ayalon":{"comprehensive_income_attributable":{"2021FY":{"v":-19.553,"pg":156,"u":"https://mayafiles.tase.co.il/rpdf/1514001-1515000/P1514161-00.pdf","std":"IFRS 4","cmp":1},"2021Q1":{"v":60.961,"pg":42,"u":"https://mayafiles.tase.co.il/rpdf/1453001-1454000/P1453845-00.pdf","std":"IFRS 4","cmp":1},"2021Q2":{"v":8.199,"pg":49,"u":"https://mayafiles.tase.co.il/rpdf/1472001-1473000/P1472731-00.pdf","std":"IFRS 4","cmp":1},"2021Q3":{"v":-43.983,"pg":54,"u":"https://mayafiles.tase.co.il/…
+{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA (סדרה רבעונית רציפה, build_series.py)","companies":{"ayalon":{"comprehensive_income_attributable":{"2021FY":{"v":-19.553,"pg":156,"u":"https://mayafiles.tase.co.il/rpdf/1514001-1515000/P1514161-00.pdf","std":"IFRS 4","cmp":1},"2021Q1":{"v":60.961,"pg":42,"u":"https://mayafiles.tase.co.il/rpdf/1453001-1454000/P1453845-00.pdf","std":"IFRS 4","cmp":1},"2021Q2":{"v":8.199,"pg":49,"u":"https://mayafiles.tase.co.il/rpdf/1472001-1473000/P1472731-00.pdf","std":"IFRS 4","cmp":1},"2021Q3":{"v":-43.983,"pg":54,"u":"https://mayafiles.tase.co.il/…
 ```
 
 ### `csm/facts/*.json`
@@ -361,7 +373,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `files`, `pg`, `report_id`, `url`
 
 ```json
-{"built":"2026-10-23","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","company":"ayalon","files":[{"company":"ayalon","period":"2025FY","report_id":1732151,"url":"https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732151-00.pdf","facts":611}]}
+{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","company":"ayalon","files":[{"company":"ayalon","period":"2025FY","report_id":1732151,"url":"https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732151-00.pdf","facts":611}]}
 ```
 
 ### `csm/rates.json`
@@ -372,7 +384,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`
 
 ```json
-{"built":"2026-10-23","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"menora","rp":"2025FY","d":"2024-12-31","port":"רכיב חיסכון שאינו תלוי תשואה ופוליסות קצבה","orig":"Policies with a non-yield-dependent savings component and annuity policies","t":1.0,"v":2.1,"pg":266}]}
+{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"menora","rp":"2025FY","d":"2024-12-31","port":"רכיב חיסכון שאינו תלוי תשואה ופוליסות קצבה","orig":"Policies with a non-yield-dependent savings component and annuity policies","t":1.0,"v":2.1,"pg":266}]}
 ```
 
 ### `csm/sens.json`
@@ -383,7 +395,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`
 
 ```json
-{"built":"2026-10-23","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"ayalon","rp":"2025FY","d":"2025-12-31","shock":"שיעור תחלואה - עלייה של 5%","risk":"morbidity","dir":1,"size":5.0,"eff":"csm"}]}
+{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"ayalon","rp":"2025FY","d":"2025-12-31","shock":"שיעור תחלואה - עלייה של 5%","risk":"morbidity","dir":1,"size":5.0,"eff":"csm"}]}
 ```
 
 ### `csm/solvency.json`
@@ -394,7 +406,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `files`, `pg`, `r`
 
 ```json
-{"built":"2026-10-25","source":"דוחות כושר פירעון כלכלי (Solvency II) של חברות הביטוח, MAYA; חולץ ונבדק מול העמוד","files":"https://mayafiles.tase.co.il/","sens":[{"c":"ayalon","d":"2020-12-31","l":"ירידה בריבית של 50 נקודות בסיס בריבית חסרת הסיכון","risk":"rate","b":"na","v":-3.1,"r":1453857,"pg":19}]}
+{"built":"2026-11-02","source":"דוחות כושר פירעון כלכלי (Solvency II) של חברות הביטוח, MAYA; חולץ ונבדק מול העמוד","files":"https://mayafiles.tase.co.il/","sens":[{"c":"ayalon","d":"2020-12-31","l":"ירידה בריבית של 50 נקודות בסיס בריבית חסרת הסיכון","risk":"rate","b":"na","v":-3.1,"r":1453857,"pg":19}]}
 ```
 
 ### `csm/summary.json`
@@ -405,7 +417,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `files`
 
 ```json
-{"built":"2026-10-23","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","files":[{"company":"ayalon","period":"2025FY"}]}
+{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","files":[{"company":"ayalon","period":"2025FY"}]}
 ```
 
 ### `debt/*.json`
@@ -512,6 +524,17 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 {"v":1,"stmt":{"pl":"רווח והפסד","oci":"רווח כולל","bs":"מאזן","cf":"תזרים מזומנים","n":"ביאורים ומגזרים","px":"גיליון החברה"},"block":{"pl":"","eps":"רווח למניה","oci":"","a":"נכסים","le":"התחייבויות והון","op":"פעילות שוטפת","adj":"התאמות","wc":"שינויים בסעיפי מאזן"},"cols":["label"],"lines":{"bs.a.05e4f5":["נכסי מסים שוטפים"],"bs.a.072b97":["נכסי ביטוח משנה"],"bs.a.0faf38":["רכוש קבוע, נטו"],"bs.a.11accc":["הלוואות שניתנו לצדדים קשורים"],"bs.a.12764e":["עלויות נדחות"],"bs.a.180f69":["חייבים ויתרות חובה"],"bs.a.1921b4":["מסים נדחים"],"bs.a.1b0218":["חייבים ויתרות חובה"]}}
 ```
 
+### `feebook.json`
+
+- schema: none (no contract yet) · files: 1 · format: json
+- written by: `build_feebook` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/feebook.json](https://fox-research-il.web.app/data/feebook.json)
+- note: wave 11: fee-book embedded value per manager x product (/feebook; python3 pipeline/build_feebook.py --check)
+
+```json
+{"managers":[{"g":0,"c":"migdal","name":"מגדל","lts":"migdal","aum":285341.5,"aum_v":285341.5,"ev":446.287,"ev_aum":0.1564}]}
+```
+
 ### `feed.json`
 
 - schema: `feed` · files: 1 · format: json
@@ -544,7 +567,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: S2: div / brk / peer / sd / disc / rank findings, each an answer body (answer_core rules), every figure with `src` re-derived
 
 ```json
-{"v":1,"order_rule":"מכפלת המהותיות (₪ מיליון בשנה) בהפתעה (סטיות תקן), מהגבוה לנמוך; בשוויון לפי המזהה. המובילים: 5 הראשונים בסדר הזה, לכל היותר 2 מכל גלאי ואחד לכל חברה. אין שדה מצרפי בקובץ: הסדר משוחזר משני הרכיבים שפורסמו.","rows":[{"id":"F-disc-more-pl-72ae27aa","det":"disc","c":"more","seg":null,"mat":{"v":1215.048,"u":"m","t":"₪1,215 מיליון","why":"היקף השורות ברבעון האחרון שבו פורטו × 4: הכנסה / הוצאה שנתית שכבר לא נראית בפירוט"},"sur":{"v":2.598,"u":"sd","t":"2.6 ס״ת","why":"Φ⁻¹(1 − p), p = 0.47%: שיעור ההפסקה ההיסטורי לרבעון של שורות עם רצף של 20+ רבעונים (כל החברות, בלי ארטיפקטים)"}…
+{"v":1,"order_rule":"מכפלת המהותיות (₪ מיליון בשנה) בהפתעה (סטיות תקן), מהגבוה לנמוך; בשוויון לפי המזהה. המובילים: 5 הראשונים בסדר הזה, לכל היותר 2 מכל גלאי ואחד לכל חברה. אין שדה מצרפי בקובץ: הסדר משוחזר משני הרכיבים שפורסמו.","rows":[{"id":"F-sd-phoenix-solvency-ratio-phoenix-insurance-2024","det":"sd","c":"phoenix","seg":null,"mat":{"v":3661.306,"u":"m","t":"₪3,661 מיליון","why":"הפער בנקודות היחס × ההון הנדרש (₪9,153 מיליון): הון עצמי"},"sur":{"v":2.052,"u":"sd","t":"2.1 ס״ת","why":"הפער (40.0) בסטיות תקן של השינוי השנתי של המדד בהיסטוריה של החברה (19.5, 5 שינויים); היעד פתוח 92 חודשים"},"…
 ```
 
 ### `flow_npv.json`
@@ -915,10 +938,32 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - schema: `nowcast` · files: 1 · format: json
 - written by: `build_nowcast` · cadence: quarterly, on each filing (MAYA)
 - example: [https://fox-research-il.web.app/data/nowcast.json](https://fox-research-il.web.app/data/nowcast.json)
-- note: append-only ledger data/ledger/nowcast/<quarter>/<stage>.json
+- note: append-only ledgers data/ledger/nowcast/<quarter>/<stage>.json and data/ledger/nowcast_f2e/<quarter>/stage2.json (wave 11 flow-to-earnings)
 
 ```json
 {"ledger":[{"quarter":"Q3-2026","stage":1,"created_at":"2026-10-27T22:24:40+02:00","method_version":"m1.0","inputs_hash":"369b898f7bedf39f07e15dea61e6b90bd60b4ff2028ce734396eb8418cc489a0","rows":[{"c":"phoenix","g":3,"q":"Q3-2026","stage":1,"asof":"2026-10-27","segs":{"pen":{"rev":117.497,"opex":97.306,"yld":0.29181,"y_tr":0.3022,"slope":-0.008313,"drift":-0.010391,"avg":161058.16,"months":[{"ym":202606,"a":158530.1},{"ym":202607,"a":159971.2},{"ym":202608,"a":162407.4},{"ym":202609,"a":163061.6,"est":1,"flow":654.2,"flows":[{"ym":202607,"v":682.1},{"ym":202608,"v":626.4}]}],"base":[{"q":"Q3-2…
+```
+
+### `nowcast_depfee.json`
+
+- schema: none (no contract yet) · files: 1 · format: json
+- written by: `nowcast_depfee` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/nowcast_depfee.json](https://fox-research-il.web.app/data/nowcast_depfee.json)
+- note: wave 11: monthly Σ deposits x deposit fee per group x segment from the regulator parquet (the per-track files carry no monthly deposit fee)
+
+```json
+{"v":1,"asof":202609,"fetched":"2026-11-01","from":202201,"rows":[[202201]]}
+```
+
+### `nowcast_f2e.json`
+
+- schema: none (no contract yet) · files: 1 · format: json
+- written by: `build_nowcast` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/nowcast_f2e.json](https://fox-research-il.web.app/data/nowcast_f2e.json)
+- note: append-only ledgers data/ledger/nowcast/<quarter>/<stage>.json and data/ledger/nowcast_f2e/<quarter>/stage2.json (wave 11 flow-to-earnings)
+
+```json
+{"ledger":[{"quarter":"Q3-2026","stage":2,"created_at":"2026-11-03T02:16:39+02:00","method_version":"f2e1.0","inputs_hash":"ba1637369924f46959c4b5e9ef1ed3a0ccb9a9090cc2bd8ae3adf451724112b6","rows":[{"c":"phoenix","g":3,"q":"Q3-2026","asof":"2026-11-03","segs":{"pen":{"rev":114.93,"lo":107.673,"hi":122.188,"ratio":1.07306,"sd":0.03388,"acc":56.1459,"dep":50.9598,"imp":107.1057,"months":[{"ym":202606,"a":158530.1,"fee":0.13931,"cov":100.0,"R":220.8416},{"ym":202607,"a":159971.2,"fee":0.1393,"cov":100.0,"R":222.834},{"ym":202608,"a":162407.4,"fee":0.13929,"cov":100.0,"R":226.2171},{"ym":202609,"a…
 ```
 
 ### `ownership/*.json`
@@ -964,7 +1009,18 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: Peer Table metric registry (follows the canon)
 
 ```json
-{"asof":"2026-11-01","entities":[{"id":"phoenix","n":"הפניקס","k":"ins","mg":"הפניקס"}]}
+{"asof":"2026-11-02","entities":[{"id":"phoenix","n":"הפניקס","k":"ins","mg":"הפניקס"}]}
+```
+
+### `pnc.json`
+
+- schema: `pnc` · files: 1 · format: json
+- written by: `build_pnc` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/pnc.json](https://fox-research-il.web.app/data/pnc.json)
+- provenance fields: `rid`
+
+```json
+{"meta":{"v":1,"built":"2026-08-26","source":"ביאור מגזר ביטוח כללי (IFRS 17), מידע נוסף לפי קבוצות תיקים עיקריות, בדוח הרבעוני של כל חברה; כל שורה בעמוד שלה","files":"https://mayafiles.tase.co.il/","periods":[["q226"]],"lines":[["pc"]],"gaps":[["pc:רכוש ואחר"]],"defs":{"lr":"(תביעות והוצאות שירותי ביטוח אחרות שהתהוו + שינויים לשירותי עבר) ÷ הכנסות משירותי ביטוח","er":"(הוצאות שירותי ביטוח − שתי שורות התביעות) ÷ הכנסות משירותי ביטוח","cr":"הוצאות שירותי ביטוח ÷ הכנסות משירותי ביטוח","crn":"(הוצאות שירותי ביטוח − הכנסות מביטוח משנה) ÷ (הכנסות משירותי ביטוח − הוצאות מביטוח משנה)","ces":"הוצאות מ…
 ```
 
 ### `positions.json`
@@ -1138,6 +1194,28 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 
 ```json
 {"v":3,"built":"2026-11-02","source":"דוחות כספיים, דוחות דירקטוריון ומצגות משקיעים של החברות, MAYA: יעדים כפי שהודפסו","files":"https://mayafiles.tase.co.il/","rows":[{"c":"altshuler","m":"target_dividend_payout","l":"מדיניות חלוקה, % מהרווח","e":"הקבוצה","seg":"group","t":"payout","u":"pct","h":null}]}
+```
+
+### `under.json`
+
+- schema: none (no contract yet) · files: 1 · format: json
+- written by: `build_under` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/under.json](https://fox-research-il.web.app/data/under.json)
+- note: W11: under.json + under/m/<yyyymm>.json (python3 pipeline/build_under.py --check)
+
+```json
+{"v":1,"asof":202609,"src":"הרשות לשוק ההון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il), כפי שהאתר מפרסם אותם: funds/<k>.json (תשואה חודשית נטו, נכסים, תזרימים), funds.json, funds/closed.json, flows/<prod>.json","from":201601,"cov":[["gm"]]}
+```
+
+### `under/m/*.json`
+
+- schema: none (no contract yet) · files: 129 · format: json
+- written by: `build_under` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/under/m/201601.json](https://fox-research-il.web.app/data/under/m/201601.json)
+- note: W11: under.json + under/m/<yyyymm>.json (python3 pipeline/build_under.py --check)
+
+```json
+{"v":1,"p":201601,"rows":[["g456"]]}
 ```
 
 ### `warroom/board.json`

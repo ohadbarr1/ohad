@@ -32,7 +32,7 @@ const NAV: [string, string, string, string, string[]][] = [
   ['/', 'home', 'בית', 'בית', ['/company/', '/pro']],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
   // the long-term savings section: the funds hub, the tracks, compare, the lens, the managers and their holdings (and the old /market links)
-  ['/funds', 'market', 'חיסכון', 'חיסכון', ['/savings', '/managers', '/flows', '/holdings', '/market']],
+  ['/funds', 'market', 'חיסכון', 'חיסכון', ['/savings', '/managers', '/flows', '/feebook', '/holdings', '/market']],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', []],
   ['/warroom', 'warroom', 'חדר מלחמה', 'חדר מלחמה', ['/capital', '/consolidation', '/fragility']],
   ['/positions', 'positions', 'עמדות', 'עמדות', []],
@@ -132,7 +132,7 @@ export function Layout() {
 }
 
 /** Wave 0 (red team 01.11.26): every page says who is behind it and links /about; the savings pages also say what they are not */
-const SAVINGS = ['/funds', '/savings', '/managers', '/flows', '/holdings', '/questions', '/my'];
+const SAVINGS = ['/funds', '/savings', '/managers', '/flows', '/feebook', '/holdings', '/questions', '/my'];
 function SiteFoot({ path, door }: { path: string; door: Door | null }) {
   // W1: the saver's and the agent's homes (and the picker) show savings figures too
   const savings = path !== '/my' && (SAVINGS.some((s) => path === s || path.startsWith(`${s}/`)) || (path === '/' && door !== 'pro'));

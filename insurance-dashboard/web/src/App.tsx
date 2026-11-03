@@ -126,6 +126,8 @@ const BriefPage = page(mBrief, 'BriefPage');
 const Watch = page(() => import('./pages/Watch'), 'Watch');  // S10: Watch & Wake, the morning brief (from the שאלות badge, the home line and search)
 const Flows = page(() => import('./pages/Flows'), 'Flows');  // W8 flows: who really won the month
 const mMoments = () => import('./pages/Moments');  // W9: saver life moments
+const FeeBook = page(() => import('./pages/FeeBook'), 'FeeBook');  // W11: fee-book embedded value
+const Under = page(() => import('./pages/Under'), 'Under');  // W11: bottom-quartile tracks still taking in money
 const MomentPage = page(mMoments, 'MomentPage');
 const MomentsIndex = page(mMoments, 'MomentsIndex');
 const mNotFound = () => import('./pages/NotFound');
@@ -221,6 +223,8 @@ export function App() {
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
         <Route path="flows" element={<Flows />} />
+        <Route path="feebook" element={<FeeBook />} />
+        <Route path="funds/under" element={<Under />} />
         <Route path="my/moment" element={<MomentsIndex />} />
         <Route path="my/moment/:id" element={<MomentPage />} />
         <Route path="calendar" element={<Calendar />} />
