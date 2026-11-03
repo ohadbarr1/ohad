@@ -3,7 +3,9 @@ quarterly print, frozen in an append-only ledger, then scored against the actual
 
 python3 pipeline/build_nowcast.py           write the live stage to the ledger (only if that stage file does not exist yet), rerun the
                                             backtest, write web/public/data/nowcast.json and data/nowcast/est_events.json
-python3 pipeline/build_nowcast.py --check   rebuild in memory and compare with nowcast.json on disk; every ledger entry's inputs hash
+python3 pipeline/build_nowcast.py --depfee [--raw DIR]   LOCAL (pandas + the regulator parquet): write web/public/data/nowcast_depfee.json,
+                                            the monthly deposit fee per group x segment that the published per-track files do not carry
+python3 pipeline/build_nowcast.py --check   rebuild in memory and compare with nowcast.json (and nowcast_f2e.json) on disk; every ledger entry's inputs hash
                                             recomputes; nothing about phoenix is stored (exit 1 on any miss). The gate runs this plus
                                             the immutability check against git HEAD (pipeline/gate.py, check `nowcast`).
 
@@ -41,6 +43,9 @@ Method (version METHOD; every assumption below is labelled as such on the page):
   backtest    every past quarter, as of its own Stage 1 / Stage 2 day: reported quarters only if printed before that day (documents.csv),
               regulator months only up to the stage's months. LIMIT: the regulator's monthly files are the current vintage (data.gov.il
               does not keep vintages), so later revisions to old months are in the backtest inputs.
+  f2e         wave 11, its own file (nowcast_f2e.json) and write-once ledger (data/ledger/nowcast_f2e/<quarter>/stage2.json): the
+              regulator's track-level fee book (assets x management fee + deposits x deposit fee) mapped to the reported fee line by the
+              manager's calibrated ratio; method and assumptions at the F2E section below.
   lens        the existing Savings Lens nowcast method (last quarter's yield, last quarter's costs, months to date) is scored beside M1
               on the same days as a baseline.
 """
@@ -48,6 +53,8 @@ import csv
 import datetime as dt
 import hashlib
 import json
+import math
+import statistics
 import sys
 from math import fsum
 from pathlib import Path
@@ -561,6 +568,279 @@ def fill_pi(ev, I):
     return ev
 
 
+# ========================================================================================================================= F2E
+# Flow-to-earnings (wave 11, method F2E_METHOD): the regulator's own fee book, track by track, mapped to the reported fee line.
+#   implied   accumulation fees  = (R0/2 + R1 + R2 + R3/2) / 12, R_m = Σ_tracks TOTAL_ASSETS_m × AVG_ANNUAL_MANAGEMENT_FEE_m / 100 (NIS m a
+#             year, market.json fee_num) scaled by assets / assets-with-a-fee (tracks without a published fee: ASSUMPTION, the group's
+#             average); m0 = the previous quarter's last month (a trapezoid, as lens avg_reg)
+#             + deposit fees     = Σ_{m1..m3} Σ_tracks DEPOSITS_m × AVG_DEPOSIT_FEE_m / 100 (nowcast_depfee.json), scaled the same way
+#   ratio     reported segment fees (lens rep.fees, report page) ÷ implied, per manager × segment × printed quarter
+#   nowcast   ratio_hat × implied of the target quarter; ratio_hat = mean of the last F2E_N ratios printed before the as-of day;
+#             range = implied × (ratio_hat ∓ F2E_Z × sd), sd = sample standard deviation of the last up to F2E_SD printed ratios.
+#             A manager's range = Σ of its segments' ranges (ASSUMPTION: segment errors fully correlated, the wider reading)
+#   profit    ONLY with disclosed costs: segment op = revenue × (1 − M1's cost/income: trailing-4Q (S&M + G&A) ÷ fees, Q4-seasonal); labelled
+#   timing    the Stage 2 day (T − S2_DAYS) of every printed quarter; only reports printed before it, months up to the quarter's third
+F2E_METHOD = "f2e1.0"
+F2E_OUT = WEB / "nowcast_f2e.json"
+DEPFEE = WEB / "nowcast_depfee.json"
+F2E_LEDGER = ROOT / "data" / "ledger" / "nowcast_f2e"
+DF_FROM = 202201              # deposit-fee cells kept from this month (the first base quarter Q1'23 needs 12/22)
+F2E_N = 4                     # ratio_hat: mean of the last F2E_N printed ratios (ASSUMPTION)
+F2E_SD = 8                    # dispersion window, printed quarters (ASSUMPTION)
+F2E_Z = 2.0                   # range half-width in standard deviations (ASSUMPTION)
+FAM_SEG = {"pension": "pen", "gemel": "gem"}
+DF_TOL = 0.05                 # NIS m: Σ deposits of the deposit-fee file vs market.json, per group × segment × month
+
+
+def extract_depfee(raw):
+    """LOCAL ONLY (pandas + the regulator's parquet, data/raw or --raw DIR): Σ DEPOSITS × AVG_DEPOSIT_FEE per month × group × segment, the
+    monthly deposit fee the published per-track files do not carry yet. Same filters and group rule as build_market.py (TOTAL_ASSETS
+    present; managing corporation -> group by build_market.group_of), so Σ dep equals market.json's dep (checked by --check in CI)."""
+    import pandas as pd
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import build_market as BM
+    m = json.loads((WEB / "market.json").read_text(encoding="utf-8"))
+    gi = {g: i for i, g in enumerate(m["groups"])}
+    rows = []
+    for fname, s in (("pensia", "pen"), ("gemel", "gem")):
+        d = pd.read_parquet(raw / f"{fname}.parquet", columns=["MANAGING_CORPORATION", "REPORT_PERIOD", "TOTAL_ASSETS", "DEPOSITS", "AVG_DEPOSIT_FEE"])
+        d = d[d["TOTAL_ASSETS"].notna() & (d["REPORT_PERIOD"] >= DF_FROM)].copy()
+        d["g"] = d["MANAGING_CORPORATION"].map(BM.group_of).map(gi)
+        assert d["g"].notna().all(), "a managing corporation outside market.json groups"
+        d["dep"] = d["DEPOSITS"].fillna(0.0)
+        ok = d["DEPOSITS"].notna() & d["AVG_DEPOSIT_FEE"].notna()
+        d["dd"] = d["dep"].where(ok, 0.0)
+        d["dfn"] = (d["dep"] * d["AVG_DEPOSIT_FEE"]).where(ok, 0.0)
+        d["n"] = ok.astype(int)
+        agg = d.groupby(["REPORT_PERIOD", "g"], as_index=False).agg(dep=("dep", "sum"), dd=("dd", "sum"), dfn=("dfn", "sum"), n=("n", "sum"))
+        for x in agg.itertuples(index=False):
+            rows.append([int(x.REPORT_PERIOD), int(x.g), s, round(float(x.dep), 3), round(float(x.dd), 3), round(float(x.dfn), 4), int(x.n)])
+    rows.sort(key=lambda x: (x[0], x[1], x[2]))
+    out = {"v": 1, "asof": m["meta"]["asof"], "fetched": m["meta"]["fetched"], "from": DF_FROM,
+           "method": "לכל חודש × קבוצה × מגזר (פנסיה: פנסיה-נט; גמל והשתלמות: גמל-נט): dep = Σ DEPOSITS; dd = Σ DEPOSITS של מסלולים שפרסמו "
+                     "AVG_DEPOSIT_FEE; dfn = Σ DEPOSITS × AVG_DEPOSIT_FEE (מיליוני ש\"ח × אחוז); n = מספר המסלולים האלה. שיוך לקבוצה ולמגזר: כמו market.json",
+           "src": m["meta"]["source"], "resources": {k: m["meta"]["resources"][k] for k in ("pensia", "gemel")}, "groups": m["groups"],
+           "cols": ["ym", "g", "s", "dep", "dd", "dfn", "n"], "rows": rows}
+    DEPFEE.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return out
+
+
+class RegBook:
+    """the regulator's fee book per group × segment × month: market.json (assets, Σ assets × fee) and nowcast_depfee.json"""
+
+    def __init__(self, I):
+        m = json.loads((WEB / "market.json").read_text(encoding="utf-8"))
+        assert [g["name"] for g in I.lens["groups"]] == m["groups"], "lens groups and market groups differ"
+        P = m["periods"]
+        fam = [p["family"] for p in m["products"]]
+        parts = {}
+        for row in m["rows"]:
+            pi, pr, g, a, dep, wd, tr, fa, fn, fd = row[:10]
+            s = FAM_SEG.get(fam[pr])
+            if s and P[pi] >= DF_FROM:
+                x = parts.setdefault((g, s, P[pi]), ([], [], [], []))
+                for lst, v in zip(x, (a, fn, fd, dep)):
+                    lst.append(v)
+        self.mk = {k: tuple(fsum(v) for v in x) for k, x in parts.items()}
+        self.df = None
+        if DEPFEE.exists():
+            d = json.loads(DEPFEE.read_text(encoding="utf-8"))
+            self.df_meta = {k: d[k] for k in ("asof", "fetched", "from", "method", "src", "resources")}
+            self.df = {(x[1], x[2], x[0]): x[3:] for x in d["rows"]}
+
+    def month(self, g, s, ym):
+        x = self.mk.get((g, s, ym))
+        if not x or not x[0]:
+            return None
+        a, fn, fd, dep = x
+        if not fd:
+            return None
+        return {"ym": ym, "a": r(a, 1), "fee": r(fn / fd, 5), "cov": r(fd / a * 100, 2), "R": r(fn * a / fd / 100, 4)}
+
+    def dmonth(self, g, s, ym):
+        x = self.mk.get((g, s, ym))
+        if self.df is None or not x:
+            return None
+        d = self.df.get((g, s, ym))
+        if d is None:
+            return {"ym": ym, "dep": 0.0, "depfee": None, "dcov": None, "D": 0.0} if not x[3] else None
+        dep, dd, dfn, n = d
+        if not dd:
+            return {"ym": ym, "dep": r(dep, 1), "depfee": None, "dcov": 0.0, "D": 0.0, "n": n}
+        return {"ym": ym, "dep": r(dep, 1), "depfee": r(dfn / dd, 4), "dcov": r(dd / dep * 100, 2) if dep else None, "D": r(dfn * dep / dd / 100, 4), "n": n}
+
+    def implied(self, g, s, y, q):
+        e = y * 100 + q * 3
+        ms = [madd(e, -3), madd(e, -2), madd(e, -1), e]
+        M = [self.month(g, s, p) for p in ms]
+        Dm = [self.dmonth(g, s, p) for p in ms[1:]]
+        if any(x is None for x in M) or any(x is None for x in Dm):
+            return None
+        acc = fsum([M[0]["R"] / 2, M[1]["R"], M[2]["R"], M[3]["R"] / 2]) / 12
+        dep = fsum(x["D"] for x in Dm)
+        return {"acc": r(acc, 4), "dep": r(dep, 4), "imp": r(acc + dep, 4), "months": M, "dmonths": Dm}
+
+
+def sd_sample(xs):
+    if len(xs) < 2:
+        return None
+    mu = fsum(xs) / len(xs)
+    return math.sqrt(fsum((x - mu) ** 2 for x in xs) / (len(xs) - 1))
+
+
+def ratio_hist(I, R, c, s, upto=None, before=None):
+    """every printed quarter of manager c × segment s (oldest first): reported fees, regulator-implied, ratio. upto: quarters < (y, q);
+    before: printed before that ISO day. A hole (unprinted or no implied) resets the run: only the contiguous run to the latest counts."""
+    g = I.G[c]
+    out = []
+    y, q = 2023, 1
+    while (y, q) <= I.last_rep and (upto is None or (y, q) < upto):
+        day = I.print_day(c, y, q)
+        row = I.rows.get((g, s, qkey(y, q)))
+        t = R.implied(g, s, y, q)
+        ok = day and (before is None or day < before) and row and row.get("rep") and row["rep"]["fees"] is not None and t and t["imp"] > 0
+        if ok:
+            out.append({"q": qkey(y, q), "printed": day, "fees": row["rep"]["fees"], "acc": t["acc"], "dep": t["dep"], "imp": t["imp"],
+                        "ratio": r(row["rep"]["fees"] / t["imp"], 5), "R": [m["R"] for m in t["months"]], "D": [m["D"] for m in t["dmonths"]]})
+        elif before is not None:
+            out = []
+        y, q = qnext(y, q)
+    return out
+
+
+def f2e_estimate(I, R, c, y, q, asof):
+    """manager c, quarter (y, q), as of a day: None when fewer than F2E_N printed ratios or the quarter's months are not all in"""
+    g = I.G[c]
+    asof_s = asof.isoformat()
+    segs = {}
+    m1 = estimate(I, c, y, q, 2, asof)
+    for s in SEGS:
+        base = ratio_hist(I, R, c, s, upto=(y, q), before=asof_s)
+        if len(base) < F2E_N:
+            continue
+        t = R.implied(g, s, y, q)
+        if not t or t["imp"] <= 0:
+            continue
+        rs = [b["ratio"] for b in base]
+        rh = fsum(rs[-F2E_N:]) / F2E_N
+        sd = sd_sample(rs[-F2E_SD:])
+        rev = rh * t["imp"]
+        ci = (m1 or {}).get("segs", {}).get(s, {}).get("ci")
+        segs[s] = {"rev": r(rev), "lo": r((rh - F2E_Z * sd) * t["imp"]), "hi": r((rh + F2E_Z * sd) * t["imp"]), "ratio": r(rh, 5), "sd": r(sd, 5),
+                   "acc": t["acc"], "dep": t["dep"], "imp": t["imp"], "months": t["months"], "dmonths": t["dmonths"],
+                   "base": [{**b, "in_n": 1 if i >= len(base) - F2E_N else 0} for i, b in enumerate(base[-F2E_SD:], len(base) - min(len(base), F2E_SD))],
+                   "ci": ci, "opex": r(rev * ci) if ci is not None else None}
+    if not segs:
+        return None
+    rev = fsum(x["rev"] for x in segs.values())
+    op_ok = all(x["opex"] is not None for x in segs.values())
+    e = y * 100 + q * 3
+    return {"c": c, "g": g, "q": qkey(y, q), "asof": asof_s, "segs": segs, "rev": r(rev), "lo": r(fsum(x["lo"] for x in segs.values())),
+            "hi": r(fsum(x["hi"] for x in segs.values())), "imp": r(fsum(x["imp"] for x in segs.values())),
+            "op": r(rev - fsum(x["opex"] for x in segs.values())) if op_ok else None, "m1_rev": (m1 or {}).get("rev"),
+            "lag_ok": all(pub_day(p) <= asof for p in (madd(e, -2), madd(e, -1), e)), "scope": "house" if c in HOUSES else "segment"}
+
+
+def f2e_backtest(I, R):
+    rows = []
+    y, q = FIRST_TARGET
+    while (y, q) <= I.last_rep:
+        for c in COVER:
+            T = I.print_day(c, y, q)
+            if not T:
+                continue
+            day = stage_day(dt.date.fromisoformat(T), 2)
+            e = f2e_estimate(I, R, c, y, q, day)
+            if not e:
+                continue
+            a = actual(I, c, y, q, list(e["segs"]))
+            if not a:
+                continue
+            rows.append({"c": c, "q": e["q"], "T": T, "day": day.isoformat(), "rev": e["rev"], "lo": e["lo"], "hi": e["hi"], "imp": e["imp"], "op": e["op"],
+                         "lag_ok": e["lag_ok"], "act": a, "e_rev": err(e["rev"], a["rev"]), "in": 1 if e["lo"] <= a["rev"] <= e["hi"] else 0,
+                         "e_opm": err_pp(e["op"], a), "m1_rev": e["m1_rev"], "e_m1": err(e["m1_rev"], a["rev"]),
+                         "segs": {s: {k: v[k] for k in ("rev", "lo", "hi", "ratio", "sd", "acc", "dep", "imp", "ci")} for s, v in e["segs"].items()}})
+        y, q = qnext(y, q)
+    return rows
+
+
+def f2e_summary(rows):
+    def st(xs, ins=None):
+        xs = [x for x in xs if x is not None]
+        if not xs:
+            return None
+        o = {"n": len(xs), "mdae": r(statistics.median(abs(x) for x in xs), 2), "mape": r(fsum(abs(x) for x in xs) / len(xs), 2),
+             "bias": r(fsum(xs) / len(xs), 2), "max": r(max(xs, key=abs), 2)}
+        if ins is not None:
+            o["cover"] = r(fsum(ins) / len(ins) * 100, 1)
+        return o
+    out = {}
+    for c in COVER + ["all"]:
+        rs = [x for x in rows if c == "all" or x["c"] == c]
+        if rs:
+            out[c] = {"rev": st([x["e_rev"] for x in rs], [x["in"] for x in rs]), "opm": st([x["e_opm"] for x in rs]), "m1": st([x["e_m1"] for x in rs])}
+    return out
+
+
+def f2e_ledger_path(qk):
+    return F2E_LEDGER / qk / "stage2.json"
+
+
+def f2e_entry(I, R, y, q, now):
+    rows = []
+    for c in COVER:
+        ts = [I.expected.get(k) for k in DOC_KEYS.get(c, [c])]
+        ts = [x[1] for x in ts if x and x[0] == f"{y}Q{q}" and x[1]]
+        e = f2e_estimate(I, R, c, y, q, now.date())
+        if e:
+            e["T_expected"] = min(ts) if ts else None
+            rows.append(e)
+    inputs = {"method": F2E_METHOD, "params": {"F2E_N": F2E_N, "F2E_SD": F2E_SD, "F2E_Z": F2E_Z, "S2_DAYS": S2_DAYS, "PUB_DAY": PUB_DAY},
+              "regulator_asof": I.asof, "regulator_fetched": I.fetched, "depfee": R.df_meta["fetched"], "last_rep": I.lens["meta"]["last_rep"], "rows": rows}
+    return {"quarter": qkey(y, q), "stage": 2, "created_at": now.isoformat(timespec="seconds"), "method_version": F2E_METHOD, "inputs_hash": sha(inputs), "inputs": inputs}
+
+
+def f2e_read_ledger():
+    return [json.loads(f.read_text(encoding="utf-8")) for f in sorted(F2E_LEDGER.glob("*/stage2.json"))] if F2E_LEDGER.exists() else []
+
+
+def f2e_score(I, ledger):
+    out = []
+    for L in ledger:
+        y, q = qparse(L["quarter"])
+        for e in L["inputs"]["rows"]:
+            a = actual(I, e["c"], y, q, list(e["segs"]))
+            row = {"c": e["c"], "q": L["quarter"], "rev": e["rev"], "lo": e["lo"], "hi": e["hi"], "op": e["op"], "created_at": L["created_at"], "act": a}
+            if a:
+                row.update(e_rev=err(e["rev"], a["rev"]), e_opm=err_pp(e["op"], a), **{"in": 1 if e["lo"] <= a["rev"] <= e["hi"] else 0})
+            out.append(row)
+    return out
+
+
+def f2e_depfee_check(R):
+    """the deposit-fee file's Σ deposits equals market.json per group × segment × month (both read the same DEPOSITS column)"""
+    if R.df is None:
+        return ["nowcast_depfee.json missing: run build_nowcast.py --depfee where the regulator parquet is"]
+    bad = []
+    for k, x in R.mk.items():
+        d = R.df.get(k)
+        dep = d[0] if d else 0.0
+        if abs(dep - x[3]) > DF_TOL:
+            bad.append(f"depfee {k}: Σ deposits {dep:.2f} vs market.json {x[3]:.2f}")
+    return bad[:5]
+
+
+def f2e_build(I, R, ledger):
+    hist = {c: {s: h for s in SEGS if (h := ratio_hist(I, R, c, s))} for c in COVER}
+    bt = f2e_backtest(I, R)
+    return {"meta": {"method": F2E_METHOD, "draft": True, "built_from": {"lens": I.lens["meta"]["generated"], "regulator_asof": I.asof, "last_rep": I.lens["meta"]["last_rep"],
+                                                                          "depfee": R.df_meta["fetched"]}, "depfee": R.df_meta},
+            "params": {"F2E_N": F2E_N, "F2E_SD": F2E_SD, "F2E_Z": F2E_Z, "S2_DAYS": S2_DAYS, "PUB_DAY": PUB_DAY, "FIRST_TARGET": qkey(*FIRST_TARGET)},
+            "cover": COVER, "houses": sorted(HOUSES), "hist": hist,
+            "ledger": [{k: L[k] for k in ("quarter", "stage", "created_at", "method_version", "inputs_hash")} | {"rows": L["inputs"]["rows"]} for L in ledger],
+            "score": f2e_score(I, ledger), "backtest": bt, "summary": f2e_summary(bt)}
+
+
 def build(I, ledger):
     bt = backtest(I)
     y, q, st = live_stage(I)
@@ -583,6 +863,11 @@ def no_phoenix(obj):
 
 
 def main():
+    if "--depfee" in sys.argv:
+        raw = Path(sys.argv[sys.argv.index("--raw") + 1]) if "--raw" in sys.argv else ROOT / "data" / "raw"
+        out = extract_depfee(raw)
+        print(f"wrote {DEPFEE.relative_to(ROOT)}: {len(out['rows'])} cells, {DF_FROM}..{out['asof']}, from {raw}")
+        return 0
     I = Inputs()
     if ABSTAIN_PHOENIX:
         assert "phoenix" not in COVER
@@ -617,17 +902,39 @@ def main():
     d = build(I, ledger)
     if ABSTAIN_PHOENIX and not no_phoenix(d):
         bad.append("nowcast.json carries a phoenix estimate")
+    # ---- F2E (wave 11): its own write-once ledger (stage 2 only: the three months of the quarter in), file and checks
+    R = RegBook(I)
+    bad += f2e_depfee_check(R)
+    if not check and st == 2 and "--dry" not in sys.argv and R.df is not None:
+        p = f2e_ledger_path(qkey(y, q))
+        if not p.exists():
+            entry = f2e_entry(I, R, y, q, dt.datetime.now().astimezone())
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(json.dumps(entry, ensure_ascii=False, indent=1), encoding="utf-8")
+            print(f"f2e ledger: wrote {p.relative_to(ROOT)} ({len(entry['inputs']['rows'])} managers, hash {entry['inputs_hash'][:12]})")
+    f2e_ledger = f2e_read_ledger()
+    for L in f2e_ledger:
+        if sha(L["inputs"]) != L["inputs_hash"] or L["method_version"] != L["inputs"]["method"]:
+            bad.append(f"f2e ledger {L['quarter']}: inputs hash does not recompute")
+    f = f2e_build(I, R, f2e_ledger) if R.df is not None else None
     if check:
         disk = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else None
         same = disk == json.loads(json.dumps(d, ensure_ascii=False))
-        print(f"nowcast.json {'matches' if same else 'DIFFERS from'} a rebuild; {len(ledger)} ledger entries; {len(d['backtest'])} backtest rows; {len(bad)} problems")
+        fdisk = json.loads(F2E_OUT.read_text(encoding="utf-8")) if F2E_OUT.exists() else None
+        fsame = f is not None and fdisk == json.loads(json.dumps(f, ensure_ascii=False))
+        print(f"nowcast.json {'matches' if same else 'DIFFERS from'} a rebuild; nowcast_f2e.json {'matches' if fsame else 'DIFFERS from'} a rebuild; "
+              f"{len(ledger)} + {len(f2e_ledger)} ledger entries; {len(d['backtest'])} + {len(f['backtest']) if f else 0} backtest rows; {len(bad)} problems")
         for b in bad:
             print("  ", b)
-        return 0 if same and not bad else 1
+        return 0 if same and fsame and not bad else 1
     if bad:
         print("problems:", bad)
         return 1
     OUT.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    F2E_OUT.write_text(json.dumps(f, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    fs = f["summary"].get("all", {}).get("rev") or {}
+    print(f"wrote {F2E_OUT.relative_to(ROOT)}: {F2E_OUT.stat().st_size:,} bytes; f2e backtest {len(f['backtest'])} manager-quarters, "
+          f"median |error| {fs.get('mdae')}%, MAPE {fs.get('mape')}%, range cover {fs.get('cover')}%")
     ev = fill_pi(est_events(I, ledger, d["score"]), I)
     EVENTS.parent.mkdir(parents=True, exist_ok=True)
     EVENTS.write_text(json.dumps({"v": 1, "t": "est", "contract": "feed.json events (wave1-m2-feed, build_feed.py docstring)", "events": ev}, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -23,6 +23,10 @@ Checks
   nowcast        module M1 (unpublished): web/public/data/nowcast.json equals a rebuild (pipeline/build_nowcast.py --check), every
                  ledger entry's inputs hash recomputes, nothing about phoenix is stored, and the ledger is append-only: every file
                  under data/ledger/nowcast/ at git HEAD is still there, byte for byte (an estimate is never edited or removed once frozen).
+                 Wave 11: nowcast_f2e.json (flow-to-earnings) also equals a rebuild, nowcast_depfee.json ties to market.json deposits,
+                 and `nowcast_f2e_ledger` holds data/ledger/nowcast_f2e/ append-only the same way.
+  feebook        wave 11: web/public/data/feebook.json equals a rebuild and every EV re-derives (pipeline/build_feebook.py --check);
+                 `feebook_lib`: the page's formula (web/src/lib/feebook.ts) equals the build's, row, total and grid (scripts/feebook-test.mjs).
   positions      module A6, the position book: web/public/data/positions.json equals a rebuild WITHOUT drafts (a --drafts dev build
                  fails), every ledger entry is valid (at least one falsifier, every evidence ref and metric resolves, horizon after the
                  revision date, revisions chained by `supersedes`, hashes recompute, outcomes dated and after the last revision, nothing
@@ -575,6 +579,22 @@ def nowcast():
     out = (p.stdout.strip() or p.stderr.strip() or "no output").splitlines()
     add("nowcast", p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[0][:200])
     append_only("nowcast_ledger", "data/ledger/nowcast", "frozen estimates")
+    append_only("nowcast_f2e_ledger", "data/ledger/nowcast_f2e", "frozen flow-to-earnings estimates")
+
+
+def feebook():  # wave 11: the fee-book embedded value rebuilds equal, every EV re-derives; the page's formula equals the build's
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_feebook.py"), "--check"], capture_output=True, text=True)
+    out = (p.stdout.strip() or p.stderr.strip() or "no output").splitlines()
+    add("feebook", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), out[0][:200])
+    node = gate_s3.NODE
+    if not node:
+        return add("feebook_lib", False, 0, 1, "node not found: feebook.ts not checked", level="warn")
+    q = subprocess.run([node, "scripts/feebook-test.mjs"], cwd=ROOT / "web", capture_output=True, text=True)
+    lines = [l for l in q.stdout.strip().splitlines() if l.strip()]
+    tail = next((l for l in lines if " passed, " in l), (q.stderr.strip() or "no output")[-160:])
+    fails = [l.strip() for l in lines if l.strip().startswith("FAIL")]
+    add("feebook_lib", q.returncode == 0, int(re.search(r"(\d+) passed", tail).group(1)) if " passed" in tail else 0, len(fails) or (0 if q.returncode == 0 else 1),
+        (tail.replace("feebook: ", "") + (f"; e.g. {fails[0][5:]}" if fails else ""))[:200])
 
 
 def append_only(id_, led, what):
@@ -803,6 +823,7 @@ def main():
     capital()
     expectations()
     nowcast()
+    feebook()
     positions()
     consistency()
     schemas()

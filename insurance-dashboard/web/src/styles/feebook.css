@@ -1,0 +1,12 @@
+/* Fee-book embedded value (pages/FeeBook.tsx, wave 11) */
+.fb-kpis { margin: 0 0 14px; }
+.fb-as .field { display: flex; flex-direction: column; gap: 3px; font-size: var(--t-2); }
+.fb-as .btn { align-self: flex-end; }
+.fb-tbl td, .fb-tbl th { white-space: nowrap; }
+.fb-tbl tr.sel td { background: color-mix(in oklch, var(--accent) 7%, var(--panel)); }
+.fb-mgr { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; color: var(--fg); font: inherit; cursor: pointer; text-align: start; }
+.fb-mgr:hover, .fb-mgr[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 3px; }
+.fb-grid td, .fb-grid th { text-align: center; white-space: nowrap; }
+.fb-grid tr.sel th, .fb-grid tr.sel td { background: color-mix(in oklch, var(--accent) 7%, var(--panel)); }
+.fb-grid td.base { outline: 2px solid color-mix(in oklch, var(--accent) 60%, transparent); outline-offset: -2px; font-weight: 700; }
+@media (max-width: 760px) { .fb-as .field { flex: 1 1 100%; } }
