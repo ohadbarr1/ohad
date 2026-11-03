@@ -1,5 +1,5 @@
 {
- "built": "2026-11-03T02:55:14+02:00",
+ "built": "2026-11-03T07:00:00+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -85,17 +85,17 @@
    "id": "ifrs_page",
    "ok": true,
    "level": "fail",
-   "n": 0,
+   "n": 16458,
    "fail": 0,
-   "note": "0/0 on the cited page; 0 new misses; 16458 facts without page text (not checked)"
+   "note": "16394/16458 on the cited page; 0 new misses; 0 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
-   "ok": true,
+   "ok": false,
    "level": "warn",
-   "n": 0,
-   "fail": 0,
-   "note": "known misses, extraction layer (graphics, image pages, targets in words): {}"
+   "n": 16458,
+   "fail": 64,
+   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'ayalon': 18, 'hachshara': 26, 'migdal': 10, 'clal': 8, 'phoenix': 2}"
   },
   {
    "id": "balance",
@@ -245,9 +245,9 @@
    "id": "watch_ledger",
    "ok": true,
    "level": "fail",
-   "n": 3,
+   "n": 4,
    "fail": 0,
-   "note": "3 answer snapshots at HEAD unchanged"
+   "note": "4 answer snapshots at HEAD unchanged"
   },
   {
    "id": "watch_lib",
@@ -511,7 +511,7 @@
    "level": "warn",
    "n": 38,
    "fail": 1,
-   "note": "38 manager-quarters; rebuild skipped (no data/work/asset_lists)"
+   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: Deserializing page header failed.)"
   },
   {
    "id": "solvency",
