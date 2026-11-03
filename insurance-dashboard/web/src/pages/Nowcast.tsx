@@ -7,16 +7,18 @@ import { nf } from '../lib/format';
 import { ql, spc, useLens, warmRep, type LensData } from '../lib/lens';
 import { NAME, NcSrc, dmy, useNowcast, type NcBt, type NcEst, type NcStat, type NowcastData } from '../lib/nowcast';
 import type { Prov } from '../lib/prov';
+import { useF2e, type F2eData } from '../lib/nowcastF2e';
+import { F2eBlock } from './NowcastF2e';
 import '../styles/lens.css';
 import '../styles/nowcast.css';
 
 /** Module M1, UNPUBLISHED: estimates frozen before the print, scored against it. Not linked from the nav, home, search or any page. */
 export function Nowcast() {
   useNoindex();
-  const nc = useNowcast(), lens = useLens();
+  const nc = useNowcast(), lens = useLens(), f2e = useF2e();
   if (nc.error || lens.error) return <ErrorBox what="האומדנים" error={nc.error ?? lens.error ?? ''} />;
   if (!nc.data || !lens.data) return <Loading what="האומדנים" />;
-  return <Page d={nc.data} lens={lens.data} />;
+  return <Page d={nc.data} lens={lens.data} f2e={f2e.data} f2eErr={f2e.error} />;
 }
 
 /** <meta name="robots" content="noindex"> while this route is open */
@@ -37,7 +39,7 @@ const pp = (x: number | null | undefined) => (x == null ? '–' : `${x > 0 ? '+'
 const stat = (s: NcStat | null | undefined) => (s == null ? '–' : `${nf(s.mape, 1)}% / ${s.bias > 0 ? '+' : ''}${nf(s.bias, 1)}%`);
 const statPP = (s: NcStat | null | undefined) => (s == null ? '–' : `${nf(s.mape, 1)} / ${s.bias > 0 ? '+' : ''}${nf(s.bias, 1)}`);
 
-function Page({ d, lens }: { d: NowcastData; lens: LensData }) {
+function Page({ d, lens, f2e, f2eErr }: { d: NowcastData; lens: LensData; f2e: F2eData | null; f2eErr: string | null }) {
   const [sp, setSp] = useSearchParams();
   const src = useMemo(() => new NcSrc(d, lens), [d, lens]);
   const quarters = [...new Set(d.ledger.map((l) => l.quarter))].sort((a, b) => (a.slice(3) + a[1]).localeCompare(b.slice(3) + b[1])).reverse();
@@ -47,6 +49,9 @@ function Page({ d, lens }: { d: NowcastData; lens: LensData }) {
   return (
     <>
       <h2 className="band">אומדנים לפני הדוח<span className="muted"><span className="chip nc-draft">טיוטה, לא פורסם</span> פנסיה וגמל: הכנסות מדמי ניהול ורווח תפעולי מגזרי · רשות שוק ההון עד <span className="num">{lensMonth(d.meta.built_from.regulator_asof)}</span> · דוחות עד <span className="num">{ql(d.meta.built_from.last_rep)}</span> · שיטה {d.meta.method}</span></h2>
+      {f2e ? <F2eBlock f={f2e} lens={lens} Mgr={Mgr} mgr={f2e.cover.includes(sp.get('fm') ?? '') ? sp.get('fm')! : f2e.cover[0]} setMgr={(v) => set('fm', v === f2e.cover[0] ? '' : v)} />
+        : f2eErr ? <ErrorBox what="אומדן זרימה-לרווח" error={f2eErr} /> : <Loading what="אומדן זרימה-לרווח" />}
+      <h2 className="band">M1: תשואה ממומשת × נכסים ממוצעים<span className="muted">האומדן הקודם, קפוא בשני שלבים, ובדיקה לאחור</span></h2>
       {quarters.length > 1 && <div className="lens-views"><SegCtl<string> label="רבעון" value={q} onChange={(v) => set('q', v)} options={quarters.map((x) => [x, ql(x)])} /></div>}
       <Live d={d} src={src} q={q} />
       <Scorecard d={d} src={src} />

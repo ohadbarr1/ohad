@@ -74,6 +74,8 @@ STEPS = [
                                                 "data/warehouse.duckdb"], [D + "kpi.json"], {"duckdb"}, code=["pipeline/autopilot/t0.py"]),
     step("build_documents", "pipeline/build_documents.py", ["data/warehouse.duckdb"], [D + "companies/*.docs.json"], {"duckdb"}),
     step("build_market", "pipeline/build_market.py", ["data/raw/_meta.json"], ["data/market.json", D + "market.json", D + "prov/reg"], {"pandas", "drive"}),
+    step("nowcast_depfee", [["pipeline/build_nowcast.py", "--depfee"]], ["data/raw/_meta.json", D + "market.json"], [D + "nowcast_depfee.json"], {"pandas", "drive"},
+         code=["pipeline/build_market.py"], note="wave 11: monthly Σ deposits x deposit fee per group x segment from the regulator parquet (the per-track files carry no monthly deposit fee)"),
     step("build_funds", "pipeline/build_funds.py", ["data/raw/_meta.json", "data/raw/macro", "data/regulation/transfer_bank.json"],
          [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/cat.json", D + "funds/closed.json"], {"pandas", "drive"}, code=["pipeline/funds_lib.py"],
          note="also: the official track taxonomy (transfer_bank) and CPI for real returns"),
@@ -128,8 +130,9 @@ STEPS = [
          daily=True, groups={"deploy"}, note="projections from today's date"),
     # module M1 (unpublished): the nowcast engine; appends the live stage to the frozen ledger (never rewrites an entry)
     step("build_nowcast", "pipeline/build_nowcast.py", [D + "lens.json", D + "market.json", D + "calendar.json", D + "macro/macro.json",
-         REG + "documents.csv", "data/extracted_fs"], [D + "nowcast.json", "data/nowcast/est_events.json"], edits=["data/ledger/nowcast"],
-         note="append-only ledger data/ledger/nowcast/<quarter>/<stage>.json"),
+         REG + "documents.csv", "data/extracted_fs", D + "nowcast_depfee.json"], [D + "nowcast.json", D + "nowcast_f2e.json", "data/nowcast/est_events.json"],
+         edits=["data/ledger/nowcast", "data/ledger/nowcast_f2e"],
+         note="append-only ledgers data/ledger/nowcast/<quarter>/<stage>.json and data/ledger/nowcast_f2e/<quarter>/stage2.json (wave 11 flow-to-earnings)"),
     step("canon_kpi", "pipeline/canon_kpi.py", [D + "lines.json", D + "companies/index.json", *WB, "web/src/pages/ReportDay.tsx"],
          [], code=["pipeline/reportday.py"], edits=[D + "kpi.json"], groups={"deploy"}, note="printed figure over the XBRL tag, in place"),
     step("build_registry", "pipeline/build_registry.py",
@@ -244,6 +247,8 @@ STEPS = [
          [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/closed.json", D + "funds/default.json", D + "market.json"],
          [D + "flows.json", D + "flows"], code=["pipeline/funds_lib.py"], groups={"deploy"},
          note="W8: flows.json + flows/<prod>.json, flows/m/<yyyymm>.json (inputs), flows/sig.json, flows/fees.json (python3 pipeline/build_flows.py --check)"),
+    step("build_feebook", "pipeline/build_feebook.py", [D + "market.json", D + "flows/[a-z][a-z].json", D + "lens.json", D + "funds/default.json", D + "csm/summary.json",
+         D + "csm/facts"], [D + "feebook.json"], groups={"deploy"}, note="wave 11: fee-book embedded value per manager x product (/feebook; python3 pipeline/build_feebook.py --check)"),
     # W2: the decision data for recommending a pension fund (CMA service index, the funds' claims annex B3, default coverage, the
     # managers'-insurance switching checklist). extract_decision reads the raw files on the drive and verifies the register (manual);
     # build_decision is standard library; gate `decision` (rebuild byte-equal + rules)

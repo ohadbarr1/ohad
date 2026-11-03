@@ -72,5 +72,64 @@ class Nowcast(unittest.TestCase):
             self.assertEqual(L["method_version"], L["inputs"]["method"])
 
 
+
+class F2E(unittest.TestCase):
+    """the flow-to-earnings method (F2E section): no look-ahead, the implied revenue re-derives, the deposit-fee file ties to market.json"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.I = B.Inputs()
+        cls.R = B.RegBook(cls.I)
+        cls.bt = B.f2e_backtest(cls.I, cls.R)
+
+    def test_depfee_ties(self):
+        self.assertEqual(B.f2e_depfee_check(self.R), [])
+
+    def test_implied(self):
+        t = self.R.implied(self.I.G["harel"], "pen", 2026, 2)
+        R = [m["R"] for m in t["months"]]
+        self.assertAlmostEqual(t["acc"], (R[0] / 2 + R[1] + R[2] + R[3] / 2) / 12, places=3)
+        self.assertAlmostEqual(t["dep"], sum(m["D"] for m in t["dmonths"]), places=3)
+        self.assertGreater(t["dep"], 0, "pension carries deposit fees")
+        self.assertEqual([m["ym"] for m in t["months"]], [202603, 202604, 202605, 202606])
+
+    def test_no_lookahead(self):
+        n = 0
+        for b in self.bt:
+            y, q = B.qparse(b["q"])
+            e = B.f2e_estimate(self.I, self.R, b["c"], y, q, dt.date.fromisoformat(b["day"]))
+            for s in e["segs"].values():
+                for h in s["base"]:
+                    n += 1
+                    self.assertLess(h["printed"], b["day"])
+                    self.assertLess(B.qparse(h["q"]), (y, q))
+        self.assertGreater(n, 500)
+
+    def test_ratio_and_range(self):
+        for b in self.bt:
+            self.assertLess(b["day"], b["T"])
+            self.assertLessEqual(b["lo"], b["rev"])
+            self.assertLessEqual(b["rev"], b["hi"])
+            for s in b["segs"].values():
+                self.assertAlmostEqual(s["rev"], s["ratio"] * s["imp"], delta=0.01)
+                self.assertAlmostEqual(s["hi"] - s["rev"], s["rev"] - s["lo"], delta=0.01)
+
+    def test_profit_needs_disclosed_costs(self):
+        for b in self.bt:
+            if b["op"] is not None:
+                self.assertTrue(all(s["ci"] is not None for s in b["segs"].values()))
+
+    def test_summary(self):
+        S = B.f2e_summary(self.bt)
+        self.assertEqual(S["all"]["rev"]["n"], len(self.bt))
+        self.assertLess(S["all"]["rev"]["mdae"], 5, "the method explains the reported fee line")
+
+    def test_ledger_hash(self):
+        for f in B.F2E_LEDGER.glob("*/stage2.json"):
+            L = json.loads(f.read_text(encoding="utf-8"))
+            self.assertEqual(B.sha(L["inputs"]), L["inputs_hash"], f)
+            self.assertEqual(L["method_version"], B.F2E_METHOD)
+
+
 if __name__ == "__main__":
     unittest.main()
