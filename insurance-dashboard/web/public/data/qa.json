@@ -1,5 +1,5 @@
 {
- "built": "2026-11-03T02:03:07+02:00",
+ "built": "2026-11-03T02:55:14+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -87,7 +87,7 @@
    "level": "fail",
    "n": 0,
    "fail": 0,
-   "note": "0/0 on the cited page; 0 new misses; 16366 facts without page text (not checked)"
+   "note": "0/0 on the cited page; 0 new misses; 16458 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
@@ -213,9 +213,9 @@
    "id": "brief_lib",
    "ok": true,
    "level": "fail",
-   "n": 205,
+   "n": 214,
    "fail": 0,
-   "note": "205 passed, 0 failed"
+   "note": "214 passed, 0 failed"
   },
   {
    "id": "deliver_lib",
@@ -237,9 +237,9 @@
    "id": "watch",
    "ok": true,
    "level": "fail",
-   "n": 3,
+   "n": 4,
    "fail": 0,
-   "note": "watch: 3 snapshots, 50 changes (answer 18, new 31, gone 1), 17 upcoming, 0 problems"
+   "note": "watch: 4 snapshots, 55 changes (answer 21, finding 1, new 32, gone 1), 17 upcoming, 0 problems"
   },
   {
    "id": "watch_ledger",
@@ -253,9 +253,9 @@
    "id": "watch_lib",
    "ok": true,
    "level": "fail",
-   "n": 52,
+   "n": 63,
    "fail": 0,
-   "note": "52 passed, 0 failed"
+   "note": "63 passed, 0 failed"
   },
   {
    "id": "capital",
@@ -287,7 +287,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "nowcast.json matches a rebuild; 3 ledger entries; 99 backtest rows; 0 problems"
+   "note": "nowcast.json matches a rebuild; nowcast_f2e.json matches a rebuild; 3 + 1 ledger entries; 99 + 99 backtest rows; 0 problems"
   },
   {
    "id": "nowcast_ledger",
@@ -296,6 +296,30 @@
    "n": 3,
    "fail": 0,
    "note": "3 frozen estimates at HEAD unchanged"
+  },
+  {
+   "id": "nowcast_f2e_ledger",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "1 frozen flow-to-earnings estimates at HEAD unchanged"
+  },
+  {
+   "id": "feebook",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "feebook.json matches a rebuild; 13 managers, 60 valued rows; 0 problems"
+  },
+  {
+   "id": "feebook_lib",
+   "ok": true,
+   "level": "fail",
+   "n": 741,
+   "fail": 0,
+   "note": "741 passed, 0 failed"
   },
   {
    "id": "positions",
@@ -341,15 +365,15 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3899,
+   "n": 3901,
    "fail": 0,
-   "note": "3899 files under contract, 0 failing; 84 contracts; 757 files without a contract"
+   "note": "3901 files under contract, 0 failing; 86 contracts; 899 files without a contract"
   },
   {
    "id": "cards",
    "ok": true,
    "level": "fail",
-   "n": 7242,
+   "n": 7229,
    "fail": 0,
    "note": "302 report cards, every digit a published fact"
   },
@@ -359,7 +383,7 @@
    "level": "fail",
    "n": 302,
    "fail": 0,
-   "note": "302 events, 4732 figures, 0 problems"
+   "note": "302 events, 4740 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -379,11 +403,11 @@
   },
   {
    "id": "funds_contract",
-   "ok": false,
-   "level": "warn",
-   "n": 16206,
-   "fail": 1,
-   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16206 checks, 0 problems, 0 warnings; 8 odd history prints; no data/raw parquet: upstream checks skipped"
+   "ok": true,
+   "level": "fail",
+   "n": 16219,
+   "fail": 0,
+   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16219 checks, 0 problems, 0 warnings; 8 odd history prints"
   },
   {
    "id": "fund_stats",
@@ -418,6 +442,14 @@
    "note": "coef: 9 funds, 187 tables, 18397 cells, 9 coverage gaps; 0 failures"
   },
   {
+   "id": "covers",
+   "ok": true,
+   "level": "fail",
+   "n": 51,
+   "fail": 0,
+   "note": "covers: 9 funds, 69 tables, 51 priced cells, 0 coverage gaps"
+  },
+  {
    "id": "attribution",
    "ok": true,
    "level": "fail",
@@ -426,12 +458,52 @@
    "note": "attribution: 15 files, 406 bridges, 668 decompositions sum to their totals, every contribution opens to a report page; 0 problems"
   },
   {
+   "id": "ifrs_std",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "ifrs_std: 7 insurers, 119 CSM roll-forwards checked, 119 close, 0 breaks listed; files equal a rebuild"
+  },
+  {
+   "id": "houses",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "houses: 6 houses, 582 segment-revenue cells; file equals a rebuild"
+  },
+  {
+   "id": "csm_rollforward",
+   "ok": true,
+   "level": "warn",
+   "n": 119,
+   "fail": 0,
+   "note": "119/119 printed CSM roll-forwards close; 8 partial (one or two chart rows) not tested"
+  },
+  {
    "id": "facts",
    "ok": true,
    "level": "fail",
    "n": 115510,
    "fail": 0,
    "note": "facts: 115510 workbook figures and 1200 statement restatement pairs checked over 190070 rows of 13 companies; (1200 with the original as the cell's first print; the rest were first printed under an ol"
+  },
+  {
+   "id": "model_xlsx",
+   "ok": true,
+   "level": "fail",
+   "n": 43918,
+   "fail": 0,
+   "note": "model_xlsx: 13 workbooks, 43918 value cells, every one sourced; largest menora 484 KB; 0 problems"
+  },
+  {
+   "id": "consensus",
+   "ok": true,
+   "level": "fail",
+   "n": 8,
+   "fail": 0,
+   "note": "consensus: 8 published targets, 0 problems"
   },
   {
    "id": "assets",

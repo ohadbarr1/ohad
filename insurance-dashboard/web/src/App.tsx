@@ -34,6 +34,7 @@ const FromHeadline = page(mPeersRedirect, 'FromHeadline');
 const FromSectors = page(mPeersRedirect, 'FromSectors');
 const mIndustryCsm = () => import('./pages/IndustryCsm');
 const IndustryCsm = page(mIndustryCsm, 'IndustryCsm');
+const IndustryHouses = page(() => import('./pages/IndustryHouses'), 'IndustryHouses');  // W10: investment-house segment economics
 const IndustryPnc = page(() => import('./pages/IndustryPnc'), 'IndustryPnc'); // W10: P&C loss / expense / combined ratios by line, gross and net of reinsurance
 const mDocSearch = () => import('./pages/DocSearch');
 const DocSearchRedirect = page(mDocSearch, 'DocSearchRedirect');
@@ -191,12 +192,13 @@ export function App() {
           <Route index element={<Navigate to="peers" replace />} />
           <Route path="peers" element={<Peers />} />
           <Route path="savings" element={<LensRedirect />} />
-          <Route path="ifrs" element={<CsmRedirect view="facts" />} />
+          <Route path="ifrs" element={<CsmRedirect view="std" />} />
           <Route path="sectors" element={<FromSectors />} />
           <Route path="matrix" element={<FromMatrix />} />
           <Route path="lines" element={<FromLines />} />
           <Route path="csm" element={<IndustryCsm />} />
           <Route path="pnc" element={<IndustryPnc />} />
+          <Route path="houses" element={<IndustryHouses />} />
           <Route path="econ" element={<LensRedirect view="econ" />} />
           <Route path="capital" element={<CsmRedirect view="capital" />} />
           <Route path="headline" element={<FromHeadline />} />

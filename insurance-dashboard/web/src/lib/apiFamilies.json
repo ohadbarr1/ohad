@@ -1155,6 +1155,18 @@
    "prov": []
   },
   {
+   "pattern": "houses.json",
+   "schema": null,
+   "example": "houses.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_houses",
+   "note": "",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
    "pattern": "ifrs.json",
    "schema": "ifrsIndex",
    "example": "ifrs.json",
@@ -1183,6 +1195,18 @@
    "prov": [
     "pg"
    ]
+  },
+  {
+   "pattern": "ifrs17/*.json",
+   "schema": null,
+   "example": "ifrs17/ayalon.json",
+   "files": 8,
+   "kind": "open",
+   "format": "json",
+   "step": "build_ifrs_std",
+   "note": "every cell page-cited or a labelled difference of printed figures; CSM roll-forward identity per insurer-quarter",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
   },
   {
    "pattern": "ifrs_*.json",

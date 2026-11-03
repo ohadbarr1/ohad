@@ -47,7 +47,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `pg`, `rid`, `u`
 
 ```json
-{"built":"2026-11-02","source":"מצגות משקיעים של החברות, MAYA: מדדים לפי הגדרת החברה, כפי שהודפסו","files":"https://mayafiles.tase.co.il/","docs":{"1489611":["phoenix"],"1512508":["phoenix"],"1525392":["phoenix"],"1543064":["phoenix"],"1560476":["phoenix"],"1582333":["phoenix"],"1595207":["phoenix"],"1612691":["phoenix"]},"companies":{"clal":{"adj_roe_excl_special_provision":{"l":"תשואה להון ללא ההפרשה המיוחדת","u":"pct","def":"","pts":[{"p":"20259M","v":25.1,"rid":1721582,"pg":25,"l":"annualized ROE of 25.1% excluding the Special Provision","dd":"2026-02-08"}]},"adj_core_profit_before_tax":{"…
+{"built":"2026-11-03","source":"מצגות משקיעים של החברות, MAYA: מדדים לפי הגדרת החברה, כפי שהודפסו","files":"https://mayafiles.tase.co.il/","docs":{"1489611":["phoenix"],"1512508":["phoenix"],"1525392":["phoenix"],"1543064":["phoenix"],"1560476":["phoenix"],"1582333":["phoenix"],"1595207":["phoenix"],"1612691":["phoenix"]},"companies":{"clal":{"adj_roe_excl_special_provision":{"l":"תשואה להון ללא ההפרשה המיוחדת","u":"pct","def":"","pts":[{"p":"20259M","v":25.1,"rid":1721582,"pg":25,"l":"annualized ROE of 25.1% excluding the Special Provision","dd":"2026-02-08"}]},"adj_core_profit_before_tax":{"…
 ```
 
 ### `alerts.json`
@@ -58,7 +58,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: /feed.xml, /feed/<company>.xml, /feed/months.xml, /feed/funds.xml (+ .atom); check: pipeline/check_feed.py
 
 ```json
-{"v":1,"built":"2026-11-02","site":"https://fox-research-il.web.app","since":"2026-11-02","feeds":[{"p":"/feed.xml","a":"/feed.atom","t":"מה השתנה","n":302,"c":null,"k":"all"}]}
+{"v":1,"built":"2026-11-03","site":"https://fox-research-il.web.app","since":"2026-11-02","feeds":[{"p":"/feed.xml","a":"/feed.atom","t":"מה השתנה","n":302,"c":null,"k":"all"}]}
 ```
 
 ### `answers/*.json`
@@ -175,7 +175,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: projections from today's date
 
 ```json
-{"built":"2026-11-02","basis":"חציון הימים מסוף התקופה לפרסום, אותו דוח, שלוש השנים האחרונות","companies":[{"id":"more_gemel","name":"מור גמל ופנסיה","last":{"period":"2026Q2","date":"2026-08-12","type":"quarterly","rid":1763070},"next":{"period":"2026Q3","end":"2026-09-30","expected":"2026-11-20","lo":"2026-11-20","hi":"2026-11-22","n":3,"lags":[53,51,51]},"history":[{"period":"2023Q3","date":"2023-11-22","lag":53}],"ics":"/data/cal/more_gemel.ics"}]}
+{"built":"2026-11-03","basis":"חציון הימים מסוף התקופה לפרסום, אותו דוח, שלוש השנים האחרונות","companies":[{"id":"more_gemel","name":"מור גמל ופנסיה","last":{"period":"2026Q2","date":"2026-08-12","type":"quarterly","rid":1763070},"next":{"period":"2026Q3","end":"2026-09-30","expected":"2026-11-20","lo":"2026-11-20","hi":"2026-11-22","n":3,"lags":[53,51,51]},"history":[{"period":"2023Q3","date":"2023-11-22","lag":53}],"ics":"/data/cal/more_gemel.ics"}]}
 ```
 
 ### `capital/forward.json`
@@ -223,7 +223,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: report cards: Report Day roles, csm_resolve, Peer Table cells, targets
 
 ```json
-{"v":1,"built":"2026-11-02","co":{"altshuler":{"p":["2026Q2"]},"analyst":{"p":["2026Q2"]},"ayalon":{"p":["2026Q2"]},"clal":{"p":["2026Q2"]},"hachshara":{"p":["2026Q2"]},"harel":{"p":["2026Q2"]},"ibi":{"p":["2026Q2"]},"meitav":{"p":["2026Q2"]}}}
+{"v":1,"built":"2026-11-03","co":{"altshuler":{"p":["2026Q2"]},"analyst":{"p":["2026Q2"]},"ayalon":{"p":["2026Q2"]},"clal":{"p":["2026Q2"]},"hachshara":{"p":["2026Q2"]},"harel":{"p":["2026Q2"]},"ibi":{"p":["2026Q2"]},"meitav":{"p":["2026Q2"]}}}
 ```
 
 ### `companies/*.docs.json`
@@ -303,7 +303,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components
 
 ```json
-{"meta":{"built":"2026-11-01","base":{"q":"Q2'26","end":"2026-06-30","ltm":["Q3'25"]},"v":1,"premium":20.0,"rule":"היעד המדורג ראשון שהרוכשת יכולה לממן בפרמיה 20%, עם ערך נוכחי חיובי לסינרגיה","refs":"bolt.<pointer>: the table `src` of the same entry (build_capital.resolve)"},"bolt":{"menora":{"status":"ok","t":"altshuler","name":"אלטשולר שחם","pair":"menora__altshuler","rank":3,"premium":20.0,"price":{"v":3336.415127,"prov":{"k":"calc","title":"מחיר · אלטשולר שחם · פרמיה 20%","value":"3,336","unit":"מיליוני ש\"ח","formula":"מחיר בסיס × (1 + פרמיה); מחיר בסיס = max(שווי מוצדק, רצפת שווי לנכסים…
+{"meta":{"built":"2026-11-03","base":{"q":"Q2'26","end":"2026-06-30","ltm":["Q3'25"]},"v":1,"premium":20.0,"rule":"היעד המדורג ראשון שהרוכשת יכולה לממן בפרמיה 20%, עם ערך נוכחי חיובי לסינרגיה","refs":"bolt.<pointer>: the table `src` of the same entry (build_capital.resolve)"},"bolt":{"menora":{"status":"ok","t":"altshuler","name":"אלטשולר שחם","pair":"menora__altshuler","rank":3,"premium":20.0,"price":{"v":3336.415127,"prov":{"k":"calc","title":"מחיר · אלטשולר שחם · פרמיה 20%","value":"3,336","unit":"מיליוני ש\"ח","formula":"מחיר בסיס × (1 + פרמיה); מחיר בסיס = max(שווי מוצדק, רצפת שווי לנכסים…
 ```
 
 ### `consolidation/matrix.json`
@@ -351,7 +351,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: /data page: reads every data file (incl. qa.json from the last gate) and today's date
 
 ```json
-{"built":"2026-11-02T22:39:38+02:00","layers":[{"id":"fs","label":"דוחות כספיים","cadence":"quarterly","source":"maya"}]}
+{"built":"2026-11-03T02:53:53+02:00","layers":[{"id":"fs","label":"דוחות כספיים","cadence":"quarterly","source":"maya"}]}
 ```
 
 ### `csm/capital.json`
@@ -362,7 +362,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `pg`, `u`
 
 ```json
-{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA (סדרה רבעונית רציפה, build_series.py)","companies":{"ayalon":{"comprehensive_income_attributable":{"2021FY":{"v":-19.553,"pg":156,"u":"https://mayafiles.tase.co.il/rpdf/1514001-1515000/P1514161-00.pdf","std":"IFRS 4","cmp":1},"2021Q1":{"v":60.961,"pg":42,"u":"https://mayafiles.tase.co.il/rpdf/1453001-1454000/P1453845-00.pdf","std":"IFRS 4","cmp":1},"2021Q2":{"v":8.199,"pg":49,"u":"https://mayafiles.tase.co.il/rpdf/1472001-1473000/P1472731-00.pdf","std":"IFRS 4","cmp":1},"2021Q3":{"v":-43.983,"pg":54,"u":"https://mayafiles.tase.co.il/…
+{"built":"2026-11-03","source":"דוחות כספיים של החברות, MAYA (סדרה רבעונית רציפה, build_series.py)","companies":{"ayalon":{"comprehensive_income_attributable":{"2021FY":{"v":-19.553,"pg":156,"u":"https://mayafiles.tase.co.il/rpdf/1514001-1515000/P1514161-00.pdf","std":"IFRS 4","cmp":1},"2021Q1":{"v":60.961,"pg":42,"u":"https://mayafiles.tase.co.il/rpdf/1453001-1454000/P1453845-00.pdf","std":"IFRS 4","cmp":1},"2021Q2":{"v":8.199,"pg":49,"u":"https://mayafiles.tase.co.il/rpdf/1472001-1473000/P1472731-00.pdf","std":"IFRS 4","cmp":1},"2021Q3":{"v":-43.983,"pg":54,"u":"https://mayafiles.tase.co.il/…
 ```
 
 ### `csm/facts/*.json`
@@ -373,7 +373,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `files`, `pg`, `report_id`, `url`
 
 ```json
-{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","company":"ayalon","files":[{"company":"ayalon","period":"2025FY","report_id":1732151,"url":"https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732151-00.pdf","facts":611}]}
+{"built":"2026-11-03","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","company":"ayalon","files":[{"company":"ayalon","period":"2025FY","report_id":1732151,"url":"https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732151-00.pdf","facts":625}]}
 ```
 
 ### `csm/rates.json`
@@ -384,7 +384,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`
 
 ```json
-{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"menora","rp":"2025FY","d":"2024-12-31","port":"רכיב חיסכון שאינו תלוי תשואה ופוליסות קצבה","orig":"Policies with a non-yield-dependent savings component and annuity policies","t":1.0,"v":2.1,"pg":266}]}
+{"built":"2026-11-03","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"menora","rp":"2025FY","d":"2024-12-31","port":"רכיב חיסכון שאינו תלוי תשואה ופוליסות קצבה","orig":"Policies with a non-yield-dependent savings component and annuity policies","t":1.0,"v":2.1,"pg":266}]}
 ```
 
 ### `csm/sens.json`
@@ -395,7 +395,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`
 
 ```json
-{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"ayalon","rp":"2025FY","d":"2025-12-31","shock":"שיעור תחלואה - עלייה של 5%","risk":"morbidity","dir":1,"size":5.0,"eff":"csm"}]}
+{"built":"2026-11-03","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","rows":[{"c":"ayalon","rp":"2025FY","d":"2025-12-31","shock":"שיעור תחלואה - עלייה של 5%","risk":"morbidity","dir":1,"size":5.0,"eff":"csm"}]}
 ```
 
 ### `csm/solvency.json`
@@ -406,7 +406,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `files`, `pg`, `r`
 
 ```json
-{"built":"2026-11-02","source":"דוחות כושר פירעון כלכלי (Solvency II) של חברות הביטוח, MAYA; חולץ ונבדק מול העמוד","files":"https://mayafiles.tase.co.il/","sens":[{"c":"ayalon","d":"2020-12-31","l":"ירידה בריבית של 50 נקודות בסיס בריבית חסרת הסיכון","risk":"rate","b":"na","v":-3.1,"r":1453857,"pg":19}]}
+{"built":"2026-11-03","source":"דוחות כושר פירעון כלכלי (Solvency II) של חברות הביטוח, MAYA; חולץ ונבדק מול העמוד","files":"https://mayafiles.tase.co.il/","sens":[{"c":"ayalon","d":"2020-12-31","l":"ירידה בריבית של 50 נקודות בסיס בריבית חסרת הסיכון","risk":"rate","b":"na","v":-3.1,"r":1453857,"pg":19}]}
 ```
 
 ### `csm/summary.json`
@@ -417,7 +417,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `files`
 
 ```json
-{"built":"2026-11-02","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","files":[{"company":"ayalon","period":"2025FY"}]}
+{"built":"2026-11-03","source":"דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד","files":[{"company":"ayalon","period":"2025FY"}]}
 ```
 
 ### `debt/*.json`
@@ -544,7 +544,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: dated, typed, sourced events since 01.01.25 (pipeline/check_feed.py = gate `feed`)
 
 ```json
-{"v":1,"built":"2026-11-02","from":"2025-01-01","files":"https://mayafiles.tase.co.il/","events":[{"id":"regmonth:202609","t":"regmonth","d":"2026-11-01","dk":"fetched","c":"market","per":"202609","h":"נתוני 09/26: גמל-נט, פנסיה-נט, ביטוח-נט","src":{"k":"reg","ym":202609}}]}
+{"v":1,"built":"2026-11-03","from":"2025-01-01","files":"https://mayafiles.tase.co.il/","events":[{"id":"regmonth:202609","t":"regmonth","d":"2026-11-01","dk":"fetched","c":"market","per":"202609","h":"נתוני 09/26: גמל-נט, פנסיה-נט, ביטוח-נט","src":{"k":"reg","ym":202609}}]}
 ```
 
 ### `filings_latest.json`
@@ -802,6 +802,16 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 {"standard":"IFRS 4","rows":[{"m":"gross_premiums_earned","s":"group","b":"na","w":"fy","pts":{"2021-12-31":{"v":3213.93,"pg":73,"from":"2022Q3","u":"https://mayafiles.tase.co.il/rpdf/1488001-1489000/P1488014-00.pdf"},"2022-12-31":{"v":3412.23,"pg":63,"from":"2023Q3","u":"https://mayafiles.tase.co.il/rpdf/1559001-1560000/P1559385-00.pdf"},"2023-12-31":{"v":4359.093,"pg":68,"from":"2024Q3","u":"https://mayafiles.tase.co.il/rpdf/1629001-1630000/P1629496-00.pdf"},"2024-12-31":{"v":4752.727,"pg":203,"from":"2024FY","u":"https://mayafiles.tase.co.il/rpdf/1651001-1652000/P1651699-00.pdf"}}}]}
 ```
 
+### `houses.json`
+
+- schema: none (no contract yet) · files: 1 · format: json
+- written by: `build_houses` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/houses.json](https://fox-research-il.web.app/data/houses.json)
+
+```json
+{"built":"2026-11-03","unit":"NIS millions (AUM: NIS billions)","files":"https://mayafiles.tase.co.il/","source":"הדוחות התקופתיים של בתי ההשקעות, MAYA: ביאור מגזרי פעילות, דוח רווח והפסד ודוח הדירקטוריון; כל מספר עם עמוד. גמל ופנסיה: הרשות לשוק ההון (גמל-נט, פנסיה-נט) ודוחות החברות המנהלות (lens.json)","houses":[{"id":"meitav","name":"מיטב","note":"מגזר 'ניהול חיסכון שוטף' כולל קרנות נאמנות, קרנות סל וניהול תיקים; מ-2026 ברוקראז' מוסדי עבר למגזר הברוקראז' (2025 הוצג מחדש)","reports":{"2024FY":1651752,"2025Q1":1667177,"2025Q2":1685944,"2025Q3":1703464,"2025FY":1729368,"2026Q1":1743468,"2026Q2"…
+```
+
 ### `ifrs.json`
 
 - schema: `ifrsIndex` · files: 1 · format: json
@@ -811,7 +821,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: also reads data/work/manifest_quarters.json (drive)
 
 ```json
-{"unit":"NIS millions","files":[{"company":"ayalon","period":"2025FY","report_id":1732151,"url":"https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732151-00.pdf","facts":611}]}
+{"unit":"NIS millions","files":[{"company":"ayalon","period":"2025FY","report_id":1732151,"url":"https://mayafiles.tase.co.il/rpdf/1732001-1733000/P1732151-00.pdf","facts":625}]}
 ```
 
 ### `ifrs/*/*.json`
@@ -824,6 +834,17 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 
 ```json
 [{"c":"ayalon","m":"csm_opening","s":"life","g":"life","b":"gross","w":"instant","d":"2024-12-31","v":831.682}]
+```
+
+### `ifrs17/*.json`
+
+- schema: none (no contract yet) · files: 8 · format: json
+- written by: `build_ifrs_std` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/ifrs17/ayalon.json](https://fox-research-il.web.app/data/ifrs17/ayalon.json)
+- note: every cell page-cited or a labelled difference of printed figures; CSM roll-forward identity per insurer-quarter
+
+```json
+{"built":"2026-11-03","unit":"NIS millions","source":"דוחות כספיים של החברות, MAYA: ביאור 'מידע נוסף לפי קבוצות תיקים עיקריות' (פורמט רשות שוק ההון), טבלאות התנועה ב-CSM, RA ורכיב ההפסד וטבלת ההכרה הצפויה ב-CSM; כל מספר עם עמוד","files":"https://mayafiles.tase.co.il/","rfs":[{"c":"ayalon","rp":"2025FY","seg":"group","b":"net","w":"fy","d":"2024-12-31","k":"2024Q4","how":"as printed"}]}
 ```
 
 ### `ifrs_*.json`
@@ -942,7 +963,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: /feed.xml, /feed/<company>.xml, /feed/months.xml, /feed/funds.xml (+ .atom); check: pipeline/check_feed.py
 
 ```json
-{"v":1,"built":"2026-11-02","files":"https://mayafiles.tase.co.il/","days":200,"events":[{"id":"restate:yelin:1766813","t":"restate","d":"2026-08-27","dk":"pub","c":"yelin","per":"2026Q2","h":"דוח רבעוני Q2'26 הציג מחדש תקופות קודמות","src":{"k":"doc","rid":1766813}}]}
+{"v":1,"built":"2026-11-03","files":"https://mayafiles.tase.co.il/","days":200,"events":[{"id":"restate:yelin:1766813","t":"restate","d":"2026-08-27","dk":"pub","c":"yelin","per":"2026Q2","h":"דוח רבעוני Q2'26 הציג מחדש תקופות קודמות","src":{"k":"doc","rid":1766813}}]}
 ```
 
 ### `nowcast.json`
@@ -1021,7 +1042,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: Peer Table metric registry (follows the canon)
 
 ```json
-{"asof":"2026-11-02","entities":[{"id":"phoenix","n":"הפניקס","k":"ins","mg":"הפניקס"}]}
+{"asof":"2026-11-03","entities":[{"id":"phoenix","n":"הפניקס","k":"ins","mg":"הפניקס"}]}
 ```
 
 ### `pnc.json`
@@ -1054,7 +1075,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - example: [https://fox-research-il.web.app/data/recon.json](https://fox-research-il.web.app/data/recon.json)
 
 ```json
-{"asof":202609,"generated":"2026-11-01","unit":"מיליוני ש\"ח","note":"pct = (printed - regulator) / regulator. reg: sum of the group's tracks at the month of the balance-sheet date. out: printed lines outside the regulator set, not in v. minus: printed lines deducted from v, each with its page.","missing":[{"group":"איילון","fam":"gemel","d":null,"why":"לא נמצא נתון מודפס"}]}
+{"asof":202609,"generated":"2026-11-03","unit":"מיליוני ש\"ח","note":"pct = (printed - regulator) / regulator. reg: sum of the group's tracks at the month of the balance-sheet date. out: printed lines outside the regulator set, not in v. minus: printed lines deducted from v, each with its page.","missing":[{"group":"איילון","fam":"gemel","d":null,"why":"לא נמצא נתון מודפס"}]}
 ```
 
 ### `regulation/impact.json`
@@ -1076,7 +1097,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - example: [https://fox-research-il.web.app/data/restatements.json](https://fox-research-il.web.app/data/restatements.json)
 
 ```json
-{"v":1,"built":"2026-10-23","source":"דוחות כספיים של החברות, MAYA: ההדפסה הראשונה של כל תקופה מול ההדפסה האחרונה שלה","files":"https://mayafiles.tase.co.il/","rows":[["yelin"]]}
+{"v":1,"built":"2026-11-03","source":"דוחות כספיים של החברות, MAYA: ההדפסה הראשונה של כל תקופה מול ההדפסה האחרונה שלה","files":"https://mayafiles.tase.co.il/","rows":[["yelin"]]}
 ```
 
 ### `roster.json`
@@ -1086,7 +1107,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - example: [https://fox-research-il.web.app/data/roster.json](https://fox-research-il.web.app/data/roster.json)
 
 ```json
-{"v":1,"built":"2026-11-01","source":"הרשות לשוק ההון, ביטוח וחיסכון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il)","ev":[[8]]}
+{"v":1,"built":"2026-11-03","source":"הרשות לשוק ההון, ביטוח וחיסכון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il)","ev":[[8]]}
 ```
 
 ### `savings_econ.json`
@@ -1129,7 +1150,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `docs`, `pages`
 
 ```json
-{"v":1,"built":"2026-10-23","source":"MAYA","files":"https://mayafiles.tase.co.il/","docs":[[1764730]]}
+{"v":1,"built":"2026-11-03","source":"MAYA","files":"https://mayafiles.tase.co.il/","docs":[[1764730]]}
 ```
 
 ### `search/entities.json`
@@ -1173,7 +1194,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: dated events per company for the "since you last looked" marks (last 400 days)
 
 ```json
-{"v":1,"built":"2026-11-02","from":"2025-09-28","files":"https://mayafiles.tase.co.il/","source":"MAYA (מסמכים, הצגות מחדש, יעדים) ורשות שוק ההון (חודש נתונים)","co":{"altshuler":[["m"]],"analyst":[["m"]],"ayalon":[["m"]],"clal":[["m"]],"globalnet":[["m"]],"hachshara":[["m"]],"harel":[["m"]],"ibi":[["r"]]}}
+{"v":1,"built":"2026-11-03","from":"2025-09-29","files":"https://mayafiles.tase.co.il/","source":"MAYA (מסמכים, הצגות מחדש, יעדים) ורשות שוק ההון (חודש נתונים)","co":{"altshuler":[["m"]],"analyst":[["m"]],"ayalon":[["m"]],"clal":[["m"]],"globalnet":[["m"]],"hachshara":[["m"]],"harel":[["m"]],"ibi":[["r"]]}}
 ```
 
 ### `sop/*.json`
@@ -1205,7 +1226,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - provenance fields: `built`, `docs`, `files`, `in`, `src`, `u`
 
 ```json
-{"v":3,"built":"2026-11-02","source":"דוחות כספיים, דוחות דירקטוריון ומצגות משקיעים של החברות, MAYA: יעדים כפי שהודפסו","files":"https://mayafiles.tase.co.il/","rows":[{"c":"altshuler","m":"target_dividend_payout","l":"מדיניות חלוקה, % מהרווח","e":"הקבוצה","seg":"group","t":"payout","u":"pct","h":null}]}
+{"v":3,"built":"2026-11-03","source":"דוחות כספיים, דוחות דירקטוריון ומצגות משקיעים של החברות, MAYA: יעדים כפי שהודפסו","files":"https://mayafiles.tase.co.il/","rows":[{"c":"altshuler","m":"target_dividend_payout","l":"מדיניות חלוקה, % מהרווח","e":"הקבוצה","seg":"group","t":"payout","u":"pct","h":null}]}
 ```
 
 ### `under.json`
@@ -1239,7 +1260,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)
 
 ```json
-{"meta":{"built":"2026-11-02","asof":202609,"fee_year":2026,"q_months":[202607],"l12":[202510],"div":{"min_n":36,"min_cover":0.3},"ke":{"v":10.0613,"rf":4.0613,"rf_month":"2026-09","rf_code":"ZC_TSB_ZND_10Y_MA","rf_url":"https://edge.boi.gov.il/FusionEdgeServer/sdmx/v2/data/dataflow/BOI.STATISTICS/ZCM/1.0/ZC_TSB_ZND_10Y_MA+ZC_TSB_ZRD_10Y_MA+EXP_EXB_ZD_10Y_MA+EXP_EXP_01Y_BI_MA?startperiod=2019-01-01&format=csv","rf_retrieved":"2026-10-22","beta":1.0,"erp":6.0},"dur":{"pen":8.26,"gem":6.93}},"groups":["מגדל"],"co":{"0":"migdal","1":"menora","2":"harel","3":"phoenix","4":"clal","5":"meitav","6":"…
+{"meta":{"built":"2026-11-03","asof":202609,"fee_year":2026,"q_months":[202607],"l12":[202510],"div":{"min_n":36,"min_cover":0.3},"ke":{"v":10.0613,"rf":4.0613,"rf_month":"2026-09","rf_code":"ZC_TSB_ZND_10Y_MA","rf_url":"https://edge.boi.gov.il/FusionEdgeServer/sdmx/v2/data/dataflow/BOI.STATISTICS/ZCM/1.0/ZC_TSB_ZND_10Y_MA+ZC_TSB_ZRD_10Y_MA+EXP_EXB_ZD_10Y_MA+EXP_EXP_01Y_BI_MA?startperiod=2019-01-01&format=csv","rf_retrieved":"2026-10-22","beta":1.0,"erp":6.0},"dur":{"pen":8.26,"gem":6.93}},"groups":["מגדל"],"co":{"0":"migdal","1":"menora","2":"harel","3":"phoenix","4":"clal","5":"meitav","6":"…
 ```
 
 ### `warroom/elasticity.json`
@@ -1251,7 +1272,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: A5: panel WLS (track + category x month effects, lags 0-6) with quality labels; board per product x category (gate `warroom`)
 
 ```json
-{"meta":{"built":"2026-11-02","asof":202609,"window":"01/20–12/25","lags":6,"source":"הרשות לשוק ההון: גמל-נט, פנסיה-נט (data.gov.il), לפי מסלול וחודש","fee_timing":{"corr_same":0.638,"n_same":29,"corr_prior":0.825,"n_prior":19,"changes":2897,"january":2895,"rule":"fee_charged(Y) = AVG_ANNUAL_MANAGEMENT_FEE posted in January of Y+1"},"unit":{"B":"% of opening assets a month per 1bp of relative fee","per_bp_year":"% of assets a year per 1bp of fee advantage"},"excl":{"min_assets":100.0,"trim":0.2,"sector":"קרנות ענפיות ואחרות","ira":"בניהול אישי"}},"products":{"pen":{"he":"פנסיה מקיפה","a1":"pe…
+{"meta":{"built":"2026-11-03","asof":202609,"window":"01/20–12/25","lags":6,"source":"הרשות לשוק ההון: גמל-נט, פנסיה-נט (data.gov.il), לפי מסלול וחודש","fee_timing":{"corr_same":0.638,"n_same":29,"corr_prior":0.825,"n_prior":19,"changes":2897,"january":2895,"rule":"fee_charged(Y) = AVG_ANNUAL_MANAGEMENT_FEE posted in January of Y+1"},"unit":{"B":"% of opening assets a month per 1bp of relative fee","per_bp_year":"% of assets a year per 1bp of fee advantage"},"excl":{"min_assets":100.0,"trim":0.2,"sector":"קרנות ענפיות ואחרות","ira":"בניהול אישי"}},"products":{"pen":{"he":"פנסיה מקיפה","a1":"pe…
 ```
 
 ### `watch.json`
@@ -1263,7 +1284,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: S10: data/ledger/answers/<day>.json (append-only) -> watch.json: changes (answer / tripped / finding / new / gone) + upcoming
 
 ```json
-{"v":1,"asof":"2026-11-02","rule":"שינוי = מה שהתשובה אומרת השתנה בין שתי בניות עוקבות (מפתח הפסיקה או משפט המסדרון), לא עדכון נתונים שהשאיר אותה כפי שהיא","changes":[{"d":"2026-11-02","pd":"2026-11-01","id":"Q-081","topic":"perf","cos":[],"q":"מי מוביל בפנסיה בתשואה מתואמת סיכון מול המתחרים?","det":null,"kind":"answer"}]}
+{"v":1,"asof":"2026-11-03","rule":"שינוי = מה שהתשובה אומרת השתנה בין שתי בניות עוקבות (מפתח הפסיקה או משפט המסדרון), לא עדכון נתונים שהשאיר אותה כפי שהיא","changes":[{"d":"2026-11-03","pd":"2026-11-02","id":"Q-109","topic":"capital","cos":["phoenix"],"q":"כמה מהשווי יכולה כל מבטחת לקנות בחזרה בהון הפנוי?","det":null,"kind":"answer"}]}
 ```
 
 ### `xlsx/*.xlsx`

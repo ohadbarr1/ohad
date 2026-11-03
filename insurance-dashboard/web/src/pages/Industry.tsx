@@ -24,6 +24,7 @@ export function IndustryLayout() {
           <NavLink to="peers">טבלת עמיתים</NavLink>
           <NavLink to="csm">IFRS 17 · CSM · הון</NavLink>
           <NavLink to="pnc">ביטוח כללי: יחסים</NavLink>
+          <NavLink to="houses">בתי השקעות</NavLink>
           <NavLink to="/restatements">הצגות מחדש</NavLink>
           <NavLink to="/presentations">מצגות</NavLink>
           <NavLink to="/debt">חוב ופירעונות</NavLink>
