@@ -1,3 +1,4 @@
+import { StdCompanyPanel } from './csm/StdCompany';
 import { foxOption } from '../lib/foxchart';
 import { usePeriodParam, useWindowParam } from '../lib/period';
 import { useMemo, useState } from 'react';
@@ -189,6 +190,8 @@ export function CompanyIfrs({ id, docs }: { id: string; docs: number }) {
         {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'QTD'], ['ytd', 'YTD']]} /></div>}
         <span className="chip">{all.length} נתונים מהדוח · מיליוני ש"ח</span>
       </section>
+
+      <StdCompanyPanel id={id} />
 
       <Panel title="תנועה ב-CSM לפי מגזר" aside={<><span className="chip">{BASIS[B] ?? B}</span><span className="chip">{annual ? 'FY' : win === 'q' ? 'QTD' : 'YTD'}</span><span>עד {dateLabel(end)}</span></>}>
         {bridge.cols.length === 0 ? <Empty title="לא נמצאה תנועת CSM בדוח לבסיס ולחלון שנבחרו" /> : (

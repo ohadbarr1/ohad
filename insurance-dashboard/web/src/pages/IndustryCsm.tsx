@@ -9,6 +9,7 @@ import { SensView } from './csm/SensView';
 import { CapitalView } from './csm/CapitalView';
 import { CurveView } from './csm/CurveView';
 import { StressLab } from './csm/StressLab';
+import { StdView } from './csm/StdView';
 import { IndustryIfrs } from './IndustryIfrs';
 import { IndustryTools } from './Industry';
 import { usePhone } from '../lib/useMedia';
@@ -16,7 +17,7 @@ import '../styles/csm.css';
 
 /** The views of the ledger, in the order an analyst reads an IFRS 17 quarter: the movement, its economics, what moves it, what it pays out, the rates under it, every printed row. */
 export const CSM_VIEWS = [
-  ['ledger', 'גשר CSM'], ['econ', 'כלכלת CSM'], ['sens', 'רגישויות'], ['stress', 'מעבדת תרחישים'], ['capital', 'הון ודיבידנד'], ['curve', 'עקום ריבית'], ['facts', 'כל השורות'],
+  ['ledger', 'גשר CSM'], ['std', 'IFRS 17 מתוקנן'], ['econ', 'כלכלת CSM'], ['sens', 'רגישויות'], ['stress', 'מעבדת תרחישים'], ['capital', 'הון ודיבידנד'], ['curve', 'עקום ריבית'], ['facts', 'כל השורות'],
 ] as const;
 export type CsmView = (typeof CSM_VIEWS)[number][0];
 
@@ -37,6 +38,7 @@ export function IndustryCsm() {
         {CSM_VIEWS.map(([k, l]) => <Link key={k} className={k === view ? 'active' : undefined} to={k === 'ledger' ? '?' : `?view=${k}`} replace aria-current={k === view ? 'page' : undefined}>{l}</Link>)}
       </nav>; return phone ? tabs : <IndustryTools at="lead">{tabs}</IndustryTools>; })()}
       {view === 'facts' ? <IndustryIfrs />
+        : view === 'std' ? <StdView name={name} />
         : error ? <ErrorBox what="נתוני CSM" error={error} />
         : !L || !reg.data ? <Loading what="ספר ה-CSM" />
         : view === 'capital' ? <CapitalView L={L} name={name} />

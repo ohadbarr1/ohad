@@ -13,6 +13,8 @@ Checks
                  reports a miss is a restatement between reports (H1 reprinted by a later report, 9M not yet): warn, with the count.
   units          per-share values (unit "nis") within [0.01, 500] in absolute value; share-count lines carry unit "shares"
   latin          no label (with its dimension) carries three or more consecutive Latin words
+  ifrs_std       W10: web/public/data/ifrs17/ equals a rebuild (pipeline/build_ifrs_std.py --check); `csm_rollforward` (warn) lists every printed
+                 CSM roll-forward whose opening + movements != closing; `houses`: houses.json equals a rebuild (pipeline/build_houses.py --check)
   placeholder    no extractor placeholder caption ("ללא תווית", "ללא כותרת")
   derived        no derived figure (flag 1) on a line that is not a flow (balance, count, ratio, per-share)
   ifrs_page      every fact of web/public/data/ifrs_*.json with a page is printed on that page, where the page text exists under
@@ -712,6 +714,23 @@ def attribution():  # module A4
     add("attribution", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else 1, out[-1][:200])
 
 
+def ifrs_std():  # W10: the standardised IFRS 17 layer and the investment houses
+    """ifrs17/ equals a rebuild from data/extracted_ifrs_std; the CSM roll-forward identity of every printed roll-forward (opening +
+    movements = closing, insurer by quarter) is listed: a break warns with its insurer, report and difference, never forced to close;
+    houses.json equals a rebuild from data/extracted_houses."""
+    for id_, script in (("ifrs_std", "build_ifrs_std.py"), ("houses", "build_houses.py")):
+        p = subprocess.run([sys.executable, str(ROOT / "pipeline" / script), "--check"], capture_output=True, text=True)
+        out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+        add(id_, p.returncode == 0, 1, 0 if p.returncode == 0 else 1, out[-1][:200])
+    f = DATA / "ifrs17" / "industry.json"
+    if not f.exists():
+        return add("csm_rollforward", False, 0, 1, "ifrs17/industry.json missing")
+    r = load(f)["recon"]
+    brk = r["breaks"]
+    note = f"{r['ok']}/{r['checked']} printed CSM roll-forwards close; {len(r['partial'])} partial (one or two chart rows) not tested"
+    add("csm_rollforward", not brk, r["checked"], len(brk), (note + (f"; e.g. {brk[0]['c']} {brk[0]['rp']} {brk[0]['seg']} {brk[0]['w']} diff {brk[0]['diff']}" if brk else ""))[:200], level="warn")
+
+
 def facts():
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_facts.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()]
@@ -799,6 +818,7 @@ def main():
     flows()
     coef()
     attribution()
+    ifrs_std()
     facts()
     assets()
     gate_layers.run(add)
