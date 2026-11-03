@@ -39,6 +39,7 @@
     "test:flows": "node scripts/flows-test.mjs",
     "test:coef": "node scripts/coef-test.mjs",
     "test:nyud": "node scripts/nyud-test.mjs",
+    "test:book": "node scripts/book-test.mjs",
     "test:news": "node scripts/news-test.mjs",
     "test:moments": "node scripts/moments-test.mjs"
   },

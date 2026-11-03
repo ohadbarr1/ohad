@@ -978,6 +978,24 @@
    ]
   },
   {
+   "pattern": "funds/covers.json",
+   "schema": "fundsCovers",
+   "example": "funds/covers.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_covers",
+   "note": "W11: funds/covers.json, the cover price per ₪1,000 salary at ages 30/40/50 (python3 pipeline/build_covers.py --check)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "asof",
+    "pages",
+    "pg",
+    "src",
+    "url"
+   ]
+  },
+  {
    "pattern": "funds/decision.json",
    "schema": "fundsDecision",
    "example": "funds/decision.json",

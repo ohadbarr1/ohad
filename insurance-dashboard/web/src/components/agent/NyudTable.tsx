@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { A1_COLS, HNM, fullCost, ilsSigned, type Basis, type NyudRow, type NyudTableOut } from '../../lib/nyud';
 import { nf } from '../../lib/format';
+import { NyudCover } from './NyudCover';  // W11: the bylaws / claims-adjusted cover price when both sides are comprehensive funds
 
 /* W7 · the ניוד before/after table (lib/nyud), on the client document (print) and on /clients (screen). Each existing product against
    each candidate: this year's fee cost, the projected savings at retirement on one basis, the cover cost a month when both sides have
@@ -34,6 +35,7 @@ export function NyudTable({ out, print = false, basis, onBasis, asofText }: { ou
         <tbody>{out.rows.map((r, i) => <Row key={i} r={r} />)}</tbody>
         {fc && <tfoot><tr><th scope="row">סך דמי ניהול לשנה ({fc.n} זוגות)</th><td><bdi dir="ltr">{ILS(fc.own)} ← {ILS(fc.cand)}</bdi></td><td colSpan={5} className="src">סך העלות של דמי הניהול במוצר הקיים ובמוצר המוצע, לפי {HNM.sections.fullCost}; לפי הנתונים שלמעלה, לא לפי נספח ב' במלואו (ראו הערה).</td></tr></tfoot>}
       </table>
+      <NyudCover rows={out.rows} />
       <Notes rows={out.rows} />
       <h3>חלק א.1 בסדר החוזר: שורה לפני ושורה אחרי</h3>
       <p className="adoc-cap">לפי {HNM.sections.a1} ו-{HNM.sections.beforeAfter} ל{HNM.title}: מוצר שמשתנה בשתי שורות עוקבות, "לא שונה" בפרמטר שאינו משתנה. "המלצה" ו"השיקולים העיקריים" נשארים לבעל הרישיון. תשואה ברוטו: ממוצע שנתי ל-36 חודשים, נתוני {asofText}.</p>

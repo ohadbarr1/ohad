@@ -1,0 +1,147 @@
+{
+ "$comment": "W11 · the insurance-cost tables (מקדמי עלות הכיסוי הביטוחי) of the new comprehensive pension funds, hand-curated register. Each fund prints, as appendices of its bylaws (תקנון), the tables the bylaws' insurance-premium clause (סעיף 38 in the uniform bylaws) prices the disability and survivors cover with: a monthly cost factor per ₪1,000 of insured disability benefit (by age, sex and end-of-cover age), factors that turn a survivor's pension into a sum at risk (by age and birth year), and a monthly death-risk rate per ₪100,000 at risk (by age, birth year and sex). The PDFs are the same files as the coefficient register (data/regulation/coef_src.json, by `src` id); pipeline/extract_covers.py reads the cells of the tables listed here from each PDF's text layer (pdftotext -layout) into data/regulation/covers_tables.json, and pipeline/build_covers.py prices the standard member and publishes web/public/data/funds/covers.json. `cols`: the table's columns in the order the text layer prints them, left to right ('age' marks the age column; a birth year is a number; other labels name a column, `pick` is the one used). `fill`: 'full' = every row prints every column ('-' for none); 'left' = a row prints only its first cells (the later birth years are blank). `quote`/`also`: words that must be printed on the table's first page. Nothing is filled by analogy between funds.",
+ "retrieved": "2026-11-03",
+ "standard": {
+  "year": 2026,
+  "ages": [30, 40, 50],
+  "disability_pct": 75,
+  "survivors_pct": 100,
+  "widow_share": 60,
+  "orphan_share": 40,
+  "contrib_pct": 18.5,
+  "waiver_pct": 94,
+  "end_age": 67,
+  "double_disability": true,
+  "balance": 0,
+  "note": "מבוטח במסלול ברירת המחדל של התקנון האחיד (75% לנכות, 100% לשאירים: 60% לאלמן/ה ו-40% ליתומים; גיל תום ביטוח 67; כולל קצבת נכות כפולה: decision.json, coverage_default), שמבוטח בשיעורים המרביים, בלי יתרה צבורה (המחיר לשאירים יורד ככל שהיתרה גדלה), שכר מבוטח ₪1,000, דמי גמולים 18.5% מהשכר; סכום הנכות המבוטח = קצבת הנכות + 94% מדמי הגמולים (שחרור מתשלום), כנוסח הערת השוליים בתקנוני מור ואלטשולר שחם; אותו סכום לכל הקרנות, כך שההבדל בין הקרנות בא מהטבלאות בלבד"
+ },
+ "funds": [
+  {
+   "id": "more", "src": "more",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [89], "quote": "מקדמים לחישוב עלות ביטוח נכות -כולל נכות כפולה", "cols": ["m60", "f60", "m62", "f62", "m64", "f64", "m67", "f67", "age"], "pick": "m67", "fill": "full"},
+    {"kind": "dis", "sex": "f", "pages": [89], "quote": "מקדמים לחישוב עלות ביטוח נכות -כולל נכות כפולה", "cols": ["m60", "f60", "m62", "f62", "m64", "f64", "m67", "f67", "age"], "pick": "f67", "fill": "full"},
+    {"kind": "wid", "sex": "m", "pages": [92], "quote": "מקדמי סכום בסיכון לקצבת אלמנה של עמית מבוטח", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "full"},
+    {"kind": "wid", "sex": "f", "pages": [93], "quote": "מקדמי סכום בסיכון לקצבת אלמנה של עמיתה מבוטחת", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "full",
+     "note": "the heading says 'אלמנה' for the female member's table (a widower's pension); the cells differ from the male member's table"},
+    {"kind": "orph", "sex": "m", "pages": [94], "quote": "מקדמי סכום בסיכון לקצבת יתום של עמית מבוטח", "also": ["למי שלא ויתר על כיסוי אלמנה"], "cols": ["f", "m", "age"], "pick": "m", "fill": "full"},
+    {"kind": "orph", "sex": "f", "pages": [94], "quote": "מקדמי סכום בסיכון לקצבת יתום של עמית מבוטח", "also": ["למי שלא ויתר על כיסוי אלמנה"], "cols": ["f", "m", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [96], "quote": "מקדמי תעריף ביטוח מוות", "also": ["סכום בסיכון -גברים"], "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "full"},
+    {"kind": "mort", "sex": "f", "pages": [97], "quote": "מקדמי תעריף ביטוח מוות", "also": ["סכום בסיכון -נשים"], "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "full"}
+   ]
+  },
+  {
+   "id": "altshuler", "src": "altshuler",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [84, 85], "quote": "מקדמי תעריף קצבת נכות של עמית מבוטח כולל נכות כפולה", "cols": ["age", "m60", "f60", "m62", "f62", "m64", "f64", "m67", "f67"], "pick": "m67", "fill": "full", "mode": "raw",
+     "note": "the page overlays a footnote text box on the rows, so the layout text mixes them; the content-stream text (pdftotext -raw) prints each row whole, the age first, then men/women for 60, 62, 64, 67"},
+    {"kind": "dis", "sex": "f", "pages": [84, 85], "quote": "מקדמי תעריף קצבת נכות של עמית מבוטח כולל נכות כפולה", "cols": ["age", "m60", "f60", "m62", "f62", "m64", "f64", "m67", "f67"], "pick": "f67", "fill": "full", "mode": "raw"},
+    {"kind": "wid", "sex": "m", "pages": [90, 91], "quote": "מקדמי סכום בסיכון לקצבת אלמן של עמית מבוטח", "cols": ["age", 1945, 1950, 1955, 1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010], "fill": "full"},
+    {"kind": "wid", "sex": "f", "pages": [92, 93], "quote": "מקדמי סכום בסיכון לקצבת אלמן של עמיתה מבוטחת", "cols": ["age", 1945, 1950, 1955, 1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010], "fill": "full"},
+    {"kind": "orph", "sex": "m", "pages": [94, 95], "quote": "מקדמי סכום בסיכון לקצבת יתום של עמית מבוטח", "also": ["למי שלא ויתר על כיסוי אלמנה"], "cols": ["m", "f", "age"], "pick": "m", "fill": "full"},
+    {"kind": "orph", "sex": "f", "pages": [94, 95], "quote": "מקדמי סכום בסיכון לקצבת יתום של עמית מבוטח", "also": ["למי שלא ויתר על כיסוי אלמנה"], "cols": ["m", "f", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [98, 99], "quote": "מקדמי תעריף סכום בסיכון של עמית מבוטח", "also": ["גברים"], "cols": ["age", 1955, 1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010], "fill": "full"},
+    {"kind": "mort", "sex": "f", "pages": [100, 101], "quote": "מקדמי תעריף סכום בסיכון של עמית מבוטח", "also": ["נשים"], "cols": ["age", 1955, 1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010], "fill": "full"}
+   ]
+  },
+  {
+   "id": "meitav", "src": "meitav",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [78], "quote": "מקדם עלות חודשית לסיכון נכות", "also": ["נכות כפולה"], "cols": ["f67", "m67", "f64", "m64", "f62", "m62", "f60", "m60", "age"], "pick": "m67", "fill": "full"},
+    {"kind": "dis", "sex": "f", "pages": [78], "quote": "מקדם עלות חודשית לסיכון נכות", "also": ["נכות כפולה"], "cols": ["f67", "m67", "f64", "m64", "f62", "m62", "f60", "m60", "age"], "pick": "f67", "fill": "full"},
+    {"kind": "wid", "sex": "m", "pages": [85, 86], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית שאירים", "also": ["לאלמנת פעיל"], "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left"},
+    {"kind": "wid", "sex": "f", "pages": [87, 88], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית שאירים", "also": ["לאלמן פעילה"], "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left"},
+    {"kind": "orph", "sex": "m", "pages": [89], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית יתומי פעיל", "also": ["עם בן זוג"], "cols": ["xf", "xm", "age", "f", "m", "age"], "pick": "m", "fill": "full"},
+    {"kind": "orph", "sex": "f", "pages": [89], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית יתומי פעיל", "also": ["עם בן זוג"], "cols": ["xf", "xm", "age", "f", "m", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [81, 82], "quote": "עלות סיכונים למקרה מוות לגבר", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left"},
+    {"kind": "mort", "sex": "f", "pages": [83, 84], "quote": "עלות סיכונים למקרה מוות לאשה", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left"}
+   ]
+  },
+  {
+   "id": "phoenix", "src": "phoenix",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [116], "quote": "מקדמים לחישוב עלות ריסק בגין ביטוח נכות -ללא נכות מתפתחת -גברים", "cols": ["d67", "d64", "d62", "d60", "n67", "n64", "n62", "n60", "age"], "pick": "d67", "fill": "full",
+     "note": "d = 'כולל נכות כפולה' (the left four), n = 'ללא נכות כפולה'"},
+    {"kind": "dis", "sex": "f", "pages": [118], "quote": "מקדמים לחישוב עלות ריסק בגין ביטוח נכות -ללא נכות מתפתחת -נשים", "cols": ["d67", "d64", "d62", "d60", "n67", "n64", "n62", "n60", "age"], "pick": "d67", "fill": "full"},
+    {"kind": "wid", "sex": "m", "pages": [120], "quote": "מקדמי סכום בסיכון לקצבת אלמנה של עמית מבוטח", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, "age"], "fill": "full"},
+    {"kind": "wid", "sex": "f", "pages": [121], "quote": "מקדמי סכום בסיכון לקצבת אלמן של עמיתה מבוטחת", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, "age"], "fill": "full"},
+    {"kind": "orph", "sex": "m", "pages": [122], "quote": "מקדמי סכום בסיכון לקצבת יתום של עמית מבוטח", "also": ["למי שלא ויתר על כיסוי אלמנה"], "cols": ["f", "m", "age"], "pick": "m", "fill": "full"},
+    {"kind": "orph", "sex": "f", "pages": [122], "quote": "מקדמי סכום בסיכון לקצבת יתום של עמית מבוטח", "also": ["למי שלא ויתר על כיסוי אלמנה"], "cols": ["f", "m", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [124], "quote": "מקדמי תעריף עלות כיסוי ביטוחי לשארים", "also": ["לגברים"], "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, "age"], "fill": "full"},
+    {"kind": "mort", "sex": "f", "pages": [125], "quote": "מקדמי תעריף עלות כיסוי ביטוחי לשארים", "also": ["לנשים"], "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, "age"], "fill": "full"}
+   ]
+  },
+  {
+   "id": "menora", "src": "menora",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [83], "quote": "מקדמים לחישוב דמי ביטוח בגין ביטוח נכות", "also": ["ללא נכות מתפתחת", "-גברים", "עם הכפלה בחודשיים הראשונים"], "cols": ["d67", "d64", "d62", "d60", "n67", "n64", "n62", "n60", "age"], "pick": "d67", "fill": "full",
+     "note": "d = 'עם הכפלה בחודשיים הראשונים' (double disability, the left four), n = 'ללא הכפלה'"},
+    {"kind": "dis", "sex": "f", "pages": [84], "quote": "מקדמים לחישוב דמי ביטוח בגין ביטוח נכות", "also": ["ללא נכות מתפתחת", "-נשים", "עם הכפלה בחודשיים הראשונים"], "cols": ["d67", "d64", "d62", "d60", "n67", "n64", "n62", "n60", "age"], "pick": "d67", "fill": "full"},
+    {"kind": "wid", "sex": "m", "pages": [89], "quote": "מקדמים לחישוב הסכום בסיכון בגין קצבת שאירי עמית מבוטח -אלמנה", "cols": [2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "full"},
+    {"kind": "wid", "sex": "f", "pages": [90], "quote": "מקדמים לחישוב הסכום בסיכון בגין קצבת שאירי עמיתה מבוטחת -אלמן", "cols": [2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "full"},
+    {"kind": "orph", "sex": "m", "pages": [91], "quote": "קצבת שאירי עמית מבוטח -יתום", "also": ["ללא ויתור כיסוי בן/בת זוג"], "cols": ["xf", "xm", "f", "m", "age"], "pick": "m", "fill": "full"},
+    {"kind": "orph", "sex": "f", "pages": [91], "quote": "קצבת שאירי עמית מבוטח -יתום", "also": ["ללא ויתור כיסוי בן/בת זוג"], "cols": ["xf", "xm", "f", "m", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [92], "quote": "מקדמים לחישוב דמי ביטוח בגין ביטוח שאירים -לגברים", "cols": [2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "full"},
+    {"kind": "mort", "sex": "f", "pages": [93], "quote": "מקדמים לחישוב דמי ביטוח בגין ביטוח שאירים -לנשים", "cols": [2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "full"}
+   ]
+  },
+  {
+   "id": "clal", "src": "clal",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [84], "quote": "מקדם עלות חודשית לסיכון נכות", "also": ["עם נכות כפולה וללא נכות מתפתחת"], "cols": ["m67", "m64", "m62", "m60", "f67", "f64", "f62", "f60", "age"], "pick": "m67", "fill": "full"},
+    {"kind": "dis", "sex": "f", "pages": [84], "quote": "מקדם עלות חודשית לסיכון נכות", "also": ["עם נכות כפולה וללא נכות מתפתחת"], "cols": ["m67", "m64", "m62", "m60", "f67", "f64", "f62", "f60", "age"], "pick": "f67", "fill": "full"},
+    {"kind": "wid", "sex": "m", "pages": [88], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית שאירים לאלמנת עמית פעיל", "cols": [2015, 2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "full"},
+    {"kind": "wid", "sex": "f", "pages": [89], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית שאירים לאלמן עמיתה פעילה", "cols": [2015, 2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "full"},
+    {"kind": "orph", "sex": "m", "pages": [90], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית יתומי פעיל", "also": ["ללא ויתור כיסוי בן/בת זוג"], "cols": ["xf", "xm", "f", "m", "age"], "pick": "m", "fill": "full"},
+    {"kind": "orph", "sex": "f", "pages": [90], "quote": "מקדמים לחישוב הסכום בסיכון בגין פנסיית יתומי פעיל", "also": ["ללא ויתור כיסוי בן/בת זוג"], "cols": ["xf", "xm", "f", "m", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [86], "quote": "עלות סיכונים למקרה מוות לגבר", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "left"},
+    {"kind": "mort", "sex": "f", "pages": [87], "quote": "עלות סיכונים למקרה מוות לאישה", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, "age"], "fill": "left"}
+   ]
+  },
+  {
+   "id": "harel", "src": "harel",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [132], "quote": "מקדם עלות חודשית לסיכון נכות", "also": ["פרנציזה", "גבר"], "cols": ["n64e", "n64", "n67e", "n67", "d60e", "d60", "d62e", "d62", "d64e", "d64", "d67e", "d67", "age"], "pick": "d67", "fill": "full",
+     "note": "Harel heads the disability columns 'פרנציזה' / 'בלי פרנציזה' and each pair 'נכות מתפתחת' (e) / 'נכות רגילה'; the bylaws text does not define 'פרנציזה'. The 'פרנציזה' cells equal the other funds' double-disability cells (age 30, man, to 67: 4.57 against 4.56–4.57), and the 'בלי פרנציזה' cells their no-double cells (4.40), so 'פרנציזה' is read as the double-disability cover (clause 27, part of the default); an inference, stated as such"},
+    {"kind": "dis", "sex": "f", "pages": [133], "quote": "פרנציזה", "also": ["נכות רגילה", "אישה"], "cols": ["d60e", "d60", "d62e", "d62", "d64e", "d64", "d67e", "d67", "mn60e", "mn60", "mn62e", "mn62", "age"], "pick": "d67", "fill": "full",
+     "note": "the table continues from p. 132 (heading 'מקדם עלות חודשית לסיכון נכות לכל ₪1000 פנסיית נכות חודשית'); the left eight columns are the women's 'פרנציזה' pairs for retirement at 60, 62, 64, 67"},
+    {"kind": "wid", "sex": "m", "pages": [125], "quote": "כיסוי מוות עבור גבר בהנחה שיש בת זוג בהפרש גיל סטטיסטי", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left",
+     "note": "headed 'סכום ביטוח עבור כל שקל של פנסיית השארים המלאה'; the cells equal the other funds' widow's factors (age 30, born 1995: 285.38 against 285.41–285.57), so they are applied to the widow's pension as in the other funds"},
+    {"kind": "wid", "sex": "f", "pages": [127], "quote": "כיסוי מוות עבור אישה בהנחה שיש בן זוג בהפרש גיל סטטיסטי", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left"},
+    {"kind": "orph", "sex": "m", "pages": [126], "quote": "כיסוי מוות בגין גבר עבור ילד", "cols": ["x", "m", "age"], "pick": "m", "fill": "full",
+     "note": "left column: 'ילדים בלבד' (spouse cover waived); right: given cover for a spouse"},
+    {"kind": "orph", "sex": "f", "pages": [128], "quote": "כיסוי מוות בגין אישה עבור ילד", "cols": ["x", "f", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [129], "quote": "עלות מוות חודשית עבור גבר לסכום בסיכון", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left"},
+    {"kind": "mort", "sex": "f", "pages": [130], "quote": "עלות מוות חודשית עבור אישה לסכום בסיכון", "cols": [2010, 2005, 2000, 1995, 1990, 1985, 1980, 1975, 1970, 1965, 1960, 1955, "age"], "fill": "left"}
+   ]
+  },
+  {
+   "id": "migdal", "src": "migdal",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [109], "quote": "מקדם עלות חודשית לסיכון נכות", "also": ["גבר", "ללא נכות כפולה", "עם נכות כפולה"], "cols": ["n67", "n64", "n62", "n60", "d67", "d64", "d62", "d60", "age"], "pick": "d67", "fill": "full",
+     "note": "the page prints the escalating-disability option 'לא' (no); n = 'ללא נכות כפולה' (left four), d = 'עם נכות כפולה'"},
+    {"kind": "dis", "sex": "f", "pages": [110], "quote": "מקדם עלות חודשית לסיכון נכות", "also": ["אשה", "ללא נכות כפולה", "עם נכות כפולה"], "cols": ["n67", "n64", "n62", "n60", "d67", "d64", "d62", "d60", "age"], "pick": "d67", "fill": "full"},
+    {"kind": "comb", "sex": "m", "pages": [84], "quote": "סכום בסיכון למבוטח אשר רכש כיסויי ביטוח לסיכוני מוות בעבור בן זוג ויתומים", "also": ["60%לבת הזוג", "זכר"], "cols": [2009, 2004, 1999, 1994, 1989, 1984, 1979, 1974, 1969, 1964, 1959, "age"], "fill": "left",
+     "note": "Migdal prints one factor per ₪1 of the full survivors' pension, computed on 60% to the spouse and 40% to the orphans (the other funds print the two parts apart)"},
+    {"kind": "comb", "sex": "f", "pages": [85], "quote": "סכום בסיכון למבוטח אשר רכש כיסויי ביטוח לסיכוני מוות בעבור בן זוג ויתומים", "also": ["נקבה"], "cols": [2009, 2004, 1999, 1994, 1989, 1984, 1979, 1974, 1969, 1964, 1959, "age"], "fill": "left"},
+    {"kind": "mort", "sex": "m", "pages": [87], "quote": "עלות מוות חודשית עבור גבר לסכום בסיכון", "cols": [2009, 2004, 1999, 1994, 1989, 1984, 1979, 1974, 1969, 1964, 1959, "age"], "fill": "left"},
+    {"kind": "mort", "sex": "f", "pages": [88], "quote": "עלות מוות חודשית עבור אשה לסכום בסיכון", "cols": [2009, 2004, 1999, 1994, 1989, 1984, 1979, 1974, 1969, 1964, 1959, "age"], "fill": "left"}
+   ]
+  },
+  {
+   "id": "infinity", "src": "infinity",
+   "tables": [
+    {"kind": "dis", "sex": "m", "pages": [92], "quote": "תעריפי ביטוח סיכוני נכות", "also": ["נכות כפולה", "סכום פיצוי חודשי"], "cols": ["f60", "f62", "f64", "f67", "m60", "m62", "m64", "m67", "age"], "pick": "m67", "fill": "full"},
+    {"kind": "dis", "sex": "f", "pages": [92], "quote": "תעריפי ביטוח סיכוני נכות", "also": ["נכות כפולה", "סכום פיצוי חודשי"], "cols": ["f60", "f62", "f64", "f67", "m60", "m62", "m64", "m67", "age"], "pick": "f67", "fill": "full"},
+    {"kind": "wid", "sex": "m", "pages": [95], "quote": "מקדמים לשערוך התחייבות לאלמן/נה לחישוב סכום ביטוח", "also": ["גבר"], "cols": [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, "age"], "fill": "full"},
+    {"kind": "wid", "sex": "f", "pages": [96], "quote": "שנת לידה אישה", "cols": [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, "age"], "fill": "full",
+     "note": "continues appendix ד'1 from p. 95 (the women's half of the table)"},
+    {"kind": "orph", "sex": "m", "pages": [97], "quote": "מקדמים לשערוך התחייבות ליתום לחישוב סכום ביטוח", "also": ["למבוטח שלא ויתר"], "cols": ["f", "m", "age"], "pick": "m", "fill": "full"},
+    {"kind": "orph", "sex": "f", "pages": [97], "quote": "מקדמים לשערוך התחייבות ליתום לחישוב סכום ביטוח", "also": ["למבוטח שלא ויתר"], "cols": ["f", "m", "age"], "pick": "f", "fill": "full"},
+    {"kind": "mort", "sex": "m", "pages": [89], "quote": "תעריפי ביטוח סיכוני מוות", "also": ["גבר"], "cols": [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, "age"], "fill": "full"},
+    {"kind": "mort", "sex": "f", "pages": [90], "quote": "שנת לידה אישה", "cols": [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, "age"], "fill": "full",
+     "note": "continues appendix ג'1 from p. 89 (the women's half)"}
+   ]
+  }
+ ]
+}

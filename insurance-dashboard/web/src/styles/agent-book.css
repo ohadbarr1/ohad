@@ -1,0 +1,67 @@
+/* W11 · agent door: the book stress test (/clients/book) and the claims-adjusted cover price. Tokens only (both themes); no text is
+   dimmed with opacity; links inside running text are underlined. */
+
+.abook .ab-priv { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); font-size: var(--t-2); line-height: 1.55; }
+.abook .ab-priv svg.ico { width: 18px; height: 18px; flex: none; margin-top: 2px; color: var(--fg); }
+.abook .pagehead .eyebrow a, .abook .fnote a, .abook .empty a, .abook .ab-dl-h a { text-decoration: underline; text-underline-offset: 2px; color: var(--link); }
+
+.ab-drop { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.ab-drop label.btn { position: relative; overflow: hidden; cursor: pointer; }
+.ab-drop label.btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.ab-extra { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: var(--t-2); }
+.ab-extra li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; padding: 6px 10px; border: 1px dashed var(--line); border-radius: var(--r-2); }
+.ab-extra .ab-acts { margin-inline-start: auto; display: inline-flex; gap: 6px; }
+
+.ab-kpis { margin-bottom: 14px; }
+
+.ab-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ab-line { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "t v n" "s s s"; gap: 4px 14px; align-items: baseline;
+  text-align: start; padding: 10px 14px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel); color: var(--fg); font: inherit; cursor: pointer; }
+.ab-line:hover:not(:disabled), .ab-line[aria-expanded="true"] { border-color: var(--line); background: var(--panel2); }
+.ab-line[aria-expanded="true"] { box-shadow: inset 3px 0 0 var(--fg); }
+.ab-line:disabled { cursor: default; }
+.ab-line:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.ab-l-t { grid-area: t; font-weight: 700; font-size: var(--t-3); }
+.ab-l-v { grid-area: v; font-variant-numeric: tabular-nums; font-weight: 700; font-size: var(--t-4); white-space: nowrap; }
+.ab-l-n { grid-area: n; font-size: var(--t-2); color: var(--muted); white-space: nowrap; }
+.ab-l-s { grid-area: s; font-size: var(--t-1); color: var(--muted); line-height: 1.5; }
+@media (max-width: 640px) {
+  .ab-line { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t t" "v n" "s s"; }
+  .ab-l-v { white-space: normal; }
+}
+
+.ab-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 900px) { .ab-two { grid-template-columns: 1fr; } }
+.ab-sl { width: 100%; }
+.ab-sl th[scope="row"] { font-weight: 600; }
+.ab-sl-b { background: none; border: 0; padding: 0; font: inherit; color: var(--link); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; text-align: start; }
+.ab-sl-b[aria-expanded="true"] { font-weight: 700; }
+.ab-um { font-size: var(--t-1); color: var(--muted); font-weight: 500; }
+.ab-bar { width: 22%; min-width: 50px; }
+.ab-sl th[scope="row"] { min-width: 9ch; }
+.ab-bar i { display: block; height: 8px; border-radius: 4px; background: var(--fg); }
+@media (max-width: 640px) { .ab-sl .ab-bar { display: none; } .ab-sl th, .ab-sl td { padding-inline: 6px; } }
+
+.ab-drill:empty { display: none; }
+.ab-dl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ab-dl > li { border-bottom: 1px solid var(--line-soft); padding-bottom: 8px; }
+.ab-dl-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 4px; }
+.ab-dl ul { margin: 0; padding-inline-start: 18px; font-size: var(--t-2); display: flex; flex-direction: column; gap: 3px; }
+.ab-dl-d { display: block; color: var(--muted); font-size: var(--t-1); line-height: 1.5; }
+
+/* ---- the cover price ---- */
+.cp-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 10px; }
+.cp-unit { font-size: var(--t-2); color: var(--muted); }
+.cp-t { width: 100%; }
+.cp-t th, .cp-t td { vertical-align: top; }
+.cp-sort { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--fg); cursor: pointer; text-align: start; }
+.cp-sort:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.cp-sub { display: block; font-size: var(--t-1); color: var(--muted); font-weight: 400; }
+.cp-why { font-size: var(--t-1); color: var(--muted); line-height: 1.45; display: inline-block; min-width: 18ch; max-width: 30ch; white-space: normal; }
+.cp-how { margin-top: 10px; font-size: var(--t-2); line-height: 1.6; }
+.cp-how summary { cursor: pointer; font-weight: 600; }
+.cp-how p { margin: 6px 0; }
+
+/* ---- on the ניוד table ---- */
+.nyud-cover { margin: 12px 0; }
+.nyud-cover h3 { font-size: var(--t-3); margin: 0 0 4px; }
