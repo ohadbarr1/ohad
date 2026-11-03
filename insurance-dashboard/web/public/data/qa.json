@@ -1,5 +1,5 @@
 {
- "built": "2026-11-02T14:09:49+02:00",
+ "built": "2026-11-03T02:03:07+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -85,17 +85,17 @@
    "id": "ifrs_page",
    "ok": true,
    "level": "fail",
-   "n": 16366,
+   "n": 0,
    "fail": 0,
-   "note": "16340/16366 on the cited page; 0 new misses; 0 facts without page text (not checked)"
+   "note": "0/0 on the cited page; 0 new misses; 16366 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
-   "ok": false,
+   "ok": true,
    "level": "warn",
-   "n": 16366,
-   "fail": 26,
-   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'hachshara': 16, 'clal': 8, 'phoenix': 2}"
+   "n": 0,
+   "fail": 0,
+   "note": "known misses, extraction layer (graphics, image pages, targets in words): {}"
   },
   {
    "id": "balance",
@@ -135,15 +135,15 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "drivers: 17 companies, 489 edges (91 missing with a reason), 149 identity checks; rebuild matches; 0 misses"
+   "note": "drivers: 17 companies, 489 edges (88 missing with a reason), 149 identity checks; rebuild matches; 0 misses"
   },
   {
    "id": "drivers_lib",
    "ok": true,
    "level": "fail",
-   "n": 1987,
+   "n": 1989,
    "fail": 0,
-   "note": "1987 passed, 0 failed"
+   "note": "1989 passed, 0 failed"
   },
   {
    "id": "regulation",
@@ -221,17 +221,17 @@
    "id": "deliver_lib",
    "ok": true,
    "level": "fail",
-   "n": 32731,
+   "n": 32868,
    "fail": 0,
-   "note": "32731 passed, 0 failed · 1248 docs, 8 files of each kind built"
+   "note": "32868 passed, 0 failed · 1254 docs, 8 files of each kind built"
   },
   {
    "id": "findings",
    "ok": true,
    "level": "fail",
-   "n": 14,
+   "n": 15,
    "fail": 0,
-   "note": "findings: 14 findings (div:5 brk:1 peer:3 sd:1 disc:1 rank:3), 5 top, 26 suppressed, 0 problems"
+   "note": "findings: 15 findings (div:5 brk:1 peer:3 sd:2 disc:1 rank:3), 5 top, 26 suppressed, 0 problems"
   },
   {
    "id": "watch",
@@ -263,15 +263,15 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "capital: 7 insurers computed, 10 marked not available; 41 identities; rebuild matches; 0 misses"
+   "note": "capital: 7 insurers computed, 10 marked not available; 41 identities; rebuild matches; 0 misses; forward: 18 capacity identities, rebuild matches, 0 misses"
   },
   {
    "id": "capital_lib",
    "ok": true,
    "level": "fail",
-   "n": 654,
+   "n": 674,
    "fail": 0,
-   "note": "654 passed, 0 failed"
+   "note": "674 passed, 0 failed"
   },
   {
    "id": "expectations",
@@ -317,9 +317,9 @@
    "id": "consistency",
    "ok": true,
    "level": "fail",
-   "n": 26154,
+   "n": 26214,
    "fail": 0,
-   "note": "22475 equal within rounding, 3365 labelled basis differences (alt 14, filer 762, restated 1108, std 1481), last 8 quarters"
+   "note": "22535 equal within rounding, 3365 labelled basis differences (alt 14, filer 762, restated 1108, std 1481), last 8 quarters"
   },
   {
    "id": "fund_roles",
@@ -333,7 +333,7 @@
    "id": "consistency_old",
    "ok": false,
    "level": "warn",
-   "n": 26154,
+   "n": 26214,
    "fail": 314,
    "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
   },
@@ -341,9 +341,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3897,
+   "n": 3899,
    "fail": 0,
-   "note": "3897 files under contract, 0 failing; 82 contracts; 552 files without a contract"
+   "note": "3899 files under contract, 0 failing; 84 contracts; 757 files without a contract"
   },
   {
    "id": "cards",
@@ -367,23 +367,23 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "fragility: 15 managers, 62 signals with data, 17 in watch/alert, 29 events, 0 problems"
+   "note": "fragility: 15 managers, 66 signals with data, 17 in watch/alert, 29 events, 0 problems"
   },
   {
    "id": "fragility_lib",
    "ok": true,
    "level": "fail",
-   "n": 352,
+   "n": 357,
    "fail": 0,
-   "note": "352 passed, 0 failed"
+   "note": "357 passed, 0 failed"
   },
   {
    "id": "funds_contract",
-   "ok": true,
-   "level": "fail",
-   "n": 16219,
-   "fail": 0,
-   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16219 checks, 0 problems, 0 warnings; 8 odd history prints"
+   "ok": false,
+   "level": "warn",
+   "n": 16206,
+   "fail": 1,
+   "note": "funds 202609: 1257 live, 1476 closed, 2733 histories; 16206 checks, 0 problems, 0 warnings; 8 odd history prints; no data/raw parquet: upstream checks skipped"
   },
   {
    "id": "fund_stats",
@@ -400,6 +400,14 @@
    "n": 15,
    "fail": 0,
    "note": "decision: 15 companies, 7 with fund claims, 12 coverage rules, 10 checklist items; 0 failures"
+  },
+  {
+   "id": "flows",
+   "ok": true,
+   "level": "fail",
+   "n": 15594,
+   "fail": 0,
+   "note": "flows ok: 10 products, 16 groups, 189 months (201101-202609), 15594 group-months, 189 month files, 1026 track signals, 1177 fee rows"
   },
   {
    "id": "coef",
@@ -431,37 +439,37 @@
    "level": "warn",
    "n": 38,
    "fail": 1,
-   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: Deserializing page header failed.)"
+   "note": "38 manager-quarters; rebuild skipped (no data/work/asset_lists)"
   },
   {
    "id": "solvency",
    "ok": true,
    "level": "fail",
-   "n": 1871,
+   "n": 2246,
    "fail": 0,
-   "note": "1871 cells and sensitivities: report with file + publication date, page, numeric, ratio in (0, 1000)%"
+   "note": "2246 cells and sensitivities: report with file + publication date, page, numeric, ratio in (0, 1000)%"
   },
   {
    "id": "solvency_page",
    "ok": true,
    "level": "fail",
-   "n": 1887,
+   "n": 2262,
    "fail": 0,
-   "note": "solvency (Solvency II reports): 1887/1887 on the cited page; 0 new misses; 62 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "solvency (Solvency II reports): 2262/2262 on the cited page; 0 new misses; 62 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "capital_page",
    "ok": true,
    "level": "fail",
-   "n": 1074,
+   "n": 1080,
    "fail": 0,
-   "note": "capital use (csm/capital.json; 101 derived Q4 = FY less 9M not printed): 1074/1074 on the cited page; 0 new misses; 8 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "capital use (csm/capital.json; 101 derived Q4 = FY less 9M not printed): 1080/1080 on the cited page; 0 new misses; 8 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "capital_page_noimgflag",
    "ok": false,
    "level": "warn",
-   "n": 1084,
+   "n": 1090,
    "fail": 10,
    "note": "cited page has no text layer (an image page) but the value carries no image flag: 10, e.g. menora sr_w 2022FY"
   },
@@ -549,9 +557,9 @@
    "id": "stress",
    "ok": true,
    "level": "fail",
-   "n": 317,
+   "n": 343,
    "fail": 0,
-   "note": "244 IFRS 17 rows and 73 solvency rows reproduced at their disclosed size (4 IFRS 17 rows with no stated direction, 2 solvency rows on risks with no slider) ; 402 passed, 0 failed"
+   "note": "244 IFRS 17 rows and 99 solvency rows reproduced at their disclosed size (4 IFRS 17 rows with no stated direction, 4 solvency rows on risks with no slider) ; 454 passed, 0 failed"
   },
   {
    "id": "credibility",

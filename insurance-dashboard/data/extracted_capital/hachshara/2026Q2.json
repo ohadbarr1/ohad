@@ -1,0 +1,16 @@
+{
+ "company": "hachshara",
+ "period": "2026Q2",
+ "report_id": 1766421,
+ "entity": "הכשרה חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its 31.12.2025 solvency report was published (the report already deducts those declared before)",
+ "facts": [],
+ "not_found": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "why": "the Q2'26 report (board report and the subsequent-events note) prints no dividend by the insurer declared after the solvency report's publication"
+  }
+ ]
+}

@@ -537,6 +537,199 @@ def rank(c):
     rs = [(o["roic"]["v"] - ke, o["id"]) for o in c["options"] if "roic" in o and o["roic"]["v"] is not None and o["cap"]["v"] > 0]
     return [i for _, i in sorted(rs, key=lambda x: (-x[0], x[1]))]
 
+# ---------------------------------------------------------------- W10 · the latest solvency report, its walk, and forward dividend capacity: capital/forward.json
+FWD_OUT = WEB / "capital" / "forward.json"
+CAPX = ROOT / "data" / "extracted_capital"
+STEP_HE = {"open": "פתיחה", "neutralise": "נטרול הוראות המעבר", "open_wo": "פתיחה ללא הוראות מעבר", "operating": "פעילות תפעולית", "economic": "פעילות כלכלית (שוק)",
+           "new_business": "עסקים חדשים", "capital_actions": "פעולות הוניות ודיבידנד", "tax_tiers": "מס נדחה, רובד 1 נוסף ורובד 2",
+           "close_wo": "סגירה ללא הוראות מעבר", "transitional": "השפעת הוראות המעבר", "close": "סגירה"}
+
+
+def solv_cell(I, c, cell, title, d, value, unit=MM):
+    S = I.S
+    r = S["reports"].get(str(cell["r"]), {})
+    attached = r.get("as_of") and r.get("pub") and r["as_of"] < r["pub"][:4] + "-01-01" and "rpdf" in (r.get("f") or "")
+    doc = f"{r.get('e') or 'חברת הביטוח'}, דוח כושר פירעון כלכלי ליום {dlab(r.get('as_of', d))}"
+    return rep(title, value, S["files"] + r["f"] if r.get("f") else None, cell.get("pg"), doc, dperiod(d), note=cell.get("l"), unit=unit,
+               src="דוח כושר פירעון כלכלי (MAYA)" + (", מצורף לדוח הרבעוני" if attached else ""))
+
+
+def cap_facts(c):
+    p = CAPX / c / "2026Q2.json"
+    return json.loads(p.read_text(encoding="utf8")) if p.exists() else None
+
+
+def forward_co(I, c, files):
+    S = I.S
+    name = I.reg[c]["name_he"] if c in I.reg else c
+    L = S.get("latest", {}).get(c)
+    if not L:
+        return {"id": c, "name": name, "status": "na", "why": "אין דוח כושר פירעון במאגר"}
+    d = L["d"]
+    row = S["companies"][c][d]
+    rep_meta = S["reports"].get(str(L["r"]), {})
+    out = {"id": c, "name": name, "status": "ok", "date": d, "period": dperiod(d), "pub": L["pub"], "rid": L["r"],
+           "doc": rep_meta.get("e"), "url": S["files"] + rep_meta["f"] if rep_meta.get("f") else None}
+    pc = lambda k, title, unit=MM, dd=None: solv_cell(I, c, row[k], title, d, pct(row[k]["v"], 0 if float(row[k]["v"]).is_integer() else 1) if unit == "%" else fm(row[k]["v"]), unit)
+    # the printed lines of the report
+    P = {}
+    for b in ("w", "wo"):
+        for k, he, unit in (("sr", "יחס כושר פירעון", "%"), ("of", "הון עצמי לעניין SCR", MM), ("scr", "SCR", MM), ("su", "עודף הון", MM),
+                            ("sra", "יחס לאחר פעולות הוניות עד הפרסום", "%"), ("ofa", "הון עצמי לאחר פעולות הוניות עד הפרסום", MM)):
+            key = f"{k}_{b}"
+            if key in row:
+                P[key] = fig(row[key]["v"], pc(key, f"{he}, {BH[b]} · {name} · {dperiod(d)}", unit))
+    for k, he in (("t1b", "רובד 1 בסיסי"), ("t1r", "רובד 1 נוסף"), ("t2", "רובד 2"), ("m_market", "SCR שוק"), ("m_life", "SCR חיתום חיים"), ("m_health", "SCR חיתום בריאות"),
+                  ("m_nonlife", "SCR חיתום כללי"), ("m_counterparty", "SCR צד נגדי"), ("m_div", "פיזור"), ("bscr", "BSCR"), ("m_operational", "SCR תפעולי"), ("m_lac_dt", "התאמה למס נדחה"),
+                  ("m_managers", "SCR חברות מנהלות"), ("tdt", "ניכוי בתקופת הפריסה")):
+        if k in row:
+            P[k] = fig(row[k]["v"], pc(k, f"{he} · {name} · {dperiod(d)}"))
+    out["lines"] = P
+    # the walk, as printed
+    W = []
+    for r in S.get("walks", {}).get(c, {}).get(d, []):
+        cell = {"r": r["r"], "pg": r["pg"], "l": r["l"]}
+        W.append({"step": r["step"], "he": STEP_HE[r["step"]], "l": r["l"],
+                  **{k: fig(r[k], solv_cell(I, c, cell, f"{STEP_HE[r['step']]} · {('הון עצמי', 'SCR', 'עודף')[i]} · {name} · 2025", d, fm(r[k])))
+                     for i, k in enumerate(("of", "scr", "su")) if r.get(k) is not None}})
+    out["walk"] = W
+    if W:   # the ratio walk: each disclosed step's effect on the ratio without transitional measures, in the order printed (each step's ratio after it)
+        o, z = next(x for x in W if x["step"] == "open_wo"), next(x for x in W if x["step"] == "close_wo")
+        of, scr = o["of"]["v"], o["scr"]["v"]
+        rw, prev = [], of / scr * 100
+        for x in W:
+            if x["step"] not in ("operating", "economic", "new_business", "capital_actions", "tax_tiers"):
+                continue
+            of, scr = of + x["of"]["v"], scr + x["scr"]["v"]
+            r1 = of / scr * 100
+            rw.append({"step": x["step"], "pp": r6(r1 - prev), "prov": calc(f"{x['he']} → יחס ללא הוראות מעבר · {name} · 2025", f"{fs(r1 - prev, 1)} נ״א",
+                                                                          "יחס אחרי הצעד − יחס לפניו; יחס = הון עצמי ÷ SCR (מצטבר בסדר ההדפסה)",
+                                                                          [inp("הון עצמי, שינוי", fm(x["of"]["v"]), x["of"]["prov"]), inp("SCR, שינוי", fm(x["scr"]["v"]), x["scr"]["prov"])],
+                                                                          unit="נקודות אחוז", note="סדר הצעדים כפי שהודפס; לסדר השפעה על הפירוק (הממונה קבע את סדר ההצגה)")})
+            prev = r1
+        out["ratio_walk"] = {"open": r6(o["of"]["v"] / o["scr"]["v"] * 100), "close": r6(z["of"]["v"] / z["scr"]["v"] * 100), "steps": rw,
+                             "check": r6(abs(prev - z["of"]["v"] / z["scr"]["v"] * 100))}
+    # sensitivities of the latest report
+    out["sens"] = [{"l": x["l"], "risk": x["risk"], "b": x["b"], "v": x["v"],
+                    "prov": solv_cell(I, c, x, f"{x['l']} · {name} · {dperiod(d)}", d, f"{fs(x['v'], 1)} נ״א", "נקודות אחוז")}
+                   for x in S["sens"] if x["c"] == c and x["d"] == d]
+    # constraints on a distribution
+    cons = []
+    tg = lambda k: row.get(k)
+    if "of_wo" in row and "scr_wo" in row and "rdf_wo" in row:
+        cons.append({"id": "reg_wo", "basis": "wo", "kind": "reg", "t": r6(row["rdf_wo"]["v"]), "t_prov": pc("rdf_wo", f"סף רגולטורי לחלוקה, ללא הוראות מעבר · {name}", "%")})
+        if tg("tg_wo"):
+            cons.append({"id": "board_wo", "basis": "wo", "kind": "board", "t": r6(tg("tg_wo")["v"]), "t_prov": pc("tg_wo", f"יעד הדירקטוריון ללא הוראות מעבר · {name}", "%")})
+    if tg("tgm_w") and "of_w" in row:
+        cons.append({"id": "board_w", "basis": "w", "kind": "board_min", "t": r6(tg("tgm_w")["v"]), "t_prov": pc("tgm_w", f"יעד מינימלי עם הוראות מעבר · {name}", "%")})
+    # deductions after publication
+    X = cap_facts(c)
+    ded = []
+    if X:
+        u = files.get(X["report_id"])
+        for x in X["facts"]:
+            kind = "div" if x["metric"] == "insurer_dividend_after_solvency_report" else "pending"
+            ded.append({"kind": kind, "v": r6(x["value"]), "d": x["date"], "prov": rep(("דיבידנד של חברת הביטוח לאחר פרסום דוח כושר הפירעון" if kind == "div" else "חלוקה בעין שאושרה וטרם בוצעה")
+                                                                            + f" · {name}", fm(x["value"]), u, x["page_he"], "דוח כספי Q2'26", "Q2'26", note=x["label"][:240])})
+    out["deducted_in_report"] = [{"v": x["v"], "dd": x["dd"], "l": x["l"], "prov": solv_cell(I, c, x, f"חלוקה שכבר נוכתה בדוח · {name}", d, fm(x["v"]))}
+                                 for x in S.get("deducted", []) if x["c"] == c and x["d"] == d]
+    D = math.fsum(x["v"] for x in ded)
+    D_prov = {"k": "none", "title": f"חלוקות לאחר פרסום הדוח · {name}",
+              "why": (X or {}).get("not_found", [{}])[0].get("why", "לא נמצאו") if X else "אין קובץ אירועים לאחר הפרסום"} if not ded else calc(f"חלוקות לאחר פרסום הדוח · {name}", fm(D), "סכום הדיבידנדים שחברת הביטוח הכריזה אחרי פרסום דוח כושר הפירעון (ושחלוקות שאושרו וטרם בוצעו)",
+                  [inp(f"{'דיבידנד' if x['kind'] == 'div' else 'חלוקה בעין תלויה'} · {x['d']}", fm(x["v"]), x["prov"]) for x in ded], est=any(x["kind"] == "pending" for x in ded),
+                  note=("כולל חלוקה בעין שאושרה בדצמבר 2024 וטרם בוצעה (בית הורד), שהחברה בוחנת מחדש: הנחה שמרנית" if any(x["kind"] == "pending" for x in ded) else None))
+    out["after"] = {"v": r6(D), "items": ded, "prov": D_prov}
+    # capacity per constraint
+    rows = []
+    for k in cons:
+        b = k["basis"]
+        use_a = f"ofa_{b}" in P
+        of = P[f"ofa_{b}" if use_a else f"of_{b}"]
+        scr = P[f"scr_{b}"]
+        head = of["v"] - scr["v"] * k["t"] / 100
+        rem = head - D
+        k2 = dict(k)
+        k2["he"] = {"reg": "סף רגולטורי 100%", "board": "יעד הדירקטוריון", "board_min": "יעד מינימלי של הדירקטוריון"}[k["kind"]] + f", {BH[b]}"
+        k2["of_after_actions"] = use_a
+        k2["head"] = fig(head, calc(f"עודף מעל {k2['he']} · {name} · {dperiod(d)}", fm(head), "הון עצמי" + (" (לאחר פעולות הוניות עד הפרסום)" if use_a else "") + " − SCR × סף ÷ 100",
+                                    [inp("הון עצמי", fm(of["v"]), of["prov"]), inp("SCR", fm(scr["v"]), scr["prov"]), inp("סף", pct(k["t"], 1), k["t_prov"])]))
+        k2["rem"] = fig(rem, calc(f"קיבולת חלוקה שנותרה · {k2['he']} · {name}", fm(rem), "עודף מעל הסף − חלוקות לאחר פרסום הדוח",
+                                  [inp("עודף מעל הסף", fm(head), k2["head"]["prov"]), inp("פחות: חלוקות לאחר הפרסום", fm(D), D_prov)], est=True,
+                                  note="אומדן: אין יחס כושר פירעון מאוחר יותר מ-31.12.2025; הרווח, התנועה בשוק ו-SCR מאז לא נכללו"))
+        k2["pp"] = fig(rem / scr["v"] * 100, calc(f"קיבולת שנותרה בנקודות יחס · {k2['he']} · {name}", f"{fm(rem / scr['v'] * 100, 1)} נ״א", "קיבולת ÷ SCR × 100 (SCR קבוע)",
+                                                  [inp("קיבולת", fm(rem), k2["rem"]["prov"]), inp("SCR", fm(scr["v"]), scr["prov"])], unit="נקודות אחוז", est=True))
+        rows.append(k2)
+    if not rows:
+        out["status"] = "partial"
+        out["why"] = "לא הודפסו הון עצמי ו-SCR ללא הוראות מעבר"
+        return out
+    out["constraints"] = rows
+    bind = min(rows, key=lambda k: (k["rem"]["v"], k["id"]))
+    out["binding"] = bind["id"]
+    # sensitivity: the company's own disclosed shocks, as own-funds equivalents on the with-transitional SCR, applied in NIS to every constraint
+    scr_w = P.get("scr_w", P.get("scr_wo"))
+    sens_rows = []
+    for x in out["sens"]:
+        dOF = x["v"] / 100 * scr_w["v"]
+        after = {k["id"]: r6(k["rem"]["v"] + dOF) for k in rows}
+        bid = min(after, key=lambda i: (after[i], i))
+        sens_rows.append({"l": x["l"], "risk": x["risk"], "dv": r6(dOF), "after": after, "bind": bid,
+                          "prov": calc(f"{x['l']} → קיבולת · {name}", fm(after[bid]), "קיבולת המחייבת + זעזוע (נ״א) × SCR עם הוראות מעבר ÷ 100; אותו סכום בש״ח על כל האילוצים",
+                                       [inp("רגישות כפי שגולתה", f"{fs(x['v'], 1)} נ״א", x["prov"]), inp("SCR עם הוראות מעבר", fm(scr_w["v"]), scr_w["prov"]),
+                                        inp("קיבולת לפני הזעזוע", fm(next(k for k in rows if k["id"] == bid)["rem"]["v"]), next(k for k in rows if k["id"] == bid)["rem"]["prov"])],
+                                       est=True, note="אומדן: הרגישות גולתה על היחס המדווח; התרגום לש״ח מניח SCR קבוע ואותה תזוזה בהון העצמי בשני הבסיסים (הניכוי בתקופת הפריסה קבוע)")})
+    out["sens_capacity"] = sens_rows
+    return out
+
+
+def forward(I=None):
+    I = I or Inputs()
+    files = {}
+    import csv
+    with open(ROOT / "data" / "registry" / "documents.csv", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if r["file_type"].startswith("pdf"):
+                files.setdefault(int(r["report_id"]), I.S["files"] + r["url"])
+    cos = [forward_co(I, c, files) for c in ["phoenix", "harel", "migdal", "clal", "menora", "ayalon", "hachshara"]]
+    return {"meta": {"v": 1, "built": max((c.get("pub") or "" for c in cos), default=""),
+                     "formula": "קיבולת חלוקה = הון עצמי (לאחר פעולות הוניות עד פרסום הדוח) − SCR × סף − חלוקות שהוכרזו אחרי פרסום הדוח; לכל סף (רגולטורי 100% ללא הוראות מעבר, יעד הדירקטוריון ללא הוראות מעבר, יעד מינימלי עם הוראות מעבר); המחמיר מחייב",
+                     "inputs": ["csm/solvency.json", "data/extracted_capital/<co>/2026Q2.json"]}, "companies": cos}
+
+
+def verify_forward(d):
+    bad, n = [], 0
+    for c in d["companies"]:
+        if c["status"] != "ok":
+            if not c.get("why"):
+                bad.append(("not computed without a reason", c["id"]))
+            continue
+        w = c["id"]
+        for k, x in c["lines"].items():
+            walk(x["prov"], f"{w}.{k}", bad)
+        for k in c["constraints"]:
+            n += 1
+            b = k["basis"]
+            of = c["lines"][f"ofa_{b}" if k["of_after_actions"] else f"of_{b}"]["v"]
+            scr = c["lines"][f"scr_{b}"]["v"]
+            if abs(of - scr * k["t"] / 100 - k["head"]["v"]) > ID_TOL or abs(k["head"]["v"] - c["after"]["v"] - k["rem"]["v"]) > ID_TOL:
+                bad.append(("identity: capacity", w, k["id"]))
+            for p in (k["head"]["prov"], k["rem"]["prov"], k["pp"]["prov"], k["t_prov"]):
+                walk(p, f"{w}.{k['id']}", bad)
+        if any(k["rem"]["v"] < next(x for x in c["constraints"] if x["id"] == c["binding"])["rem"]["v"] - 1e-9 for k in c["constraints"]):
+            bad.append(("binding is not the lowest", w))
+        if "ratio_walk" in c and c["ratio_walk"]["check"] > 0.05:
+            bad.append(("ratio walk does not reach the closing ratio", w, c["ratio_walk"]["check"]))
+        for x in c.get("walk", []):
+            for k in ("of", "scr", "su"):
+                if k in x:
+                    walk(x[k]["prov"], f"{w}.walk.{x['step']}.{k}", bad)
+        for x in c["sens"]:
+            walk(x["prov"], f"{w}.sens", bad)
+        for x in c.get("sens_capacity", []):
+            walk(x["prov"], f"{w}.sens_capacity", bad)
+        walk(c["after"]["prov"], f"{w}.after", bad)
+    return bad, n
+
 
 FUND_WHY = "הון עצמי של חברה מנהלת מול דרישת ההון המינימלית לא חולץ מהדוחות; אין חישוב הון בר-חלוקה"
 
@@ -692,23 +885,33 @@ def dumps(d):
 if __name__ == "__main__":
     d = build()
     bad, n_id = verify(d)
+    F = forward()
+    fbad, fn = verify_forward(F)
     ok = [c for c in d["companies"] if c["status"] == "ok"]
     if "--check" in sys.argv:
         same = OUT.exists() and json.loads(OUT.read_text(encoding="utf8")) == json.loads(dumps(d))
+        fsame = FWD_OUT.exists() and json.loads(FWD_OUT.read_text(encoding="utf8")) == json.loads(dumps(F))
         print(f"capital: {len(ok)} insurers computed, {len(d['companies']) - len(ok)} marked not available; {n_id} identities; "
-              f"{'rebuild matches' if same else 'DIFFERS from capital/options.json'}; {len(bad)} misses")
-        for b in bad[:20]:
+              f"{'rebuild matches' if same else 'DIFFERS from capital/options.json'}; {len(bad)} misses; "
+              f"forward: {fn} capacity identities, {'rebuild matches' if fsame else 'DIFFERS from capital/forward.json'}, {len(fbad)} misses")
+        for b in (bad + fbad)[:20]:
             print("  ", b)
-        sys.exit(0 if same and not bad else 1)
-    if bad:
+        sys.exit(0 if same and fsame and not bad and not fbad else 1)
+    if bad or fbad:
         print("misses:")
-        for b in bad[:40]:
+        for b in (bad + fbad)[:40]:
             print("  ", b)
         sys.exit(1)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(dumps(d), encoding="utf8")
+    FWD_OUT.write_text(dumps(F), encoding="utf8")
     print(f"wrote {OUT.relative_to(ROOT)}: {OUT.stat().st_size:,} bytes; {len(ok)} insurers, {n_id} identities")
+    print(f"wrote {FWD_OUT.relative_to(ROOT)}: {FWD_OUT.stat().st_size:,} bytes; {fn} capacity identities")
     for c in ok:
         b = next(k for k in c["constraints"] if k["id"] == c["binding"])
         print(f"  {c['id']:10s} {c['period']}  binding {b['id']:9s} {b['t']:6.1f}%  headroom {b['headroom']['v']:9,.1f}  buffer {c['buffer']['pp']:4.1f}pp {c['buffer']['v']:7,.1f}"
               f"  distributable {c['distributable']['v']:9,.1f}  rank {c['rank']}")
+    for c in F["companies"]:
+        if c["status"] == "ok":
+            b = next(k for k in c["constraints"] if k["id"] == c["binding"])
+            print(f"  fwd {c['id']:10s} {c['period']} binding {b['id']:8s} {b['t']:6.1f}%  head {b['head']['v']:8,.0f}  after-pub {c['after']['v']:6,.0f}  remaining {b['rem']['v']:8,.0f} = {b['pp']['v']:5.1f}pp")

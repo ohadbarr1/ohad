@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon';
 import { Sourced } from '../components/Source';
 import { Empty, ErrorBox, Loading, Panel } from '../components/ui';
 import { BufferInput, OptionTable, StressTable, lts, useBufferParam, useCapitalBase } from '../components/CapitalPanel';
+import { CapitalForward } from '../components/CapitalForward';
 import { load } from '../lib/useData';
 import { idCss } from '../lib/identity';
 import { driversPath, fmt, fmtS, type DriverFile } from '../lib/drivers';
@@ -116,6 +117,8 @@ export function Capital() {
         </ol>
         <div className="src">הון בר-חלוקה = הון עצמי − SCR × יעד − מרווח ניהולי, לכל בסיס שהודפס (עם / ללא הוראות מעבר; יעד הדירקטוריון או סף החלוקה), הנמוך מחייב. אחרי התרחיש: Δ יחס כושר הפירעון מ<Link to="/drivers">מנגנוני A1</Link> × SCR, SCR קבוע. "החמור לכל חברה" רק כשכל תרחישי השוק חושבו; חברה בלי רגישויות בסוף הרשימה. מספרים אנליטיים, לא המלצה.</div>
       </Panel>
+
+      <CapitalForward />
 
       {na.length > 0 && <div className="src">לא חושב: {na.map((c, i) => <span key={c.id}>{i ? ' · ' : ''}<Link to={`/company/${c.id}`}>{c.name}</Link></span>)}. {'why' in na[0] ? [...new Set(na.map((c) => ('why' in c ? c.why : '')))].join(' · ') : ''}</div>}
     </div>

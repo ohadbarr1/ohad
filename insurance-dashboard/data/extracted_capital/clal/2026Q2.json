@@ -1,0 +1,23 @@
+{
+ "company": "clal",
+ "period": "2026Q2",
+ "report_id": 1764359,
+ "entity": "כלל חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its 31.12.2025 solvency report was published (the report already deducts those declared before)",
+ "facts": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-08-18",
+   "value": 200,
+   "page_he": 6,
+   "label": "ביום 18 באוגוסט 2026 אישר דירקטוריון כלל ביטוח חלוקת דיבידנד, בסך של 200 מיליוני ש\"ח",
+   "source": "text",
+   "note": ""
+  }
+ ],
+ "not_found": []
+}

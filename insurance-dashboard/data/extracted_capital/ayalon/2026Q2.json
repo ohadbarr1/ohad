@@ -1,0 +1,23 @@
+{
+ "company": "ayalon",
+ "period": "2026Q2",
+ "report_id": 1764938,
+ "entity": "איילון חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its 31.12.2025 solvency report was published (the report already deducts those declared before)",
+ "facts": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-08-20",
+   "value": 50,
+   "page_he": 176,
+   "label": "ביום 20 באוגוסט 2026 אישר דירקטוריון החברה חלוקת דיבידנד ביניים נוסף לשנת 2026 בסך של 50 מיליון ש\"ח",
+   "source": "text",
+   "note": "the listed company is the insurer; the NIS 30m declared 26.5.2026 is already deducted in the 31.12.2025 report"
+  }
+ ],
+ "not_found": []
+}

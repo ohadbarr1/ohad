@@ -56,10 +56,10 @@ for (const p of P) for (const mode of ['clamp', 'linear'] as const) {
   }
   ok(rank(rs, 'vul').length === 17 && headline(rank(rs, 'vul'), p.he).length > 10, `${p.id}: ranked`);
 }
-// Menora: solvency sensitivities not extracted → under an equity shock the stressed ratio is a gap, not the base
+// Menora: the FY'25 solvency report discloses −15.9pp for equities −25% (W10) → the stressed ratio moves by exactly that, no gap
 const menora = ctx.find((c) => c.id === 'menora')!;
 const mr = runOne(menora, { ...ZERO, eq: -25 }, ncAt, 'clamp', lts);
-ok(mr.cells.solv_w.v == null && mr.cells.solv_w.gap.length > 0 && mr.cells.solv_w.base != null, 'Menora solvency under −25% equities: gap with the base kept');
+ok(mr.cells.solv_w.v != null && mr.cells.solv_w.base != null && near(mr.cells.solv_w.v - mr.cells.solv_w.base, -15.9, 1e-9), 'Menora solvency under −25% equities: −15.9pp as disclosed');
 // credit spreads: a gap everywhere, never an effect
 for (const r of runAll(ctx, { ...ZERO, credit: 150 }, ncAt, 'clamp', lts)) {
   ok(OUT_KEYS.every((k) => !r.cells[k].d), `${r.id}: credit alone moves nothing`);
@@ -67,7 +67,7 @@ for (const r of runAll(ctx, { ...ZERO, credit: 150 }, ncAt, 'clamp', lts)) {
 }
 // the transitional measures: without-basis moves are labelled estimates where no disclosure on that basis exists
 const ph = runOne(ctx.find((c) => c.id === 'phoenix')!, { ...ZERO, eq: -25 }, ncAt, 'clamp', lts);
-ok(ph.cells.solv_wo.est.length > 0 && ph.cells.solv_w.q === 'low', 'Phoenix: FY\'21 solvency read is low quality, the without-basis move an estimate');
+ok(ph.cells.solv_wo.est.length > 0 && ph.cells.solv_w.q !== 'low', 'Phoenix: the FY\'25 solvency read is current, the without-basis move an estimate');
 
 // 4 · per-product inputs reproduce the identities: fee cap = 5 × fee.op(pen) + 10 × fee.op(gem); freeze = −2 × LTM transfers
 for (const c of ctx) {

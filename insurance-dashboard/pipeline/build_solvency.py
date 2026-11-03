@@ -5,6 +5,10 @@ Input : data/extracted_solvency/<company>/<period>.json (extraction spec v8, pip
 Nothing is computed here. Several reports can print the same date (the comparative column of the next report, an amended filing):
 the report whose own date it is wins, then the latest filing; a different value printed elsewhere is kept as `alt`.
 Values read from a page image or a chart carry `i: 1` (shown as "נקרא מתמונה").
+Since FY'25 most insurers attach the report to the next periodic report (Q1'26): its report id is then that quarterly filing and the page is
+the page of that PDF. Also published (W10): `walks` (the regulator's capital-surplus movement table, section 7/8 of each report, as printed),
+`deducted` (distributions the report says its calculation already deducts) and `latest` (per company: the newest calculation date, its
+report and publication date: the vintage the pages label).
 
 python3 pipeline/build_solvency.py   (run before build_csm.py, which merges the ratio, own funds, SCR and surplus into capital.json)
 """
@@ -25,7 +29,8 @@ B = {"with_transitional": "w", "without_transitional": "wo"}
 KEYS = {
     "solvency_ratio": "sr*", "own_funds": "of*", "scr": "scr*", "solvency_surplus": "su*",
     "solvency_ratio_after_capital_actions": "sra*", "own_funds_after_capital_actions": "ofa*", "solvency_surplus_after_capital_actions": "sua*",
-    "target_solvency_ratio": "tg*", "target_solvency_ratio_min": "tgm*", "solvency_surplus_over_target": "sut*",
+    "target_solvency_ratio": "tg*", "target_solvency_ratio_min": "tgm*", "solvency_surplus_over_target": "sut*", "target_solvency_ratio_range": "tgr*",
+    "capital_actions_after_date": "caa*", "pending_distribution_ratio_effect": "pde*", "regulatory_dividend_floor": "rdf*",
     "mcr": "mcr", "own_funds_for_mcr": "ofm", "mcr_ratio": "mcr_ratio",
     "own_funds_tier1": "t1", "own_funds_tier1_basic": "t1b", "own_funds_tier1_restricted": "t1r", "own_funds_tier2": "t2", "own_funds_tier3": "t3",
     "scr_market": "m_market", "scr_counterparty": "m_counterparty", "scr_life": "m_life", "scr_health": "m_health", "scr_nonlife": "m_nonlife",
@@ -54,11 +59,16 @@ def risk_of(t):
     return "other"
 
 
-def docs():
+WALK_STEPS = ("open", "neutralise", "open_wo", "operating", "economic", "new_business", "capital_actions", "tax_tiers", "close_wo", "transitional", "close")
+WALK_TOL = 2.0   # NIS m: the printed rows foot (thousands rounded in the source)
+
+
+def docs(ids=None):
+    """the registry rows of the solvency reports, and of any other filing an extraction cites (a periodic report the solvency report is attached to)"""
     out = {}
     with open(ROOT / "data" / "registry" / "documents.csv", encoding="utf-8") as f:
         for r in csv.DictReader(f):
-            if r["doc_type"] != "solvency":
+            if r["doc_type"] != "solvency" and not (ids and int(r["report_id"]) in ids):
                 continue
             rid = int(r["report_id"])
             cur = out.get(rid)
@@ -68,8 +78,35 @@ def docs():
     return out
 
 
+def walk_check(rows):
+    """the identities of a printed walk: own funds − SCR = surplus on every row; opening + items = closing on each basis"""
+    bad = []
+    by = {r["step"]: r for r in rows}
+    for r in rows:
+        if all(k in r for k in ("of", "scr", "su")) and abs(r["of"] - r["scr"] - r["su"]) > WALK_TOL:
+            bad.append(f"{r['step']}: own funds − SCR ≠ surplus")
+    for comp in ("of", "scr", "su"):
+        g = lambda k: by.get(k, {}).get(comp)
+        if None in (g("open"), g("neutralise"), g("open_wo")) or abs(g("open") + g("neutralise") - g("open_wo")) > WALK_TOL:
+            bad.append(f"{comp}: opening + neutralisation ≠ opening without transitional")
+        mid = [g(k) for k in ("operating", "economic", "new_business", "capital_actions", "tax_tiers")]
+        if None in mid or g("close_wo") is None or abs(g("open_wo") + sum(mid) - g("close_wo")) > WALK_TOL:
+            bad.append(f"{comp}: opening + movements ≠ closing without transitional")
+        if None in (g("close_wo"), g("transitional"), g("close")) or abs(g("close_wo") + g("transitional") - g("close")) > WALK_TOL:
+            bad.append(f"{comp}: closing without + transitional effect ≠ closing")
+    return bad
+
+
 def main():
-    reg = docs()
+    ids = set()
+    for c in INSURERS:
+        for f in (SRC / c).glob("*.json"):
+            rid = json.loads(f.read_text(encoding="utf-8")).get("report_id")
+            if rid:
+                ids.add(int(rid))
+    reg = docs(ids)
+    walks = defaultdict(lambda: defaultdict(dict))   # company -> date -> step -> row
+    deducted = []
     cand = defaultdict(list)   # (company, date, key) -> [(rank, cell)]
     sens = defaultdict(list)
     reports, n_facts, skipped = {}, 0, Counter()
@@ -92,6 +129,15 @@ def main():
                 if img:
                     img_pages.add((rid, x.get("page_he")))
                 rank = (dt == as_of, rid)
+                if x["metric"] == "solvency_movement":
+                    row = walks[c][dt].setdefault(x["step"], {"step": x["step"], "l": x.get("label", "")[:90], "r": rid, "pg": x.get("page_he"), "from": x.get("window_from")})
+                    row[x["component"]] = x["value"]
+                    if x.get("note"):
+                        row["n"] = x["note"][:200]
+                    continue
+                if x["metric"] == "dividend_deducted_in_ratio":
+                    deducted.append({"c": c, "d": as_of, "v": x["value"], "dd": dt, "l": x.get("label", "")[:240], "r": rid, "pg": x.get("page_he")})
+                    continue
                 if x["metric"] == "solvency_sensitivity":
                     if x.get("value") is None:
                         continue
@@ -116,6 +162,8 @@ def main():
                     continue
                 if v is None and x.get("value_high") is not None:
                     cell["hi"] = x["value_high"]
+                if x.get("note") and k.startswith(("tg", "pde", "of", "sr", "rdf")):
+                    cell["n"] = x["note"][:200]
                 if img:
                     cell["i"] = 1
                 cand[(c, dt, k)].append((rank, cell))
@@ -139,14 +187,32 @@ def main():
         cs.sort(key=lambda t: t[0], reverse=True)
         srows.append(cs[0][1])
     srows.sort(key=lambda r: (r["c"], r["d"], r["risk"], r["l"]))
+    W, wbad = {}, []
+    for c in INSURERS:
+        for dt, steps in sorted(walks.get(c, {}).items()):
+            rows = [steps[k] for k in WALK_STEPS if k in steps]
+            bad = walk_check(rows)
+            wbad += [f"{c} {dt} {b}" for b in bad]
+            W.setdefault(c, {})[dt] = rows
+    if wbad:
+        raise SystemExit("solvency walk does not foot: " + "; ".join(wbad[:6]))
+    latest = {}
+    for c in INSURERS:
+        ds = [d for d, m in comp.get(c, {}).items() if "sr_w" in m and d[5:] in ("06-30", "12-31")]
+        if not ds:
+            continue
+        d = max(ds)
+        r = comp[c][d]["sr_w"]["r"]
+        latest[c] = {"d": d, "r": r, "pub": reports.get(str(r), {}).get("pub")}
     out = {"built": date.today().isoformat(), "source": "דוחות כושר פירעון כלכלי (Solvency II) של חברות הביטוח, MAYA; חולץ ונבדק מול העמוד",
            "files": FILES, "reports": reports,
-           "companies": {c: dict(sorted(comp[c].items())) for c in INSURERS if comp.get(c)}, "sens": srows}
+           "companies": {c: dict(sorted(comp[c].items())) for c in INSURERS if comp.get(c)}, "sens": srows,
+           "walks": W, "deducted": sorted(deducted, key=lambda x: (x["c"], x["dd"])), "latest": latest}
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     cov = {c: len([d for d, m in comp[c].items() if "sr_w" in m or "sr_wo" in m]) for c in INSURERS}
     print(f"solvency.json: {len(reports)} reports, {n_facts} facts -> {sum(len(m) for c in comp for m in comp[c].values())} cells, "
-          f"{len(srows)} sensitivities, {n_alt} with a different value elsewhere; dates with a ratio {cov}; skipped {dict(skipped)}; "
+          f"{len(srows)} sensitivities, {sum(len(v) for v in W.values())} walks, {n_alt} with a different value elsewhere; dates with a ratio {cov}; skipped {dict(skipped)}; "
           f"{OUT.stat().st_size // 1024} KB")
 
 
