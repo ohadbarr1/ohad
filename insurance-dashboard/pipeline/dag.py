@@ -267,6 +267,14 @@ STEPS = [
     step("build_decision", "pipeline/build_decision.py",
          ["data/regulation/decision_src.json", "data/regulation/decision_claims.json", D + "funds.json"], [D + "funds/decision.json"],
          groups={"deploy"}, note="W2: funds/decision.json (python3 pipeline/build_decision.py --check)"),
+    # W11: the price of the disability and survivors cover per ₪1,000 of insured salary, from each comprehensive fund's bylaws tables.
+    # extract_covers reads the PDFs (manual: pdftotext, the PDFs are not in git); build_covers is standard library; gate `covers`
+    step("extract_covers", "pipeline/extract_covers.py", ["data/regulation/covers_src.json", "data/regulation/coef_src.json", "data/raw/regulator/coef"],
+         ["data/regulation/covers_tables.json"], {"drive", "pdftotext"},
+         note="W11: the insurance-cost tables (disability factor, sum-at-risk factors, death rate) from the bylaws PDFs; --raw names their folder"),
+    step("build_covers", "pipeline/build_covers.py",
+         ["data/regulation/covers_src.json", "data/regulation/covers_tables.json", "data/regulation/coef_src.json", D + "funds.json"], [D + "funds/covers.json"],
+         groups={"deploy"}, note="W11: funds/covers.json, the cover price per ₪1,000 salary at ages 30/40/50 (python3 pipeline/build_covers.py --check)"),
     # Wave 5 (Pro depth): one model-ready workbook per company (P&L, balance sheet, IFRS 17, solvency, savings, KPIs, a Sources row per
     # value) from the published JSON; standard library (pipeline/xlsx_lib.py); gate `model_xlsx` (byte-equal rebuild, opens, every cell sourced)
     step("build_model_xlsx", "pipeline/build_model_xlsx.py",

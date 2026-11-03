@@ -111,6 +111,9 @@ Checks
   coef           W6: web/public/data/funds/coef.json equals a rebuild (pipeline/build_coef.py --check): every conversion-coefficient table
                  has a source page and heading, cells in [145, 260], falls with the retirement age and never with the birth year, women never
                  below men without survivors, every pension company group has a coverage row
+  covers         W11: web/public/data/funds/covers.json equals a rebuild (pipeline/build_covers.py --check): every fund's source has a
+                 URL, edition and sha256, every table its pages and quoted heading, every price finite and > 0 with parts that sum, every
+                 standard cell within ±25% of the funds' median, every comprehensive-pension group a coverage row
   decision       W2: web/public/data/funds/decision.json equals a rebuild (pipeline/build_decision.py --check): every service-index row's
                  total = the published weights x its components within rounding, every claims block sums to 100%, every company is a
                  fox group, every figure has a source with a URL and a retrieval date, every coverage rule and checklist item a quoted phrase
@@ -725,6 +728,14 @@ def coef():  # W6: the conversion coefficients read from the funds' bylaws
         (out[0] if p.returncode == 0 else " · ".join(out[:2]))[:200])
 
 
+def covers():  # W11: the cover price read from the funds' bylaws insurance-cost tables
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_covers.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) priced cells", out[0])
+    add("covers", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[0] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def attribution():  # module A4
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_attribution.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -835,6 +846,7 @@ def main():
     decision()
     flows()
     coef()
+    covers()
     attribution()
     facts()
     model_xlsx()

@@ -146,6 +146,10 @@
    "schema": "fundsCoef"
   },
   {
+   "pattern": "funds/covers.json",
+   "schema": "fundsCovers"
+  },
+  {
    "pattern": "funds/trackers.json",
    "schema": "fundsTrackers"
   },
@@ -16378,6 +16382,7 @@
     }
    }
   },
+  "fundsCovers": {"type": "object", "required": ["v", "asof", "method", "standard", "standard_note", "dis_amount", "funds", "coverage"], "properties": {"v": {"type": "integer"}, "asof": {"$ref": "#/$defs/date"}, "method": {"type": "string"}, "standard_note": {"type": "string"}, "dis_amount": {"type": "number"}, "standard": {"type": "object", "required": ["year", "ages", "disability_pct", "survivors_pct", "widow_share", "orphan_share", "contrib_pct", "waiver_pct", "end_age", "balance"], "properties": {"ages": {"type": "array", "minItems": 1, "items": {"type": "integer"}}}}, "funds": {"type": "object", "additionalProperties": {"type": "object", "required": ["grp", "src", "tables", "excluded", "cells"], "properties": {"grp": {"type": "string"}, "src": {"type": "object", "required": ["title", "edition", "url", "retrieved", "sha256"], "properties": {"url": {"type": "string", "pattern": "^https://"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}, "tables": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["kind", "sex", "pages", "quote"], "properties": {"kind": {"enum": ["dis", "wid", "orph", "mort", "comb"]}, "sex": {"enum": ["m", "f"]}, "pages": {"type": "array", "minItems": 1, "items": {"type": "integer"}}, "quote": {"type": "string"}}}}, "excluded": {"type": "array", "items": {"type": "object", "required": ["kind", "sex", "pages", "why"]}}, "cells": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["sex", "age", "dis", "surv", "total"], "properties": {"sex": {"enum": ["m", "f"]}, "age": {"type": "integer"}, "dis": {"type": ["object", "null"], "properties": {"f": {"type": "number"}, "pg": {"type": "array", "minItems": 1, "items": {"type": "integer"}}, "cost": {"type": "number"}}}, "surv": {"type": ["object", "null"], "properties": {"by": {"type": "integer"}, "m": {"type": "number"}, "pg_m": {"type": "array", "minItems": 1, "items": {"type": "integer"}}, "sar": {"type": "number"}, "cost": {"type": "number"}}}, "total": {"type": ["number", "null"]}, "dis_why": {"type": "string"}, "surv_why": {"type": "string"}}}}}}}, "coverage": {"type": "array", "items": {"type": "object", "required": ["grp", "status"], "properties": {"grp": {"type": "string"}, "status": {"enum": ["table", "missing"]}}}}}},
   "fundsCoef": {
    "type": "object",
    "required": [

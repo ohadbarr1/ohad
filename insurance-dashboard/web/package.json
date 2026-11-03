@@ -42,6 +42,7 @@
     "test:under": "node scripts/under-test.mjs",
     "test:coef": "node scripts/coef-test.mjs",
     "test:nyud": "node scripts/nyud-test.mjs",
+    "test:book": "node scripts/book-test.mjs",
     "test:news": "node scripts/news-test.mjs",
     "test:moments": "node scripts/moments-test.mjs",
     "test:feebook": "node scripts/feebook-test.mjs"
