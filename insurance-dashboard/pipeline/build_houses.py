@@ -14,6 +14,7 @@ activity code covers two printed segments with no printed parent (Altshuler 2024
 listed). The bridge's residuals are differences of printed or regulator figures and are labelled as such. Nothing is estimated.
 """
 import json
+import math  # CI runs 3.12, whose sum() of floats differs from 3.9/3.11: fsum is exact on both
 import re
 import sys
 from collections import defaultdict
@@ -145,7 +146,7 @@ def segment_series(rows, metric):
         # the same report must print all parts; otherwise the newest name wins (a renamed segment)
         reps = {p["rp"] for p in picks.values()}
         if len(reps) == 1 and len({p["pg"] for p in picks.values()}) == 1 and all(p["l"] == next(iter(picks.values()))["l"] for p in picks.values()):
-            out[code][wkey(w, d)] = [round(sum(conv(p) for p in picks.values()), 3), None, None, 1, [[he, round(conv(p), 3), p["pg"], p["r"]] for he, p in sorted(picks.items())]]
+            out[code][wkey(w, d)] = [round(math.fsum(conv(p) for p in picks.values()), 3), None, None, 1, [[he, round(conv(p), 3), p["pg"], p["r"]] for he, p in sorted(picks.items())]]
             names[code] |= set(picks)
         else:
             b, a = pick(top)

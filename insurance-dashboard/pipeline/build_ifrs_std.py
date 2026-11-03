@@ -22,6 +22,7 @@ Rules (nothing estimated):
 - The CSM roll-forward identity (opening + movements = closing) is checked for every printed roll-forward; every break is listed.
 """
 import json
+import math  # CI runs 3.12, whose sum() of floats differs from 3.9/3.11: fsum is exact on both
 import re
 import sys
 from collections import defaultdict
@@ -290,7 +291,7 @@ def rollforwards(rows):
                     pass
                 o = sorted(op, key=lambda r: r["src"] != "table")[0]
                 signs, how = solve(o["v"], cl["v"], [r["v"] for r in use], tol=max(2.0 * max(1, len(use)) * 0.5, abs(cl["v"]) * 0.0005))
-                diff = round(cl["v"] - o["v"] - sum(r["v"] for r in use), 3)
+                diff = round(cl["v"] - o["v"] - math.fsum(r["v"] for r in use), 3)
                 k = qkey(cl["d"])
                 rf = {"c": c, "rp": rp, "seg": seg, "b": b, "w": w, "d": cl["d"], "k": k, "how": how or "breaks", "ok": bool(signs), "diff": diff,
                       "open": [round(o["v"], 3), o["pg"], o["r"]], "close": [round(cl["v"], 3), cl["pg"], cl["r"]],
@@ -350,7 +351,7 @@ def runoff(rows):
                 elif len(parts) == 1:
                     std.append([sid, he, round(parts[0][1]["v"], 3), parts[0][1]["pg"], parts[0][1]["r"]])
                 else:
-                    std.append([sid, he, round(sum(r["v"] for _, r in parts), 3), None, None, 1, [[r["bucket"], round(r["v"], 3), r["pg"], r["r"]] for _, r in parts]])
+                    std.append([sid, he, round(math.fsum(r["v"] for _, r in parts), 3), None, None, 1, [[r["bucket"], round(r["v"], 3), r["pg"], r["r"]] for _, r in parts]])
             res[f"{seg}|{b}"] = {"seg": seg, "b": b, "asof": "2025-12-31", "printed": printed, "std": std}
         out[c] = res
     return out
@@ -437,7 +438,7 @@ def build():
                     continue
                 need = ["life", "health"] if not (c == "menora" and segs.get("life_health_risk", {}).get(m, {}).get(k)) else ["life", "life_health_risk"]
                 if all(dict(have).get(s) for s in need):
-                    lh[m][k] = [round(sum(dict(have)[s][0] for s in need), 3), None, None, 1, [[1, dict(have)[s][0], dict(have)[s][1], dict(have)[s][2], s] for s in need]]
+                    lh[m][k] = [round(math.fsum(dict(have)[s][0] for s in need), 3), None, None, 1, [[1, dict(have)[s][0], dict(have)[s][1], dict(have)[s][2], s] for s in need]]
         segs["lh"] = lh
         # portfolios (the regulator's groups), stocks and the main flows
         ports = defaultdict(dict)
@@ -462,7 +463,7 @@ def build():
                 for k in QUARTERS:
                     xs = [(p, ports[p].get(m, {}).get(k)) for p in members if ports.get(p, {}).get(m, {}).get(k)]
                     if xs and (model == "vfa" or len(xs) >= 2):
-                        mv[model][m][k] = [round(sum(x[0] for _, x in xs), 3), None, None, 1, [[1, x[0], x[1], x[2], p] for p, x in xs]]
+                        mv[model][m][k] = [round(math.fsum(x[0] for _, x in xs), 3), None, None, 1, [[1, x[0], x[1], x[2], p] for p, x in xs]]
         comp[c] = {"segs": segs, "nulls": nulls, "ports": dict(ports), "port_he": {p: sorted(v) for p, v in ph.items()}, "model_view": mv}
     rfs = rollforwards(rows)
     ro = runoff(rows)
