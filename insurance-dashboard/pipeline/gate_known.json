@@ -25,6 +25,37 @@
   "hachshara 2026Q2 p12 csm_other:השפעות כלכליות ריבית -50.949 [he_1766421]",
   "hachshara 2026Q2 p12 csm_release -10.461 [he_1766421]",
   "phoenix 2025Q3 p33 csm_new_business 462.0 [he]",
-  "phoenix 2025Q3 p33 future_profit_new_business 159.0 [he]"
- ]
+  "phoenix 2025Q3 p33 future_profit_new_business 159.0 [he]",
+  "ayalon 2025FY p143 csm_new_business 72.0 [he_1732151]",
+  "ayalon 2025FY p143 csm_interest_accretion 44.0 [he_1732151]",
+  "ayalon 2025FY p143 csm_changes_in_estimates 201.0 [he_1732151]",
+  "ayalon 2025FY p143 csm_release -74.0 [he_1732151]",
+  "ayalon 2025FY p143 csm_release -65.0 [he_1732151]",
+  "ayalon 2025FY p143 csm_other:שינויים ב-CSM ביטוח  -192.0 [he_1732151]",
+  "ayalon 2025FY p142 csm_new_business 210.0 [he_1732151]",
+  "ayalon 2025FY p142 csm_interest_accretion 50.0 [he_1732151]",
+  "ayalon 2025FY p142 csm_changes_in_estimates -35.0 [he_1732151]",
+  "ayalon 2025FY p142 csm_release -90.0 [he_1732151]",
+  "ayalon 2025FY p142 csm_release -81.0 [he_1732151]",
+  "ayalon 2025FY p142 csm_other:שינויים ב-CSM ביטוח  -10.0 [he_1732151]",
+  "migdal 2025FY p108 csm_opening 13104.0 [he_1730567]",
+  "migdal 2025FY p108 csm_interest_accretion 276.0 [he_1730567]",
+  "migdal 2025FY p108 csm_new_business 438.0 [he_1730567]",
+  "migdal 2025FY p108 csm_changes_in_estimates -235.0 [he_1730567]",
+  "migdal 2025FY p108 csm_closing 14411.0 [he_1730567]",
+  "ayalon 2026Q1 p19 csm_new_business 210.0 [he]",
+  "ayalon 2026Q1 p19 csm_interest_accretion 50.0 [he]",
+  "ayalon 2026Q1 p19 csm_changes_in_estimates -35.0 [he]",
+  "ayalon 2026Q1 p19 csm_release -87.0 [he]",
+  "ayalon 2026Q1 p19 csm_release -84.0 [he]",
+  "ayalon 2026Q1 p19 csm_other:שינויים ב-CSM ביטוח  -10.0 [he]",
+  "migdal 2026Q2 p12 csm_opening 14411.0 [he_1763684]",
+  "migdal 2026Q2 p12 csm_interest_accretion 133.0 [he_1763684]",
+  "migdal 2026Q2 p12 csm_new_business 242.0 [he_1763684]",
+  "migdal 2026Q2 p12 csm_changes_in_estimates 312.0 [he_1763684]",
+  "migdal 2026Q2 p12 csm_closing 15276.0 [he_1763684]"
+ ],
+ "notes": {
+  "ifrs_page_w10": "03.11.26: 28 CSM-movement values for Ayalon (FY'25 pp.142-143, Q1'26 p.19 = the FY'25 chart reprinted, tagged fy 2025) and Migdal (FY'25 p.108, Q2'26 p.12) are read from the board report's labelled waterfall charts (no text layer). Checked: Ayalon release 90+81 = the 171 stated in the text, new business 210 = 122% of release as stated; Migdal FY'25 bridge 13,104 -> 14,414 vs closing 14,411, H1'26 14,411 -> 15,275 vs 15,276 (rounding)."
+ }
 }
