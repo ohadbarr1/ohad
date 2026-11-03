@@ -1,0 +1,14 @@
+/* Wave 11 · /funds/under and the saver's UnderLine. No dimming by opacity; inline links underlined. */
+.under .under-def { margin-bottom: 10px; }
+.under .under-line { margin: 0 0 12px; font-size: 15px; line-height: 1.6; color: var(--fg); max-width: 72ch; }
+.under .under-past { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.under a:not(.btn):not(.item):not(.cmptray-go) { text-decoration: underline; text-underline-offset: 3px; }
+.under .chip.mig { margin-inline-start: 6px; }
+.under .under-list { margin: 0; padding-inline-start: 18px; display: grid; gap: 6px; font-size: 13px; line-height: 1.6; max-width: 90ch; }
+.under .under-list b { font-weight: 600; }
+.under .fnote { margin-top: 8px; }
+.under tr.lead td { font-weight: 600; }
+.under td.lbl a { color: var(--fg); }
+.sv-card .sv-under, .sv-under { margin: 6px 0 0; font-size: 14px; line-height: 1.55; }
+.sv-under a { text-decoration: underline; text-underline-offset: 3px; }
+.sv-under .sv-src { color: var(--muted); font-size: 12px; }

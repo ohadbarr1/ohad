@@ -247,6 +247,12 @@ STEPS = [
          [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/closed.json", D + "funds/default.json", D + "market.json"],
          [D + "flows.json", D + "flows"], code=["pipeline/funds_lib.py"], groups={"deploy"},
          note="W8: flows.json + flows/<prod>.json, flows/m/<yyyymm>.json (inputs), flows/sig.json, flows/fees.json (python3 pipeline/build_flows.py --check)"),
+    # Wave 11 "under": bottom-quartile tracks (5Y net, in their category) still taking in money, the intra-group migration taken out, and
+    # the shekel cost of their gap to the category median, month by month since 2016; standard library; rebuild byte-equal + rules
+    step("build_under", "pipeline/build_under.py",
+         [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/closed.json", D + "flows"],
+         [D + "under.json", D + "under"], code=["pipeline/funds_lib.py", "pipeline/build_flows.py"], groups={"deploy"},
+         note="W11: under.json + under/m/<yyyymm>.json (python3 pipeline/build_under.py --check)"),
     # W2: the decision data for recommending a pension fund (CMA service index, the funds' claims annex B3, default coverage, the
     # managers'-insurance switching checklist). extract_decision reads the raw files on the drive and verifies the register (manual);
     # build_decision is standard library; gate `decision` (rebuild byte-equal + rules)
