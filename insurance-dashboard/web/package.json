@@ -37,6 +37,7 @@
     "test:deposits": "node scripts/deposits-test.mjs",
     "test:flags": "node scripts/flags-test.mjs",
     "test:flows": "node scripts/flows-test.mjs",
+    "test:under": "node scripts/under-test.mjs",
     "test:coef": "node scripts/coef-test.mjs",
     "test:nyud": "node scripts/nyud-test.mjs",
     "test:news": "node scripts/news-test.mjs",
