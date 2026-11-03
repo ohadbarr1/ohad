@@ -28,7 +28,7 @@ class Savings(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         files = build_answers.build()
-        cls.ans = {a["id"]: a for name, f in files.items() if name != "index.json" for a in f["rows"]}
+        cls.ans = {a["id"]: a for name, f in files.items() if name != "index.json" and not name.startswith("..") for a in f["rows"]}
         L = jl("lens.json")
         cls.L = L
         cls.ids = {i: g["id"] for i, g in enumerate(L["groups"])}
