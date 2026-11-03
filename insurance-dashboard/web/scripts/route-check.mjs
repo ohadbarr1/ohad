@@ -3,7 +3,7 @@
 // Fails (exit 1) on: the page scrolling sideways at 390 px, an ISO date (2026-08-27) in the text, a route without its own title,
 // a valid route landing on the not-found page. Reports, without failing: Latin runs of 3+ words, first-figure position, transfer size.
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -11,7 +11,15 @@ const args = process.argv.slice(2);
 // clean URLs; --hash for a build that still routes through the fragment
 const BASE = (args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--only' && args[i - 1] !== '--json') ?? 'http://localhost:4173').replace(/\/$/, '') + (args.includes('--hash') ? '/#' : '');
 const JSON_OUT = args.includes('--json') ? args[args.indexOf('--json') + 1] : null;
-const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+// The browser: $CHROME when set (CI sets /usr/bin/google-chrome); else Playwright's pinned Chromium, so an auto-update of the
+// system Chrome cannot change or hang the check (Chrome 156 hung it on 03.11.26); else the system Chrome.
+async function pickChrome() {
+  if (process.env.CHROME) return process.env.CHROME;
+  try { const { chromium } = await import('playwright'); const p = chromium.executablePath(); if (p && existsSync(p)) return p; } catch {}
+  return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+}
+const CHROME = await pickChrome();
+const CDP_TIMEOUT = 60_000;  // a browser command that gets no answer in a minute fails the check instead of waiting forever
 const ROUTES = [
   '/', '/companies', '/company/phoenix', '/company/phoenix/report', '/company/phoenix/review', '/company/phoenix/financials', '/company/phoenix/profit',
   '/company/phoenix/ifrs17', '/company/phoenix/savings', '/company/phoenix/filings', '/company/harel/financials', '/company/altshuler', '/company/altshuler/savings',
@@ -75,7 +83,12 @@ async function run(width, height, phone) {
   const ws = new WebSocket(wsUrl); await new Promise((r) => (ws.onopen = r));
   let id = 0; const pending = new Map();
   ws.onmessage = (m) => { const d = JSON.parse(m.data); if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id); } };
-  const send = (method, params = {}) => new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
+  const send = (method, params = {}) => new Promise((res, rej) => {
+    const i = ++id;
+    const t = setTimeout(() => { pending.delete(i); rej(new Error(`${method} got no answer from the browser in ${CDP_TIMEOUT / 1000} s (${CHROME})`)); }, CDP_TIMEOUT);
+    pending.set(i, (d) => { clearTimeout(t); res(d); });
+    ws.send(JSON.stringify({ id: i, method, params }));
+  });
   await send('Page.enable'); await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: phone ? 2 : 1, mobile: false });
   if (phone) await send('Emulation.setEmulatedMedia', { features: [{ name: 'hover', value: 'none' }, { name: 'pointer', value: 'coarse' }] });
