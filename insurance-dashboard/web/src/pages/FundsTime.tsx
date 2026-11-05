@@ -1,8 +1,7 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { BasisToggle, CompareAdd, FundsHead } from '../components/FundsNav';
-import { CatPicker, TimeNav, WatchStar, pctChartOption, rankProv } from '../components/FundsTime';
-import { MgrChip, IdDot } from '../components/MgrChip';
+import { BasisToggle, FundsHead } from '../components/FundsNav';
+import { IdDot } from '../components/MgrChip';
 import { Sourced } from '../components/Source';
 import { Chart } from '../components/Chart';
 import { DataTable } from '../components/DataTable';
@@ -11,93 +10,26 @@ import { Empty, ErrorBox, Loading, Panel, Pick, Seg } from '../components/ui';
 import { useFunds } from '../lib/useData';
 import { useSource, type Prov } from '../lib/prov';
 import { chartBase, CHART_FONT } from '../lib/theme';
-import { GROUP_ID, idColor } from '../lib/identity';
 import { nf, sn } from '../lib/format';
 import { expP, fundP } from '../lib/market';
 import { NET_LABEL, netProv, pc, refOf, retOf, selfDirected, useBasis, type Basis, type FundX, type FundsFile, type Per } from '../lib/funds';
-import { BANDS, backM, pickSet, rankSeries, stepDown, ymL, type Band, type RankMetric } from '../lib/fundsTime';
-import { membersOf, useBranch, useCat, useCatFiles, useClosed, useGlide, useHists, yOf } from '../lib/fundsTimeLoad';
+import { BANDS, stepDown, ymL, type Band } from '../lib/fundsTime';
+import { useGlide, useHists } from '../lib/fundsTimeLoad';
 import '../styles/lens.css';
 import '../styles/market.css';
 import '../styles/funds-time.css';
 
-/* F2 TIME, the views of the section's "סיכון וזמן" tab: peer rank over time by category (#11) and the age-track glide paths (#15).
+/* F2 TIME, the views of the section's "סיכון וזמן" tab: the age-track glide paths (#15) (the peer rank over time, #11, is the screener's
+   persistence column since wave 2b).
    Net of fee by default; closed tracks are in every historical view (survivorship); every number opens its source. The map (#10), the
    quilt (#13) and the persistence view (#12) were removed (owner, 01.11.26; code cut in phase 0, 05.11.26); their addresses land on
-   /funds/rank. The persistence file (funds/persist.json) is still built: the answers Q-220 and Q-221 read it. */
+   the screener sorted by persistence. The persistence file (funds/persist.json) is still built: the answers Q-220 and Q-221 read it. */
 
 const useFile = () => { const { data, error } = useFunds(); return { data: data as FundsFile | undefined, error }; };
 const basisLbl = (b: Basis) => (b === 'net' ? NET_LABEL : 'ברוטו');
-const grpId = (g: string) => GROUP_ID[g] ?? '';
 
-/* ======================================================================================== rank over time, by category (#11) */
-export function FundsRank() {
-  const { data, error } = useFile();
-  const [cat, setCat] = useCat();
-  const [basisAsked] = useBasis();
-  const [metric, setMetric] = useState<RankMetric>('y12');
-  const [own, setOwn] = useState(false);
-  const { open } = useSource();
-  const files = useCatFiles(cat, { stats: false, rank: true });
-  const set = pickSet(files.rank, metric, basisAsked) ?? pickSet(files.rank, metric, 'net');
-  const b: Basis = set?.basis ?? basisAsked;
-  const [br, setBr] = useBranch();
-  const closed = useClosed(true);
-  const mem = useMemo(() => (data && closed ? membersOf(data.funds, closed, cat, br) : []), [data, closed, cat, br]);
-  const hs = useHists(own && !set ? mem.map((f) => f.k) : []);
-  const asof = data?.asof ?? 0;
-  const months = files.rank?.months ?? (asof ? backM(asof, 60) : []);
-  const browser = useMemo(() => {
-    if (set || !own || !mem.length || hs.pending) return null;
-    return rankSeries(mem.filter((f) => hs.h[f.k]).map((f) => ({ k: f.k, p: hs.h[f.k].p, y: yOf(hs.h[f.k], b) })), months, metric === 'y12' ? 12 : 36);
-  }, [set, own, mem, hs.pending, hs.h, months, metric, b]);
-  const series = set ? { tracks: set.tracks, n: set.n, how: 'file' as const } : browser ? { ...browser, how: 'browser' as const } : null;
-  useEffect(() => { setOwn(false); }, [cat]);
-  if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
-  const fOf = (k: string) => mem.find((f) => f.k === k);
-  const L = months.length - 1;
-  const rows = series ? Object.entries(series.tracks).map(([k, xs]) => { const f = fOf(k); if (!f) return null;
-    const ranked = xs.slice(-60).filter((v) => v != null) as number[];
-    return { f, xs, now: xs[L] ?? null, y1: xs[L - 12] ?? null, y3: xs[L - 36] ?? null, top: ranked.filter((v) => v >= 75).length, of: ranked.length }; }).filter((r): r is NonNullable<typeof r> => !!r) : [];
-  const top10 = rows.filter((r) => r.now != null && !r.f.gone).sort((a, c) => c.now! - a.now!).slice(0, 10);
-  const firstOfGrp = new Map<string, string>(); top10.forEach((r) => { if (!firstOfGrp.has(r.f.grp)) firstOfGrp.set(r.f.grp, r.f.k); });
-  const shown = months.slice(-60), off = months.length - shown.length;
-  const P = (r: (typeof rows)[number], i: number) => () => rankProv(r.f.name, months[i], r.xs[i] ?? null, series!.n[i] ?? null, metric, b, series!.how);
-  const cell = (r: (typeof rows)[number], i: number, v: number | null) => (v == null ? <span className="muted">–</span> : <Sourced src={P(r, i)}><span className="num">{nf(v, 0)}</span></Sourced>);
-  return (
-    <>
-      <FundsHead title="סיכון וזמן" sub={<>אחוזון בקטגוריה לאורך זמן · {cat}</>} tools={<><CatPicker fs={data?.funds ?? []} cat={cat} onChange={setCat} /><BasisToggle real={false} /></>} />
-      <TimeNav />
-      <Panel title={<>עשרת המובילים היום, ומאיפה הגיעו <Tip k="rank" /></>} aside={<><Seg<RankMetric> label="חלון" value={metric} onChange={setMetric} options={[['y12', 'LTM'], ['a3', '3Y']]} /><span className={`chip${b === 'net' ? ' est' : ''}`}>{basisLbl(b)}</span><button type="button" className="chip" aria-pressed={br} onClick={() => setBr(!br)} title="להציג גם קופות של ארגון או מפעל, שאינן פתוחות לכל הציבור">קופות ענפיות</button>{series && <span className="chip">{series.how === 'file' ? 'מחושב בבניית הנתונים' : 'מחושב בדפדפן'}</span>}</>}>
-        {!data || !files.settled ? <Loading what="אחוזונים" /> : !series ? (own ? <Loading what={`${mem.length - hs.pending} מתוך ${mem.length} היסטוריות`} /> : (
-          <Empty title="קובץ האחוזונים עוד לא פורסם לקטגוריה הזו">אפשר לחשב אותו כאן מהתשואות החודשיות של כל חברי הקטגוריה, כולל מסלולים שנסגרו. <button type="button" className="chip" onClick={() => setOwn(true)}>חישוב בדפדפן ({mem.length} קבצים)</button></Empty>
-        )) : !top10.length ? <Empty title="אין מסלולים מדורגים בחודש האחרון" /> : (
-          <>
-            <Chart label={`אחוזון ${metric === 'y12' ? 'LTM' : '3Y'} · ${cat}`} height={340} deps={[cat, metric, b, series.how, top10.map((r) => r.f.k).join()]}
-              onPoint={(si, di) => { const r = top10[si]; if (r) open(P(r, off + di)()); }}
-              build={() => pctChartOption(shown.map(ymL), top10.map((r) => ({ name: r.f.name, data: r.xs.slice(off), color: grpId(r.f.grp) ? idColor(grpId(r.f.grp)) : chartBase().mu, dashed: firstOfGrp.get(r.f.grp) !== r.f.k })))} />
-            <div className="fnote">חמש השנים האחרונות. צבע: המנהל; מסלול שני של אותו מנהל: מקווקו. הרצועות: הרבע העליון והתחתון. מסלול שאינו בקטגוריה בחודש מסוים: הקו נקטע.</div>
-          </>
-        )}
-      </Panel>
-      {series && rows.length > 0 && (
-        <Panel title="כל המסלולים" aside={<span>אחוזון היום, לפני שנה ולפני שלוש שנים; חודשים ברבע העליון מתוך 60</span>}>
-          <DataTable caption={`אחוזון לאורך זמן · ${cat}`} rows={rows} rowKey={(r) => r.f.k} sort={{ key: 'now', dir: 'desc' }} maxHeight={560}
-            export={{ name: 'fox-rank-history', title: `אחוזון ${metric === 'y12' ? 'LTM' : '3Y'} לאורך זמן · ${cat} · ${basisLbl(b)}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }}
-            columns={[
-              { key: 'n', head: 'מסלול', value: (r) => r.f.name, firstDir: 'asc', cell: (r) => <span className="fmapname"><Link to={`/funds/${r.f.k}`}>{r.f.name}</Link><MgrChip grp={r.f.grp} mgr={r.f.mgr} short />{r.f.gone && <span className="chip">נסגר</span>}</span> },
-              { key: 'now', head: <>היום <span className="dim num">{ymL(months[L])}</span></>, value: (r) => r.now, cell: (r) => cell(r, L, r.now) },
-              { key: 'y1', head: 'לפני שנה', value: (r) => r.y1, cell: (r) => cell(r, L - 12, r.y1) },
-              { key: 'y3', head: 'לפני 3 שנים', className: 'wide-only', value: (r) => r.y3, cell: (r) => cell(r, L - 36, r.y3) },
-              { key: 'top', head: 'ברבע העליון', value: (r) => (r.of ? r.top / r.of : null), cell: (r) => (r.of ? <Sourced src={() => ({ k: 'calc', title: `חודשים ברבע העליון · ${r.f.name}`, value: `${r.top} מתוך ${r.of}`, formula: 'מספר החודשים מתוך 60 האחרונים שבהם האחוזון היה 75 ומעלה, מתוך החודשים שבהם המסלול דורג',
-                inputs: r.xs.slice(-60).map((v, i) => ({ label: ymL(months[months.length - 60 + i] ?? 0), v: v == null ? '–' : nf(v, 0), src: v == null ? undefined : P(r, months.length - 60 + i) })).filter((z) => z.v !== '–') })}><span className="num">{r.top}/{r.of}</span></Sourced> : <span className="muted">–</span>) },
-              { key: 'act', head: <span className="sr-only">פעולות</span>, label: 'פעולות', noExport: true, sortable: false, cell: (r) => (r.f.gone ? null : <span className="fact"><CompareAdd k={r.f.k} name={r.f.name} small /><WatchStar f={r.f} asof={asof} small /></span>) },
-            ]} />
-        </Panel>
-      )}
-    </>
-  );
-}
+/* the percentile over time by category (#11) left this page in wave 2b (fox 3.0): it is the screener's persistence column
+   (/funds/screen?sort=persist; /funds/rank lands there) and the percentile chart of the track card */
 
 /* ======================================================================================== glide paths (#15) */
 const GLIDE_PRODS = ['גמל', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)'];
@@ -138,7 +70,6 @@ export function FundsGlide() {
   return (
     <>
       <FundsHead title="סיכון וזמן" sub={<>מסלולי גיל: כמה סיכון המעבר בגיל באמת מוריד · {prod}</>} tools={<><Pick label="מוצר" value={prod} onChange={(v) => { const n = new URLSearchParams(sp); n.set('prod', v); setSp(n, { replace: true }); }} options={GLIDE_PRODS.map((x) => [x, x] as [string, string])} /><BasisToggle real={false} /></>} />
-      <TimeNav />
       {!data ? <Loading what="מסלולי גיל" /> : !rows.length ? <Empty title="אין מנהלים עם שני מסלולי גיל לפחות במוצר הזה" /> : (
         <>
           <Panel title={<>חשיפה למניות לפי גיל, לכל מנהל <Tip k="glide" /></>} aside={<><span>ממוין לפי הירידה מעד 50 ל-60 ומעלה</span><span className="num">{ymL(asof)}</span></>}>

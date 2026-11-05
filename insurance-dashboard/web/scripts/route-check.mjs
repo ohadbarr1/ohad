@@ -54,12 +54,16 @@ const ROUTES = [
   '/questions', '/findings', '/brief', '/clients/book', '/funds/tools', '/my', '/funds/watch', '/methodology', '/drivers', '/drivers/harel',
   // phase 1, lane P3/P5 (savings season): the published nowcast (and /nowcast landing on it), the flows hub's tabs and the monthly letter
   '/savings?v=now', '/nowcast', '/nowcast?q=Q3-2026&fm=harel', '/flows', '/funds/under', '/flows/letter', '/flows/letter/202609', '/flows/letter/202609?v=1',
+  // fox 3.0 wave 2b (Pro merges): one canonical page each; every old address lands on it (a tab, a section or a view)
+  '/company/phoenix/numbers#review', '/company/harel/review', '/attribution', '/industry/csm?view=std', '/capital#reported', '/industry/capital?sr=wo',
+  '/scenarios?view=solvency', '/scenarios?view=solvency&r=-100&eq=-20', '/savings?v=market', '/savings?v=econ', '/savings?v=npv', '/savings?v=value', '/feebook', '/managers',
+  '/valuation', '/expectations', '/funds/screen?sort=persist', '/funds/screen?prod=%D7%92%D7%9E%D7%9C&track=%D7%A2%D7%93%2050&sort=persist', '/funds/rank', '/funds/rank?cat=%D7%92%D7%9E%D7%9C%20%7C%20%D7%A2%D7%93%2050', '/funds/glide',
   // fox 3.0 phase 2: the agent desk (the folders with the call list and the reviews; the new-client wizard)
   '/clients', '/clients/new',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */
-const MUST_404 = ['/company/zzz', '/company/zzz/financials', '/debt/zzz', '/facts/zzz', '/ownership/zzz', '/holdings/zzz', '/card/zzz/2026Q2'];
+const MUST_404 = ['/company/zzz', '/company/zzz/financials', '/debt/zzz', '/facts/zzz', '/valuation/zzz', '/ownership/zzz', '/holdings/zzz', '/card/zzz/2026Q2'];
 ROUTES.push(...MUST_404);
 // --only <a,b>: just the routes that contain one of these strings (a module's own pages while it is built)
 const ONLY = args.includes('--only') ? args[args.indexOf('--only') + 1].split(',') : null;

@@ -12,7 +12,7 @@ export interface Item { kind: Kind; label: string; meta: string; to: string; sco
 
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
 export const FUNCS: { code: string; badge: string; label: string; keys: string[]; to: (id: string) => string }[] = [
-  { code: 'ER', badge: 'סקירה', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'yoy', 'qoq'], to: (id) => `/company/${id}/review` },
+  { code: 'ER', badge: 'סקירה', label: 'סקירת דוח', keys: ['er', 'review', 'סקירת', 'סקירה', 'yoy', 'qoq'], to: (id) => `/company/${id}/numbers#review` },  // wave 2b: a section of "מספרים"
   { code: 'RANK', badge: 'דירוג', label: 'מול השוק, לפי מסלול', keys: ['rank', 'דירוג', 'מסלולים', 'יצרן', 'תשואות'], to: (id) => `/managers?v=makers&mk=${id}` },
   { code: 'SOP', badge: 'מקורות רווח', label: 'מקורות רווח וענפים', keys: ['sop', 'מקורות', 'ענפים', 'נוסטרו', 'combined', 'lob'], to: (id) => `/company/${id}/profit` },
   { code: 'CSM', badge: 'CSM', label: 'IFRS 17 · CSM', keys: ['csm', 'ifrs', 'ra', 'רגישויות', 'solvency', 'סולבנסי', 'כושר', 'פירעון'], to: (id) => `/company/${id}/ifrs17` },
@@ -35,7 +35,7 @@ const REG_KEYS = ['regulation', 'regulatory', 'רגולציה', 'רגולטור'
 const CAP_KEYS = ['capital', 'surplus', 'dividend', 'buyback', 'allocation', 'הון', 'עודף', 'דיבידנד', 'חלוקה', 'רכישה', 'עצמית', 'הקצאה', 'אפשרויות', 'בר-חלוקה'].map(normalize);
 /** words that reach the Fragility Monitor (/fragility, module A10): with a company, its row */
 const FRAG_KEYS = ['fragility', 'fragile', 'warning', 'early', 'שבריריות', 'שביר', 'אזהרה', 'אזהרות', 'התראה', 'התראות', 'סימני', 'מוניטור', 'סיכון'].map(normalize);
-/** words that reach the expectations decoder (/expectations, module A3) without a company */
+/** words that reach the expectations decoder (the index of /valuation, module A3; formerly /expectations) without a company */
 const EXP_KEYS = ['expectations', 'implied', 'reverse', 'priced', 'ציפיות', 'מגולם', 'מגלם', 'משתמע', 'נדרש', 'דורש', 'מתמחר'].map(normalize);
 /** words that reach the consolidation screen (/consolidation, module A9) without a company */
 const CONS_KEYS = ['consolidation', 'merger', 'acquisition', 'synergy', 'bolt-on', 'm&a', 'איחוד', 'איחודים', 'מיזוג', 'מיזוגים', 'רכישה', 'רכישות', 'סינרגיה', 'סינרגיות', 'רוכשת', 'יעד', 'יעדים'].map(normalize);
@@ -46,7 +46,7 @@ const BR_KEYS = ['brief', 'briefing', 'meeting', 'תדריך', 'תדריכים',
 const WT_KEYS = ['watch', 'changes', 'brief', 'מעקב', 'עוקב', 'השתנה', 'שינויים', 'תקציר', 'בוקר'].map(normalize);
 // F2 TIME: the risk and time views of the funds section and the funds watchlist
 const FT_PAGES: [string[], string, string, string][] = ([
-  [['rank', 'percentile', 'אחוזון', 'אחוזונים', 'דירוג', 'מקום'], 'אחוזון לאורך זמן · קופות', 'המקום של כל מסלול בקטגוריה, חודש אחר חודש', '/funds/rank'],
+  [['rank', 'percentile', 'persistence', 'אחוזון', 'אחוזונים', 'דירוג', 'מקום', 'התמדה', 'עקביות'], 'התמדה · מסלולים', 'כמה חודשים מתוך 60 כל מסלול היה ברבע העליון של הקטגוריה', '/funds/screen?sort=persist'],  // wave 2b: was /funds/rank
   [['glide', 'age', 'גיל', 'תלוי', 'מסלולי'], 'מסלולי גיל · קופות', 'עד 50, 50–60, 60 ומעלה: החשיפה למניות בפועל', '/funds/glide'],
   [['watchlist', 'מעקב', 'שלי', 'כוכב', 'עוקב'], 'במעקב · המוצרים שלי', 'המסלולים שסימנת ☆: 12 חודשים, דמי ניהול וחודש חדש · פרטי לדפדפן', '/my#watch'],  // phase 0: was /funds/watch
 ] as [string[], string, string, string][]).map(([k, l, m, to]) => [(k as string[]).map(normalize), l, m, to] as [string[], string, string, string]);
@@ -249,7 +249,7 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
   }
   // the expectations decoder (module A3)
   if (!p.company && words.length && words.every((w) => EXP_KEYS.some((k) => k.startsWith(w)))) {
-    out.push({ kind: 'פונקציה', label: 'ציפיות השוק · מה המכפיל דורש', meta: 'צמיחת נכסים, דמי ניהול, עלות, שחרור CSM ו-ROE שהמחיר מגלם, מול ההיסטוריה', to: '/expectations', score: 96 });
+    out.push({ kind: 'פונקציה', label: 'ציפיות השוק · מה המכפיל דורש', meta: 'צמיחת נכסים, דמי ניהול, עלות, שחרור CSM ו-ROE שהמחיר מגלם, מול ההיסטוריה', to: '/valuation', score: 96 });
   }
   // the consolidation screen (module A9)
   if (!p.company && words.length && words.every((w) => CONS_KEYS.some((k) => k.startsWith(w)))) {

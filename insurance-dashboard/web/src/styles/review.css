@@ -46,3 +46,15 @@ svg.spark .zero { stroke: var(--line); stroke-dasharray: 2 2; }
 tr.on svg.spark polyline { stroke: var(--fg); }
 .ledger-chart { position: sticky; top: 76px; }
 @media (max-width: 1100px) { .ledger-wrap { grid-template-columns: minmax(0, 1fr); } .ledger-chart { display: none; } }
+
+/* fox 3.0 wave 2b: the review's chapters fold inside the company's "מספרים" (CompanyOverview, #review) */
+details.rv-ch > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
+details.rv-ch > summary .aside { margin-inline-start: auto; gap: 4px; }
+details.rv-ch > summary::-webkit-details-marker { display: none; }
+details.rv-ch > summary h3 { margin: 0; font-size: var(--t-3); font-weight: 700; }
+details.rv-ch > summary::before { content: "◂"; color: var(--muted); font-size: 12px; width: 1em; flex: none; }
+details.rv-ch[open] > summary::before { content: "▾"; }
+details.rv-ch > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.rv-ch:not([open]) > summary { margin-bottom: 0; }
+.co-sec { scroll-margin-top: 72px; }
+.co-sec > .controls { margin-bottom: 8px; }

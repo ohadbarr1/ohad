@@ -19,6 +19,9 @@ import {
 } from '../lib/funds';
 import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import { useOptional } from '../lib/fundsLoad';
+import { useStatsIndex } from '../lib/fundsTimeLoad';
+import { pickSet, slugOf, ymL, type RankFile } from '../lib/fundsTime';
+import { rankProv } from '../components/FundsTime';
 import type { DefaultFile } from '../lib/fundsTools';
 import { defaultKeys, defaultNow, isPension, periodText } from '../lib/pensionPack';
 import { claimProv, claimsWhy, companyOf, DECISION_PATH, isOldGen, pc1, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2, W6 claims
@@ -35,8 +38,8 @@ import '../styles/market.css';
 
 const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 const ALL = 'all';
-type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'act' | 'svc' | 'clm';
-const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['act', 'איזון אקטוארי'], ['svc', 'מדד שירות'], ['clm', 'תביעות נכות']];  // act: W1-agent, svc: W2, clm: W6 (the company's own claims report), pension only
+type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'persist' | 'act' | 'svc' | 'clm';
+const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['persist', 'התמדה'], ['act', 'איזון אקטוארי'], ['svc', 'מדד שירות'], ['clm', 'תביעות נכות']];  // act: W1-agent, svc: W2, clm: W6 (the company's own claims report), pension only
 const COL_LABEL = Object.fromEntries(COLS) as Record<ColKey, string>;
 const DEFAULT_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'assets', 'sharpe', 'st', 'top'];
 /** W1-agent: a pension product opens with its decision columns (both fees, the actuarial balance) */
@@ -49,7 +52,37 @@ interface Saved { name: string; qs: string }
 /** ordinal rank and percentile (rankAll) plus the shared place inside the tie band (lo–hi) */
 type RankInfo = { rank: number; n: number; pct: number | null; lo: number; hi: number };
 /** the fee columns: the regulator's average actual fee of the track, not a quote */
-const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון', svc: 'הרשות, 2025', clm: 'אושרו · דיווח החברה' };
+const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון', svc: 'הרשות, 2025', clm: 'אושרו · דיווח החברה', persist: 'חודשים ברבע העליון מ-60' };
+
+/* wave 2b (fox 3.0): persistence, the former /funds/rank. The site's monthly percentile of every track in its category (funds/rank/<slug>.json,
+   LTM return, the build's own ranking), and how many of the last 60 months the track sat in the top quarter (percentile 75 and up). The
+   files load only when the column is on screen or the screen is sorted by it (?sort=persist). The percentile chart is on the track card. */
+type Persist = { top: number; of: number; xs: (number | null)[]; months: number[]; n: number[]; basis: Basis };
+function usePersist(cats: string[], on: boolean, basis: Basis): Map<string, Map<string, Persist>> | null {
+  const idx = useStatsIndex();
+  const [files, setFiles] = useState<Map<string, RankFile | null>>(new Map());
+  const want = on && idx.data ? cats.map((c) => [c, slugOf(idx.data, c)] as const).filter(([c, r]) => r && r.rank !== false && !files.has(c)) : [];
+  const key = want.map(([c]) => c).join('|');
+  useEffect(() => {
+    if (!want.length) return;
+    let live = true;
+    Promise.all(want.map(([c, r]) => load<RankFile>(`funds/rank/${r!.slug}.json`).then((f) => [c, f] as const, () => [c, null] as const)))
+      .then((xs) => live && setFiles((m) => { const n = new Map(m); xs.forEach(([c, f]) => n.set(c, f)); return n; }));
+    return () => { live = false; };
+  }, [key]);  // eslint-disable-line react-hooks/exhaustive-deps
+  return useMemo(() => {
+    if (!on || (!idx.data && !idx.missing)) return null;
+    const out = new Map<string, Map<string, Persist>>();
+    files.forEach((f, c) => {
+      const set = f ? pickSet(f, 'y12', basis) ?? pickSet(f, 'y12', 'net') ?? pickSet(f, 'y12', 'gross') : null;
+      if (!f || !set) return;
+      const m = new Map<string, Persist>();
+      Object.entries(set.tracks).forEach(([k, xs]) => { const last = xs.slice(-60).filter((v): v is number => v != null); if (last.length) m.set(k, { top: last.filter((v) => v >= 75).length, of: last.length, xs, months: f.months, n: set.n, basis: set.basis }); });
+      out.set(c, m);
+    });
+    return out;
+  }, [on, idx.data, idx.missing, files, basis]);
+}
 
 /** W6 doors: the IRA note in the agent's words (SELF_NOTE speaks to the saver) */
 const SELF_NOTE_AGENT = 'מסלולי IRA (ניהול אישי) אינם מדורגים: העמית בוחר את ההשקעות בעצמו, והתשואה המפורסמת אינה תוצאה של מנהל';
@@ -83,9 +116,13 @@ export function FundsScreen() {
   const closed = sp.get('closed') === '1', gone = sp.get('gone') === '1', outOnly = sp.get('out') === '1';
   const F = { fmax: num('fmax'), dmax: num('dmax'), amin: num('amin'), smin: num('smin'), hist: num('hist'), eqmin: num('eqmin'), eqmax: num('eqmax') };
   const colsQ = (sp.get('cols') ?? '').split(',').filter((x): x is ColKey => COLS.some(([k]) => k === x));
+  // ?sort=persist (the address /funds/rank lands on): sorted by persistence, with its column on screen
+  const sortPersist = sp.get('sort') === 'persist' && !sp.get('s');
   const colsAll = agentDoor ? COLS.filter(([k]) => k !== 'top') : COLS;
   const baseCols = (isPenProd(prod) ? PENSION_COLS : DEFAULT_COLS).filter((c) => !agentDoor || c !== 'top');
-  const cols: ColKey[] = colsQ.length ? colsQ.filter((c) => !agentDoor || c !== 'top') : baseCols;
+  const cols0: ColKey[] = colsQ.length ? colsQ.filter((c) => !agentDoor || c !== 'top') : baseCols;
+  // the persistence column sits beside the percentile when the address asks for it
+  const cols: ColKey[] = sortPersist && !cols0.includes('persist') ? (() => { const i = cols0.indexOf('pct') + 1; return [...cols0.slice(0, i), 'persist' as ColKey, ...cols0.slice(i)]; })() : cols0;
   // W1-agent: the default funds (קרנות ברירת מחדל) of the tender in force; `df=1` keeps only them
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dfOnly = sp.get('df') === '1';
@@ -128,7 +165,11 @@ export function FundsScreen() {
     if (dfOnly && !dfKeys.has(f.k)) return false;
     return true;
   };
-  const sortKey = (sp.get('s') ?? '') as ColKey | '';
+  const sortKey = (sp.get('s') ?? (sortPersist ? 'persist' : '')) as ColKey | '';
+  const persistOn = cols.includes('persist') || sortKey === 'persist';
+  const persistCats = useMemo(() => [...new Set(all.filter((f) => inProd(f) && (T === ALL || f.track === T)).map(catKey))], [all, prod, T]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const persist = usePersist(persistCats, persistOn, basis);
+  const persistOf = (f: FundX) => persist?.get(catKey(f))?.get(f.k) ?? null;
   const groups = useMemo(() => {
     const keys = new Map<string, FundX[]>();
     all.filter((f) => inProd(f) && (T === ALL || f.track === T) && (closed || !f.closed)).forEach((f) => keys.set(catKey(f), [...(keys.get(catKey(f)) ?? []), f]));
@@ -140,7 +181,7 @@ export function FundsScreen() {
       const ord = rankAll(peers, (f) => val(f, per)), tie = tieRanks(peers, (f) => val(f, per), tieBand(per, asof));
       const rk = new Map<string, RankInfo>([...ord].map(([k, r]) => [k, { ...r, lo: tie.get(k)?.lo ?? r.rank, hi: tie.get(k)?.hi ?? r.rank }]));
       const by = sortKey && sortKey !== 'pct' ? sortKey : null;
-      const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : by === 'svc' ? (isPension(f) ? svcOf(dec, f.grp, 'pension')?.total ?? null : null) : by === 'clm' ? (isPension(f) && dec ? companyOf(dec, f.grp)?.claims?.disability.approved ?? null : null) : (f as unknown as Record<string, number | null>)[by] ?? null);
+      const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : by === 'persist' ? (() => { const x = persistOf(f); return x ? x.top / x.of : null; })() : by === 'svc' ? (isPension(f) ? svcOf(dec, f.grp, 'pension')?.total ?? null : null) : by === 'clm' ? (isPension(f) && dec ? companyOf(dec, f.grp)?.claims?.disability.approved ?? null : null) : (f as unknown as Record<string, number | null>)[by] ?? null);
       const list = shown.filter(screened).sort((a, b) => {
         if (a.gone !== b.gone) return a.gone ? 1 : -1;
         if (by) { const x = sv(a), y = sv(b); if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1; return by === 'fee' || by === 'depfee' || by === 'sd' ? x - y : y - x; }
@@ -148,7 +189,7 @@ export function FundsScreen() {
       });
       return { k, prod: shown[0].prod, track: shown[0].track, list, rk, n: rk.size ? [...rk.values()][0].n : 0, assets: peers.reduce((t, f) => t + (f.assets ?? 0), 0) };
     }).filter((g) => g.list.length).sort((a, b) => b.assets - a.assets);
-  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp, dfKeys, dec]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp, dfKeys, dec, persist]);  // eslint-disable-line react-hooks/exhaustive-deps
   const shownN = groups.reduce((t, g) => t + g.list.length, 0);
   const multi = groups.length > 1 || T === ALL;
   const nFilters = [q, fams.length ? '1' : '', mk, closed ? '1' : '', gone ? '1' : '', outOnly ? '1' : '', dfOnly ? '1' : '', ...Object.values(F).map((v) => (v == null ? '' : '1'))].filter(Boolean).length;
@@ -189,6 +230,12 @@ export function FundsScreen() {
       case 'clm': { const c = isPension(f) && dec ? companyOf(dec, f.grp)?.claims : null; const v = c?.disability.approved ?? null;
         return !isPension(f) ? <span className="muted">–</span> : v == null ? <span className="muted" title={dec ? claimsWhy(dec, f.grp) : 'קובץ נתוני ההחלטה לא פורסם'}>–</span> : <Sourced src={() => claimProv(dec!, f.grp, 'disability', 'approved')} title={`תביעות נכות שאושרו ב-${c!.year}, מתוך התביעות שנסגרו · דיווח החברה (${c!.entity}), לא נבדק על ידי הרשות`}><span className="num">{pc1(v)}</span></Sourced>; }
       case 'svc': { const r = isPension(f) && dec ? svcOf(dec, f.grp, 'pension') : null; return !r ? <span className="muted" title={isPension(f) ? 'החברה אינה במדד השירות לקרנות פנסיה' : 'מדד השירות לקרנות פנסיה'}>–</span> : <Sourced src={() => svcProv(dec!, f.grp, 'pension', 'total')} title={`מדד השירות 2025: ${r.total}, מקום ${r.rank} מתוך ${r.of} (ברמת החברה המנהלת)`}><span className="num">{r.total}</span><span className="dim num"> · {r.rank}/{r.of}</span></Sourced>; }
+      case 'persist': { const x = persistOf(f);
+        if (!x) return <span className="muted" title={persist == null ? 'טוען את קובצי האחוזונים' : 'אין אחוזון חודשי למסלול בקטגוריה (היסטוריה קצרה, או שהקטגוריה קטנה מדי)'}>–</span>;
+        const L = x.months.length - 1, first = Math.max(0, x.xs.length - 60);
+        return <Sourced src={() => ({ k: 'calc', est: x.basis === 'net', title: `התמדה · ${f.name}`, value: `${x.top} מתוך ${x.of}`, formula: 'מספר החודשים מתוך 60 האחרונים שבהם האחוזון של המסלול בקטגוריה (תשואת LTM) היה 75 ומעלה, מתוך החודשים שבהם המסלול דורג',
+          note: `אחוזון היום: ${x.xs[L] == null ? '–' : nf(x.xs[L]!, 0)} · ${x.basis === 'net' ? 'נטו (אומדן)' : 'ברוטו'} · הגרף החודשי בכרטיס המסלול`,
+          inputs: x.xs.slice(first).map((v, i) => ({ label: ymL(x.months[first + i] ?? 0), v: v == null ? '–' : nf(v, 0), src: v == null ? undefined : () => rankProv(f.name, x.months[first + i], v, x.n[first + i] ?? null, 'y12', x.basis, 'file') })).filter((z) => z.v !== '–') })}><span className="num">{x.top}/{x.of}</span></Sourced>; }
       case 'top': return f.yrs ? <Sourced src={() => ({ k: 'calc', title: `רבע עליון · ${f.name}`, value: `${f.top}/${f.yrs}`, formula: 'בכמה מהשנים הקלנדריות המלאות מתוך חמש האחרונות תשואת המסלול (ברוטו, ריבית דריבית על 12 תשואות חודשיות) הייתה ברבע העליון של הקטגוריה: מקום ≤ ⌈n÷4⌉, בקטגוריה של 4 מסלולים לפחות', inputs: [{ label: 'שנים ברבע העליון', v: nf(f.top ?? 0, 0) }, { label: 'שנים שנבדקו', v: nf(f.yrs ?? 0, 0) }], note: 'מחושב בבניית הנתונים מתשואות חברי הקטגוריה' })}><span className="num">{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>;
     }
     return null;
@@ -228,7 +275,7 @@ export function FundsScreen() {
         <button type="button" className="chip" aria-pressed={closed} onClick={() => set({ closed: closed ? null : '1' })}>כולל קופות ענפיות</button><Tip k="closed" />
         <button type="button" className="chip" aria-pressed={gone} onClick={() => set({ gone: gone ? null : '1' })}>כולל מסלולים שנסגרו</button>
       </div>
-      {!phone && <div className="field"><span>עמודות</span><div className="fchips">{colsAll.map(([k, l]) => <button key={k} type="button" className="chip" aria-pressed={cols.includes(k)} onClick={() => { const next = cols.includes(k) ? cols.filter((x) => x !== k) : COLS.map(([x]) => x).filter((x) => cols.includes(x) || x === k); set({ cols: next.join(',') === baseCols.join(',') ? null : next.join(',') }); }}>{l}</button>)}</div></div>}
+      {!phone && <div className="field"><span>עמודות</span><div className="fchips">{colsAll.map(([k, l]) => <button key={k} type="button" className="chip" aria-pressed={cols.includes(k)} onClick={() => { const next = cols.includes(k) ? cols.filter((x) => x !== k) : COLS.map(([x]) => x).filter((x) => cols.includes(x) || x === k); set({ cols: next.join(',') === baseCols.join(',') ? null : next.join(','), sort: null }); }}>{l}</button>)}</div></div>}
       <div className="field"><span>סינונים שמורים <span className="muted">· בדפדפן הזה בלבד</span></span>
         <div className="fchips">
           {saved.map((s) => <span key={s.name} className="fsaved"><Link className="chip" to={`/funds/screen?${s.qs}`}>{s.name}</Link><button type="button" className="fsaved-x" aria-label={`מחיקת הסינון ${s.name}`} onClick={() => setSaved(saved.filter((x) => x.name !== s.name))}>×</button></span>)}
@@ -282,7 +329,7 @@ export function FundsScreen() {
           </div>
         ) : (
           <div className="scroll" style={{ maxHeight: 720 }}><table className="rank fscreen">
-            <thead><tr><th>מסלול</th><th>#</th>{cols.map((c) => <th key={c} aria-sort={sortKey === c ? 'descending' : undefined}><button type="button" className="thbtn" onClick={() => set({ s: sortKey === c ? null : c })}>{RET.has(c) && c === per ? <b>{COL_LABEL[c]}</b> : COL_LABEL[c]}{FEE_SUB[c] && <span className="dim">{FEE_SUB[c]}</span>}</button>{TIP[c] && <Tip k={TIP[c]!} />}</th>)}<th><span className="sr-only">השוואה</span></th></tr></thead>
+            <thead><tr><th>מסלול</th><th>#</th>{cols.map((c) => <th key={c} aria-sort={sortKey === c ? 'descending' : undefined}><button type="button" className="thbtn" onClick={() => set({ s: sortKey === c ? null : c, sort: null })}>{RET.has(c) && c === per ? <b>{COL_LABEL[c]}</b> : COL_LABEL[c]}{FEE_SUB[c] && <span className="dim">{FEE_SUB[c]}</span>}</button>{TIP[c] && <Tip k={TIP[c]!} />}</th>)}<th><span className="sr-only">השוואה</span></th></tr></thead>
             <tbody>
               {groups.map((g) => (
                 <Fragment key={g.k}>

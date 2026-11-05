@@ -19,7 +19,7 @@ import '../styles/funds-time.css';
 /* F2 TIME, the shared pieces: the section's second row of tabs ("סיכון וזמן"), the category picker, the watch star, the risk panel (track
    card and compare) and the peer-rank-over-time panel (track card). */
 
-export const TIME_TABS: [string, string][] = [['/funds/rank', 'אחוזון לאורך זמן'], ['/funds/glide', 'מסלולי גיל']];  // map, quilt, persist removed (owner, 01.11.26)
+export const TIME_TABS: [string, string][] = [['/funds/glide', 'מסלולי גיל']];  // map, quilt, persist removed (owner, 01.11.26); rank: the screener's persistence column (wave 2b)
 export function TimeNav() {
   // the category travels with the reader between the views
   const cat = new URLSearchParams(useLocation().search).get('cat');

@@ -67,7 +67,7 @@ export function ValuationLayout() {
   if (!kpis || !reg.data) return <Loading what="הערכת שווי" />;
   const ids = reg.data.filter((c) => kpis.get(c.id)?.latest('equity')).map((c) => c.id);
   if (id && !kpis.has(id) && !ids.includes(id)) return <NotFound />;
-  if (!id || !kpis.has(id)) return <Navigate to={`/valuation/${ids.includes('phoenix') ? 'phoenix' : ids[0]}`} replace />;
+  if (!id || !kpis.has(id)) return <Navigate to="/valuation" replace />;  // wave 2b: the index is the market-expectations ranking
   const entry = reg.data.find((c) => c.id === id)!;
   const k = kpis.get(id)!;
   const n10 = macro?.series.nom10;

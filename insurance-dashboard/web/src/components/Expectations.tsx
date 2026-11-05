@@ -175,7 +175,7 @@ export function ExpectationsView({ c, head = true, note }: { c: ECompanyOk; head
       </details>
       <div className="src">
         שווי = Σ ערך נוכחי של החלוקות ב-{c.meta.periods.join(', ')} + P/B מוצדק (ROE − g) ÷ (ke − g) על ההון של {c.meta.horizon}. כל מנוף נפתר לבדו (חיפוש בינארי), השאר בערכם הנוכחי; נכסים צומחים בקצב 5 השנים. אחוזון = חלק ההיסטוריה של החברה שדורש פחות. "לא מנוף מכריע": הפלח מתחת ל-15% מהרווח לפני מס, אין פתרון בטווח, או נדרש יותר מפי 2 מהשיא של החברה; לא נכנס לשורת המסקנה ולדירוג. {c.meta.price_label}. ניתוח של מה שהמכפיל מגלם, לא המלצה.{' '}
-        <Link to="/expectations">כל החברות</Link>
+        <Link to="/valuation">כל החברות</Link>
       </div>
     </div>
   );

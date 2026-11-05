@@ -39,7 +39,7 @@ const NAV: Place[] = [
   ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה', ['/industry', '/capital', '/restatements']],
   // the long-term-savings section: the lens, flows, managers, the funds pages (and the old /market links)
   ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', '/funds', '/feebook', '/nowcast', '/market']],
-  ['/valuation', 'value', 'שווי', 'שווי', ['/expectations'], true],
+  ['/valuation', 'value', 'שווי', 'שווי', [], true],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', ['/warroom', '/fragility'], true],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
   ['/feed', 'spark', 'מה השתנה', 'מה השתנה', ['/watch', '/calendar']],
@@ -57,7 +57,7 @@ const SAVER_NAV: Place[] = [
 const AGENT_NAV: Place[] = [
   ['/', 'home', 'בית', 'בית', []],
   ['/clients', 'clients', 'לקוחות', 'לקוחות', []],
-  ['/funds/screen', 'funds', 'מסלולים', 'מסלולים', ['/funds$', '/funds/makers', '/funds/rank', /^\/funds\/[gip]\d+$/]],
+  ['/funds/screen', 'funds', 'מסלולים', 'מסלולים', ['/funds$', '/funds/makers', /^\/funds\/[gip]\d+$/]],
   ['/funds/compare', 'compare', 'השוואה', 'השוואה', []],
   ['/managers', 'companies', 'גופים', 'גופים', []],
   ['/funds/tools', 'sliders', 'כלים', 'כלים', ['/funds/trackers', '/funds/glide', '/funds/default', '/funds/bm']],

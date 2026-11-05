@@ -1,7 +1,6 @@
 import { CsmEconomics } from '../components/CsmEconomics';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CompanyIfrs } from './CompanyIfrs';
-import { CompanyReview } from './CompanyReview';
 import { CompanySop } from './CompanySop';
 import { CompanySeries } from './CompanySeries';
 import { Link, Navigate, NavLink, Outlet, useLocation, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
@@ -67,15 +66,15 @@ export function CompanyLayout() {
   if (!entry) return <NotFound />;
   const latest = entry.filings[0]?.end ? dateLabel(entry.filings[0].end) : entry.filings[0]?.period;  // the latest report, named like every other period
   const fund = entry.kind === 'fund_house';
-  const inStatements = /\/(financials|review|profit|ifrs17)\/?$/.test(loc.pathname);
+  const inStatements = /\/(financials|profit|ifrs17)\/?$/.test(loc.pathname);
   const inNumbers = /^\/company\/[^/]+(\/numbers)?\/?$/.test(loc.pathname);  // phase 0: the company opens on its numbers
   const keep = keepPeriod(loc.search);  // the report and window travel with the reader between the report day and the statement views
   // a listed holding company files the figures of a company it holds part of (Yelin Lapidot: Atrao, 50%): said once, in the header
   const filer = kpi.data?.companies[entry.id]?.filer;
-  // the statement views under "דוחות": the full statements, then (insurers) the review, sources of profit and IFRS 17
+  // the statement views under "דוחות": the full statements, then (insurers) sources of profit and IFRS 17 (the review is a section of "מספרים")
   const views: [string, string, string][] = [
     ...(entry.has_financials ? [['financials', 'דוחות כספיים', 'כספיים'] as [string, string, string]] : []),
-    ...(!fund ? [['review', 'סקירת דוח', 'סקירה'], ['profit', 'מקורות רווח וענפים', 'מקורות רווח'], ['ifrs17', 'IFRS 17', 'IFRS 17']] as [string, string, string][] : []),
+    ...(!fund ? [['profit', 'מקורות רווח וענפים', 'מקורות רווח'], ['ifrs17', 'IFRS 17', 'IFRS 17']] as [string, string, string][] : []),
   ];
   return (
     <>
@@ -101,8 +100,8 @@ export function CompanyLayout() {
           long-term savings, documents; then the view's own controls */}
       <Toolbar className="cotools" lead={<>
         <nav className="subnav cnav" aria-label="חברה">
-          <NavLink to={`.${keep}`} end className={() => (inNumbers ? 'active' : '')} title="מספרים: מה הדוח הדפיס, מול שנה ורבעון קודמים, ונתוני המפתח לאורך זמן">מספרים</NavLink>
-          <NavLink to="thesis" title="תזה: עמדה, ציפיות השוק, גשר ROE, שבריריות והון">תזה</NavLink>
+          <NavLink to={`.${keep}`} end className={() => (inNumbers ? 'active' : '')} title="מספרים: מה הדוח הדפיס, מול שנה ורבעון קודמים, סקירה לפי פרקים, נתוני המפתח לאורך זמן וניתוח">מספרים</NavLink>
+          <NavLink to="thesis" title="תזה: עמדה, ציפיות השוק ושבריריות">תזה</NavLink>
           {(entry.has_financials || !fund) && <NavLink to={`${views[0]?.[0] ?? 'financials'}${keep}`} className={() => (inStatements ? 'active' : '')}>דוחות</NavLink>}
           {entry.market_group && <NavLink to="savings"><span className="lg">חיסכון ארוך טווח</span><span className="sm">חיסכון</span></NavLink>}
           <NavLink to="filings">מסמכים{entry.docs > 0 && <span className="count num">{entry.docs}</span>}</NavLink>
@@ -644,10 +643,11 @@ function FinancialsInner({ store, companyId, fund, onOutsideLink }: { store: Com
 }
 
 /* ---------- IFRS 17: CSM by portfolio group ---------- */
+/** fox 3.0 wave 2b: the review is a section of "מספרים" (#review, its chapters folded); an old link keeps its report and window (?p=&w=) */
 export function CompanyReviewTab() {
-  const { entry, store } = useCtx();
-  if (entry.kind === 'fund_house') return <Navigate to="../numbers" replace />;  // a fund house has no IFRS 17 review: its tabs are the ones with content
-  return <CompanyReview id={entry.id} docs={entry.docs} store={store} />;
+  const { entry } = useCtx();
+  const loc = useLocation();
+  return <Navigate to={`../numbers${loc.search}${entry.kind === 'fund_house' ? '' : '#review'}`} replace />;  // a fund house has no IFRS 17 review
 }
 
 export function CompanyHistTab() {

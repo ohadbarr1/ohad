@@ -47,7 +47,6 @@ const mFunds = () => import('./pages/Funds');
 const FundCard = page(mFunds, 'FundCard');
 const FundMakers = page(mFunds, 'FundMakers');
 const mFundsTime = () => import('./pages/FundsTime');  // F2 TIME: risk and time views of the section
-const FundsRank = page(mFundsTime, 'FundsRank');
 const FundsGlide = page(mFundsTime, 'FundsGlide');
 const mFundsHub = () => import('./pages/FundsHub');  // F1: the "חיסכון" section's front door
 const FundsHub = page(mFundsHub, 'FundsHub');
@@ -70,6 +69,7 @@ const Clients = page(() => import('./pages/Clients'), 'Clients');  // W3: the ag
 const mValuation = () => import('./pages/Valuation');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
 const ValuationPb = page(mValuation, 'ValuationPb');
+const ValuationIndex = page(() => import('./pages/Expectations'), 'ValuationIndex');  // wave 2b: /valuation = the market-expectations ranking
 const mValuationModels = () => import('./pages/ValuationModels');
 const ValuationRi = page(mValuationModels, 'ValuationRi');
 const ValuationExpectations = page(mValuationModels, 'ValuationExpectations'); // module A3
@@ -92,8 +92,6 @@ const mAutopilot = () => import('./pages/Autopilot');  // lane AP
 const Autopilot = page(mAutopilot, 'Autopilot');
 const mDebt = () => import('./pages/Debt');  // lane DL
 const Debt = page(mDebt, 'Debt');
-const mFacts = () => import('./pages/Facts');  // lane FT
-const FactsPage = page(mFacts, 'FactsPage');
 const mAssets = () => import('./pages/Assets');  // lane AL
 const Assets = page(mAssets, 'Assets');
 const mReportCard = () => import('./pages/ReportCard');  // lane S2
@@ -109,7 +107,6 @@ const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRo
 const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator, a main place (nav: חדר מלחמה, which also lights /capital, /consolidation, /fragility)
 const Capital = page(() => import('./pages/Capital'), 'Capital'); // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const Fragility = page(() => import('./pages/Fragility'), 'Fragility'); // module A10: the Fragility Monitor (not a nav item)
-const Expectations = page(() => import('./pages/Expectations'), 'Expectations'); // module A3: what the multiple requires, all listed names (from the valuation tab and search, not a nav item) // module A7: capital and strategic options (from /scenarios, company panels and search, not a nav item)
 const mConsolidation = () => import('./pages/Consolidation');
 const Consolidation = page(mConsolidation, 'Consolidation'); // module A9: the consolidation screen (from /capital, /savings and search, not a nav item)
 const ConsolidationPair = page(mConsolidation, 'ConsolidationPair');
@@ -159,9 +156,34 @@ function NowcastRedirect() {
 }
 /** the report day lives under "numbers" now (the thesis is the company home): an old link keeps its report, window and row (?p=&w=&row=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`../numbers${loc.search}${loc.hash}`} replace />; }
+/** fox 3.0 wave 2b: /facts/<id> (one statement with the vintage toggle) became the "גרסה" control of the company's statements: an old link
+ *  keeps its statement (?s=), standard (?std=), window (?w=) and vintage (?vin=) */
+const FACT_SHEET: Record<string, string> = { pl: 'X.רווח_והפסד', bs: 'X.מאזן', oci: 'X.רווח_כולל', cf: 'X.תזרים_מזומנים' };
+function FactsRedirect() {
+  const { id } = useParams(), loc = useLocation(), q = new URLSearchParams(loc.search), n = new URLSearchParams();
+  n.set('sheet', FACT_SHEET[q.get('s') ?? ''] ?? FACT_SHEET.pl);
+  const w = q.get('w'); if (w && ['Q', 'H', 'FY', 'I'].includes(w)) n.set('t', w);
+  const std = q.get('std'); if (std === '17' || std === '4') n.set('s', std);
+  const vin = q.get('vin'); if (vin) n.set('vin', vin);
+  return <Navigate to={`/company/${id}/financials?${n}`} replace />;
+}
+/** an address that moved as a whole: the reader's query and anchor come along */
+function KeepQuery({ to }: { to: string }) { const loc = useLocation(); return <Navigate to={`${to}${loc.search}${loc.hash}`} replace />; }
+/** wave 2b: the percentile over time by category (/funds/rank, and the map, quilt, persistence and risk views that had landed on it) is the
+ *  screener's persistence column now: the category (?cat="מוצר | מסלול") opens the screener on it, sorted by persistence */
+function RankRedirect() {
+  const loc = useLocation(), q = new URLSearchParams(loc.search), n = new URLSearchParams();
+  const [prod, track] = (q.get('cat') ?? '').split(' | ');
+  if (prod && track) { n.set('prod', prod); n.set('track', track); }
+  if (q.get('br') === '1') n.set('closed', '1');
+  n.set('sort', 'persist');
+  return <Navigate to={`/funds/screen?${n}`} replace />;
+}
 /** /ownership/<id> was cut (phase 0, 05.11.26): an old link lands on the company */
 function OwnershipRedirect() { const { id } = useParams(); return <Navigate to={`/company/${id}`} replace />; }
-/** the IFRS 17 and capital tabs are views of the CSM ledger now: an old link keeps its pickers */
+/** wave 2b: capital has one page, /capital (its "כפי שדווח" section holds what the ledger's capital view showed); an old link keeps its pickers */
+function CapitalRedirect() { const loc = useLocation(); return <Navigate to={`/capital${loc.search}#reported`} replace />; }
+/** the IFRS 17 tab is a view of the CSM ledger now: an old link keeps its pickers */
 function CsmRedirect({ view }: { view: string }) { const loc = useLocation(); return <Navigate to={`/industry/csm?view=${view}${loc.search ? `&${loc.search.slice(1)}` : ''}`} replace />; }
 
 export function App() {
@@ -206,7 +228,7 @@ export function App() {
           <Route path="pnc" element={<IndustryPnc />} />
           <Route path="houses" element={<IndustryHouses />} />
           <Route path="econ" element={<LensRedirect view="econ" />} />
-          <Route path="capital" element={<CsmRedirect view="capital" />} />
+          <Route path="capital" element={<CapitalRedirect />} />
           <Route path="headline" element={<FromHeadline />} />
           <Route path="search" element={<DocSearchRedirect />} />
         </Route>
@@ -223,20 +245,20 @@ export function App() {
         <Route path="funds/trackers" element={<FundsTrackers />} />
         <Route path="funds/holdings" element={<Navigate to="/holdings" replace />} />
         <Route path="funds/makers" element={<FundMakers />} />
-        <Route path="funds/map" element={<Navigate to="/funds/rank" replace />} />{/* removed by owner decision 01.11.26 */}
-        <Route path="funds/rank" element={<FundsRank />} />
-        <Route path="funds/quilt" element={<Navigate to="/funds/rank" replace />} />
-        <Route path="funds/persist" element={<Navigate to="/funds/rank" replace />} />
+        <Route path="funds/map" element={<RankRedirect />} />{/* removed by owner decision 01.11.26 */}
+        <Route path="funds/rank" element={<RankRedirect />} />{/* wave 2b: a persistence column of the screener; the percentile chart stays on the track card */}
+        <Route path="funds/quilt" element={<RankRedirect />} />
+        <Route path="funds/persist" element={<RankRedirect />} />
         <Route path="funds/glide" element={<FundsGlide />} />
         <Route path="funds/watch" element={<Navigate to="/my#watch" replace />} />{/* phase 0: the watchlist is a section of /my */}
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
-        <Route element={<Hub hub="flows" />}>{/* P3: who won · under the median (/funds/under keeps its address) · the monthly letter */}
-          <Route path="flows" element={<Flows />} />
-          <Route path="funds/under" element={<Under />} />
-          <Route path="flows/letter" element={<FlowsLetter />} />
-          <Route path="flows/letter/:ym" element={<FlowsLetter />} />
-        </Route>
+        {/* P3 + wave 2b: the savings hub's "החודש": who won · the month's leaders and laggards (/funds, Pro) · under the median (/funds/under
+            keeps its address) · the monthly letter; the tab rows are in the section head (components/FundsNav) */}
+        <Route path="flows" element={<Flows />} />
+        <Route path="funds/under" element={<Under />} />
+        <Route path="flows/letter" element={<FlowsLetter />} />
+        <Route path="flows/letter/:ym" element={<FlowsLetter />} />
         <Route path="feebook" element={<FeeBook />} />
         <Route path="my/moment" element={<MomentsIndex />} />
         <Route path="my/moment/:id" element={<MomentPage />} />
@@ -246,14 +268,17 @@ export function App() {
           <Route path="data/autopilot" element={<Autopilot />} />
           <Route path="data/api" element={<Api />} />
         </Route>
-        <Route path="restatements" element={<Restatements />} />
+        <Route element={<Hub hub="industry" />}>{/* wave 2b: tabs of "השוואה ענפית" with pages of their own */}
+          <Route path="restatements" element={<Restatements />} />
+          <Route path="capital" element={<Capital />} />{/* module A7, the canonical capital page (the CSM ledger's capital view landed here) */}
+        </Route>
         <Route path="presentations" element={<Presentations />} />
         <Route path="credibility" element={<Credibility />} />{/* lane S3 */}
         <Route path="nowcast" element={<NowcastRedirect />} />{/* P5: published as /savings?v=now */}
         <Route path="mine" element={<Navigate to="/book" replace />} />{/* the workspace is gone; the chart book stays */}
         <Route path="debt" element={<Debt />} />
         <Route path="debt/:id" element={<Debt />} />
-        <Route path="facts/:id" element={<FactsPage />} />
+        <Route path="facts/:id" element={<FactsRedirect />} />{/* wave 2b: the "גרסה" control of the statements */}
         <Route path="ownership" element={<Navigate to="/" replace />} />{/* cut in phase 0 (05.11.26) */}
         <Route path="ownership/:id" element={<OwnershipRedirect />} />
         <Route path="holdings" element={<Assets />} />{/* lane AL: not /assets, whose /assets/** immutable cache header (hashed bundles) would pin the HTML shell */}
@@ -272,9 +297,8 @@ export function App() {
         <Route path="scenarios" element={<Scenarios />} />{/* module A2 */}
         <Route path="warroom/regulation" element={<WarRoomRegulation />} />{/* module A8: reached from /warroom (A5), /savings and search, not a nav item */}
         <Route path="warroom" element={<WarRoom />} />{/* module A5 */}
-        <Route path="capital" element={<Capital />} />{/* module A7 */}
         <Route path="fragility" element={<Fragility />} />{/* module A10: reached from /savings, /scenarios, search and the company homes, not a nav item */}
-        <Route path="expectations" element={<Expectations />} />{/* module A3 */}
+        <Route path="expectations" element={<KeepQuery to="/valuation" />} />{/* module A3: wave 2b, the index of /valuation */}
         <Route path="consolidation" element={<Consolidation />} />{/* module A9 */}
         <Route path="consolidation/:a/:t" element={<ConsolidationPair />} />
         <Route element={<Hub hub="questions" />}>{/* phase 0: questions · findings · briefs, one page */}
@@ -304,10 +328,10 @@ export function App() {
         <Route path="thesis" element={<Navigate to="/pro" replace />} />
         <Route path="report" element={<Navigate to="/calendar" replace />} />
         <Route path="filings" element={<Navigate to="/feed" replace />} />
-        <Route path="funds/risk" element={<Navigate to="/funds/rank" replace />} />
+        <Route path="funds/risk" element={<RankRedirect />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="doc/:id" element={<Reader />} />
-        <Route path="valuation" element={<ValuationLayout />} />
+        <Route path="valuation" element={<ValuationIndex />} />{/* wave 2b: the market-expectations ranking (formerly /expectations) */}
         <Route path="valuation/:id" element={<ValuationLayout />}>
           <Route index element={<ValuationPb />} />
           <Route path="ri" element={<ValuationRi />} />

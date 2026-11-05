@@ -9,12 +9,16 @@ export const ROUTES: [string, string][] = [
   ['company', '/company/phoenix'],                     // phase 0: the company opens on its numbers
   ['thesis', '/company/phoenix/thesis'],
   ['numbers', '/company/phoenix/numbers'],
+  ['numbers-review', '/company/phoenix/numbers#review'],   // wave 2b: the review by chapter (was /company/<id>/review) and "ניתוח", sections of "מספרים"
   ['company-more', '/company/more'],
   ['financials', '/company/phoenix/financials'],
   ['ifrs17', '/company/phoenix/ifrs17'],
   ['peers', '/industry/peers'],
   ['csm', '/industry/csm'],
+  ['ifrs17-std', '/industry/csm?view=std'],               // wave 2b: "IFRS 17", a tab of "השוואה ענפית"
   ['savings', '/savings'],
+  ['savings-value', '/savings?v=npv'],                   // wave 2b: the savings hub's "ערך" (the flows' value · the fee book)
+  ['feebook', '/feebook'],
   ['funds', '/funds'],                                   // F1: the "חיסכון" hub
   ['funds-screen', '/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99'],
   ['funds-screen-all', '/funds/screen?prod=all&track=all&fam=index'],
@@ -24,7 +28,7 @@ export const ROUTES: [string, string][] = [
   ['funds-fees', '/funds/tools/fees'],
   ['funds-default', '/funds/default'],
   ['funds-trackers', '/funds/trackers?g=sp500&w=a3'],
-  ['funds-rank', '/funds/rank?cat=%D7%92%D7%9E%D7%9C%20%7C%20%D7%A2%D7%93%2050'],
+  ['funds-persist', '/funds/screen?prod=%D7%92%D7%9E%D7%9C&track=%D7%A2%D7%93%2050&sort=persist'],  // wave 2b: was /funds/rank
   ['funds-glide', '/funds/glide?prod=%D7%92%D7%9E%D7%9C'],
   ['managers', '/managers'],
   ['valuation', '/valuation/phoenix'],
@@ -35,13 +39,14 @@ export const ROUTES: [string, string][] = [
   ['my', '/my'],                                         // W1 saver: "המוצרים שלי", empty in a fresh browser (picker + example)
   ['scenarios', '/scenarios'],
   ['scenarios-preset', '/scenarios?e=-25&cr=150'],
+  ['scenarios-solvency', '/scenarios?view=solvency'],   // wave 2b: the stress lab (was /industry/csm?view=stress)
   ['regulation', '/warroom/regulation'],
   ['warroom', '/warroom'],
   ['capital', '/capital'],
   ['capital-preset', '/capital?s=eqdd&buf=5'],
   ['fragility', '/fragility'],
   ['fragility-detail', '/fragility?c=altshuler&s=flow&fee_watch=1'],
-  ['expectations', '/expectations'],
+  ['valuation-index', '/valuation'],                     // wave 2b: the market-expectations ranking (was /expectations)
   ['valuation-expectations', '/valuation/phoenix/expectations'],
   ['consolidation', '/consolidation'],
   ['consolidation-pair', '/consolidation/menora/clal?r=60'],
