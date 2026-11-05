@@ -19,7 +19,7 @@ Every row is one figure fox already publishes, with its provenance; nothing is e
              (fox estimate: gross less fee / 12), management fee on assets, AUM.
 
 Columns (v1; a column never changes meaning, new columns are only appended): see COLUMNS. Files per table: <t>.csv (UTF-8 with BOM,
-CRLF, so Excel reads Hebrew) and <t>.json ({"columns": [...], "rows": [[...]]}). Beside them: manifest.json (tables, row counts,
+CRLF, so Excel reads Hebrew) and <t>.json ({"columns": [...], "rows": [[...]]}); savings_m and funds_m are CSV only (CSV_ONLY). Beside them: manifest.json (tables, row counts,
 sha256, last-changed), changes.json (a dated log of rows added / changed / removed per table since the previous build, kept for the
 last LOG_KEEP builds that changed anything), changes.csv (the same log as rows), pq/<t>.pq (a ready Power Query M script per table)
 and fox_powerquery.xlsx (all queries in one workbook: pipeline/pq_kit.py).
@@ -91,6 +91,7 @@ TABLES = [  # id, Hebrew title, English title, grain
     ("savings_m", "חיסכון ארוך טווח: חודשי לפי קבוצה ומוצר", "Long-term savings, monthly by group and product (regulator)", "group × product × metric × month, from 01/22"),
     ("funds_m", "מסלולים: חודשי", "Tracks, monthly (regulator)", "track × metric × month, last 12 months"),
 ]
+CSV_ONLY = {"savings_m", "funds_m"}  # the two large regulator tables: CSV only (no .json copy), to keep git and hosting size down
 GRAIN_HE = {"kpi": "חברה × מדד × תקופה (רבעון, שנה)", "ifrs17": "מבטחת × מגזר ובסיס × מדד × תקופה", "solvency": "מבטחת × מקור × מדד × תאריך",
             "pnc": "מבטחת × ענף × מדד × תקופה", "savings_q": "מנהל × מגזר × מדד × רבעון", "savings_m": "קבוצה × מוצר × מדד × חודש, מ-01/22",
             "funds_m": "מסלול × מדד × חודש, 12 החודשים האחרונים"}
@@ -516,16 +517,40 @@ def read_json(p):
         return None
 
 
+def read_prev(t):
+    """the table as last built: its .json, or for a CSV-only table its .csv (value as a number, page as an integer)"""
+    d = read_json(OUT / f"{t}.json")
+    if d is not None or t not in CSV_ONLY:
+        return d
+    try:
+        text = (OUT / f"{t}.csv").read_bytes().decode("utf-8-sig")
+    except OSError:
+        return None
+    rd = csv.reader(io.StringIO(text, newline=""))
+    head = next(rd, None)
+    if head is None:
+        return None
+    vi, pi = head.index("value"), head.index("source_page")
+    rows = []
+    for r in rd:
+        r = list(r)
+        r[vi] = float(r[vi]) if r[vi] else None
+        r[pi] = int(r[pi]) if r[pi] else None
+        rows.append(r)
+    return {"rows": rows}
+
+
 def render(T, prev_log, prev_manifest, first_build):
     """every output file as {relative path: bytes}; the log gains an entry when a table's values changed since the files on disk"""
     files, entry = {}, {}
     for t, rows in T.items():
         files[f"{t}.csv"] = csv_bytes(rows)
-        files[f"{t}.json"] = json_bytes(t, rows)
+        if t not in CSV_ONLY:
+            files[f"{t}.json"] = json_bytes(t, rows)
     day = today()
     log = list((prev_log or {}).get("builds", []))
     for t, rows in T.items():
-        old = read_json(OUT / f"{t}.json")
+        old = read_prev(t)
         if old is None:
             if not first_build:
                 entry[t] = {"added": len(rows), "changed": 0, "removed": 0, "listed": 0, "rows": [], "new_table": True}
@@ -561,8 +586,9 @@ def render(T, prev_log, prev_manifest, first_build):
                      "metrics": len({r[4] for r in rows}), "first": ps[0] if ps else None, "last": ps[-1] if ps else None,
                      "first_label": plab(ps[0]) if ps else None, "last_label": plab(ps[-1]) if ps else None,
                      "changed": changed_on.get(t) or (prev_tables.get(t) or {}).get("changed") or day,
-                     "csv": f"{t}.csv", "json": f"{t}.json", "pq": f"pq/{t}.pq", "csv_bytes": len(files[f"{t}.csv"]), "json_bytes": len(files[f"{t}.json"]),
-                     "csv_sha256": sha(files[f"{t}.csv"]), "json_sha256": sha(files[f"{t}.json"]), "metrics": metrics})
+                     "csv": f"{t}.csv", "json": None if t in CSV_ONLY else f"{t}.json", "pq": f"pq/{t}.pq", "csv_bytes": len(files[f"{t}.csv"]),
+                     "json_bytes": None if t in CSV_ONLY else len(files[f"{t}.json"]), "csv_sha256": sha(files[f"{t}.csv"]),
+                     "json_sha256": None if t in CSV_ONLY else sha(files[f"{t}.json"]), "metrics": metrics})
     for t, he, en, _ in TABLES + [("changes", "חדש מאז ההורדה הקודמת", "What changed since the previous build", "")]:
         cols = CH_COLS if t == "changes" else COLS
         files[f"pq/{t}.pq"] = pq_kit.m_script(t, he, en, BASE, cols, [c[0] for c in COLUMNS if c[1] in ("number", "integer", "date")] if t != "changes" else
@@ -590,7 +616,9 @@ def check():
             if rows is None:
                 probs.append(f"{x['id']}: in the manifest, not built")
                 continue
-            for ext in ("csv", "json"):
+            if x["id"] in CSV_ONLY and (x.get("json") or (OUT / f"{x['id']}.json").exists()):
+                probs.append(f"{x['id']}: CSV only, but a .json is listed or on disk")
+            for ext in (("csv",) if x["id"] in CSV_ONLY else ("csv", "json")):
                 f = OUT / x[ext]
                 b = f.read_bytes() if f.exists() else b""
                 fresh = csv_bytes(rows) if ext == "csv" else json_bytes(x["id"], rows)
@@ -638,7 +666,8 @@ def main():
             p.write_bytes(b)
     tot = sum(len(b) for b in files.values())
     for t, *_ in TABLES:
-        print(f"  {t:10} {len(T[t]):7} rows  csv {len(files[t + '.csv']) // 1024:6} KB  json {len(files[t + '.json']) // 1024:6} KB")
+        js = f"json {len(files[t + '.json']) // 1024:6} KB" if t + ".json" in files else "csv only"
+        print(f"  {t:10} {len(T[t]):7} rows  csv {len(files[t + '.csv']) // 1024:6} KB  {js}")
     print(f"tables/{VERSION}: {len(T)} tables, {sum(len(r) for r in T.values())} rows, {len(files)} files, {tot // 1024} KB")
     return 0
 

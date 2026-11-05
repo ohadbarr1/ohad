@@ -50,7 +50,7 @@
   [
    "/data/tables/v1/<table>.csv",
    "CSV",
-   "fox inside Excel: a long table (UTF-8 with BOM), one row per figure with its source; also .json; CORS open"
+   "fox inside Excel: a long table (UTF-8 with BOM), one row per figure with its source; also .json except savings_m and funds_m; CORS open"
   ],
   [
    "/data/tables/v1/manifest.json",
@@ -77,7 +77,7 @@
   [
    "2026-11-05",
    "added",
-   "tables/v1/: fox inside Excel. Seven long tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV + JSON with a source on every row, manifest.json, changes.json, Power Query scripts and fox_powerquery.xlsx (schemas `tablesTable`, `tablesManifest`, `tablesChanges`); CORS open on /data/tables/**."
+   "tables/v1/: fox inside Excel. Seven long tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV (+ JSON, except savings_m and funds_m) with a source on every row, manifest.json, changes.json, Power Query scripts and fox_powerquery.xlsx (schemas `tablesTable`, `tablesManifest`, `tablesChanges`); CORS open on /data/tables/**."
   ],
   [
    "2026-11-05",
@@ -1822,8 +1822,8 @@
   {
    "pattern": "tables/v1/*.json",
    "schema": "tablesTable",
-   "example": "tables/v1/funds_m.json",
-   "files": 7,
+   "example": "tables/v1/ifrs17.json",
+   "files": 5,
    "kind": "open",
    "format": "json",
    "step": "build_tables",

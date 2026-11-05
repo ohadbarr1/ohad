@@ -28,7 +28,7 @@ const FEED_HE: Record<string, string> = {
   '/feed.xml': 'פיד השינויים: כל נתון חדש מדוח, הצגה מחדש, יעד, חודש רשות', '/feed.atom': 'אותו פיד ב-Atom', '/feed/<company>.xml': 'האירועים של חברה אחת (גם ‎.atom)',
   '/feed/months.xml': 'קובצי הרשות החודשיים כשהם נקלטים (גם ‎.atom)', '/feed/funds.xml': 'אירועי קופות ומסלולים (גם ‎.atom)', '/feed/market.xml': 'אירועי שוק (גם ‎.atom)',
   '/data/calendar.ics': 'כל מועדי הדיווח הצפויים (לוח שנה)', '/data/cal/<company>.ics': 'מועדי הדיווח של חברה אחת',
-  '/data/tables/v1/<table>.csv': 'fox בתוך Excel: טבלה ארוכה (UTF-8 עם BOM), שורה לכל נתון עם המקור שלו; גם ‎.json; פתוח לכל מקור (CORS)',
+  '/data/tables/v1/<table>.csv': 'fox בתוך Excel: טבלה ארוכה (UTF-8 עם BOM), שורה לכל נתון עם המקור שלו; גם ‎.json, חוץ מ-savings_m ו-funds_m; פתוח לכל מקור (CORS)',
   '/data/tables/v1/manifest.json': 'רשימת הטבלאות: שורות, sha256, תקופה ראשונה ואחרונה, תאריך שינוי אחרון, מילון מדדים',
   '/data/tables/v1/changes.json': 'מה השתנה מאז הבנייה הקודמת: שורות שנוספו, השתנו או הוסרו בכל טבלה, יומן מתוארך (גם changes.csv)',
   '/data/tables/v1/fox_powerquery.xlsx': 'ערכת Power Query: שאילתה לכל טבלה בכתובות הקבועות; נתונים ← רענן הכל (סקריפטי M: ‎/data/tables/v1/pq/)',
@@ -43,7 +43,7 @@ const PROV: [string, string][] = [
 const kb = (b: number) => (b >= 1048576 ? `${nf(b / 1048576, 1)} MB` : `${nf(b / 1024, 0)} KB`);
 
 /* fox inside Excel (lane P4): the long tables under /data/tables/v1 (pipeline/build_tables.py), read live from their manifest and change log */
-interface TabMeta { id: string; he: string; en: string; grain: string; grain_he?: string; rows: number; entities: number; first_label: string | null; last_label: string | null; changed: string; csv: string; json: string; pq: string; csv_bytes: number }
+interface TabMeta { id: string; he: string; en: string; grain: string; grain_he?: string; rows: number; entities: number; first_label: string | null; last_label: string | null; changed: string; csv: string; json: string | null; pq: string; csv_bytes: number }
 interface Manifest { base: string; built: string; tables: TabMeta[]; changes: { json: string; csv: string; pq: string; builds: number; last: string | null }; kit: { xlsx: string; bytes: number } }
 type LogRow = [string, string, string, string, string, string, string, string, string, number | null, number | null, string];
 interface LogTab { added: number; changed: number; removed: number; listed?: number; new_table?: boolean; rows: LogRow[] }
@@ -140,7 +140,7 @@ function ExcelPanel() {
             <td><span className="num">{nf(t.rows, 0)}</span></td>
             <td><span className="num" dir="ltr">{t.first_label} – {t.last_label}</span></td>
             <td><span className="num">{dmy(t.changed)}</span></td>
-            <td><span className="xl-links"><a href={`/data/${TB}${t.csv}`} download>CSV</a> · <a href={`/data/${TB}${t.json}`} target="_blank" rel="noreferrer">JSON</a> <span className="num">{kb(t.csv_bytes)}</span></span></td>
+            <td><span className="xl-links"><a href={`/data/${TB}${t.csv}`} download>CSV</a>{t.json ? <> · <a href={`/data/${TB}${t.json}`} target="_blank" rel="noreferrer">JSON</a></> : <> · CSV בלבד</>} <span className="num">{kb(t.csv_bytes)}</span></span></td>
             <td><CopyBtn text={`${M.base}${t.csv}`} label="העתקת הכתובת" /></td>
             <td><button type="button" className="chip" aria-expanded={openM === t.id} onClick={() => setOpenM(openM === t.id ? null : t.id)}>{openM === t.id ? 'הסתרת M' : 'סקריפט M'}</button></td>
           </tr>

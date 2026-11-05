@@ -100,6 +100,11 @@ class Files(unittest.TestCase):
                 self.assertEqual((k["rows"], k["changed"]), (2, "2026-11-06"))
                 self.assertEqual(k["csv_sha256"], B.sha(f3["kpi.csv"]))
                 self.assertIn(b"2026-11-06,kpi,changed,harel", f3["changes.csv"])
+                for t in B.CSV_ONLY:  # the two large regulator tables: CSV only
+                    self.assertIn(f"{t}.csv", f3)
+                    self.assertNotIn(f"{t}.json", f3)
+                    self.assertIsNone(next(x for x in man["tables"] if x["id"] == t)["json"])
+                self.assertIn("kpi.json", f3)
             finally:
                 B.OUT = out0
                 if env0 is None:
@@ -140,6 +145,18 @@ class RealData(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.T = B.build_all()
+
+    def test_csv_only_round_trip(self):
+        """a CSV-only table read back from its CSV (the previous build) gives the same keys and values"""
+        with tempfile.TemporaryDirectory() as d:
+            out0, B.OUT = B.OUT, Path(d)
+            try:
+                rows = self.T["savings_m"][:500]
+                (B.OUT / "savings_m.csv").write_bytes(B.csv_bytes(rows))
+                back = B.read_prev("savings_m")["rows"]
+                self.assertIsNone(B.log_entry("savings_m", back, rows))
+            finally:
+                B.OUT = out0
 
     def test_unique_and_sourced(self):
         self.assertEqual(B.problems(self.T), [])

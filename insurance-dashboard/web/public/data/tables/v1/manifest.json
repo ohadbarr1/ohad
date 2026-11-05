@@ -3616,12 +3616,12 @@
    "last_label": "09/26",
    "changed": "2026-11-05",
    "csv": "savings_m.csv",
-   "json": "savings_m.json",
+   "json": null,
    "pq": "pq/savings_m.pq",
    "csv_bytes": 10916843,
-   "json_bytes": 12576157,
+   "json_bytes": null,
    "csv_sha256": "be098387bc4db8e4691cacf00a0d80888cb8172e2b37affb20f3ad922d958fe2",
-   "json_sha256": "1c6a268fdc0cce0b74dadd7349a8d8bcb103d4b9b663b98ec8859c576eb7e702"
+   "json_sha256": null
   },
   {
    "id": "funds_m",
@@ -3675,12 +3675,12 @@
    "last_label": "09/26",
    "changed": "2026-11-05",
    "csv": "funds_m.csv",
-   "json": "funds_m.json",
+   "json": null,
    "pq": "pq/funds_m.pq",
    "csv_bytes": 17875305,
-   "json_bytes": 20115331,
+   "json_bytes": null,
    "csv_sha256": "ea9bcb03fd6c5cfbe80431b5dadcdcb0de2a44fa772383a4dd3522fc40ba0a06",
-   "json_sha256": "094ac12a57af62e99b33afbb9cd1bf715ad9a90627e2b88780357718ee3b91b6"
+   "json_sha256": null
   }
  ],
  "changes": {
