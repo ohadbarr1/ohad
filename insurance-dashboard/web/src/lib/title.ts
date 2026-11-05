@@ -32,17 +32,19 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'savings': return p[1] ? null : t('עדשת חיסכון', 'חיסכון');
     case 'funds': if (p[1] === 'tools') return p[2] === 'hindsight' ? t('מה היה לי', 'חיסכון') : p[2] === 'fees' ? t('דמי ניהול לאורך קריירה', 'חיסכון') : p[2] ? null : t('כלים', 'חיסכון');
       if (p[1] === 'bm') return p[2] ? null : t('ביטוחי מנהלים ישנים', 'חיסכון');  // W2
+      if (p[1] === 'under') return p[2] ? null : t('מתחת לחציון, ועדיין מקבלים כסף', 'חיסכון');  // W11, a tab of /flows (P3)
       if (p[1] === 'default' || p[1] === 'trackers') return p[2] ? null : t(p[1] === 'default' ? 'קרנות ברירת מחדל' : 'מעבדת עוקבי המדד', 'חיסכון');
       return p[1] === 'makers' ? t('יצרן מול השוק', 'חיסכון') : p[1] === 'screen' ? t('מסלולים', 'חיסכון') : p[1] === 'compare' ? t('השוואת מסלולים', 'חיסכון')
       : p[1] === 'holdings' ? t('הרכב נכסים', 'חיסכון') : p[1] && FUNDS_TIME[p[1]] ? (p[2] ? null : t(FUNDS_TIME[p[1]], 'חיסכון')) : p[1] ? (p[2] ? null : t('מסלול', 'חיסכון')) : t('החודש בקופות', 'חיסכון');
     case 'managers': return t('דירוג מנהלים', 'חיסכון');
+    case 'flows': return !p[1] ? t('מי ניצח החודש', 'חיסכון') : p[1] === 'letter' && !p[3] ? t(p[2] && /^\d{6}$/.test(p[2]) ? `מכתב התזרימים ${p[2].slice(4)}/${p[2].slice(2, 4)}` : 'מכתב התזרימים', 'חיסכון') : null;  // P3
     case 'calendar': return t('לוח דיווחים');
     case 'book': return t('ספר הגרפים');
     case 'data': return p[1] === 'autopilot' && !p[2] ? t('טייס אוטומטי', 'נתונים ואיכות') : p[1] === 'api' && !p[2] ? t('API נתונים', 'נתונים ואיכות') : p[1] ? null : t('נתונים ואיכות');
     case 'restatements': return p[1] ? null : t('הצגות מחדש', 'השוואה ענפית');
     case 'presentations': return p[1] ? null : t('מצגות משקיעים');
     case 'credibility': return p[1] ? null : t('אמינות יעדים');  // lane S3
-    case 'nowcast': return p[1] ? null : t('אומדנים לפני הדוח', 'טיוטה');  // module M1, unpublished
+    case 'nowcast': return p[1] ? null : t('אומדנים לפני הדוח', 'חיסכון');  // P5: redirects to /savings?v=now
     case 'search': return t('חיפוש');
     case 'about': return p[1] ? null : t('על fox');  // Wave 0
     case 'methodology': return p[1] ? null : t('מתודולוגיה', 'על fox');  // W6 trust

@@ -5,7 +5,7 @@ import { NavLink, Outlet } from 'react-router-dom';
    view itself is still loading. */
 
 type Tab = [to: string, label: string, end?: boolean];
-const HUBS: Record<'feed' | 'questions' | 'data' | 'clients', { label: string; tabs: Tab[] }> = {
+const HUBS: Record<'feed' | 'questions' | 'data' | 'clients' | 'flows', { label: string; tabs: Tab[] }> = {
   // "מה השתנה": everything, what this browser follows (the answers' morning brief, /watch), the report calendar
   feed: { label: 'מה השתנה', tabs: [['/feed', 'הכול', true], ['/watch', 'שאני עוקב', true], ['/calendar', 'לוח דיווחים', true]] },
   // "שאלות": the index, the findings, the meeting briefs
@@ -14,6 +14,8 @@ const HUBS: Record<'feed' | 'questions' | 'data' | 'clients', { label: string; t
   data: { label: 'נתונים', tabs: [['/data', 'איכות', true], ['/data/autopilot', 'טייס אוטומטי', true], ['/data/api', 'API', true]] },
   // the agent's "לקוחות": the client folders, the stress test across them
   clients: { label: 'לקוחות', tabs: [['/clients', 'תיקים', true], ['/clients/book', 'מבחן לחץ לתיק', true]] },
+  // P3 (phase 1): "מי ניצח החודש" = the scorecard · under the median and still taking money (/funds/under) · the monthly letter
+  flows: { label: 'תזרימים', tabs: [['/flows', 'מי ניצח', true], ['/funds/under', 'מתחת לחציון', true], ['/flows/letter', 'המכתב החודשי']] },
 };
 export type HubId = keyof typeof HUBS;
 

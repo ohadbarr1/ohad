@@ -86,7 +86,6 @@ const Restatements = page(mRestatements, 'Restatements');
 const mPresentations = () => import('./pages/Presentations');
 const mCredibility = () => import('./pages/Credibility');
 const Credibility = page(mCredibility, 'Credibility'); // lane S3
-const Nowcast = page(() => import('./pages/Nowcast'), 'Nowcast'); // module M1: unpublished (no link anywhere, noindex)
 const Presentations = page(mPresentations, 'Presentations');
 const mAutopilot = () => import('./pages/Autopilot');  // lane AP
 const Autopilot = page(mAutopilot, 'Autopilot');
@@ -122,6 +121,7 @@ const Brief = page(mBrief, 'Brief');
 const BriefPage = page(mBrief, 'BriefPage');
 const Watch = page(() => import('./pages/Watch'), 'Watch');  // S10: Watch & Wake, the morning brief (from the שאלות badge, the home line and search)
 const Flows = page(() => import('./pages/Flows'), 'Flows');  // W8 flows: who really won the month
+const FlowsLetter = page(() => import('./pages/FlowsLetter'), 'FlowsLetter');  // P3: the monthly flows letter, versioned permalink per regulator month
 const mMoments = () => import('./pages/Moments');  // W9: saver life moments
 const FeeBook = page(() => import('./pages/FeeBook'), 'FeeBook');  // W11: fee-book embedded value
 const Book = page(() => import('./pages/Book'), 'Book');  // W11: the agent-book stress test
@@ -148,6 +148,12 @@ function FundsRoot() {
   if (sel && !q.get('prod') && !q.get('q')) return <Navigate to={`/funds/compare?k=${sel}`} replace />;
   if (['prod', 'track', 'q', 'per', 'fmax', 'smin', 'amin', 'mk'].some((k) => q.has(k))) { q.delete('sel'); return <Navigate to={`/funds/screen?${q}`} replace />; }
   return <FundsHub />;
+}
+/** P5: the nowcast is published as the "אומדן" view of /savings; an old /nowcast link keeps its quarter and managers (?q= &m= &fm=) */
+function NowcastRedirect() {
+  const loc = useLocation(), q = new URLSearchParams(loc.search), n = new URLSearchParams({ v: 'now' });
+  [['q', 'nq'], ['m', 'nm'], ['fm', 'fm']].forEach(([a, b]) => { const x = q.get(a); if (x) n.set(b, x); });
+  return <Navigate to={`/savings?${n}${loc.hash}`} replace />;
 }
 /** the report day lives under "numbers" now (the thesis is the company home): an old link keeps its report, window and row (?p=&w=&row=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`../numbers${loc.search}${loc.hash}`} replace />; }
@@ -223,9 +229,13 @@ export function App() {
         <Route path="funds/watch" element={<Navigate to="/my#watch" replace />} />{/* phase 0: the watchlist is a section of /my */}
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
-        <Route path="flows" element={<Flows />} />
+        <Route element={<Hub hub="flows" />}>{/* P3: who won · under the median (/funds/under keeps its address) · the monthly letter */}
+          <Route path="flows" element={<Flows />} />
+          <Route path="funds/under" element={<Under />} />
+          <Route path="flows/letter" element={<FlowsLetter />} />
+          <Route path="flows/letter/:ym" element={<FlowsLetter />} />
+        </Route>
         <Route path="feebook" element={<FeeBook />} />
-        <Route path="funds/under" element={<Under />} />
         <Route path="my/moment" element={<MomentsIndex />} />
         <Route path="my/moment/:id" element={<MomentPage />} />
         <Route path="book" element={<ChartBook />} />
@@ -237,7 +247,7 @@ export function App() {
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="credibility" element={<Credibility />} />{/* lane S3 */}
-        <Route path="nowcast" element={<Nowcast />} />{/* module M1: unpublished draft */}
+        <Route path="nowcast" element={<NowcastRedirect />} />{/* P5: published as /savings?v=now */}
         <Route path="mine" element={<Navigate to="/book" replace />} />{/* the workspace is gone; the chart book stays */}
         <Route path="debt" element={<Debt />} />
         <Route path="debt/:id" element={<Debt />} />

@@ -10,3 +10,10 @@
 .nc-notes { margin: 0; padding-inline-start: 18px; color: var(--muted); font-size: var(--t-2); line-height: 1.6; }
 .nc-notes li { margin: 2px 0; }
 @media (max-width: 760px) { .nc-tbl tr.nc-abstain td { font-size: var(--t-1); } }
+/* P5: the published forecast (the "אומדן" view of /savings) */
+.chip.nc-pub { border-color: color-mix(in oklch, var(--pos) 55%, transparent); background: color-mix(in oklch, var(--pos) 12%, var(--panel)); color: var(--fg); font-weight: 600; }
+.nc-kpis { margin-bottom: 10px; }
+.nc-official .nc-hit { color: var(--pos); font-weight: 600; white-space: nowrap; }
+.nc-official .nc-miss { color: var(--neg); font-weight: 600; white-space: nowrap; }
+.nc-official .nc-wait { color: var(--fg); white-space: nowrap; }
+.nc-method { margin-top: 10px; color: var(--fg); }

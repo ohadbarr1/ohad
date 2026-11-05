@@ -88,7 +88,7 @@ export function Flows() {
 
   return (
     <>
-      <FundsHead title="מי ניצח החודש" sub={<>תזרימים לפי קבוצה ומוצר · נתוני <span className="num">{ym(idx.asof)}</span> · התקבל <span className="num">{dateHe(idx.received)}</span> · מיליוני ש"ח · <Link to="/managers">דירוג מנהלים</Link></>}
+      <FundsHead title="מי ניצח החודש" sub={<>תזרימים לפי קבוצה ומוצר · נתוני <span className="num">{ym(idx.asof)}</span> · התקבל <span className="num">{dateHe(idx.received)}</span> · מיליוני ש"ח · <Link className="sv-u" to="/managers">דירוג מנהלים</Link> · <Link className="sv-u" to={`/flows/letter/${idx.asof}`} data-testid="flows-letter-link">מכתב התזרימים {ym(idx.asof)}: להטמעה ולציטוט</Link></>}
         tools={<>
           <Pick label="מוצר" cap="מוצר" value={prodId} onChange={(v) => set('prod', v)} options={prodOpts} />
           {months.length > 0 && p && <Pick label="חודש" cap="חודש" value={String(p)} onChange={(v) => set('m', v)} options={months.map((q) => [String(q), ym(q)] as [string, string])} />}

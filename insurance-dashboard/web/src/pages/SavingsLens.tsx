@@ -22,6 +22,7 @@ import '../styles/prov-market.css';
 const LensMarket = lazy(async () => ({ default: (await import('./SavingsLensMarket')).LensMarket }));
 const IndustryEcon = lazy(async () => ({ default: (await import('./IndustryEcon')).IndustryEcon }));
 const LensNpv = lazy(async () => ({ default: (await import('./SavingsLensNpv')).LensNpv }));  // M3: value of the flows
+const NowcastView = lazy(async () => ({ default: (await import('./Nowcast')).NowcastView }));  // P5: the published forecast, its scorecard and backtest (/nowcast lands here)
 
 type View = 'lens' | 'now' | 'rank' | 'market' | 'econ' | 'npv';
 const OTHERS = 'קרנות ענפיות ואחרות';
@@ -66,7 +67,7 @@ function Lens({ d }: { d: LensData }) {
       <h2 className="band">עדשת חיסכון<span className="muted">תזרימים ונכסים: רשות שוק ההון, חודשי, עד <span className="num">{ym(d.meta.asof)}</span> · הכנסות והוצאות: דוחות החברות המנהלות, עד <span className="num">{ql(d.meta.last_rep)}</span></span></h2>
       <div className="lens-views"><SegCtl<View> label="תצוגה" value={view} onChange={(v) => set({ v: v === 'lens' ? '' : v })} options={views} /><Link className="chip lens-out" to={`/managers?v=rank${seg !== 'pen' ? `&s=${seg}` : ''}`}>דירוג מנהלים לאורך זמן ←</Link><Link className="chip lens-out" to="/warroom">חדר מלחמה: מהלך דמי ניהול ←</Link><Link className="chip lens-out" to="/warroom/regulation">צנרת רגולציה ←</Link><Link className="chip lens-out" to="/fragility">מוניטור שבריריות ←</Link><Link className="chip lens-out" to="/consolidation">מסך האיחודים ←</Link></div>
       {view === 'lens' && <LensView d={d} src={src} seg={seg} q={q} g={g} set={set} />}
-      {view === 'now' && <NowView d={d} src={src} seg={seg} set={set} />}
+      {view === 'now' && <><Suspense fallback={<Loading what="האומדן שפורסם" />}><NowcastView /></Suspense><NowView d={d} src={src} seg={seg} set={set} /></>}
       {(view === 'market' || view === 'econ') && <Suspense fallback={<Loading what="התצוגה" />}>{view === 'market' ? <LensMarket /> : <IndustryEcon />}</Suspense>}
       {view === 'npv' && <Suspense fallback={<Loading what="התצוגה" />}><LensNpv /></Suspense>}
       {g >= 0 && view === 'now' && <Drill d={d} src={src} g={g} seg={seg} onClose={() => set({ g: '' })} />}
@@ -329,10 +330,11 @@ function NowView({ d, src, seg, set }: { d: LensData; src: LensSrc; seg: Seg; se
   if (!nc.months.length) return <Empty title={`אין עדיין חודשים שפורסמו ל-${ql(nc.q)}`} />;
   return (
     <>
+      <h2 className="band">לפי מוצר ומנהל · שיטת העדשה<span className="muted">בסיס להשוואה, מתעדכן עם כל חודש רשות; לא נקפא</span></h2>
       <section className="controls lens-ctl"><SegPick seg={s} set={set} omit={['ins']} /></section>
       <div className="lens-note est"><span className="chip est">אומדן</span> {ql(nc.q)} עד <span className="num">{ym(nc.months[nc.months.length - 1])}</span> · <span className="num">{nc.months.length}/3</span> חודשים · הכנסות = תשואת דמי הניהול של {ql(nc.base)} × נכסים ממוצעים QTD מהרשות × 3 ÷ 12 · רווח = אומדן ההכנסות פחות הוצאות {ql(nc.base)} · ניוד וצבירה: בפועל, QTD.</div>
       <Panel title={`${SEG_LONG[s]} · ${ql(nc.q)} אומדן מול ${ql(nc.base)}`} aside={<span>הכנסות ורווח: מיליוני ש"ח · נכסים ותזרימים: מיליארדי ש"ח</span>}>
-        <div className="scroll"><table className="lens-tbl">
+        <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl">
           <thead><tr><th>מנהל</th><th className={s !== 'hish' ? 'wide-only' : ''}>נכסים ממוצעים QTD</th><th className="wide-only">מול {ql(nc.base)}</th><th className="wide-only">ניוד נטו QTD</th><th className="wide-only">צבירה QTD</th>
             {s !== 'hish' && <><th className="wide-only">הכנסות {ql(nc.base)}</th><th>הכנסות {ql(nc.q)} <span className="chip est">אומדן</span></th><th>שינוי</th><th className="wide-only">רווח {ql(nc.base)}</th><th className="wide-only">רווח {ql(nc.q)} <span className="chip est">אומדן</span></th></>}</tr></thead>
           <tbody>{rows.map((n) => { const b = base(n), name = src.name(n.g), da = delta(n.avg, n.baseAvg), df = delta(n.fees, n.baseFees); return (

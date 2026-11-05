@@ -50,6 +50,8 @@ const ROUTES = [
   '/watch',
   // phase 0 (05.11.26): the merged pages and the addresses that now land on them
   '/questions', '/findings', '/brief', '/clients/book', '/funds/tools', '/my', '/funds/watch', '/methodology', '/drivers', '/drivers/harel',
+  // phase 1, lane P3/P5 (savings season): the published nowcast (and /nowcast landing on it), the flows hub's tabs and the monthly letter
+  '/savings?v=now', '/nowcast', '/nowcast?q=Q3-2026&fm=harel', '/flows', '/funds/under', '/flows/letter', '/flows/letter/202609', '/flows/letter/202609?v=1',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */

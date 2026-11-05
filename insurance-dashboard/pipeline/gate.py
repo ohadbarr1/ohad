@@ -122,6 +122,9 @@ Checks
   flows          Wave 3: web/public/data/flows.json and flows/ equal a rebuild (pipeline/build_flows.py --check): every group-month cell
                  equals the sum of its tracks (flows/m/<yyyymm>.json) within 0.5 NIS m, every product total the sum of its groups, net = dep −
                  wd + tr and comp = tr − dt − cl exactly, mig ≥ 0 and cl ≤ 0, ranks start at 1, every method string present
+  flows_letter   P3: the monthly flows letter of the latest regulator month is current (pipeline/build_flows_letter.py --check): its body
+                 hashes to a rebuild from flows/ and under.json, the index equals a rebuild, every superseded version's snapshot hashes to
+                 the version it records, tr = comp + dt + cl per product
   attribution    the attribution engine (web/public/data/attribution/, module A4) equals a rebuild (pipeline/build_attribution.py --check):
                  every bridge's contributions plus its residual sum to its total within rounding, from + total = to, ROE recomputes
                  from the facts it cites, and every contribution has inputs that open down to a report and page
@@ -722,6 +725,12 @@ def flows():  # Wave 3: who really won
         (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
 
 
+def flows_letter():  # P3: the monthly flows letter, versioned
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_flows_letter.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    add("flows_letter", p.returncode == 0, 1, 0 if p.returncode == 0 else max(1, len(out) - 1), (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def coef():  # W6: the conversion coefficients read from the funds' bylaws
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_coef.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -864,6 +873,7 @@ def main():
     fund_stats()
     decision()
     flows()
+    flows_letter()
     coef()
     covers()
     attribution()

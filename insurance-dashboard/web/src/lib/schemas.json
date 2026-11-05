@@ -278,6 +278,14 @@
    "schema": "flowNpv"
   },
   {
+   "pattern": "flows/letters/index.json",
+   "schema": "flowsLetterIndex"
+  },
+  {
+   "pattern": "flows/letters/*.json",
+   "schema": "flowsLetter"
+  },
+  {
    "pattern": "nowcast.json",
    "schema": "nowcast"
   },
@@ -6967,6 +6975,381 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/feedEvent"
+     }
+    }
+   }
+  },
+  "flowsLetterIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "latest",
+    "letters",
+    "events"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "latest": {
+     "$ref": "#/$defs/month"
+    },
+    "letters": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "p",
+       "ver",
+       "built",
+       "first",
+       "hash",
+       "h"
+      ],
+      "properties": {
+       "p": {
+        "$ref": "#/$defs/month"
+       },
+       "ver": {
+        "type": "integer"
+       },
+       "built": {
+        "$ref": "#/$defs/date"
+       },
+       "first": {
+        "$ref": "#/$defs/date"
+       },
+       "hash": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+       },
+       "h": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "t",
+       "d",
+       "dk",
+       "c",
+       "per",
+       "h",
+       "src",
+       "to"
+      ],
+      "properties": {
+       "t": {
+        "enum": [
+         "letter"
+        ]
+       },
+       "d": {
+        "$ref": "#/$defs/date"
+       },
+       "dk": {
+        "enum": [
+         "fetched"
+        ]
+       },
+       "src": {
+        "type": "object",
+        "required": [
+         "k",
+         "ym"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "flowsLetter": {
+   "type": "object",
+   "required": [
+    "v",
+    "p",
+    "ver",
+    "built",
+    "hash",
+    "permalink",
+    "versions",
+    "body"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "p": {
+     "$ref": "#/$defs/month"
+    },
+    "ver": {
+     "type": "integer"
+    },
+    "built": {
+     "$ref": "#/$defs/date"
+    },
+    "hash": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "permalink": {
+     "type": "string",
+     "pattern": "^https://"
+    },
+    "versions": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "ver",
+       "built",
+       "hash",
+       "changes"
+      ],
+      "properties": {
+       "ver": {
+        "type": "integer"
+       },
+       "built": {
+        "$ref": "#/$defs/date"
+       },
+       "changes": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "k",
+          "l",
+          "a",
+          "b"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "body": {
+     "type": "object",
+     "required": [
+      "p",
+      "received",
+      "src",
+      "headline",
+      "winner",
+      "loser",
+      "across",
+      "total",
+      "prods",
+      "tenders",
+      "under",
+      "defs",
+      "method",
+      "figs"
+     ],
+     "properties": {
+      "p": {
+       "$ref": "#/$defs/month"
+      },
+      "received": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "headline": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "string"
+       }
+      },
+      "winner": {
+       "type": "object",
+       "required": [
+        "grp",
+        "comp"
+       ]
+      },
+      "loser": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "across": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "required": [
+         "grp",
+         "comp",
+         "tr",
+         "dt",
+         "cl",
+         "mig",
+         "in"
+        ]
+       }
+      },
+      "total": {
+       "type": "object",
+       "required": [
+        "tr",
+        "comp",
+        "dt",
+        "cl",
+        "mig",
+        "in"
+       ]
+      },
+      "prods": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "required": [
+         "id",
+         "label",
+         "tot",
+         "groups",
+         "top",
+         "low"
+        ],
+        "properties": {
+         "groups": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+           "type": "object",
+           "required": [
+            "grp",
+            "a",
+            "tr",
+            "comp",
+            "dt",
+            "cl",
+            "mig",
+            "org",
+            "net",
+            "rk"
+           ],
+           "properties": {
+            "a": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "tr": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "comp": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "dt": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "cl": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "mig": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "org": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "net": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "rk": {
+             "type": [
+              "integer",
+              "null"
+             ]
+            },
+            "since": {
+             "$ref": "#/$defs/month"
+            }
+           }
+          }
+         }
+        }
+       }
+      },
+      "tenders": {
+       "type": "array"
+      },
+      "under": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "defs": {
+       "type": "object",
+       "required": [
+        "fox",
+        "compare"
+       ],
+       "properties": {
+        "fox": {
+         "type": "array",
+         "minItems": 1,
+         "items": {
+          "type": "object",
+          "required": [
+           "k",
+           "he",
+           "def"
+          ]
+         }
+        },
+        "compare": {
+         "type": "array",
+         "minItems": 1,
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      },
+      "method": {
+       "type": "object"
+      },
+      "figs": {
+       "type": "object"
+      }
      }
     }
    }

@@ -1,34 +1,24 @@
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Sourced } from '../components/Source';
 import { IdDot } from '../components/MgrChip';
-import { Empty, ErrorBox, Loading, Panel, Seg as SegCtl } from '../components/ui';
+import { Empty, ErrorBox, Kpi, Loading, Panel, Seg as SegCtl } from '../components/ui';
 import { nf } from '../lib/format';
 import { ql, spc, useLens, warmRep, type LensData } from '../lib/lens';
 import { NAME, NcSrc, dmy, useNowcast, type NcBt, type NcEst, type NcStat, type NowcastData } from '../lib/nowcast';
 import type { Prov } from '../lib/prov';
-import { useF2e, type F2eData } from '../lib/nowcastF2e';
+import { F2eSrc, useF2e, type F2eData, type FEst, type FSeg } from '../lib/nowcastF2e';
 import { F2eBlock } from './NowcastF2e';
 import '../styles/lens.css';
 import '../styles/nowcast.css';
 
-/** Module M1, UNPUBLISHED: estimates frozen before the print, scored against it. Not linked from the nav, home, search or any page. */
-export function Nowcast() {
-  useNoindex();
+/** Module M1 + wave 11 (P5, fox 3.0 phase 1): the estimates frozen BEFORE the print, published, and scored against it. The canonical place is
+ *  the "אומדן" view of /savings (?v=now); /nowcast redirects there. Query keys: nq (quarter), nm (M1 manager), fm (F2E manager). */
+export function NowcastView() {
   const nc = useNowcast(), lens = useLens(), f2e = useF2e();
   if (nc.error || lens.error) return <ErrorBox what="האומדנים" error={nc.error ?? lens.error ?? ''} />;
   if (!nc.data || !lens.data) return <Loading what="האומדנים" />;
   return <Page d={nc.data} lens={lens.data} f2e={f2e.data} f2eErr={f2e.error} />;
-}
-
-/** <meta name="robots" content="noindex"> while this route is open */
-function useNoindex() {
-  useEffect(() => {
-    const m = document.createElement('meta');
-    m.name = 'robots'; m.content = 'noindex, nofollow';
-    document.head.appendChild(m);
-    return () => { m.remove(); };
-  }, []);
 }
 
 const tone = (v: number | null | undefined) => (v == null ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : '');
@@ -43,20 +33,21 @@ function Page({ d, lens, f2e, f2eErr }: { d: NowcastData; lens: LensData; f2e: F
   const [sp, setSp] = useSearchParams();
   const src = useMemo(() => new NcSrc(d, lens), [d, lens]);
   const quarters = [...new Set(d.ledger.map((l) => l.quarter))].sort((a, b) => (a.slice(3) + a[1]).localeCompare(b.slice(3) + b[1])).reverse();
-  const q = quarters.includes(sp.get('q') ?? '') ? sp.get('q')! : quarters[0] ?? d.meta.live.q;
-  const mgr = d.cover.includes(sp.get('m') ?? '') ? sp.get('m')! : d.cover[0];
+  const q = quarters.includes(sp.get('nq') ?? '') ? sp.get('nq')! : quarters[0] ?? d.meta.live.q;
+  const mgr = d.cover.includes(sp.get('nm') ?? '') ? sp.get('nm')! : d.cover[0];
   const set = (k: string, v: string) => { const n = new URLSearchParams(sp); if (v) n.set(k, v); else n.delete(k); setSp(n, { replace: true }); };
   return (
     <>
-      <h2 className="band">אומדנים לפני הדוח<span className="muted"><span className="chip nc-draft">טיוטה, לא פורסם</span> פנסיה וגמל: הכנסות מדמי ניהול ורווח תפעולי מגזרי · רשות שוק ההון עד <span className="num">{lensMonth(d.meta.built_from.regulator_asof)}</span> · דוחות עד <span className="num">{ql(d.meta.built_from.last_rep)}</span> · שיטה {d.meta.method}</span></h2>
-      {f2e ? <F2eBlock f={f2e} lens={lens} Mgr={Mgr} mgr={f2e.cover.includes(sp.get('fm') ?? '') ? sp.get('fm')! : f2e.cover[0]} setMgr={(v) => set('fm', v === f2e.cover[0] ? '' : v)} />
+      {f2e && <Official d={d} f={f2e} lens={lens} q={q} />}
+      <h2 className="band">אומדנים לפני הדוח<span className="muted">פנסיה וגמל: הכנסות מדמי ניהול ורווח תפעולי מגזרי · רשות שוק ההון עד <span className="num">{lensMonth(d.meta.built_from.regulator_asof)}</span> · דוחות עד <span className="num">{ql(d.meta.built_from.last_rep)}</span> · שיטה {d.meta.method}</span></h2>
+      {f2e ? <F2eBlock live={false} f={f2e} lens={lens} Mgr={Mgr} mgr={f2e.cover.includes(sp.get('fm') ?? '') ? sp.get('fm')! : f2e.cover[0]} setMgr={(v) => set('fm', v === f2e.cover[0] ? '' : v)} />
         : f2eErr ? <ErrorBox what="אומדן זרימה-לרווח" error={f2eErr} /> : <Loading what="אומדן זרימה-לרווח" />}
       <h2 className="band">M1: תשואה ממומשת × נכסים ממוצעים<span className="muted">האומדן הקודם, קפוא בשני שלבים, ובדיקה לאחור</span></h2>
-      {quarters.length > 1 && <div className="lens-views"><SegCtl<string> label="רבעון" value={q} onChange={(v) => set('q', v)} options={quarters.map((x) => [x, ql(x)])} /></div>}
+      {quarters.length > 1 && <div className="lens-views"><SegCtl<string> label="רבעון" value={q} onChange={(v) => set('nq', v)} options={quarters.map((x) => [x, ql(x)])} /></div>}
       <Live d={d} src={src} q={q} />
       <Scorecard d={d} src={src} />
       <Summary d={d} />
-      <Detail d={d} src={src} mgr={mgr} setMgr={(v) => set('m', v === d.cover[0] ? '' : v)} />
+      <Detail d={d} src={src} mgr={mgr} setMgr={(v) => set('nm', v === d.cover[0] ? '' : v)} />
       <Panel title="הנחות" aside={<span className="chip est">אומדן</span>}>
         <ul className="nc-notes">
           <li>שלב 1: חודשים 1–2 בפועל, חודש 3 באומדן (A₃ = A₂ + ממוצע הצבירה נטו של חודשים 1–2, ללא תשואת שוק). יום נומינלי: <span className="num">{d.params.S1_DAYS}</span> יום לפני הדוח. שלב 2: שלושת החודשים בפועל, <span className="num">{d.params.S2_DAYS}</span> יום לפני הדוח.</li>
@@ -71,6 +62,67 @@ function Page({ d, lens, f2e, f2eErr }: { d: NowcastData; lens: LensData; f2e: F
   );
 }
 const lensMonth = (p: number) => `${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`;
+
+/* ---------- P5: the published forecast of the quarter, its vintage, and the hit / miss of every print ---------- */
+/** hit = the reported fee revenue falls inside the frozen range of the flow-to-earnings estimate (the range is frozen with it) */
+function Official({ d, f, lens, q }: { d: NowcastData; f: F2eData; lens: LensData; q: string }) {
+  const fsrc = useMemo(() => new F2eSrc(f, lens), [f, lens]);
+  const nsrc = useMemo(() => new NcSrc(d, lens), [d, lens]);
+  const L = f.ledger.find((l) => l.quarter === q) ?? f.ledger[f.ledger.length - 1];
+  if (!L) return null;
+  const m2 = d.ledger.find((l) => l.quarter === L.quarter && l.stage === 2), m1s = d.ledger.find((l) => l.quarter === L.quarter && l.stage === 1);
+  const sc = (c: string) => f.score.find((x) => x.c === c && x.q === L.quarter);
+  const first = L.rows.map((e) => e.T_expected ?? '').filter(Boolean).sort()[0] ?? null;
+  // every frozen F2E row of every quarter that has its print: the cumulative, published-before-the-report hit rate
+  const done = f.score.filter((x) => x.act);
+  const hits = done.filter((x) => x.in === 1).length;
+  const all = f.summary.all?.rev ?? null;
+  const errP = (e: FEst, a: number): Prov => ({ k: 'calc', title: `סטייה · ${NAME[e.c] ?? e.c} · ${ql(e.q)}`, value: spc((e.rev - a) / Math.abs(a) * 100, 1), unit: '% מהבפועל',
+    formula: '(אומדן − בפועל) ÷ בפועל × 100', inputs: [{ label: 'אומדן, קפוא', v: m1(e.rev), src: () => fsrc.rev(e) }, { label: 'בפועל, מהדוח', v: m1(a), src: () => fsrc.actual(e.c, e.g, e.q, Object.keys(e.segs) as FSeg[], a) }] });
+  const errN = (e: FEst, a: number): Prov => ({ k: 'calc', title: `סטייה בש"ח · ${NAME[e.c] ?? e.c} · ${ql(e.q)}`, value: pm(e.rev - a), unit: 'מיליוני ש"ח',
+    formula: 'אומדן − בפועל', inputs: [{ label: 'אומדן, קפוא', v: m1(e.rev), src: () => fsrc.rev(e) }, { label: 'בפועל, מהדוח', v: m1(a), src: () => fsrc.actual(e.c, e.g, e.q, Object.keys(e.segs) as FSeg[], a) }] });
+  const rate: Prov = { k: 'calc', title: 'שיעור פגיעה מצטבר · אומדנים שפורסמו לפני הדוח', value: done.length ? `${hits}/${done.length}` : '–',
+    formula: 'מספר הדוחות שבהם ההכנסות בפועל נפלו בטווח הקפוא ÷ מספר הדוחות שהוכרעו. רק אומדנים מהיומן (נקפאו לפני הדוח), לא בדיקה לאחור',
+    inputs: done.map((x) => ({ label: `${NAME[x.c] ?? x.c} · ${ql(x.q)}: טווח ${m1(x.lo)}–${m1(x.hi)}, בפועל ${m1(x.act!.rev)}`, v: x.in ? 'פגיעה' : 'החטאה' })) };
+  const bt: Prov = { k: 'calc', est: true, title: 'בדיקה לאחור · זרימה לרווח', value: all?.cover == null ? '–' : `${nf(all.cover, 0)}%`, unit: 'מהרבעונים בתוך הטווח',
+    formula: `כל רבעון מ-${ql(f.params.FIRST_TARGET)}: האומדן נבנה מהנתונים שפורסמו עד ${f.params.S2_DAYS} יום לפני הדוח ונמדד מול הדוח. לא פורסם מראש: מדד לשיטה, לא לעמידה בתחזית`,
+    inputs: all ? [{ label: 'מנהל-רבעונים', v: String(all.n) }, { label: 'חציון סטייה מוחלטת', v: `${nf(all.mdae, 2)}%` }, { label: 'MAPE', v: `${nf(all.mape, 2)}%` }, { label: 'הטיה', v: `${all.bias > 0 ? '+' : ''}${nf(all.bias, 2)}%` }] : [] };
+  return (
+    <>
+      <h2 className="band" id="official">האומדן שפורסם · {ql(L.quarter)}<span className="muted">הכנסות מדמי ניהול, פנסיה וגמל · <span className="chip nc-pub">פורסם לפני הדוח · {dmy(L.created_at)}</span></span></h2>
+      <section className="kpis nc-kpis">
+        <Kpi label="נקפא" value={<span className="num">{dmy(L.created_at)}</span>} sub={<>hash <span className="mono">{L.inputs_hash.slice(0, 12)}</span> · שיטה {L.method_version}</>} />
+        <Kpi label="הדוח הראשון של הרבעון, צפוי" value={<span className="num">{dmy(first)}</span>} sub={`${L.rows.length} מנהלים`} />
+        <Kpi label="פגיעות עד כה" value={<Sourced src={() => rate}><span className="num">{done.length ? `${hits}/${done.length}` : `0/${f.score.length}`}</span></Sourced>} sub={done.length ? 'בפועל בתוך הטווח הקפוא' : 'עוד לא הוכרע אף דוח'} />
+        <Kpi label="בדיקה לאחור, בתוך הטווח" value={<Sourced src={() => bt}><span className="num">{all?.cover == null ? '–' : `${nf(all.cover, 0)}%`}</span></Sourced>} sub={all ? <>חציון סטייה <span className="num">{nf(all.mdae, 2)}%</span> · <span className="num">{all.n}</span> מנהל-רבעונים</> : undefined} />
+      </section>
+      <Panel title={`${ql(L.quarter)} · אומדן, טווח, ובפועל אחרי הדוח`} aside={<span>מיליוני ש"ח, רבעון</span>}>
+        <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl nc-official">
+          <thead><tr><th>מנהל</th><th>אומדן</th><th>טווח</th><th className="wide-only">M1, שלב 2</th><th className="wide-only">דוח צפוי</th><th>בפועל</th><th className="wide-only">סטייה, מיליוני ש"ח</th><th>סטייה</th><th>תוצאה</th></tr></thead>
+          <tbody>{L.rows.map((e) => { const s = sc(e.c), a = s?.act?.rev ?? null, m = (m2 ?? m1s)?.rows.find((r) => r.c === e.c); return (
+            <tr key={e.c} onPointerEnter={() => warmRep(e.c)} onFocus={() => warmRep(e.c)}>
+              <td><Mgr c={e.c} /></td>
+              <td><S className="est-num" src={() => fsrc.rev(e)}>{m1(e.rev)}</S></td>
+              <td><S className="est-num" src={() => fsrc.range(e)}>{m1(e.lo)}–{m1(e.hi)}</S></td>
+              <td className="wide-only">{m ? <S className="est-num" src={() => nsrc.rev(m)}>{m1(m.rev)}</S> : '–'}</td>
+              <td className="wide-only"><span className="num">{dmy(e.T_expected)}</span></td>
+              <td>{a != null ? <S src={() => fsrc.actual(e.c, e.g, e.q, Object.keys(e.segs) as FSeg[], a)}>{m1(a)}</S> : <span className="lens-dash" title={`הדוח צפוי ${dmy(e.T_expected)}`}>–</span>}</td>
+              <td className="wide-only">{a != null ? <S src={() => errN(e, a)}>{pm(e.rev - a)}</S> : '–'}</td>
+              <td>{a != null ? <S src={() => errP(e, a)}>{spc((e.rev - a) / Math.abs(a) * 100, 1)}</S> : '–'}</td>
+              <td>{a == null ? <span className="nc-wait">ממתין לדוח</span> : s?.in ? <span className="nc-hit">✓ בטווח</span> : <span className="nc-miss">✗ מחוץ לטווח</span>}</td>
+            </tr>); })}</tbody>
+        </table></div>
+        <ul className="nc-notes nc-method">
+          <li>האומדן נקפא ב-<span className="num">{dmy(L.created_at)}</span>, לפני הדוח הראשון של הרבעון (צפוי <span className="num">{dmy(first)}</span>), ונרשם ביומן שמוסיפים לו ואינו משתנה: כל שורה נושאת את קלטיה ואת ה-hash שלהם, והבדיקה האוטומטית נכשלת אם רשומה קפואה משתנה.</li>
+          <li>אומדן: זרימה לרווח (ספר דמי הניהול של הרשות, מכויל לדוח). טווח: ±<span className="num">{nf(f.params.F2E_Z, 1)}</span> סטיות תקן של היחס המכויל. פגיעה: ההכנסות בפועל בתוך הטווח. סטייה: אומדן פחות בפועל, ובאחוזים מהבפועל.</li>
+          <li>M1 (תשואה ממומשת × נכסים ממוצעים) נקפא בנפרד בשני שלבים ומוצג להשוואה; כרטיס הציון שלו למטה.</li>
+          <li>היקף: הכנסות מדמי ניהול של מגזרי הפנסיה והגמל של החברה המנהלת, לא רווח הקבוצה. הבפועל: אותה שורה בדוח, אותם מגזרים; כל מספר נפתח לעמוד בדוח.</li>
+        </ul>
+      </Panel>
+    </>
+  );
+}
+const pm = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${nf(Math.abs(x), 1)}`;
 
 function Mgr({ c }: { c: string }) {
   const grp: Record<string, string> = { menora: 'מנורה מבטחים', altshuler: 'אלטשולר שחם', yelin: 'ילין לפידות' };
@@ -92,7 +144,7 @@ function Live({ d, src, q }: { d: NowcastData; src: NcSrc; q: string }) {
   return (
     <Panel title={`${ql(q)} · שלב 1, שלב 2, בפועל`} aside={<span>מיליוני ש"ח, רבעון · קפוא {s1 ? dmy(s1.created_at) : ''}{s2 ? ` · ${dmy(s2.created_at)}` : ''}</span>}>
       <div className="lens-note est"><span className="chip est">אומדן</span> שלב 1 קפוא <span className="num">{s1 ? dmy(s1.created_at) : '–'}</span> מחודשי רשות עד <span className="num">{lensMonth(lastM)}</span> · שלב 2 {s2 ? <>קפוא <span className="num">{dmy(s2.created_at)}</span></> : <>ממתין לחודש <span className="num">{lensMonth(lastM + 1)}</span> (נקרא בערך ב-<span className="num">{d.params.PUB_DAY}</span> בחודש שאחריו)</>} · hash <span className="mono">{any.inputs_hash.slice(0, 12)}</span></div>
-      <div className="scroll"><table className="lens-tbl nc-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
         <thead><tr><th>מנהל</th><th className="wide-only">היקף</th><th className="wide-only">הכנסות {ql(base)}</th><th>הכנסות, שלב 1</th><th className="wide-only">שלב 2</th><th>בפועל</th><th className="wide-only">סטייה</th>
           <th className="wide-only">רווח {ql(base)}</th><th>רווח, שלב 1</th><th className="wide-only">שלב 2</th><th className="wide-only">בפועל</th><th className="wide-only">נוסטרו</th><th className="wide-only">דוח צפוי</th></tr></thead>
         <tbody>
@@ -135,7 +187,7 @@ function Scorecard({ d, src }: { d: NowcastData; src: NcSrc }) {
   return (
     <Panel title="כרטיס ציון · אומדנים קפואים מול הדוח" aside={<span>% מהבפועל</span>}>
       {!done.length ? <Empty title="עוד אין אומדן קפוא שהוכרע">{ql(d.meta.live.q)} יוכרע עם הדוחות, מ-{dmy(d.ledger.flatMap((l) => l.rows.map((r) => r.T_expected ?? '')).filter(Boolean).sort()[0])}.</Empty> : (
-        <div className="scroll"><table className="lens-tbl nc-tbl">
+        <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
           <thead><tr><th>מנהל</th><th>רבעון</th><th>שלב 1</th><th>שלב 2</th><th>בפועל</th><th>סטייה 1</th><th>סטייה 2</th><th className="wide-only">תיקון 1→2</th><th className="wide-only">רווח: סטייה 2, נק׳ מההכנסות</th></tr></thead>
           <tbody>{done.map((x) => { const g = d.ledger.flatMap((l) => l.rows).find((r) => r.c === x.c && r.q === x.q)!; return (
             <tr key={x.c + x.q} onPointerEnter={() => warmRep(x.c)}><td><Mgr c={x.c} /></td><td><span className="num">{ql(x.q)}</span></td><td><span className="num est-num">{m1(x.s1?.rev)}</span></td><td><span className="num est-num">{m1(x.s2?.rev)}</span></td>
@@ -152,7 +204,7 @@ function Summary({ d }: { d: NowcastData }) {
   const rows = [...d.cover, 'all'].filter((c) => d.summary[c]);
   return (
     <Panel title="בדיקה לאחור · סטייה לפי מנהל" aside={<span>MAPE / הטיה · {ql(d.backtest[0]?.q ?? '')}–{ql(d.backtest[d.backtest.length - 1]?.q ?? '')}</span>}>
-      <div className="scroll"><table className="lens-tbl nc-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
         <thead><tr><th>מנהל</th><th>רבעונים</th><th>הכנסות, שלב 1</th><th className="wide-only">הכנסות, שלב 2</th><th className="wide-only">תיקון 1→2 (ממוצע מוחלט)</th><th>רווח, שלב 2: נק׳ מההכנסות</th><th className="wide-only">רווח, שלב 2: % מהרווח</th><th className="wide-only">שיטת העדשה: הכנסות</th><th className="wide-only">שיטת העדשה: רווח, נק׳</th></tr></thead>
         <tbody>{rows.map((c) => { const s = d.summary[c]; return (
           <tr key={c} className={c === 'all' ? 'tot' : ''}><td>{c === 'all' ? 'כל המנהלים' : <Mgr c={c} />}</td><td><span className="num">{s.s1.rev?.n ?? '–'}</span></td>
@@ -173,7 +225,7 @@ function Detail({ d, src, mgr, setMgr }: { d: NowcastData; src: NcSrc; mgr: stri
   return (
     <Panel title={`בדיקה לאחור · ${NAME[mgr]} · כל רבעון`} aside={<span>מיליוני ש"ח</span>}>
       <section className="controls lens-ctl"><div className="field"><span>מנהל</span><SegCtl<string> label="מנהל" value={mgr} onChange={setMgr} options={d.cover.map((c) => [c, NAME[c]])} /></div></section>
-      <div className="scroll" onPointerEnter={() => warmRep(mgr)} onFocus={() => warmRep(mgr)}><table className="lens-tbl nc-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב" onPointerEnter={() => warmRep(mgr)} onFocus={() => warmRep(mgr)}><table className="lens-tbl nc-tbl">
         <thead><tr><th>רבעון</th><th className="wide-only">דוח</th><th>שלב 1</th><th className="wide-only">שלב 2</th><th>בפועל</th><th>סטייה 1</th><th className="wide-only">סטייה 2</th><th className="wide-only">תיקון 1→2</th><th className="wide-only">רווח, שלב 2</th><th className="wide-only">רווח בפועל</th><th>רווח: נק׳</th></tr></thead>
         <tbody>{rows.map((b) => (
           <tr key={b.q}>

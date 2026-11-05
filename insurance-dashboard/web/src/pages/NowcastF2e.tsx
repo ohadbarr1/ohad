@@ -8,7 +8,7 @@ import { NAME, dmy } from '../lib/nowcast';
 import { F2eSrc, type F2eData, type FEst, type FSeg, type FStat } from '../lib/nowcastF2e';
 import type { Prov } from '../lib/prov';
 
-/** Wave 11: the flow-to-earnings nowcast on /nowcast. The regulator's track-level fee book, calibrated to each manager's reported fee line. */
+/** Wave 11: the flow-to-earnings nowcast (the "אומדן" view of /savings; /nowcast redirects there). The regulator's track-level fee book, calibrated to each manager's reported fee line. */
 const m1 = (x: number | null | undefined) => (x == null ? '–' : nf(x, 1));
 const tone = (v: number | null | undefined) => (v == null ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : '');
 const S = ({ src, children, className = '' }: { src: () => Prov; children: ReactNode; className?: string }) => <Sourced src={src}><span className={`num ${className}`}>{children}</span></Sourced>;
@@ -16,12 +16,12 @@ const st = (s: FStat | null | undefined, k: 'mdae' | 'mape') => (s == null ? '�
 const bias = (s: FStat | null | undefined) => (s == null ? '–' : `${s.bias > 0 ? '+' : ''}${nf(s.bias, 2)}%`);
 const SEGS: FSeg[] = ['pen', 'gem'];
 
-export function F2eBlock({ f, lens, Mgr, mgr, setMgr }: { f: F2eData; lens: LensData; Mgr: (p: { c: string }) => ReactNode; mgr: string; setMgr: (v: string) => void }) {
+export function F2eBlock({ f, lens, Mgr, mgr, setMgr, live = true }: { live?: boolean; f: F2eData; lens: LensData; Mgr: (p: { c: string }) => ReactNode; mgr: string; setMgr: (v: string) => void }) {
   const src = useMemo(() => new F2eSrc(f, lens), [f, lens]);
   return (
     <>
       <h2 className="band" id="f2e">זרימה לרווח: ספר דמי הניהול של הרשות, מכויל לדוח<span className="muted">שיטה {f.meta.method} · רשות עד <span className="num">{String(f.meta.built_from.regulator_asof % 100).padStart(2, '0')}/{String(f.meta.built_from.regulator_asof).slice(2, 4)}</span> · דוחות עד <span className="num">{ql(f.meta.built_from.last_rep)}</span> · דמי ניהול מהפקדה {dmy(f.meta.built_from.depfee)}</span></h2>
-      <F2eLive f={f} src={src} Mgr={Mgr} />
+      {live && <F2eLive f={f} src={src} Mgr={Mgr} />}
       <F2eScore f={f} Mgr={Mgr} />
       <F2eRatios f={f} src={src} Mgr={Mgr} lens={lens} />
       <F2eLedger f={f} src={src} mgr={mgr} setMgr={setMgr} />
@@ -44,7 +44,7 @@ function F2eLive({ f, src, Mgr }: { f: F2eData; src: F2eSrc; Mgr: (p: { c: strin
   const sc = (c: string) => f.score.find((x) => x.c === c && x.q === L.quarter);
   return (
     <Panel title={`${ql(L.quarter)} · אומדן זרימה-לרווח, קפוא ${dmy(L.created_at)}`} aside={<span>מיליוני ש"ח, רבעון · hash <span className="mono">{L.inputs_hash.slice(0, 12)}</span></span>}>
-      <div className="scroll"><table className="lens-tbl nc-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
         <thead><tr><th>מנהל</th><th className="wide-only">משתמע מהרשות</th><th className="wide-only">יחס מכויל</th><th>אומדן</th><th>טווח</th><th className="wide-only">M1 שלב 2</th><th className="wide-only">פער מ-M1</th><th>בפועל</th><th className="wide-only">סטייה</th><th className="wide-only">רווח מגזרי (הוצאות מהדוח)</th><th className="wide-only">דוח צפוי</th></tr></thead>
         <tbody>{L.rows.map((e: FEst) => { const s = sc(e.c), segs = Object.keys(e.segs) as FSeg[]; return (
           <tr key={e.c} onPointerEnter={() => warmRep(e.c)} onFocus={() => warmRep(e.c)}>
@@ -72,7 +72,7 @@ function F2eScore({ f, Mgr }: { f: F2eData; Mgr: (p: { c: string }) => ReactNode
   const bt = f.backtest;
   return (
     <Panel title="כרטיס פגיעה · כל רבעון שעבר, מהנתונים שהיו לפני הדוח" aside={<span>{ql(bt[0]?.q ?? '')}–{ql(bt[bt.length - 1]?.q ?? '')} · % מהבפועל</span>}>
-      <div className="scroll"><table className="lens-tbl nc-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
         <thead><tr><th>מנהל</th><th>רבעונים</th><th>חציון סטייה מוחלטת</th><th className="wide-only">MAPE</th><th className="wide-only">הטיה</th><th className="wide-only">סטייה מרבית</th><th>בתוך הטווח</th><th className="wide-only">M1, אותם רבעונים: חציון / MAPE</th><th className="wide-only">רווח: נק׳ מההכנסות (MAPE)</th></tr></thead>
         <tbody>{rows.map((c) => { const s = f.summary[c]; return (
           <tr key={c} className={c === 'all' ? 'tot' : ''}><td>{c === 'all' ? 'כל המנהלים' : <Mgr c={c} />}</td><td><span className="num">{s.rev?.n ?? '–'}</span></td>
@@ -93,7 +93,7 @@ function F2eRatios({ f, src, Mgr, lens }: { f: F2eData; src: F2eSrc; Mgr: (p: { 
   const show = qs.slice(-8);
   return (
     <Panel title="היחס המכויל: הכנסות בדוח ÷ הכנסות משתמעות מהרשות" aside={<span>לכל רבעון שפורסם · ממוצע וסטיית תקן על כל הרבעונים</span>}>
-      <div className="scroll"><table className="lens-tbl nc-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
         <thead><tr><th>מנהל</th><th>מגזר</th><th>מגמה</th>{show.map((q) => <th key={q} className="wide-only">{ql(q)}</th>)}<th>ממוצע</th><th>סטיית תקן</th></tr></thead>
         <tbody>{f.cover.flatMap((c) => SEGS.filter((s) => f.hist[c]?.[s]?.length).map((s) => { const h = f.hist[c][s]!, by = new Map(h.map((b) => [b.q, b])), rs = h.map((b) => b.ratio);
           const mu = rs.reduce((a, b) => a + b, 0) / rs.length, sd = rs.length > 1 ? Math.sqrt(rs.reduce((a, b) => a + (b - mu) ** 2, 0) / (rs.length - 1)) : null;
@@ -113,7 +113,7 @@ function F2eLedger({ f, src, mgr, setMgr }: { f: F2eData; src: F2eSrc; mgr: stri
   return (
     <Panel title={`יומן פגיעות · ${NAME[mgr] ?? mgr}`} aside={<span>מיליוני ש"ח</span>}>
       <section className="controls lens-ctl"><div className="field"><span>מנהל</span><SegCtl<string> label="מנהל" value={mgr} onChange={setMgr} options={f.cover.map((c) => [c, NAME[c] ?? c])} /></div></section>
-      <div className="scroll"><table className="lens-tbl nc-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
         <thead><tr><th>רבעון</th><th className="wide-only">יום האומדן</th><th className="wide-only">דוח</th><th className="wide-only">משתמע</th><th>אומדן</th><th className="wide-only">טווח</th><th>בפועל</th><th>סטייה</th><th>בטווח</th><th className="wide-only">M1: סטייה</th><th className="wide-only">רווח: נק׳</th></tr></thead>
         <tbody>{rows.map((b) => (
           <tr key={b.q}><td><span className="num">{ql(b.q)}</span></td><td className="wide-only"><span className="num muted">{dmy(b.day)}</span></td><td className="wide-only"><span className="num muted">{dmy(b.T)}</span></td>

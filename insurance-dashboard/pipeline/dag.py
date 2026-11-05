@@ -253,14 +253,19 @@ STEPS = [
     # tender effect and closing transfers taken apart), the fund card's flow signal and the fee history; standard library; gate `flows`
     step("build_flows", "pipeline/build_flows.py",
          [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/closed.json", D + "funds/default.json", D + "market.json"],
-         [D + "flows.json", D + "flows"], code=["pipeline/funds_lib.py"], groups={"deploy"},
+         [D + "flows.json", D + "flows/[a-z][a-z].json", D + "flows/m", D + "flows/sig.json", D + "flows/fees.json"], code=["pipeline/funds_lib.py"], groups={"deploy"},
          note="W8: flows.json + flows/<prod>.json, flows/m/<yyyymm>.json (inputs), flows/sig.json, flows/fees.json (python3 pipeline/build_flows.py --check)"),
     # Wave 11 "under": bottom-quartile tracks (5Y net, in their category) still taking in money, the intra-group migration taken out, and
     # the shekel cost of their gap to the category median, month by month since 2016; standard library; rebuild byte-equal + rules
     step("build_under", "pipeline/build_under.py",
-         [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/closed.json", D + "flows"],
+         [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/closed.json", D + "flows.json", D + "flows/[a-z][a-z].json", D + "flows/m"],
          [D + "under.json", D + "under"], code=["pipeline/funds_lib.py", "pipeline/build_flows.py"], groups={"deploy"},
          note="W11: under.json + under/m/<yyyymm>.json (python3 pipeline/build_under.py --check)"),
+    # P3 (fox 3.0 phase 1): the monthly flows letter of the latest regulator month, versioned (a changed body cuts a new version; the old
+    # one is frozen as <yyyymm>.v<n>.json); its index carries the feed events (type `letter`); standard library
+    step("build_flows_letter", "pipeline/build_flows_letter.py", [D + "flows.json", D + "flows/[a-z][a-z].json", D + "under.json"],
+         [D + "flows/letters"], groups={"deploy"},
+         note="P3: flows/letters/<yyyymm>.json, .v<n>.json, index.json (python3 pipeline/build_flows_letter.py --check)"),
     step("build_feebook", "pipeline/build_feebook.py", [D + "market.json", D + "flows/[a-z][a-z].json", D + "lens.json", D + "funds/default.json", D + "csm/summary.json",
          D + "csm/facts", "data/extracted_lts/meitav"], [D + "feebook.json"], groups={"deploy"}, note="wave 11: fee-book embedded value per manager x product (/feebook; python3 pipeline/build_feebook.py --check)"),
     # W2: the decision data for recommending a pension fund (CMA service index, the funds' claims annex B3, default coverage, the

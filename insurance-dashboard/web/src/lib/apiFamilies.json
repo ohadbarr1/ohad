@@ -919,6 +919,35 @@
    "prov": []
   },
   {
+   "pattern": "flows/letters/*.json",
+   "schema": "flowsLetter",
+   "example": "flows/letters/202609.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_flows_letter",
+   "note": "P3: flows/letters/<yyyymm>.json, .v<n>.json, index.json (python3 pipeline/build_flows_letter.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "flows/letters/index.json",
+   "schema": "flowsLetterIndex",
+   "example": "flows/letters/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_flows_letter",
+   "note": "P3: flows/letters/<yyyymm>.json, .v<n>.json, index.json (python3 pipeline/build_flows_letter.py --check)",
+   "cadence": "monthly (regulator files, data.gov.il)",
+   "prov": [
+    "built",
+    "src"
+   ]
+  },
+  {
    "pattern": "flows/m/*.json",
    "schema": null,
    "example": "flows/m/201101.json",
