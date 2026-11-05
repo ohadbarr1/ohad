@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "prerender": "node scripts/prerender-seo.mjs dist",
     "typecheck": "tsc --noEmit",
     "deploy": "cd .. && ./deploy.sh",
     "check": "cd .. && ./deploy.sh --check-only",

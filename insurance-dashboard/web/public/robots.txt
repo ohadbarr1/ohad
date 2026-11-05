@@ -1,2 +1,6 @@
+# fox: the saver entry points are open to search engines; the private and utility pages carry X-Robots-Tag: noindex (firebase.json).
+# /data and /assets stay crawlable: the pages are rendered from them (a blocked /data would leave every page empty to a crawler).
 User-agent: *
 Allow: /
+
+Sitemap: https://fox-research-il.web.app/sitemap.xml

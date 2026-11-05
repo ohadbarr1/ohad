@@ -6,7 +6,7 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "cleanUrls": false,
+    "cleanUrls": true,
     "rewrites": [
       {
         "source": "!**/*.*",
@@ -29,6 +29,10 @@
           {
             "key": "Cache-Control",
             "value": "public, max-age=300"
+          },
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex"
           }
         ]
       },
@@ -73,7 +77,7 @@
         ]
       },
       {
-        "source": "**/*.xml",
+        "source": "/feed.xml",
         "headers": [
           {
             "key": "Content-Type",
@@ -86,6 +90,36 @@
           {
             "key": "Access-Control-Allow-Origin",
             "value": "*"
+          }
+        ]
+      },
+      {
+        "source": "/feed/**/*.xml",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/rss+xml; charset=utf-8"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=900"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      },
+      {
+        "source": "/sitemap.xml",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/xml; charset=utf-8"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
           }
         ]
       },
@@ -123,10 +157,6 @@
         "source": "**",
         "headers": [
           {
-            "key": "X-Robots-Tag",
-            "value": "noindex, nofollow"
-          },
-          {
             "key": "X-Content-Type-Options",
             "value": "nosniff"
           },
@@ -149,7 +179,7 @@
         ]
       },
       {
-        "source": "/nowcast",
+        "source": "/@(my|book|feebook|search|nowcast|fragility|positions|consolidation|clients|brief)",
         "headers": [
           {
             "key": "X-Robots-Tag",
@@ -158,7 +188,7 @@
         ]
       },
       {
-        "source": "/feebook",
+        "source": "/@(positions|consolidation|clients|brief|doc)/**",
         "headers": [
           {
             "key": "X-Robots-Tag",
@@ -167,20 +197,11 @@
         ]
       },
       {
-        "source": "/data/feebook.json",
+        "source": "/data/autopilot",
         "headers": [
           {
             "key": "X-Robots-Tag",
-            "value": "noindex"
-          }
-        ]
-      },
-      {
-        "source": "/data/nowcast.json",
-        "headers": [
-          {
-            "key": "X-Robots-Tag",
-            "value": "noindex"
+            "value": "noindex, nofollow"
           }
         ]
       }
