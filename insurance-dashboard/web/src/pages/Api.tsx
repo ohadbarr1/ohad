@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Icon } from '../components/Icon';
-import { Empty, Field, Panel, Seg } from '../components/ui';
+import { Empty, ErrorBox, Field, Loading, Panel, Seg } from '../components/ui';
 import { nf } from '../lib/format';
 import { useLoad, useRegistry } from '../lib/useData';
 import api from '../lib/apiFamilies.json';
@@ -22,12 +22,16 @@ const CADENCE_HE: Record<string, string> = {
   'quarterly, on each filing (MAYA)': 'רבעוני, עם כל דוח (MAYA)', 'monthly (regulator files, data.gov.il)': 'חודשי, קובצי הרשות (data.gov.il)',
   'monthly (Bank of Israel, CBS)': 'חודשי, בנק ישראל והלמ"ס', 'every build (date-dependent)': 'בכל בנייה (תלוי תאריך)', 'every deploy (pipeline/gate.py)': 'בכל פריסה (בדיקות האיכות)',
   'outside the DAG (its own script, on demand)': 'סקריפט נפרד, לפי צורך', 'manual (valuation input only)': 'ידני, קלט להערכת שווי בלבד', 'on each MAYA form': 'עם כל טופס ב-MAYA',
-  'by hand, when a target is published': 'ידני, כשמתפרסם מחיר יעד',
+  'by hand, when a target is published': 'ידני, כשמתפרסם מחיר יעד', 'on each filing (MAYA) and each regulator month': 'עם כל דוח (MAYA) ועם כל חודש של הרשות',
 };
 const FEED_HE: Record<string, string> = {
   '/feed.xml': 'פיד השינויים: כל נתון חדש מדוח, הצגה מחדש, יעד, חודש רשות', '/feed.atom': 'אותו פיד ב-Atom', '/feed/<company>.xml': 'האירועים של חברה אחת (גם ‎.atom)',
   '/feed/months.xml': 'קובצי הרשות החודשיים כשהם נקלטים (גם ‎.atom)', '/feed/funds.xml': 'אירועי קופות ומסלולים (גם ‎.atom)', '/feed/market.xml': 'אירועי שוק (גם ‎.atom)',
   '/data/calendar.ics': 'כל מועדי הדיווח הצפויים (לוח שנה)', '/data/cal/<company>.ics': 'מועדי הדיווח של חברה אחת',
+  '/data/tables/v1/<table>.csv': 'fox בתוך Excel: טבלה ארוכה (UTF-8 עם BOM), שורה לכל נתון עם המקור שלו; גם ‎.json; פתוח לכל מקור (CORS)',
+  '/data/tables/v1/manifest.json': 'רשימת הטבלאות: שורות, sha256, תקופה ראשונה ואחרונה, תאריך שינוי אחרון, מילון מדדים',
+  '/data/tables/v1/changes.json': 'מה השתנה מאז הבנייה הקודמת: שורות שנוספו, השתנו או הוסרו בכל טבלה, יומן מתוארך (גם changes.csv)',
+  '/data/tables/v1/fox_powerquery.xlsx': 'ערכת Power Query: שאילתה לכל טבלה בכתובות הקבועות; נתונים ← רענן הכל (סקריפטי M: ‎/data/tables/v1/pq/)',
   '/data/xlsx/<company>.xlsx': 'חוברת Excel למודל: מדד × תקופה, Q1\'23 עד Q2\'26 ו-FY, לכל ערך מסמך, עמוד וקישור (גיליון Sources)', '/data/schemas.json': 'חוזי הנתונים: הסכמה של כל משפחה מתחת',
 };
 const KIND_HE: Record<string, string> = { added: 'נוסף', breaking: 'שבירה', changed: 'שינוי' };
@@ -37,6 +41,119 @@ const PROV: [string, string][] = [
   ['der', 'נגזר (Q4 = שנה פחות 9 חודשים)'], ['vint', 'גרסאות: כל דוח שהדפיס את הנתון'], ['fetched · built · asof', 'מתי נקרא או נבנה'],
 ];
 const kb = (b: number) => (b >= 1048576 ? `${nf(b / 1048576, 1)} MB` : `${nf(b / 1024, 0)} KB`);
+
+/* fox inside Excel (lane P4): the long tables under /data/tables/v1 (pipeline/build_tables.py), read live from their manifest and change log */
+interface TabMeta { id: string; he: string; en: string; grain: string; grain_he?: string; rows: number; entities: number; first_label: string | null; last_label: string | null; changed: string; csv: string; json: string; pq: string; csv_bytes: number }
+interface Manifest { base: string; built: string; tables: TabMeta[]; changes: { json: string; csv: string; pq: string; builds: number; last: string | null }; kit: { xlsx: string; bytes: number } }
+type LogRow = [string, string, string, string, string, string, string, string, string, number | null, number | null, string];
+interface LogTab { added: number; changed: number; removed: number; listed?: number; new_table?: boolean; rows: LogRow[] }
+interface ChangeLog { builds: { date: string; kind: 'initial' | 'update'; tables: Record<string, LogTab> }[] }
+const TB = 'tables/v1/';
+const dmy = (d: string) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(2, 4)}`;
+const CH_HE: Record<string, string> = { added: 'נוסף', changed: 'השתנה', removed: 'הוסר' };
+
+/** clipboard with a fallback for browsers or contexts without the async API (a hidden textarea and execCommand) */
+function copy(text: string): Promise<boolean> {
+  const legacy = () => {
+    const t = document.createElement('textarea');
+    t.value = text; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    document.body.removeChild(t);
+    return ok;
+  };
+  try { if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text).then(() => true, () => legacy()); } catch { /* fall through */ }
+  return Promise.resolve(legacy());
+}
+
+function CopyBtn({ text, label }: { text: string; label: string }) {
+  const [st, setSt] = useState<'' | 'ok' | 'no'>('');
+  return <button type="button" className="chip" title={text.length < 200 ? text : undefined} onClick={() => void copy(text).then((ok) => { setSt(ok ? 'ok' : 'no'); window.setTimeout(() => setSt(''), 1800); })}>
+    {st === 'ok' ? <><Icon name="check" />הועתק</> : st === 'no' ? 'סמנו והעתיקו ידנית' : label}</button>;
+}
+
+/** the M script of a table, fetched when its row opens; shown on a full-width row under the table's row */
+function MRow({ path, cols }: { path: string; cols: number }) {
+  const [st, setSt] = useState<{ text?: string; err?: string }>({});
+  useEffect(() => {
+    let live = true;
+    fetch(`/data/${TB}${path}`).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.text(); })
+      .then((text) => live && setSt({ text }), (e) => live && setSt({ err: String(e) }));
+    return () => { live = false; };
+  }, [path]);
+  return (
+    <tr className="xl-mrow"><td colSpan={cols}>
+      <div className="xl-m">{st.err ? <span className="neg">לא נטען ({st.err})</span> : st.text ? <><pre dir="ltr" tabIndex={0} aria-label="סקריפט Power Query">{st.text}</pre><CopyBtn text={st.text} label="העתקת הסקריפט" /></> : <span>טוען…</span>}</div>
+    </td></tr>
+  );
+}
+
+function ChangeBuild({ b, open, toggle, names }: { b: ChangeLog['builds'][number]; open: boolean; toggle: () => void; names: Map<string, string> }) {
+  const tabs = Object.entries(b.tables).filter(([, t]) => t.added + t.changed + t.removed > 0);
+  const rows = tabs.flatMap(([id, t]) => t.rows.map((r) => [id, ...r] as [string, ...LogRow]));
+  return (
+    <li>
+      <div className="xl-b">
+        <span className="num">{dmy(b.date)}</span>
+        {b.kind === 'initial' ? <span className="chip">בנייה ראשונה</span> : null}
+        <span className="chips">{tabs.map(([id, t]) => <span key={id} className="chip" title={names.get(id) ?? id}><span className="mono" dir="ltr">{id}</span>
+          {t.added ? <span className="num pos"> +{nf(t.added, 0)}</span> : null}{t.changed ? <span className="num"> ~{nf(t.changed, 0)}</span> : null}{t.removed ? <span className="num neg"> −{nf(t.removed, 0)}</span> : null}</span>)}</span>
+        {rows.length > 0 && <button type="button" className="chip" aria-expanded={open} onClick={toggle}>{open ? 'הסתרה' : `${nf(rows.length, 0)} שורות`}</button>}
+      </div>
+      {open && rows.length > 0 && <div className="scroll" tabIndex={0} role="region" aria-label="שורות היומן"><table className="api-t">
+        <thead><tr><th>טבלה</th><th>שינוי</th><th>ישות</th><th>חתך</th><th>מדד</th><th>תקופה</th><th>לפני</th><th>אחרי</th><th>יחידה</th></tr></thead>
+        <tbody>{rows.slice(0, 60).map((r, i) => <tr key={i}><td><span className="mono" dir="ltr">{r[0]}</span></td><td>{CH_HE[r[1]] ?? r[1]}</td><td>{r[3]}</td><td className="wrap">{r[5]}</td>
+          <td className="wrap">{r[7]}</td><td><span className="num">{r[9]}</span></td><td><span className="num">{r[10] == null ? '–' : nf(r[10], 2)}</span></td>
+          <td><span className="num">{r[11] == null ? '–' : nf(r[11], 2)}</span></td><td>{r[12]}</td></tr>)}</tbody>
+      </table>{rows.length > 60 && <div className="src">ועוד {nf(rows.length - 60, 0)} שורות ב-changes.csv</div>}</div>}
+    </li>
+  );
+}
+
+function ExcelPanel() {
+  const man = useLoad<Manifest>(`${TB}manifest.json`);
+  const log = useLoad<ChangeLog>(`${TB}changes.json`);
+  const [openB, setOpenB] = useState<string | null>(null);
+  const [openM, setOpenM] = useState<string | null>(null);
+  if (man.error) return <Panel title="fox בתוך Excel"><ErrorBox what="רשימת הטבלאות" error={man.error} /></Panel>;
+  if (!man.data) return <Panel title="fox בתוך Excel"><Loading what="רשימת הטבלאות" /></Panel>;
+  const M = man.data, names = new Map(M.tables.map((t) => [t.id, t.he]));
+  const total = M.tables.reduce((s, t) => s + t.rows, 0);
+  return (
+    <Panel title={<><span className="icotile"><Icon name="download" /></span>fox בתוך Excel</>} className="xl"
+      aside={<span><span className="num">{M.tables.length}</span> טבלאות · <span className="num">{nf(total, 0)}</span> שורות · עודכן <span className="num">{dmy(M.built)}</span></span>}>
+      <div className="xl-kit">
+        <a className="btn primary" href={`/data/${TB}${M.kit.xlsx}`} download="fox_powerquery.xlsx" onClick={() => track('xlsx_dl')}><Icon name="download" />קובץ Power Query ({kb(M.kit.bytes)})</a>
+        <ol className="xl-steps">
+          <li>פתחו ב-Excel (Microsoft 365, Windows או Mac) ולחצו "הפוך תוכן לזמין"</li>
+          <li>נתונים ← רענן הכל; בפעם הראשונה: תוכן אינטרנט, אנונימי, התחבר</li>
+          <li>המודל קורא מהטבלאות <span className="mono" dir="ltr">fox_kpi</span>, <span className="mono" dir="ltr">fox_ifrs17</span>… ב-SUMIFS או XLOOKUP</li>
+        </ol>
+      </div>
+      <div className="scroll" tabIndex={0} role="region" aria-label="טבלאות fox בתוך Excel"><table className="api-t xl-t">
+        <thead><tr><th>טבלה</th><th>רמת פירוט</th><th>שורות</th><th>תקופות</th><th>עודכן</th><th>קבצים</th><th>כתובת קבועה</th><th>Power Query</th></tr></thead>
+        <tbody>{M.tables.map((t) => (<Fragment key={t.id}>
+          <tr>
+            <td><b>{t.he}</b><div className="mono" dir="ltr">{t.id}</div></td>
+            <td className="wrap">{t.grain_he ?? t.grain}</td>
+            <td><span className="num">{nf(t.rows, 0)}</span></td>
+            <td><span className="num" dir="ltr">{t.first_label} – {t.last_label}</span></td>
+            <td><span className="num">{dmy(t.changed)}</span></td>
+            <td><span className="xl-links"><a href={`/data/${TB}${t.csv}`} download>CSV</a> · <a href={`/data/${TB}${t.json}`} target="_blank" rel="noreferrer">JSON</a> <span className="num">{kb(t.csv_bytes)}</span></span></td>
+            <td><CopyBtn text={`${M.base}${t.csv}`} label="העתקת הכתובת" /></td>
+            <td><button type="button" className="chip" aria-expanded={openM === t.id} onClick={() => setOpenM(openM === t.id ? null : t.id)}>{openM === t.id ? 'הסתרת M' : 'סקריפט M'}</button></td>
+          </tr>
+          {openM === t.id && <MRow path={t.pq} cols={8} />}
+        </Fragment>))}</tbody>
+      </table></div>
+      <h3 className="xl-h">חדש מאז ההורדה הקודמת</h3>
+      {log.error ? <ErrorBox what="יומן השינויים" error={log.error} /> : !log.data ? <Loading what="יומן השינויים" /> : (
+        <ul className="xl-log">{log.data.builds.slice(0, 10).map((b, i) => { const k = `${b.date}#${i}`; return <ChangeBuild key={k} b={b} names={names} open={openB === k} toggle={() => setOpenB(openB === k ? null : k)} />; })}</ul>)}
+      <div className="src">יומן מלא: <a href={`/data/${TB}${M.changes.json}`} target="_blank" rel="noreferrer">changes.json</a> · <a href={`/data/${TB}${M.changes.csv}`} download>changes.csv</a> · רשימת הטבלאות, ספירות ו-sha256: <a href={`/data/${TB}manifest.json`} target="_blank" rel="noreferrer">manifest.json</a> · v1: עמודה לא משנה משמעות; עמודות חדשות מתווספות רק בסוף · מקור בכל שורה: source_url</div>
+    </Panel>
+  );
+}
 
 /** the first record of a file, as build_api_doc.py prints it: header scalars and the first item of the first list of records */
 function firstRecord(d: unknown): unknown {
@@ -84,6 +201,8 @@ export function Api() {
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>API נתונים</h1>
         <div className="sub"><span className="num">{open.length}</span> משפחות קבצים פתוחות · JSON סטטי עם חוזה נתונים · <a href="/data/schemas.json" download>schemas.json</a></div></div></div>
 
+      <ExcelPanel />
+
       <Panel title="תנאי שימוש">
         <div className="licence"><b>חינם, גם לשימוש מסחרי. ציטוט: fox והמקור הראשוני</b>
           <span className="muted">הדוח והעמוד ב-MAYA, או מאגר הרשות שהרשומה מציינת. יסודות בלבד: אין מחירי מניה. קבצים סטטיים, ללא מפתח וללא מגבלת קצב; שמרו במטמון. ללא אחריות: בדקו מול העמוד המצוטט לפני שימוש.</span></div>
@@ -92,7 +211,7 @@ export function Api() {
 
       <div className="api-two">
         <Panel title="פידים והורדות">
-          <div className="scroll"><table className="api-t">
+          <div className="scroll" tabIndex={0} role="region" aria-label="פידים והורדות"><table className="api-t">
             <thead><tr><th>כתובת</th><th>פורמט</th><th>מה</th></tr></thead>
             <tbody>{A.feeds.map(([p, f, w]) => <tr key={p}><td><span className="mono" dir="ltr">{p.includes('<') ? p : <a href={p}>{p}</a>}</span></td><td>{f}</td><td className="wrap" title={w}>{FEED_HE[p] ?? w}</td></tr>)}</tbody>
           </table></div>
@@ -107,7 +226,7 @@ export function Api() {
         <div className="api-filter"><Field label="חיפוש"><input type="search" dir="ltr" value={q} onChange={(e) => setQ(e.target.value)} placeholder="facts, csm, funds…" /></Field>
           <span className="muted"><span className="num">{rows.length}</span> משפחות</span></div>
         {!rows.length ? <Empty title="אין משפחה כזו" /> : (
-          <div className="scroll"><table className="api-t fam">
+          <div className="scroll" tabIndex={0} role="region" aria-label="משפחות קבצים"><table className="api-t fam">
             <thead><tr><th>תבנית נתיב</th><th>חוזה</th><th>קבצים</th><th>גודל</th><th>נכתב ב</th><th>קצב עדכון</th><th>שדות מקור</th><th>דוגמה</th></tr></thead>
             <tbody>{rows.map((f) => { const lv = live.get(f.pattern); return (
               <tr key={f.pattern}>
@@ -125,7 +244,7 @@ export function Api() {
       </Panel>
 
       <Panel title="יומן שינויים" aside={<span>שינוי שובר (מפתח ששונה או הוסר, יחידה, קובץ שעבר) נרשם כאן עם התאריך</span>}>
-        <div className="scroll"><table className="api-t">
+        <div className="scroll" tabIndex={0} role="region" aria-label="יומן שינויים"><table className="api-t">
           <thead><tr><th>תאריך</th><th>סוג</th><th>שינוי</th></tr></thead>
           <tbody>{A.changelog.map(([d, k, w], i) => <tr key={i}><td><span className="num">{`${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(2, 4)}`}</span></td><td><span className={`chip ${k === 'breaking' ? 'bad' : ''}`}>{KIND_HE[k] ?? k}</span></td><td className="wrap" dir="ltr">{w}</td></tr>)}</tbody>
         </table></div>

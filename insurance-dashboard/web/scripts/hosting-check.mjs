@@ -35,6 +35,11 @@ check(!!headersFor(H, '/company/harel')['Content-Security-Policy'], 'CSP on ever
 for (const [p, want] of [['/feed.xml', /application\/rss\+xml/], ['/feed/harel.xml', /application\/rss\+xml/], ['/feed/months.atom', /application\/atom\+xml/], ['/data/cal/reminders.ics', /text\/calendar/]])
   check(rewriteFor(H, p) === null && want.test(headersFor(H, p)['Content-Type'] ?? ''), `${p} not rewritten, Content-Type ${headersFor(H, p)['Content-Type'] ?? '(none)'}`);
 
+// fox inside Excel (P4): the long tables are open to any origin (Power Query, notebooks) and short-lived; nothing else under /data is
+for (const p of ['/data/tables/v1/kpi.csv', '/data/tables/v1/manifest.json', '/data/tables/v1/fox_powerquery.xlsx'])
+  check(headersFor(H, p)['Access-Control-Allow-Origin'] === '*' && /max-age=300/.test(cc(p)) && rewriteFor(H, p) === null, `${p} CORS * and max-age=300`);
+check(!headersFor(H, '/data/kpi.json')['Access-Control-Allow-Origin'], '/data/kpi.json keeps same-origin');
+
 // immutable is only safe for content-hashed names
 if (existsSync(join(DIST, 'assets'))) {
   const bad = readdirSync(join(DIST, 'assets')).filter((f) => !/-[A-Za-z0-9_-]{8}\.[a-z0-9]+$/.test(f));

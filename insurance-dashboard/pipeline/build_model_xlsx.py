@@ -58,6 +58,15 @@ def _periods():
 
 PERIODS = _periods()
 PCOL = {p: i for i, p in enumerate(PERIODS)}
+
+
+def set_periods(first, last):
+    """Move the period window: the sheet readers below read FIRST, LAST, PERIODS and PCOL at call time. The workbooks keep Q1'23 ...
+    Q2'26; pipeline/build_tables.py reads the same layers over every period on file through these readers."""
+    global FIRST, LAST, PERIODS, PCOL
+    FIRST, LAST = first, last
+    PERIODS = _periods()
+    PCOL = {p: i for i, p in enumerate(PERIODS)}
 NFIX = 5  # key, label, unit, segment, standard
 
 

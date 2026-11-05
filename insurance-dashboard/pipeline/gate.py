@@ -753,6 +753,14 @@ def model_xlsx():  # Wave 5: the model-ready workbooks
         (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
 
 
+def tables():  # P4: fox inside Excel, the long tables and the Power Query kit
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_tables.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
+    m = re.search(r"(\d+) rows", out[-1])
+    add("tables", p.returncode == 0, int(m.group(1)) if m else 0, 0 if p.returncode == 0 else max(1, len(out) - 1),
+        (out[-1] if p.returncode == 0 else " · ".join(out[:2]))[:200])
+
+
 def consensus():  # Wave 5: published sell-side targets
     p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_consensus.py"), "--check"], capture_output=True, text=True)
     out = [l for l in p.stdout.strip().splitlines() if l.strip()] or [p.stderr.strip()[-200:]]
@@ -870,6 +878,7 @@ def main():
     ifrs_std()
     facts()
     model_xlsx()
+    tables()
     consensus()
     assets()
     gate_layers.run(add)

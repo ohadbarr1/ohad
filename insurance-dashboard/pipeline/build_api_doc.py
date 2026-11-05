@@ -33,6 +33,7 @@ INTERNAL = ("search/ft/", "search/text/", "search/facts/", "prov/reg/", "feed_se
 REG_STEPS = {"build_market", "build_funds", "build_fund_stats", "build_flows", "build_lens", "build_roster", "build_recon", "build_warroom", "build_flow_npv",
              "build_decision", "build_market_home", "build_regulation"}
 CHANGELOG = [  # date, kind (added / breaking / changed), what
+    ("2026-11-05", "added", "tables/v1/: fox inside Excel. Seven long tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV + JSON with a source on every row, manifest.json, changes.json, Power Query scripts and fox_powerquery.xlsx (schemas `tablesTable`, `tablesManifest`, `tablesChanges`); CORS open on /data/tables/**."),
     ("2026-11-05", "added", "corrections.json: the corrections log of /about#corrections, one entry per corrected figure (schema `corrections`); starts empty."),
     ("2026-11-02", "added", "xlsx/<company>.xlsx: one model-ready workbook per company (P&L, Balance sheet, IFRS 17, Solvency, Savings, KPIs, Sources)."),
     ("2026-11-02", "added", "consensus.json: published sell-side price targets and recommendations, each with its source URL (schema `consensus`)."),
@@ -52,6 +53,10 @@ FEEDS = [
     ("/data/calendar.ics", "iCalendar", "every expected filing date (calendar.json as ICS)"),
     ("/data/cal/<company>.ics", "iCalendar", "one company's expected filing dates"),
     ("/data/xlsx/<company>.xlsx", "XLSX", "the model-ready workbook of a company: metrics x periods Q1'23 ... Q2'26 + FY, every value with its document, page and link (Sources sheet)"),
+    ("/data/tables/v1/<table>.csv", "CSV", "fox inside Excel: a long table (UTF-8 with BOM), one row per figure with its source; also .json; CORS open"),
+    ("/data/tables/v1/manifest.json", "JSON", "the tables: row counts, sha256, first and last period, last-changed date, metric dictionary"),
+    ("/data/tables/v1/changes.json", "JSON", "what changed since the previous build: rows added / changed / removed per table, a dated log (also changes.csv)"),
+    ("/data/tables/v1/fox_powerquery.xlsx", "XLSX", "the Power Query kit: one query per table at the stable URLs; Data > Refresh All (M scripts: /data/tables/v1/pq/<table>.pq)"),
     ("/data/schemas.json", "JSON Schema", "the data contracts: the schema of every contracted family below"),
 ]
 
@@ -113,6 +118,8 @@ def cadence(s, rel=""):
         return "on each MAYA form"
     if n in ("build_consensus",):
         return "by hand, when a target is published"
+    if n in ("build_tables",):
+        return "on each filing (MAYA) and each regulator month"
     return "quarterly, on each filing (MAYA)"
 
 
@@ -188,6 +195,42 @@ def render_json(fams):
                       ensure_ascii=False, indent=1) + "\n"
 
 
+def excel_md():
+    """the section 'fox inside Excel': the tables from tables/v1/manifest.json, the columns, the versioning promise, how to refresh"""
+    man = DATA / "tables" / "v1" / "manifest.json"
+    if not man.exists():
+        return []
+    m = json.loads(man.read_text(encoding="utf-8"))
+    b = m["base"]
+    L = ["", "## fox inside Excel · fox בתוך Excel", "",
+         "Stable, versioned long tables for a model that refreshes from fox (Power Query, or any client that reads CSV / JSON). One row per "
+         "figure: entity, slice, metric, period, value, unit, kind and the source (MAYA report id and page, or the regulator's dataset), as-of "
+         "and the schema version. Nothing is estimated in the tables except where `kind` says `estimate` (the net return of a track); `derived` "
+         "and `calc` rows carry their formula in `note`.", "",
+         "טבלאות ארוכות, יציבות ומגורסות, כדי שהמודל ב-Excel יתרענן מ-fox. שורה לכל נתון: ישות, חתך, מדד, תקופה, ערך, יחידה, סוג, והמקור "
+         "(מספר הדיווח והעמוד ב-MAYA, או מאגר הרשות), נכון ל-, וגרסת הסכמה.", "",
+         "| Table | What | Grain | Rows | Periods | CSV | JSON | M |", "|---|---|---|---|---|---|---|---|"]
+    for t in m["tables"]:
+        L.append(f"| `{t['id']}` | {t['en']} · {t['he']} | {t['grain']} | {t['rows']:,} | {t['first_label']} … {t['last_label']} | "
+                 f"[{t['csv']}]({b}{t['csv']}) | [{t['json']}]({b}{t['json']}) | [{t['pq']}]({b}{t['pq']}) |")
+    L += ["", "Columns (v1, in this order):", "", "| Column | Type | עברית | Meaning |", "|---|---|---|---|"]
+    L += [f"| `{c['id']}` | {c['type']} | {c['he']} | {c['en']} |" for c in m["columns"]]
+    L += ["", "Each table's metric dictionary (id, Hebrew label, unit, kinds, definition) is in `manifest.json` → `tables[].metrics`.", "",
+          "**Versioning promise · הבטחת גרסה.** " + m["promise"] + " · עמודה ב-v1 לעולם לא משנה משמעות, ומזהה מדד לא משנה משמעות או יחידה; "
+          "עמודות חדשות מתווספות רק בסוף; שינוי שובר יפתח v2 לצד v1.", "",
+          "**What changed · מה השתנה.** `changes.json` (and `changes.csv`) is a dated log, newest first: for every build that changed a value, per "
+          f"table the count of rows added, changed (value) and removed, and up to {json.loads((DATA / 'tables' / 'v1' / 'changes.json').read_text(encoding='utf-8')).get('rows_per_table', '')} of them "
+          "with the old and new value. `manifest.json` gives each table's last-changed date and the sha256 of each file.", "",
+          "**How to refresh · איך מרעננים.** Download [fox_powerquery.xlsx](" + b + "fox_powerquery.xlsx) and open it in Excel (Microsoft 365, Windows or "
+          "Mac): Enable Content, then Data → Refresh All (the first time: Web content, Anonymous, Connect). Each sheet is a table named "
+          "`fox_<table>`; point the model at it with SUMIFS / XLOOKUP or a PivotTable. To add one table to your own workbook: Data → Get Data → "
+          "From Other Sources → Blank Query → Advanced Editor, paste `pq/<table>.pq`, Close & Load. · הורידו את fox_powerquery.xlsx, פתחו ב-Excel, "
+          "'הפוך תוכן לזמין' ואז נתונים → רענן הכל. כל גיליון הוא טבלה בשם fox_<table>; הגיליון 'חדש מאז ההורדה הקודמת' מציג את השינויים.", "",
+          "Served with `Access-Control-Allow-Origin: *` and `Cache-Control: public, max-age=300`. Full histories stay in the source families: "
+          "funds_m carries the last 12 months (all months: `funds/<k>.json`), savings_m from 01/22 (all months: `market.json`)."]
+    return [x.replace("segment|basis", "segment/basis") for x in L]
+
+
 def render_md(fams):
     L = ["# fox data API", "",
          "<!-- generated by pipeline/build_api_doc.py from web/src/lib/schemas.json, pipeline/dag.py and the files under web/public/data; "
@@ -203,6 +246,7 @@ def render_md(fams):
          "(Q4 = FY − 9M) · `vint`: the vintages (every report that printed a figure) · `fetched` / `built` / `asof`: when it was read.", "",
          "## Feeds and downloads", "", "| Path | Format | What |", "|---|---|---|"]
     L += [f"| `{p}` | {f} | {w} |" for p, f, w in FEEDS]
+    L += excel_md()
     L += ["", "## Changelog", "", "A breaking change (a key renamed or removed, a unit changed, a file moved) is listed here with its date; the contract in "
           "schemas.json changes in the same commit.", "", "| Date | Kind | Change |", "|---|---|---|"]
     L += [f"| {d} | {k} | {w} |" for d, k, w in CHANGELOG]
