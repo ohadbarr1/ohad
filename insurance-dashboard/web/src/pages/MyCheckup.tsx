@@ -24,6 +24,7 @@ import { defaultFor, digitOf } from '../lib/momentsCalc';
 import { winnerTrack } from '../lib/pensionPack';
 import { S as MS } from '../lib/momentsContent';
 import { track } from '../lib/track';
+import { headTitle } from '../lib/seo';
 import {
   CAPS_REG, MIN_GAP, ST_FAR, ageAsk, checkupOf, dueNegos, dueOf, feeLetter, feeShort, icsOf, isoDay, mailHref, normNegos, savingOf, startNego, waHref, yearSaving,
   type AgeRowOut, type CRow, type DepRowOut, type FeeRow, type Nego, type Tone,
@@ -59,7 +60,7 @@ const when = (r: FeeRow, retire: number) => (r.horizon === 'liq' ? `בעוד ${r
 
 export function MyCheckup() {
   useSaverDoor();
-  useEffect(() => { document.title = 'הבדיקה השנתית · fox'; }, []);
+  useEffect(() => { document.title = headTitle('/my/checkup') ?? 'הבדיקה השנתית · fox'; }, []);
   const { data: raw, error } = useFunds();
   const data = raw as FundsFile | undefined;
   const dfile = useOptional<DefaultFile>('funds/default.json');

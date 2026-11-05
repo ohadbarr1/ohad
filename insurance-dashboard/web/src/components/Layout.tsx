@@ -13,6 +13,7 @@ import '../styles/sheet.css';
 import '../lib/density';
 import { useRegistry } from '../lib/useData';
 import { titleFor } from '../lib/title';
+import { headTitle, syncHead } from '../lib/seo';  // D2 SEO: the prerendered head wins, description and canonical follow the address
 import { pubLabel } from '../lib/format';
 import { ChartBookLink } from '../pages/ChartBookLink';  // lane G
 import { useWatchNews } from '../lib/watchLoad';  // S10: the badge on שאלות
@@ -99,7 +100,8 @@ export function Layout() {
   useEffect(() => {
     const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
     // while the list loads a name is unknown (undefined); once it has loaded, an id that is not on it is a page that does not exist (null)
-    document.title = titleFor(loc.pathname, (id) => (reg.data ? names.get(id) ?? null : undefined), door) ?? 'העמוד לא נמצא · fox';
+    document.title = headTitle(loc.pathname) ?? titleFor(loc.pathname, (id) => (reg.data ? names.get(id) ?? null : undefined), door) ?? 'העמוד לא נמצא · fox';
+    syncHead(loc.pathname);
   }, [loc.pathname, reg.data, door]);
   // a row of tabs wider than the screen opens with the current tab in view
   useEffect(() => { const id = requestAnimationFrame(() => document.querySelectorAll('.subnav a.active').forEach((a) => a.scrollIntoView({ inline: 'center', block: 'nearest' }))); return () => cancelAnimationFrame(id); }, [loc.pathname]);

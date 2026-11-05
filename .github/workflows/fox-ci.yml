@@ -65,7 +65,7 @@ jobs:
         run: python pipeline/gate.py
       - name: Typecheck and build
         working-directory: insurance-dashboard/web
-        run: npx tsc --noEmit && npx vite build
+        run: npx tsc --noEmit && npx vite build && node scripts/prerender-seo.mjs dist
       - name: Route check (390 and 1440 px)
         working-directory: insurance-dashboard/web
         env: { CHROME: /usr/bin/google-chrome }

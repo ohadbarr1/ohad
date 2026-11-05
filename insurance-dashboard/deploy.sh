@@ -148,6 +148,8 @@ cp -R "$OUT-app/." "$OUT/"
 want=$(find public -type f ! -name ".*" | wc -l | tr -d ' ')
 have=$(find "$OUT" -type f ! -path "$OUT/assets/*" ! -name index.html ! -name ".*" | wc -l | tr -d ' ')  # everything copied from public/: data, icons, manifest, service worker
 [[ -s "$OUT/index.html" && -n "$(ls "$OUT/assets"/index-*.js 2>/dev/null)" && "$have" -ge "$want" ]] || { echo "incomplete build ($have of $want data files): not deploying"; exit 1; }
+# D2 SEO: a copy of the shell with its own head for every saver entry point (funds/<k>.html, served by cleanUrls) and sitemap.xml
+node scripts/prerender-seo.mjs "$OUT" || { echo "prerender failed: not deploying"; exit 1; }
 
 # the assembled site, served locally, checked route by route before anything is uploaded
 node scripts/serve.mjs "$OUT" 4173 >/dev/null 2>&1 & SRV=$!

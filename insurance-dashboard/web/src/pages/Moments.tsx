@@ -12,6 +12,7 @@ import { COEF_PATH, type CoefFile } from '../lib/coef';
 import { DECISION_PATH, type DecisionFile } from '../lib/decision';
 import { MOMENTS, isMomentId, momentPath, type MomentId } from '../lib/moments';
 import { TEXT, askText } from '../lib/momentsContent';
+import { headTitle } from '../lib/seo';
 import { CHECKS, MomentChips, SrcA, type Ctx } from '../components/saver/Moments';
 import '../styles/saver.css';
 import '../styles/moments.css';
@@ -26,7 +27,7 @@ export function MomentPage() {
   useSaverDoor();
   const { id } = useParams();
   const ok = isMomentId(id);
-  useEffect(() => { if (ok) document.title = `${MOMENTS[id].title} · fox`; }, [ok, id]);
+  useEffect(() => { if (ok) document.title = headTitle(momentPath(id)) ?? `${MOMENTS[id].title} · fox`; }, [ok, id]);
   if (!ok) return <MomentsIndex missing={id ?? ''} />;
   return <Moment id={id} />;
 }
