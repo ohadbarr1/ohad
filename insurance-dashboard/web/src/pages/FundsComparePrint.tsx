@@ -20,6 +20,7 @@ import { AGE_DEFAULT, BALANCE_EX, GROWTH_DEFAULT, INFL_DEFAULT, RETIRE_AGE, RET_
 import { brandLine, hasBrand, useBranding } from '../lib/branding';  // W7
 import { nyudTable, type Basis } from '../lib/nyud';  // W7
 import { NyudTable } from '../components/agent/NyudTable';  // W7
+import { track } from '../lib/track';
 import * as H from '../lib/hanmaka';  // W7: the binding wording
 import '../styles/agentDoc.css';
 
@@ -147,7 +148,7 @@ export function FundsComparePrint() {
         <span className="adoc-priv" style={{ flexBasis: 'auto' }}>בעל הרישיון: {brandTxt || 'לא הוגדר'} · <Link to="/clients">עריכה בתיקי לקוחות</Link></span>
         <label className="chk"><input type="checkbox" checked={annex} onChange={(e) => setAnnex(e.target.checked)} /> מסמך הנמקה</label>
         <label className="chk"><input type="checkbox" checked={docB} onChange={(e) => setDocB(e.target.checked)} /> מסמך ב'</label>
-        <button type="button" className="cmp-doc" onClick={() => window.print()}><Icon name="download" />הדפסה / PDF</button>
+        <button type="button" className="cmp-doc" onClick={() => { if (annex) track('hanmaka_pdf'); window.print(); }}><Icon name="download" />הדפסה / PDF</button>
         <ClientSave keys={rows.map((r) => r.k)} b={net ? 'net' : 'gross'} folder={folder} onSaved={(f) => { setFolderId(f.id); setLive(false); }} suggest={client} busy={!useSnap && pending > 0}
           collect={() => ({ tags: Object.fromEntries(rows.map((r) => [r.k, tagOf(r.k)])),
             ...(useSnap ? {} : { snap: snapOf(rows, bottom, todayIso(), data.asof, net ? 'net' : 'gross') }),

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Sourced } from '../Source';
 import { Tip } from '../Explain';
 import { copyText } from '../ui';
+import { track } from '../../lib/track';
 import { WatchStar } from '../FundsTime';
 import { useActiveProfile, useMyAge, useMySalary, useMySex, useRetire, type MyProduct } from '../../lib/mine';
 import { thirdPerson } from '../../lib/household';  // W7
@@ -137,7 +138,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
     : vsT ? null : medLine(gMed, atRet, () => gapProv(med!, 'החציון בקטגוריה', gMed!, medSrc));
   const paid = tBest && tBest.g.feesReal > 500 ? <> {g('תשלמי', 'תשלם', 'תשלמו')} <span className="sv-nw">כ-<Est src={() => gapProv(tBest.p, 'תנאי ברירת המחדל', tBest.g, tSrc(tBest.p))}>{ilsRound(tBest.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
 
-  const copy = () => copyText(script, (ok) => { if (ok) setCopied('ok'); else { setCopied('manual'); setOpen(true); } });
+  const copy = () => copyText(script, (ok) => { if (ok) { setCopied('ok'); track('letter_copied'); } else { setCopied('manual'); setOpen(true); } });
   const B = brief(v, C.lever);
 
   return (

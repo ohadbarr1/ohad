@@ -11,6 +11,7 @@ Inputs (published files of this repo, free public data only):
   web/public/data/lens.json          reported segment fees, selling & marketing, G&A per manager x segment x quarter (lts.json, report pages)
   web/public/data/funds/default.json the default-fund tenders: the winners' accumulation fee (the pension floor) and its source
   web/public/data/csm/summary.json   the insurers' CSM by date (csm_resolve.py rule) and csm/facts/<c>.json (its report page)
+  data/extracted_lts/<manager>/*.json the printed service fee to the controlling company (SERVICE_FEE managers only), operating-segments note
 
 Method (version METHOD; each ASSUMPTION is printed on the page and editable there):
   AUM_0      regulator assets of the group x product at the latest month (NIS m)
@@ -25,6 +26,12 @@ Method (version METHOD; each ASSUMPTION is printed on the page and editable ther
   cost ratio (S&M + G&A) / fees of the manager's reported segment (pension -> pen, the rest -> gem), the last four printed quarters summed.
              No reported segment costs -> cost ratio null and EV null (never assumed). A "G&A only" basis is written beside it (the page's
              toggle: a run-off book pays no acquisition costs; trail commissions sit in S&M for some managers, so it is a bound, not a fact)
+             SERVICE FEE (fb1.1): a manager that runs its funds through a service fee to its controlling company prints that fee as its own
+             segment-note line, outside S&M and G&A (Meitav: "דמי ניהול לחברה בעלת שליטה", LTM to Q2-2026 about 2/3 of the
+             pension segment's costs and 1/4 of provident's; without it Meitav's G&A is 1.7% / 2.3% of fees against 22% or more at every other manager).
+             lens.json keeps it out of G&A (its deck metric); here it is added to G&A, so the cost ratio carries the cost of running the
+             book, as the other managers' printed S&M and G&A do. Quarters from the operating-segments note of
+             data/extracted_lts/<manager> (a printed quarter, else year-to-date minus the previous year-to-date of the same year)
   EV         Σ_{t=1..H} AUM_0 x [survival x (1 + growth)]^(t-1) x fee_t / 100 x (1 - cost ratio) / (1 + r)^t: the fee on the opening balance
              of each year, received at its end. ASSUMPTIONS: r = DISC nominal, growth (investment return on the book) = GROWTH, H = HORIZON
              years; no new deposits and no deposit fees (those are new business, not the book); no tax
@@ -42,7 +49,7 @@ ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web" / "public" / "data"
 OUT = WEB / "feebook.json"
 
-METHOD = "fb1.0"
+METHOD = "fb1.1"   # fb1.1: the service fee to the controlling company enters G&A (SERVICE_FEE)
 DISC = 8.0          # % nominal, ASSUMPTION
 GROWTH = 0.0        # % a year, investment return on the book, ASSUMPTION (the formula as specified: no growth)
 HORIZON = 30        # years
@@ -51,6 +58,10 @@ MIN_AUM = 10.0      # NIS m: smaller cells are listed in the count but not value
 GRID_R = [6.0, 7.0, 8.0, 9.0, 10.0, 12.0]
 GRID_S = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0]   # survival shift, pp
 OTHERS = "קרנות ענפיות ואחרות"
+RAW = ROOT / "data" / "extracted_lts"
+# managers whose segment costs are bought from the controlling company through a fee printed outside S&M and G&A: lens id -> raw metric
+SERVICE_FEE = {"meitav": "management_fees_to_controlling_company"}
+RAW_SEG = {"pen": "pension", "gem": "provident"}
 PRODS = {  # market product key -> flows file, lens segment, floor applies
     "pension_new": ("pm", "pen", True), "pension_general": ("pk", "pen", True), "gemel": ("gm", "gem", False), "hishtalmut": ("hs", "gem", False),
     "gemel_invest": ("gl", "gem", False), "gemel_child": ("ch", "gem", False), "severance": ("mp", "gem", False), "other_purpose": ("go", "gem", False),
@@ -86,6 +97,52 @@ def ev_book(aum, fee, eros, floor, surv, ci, disc, growth, horizon):
     return fsum(parts)
 
 
+def q_end(q):
+    """'Q3-2025' -> '2025-09-30' (the quarter's last day as the reports print it)"""
+    n, y = int(q[1]), int(q[3:])
+    return f"{y}-{3 * n:02d}-{(31 if n in (1, 4) else 30):02d}"
+
+
+def service_fee(lts_id, seg, qs, raw=RAW):
+    """The quarterly service fee to the controlling company of one manager x segment, NIS m, from the operating-segments note:
+    a printed three-month figure, else year-to-date minus the previous year-to-date of the same year (Q1: the year-to-date is the
+    quarter). Each figure from the report of its own period when printed there, else the earliest report that prints it.
+    -> ({quarter: value}, None) when every quarter resolves, else (None, reason)."""
+    metric = SERVICE_FEE.get(lts_id)
+    if not metric:
+        return None, None
+    seen = {}
+    for f in sorted((raw / lts_id).glob("*.json")):
+        d = json.loads(f.read_text(encoding="utf-8"))
+        unit = d.get("unit")
+        for x in d["facts"]:
+            if x.get("metric") != metric or x.get("segment") != RAW_SEG[seg] or x.get("value") is None:
+                continue
+            if x.get("table") and not str(x["table"]).startswith("operating segments note"):
+                continue
+            sc = {"NIS thousand": 1e-3, "NIS thousands": 1e-3, "NIS million": 1.0, "NIS millions": 1.0}[x.get("unit") or unit]
+            w = "ytd" if x["window"] == "fy" else x["window"]
+            own = f.stem == f"{x['date'][:4]}{'FY' if x['date'][5:7] == '12' and x['window'] == 'fy' else 'Q' + str(int(x['date'][5:7]) // 3)}"
+            k = (w, x["date"])
+            if k not in seen or (own and not seen[k][1]):
+                seen[k] = (x["value"] * sc, own)
+    val = lambda w, dt: seen[(w, dt)][0] if (w, dt) in seen else None  # noqa: E731
+    out = {}
+    for q in qs:
+        dt, n = q_end(q), int(q[1])
+        v = val("q", dt)
+        if v is None:
+            ytd, prev = val("ytd", dt), 0.0
+            if n > 1:
+                pe = q_end(f"Q{n - 1}-{q[3:]}")
+                prev = val("ytd", pe) if val("ytd", pe) is not None else (val("q", pe) if n == 2 else None)
+            v = ytd - prev if ytd is not None and prev is not None else None
+        if v is None:
+            return None, f"דמי השירות לחברה האם לא נמצאו ב-{q}"
+        out[q] = v
+    return out, None
+
+
 def build():
     m = json.loads((WEB / "market.json").read_text(encoding="utf-8"))
     lens = json.loads((WEB / "lens.json").read_text(encoding="utf-8"))
@@ -117,16 +174,27 @@ def build():
     qs = lens["quarters"][: lens["quarters"].index(lr) + 1][-4:]
     rows_l = {(x["g"], x["s"], x["q"]): x for x in lens["rows"]}
 
-    def costs(g, s):
+    def costs(g, s, lts_id):
         rr = [rows_l.get((g, s, q)) for q in qs]
-        if not all(x and x.get("rep") and x["rep"].get("fees") and x["rep"].get("sm") is not None and x["rep"].get("ga") is not None for x in rr):
+        full = [bool(x and x.get("rep") and x["rep"].get("fees") and x["rep"].get("sm") is not None and x["rep"].get("ga") is not None) for x in rr]
+        if not all(full):
             have = [q for q, x in zip(qs, rr) if x and x.get("rep") and x["rep"].get("fees")]
-            return None, ("הדוחות אינם מפרסמים הכנסות והוצאות למגזר" if not have else f"חסרים הוצאות או הכנסות במגזר ב-{4 - len(have)} מ-4 הרבעונים")
-        fees = fsum(x["rep"]["fees"] for x in rr)
-        sm = fsum(x["rep"]["sm"] for x in rr)
-        ga = fsum(x["rep"]["ga"] for x in rr)
-        return {"q": qs, "fees": r(fees, 3), "sm": r(sm, 3), "ga": r(ga, 3), "ci": r((sm + ga) / fees, 6), "ci_ga": r(ga / fees, 6),
-                "parts": [{"q": q, "fees": x["rep"]["fees"], "sm": x["rep"]["sm"], "ga": x["rep"]["ga"]} for q, x in zip(qs, rr)]}, None
+            return None, ("הדוחות אינם מפרסמים הכנסות והוצאות למגזר" if not have else f"חסרים הוצאות או הכנסות במגזר ב-{len(full) - sum(full)} מ-4 הרבעונים")
+        sf, why = service_fee(lts_id, s, qs)
+        if why:
+            return None, why
+        # G&A as printed, plus the service fee to the controlling company where the manager pays one (SERVICE_FEE); a sum of the
+        # rounded quarterly parts, so the page's per-quarter table adds up to the totals it shows
+        ga_q = [x["rep"]["ga"] + (sf[q] if sf else 0.0) for q, x in zip(qs, rr)]
+        parts = [{"q": q, "fees": x["rep"]["fees"], "sm": x["rep"]["sm"], "ga": r(gq, 3)} | ({"sf": r(sf[q], 3)} if sf else {})
+                 for q, x, gq in zip(qs, rr, ga_q)]
+        fees = fsum(p["fees"] for p in parts)
+        sm = fsum(p["sm"] for p in parts)
+        ga = fsum(p["ga"] for p in parts)
+        out = {"q": qs, "fees": r(fees, 3), "sm": r(sm, 3), "ga": r(ga, 3), "ci": r((sm + ga) / fees, 6), "ci_ga": r(ga / fees, 6), "parts": parts}
+        if sf:
+            out["sf"] = r(fsum(p["sf"] for p in parts), 3)
+        return out, None
 
     flows = {pid: json.loads((WEB / "flows" / f"{fid}.json").read_text(encoding="utf-8")) for pid, (fid, _, _) in PRODS.items()}
     out_rows, mgrs = [], []
@@ -135,7 +203,7 @@ def build():
             continue
         lg = lens["groups"][gi]
         cid = lg["id"]
-        seg_cost = {s: costs(gi, s) if lg["lts"] else (None, "אין לקבוצה דוח מגזרי באתר") for s in ("pen", "gem")}
+        seg_cost = {s: costs(gi, s, lg["lts"]) if lg["lts"] else (None, "אין לקבוצה דוח מגזרי באתר") for s in ("pen", "gem")}
         mrows = []
         for pkey, (fid, seg, has_floor) in PRODS.items():
             pi = pk[pkey]

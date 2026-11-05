@@ -10,3 +10,6 @@
 .fb-grid tr.sel th, .fb-grid tr.sel td { background: color-mix(in oklch, var(--accent) 7%, var(--panel)); }
 .fb-grid td.base { outline: 2px solid color-mix(in oklch, var(--accent) 60%, transparent); outline-offset: -2px; font-weight: 700; }
 @media (max-width: 760px) { .fb-as .field { flex: 1 1 100%; } }
+/* fox 3.0 phase 0: the draft banner (a tint, never dimmed text) */
+.fb-draft { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin: 0 0 14px; padding: 10px 14px; border-radius: var(--r-2, 8px); border: 1px solid color-mix(in oklch, var(--warn) 45%, transparent); background: color-mix(in oklch, var(--warn) 12%, var(--panel)); color: var(--fg); line-height: 1.55; }
+.fb-draft b { font-weight: 700; }

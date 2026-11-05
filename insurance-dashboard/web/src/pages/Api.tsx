@@ -4,6 +4,7 @@ import { Empty, Field, Panel, Seg } from '../components/ui';
 import { nf } from '../lib/format';
 import { useLoad, useRegistry } from '../lib/useData';
 import api from '../lib/apiFamilies.json';
+import { track } from '../lib/track';
 import '../styles/data.css';
 import '../styles/api.css';
 
@@ -95,7 +96,7 @@ export function Api() {
             <thead><tr><th>כתובת</th><th>פורמט</th><th>מה</th></tr></thead>
             <tbody>{A.feeds.map(([p, f, w]) => <tr key={p}><td><span className="mono" dir="ltr">{p.includes('<') ? p : <a href={p}>{p}</a>}</span></td><td>{f}</td><td className="wrap" title={w}>{FEED_HE[p] ?? w}</td></tr>)}</tbody>
           </table></div>
-          {xlsx.length > 0 && <div className="api-xl"><span className="muted">חוברות Excel:</span>{xlsx.map((c) => <a key={c.id} className="chip" href={`/data/xlsx/${c.id}.xlsx`} download={`fox-${c.id}.xlsx`}><Icon name="download" />{c.name_he}</a>)}</div>}
+          {xlsx.length > 0 && <div className="api-xl"><span className="muted">חוברות Excel:</span>{xlsx.map((c) => <a key={c.id} className="chip" href={`/data/xlsx/${c.id}.xlsx`} download={`fox-${c.id}.xlsx`} onClick={() => track('xlsx_dl')}><Icon name="download" />{c.name_he}</a>)}</div>}
         </Panel>
         <Panel title="שדות מקור">
           <dl className="api-prov">{PROV.map(([k, v]) => <div key={k}><dt className="mono" dir="ltr">{k}</dt><dd>{v}</dd></div>)}</dl>

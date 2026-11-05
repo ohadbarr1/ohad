@@ -5,6 +5,7 @@ import { decodeXml, heldOf, parseMaslaka, readTree, rowsOf, sniff, type MFund, t
 import { folderFromImport, upsert, useClients, type Folder, type Held } from '../../lib/clients';
 import { today } from '../../lib/visits';
 import { nf } from '../../lib/format';
+import { track } from '../../lib/track';
 
 /* W4 · /clients, "ייבוא מהמסלקה ללקוח" (agent door): the client's clearing-house XML files are read in this browser (lib/maslaka, the
    same reader as the saver's /my import), shown for review, and saved as a NEW client folder: the client's products with their balances,
@@ -66,6 +67,7 @@ export function ClientImport({ funds, onDone, startOpen = false }: { funds: Fund
     const f = folderFromImport(lab, held);
     const r = upsert(file, { ...f, b: 'net', note: `ייבוא מהמסלקה, ${today().split('-').reverse().join('.')}` }, today());
     setFile(r.file);
+    track('import_done');  // F2: the event name only
     onDone(r.folder, `נוצר תיק "${r.folder.label}": ${held.length} מוצרים מהמסלקה, ${r.folder.keys.length} מהם מסלולים להשוואה. הקבצים עצמם לא נשמרו.`);
     setReads(null); setOpen(startOpen); setLabel(''); if (inp.current) inp.current.value = '';
   };

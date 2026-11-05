@@ -5,6 +5,7 @@ import type { FundX } from '../../lib/funds';
 import type { MyProduct } from '../../lib/mine';
 import { FEE_HOW, MATCH_BY, applyRows, decodeXml, mergeMFiles, parseMaslaka, readTree, rowsOf, sniff, type MFile, type MFund, type Row } from '../../lib/maslaka';
 import { pcf } from '../../lib/verdict';
+import { track } from '../../lib/track';
 
 /* W3 · "ייבוא מהמסלקה" on /my (בטא): the reader picks their clearing-house report; it is read here (lib/maslaka), matched to the
    regulator's tracks, shown for review, and only then saved into "המוצרים שלי" (localStorage). The files never leave the device.
@@ -170,6 +171,7 @@ export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; 
   const nDep = chosen.reduce((t, r) => t + (r.deposits?.length ?? 0), 0), nCov = rows.reduce((t, r) => t + (r.covers?.length ?? 0), 0);
   const save = () => {
     const res = applyRows(mine, chosen, today);
+    track('import_done');  // F2: the event name only
     onSave(res.list as MyProduct[], `נשמרו ${res.added + res.updated} מוצרים מהמסלקה${res.added ? `: ${res.added} חדשים` : ''}${res.updated ? `${res.added ? ',' : ':'} ${res.updated} עודכנו` : ''}${nDep ? `, עם ${nDep} חודשי הפקדה` : ''}. הקובץ עצמו לא נשמר.`);
     mf.reset(); setOpen(false);
   };

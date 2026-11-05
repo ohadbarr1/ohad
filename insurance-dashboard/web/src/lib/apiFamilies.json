@@ -55,6 +55,11 @@
  ],
  "changelog": [
   [
+   "2026-11-05",
+   "added",
+   "corrections.json: the corrections log of /about#corrections, one entry per corrected figure (schema `corrections`); starts empty."
+  ],
+  [
    "2026-11-02",
    "added",
    "xlsx/<company>.xlsx: one model-ready workbook per company (P&L, Balance sheet, IFRS 17, Solvency, Savings, KPIs, Sources)."
@@ -526,6 +531,20 @@
    "prov": [
     "prov",
     "r"
+   ]
+  },
+  {
+   "pattern": "corrections.json",
+   "schema": "corrections",
+   "example": "corrections.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": null,
+   "note": "",
+   "cadence": "outside the DAG (its own script, on demand)",
+   "prov": [
+    "source"
    ]
   },
   {
