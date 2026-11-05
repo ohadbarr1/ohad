@@ -38,13 +38,14 @@ SITE = "https://fox-research-il.web.app"
 TAG = "tag:fox-research-il.web.app,2026:feed/"
 MAX_ALL, MAX_ONE = 200, 120
 TYPE_SHORT = {"filing": "דוח", "restate": "הצגה מחדש", "regmonth": "חודש רשות", "flow": "צבירה נטו", "target": "יעד", "solv": "כושר פירעון",
-              "fee": "דמי ניהול", "est": "אומדנים", "pos": "עמדות", "fragility": "שבריריות"}
+              "fee": "דמי ניהול", "est": "אומדנים", "pos": "עמדות", "fragility": "שבריריות", "chg": "שינויים", "letter": "מכתב התזרימים"}
 DOC_HE = {"annual": "דוח שנתי", "quarterly": "דוח רבעוני", "presentation": "מצגת", "solvency": "דוח כושר פירעון"}
 DS_HE = {"gemel": "גמל-נט", "pensia": "פנסיה-נט", "insurance": "ביטוח-נט"}
 DK_HE = {"pub": "פורסם במאיה", "fetched": "התקבל מהרשות", "month": "חודש הנתונים"}
 UNIT_HE = {"m": 'מיליוני ש"ח', "dm": 'מיליוני ש"ח', "bn": 'מיליארד ש"ח', "dbn": 'מיליארד ש"ח', "pp": "נק׳ אחוז"}
 MINUS = "−"
 PKG = {"gemel": "gemelnet", "pensia": "pensia-net", "insurance": "insurance"}   # the CKAN packages (market.json meta.packages)
+TYPE_SINCE = {"chg": "2026-11-05"}   # event types added after the ledger began (LEDGER since): the day each was introduced
 SPECIAL = {"months": ("regmonth",), "funds": ("fee",)}
 NEWS_TYPES = {"fee", "restate", "merger", "tender", "service", "regdec"}   # lib/news.ts: a track's own fee, its manager's company-level events
 NEWS_DAYS = 200                                                             # the page keeps the last 90 days from its own today
@@ -147,7 +148,13 @@ def row_text(r):
 
 def title_of(F, e):
     name = F["cos"].get(e["c"], e["c"])
-    t = f"{TYPE_SHORT.get(e['t'], e['t'])}: {e['h']}" if e["c"] == "market" else f"{name} · {TYPE_SHORT.get(e['t'], e['t'])}: {e['h']}"
+    if e["t"] == "chg":  # Report Day: "Q3'26 הראל · 10 שינויים"
+        per, _, rest = e["h"].partition(" · ")
+        return f"{per} {name} · {rest}"
+    lab = TYPE_SHORT.get(e["t"], e["t"])
+    if e["t"] == "letter" and e["h"].startswith(lab):  # the headline already names its type (the flows letter: "מכתב התזרימים 09/26: ...")
+        return e["h"] if e["c"] == "market" else f"{name} · {e['h']}"
+    t = f"{lab}: {e['h']}" if e["c"] == "market" else f"{name} · {TYPE_SHORT.get(e['t'], e['t'])}: {e['h']}"
     r = (e.get("rows") or [None])[0]
     if r and r.get("b") and not r.get("rng") and r["a"]["u"] == "pct":
         t += f" ({fmt_fig(r['b'])} → {fmt_fig(r['a'])})"
@@ -209,7 +216,10 @@ def seen_dates(F, ledger):
         if e["id"] in led["seen"]:
             continue
         n += 1
-        if e["dk"] == "fetched":
+        since = TYPE_SINCE.get(e["t"])
+        if since and e["d"] < since:  # a type added later: its events of reports published before it existed are backfill, not news
+            led["seen"][e["id"]] = [e["d"], "b"]
+        elif e["dk"] == "fetched":
             led["seen"][e["id"]] = [min(e["d"], today), "r"]
         elif fresh:
             led["seen"][e["id"]] = [e["d"], "b"]

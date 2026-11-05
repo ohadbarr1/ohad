@@ -5,7 +5,7 @@ import type { MetricKey, Win } from './market';
 import type { RegDs } from './sources';
 import { useLoad } from './useData';
 
-export type FeedType = 'filing' | 'restate' | 'regmonth' | 'flow' | 'target' | 'solv' | 'fee' | 'est' | 'pos' | 'fragility';
+export type FeedType = 'filing' | 'restate' | 'regmonth' | 'flow' | 'target' | 'solv' | 'fee' | 'est' | 'pos' | 'fragility' | 'chg' | 'letter';
 export type FeedUnit = 'm' | 'bn' | 'pct' | 'pp' | 'dm' | 'dbn' | 'dpct' | 'n' | 'r';
 export type FeedSrc =
   | { k: 'pg'; rid: number; pg: number | null; der?: 1 | 2 }
@@ -37,9 +37,9 @@ export interface FeedFile {
 }
 export const useFeed = (enabled = true) => useLoad<FeedFile>(enabled ? 'feed.json' : null);
 
-export const FEED_TYPES: FeedType[] = ['filing', 'restate', 'solv', 'target', 'regmonth', 'flow', 'fee', 'fragility', 'pos', 'est'];
+export const FEED_TYPES: FeedType[] = ['filing', 'chg', 'restate', 'solv', 'target', 'regmonth', 'flow', 'fee', 'fragility', 'letter', 'pos', 'est'];
 /** short labels for chips and filters */
-export const TYPE_SHORT: Record<FeedType, string> = { filing: 'דוח', restate: 'הצגה מחדש', regmonth: 'חודש רשות', flow: 'צבירה נטו', target: 'יעד', solv: 'כושר פירעון', fee: 'דמי ניהול', est: 'אומדנים', pos: 'עמדות', fragility: 'שבריריות' };
+export const TYPE_SHORT: Record<FeedType, string> = { filing: 'דוח', restate: 'הצגה מחדש', regmonth: 'חודש רשות', flow: 'צבירה נטו', target: 'יעד', solv: 'כושר פירעון', fee: 'דמי ניהול', est: 'אומדנים', pos: 'עמדות', fragility: 'שבריריות', chg: 'שינויים', letter: 'מכתב התזרימים' };
 export const DK_HE: Record<FeedEvent['dk'], string> = { pub: 'פרסום', fetched: 'התקבל מהרשות', month: 'חודש נתונים' };
 const DOC_HE: Record<string, string> = { annual: 'דוח שנתי', quarterly: 'דוח רבעוני', presentation: 'מצגת', solvency: 'דוח כושר פירעון' };
 const DS_HE: Record<string, string> = { gemel: 'גמל-נט', pensia: 'פנסיה-נט', insurance: 'ביטוח-נט' };

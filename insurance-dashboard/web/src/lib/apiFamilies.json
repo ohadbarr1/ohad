@@ -364,6 +364,38 @@
    ]
   },
   {
+   "pattern": "changes/*.json",
+   "schema": "changes",
+   "example": "changes/altshuler.json",
+   "files": 13,
+   "kind": "open",
+   "format": "json",
+   "step": "build_changes",
+   "note": "changes/<company>.json + index.json: materiality = |change| / equity x volatility weight (pipeline/build_changes.py --check)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "cmp",
+    "der",
+    "docs",
+    "pages",
+    "rid"
+   ]
+  },
+  {
+   "pattern": "changes/index.json",
+   "schema": "changesIndex",
+   "example": "changes/index.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_changes",
+   "note": "changes/<company>.json + index.json: materiality = |change| / equity x volatility weight (pipeline/build_changes.py --check)",
+   "cadence": "quarterly, on each filing (MAYA)",
+   "prov": [
+    "built"
+   ]
+  },
+  {
    "pattern": "companies/*.docs.json",
    "schema": "docs",
    "example": "companies/altshuler.docs.json",

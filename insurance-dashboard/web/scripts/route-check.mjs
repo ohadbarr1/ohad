@@ -44,6 +44,8 @@ const ROUTES = [
   '/card/harel/2026Q2', '/card/phoenix/2025FY', '/card/meitav/2026Q2',
   // module M2: the delta feed (all, one company, one type, the empty estimate slot)
   '/feed', '/feed?co=harel', '/feed?t=fee', '/feed?co=market&t=regmonth', '/feed?t=est',
+  // lane P1 Report Day: the changes panel on the company home (an insurer, a fund house), an earlier report, the changes feed type
+  '/company/harel', '/company/harel?p=2025FY', '/feed?t=chg',
   // module A9: the consolidation screen (matrix, an override, tear sheets: an insurer arm, a fund house, a flagged pair)
   '/consolidation', '/consolidation?r=80&lev=50', '/consolidation/menora/clal', '/consolidation/analyst/more', '/consolidation/meitav/harel',
   // module S10: the morning brief (what changed in the answers, the prep queue), now the "שאני עוקב" tab of /feed

@@ -664,6 +664,16 @@ def cards():  # lane S2: the digit validator of the report cards
         (f"{m.group(1)} report cards, every digit a published fact" if m and p.returncode == 0 else (out[-1] if out else p.stderr.strip()[-200:]))[:200])
 
 
+def changes():  # lane P1: Report Day changes (rebuild equals the files; every printed figure on its page)
+    p = subprocess.run([sys.executable, str(ROOT / "pipeline" / "build_changes.py"), "--check"], capture_output=True, text=True)
+    out = [l for l in p.stdout.strip().splitlines() if l.strip()]
+    m = re.search(r"(\d+) reports, (\d+) figures, (\d+) problems", out[-1] if out else "")
+    fails = [l[5:] for l in out if l.startswith("FAIL ")]
+    add("changes", p.returncode == 0 and bool(m), int(m.group(2)) if m else 0, int(m.group(3)) if m else 1,
+        ((f"{m.group(1)} reports, every printed figure on its page" if p.returncode == 0 else f"{m.group(3)} problems; e.g. {fails[0] if fails else ''}") if m
+         else (out[-1] if out else p.stderr.strip()[-200:]))[:200])
+
+
 def feed():  # module M2: the delta feed
     import check_feed
     try:
@@ -858,6 +868,7 @@ def main():
     consistency()
     schemas()
     cards()
+    changes()
     feed()
     fragility()
     funds_contract()

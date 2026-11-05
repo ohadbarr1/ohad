@@ -1,0 +1,3 @@
+{
+ "$comment": "Report Day changes (pipeline/build_changes.py): a one-line reason for a change, only where the report itself states it. Key <company>/<period>/<item key> (the key in changes/<company>.json); value {\"t\": the reason in Hebrew as the report words it, \"rid\": report id, \"pg\": page}. Filled by the report-day extraction pass (docs/REPORTDAY.md) and checked by hand; never generated."
+}

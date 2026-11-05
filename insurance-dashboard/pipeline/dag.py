@@ -153,6 +153,11 @@ STEPS = [
           D + "csm/facts", D + "peers/m/ifrs-csm_new_business.json", D + "peers/m/ifrs-csm_release.json", "web/src/pages/ReportDay.tsx"],
          [D + "cards"], code=["pipeline/reportday.py", "pipeline/csm_resolve.py"], groups={"deploy"},
          note="report cards: Report Day roles, csm_resolve, Peer Table cells, targets"),
+    # lane P1 (Report Day): the <=10 most material changes of each report, both figures with their pages (gate `changes`; feeds `chg` events)
+    step("build_changes", "pipeline/build_changes.py",
+         [*WB, D + "companies/index.json", D + "cards", D + "search/docs.json", "data/registry/changes_why.json", "web/src/pages/ReportDay.tsx"],
+         [D + "changes"], code=["pipeline/reportday.py", "pipeline/build_cards.py", "pipeline/csm_resolve.py"], groups={"deploy"},
+         note="changes/<company>.json + index.json: materiality = |change| / equity x volatility weight (pipeline/build_changes.py --check)"),
     step("build_since", "pipeline/build_since.py",
          [*WB, D + "companies/index.json", D + "companies/*.docs.json", D + "targets.json", D + "market.json"],
          [D + "since.json"], daily=True, groups={"deploy"}, note="dated events per company for the \"since you last looked\" marks (last 400 days)"),
@@ -165,7 +170,7 @@ STEPS = [
     # module M2: the delta feed (/feed) from the published files, and its weekly digest (an email body; no sender is wired)
     step("build_feed", "pipeline/build_feed.py",
          [D + "search/docs.json", D + "companies/index.json", *WB, D + "cards", D + "restatements.json", D + "targets.json", D + "market.json",
-          D + "funds", D + "csm/solvency.json", D + "positions.json", D + "fragility.json", "web/src/pages/ReportDay.tsx"],
+          D + "funds", D + "csm/solvency.json", D + "positions.json", D + "fragility.json", D + "changes", D + "flows/letters/index.json", "web/src/pages/ReportDay.tsx"],
          [D + "feed.json"], code=["pipeline/reportday.py"], groups={"deploy"},
          note="dated, typed, sourced events since 01.01.25 (pipeline/check_feed.py = gate `feed`)"),
     # W8 feeds: the delta feed as static RSS 2.0 + Atom (pull-based alerts, no server) and the first-seen ledger behind every pubDate

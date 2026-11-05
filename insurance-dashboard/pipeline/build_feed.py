@@ -26,6 +26,11 @@ source of both. Event types (`t`):
            or closed (the ledger date), evidence drift (a trigger's first crossing since opening: that report's publication day),
            a falsifier met (a suggestion; the author closes), a review due (a print after the last revision), a company of the
            position crossing into watch / alert on the Fragility Monitor (pk fragility). `pk` names which.
+  chg      Report Day (lane P1): the <=10 most material changes of a report (changes/<company>.json, pipeline/build_changes.py: the
+           materiality rule is there), headline "Q2'26 · 10 שינויים", each change with both figures and their pages; dated by the
+           filing's publication day; a T+0 report (XBRL only, unverified) is left out until its figures are printed
+  letter   the monthly flows letter (lane P5+P3, flows/letters/index.json `events`, built by the flows pipeline): one event per regulator
+           month, dated the day the month was fetched, no rows (the letter's own page carries every figure); absent file = no events
   fragility the Fragility Monitor (module A10, fragility.json, built by pipeline/build_fragility.py): a manager crossing into watch or
            alert on one signal from the state of the period before (`fs` = the new state), dated by the data's own date
 
@@ -75,7 +80,8 @@ TK = {"pensia": "p", "gemel": "g", "insurance": "i"}
 TYPES = {
     "filing": "דוח כספי חדש", "restate": "הצגה מחדש", "regmonth": "חודש נתוני רשות", "flow": "מעבר בצבירה נטו",
     "target": "יעד הנהלה הוכרע", "solv": "יחס כושר פירעון", "fee": "שינוי בדמי ניהול", "est": "עדכון אומדן / אומדן מול בפועל",
-    "pos": "ספר העמדות", "fragility": "מוניטור שבריריות",
+    "pos": "ספר העמדות", "fragility": "מוניטור שבריריות", "chg": "שינויים מהותיים בדוח",
+    "letter": "מכתב התזרימים",
 }
 
 
@@ -279,6 +285,50 @@ def card_rows(card, docs):
 def date_q(d):
     q = {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "Q4"}.get(d[5:10])
     return f"{q}'{d[2:4]}" if q else f"{d[8:10]}.{d[5:7]}.{d[2:4]}"
+
+
+# ---------------------------------------------------------------------------------------------------------------- report-day changes
+def changes(docs, cos):
+    """one event per report of changes/<company>.json with its ranked changes (pipeline/build_changes.py writes them)"""
+    out = []
+    for p in sorted((DATA / "changes").glob("*.json")):
+        if p.stem == "index" or p.stem not in cos:
+            continue
+        d = json.loads(p.read_text(encoding="utf-8"))
+        for r in d["reports"]:
+            if r["st"] != "verified" or not r["items"] or not r.get("rid") or not docs.date(r["rid"]) or docs.date(r["rid"]) < FROM:
+                continue
+            rows = []
+            for it in r["items"]:
+                row = {"l": it["l"], "ab": [it["la"], it["lb"]], "a": cfig(docs, it["a"], d["c"]), "b": cfig(docs, it["b"], d["c"]), "d": cfig(docs, it["d"], d["c"])}
+                if it.get("dp"):
+                    row["dp"] = cfig(docs, it["dp"], d["c"])
+                notes = (["הוצג מחדש"] if it.get("rest") else []) + (["מטקסט הדוח"] if it.get("tx") else [])
+                if notes:
+                    row["note"] = " · ".join(notes)
+                if all(row[k] for k in ("a", "b", "d")) and (not it.get("dp") or row["dp"]):
+                    rows.append(row)
+            if rows:
+                out.append({"id": f"chg:{d['c']}:{r['p']}", "t": "chg", "d": docs.date(r["rid"]), "dk": "pub", "c": d["c"], "per": r["p"],
+                            "h": f"{per_label(r['p'])} · {len(rows)} שינויים", "src": {"k": "doc", "rid": docs.ref(r["rid"])}, "rows": rows,
+                            "to": f"/company/{d['c']}?p={r['p']}#rd-changes"})
+    return out
+
+
+def cfig(docs, f, company):
+    """a figure of changes/<company>.json in the feed's form: the same shape; its reports registered in `docs`"""
+    if not f:
+        return None
+    s = f["s"]
+    if s["k"] == "pg":
+        x = pg(docs, s["rid"], s["pg"], None, company, der=s.get("der") or 0)
+        return fig(f["v"], f["u"], x) if x else None
+    if s["k"] == "calc":
+        ins = [cfig(docs, x, company) for x in s["in"]]
+        if not all(ins):
+            return None
+        return fig(f["v"], f["u"], {"k": "calc", "fx": s["fx"], "in": [inp(x["l"], y) for x, y in zip(s["in"], ins)]})
+    return None
 
 
 # ---------------------------------------------------------------------------------------------------------------- restatements
@@ -628,6 +678,14 @@ def fragility():
     return list(load("fragility.json").get("events") or [])
 
 
+def letters():
+    """lane P5+P3: the monthly flows letter, one event per regulator month, shaped by its builder (flows/letters/index.json `events`)"""
+    p = DATA / "flows" / "letters" / "index.json"
+    if not p.exists():
+        return []
+    return [e for e in load("flows/letters/index.json").get("events") or [] if e.get("t") == "letter"]
+
+
 # ---------------------------------------------------------------------------------------------------------------- main
 def main():
     reg_co = load("companies/index.json")
@@ -643,6 +701,7 @@ def main():
     ev = []
     ev += filings(docs, books, cos)
     ev += restatements(docs, cos)
+    ev += changes(docs, cos)
     m, f = regulator(reg, slug)
     ev += m + f
     ev += fees(reg, slug)
@@ -650,6 +709,7 @@ def main():
     ev += solvency(docs, cos)
     ev += positions()
     ev += fragility()
+    ev += letters()
     order = {t: i for i, t in enumerate(TYPES)}
     ev.sort(key=lambda e: (e["d"], -order[e["t"]], e["id"]), reverse=True)
     counts = collections.Counter(e["t"] for e in ev)
