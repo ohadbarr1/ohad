@@ -12,6 +12,7 @@
    number. Pure helpers below (normalise, merge, upsert); the hook is the only part that touches storage. */
 import type { DepositRow, GuaranteedCoef, HeldExtra } from './clientTypes';  // W7: deposits, code, salary, guaranteed coefficient
 import { useStored } from './local';
+import { normRisk } from './harbTypes';  // fox 3.0 A6
 
 export type Tag = 'קיים' | 'מומלץ' | 'נבחן';
 export const TAGS: Tag[] = ['קיים', 'מומלץ', 'נבחן'];
@@ -107,6 +108,7 @@ export function normHeld(x: unknown): Held | null {
     ...(numN(o.salary) != null ? { salary: numN(o.salary) } : {}),
     ...(safe(o.insTrack, 120) ? { insTrack: safe(o.insTrack, 120) } : {}),
     ...(coef ? { coefGuaranteed: coef } : {}),
+    ...(normRisk(o.risk) ? { risk: normRisk(o.risk) } : {}),  // fox 3.0 A6: a הר הביטוח policy
   };
 }
 const isoD = (x: unknown) => (typeof x === 'string' && /^\d{4}-\d{2}-\d{2}/.test(x) ? x.slice(0, 10) : '');

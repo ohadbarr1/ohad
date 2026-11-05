@@ -35,6 +35,7 @@
     "test:agent": "node scripts/agent-test.mjs",
     "test:maslaka": "node scripts/maslaka-test.mjs",
     "test:import": "node scripts/import-test.mjs",
+    "test:harb": "node scripts/harb-test.mjs",
     "test:mysince": "node scripts/mysince-test.mjs",
     "test:deposits": "node scripts/deposits-test.mjs",
     "test:flags": "node scripts/flags-test.mjs",
