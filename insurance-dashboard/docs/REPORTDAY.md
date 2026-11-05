@@ -77,7 +77,7 @@ DAG cache (deploy steps 65 s, gate 81 s), 100 s warm (deploy steps 7–12 s, gat
 steps 14 s, gate 68 s, `deploy.sh --check-only` 1,303 s (≈ 22 min: the whole-site route check at 390 and 1440 px dominates); the run end to
 end 26 min. **The duckdb steps stalled on the .venv that lives on the synced drive** (`verify_extraction.py` sat at 0% CPU for 6 min and was
 stopped; the measured run used `FOX_VENV_PY=/nonexistent`, which skips build_kpi / build_ifrs / verify_extraction): before the season,
-build a local venv (`uv venv -p 3.12 ~/code/venv-fox && uv pip install -r pipeline/requirements.txt`) and point `FOX_VENV_PY` at it.
+a local venv now exists at `~/code/venvs/fox` (Python 3.11, same pinned packages as the Drive .venv; built 06.11.26) and `scripts/reportday.sh` uses it by default (`FOX_VENV_PY` overrides).
 
 ### LLM extraction budget per report (estimate)
 

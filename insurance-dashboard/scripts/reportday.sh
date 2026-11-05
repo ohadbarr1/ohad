@@ -20,7 +20,9 @@ cd "$(dirname "$0")/.." || exit 1
 ROOT=$(pwd)
 PY=/usr/bin/python3                                  # the gate, the DAG and every automatic step: standard library only
 DRIVE_VENV="$HOME/Library/CloudStorage/GoogleDrive-thebarrs14@gmail.com/My Drive/Chief of Staff/Fox/ohad/insurance-dashboard/.venv/bin/python"
-VPY=${FOX_VENV_PY:-$DRIVE_VENV}                      # duckdb steps (build_kpi, build_ifrs, fetch_maya): the owner's .venv
+LOCAL_VENV="$HOME/code/venvs/fox/bin/python"         # local Python 3.11 venv (06.11.26): the Drive .venv stalls on import
+[[ -x "$LOCAL_VENV" ]] && DEF_VENV=$LOCAL_VENV || DEF_VENV=$DRIVE_VENV
+VPY=${FOX_VENV_PY:-$DEF_VENV}                      # duckdb steps (build_kpi, build_ifrs, fetch_maya): the owner's .venv
 
 usage() { sed -n '2,8p' "$0"; exit 64; }
 [ $# -ge 1 ] || usage
