@@ -42,3 +42,21 @@ export function AskStrip() {
     </section>
   );
 }
+
+/** P0 · P2 (05.11.26): the Pro home's side column keeps the finding alone, beside the scoreboard; the question field lives on /questions */
+export function TopFinding() {
+  const { data: F } = useFindings();
+  const top = useMemo(() => (F ? topFirst(F.rows).find((r) => isOk(r)) ?? null : null), [F]);
+  const tf = top && isOk(top) ? top : null;
+  useEffect(() => { if (tf) warmBody(tf); }, [tf]);
+  if (!tf || !top) return null;
+  return (
+    <section className="ask one ask-top" aria-label="הממצא המוביל">
+      <div className="ask-cell ask-f">
+        <div className="hub-hd"><h2><Link className="hub-t" to="/findings"><span className="icotile sm"><Icon name="spark" /></span>הממצא המוביל{F!.dets[top.det] && <span className="muted"> · {F!.dets[top.det].he}</span>}</Link></h2><Link className="hub-more" to={`/findings?f=${top.id}`}>לתשובה המלאה</Link></div>
+        <p className="hub-line ask-corr"><Tokens text={tf.corr} figs={tf.figs} /></p>
+        <p className="hub-sub">מהותיות <b className="num">{top.mat?.t ?? '–'}</b> · הפתעה <b className="num">{top.sur?.t ?? '–'}</b> · בלי ציון מצרפי{tf.asof && <> · נכון ל-<span className="num">{tf.asof}</span></>}</p>
+      </div>
+    </section>
+  );
+}

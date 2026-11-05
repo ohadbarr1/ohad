@@ -179,3 +179,31 @@
 @media (pointer: coarse), (max-width: 760px) { .door-mods a { min-height: 40px; } }
 /* W4: a product row that holds two products says so under its name */
 .dprods-note { display: block; font-size: var(--t-1); font-weight: 400; color: var(--muted); line-height: 1.4; margin-top: 2px; max-width: 44ch; }
+
+/* P0 (fox 3.0 plan, 05.11.26): each door home opens on its hero job.
+   Saver: the annual check-up from the clearing-house file (the import keeps its "בטא" until QA on real files). Agent: a new client from a
+   clearing-house file, with the latest folders beside it; the product picker below. */
+.dlead .eyebrow { display: block; font-size: var(--t-1); font-weight: 700; letter-spacing: 0.04em; color: var(--accent-text); margin-bottom: 4px; }
+.dlead h1 { margin: 0 0 6px; font-size: var(--t-7); line-height: 1.15; letter-spacing: -0.015em; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.dbeta { font-size: var(--t-2); font-weight: 600; letter-spacing: 0; color: var(--warn); background: color-mix(in oklch, var(--warn) 9%, transparent); border: 1px solid color-mix(in oklch, var(--warn) 30%, transparent); border-radius: var(--r-pill); padding: 1px 9px; }
+.dcheck-go { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+.dcheck-alt { font-size: var(--t-2); color: var(--fg); text-align: center; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in oklch, currentColor 40%, transparent); }
+.dcheck-alt:hover { color: var(--accent-text); }
+.dnew-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.dnew { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+.dnew-hd { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 18px; align-items: start; }
+.dnew .ci-body { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1.5px dashed var(--accent-line); border-radius: var(--r-3); background: color-mix(in oklch, var(--panel) 70%, transparent); transition: border-color var(--fast), background var(--fast); }
+.dnew .ci-body.ci-over { border-color: var(--accent); background: var(--accent-soft); }
+.dnew .ci-body > .csave-priv:first-child { margin: 0; font-size: var(--t-2); color: var(--muted); }
+.dnew .ci-file { align-self: flex-start; }
+.dnew .csave-msg { margin: 0; }
+.dhome-agent .dprods .aside { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+@media (max-width: 1099px) { .dnew-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .dlead h1 { font-size: var(--t-6); }
+  .dcheck-go { grid-column: 1 / -1; }
+  .dnew-hd { grid-template-columns: minmax(0, 1fr); } .dnew-hd .icotile { display: none; }
+}
+.dhome-saver .dcards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+.doors-note a, .dnew .csave-msg a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+@media (min-width: 761px) { .dhome-agent .dcards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

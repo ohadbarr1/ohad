@@ -42,22 +42,22 @@ test('company page survives reloads and place switches in WebKit', async ({ page
   expect(seen.length).toBe(13);
 });
 
-/* The phone's bottom bar (the owner's iPhone): the six places (שאלות added with the Question Index, S1; חיסכון with the funds module, F1),
-   each label whole on one line at 375 px (the narrowest iPhone in use), the evidence group off the bar, the active place lit for a
-   company page, and the bar inside the screen. */
-const PLACES = ['בית', 'שאלות', 'חיסכון', 'תרחישים', 'חדר מלחמה', 'עמדות'];
-test('phone bottom bar shows the six places in WebKit', async ({ page }) => {
+/* The phone's bottom bar (the owner's iPhone), Pro door (P0 shell, fox 3.0 plan 05.11.26): five places and "עוד" (שווי, תרחישים and the
+   library sheet behind it), each label whole on one line at 375 px (the narrowest iPhone in use), the active place lit for a company page,
+   and the bar inside the screen. */
+const PLACES = ['בית', 'השוואה', 'חיסכון', 'שאלות', 'מה השתנה'];
+test('phone bottom bar shows the Pro places and the library sheet in WebKit', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await open(page, '/company/phoenix', 'phoenix');
   const bar = page.getByRole('navigation', { name: 'ראשי' });
   const items = bar.locator('a.item:visible');
-  await expect(items).toHaveCount(6);
+  await expect(items).toHaveCount(5);
   expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(PLACES);
-  await expect(bar.locator('.rail-ev')).toBeHidden();
   await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'בית');
-  const fit = await items.evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1 }; }));
+  const fit = await bar.locator(':is(a.item, .lib-btn):visible').evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1 }; }));
+  expect(fit.length).toBe(6);
   expect(fit.filter((f) => f.cut || f.out), 'a bottom-bar label wraps, is cut or leaves the screen').toEqual([]);
-  for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/funds$/], ['תרחישים', /\/scenarios/], ['חדר מלחמה', /\/warroom/], ['עמדות', /\/positions/], ['בית', /\/$/]] as const) {
+  for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/savings/], ['השוואה ענפית', /\/industry\/peers/], ['מה השתנה', /\/feed/], ['בית', /\/$/]] as const) {
     await bar.getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(url);
     await settle(page);
@@ -65,17 +65,25 @@ test('phone bottom bar shows the six places in WebKit', async ({ page }) => {
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     expect(sideways, `${name} scrolls sideways`).toBeLessThanOrEqual(1);
   }
+  // "עוד": the places the bar has no room for, the library and the lab, in a sheet above the bar
+  await bar.locator('.lib-btn').click();
+  const sheet = bar.locator('.lib-pop');
+  await expect(sheet).toBeVisible();
+  for (const name of ['שווי', 'תרחישים', 'מצגות משקיעים', 'מסך האיחודים']) await expect(sheet.getByRole('link', { name, exact: true })).toBeVisible();
+  await sheet.getByRole('link', { name: 'תרחישים', exact: true }).click();
+  await expect(page).toHaveURL(/\/scenarios/);
+  await expect(sheet).toBeHidden();
   // the section lights its place on every page of it
-  for (const route of ['/funds/screen', '/funds/p2009', '/savings', '/managers', '/holdings']) {
+  for (const route of ['/funds/screen', '/funds/p2009', '/savings', '/managers', '/flows']) {
     await page.goto(route); await settle(page);
     await expect(bar.locator('a.item.active:visible'), `חיסכון lit on ${route}`).toHaveAttribute('aria-label', 'חיסכון');
   }
 });
 
 /* W1 · three doors (plan 01.11.26): a first visit lands on the picker; ?door= opens a door and keeps it; each door has its own bottom bar
-   (saver five places, agent six, Pro the six above), whole labels at 375 px; the phone's door menu switches doors and goes back to the
+   (saver five places, agent six, Pro five and "עוד"), whole labels at 375 px; the phone's door menu switches doors and goes back to the
    picker; a Pro page opened from the saver's door works and says so. No open() here: it chooses Pro on every load. */
-const DOOR_BARS: [string, string[]][] = [['saver', ['בית', 'המוצרים שלי', 'דמי ניהול', 'השוואה', 'המעקב שלי']], ['agent', ['בית', 'מסלולים', 'השוואה', 'ברירת מחדל', 'גופים', 'כלים']]];
+const DOOR_BARS: [string, string[]][] = [['saver', ['בית', 'המוצרים שלי', 'דמי ניהול', 'השוואה', 'רגעים']], ['agent', ['בית', 'לקוחות', 'מסלולים', 'השוואה', 'גופים', 'כלים']]];
 test('three doors: picker, ?door=, per-door bottom bar and the door menu in WebKit', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -96,11 +104,12 @@ test('three doors: picker, ?door=, per-door bottom bar and the door menu in WebK
     expect(await items.count(), `${door} kept after a reload`).toBe(places.length);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), `${door} home scrolls sideways`).toBeLessThanOrEqual(1);
   }
-  // the door menu: switch to Pro (its six places), then back to the picker
+  // the door menu: switch to Pro (its five places on the bar, and "עוד"), then back to the picker
   const pill = page.locator('.door-pill');
   await pill.click();
   await page.getByRole('menuitemradio', { name: /^Pro/ }).click();
-  await expect(bar.locator('a.item:visible')).toHaveCount(6);
+  await expect(bar.locator('a.item:visible')).toHaveCount(5);
+  await expect(bar.locator('.lib-btn')).toBeVisible();
   await pill.click();
   await page.getByRole('menuitem', { name: 'כל הדלתות' }).click();
   await expect(page.getByRole('heading', { level: 3, name: 'מה יש לך?' })).toBeVisible();

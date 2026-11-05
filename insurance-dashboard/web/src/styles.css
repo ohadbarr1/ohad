@@ -99,6 +99,9 @@ svg.ico.ink .f { fill: var(--sel-bg); opacity: 0.18; }
 .wordmark:hover { text-decoration: none; }
 .wordmark span { color: var(--accent); }
 .page { width: 100%; max-width: 1440px; margin-inline: auto; padding: 26px 26px 80px; display: flex; flex-direction: column; gap: 22px; animation: page-in var(--mid) ease-out both; }
+/* P0 shell: the site footer follows <main>; the page's bottom room (the compare tray, the phone's bar) moves under the footer */
+.page { padding-bottom: 0; }
+.main > .site-foot { width: calc(100% - 52px); max-width: calc(1440px - 52px); margin: 50px auto 0; padding-bottom: 80px; }
 @keyframes page-in { from { opacity: 0; } }
 
 /* page head and tabs */
@@ -292,7 +295,8 @@ td.heat { transition: background var(--mid); }
   .rail a.item svg.ico { width: 24px; height: 24px; }
   .rail a.item.active::before { inset: auto 20% 0 20%; top: auto; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
   .top-in { padding: calc(9px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 9px max(14px, env(safe-area-inset-left, 0px)); } .wordmark { display: none; }
-  .page { padding: 16px 14px 104px; gap: 18px; }
+  .page { padding: 16px 14px 0; gap: 18px; }
+  .main > .site-foot { width: calc(100% - 28px); margin-top: 46px; padding-bottom: 104px; }
   .pagehead h1 { font-size: var(--t-6); }
 }
 @media (prefers-reduced-motion: reduce) {

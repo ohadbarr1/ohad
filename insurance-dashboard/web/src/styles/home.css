@@ -1,19 +1,22 @@
-/* Home, the season desk (docs/HOME.md): season strip, scoreboard, LTS figures, macro, jump row.
-   Phone: one column, scoreboard first. 761-1599 px: one column, the four LTS figures above the scoreboard. From 1600 px: scoreboard in the
-   main column, the rest in a sticky side column. */
+/* Home, the season desk (docs/HOME.md; P0 · P2, 05.11.26): season strip, then the scoreboard with "what changed" (the feed, 5 rows) and the
+   top finding beside it, the LTS figures and macro under them, the lab's links at the bottom.
+   Phone and up to 1199 px: one column, the scoreboard first. From 1200 px: the scoreboard in the main column, the rest in a side column. */
 .home { display: flex; flex-direction: column; gap: 22px; }
 .home-grid { display: flex; flex-direction: column; gap: 22px; }
 .home-main, .home-side { display: contents; }
-.home .cos { order: 1; } .home .hm-kpis { order: 2; } .home .macro { order: 3; } .home .hm-jump { order: 4; }
+.home .cos { order: 1; } .home .hm-delta { order: 2; } .home .ask-top { order: 3; } .home .hm-kpis { order: 4; } .home .macro { order: 5; } .home .hm-jump { order: 6; }
 html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { gap: 14px; }
-@media (min-width: 761px) and (max-width: 1599px) { .home .hm-kpis { order: 0; } }
-@media (min-width: 1600px) {
-  .home-grid { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 22vw, 440px); align-items: start; }
+@media (min-width: 1200px) {
+  .home-grid { display: grid; grid-template-columns: minmax(0, 1fr) clamp(340px, 22vw, 440px); gap: 22px; align-items: start; }
   .home-main, .home-side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
-  .home-side { position: sticky; top: 16px; }
   .home .hm-kpis { grid-template-columns: 1fr 1fr; }
   .home .hm-kpis .kpi { padding: 14px 16px 13px; } .home .hm-kpis .kpi .v { font-size: var(--t-6); }
+  .home-side .macro-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+/* the lab's links (what the advisory hub became): a quiet row, the same chips as the old evidence row */
+.home .hm-lab { border: 1px solid var(--line-soft); border-radius: var(--r-3); background: var(--panel); }
+.hm-lab-n { font-size: var(--t-1); color: var(--muted); margin-inline-start: auto; }
+@media (max-width: 760px) { .hm-lab-n { margin-inline-start: 0; flex-basis: 100%; } }
 
 /* the season strip: period, one tick per reporting company (its identity colour once filed), count, last filing, next due */
 .hm-season { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 16px; min-height: 52px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-3); font-size: var(--t-3); }
@@ -68,7 +71,6 @@ html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { ga
 .macro .mt .v { font-size: var(--t-6); font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
 .macro .mt .s { font-size: var(--t-1); color: var(--muted); line-height: 1.5; }
 .macro .spark { color: var(--accent); opacity: 0.8; flex: none; }
-@media (min-width: 1600px) { .home-side .macro-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .macro-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .macro .spark { width: 64px; } .macro .mt .v { font-size: var(--t-5); } }
 
 /* the company table: two column sets on a phone and laptop, both from 1600 px */

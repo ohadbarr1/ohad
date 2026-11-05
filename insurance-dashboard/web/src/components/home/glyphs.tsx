@@ -10,6 +10,10 @@ const X: Record<string, Glyph> = {
   terminal: { f: 'M3 5h18v14H3z', s: 'M3 5h18v14H3zM17 10l-3 2 3 2M12 15H7' },
   arrow: { s: 'M19 12H5M11 6l-6 6 6 6' },
   doors: { f: 'M4 4h7v7H4zM13 13h7v7h-7z', s: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z' },
+  // P0 shell (05.11.26): the agent's clients, the saver's moments, the Pro library
+  clients: { f: 'M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6z', s: 'M9 4.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7zM3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15.5 4.8a3.2 3.2 0 010 6.4M17.5 14.3c2 .7 3.5 2.9 3.5 5.7' },
+  moment: { f: 'M5 4h13l-2.6 4L18 12H5z', s: 'M5 21V4h13l-2.6 4L18 12H5' },
+  library: { f: 'M3.5 4h4v16h-4zM9.5 4h4v16h-4z', s: 'M3.5 4h4v16h-4zM9.5 4h4v16h-4zM15.4 5.6l3.6-1 3.4 13.4-3.6 1zM3.5 8h4M9.5 8h4' },
 };
 
 /** A house glyph, or one of the door glyphs above; the same markup and classes as <Icon>, so every rule that styles `svg.ico` applies. */

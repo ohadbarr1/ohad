@@ -20,9 +20,11 @@ interface Read { name: string; rows: Row[]; error?: string; warn: string[] }
 /** the folder an import makes (W5: the pure helper moved to lib/clients, node-testable) */
 export { folderFromImport };
 
-export function ClientImport({ funds, onDone }: { funds: FundX[]; onDone: (f: Folder, msg: string) => void }) {
+/** P0 · A1 (05.11.26): `startOpen` shows the file picker at once (the agent's home opens on it); the picker also takes files dropped on it */
+export function ClientImport({ funds, onDone, startOpen = false }: { funds: FundX[]; onDone: (f: Folder, msg: string) => void; startOpen?: boolean }) {
   const [file, setFile] = useClients();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
+  const [over, setOver] = useState(false);
   const [reads, setReads] = useState<Read[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [label, setLabel] = useState('');
@@ -65,7 +67,7 @@ export function ClientImport({ funds, onDone }: { funds: FundX[]; onDone: (f: Fo
     const r = upsert(file, { ...f, b: 'net', note: `ייבוא מהמסלקה, ${today().split('-').reverse().join('.')}` }, today());
     setFile(r.file);
     onDone(r.folder, `נוצר תיק "${r.folder.label}": ${held.length} מוצרים מהמסלקה, ${r.folder.keys.length} מהם מסלולים להשוואה. הקבצים עצמם לא נשמרו.`);
-    setReads(null); setOpen(false); setLabel(''); if (inp.current) inp.current.value = '';
+    setReads(null); setOpen(startOpen); setLabel(''); if (inp.current) inp.current.value = '';
   };
 
   if (!open) return (
@@ -75,7 +77,8 @@ export function ClientImport({ funds, onDone }: { funds: FundX[]; onDone: (f: Fo
     </div>
   );
   return (
-    <div className="ci-body">
+    <div className={`ci-body${over ? ' ci-over' : ''}`} onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setOver(true); } }} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(false); }}
+      onDrop={(e) => { if (!e.dataTransfer.files.length) return; e.preventDefault(); setOver(false); void readFiles(e.dataTransfer.files); }}>
       <p className="csave-priv">הקבצים נקראים בדפדפן הזה בלבד ולא יוצאים מהמכשיר. הקורא אינו פותח את פרטי הלקוח, המעסיק או המבוטח בכיסוי; נשמרים רק המוצר, המסלול, היתרה, ההפקדה, דמי הניהול והכיסויים, ורק אחרי שתאשרו. בטא: שמות השדות לפי המבנה האחיד של רשות שוק ההון (ממשק אחזקות, גרסה 008).</p>
       <label className="btn primary ci-file">{busy ? 'קורא…' : 'בחירת קובצי XML של הלקוח'}<input ref={inp} type="file" accept=".xml,text/xml,application/xml" multiple onChange={(e) => void readFiles(e.target.files)} /></label>
       {reads && (
@@ -100,7 +103,7 @@ export function ClientImport({ funds, onDone }: { funds: FundX[]; onDone: (f: Fo
             <input id="ci-l" value={label} onChange={(e) => { setLabel(e.target.value); setErr(null); }} maxLength={80} placeholder="למשל: ד.כ., מסלקה 11/26" autoComplete="off" />
             <div className="csave-acts">
               <button type="button" className="btn primary" disabled={!rows.length || !lab || taken} onClick={save}>יצירת תיק לקוח ({rows.length} מוצרים)</button>
-              <button type="button" className="btn" onClick={() => { setReads(null); setOpen(false); }}>ביטול</button>
+              <button type="button" className="btn" onClick={() => { setReads(null); setOpen(startOpen); if (inp.current) inp.current.value = ''; }}>ביטול</button>
             </div>
             {(err || taken) && <p role="alert" className="csave-msg">{err ?? 'כבר יש תיק בשם הזה. הייבוא יוצר תיק חדש: בחרו שם אחר'}</p>}
           </div>

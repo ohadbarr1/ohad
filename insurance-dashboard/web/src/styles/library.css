@@ -1,0 +1,40 @@
+/* P0 shell (05.11.26): the Pro door's "ספרייה" entry (components/LibraryMenu.tsx). Desktop: the last entry on the rail, under a hairline
+   like the old evidence group, opening a panel beside the rail. Phone: the last slot of the bottom bar ("עוד"), opening a sheet above it. */
+.rail .lib { position: relative; width: 100%; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.rail .lib-btn { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 2px 7px; border: 0; border-radius: var(--r-2); background: transparent; color: var(--muted); font: inherit; font-size: 11.5px; font-weight: 500; line-height: 1.2; text-align: center; cursor: pointer; transition: color var(--fast), background var(--fast); }
+.rail .lib-btn:hover { color: var(--fg); background: var(--panel2); }
+.rail .lib-btn:hover svg.ico .f { opacity: 0.22; }
+.rail .lib-btn svg.ico { width: 22px; height: 22px; }
+.rail .lib-btn[aria-expanded="true"] { color: var(--fg); background: var(--panel2); }
+.rail .lib-btn.active { color: var(--fg); font-weight: 700; background: var(--accent-soft); }
+.rail .lib-btn.active svg.ico { color: var(--accent-text); } .rail .lib-btn.active svg.ico .f { fill: var(--accent); opacity: 0.3; }
+.rail .lib-btn.active::before { content: ""; position: absolute; inset-inline-end: -8px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--accent); }
+:root:not([data-theme="dark"]) .rail .lib-btn.active { color: var(--navy); }
+.rail .lib-btn .lbl-p { display: none; }
+
+.lib-pop { position: absolute; inset-inline-start: calc(100% + 16px); bottom: -8px; z-index: 40; width: 288px; max-height: calc(100dvh - 24px); overflow: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 8px; padding: 10px; text-align: start; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-3); box-shadow: var(--e-1), 0 18px 48px -18px rgb(17 28 63 / 0.28); }
+.lib-pop[hidden] { display: none; }
+.lib-h { display: block; padding: 2px 10px 4px; font-size: var(--t-1); font-weight: 700; color: var(--muted); letter-spacing: 0.02em; }
+.lib-note { font-weight: 500; letter-spacing: 0; }
+.lib-g ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.lib-g a { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 6px 10px; border-radius: var(--r-2); color: var(--fg); font-size: var(--t-3); font-weight: 500; line-height: 1.3; text-decoration: none; }
+.lib-g a:hover { background: var(--panel2); color: var(--accent-text); text-decoration: none; }
+.lib-g a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
+.lib-g a .chip { margin-inline-start: auto; font-weight: 500; }
+.lib-lab { border-top: 1px solid var(--line-soft); padding-top: 8px; }
+.lib-more { display: none; }
+
+@media (max-width: 760px) {
+  .rail .lib { position: static; flex: 1; display: flex; margin: 0; padding: 0; border: 0; min-width: 0; }
+  .rail .lib-btn { min-height: 50px; justify-content: center; gap: 3px; font-size: var(--t-1); white-space: nowrap; }
+  .rail .lib-btn svg.ico { width: 24px; height: 24px; }
+  .rail .lib-btn .lbl-w { display: none; } .rail .lib-btn .lbl-p { display: inline; }
+  .rail .lib-btn.active::before { inset: auto 20% 0 20%; top: auto; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
+  .lib-pop { position: fixed; inset: auto 0 calc(62px + env(safe-area-inset-bottom)) 0; width: auto; max-height: min(72dvh, 600px); padding: 12px 12px 14px; gap: 10px;
+    border-radius: 16px 16px 0 0; border-inline: 0; border-bottom: 0; box-shadow: 0 -14px 36px -12px rgb(17 28 63 / 0.25); }
+  .lib-more { display: block; border-bottom: 1px solid var(--line-soft); padding-bottom: 8px; }
+  .lib-g ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 6px; }
+  .lib-g a { min-height: 44px; font-size: var(--t-3); }
+}
+@media print { .lib-pop { display: none; } }

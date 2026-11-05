@@ -17,9 +17,8 @@ import { DataTable } from '../DataTable';
 import { periodLabelShort, periodTag } from '../../lib/kpi';
 import { MacroPanel } from '../MacroPanel';
 import { FeedBlock } from './FeedBlock';
-import { AdvisoryHub } from './AdvisoryHub';
-import { AskStrip } from './AskStrip';
-import { WatchLine } from './WatchLine';
+import { TopFinding } from './AskStrip';
+import { LabRow } from './LabRow';  // P0: the advisory hub's place, a quiet row of the lab's links at the bottom
 import '../../styles/market.css';
 import '../../styles/home.css';
 
@@ -29,7 +28,7 @@ const JUMP: [string, string][] = [['/scenarios', 'חדר תרחישים'], ['/in
 type View = 'fin' | 'mkt';
 type Kind = 'all' | 'insurance_group' | 'fund_house';
 
-/** Pro home (W1: the current home, unchanged; at / for the Pro door and at /pro). The season desk (docs/HOME.md): the season in one line, every company's latest quarter (a ranked list on a phone, the full table on a
+/** Pro home (at / for the Pro door and at /pro; P0 05.11.26: the season desk first, the lab at the bottom). The season desk (docs/HOME.md): the season in one line, every company's latest quarter (a ranked list on a phone, the full table on a
  *  desktop), the long-term-savings market in four numbers and the macro inputs. Filings themselves live on the calendar and the company pages. */
 export function ProHome() {
   const { market: m } = useMarket(true, true);
@@ -97,9 +96,8 @@ export function ProHome() {
   return (
     <div className="wide-page home">
       <h1 className="sr-only">fox · ביטוח, פנסיה וגמל</h1>
-      <WatchLine />
-      <AdvisoryHub />
-      <AskStrip />
+      {/* P0 · P2 (fox 3.0 plan, 05.11.26): the season desk leads; the advisory tiles (today's scenario, fragility alerts, the position
+          book) left the first screen for the lab row at the bottom, and the one "what changed" block is the feed beside the scoreboard */}
       <SeasonStrip />
       <div className="home-grid">
         <div className="home-main">
@@ -140,9 +138,10 @@ export function ProHome() {
             <div className="src">רווח, הון ו-ROE: XBRL של הדוחות התקופתיים (ילין לפידות: הדוחות הכספיים שלה, 100%) · נכסים, צבירה ודמי ניהול: רשות שוק ההון (פנסיה, גמל, ביטוחי מנהלים ופוליסות חיסכון; צבירה: פנסיה וגמל)</div>
             {view === 'mkt' && <FlowDef kinds={['organic']} className="src" />}
           </section>
-          <FeedBlock />
         </div>
         <div className="home-side">
+          <FeedBlock limit={5} />
+          <TopFinding />
           {m && (
             <section className="kpis hm-kpis" aria-label="חיסכון ארוך טווח">
               {([['סך נכסים מנוהלים', 'all'], ['פנסיה', 'fam:pension'], ['גמל והשתלמות', 'fam:gemel'], ['ביטוחי מנהלים ופוליסות חיסכון', 'fam:insurance']] as const).map(([label, s]) => (
@@ -158,6 +157,7 @@ export function ProHome() {
           <nav className="hm-jump" aria-label="מעבר מהיר">{JUMP.map(([to, l]) => <Link key={to} to={to}>{l}</Link>)}</nav>
         </div>
       </div>
+      <LabRow />
       <Reminders door="pro" />
     </div>
   );

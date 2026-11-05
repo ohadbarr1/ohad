@@ -5,6 +5,8 @@ import { Ico } from './glyphs';
 import { FundFacts, ProdFigs, screenHref, useFundFacts, useProducts } from './fundFacts';
 import { useActiveDoor } from './doorState';
 import { ClientsPanel } from './ClientsPanel';
+import { ClientImport } from '../agent/ClientImport';  // P0 · A1: the agent's home opens on a new client
+import { useState } from 'react';
 import { useMine, type MyProduct } from '../../lib/mine';
 import { nf } from '../../lib/format';
 import { fundP } from '../../lib/market';
@@ -80,15 +82,6 @@ export function DoorPicker() {
   );
 }
 
-/** a door home's head: the door's name in the ember eyebrow, a title, one line */
-function Head({ k, title, line }: { k: string; title: string; line: string }) {
-  return (
-    <header className="pagehead dhome-hd">
-      <div><span className="eyebrow">{k}</span><h1>{title}</h1><div className="sub">{line}</div></div>
-    </header>
-  );
-}
-
 type Card = [to: string, icon: string, title: string, line: string];
 function Cards({ cards, label }: { cards: Card[]; label: string }) {
   return (
@@ -98,33 +91,37 @@ function Cards({ cards, label }: { cards: Card[]; label: string }) {
   );
 }
 
+/** P0 (fox 3.0 plan, 05.11.26): four cards under the annual check-up; the watchlist folds into /my, "רגעים" takes its card */
 const SAVER_CARDS: Card[] = [
   ['/funds/tools/fees', 'fee', 'כמה עולים לי דמי הניהול?', 'הפער בשקלים עד הפרישה, לפי דמי הניהול שלכם ומול השוק.'],
-  ['/funds/default', 'shield', 'קרנות ברירת המחדל', 'הקרנות שנבחרו במכרז המדינה ודמי הניהול שנקבעו להן.'],
+  ['/funds/default', 'shield', 'קרן ברירת המחדל', 'הקרנות שנבחרו במכרז המדינה ודמי הניהול שנקבעו להן.'],
   ['/funds/compare', 'compare', 'השוואת מסלולים', 'כמה מסלולים זה לצד זה: תשואה נטו, סיכון ודמי ניהול.'],
-  ['/funds/watch', 'eye', 'המעקב שלי', 'המסלולים ששמרתם, ומה השתנה בהם מאז הפעם הקודמת.'],
-  ['/about', 'spark', 'מי אנחנו ומאיפה הנתונים', 'אתר חינמי ועצמאי. הנתונים מהרשות לשוק ההון, וכל מספר נפתח למקור.'],
+  ['/my/moment', 'moment', 'רגעים', 'עבודה חדשה, העלאה, הצעה לעבור קרן או גיל 60: מה בודקים ומה שואלים.'],
 ];
 
-/** the saver's home: "what do you have" first, then the four questions a saver asks */
+/** the saver's home (P0, S1 entry): the annual check-up from the clearing-house file comes first; the products the reader already
+ *  entered under it; then the four questions a saver asks */
 export function SaverHome() {
   const [mine] = useMine();
+  const has = mine.length > 0;
   return (
     <div className="dhome dhome-saver">
-      <Head k="חוסך" title="החיסכון שלך, בשקלים ובמילים" line="כמה אתם משלמים, איך המסלול שלכם עומד מול מסלולים דומים, ומה לשאול את הסוכן או את החברה." />
-      {mine.length > 0 ? <MineSummary mine={mine} /> : (
-        <section className="dlead" aria-labelledby="dlead-t">
-          <span className="icotile lg"><Ico name="mine" /></span>
-          <div className="dlead-t">
-            <h2 id="dlead-t">מה יש לך?</h2>
-            <p>בוחרים את המוצר (פנסיה, השתלמות, גמל או פוליסה), את החברה ואת המסלול. אחר כך רואים כמה אתם משלמים ואיפה אתם עומדים.</p>
-          </div>
-          <Link to="/my" className="door-go primary">להתחיל<Ico name="arrow" /></Link>
-        </section>
-      )}
-      <FundFacts />
+      <header className="dlead dcheck" aria-labelledby="dcheck-t">
+        <span className="icotile lg"><Ico name="mine" /></span>
+        <div className="dlead-t">
+          <span className="eyebrow">חוסך · הבדיקה השנתית</span>
+          <h1 id="dcheck-t">ייבוא מהמסלקה <span className="dbeta">בטא</span></h1>
+          <p>מורידים את הדוח מהמסלקה הפנסיונית ופותחים אותו כאן: כל המוצרים, דמי הניהול שלכם מול השוק וההפקדות, בשקלים ובמילים. הקובץ נקרא בדפדפן ולא יוצא מהמכשיר.</p>
+        </div>
+        <div className="dcheck-go">
+          <Link to="/my#mk-h" className="door-go primary">ייבוא מהמסלקה<Ico name="arrow" /></Link>
+          <Link to={has ? '/my' : '/my#sv-add-h'} className="dcheck-alt">{has ? 'לבדיקה של המוצרים שלי' : 'או לבחור מוצר ידנית'}</Link>
+        </div>
+      </header>
+      {has && <MineSummary mine={mine} />}
       <Cards cards={SAVER_CARDS} label="מה אפשר לבדוק" />
-      <p className="doors-note">מה שאתם מזינים נשמר בדפדפן הזה בלבד ולא נשלח לשום מקום.</p>
+      <FundFacts />
+      <p className="doors-note">מה שאתם מזינים נשמר בדפדפן הזה בלבד ולא נשלח לשום מקום. <Link className="sv-u" to="/about">מי אנחנו ומאיפה הנתונים</Link></p>
     </div>
   );
 }
@@ -170,15 +167,32 @@ const AGENT_CARDS: Card[] = [
   ['/funds/bm', 'statement', 'ביטוחי מנהלים ישנים', 'פוליסות 1990-2003: מקדם מובטח, הסדר ריסק ומה נבדק לפני מעבר.'],
 ];
 
-/** the agent's home: a pension-first product picker with each product's sourced figures, then the tools for a client meeting */
+/** the agent's home (P0, A1): a new client from a clearing-house file first, the latest client folders beside it; the product picker
+ *  and the meeting tools below the fold */
 export function AgentHome() {
   const { rows, asof, ready } = useProducts();
+  const { data } = useFundFacts();
+  const [done, setDone] = useState<string | null>(null);
   return (
     <div className="dhome dhome-agent">
-      <Head k="סוכן" title="מסלולים, השוואה ודמי ניהול" line="כל המסלולים שהרשות מפרסמת, נטו אחרי דמי ניהול, עם מקור לכל מספר." />
-      <FundFacts />
+      <div className="dnew-grid">
+        <section className="dlead dnew" aria-labelledby="dnew-t">
+          <div className="dnew-hd">
+            <span className="icotile lg"><Ico name="clients" /></span>
+            <div className="dlead-t">
+              <span className="eyebrow">סוכן</span>
+              <h1 id="dnew-t">לקוח חדש: גררו קובץ מסלקה</h1>
+              <p>קובצי ה-XML של הלקוח נקראים בדפדפן הזה ונשמרים כתיק: מוצרים, יתרות, דמי הניהול של הלקוח וכיסויים. משם להשוואה, לניוד ולמסמך ללקוח.</p>
+            </div>
+          </div>
+          {data ? <ClientImport funds={data.funds as FundX[]} startOpen onDone={(_, m) => setDone(m)} /> : <p className="muted" aria-busy="true">טוען את נתוני המסלולים…</p>}
+          {done && <p role="status" className="csave-msg">{done} <Link className="sv-u" to="/clients">לתיק בלקוחות</Link></p>}
+        </section>
+        {/* W3 */}<ClientsPanel />
+      </div>
+      <Cards cards={AGENT_CARDS} label="כלים לסוכן" />
       <section className="panel dprods" aria-labelledby="dprods-t">
-        <div className="hd"><h2 id="dprods-t">בחירת מוצר</h2><div className="aside">דמי ניהול: ממוצע בפועל, חציון המסלולים</div></div>
+        <div className="hd"><h2 id="dprods-t">בחירת מוצר</h2><div className="aside"><span>דמי ניהול: ממוצע בפועל, חציון המסלולים</span><Link to="/funds/screen">לכל המסלולים</Link></div></div>
         <ul className="dprods-l">
           {!ready && [0, 1, 2, 3].map((i) => <li key={i} className="dprods-sk" aria-hidden="true" />)}
           {rows.map((r, i) => (
@@ -190,8 +204,7 @@ export function AgentHome() {
           ))}
         </ul>
       </section>
-      {/* W3 */}<ClientsPanel />
-      <Cards cards={AGENT_CARDS} label="כלים לסוכן" />
+      <FundFacts />
     </div>
   );
 }
