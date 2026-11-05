@@ -356,3 +356,8 @@ td.cmp-best::after { content: "●"; color: var(--accent); font-size: 8px; verti
 .onb-save input { font: inherit; font-size: 16px; padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--r-1); background: var(--panel); color: var(--fg); }
 .onb-save .chip { cursor: pointer; }
 .onb-save .chip svg.ico { width: 14px; height: 14px; }
+
+/* fox 3.0 phase 2 (A4): the call-list line on the agent's home panel */
+.cl-calls { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: var(--r-2); background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--fg); text-decoration: none; font-size: var(--t-2); }
+.cl-calls b { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
+.cl-calls:hover { border-color: var(--accent); }

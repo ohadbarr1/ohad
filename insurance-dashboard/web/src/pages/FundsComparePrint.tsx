@@ -22,6 +22,7 @@ import { nyudTable, type Basis } from '../lib/nyud';  // W7
 import { NyudTable } from '../components/agent/NyudTable';  // W7
 import { track } from '../lib/track';
 import * as H from '../lib/hanmaka';  // W7: the binding wording
+import { DocBar, docMode, nyudInOf } from '../components/agent/DocBar';  // fox 3.0 phase 2: the wizard's step 3 and the annual-review queue
 import '../styles/agentDoc.css';
 
 /* W1 · agent door: the client document, /funds/compare/print?k=…&b=net|gross. An A4 page set, right to left: the tracks compared with
@@ -78,8 +79,8 @@ export function FundsComparePrint() {
   const coefF = useOptional<CoefFile>(COEF_PATH);  // W6
   const [client, setClient] = useState('');
   const [brand] = useBranding();  // W7
-  const [annex, setAnnex] = useState(true);
-  const [docB, setDocB] = useState(true);  // W7
+  const [annex, setAnnex] = useState(() => docMode(window.history.state?.usr) !== 'review');
+  const [docB, setDocB] = useState(() => docMode(window.history.state?.usr) !== 'review');  // W7
   const [kind, setKind] = useState<H.DocKind>('full');  // W7: §4
   const [basis, setBasis] = useState<Basis>('fox');  // W7
   const [tags, setTags] = useState<Record<string, Tag>>({});
@@ -89,6 +90,8 @@ export function FundsComparePrint() {
   const [clients] = useClients();
   const [folderId, setFolderId] = useState<string | null>(() => folderOfState(loc.state));
   const folder: Folder | null = folderId ? clients.folders.find((f) => f.id === folderId) ?? null : null;
+  // fox 3.0 phase 2: the review queue opens the next client's document on this same page: follow the folder in the router's state
+  useEffect(() => { const id = folderOfState(loc.state); if (id && id !== folderId) setFolderId(id); }, [loc.state]);  // eslint-disable-line react-hooks/exhaustive-deps
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [gen, setGen] = useState(0);
   // W4: a folder with a snapshot of the same tracks opens on it; "נתוני היום" shows today's figures
@@ -122,7 +125,7 @@ export function FundsComparePrint() {
   const diffs = snap && live ? snap.rows.map((t) => { const n = liveRows.find((r) => r.k === t.k); return n ? { r: n, d: snapDiff(t, n, data.asof) } : null; }).filter((x): x is { r: SnapRow; d: ReturnType<typeof snapDiff> } => !!x && x.d.length > 0) : [];
   // W7: the ניוד table of the folder's imported products against the candidate tracks
   const tagMap = Object.fromEntries(rows.map((r) => [r.k, tagOf(r.k)]));
-  const ny = held.length ? nyudTable(held, rows, tagMap, coefF, { basis }, ym(asof)) : null;
+  const ny = held.length ? nyudTable(held, rows, tagMap, coefF, { basis, ...nyudInOf(folder) }, ym(asof)) : null;
   const next = rows.filter((r) => tagOf(r.k) === 'מומלץ');
   const brandTxt = hasBrand(brand) ? brandLine(brand) : '';
   const kindOf = H.DOC_KINDS.find((d) => d.k === kind)!;
@@ -142,6 +145,7 @@ export function FundsComparePrint() {
 
   return (
     <div className="adoc-wrap">
+      <DocBar folder={folder} nav={loc.state} ready={pending === 0} annex={annex} />
       <div className="adoc-tools" role="region" aria-label="הגדרות המסמך">
         <Link to={`/funds/compare?k=${keys.join(',')}`} state={folder ? { folder: folder.id } : undefined} className="chip"><span aria-hidden="true">→</span> חזרה להשוואה</Link>
         <label>שם הלקוח <input value={client} onChange={(e) => setClient(e.target.value)} placeholder="לא חובה" maxLength={60} /></label>

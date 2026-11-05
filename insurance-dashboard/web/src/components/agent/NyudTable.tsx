@@ -11,6 +11,8 @@ import { NyudCover } from './NyudCover';  // W11: the bylaws / claims-adjusted c
 
 const ILS = (v: number | null | undefined) => (v == null ? '–' : `₪${Math.round(v).toLocaleString('en-US')}`);
 const PC = (v: number) => `${nf(v, 2)}%`;
+/** fox 3.0 phase 2: on screen the circular is named by its title and date (its number, 2018-10-11, reads as an ISO date); the print keeps it */
+const CIRC_SCREEN = 'חוזר סוכנים ויועצים "מסמך הנמקה – תיקון" (18.07.2018; בתוקף מ-01.07.2019)';
 
 export function NyudTable({ out, print = false, basis, onBasis, asofText }: { out: NyudTableOut; print?: boolean; basis: Basis; onBasis?: (b: Basis) => void; asofText: string }) {
   const fc = fullCost(out.rows);
@@ -38,13 +40,13 @@ export function NyudTable({ out, print = false, basis, onBasis, asofText }: { ou
       <NyudCover rows={out.rows} />
       <Notes rows={out.rows} />
       <h3>חלק א.1 בסדר החוזר: שורה לפני ושורה אחרי</h3>
-      <p className="adoc-cap">לפי {HNM.sections.a1} ו-{HNM.sections.beforeAfter} ל{HNM.title}: מוצר שמשתנה בשתי שורות עוקבות, "לא שונה" בפרמטר שאינו משתנה. "המלצה" ו"השיקולים העיקריים" נשארים לבעל הרישיון. תשואה ברוטו: ממוצע שנתי ל-36 חודשים, נתוני {asofText}.</p>
+      <p className="adoc-cap">לפי {HNM.sections.a1} ו-{HNM.sections.beforeAfter} ל{print ? HNM.title : CIRC_SCREEN}: מוצר שמשתנה בשתי שורות עוקבות, "לא שונה" בפרמטר שאינו משתנה. "המלצה" ו"השיקולים העיקריים" נשארים לבעל הרישיון. תשואה ברוטו: ממוצע שנתי ל-36 חודשים, נתוני {asofText}.</p>
       <div className="nyud-a1">
         <table className="adoc-t annex-t a1x">
           <thead><tr><th scope="col" /> {A1_COLS.map((c) => <th key={c} scope="col">{c}</th>)}</tr></thead>
           <tbody>{out.rows.map((r, i) => <>
-            <tr key={`${i}b`} className="before"><th scope="row">לפני</th>{A1_COLS.map((c) => <td key={c}>{r.annex.before[c] || <span className="blank" aria-label="להשלמה" />}</td>)}</tr>
-            <tr key={`${i}a`} className="after"><th scope="row">אחרי</th>{A1_COLS.map((c) => <td key={c}>{r.annex.after[c] || <span className="blank" aria-label="להשלמה" />}</td>)}</tr>
+            <tr key={`${i}b`} className="before"><th scope="row">לפני</th>{A1_COLS.map((c) => <td key={c}>{r.annex.before[c] || <span className="blank"><span className="sr-only">להשלמה</span></span>}</td>)}</tr>
+            <tr key={`${i}a`} className="after"><th scope="row">אחרי</th>{A1_COLS.map((c) => <td key={c}>{r.annex.after[c] || <span className="blank"><span className="sr-only">להשלמה</span></span>}</td>)}</tr>
           </>)}</tbody>
         </table>
       </div>

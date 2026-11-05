@@ -125,6 +125,7 @@ const Flows = page(() => import('./pages/Flows'), 'Flows');  // W8 flows: who re
 const mMoments = () => import('./pages/Moments');  // W9: saver life moments
 const FeeBook = page(() => import('./pages/FeeBook'), 'FeeBook');  // W11: fee-book embedded value
 const Book = page(() => import('./pages/Book'), 'Book');  // W11: the agent-book stress test
+const ClientsNew = page(() => import('./pages/ClientsNew'), 'ClientsNew');  // fox 3.0 phase 2 (A2): the new-client wizard
 const Under = page(() => import('./pages/Under'), 'Under');  // W11: bottom-quartile tracks still taking in money
 const MomentPage = page(mMoments, 'MomentPage');
 const MomentsIndex = page(mMoments, 'MomentsIndex');
@@ -278,6 +279,7 @@ export function App() {
         <Route element={<Hub hub="clients" />}>{/* phase 0: the agent's "לקוחות": folders · the stress test across them */}
           {/* W3 */}<Route path="clients" element={<Clients />} />
           {/* W11 */}<Route path="clients/book" element={<Book />} />
+          {/* A2 */}<Route path="clients/new" element={<ClientsNew />} />
         </Route>
         <Route path="about" element={<About />} />
         <Route path="methodology" element={<Methodology />} />{/* W6 trust */}

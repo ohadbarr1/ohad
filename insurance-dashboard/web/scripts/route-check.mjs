@@ -50,6 +50,8 @@ const ROUTES = [
   '/watch',
   // phase 0 (05.11.26): the merged pages and the addresses that now land on them
   '/questions', '/findings', '/brief', '/clients/book', '/funds/tools', '/my', '/funds/watch', '/methodology', '/drivers', '/drivers/harel',
+  // fox 3.0 phase 2: the agent desk (the folders with the call list and the reviews; the new-client wizard)
+  '/clients', '/clients/new',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */

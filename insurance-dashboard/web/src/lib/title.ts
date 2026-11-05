@@ -22,7 +22,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case '': return door === 'saver' ? t('החיסכון שלי') : door === 'agent' ? t('מסלולים, השוואה ודמי ניהול', 'סוכן') : door == null ? 'fox · כל מסלולי החיסכון, נטו ובמקור' : 'fox · ביטוח, פנסיה וגמל';
     case 'pro': return p[1] ? null : t('Pro', 'ביטוח, פנסיה וגמל');  // W1: the Pro home at a fixed address
     case 'my': return p[1] === 'statement' && !p[2] ? t('איך קוראים את הדוח השנתי', 'החיסכון שלי') : p[1] ? null : t('המוצרים שלי');  // W1: the saver's products; W3: the statement guide
-    case 'clients': return p[1] === 'book' && !p[2] ? t('מבחן לחץ לתיק הלקוחות', 'סוכן') : p[1] ? null : t('תיקי לקוחות', 'סוכן');  // W3: the agent's client folders (private: no client name in the title); W11: the book stress test
+    case 'clients': return p[1] === 'book' && !p[2] ? t('מבחן לחץ לתיק הלקוחות', 'סוכן') : p[1] === 'new' && !p[2] ? t('לקוח חדש: מקובץ מסלקה להנמקה', 'סוכן') : p[1] ? null : t('תיקי לקוחות', 'סוכן');  // W3: the agent's client folders (private: no client name in the title); W11: the book stress test
     case 'companies': return t('חברות');
     case 'company': {
       if (!((p[2] ?? '') in COMPANY_TAB) || name(p[1]) === null) return null;

@@ -210,7 +210,10 @@ export function heldCost(h: Pick<Held, 'balance' | 'monthly' | 'fee' | 'depfee'>
   return { acc, dep, total: acc == null && dep == null ? null : (acc ?? 0) + (dep ?? 0) };
 }
 /** a product held only for its insurance cover (risk, no savings): it belongs in the cover table, not in the savings composition */
-export const coverOnly = (h: Held) => h.balance == null && !h.k && h.covers.length > 0;
+/** fox 3.0 phase 2 (round-3 gap): a savings product (managers' insurance, pension, provident, study fund, savings policy) is never
+ *  "cover only", even when the file gives no balance: it stays in part א.1 as an existing product, with its covers in א.2 */
+export const SAVINGS_RE = /ביטוח מנהלים|ביטוחי מנהלים|פנסיה|גמל|השתלמות|פוליסת חיסכון|פוליסות חיסכון|חיסכון לכל ילד/;
+export const coverOnly = (h: Held) => h.balance == null && !h.k && h.covers.length > 0 && !SAVINGS_RE.test(h.typeHe);
 
 /** the totals of a client's held products: balances, deposits, the annual fee cost (from savings and from deposits) and the
  *  insurance cost a year (Σ monthly cost × 12, where the file gives a cost). `noFee`: products with a balance but no fee from
@@ -274,31 +277,42 @@ async function shareKey(pass: string, salt: Uint8Array, iter: number): Promise<C
   const base = await sc.importKey('raw', new TextEncoder().encode(pass.normalize('NFKC')), 'PBKDF2', false, ['deriveKey']);
   return sc.deriveKey({ name: 'PBKDF2', salt: salt as BufferSource, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 }
-/** one folder, encrypted under a passphrase (8 characters or more), as the file's text */
-export async function encryptFolder(folder: Folder, pass: string, today: string): Promise<string> {
+/** fox 3.0 phase 2: any JSON value sealed under a passphrase (8 characters or more), as a file's text: the same envelope as the share
+ *  file (PBKDF2-SHA-256 → AES-256-GCM, random salt and IV), with its own `kind` (the share file, the whole book's backup) */
+export interface Sealed { kind: string; v: 1; kdf: 'PBKDF2-SHA-256'; iter: number; salt: string; alg: 'AES-GCM'; iv: string; ct: string; label?: string; exported: string }
+export async function seal(kind: string, value: unknown, pass: string, today: string, label?: string): Promise<string> {
   if (pass.length < 8) throw new Error('סיסמה של 8 תווים לפחות');
   const sc = subtle();
   if (!sc) throw new Error('הדפדפן אינו תומך בהצפנה (Web Crypto)');
   const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await shareKey(pass, salt, SHARE_ITER);
-  const plain = new TextEncoder().encode(JSON.stringify({ kind: 'fox-clients', v: CLIENTS_V, folders: [normFolder(folder)] }));
+  const plain = new TextEncoder().encode(JSON.stringify(value));
   const ct = new Uint8Array(await sc.encrypt({ name: 'AES-GCM', iv: iv as BufferSource }, key, plain as BufferSource));
-  const out: ShareFile = { kind: 'fox-client-share', v: 1, kdf: 'PBKDF2-SHA-256', iter: SHARE_ITER, salt: b64(salt), alg: 'AES-GCM', iv: b64(iv), ct: b64(ct), label: folder.label.slice(0, 80), exported: today };
+  const out: Sealed = { kind, v: 1, kdf: 'PBKDF2-SHA-256', iter: SHARE_ITER, salt: b64(salt), alg: 'AES-GCM', iv: b64(iv), ct: b64(ct), ...(label ? { label: label.slice(0, 80) } : {}), exported: today };
   return JSON.stringify(out);
 }
-export const isShareFile = (x: unknown): x is ShareFile => !!x && typeof x === 'object' && (x as ShareFile).kind === 'fox-client-share' && (x as ShareFile).v === 1 && typeof (x as ShareFile).ct === 'string' && typeof (x as ShareFile).salt === 'string' && typeof (x as ShareFile).iv === 'string';
-/** the folder inside a share file; throws (in Hebrew) on a wrong passphrase or a damaged file */
-export async function decryptShare(text: string, pass: string): Promise<Folder> {
+export const isSealed = (x: unknown, kind: string): x is Sealed => !!x && typeof x === 'object' && (x as Sealed).kind === kind && (x as Sealed).v === 1 && typeof (x as Sealed).ct === 'string' && typeof (x as Sealed).salt === 'string' && typeof (x as Sealed).iv === 'string';
+/** the value inside a sealed file of this kind; throws (in Hebrew) on a wrong passphrase, a damaged file or another kind of file */
+export async function unseal(text: string, pass: string, kind: string, what = 'קובץ שיתוף תיק'): Promise<unknown> {
   let x: unknown;
-  try { x = JSON.parse(text); } catch { throw new Error('הקובץ אינו קובץ שיתוף תיק'); }
-  if (!isShareFile(x)) throw new Error('הקובץ אינו קובץ שיתוף תיק');
+  try { x = JSON.parse(text); } catch { throw new Error(`הקובץ אינו ${what}`); }
+  if (!isSealed(x, kind)) throw new Error(`הקובץ אינו ${what}`);
   const sc = subtle();
   if (!sc) throw new Error('הדפדפן אינו תומך בהצפנה (Web Crypto)');
   const iter = Number.isInteger(x.iter) && x.iter >= 100_000 && x.iter <= 2_000_000 ? x.iter : SHARE_ITER;
   const key = await shareKey(pass, unb64(x.salt), iter);
   let plain: ArrayBuffer;
   try { plain = await sc.decrypt({ name: 'AES-GCM', iv: unb64(x.iv) as BufferSource }, key, unb64(x.ct) as BufferSource); } catch { throw new Error('הסיסמה שגויה או שהקובץ ניזוק'); }
-  const f = normClients(JSON.parse(new TextDecoder().decode(plain))).folders[0];
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+/** one folder, encrypted under a passphrase (8 characters or more), as the file's text */
+export async function encryptFolder(folder: Folder, pass: string, today: string): Promise<string> {
+  return seal('fox-client-share', { kind: 'fox-clients', v: CLIENTS_V, folders: [normFolder(folder)] }, pass, today, folder.label);
+}
+export const isShareFile = (x: unknown): x is ShareFile => !!x && typeof x === 'object' && (x as ShareFile).kind === 'fox-client-share' && (x as ShareFile).v === 1 && typeof (x as ShareFile).ct === 'string' && typeof (x as ShareFile).salt === 'string' && typeof (x as ShareFile).iv === 'string';
+/** the folder inside a share file; throws (in Hebrew) on a wrong passphrase or a damaged file */
+export async function decryptShare(text: string, pass: string): Promise<Folder> {
+  const f = normClients(await unseal(text, pass, 'fox-client-share')).folders[0];
   if (!f) throw new Error('בקובץ אין תיק תקין');
   return f;
 }

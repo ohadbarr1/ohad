@@ -1,12 +1,18 @@
-// Runs tests/agent.unit.ts: bundles it with esbuild (Vite's own copy) into a temp file and runs it in node.
+// Runs tests/agent.unit.ts, then tests/agentDesk.unit.ts (fox 3.0 phase 2: the call list, the reviews, the encrypted backup, the
+// wizard and the agent's file reader): bundles each with esbuild (Vite's own copy) into a temp file and runs it in node.
 import { build } from 'esbuild';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const dir = mkdtempSync(join(tmpdir(), 'agenttest-')), out = join(dir, 'agent.unit.mjs');
+// Vite's `?url` asset imports (lib/zipRead's WASM file) have no meaning in node: stubbed to '' so zip.js uses its built-in copy
+const urlStub = { name: 'vite-url-stub', setup(b) { b.onResolve({ filter: /\?url$/ }, (a) => ({ path: a.path, namespace: 'url-stub' })); b.onLoad({ filter: /.*/, namespace: 'url-stub' }, () => ({ contents: 'export default ""', loader: 'js' })); } };
+const dir = mkdtempSync(join(tmpdir(), 'agenttest-'));
 try {
-  await build({ entryPoints: [new URL('../tests/agent.unit.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' } });
-  await import(pathToFileURL(out).href);
+  for (const name of ['agent', 'agentDesk']) {
+    const out = join(dir, `${name}.unit.mjs`);
+    await build({ entryPoints: [new URL(`../tests/${name}.unit.ts`, import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' }, plugins: [urlStub] });
+    await import(pathToFileURL(out).href);
+  }
 } finally { rmSync(dir, { recursive: true, force: true }); }
