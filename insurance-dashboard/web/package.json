@@ -45,6 +45,7 @@
     "test:book": "node scripts/book-test.mjs",
     "test:news": "node scripts/news-test.mjs",
     "test:moments": "node scripts/moments-test.mjs",
+    "test:checkup": "node scripts/checkup-test.mjs",
     "test:feebook": "node scripts/feebook-test.mjs",
     "test:ifrsstd": "node scripts/ifrsstd-test.mjs"
   },

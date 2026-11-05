@@ -254,7 +254,7 @@ main .ms-lines button.src:not(.bar) { padding: 4px 0; margin: -4px 0; display: b
 .sv-kpis dt { font-size: var(--t-3); color: var(--muted); font-weight: 600; }
 .sv-kpis dd { margin: 0; font-size: var(--t-4); }
 .sv-kpis dd b { font-size: var(--t-6); font-weight: 800; letter-spacing: -0.01em; }
-.sv-kpis .sv-a::before { content: none; }
+.sv-kpis .sv-a::before { content: none; } .sv-kpis dd.sv-a { font-size: var(--t-3); }
 .sv-one { margin: 0; font-size: var(--t-4); line-height: 1.6; padding-top: 10px; border-top: 1px solid var(--line-soft); }
 .sv-one a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 .sv-brief li { font-size: var(--t-4); line-height: 1.55; }

@@ -85,8 +85,8 @@ ok(/6% עובד, 6.5% מעסיק ו-6% פיצויים \(18.5% בסך הכול\),
 ok(/תקנות הפיקוח על שירותים פיננסיים \(קופות גמל\) \(תשלומים לקופת גמל\), התשע"ד-2014/.test(L) && /7 ימי עסקים/.test(L) && /15 יום מתום החודש/.test(L), 'letter cites the regulations and the deadline');
 ok(/מינהל הסדרה ואכיפת חוקי עבודה במשרד העבודה \(מוקד 1-800-354-354\)/.test(L), 'letter names the complaints body');
 ok(!/מומלץ|כדאי לעבור/.test(L), 'letter recommends nothing');
-const L3 = letterOf(a1, { fund: 'הראל פנסיה', prod: 'פנסיה מקיפה', third: true });
-ok(/החוסך\/ת/.test(L3) && !/\bשלי\b/.test(L3) && !/אפנה/.test(L3), 'third-person letter names "החוסך/ת" and no one else');
+const L3 = letterOf(a1, { fund: 'הראל פנסיה', prod: 'פנסיה מקיפה', id: 1234, third: true });
+ok(!/\//.test(L3.replace(/\d+\/\d+/g, '')) && !/חוסך/.test(L3) && /אפנה/.test(L3) && L3 === L, 'S1: a household profile\'s letter is the same first-person letter, gender-neutral (no "החוסך/ת", no slashes)');
 const LH = letterOf(auditDeposits([{ ym: '2025-01', total: 1000 }], 20000, HISH_RATES, 'hishtalmut', { months: ['2025-01'] }), { fund: 'קרן ב', prod: 'השתלמות' });
 ok(/2.5% עובד ו-7.5% מעסיק/.test(LH) && /תקרת השכר של 15,712 ש"ח/.test(LH) && /כפי שסוכם/.test(LH), 'השתלמות letter: agreed rates and the cap, no statutory claim');
 

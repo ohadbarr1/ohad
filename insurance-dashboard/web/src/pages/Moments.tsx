@@ -94,6 +94,8 @@ export function MomentsIndex({ missing }: { missing?: string }) {
       </div></div>
       {missing ? <p className="sv-note" role="status">אין רגע בשם "{missing}". הנה כל הרגעים:</p> : null}
       <ul className="mo-list">
+        <li><Link to="/my/checkup" className="panel sv-stmt mo-item"><span className="sv-stmt-t"><b>הדוח השנתי הגיע</b><span>הבדיקה השנתית: דמי הניהול מול מחיר ברירת המחדל, ההפקדות מול החוק ומסלול הגיל, עם מכתב מוכן.</span></span><span className="sv-stmt-go" aria-hidden="true">←</span></Link></li>
+        <li><Link to="/my/statement" className="panel sv-stmt mo-item"><span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי</b><span>שדה אחר שדה, עם סעיפי החוזר.</span></span><span className="sv-stmt-go" aria-hidden="true">←</span></Link></li>
         {ORDER.map((id) => <li key={id}><Link to={momentPath(id)} className="panel sv-stmt mo-item"><span className="sv-stmt-t"><b>{MOMENTS[id].title}</b><span>{MOMENTS[id].meta}</span></span><span className="sv-stmt-go" aria-hidden="true">←</span></Link></li>)}
       </ul>
     </div>

@@ -5,7 +5,7 @@ import { Icon } from '../components/Icon';
 import { Sourced } from '../components/Source';
 import { useFundCats, useFunds } from '../lib/useData';
 import { useOptional } from '../lib/fundsLoad';
-import { SALARY_KEY, useMine, useMyAge, useMyRetire, useMySalary, useMySex, useProfiles, useRetire, type MyProduct } from '../lib/mine';
+import { SALARY_KEY, useMine, useMy, useMyAge, useMyRetire, useMySalary, useMySex, useProfiles, useRetire, type MyProduct } from '../lib/mine';
 import { writeStored } from '../lib/local';
 import { PROFILE_ADD, PROFILE_LABEL, addProfile, removeProfile, setActive, type ProfileId } from '../lib/household';  // W7
 import { useSaverDoor } from '../lib/door';
@@ -27,9 +27,11 @@ import { GlossBar } from '../components/saver/Gloss';
 import { MaslakaImport } from '../components/saver/MaslakaImport';
 import { SinceVisit } from '../components/saver/SinceVisit';
 import { MomentChips } from '../components/saver/MomentChips';  // W9: life moments
+import { dueNegos, isoDay, normNegos } from '../lib/checkup';  // S1+S2: the check-up's 30-day reminder
 import '../styles/moments.css';
 import '../styles/saver.css';
 import '../styles/my-watch.css';
+import '../styles/checkup.css';
 
 /* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26): the reader's age once, a strip that adds up what they
    pay and what the pension funds may pay, the one thing worth asking for, then a folded card per product. The list lives in this
@@ -100,7 +102,8 @@ export function My() {
       <AgeRow />
       {msg && <p className="sv-done" role="status">{msg}</p>}
       {rows.length > 0 && <Strip rows={rows} retire={R.v} coefF={coefF} />}
-      <MomentChips />
+      <CheckupLink has={shown.length > 0} />
+      <MomentChips lead={false} />
 
       {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
       <Watching data={data} />
@@ -119,11 +122,6 @@ export function My() {
 
       <MaslakaImport funds={data.funds as FundX[]} mine={list} today={today()} onSave={(next, m) => { setMine(next); setMsg(m); requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' })); }} />
 
-      <Link to="/my/statement" className="panel sv-stmt">
-        <span className="icotile"><Icon name="statement" /></span>
-        <span className="sv-stmt-t"><b>איך קוראים את הדוח השנתי?</b><span>שדה אחר שדה.</span></span>
-        <span className="sv-stmt-go" aria-hidden="true">←</span>
-      </Link>
 
       {shown.length === 0 && ex && <section className="sv-exwrap" aria-label="דוגמה">
         <p className="sv-exlead">כך נראה כרטיס של מוצר. <b>זו דוגמה, לא המוצר שלך:</b> קרן פנסיה אמיתית מהנתונים, עם דמי הניהול הממוצעים בה.</p>
@@ -177,6 +175,21 @@ function Watching({ data }: { data: FundsFile }) {
       })}</ul>
       <p className="sv-muted mw-note">נתוני {ymL(asof)}, {b === 'net' ? 'נטו (אומדן)' : 'ברוטו'} · "חודש חדש": מאז הביקור הקודם ברשימה · נשמר רק בדפדפן הזה</p>
     </details>
+  );
+}
+
+/** S1 (fox 3.0): the way into the annual check-up (/my/checkup), and its 30-day reminder when one is due (S2). It takes the place of
+ *  the "איך קוראים את הדוח השנתי?" card (the plan merges the statement guide into "רגעים" as "הדוח השנתי הגיע"; the check-up links
+ *  to it), so the page stays inside its 400-word budget */
+function CheckupLink({ has }: { has: boolean }) {
+  const [raw] = useMy<unknown>('my:nego', []);
+  const due = dueNegos(normNegos(raw), isoDay(new Date())).length > 0;
+  return (
+    <Link to="/my/checkup" className={`panel sv-stmt sv-ck${due ? ' due' : ''}`}>
+      <span className="icotile"><Icon name={due ? 'calendar' : 'check'} /></span>
+      <span className="sv-stmt-t"><b>{due ? 'עברו 30 יום: מה דמי הניהול עכשיו?' : 'הבדיקה השנתית'}</b><span>{due ? 'הזינו ונחשב כמה חסכתם.' : has ? 'דמי ניהול, הפקדות ומסלול גיל.' : 'מקובץ המסלקה, בשלוש שורות.'}</span></span>
+      <span className="sv-stmt-go" aria-hidden="true">←</span>
+    </Link>
   );
 }
 
@@ -286,10 +299,10 @@ function Strip({ rows, retire, coefF }: { rows: SumRow[]; retire: number; coefF:
   return (
     <section className="panel sv-sum" aria-label="התמונה בקצרה">
       <dl className="sv-kpis">
-        <div><dt>דמי ניהול בשנה</dt><dd><Sourced src={feesProv}><b className="num">{ilsRound(s.fees)}</b></Sourced></dd><span className="sv-a">{rows.length > 1 ? `כל ${rows.length} המוצרים` : 'המוצר'}{s.feesAvg ? ', חלקם לפי הממוצע במסלול' : ', לפי דמי הניהול שלך'}{s.feesEx ? ', עם נתונים לדוגמה' : ''}</span></div>
+        <div><dt>דמי ניהול בשנה</dt><dd><Sourced src={feesProv}><b className="num">{ilsRound(s.fees)}</b></Sourced></dd><dd className="sv-a">{rows.length > 1 ? `כל ${rows.length} המוצרים` : 'המוצר'}{s.feesAvg ? ', חלקם לפי הממוצע במסלול' : ', לפי דמי הניהול שלך'}{s.feesEx ? ', עם נתונים לדוגמה' : ''}</dd></div>
         {s.pension != null && (s.penBal > 0
-          ? <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><span className="sv-a">{at}, בשקלי היום, תשואה 4%; {coefWhy}</span></div>
-          : <div><dt>קצבה מהפנסיה, אומדן</dt><dd><a href={firstPen ? `#${firstPen.k}` : '#'} className="sv-u">הזינו יתרה</a></dd><span className="sv-a">בלי היתרה שלך מהדוח אין מה לאמוד; {coefWhy}</span></div>)}
+          ? <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><dd className="sv-a">{at}, בשקלי היום, תשואה 4%; {coefWhy}</dd></div>
+          : <div><dt>קצבה מהפנסיה, אומדן</dt><dd><a href={firstPen ? `#${firstPen.k}` : '#'} className="sv-u">הזינו יתרה</a></dd><dd className="sv-a">בלי היתרה שלך מהדוח אין מה לאמוד; {coefWhy}</dd></div>)}
       </dl>
       {rep && coefF && <ReplaceLines rep={rep} coefF={coefF} salary={salary!} pension={s.pension!} />}
       <p className="sv-one"><b>דבר אחד לעשות:</b>{' '}

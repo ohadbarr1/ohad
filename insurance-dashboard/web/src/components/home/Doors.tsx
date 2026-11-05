@@ -114,7 +114,7 @@ export function SaverHome() {
           <p>מורידים את הדוח מהמסלקה הפנסיונית ופותחים אותו כאן: כל המוצרים, דמי הניהול שלכם מול השוק וההפקדות, בשקלים ובמילים. הקובץ נקרא בדפדפן ולא יוצא מהמכשיר.</p>
         </div>
         <div className="dcheck-go">
-          <Link to="/my#mk-h" className="door-go primary">ייבוא מהמסלקה<Ico name="arrow" /></Link>
+          <Link to="/my/checkup" className="door-go primary">ייבוא מהמסלקה<Ico name="arrow" /></Link>
           <Link to={has ? '/my' : '/my#sv-add-h'} className="dcheck-alt">{has ? 'לבדיקה של המוצרים שלי' : 'או לבחור מוצר ידנית'}</Link>
         </div>
       </header>

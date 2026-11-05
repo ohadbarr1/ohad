@@ -41,3 +41,4 @@
 .mo-save input[type="checkbox"] { width: 18px; height: 18px; flex: none; margin: 0; }
 .mo-save span { flex: 1 1 auto; min-width: 0; }
 .mo-form .mo-save { align-self: end; }
+.mo-chip-lead { border-color: var(--accent-line); font-weight: 700; color: var(--accent-text); }

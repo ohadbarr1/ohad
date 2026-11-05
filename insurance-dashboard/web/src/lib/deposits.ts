@@ -142,9 +142,11 @@ const ils = (v: number) => `${Math.round(v).toLocaleString('en-US')} ש"ח`;
 const pc = (v: number) => `${v % 1 === 0 ? v : v.toFixed(2).replace(/0+$/, '')}%`;
 export interface LetterIn { fund: string; prod: string; id?: number | null; third?: boolean }
 /** A plain letter to the employer: the months and amounts, the duty the order and the regulations set, the request, and where a
- *  complaint goes. Facts and figures only; the saver checks it against the statement before sending. */
+ *  complaint goes. Facts and figures only; the saver checks it against the statement before sending.
+ *  S1 (fox 3.0): always in the first person, which Hebrew does not gender ("אבקש", "אפנה"), so no "החוסך/ת" and no slashes: the
+ *  letter is sent by the person whose savings these are, also for a household profile (`third` is kept for callers, and ignored). */
 export function letterOf(a: Audit, s: LetterIn): string {
-  const me = s.third ? 'החוסך/ת' : 'אני', my = s.third ? 'של החוסך/ת' : 'שלי';
+  const my = 'שלי';
   const out: string[] = ['שלום,'];
   out.push(`לפי הדוח השנתי של ${s.fund}${s.id ? ` (מספר קופה ${s.id})` : ''}, ${s.prod === 'השתלמות' ? 'קרן ההשתלמות' : 'קרן הפנסיה'} ${my}, בדקתי את ההפקדות של ${a.months.length} החודשים ${ymHe(a.months[0].ym)}–${ymHe(a.months[a.months.length - 1].ym)}.`);
   if (a.missing.length) out.push(`חודשים שבהם לא נמצאה הפקדה: ${a.missing.map((m) => ymHe(m.ym)).join(', ')}.`);
@@ -159,7 +161,7 @@ export function letterOf(a: Audit, s: LetterIn): string {
     out.push(`הסכום הצפוי מחושב לפי שכר של ${ils(a.salary)} לחודש: ${pc(r.employee)} עובד ו-${pc(r.employer)} מעסיק (${pc(rateTotal(r))}), כפי שסוכם${a.months.some((m) => m.exp.capped) ? `, עד תקרת השכר של ${ils(HISH_CAP_MONTHLY)} לחודש` : ''}.`);
   }
   out.push(`לפי תקנות הפיקוח על שירותים פיננסיים (קופות גמל) (תשלומים לקופת גמל), התשע"ד-2014, על המעסיק להעביר את ההפקדות עד 7 ימי עסקים ממועד תשלום המשכורת או עד 15 יום מתום החודש, המוקדם מביניהם; על איחור מגיעה לקופה ריבית פיגורים מה-16 בחודש העוקב.`);
-  if (a.missing.length || a.short.length || a.late.length) out.push(`אבקש להעביר את ההפקדות החסרות בצירוף הריבית, ולשלוח ${s.third ? 'לחוסך/ת' : 'לי'} אישור על ההעברה. אם ההפקדות לא יושלמו, ${me} ${s.third ? 'יפנה/תפנה' : 'אפנה'} ל${COMPLAIN_BODY} (מוקד ${COMPLAIN_PHONE}).`);
+  if (a.missing.length || a.short.length || a.late.length) out.push(`אבקש להעביר את ההפקדות החסרות בצירוף הריבית, ולשלוח לי אישור על ההעברה. אם ההפקדות לא יושלמו, אפנה ל${COMPLAIN_BODY} (מוקד ${COMPLAIN_PHONE}).`);
   out.push('תודה,');
   return out.join('\n');
 }

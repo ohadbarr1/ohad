@@ -1,0 +1,98 @@
+/* S1 + S2 saver · /my/checkup, the annual check-up: three status cards (red / amber / green: a word and a mark, never color alone), the
+   letter and its channels, the 30-day reminder, the saving and the share card. Phone first (390px); the site's tokens only. Links inside
+   text are underlined (.sv-u); secondary text is tinted (--muted), never dimmed with opacity. */
+
+.ck-page { --ck-red: var(--down); --ck-amber: var(--warn); --ck-green: var(--up); }
+.ck-page .eyebrow a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.ck-page .ck-src a, .ck-page .ck-sum a, .ck-page .sv-note a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+
+.ck-who { align-items: center; }
+.ck-ret { font-size: var(--t-3); color: var(--fg); display: inline-flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; }
+
+.ck-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: none; }
+.ck-line { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 16px; border-inline-start: 5px solid var(--line); overflow-wrap: anywhere; }
+.ck-line.ck-red { border-inline-start-color: var(--ck-red); }
+.ck-line.ck-amber { border-inline-start-color: var(--ck-amber); }
+.ck-line.ck-green { border-inline-start-color: var(--ck-green); }
+.ck-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+.ck-head h2 { margin: 0; font-size: var(--t-5); letter-spacing: -0.01em; line-height: 1.25; }
+.ck-n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ck-ico { box-shadow: 0 1px 0 var(--hi) inset, 0 6px 14px -8px color-mix(in oklch, var(--accent) 60%, transparent); background: linear-gradient(160deg, var(--accent-soft), color-mix(in oklch, var(--accent-soft) 40%, var(--panel2))); }
+.ck-red .ck-ico { color: color-mix(in oklch, var(--ck-red) 80%, var(--fg)); background: linear-gradient(160deg, color-mix(in oklch, var(--ck-red) 16%, transparent), var(--panel2)); }
+.ck-amber .ck-ico { color: color-mix(in oklch, var(--ck-amber) 85%, var(--fg)); background: linear-gradient(160deg, color-mix(in oklch, var(--ck-amber) 18%, transparent), var(--panel2)); }
+.ck-green .ck-ico { color: color-mix(in oklch, var(--ck-green) 85%, var(--fg)); background: linear-gradient(160deg, color-mix(in oklch, var(--ck-green) 16%, transparent), var(--panel2)); }
+.ck-st { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); font-size: var(--t-3); font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
+.ck-st > span[aria-hidden] { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-size: 12px; font-weight: 800; color: var(--panel); }
+.ck-st-red { color: color-mix(in oklch, var(--ck-red) 82%, var(--fg)); background: color-mix(in oklch, var(--ck-red) 10%, var(--panel)); border-color: color-mix(in oklch, var(--ck-red) 40%, transparent); }
+.ck-st-red > span[aria-hidden] { background: var(--ck-red); }
+.ck-st-amber { color: color-mix(in oklch, var(--ck-amber) 88%, var(--fg)); background: color-mix(in oklch, var(--ck-amber) 10%, var(--panel)); border-color: color-mix(in oklch, var(--ck-amber) 40%, transparent); }
+.ck-st-amber > span[aria-hidden] { background: var(--ck-amber); }
+.ck-st-green { color: color-mix(in oklch, var(--ck-green) 82%, var(--fg)); background: color-mix(in oklch, var(--ck-green) 10%, var(--panel)); border-color: color-mix(in oklch, var(--ck-green) 40%, transparent); }
+.ck-st-green > span[aria-hidden] { background: var(--ck-green); }
+.ck-st-none { color: var(--muted); background: var(--panel2); }
+
+.ck-sum { margin: 0; font-size: var(--t-4); line-height: 1.6; }
+.ck-sum b.ck-ils { font-size: var(--t-5); white-space: nowrap; }
+.ck-ils { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ck-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ck-rows li { display: flex; gap: 10px; align-items: flex-start; font-size: var(--t-3); line-height: 1.55; padding: 8px 10px; border-radius: var(--r-2); background: var(--panel2); }
+.ck-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 0.45em; background: var(--faint); }
+.ck-dot-red { background: var(--ck-red); } .ck-dot-amber { background: var(--ck-amber); } .ck-dot-green { background: var(--ck-green); }
+.ck-r { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ck-kv { color: var(--fg); }
+.ck-ctx { color: var(--muted); }
+.ck-src { margin: 0; font-size: var(--t-3); line-height: 1.6; color: var(--muted); }
+.ck-src b { color: var(--fg); }
+
+.ck-act { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.ck-act h3 { margin: 0; font-size: var(--t-4); }
+.ck-act > .btn { align-self: flex-start; }
+div.ck-act:has(> a.btn) { flex-direction: row; flex-wrap: wrap; }
+.ck-send { display: flex; flex-wrap: wrap; gap: 8px; }
+.ck-send .btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; min-height: 40px; }
+.ck-send .btn svg.ico { width: 16px; height: 16px; }
+.ck-nego .sv-chips { margin: 0; }
+
+.ck-digit { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 14px; font-size: var(--t-3); padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--r-2); }
+.ck-digit label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-weight: 600; }
+.ck-digit input { width: 64px; font-size: 16px; text-align: center; }
+.ck-digit > span { flex: 1 1 200px; line-height: 1.55; }
+
+.ck-new { display: flex; flex-direction: column; gap: 10px; }
+.ck-new .mo-form { align-items: end; }
+.ck-new .mo-form .btn { align-self: end; min-height: 40px; }
+.ck-win { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: var(--r-3); background: linear-gradient(135deg, color-mix(in oklch, var(--ck-green) 12%, var(--panel)), var(--panel)); border: 1px solid color-mix(in oklch, var(--ck-green) 35%, transparent); }
+.ck-win-t { margin: 0; font-size: var(--t-6); font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; }
+.ck-win-t b { color: color-mix(in oklch, var(--ck-green) 75%, var(--fg)); }
+.ck-saved { gap: 10px; }
+.ck-share { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+
+.ck-due { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--accent-line); background: linear-gradient(160deg, var(--accent-soft), var(--panel)); }
+.ck-due h2 { margin: 0; display: flex; align-items: center; gap: 10px; font-size: var(--t-5); }
+.ck-due p { margin: 0; font-size: var(--t-4); line-height: 1.6; }
+.ck-empty { display: flex; flex-direction: column; gap: 8px; }
+.ck-empty h2 { margin: 0; font-size: var(--t-5); }
+.ck-empty p { margin: 0; font-size: var(--t-4); line-height: 1.6; }
+
+.ck-how summary { cursor: pointer; list-style: none; }
+.ck-how summary::-webkit-details-marker { display: none; }
+.ck-how summary h2 { display: inline; margin: 0; font-size: var(--t-4); }
+.ck-how summary::before { content: '▸'; display: inline-block; margin-inline-end: 8px; color: var(--muted); transform: scaleX(-1); }
+.ck-how[open] summary::before { transform: rotate(90deg); }
+.ck-how p { margin: 10px 0 0; font-size: var(--t-3); line-height: 1.65; }
+
+@media (max-width: 560px) {
+  .ck-head { grid-template-columns: auto 1fr; }
+  .ck-head .ck-st { grid-column: 2; justify-self: start; }
+  .ck-head .icotile.lg { width: 44px; height: 44px; border-radius: 12px; grid-row: span 2; }
+  .ck-line { padding: 14px 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ck-line { animation: ck-in 0.32s ease-out both; }
+  .ck-lines > li:nth-child(2) { animation-delay: 0.06s; } .ck-lines > li:nth-child(3) { animation-delay: 0.12s; }
+  @keyframes ck-in { from { transform: translateY(6px); } to { transform: none; } }
+}
+
+/* the link on /my (pages/My CheckupLink) */
+.sv-ck .icotile { box-shadow: 0 1px 0 var(--hi) inset, 0 6px 14px -8px color-mix(in oklch, var(--accent) 60%, transparent); }
+.sv-ck.due { border-color: var(--accent-line); background: linear-gradient(160deg, var(--accent-soft), var(--panel)); }
