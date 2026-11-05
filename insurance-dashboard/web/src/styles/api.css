@@ -20,3 +20,29 @@ table.api-t.fam td:first-child { min-width: 210px; }
 .api-filter { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: end; margin-bottom: 10px; }
 .api-filter .field input { min-width: 220px; }
 .api .src[dir="ltr"] { text-align: left; }
+
+/* fox inside Excel (lane P4): the long tables, the Power Query kit and the change log */
+.api .xl .hd h2 { display: inline-flex; gap: 8px; align-items: center; }
+.xl-kit { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin-bottom: 14px; }
+.xl-kit .btn { display: inline-flex; gap: 6px; align-items: center; text-decoration: none; }
+.xl-kit .btn svg { width: 16px; height: 16px; }
+.xl-steps { margin: 0; padding-inline-start: 20px; display: grid; gap: 2px; font-size: var(--t-2); }
+table.xl-t td:first-child { min-width: 150px; }
+table.xl-t td:first-child .mono { font-size: var(--t-1); }
+.xl-links a, .xl-log a { text-decoration: underline; text-underline-offset: 2px; }
+.xl-links .num { font-size: var(--t-1); margin-inline-start: 4px; }
+.api .xl .chip { cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+.api .xl .chip svg { width: 13px; height: 13px; }
+tr.xl-mrow > td { white-space: normal; background: var(--panel2); }
+.xl-m { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; width: 0; min-width: 100%; }
+.xl-m pre { margin: 0; padding: 8px 10px; max-height: 280px; width: 100%; overflow: auto; font-family: var(--font-mono); font-size: var(--t-1); line-height: 1.45; background: var(--panel2); border: 1px solid var(--line-soft); border-radius: var(--r-2); white-space: pre; text-align: left; }
+.xl-h { font-size: var(--t-3); margin: 18px 0 8px; }
+.xl-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.xl-log > li { border-bottom: 1px solid var(--line-soft); padding-bottom: 6px; }
+.xl-b { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.xl-b .chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+@media (max-width: 640px) {
+  .xl-kit { flex-direction: column; align-items: stretch; }
+  .xl-kit .btn { justify-content: center; }
+  table.xl-t th:nth-child(2), table.xl-t td:nth-child(2) { display: none; }
+}

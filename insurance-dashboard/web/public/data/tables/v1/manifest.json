@@ -1,0 +1,3698 @@
+{
+ "v": 1,
+ "version": "v1",
+ "site": "https://fox-research-il.web.app",
+ "base": "https://fox-research-il.web.app/data/tables/v1/",
+ "built": "2026-11-05",
+ "promise": "v1: a column never changes meaning, a metric id never changes meaning or unit; new columns are appended at the end, new tables and metrics are added; a breaking change opens v2 beside v1.",
+ "columns": [
+  {
+   "id": "entity_id",
+   "type": "text",
+   "he": "מזהה ישות",
+   "en": "fox id of the company, manager group or track"
+  },
+  {
+   "id": "entity_name",
+   "type": "text",
+   "he": "שם הישות",
+   "en": "Hebrew name"
+  },
+  {
+   "id": "dim_id",
+   "type": "text",
+   "he": "מזהה חתך",
+   "en": "the slice inside the entity: segment|basis, line of business, product, ... ('group' = the whole entity)"
+  },
+  {
+   "id": "dim_label",
+   "type": "text",
+   "he": "חתך",
+   "en": "the slice in Hebrew"
+  },
+  {
+   "id": "metric_id",
+   "type": "text",
+   "he": "מזהה מדד",
+   "en": "stable metric id (the same id across companies)"
+  },
+  {
+   "id": "metric_label",
+   "type": "text",
+   "he": "מדד",
+   "en": "Hebrew label"
+  },
+  {
+   "id": "period",
+   "type": "text",
+   "he": "תקופה (מכונה)",
+   "en": "2026Q2 · 2025FY · 2026H1 · LTM2026Q2 · 2026-09 (month)"
+  },
+  {
+   "id": "period_label",
+   "type": "text",
+   "he": "תקופה",
+   "en": "Q2'26 · FY'25 · H1'26 · LTM Q2'26 · 09/26"
+  },
+  {
+   "id": "period_end",
+   "type": "date",
+   "he": "סוף התקופה",
+   "en": "YYYY-MM-DD"
+  },
+  {
+   "id": "value",
+   "type": "number",
+   "he": "ערך",
+   "en": "the figure, in `unit`"
+  },
+  {
+   "id": "unit",
+   "type": "text",
+   "he": "יחידה",
+   "en": "₪m (NIS millions) · % · ₪ · count"
+  },
+  {
+   "id": "kind",
+   "type": "text",
+   "he": "סוג",
+   "en": "printed · derived · xbrl · regulator · calc · estimate"
+  },
+  {
+   "id": "standard",
+   "type": "text",
+   "he": "תקן",
+   "en": "IFRS 17 / IFRS 4 where the line depends on it"
+  },
+  {
+   "id": "source_id",
+   "type": "text",
+   "he": "מזהה מקור",
+   "en": "maya:<report id> or data.gov.il:<dataset>"
+  },
+  {
+   "id": "source_page",
+   "type": "integer",
+   "he": "עמוד",
+   "en": "page in the source PDF"
+  },
+  {
+   "id": "source_url",
+   "type": "text",
+   "he": "קישור למקור",
+   "en": "the PDF at the page, the MAYA report or the regulator's dataset"
+  },
+  {
+   "id": "source_name",
+   "type": "text",
+   "he": "שם המקור",
+   "en": "the document in Hebrew"
+  },
+  {
+   "id": "as_of",
+   "type": "date",
+   "he": "נכון ל",
+   "en": "publication date of the source (MAYA) or the date fox read the regulator's file"
+  },
+  {
+   "id": "note",
+   "type": "text",
+   "he": "הערה",
+   "en": "derivation, formula, second page, verification status"
+  },
+  {
+   "id": "version",
+   "type": "text",
+   "he": "גרסת סכמה",
+   "en": "v1"
+  }
+ ],
+ "tables": [
+  {
+   "id": "kpi",
+   "he": "נתוני מפתח לפי חברה ותקופה",
+   "en": "Headline KPIs by company and period",
+   "grain": "company × metric × period (quarter, FY)",
+   "grain_he": "חברה × מדד × תקופה (רבעון, שנה)",
+   "rows": 18126,
+   "entities": 15,
+   "metrics": [
+    {
+     "id": "adj_comprehensive_income_before_special_provision",
+     "he": "רווח כולל לפני ההפרשה המיוחדת (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_core_profit",
+     "he": "רווח ליבה (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_core_profit_after_tax",
+     "he": "רווחי ליבה לאחר מס (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_core_profit_before_tax",
+     "he": "רווח מעסקי ליבה לפני מס (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_core_profit_pre_tax",
+     "he": "רווח ליבה לפני מס (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_core_roe",
+     "he": "תשואה להון מפעילות ליבה (הגדרת החברה)",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_ebitda",
+     "he": "EBITDA מותאם (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_excess_financial_margin",
+     "he": "מרווח פיננסי עודף (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_profit_after_tax",
+     "he": "רווח מותאם לאחר מס (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_profit_before_tax",
+     "he": "רווח מותאם לפני מס (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_profit_before_tax_continuing_products",
+     "he": "רווח מותאם לפני מס, מוצרים ממשיכים (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_profit_before_tax_run_off",
+     "he": "רווח מותאם לפני מס, Run-off (הגדרת החברה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_roe",
+     "he": "תשואה להון מותאמת (הגדרת החברה)",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adj_roe_core",
+     "he": "תשואה להון מפעילות ליבה (הגדרת החברה)",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adjusted_profit_after_tax",
+     "he": "רווח מותאם לאחר מס",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "adjusted_profit_before_tax",
+     "he": "רווח מותאם לפני מס",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assets",
+     "he": "סך הנכסים",
+     "unit": "₪m",
+     "kinds": [
+      "xbrl"
+     ]
+    },
+    {
+     "id": "assets_for_yield_dependent_contracts",
+     "he": "assets for yield dependent contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_change_effect:income (loss) from investments and finance, net",
+     "he": "השפעת שינוי הנחות · income (loss) from investments and finance, net",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:גידול בריבית ההיוון",
+     "he": "עדכון הנחות · גידול בריבית ההיוון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:גידול בשיעור התחלואה",
+     "he": "עדכון הנחות · גידול בשיעור התחלואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:סה\"כ",
+     "he": "עדכון הנחות · סה\"כ",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:סך הכל",
+     "he": "עדכון הנחות · סך הכל",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:עדכון הנחת ביטולים",
+     "he": "עדכון הנחות · עדכון הנחת ביטולים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:עדכון מודל ביטולים ופדיונות",
+     "he": "עדכון הנחות · עדכון מודל ביטולים ופדיונות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:עדכון מודל הוצאות",
+     "he": "עדכון הנחות · עדכון מודל הוצאות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:עדכון מחקר התחלואה",
+     "he": "עדכון הנחות · עדכון מחקר התחלואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:עדכון מחקר תמותה",
+     "he": "עדכון הנחות · עדכון מחקר תמותה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:קיטון בריבית ההיוון",
+     "he": "עדכון הנחות · קיטון בריבית ההיוון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:שינוי בעקום ריבית ההיוון",
+     "he": "עדכון הנחות · שינוי בעקום ריבית ההיוון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:שינוי בשיעור התמותה",
+     "he": "עדכון הנחות · שינוי בשיעור התמותה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "assumption_update:שינוי בשיעור ריבית היוון והנחת תשואה חזויה (כולל פרמיית אי נזילות)",
+     "he": "עדכון הנחות · שינוי בשיעור ריבית היוון והנחת תשואה חזויה (כולל פרמיית אי נזילות)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_credit",
+     "he": "נכסים מנוהלים: אשראי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_customer_portfolios",
+     "he": "נכסים מנוהלים: תיקי לקוחות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_financial_services",
+     "he": "נכסים מנוהלים: שירותים פיננסיים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_financial_services_nis_bn",
+     "he": "aum financial services nis bn",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_gemel",
+     "he": "נכסים מנוהלים: גמל",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_gemel_nis_bn",
+     "he": "aum gemel nis bn",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_hmo_ltc",
+     "he": "נכסים מנוהלים: קרנות סיעוד של קופות החולים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_insurance_and_investment_contracts",
+     "he": "נכסים מנוהלים: ביטוח ופוליסות חיסכון (חוזי השקעה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_insurance_contracts",
+     "he": "aum insurance contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_insured_and_members",
+     "he": "aum insured and members",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_investment_contracts",
+     "he": "נכסים מנוהלים: פוליסות חיסכון (חוזי השקעה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_managed_for_insureds_and_members",
+     "he": "נכסים מנוהלים עבור מבוטחים וחברים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_mutual_funds",
+     "he": "נכסים מנוהלים: קרנות נאמנות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_nostro",
+     "he": "נכסי נוסטרו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_pension",
+     "he": "נכסים מנוהלים: פנסיה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_pension_gemel",
+     "he": "נכסים מנוהלים: פנסיה וגמל",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_pension_gemel_total",
+     "he": "aum pension gemel total",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_pension_nis_bn",
+     "he": "aum pension nis bn",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_total",
+     "he": "נכסים מנוהלים, סך הכול",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_total_members_funds",
+     "he": "נכסים מנוהלים: כספי חברים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_total_nostro",
+     "he": "נכסים מנוהלים: נוסטרו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_actions_redemptions",
+     "he": "פעולות הון: פדיונות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_actions_total",
+     "he": "פעולות הון, סך הכול",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_instruments_excess_over_quantitative_limits",
+     "he": "מכשירי הון מעל המגבלה הכמותית",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_instruments_issued_redeemed",
+     "he": "מכשירי הון שהונפקו ונפדו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_issuance_after_calculation_date",
+     "he": "הנפקת הון לאחר תאריך החישוב",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_raise_after_period",
+     "he": "capital raise after period",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_raise_after_period_with_transitional",
+     "he": "capital raise after period with transitional",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_raise_after_report_date",
+     "he": "capital raise after report date",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_raise_effect",
+     "he": "השפעת גיוס הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_raising_after_calculation_date",
+     "he": "גיוס הון לאחר תאריך החישוב",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_shortfall_vs_target",
+     "he": "capital shortfall vs target",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "capital_surplus_over_target",
+     "he": "capital surplus over target",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "cet1_ratio",
+     "he": "יחס CET1",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "cfo",
+     "he": "תזרים מפעילות שוטפת",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "xbrl"
+     ]
+    },
+    {
+     "id": "combined_ratio",
+     "he": "יחס משולב",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "comprehensive_income_attributable",
+     "he": "רווח כולל לבעלי המניות",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "comprehensive_income_before_tax",
+     "he": "רווח כולל לפני מס",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "comprehensive_income_before_tax_after_allocation",
+     "he": "רווח כולל לפני מס, לאחר הקצאה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "comprehensive_income_total",
+     "he": "רווח כולל",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "contributions",
+     "he": "הפקדות",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "contributions_gemel",
+     "he": "הפקדות: גמל",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "contributions_pension",
+     "he": "הפקדות: פנסיה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "contributions_towards_benefits",
+     "he": "הפקדות לצורך הטבות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "core_income",
+     "he": "רווח ליבה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "core_profit",
+     "he": "רווח ליבה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "current_premiums_incl_investment_contract_receipts",
+     "he": "current premiums incl investment contract receipts",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "dividend_declared",
+     "he": "דיבידנד שהוכרז",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "dividend_declared_after_period",
+     "he": "דיבידנד שהוכרז לאחר תאריך המאזן",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "dividend_declared_in_kind",
+     "he": "dividend declared in kind",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "dividend_paid",
+     "he": "דיבידנד ששולם",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "eps",
+     "he": "רווח בסיסי למניה",
+     "unit": "₪",
+     "kinds": [
+      "printed",
+      "xbrl"
+     ]
+    },
+    {
+     "id": "equity",
+     "he": "הון לבעלי המניות",
+     "unit": "₪m",
+     "kinds": [
+      "xbrl"
+     ]
+    },
+    {
+     "id": "equity_all",
+     "he": "סך ההון",
+     "unit": "₪m",
+     "kinds": [
+      "xbrl"
+     ]
+    },
+    {
+     "id": "equity_attributable",
+     "he": "הון לבעלי המניות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "equity_total",
+     "he": "סך הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "excess_capital_over_target",
+     "he": "עודף הון מעל היעד",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "excess_financial_spread",
+     "he": "מרווח פיננסי עודף",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "fee_rate_from_assets",
+     "he": "fee rate from assets",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "fee_rate_from_deposits",
+     "he": "fee rate from deposits",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "financial_margin",
+     "he": "financial margin",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "financial_margin_and_management_fees",
+     "he": "financial margin and management fees",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "financial_margin_incl_management_fees",
+     "he": "financial margin incl management fees",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "gross_premiums_earned",
+     "he": "gross premiums earned",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "gross_premiums_incl_investment_contract_receipts",
+     "he": "gross premiums incl investment contract receipts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "gross_written_premiums",
+     "he": "פרמיות ברוטו",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "gross_written_premiums_turnover",
+     "he": "gross written premiums turnover",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "income_before_tax",
+     "he": "רווח לפני מס",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "income_tax",
+     "he": "מס הכנסה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "income_tax_benefit",
+     "he": "הטבת מס",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "income_tax_on_comprehensive_income",
+     "he": "מס על הכנסה כוללת",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_revenue",
+     "he": "הכנסות משירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_service_result",
+     "he": "תוצאות שירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contract_premiums",
+     "he": "investment contract premiums",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contract_proceeds",
+     "he": "תקבולים בגין חוזי השקעה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contract_receipts",
+     "he": "תקבולים בגין חוזי השקעה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contract_receipts_credited_to_reserves",
+     "he": "investment contract receipts credited to reserves",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contracts_liability",
+     "he": "התחייבות בגין פוליסות חיסכון (חוזי השקעה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contracts_profit",
+     "he": "רווח מפוליסות חיסכון (חוזי השקעה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contracts_receipts",
+     "he": "תקבולים בגין חוזי השקעה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_contracts_yield_component",
+     "he": "פוליסות חיסכון (חוזי השקעה): רכיב תשואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "investment_gains_assets_held_against_insurance_and_yield_dependent",
+     "he": "רווחי השקעה בנכסים כנגד התחייבויות ביטוח ותלויות תשואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ise_amortization_acquisition",
+     "he": "הוצאות שירותי ביטוח: הפחתת עלויות רכישה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ise_claims_incurred",
+     "he": "הוצאות שירותי ביטוח: תביעות שהתהוו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ise_past_service",
+     "he": "הוצאות שירותי ביטוח: שירות עבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ise_total",
+     "he": "הוצאות שירותי ביטוח, סך הכול",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "liabilities",
+     "he": "סך ההתחייבויות",
+     "unit": "₪m",
+     "kinds": [
+      "xbrl"
+     ]
+    },
+    {
+     "id": "loss_ratio",
+     "he": "יחס נזקים",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "loss_recovery_component",
+     "he": "רכיב השבת הפסד",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "management_fees",
+     "he": "דמי ניהול",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "management_fees_fixed",
+     "he": "דמי ניהול קבועים",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "management_fees_variable",
+     "he": "דמי ניהול משתנים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "nci",
+     "he": "זכויות שאינן מקנות שליטה",
+     "unit": "₪m",
+     "kinds": [
+      "xbrl"
+     ]
+    },
+    {
+     "id": "net_accumulation",
+     "he": "net accumulation",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "net_income",
+     "he": "רווח נקי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "net_inflows",
+     "he": "net inflows",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "net_investment_and_finance_result",
+     "he": "תוצאות השקעה ומימון, נטו",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "net_investment_and_finance_result_pl",
+     "he": "תוצאות השקעה ומימון, נטו (רווח והפסד)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "net_investment_result_oci",
+     "he": "תוצאות השקעה, נטו (רווח כולל אחר)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "net_premiums_earned",
+     "he": "net premiums earned",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "net_profit",
+     "he": "רווח נקי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "net_profit_total",
+     "he": "net profit total",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "net_transfers",
+     "he": "net transfers",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "net_written_premiums",
+     "he": "net written premiums",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note10_csm_effect_demographic_and_other",
+     "he": "השפעה על CSM: הנחות דמוגרפיות ואחרות (ביאור 10)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note10_csm_effect_demographic_and_other:VAT rate update",
+     "he": "השפעה על CSM: הנחות דמוגרפיות ואחרות (ביאור 10) · VAT rate update",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note10_csm_effect_interest_and_financial_assumptions",
+     "he": "השפעה על CSM: ריבית והנחות פיננסיות (ביאור 10)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note10_csm_effect_total",
+     "he": "השפעה על CSM, סך הכול (ביאור 10)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note12_csm_effect_interest_rate_and_yield",
+     "he": "ביאור 12: השפעה על CSM, ריבית ותשואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note12_pl_effect_interest_rate_and_yield",
+     "he": "ביאור 12: השפעה על הרווח, ריבית ותשואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_assumption_update_csm_effect",
+     "he": "עדכון הנחות: השפעה על CSM (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_assumption_update_finance_effect",
+     "he": "עדכון הנחות: השפעה פיננסית (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_csm_effect_demographic_and_other",
+     "he": "השפעה על CSM: הנחות דמוגרפיות ואחרות (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_csm_effect_discount_rate_change",
+     "he": "ביאור 13: השפעה על CSM, שינוי בריבית ההיוון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_csm_effect_interest_rate_and_yield",
+     "he": "השפעה על CSM: ריבית ותשואה (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_csm_impact_demographic_and_other_assumptions",
+     "he": "השפעה על CSM: הנחות דמוגרפיות ואחרות (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_csm_impact_discount_rate_and_expected_return",
+     "he": "השפעה על CSM: שיעור היוון ותשואה צפויה (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_pl_effect_demographic_and_other",
+     "he": "השפעה על רווח והפסד: הנחות דמוגרפיות ואחרות (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note13_pl_effect_interest_rate_and_yield",
+     "he": "השפעה על רווח והפסד: ריבית ותשואה (ביאור 13)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note17d_csm_new_business",
+     "he": "CSM: עסק חדש (ביאור 17ד)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note17d_gain_on_initial_recognition_reinsurance",
+     "he": "רווח מהכרה לראשונה בביטוח משנה (ביאור 17ד)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "note17d_losses_on_onerous_contracts",
+     "he": "הפסדים מחוזים מכבידים (ביאור 17ד)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "oci",
+     "he": "רווח כולל לבעלי המניות",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed",
+      "xbrl"
+     ]
+    },
+    {
+     "id": "operating_profit_before_tax",
+     "he": "רווח תפעולי לפני מס",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "payments_investment_contracts",
+     "he": "תשלומים בגין פוליסות חיסכון (חוזי השקעה)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "pension_gemel_profit_before_tax",
+     "he": "רווח לפני מס, פנסיה וגמל",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "premiums_incl_investment_contract_receipts",
+     "he": "premiums incl investment contract receipts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "pretax",
+     "he": "רווח לפני מס",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "xbrl"
+     ]
+    },
+    {
+     "id": "proceeds_investment_contracts",
+     "he": "תקבולים בגין חוזי השקעה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "profit",
+     "he": "רווח נקי לבעלי המניות",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed",
+      "xbrl"
+     ]
+    },
+    {
+     "id": "profit_attributable",
+     "he": "רווח נקי לבעלי המניות",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "profit_before_tax",
+     "he": "רווח לפני מס",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "profit_for_period",
+     "he": "רווח לתקופה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "profit_for_year",
+     "he": "רווח לשנה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "profit_total",
+     "he": "רווח, סך הכול",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "quantitative_limit_excess",
+     "he": "חריגה מהמגבלה הכמותית",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "receipts_investment_contracts",
+     "he": "תקבולים בגין חוזי השקעה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_expenses",
+     "he": "הוצאות ביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_expenses_total",
+     "he": "הוצאות ביטוח משנה, סך הכול",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_finance_result",
+     "he": "תוצאות מימון ביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_net_result",
+     "he": "תוצאות ביטוח משנה, נטו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_past_service",
+     "he": "ביטוח משנה: שירות עבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_recoveries_claims",
+     "he": "ביטוח משנה: השבות בגין תביעות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_revenues",
+     "he": "הכנסות ביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reinsurance_revenues_total",
+     "he": "הכנסות ביטוח משנה, סך הכול",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "revenue",
+     "he": "הכנסות (תג XBRL Revenue)",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed",
+      "xbrl"
+     ]
+    },
+    {
+     "id": "roe_adjusted",
+     "he": "תשואה להון מותאמת",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "roe_core",
+     "he": "תשואה להון, ליבה",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "roe_normalized",
+     "he": "roe normalized",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "roe_reported",
+     "he": "תשואה להון, כפי שדווחה",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "roe_reported_ex_adjustments",
+     "he": "תשואה להון, כפי שדווחה, ללא התאמות",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "shortfall_vs_board_target",
+     "he": "חסר מול יעד הדירקטוריון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "surplus_over_target",
+     "he": "surplus over target",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "surplus_vs_board_target",
+     "he": "עודף מעל יעד הדירקטוריון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "surplus_vs_target",
+     "he": "עודף מעל היעד",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "text_csm_release_net",
+     "he": "שחרור CSM, נטו (מהטקסט)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "total_assets",
+     "he": "סך נכסים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "total_assets_yield_linked",
+     "he": "נכסים צמודי תשואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "total_capital_ratio",
+     "he": "יחס הון כולל",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "total_equity",
+     "he": "סך הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "total_investment_gains_recognized_in_income_statement",
+     "he": "סך רווחי השקעות שהוכרו בדוח רווח והפסד",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "transfers_in",
+     "he": "transfers in",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "transfers_out",
+     "he": "transfers out",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "transitional_deduction",
+     "he": "ניכוי הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "yield_component_investment_contracts",
+     "he": "רכיב תשואה בחוזי השקעה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    }
+   ],
+   "first": "2018Q4",
+   "last": "2026Q2",
+   "first_label": "Q4'18",
+   "last_label": "Q2'26",
+   "changed": "2026-11-05",
+   "csv": "kpi.csv",
+   "json": "kpi.json",
+   "pq": "pq/kpi.pq",
+   "csv_bytes": 6931761,
+   "json_bytes": 7594751,
+   "csv_sha256": "7ede63d1e58b7dcfad142e422ac7baa951260ebd24f1de22a21b884a9d78ad36",
+   "json_sha256": "457769443c4e6bba37cf98a0efa7fd58e18c69f0e046905205f2d835a6caff8c"
+  },
+  {
+   "id": "ifrs17",
+   "he": "IFRS 17: שורות אחידות וגשר CSM",
+   "en": "IFRS 17 standardised lines and CSM roll-forward",
+   "grain": "insurer × segment|basis × metric × period",
+   "grain_he": "מבטחת × מגזר ובסיס × מדד × תקופה",
+   "rows": 5384,
+   "entities": 7,
+   "metrics": [
+    {
+     "id": "csm_changes_in_estimates",
+     "he": "CSM: שינויי אומדן",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_closing",
+     "he": "CSM: יתרת סגירה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_economic_interest_and_other_effects",
+     "he": "CSM: ריבית והשפעות כלכליות אחרות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_interest_accretion",
+     "he": "CSM: צבירת ריבית",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_new_business",
+     "he": "CSM: עסק חדש",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_opening",
+     "he": "CSM: יתרת פתיחה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:Actual vs. expected financial spread, including modified assumptions",
+     "he": "CSM: אחר · Actual vs. expected financial spread, including modified assumptions",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:Balance of assets as of December 31",
+     "he": "CSM: אחר · Balance of assets as of December 31",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:Balance of liabilities as of December 31",
+     "he": "CSM: אחר · Balance of liabilities as of December 31",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:Changes in recoveries of losses for groups of onerous underlying insurance contracts adjusting the CSM",
+     "he": "CSM: אחר · Changes in recoveries of losses for groups of onerous underlying insurance contracts adjusting the CSM",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:Changes in reinsurance CSM",
+     "he": "CSM: אחר · Changes in reinsurance CSM",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:Note 21E effect of revision of estimates",
+     "he": "CSM: אחר · Note 21E effect of revision of estimates",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:time value (interest accretion) and other financial variables",
+     "he": "CSM: אחר · time value (interest accretion) and other financial variables",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:שינויים ב-CSM ביטוח משנה",
+     "he": "CSM: אחר · שינויים ב-CSM ביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_other:שינויים בהשבות של הפסדים בגין קבוצות של חוזי ביטוח בסיס מכבידים המתאמים את מרווח השירות החוזי",
+     "he": "CSM: אחר · שינויים בהשבות של הפסדים בגין קבוצות של חוזי ביטוח בסיס מכבידים המתאמים את מרווח השירות החוזי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_release",
+     "he": "CSM: שחרור לרווח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "csm_resolved",
+     "he": "CSM, יתרת סגירה, בבסיס שהדוח מציג",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_accrued_interest",
+     "he": "מימון ביטוח: צבירת ריבית",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_component:Change in liabilities arising from changes in fair value of underlying items of VFA contracts",
+     "he": "רכיב מימון ביטוח · Change in liabilities arising from changes in fair value of underlying items of VFA contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_component:Effect of difference between current-rate and original-rate discounting of changes in FCF charged to CSM",
+     "he": "רכיב מימון ביטוח · Effect of difference between current-rate and original-rate discounting of changes in FCF charged to CSM",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_component:Effects of changes in interest rates and other financial assumptions",
+     "he": "רכיב מימון ביטוח · Effects of changes in interest rates and other financial assumptions",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_component:Effects of changes in interest rates and other financial assumptions (including inflation)",
+     "he": "רכיב מימון ביטוח · Effects of changes in interest rates and other financial assumptions (including inflation)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_component:Effects of the risk mitigation option for VFA contracts",
+     "he": "רכיב מימון ביטוח · Effects of the risk mitigation option for VFA contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_component:Exchange rate differences and other, net",
+     "he": "רכיב מימון ביטוח · Exchange rate differences and other, net",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_component:Interest accrued",
+     "he": "רכיב מימון ביטוח · Interest accrued",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_interest_accrued",
+     "he": "מימון ביטוח: ריבית שנצברה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_rate_effect",
+     "he": "מימון ביטוח: השפעת שינויי ריבית",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_rate_effects",
+     "he": "מימון ביטוח: השפעת שינויי ריבית",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_result",
+     "he": "הכנסות (הוצאות) מימון ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_result:Change in liabilities from changes in fair value of underlying items of VFA contracts",
+     "he": "הכנסות (הוצאות) מימון ביטוח · Change in liabilities from changes in fair value of underlying items of VFA contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_result:Effect of difference between current and original discount rate on changes in FCF carried to CSM",
+     "he": "הכנסות (הוצאות) מימון ביטוח · Effect of difference between current and original discount rate on changes in FCF carried to CSM",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_result:Effects of changes in interest rates and other financial assumptions",
+     "he": "הכנסות (הוצאות) מימון ביטוח · Effects of changes in interest rates and other financial assumptions",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_result:Effects of the risk mitigation option for VFA contracts",
+     "he": "הכנסות (הוצאות) מימון ביטוח · Effects of the risk mitigation option for VFA contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_finance_result:Interest accrued",
+     "he": "הכנסות (הוצאות) מימון ביטוח · Interest accrued",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_revenue",
+     "he": "הכנסות משירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_service_expense",
+     "he": "הוצאות שירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_service_expenses",
+     "he": "הוצאות שירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_service_result",
+     "he": "תוצאות שירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "insurance_service_result_before_reinsurance",
+     "he": "תוצאות שירותי ביטוח לפני ביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "loss_component",
+     "he": "רכיב הפסד",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "losses_on_onerous_contracts",
+     "he": "הפסדים מחוזים מכבידים",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "net_reinsurance_result",
+     "he": "תוצאות ביטוח משנה, נטו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "new_business_annualized_premiums",
+     "he": "פרמיה משונתת, עסק חדש",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "new_business_annualized_premiums_investment_contracts",
+     "he": "new business annualized premiums investment contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "new_business_individual_premium",
+     "he": "new business individual premium",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "new_business_one_off_premiums",
+     "he": "פרמיות חד פעמיות, עסק חדש",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "new_business_single_premiums",
+     "he": "פרמיות חד פעמיות, עסק חדש",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "one_time_premium_earned",
+     "he": "one time premium earned",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "one_time_premium_new_business",
+     "he": "פרמיות חד פעמיות, עסק חדש",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "one_time_premium_new_business_investment_contracts",
+     "he": "one time premium new business investment contracts",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "one_time_premiums_incl_investment_contract_receipts",
+     "he": "one time premiums incl investment contract receipts",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "ra_closing",
+     "he": "RA: יתרת סגירה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ra_confidence_level",
+     "he": "RA: רמת ביטחון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ra_release",
+     "he": "RA: שחרור",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reins_expense_csm_release",
+     "he": "ביטוח משנה: שחרור CSM",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "reins_expense_ra_release",
+     "he": "ביטוח משנה: שחרור RA",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_acquisition_cashflow_recovery",
+     "he": "הכנסות: השבת תזרימי רכישה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_csm_release",
+     "he": "הכנסות: שחרור CSM",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_expected_claims_and_expenses",
+     "he": "הכנסות: תביעות והוצאות צפויות",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_non_paa_total",
+     "he": "הכנסות: סך חוזים ללא PAA",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_other",
+     "he": "הכנסות: אחר",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_other:Experience adjustments arising from premiums paid",
+     "he": "הכנסות: אחר · Experience adjustments arising from premiums paid",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_other:Experience adjustments arising from premiums received",
+     "he": "הכנסות: אחר · Experience adjustments arising from premiums received",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_other:Experience adjustments from premiums received in the period relating to current or past service",
+     "he": "הכנסות: אחר · Experience adjustments from premiums received in the period relating to current or past service",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_other:Total contracts for which the PAA was not applied",
+     "he": "הכנסות: אחר · Total contracts for which the PAA was not applied",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_other:סך הכל חוזים שלגביהם לא יושמה גישת הקצאת הפרמיה (PAA)",
+     "he": "הכנסות: אחר · סך הכל חוזים שלגביהם לא יושמה גישת הקצאת הפרמיה (PAA)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_other:תיאומים בהתאם לניסיון הנובעים מפרמיות שהתקבלו",
+     "he": "הכנסות: אחר · תיאומים בהתאם לניסיון הנובעים מפרמיות שהתקבלו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_paa",
+     "he": "הכנסות: PAA",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rev_ra_release",
+     "he": "הכנסות: שחרור RA",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "risk_adjustment",
+     "he": "התאמת סיכון (RA)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    }
+   ],
+   "first": "2021Q1",
+   "last": "2026Q2",
+   "first_label": "Q1'21",
+   "last_label": "Q2'26",
+   "changed": "2026-11-05",
+   "csv": "ifrs17.csv",
+   "json": "ifrs17.json",
+   "pq": "pq/ifrs17.pq",
+   "csv_bytes": 2085087,
+   "json_bytes": 2277424,
+   "csv_sha256": "aa1ff6765d111e667e6182bfe36b797fd457296626663dfff4b2d0da9c7f2d3d",
+   "json_sha256": "17be6a433da2cdd47afaedfbf1ec909ff8e08aa9f26152cb78fd03cb24be7434"
+  },
+  {
+   "id": "solvency",
+   "he": "כושר פירעון",
+   "en": "Solvency (statements and Solvency II reports)",
+   "grain": "insurer × source × metric × date",
+   "grain_he": "מבטחת × מקור × מדד × תאריך",
+   "rows": 3988,
+   "entities": 7,
+   "metrics": [
+    {
+     "id": "bscr",
+     "he": "BSCR (לפני תפעולי והתאמות)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "caa_w",
+     "he": "סך פעולות הוניות עד לתאריך פרסום דוח יחס כושר פירעון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "eco_assets",
+     "he": "סך כל הנכסים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "eco_be",
+     "he": "התחייבויות בגין חוזי ביטוח וחוזי השקעה שאינם תלויי תשואה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "eco_excess",
+     "he": "סך כל ההון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "eco_liab",
+     "he": "סך כל ההתחייבויות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "eco_rm",
+     "he": "          מרווח סיכון  RM",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_counterparty",
+     "he": "SCR · צד נגדי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_div",
+     "he": "SCR · השפעת פיזור",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_eq_tr",
+     "he": "SCR · הוראת מעבר, מניות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_health",
+     "he": "SCR · חיתום בריאות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_intangible",
+     "he": "SCR · בלתי מוחשיים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_lac_dt",
+     "he": "SCR · ספיגת הפסדים, מס נדחה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_life",
+     "he": "SCR · חיתום חיים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_managers",
+     "he": "SCR · חברות מנהלות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_market",
+     "he": "SCR · שוק",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_nonlife",
+     "he": "SCR · חיתום כללי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "m_operational",
+     "he": "SCR · תפעולי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "mcr",
+     "he": "סף הון (MCR)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "of",
+     "he": "הון עצמי כלכלי מוכר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "of_w",
+     "he": "הון עצמי לעניין SCR",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "of_wo",
+     "he": "הון עצמי לעניין SCR, ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ofa_w",
+     "he": "    הון עצמי לעניין הון נדרש לכושר פירעון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ofa_wo",
+     "he": "    הון עצמי לעניין הון נדרש לכושר פירעון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ofm",
+     "he": "הון עצמי לעניין MCR",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds",
+     "he": "הון עצמי לעניין SCR",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_after_capital_actions",
+     "he": "הון עצמי לעניין SCR, לאחר פעולות הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_after_capital_actions_with_transitional",
+     "he": "הון עצמי לעניין SCR, לאחר פעולות הון, עם הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_after_capital_actions_without_transitional",
+     "he": "הון עצמי לעניין SCR, לאחר פעולות הון, ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_after_capital_events",
+     "he": "הון עצמי לעניין SCR, לאחר אירועי הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_after_capital_raise",
+     "he": "הון עצמי לעניין SCR, אחרי גיוס הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_after_capital_transactions",
+     "he": "הון עצמי לעניין SCR, לאחר פעולות הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_for_mcr",
+     "he": "הון עצמי לעניין MCR",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_mcr",
+     "he": "הון עצמי לעניין MCR",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_with_transitional",
+     "he": "הון עצמי לעניין SCR, עם הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_with_transitional_after_capital_actions",
+     "he": "הון עצמי לעניין SCR, עם הוראות מעבר, אחרי פעולות הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_with_transitional_after_capital_raise",
+     "he": "הון עצמי לעניין SCR, עם הוראות מעבר, אחרי גיוס הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_with_transitional_pro_forma",
+     "he": "הון עצמי לעניין SCR, עם הוראות מעבר, פרו פורמה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_without_transitional",
+     "he": "הון עצמי לעניין SCR, ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_without_transitional_after_capital_actions",
+     "he": "own funds without transitional after capital actions",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "own_funds_without_transitional_pro_forma",
+     "he": "הון עצמי לעניין SCR, ללא הוראות מעבר, פרו פורמה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "pde_wo",
+     "he": "השלמת החלוקות ככל שתתבצע הינה ירידה של כ-6% ביחס כושר פירעון ללא יישום הוראות המעבר לתקופת",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "rdf_wo",
+     "he": "חברת ביטוח תהיה רשאית לחלק דיבידנד רק אם לאחר ביצוע החלוקה יש לחברה יחס כושר פירעון לפי חו",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "scr",
+     "he": "הון נדרש (SCR)",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "scr_w",
+     "he": "SCR",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "scr_with_transitional",
+     "he": "הון נדרש (SCR), עם הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "scr_without_transitional",
+     "he": "הון נדרש (SCR), ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "scr_wo",
+     "he": "SCR, ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_deficit_vs_target",
+     "he": "solvency deficit vs target",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_gap_to_target",
+     "he": "solvency gap to target",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio",
+     "he": "יחס כושר פירעון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_after_capital_actions",
+     "he": "יחס כושר פירעון, לאחר פעולות הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_after_capital_actions_with_transitional",
+     "he": "solvency ratio after capital actions with transitional",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_with_transitional",
+     "he": "יחס כושר פירעון, עם הוראות מעבר",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_with_transitional_after_capital_actions",
+     "he": "יחס כושר פירעון, עם הוראות מעבר, לאחר פעולות הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_with_transitional_after_capital_events",
+     "he": "יחס כושר פירעון, עם הוראות מעבר, לאחר אירועי הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_with_transitional_after_capital_raise",
+     "he": "יחס כושר פירעון, עם הוראות מעבר, לאחר גיוס הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_with_transitional_after_capital_transactions",
+     "he": "יחס כושר פירעון, עם הוראות מעבר, לאחר פעולות הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_with_transitional_pro_forma",
+     "he": "יחס כושר פירעון, עם הוראות מעבר, פרו פורמה",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_without_transitional",
+     "he": "יחס כושר פירעון, ללא הוראות מעבר",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_without_transitional_after_capital_actions",
+     "he": "יחס כושר פירעון, ללא הוראות מעבר, לאחר פעולות הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_without_transitional_after_capital_events",
+     "he": "יחס כושר פירעון, ללא הוראות מעבר, לאחר אירועי הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_without_transitional_after_capital_raise",
+     "he": "יחס כושר פירעון, ללא הוראות מעבר, לאחר גיוס הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_without_transitional_after_capital_transactions",
+     "he": "יחס כושר פירעון, ללא הוראות מעבר, לאחר פעולות הון",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_ratio_without_transitional_pro_forma",
+     "he": "יחס כושר פירעון, ללא הוראות מעבר, פרו פורמה",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus",
+     "he": "עודף הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_after_capital_actions",
+     "he": "עודף הון, לאחר פעולות הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_after_capital_actions_with_transitional",
+     "he": "עודף הון, לאחר פעולות הון, עם הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_after_capital_actions_without_transitional",
+     "he": "עודף הון, לאחר פעולות הון, ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_after_capital_events",
+     "he": "עודף הון, לאחר אירועי הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_after_capital_transactions",
+     "he": "עודף הון, לאחר פעולות הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_over_target",
+     "he": "עודף מעל היעד",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_pro_forma",
+     "he": "עודף הון, פרו פורמה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_vs_board_target",
+     "he": "עודף הון מעל יעד הדירקטוריון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_vs_target",
+     "he": "עודף מעל היעד",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_with_transitional",
+     "he": "עודף הון, עם הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_with_transitional_after_capital_actions",
+     "he": "עודף הון, עם הוראות מעבר, לאחר פעולות הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_with_transitional_after_capital_raise",
+     "he": "עודף הון, עם הוראות מעבר, אחרי גיוס הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_without_transitional",
+     "he": "עודף הון, ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_without_transitional_after_capital_actions",
+     "he": "solvency surplus without transitional after capital actions",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_without_transitional_after_capital_raise",
+     "he": "עודף הון, ללא הוראות מעבר, אחרי גיוס הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "solvency_surplus_without_transitional_pro_forma",
+     "he": "עודף הון, ללא הוראות מעבר, פרו פורמה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sr_w",
+     "he": "יחס כושר פירעון, עם הוראות מעבר",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sr_wo",
+     "he": "יחס כושר פירעון, ללא הוראות מעבר",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sra_w",
+     "he": "    יחס כושר פירעון כלכלי  באחוזים ",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sra_wo",
+     "he": "    יחס כושר פירעון  ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות ",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "su",
+     "he": "עודף הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "su_w",
+     "he": "עודף הון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "su_wo",
+     "he": "עודף הון, ללא הוראות מעבר",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sua_w",
+     "he": "    עודף",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sua_wo",
+     "he": "    עודף  ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות ",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sut_wo",
+     "he": "חוסר הון ביחס ליעד (אלפי ש\"ח) []2",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "t1",
+     "he": "רובד 1",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "t1b",
+     "he": "רובד 1 בסיסי",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "t1r",
+     "he": "רובד 1 נוסף",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "t2",
+     "he": "רובד 2",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "tdt",
+     "he": "ניכוי בתקופת הפריסה - סך התחייבויות ביטוח, לרבות מרווח הסיכון",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "tg_w",
+     "he": "טווח של 150%-170% ... יעד יחס כושר פירעון מינימלי של 135%",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "tg_wo",
+     "he": "    יעד הדירקטוריון  לתום תקופת הפריסה ",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "tgm_w",
+     "he": "נקבע יעד יחס כושר פירעון מינימאלי יציבותי של 135%",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "tgr_w",
+     "he": "שיחס כושר פירעון כלכלי של החברה יעמוד בטווח של 150%-170%",
+     "unit": "%",
+     "kinds": [
+      "printed"
+     ]
+    }
+   ],
+   "first": "2018Q4",
+   "last": "2026Q1",
+   "first_label": "Q4'18",
+   "last_label": "Q1'26",
+   "changed": "2026-11-05",
+   "csv": "solvency.csv",
+   "json": "solvency.json",
+   "pq": "pq/solvency.pq",
+   "csv_bytes": 1578014,
+   "json_bytes": 1717407,
+   "csv_sha256": "89b113b0daeab4f7305ba36e969182d1d5cc6812245e99bd55ed86ce5bce8359",
+   "json_sha256": "540dae0714cefdf50e633444111228cee5a6003bf35507130441bf1a32ac5dad"
+  },
+  {
+   "id": "pnc",
+   "he": "ביטוח כללי: שורות ויחסים לפי ענף",
+   "en": "P&C lines and ratios by line of business",
+   "grain": "insurer × line × metric × period",
+   "grain_he": "מבטחת × ענף × מדד × תקופה",
+   "rows": 3136,
+   "entities": 7,
+   "metrics": [
+    {
+     "id": "cl",
+     "he": "תביעות והוצאות שירותי ביטוח אחרות שהתהוו",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "ise",
+     "he": "הוצאות שירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "isr",
+     "he": "רווח משירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "isr_gross",
+     "he": "רווח משירותי ביטוח לפני ביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "past",
+     "he": "שינויים לשירותי עבר (תביעות שהתהוו)",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "ratio_ces",
+     "he": "שיעור ביטוח משנה",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ]
+    },
+    {
+     "id": "ratio_cr",
+     "he": "משולב, ברוטו",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ]
+    },
+    {
+     "id": "ratio_crn",
+     "he": "משולב, נטו ביטוח משנה",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ]
+    },
+    {
+     "id": "ratio_er",
+     "he": "יחס הוצאות",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ]
+    },
+    {
+     "id": "ratio_lr",
+     "he": "יחס נזק",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ]
+    },
+    {
+     "id": "rev",
+     "he": "הכנסות משירותי ביטוח",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "ri",
+     "he": "הכנסות מביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rnet",
+     "he": "תוצאת ביטוח משנה, נטו",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
+     "id": "rx",
+     "he": "הוצאות מביטוח משנה",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    }
+   ],
+   "first": "2025Q1",
+   "last": "LTM2026Q2",
+   "first_label": "Q1'25",
+   "last_label": "LTM Q2'26",
+   "changed": "2026-11-05",
+   "csv": "pnc.csv",
+   "json": "pnc.json",
+   "pq": "pq/pnc.pq",
+   "csv_bytes": 1481558,
+   "json_bytes": 1591850,
+   "csv_sha256": "b241835ba244bd68e13f200ab9b381de98f7504b774a9b76986a4a638e3d934d",
+   "json_sha256": "b2b153eacf9d4c7baece156e341eafa49a1aaed4e87578eb6acaece8b4ac0695"
+  },
+  {
+   "id": "savings_q",
+   "he": "חיסכון ארוך טווח: רבעוני",
+   "en": "Long-term savings, quarterly (reports and regulator join)",
+   "grain": "manager × segment × metric × quarter",
+   "grain_he": "מנהל × מגזר × מדד × רבעון",
+   "rows": 5147,
+   "entities": 12,
+   "metrics": [
+    {
+     "id": "aum",
+     "he": "נכסים מנוהלים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "aum_share",
+     "he": "נתח מנכסי השוק",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ],
+     "def": "נכסי הקבוצה ÷ נכסי כל הקבוצות × 100, חודש סוף הרבעון"
+    },
+    {
+     "id": "deposits",
+     "he": "דמי גמולים",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "exp_ratio",
+     "he": "הוצאות ÷ הכנסות מדמי ניהול",
+     "unit": "%",
+     "kinds": [
+      "derived"
+     ]
+    },
+    {
+     "id": "expenses",
+     "he": "הוצאות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "fee_yield_reg",
+     "he": "תשואת דמי ניהול על נכסי הרשות, שנתי",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ],
+     "def": "הכנסות מדמי ניהול בדוח (רבעון) × 4 ÷ נכסים ממוצעים ברשות × 100"
+    },
+    {
+     "id": "fee_yield_rep",
+     "he": "תשואת דמי ניהול על נכסים מדווחים, שנתי",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ],
+     "def": "הכנסות מדמי ניהול × 4 ÷ נכסים ממוצעים כפי שהודפסו × 100"
+    },
+    {
+     "id": "fees",
+     "he": "הכנסות מדמי ניהול",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "flow_share",
+     "he": "נתח מהצבירה נטו של השוק",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ],
+     "def": "(אורגני + העברות) של הקבוצה ÷ של השוק × 100"
+    },
+    {
+     "id": "ga",
+     "he": "הנהלה וכלליות",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "ga_pct",
+     "he": "הנהלה וכלליות ÷ הכנסות",
+     "unit": "%",
+     "kinds": [
+      "derived"
+     ]
+    },
+    {
+     "id": "margin",
+     "he": "שיעור רווח (רווח ÷ הכנסות)",
+     "unit": "%",
+     "kinds": [
+      "derived"
+     ]
+    },
+    {
+     "id": "profit",
+     "he": "רווח לפני מס",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "reg_aum_avg",
+     "he": "נכסים ממוצעים ברבעון (רשות, טרפז על ארבעה סופי חודש)",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "(A₀÷2 + A₁ + A₂ + A₃÷2) ÷ 3 על ארבעה סופי חודש, A₀ = סוף הרבעון הקודם"
+    },
+    {
+     "id": "reg_aum_end",
+     "he": "נכסים לסוף הרבעון (רשות)",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "סכום מסלולי הקבוצה בחודש סוף הרבעון"
+    },
+    {
+     "id": "reg_organic",
+     "he": "צבירה אורגנית ברבעון (רשות)",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "סכום מסלולי הקבוצה ברבעון"
+    },
+    {
+     "id": "reg_transfers",
+     "he": "העברות נטו ברבעון (רשות)",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "סכום מסלולי הקבוצה ברבעון"
+    },
+    {
+     "id": "sm",
+     "he": "שיווק ומכירה",
+     "unit": "₪m",
+     "kinds": [
+      "printed"
+     ]
+    },
+    {
+     "id": "sm_pct",
+     "he": "שיווק ומכירה ÷ הכנסות",
+     "unit": "%",
+     "kinds": [
+      "derived"
+     ]
+    }
+   ],
+   "first": "2023Q1",
+   "last": "2026Q2",
+   "first_label": "Q1'23",
+   "last_label": "Q2'26",
+   "changed": "2026-11-05",
+   "csv": "savings_q.csv",
+   "json": "savings_q.json",
+   "pq": "pq/savings_q.pq",
+   "csv_bytes": 2206303,
+   "json_bytes": 2398770,
+   "csv_sha256": "9edd9256896750384c1c43ad24a3836aff955e501d70d3a558cf1a20cb93e82d",
+   "json_sha256": "33f76fbb85ca395fc9e477b70f5e7ebc8f5f2521460736efe7c3bf1c0b393626"
+  },
+  {
+   "id": "savings_m",
+   "he": "חיסכון ארוך טווח: חודשי לפי קבוצה ומוצר",
+   "en": "Long-term savings, monthly by group and product (regulator)",
+   "grain": "group × product × metric × month, from 01/22",
+   "grain_he": "קבוצה × מוצר × מדד × חודש, מ-01/22",
+   "rows": 40695,
+   "entities": 16,
+   "metrics": [
+    {
+     "id": "aum",
+     "he": "נכסים מנוהלים לסוף החודש",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "סכום נכסי מסלולי הקבוצה במוצר לסוף החודש (TOTAL_ASSETS)"
+    },
+    {
+     "id": "deposits",
+     "he": "הפקדות בחודש",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "סכום מסלולי הקבוצה שדיווחו תזרים"
+    },
+    {
+     "id": "fee_rate",
+     "he": "דמי ניהול מהצבירה, ממוצע משוקלל נכסים, שנתי",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ],
+     "def": "Σ(נכסים × דמי ניהול) ÷ Σ נכסים של מסלולי הקבוצה במוצר (AVG_ANNUAL_MANAGEMENT_FEE)"
+    },
+    {
+     "id": "net_flow",
+     "he": "צבירה נטו בחודש (הפקדות − משיכות + העברות)",
+     "unit": "₪m",
+     "kinds": [
+      "calc"
+     ],
+     "def": "הפקדות − משיכות + העברות נטו, סכום המסלולים שדיווחו תזרים"
+    },
+    {
+     "id": "return_gross",
+     "he": "תשואה חודשית ברוטו, ממוצע משוקלל בנכסי החודש הקודם",
+     "unit": "%",
+     "kinds": [
+      "calc"
+     ],
+     "def": "Σ(נכסי החודש הקודם × תשואה חודשית) ÷ Σ נכסי החודש הקודם (MONTHLY_YIELD, לפני דמי ניהול)"
+    },
+    {
+     "id": "tracks",
+     "he": "מספר מסלולים שדיווחו",
+     "unit": "count",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "מספר המסלולים שדיווחו נכסים בחודש"
+    },
+    {
+     "id": "transfers_net",
+     "he": "העברות נטו בחודש",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "סכום מסלולי הקבוצה שדיווחו תזרים (INTERNAL_TRANSFERS)"
+    },
+    {
+     "id": "withdrawals",
+     "he": "משיכות בחודש",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "סכום מסלולי הקבוצה שדיווחו תזרים"
+    }
+   ],
+   "first": "2022-01",
+   "last": "2026-09",
+   "first_label": "01/22",
+   "last_label": "09/26",
+   "changed": "2026-11-05",
+   "csv": "savings_m.csv",
+   "json": null,
+   "pq": "pq/savings_m.pq",
+   "csv_bytes": 10916843,
+   "json_bytes": null,
+   "csv_sha256": "be098387bc4db8e4691cacf00a0d80888cb8172e2b37affb20f3ad922d958fe2",
+   "json_sha256": null
+  },
+  {
+   "id": "funds_m",
+   "he": "מסלולים: חודשי",
+   "en": "Tracks, monthly (regulator)",
+   "grain": "track × metric × month, last 12 months",
+   "grain_he": "מסלול × מדד × חודש, 12 החודשים האחרונים",
+   "rows": 56114,
+   "entities": 1257,
+   "metrics": [
+    {
+     "id": "aum",
+     "he": "נכסים",
+     "unit": "₪m",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "נכסי המסלול לסוף החודש (TOTAL_ASSETS)"
+    },
+    {
+     "id": "fee_rate",
+     "he": "דמי ניהול מהצבירה",
+     "unit": "%",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "שיעור שנתי ממוצע של המסלול (AVG_ANNUAL_MANAGEMENT_FEE)"
+    },
+    {
+     "id": "return_gross",
+     "he": "תשואה ברוטו",
+     "unit": "%",
+     "kinds": [
+      "regulator"
+     ],
+     "def": "תשואה חודשית כפי שפורסמה, לפני דמי ניהול (MONTHLY_YIELD)"
+    },
+    {
+     "id": "return_net",
+     "he": "תשואה נטו (אומדן)",
+     "unit": "%",
+     "kinds": [
+      "estimate"
+     ],
+     "def": "אומדן fox: התשואה ברוטו פחות שיעור דמי הניהול מהצבירה ÷ 12; שיעור ממוצע של המסלול, לא של חוסך מסוים"
+    }
+   ],
+   "first": "2025-10",
+   "last": "2026-09",
+   "first_label": "10/25",
+   "last_label": "09/26",
+   "changed": "2026-11-05",
+   "csv": "funds_m.csv",
+   "json": null,
+   "pq": "pq/funds_m.pq",
+   "csv_bytes": 17875305,
+   "json_bytes": null,
+   "csv_sha256": "ea9bcb03fd6c5cfbe80431b5dadcdcb0de2a44fa772383a4dd3522fc40ba0a06",
+   "json_sha256": null
+  }
+ ],
+ "changes": {
+  "json": "changes.json",
+  "csv": "changes.csv",
+  "pq": "pq/changes.pq",
+  "builds": 1,
+  "last": "2026-11-05"
+ },
+ "kit": {
+  "xlsx": "fox_powerquery.xlsx",
+  "bytes": 36333,
+  "sha256": "7d5f45fb4e72de5992e0caa322de70e3c4c517e9b24329dbedfde531dce1a7c1"
+ }
+}

@@ -48,12 +48,37 @@
    "the model-ready workbook of a company: metrics x periods Q1'23 ... Q2'26 + FY, every value with its document, page and link (Sources sheet)"
   ],
   [
+   "/data/tables/v1/<table>.csv",
+   "CSV",
+   "fox inside Excel: a long table (UTF-8 with BOM), one row per figure with its source; also .json except savings_m and funds_m; CORS open"
+  ],
+  [
+   "/data/tables/v1/manifest.json",
+   "JSON",
+   "the tables: row counts, sha256, first and last period, last-changed date, metric dictionary"
+  ],
+  [
+   "/data/tables/v1/changes.json",
+   "JSON",
+   "what changed since the previous build: rows added / changed / removed per table, a dated log (also changes.csv)"
+  ],
+  [
+   "/data/tables/v1/fox_powerquery.xlsx",
+   "XLSX",
+   "the Power Query kit: one query per table at the stable URLs; Data > Refresh All (M scripts: /data/tables/v1/pq/<table>.pq)"
+  ],
+  [
    "/data/schemas.json",
    "JSON Schema",
    "the data contracts: the schema of every contracted family below"
   ]
  ],
  "changelog": [
+  [
+   "2026-11-05",
+   "added",
+   "tables/v1/: fox inside Excel. Seven long tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV (+ JSON, except savings_m and funds_m) with a source on every row, manifest.json, changes.json, Power Query scripts and fox_powerquery.xlsx (schemas `tablesTable`, `tablesManifest`, `tablesChanges`); CORS open on /data/tables/**."
+  ],
   [
    "2026-11-05",
    "added",
@@ -1809,6 +1834,80 @@
    "step": "build_sop",
    "note": "",
    "cadence": "quarterly, on each filing (MAYA)",
+   "prov": []
+  },
+  {
+   "pattern": "tables/v1/*.csv",
+   "schema": null,
+   "example": "tables/v1/changes.csv",
+   "files": 8,
+   "kind": "open",
+   "format": "csv",
+   "step": "build_tables",
+   "note": "tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)",
+   "cadence": "on each filing (MAYA) and each regulator month",
+   "prov": []
+  },
+  {
+   "pattern": "tables/v1/*.json",
+   "schema": "tablesTable",
+   "example": "tables/v1/ifrs17.json",
+   "files": 5,
+   "kind": "open",
+   "format": "json",
+   "step": "build_tables",
+   "note": "tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)",
+   "cadence": "on each filing (MAYA) and each regulator month",
+   "prov": []
+  },
+  {
+   "pattern": "tables/v1/*.xlsx",
+   "schema": null,
+   "example": "tables/v1/fox_powerquery.xlsx",
+   "files": 1,
+   "kind": "open",
+   "format": "xlsx",
+   "step": "build_tables",
+   "note": "tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)",
+   "cadence": "on each filing (MAYA) and each regulator month",
+   "prov": []
+  },
+  {
+   "pattern": "tables/v1/changes.json",
+   "schema": "tablesChanges",
+   "example": "tables/v1/changes.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_tables",
+   "note": "tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)",
+   "cadence": "on each filing (MAYA) and each regulator month",
+   "prov": []
+  },
+  {
+   "pattern": "tables/v1/manifest.json",
+   "schema": "tablesManifest",
+   "example": "tables/v1/manifest.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "build_tables",
+   "note": "tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)",
+   "cadence": "on each filing (MAYA) and each regulator month",
+   "prov": [
+    "built"
+   ]
+  },
+  {
+   "pattern": "tables/v1/pq/*.pq",
+   "schema": null,
+   "example": "tables/v1/pq/changes.pq",
+   "files": 8,
+   "kind": "open",
+   "format": "pq",
+   "step": "build_tables",
+   "note": "tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)",
+   "cadence": "on each filing (MAYA) and each regulator month",
    "prov": []
   },
   {

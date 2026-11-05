@@ -293,6 +293,15 @@ STEPS = [
           "web/src/lib/solvency.ts"],
          [D + "xlsx"], code=["pipeline/xlsx_lib.py"], groups={"deploy"},
          note="xlsx/<company>.xlsx, < 1 MB each (python3 pipeline/build_model_xlsx.py --check)"),
+    # P4 fox inside Excel: the long, versioned tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV + JSON with a
+    # source on every row, manifest.json (counts, sha256, last-changed), changes.json (dated log of rows added / changed / removed since the
+    # previous build), the Power Query M scripts and fox_powerquery.xlsx; reads the published JSON through build_model_xlsx's readers
+    step("build_tables", "pipeline/build_tables.py",
+         [D + "facts", D + "series", D + "csm/facts", D + "csm/capital.json", D + "csm/solvency.json", D + "savings_econ.json", D + "lens.json",
+          D + "kpi.json", D + "adjusted.json", D + "companies/index.json", D + "search/docs.json", D + "pnc.json", D + "market.json", D + "funds.json",
+          D + "funds/[gip]*.json", "web/src/lib/labels.ts", "web/src/pages/CompanyIfrs.tsx", "web/src/lib/solvency.ts", "web/src/lib/pnc.ts"],
+         [D + "tables"], code=["pipeline/build_model_xlsx.py", "pipeline/xlsx_lib.py", "pipeline/pq_kit.py"], groups={"deploy"},
+         note="tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)"),
     # Wave 5: published sell-side price targets and recommendations (hand-curated registry, every row confirmed on its page); gate `consensus`
     step("build_consensus", "pipeline/build_consensus.py", [REG + "consensus.json", D + "companies/index.json"], [D + "consensus.json"],
          groups={"deploy"}, note="/credibility: dated, sourced targets as published; no share price (python3 pipeline/build_consensus.py --check)"),

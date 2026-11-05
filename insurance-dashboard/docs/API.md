@@ -25,7 +25,62 @@ Free to use, including commercially. Cite fox (with a link to the page or file) 
 | `/data/calendar.ics` | iCalendar | every expected filing date (calendar.json as ICS) |
 | `/data/cal/<company>.ics` | iCalendar | one company's expected filing dates |
 | `/data/xlsx/<company>.xlsx` | XLSX | the model-ready workbook of a company: metrics x periods Q1'23 ... Q2'26 + FY, every value with its document, page and link (Sources sheet) |
+| `/data/tables/v1/<table>.csv` | CSV | fox inside Excel: a long table (UTF-8 with BOM), one row per figure with its source; also .json except savings_m and funds_m; CORS open |
+| `/data/tables/v1/manifest.json` | JSON | the tables: row counts, sha256, first and last period, last-changed date, metric dictionary |
+| `/data/tables/v1/changes.json` | JSON | what changed since the previous build: rows added / changed / removed per table, a dated log (also changes.csv) |
+| `/data/tables/v1/fox_powerquery.xlsx` | XLSX | the Power Query kit: one query per table at the stable URLs; Data > Refresh All (M scripts: /data/tables/v1/pq/<table>.pq) |
 | `/data/schemas.json` | JSON Schema | the data contracts: the schema of every contracted family below |
+
+## fox inside Excel · fox בתוך Excel
+
+Stable, versioned long tables for a model that refreshes from fox (Power Query, or any client that reads CSV / JSON). One row per figure: entity, slice, metric, period, value, unit, kind and the source (MAYA report id and page, or the regulator's dataset), as-of and the schema version. Nothing is estimated in the tables except where `kind` says `estimate` (the net return of a track); `derived` and `calc` rows carry their formula in `note`.
+
+טבלאות ארוכות, יציבות ומגורסות, כדי שהמודל ב-Excel יתרענן מ-fox. שורה לכל נתון: ישות, חתך, מדד, תקופה, ערך, יחידה, סוג, והמקור (מספר הדיווח והעמוד ב-MAYA, או מאגר הרשות), נכון ל-, וגרסת הסכמה.
+
+| Table | What | Grain | Rows | Periods | CSV | JSON | M |
+|---|---|---|---|---|---|---|---|
+| `kpi` | Headline KPIs by company and period · נתוני מפתח לפי חברה ותקופה | company × metric × period (quarter, FY) | 18,126 | Q4'18 … Q2'26 | [kpi.csv](https://fox-research-il.web.app/data/tables/v1/kpi.csv) | [kpi.json](https://fox-research-il.web.app/data/tables/v1/kpi.json) | [pq/kpi.pq](https://fox-research-il.web.app/data/tables/v1/pq/kpi.pq) |
+| `ifrs17` | IFRS 17 standardised lines and CSM roll-forward · IFRS 17: שורות אחידות וגשר CSM | insurer × segment/basis × metric × period | 5,384 | Q1'21 … Q2'26 | [ifrs17.csv](https://fox-research-il.web.app/data/tables/v1/ifrs17.csv) | [ifrs17.json](https://fox-research-il.web.app/data/tables/v1/ifrs17.json) | [pq/ifrs17.pq](https://fox-research-il.web.app/data/tables/v1/pq/ifrs17.pq) |
+| `solvency` | Solvency (statements and Solvency II reports) · כושר פירעון | insurer × source × metric × date | 3,988 | Q4'18 … Q1'26 | [solvency.csv](https://fox-research-il.web.app/data/tables/v1/solvency.csv) | [solvency.json](https://fox-research-il.web.app/data/tables/v1/solvency.json) | [pq/solvency.pq](https://fox-research-il.web.app/data/tables/v1/pq/solvency.pq) |
+| `pnc` | P&C lines and ratios by line of business · ביטוח כללי: שורות ויחסים לפי ענף | insurer × line × metric × period | 3,136 | Q1'25 … LTM Q2'26 | [pnc.csv](https://fox-research-il.web.app/data/tables/v1/pnc.csv) | [pnc.json](https://fox-research-il.web.app/data/tables/v1/pnc.json) | [pq/pnc.pq](https://fox-research-il.web.app/data/tables/v1/pq/pnc.pq) |
+| `savings_q` | Long-term savings, quarterly (reports and regulator join) · חיסכון ארוך טווח: רבעוני | manager × segment × metric × quarter | 5,147 | Q1'23 … Q2'26 | [savings_q.csv](https://fox-research-il.web.app/data/tables/v1/savings_q.csv) | [savings_q.json](https://fox-research-il.web.app/data/tables/v1/savings_q.json) | [pq/savings_q.pq](https://fox-research-il.web.app/data/tables/v1/pq/savings_q.pq) |
+| `savings_m` | Long-term savings, monthly by group and product (regulator) · חיסכון ארוך טווח: חודשי לפי קבוצה ומוצר | group × product × metric × month, from 01/22 | 40,695 | 01/22 … 09/26 | [savings_m.csv](https://fox-research-il.web.app/data/tables/v1/savings_m.csv) | CSV only | [pq/savings_m.pq](https://fox-research-il.web.app/data/tables/v1/pq/savings_m.pq) |
+| `funds_m` | Tracks, monthly (regulator) · מסלולים: חודשי | track × metric × month, last 12 months | 56,114 | 10/25 … 09/26 | [funds_m.csv](https://fox-research-il.web.app/data/tables/v1/funds_m.csv) | CSV only | [pq/funds_m.pq](https://fox-research-il.web.app/data/tables/v1/pq/funds_m.pq) |
+
+Columns (v1, in this order):
+
+| Column | Type | עברית | Meaning |
+|---|---|---|---|
+| `entity_id` | text | מזהה ישות | fox id of the company, manager group or track |
+| `entity_name` | text | שם הישות | Hebrew name |
+| `dim_id` | text | מזהה חתך | the slice inside the entity: segment/basis, line of business, product, ... ('group' = the whole entity) |
+| `dim_label` | text | חתך | the slice in Hebrew |
+| `metric_id` | text | מזהה מדד | stable metric id (the same id across companies) |
+| `metric_label` | text | מדד | Hebrew label |
+| `period` | text | תקופה (מכונה) | 2026Q2 · 2025FY · 2026H1 · LTM2026Q2 · 2026-09 (month) |
+| `period_label` | text | תקופה | Q2'26 · FY'25 · H1'26 · LTM Q2'26 · 09/26 |
+| `period_end` | date | סוף התקופה | YYYY-MM-DD |
+| `value` | number | ערך | the figure, in `unit` |
+| `unit` | text | יחידה | ₪m (NIS millions) · % · ₪ · count |
+| `kind` | text | סוג | printed · derived · xbrl · regulator · calc · estimate |
+| `standard` | text | תקן | IFRS 17 / IFRS 4 where the line depends on it |
+| `source_id` | text | מזהה מקור | maya:<report id> or data.gov.il:<dataset> |
+| `source_page` | integer | עמוד | page in the source PDF |
+| `source_url` | text | קישור למקור | the PDF at the page, the MAYA report or the regulator's dataset |
+| `source_name` | text | שם המקור | the document in Hebrew |
+| `as_of` | date | נכון ל | publication date of the source (MAYA) or the date fox read the regulator's file |
+| `note` | text | הערה | derivation, formula, second page, verification status |
+| `version` | text | גרסת סכמה | v1 |
+
+Each table's metric dictionary (id, Hebrew label, unit, kinds, definition) is in `manifest.json` → `tables[].metrics`.
+
+**Versioning promise · הבטחת גרסה.** v1: a column never changes meaning, a metric id never changes meaning or unit; new columns are appended at the end, new tables and metrics are added; a breaking change opens v2 beside v1. · עמודה ב-v1 לעולם לא משנה משמעות, ומזהה מדד לא משנה משמעות או יחידה; עמודות חדשות מתווספות רק בסוף; שינוי שובר יפתח v2 לצד v1.
+
+**What changed · מה השתנה.** `changes.json` (and `changes.csv`) is a dated log, newest first: for every build that changed a value, per table the count of rows added, changed (value) and removed, and up to 400 of them with the old and new value. `manifest.json` gives each table's last-changed date and the sha256 of each file.
+
+**How to refresh · איך מרעננים.** Download [fox_powerquery.xlsx](https://fox-research-il.web.app/data/tables/v1/fox_powerquery.xlsx) and open it in Excel (Microsoft 365, Windows or Mac): Enable Content, then Data → Refresh All (the first time: Web content, Anonymous, Connect). Each sheet is a table named `fox_<table>`; point the model at it with SUMIFS / XLOOKUP or a PivotTable. To add one table to your own workbook: Data → Get Data → From Other Sources → Blank Query → Advanced Editor, paste `pq/<table>.pq`, Close & Load. · הורידו את fox_powerquery.xlsx, פתחו ב-Excel, 'הפוך תוכן לזמין' ואז נתונים → רענן הכל. כל גיליון הוא טבלה בשם fox_<table>; הגיליון 'חדש מאז ההורדה הקודמת' מציג את השינויים.
+
+savings_m and funds_m are CSV only (no .json copy, to keep the files small). Served with `Access-Control-Allow-Origin: *` and `Cache-Control: public, max-age=300`. Full histories stay in the source families: funds_m carries the last 12 months (all months: `funds/<k>.json`), savings_m from 01/22 (all months: `market.json`).
 
 ## Changelog
 
@@ -33,6 +88,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 
 | Date | Kind | Change |
 |---|---|---|
+| 2026-11-05 | added | tables/v1/: fox inside Excel. Seven long tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV (+ JSON, except savings_m and funds_m) with a source on every row, manifest.json, changes.json, Power Query scripts and fox_powerquery.xlsx (schemas `tablesTable`, `tablesManifest`, `tablesChanges`); CORS open on /data/tables/**. |
 | 2026-11-05 | added | corrections.json: the corrections log of /about#corrections, one entry per corrected figure (schema `corrections`); starts empty. |
 | 2026-11-02 | added | xlsx/<company>.xlsx: one model-ready workbook per company (P&L, Balance sheet, IFRS 17, Solvency, Savings, KPIs, Sources). |
 | 2026-11-02 | added | consensus.json: published sell-side price targets and recommendations, each with its source URL (schema `consensus`). |
@@ -1253,6 +1309,61 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 ```json
 {"ayalon":{"2025FY":516,"2026Q2":789},"clal":{"2025FY":336,"2026Q2":588},"harel":{"2025FY":585,"2026Q2":615},"menora":{"2025FY":455,"2026Q2":1367},"migdal":{"2025FY":184,"2026Q2":356},"phoenix":{"2025FY":340,"2026Q2":418}}
 ```
+
+### `tables/v1/*.csv`
+
+- schema: none (no contract yet) · files: 8 · format: csv
+- written by: `build_tables` · cadence: on each filing (MAYA) and each regulator month
+- example: [https://fox-research-il.web.app/data/tables/v1/changes.csv](https://fox-research-il.web.app/data/tables/v1/changes.csv)
+- note: tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)
+
+### `tables/v1/*.json`
+
+- schema: `tablesTable` · files: 5 · format: json
+- written by: `build_tables` · cadence: on each filing (MAYA) and each regulator month
+- example: [https://fox-research-il.web.app/data/tables/v1/ifrs17.json](https://fox-research-il.web.app/data/tables/v1/ifrs17.json)
+- note: tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)
+
+```json
+{"v":1,"table":"ifrs17","version":"v1","rows":[["ayalon"]]}
+```
+
+### `tables/v1/*.xlsx`
+
+- schema: none (no contract yet) · files: 1 · format: xlsx
+- written by: `build_tables` · cadence: on each filing (MAYA) and each regulator month
+- example: [https://fox-research-il.web.app/data/tables/v1/fox_powerquery.xlsx](https://fox-research-il.web.app/data/tables/v1/fox_powerquery.xlsx)
+- note: tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)
+
+### `tables/v1/changes.json`
+
+- schema: `tablesChanges` · files: 1 · format: json
+- written by: `build_tables` · cadence: on each filing (MAYA) and each regulator month
+- example: [https://fox-research-il.web.app/data/tables/v1/changes.json](https://fox-research-il.web.app/data/tables/v1/changes.json)
+- note: tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)
+
+```json
+{"v":1,"version":"v1","keep":40,"rows_per_table":400,"builds":[{"date":"2026-11-05","kind":"initial","tables":{"kpi":{"added":18126,"changed":0,"removed":0,"listed":0,"rows":[]},"ifrs17":{"added":5384,"changed":0,"removed":0,"listed":0,"rows":[]},"solvency":{"added":3988,"changed":0,"removed":0,"listed":0,"rows":[]},"pnc":{"added":3136,"changed":0,"removed":0,"listed":0,"rows":[]},"savings_q":{"added":5147,"changed":0,"removed":0,"listed":0,"rows":[]},"savings_m":{"added":40695,"changed":0,"removed":0,"listed":0,"rows":[]},"funds_m":{"added":56114,"changed":0,"removed":0,"listed":0,"rows":[]}}…
+```
+
+### `tables/v1/manifest.json`
+
+- schema: `tablesManifest` · files: 1 · format: json
+- written by: `build_tables` · cadence: on each filing (MAYA) and each regulator month
+- example: [https://fox-research-il.web.app/data/tables/v1/manifest.json](https://fox-research-il.web.app/data/tables/v1/manifest.json)
+- provenance fields: `built`
+- note: tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)
+
+```json
+{"v":1,"version":"v1","site":"https://fox-research-il.web.app","base":"https://fox-research-il.web.app/data/tables/v1/","columns":[{"id":"entity_id","type":"text","he":"מזהה ישות","en":"fox id of the company, manager group or track"}]}
+```
+
+### `tables/v1/pq/*.pq`
+
+- schema: none (no contract yet) · files: 8 · format: pq
+- written by: `build_tables` · cadence: on each filing (MAYA) and each regulator month
+- example: [https://fox-research-il.web.app/data/tables/v1/pq/changes.pq](https://fox-research-il.web.app/data/tables/v1/pq/changes.pq)
+- note: tables/v1/<table>.csv + .json, manifest.json, changes.json, pq/, fox_powerquery.xlsx (python3 pipeline/build_tables.py --check)
 
 ### `targets.json`
 
