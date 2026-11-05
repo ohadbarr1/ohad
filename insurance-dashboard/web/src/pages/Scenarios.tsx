@@ -15,6 +15,7 @@ import {
   type CatFile, type Cell, type Ctx, type CurveFile, type MacroFile, type NowcastFile, type Preset, type RankKey, type Res, type Scn, type SKey,
 } from '../lib/scenarios';
 import '../styles/scenarios.css';
+import { WarTabs } from '../components/WarTabs';
 
 /* A2 · /scenarios, the war table: eight inputs, all 17 companies repriced through their driver graphs (lib/drivers.ts propagate) as the
    sliders move, ranked by how much of their capital or earnings cushion the scenario consumes. The scenario lives in the URL. Every
@@ -221,8 +222,9 @@ export function Scenarios() {
     <div className="scn">
       <div className="pagehead"><div>
         <h1><span className="icotile"><Icon name="sliders" /></span>חדר תרחישים</h1>
-        <div className="sub"><span><span className="num">{activeN}</span> חברות פעילות{dormantN > 0 && <span className="dim"> (<span className="num">{dormantN}</span> לא פעילות בדיווח)</span>}</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/drivers">המנגנונים</Link><Link to="/industry/csm?view=stress">מעבדת הרגישויות</Link><Link to="/capital">הון ואפשרויות הקצאה</Link><Link to="/fragility?s=scen">מוניטור שבריריות</Link></div>
+        <div className="sub"><span><span className="num">{activeN}</span> חברות פעילות{dormantN > 0 && <span className="dim"> (<span className="num">{dormantN}</span> לא פעילות בדיווח)</span>}</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/methodology#drivers">המנגנונים</Link><Link to="/industry/csm?view=stress">מעבדת הרגישויות</Link><Link to="/capital">הון ואפשרויות הקצאה</Link><Link to="/fragility?s=scen">מוניטור שבריריות</Link></div>
       </div></div>
+      <WarTabs />
 
       {presetBar}
       {cur && <div className="scn-def src"><Sourced src={() => cur.prov}>{cur.he}</Sourced>: {scnText(cur.sc)}{cur.gaps.length > 0 && <> · <span className="gapt">{cur.gaps.join(' · ')}</span></>}</div>}
