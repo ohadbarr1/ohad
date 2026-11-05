@@ -108,3 +108,16 @@ html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { ga
 
 /* the inactive-companies footnote: its links are in running text, so they are underlined (WCAG 1.4.1) */
 .cos-inactive a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* lane P1: companies that reported in the last 7 days, each a link to its report's changes (Report Day) */
+.hm-s-ticks i.nw { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hm-s-new { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; flex-basis: 100%; font-size: var(--t-2); }
+.hm-s-chg { display: inline-flex; align-items: center; gap: 5px; color: var(--fg); text-decoration: none; }
+.hm-s-chg i { width: 8px; height: 8px; border-radius: 50%; }
+.hm-s-chg:hover { border-color: var(--accent-line); }
+.hm-s-chg { padding: 2px 9px; font-size: 12.5px; white-space: nowrap; }
+.hm-s-more { display: none; font-size: 12.5px; }
+@media (max-width: 760px) {
+  .hm-s-new .hm-s-chg:nth-of-type(n+5) { display: none; }
+  .hm-s-more { display: inline; text-decoration: underline; text-underline-offset: 2px; }
+}

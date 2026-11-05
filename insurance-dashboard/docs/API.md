@@ -115,7 +115,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: /feed.xml, /feed/<company>.xml, /feed/months.xml, /feed/funds.xml (+ .atom); check: pipeline/check_feed.py
 
 ```json
-{"v":1,"built":"2026-11-05","site":"https://fox-research-il.web.app","since":"2026-11-02","feeds":[{"p":"/feed.xml","a":"/feed.atom","t":"מה השתנה","n":302,"c":null,"k":"all"}]}
+{"v":1,"built":"2026-11-05","site":"https://fox-research-il.web.app","since":"2026-11-02","feeds":[{"p":"/feed.xml","a":"/feed.atom","t":"מה השתנה","n":380,"c":null,"k":"all"}]}
 ```
 
 ### `answers/*.json`
@@ -281,6 +281,30 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 
 ```json
 {"v":1,"built":"2026-11-05","co":{"altshuler":{"p":["2026Q2"]},"analyst":{"p":["2026Q2"]},"ayalon":{"p":["2026Q2"]},"clal":{"p":["2026Q2"]},"hachshara":{"p":["2026Q2"]},"harel":{"p":["2026Q2"]},"ibi":{"p":["2026Q2"]},"meitav":{"p":["2026Q2"]}}}
+```
+
+### `changes/*.json`
+
+- schema: `changes` · files: 13 · format: json
+- written by: `build_changes` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/changes/altshuler.json](https://fox-research-il.web.app/data/changes/altshuler.json)
+- provenance fields: `cmp`, `der`, `docs`, `pages`, `rid`
+- note: changes/<company>.json + index.json: materiality = |change| / equity x volatility weight (pipeline/build_changes.py --check)
+
+```json
+{"v":1,"c":"altshuler","name":"אלטשולר שחם","kind":"fund","reports":[{"p":"2026Q2","end":"2026-06-30","st":"verified","rid":1764730,"pub":"2026-08-20","pages":71,"eq":{"v":608.142,"u":"m","s":{"k":"pg","rid":1744493,"pg":35}},"cand":8}]}
+```
+
+### `changes/index.json`
+
+- schema: `changesIndex` · files: 1 · format: json
+- written by: `build_changes` · cadence: quarterly, on each filing (MAYA)
+- example: [https://fox-research-il.web.app/data/changes/index.json](https://fox-research-il.web.app/data/changes/index.json)
+- provenance fields: `built`
+- note: changes/<company>.json + index.json: materiality = |change| / equity x volatility weight (pipeline/build_changes.py --check)
+
+```json
+{"v":1,"built":"2026-11-05","rule":"ציון = |שינוי| ÷ הון לבעלי המניות בתחילת החלון × 100 (שורות יחס: נק׳ × 0.2) × משקל תנודתיות: |שינוי| ÷ RMS של 8 השינויים הקודמים מאותו סוג, חלקי 2, בין 0.5 ל-2 (שורות ברוטו × 0.5); נכנס מ-0.5 ומעלה; 10 הגבוהים","mat":{"min_score":0.5,"min_abs_m":1.0,"pp_to_eq":0.2,"hist":8,"hist_min":4,"w_lo":0.5,"w_hi":2.0,"gross":0.5},"co":{"altshuler":{"name":"אלטשולר שחם","p":"2026Q2","pub":"2026-08-20","n":8,"st":"verified","rid":1764730,"top":"הכנסות מדמי ניהול, נטו","ps":["2026Q2"]},"analyst":{"name":"אנליסט","p":"2026Q2","pub":"2026-08-20","n":10,"st":"verified","rid…
 ```
 
 ### `companies/*.docs.json`

@@ -262,6 +262,14 @@
    "schema": "card"
   },
   {
+   "pattern": "changes/index.json",
+   "schema": "changesIndex"
+  },
+  {
+   "pattern": "changes/*.json",
+   "schema": "changes"
+  },
+  {
    "pattern": "since.json",
    "schema": "since"
   },
@@ -6162,6 +6170,12 @@
     }
    }
   },
+  "chgSrc": {"type": "object", "required": ["k"], "additionalProperties": false, "properties": {"k": {"type": "string", "enum": ["pg", "calc", "xbrl"]}, "rid": {"type": ["integer", "null"]}, "pg": {"type": "integer"}, "der": {"type": "integer", "enum": [1]}, "fx": {"type": "string"}, "in": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/chgFig"}}, "key": {"type": ["string", "null"]}, "p": {"type": ["string", "null"]}}},
+  "chgFig": {"type": "object", "required": ["v", "u", "s"], "additionalProperties": false, "properties": {"l": {"type": "string"}, "v": {"type": "number"}, "u": {"type": "string", "enum": ["m", "pct", "pp", "dm", "dpct"]}, "s": {"$ref": "#/$defs/chgSrc"}}},
+  "chgItem": {"type": "object", "required": ["k", "l", "g", "cmp", "la", "lb", "a", "b", "d", "z", "sc", "pl", "gd"], "additionalProperties": false, "properties": {"k": {"type": "string"}, "l": {"type": "string"}, "g": {"type": "string", "enum": ["pl", "bs", "ifrs", "ratio", "xbrl"]}, "cmp": {"type": "string", "enum": ["YoY", "QoQ", "LTM", "prev"]}, "la": {"type": "string"}, "lb": {"type": "string"}, "pl": {"type": "string"}, "a": {"$ref": "#/$defs/chgFig"}, "b": {"$ref": "#/$defs/chgFig"}, "d": {"$ref": "#/$defs/chgFig"}, "dp": {"$ref": "#/$defs/chgFig"}, "rest": {"$ref": "#/$defs/chgFig"}, "z": {"type": ["number", "null"]}, "sc": {"type": "number"}, "gd": {"type": "integer", "enum": [-1, 0, 1]}, "alt": {"type": "integer", "enum": [1]}, "der": {"type": "integer", "enum": [1]}, "tx": {"type": "integer", "enum": [1]}, "why": {"type": "object", "required": ["t", "s"], "additionalProperties": false, "properties": {"t": {"type": "string"}, "s": {"$ref": "#/$defs/chgSrc"}}}}},
+  "chgReport": {"type": "object", "required": ["p", "end", "st", "rid", "pub", "pages", "eq", "cand", "n", "items"], "additionalProperties": false, "properties": {"p": {"$ref": "#/$defs/period"}, "end": {"$ref": "#/$defs/date"}, "st": {"type": "string", "enum": ["verified", "unverified"]}, "rid": {"type": ["integer", "null"]}, "pub": {"type": ["string", "null"]}, "pages": {"type": ["integer", "null"]}, "eq": {"type": ["object", "null"]}, "cand": {"type": "integer"}, "n": {"type": "integer"}, "items": {"type": "array", "items": {"$ref": "#/$defs/chgItem"}}}},
+  "changes": {"type": "object", "required": ["v", "c", "name", "kind", "rule", "docs", "reports"], "additionalProperties": false, "properties": {"v": {"type": "integer"}, "c": {"type": "string"}, "name": {"type": "string"}, "kind": {"type": "string", "enum": ["ins", "fund"]}, "rule": {"type": "string"}, "docs": {"type": "object"}, "reports": {"type": "array", "items": {"$ref": "#/$defs/chgReport"}}}},
+  "changesIndex": {"type": "object", "required": ["v", "built", "rule", "mat", "co"], "additionalProperties": false, "properties": {"v": {"type": "integer"}, "built": {"$ref": "#/$defs/date"}, "rule": {"type": "string"}, "mat": {"type": "object"}, "co": {"type": "object"}}},
   "cardsIndex": {
    "type": "object",
    "required": [
@@ -6507,7 +6521,9 @@
       "fee",
       "est",
       "pos",
-      "fragility"
+      "fragility",
+       "chg",
+       "letter"
      ]
     },
     "d": {
@@ -6733,7 +6749,9 @@
       "fee",
       "est",
       "pos",
-      "fragility"
+      "fragility",
+      "chg",
+      "letter"
      ],
      "additionalProperties": false,
      "properties": {
@@ -6907,6 +6925,42 @@
        }
       },
       "fragility": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "chg": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "letter": {
        "type": "object",
        "required": [
         "he",

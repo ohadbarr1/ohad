@@ -7,6 +7,7 @@ import { mayaReport } from '../../lib/sources';
 import { useLoad } from '../../lib/useData';
 import { FILING_TYPE, filingPeriod as pl } from './RecentFilings';
 import { SinceStrip } from '../SinceBadge';
+import { repName, useChangesIndex } from '../../lib/changes';
 
 interface CalCo { id: string; name: string; inactive?: boolean; last: { period: string; date: string; type: string; rid: number };
   next: { period: string; end: string; expected?: string; lo?: string; hi?: string }; history: { period: string; date: string; lag: number }[] }
@@ -24,6 +25,7 @@ const filedProv = (c: CalCo): Prov => ({ k: 'report', title: `${FILING_TYPE[c.la
  *  reader last opened it (lane S2: one visit date per company, not one global date). */
 export function SeasonStrip() {
   const cal = useLoad<Cal>('calendar.json');
+  const chg = useChangesIndex();  // lane P1: who reported in the last 7 days, and how many material changes each report carries
   const today = new Date().toISOString().slice(0, 10);
   if (!cal.data) return <section className="hm-season" aria-busy="true" />;
   const active = cal.data.companies.filter((c) => !c.inactive);
@@ -36,13 +38,15 @@ export function SeasonStrip() {
   const due = (waiting.length ? waiting : active).filter((c) => c.next.expected).sort((a, b) => a.next.expected!.localeCompare(b.next.expected!))[0];
   const left = due?.next.expected ? days(due.next.expected, today) : null;
   const name = (id: string) => cal.data!.companies.find((c) => c.id === id)?.name ?? id;
+  const fresh = Object.entries(chg.data?.co ?? {}).filter(([, x]) => x.pub && x.pub <= today && days(today, x.pub) <= 7).sort((a, b) => b[1].pub!.localeCompare(a[1].pub!));
+  const isNew = new Set(fresh.map(([c]) => c));
   const countProv = (): Prov => ({ k: 'calc', title: `דיווחו ${pl(season)}`, value: `${done.length}/${active.length}`, formula: 'חברות שהדוח התקופתי האחרון שלהן ב-MAYA הוא לתקופה, מתוך החברות המדווחות',
     inputs: [...done.map((c) => ({ label: c.name, v: pubLabel(c.last.date), src: () => filedProv(c) })), ...waiting.map((c) => ({ label: `${c.name} (אחרון ${pl(c.last.period)})`, v: 'טרם', src: () => filedProv(c) }))] });
   return (
     <section className="hm-season" aria-label="עונת הדוחות">
       <div className="hm-s-main">
         <span className="hm-s-per num">{pl(season)}</span>
-        <span className="hm-s-ticks" aria-hidden="true">{active.map((c) => <i key={c.id} title={c.name} className={c.last.period === season ? 'on' : ''} style={c.last.period === season ? { background: idCss(c.id) } : undefined} />)}</span>
+        <span className="hm-s-ticks" aria-hidden="true">{active.map((c) => <i key={c.id} title={c.name} className={`${c.last.period === season ? 'on' : ''}${isNew.has(c.id) ? ' nw' : ''}`} style={c.last.period === season ? { background: idCss(c.id) } : undefined} />)}</span>
         <span className="hm-s-k"><Sourced src={countProv}>{`${done.length}/${active.length}`}</Sourced> דיווחו</span>
         {lastIn && <span className="hm-s-k hm-s-last muted">אחרון <Sourced src={() => filedProv(lastIn)}><span className="num">{pubLabel(lastIn.last.date)}</span></Sourced></span>}
         {due?.next.expected && (
@@ -52,6 +56,17 @@ export function SeasonStrip() {
           </span>
         )}
       </div>
+      {fresh.length > 0 && (
+        <div className="hm-s-new" role="list" aria-label="דיווחו ב-7 הימים האחרונים">
+          <span className="hm-s-k muted">חדש · <span className="num">7</span> ימים</span>
+          {fresh.map(([c, x]) => (
+            <Link role="listitem" key={c} className="chip hm-s-chg" to={`/company/${c}?p=${x.p}#rd-changes`} title={`${x.name}: ${x.n} שינויים בדוח ${repName(x.p)}, פורסם ${pubLabel(x.pub)}`}>
+              <i aria-hidden="true" style={{ background: idCss(c) }} /><span className="num">{repName(x.p)}</span> {x.name} · <span className="num">{x.n}</span> שינויים{x.st === 'unverified' && <span className="est"> · XBRL</span>}
+            </Link>
+          ))}
+          {fresh.length > 4 && <Link className="hm-s-more" to="/calendar">+<span className="num">{fresh.length - 4}</span> עוד</Link>}
+        </div>
+      )}
       <div className="hm-s-aside">
         <SinceStrip />
         <Link to="/calendar">לוח דיווחים</Link>
