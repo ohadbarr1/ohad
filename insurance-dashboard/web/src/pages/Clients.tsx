@@ -5,7 +5,7 @@ import { Empty, Panel } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { useFunds } from '../lib/useData';
 import type { FundsFile } from '../lib/funds';
-import { BACKUP_KEY, LAST_FOLDER_KEY, backupState, brandOfFile, exportText, heldCost, heldSum, mergeClients, removeFolder, sorted, useClients, type Folder, type SnapRow } from '../lib/clients';
+import { BACKUP_KEY, LAST_FOLDER_KEY, brandOfFile, exportText, heldCost, heldSum, mergeClients, removeFolder, sorted, useClients, type Folder, type SnapRow } from '../lib/clients';
 import { useStored, writeStored } from '../lib/local';
 import { BrandPanel } from '../components/agent/BrandPanel';  // W7
 import { ShareFolder, ShareImport } from '../components/agent/ShareFolder';  // W7
@@ -18,7 +18,10 @@ import type { DefaultFile } from '../lib/fundsTools';
 import { docRow } from '../lib/compareDoc';
 import type { FundX } from '../lib/funds';
 import { today } from '../lib/visits';
-import { ClientImport } from '../components/agent/ClientImport';
+import { CallList, Reviews } from '../components/agent/CallList';  // fox 3.0 phase 2: A4, A5
+import { BookSafe } from '../components/agent/BookSafe';  // fox 3.0 phase 2: install, encrypted backup, restore
+import { Ico } from '../components/home/glyphs';
+import '../styles/agentDesk.css';
 import { nf } from '../lib/format';
 import { ym } from '../lib/funds';
 import '../styles/agent.css';
@@ -68,20 +71,17 @@ export function Clients() {
   const [brand, setBrand] = useBranding();  // W7
   const nav = useNavigate();
   const [msg, setMsg] = useState<string | null>(null);
-  const [impMsg, setImpMsg] = useState<string | null>(null);
   const nameOf = (k: string) => data?.funds.find((f) => f.k === k)?.name ?? k;
   const list = sorted(file);
   const openCmp = (f: Folder) => { writeStored(LAST_FOLDER_KEY, f.id); nav(`/funds/compare?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } }); };
   const openDoc = (f: Folder) => { writeStored(LAST_FOLDER_KEY, f.id); nav(`/funds/compare/print?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } }); };
   // W5: the folders live in this browser only; the page says when they were last exported (no cloud copy: owner decision pending)
-  const [lastBackup, setLastBackup] = useStored<string>(BACKUP_KEY, '');
-  const bk = backupState(file, lastBackup, today());
+  const [, setLastBackup] = useStored<string>(BACKUP_KEY, '');
   const exportFile = () => {
     const blob = new Blob([exportText(file, today(), hasBrand(brand) ? brand : undefined)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fox-clients-${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     setLastBackup(today());
   };
-  const bkText = bk.days == null ? 'עוד לא נשמר גיבוי של התיקים' : `גיבוי אחרון: ${bk.days === 0 ? 'היום' : bk.days === 1 ? 'אתמול' : `לפני ${bk.days} ימים`} (${dmy(lastBackup)})${bk.changed ? ` · ${bk.changed === 1 ? 'תיק אחד השתנה' : `${bk.changed} תיקים השתנו`} מאז` : ''}`;
   const importFile = (f: File | undefined) => {
     if (!f) return;
     if (f.size > 2_000_000) { setMsg('הקובץ גדול מדי לתיקי לקוחות'); return; }
@@ -96,13 +96,9 @@ export function Clients() {
         <span className="eyebrow">סוכן</span>
         <h1><span className="icotile"><Icon name="inbox" /></span>תיקי לקוחות</h1>
         <div className="sub">השוואות ששמרתם ללקוחות: המסלולים, הסיווג בנספח וטיוטת ההנמקה. נשמר בדפדפן הזה בלבד.</div>
-      </div></div>
-      {list.length > 0 && <div className={`cl-backup${bk.nudge ? ' nudge' : ''}`} role="status">
-        <Icon name="download" /><span><b>{bkText}.</b> התיקים שמורים רק בדפדפן הזה: ניקוי נתוני הגלישה או מכשיר אחר מוחקים אותם. גיבוי הוא קובץ JSON שנשמר אצלכם.</span>
-        <button type="button" className={`btn${bk.nudge ? ' primary' : ''}`} onClick={exportFile}>גיבוי עכשיו</button>
-        <label className="chip cl-imp">שחזור מגיבוי<input type="file" accept="application/json,.json" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} /></label>
-        {msg && <span className="muted cl-bk-msg">{msg}</span>}
-      </div>}
+      </div><Link to="/clients/new" className="cmp-doc cl-new"><Ico name="clients" />לקוח חדש: מקובץ מסלקה להנמקה</Link></div>
+      <CallList />
+      <Reviews />
       <Panel title={`${list.length} תיקים`} aside={<span>פרטי לדפדפן הזה</span>}>
         {!list.length ? (
           <Empty title="עוד אין תיקים" icon="inbox">בהשוואת מסלולים ובמסמך ללקוח יש כפתור "שמור ללקוח". אפשר גם לייבא קובץ שיוצא ממכשיר אחר.</Empty>
@@ -130,13 +126,15 @@ export function Clients() {
       <Panel title="פרטי בעל הרישיון במסמך ללקוח" aside={<span>כותרת, חתימה ולוגו · בדפדפן בלבד</span>}>
         <BrandPanel />
       </Panel>
-      <Panel title="ייבוא מהמסלקה ללקוח" aside={<span>בטא · בדפדפן בלבד</span>}>
-        {data ? <ClientImport funds={data.funds} onDone={(_, m) => setImpMsg(m)} /> : <span className="muted">טוען…</span>}
-        {impMsg && <p role="status" className="csave-msg">{impMsg}</p>}
-      </Panel>
+      <section className="panel cl-wiz" aria-labelledby="cl-wiz-h">
+        <span className="icotile lg"><Ico name="clients" /></span>
+        <div><h2 id="cl-wiz-h">ייבוא מהמסלקה ללקוח</h2><p>שלושה צעדים: הקובץ (zip או XML, גם עם סיסמה), ניוד לפני ואחרי עם המקורות, ומסמך הנמקה בנוסח המחייב עם הפרטים שלכם. בדפדפן הזה בלבד.</p></div>
+        <Link to="/clients/new" className="cmp-doc">פתיחת האשף</Link>
+      </section>
+      <BookSafe />
       <Panel title="העברה בין מכשירים" aside={<span>קובץ JSON</span>}>
         <div className="cl-io">
-          <button type="button" className="chip" onClick={exportFile} disabled={!list.length}><Icon name="download" /> ייצוא לקובץ (גיבוי)</button>
+          <button type="button" className="chip" onClick={exportFile} disabled={!list.length}><Icon name="download" /> ייצוא לקובץ לא מוצפן</button>
           <label className="chip cl-imp">ייבוא מקובץ / שחזור<input type="file" accept="application/json,.json" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} /></label>
           {msg && <span role="status" className="muted">{msg}</span>}
         </div>

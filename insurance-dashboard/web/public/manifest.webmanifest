@@ -29,6 +29,28 @@
   ],
   "shortcuts": [
     {
+      "name": "לקוח חדש: מקובץ מסלקה להנמקה",
+      "short_name": "לקוח חדש",
+      "url": "/clients/new",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "לקוחות: למי להתקשר החודש",
+      "short_name": "לקוחות",
+      "url": "/clients",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
       "name": "מה השתנה",
       "short_name": "מה השתנה",
       "url": "/feed",
@@ -50,5 +72,6 @@
         }
       ]
     }
-  ]
+  ],
+  "id": "/"
 }

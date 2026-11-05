@@ -36,7 +36,7 @@ export function BrandPanel() {
         {b.logo && <button type="button" className="chip" onClick={() => setB({ ...b, logo: null })}>הסרת הלוגו ({Math.round(logoBytes(b.logo) / 1000)} KB)</button>}
         <button type="button" className="chip" onClick={() => { if (confirm('למחוק את פרטי בעל הרישיון מהדפדפן הזה?')) setB(EMPTY_BRAND); }}>מחיקת הפרטים</button>
         {err && <p role="alert" className="ci-err">{err}</p>}
-        <p className="csave-priv">נשמר בדפדפן הזה בלבד ולא נשלח לשום מקום; מצורף לקובץ הגיבוי של התיקים, כך שמכשיר אחר מקבל אותו בשחזור. הלוגו מוקטן במכשיר ל-{Math.round(LOGO_MAX_BYTES / 1000)} KB לכל היותר. החוזר מתיר להוסיף למסמך ההנמקה סימנים מסחריים (לוגו) ואוסר כל שינוי אחר בנוסח ובסדר (חוזר סוכנים ויועצים 2018-10-11, §3(ג)).</p>
+        <p className="csave-priv">נשמר בדפדפן הזה בלבד ולא נשלח לשום מקום; מצורף לקובץ הגיבוי של התיקים, כך שמכשיר אחר מקבל אותו בשחזור. הלוגו מוקטן במכשיר ל-{Math.round(LOGO_MAX_BYTES / 1000)} KB לכל היותר. החוזר מתיר להוסיף למסמך ההנמקה סימנים מסחריים (לוגו) ואוסר כל שינוי אחר בנוסח ובסדר (חוזר סוכנים ויועצים "מסמך הנמקה – תיקון", 18.07.2018, §3(ג)).</p>
       </form>}
     </div>
   );
