@@ -81,7 +81,7 @@ export function TargetsCompact({ id, name }: { id: string; name: string }) {
   const pick = [...rows].sort((a, b) => (a.src === b.src ? 0 : a.src === 'pres' ? -1 : 1) || (b.h ?? 0) - (a.h ?? 0) || (b.st1?.[0] ?? '').localeCompare(a.st1?.[0] ?? '')).slice(0, 8);
   const said = d.status[id]?.at(-1);
   return (
-    <Panel title="יעדי הנהלה" aside={<Link to={`/presentations?co=${id}#targets`}>כל היעדים ({rows.length})</Link>}>
+    <Panel title="יעדי הנהלה" aside={<Link to={`/credibility?co=${id}`}>כל היעדים ({rows.length})</Link>}>
       <div className="scroll"><table className="tight tg-t tg-c">
         <thead><tr><th>יעד</th><th>יעד</th><th>בפועל</th><th>סטטוס</th></tr></thead>
         <tbody>{pick.map((t, i) => (

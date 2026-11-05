@@ -6,6 +6,7 @@ import { Sheet } from '../components/Sheet';
 import { BreakChip, Empty, ErrorBox, Field, Kpi, Loading, Panel, Seg as SegCtl } from '../components/ui';
 import { IdDot } from '../components/MgrChip';
 import { FundsHead } from '../components/FundsNav';
+import { useActiveDoor } from '../components/home/doorState';
 import { FlowDef } from '../components/FlowDef';  // W6 trust
 import { foxOption } from '../lib/foxchart';
 import { identify } from '../lib/idmarks';
@@ -54,7 +55,11 @@ export function SavingsLens() {
 function Lens({ d }: { d: LensData }) {
   const [sp, setSp] = useSearchParams();
   const src = useMemo(() => new LensSrc(d), [d]);
-  const view = (['lens', 'now', 'rank', 'market', 'econ', 'npv'] as View[]).find((v) => v === sp.get('v')) ?? 'lens';
+  // wave 2b: "?v=value" is the savings hub's "ערך" (the flows' value; the fee book is its second tab, /feebook)
+  const vq = sp.get('v') === 'value' ? 'npv' : sp.get('v');
+  const view = (['lens', 'now', 'rank', 'market', 'econ', 'npv'] as View[]).find((v) => v === vq) ?? 'lens';
+  // the Pro door has the hub's tab row above (components/FundsNav): the views are its tabs, not a second control
+  const [door] = useActiveDoor();
   const seg = (SEGS.map(([k]) => k).find((k) => k === sp.get('s')) ?? 'pen') as Seg;
   const q = d.quarters.includes(sp.get('q') ?? '') ? sp.get('q')! : d.meta.last_rep;
   const g = d.groups.findIndex((x) => x.name === sp.get('g'));
@@ -65,7 +70,7 @@ function Lens({ d }: { d: LensData }) {
   return (
     <>
       <h2 className="band">עדשת חיסכון<span className="muted">תזרימים ונכסים: רשות שוק ההון, חודשי, עד <span className="num">{ym(d.meta.asof)}</span> · הכנסות והוצאות: דוחות החברות המנהלות, עד <span className="num">{ql(d.meta.last_rep)}</span></span></h2>
-      <div className="lens-views"><SegCtl<View> label="תצוגה" value={view} onChange={(v) => set({ v: v === 'lens' ? '' : v })} options={views} /><Link className="chip lens-out" to={`/managers?v=rank${seg !== 'pen' ? `&s=${seg}` : ''}`}>דירוג מנהלים לאורך זמן ←</Link><Link className="chip lens-out" to="/warroom">חדר מלחמה: מהלך דמי ניהול ←</Link><Link className="chip lens-out" to="/warroom/regulation">צנרת רגולציה ←</Link><Link className="chip lens-out" to="/fragility">מוניטור שבריריות ←</Link><Link className="chip lens-out" to="/consolidation">מסך האיחודים ←</Link></div>
+      <div className="lens-views">{door !== 'pro' && <SegCtl<View> label="תצוגה" value={view} onChange={(v) => set({ v: v === 'lens' ? '' : v })} options={views} />}<Link className="chip lens-out" to={`/managers?v=rank${seg !== 'pen' ? `&s=${seg}` : ''}`}>דירוג מנהלים לאורך זמן ←</Link><Link className="chip lens-out" to="/warroom">חדר מלחמה: מהלך דמי ניהול ←</Link><Link className="chip lens-out" to="/warroom/regulation">צנרת רגולציה ←</Link><Link className="chip lens-out" to="/fragility">מוניטור שבריריות ←</Link><Link className="chip lens-out" to="/consolidation">מסך האיחודים ←</Link></div>
       {view === 'lens' && <LensView d={d} src={src} seg={seg} q={q} g={g} set={set} />}
       {view === 'now' && <><Suspense fallback={<Loading what="האומדן שפורסם" />}><NowcastView /></Suspense><NowView d={d} src={src} seg={seg} set={set} /></>}
       {(view === 'market' || view === 'econ') && <Suspense fallback={<Loading what="התצוגה" />}>{view === 'market' ? <LensMarket /> : <IndustryEcon />}</Suspense>}

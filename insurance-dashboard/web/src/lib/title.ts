@@ -5,7 +5,7 @@ const COMPANY_TAB: Record<string, string> = {
   ifrs17: 'IFRS 17', savings: 'חיסכון ארוך טווח', filings: 'מסמכים',
 };
 const INDUSTRY_TAB: Record<string, string> = {
-  peers: 'טבלת עמיתים', sectors: 'השוואת ענפים', lines: 'שורות דוח', csm: 'IFRS 17 · CSM · הון', ifrs: 'IFRS 17 · CSM · הון', capital: 'IFRS 17 · CSM · הון',
+  peers: 'טבלת עמיתים', sectors: 'השוואת ענפים', lines: 'שורות דוח', csm: 'IFRS 17 · CSM', ifrs: 'IFRS 17 · CSM', capital: 'הון ואפשרויות הקצאה',
   econ: 'רווחיות פנסיה וגמל', savings: 'עדשת חיסכון', headline: 'לאורך זמן', search: 'חיפוש בדוחות', matrix: 'מטריצת עמיתים',
 };
 const VALUATION_TAB: Record<string, string> = { '': 'P/B מוצדק', ri: 'הכנסה שיורית', expectations: 'ציפיות השוק', csm: 'הון ו-CSM', sotp: 'סכום החלקים', dcf: 'DCF' };
@@ -30,6 +30,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     }
     case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'השוואה ענפית') : null;
     case 'savings': return p[1] ? null : t('עדשת חיסכון', 'חיסכון');
+    case 'feebook': return p[1] ? null : t('ערך ספר דמי הניהול', 'חיסכון');  // W11, the second tab of the savings hub's "ערך" (wave 2b)
     case 'funds': if (p[1] === 'tools') return p[2] === 'hindsight' ? t('מה היה לי', 'חיסכון') : p[2] === 'fees' ? t('דמי ניהול לאורך קריירה', 'חיסכון') : p[2] ? null : t('כלים', 'חיסכון');
       if (p[1] === 'bm') return p[2] ? null : t('ביטוחי מנהלים ישנים', 'חיסכון');  // W2
       if (p[1] === 'under') return p[2] ? null : t('מתחת לחציון, ועדיין מקבלים כסף', 'חיסכון');  // W11, a tab of /flows (P3)
@@ -58,7 +59,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'warroom': return p[1] === 'regulation' ? t('רגולציה', 'חדר מלחמה') : p[1] ? null : t('מהלך דמי ניהול', 'חדר מלחמה');  // module A5 (A8: regulation)
     case 'drivers': return p[1] ? (p[2] || name(p[1]) === null ? null : t('מנגנונים', name(p[1]) ?? p[1])) : t('מנגנונים');  // module A1
     case 'scenarios': return p[1] ? null : t('חדר תרחישים');  // module A2
-    case 'capital': return p[1] ? null : t('הון ואפשרויות הקצאה');  // module A7
+    case 'capital': return p[1] ? null : t('הון ואפשרויות הקצאה', 'השוואה ענפית');  // module A7, a tab of "השוואה ענפית" (wave 2b)
     case 'fragility': return p[1] ? null : t('מוניטור שבריריות');  // module A10
     case 'expectations': return p[1] ? null : t('ציפיות השוק');  // module A3
     case 'consolidation': return p[1] ? (p[3] || !p[2] || name(p[1]) === null || name(p[2]) === null ? null : t(`${name(p[1]) ?? p[1]} ← ${name(p[2]) ?? p[2]}`, 'מסך האיחודים')) : t('מסך האיחודים');  // module A9
@@ -69,7 +70,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'doc': return p[1] ? t('קורא מסמכים') : null;
     case 'card': return p[1] && p[2] && !p[3] && name(p[1]) !== null ? t('כרטיס דוח', name(p[1]) ?? p[1], p[2].endsWith('FY') ? `FY'${p[2].slice(2, 4)}` : `${p[2].slice(4)}'${p[2].slice(2, 4)}`) : null;  // lane S2
     case 'market': return p[1] === 'group' ? t(p[2], 'שוק') : MARKET_TAB[p[1] ?? 'overview'] ? t(MARKET_TAB[p[1] ?? 'overview'], 'שוק') : null;
-    case 'valuation': return p[1] ? (((p[2] ?? '') in VALUATION_TAB) && name(p[1]) !== null ? t(VALUATION_TAB[p[2] ?? ''], name(p[1]) ?? p[1], 'הערכת שווי') : null) : t('הערכת שווי');
+    case 'valuation': return p[1] ? (((p[2] ?? '') in VALUATION_TAB) && name(p[1]) !== null ? t(VALUATION_TAB[p[2] ?? ''], name(p[1]) ?? p[1], 'הערכת שווי') : null) : t('ציפיות השוק', 'הערכת שווי');  // wave 2b: the index is the expectations ranking
     default: return null;
   }
 }

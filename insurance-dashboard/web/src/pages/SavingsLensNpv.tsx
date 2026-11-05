@@ -103,7 +103,7 @@ function NpvView({ d, lens }: { d: FlowNpv; lens: LensData }) {
       <div className="lens-note est"><span className="chip est">אומדן</span> NPV = זרימה × מרווח על נכסים × a(D, ke) · מרווח = תשואת דמי ניהול × (1 − {basis === 'ci' ? 'הוצאות להכנסות' : 'הנהלה וכלליות להכנסות'}) מהעדשה · {ltm ? `זרימה = סכום ארבעת הרבעונים ${d.rows.find((r) => r.p === p)?.qs.map(ql).join(', ') ?? ''}` : 'זרימה = הרבעון'} · רווח תפעולי של המגזר, לפני מס · בלי צמיחת הנכסים, שחיקת דמי ניהול ועלות שולית.</div>
 
       <Panel title={`ערך הניוד · ${d.segs[seg]} · ${pl(p)}`} aside={<><span>זרימות: מיליארדי ש"ח · ערך נוכחי: מיליוני ש"ח</span><button type="button" className="btn" onClick={() => void xlsx()}>Excel</button></>}>
-        {!rows.length ? <Empty title="אין נתונים לתקופה" /> : <div className="scroll"><table className="lens-tbl npv-tbl">
+        {!rows.length ? <Empty title="אין נתונים לתקופה" /> : <div className="scroll" tabIndex={0} role="region" aria-label="ערך הניוד לפי מנהל"><table className="lens-tbl npv-tbl">
           <thead><tr>
             <th>מנהל</th><th className="wide-only">ניוד נטו</th><th>{phone ? 'NPV ניוד' : 'ערך הניוד'} <span className="chip est">אומדן</span></th><th>#</th>
             <th className="wide-only">צבירה אורגנית</th><th>{phone ? 'NPV אורגני' : 'ערך הצבירה'} <span className="chip est">אומדן</span></th><th className="wide-only">#</th>

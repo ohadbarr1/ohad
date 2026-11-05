@@ -16,6 +16,9 @@ import {
 } from '../lib/scenarios';
 import '../styles/scenarios.css';
 import { WarTabs } from '../components/WarTabs';
+import { useLedger } from '../lib/csmData';
+import { StressLab } from './csm/StressLab';
+import '../styles/csm.css';
 
 /* A2 · /scenarios, the war table: eight inputs, all 17 companies repriced through their driver graphs (lib/drivers.ts propagate) as the
    sliders move, ranked by how much of their capital or earnings cushion the scenario consumes. The scenario lives in the URL. Every
@@ -119,7 +122,30 @@ function useFlip(keys: string[]) {
   return (k: string) => (el: HTMLElement | null) => { if (el) els.current.set(k, el); else els.current.delete(k); };
 }
 
+/** wave 2b: "תרחישים" has two views: the market scenarios through the driver graphs (the default) and the solvency view (?view=solvency),
+ *  the stress lab that read the insurers' own disclosed IFRS 17 and solvency sensitivities (formerly /industry/csm?view=stress). */
 export function Scenarios() {
+  const [sp] = useSearchParams();
+  return sp.get('view') === 'solvency' ? <SolvencyView /> : <MarketScenarios />;
+}
+
+function SolvencyView() {
+  const reg = useRegistry();
+  const { data: L, error } = useLedger();
+  const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
+  return (
+    <div className="scn csmpage">
+      <div className="pagehead"><div>
+        <h1><span className="icotile"><Icon name="sliders" /></span>חדר תרחישים</h1>
+        <div className="sub"><span>כושר פירעון, CSM והון בזעזוע: הרגישויות שכל מבטחת גילתה, בלי מודל מעבר להן</span><span>·</span><Link to="/capital">הון ואפשרויות הקצאה</Link><Link to="/industry/csm?view=sens">הרגישויות כפי שגולו</Link></div>
+      </div></div>
+      <WarTabs />
+      {error ? <ErrorBox what="נתוני CSM" error={error} /> : !L || !reg.data ? <Loading what="מעבדת הרגישויות" /> : <StressLab L={L} name={name} />}
+    </div>
+  );
+}
+
+function MarketScenarios() {
   const reg = useRegistry();
   const phone = usePhone();
   const ids = useMemo(() => reg.data?.map((c) => c.id) ?? null, [reg.data]);
@@ -222,7 +248,7 @@ export function Scenarios() {
     <div className="scn">
       <div className="pagehead"><div>
         <h1><span className="icotile"><Icon name="sliders" /></span>חדר תרחישים</h1>
-        <div className="sub"><span><span className="num">{activeN}</span> חברות פעילות{dormantN > 0 && <span className="dim"> (<span className="num">{dormantN}</span> לא פעילות בדיווח)</span>}</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/methodology#drivers">המנגנונים</Link><Link to="/industry/csm?view=stress">מעבדת הרגישויות</Link><Link to="/capital">הון ואפשרויות הקצאה</Link><Link to="/fragility?s=scen">מוניטור שבריריות</Link></div>
+        <div className="sub"><span><span className="num">{activeN}</span> חברות פעילות{dormantN > 0 && <span className="dim"> (<span className="num">{dormantN}</span> לא פעילות בדיווח)</span>}</span><span>·</span><span>בסיס <span className="num">{base?.q}</span>, LTM <span className="num">{base?.ltm[0]}–{base?.ltm[3]}</span></span><span>·</span><span>קצב שנתי, ש״ח במיליונים</span><span>·</span><Link to="/methodology#drivers">המנגנונים</Link><Link to="/capital">הון ואפשרויות הקצאה</Link><Link to="/fragility?s=scen">מוניטור שבריריות</Link></div>
       </div></div>
       <WarTabs />
 

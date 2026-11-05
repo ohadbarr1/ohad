@@ -5,15 +5,14 @@ import { SinceBlock } from '../components/SinceBadge';
 import { EXPECTATIONS_READY } from '../components/thesisSlots';
 import '../styles/thesis.css';
 
-/* The company thesis (/company/<id>, also /company/<id>/thesis): the company's default view, the advisory layer on top of the evidence.
-   In order: the position(s) in the book (A6), the market's expectations (A3), the ROE bridge (A4), the fragility signals (A10), the capital
-   options (A7, insurers only), then a row of links down to the evidence. A section with no data for the company does not render (each
+/* The company thesis (/company/<id>/thesis; the company opens on its numbers since phase 0): the advisory layer on top of the evidence.
+   In order: the position(s) in the book (A6), the market's expectations (A3), the fragility signals (A10), then a row of links down to the
+   evidence (wave 2b: the ROE bridge, A4, and the capital options, A7, are the "ניתוח" section of the numbers, linked from that row). A section with no data for the company does not render (each
    panel returns nothing); the expectations slot is a muted placeholder until A3 merges (components/thesisSlots.ts).
    The report day and the key-figure ledger moved to /company/<id>/numbers: an old deep link into them (?p=, ?w=, ?row=, #rd-…) lands there. */
 const PositionsBlock = lazy(() => import('./Positions').then((m) => ({ default: m.PositionsBlock })));  // A6: only when the company has a position
-const AttributionPanel = lazy(() => import('../components/Attribution').then((m) => ({ default: m.AttributionPanel })));  // A4
+// fox 3.0 wave 2b: the ROE bridge (A4) and the capital options (A7) moved to "ניתוח" in the numbers (/company/<id>/numbers#analysis)
 const FragilityPanel = lazy(() => import('../components/FragilityPanel').then((m) => ({ default: m.FragilityPanel })));  // A10
-const CapitalPanel = lazy(() => import('../components/CapitalPanel').then((m) => ({ default: m.CapitalPanel })));  // A7: insurers only
 const ExpectationsPanel = lazy(() => import('../components/Expectations').then((m) => ({ default: m.ExpectationsPanel })));  // module A3
 
 /** the report day's own address parameters and anchors: a link carrying them was written for the numbers view */
@@ -35,13 +34,12 @@ export function CompanyThesis() {
             <div className="hd"><h2>ציפיות השוק</h2><div className="aside"><span className="chip">בבנייה</span></div></div>
           </section>
         ))}
-        {entry.has_financials && <AttributionPanel id={entry.id} />}
         <FragilityPanel id={entry.id} />
-        {!fund && entry.has_financials && <CapitalPanel id={entry.id} />}
       </Suspense>
       <nav className="th-ev" aria-label="ראיות">
         <span className="l">ראיות</span>
         <Link to={`${base}/numbers`}>מספרים</Link>
+        {entry.has_financials && <Link to={`${base}/numbers#analysis`}>{fund ? 'גשר ROE' : 'גשר ROE והון'}</Link>}
         {!fund && entry.has_financials && <Link to={`${base}/ifrs17`}>IFRS 17</Link>}
         {entry.market_group && <Link to={`${base}/savings`}>חיסכון ארוך טווח</Link>}
         {entry.has_price && <Link to={`/valuation/${entry.id}`}>שווי</Link>}

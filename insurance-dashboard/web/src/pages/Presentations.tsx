@@ -8,14 +8,13 @@ import { loadCorpus, readerHref, searchText, type Corpus, type DocMeta, type FtQ
 import { periodText } from '../lib/searchOmni';
 import { useRegistry } from '../lib/useData';
 import { useTargets } from '../lib/targets';
-import { TargetsTracker } from '../components/TargetsTracker';
 import { usePhone } from '../lib/useMedia';
 import { Snip } from './SearchPage';
 import '../styles/restate.css';
 
 const QS = ['FY', 'Q3', 'Q2', 'Q1'];
 /** Presentations library: every investor deck in the registry, company × period, each opening the reader; search inside decks;
- *  the management targets tracker (filings and decks, actual vs target). */
+ *  decks with extracted targets are marked; the targets tracker itself is /credibility (wave 2b). */
 export function Presentations() {
   const reg = useRegistry();
   const tg = useTargets();
@@ -24,7 +23,7 @@ export function Presentations() {
   const [sp, setSp] = useSearchParams();
   const phone = usePhone();
   useEffect(() => { loadCorpus().then(setCorpus, () => setErr('רשימת המסמכים לא נטענה')); }, []);
-  const co = sp.get('co') ?? '', all = sp.get('all') === '1', q = sp.get('q') ?? '', tAll = sp.get('ta') === '1', tSt = sp.get('ts') ?? '';
+  const co = sp.get('co') ?? '', all = sp.get('all') === '1', q = sp.get('q') ?? '';
   const set = (k: string, v: string) => setSp((p) => { const x = new URLSearchParams(p); if (v) x.set(k, v); else x.delete(k); return x; }, { replace: true });
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
@@ -108,7 +107,8 @@ export function Presentations() {
         <p className="src">מקור: MAYA, דיווחי החברות (מצגת משקיעים) · מספר בפינה: כמה מצגות בעברית פורסמו לאותה תקופה · EN: גרסה באנגלית</p>
       </section>
 
-      <div id="targets"><TargetsTracker inCo={inCo} name={name} all={tAll} setAll={(v) => set('ta', v ? '1' : '')} status={tSt} setStatus={(v) => set('ts', v)} /></div>
+      {/* wave 2b (fox 3.0): the management-targets tracker has one home, /credibility (hit rates, every target with its pages) */}
+      <p id="targets" className="src pz-targets">יעדי הנהלה מהמצגות ומהדוחות, מול מה שהושג: <Link className="sv-u" to={`/credibility${co && co !== 'ins' && co !== 'fund' ? `?co=${co}` : ''}`}>אמינות יעדים</Link>{tg.data && <> · <span className="num">{tg.data.rows.filter((t) => inCo(t.c)).length}</span> יעדים</>}</p>
     </div>
   );
 }

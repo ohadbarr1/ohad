@@ -67,11 +67,14 @@ function Trend({ pts }: { pts: { p: string; v: number }[] }) {
   );
 }
 
-/** One report against the same period a year earlier and the previous quarter. Every figure is as printed and opens its source page. */
-export function CompanyReview({ id, docs }: { id: string; docs: number; store?: CompanyStore | null }) {
+/** One report against the same period a year earlier and the previous quarter. Every figure is as printed and opens its source page.
+ *  fox 3.0 wave 2b: the review is a section of the company's "מספרים" (`embedded`): the chapters fold, the report is the page's own
+ *  (`period`, the report day's), and an old /company/<id>/review link lands there with every chapter open (`open`). */
+export function CompanyReview({ id, docs, embedded, period: asked, open: openAll }: { id: string; docs: number; store?: CompanyStore | null; embedded?: boolean; period?: string; open?: boolean }) {
   const { data: d, error } = useIfrsData();
   const periods = useMemo(() => (d?.files ?? []).filter((f) => f.company === id).map((f) => f.period).sort(byPeriodDesc), [d, id]);
-  const [period, setPeriod] = usePeriodParam();
+  const [periodQ, setPeriod] = usePeriodParam();
+  const period = embedded ? asked ?? '' : periodQ;
   // the window is shared with the other company tabs through the address (?w=); a trailing-twelve-month choice reads here as the quarter
   const [w, setWin] = useWindowParam(), win: 'q' | 'ytd' = w === 'ytd' ? 'ytd' : 'q';
   const P = periods.includes(period) ? period : periods[0] ?? '';
@@ -116,7 +119,7 @@ export function CompanyReview({ id, docs }: { id: string; docs: number; store?: 
 
   if (error) return <ErrorBox what="נתוני הדוחות" error={error} />;
   if (!d) return <Loading what="סקירת דוח" />;
-  if (!P) return <Empty title="הדוחות של החברה טרם חולצו">{docs > 0 && <Link to="../filings">{docs} מסמכי מקור</Link>}</Empty>;
+  if (!P) return embedded ? null : <Empty title="הדוחות של החברה טרם חולצו">{docs > 0 && <Link to="../filings">{docs} מסמכי מקור</Link>}</Empty>;
   if (cur.error) return <ErrorBox what="נתוני הדוח" error={cur.error} />;
   if (!cur.data || (PP && !prev.data && !prev.error)) return <Loading what="נתוני הדוח" />;
   const file = d.files.find((x) => x.company === id && x.period === P);
@@ -124,14 +127,15 @@ export function CompanyReview({ id, docs }: { id: string; docs: number; store?: 
   return (
     <>
       <section className="controls">
-        <div className="field"><span>דוח</span><Seg label="דוח" value={P} onChange={setPeriod} options={periods.map((p) => [p, periodName(p)])} /></div>
-        {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'QTD'], ['ytd', 'YTD']]} /></div>}
+        {embedded ? <span className="chip">דוח <span className="num">{periodName(P)}</span>{!annual && <> · {win === 'ytd' ? 'YTD' : 'QTD'}</>}</span> : <>
+          <div className="field"><span>דוח</span><Seg label="דוח" value={P} onChange={setPeriod} options={periods.map((p) => [p, periodName(p)])} /></div>
+          {!annual && <div className="field"><span>חלון</span><Seg label="חלון" value={win} onChange={setWin} options={[['q', 'QTD'], ['ytd', 'YTD']]} /></div>}</>}
+        {embedded && asked && asked !== P && <span className="chip est" title="הדוח שבראש העמוד טרם חולץ לסקירה לפי פרקים">{periodName(asked)} טרם חולץ לסקירה</span>}
         <span className="chip">מיליוני ש"ח · כפי שדווח</span>
         {file?.url && <a className="chip" href={file.url} target="_blank" rel="noreferrer">הדוח המלא</a>}
         {!annual && !PP && <span className="chip est">QoQ: {periodName(prevPeriod(P))} טרם חולץ</span>}
       </section>
-      {sections.map((s) => (
-        <Panel key={s.title} title={s.title}>
+      {sections.map((s) => { const body = (
           <div className="scroll"><table className="tight review">
             <thead><tr><th>שורה</th><th>{periodName(P)}</th><th>{periodName(`${Number(P.slice(0, 4)) - 1}${P.slice(4)}`)} · YoY</th>{!annual && <th>{periodName(prevPeriod(P))} · QoQ</th>}<th className="wide-only">{periods.length} דוחות</th></tr></thead>
             <tbody>{s.rows.map((r, i) => { const multi = (k: number) => s.rows.filter((x) => x.f.m === s.rows[k].f.m).length > 1; return (
@@ -148,8 +152,11 @@ export function CompanyReview({ id, docs }: { id: string; docs: number; store?: 
               </Fragment>
             ); })}</tbody>
           </table></div>
-        </Panel>
-      ))}
+        );
+        return embedded
+          ? <details key={s.title} className="panel rv-ch" open={openAll || undefined}><summary className="hd"><h3>{s.title}</h3><div className="aside"><span className="num">{s.rows.length}</span> שורות</div></summary>{body}</details>
+          : <Panel key={s.title} title={s.title}>{body}</Panel>;
+      })}
     </>
   );
 }

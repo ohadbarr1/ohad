@@ -1,6 +1,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { IdDot } from '../components/MgrChip';
+import { FundsHead } from '../components/FundsNav';
 import { Sourced } from '../components/Source';
 import { ErrorBox, Kpi, Loading, Panel, Seg as SegCtl } from '../components/ui';
 import { nf } from '../lib/format';
@@ -18,9 +19,9 @@ export function FeeBook() {
   const fb = useFeeBook(), lens = useLens();
   useEffect(() => { document.title = 'ערך ספר דמי הניהול · fox'; }, []);
   useNoindex();
-  if (fb.error || lens.error) return <ErrorBox what="ערך ספר דמי הניהול" error={fb.error ?? lens.error ?? ''} />;
-  if (!fb.data || !lens.data) return <Loading what="ערך ספר דמי הניהול" />;
-  return <Page d={fb.data} lens={lens.data} />;
+  // wave 2b: the second tab of the savings hub's "ערך" (the hub's head and rows above it; the address, the draft banner and noindex stay)
+  return <><FundsHead />{fb.error || lens.error ? <ErrorBox what="ערך ספר דמי הניהול" error={fb.error ?? lens.error ?? ''} />
+    : !fb.data || !lens.data ? <Loading what="ערך ספר דמי הניהול" /> : <Page d={fb.data} lens={lens.data} />}</>;
 }
 
 /** fox 3.0 phase 0 (no draft in the shop window): <meta name="robots" content="noindex"> while this route is open; firebase.json sends
@@ -75,7 +76,7 @@ function Page({ d, lens }: { d: FeeBookData; lens: LensData }) {
         <Kpi label="ערך לכל ₪ נכסים" value={pct(sumA ? sumEv / sumA * 100 : null, 2)} sub="ממוצע משוקלל" />
       </section>
       <Panel title="לפי מנהל" aside={<span>מיליוני ש"ח · לחיצה על שם: מוצרים ורגישות</span>}>
-        <div className="scroll"><table className="lens-tbl nc-tbl fb-tbl">
+        <div className="scroll" tabIndex={0} role="region" aria-label="ערך ספר דמי הניהול לפי מנהל"><table className="lens-tbl nc-tbl fb-tbl">
           <thead><tr><th>מנהל</th><th>נכסים (מיליארד)</th><th>ערך הספר</th><th>ערך ÷ נכסים</th><th className="wide-only">ערך לפני הוצאות</th><th className="wide-only">הוצאות להכנסות: פנסיה</th><th className="wide-only">גמל והשתלמות</th><th className="wide-only">שרידות ממוצעת</th><th className="wide-only">CSM ÷ נכסי ביטוח</th></tr></thead>
           <tbody>{tot.map(({ m, ev, aum }) => { const rs = byG.get(m.g) ?? [], gross = rs.reduce((s, x) => s + (rowEv(x, a) == null ? 0 : evGross(x, a)), 0);
             const sv = wAvg(rs.filter((x) => x.surv != null).map((x) => [rowIn(x, a).surv!, x.aum]));
@@ -140,7 +141,7 @@ function Assumptions({ d, a, set, changed, P }: { d: FeeBookData; a: FbAssume; s
 function Products({ d, m, rows, a, P }: { d: FeeBookData; m: FbMgr; rows: FbRow[]; a: FbAssume; P: FbSrc }) {
   return (
     <Panel title={`${m.name} · לפי מוצר`} aside={<span>מיליוני ש"ח · רשות {ym(d.meta.asof)}</span>}>
-      <div className="scroll"><table className="lens-tbl nc-tbl fb-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="ערך ספר דמי הניהול לפי מוצר"><table className="lens-tbl nc-tbl fb-tbl">
         <thead><tr><th>מוצר</th><th>נכסים</th><th>דמי ניהול</th><th className="wide-only">מגמה, נק׳ לשנה</th><th className="wide-only">רצפה</th><th>שרידות</th><th className="wide-only">הוצאות להכנסות</th><th>ערך</th><th>ערך ÷ נכסים</th></tr></thead>
         <tbody>{rows.map((x) => { const i = rowIn(x, a), ev = rowEv(x, a); return (
           <tr key={x.p}>
@@ -166,7 +167,7 @@ function Grid({ d, m, rows, a }: { d: FeeBookData; m: FbMgr; rows: FbRow[]; a: F
   return (
     <Panel title={`${m.name} · רגישות: שיעור היוון × שרידות`} aside={<span>ערך הספר, מיליוני ש"ח · שאר ההנחות כמו למעלה</span>}>
       {!has ? <p className="muted">אין ערך בלי הוצאות מגזר מדווחות.</p> : (
-        <div className="scroll"><table className="lens-tbl nc-tbl fb-grid">
+        <div className="scroll" tabIndex={0} role="region" aria-label="רגישות להנחות"><table className="lens-tbl nc-tbl fb-grid">
           <thead><tr><th>היוון \ שרידות</th>{d.assume.grid_s.map((s) => <th key={s}>{s === 0 ? 'בפועל' : `${s > 0 ? '+' : ''}${nf(s, 0)} נק׳`}</th>)}</tr></thead>
           <tbody>{d.assume.grid_r.map((r) => (
             <tr key={r} className={Math.abs(r - a.disc) < 1e-9 ? 'sel' : ''}><th scope="row"><span className="num">{nf(r, 1)}%</span></th>
@@ -181,7 +182,7 @@ function CsmCheck({ d, a, byG, P }: { d: FeeBookData; a: FbAssume; byG: Map<numb
   const ins = d.managers.filter((m) => m.csm);
   return (
     <Panel title="בדיקת סבירות: CSM של המבטחות לכל ₪ נכסי ביטוח" aside={<span>אחוז מהנכסים</span>}>
-      <div className="scroll"><table className="lens-tbl nc-tbl fb-tbl">
+      <div className="scroll" tabIndex={0} role="region" aria-label="בדיקת סבירות מול CSM"><table className="lens-tbl nc-tbl fb-tbl">
         <thead><tr><th>מבטחת</th><th>CSM (מיליוני ש"ח)</th><th className="wide-only">בסיס</th><th className="wide-only">נכסי ביטוח, רשות (מיליארד)</th><th>CSM ÷ נכסים</th><th className="wide-only">CSM חיים וחיסכון ÷ נכסים</th><th>ספר דמי הניהול ÷ נכסים</th></tr></thead>
         <tbody>{ins.map((m) => { const c = m.csm!, t = mgrEv(byG.get(m.g) ?? [], a); return (
           <tr key={m.c}><td><span className="lens-mgr"><IdDot grp={m.name} />{m.name}</span></td>

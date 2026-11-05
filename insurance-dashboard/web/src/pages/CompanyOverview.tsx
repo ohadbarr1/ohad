@@ -1,6 +1,7 @@
-import { lazy, Suspense, useMemo, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { DividendCapacity } from '../components/DividendCapacity';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { CompanyReview } from './CompanyReview';
 import { ErrorBox, Panel } from '../components/ui';
 import { nf, periodLabel, pubLabel } from '../lib/format';
 import type { CompanyStore } from '../lib/company';
@@ -14,8 +15,11 @@ const DebtStrip = lazy(() => import('./Debt').then((m) => ({ default: m.DebtStri
 const ScrComposition = lazy(() => import('./csm/ScrComposition').then((m) => ({ default: m.ScrComposition })));
 const TargetsCompact = lazy(() => import('../components/TargetsTracker').then((m) => ({ default: m.TargetsCompact })));
 const AdjustedPanel = lazy(() => import('../components/AdjustedPanel').then((m) => ({ default: m.AdjustedPanel })));
-// the advisory panels (positions A6, attribution A4, fragility A10, capital A7) live on the thesis, the company's default view (CompanyThesis.tsx);
-// this page is the evidence under it: the report day, the key-figure ledger and the balance-sheet panels
+// fox 3.0 wave 2b: "מספרים" is the one page for reading a report. Under the report day (with its "10 שינויים" panel) the review by chapter
+// (#review, the former /company/<id>/review tab), then "ניתוח" (#analysis): the ROE bridge (A4) and the capital options (A7), which left the
+// thesis; the thesis keeps the position, the market's expectations and the fragility signals.
+const AttributionPanel = lazy(() => import('../components/Attribution').then((m) => ({ default: m.AttributionPanel })));  // A4
+const CapitalPanel = lazy(() => import('../components/CapitalPanel').then((m) => ({ default: m.CapitalPanel })));  // A7: insurers only
 import type { Prov } from '../lib/prov';
 import type { DocEntry } from '../lib/types';
 import { usePeriodParam, useWindowParam, type Win } from '../lib/period';
@@ -171,6 +175,13 @@ export function CompanyOverview() {
   const [p] = usePeriodParam();
   const [w] = useWindowParam();
   const [sp, setSp] = useSearchParams();
+  const loc = useLocation();
+  // an old /review or /attribution-panel link lands on its section: brought into view once the report day above it has laid out
+  useEffect(() => {
+    if (loc.hash !== '#review' && loc.hash !== '#analysis') return;
+    const t = setTimeout(() => document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' }), 900);
+    return () => clearTimeout(t);
+  }, [loc.hash, entry.id]);
   const sel = sp.get('row') ?? '';
   const onSel = (key: string) => setSp((q) => { const n = new URLSearchParams(q); if (key) n.set('row', key); else n.delete('row'); return n; }, { replace: true });
   const k = kpis?.get(entry.id);
@@ -205,13 +216,29 @@ export function CompanyOverview() {
       {!entry.has_financials && tiles}
       {fund && <FundHouseStrip id={entry.id} name={entry.name_he} market={market} group={entry.market_group} />}
       {!entry.has_financials && !fund && <CompanyTear id={entry.id} />}
+      {!fund && entry.has_financials && (
+        <section id="review" className="co-sec" aria-labelledby="review-h">
+          <h2 className="band" id="review-h">סקירת דוח לפי פרקים<span className="muted">רווח והון · שירותי ביטוח · CSM · חיסכון · כושר פירעון · YoY ו-QoQ, כפי שהודפס</span></h2>
+          <CompanyReview id={entry.id} docs={entry.docs} embedded period={P || reports[0]} open={loc.hash === '#review'} />
+        </section>
+      )}
       {groups.length > 0 && (
         <section className="kpi-sec">
           <h2 className="band">נתוני מפתח<span className="muted">{repTag && <><span className="num">{repTag}</span> · </>}{WIN_HE[win]} · {phone ? 'לחיצה על שורה פותחת גרף' : 'לחיצה על שורה מציגה אותה בגרף'}</span></h2>
           <KpiLedger groups={groups} asOf={asOf} sel={sel} onSel={onSel} />
         </section>
       )}
-      {!fund && <DividendCapacity id={entry.id} />}
+      {entry.has_financials && (
+        <section id="analysis" className="co-sec" aria-labelledby="analysis-h">
+          <h2 className="band" id="analysis-h">ניתוח<span className="muted">גשר ROE{!fund && <> · כושר חלוקה · הון ואפשרויות הקצאה</>}</span></h2>
+          <Suspense fallback={null}>
+            <AttributionPanel id={entry.id} />
+            {!fund && <DividendCapacity id={entry.id} />}
+            {!fund && <CapitalPanel id={entry.id} />}
+          </Suspense>
+        </section>
+      )}
+      {!entry.has_financials && !fund && <DividendCapacity id={entry.id} />}
       <Suspense fallback={null}>
         <TargetsCompact id={entry.id} name={entry.name_he} />
         <AdjustedPanel id={entry.id} name={entry.name_he} />

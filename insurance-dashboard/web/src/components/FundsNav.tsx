@@ -6,24 +6,54 @@ import { Tip } from './Explain';
 import { useBasis, useReal, useTray, TRAY_MAX, type Basis } from '../lib/funds';
 import '../styles/funds.css';
 import { useActiveDoor } from './home/doorState';
+import { HubTabs } from './HubTabs';
 
-/* The "חיסכון" section's chip row, Pro door only (P0 shell, fox 3.0 plan 05.11.26): at most six chips, the places an analyst moves between
-   inside the section. Everything else in the section (the time views, the trackers lab, the tools, the under-median list, the book value,
-   the holdings) keeps its address and is reached from its page's links, the rail's "חיסכון" and the library. The saver and the agent have
-   their places on the rail; no chip row for them. */
-const TABS: [string, string, boolean?][] = [['/funds/screen', 'מסלולים'], ['/funds/compare', 'השוואה'], ['/managers', 'גופים'], ['/funds', 'החודש', true], ['/flows', 'מי ניצח'], ['/funds/default', 'ברירת מחדל']];
+/* The "חיסכון" section's tab row, Pro door only (P0 shell, fox 3.0 plan 05.11.26; wave 2b: the savings hub). On the hub's pages the row is
+   the hub's seven tabs: עדשה · נכסים ותזרימים · החודש (/flows: who won, the month's leaders and laggards, under the median, the letter) ·
+   מנהלים · רווחיות · ערך (the flows' value and the fee book) · אומדן; each keeps its own address (?v= on /savings). On the tracks engine's
+   pages (the screener, a track card, compare, the tools) the row is the engine's own. The saver and the agent have their places on the
+   rail; no row for them. */
+type On = (path: string, v: string) => boolean;
+const LENS_VIEWS = ['market', 'econ', 'npv', 'value', 'now'];
+const SAVINGS_TABS: [string, string, On][] = [
+  ['/savings', 'עדשה', (p, v) => p === '/savings' && !LENS_VIEWS.includes(v)],
+  ['/savings?v=market', 'נכסים ותזרימים', (p, v) => p === '/savings' && v === 'market'],
+  ['/flows', 'החודש', (p) => p === '/flows' || p.startsWith('/flows/') || p === '/funds/under' || p === '/funds'],
+  ['/managers', 'מנהלים', (p) => p === '/managers'],
+  ['/savings?v=econ', 'רווחיות', (p, v) => p === '/savings' && v === 'econ'],
+  ['/savings?v=npv', 'ערך', (p, v) => (p === '/savings' && (v === 'npv' || v === 'value')) || p === '/feebook'],
+  ['/savings?v=now', 'אומדן', (p, v) => p === '/savings' && v === 'now'],
+];
+const ENGINE_TABS: [string, string][] = [['/funds/screen', 'מסלולים'], ['/funds/compare', 'השוואה'], ['/funds/default', 'ברירת מחדל'], ['/funds/tools', 'כלים']];
+const here = (loc: { pathname: string; search: string }) => ({ p: loc.pathname.replace(/\/+$/, '') || '/', v: new URLSearchParams(loc.search).get('v') ?? '' });
 
 export function FundsNav() {
   const loc = useLocation();
   const [door] = useActiveDoor();
   if (door !== 'pro') return null;
-  // a track card (/funds/p2009) belongs to the tracks chip
-  const card = /^\/funds\/[gip]\d+$/.test(loc.pathname);
-  return (
+  const { p, v } = here(loc);
+  if (SAVINGS_TABS.some(([, , on]) => on(p, v))) return (
     <nav className="subnav" aria-label="חיסכון">
-      {TABS.map(([to, l, end]) => <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive || (card && to === '/funds/screen') ? 'active' : '')}>{l}</NavLink>)}
+      {SAVINGS_TABS.map(([to, l, on]) => { const a = on(p, v); return <Link key={to} to={to} className={a ? 'active' : ''} aria-current={a ? 'page' : undefined}>{l}</Link>; })}
     </nav>
   );
+  // a track card (/funds/p2009) belongs to the tracks tab
+  const card = /^\/funds\/[gip]\d+$/.test(p);
+  return (
+    <nav className="subnav" aria-label="מסלולים">
+      {ENGINE_TABS.map(([to, l]) => <NavLink key={to} to={to} className={({ isActive }) => (isActive || (card && to === '/funds/screen') ? 'active' : '')}>{l}</NavLink>)}
+    </nav>
+  );
+}
+
+/** the second row under the hub's tab: the views of "החודש" and of "ערך" (components/HubTabs) */
+function SubTabs() {
+  const loc = useLocation();
+  const [door] = useActiveDoor();
+  const { p, v } = here(loc);
+  if (p === '/flows' || p.startsWith('/flows/') || p === '/funds/under' || (p === '/funds' && door === 'pro')) return <HubTabs hub="flows" sub />;
+  if (door === 'pro' && ((p === '/savings' && (v === 'npv' || v === 'value')) || p === '/feebook')) return <HubTabs hub="value" sub />;
+  return null;
 }
 
 /** Net or gross, nominal or real: one choice for the whole section, kept in this browser (and in the URL when a link carries it). */
@@ -46,6 +76,7 @@ export function FundsHead({ sub, tools, title = 'חיסכון' }: { sub?: ReactN
     <>
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="market" /></span>{title}</h1>{sub && <div className="sub">{sub}</div>}</div></div>
       <Toolbar lead={<FundsNav />}>{tools}</Toolbar>
+      <SubTabs />
       <CompareTray />
     </>
   );

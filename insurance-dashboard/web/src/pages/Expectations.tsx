@@ -1,15 +1,17 @@
-import { Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
-import { Empty, ErrorBox, Loading, Panel } from '../components/ui';
-import { useLoad } from '../lib/useData';
+import { Empty, ErrorBox, Loading, Panel, Pick, Toolbar } from '../components/ui';
+import { useLoad, useRegistry } from '../lib/useData';
 import { idCss } from '../lib/identity';
 import { fmt, fmtS } from '../lib/drivers';
 import { EXPECTATIONS_INDEX, NONBINDING, LEVER_NOTE, LEVER_SHORT, dateHe, pctText, pctTone, reqText, type EIndex, type EIndexRow, type EPart, type LeverKey } from '../lib/expectations';
 import '../styles/expectations.css';
 
-/* A3 · /expectations: every listed name ranked by how extreme its required inputs are. The rank is the highest percentile among the
-   components (ties: the next highest, and so on); every component is on the row, there is no composite score. Not a navigation item:
-   linked from the valuation tab and search. What the multiple implies, not a recommendation. */
+/* A3 · the market-expectations ranking: every listed name ranked by how extreme its required inputs are. The rank is the highest percentile
+   among the components (ties: the next highest, and so on); every component is on the row, there is no composite score. Wave 2b: it is the
+   index of "שווי" (/valuation with no company; /expectations lands here); a company's own models are a pick away. What the multiple implies,
+   not a recommendation. */
 
 const COLS: LeverKey[] = ['aum', 'fee', 'ci', 'csm', 'roe'];
 const iso = (s: string) => `⁦${s}⁩`;
@@ -43,23 +45,33 @@ function Row({ r }: { r: EIndexRow }) {
   );
 }
 
-export function Expectations() {
+export function ValuationIndex() {
   const { data, error } = useLoad<EIndex>(EXPECTATIONS_INDEX);
-  if (error) return <ErrorBox what="ציפיות השוק" error={error} />;
-  if (!data) return <Loading what="ציפיות השוק" />;
+  const reg = useRegistry();
+  const nav = useNavigate();
+  const head = (sub: ReactNode) => {
+    const cos = (reg.data ?? []).filter((c) => c.has_price);
+    return <>
+      <div className="pagehead"><div>
+        <h1><span className="icotile"><Icon name="value" /></span>הערכת שווי</h1>
+        <div className="sub">{sub}</div>
+      </div></div>
+      {cos.length > 0 && <Toolbar lead={<nav className="subnav" aria-label="שווי"><Link to="/valuation" className="active" aria-current="page">ציפיות השוק · כל החברות</Link></nav>}>
+        <Pick label="חברה" cap="חברה" value="" onChange={(x) => x && nav(`/valuation/${x}`)} options={[['', 'בחירת חברה'], ...cos.map((c) => [c.id, c.name_he] as [string, string])]} />
+      </Toolbar>}
+    </>;
+  };
+  if (error) return <div className="exp">{head(null)}<ErrorBox what="ציפיות השוק" error={error} /></div>;
+  if (!data) return <div className="exp">{head(null)}<Loading what="ציפיות השוק" /></div>;
   const ok = data.companies.filter((c) => c.status === 'ok');
   const na = data.companies.filter((c) => c.status !== 'ok');
-  if (!ok.length) return <Empty title="לא חושבו ציפיות שוק" />;
   const m = data.meta;
   return (
     <div className="exp">
-      <div className="pagehead"><div>
-        <h1><span className="icotile"><Icon name="value" /></span>ציפיות השוק</h1>
-        <div className="sub"><span><span className="num">{ok.length}</span> חברות נסחרות</span><span>·</span><span>מה המכפיל דורש עד {m.horizon}, מנוף אחד בכל פעם</span><span>·</span>
-          <span className="chip est" title="שווי השוק הוא קלט ידני ליום זה; אין היסטוריית מחירים">{m.price_label}</span><span>·</span><Link to="/valuation/phoenix">הערכת שווי</Link></div>
-      </div></div>
-
-      <Panel title="דירוג: עד כמה הדרישה רחוקה ממה שהחברה עשתה" aside={<span>אחוזון = חלק ההיסטוריה של החברה שדורש פחות; 100 = מעולם לא</span>}>
+      {head(<><span>מודלים על נתוני הדוחות; המחיר הוא קלט</span><span>·</span><span><span className="num">{ok.length}</span> חברות נסחרות</span><span>·</span><span>מה המכפיל דורש עד {m.horizon}, מנוף אחד בכל פעם</span><span>·</span>
+        <span className="chip est" title="שווי השוק הוא קלט ידני ליום זה; אין היסטוריית מחירים">{m.price_label}</span></>)}
+      {!ok.length ? <Empty title="לא חושבו ציפיות שוק" /> : <>
+      <Panel title="ציפיות השוק · דירוג: עד כמה הדרישה רחוקה ממה שהחברה עשתה" aside={<span>אחוזון = חלק ההיסטוריה של החברה שדורש פחות; 100 = מעולם לא</span>}>
         <ol className="exp-rank">
           <li className="hd" aria-hidden="true"><div /><div>חברה</div><div>P/B</div>{COLS.map((k) => <div key={k} title={LEVER_NOTE[k]}>{LEVER_SHORT[k]}</div>)}<div>הגבוה</div></li>
           {ok.map((r) => <Row key={r.id} r={r} />)}
@@ -69,6 +81,7 @@ export function Expectations() {
           כל מנוף נפתר לבדו, השאר בערכם הנוכחי; ROE {m.horizon} הוא המסלול שכל המנופים יחד צריכים לייצר. מדורג לפי האחוזון הגבוה מבין המנופים המכריעים ו-ROE, בשוויון לפי הבא אחריו; מנוף שאינו מכריע (פלח מתחת ל-15% מהרווח לפני מס, אין פתרון בטווח, או יותר מפי 2 מהשיא של החברה) לא נכנס לדירוג. ניתוח של מה שהמכפיל מגלם, לא המלצה.
         </div>
       </Panel>
+      </>}
       {na.length > 0 && <div className="src">לא חושב: {na.map((c, i) => <span key={c.id}>{i ? ' · ' : ''}<Link to={`/company/${c.id}`}>{c.name}</Link> ({c.why})</span>)}</div>}
     </div>
   );

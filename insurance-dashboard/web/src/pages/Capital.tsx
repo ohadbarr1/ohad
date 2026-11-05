@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { Sourced } from '../components/Source';
 import { Empty, ErrorBox, Loading, Panel } from '../components/ui';
 import { BufferInput, OptionTable, StressTable, lts, useBufferParam, useCapitalBase } from '../components/CapitalPanel';
 import { CapitalForward } from '../components/CapitalForward';
-import { load } from '../lib/useData';
+import { load, useRegistry } from '../lib/useData';
+import { useLedger } from '../lib/csmData';
+import { CapitalView } from './csm/CapitalView';
 import { idCss } from '../lib/identity';
 import { driversPath, fmt, fmtS, type DriverFile } from '../lib/drivers';
 import { BASIS_HE, bindingOf, cprov, distAt, isOk, optionsAt, stressOf, vintLabel, worstOf, type CapOk, type Rows, type Stressed } from '../lib/capital';
 import '../styles/scenarios.css';
 import '../styles/capital.css';
+import '../styles/csm.css';
 
 /* A7 · /capital: every insurer's distributable capital, ranked by how much of it (as a share of SCR) survives an A2 preset (default: each
-   insurer's own worst computed preset). Not a navigation item: linked from /scenarios, the company panels and search. */
+   insurer's own worst computed preset). Wave 2b: the canonical capital page, the "הון" tab of "השוואה ענפית"; under the ranking, "כפי שדווח"
+   (#reported): five years of solvency, surplus, SCR, equity and payout per insurer, the distribution capacity, the debt wall and SCR by risk
+   module (formerly /industry/csm?view=capital and /industry/capital, which land here). */
 
 const sign = (v: number | null | undefined, d = 1) => (v == null ? '–' : `⁦${fmtS(v, d)}⁩`);
 const signP = (v: number | null | undefined, d = 1) => (v == null ? '–' : `⁦${fmtS(v, d)}%⁩`);
@@ -77,7 +82,7 @@ export function Capital() {
     <div className="cap scn">
       <div className="pagehead"><div>
         <h1><span className="icotile"><Icon name="shield" /></span>הון ואפשרויות הקצאה</h1>
-        <div className="sub"><span><span className="num">{cos.length}</span> מבטחות</span><span>·</span><span>כושר פירעון <span className="num">{dates}</span>, רווח LTM <span className="num">{B.file.meta.base.ltm[0]}–{B.file.meta.base.ltm[3]}</span></span><span>·</span><span>מיליוני ש״ח</span><span>·</span><Link to="/scenarios">חדר התרחישים</Link><Link to="/industry/csm?view=capital">כושר חלוקה כפי שדווח</Link><Link to="/consolidation">מסך האיחודים</Link></div>
+        <div className="sub"><span><span className="num">{cos.length}</span> מבטחות</span><span>·</span><span>כושר פירעון <span className="num">{dates}</span>, רווח LTM <span className="num">{B.file.meta.base.ltm[0]}–{B.file.meta.base.ltm[3]}</span></span><span>·</span><span>מיליוני ש״ח</span><span>·</span><Link to="/scenarios">חדר התרחישים</Link><a href="#reported">כושר חלוקה כפי שדווח</a><Link to="/consolidation">מסך האיחודים</Link></div>
       </div></div>
 
       <div className="cap-ctl">
@@ -121,6 +126,24 @@ export function Capital() {
       <CapitalForward />
 
       {na.length > 0 && <div className="src">לא חושב: {na.map((c, i) => <span key={c.id}>{i ? ' · ' : ''}<Link to={`/company/${c.id}`}>{c.name}</Link></span>)}. {'why' in na[0] ? [...new Set(na.map((c) => ('why' in c ? c.why : '')))].join(' · ') : ''}</div>}
+
+      <Reported />
     </div>
+  );
+}
+
+/** "כפי שדווח": the capital lines as the insurers printed them (the CSM ledger's former capital view), every figure linked to its page */
+function Reported() {
+  const reg = useRegistry();
+  const { data: L, error } = useLedger();
+  const loc = useLocation();
+  // an old /industry/csm?view=capital link lands here (#reported): brought into view once the ranking above it has laid out
+  useEffect(() => { if (loc.hash !== '#reported' || !L) return; const t = setTimeout(() => document.getElementById('reported')?.scrollIntoView({ block: 'start' }), 300); return () => clearTimeout(t); }, [loc.hash, L]);
+  const name = (id: string) => reg.data?.find((c) => c.id === id)?.name_he ?? id;
+  return (
+    <section id="reported" className="csmpage cap-reported" aria-labelledby="reported-h">
+      <h2 className="band" id="reported-h">כפי שדווח<span className="muted">יחס כושר פירעון, עודף הון, SCR, הון ודיבידנד לכל מבטחת · כושר חלוקה · חומת החוב · SCR לפי מודול סיכון</span></h2>
+      {error ? <ErrorBox what="נתוני ההון כפי שדווחו" error={error} /> : !L || !reg.data ? <Loading what="הון ודיבידנד" /> : <CapitalView L={L} name={name} />}
+    </section>
   );
 }

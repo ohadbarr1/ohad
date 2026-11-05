@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { NavLink, Outlet, useOutletContext } from 'react-router-dom';
+import { Outlet, useOutletContext } from 'react-router-dom';
+import { HubTabs } from '../components/HubTabs';
 import { Icon } from '../components/Icon';
 import { Toolbar } from '../components/ui';
 import '../styles/prov-kpi.css';
@@ -20,15 +21,9 @@ export function IndustryLayout() {
     <>
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="compare" /></span>השוואה ענפית</h1></div></div>
       <Toolbar className="hubtools" lead={<>
-        <nav className="subnav" aria-label="השוואה ענפית">
-          <NavLink to="peers">טבלת עמיתים</NavLink>
-          <NavLink to="csm">IFRS 17 · CSM · הון</NavLink>
-          <NavLink to="pnc">ביטוח כללי: יחסים</NavLink>
-          <NavLink to="houses">בתי השקעות</NavLink>
-          <NavLink to="/restatements">הצגות מחדש</NavLink>
-          <NavLink to="/presentations">מצגות</NavLink>
-          <NavLink to="/debt">חוב ופירעונות</NavLink>
-        </nav>
+        {/* wave 2b: the hub's tab row, shared with /capital and /restatements (components/HubTabs); investor presentations and the debt
+            ladder are in the Pro door's library */}
+        <HubTabs hub="industry" />
         <span ref={setLead} className="tools-slot" />
       </>}><span ref={setEnd} className="tools-slot" /></Toolbar>
       <Outlet context={{ lead, end } satisfies IndustryCtx} />
