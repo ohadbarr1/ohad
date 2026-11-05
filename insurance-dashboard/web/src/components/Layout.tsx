@@ -24,45 +24,51 @@ import { doorFromSearch, doorLabel, isProPage, useActiveDoor } from './home/door
 import type { Door } from '../lib/door';
 import '../styles/doors.css';
 import { useSaverCompareHref } from '../lib/saverLinks';  // W5 saver: the compare tab opens on the reader's products
-import { MonthNotifier } from './Reminders';  // W8 feeds: a notification on this device when a new regulator month arrived
+import { MonthNotifier } from './Reminders';
+import { LibraryMenu, LIB_PATHS } from './LibraryMenu';  // P0 shell: the Pro door's library and lab
+import { usePositions } from '../lib/positions';  // W8 feeds: a notification on this device when a new regulator month arrived
 
-// The six places, the same on the rail and the phone's bottom bar (חיסכון joined in F1: the funds section left the evidence group): [route, icon, label, label on the phone (the same word, shortened),
-// other addresses that light it]. Search lives in the top bar on every screen; data quality (/data) keeps its address but is not a place.
-const NAV: [string, string, string, string, string[]][] = [
+// P0 shell (fox 3.0 plan, 05.11.26): each door opens on its hero job and keeps 5 to 7 places, the same on the rail and the phone's bottom bar.
+// A place: [route, icon, label, label on the phone (the same word, shortened), other addresses that light it, wide only (on the phone it
+// moves into the "עוד" sheet)]. Search lives in the top bar on every screen.
+type Place = [to: string, icon: string, label: string, short: string, also: (string | RegExp)[], wide?: boolean];
+/** Pro: seven places. The war room is a tab of the scenarios (its address stays); the positions join only once one is published; the
+ *  reference screens and the lab sit behind "ספרייה" (components/LibraryMenu) */
+const NAV: Place[] = [
   ['/', 'home', 'בית', 'בית', ['/company/', '/pro']],
+  ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה', ['/industry', '/capital', '/restatements']],
+  // the long-term-savings section: the lens, flows, managers, the funds pages (and the old /market links)
+  ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', '/funds', '/feebook', '/nowcast', '/market']],
+  ['/valuation', 'value', 'שווי', 'שווי', ['/expectations'], true],
+  ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', ['/warroom', '/fragility'], true],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
-  // the long-term savings section: the funds hub, the tracks, compare, the lens, the managers and their holdings (and the old /market links)
-  ['/funds', 'market', 'חיסכון', 'חיסכון', ['/savings', '/managers', '/flows', '/feebook', '/holdings', '/market']],
-  ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', []],
-  ['/warroom', 'warroom', 'חדר מלחמה', 'חדר מלחמה', ['/capital', '/consolidation', '/fragility']],
-  ['/positions', 'positions', 'עמדות', 'עמדות', []],
+  ['/feed', 'spark', 'מה השתנה', 'מה השתנה', ['/watch', '/calendar']],
 ];
-/** the evidence layer under the four places: on the desktop rail only (the phone reaches it from the home hub and from search) */
-const EVIDENCE: [string, string, string, string[]][] = [
-  ['/industry', 'compare', 'השוואה ענפית', []],
-  ['/valuation', 'value', 'שווי', []],
-];
-/** W1 shell: the places of the saver's and the agent's doors (same shape as NAV; Pro keeps NAV and EVIDENCE as they are) */
-const SAVER_NAV: typeof NAV = [
+const POSITIONS: Place = ['/positions', 'positions', 'עמדות', 'עמדות', [], true];
+/** the saver: five places; "רגעים" (life moments and the annual statement) took the watchlist's place (it folds into /my) */
+const SAVER_NAV: Place[] = [
   ['/', 'home', 'בית', 'בית', []],
   ['/my', 'mine', 'המוצרים שלי', 'המוצרים שלי', []],
   ['/funds/tools/fees', 'fee', 'דמי ניהול', 'דמי ניהול', []],
   ['/funds/compare', 'compare', 'השוואה', 'השוואה', []],
-  ['/funds/watch', 'eye', 'המעקב שלי', 'המעקב שלי', []],
+  ['/my/moment', 'moment', 'רגעים', 'רגעים', ['/my/statement']],
 ];
-const AGENT_NAV: typeof NAV = [
+/** the agent: six places, no chip row and no "עוד" under them; the Pro pages leave this door */
+const AGENT_NAV: Place[] = [
   ['/', 'home', 'בית', 'בית', []],
-  ['/funds/screen', 'funds', 'מסלולים', 'מסלולים', ['/funds$', '/funds/makers', '/funds/rank', '/funds/glide']],
+  ['/clients', 'clients', 'לקוחות', 'לקוחות', []],
+  ['/funds/screen', 'funds', 'מסלולים', 'מסלולים', ['/funds$', '/funds/makers', '/funds/rank', /^\/funds\/[gip]\d+$/]],
   ['/funds/compare', 'compare', 'השוואה', 'השוואה', []],
-  ['/funds/default', 'shield', 'ברירת מחדל', 'ברירת מחדל', []],
   ['/managers', 'companies', 'גופים', 'גופים', []],
-  ['/funds/tools', 'sliders', 'כלים', 'כלים', ['/funds/trackers', '/funds/watch']],
+  ['/funds/tools', 'sliders', 'כלים', 'כלים', ['/funds/trackers', '/funds/glide', '/funds/default', '/funds/bm']],
 ];
 /** the rail and the bottom bar of a door; with no door chosen yet, the saver's (the widest audience; the picker is one tap away) */
-const navOf = (door: Door | null) => (door === 'pro' ? NAV : door === 'agent' ? AGENT_NAV : SAVER_NAV);
+const navOf = (door: Door | null, positions: boolean) => (door === 'pro' ? (positions ? [...NAV, POSITIONS] : NAV) : door === 'agent' ? AGENT_NAV : SAVER_NAV);
 /** an address that lights a place besides its own: '/company/' covers every company page, '/capital' itself and anything under it,
- *  and (W1) '/funds$' that address alone */
-const lit = (path: string, also: string[]) => also.some((s) => (s.endsWith('$') ? path === s.slice(0, -1) : s.endsWith('/') ? path.startsWith(s) : path === s || path.startsWith(`${s}/`)));
+ *  '/funds$' that address alone, a pattern what it matches */
+const lit = (path: string, also: (string | RegExp)[]) => also.some((s) => (typeof s !== 'string' ? s.test(path) : s.endsWith('$') ? path === s.slice(0, -1) : s.endsWith('/') ? path.startsWith(s) : path === s || path.startsWith(`${s}/`)));
+/** a place is on: its own address (and below it; the home and "המוצרים שלי" only exactly), or one of the addresses it also covers */
+const isOn = (path: string, [to, , , , also]: Place) => (to === '/' || to === '/my' ? path === to : path === to || path.startsWith(`${to}/`)) || lit(path, also);
 
 export function Layout() {
   const { theme, toggle, next } = useTheme();
@@ -84,9 +90,12 @@ export function Layout() {
     const rest = q.toString();
     go({ pathname: loc.pathname, search: rest ? `?${rest}` : '', hash: loc.hash }, { replace: true });
   }, [loc.search]);  // eslint-disable-line react-hooks/exhaustive-deps
-  const nav = navOf(door);
   const pro = door === 'pro';
+  // the positions join the Pro rail once the book has a published position (positions.json is small; it is read in the Pro door only)
+  const book = usePositions(pro);
+  const nav = navOf(door, (book.data?.positions?.length ?? 0) > 0);
   const cmpHref = useSaverCompareHref(nav === SAVER_NAV);
+  const libLit = pro && !nav.some((p) => isOn(loc.pathname, p)) && LIB_PATHS.some((s) => loc.pathname === s || loc.pathname.startsWith(`${s}/`));
   useEffect(() => {
     const names = new Map(reg.data?.map((c) => [c.id, c.name_he]));
     // while the list loads a name is unknown (undefined); once it has loaded, an id that is not on it is a page that does not exist (null)
@@ -101,11 +110,8 @@ export function Layout() {
       <aside className="rail">
         <NavLink to="/" className="brand" aria-label="fox" title="fox · דף הבית"><Logo size={40} /></NavLink>
         <nav aria-label="ראשי">
-          {nav.map(([to, icon, label, short, also]) => <NavLink key={to} to={to === '/funds/compare' && cmpHref ? cmpHref : to} end={to === '/'} aria-label={to === '/questions' && news > 0 ? `${label}, ${news} תשובות במעקב השתנו` : label} className={({ isActive }) => `item${isActive || lit(loc.pathname, also) ? ' active' : ''}`}><Ico name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span>{to === '/questions' && news > 0 && <span className="wt-badge" aria-hidden="true">{news > 99 ? '99+' : news}</span>}</NavLink>)}
-          {pro && <div className="rail-ev" role="group" aria-labelledby="rail-ev-l">
-            <span className="rail-ev-l" id="rail-ev-l">ראיות</span>
-            {EVIDENCE.map(([to, icon, label, also]) => <NavLink key={to} to={to} aria-label={label} className={({ isActive }) => `item ev${isActive || lit(loc.pathname, also) ? ' active' : ''}`}><Icon name={icon} /><span className="lbl-w">{label}</span></NavLink>)}
-          </div>}
+          {nav.map((p) => <RailItem key={p[0]} p={p} path={loc.pathname} news={news} href={p[0] === '/funds/compare' && cmpHref ? cmpHref : p[0]} />)}
+          {pro && <LibraryMenu lit={libLit} more={nav.filter((p) => p[5]).map(([to, , label]) => <li key={to}><NavLink to={to}>{label}</NavLink></li>)} />}
         </nav>
         <div className="foot">
           <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
@@ -122,12 +128,26 @@ export function Layout() {
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
-        <main className="page" id="main" tabIndex={-1} key={section}>{!pro && isProPage(loc.pathname) && <ProChip door={door} />}<ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary><SiteFoot path={loc.pathname} door={door} /><MonthNotifier /></main>
+        <main className="page" id="main" tabIndex={-1} key={section}>{!pro && isProPage(loc.pathname) && <ProChip door={door} />}<ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<Loading what="עמוד" />}><Outlet /></Suspense></ErrorBoundary><MonthNotifier /></main>
+        {/* P0: the footer follows <main> (its own contentinfo landmark), so a page's word budget counts the page, not the site's chrome */}
+        <SiteFoot path={loc.pathname} door={door} />
       </div>
     </div>
     {help && <ShortcutsHelp onClose={() => setHelp(false)} />}
     <div className="print-foot">fox · {location.host}{loc.pathname} · כל מספר מקושר לעמוד המקור בדוח · הודפס {pubLabel(new Date().toISOString())}</div>
     </SourceProvider>
+  );
+}
+
+/** one place on the rail (a whole label) and on the phone's bottom bar (the short one); a wide-only place leaves the bar for "עוד" */
+function RailItem({ p, path, news, href }: { p: Place; path: string; news: number; href: string }) {
+  const [to, icon, label, short, , wide] = p;
+  const badge = to === '/questions' && news > 0;
+  return (
+    <NavLink to={href} end={to === '/' || to === '/my'} aria-label={badge ? `${label}, ${news} תשובות במעקב השתנו` : label} className={`item${isOn(path, p) ? ' active' : ''}${wide ? ' wide-item' : ''}`}>
+      <Ico name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span>
+      {badge && <span className="wt-badge" aria-hidden="true">{news > 99 ? '99+' : news}</span>}
+    </NavLink>
   );
 }
 
@@ -143,6 +163,8 @@ function SiteFoot({ path, door }: { path: string; door: Door | null }) {
         ? <span className="disc">נתוני רשות שוק ההון, עובדתיים ומשווים; אינם ייעוץ או שיווק פנסיוני ללקוח מסוים. תשואות עבר אינן מבטיחות תשואות עתיד; ״נטו״: אומדן לפי דמי הניהול הממוצעים בפועל.</span>
         : <span className="disc">המידע עובדתי ומשווה, ואינו ייעוץ השקעות או שיווק פנסיוני ואינו מתחשב בנתונים האישיים שלכם. תשואות עבר אינן מבטיחות תשואות בעתיד. ״נטו״ הוא אומדן לפי דמי הניהול הממוצעים בפועל.</span>)}
       <NavLink to="/about">על fox ומקורות הנתונים</NavLink>
+      {/* P0 · F3: the corrections log and the contact (the section itself is built on /about) */}
+      <Link to="/about#corrections">תיקונים ויצירת קשר</Link>
       <span>חינם, בלי פרסומות ובלי עמלות</span>
     </footer>
   );
