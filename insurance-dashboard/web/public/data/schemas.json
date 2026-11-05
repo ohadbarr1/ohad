@@ -262,6 +262,14 @@
    "schema": "card"
   },
   {
+   "pattern": "changes/index.json",
+   "schema": "changesIndex"
+  },
+  {
+   "pattern": "changes/*.json",
+   "schema": "changes"
+  },
+  {
    "pattern": "since.json",
    "schema": "since"
   },
@@ -276,6 +284,14 @@
   {
    "pattern": "flow_npv.json",
    "schema": "flowNpv"
+  },
+  {
+   "pattern": "flows/letters/index.json",
+   "schema": "flowsLetterIndex"
+  },
+  {
+   "pattern": "flows/letters/*.json",
+   "schema": "flowsLetter"
   },
   {
    "pattern": "nowcast.json",
@@ -360,7 +376,10 @@
   {
    "pattern": "answers/*.json",
    "schema": "answersTopic"
-  }
+  },
+  {"pattern": "tables/v1/manifest.json", "schema": "tablesManifest"},
+  {"pattern": "tables/v1/changes.json", "schema": "tablesChanges"},
+  {"pattern": "tables/v1/*.json", "schema": "tablesTable"}
  ],
  "$defs": {
   "period": {
@@ -6151,6 +6170,12 @@
     }
    }
   },
+  "chgSrc": {"type": "object", "required": ["k"], "additionalProperties": false, "properties": {"k": {"type": "string", "enum": ["pg", "calc", "xbrl"]}, "rid": {"type": ["integer", "null"]}, "pg": {"type": "integer"}, "der": {"type": "integer", "enum": [1]}, "fx": {"type": "string"}, "in": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/chgFig"}}, "key": {"type": ["string", "null"]}, "p": {"type": ["string", "null"]}}},
+  "chgFig": {"type": "object", "required": ["v", "u", "s"], "additionalProperties": false, "properties": {"l": {"type": "string"}, "v": {"type": "number"}, "u": {"type": "string", "enum": ["m", "pct", "pp", "dm", "dpct"]}, "s": {"$ref": "#/$defs/chgSrc"}}},
+  "chgItem": {"type": "object", "required": ["k", "l", "g", "cmp", "la", "lb", "a", "b", "d", "z", "sc", "pl", "gd"], "additionalProperties": false, "properties": {"k": {"type": "string"}, "l": {"type": "string"}, "g": {"type": "string", "enum": ["pl", "bs", "ifrs", "ratio", "xbrl"]}, "cmp": {"type": "string", "enum": ["YoY", "QoQ", "LTM", "prev"]}, "la": {"type": "string"}, "lb": {"type": "string"}, "pl": {"type": "string"}, "a": {"$ref": "#/$defs/chgFig"}, "b": {"$ref": "#/$defs/chgFig"}, "d": {"$ref": "#/$defs/chgFig"}, "dp": {"$ref": "#/$defs/chgFig"}, "rest": {"$ref": "#/$defs/chgFig"}, "z": {"type": ["number", "null"]}, "sc": {"type": "number"}, "gd": {"type": "integer", "enum": [-1, 0, 1]}, "alt": {"type": "integer", "enum": [1]}, "der": {"type": "integer", "enum": [1]}, "tx": {"type": "integer", "enum": [1]}, "why": {"type": "object", "required": ["t", "s"], "additionalProperties": false, "properties": {"t": {"type": "string"}, "s": {"$ref": "#/$defs/chgSrc"}}}}},
+  "chgReport": {"type": "object", "required": ["p", "end", "st", "rid", "pub", "pages", "eq", "cand", "n", "items"], "additionalProperties": false, "properties": {"p": {"$ref": "#/$defs/period"}, "end": {"$ref": "#/$defs/date"}, "st": {"type": "string", "enum": ["verified", "unverified"]}, "rid": {"type": ["integer", "null"]}, "pub": {"type": ["string", "null"]}, "pages": {"type": ["integer", "null"]}, "eq": {"type": ["object", "null"]}, "cand": {"type": "integer"}, "n": {"type": "integer"}, "items": {"type": "array", "items": {"$ref": "#/$defs/chgItem"}}}},
+  "changes": {"type": "object", "required": ["v", "c", "name", "kind", "rule", "docs", "reports"], "additionalProperties": false, "properties": {"v": {"type": "integer"}, "c": {"type": "string"}, "name": {"type": "string"}, "kind": {"type": "string", "enum": ["ins", "fund"]}, "rule": {"type": "string"}, "docs": {"type": "object"}, "reports": {"type": "array", "items": {"$ref": "#/$defs/chgReport"}}}},
+  "changesIndex": {"type": "object", "required": ["v", "built", "rule", "mat", "co"], "additionalProperties": false, "properties": {"v": {"type": "integer"}, "built": {"$ref": "#/$defs/date"}, "rule": {"type": "string"}, "mat": {"type": "object"}, "co": {"type": "object"}}},
   "cardsIndex": {
    "type": "object",
    "required": [
@@ -6496,7 +6521,9 @@
       "fee",
       "est",
       "pos",
-      "fragility"
+      "fragility",
+       "chg",
+       "letter"
      ]
     },
     "d": {
@@ -6722,7 +6749,9 @@
       "fee",
       "est",
       "pos",
-      "fragility"
+      "fragility",
+      "chg",
+      "letter"
      ],
      "additionalProperties": false,
      "properties": {
@@ -6912,6 +6941,42 @@
          "type": "integer"
         }
        }
+      },
+      "chg": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
+      },
+      "letter": {
+       "type": "object",
+       "required": [
+        "he",
+        "n"
+       ],
+       "properties": {
+        "he": {
+         "type": "string"
+        },
+        "n": {
+         "type": "integer"
+        },
+        "slot": {
+         "type": "integer"
+        }
+       }
       }
      }
     },
@@ -6967,6 +7032,381 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/feedEvent"
+     }
+    }
+   }
+  },
+  "flowsLetterIndex": {
+   "type": "object",
+   "required": [
+    "v",
+    "latest",
+    "letters",
+    "events"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "latest": {
+     "$ref": "#/$defs/month"
+    },
+    "letters": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "p",
+       "ver",
+       "built",
+       "first",
+       "hash",
+       "h"
+      ],
+      "properties": {
+       "p": {
+        "$ref": "#/$defs/month"
+       },
+       "ver": {
+        "type": "integer"
+       },
+       "built": {
+        "$ref": "#/$defs/date"
+       },
+       "first": {
+        "$ref": "#/$defs/date"
+       },
+       "hash": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+       },
+       "h": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "t",
+       "d",
+       "dk",
+       "c",
+       "per",
+       "h",
+       "src",
+       "to"
+      ],
+      "properties": {
+       "t": {
+        "enum": [
+         "letter"
+        ]
+       },
+       "d": {
+        "$ref": "#/$defs/date"
+       },
+       "dk": {
+        "enum": [
+         "fetched"
+        ]
+       },
+       "src": {
+        "type": "object",
+        "required": [
+         "k",
+         "ym"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "flowsLetter": {
+   "type": "object",
+   "required": [
+    "v",
+    "p",
+    "ver",
+    "built",
+    "hash",
+    "permalink",
+    "versions",
+    "body"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "p": {
+     "$ref": "#/$defs/month"
+    },
+    "ver": {
+     "type": "integer"
+    },
+    "built": {
+     "$ref": "#/$defs/date"
+    },
+    "hash": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "permalink": {
+     "type": "string",
+     "pattern": "^https://"
+    },
+    "versions": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "ver",
+       "built",
+       "hash",
+       "changes"
+      ],
+      "properties": {
+       "ver": {
+        "type": "integer"
+       },
+       "built": {
+        "$ref": "#/$defs/date"
+       },
+       "changes": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "k",
+          "l",
+          "a",
+          "b"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "body": {
+     "type": "object",
+     "required": [
+      "p",
+      "received",
+      "src",
+      "headline",
+      "winner",
+      "loser",
+      "across",
+      "total",
+      "prods",
+      "tenders",
+      "under",
+      "defs",
+      "method",
+      "figs"
+     ],
+     "properties": {
+      "p": {
+       "$ref": "#/$defs/month"
+      },
+      "received": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "headline": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "string"
+       }
+      },
+      "winner": {
+       "type": "object",
+       "required": [
+        "grp",
+        "comp"
+       ]
+      },
+      "loser": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "across": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "required": [
+         "grp",
+         "comp",
+         "tr",
+         "dt",
+         "cl",
+         "mig",
+         "in"
+        ]
+       }
+      },
+      "total": {
+       "type": "object",
+       "required": [
+        "tr",
+        "comp",
+        "dt",
+        "cl",
+        "mig",
+        "in"
+       ]
+      },
+      "prods": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "required": [
+         "id",
+         "label",
+         "tot",
+         "groups",
+         "top",
+         "low"
+        ],
+        "properties": {
+         "groups": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+           "type": "object",
+           "required": [
+            "grp",
+            "a",
+            "tr",
+            "comp",
+            "dt",
+            "cl",
+            "mig",
+            "org",
+            "net",
+            "rk"
+           ],
+           "properties": {
+            "a": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "tr": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "comp": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "dt": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "cl": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "mig": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "org": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "net": {
+             "type": [
+              "number",
+              "null"
+             ]
+            },
+            "rk": {
+             "type": [
+              "integer",
+              "null"
+             ]
+            },
+            "since": {
+             "$ref": "#/$defs/month"
+            }
+           }
+          }
+         }
+        }
+       }
+      },
+      "tenders": {
+       "type": "array"
+      },
+      "under": {
+       "type": [
+        "object",
+        "null"
+       ]
+      },
+      "defs": {
+       "type": "object",
+       "required": [
+        "fox",
+        "compare"
+       ],
+       "properties": {
+        "fox": {
+         "type": "array",
+         "minItems": 1,
+         "items": {
+          "type": "object",
+          "required": [
+           "k",
+           "he",
+           "def"
+          ]
+         }
+        },
+        "compare": {
+         "type": "array",
+         "minItems": 1,
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      },
+      "method": {
+       "type": "object"
+      },
+      "figs": {
+       "type": "object"
+      }
      }
     }
    }
@@ -16936,6 +17376,34 @@
      }
     }
    }
-  }
+  },
+  "tablesColumns": {"$comment": "P4 fox inside Excel: the v1 columns of every long table, in this order. v1 promise: a column never changes meaning; new columns are only appended (then this list grows at its end).",
+   "type": "array", "prefixItems": [{"enum": ["entity_id"]}, {"enum": ["entity_name"]}, {"enum": ["dim_id"]}, {"enum": ["dim_label"]}, {"enum": ["metric_id"]}, {"enum": ["metric_label"]},
+    {"enum": ["period"]}, {"enum": ["period_label"]}, {"enum": ["period_end"]}, {"enum": ["value"]}, {"enum": ["unit"]}, {"enum": ["kind"]}, {"enum": ["standard"]}, {"enum": ["source_id"]},
+    {"enum": ["source_page"]}, {"enum": ["source_url"]}, {"enum": ["source_name"]}, {"enum": ["as_of"]}, {"enum": ["note"]}, {"enum": ["version"]}], "minItems": 20, "items": {"type": "string"}},
+  "tablesTable": {"$comment": "P4: one long table, web/public/data/tables/v1/<table>.json (the same rows as <table>.csv), pipeline/build_tables.py. A row: entity, slice, metric, period, value with its unit and kind, the source (MAYA report id and page, or the regulator's dataset), as-of and the schema version.",
+   "type": "object", "required": ["v", "table", "version", "columns", "rows"], "additionalProperties": false,
+   "properties": {"v": {"type": "integer"}, "table": {"type": "string", "pattern": "^[a-z0-9_]+$"}, "version": {"enum": ["v1"]}, "columns": {"$ref": "#/$defs/tablesColumns"},
+    "rows": {"type": "array", "items": {"type": "array", "minItems": 20, "prefixItems": [
+     {"type": "string"}, {"type": "string"}, {"type": "string"}, {"type": "string"}, {"type": "string"}, {"type": "string"},
+     {"type": "string", "pattern": "^(\\d{4}(Q[1-4]|FY|H[12])|LTM\\d{4}Q[1-4]|\\d{4}-\\d{2})$"}, {"type": "string"}, {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+     {"type": "number"}, {"enum": ["₪m", "%", "₪", "count", "shares", "x"]}, {"enum": ["printed", "derived", "xbrl", "regulator", "calc", "estimate"]}, {"type": "string"},
+     {"type": "string"}, {"type": ["integer", "null"]}, {"type": "string", "pattern": "^https://"}, {"type": "string"}, {"type": "string"}, {"type": "string"}, {"enum": ["v1"]}]}}}},
+  "tablesManifest": {"$comment": "P4: web/public/data/tables/v1/manifest.json: the tables with row counts, sha256 of each file, first and last period, the date a value last changed, the metric dictionary; the columns; the change log and the Power Query kit.",
+   "type": "object", "required": ["v", "version", "base", "built", "promise", "columns", "tables", "changes", "kit"], "additionalProperties": false,
+   "properties": {"v": {"type": "integer"}, "version": {"enum": ["v1"]}, "site": {"type": "string"}, "base": {"type": "string", "pattern": "^https://"}, "built": {"$ref": "#/$defs/date"}, "promise": {"type": "string"},
+    "columns": {"type": "array", "items": {"type": "object", "required": ["id", "type", "he", "en"], "properties": {"id": {"type": "string"}, "type": {"enum": ["text", "number", "integer", "date"]}, "he": {"type": "string"}, "en": {"type": "string"}}}},
+    "tables": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "he", "en", "rows", "changed", "csv", "json", "pq", "csv_sha256", "json_sha256", "metrics"],
+     "properties": {"id": {"type": "string"}, "he": {"type": "string"}, "en": {"type": "string"}, "grain": {"type": "string"}, "grain_he": {"type": "string"}, "rows": {"type": "integer"}, "entities": {"type": "integer"}, "metrics": {"type": "array"},
+      "first": {"type": ["string", "null"]}, "last": {"type": ["string", "null"]}, "first_label": {"type": ["string", "null"]}, "last_label": {"type": ["string", "null"]}, "changed": {"$ref": "#/$defs/date"},
+      "csv": {"type": "string"}, "json": {"type": ["string", "null"]}, "pq": {"type": "string"}, "csv_bytes": {"type": "integer"}, "json_bytes": {"type": ["integer", "null"]},
+      "csv_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "json_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}}}},
+    "changes": {"type": "object", "required": ["json", "csv", "builds"]}, "kit": {"type": "object", "required": ["xlsx", "bytes", "sha256"]}}},
+  "tablesChanges": {"$comment": "P4: web/public/data/tables/v1/changes.json: a dated log, newest first, one entry per build that changed a value (plus the initial build): per table the count of rows added, changed (value) and removed, and up to rows_per_table of them with the old and new value.",
+   "type": "object", "required": ["v", "version", "columns", "builds"], "additionalProperties": false,
+   "properties": {"v": {"type": "integer"}, "version": {"enum": ["v1"]}, "columns": {"type": "array", "items": {"type": "string"}}, "keep": {"type": "integer"}, "rows_per_table": {"type": "integer"},
+    "builds": {"type": "array", "items": {"type": "object", "required": ["date", "kind", "tables"], "properties": {"date": {"$ref": "#/$defs/date"}, "kind": {"enum": ["initial", "update"]},
+     "tables": {"type": "object", "additionalProperties": {"type": "object", "required": ["added", "changed", "removed", "rows"], "properties": {"added": {"type": "integer"}, "changed": {"type": "integer"},
+      "removed": {"type": "integer"}, "listed": {"type": "integer"}, "new_table": {"type": "boolean"}, "rows": {"type": "array", "items": {"type": "array", "minItems": 12, "prefixItems": [{"enum": ["added", "changed", "removed"]}]}}}}}}}}}}
  }
 }
