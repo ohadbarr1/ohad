@@ -1,5 +1,5 @@
 {
- "built": "2026-11-03T08:46:07+02:00",
+ "built": "2026-11-05T22:22:50+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -237,9 +237,9 @@
    "id": "watch",
    "ok": true,
    "level": "fail",
-   "n": 4,
+   "n": 5,
    "fail": 0,
-   "note": "watch: 4 snapshots, 55 changes (answer 21, finding 1, new 32, gone 1), 17 upcoming, 0 problems"
+   "note": "watch: 5 snapshots, 55 changes (answer 21, finding 1, new 32, gone 1), 17 upcoming, 0 problems"
   },
   {
    "id": "watch_ledger",
@@ -253,9 +253,9 @@
    "id": "watch_lib",
    "ok": true,
    "level": "fail",
-   "n": 63,
+   "n": 52,
    "fail": 0,
-   "note": "63 passed, 0 failed"
+   "note": "52 passed, 0 failed"
   },
   {
    "id": "capital",
@@ -365,9 +365,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3901,
+   "n": 3902,
    "fail": 0,
-   "note": "3901 files under contract, 0 failing; 86 contracts; 899 files without a contract"
+   "note": "3902 files under contract, 0 failing; 87 contracts; 899 files without a contract"
   },
   {
    "id": "cards",
@@ -619,11 +619,11 @@
   },
   {
    "id": "links",
-   "ok": true,
+   "ok": false,
    "level": "warn",
    "n": 223,
-   "fail": 0,
-   "note": "223 source URLs checked 2026-10-25 (8 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867"
+   "fail": 1,
+   "note": "223 source URLs checked 2026-10-25 (11 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867; older than 8 days"
   },
   {
    "id": "stress",
