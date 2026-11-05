@@ -62,7 +62,10 @@ export function gapOf(c: CardCalc): { v: number; ref: 'med' | 'dflt'; years: num
   }
   // W5 (red team 3): the reader's own pension fees are read against the default-fund price, what a member can actually get, never
   // against the median of the other tracks' averages; otherwise the median first: it is the comparison every product has
-  if (c.v.fee.basis === 'tender' || c.v.dep?.basis === 'tender') return opts.find((x) => x.ref === 'dflt') ?? null;
+  // S1 (fox 3.0): and only when the reader's pair is above the tender's terms (an allowed pair no higher on both parts) or a part is
+  // above its base price: a reader AT the price is not told to ask for a cut because another row of the conversion table would leave
+  // more on their amounts (the card says "לא מעל קרנות ברירת המחדל" there, and the strip must agree)
+  if (c.v.fee.basis === 'tender' || c.v.dep?.basis === 'tender') return c.v.dflt?.above || c.v.lever ? opts.find((x) => x.ref === 'dflt') ?? null : null;
   return opts.find((x) => x.ref === 'med') ?? opts[0] ?? null;
 }
 

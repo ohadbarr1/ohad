@@ -65,6 +65,7 @@ const About = page(() => import('./pages/About'), 'About');  // Wave 0: who, sou
 const Methodology = page(() => import('./pages/Methodology'), 'Methodology');  // W6 trust: how the figures are computed
 const My = page(() => import('./pages/My'), 'My');  // W1-saver: "המוצרים שלי"
 const MyStatement = page(() => import('./pages/MyStatement'), 'MyStatement');  // W3: the annual-statement guide
+const MyCheckup = page(() => import('./pages/MyCheckup'), 'MyCheckup');  // S1+S2 (fox 3.0): the annual check-up
 const Clients = page(() => import('./pages/Clients'), 'Clients');  // W3: the agent's client folders
 const mValuation = () => import('./pages/Valuation');
 const ValuationLayout = page(mValuation, 'ValuationLayout');
@@ -285,6 +286,7 @@ export function App() {
         {/* W1-saver */}
         <Route path="my" element={<My />} />
         {/* W3 */}<Route path="my/statement" element={<MyStatement />} />
+        {/* S1 */}<Route path="my/checkup" element={<MyCheckup />} />
         <Route element={<Hub hub="clients" />}>{/* phase 0: the agent's "לקוחות": folders · the stress test across them */}
           {/* W3 */}<Route path="clients" element={<Clients />} />
           {/* W11 */}<Route path="clients/book" element={<Book />} />
