@@ -27,17 +27,17 @@ const ROUTES = [
   '/industry/search', '/industry/matrix', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?t=reg&n=5', '/compare', '/funds', '/funds/makers', '/managers', '/market/overview', '/market/ranking', '/market/funds', '/valuation/phoenix', '/valuation/phoenix/ri', '/valuation/phoenix/csm', '/valuation/phoenix/dcf', '/valuation/phoenix/sotp', '/valuation/harel/sotp', '/valuation/hachshara', '/valuation/altshuler/sotp', '/calendar', '/book', '/search?q=%D7%A8%D7%9B%D7%99%D7%91%20%D7%94%D7%A4%D7%A1%D7%93', '/doc/1765739?page=32&q=%D7%93%D7%99%D7%91%D7%99%D7%93%D7%A0%D7%93', '/data', '/data?cite=%2Fcompany%2Fharel&f=CSM', '/restatements', '/restatements?season=2026Q2&min=2', '/presentations', '/credibility', '/credibility?co=phoenix&v=scored', '/mine', '/presentations?co=harel&q=%D7%AA%D7%A9%D7%95%D7%90%D7%94',
   // lane A2: fund houses, an unlisted insurer, the report and window carried between company views
   '/company/yelin', '/company/hachshara', '/company/altshuler/financials', '/company/phoenix?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/review?p=2025Q3&w=ytd', '/company/phoenix/financials?p=2025Q3&w=ltm',
-  // the advisory surface: the thesis is the company home, the report day moved to "numbers" (old deep links land there)
+  // the advisory surface: the report day ("numbers") is the company home again since phase 0; the thesis is a tab (old deep links land on the numbers)
   '/company/phoenix/thesis', '/company/phoenix/numbers', '/company/phoenix/numbers?p=2025FY&w=ltm&row=st%3Anet', '/company/phoenix/report?p=2025Q3', '/company/more', '/company/more/numbers', '/company/more/review', '/company/idi', '/company/idi/numbers',
   '/scenarios', '/warroom', '/positions', '/fragility', '/capital',
-  // lane AP: the report-day autopilot's status page
+  // lane AP: the report-day autopilot's status page; phase 0: quality · autopilot · API are the tabs of /data
   '/data/autopilot', '/data/api',
   // lane DL: debt ladder (industry wall, a group with a capital-raising subsidiary, a fund house, a pinned date and view)
   '/debt', '/debt?k=fund', '/debt/phoenix', '/debt/meitav', '/debt/harel?d=2025-12-31&v=group&by=link',
   // lane FT: the fact table with the vintage toggle
   '/facts/harel', '/facts/clal?s=bs&vin=o', '/facts/phoenix?s=cf&w=FY&vin=2025-08-31',
-  // lane OW: who owns whom
-  '/ownership', '/ownership/harel', '/ownership/phoenix', '/ownership/yelin', '/ownership/infinity', '/ownership?cell=phoenix~harel',
+  // lane OW was cut in phase 0 (05.11.26): /ownership lands on the home, /ownership/<id> on the company
+  '/ownership', '/ownership/harel',
   // lane AL: quarterly asset lists (index, a pension+gemel house, a participating portfolio, a blocked site, pinned views)
   '/holdings', '/holdings?m=ta35_pct&pair=altshuler~meitav', '/holdings/meitav', '/holdings/migdal?u=pct', '/holdings/altshuler?f=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA', '/holdings/menora',
   // lane S2: report cards (an insurer quarter, an annual report, a fund house)
@@ -46,8 +46,10 @@ const ROUTES = [
   '/feed', '/feed?co=harel', '/feed?t=fee', '/feed?co=market&t=regmonth', '/feed?t=est',
   // module A9: the consolidation screen (matrix, an override, tear sheets: an insurer arm, a fund house, a flagged pair)
   '/consolidation', '/consolidation?r=80&lev=50', '/consolidation/menora/clal', '/consolidation/analyst/more', '/consolidation/meitav/harel',
-  // module S10: the morning brief (what changed in the answers, the prep queue)
+  // module S10: the morning brief (what changed in the answers, the prep queue), now the "שאני עוקב" tab of /feed
   '/watch',
+  // phase 0 (05.11.26): the merged pages and the addresses that now land on them
+  '/questions', '/findings', '/brief', '/clients/book', '/funds/tools', '/my', '/funds/watch', '/methodology', '/drivers', '/drivers/harel',
   '/industry/savings?v=now', '/industry/savings?v=rank', '/industry/savings?v=market', '/industry/savings?s=ins', '/industry/savings?g=%D7%9E%D7%99%D7%98%D7%91&s=gem', '/funds/p2009', '/market/group/%D7%94%D7%A8%D7%90%D7%9C',
 ];
 /** addresses that must land on the not-found page (with its title), not on an empty shell */

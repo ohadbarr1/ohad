@@ -1,5 +1,5 @@
-/* F2 TIME (lib/fundsTime.ts): the risk statistics, percentile ranks over time, the map's frames and edge, the quilt, the persistence and glide
-   readers, and the watchlist, run in node.
+/* F2 TIME (lib/fundsTime.ts): the risk statistics, percentile ranks over time, the glide reader and the watchlist, run in node (the map,
+   the quilt, the persistence view and the old watchlist page's helpers were cut with their pages in phase 0, 05.11.26).
    1 · hand-checkable series: drawdown, recovery, Sharpe / Sortino, beta, capture, tracking error;
    2 · the fixtures (tests/fixtures/funds/: the F2 contracts, built from the published F1 files): the browser's fallback (riskFromHist,
        rankSeries) must give the same figures as the build's definitions on the same months, for every track of the fixture categories;
@@ -8,8 +8,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  BANDS, NO_WATCH, STAT_KEYS, addM, backM, drawdown, rfFromCurve, deltaOf, frameMonths, frameOf, frontier, markSeen, mergeWatch, normGlide, normPersist, normWatch, outflowStreak, percentiles,
-  persistVerdict, pickSet, quartileOf, quilt, rankSeries, retBetween, riskFromHist, riskStats, ddNow, slugOf, statMedians, stepDown, toggleWatch, watchBadge, wilson,
+  BANDS, NO_WATCH, STAT_KEYS, addM, backM, drawdown, rfFromCurve, deltaOf, markSeen, normGlide, normWatch, percentiles,
+  pickSet, quartileOf, rankSeries, riskFromHist, riskStats, slugOf, statMedians, stepDown, toggleWatch, watchBadge,
   type RankFile, type StatsFile, type StatsIndex, type WSnap,
 } from '../src/lib/fundsTime';
 
@@ -53,29 +53,6 @@ eq(backM(202603, 4), [202512, 202601, 202602, 202603], 'backM');
   eq([...pc.values()], [0, 25, 50, 75, 100], 'percentiles of five');
   eq(percentiles(new Map([['a', 1], ['b', 2]])).get('a'), null, 'fewer than five: no percentile');
   eq([quartileOf(80), quartileOf(50), quartileOf(30), quartileOf(10), quartileOf(null)], [1, 2, 3, 4, null], 'quartiles');
-}
-{
-  const f = frontier([{ x: 1, y: 1 }, { x: 2, y: 3 }, { x: 2, y: 2 }, { x: 3, y: 2.5 }, { x: 4, y: 4 }]);
-  eq(f.map((p) => `${p.x},${p.y}`), ['1,1', '2,3', '4,4'], 'efficient edge');
-  const fr = frameOf('a', { p: [202601, 202602, 202603], st: [40, 41, 42], a: [1, 2, 3] }, [1, -2, 3], 202603, 3);
-  near(fr?.ret, (1.01 * 0.98 * 1.03 - 1) * 100, 1e-9, 'frame return (3 months, not annualised)');
-  eq([fr?.st, fr?.a], [42, 3], 'frame exposure and assets at the end');
-  eq(frameOf('a', { p: [202602, 202603] }, [1, 2], 202603, 3), null, 'frame: a missing month');
-  eq(frameMonths([200001, 200001, 200001, 200001, 200001], 202603, 12, 5).slice(0, 2), [200012, 200112], 'frames from the first full year');
-  eq(frameMonths([200001], 202603, 12, 5), [202603], 'frames: too few tracks before, only the latest');
-}
-{
-  const q = quilt([{ k: 'a', grp: 'x', p: [202601, 202602], y: [1, 1] }, { k: 'b', grp: 'y', p: [202601, 202602], y: [2, null] }], 202602, [2026]);
-  eq(q.get(2026)?.map((c) => c.k), ['a'], 'quilt: a year needs every month to asof');
-  const q2 = quilt([{ k: 'a', grp: 'x', p: [202601, 202602], y: [1, 1] }, { k: 'b', grp: 'y', p: [202601, 202602], y: [2, 2] }], 202602, [2026]);
-  eq(q2.get(2026)?.map((c) => c.k), ['b', 'a'], 'quilt: best first');
-}
-{
-  eq(retBetween([202601, 202602, 202603], [1, 2, 3], 202601, 202603)?.ps, [202602, 202603], 'return since a month');
-  eq(retBetween([202601, 202603], [1, 3], 202601, 202603), null, 'return since: a gap is null');
-  eq(outflowStreak({ dep: [1, 1, 1, 1], wd: [0, 2, 2, 2], tr: [0, 0, 0, 0] }), 3, 'outflow streak');
-  const w = wilson(30, 100)!; ok(w[0] < 30 && w[1] > 30 && w[0] > 20, 'Wilson interval');
-  eq(ddNow([10, -10, 5]).dd_len, 2, 'months under the all-time peak');
 }
 
 /* ---------------------------------------------------------------- 2 · fixtures against the published histories */
@@ -130,17 +107,6 @@ for (const cat of ['השתלמות | כללי', 'גמל | עד 50']) {
 ok(compared > 50, `compared the browser's statistics with the fixture on ${compared} tracks`);
 
 {
-  const p = normPersist(json(join(FX, 'persist.json')));
-  ok(p.tests.length >= 8 && p.tests.every((t) => t.m.length === 4 && t.m.every((r) => r.length === 5)), `persist: 4×5 matrices (${p.tests.length})`);
-  ok(p.tests.some((t) => t.prod === 'הכל') && p.tests.some((t) => t.basis === 'gross'), 'persist: pooled family and both bases');
-  ok(p.tests.every((t) => t.stay.k === t.m[0][0] && t.stay.n === t.m[0].reduce((a, b) => a + b, 0)), 'persist: stay-top is the top-left cell over its row');
-  ok(p.tests.every((t) => t.surv.lo == null || (t.surv.lo <= (t.surv.share ?? 0) + 1e-9 && (t.surv.share ?? 0) <= (t.surv.hi ?? 0) + 1e-9) || t.ci === 'wilson'), 'persist: the survivors share sits inside its bootstrap interval');
-  ok(p.tests.every((t) => ['above', 'below', 'coin'].includes(persistVerdict(t))), 'persist: a verdict for every test');
-  eq(normPersist({ rows: [{ fam: 'x', win: '12', rows: [{ q: 1, to: [1, 2] }] }, 'x'] }).tests.length, 0, 'persist: malformed rows are skipped');
-  const one = normPersist({ rows: [{ fam: 'גמל', win: '12', basis: 'net', thin: true, coin: 25, wilson90: { k: 5, n: 20, lo: 12, hi: 41, pct: 25 }, rows: [1, 2, 3, 4].map((q) => ({ q, to: [5, 5, 5, 5], gone: 0 })) }] }).tests[0];
-  eq([one.win, one.ci, one.surv.share, persistVerdict(one)], [12, 'wilson', 25, 'coin'], 'persist: a thin sample falls back to Wilson; 25% is a coin');
-}
-{
   const g = normGlide(json(join(FX, 'glide.json')));
   ok(g.prods.length >= 2 && g.months.length > 24, 'glide: products and months');
   ok(g.prods.every((p) => p.groups.every((x) => x.tracks.every((t) => (BANDS as readonly string[]).includes(t.band) && (!t.hist || t.hist.st.length === g.months.length)))), 'glide: bands, history aligned');
@@ -170,7 +136,6 @@ ok(compared > 50, `compared the browser's statistics with the fixture on ${compa
   eq([seen.items[0].base?.asof, seen.items[1].base?.asof], [202608, 202607], 'mark seen: tracks shown take today’s snapshot');
   eq(watchBadge(seen, 202608), 1, 'badge after the look');
   eq(watchBadge(markSeen(w, new Map([['g1', s(202608, 40, 0.45)]]), 202608), 202608), 0, 'a track with nothing to show (closed) is seen too');
-  eq(mergeWatch(w, { items: [{ k: 'g1', base: s(202601, 1, 1) }, { k: 'i9' }] }).items.map((i) => [i.k, i.base?.asof ?? null]), [['g1', 202607], ['g2', 202607], ['i9', null]], 'import merges, stored wins');
   const many = normWatch({ items: Array.from({ length: 80 }, (_, i) => `g${i + 1}`) });
   eq(many.items.length, 60, 'watch: capped');
 }

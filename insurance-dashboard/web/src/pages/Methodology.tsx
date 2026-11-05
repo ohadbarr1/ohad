@@ -1,8 +1,11 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { ckanDataset, REG_SITE } from '../lib/sources';
 import { DEFAULT_PER, TIE_BP } from '../lib/fundsTie';
 import { EXP_HI, EXP_LO } from '../lib/flags';
+import { useRegistry } from '../lib/useData';
 import '../styles/about.css';
+import '../styles/drivers.css';
 
 /* /methodology (W6 trust, red team 01.11.26): how every figure on the site is computed, in the words the pages use. One screen per
    section, factual, no marketing. The source sheet of every number links here; /about links here; tables that show flows link to #flows.
@@ -10,11 +13,16 @@ import '../styles/about.css';
 
 const SECTIONS: [string, string][] = [
   ['sources', 'מקורות'], ['net', 'נטו, אומדן'], ['ranks', 'דירוג ותיקו'], ['flows', 'תזרימים'], ['risk', 'סיכון וחלון משותף'],
-  ['closed', 'מסלולים סגורים'], ['flags', 'דגלי נתונים'], ['refresh', 'עדכון הנתונים'], ['versions', 'גרסאות ותיקונים'],
+  ['closed', 'מסלולים סגורים'], ['flags', 'דגלי נתונים'], ['drivers', 'המנגנונים'], ['refresh', 'עדכון הנתונים'], ['versions', 'גרסאות ותיקונים'],
 ];
 
 export function Methodology() {
   const win = DEFAULT_PER === 'a5' ? '5 שנים, שנתי' : DEFAULT_PER;
+  const reg = useRegistry();
+  const { hash } = useLocation();
+  // an address with a section (/methodology#drivers, where /drivers lands) opens on it once the page is drawn
+  useEffect(() => { if (!hash) return; const t = setTimeout(() => document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: 'start' }), 250); return () => clearTimeout(t); }, [hash, !!reg.data]);
+  const cos = reg.data ?? [];
   return (
     <article className="about method">
       <header className="about-hd">
@@ -89,6 +97,17 @@ export function Methodology() {
           <dt>לבדיקה מול המנהל</dt><dd>חשיפה מעל <span className="num">{EXP_HI}%</span> או מתחת ל-<span className="num">{EXP_LO}%</span> מהנכסים, כפי שפורסמה. מוצגת כפי שפורסמה, מסומנת, ואינה נכללת בפיזור הקטגוריה ובממוצעים.</dd>
           <dt>אומדן, נגזר</dt><dd>אומדן: ערך שנבנה על הנחה (למשל נטו). נגזר: ערך שלא הודפס כשלעצמו וחושב מערכים מודפסים (למשל רבעון רביעי = שנה פחות תשעה חודשים). שניהם מסומנים ליד המספר, והחישוב בחלון המקור.</dd>
         </dl>
+      </section>
+
+      <section id="drivers">
+        <h2>המנגנונים</h2>
+        <p>לכל חברה דף מנגנונים: הגמישויות שמחברות זעזוע (תשואת שוק, ריבית, דמי ניהול, צבירה) לתוצאה (הכנסות, רווח, תשואה להון, הון לכושר פירעון). כל קשר מסומן בשיטה שלו: <b>זהות</b> חשבונאית על קלטים מודפסים, <b>רגרסיה</b> על ההיסטוריה של החברה (עם n, חלון ו-R²), <b>גילוי</b> כפי שהחברה הדפיסה את הרגישות (דוח ועמוד), או <b>הנחה</b> מסומנת. איכות <b>גבוהה</b>: זהות על קלטים מודפסים, רגרסיה על 36 חודשים לפחות עם R² של 0.7 ומעלה ו-|t| של 2 ומעלה, או גילוי מ-24 החודשים שלפני הבסיס; <b>נמוכה</b>: הנחה, התאמה חלשה או קצרה, או גילוי ישן מ-36 חודשים; בין לבין: בינונית. קשר שאין לו קלט ציבורי מוצג כחסר, עם הסיבה. אלה הקשרים שהתרחישים וחדר המלחמה מריצים.</p>
+        {cos.length > 0 && <>
+          <p className="dr-mech-h">ביטוח ופיננסים</p>
+          <ul className="dr-cos dr-mech">{cos.filter((c) => c.kind === 'insurance_group').map((c) => <li key={c.id}><Link to={`/drivers/${c.id}`}>{c.name_he}</Link></li>)}</ul>
+          <p className="dr-mech-h">בתי השקעות ומנהלי קופות</p>
+          <ul className="dr-cos dr-mech">{cos.filter((c) => c.kind !== 'insurance_group').map((c) => <li key={c.id}><Link to={`/drivers/${c.id}`}>{c.name_he}</Link></li>)}</ul>
+        </>}
       </section>
 
       <section id="refresh">

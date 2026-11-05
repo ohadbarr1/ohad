@@ -96,7 +96,7 @@ export function Clients() {
         <span className="eyebrow">סוכן</span>
         <h1><span className="icotile"><Icon name="inbox" /></span>תיקי לקוחות</h1>
         <div className="sub">השוואות ששמרתם ללקוחות: המסלולים, הסיווג בנספח וטיוטת ההנמקה. נשמר בדפדפן הזה בלבד.</div>
-      </div>{/* W11 */}<Link className="btn" to="/clients/book"><Icon name="shield" /> מבחן לחץ לכל התיקים</Link></div>
+      </div></div>
       {list.length > 0 && <div className={`cl-backup${bk.nudge ? ' nudge' : ''}`} role="status">
         <Icon name="download" /><span><b>{bkText}.</b> התיקים שמורים רק בדפדפן הזה: ניקוי נתוני הגלישה או מכשיר אחר מוחקים אותם. גיבוי הוא קובץ JSON שנשמר אצלכם.</span>
         <button type="button" className={`btn${bk.nudge ? ' primary' : ''}`} onClick={exportFile}>גיבוי עכשיו</button>

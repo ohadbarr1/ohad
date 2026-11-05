@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { Empty, Field, Panel, Seg } from '../components/ui';
 import { nf } from '../lib/format';
@@ -82,7 +81,7 @@ export function Api() {
   return (
     <div className="dq api wide-page">
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>API נתונים</h1>
-        <div className="sub"><span className="num">{open.length}</span> משפחות קבצים פתוחות · JSON סטטי עם חוזה נתונים · <a href="/data/schemas.json" download>schemas.json</a> · <Link to="/data">נתונים ואיכות</Link></div></div></div>
+        <div className="sub"><span className="num">{open.length}</span> משפחות קבצים פתוחות · JSON סטטי עם חוזה נתונים · <a href="/data/schemas.json" download>schemas.json</a></div></div></div>
 
       <Panel title="תנאי שימוש">
         <div className="licence"><b>חינם, גם לשימוש מסחרי. ציטוט: fox והמקור הראשוני</b>

@@ -1,6 +1,7 @@
 import { lazy, type ComponentType } from 'react';
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { Hub } from './components/HubTabs';  // phase 0: one canonical page per question, its neighbours as tabs
 
 /** A page loaded the first time its route is visited: each route group is its own file, so the shell carries no page it does not show. */
 const page = <M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M) => lazy(async () => ({ default: (await load())[name] as ComponentType }));
@@ -18,7 +19,7 @@ const CompanySavings = page(mCompany, 'CompanySavings');
 const CompanySopTab = page(mCompany, 'CompanySopTab');
 const mCompanyOverview = () => import('./pages/CompanyOverview');
 const CompanyOverview = page(mCompanyOverview, 'CompanyOverview');
-const CompanyThesis = page(() => import('./pages/CompanyThesis'), 'CompanyThesis');  // the company's default view: the advisory layer
+const CompanyThesis = page(() => import('./pages/CompanyThesis'), 'CompanyThesis');  // the advisory layer, a tab at /company/<id>/thesis (the default view is the numbers)
 const mCompanyDocs = () => import('./pages/CompanyDocs');
 const CompanyDocs = page(mCompanyDocs, 'CompanyDocs');
 const mIndustry = () => import('./pages/Industry');
@@ -48,7 +49,6 @@ const FundMakers = page(mFunds, 'FundMakers');
 const mFundsTime = () => import('./pages/FundsTime');  // F2 TIME: risk and time views of the section
 const FundsRank = page(mFundsTime, 'FundsRank');
 const FundsGlide = page(mFundsTime, 'FundsGlide');
-const FundsWatch = page(() => import('./pages/FundsWatch'), 'FundsWatch');  // F2 TIME: the watchlist
 const mFundsHub = () => import('./pages/FundsHub');  // F1: the "חיסכון" section's front door
 const FundsHub = page(mFundsHub, 'FundsHub');
 const mFundsScreen = () => import('./pages/FundsScreen');
@@ -94,10 +94,6 @@ const mDebt = () => import('./pages/Debt');  // lane DL
 const Debt = page(mDebt, 'Debt');
 const mFacts = () => import('./pages/Facts');  // lane FT
 const FactsPage = page(mFacts, 'FactsPage');
-const mOwnership = () => import('./pages/Ownership');  // lane OW
-const Ownership = page(mOwnership, 'Ownership');
-const mOwnershipCompany = () => import('./pages/OwnershipCompany');  // lane OW
-const OwnershipCompany = page(mOwnershipCompany, 'OwnershipCompany');
 const mAssets = () => import('./pages/Assets');  // lane AL
 const Assets = page(mAssets, 'Assets');
 const mReportCard = () => import('./pages/ReportCard');  // lane S2
@@ -107,7 +103,7 @@ const Feed = page(mFeed, 'Feed');
 const mPositions = () => import('./pages/Positions');  // module A6: the position book
 const Positions = page(mPositions, 'Positions');
 const PositionSheet = page(mPositions, 'PositionSheet');
-const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: the driver graph's elasticities (not a nav item)
+const Drivers = page(() => import('./pages/Drivers'), 'Drivers'); // module A1: one company's driver graph (the index is a section of /methodology)
 const Scenarios = page(() => import('./pages/Scenarios'), 'Scenarios'); // module A2: the scenario studio, a main place (nav: תרחישים)
 const WarRoomRegulation = page(() => import('./pages/WarRoomRegulation'), 'WarRoomRegulation'); // module A8: the regulatory pipeline (not a nav item)
 const WarRoom = page(() => import('./pages/WarRoom'), 'WarRoom'); // module A5: the move simulator, a main place (nav: חדר מלחמה, which also lights /capital, /consolidation, /fragility)
@@ -155,6 +151,8 @@ function FundsRoot() {
 }
 /** the report day lives under "numbers" now (the thesis is the company home): an old link keeps its report, window and row (?p=&w=&row=) */
 function ReportRedirect() { const loc = useLocation(); return <Navigate to={`../numbers${loc.search}${loc.hash}`} replace />; }
+/** /ownership/<id> was cut (phase 0, 05.11.26): an old link lands on the company */
+function OwnershipRedirect() { const { id } = useParams(); return <Navigate to={`/company/${id}`} replace />; }
 /** the IFRS 17 and capital tabs are views of the CSM ledger now: an old link keeps its pickers */
 function CsmRedirect({ view }: { view: string }) { const loc = useLocation(); return <Navigate to={`/industry/csm?view=${view}${loc.search ? `&${loc.search.slice(1)}` : ''}`} replace />; }
 
@@ -175,7 +173,7 @@ export function App() {
         </Route>
         <Route path="companies" element={<Navigate to="/" replace />} />
         <Route path="company/:id" element={<CompanyLayout />}>
-          <Route index element={<CompanyThesis />} />
+          <Route index element={<CompanyOverview />} />{/* phase 0: the company opens on its numbers */}
           <Route path="thesis" element={<CompanyThesis />} />
           <Route path="numbers" element={<CompanyOverview />} />
           <Route path="review" element={<CompanyReviewTab />} />
@@ -222,20 +220,20 @@ export function App() {
         <Route path="funds/quilt" element={<Navigate to="/funds/rank" replace />} />
         <Route path="funds/persist" element={<Navigate to="/funds/rank" replace />} />
         <Route path="funds/glide" element={<FundsGlide />} />
-        <Route path="funds/watch" element={<FundsWatch />} />
+        <Route path="funds/watch" element={<Navigate to="/my#watch" replace />} />{/* phase 0: the watchlist is a section of /my */}
         <Route path="funds/:k" element={<FundCard />} />
         <Route path="managers" element={<Managers />} />
         <Route path="flows" element={<Flows />} />
         <Route path="feebook" element={<FeeBook />} />
-        <Route path="clients/book" element={<Book />} />
         <Route path="funds/under" element={<Under />} />
         <Route path="my/moment" element={<MomentsIndex />} />
         <Route path="my/moment/:id" element={<MomentPage />} />
-        <Route path="calendar" element={<Calendar />} />
         <Route path="book" element={<ChartBook />} />
-        <Route path="data" element={<DataPage />} />
-        <Route path="data/autopilot" element={<Autopilot />} />
-        <Route path="data/api" element={<Api />} />
+        <Route element={<Hub hub="data" />}>{/* phase 0: quality · autopilot · API, one page */}
+          <Route path="data" element={<DataPage />} />
+          <Route path="data/autopilot" element={<Autopilot />} />
+          <Route path="data/api" element={<Api />} />
+        </Route>
         <Route path="restatements" element={<Restatements />} />
         <Route path="presentations" element={<Presentations />} />
         <Route path="credibility" element={<Credibility />} />{/* lane S3 */}
@@ -244,16 +242,20 @@ export function App() {
         <Route path="debt" element={<Debt />} />
         <Route path="debt/:id" element={<Debt />} />
         <Route path="facts/:id" element={<FactsPage />} />
-        <Route path="ownership" element={<Ownership />} />{/* lane OW */}
-        <Route path="ownership/:id" element={<OwnershipCompany />} />
+        <Route path="ownership" element={<Navigate to="/" replace />} />{/* cut in phase 0 (05.11.26) */}
+        <Route path="ownership/:id" element={<OwnershipRedirect />} />
         <Route path="holdings" element={<Assets />} />{/* lane AL: not /assets, whose /assets/** immutable cache header (hashed bundles) would pin the HTML shell */}
         <Route path="holdings/:id" element={<Assets />} />
         <Route path="card/:company/:period" element={<ReportCardPage />} />{/* lane S2 */}
         <Route path="attribution" element={<AttributionPage />} />{/* module A4: reached from the company home's attribution panel, not a nav item */}
-        <Route path="feed" element={<Feed />} />{/* module M2: reached from the home block and search, not a nav item */}
+        <Route element={<Hub hub="feed" />}>{/* phase 0: "מה השתנה" = everything · what I follow (/watch) · the report calendar (/calendar) */}
+          <Route path="feed" element={<Feed />} />{/* module M2 */}
+          <Route path="watch" element={<Watch />} />{/* S10 */}
+          <Route path="calendar" element={<Calendar />} />
+        </Route>
         <Route path="positions" element={<Positions />} />{/* module A6: the position book, a main place (nav: עמדות) */}
         <Route path="positions/:id" element={<PositionSheet />} />
-        <Route path="drivers" element={<Drivers />} />
+        <Route path="drivers" element={<Navigate to="/methodology#drivers" replace />} />{/* phase 0: the index is a section of /methodology */}
         <Route path="drivers/:id" element={<Drivers />} />{/* module A1 */}
         <Route path="scenarios" element={<Scenarios />} />{/* module A2 */}
         <Route path="warroom/regulation" element={<WarRoomRegulation />} />{/* module A8: reached from /warroom (A5), /savings and search, not a nav item */}
@@ -263,16 +265,20 @@ export function App() {
         <Route path="expectations" element={<Expectations />} />{/* module A3 */}
         <Route path="consolidation" element={<Consolidation />} />{/* module A9 */}
         <Route path="consolidation/:a/:t" element={<ConsolidationPair />} />
-        <Route path="questions" element={<Questions />} />{/* S1: a main place (nav: שאלות, which also lights /findings) */}
+        <Route element={<Hub hub="questions" />}>{/* phase 0: questions · findings · briefs, one page */}
+          <Route path="questions" element={<Questions />} />{/* S1 */}
+          <Route path="findings" element={<Findings />} />{/* S2 */}
+          <Route path="brief" element={<Brief />} />{/* S3: the meeting registry */}
+        </Route>
         <Route path="questions/:id" element={<QuestionPage />} />{/* S6: one answer on the ladder */}
-        <Route path="findings" element={<Findings />} />{/* S2 */}
-        <Route path="brief" element={<Brief />} />{/* S3: the meeting registry (nav: lights שאלות) */}
         <Route path="brief/:id" element={<BriefPage />} />{/* S3: one brief; /brief/demo is the built-in demo */}
-        <Route path="watch" element={<Watch />} />{/* S10 */}
         {/* W1-saver */}
         <Route path="my" element={<My />} />
         {/* W3 */}<Route path="my/statement" element={<MyStatement />} />
-        {/* W3 */}<Route path="clients" element={<Clients />} />
+        <Route element={<Hub hub="clients" />}>{/* phase 0: the agent's "לקוחות": folders · the stress test across them */}
+          {/* W3 */}<Route path="clients" element={<Clients />} />
+          {/* W11 */}<Route path="clients/book" element={<Book />} />
+        </Route>
         <Route path="about" element={<About />} />
         <Route path="methodology" element={<Methodology />} />{/* W6 trust */}
         {/* W6 trust: addresses that were linked as if they were pages of their own (a review found nine landing on "not found"): each goes to the page that holds it */}

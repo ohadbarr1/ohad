@@ -1,7 +1,7 @@
 /** The browser-tab title of every route: what the page is, then the company or section, then the site.
  *  One place, so history, bookmarks, tab strips and screen-reader page announcements can tell pages apart. */
 const COMPANY_TAB: Record<string, string> = {
-  '': 'תזה', thesis: 'תזה', numbers: 'מספרים', review: 'סקירת דוח', financials: 'דוחות כספיים', report: 'יום הדוח', profit: 'מקורות רווח וענפים',
+  '': 'מספרים', thesis: 'תזה', numbers: 'מספרים', review: 'סקירת דוח', financials: 'דוחות כספיים', report: 'יום הדוח', profit: 'מקורות רווח וענפים',
   ifrs17: 'IFRS 17', savings: 'חיסכון ארוך טווח', filings: 'מסמכים',
 };
 const INDUSTRY_TAB: Record<string, string> = {
@@ -22,7 +22,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case '': return door === 'saver' ? t('החיסכון שלי') : door === 'agent' ? t('מסלולים, השוואה ודמי ניהול', 'סוכן') : door == null ? 'fox · כל מסלולי החיסכון, נטו ובמקור' : 'fox · ביטוח, פנסיה וגמל';
     case 'pro': return p[1] ? null : t('Pro', 'ביטוח, פנסיה וגמל');  // W1: the Pro home at a fixed address
     case 'my': return p[1] === 'statement' && !p[2] ? t('איך קוראים את הדוח השנתי', 'החיסכון שלי') : p[1] ? null : t('המוצרים שלי');  // W1: the saver's products; W3: the statement guide
-    case 'clients': return p[1] ? null : t('תיקי לקוחות', 'סוכן');  // W3: the agent's client folders (private: no client name in the title)
+    case 'clients': return p[1] === 'book' && !p[2] ? t('מבחן לחץ לתיק הלקוחות', 'סוכן') : p[1] ? null : t('תיקי לקוחות', 'סוכן');  // W3: the agent's client folders (private: no client name in the title); W11: the book stress test
     case 'companies': return t('חברות');
     case 'company': {
       if (!((p[2] ?? '') in COMPANY_TAB) || name(p[1]) === null) return null;

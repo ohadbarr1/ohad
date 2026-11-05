@@ -102,7 +102,7 @@ function Inner({ s }: { s: Status }) {
     <div className="ap wide-page">
       <div className="pagehead"><div>
         <h1>טייס אוטומטי · יום הדוח</h1>
-        <div className="sub"><span className="ap-flow">{['MAYA', 'XBRL', 'בדיקות', 'אתר'].map((x, i) => <span key={x}>{i > 0 && ' ← '}<bdi>{x}</bdi></span>)}</span> · נבנה <span className="num">{pubLabel(s.built.slice(0, 10))}</span>{s.mode === 'dry-run' ? ' · הרצת ניסיון' : ''} · <Link to="/data">נתונים ואיכות</Link></div>
+        <div className="sub"><span className="ap-flow">{['MAYA', 'XBRL', 'בדיקות', 'אתר'].map((x, i) => <span key={x}>{i > 0 && ' ← '}<bdi>{x}</bdi></span>)}</span> · נבנה <span className="num">{pubLabel(s.built.slice(0, 10))}</span>{s.mode === 'dry-run' ? ' · הרצת ניסיון' : ''}</div>
       </div></div>
 
       <section className="kpis">

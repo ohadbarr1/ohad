@@ -1,4 +1,4 @@
-/* The "חיסכון" tools (wave F2, TOOLS): the tool links, the input forms, the outcome strip, the sensitivity grid, the tender timeline. */
+/* The "חיסכון" tools (wave F2, TOOLS): the tool links, the input forms, the sensitivity grid, the tender timeline. */
 
 .ftools-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 .ftools-nav a { padding: 5px 12px; border-radius: var(--r-pill); border: 1px solid var(--line-soft); background: var(--panel); color: var(--muted); font-size: var(--t-2); font-weight: 600; text-decoration: none; }
@@ -19,19 +19,10 @@
 .fpair .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .fpairs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin-top: 12px; }
 
-/* ---- the outcome strip (hindsight) ---- */
-.fdots { width: 100%; height: auto; display: block; overflow: visible; }
-.fdots .dot { fill: color-mix(in oklch, var(--accent) 35%, transparent); stroke: var(--accent); stroke-width: 1; }
-.fdots .dot.gone { fill: var(--panel); stroke: var(--muted); stroke-dasharray: 2 1.5; }
-.fdots .dot.me { fill: var(--warn); stroke: var(--fg); stroke-width: 1.5; }
-.fdots .med { stroke: var(--fg); stroke-width: 1.2; stroke-dasharray: 3 3; }
-.fdots .ax { stroke: var(--line); }
-.fdots text { fill: var(--muted); font: 500 10px var(--font-body); }
-.fdots text.me { fill: var(--fg); font-weight: 700; }
+/* ---- tables ---- */
 table.fsimple tbody th { display: table-cell; text-align: start; }
 tr.fme td { font-weight: 700; border-top: 1px solid var(--warn); border-bottom: 1px solid var(--warn); }
 tr.fme td:first-child { box-shadow: inset -4px 0 0 var(--warn); }
-.fgap { font-size: var(--t-4); font-weight: 700; }
 
 /* ---- the sensitivity grid (fees) ---- */
 table.fgrid { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: var(--t-2); }
@@ -93,3 +84,9 @@ tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
 .ffees-pro > summary { cursor: pointer; color: var(--muted); font-size: var(--t-2); padding: 8px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-2); background: var(--panel2); }
 .ffees-pro > summary:hover { color: var(--fg); }
 .ffees-pro[open] > summary { margin-bottom: 12px; }
+
+/* ---- /funds/tools as a list (phase 0): each tile names the question it answers ---- */
+.ftools-list { list-style: none; padding: 0; }
+.ftools-list > li { display: grid; }
+.ftile .ftile-q { color: var(--fg); font-weight: 600; font-size: var(--t-3); line-height: 1.45; }
+.fnote .sv-u { text-decoration: underline; text-underline-offset: 2px; }

@@ -86,7 +86,7 @@ export function Book() {
   return (
     <div className="clients abook">
       <div className="pagehead"><div>
-        <span className="eyebrow">סוכן · <Link to="/clients">תיקי לקוחות</Link></span>
+        <span className="eyebrow">סוכן</span>
         <h1><span className="icotile"><Icon name="inbox" /></span>מבחן לחץ לתיק הלקוחות</h1>
         <div className="sub">כל תיקי הלקוחות שבדפדפן הזה, יחד: חשיפה לפי גוף מנהל ומוצר, ריכוזיות, והשורות שכדאי לבדוק. כל שורה נפתחת לרשימת התיקים שמאחוריה.</div>
       </div></div>

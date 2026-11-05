@@ -115,7 +115,7 @@ export function Brief() {
   return (
     <div className="qi br">
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="calendar" /></span>תדריכים</h1>
-        <div className="sub"><span>פגישה קבועה ← תדריך של עמוד אחד, מוכן לפני כל פגישה</span><span>·</span><span className="chip">פרטי לדפדפן הזה</span><span>·</span><Link to="/questions">שאלות</Link><span>·</span><Link to="/brief/demo">תדריך לדוגמה</Link></div></div></div>
+        <div className="sub"><span>פגישה קבועה ← תדריך של עמוד אחד, מוכן לפני כל פגישה</span><span>·</span><span className="chip">פרטי לדפדפן הזה</span><span>·</span><Link to="/brief/demo">תדריך לדוגמה</Link></div></div></div>
       <p className="qi-priv">רשימת הפגישות (שמות, קהל, סדר יום, מוקד) נשמרת רק בדפדפן הזה (localStorage): לא נשלחת לשום מקום ולא מגיעה לאתר. ייצוא לקובץ שומר עותק אצלך; ייבוא מחזיר אותו, גם בדפדפן אחר.</p>
 
       {edit ? <MeetingForm key={edit.id} init={edit} I={I} onSave={save} onCancel={() => setEdit(null)} />

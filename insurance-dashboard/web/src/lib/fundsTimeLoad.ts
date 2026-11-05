@@ -4,7 +4,7 @@ import { load, useFunds, useLoad } from './useData';
 import { useStored } from './local';
 import { useCurve } from './macro';
 import { catKey, netSeries, selfDirected, type Basis, type FundX, type HistX } from './funds';
-import { NO_WATCH, rfFromCurve, normGlide, normPersist, normWatch, slugOf, watchBadge, type RankFile, type StatsFile, type StatsIndex, type WSnap, type WatchStore } from './fundsTime';
+import { NO_WATCH, rfFromCurve, normGlide, normWatch, slugOf, watchBadge, type RankFile, type StatsFile, type StatsIndex, type WSnap, type WatchStore } from './fundsTime';
 import { EXPLAIN } from '../components/Explain';
 
 /* F2 TIME: the loaders of the precomputed files (absent until the DATA build ships them: every hook returns null then, never an error the
@@ -25,7 +25,6 @@ export function useCatFiles(cat: string | null, want: { stats?: boolean; rank?: 
   const settled = idx.missing || (!!idx.data && (!row || ((!want.stats || row.stats === false || stats.data || stats.missing) && (!want.rank || row.rank === false || rank.data || rank.missing))));
   return { idx: idx.data, row, stats: stats.data, rank: rank.data, settled: !!settled };
 }
-export function usePersist() { const r = useOptional<unknown>('funds/persist.json'); return { data: useMemo(() => (r.data ? normPersist(r.data) : null), [r.data]), missing: r.missing }; }
 export function useGlide() { const r = useOptional<unknown>('funds/glide.json'); return { data: useMemo(() => (r.data ? normGlide(r.data) : null), [r.data]), missing: r.missing }; }
 
 /** closed tracks (funds/closed.json), for the questions that are historical (survivorship): loaded only when asked */
@@ -111,8 +110,5 @@ Object.assign(EXPLAIN, {
   ddcur: ['מתחת לשיא', 'כמה רחוק המסלול היום מהשיא הגבוה שלו, ומכמה חודשים.'],
   rec: ['התאוששות', 'כמה חודשים לקח לחזור לשיא אחרי הירידה הגדולה בחלון.'],
   rank: ['אחוזון לאורך זמן', 'בכל חודש: כמה מהמסלולים באותה קטגוריה השיגו פחות בחלון שהסתיים באותו חודש. 100 הוא הגבוה; הרצועות הן הרבעונים.'],
-  persist: ['התמדה', 'מהמסלולים שהיו ברבע העליון בחלון אחד, כמה נשארו ברבע העליון בחלון הבא. מטבע היה נותן 25%.'],
-  quilt: ['טבלת שנים', 'כל עמודה היא שנה, ממוינת מהגבוה לנמוך. הצבע הוא המנהל, כך רואים אם מנהל נשאר למעלה או קופץ.'],
   glide: ['מסלולי גיל', 'עד 50, 50–60 ו-60 ומעלה: ככל שהגיל עולה המסלול אמור להחזיק פחות מניות. כאן רואים כמה בפועל.'],
-  map: ['מפת סיכון ותשואה', 'כל נקודה היא מסלול: לימין יותר סיכון, למעלה יותר תשואה. גודל הנקודה הוא הנכסים.'],
 });

@@ -48,7 +48,7 @@ const WT_KEYS = ['watch', 'changes', 'brief', 'מעקב', 'עוקב', 'השתנ�
 const FT_PAGES: [string[], string, string, string][] = ([
   [['rank', 'percentile', 'אחוזון', 'אחוזונים', 'דירוג', 'מקום'], 'אחוזון לאורך זמן · קופות', 'המקום של כל מסלול בקטגוריה, חודש אחר חודש', '/funds/rank'],
   [['glide', 'age', 'גיל', 'תלוי', 'מסלולי'], 'מסלולי גיל · קופות', 'עד 50, 50–60, 60 ומעלה: החשיפה למניות בפועל', '/funds/glide'],
-  [['watchlist', 'מעקב', 'שלי', 'כוכב', 'עוקב'], 'המעקב שלי · קופות', 'מה השתנה במסלולים שבמעקב מאז הביקור הקודם · פרטי לדפדפן', '/funds/watch'],
+  [['watchlist', 'מעקב', 'שלי', 'כוכב', 'עוקב'], 'במעקב · המוצרים שלי', 'המסלולים שסימנת ☆: 12 חודשים, דמי ניהול וחודש חדש · פרטי לדפדפן', '/my#watch'],  // phase 0: was /funds/watch
 ] as [string[], string, string, string][]).map(([k, l, m, to]) => [(k as string[]).map(normalize), l, m, to] as [string[], string, string, string]);
 const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 'הפתעה', 'הפתעות', 'חריג', 'חריגים'].map(normalize);
 // the funds tools (F2 TOOLS): each tool answers to its own words

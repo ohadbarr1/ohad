@@ -117,7 +117,7 @@ export function Questions() {
     <div className="qi">
       <div className="pagehead"><div><h1><span className="icotile"><Icon name="questions" /></span>שאלות</h1>
         <div className="sub"><span><span className="num">{I.n}</span> שאלות</span><span>·</span><span><span className="num">{I.ok}</span> עם תשובה</span>
-          {tripped > 0 && <><span>·</span><span><span className="num">{tripped}</span> שהסף שלהן נחצה</span></>}<span>·</span><span>מחושב מחדש בכל בנייה, כל מספר נפתח במקור</span><span>·</span><Link to="/brief">תדריכים</Link><span>·</span><Link to="/watch">מה השתנה</Link></div></div></div>
+          {tripped > 0 && <><span>·</span><span><span className="num">{tripped}</span> שהסף שלהן נחצה</span></>}<span>·</span><span>מחושב מחדש בכל בנייה, כל מספר נפתח במקור</span><span>·</span><Link to="/watch">מה השתנה בתשובות</Link></div></div></div>
 
       <section className="qi-ctl" aria-label="סינון">
         <div className="qi-chairs" role="group" aria-label="מי שואל">
@@ -224,7 +224,7 @@ export function Findings() {
   }, [F]);
   if (!done) return <Loading what="הממצאים" />;
   const head = <div className="pagehead"><div><h1><span className="icotile"><Icon name="spark" /></span>ממצאים</h1>
-    <div className="sub"><span>הפתעות שהמנוע מצא בבסיס העובדות, בכל בנייה</span><span>·</span><span>מהותיות והפתעה מוצגות כשני רכיבים נפרדים, בלי ציון מצרפי</span><span>·</span><Link to="/questions">שאלות</Link></div></div></div>;
+    <div className="sub"><span>הפתעות שהמנוע מצא בבסיס העובדות, בכל בנייה</span><span>·</span><span>מהותיות והפתעה מוצגות כשני רכיבים נפרדים, בלי ציון מצרפי</span></div></div></div>;
   if (!F) return <div className="qi fd">{head}<Empty title="אין ממצאים בבנייה הזו" icon="spark">מנוע הממצאים לא פרסם קובץ בבנייה הנוכחית. <Link to="/questions">לאינדקס השאלות</Link></Empty></div>;
   const top = topFirst(F.rows).filter((r) => r.top);
   const asof = typeof F.asof === 'string' ? F.asof : Object.values(F.asof).join(' · ');

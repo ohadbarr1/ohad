@@ -1,8 +1,7 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import type { ECharts } from 'echarts/core';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { BasisToggle, CompareAdd, FundsHead } from '../components/FundsNav';
-import { CatPicker, Lede, TimeNav, WatchStar, monthsIn, pctChartOption, rankProv } from '../components/FundsTime';
+import { CatPicker, TimeNav, WatchStar, pctChartOption, rankProv } from '../components/FundsTime';
 import { MgrChip, IdDot } from '../components/MgrChip';
 import { Sourced } from '../components/Source';
 import { Chart } from '../components/Chart';
@@ -11,188 +10,25 @@ import { Tip } from '../components/Explain';
 import { Empty, ErrorBox, Loading, Panel, Pick, Seg } from '../components/ui';
 import { useFunds } from '../lib/useData';
 import { useSource, type Prov } from '../lib/prov';
-import { useTheme, chartBase, tooltipCss, CHART_FONT } from '../lib/theme';
-import { polish } from '../lib/foxchart';
-import { GROUP_ID, idColor, idCss } from '../lib/identity';
+import { chartBase, CHART_FONT } from '../lib/theme';
+import { GROUP_ID, idColor } from '../lib/identity';
 import { nf, sn } from '../lib/format';
 import { expP, fundP } from '../lib/market';
-import { NET_LABEL, NET_NOTE, netProv, pc, refOf, retOf, selfDirected, useBasis, useTray, type Basis, type FundX, type FundsFile, type Per } from '../lib/funds';
-import { BANDS, backM, frameMonths, frameOf, frontier, median, persistVerdict, pickSet, quilt, rankSeries, rowShares, stepDown, ymL, type Band, type Frame, type PersistTest, type QuiltCell, type RankMetric } from '../lib/fundsTime';
-import { membersOf, useBranch, useCat, useCatFiles, useClosed, useGlide, useHists, usePersist, yOf } from '../lib/fundsTimeLoad';
+import { NET_LABEL, netProv, pc, refOf, retOf, selfDirected, useBasis, type Basis, type FundX, type FundsFile, type Per } from '../lib/funds';
+import { BANDS, backM, pickSet, rankSeries, stepDown, ymL, type Band, type RankMetric } from '../lib/fundsTime';
+import { membersOf, useBranch, useCat, useCatFiles, useClosed, useGlide, useHists, yOf } from '../lib/fundsTimeLoad';
 import '../styles/lens.css';
 import '../styles/market.css';
 import '../styles/funds-time.css';
 
-/* F2 TIME, the views of the section's "סיכון וזמן" tab: the risk/return map with its year-by-year animation (#10), peer rank over time
-   by category (#11), the calendar quilt (#13), the persistence test (#12, the view of the DATA build's file) and the age-track glide paths
-   (#15). Net of fee by default; closed tracks are in every historical view (survivorship); every number opens its source. */
+/* F2 TIME, the views of the section's "סיכון וזמן" tab: peer rank over time by category (#11) and the age-track glide paths (#15).
+   Net of fee by default; closed tracks are in every historical view (survivorship); every number opens its source. The map (#10), the
+   quilt (#13) and the persistence view (#12) were removed (owner, 01.11.26; code cut in phase 0, 05.11.26); their addresses land on
+   /funds/rank. The persistence file (funds/persist.json) is still built: the answers Q-220 and Q-221 read it. */
 
-const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const useFile = () => { const { data, error } = useFunds(); return { data: data as FundsFile | undefined, error }; };
 const basisLbl = (b: Basis) => (b === 'net' ? NET_LABEL : 'ברוטו');
 const grpId = (g: string) => GROUP_ID[g] ?? '';
-
-/* ======================================================================================== the map (#10) */
-type Axis = 'vol' | 'dd' | 'st';
-const AXES: [Axis, string][] = [['vol', 'תנודתיות'], ['dd', 'ירידה מרבית'], ['st', 'חשיפה למניות']];
-const AXIS_NAME: Record<Axis, string> = { vol: 'תנודתיות שנתית, %', dd: 'ירידה מרבית בחלון, % (בערך מוחלט)', st: 'חשיפה למניות, % מהנכסים' };
-const WINS: ['12' | '36' | '60', string][] = [['12', '1Y'], ['36', '3Y'], ['60', '5Y']];
-const riskX = (p: Frame, x: Axis) => (x === 'vol' ? p.vol : x === 'dd' ? -p.dd : p.st);
-
-export function FundsMap() {
-  const { data, error } = useFile();
-  const [cat, setCat] = useCat();
-  const [sp, setSp] = useSearchParams();
-  const w = (['12', '36', '60'].includes(sp.get('w') ?? '') ? sp.get('w') : '36') as '12' | '36' | '60';
-  const x = (['vol', 'dd', 'st'].includes(sp.get('x') ?? '') ? sp.get('x') : 'vol') as Axis;
-  const setQ = (k: string, v: string) => { const n = new URLSearchParams(sp); n.set(k, v); setSp(n, { replace: true }); };
-  const [b] = useBasis();
-  const [tap, setTap] = useState<'open' | 'cmp'>('open');
-  const [fixed, setFixed] = useState(false);
-  const [br, setBr] = useBranch();
-  const nav = useNavigate();
-  const tray = useTray();
-  const closed = useClosed(true);
-  const mem = useMemo(() => (data && closed ? membersOf(data.funds, closed, cat, br) : []), [data, closed, cat, br]);
-  const hs = useHists(mem.map((f) => f.k));
-  const n = Number(w), asof = data?.asof ?? 0;
-  const ready = !!data && !!closed && mem.length > 0 && hs.pending === 0;
-  const live = mem.filter((f) => hs.h[f.k]);
-  const frames = useMemo(() => {
-    if (!ready) return [] as number[];
-    const firsts = live.map((f) => { const h = hs.h[f.k], y = yOf(h, b); return h.p.find((_, i) => y[i] != null) ?? 999999; });
-    return frameMonths(firsts, asof, n);
-  }, [ready, live.length, b, asof, n]);  // eslint-disable-line react-hooks/exhaustive-deps
-  const all = useMemo(() => frames.map((e) => live.map((f) => (f.gone && f.end != null && e > f.end ? null : frameOf(f.k, hs.h[f.k], yOf(hs.h[f.k], b), e, n)))), [frames, b, n]);  // eslint-disable-line react-hooks/exhaustive-deps
-  const [fi, setFi] = useState(-1);
-  const at = fi < 0 || fi >= frames.length ? frames.length - 1 : fi;
-  useEffect(() => { setFi(-1); }, [cat, w, b, br]);
-  const [playing, setPlaying] = useState(false);
-  useEffect(() => {
-    if (!playing) return;
-    if (at >= frames.length - 1) { setPlaying(false); return; }
-    const id = setTimeout(() => setFi(at + 1), reducedMotion() ? 1800 : 1100);
-    return () => clearTimeout(id);
-  }, [playing, at, frames.length]);
-
-  if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
-  const pts = (all[at] ?? []).map((p, i) => (p ? { p, f: live[i] } : null)).filter((z): z is { p: Frame; f: FundX } => !!z && riskX(z.p, x) != null);
-  const end = frames[at];
-  const medX = median(pts.map((z) => riskX(z.p, x)!)), medY = median(pts.map((z) => z.p.ret));
-  const winLbl = WINS.find(([k]) => k === w)![1];
-  const retLbl = n > 12 ? `תשואה שנתית ממוצעת, ${winLbl}` : `תשואה ${winLbl}`;
-  const retProv = (z: { p: Frame; f: FundX }): Prov => ({ k: 'calc', est: b === 'net', title: `${retLbl}${b === 'net' ? ', נטו' : ''} · ${z.f.name} · עד ${ymL(z.p.months[z.p.months.length - 1])}`, value: pc(z.p.ret),
-    formula: n > 12 ? '(1 + r₁) × … × (1 + rₙ) בחזקת 12 ÷ n, פחות 1, על התשואות החודשיות של החלון' : '(1 + r₁) × … × (1 + r₁₂) − 1', note: b === 'net' ? NET_NOTE : undefined, inputs: monthsIn(refOf(z.f), hs.h[z.f.k], z.p.months, b) });
-  const riskProv = (z: { p: Frame; f: FundX }): Prov => {
-    const e = z.p.months[z.p.months.length - 1];
-    if (x === 'st') return expP(refOf(z.f), e, 'STOCK_MARKET_EXPOSURE', 'חשיפה למניות', z.p.st, z.p.a);
-    return { k: 'calc', est: b === 'net', title: `${x === 'vol' ? 'תנודתיות שנתית' : 'ירידה מרבית'}, ${winLbl} · ${z.f.name} · עד ${ymL(e)}`, value: x === 'vol' ? nf(z.p.vol, 2) + '%' : pc(z.p.dd),
-      formula: x === 'vol' ? 'סטיית התקן של התשואות החודשיות בחלון (n − 1) כפול שורש 12' : 'הירידה הגדולה ביותר של מדד התשואה המצטברת משיא לשפל בתוך החלון', inputs: monthsIn(refOf(z.f), hs.h[z.f.k], z.p.months, b) };
-  };
-  const aProv = (z: { p: Frame; f: FundX }): Prov => fundP(refOf(z.f), z.p.months[z.p.months.length - 1], 'TOTAL_ASSETS', 'נכסים', z.p.a == null ? '–' : nf(z.p.a, 1), 'מיליוני ש"ח');
-  const medProv = (axis: 'x' | 'y', v: number | null): Prov => ({ k: 'calc', title: `חציון ${axis === 'x' ? AXIS_NAME[x] : retLbl} · ${cat} · ${end ? ymL(end) : ''}`, value: v == null ? '–' : nf(v, 2) + '%', formula: 'החציון על פני המסלולים שבמפה בחודש הזה',
-    inputs: pts.map((z) => ({ label: z.f.name, v: nf(axis === 'x' ? riskX(z.p, x)! : z.p.ret, 2) + '%', src: () => (axis === 'x' ? riskProv(z) : retProv(z)) })) });
-  const gone = pts.filter((z) => z.f.gone).length;
-
-  return (
-    <>
-      <FundsHead title="סיכון וזמן" sub={<>מפת סיכון ותשואה · {cat}{data ? <> · <span className="num">{ymL(asof)}</span></> : null}</>} tools={<><CatPicker fs={data?.funds ?? []} cat={cat} onChange={setCat} /><BasisToggle real={false} /></>} />
-      <TimeNav />
-      <Panel title={<>כל מסלול בקטגוריה: תשואה מול סיכון <Tip k="map" /></>} aside={<><Seg label="חלון" value={w} onChange={(v) => setQ('w', v)} options={WINS} /><Seg label="ציר הסיכון" value={x} onChange={(v) => setQ('x', v)} options={AXES} /><button type="button" className="chip" aria-pressed={br} onClick={() => setBr(!br)} title="קופות של ארגון או מפעל, שאינן פתוחות לכל הציבור">קופות ענפיות</button><span className={`chip${b === 'net' ? ' est' : ''}`}>{basisLbl(b)}</span></>}>
-        {!ready ? <Loading what={mem.length ? `${mem.length - hs.pending} מתוך ${mem.length} מסלולים` : 'המסלולים'} /> : frames.length === 0 || !pts.length ? <Empty title="אין מסלולים עם תשואה לכל חודשי החלון בקטגוריה הזו" /> : (
-          <>
-            <div className="fplay" role="group" aria-label="הנפשה לפי שנים">
-              <button type="button" className="chip" onClick={() => { if (at >= frames.length - 1) setFi(0); if (!playing) setFixed(true); setPlaying(!playing); }} aria-pressed={playing} aria-label={playing ? 'עצירה' : 'הפעלה שנה אחר שנה'}>{playing ? '⏸ עצירה' : '▶ שנה אחר שנה'}</button>
-              <button type="button" className="chip" onClick={() => { setPlaying(false); setFi(Math.max(0, at - 1)); }} disabled={at <= 0} aria-label="השנה הקודמת">‹</button>
-              <input type="range" min={0} max={frames.length - 1} value={at} onChange={(e) => { setPlaying(false); setFi(Number(e.target.value)); }} aria-label="חודש הסיום של החלון" aria-valuetext={ymL(end)} />
-              <button type="button" className="chip" onClick={() => { setPlaying(false); setFi(Math.min(frames.length - 1, at + 1)); }} disabled={at >= frames.length - 1} aria-label="השנה הבאה">›</button>
-              <b className="num fplay-at" aria-live="polite">{ymL(end)}</b>
-              <Seg label="צירים" value={fixed ? 'fixed' : 'fit'} onChange={(v) => setFixed(v === 'fixed')} options={[['fit', 'צירים לפי השנה'], ['fixed', 'צירים קבועים']]} />
-              <Seg label="לחיצה על נקודה" value={tap} onChange={setTap} options={[['open', 'פתיחת כרטיס'], ['cmp', 'הוספה להשוואה']]} />
-            </div>
-            <MapChart pts={pts} all={fixed ? all : [pts.map((z) => z.p)]} live={live} x={x} retLbl={retLbl} medX={medX} medY={medY} structure={`${cat}|${w}|${x}|${b}|${br}|${fixed}`}
-              onDot={(k) => { const f = live.find((z) => z.k === k); if (!f) return; if (tap === 'open' || f.gone) nav(`/funds/${k}`); else tray.toggle(k); }} />
-            <div className="fnote">
-              כל נקודה: מסלול; גודל: הנכסים בסוף החלון; צבע: המנהל. קווים מקווקווים: החציון בכל ציר (<Sourced src={() => medProv('x', medX)}><span className="num">{medX == null ? '–' : nf(medX, 1)}</span></Sourced>, <Sourced src={() => medProv('y', medY)}><span className="num">{medY == null ? '–' : nf(medY, 1)}</span></Sourced>). הקו הדק: המסלולים שאף מסלול אחר לא השיג יותר בפחות סיכון.
-              {' '}בכל שנה מוצגים המסלולים שהיו קיימים אז, כולל {gone ? <><span className="num">{gone}</span> שנסגרו מאז</> : 'מסלולים שנסגרו מאז, כשהיו'}. {b === 'net' ? 'נטו, אומדן: אחרי דמי ניהול מצבירה.' : 'ברוטו, כפי שהרשות מפרסמת.'} {reducedMotion() ? 'תנועה מופחתת: המעבר בין שנים בלי הנפשה.' : ''}
-            </div>
-          </>
-        )}
-      </Panel>
-      {ready && pts.length > 0 && (
-        <Panel title={<>הנקודות · <span className="num">{ymL(end)}</span></>} aside={<span>{pts.length} מסלולים</span>}>
-          <DataTable caption={`מפת סיכון ותשואה · ${cat} · ${ymL(end)}`} rows={pts} rowKey={(z) => z.f.k} sort={{ key: 'ret', dir: 'desc' }} maxHeight={520}
-            export={{ name: `fox-map-${ymL(end).replace('/', '-')}`, title: `מפת סיכון ותשואה · ${cat} · ${ymL(end)} · ${basisLbl(b)}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }}
-            columns={[
-              { key: 'n', head: 'מסלול', value: (z) => z.f.name, firstDir: 'asc', cell: (z) => <span className="fmapname"><Link to={`/funds/${z.f.k}`}>{z.f.name}</Link><MgrChip grp={z.f.grp} mgr={z.f.mgr} short />{z.f.gone && <span className="chip">נסגר {z.f.end ? ymL(z.f.end) : ''}</span>}</span> },
-              { key: 'ret', head: retLbl, value: (z) => z.p.ret, cell: (z) => <Sourced src={() => retProv(z)}><span className="num">{pc(z.p.ret, 1)}</span></Sourced> },
-              { key: 'x', head: AXIS_NAME[x], value: (z) => riskX(z.p, x), cell: (z) => <Sourced src={() => riskProv(z)}><span className="num">{nf(riskX(z.p, x)!, 1)}%</span></Sourced> },
-              { key: 'a', head: 'נכסים, מיליוני ש"ח', className: 'wide-only', value: (z) => z.p.a, cell: (z) => (z.p.a == null ? <span className="muted">–</span> : <Sourced src={() => aProv(z)}><span className="num">{nf(z.p.a, 0)}</span></Sourced>) },
-              { key: 'act', head: <span className="sr-only">פעולות</span>, label: 'פעולות', noExport: true, sortable: false, cell: (z) => <span className="fact">{!z.f.gone && <CompareAdd k={z.f.k} name={z.f.name} small />}{!z.f.gone && <WatchStar f={z.f} asof={asof} small />}</span> },
-            ]} />
-        </Panel>
-      )}
-    </>
-  );
-}
-/** The scatter, drawn on its own instance so a new year tweens the dots instead of redrawing them (a merge, not a replace). */
-function MapChart({ pts, all, live, x, retLbl, medX, medY, structure, onDot }: { pts: { p: Frame; f: FundX }[]; all: (Frame | null)[][]; live: FundX[]; x: Axis; retLbl: string; medX: number | null; medY: number | null; structure: string; onDot: (k: string) => void }) {
-  const el = useRef<HTMLDivElement>(null), chart = useRef<ECharts | null>(null), last = useRef('');
-  const { theme } = useTheme();
-  const [ready, setReady] = useState(false);
-  const dot = useRef(onDot); dot.current = onDot;
-  useEffect(() => {
-    let alive = true, ro: ResizeObserver | null = null;
-    void import('../lib/echarts').then(({ echarts }) => {
-      if (!alive || !el.current) return;
-      const c = echarts.init(el.current); chart.current = c;
-      ro = new ResizeObserver(() => c.resize()); ro.observe(el.current);
-      c.on('click', (e) => { const d = e.data as { k?: string } | undefined; if (d?.k) dot.current(d.k); });
-      setReady(true);
-    });
-    return () => { alive = false; ro?.disconnect(); chart.current?.dispose(); chart.current = null; };
-  }, []);
-  // fixed axes over every year, so a dot's move is a real move
-  const ext = useMemo(() => {
-    const xs: number[] = [], ys: number[] = [], as: number[] = [];
-    all.forEach((fr) => fr.forEach((p) => { if (!p) return; const v = riskX(p, x); if (v != null) xs.push(v); ys.push(p.ret); if (p.a != null) as.push(p.a); }));
-    const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.06 || 1; return [Math.floor(lo - d), Math.ceil(hi + d)]; };
-    return { x: pad(Math.min(...xs), Math.max(...xs)), y: pad(Math.min(...ys), Math.max(...ys)), a: Math.max(1, ...as) };
-  }, [all, x]);
-  const groups = useMemo(() => { const m = new Map<string, number>(); live.forEach((f) => m.set(f.grp, (m.get(f.grp) ?? 0) + (f.assets ?? f.end_assets ?? 0))); return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([g]) => g); }, [live]);
-  useEffect(() => {
-    if (!ready || !chart.current) return;
-    const id = requestAnimationFrame(() => {
-      const bs = chartBase(), red = reducedMotion(), at = new Map(pts.map((z) => [z.f.k, z]));
-      const size = (a: number | null) => 7 + 30 * Math.sqrt(Math.max(0, a ?? 0) / ext.a);
-      const edge = frontier(pts.map((z) => ({ x: riskX(z.p, x)!, y: z.p.ret })));
-      const series: Record<string, unknown>[] = groups.map((g) => {
-        const fs = live.filter((f) => f.grp === g), col = grpId(g) ? idColor(grpId(g)) : bs.mu;
-        return { id: `g:${g}`, name: g, type: 'scatter', itemStyle: { color: col, opacity: 0.82, borderColor: bs.panel, borderWidth: 1 }, emphasis: { focus: 'series', itemStyle: { opacity: 1 } },
-          data: fs.map((f) => { const z = at.get(f.k); return z ? { value: [riskX(z.p, x), z.p.ret], k: f.k, name: f.name, a: z.p.a, gone: !!f.gone, symbolSize: size(z.p.a) } : { value: ['-', '-'], k: f.k, name: f.name, symbolSize: 0 }; }) };
-      });
-      series.push({ id: 'edge', name: 'גבול יעיל', type: 'line', silent: true, symbol: 'none', data: edge.map((p) => [p.x, p.y]), lineStyle: { color: bs.mu, width: 1, opacity: 0.6 }, z: 1, tooltip: { show: false },
-        markLine: { silent: true, symbol: 'none', lineStyle: { color: bs.mu, type: 'dashed', width: 1 }, label: { show: false }, data: [...(medX != null ? [{ xAxis: medX }] : []), ...(medY != null ? [{ yAxis: medY }] : [])] } });
-      const fmt = (v: number) => `${nf(v, 1)}%`;
-      const opt = polish({
-        animation: !red, animationDurationUpdate: red ? 0 : 900, animationEasingUpdate: 'cubicInOut',
-        textStyle: { fontFamily: CHART_FONT, color: bs.fg },
-        grid: { left: 8, right: 18, top: 56, bottom: 30, containLabel: true },
-        legend: { top: 0, type: 'scroll', data: groups, textStyle: { color: bs.fg, fontSize: 11.5 }, itemWidth: 10, itemHeight: 10, icon: 'circle' },
-        tooltip: { trigger: 'item', confine: true, backgroundColor: bs.panel, borderColor: bs.ln, extraCssText: tooltipCss(), textStyle: { color: bs.fg, fontSize: 12 },
-          formatter: (q: { data: { value: [number, number]; name: string; a: number | null; gone?: boolean }; seriesName: string; marker: string }) => (q.data?.name ? `${q.marker} <b>${q.data.name}</b>${q.data.gone ? ' (נסגר)' : ''}<br>${q.seriesName}<br>${retLbl}: <b>${fmt(q.data.value[1])}</b><br>${AXIS_NAME[x]}: <b>${fmt(q.data.value[0])}</b><br>נכסים: ${q.data.a == null ? '–' : nf(q.data.a, 0)} מיליוני ש"ח` : '') },
-        xAxis: { type: 'value', name: AXIS_NAME[x], nameLocation: 'middle', nameGap: 24, min: ext.x[0], max: ext.x[1], nameTextStyle: { color: bs.mu, fontSize: 11 }, axisLabel: { color: bs.mu, fontSize: 11, formatter: (v: number) => `${nf(v, 0)}` }, splitLine: { lineStyle: { color: bs.ln2 } } },
-        yAxis: { type: 'value', name: `${retLbl}, %`, min: ext.y[0], max: ext.y[1], nameTextStyle: { color: bs.mu, fontSize: 11, align: 'left' }, axisLabel: { color: bs.mu, fontSize: 11, formatter: (v: number) => `${nf(v, 0)}` }, splitLine: { lineStyle: { color: bs.ln2 } } },
-        series,
-      });
-      const replace = last.current !== `${structure}|${theme}`;
-      last.current = `${structure}|${theme}`;
-      chart.current!.setOption(opt, { notMerge: replace });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [ready, pts, ext, groups, x, retLbl, medX, medY, structure, theme, live]);
-  return <div ref={el} className="fmap" role="img" aria-label={`מפת סיכון ותשואה: ${pts.length} מסלולים, ${retLbl} מול ${AXIS_NAME[x]}. הטבלה שמתחת מפרטת כל נקודה.`} />;
-}
 
 /* ======================================================================================== rank over time, by category (#11) */
 export function FundsRank() {
@@ -259,121 +95,6 @@ export function FundsRank() {
             ]} />
         </Panel>
       )}
-    </>
-  );
-}
-
-/* ======================================================================================== the quilt (#13) */
-export function FundsQuilt() {
-  const { data, error } = useFile();
-  const [cat, setCat] = useCat();
-  const [b] = useBasis();
-  const [mode, setMode] = useState<'mgr' | 'all'>('mgr');
-  const [hi, setHi] = useState<string | null>(null);
-  const [phone, setPhone] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 760px)').matches);
-  useEffect(() => { if (typeof matchMedia === 'undefined') return; const m = matchMedia('(max-width: 760px)'); const on = () => setPhone(m.matches); m.addEventListener('change', on); return () => m.removeEventListener('change', on); }, []);
-  const [br, setBr] = useBranch();
-  const closed = useClosed(true);
-  const mem = useMemo(() => (data && closed ? membersOf(data.funds, closed, cat, br) : []), [data, closed, cat, br]);
-  const hs = useHists(mem.map((f) => f.k));
-  const asof = data?.asof ?? 0, ready = !!data && !!closed && mem.length > 0 && hs.pending === 0;
-  const years = useMemo(() => (asof ? Array.from({ length: 10 }, (_, i) => Math.floor(asof / 100) - 9 + i) : []), [asof]);
-  // per manager: its largest track of the category (assets today, or at closing)
-  const chosen = useMemo(() => {
-    const live = mem.filter((f) => hs.h[f.k]);
-    if (mode === 'all') return live;
-    const by = new Map<string, FundX>();
-    live.filter((f) => !f.gone && !f.closed).forEach((f) => { const c = by.get(f.grp); if (!c || (f.assets ?? 0) > (c.assets ?? 0)) by.set(f.grp, f); });
-    return [...by.values()];
-  }, [mem, hs.h, mode]);
-  const q = useMemo(() => (ready ? quilt(chosen.map((f) => ({ k: f.k, grp: f.grp, p: hs.h[f.k].p, y: yOf(hs.h[f.k], b), gone: f.gone })), asof, years) : null), [ready, chosen, b, asof, years]);  // eslint-disable-line react-hooks/exhaustive-deps
-  if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
-  const fOf = (k: string) => mem.find((f) => f.k === k)!;
-  const depth = q ? Math.max(0, ...[...q.values()].map((c) => c.length)) : 0;
-  const cut = phone && depth > 10;
-  const grps = [...new Set(chosen.map((f) => f.grp))];
-  const cellProv = (k: string, yr: number, r: number, ps: number[]): Prov => { const f = fOf(k);
-    return { k: 'calc', est: b === 'net', title: `תשואה ${yr}${yr === Math.floor(asof / 100) ? ' (YTD)' : ''}${b === 'net' ? ', נטו' : ''} · ${f.name}`, value: pc(r), formula: '(1 + r₁) × … × (1 + rₙ) − 1 על התשואות החודשיות של השנה', note: b === 'net' ? NET_NOTE : undefined, inputs: monthsIn(refOf(f), hs.h[k], ps, b) }; };
-  // on a phone: the last five years, and in each year its top five and bottom five (all of it when a year has ten or fewer)
-  const shownYears = phone ? years.slice(-5) : years;
-  const rowsIdx = cut ? [0, 1, 2, 3, 4, -1, 6, 7, 8, 9, 10] : Array.from({ length: depth }, (_, i) => i);
-  const cellAt = (cs: QuiltCell[], ix: number): { c: QuiltCell; place: number } | undefined => {
-    const i = !cut || ix < 5 ? ix : cs.length > 10 ? cs.length - 5 + (ix - 6) : 5 + (ix - 6);
-    return cs[i] ? { c: cs[i], place: i + 1 } : undefined;
-  };
-  return (
-    <>
-      <FundsHead title="סיכון וזמן" sub={<>שנים: מי היה למעלה ומי למטה · {cat}</>} tools={<><CatPicker fs={data?.funds ?? []} cat={cat} onChange={setCat} /><BasisToggle real={false} /></>} />
-      <TimeNav />
-      <Panel title={<>תשואה לפי שנה, מהגבוה לנמוך <Tip k="quilt" /></>} aside={<><Seg label="מה מוצג" value={mode} onChange={setMode} options={[['mgr', 'מנהל: המסלול הגדול'], ['all', 'כל המסלולים']]} />{mode === 'all' && <button type="button" className="chip" aria-pressed={br} onClick={() => setBr(!br)}>קופות ענפיות</button>}<span className={`chip${b === 'net' ? ' est' : ''}`}>{basisLbl(b)}</span></>}>
-        {!ready || !q ? <Loading what={mem.length ? `${mem.length - hs.pending} מתוך ${mem.length} מסלולים` : 'המסלולים'} /> : !depth ? <Empty title="אין שנים מלאות בקטגוריה הזו" /> : (
-          <>
-            <div className="fq-legend" role="group" aria-label="הדגשת מנהל">
-              {grps.map((g) => <button key={g} type="button" className="chip" aria-pressed={hi === g} onClick={() => setHi(hi === g ? null : g)}><IdDot grp={g} />{g}</button>)}
-            </div>
-            <div className="scroll"><table className={`fquilt${hi ? ' hi' : ''}`}>
-              <caption className="sr-only">תשואה לפי שנה קלנדרית, כל עמודה ממוינת מהגבוה לנמוך, {cat}</caption>
-              <thead><tr><th scope="col" className="fq-rk">מקום</th>{shownYears.map((y) => <th key={y} scope="col"><span className="num">{y}</span>{y === Math.floor(asof / 100) ? <span className="dim"> YTD</span> : ''}<span className="dim fq-n">{q.get(y)?.length ?? 0} מסלולים</span></th>)}</tr></thead>
-              <tbody>{rowsIdx.map((ri) => ri < 0 ? <tr key="gap"><th scope="row" className="dim">⋯</th>{shownYears.map((y) => <td key={y} className="fq-gap">{(q.get(y)?.length ?? 0) > 10 ? '⋯' : ''}</td>)}</tr> : (
-                <tr key={ri}><th scope="row" className="dim">{cut && ri > 5 ? '' : <span className="num">{ri + 1}</span>}</th>{shownYears.map((y) => { const hit = cellAt(q.get(y) ?? [], ri);
-                  if (!hit) return <td key={y} />;
-                  const { c, place } = hit, f = fOf(c.k), id = grpId(c.grp);
-                  return <td key={y} className={`fq-c${hi && hi !== c.grp ? ' dim2' : ''}${hi === c.grp ? ' on' : ''}`} style={{ ['--idc' as string]: id ? idCss(id) : 'var(--neutral)' }}>
-                    <Sourced src={() => cellProv(c.k, y, c.r, c.ps)} title={`${f.name} · ${c.grp} · מקום ${place} מתוך ${q.get(y)?.length ?? 0}`}><span className="num">{sn(c.r, 1)}</span></Sourced><span className="fq-m">{c.grp.replace('מנורה מבטחים', 'מנורה').replace('אלטשולר שחם', 'אלטשולר').replace('ילין לפידות', 'ילין')}{c.gone ? ' †' : ''}</span></td>; })}</tr>
-              ))}</tbody>
-            </table></div>
-            <div className="fnote">{mode === 'mgr' ? 'לכל מנהל: המסלול הגדול שלו בקטגוריה היום. ' : 'כל מסלולי הקטגוריה, כולל מסלולים שנסגרו (†) בשנים שבהן פעלו. '}שנה נכללת רק כשפורסמה תשואה לכל חודשיה; השנה הנוכחית: עד {ymL(asof)}. {phone ? 'בטלפון: חמש השנים האחרונות; בשנה עם יותר מעשרה, חמשת הראשונים וחמשת האחרונים. ' : ''}{b === 'net' ? 'נטו, אומדן: אחרי דמי ניהול מצבירה.' : 'ברוטו.'} לחיצה על מנהל מדגישה את דרכו לאורך השנים.</div>
-          </>
-        )}
-      </Panel>
-    </>
-  );
-}
-
-/* ======================================================================================== persistence (#12 view) */
-const VERDICT: Record<ReturnType<typeof persistVerdict>, string> = { above: 'מעל מטבע', below: 'מתחת למטבע', coin: 'לא מובחן ממטבע' };
-const QHEAD = ['רבע עליון', 'רבע שני', 'רבע שלישי', 'רבע תחתון', 'נסגר'];
-function verdictHead(t: PersistTest) {
-  const v = persistVerdict(t), s = t.surv.share ?? t.stay.share;
-  return v === 'above' ? (s - t.stay.coin < 10 ? 'יש התמדה, חלשה' : 'יש התמדה') : v === 'below' ? 'המובילים נטו לרדת' : 'אין התמדה שאפשר להבחין בה';
-}
-export function FundsPersist() {
-  const p = usePersist();
-  const [b] = useBasis();
-  const [sp, setSp] = useSearchParams();
-  const fams = p.data ? [...new Set(p.data.tests.map((t) => t.prod))].sort((x, y) => (x === 'הכל' ? -1 : y === 'הכל' ? 1 : 0)) : [];
-  const cur = fams.includes(sp.get('prod') ?? '') ? sp.get('prod')! : fams[0] ?? null;
-  const tests = p.data?.tests.filter((t) => t.prod === cur && t.basis === b).sort((x, y) => x.win - y.win) ?? [];
-  const famL = (f: string) => (f === 'הכל' ? 'כל המוצרים יחד' : f);
-  const cellProv = (t: PersistTest, i: number, j: number): Prov => ({ k: 'calc', est: t.basis === 'net', title: `${famL(t.prod)} · ${t.label} · מ${QHEAD[i]} אל ${QHEAD[j]}`, value: `${nf(rowShares(t.m[i])[j], 1)}%`, formula: 'מספר המקרים בתא ÷ סך המקרים שהתחילו באותו רבע × 100. מקרה: מסלול בחודש התחלה; הרבע לפי התשואה בחלון שהסתיים בו, ושוב בחלון הבא באותו אורך',
-    inputs: [{ label: 'מקרים בתא', v: nf(t.m[i][j], 0) }, { label: `התחילו ב${QHEAD[i]}`, v: nf(t.m[i].reduce((x, c) => x + c, 0), 0) }, ...(t.first ? [{ label: 'חודשי התחלה', v: `${ymL(t.first)}–${ymL(t.last ?? t.first)}${t.nStarts ? ` (${t.nStarts})` : ''}` }] : []), ...(t.cats ? [{ label: 'קטגוריות', v: nf(t.cats, 0) }] : [])], note: p.data?.method ?? undefined });
-  const stayProv = (t: PersistTest, surv: boolean): Prov => ({ k: 'calc', est: t.basis === 'net', title: `נשארו ברבע העליון${surv ? ', מתוך השורדים' : ''} · ${famL(t.prod)} · ${t.label}`, value: `${nf(surv ? t.surv.share ?? 0 : t.stay.share, 1)}%`,
-    formula: surv ? 'נשארו ברבע העליון ÷ מי שהתחיל בו ושרד את החלון הבא × 100. מטבע הוגן: 25%' : 'נשארו ברבע העליון ÷ כל מי שהתחיל בו, כולל מסלולים שנסגרו בחלון הבא × 100',
-    inputs: [{ label: 'נשארו', v: nf(t.stay.k, 0) }, { label: surv ? 'התחילו ושרדו' : 'התחילו ברבע העליון', v: nf((surv ? t.surv.n : t.stay.n) ?? 0, 0) },
-      ...(surv && t.surv.lo != null ? [{ label: t.ci === 'boot' ? 'רווח 90%, bootstrap בבלוקים' : 'רווח 90%, Wilson על חלונות שאינם חופפים', v: `${nf(t.surv.lo, 1)}%–${nf(t.surv.hi ?? 0, 1)}%` }] : []),
-      ...(!surv && t.stay.lo != null ? [{ label: 'רווח 90%, bootstrap בבלוקים', v: `${nf(t.stay.lo, 1)}%–${nf(t.stay.hi ?? 0, 1)}%` }] : []), ...(t.eff ? [{ label: 'חלונות בלתי חופפים', v: nf(t.eff, 1) }] : [])], note: p.data?.method ?? undefined });
-  return (
-    <>
-      <FundsHead title="סיכון וזמן" sub="האם המנצחים נשארים מנצחים?" tools={<>{fams.length > 1 && <Pick label="מוצר" value={cur ?? ''} onChange={(v) => { const n = new URLSearchParams(sp); n.set('prod', v); setSp(n, { replace: true }); }} options={fams.map((x) => [x, famL(x)] as [string, string])} />}<BasisToggle real={false} /></>} />
-      <TimeNav />
-      <Lede>בכל חודש התחלה מחלקים כל קטגוריה לארבעה רבעים לפי התשואה בחלון שהסתיים בו, ובודקים באיזה רבע כל מסלול היה בחלון הבא. אם העבר לא מלמד דבר, מי ששרד ברבע העליון יישאר בו ב-25% מהמקרים, כמו מטבע.</Lede>
-      {!p.data ? (p.missing ? <Empty title="מבחן ההתמדה יתפרסם עם בניית הנתונים הבאה">הקובץ funds/persist.json עוד לא קיים באתר. המבחן מחושב בבניית הנתונים על כל ההיסטוריה, כולל מסלולים שנסגרו.</Empty> : <Loading what="מבחן ההתמדה" />)
-        : !tests.length ? <Empty title="אין מבחן במוצר ובבסיס האלה" /> : tests.map((t) => { const v = persistVerdict(t), tot = t.m[0].reduce((x, c) => x + c, 0);
-          return (
-            <Panel key={`${t.prod}${t.win}${t.basis}`} title={<>{famL(t.prod)} · {t.label} <Tip k="persist" /></>} aside={<><span className={`chip ${v === 'above' ? 'pos' : v === 'below' ? 'neg' : ''}`}>{VERDICT[v]}</span>{t.thin && <span className="chip est" title="פחות משלושה חלונות שאינם חופפים">מדגם דק</span>}<span className={`chip${t.basis === 'net' ? ' est' : ''}`}>{basisLbl(t.basis)}</span></>}>
-              <p className="fverdict"><b>{verdictHead(t)}.</b> מי שהיה ברבע העליון ושרד נשאר בו ב-<Sourced src={() => stayProv(t, true)}><span className="num">{nf(t.surv.share ?? 0, 1)}%</span></Sourced> מהמקרים, מול 25% של מטבע{t.surv.lo != null ? <> (רווח 90%: <span className="num">{nf(t.surv.lo, 1)}%–{nf(t.surv.hi ?? 0, 1)}%</span>)</> : ''}. מכל מי שהתחיל ברבע העליון, כולל מי שנסגר: <Sourced src={() => stayProv(t, false)}><span className="num">{nf(t.stay.share, 1)}%</span></Sourced>; <span className="num">{nf(tot ? (100 * t.m[0][3]) / tot : 0, 1)}%</span> ירדו לרבע התחתון ו-<span className="num">{nf(tot ? (100 * t.m[0][4]) / tot : 0, 1)}%</span> נסגרו לפני סוף החלון הבא{t.goneQ4Pct != null ? <> (ברבע התחתון: <span className="num">{nf(t.goneQ4Pct, 1)}%</span>)</> : ''}.</p>
-              <div className="scroll"><table className="fpersist">
-                <caption className="sr-only">מטריצת מעבר בין רבעים, {famL(t.prod)}, {t.label}: שורה = הרבע בחלון הראשון, עמודה = הרבע בחלון הבא</caption>
-                <thead><tr><th scope="col">בחלון הראשון ↓ · בחלון הבא ←</th>{QHEAD.map((h) => <th key={h} scope="col">{h}</th>)}<th scope="col">מקרים</th></tr></thead>
-                <tbody>{t.m.map((row, i) => { const sh = rowShares(row); return (
-                  <tr key={i}><th scope="row">{QHEAD[i]}</th>{sh.map((x, j) => <td key={j} className={`fp-c${i === j ? ' diag' : ''}`} style={{ ['--w' as string]: `${Math.min(100, x * 2)}%` }}><Sourced src={() => cellProv(t, i, j)}><span className="num">{nf(x, 1)}%</span></Sourced></td>)}<td><span className="num muted">{nf(row.reduce((x, c) => x + c, 0), 0)}</span></td></tr>
-                ); })}</tbody>
-              </table></div>
-              <div className="fnote">אלכסון מודגש: נשארו באותו רבע. {t.first ? <>חודשי התחלה {ymL(t.first)}–{ymL(t.last ?? t.first)}{t.nStarts ? <>, <span className="num">{t.nStarts}</span> חודשים</> : ''}{t.cats ? <>, <span className="num">{t.cats}</span> קטגוריות</> : ''}. </> : ''}{t.rho != null ? <>מתאם הדירוגים (Spearman) בין החלון לחלון הבא, בין השורדים: <span className="num">{nf(t.rho, 2)}</span>. </> : ''}החלונות חופפים, ולכן הרווח מחושב ב-bootstrap בבלוקים של חודשי התחלה ({t.eff != null ? <><span className="num">{nf(t.eff, 1)}</span> חלונות בלתי חופפים</> : 'ראו שיטה'}).</div>
-            </Panel>
-          ); })}
-      {p.data?.note && <div className="fnote">{p.data.note}</div>}
-      {p.data?.method && <details className="fnote"><summary>שיטה</summary>{p.data.method}</details>}
     </>
   );
 }

@@ -6,7 +6,7 @@ export const ROUTES: [string, string][] = [
   ['home-agent', '/?door=agent'],                        // W1: the agent's home
   ['pro', '/pro'],                                       // W1: the Pro home at its fixed address
   ['pro-from-saver', '/warroom?door=saver'],             // W1: a Pro page opened from the saver's door (the "עמוד מקצועי" chip, the saver's nav)
-  ['company', '/company/phoenix'],
+  ['company', '/company/phoenix'],                     // phase 0: the company opens on its numbers
   ['thesis', '/company/phoenix/thesis'],
   ['numbers', '/company/phoenix/numbers'],
   ['company-more', '/company/more'],
@@ -20,18 +20,17 @@ export const ROUTES: [string, string][] = [
   ['funds-screen-all', '/funds/screen?prod=all&track=all&fam=index'],
   ['funds-compare', '/funds/compare?k=p2009,g12531,i2081&b=net'],
   ['fund', '/funds/p2009'],
-  ['funds-tools', '/funds/tools'],                                                  // F2 TOOLS
+  ['funds-tools', '/funds/tools'],                                                  // F2 TOOLS; phase 0: a list, each tool with its question
   ['funds-fees', '/funds/tools/fees'],
   ['funds-default', '/funds/default'],
   ['funds-trackers', '/funds/trackers?g=sp500&w=a3'],
   ['funds-rank', '/funds/rank?cat=%D7%92%D7%9E%D7%9C%20%7C%20%D7%A2%D7%93%2050'],
   ['funds-glide', '/funds/glide?prod=%D7%92%D7%9E%D7%9C'],
-  ['funds-watch', '/funds/watch'],
   ['managers', '/managers'],
   ['valuation', '/valuation/phoenix'],
-  ['calendar', '/calendar'],
+  ['calendar', '/calendar'],                             // phase 0: a tab of /feed
   ['search', '/search?q=%D7%A8%D7%9B%D7%99%D7%91%20%D7%94%D7%A4%D7%A1%D7%93'],
-  ['data', '/data'],
+  ['data', '/data'],                                     // phase 0: quality · autopilot · API tabs
   ['positions', '/positions'],
   ['my', '/my'],                                         // W1 saver: "המוצרים שלי", empty in a fresh browser (picker + example)
   ['scenarios', '/scenarios'],
@@ -52,10 +51,10 @@ export const ROUTES: [string, string][] = [
   ['question-email', '/questions/Q-001?r=email'],
   ['question-exhibit', '/questions/Q-001?r=ex'],
   ['question-missing', '/questions/Q-999'],
-  ['findings', '/findings'],
+  ['findings', '/findings'],                             // phase 0: a tab of /questions
   ['brief', '/brief'],            // S3: the registry, empty in a fresh browser (private: nothing to seed)
   ['brief-demo', '/brief/demo'],  // S3: the built-in demo meeting's brief
-  ['watch', '/watch'],
+  ['watch', '/watch'],                                   // phase 0: the "שאני עוקב" tab of /feed
 ];
 export const THEMES = ['phoenix', 'dark'] as const;
 

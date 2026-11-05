@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ErrorBox, Loading } from '../components/ui';
 import { Icon } from '../components/Icon';
@@ -9,7 +9,11 @@ import { SALARY_KEY, useMine, useMyAge, useMyRetire, useMySalary, useMySex, useP
 import { writeStored } from '../lib/local';
 import { PROFILE_ADD, PROFILE_LABEL, addProfile, removeProfile, setActive, type ProfileId } from '../lib/household';  // W7
 import { useSaverDoor } from '../lib/door';
-import type { CatX, FundX, FundsFile } from '../lib/funds';
+import { grossProv, netProv, useBasis, type CatX, type FundX, type FundsFile } from '../lib/funds';
+import { deltaOf, markSeen, ymL, type WSnap } from '../lib/fundsTime';  // phase 0: the watchlist (was /funds/watch)
+import { snapOf, useWatch } from '../lib/fundsTimeLoad';
+import { WatchStar } from '../components/FundsTime';
+import { nf } from '../lib/format';
 import type { DefaultFile } from '../lib/fundsTools';
 import type { Prov } from '../lib/prov';
 import { AGE_DEFAULT, KZ_RETIRE, RET_FALLBACK, ageText, ilsRound } from '../lib/retire';
@@ -25,6 +29,7 @@ import { SinceVisit } from '../components/saver/SinceVisit';
 import { MomentChips } from '../components/saver/MomentChips';  // W9: life moments
 import '../styles/moments.css';
 import '../styles/saver.css';
+import '../styles/my-watch.css';
 
 /* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26): the reader's age once, a strip that adds up what they
    pay and what the pension funds may pay, the one thing worth asking for, then a folded card per product. The list lives in this
@@ -38,7 +43,9 @@ import '../styles/saver.css';
    retirement age, salary and "what changed" snapshot; "אני" keeps the keys the page always used, so nothing is lost. The deposit
    watchdog, the coverage line and "חבר אמר לעבור ל…" live on the card (components/saver). /my#deposits opens the first pension or
    השתלמות card on its watchdog (the link from /my/statement).
-   W9: a row of five chips, the life moments (/my/moment/<id>, pages/Moments), the labels only (the page's 400-word budget). */
+   W9: a row of five chips, the life moments (/my/moment/<id>, pages/Moments), the labels only (the page's 400-word budget).
+   Phase 0 (05.11.26): "במעקב", the tracks this browser follows (the ☆ on every track; formerly /funds/watch, which lands on /my#watch):
+   one line per track, folded unless the address asks for it, so it costs the page's word budget nothing until opened. */
 export { SALARY_KEY };
 const EXAMPLE = 'p9757';
 const today = () => new Date().toISOString().slice(0, 10);
@@ -96,6 +103,7 @@ export function My() {
       <MomentChips />
 
       {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
+      <Watching data={data} />
 
       {shown.length > 0 && <div className="sv-list">
         {shown.map(({ m, f }) => f
@@ -126,6 +134,49 @@ export function My() {
       <GlossBar />
       <p className="sv-legal">מידע תיאורי מנתוני רשות שוק ההון, עם מקור לכל מספר. לא ייעוץ השקעות, לא ייעוץ או שיווק פנסיוני, ואין המלצה לעבור או להישאר. תשואות עבר אינן מבטיחות תשואות בעתיד. האומדנים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
     </div>
+  );
+}
+
+/** Phase 0: the tracks this browser follows (the ☆ on every track card, lib/fundsTime watch store), one line each: the last 12 months,
+ *  the fee and a "new month" chip against the last look. The look is recorded when the reader leaves, only if the list was opened. */
+function Watching({ data }: { data: FundsFile }) {
+  const [w, setW] = useWatch();
+  const [b] = useBasis();
+  const { hash } = useLocation();
+  const asof = data.asof;
+  const byK = useMemo(() => new Map(((data.funds ?? []) as FundX[]).map((f) => [f.k, f])), [data]);
+  const now = useMemo(() => { const m = new Map<string, WSnap>(); w.items.forEach((i) => { const f = byK.get(i.k); if (f) m.set(i.k, snapOf(f, asof, b)); }); return m; }, [w, byK, asof, b]);
+  const [open, setOpen] = useState(hash === '#watch');
+  // /my#watch (where /funds/watch lands) opens the list and brings it into view once the cards above it have taken their height
+  useEffect(() => { if (hash !== '#watch') return; setOpen(true); const t = setTimeout(() => document.getElementById('watch')?.scrollIntoView({ block: 'start' }), 250); return () => clearTimeout(t); }, [hash]);
+  const ref = useRef({ w, now, opened: open }); ref.current = { w, now, opened: ref.current.opened || open };
+  useEffect(() => {
+    const mark = () => { const r = ref.current; if (r.opened && r.w.items.length) setW(markSeen(r.w, r.now, asof)); };
+    addEventListener('pagehide', mark);
+    return () => { removeEventListener('pagehide', mark); mark(); };
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  if (!w.items.length) return hash === '#watch' ? <p id="watch" className="sv-muted mw-empty">במעקב: עוד אין מסלולים. ☆ בכרטיס של כל מסלול מוסיף אותו לכאן.</p> : null;
+  const y12 = (f: FundX) => (b === 'net' ? f.net?.y12 ?? null : f.y12);
+  const fresh = w.items.filter((i) => deltaOf(i, now.get(i.k) ?? null)?.fresh).length;
+  return (
+    <details id="watch" className="panel mw" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary><h2>במעקב</h2><span><span className="num">{w.items.length}</span> מסלולים{fresh > 0 && <> · <span className="num">{fresh}</span> עם חודש חדש</>}</span></summary>
+      <ul className="mw-list">{w.items.map((i) => {
+        const f = byK.get(i.k), d = deltaOf(i, now.get(i.k) ?? null);
+        if (!f) return <li key={i.k}><b>{i.name}</b><span>לא בנתוני הרשות ({ymL(asof)}): ייתכן שנסגר או מוזג</span></li>;
+        const r = y12(f);
+        return (
+          <li key={i.k} className={d?.fresh ? 'fresh' : undefined}>
+            <Link className="sv-u" to={`/funds/${f.k}`}>{f.name}</Link>
+            <span className="mw-kv">12 חודשים {r == null ? '–' : <Sourced src={() => (b === 'net' ? netProv(f, 'y12', asof, r) : grossProv(f, 'y12', asof))}><span className="num">{nf(r, 2)}%</span></Sourced>}</span>
+            <span className="mw-kv">דמי ניהול {f.fee == null ? '–' : <span className="num">{nf(f.fee, 2)}%</span>}{d?.dFee ? <span> (<span className="num">{d.dFee > 0 ? '▲' : '▼'} {nf(Math.abs(d.dFee), 2)}</span> נ"א מאז)</span> : null}</span>
+            {d?.fresh && <span className="chip est">{d.months === 1 ? 'חודש חדש' : `${d.months} חודשים חדשים`}</span>}
+            <WatchStar f={f} asof={asof} small />
+          </li>
+        );
+      })}</ul>
+      <p className="sv-muted mw-note">נתוני {ymL(asof)}, {b === 'net' ? 'נטו (אומדן)' : 'ברוטו'} · "חודש חדש": מאז הביקור הקודם ברשימה · נשמר רק בדפדפן הזה</p>
+    </details>
   );
 }
 

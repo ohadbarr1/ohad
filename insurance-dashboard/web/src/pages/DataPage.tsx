@@ -118,7 +118,7 @@ function Inner({ c, qa, qaError }: { c: Cov; qa: Qa | null; qaError: string | nu
 
   return (
     <div className="dq wide-page">
-      <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>נתונים ואיכות</h1><div className="sub">כיסוי, בדיקות ורעננות לפי מקור · נבנה <span className="num">{pubLabel(c.built)}</span> · <Link to="/data/autopilot">טייס אוטומטי</Link> · <Link to="/data/api">API: תיעוד הקבצים</Link></div></div></div>
+      <div className="pagehead"><div><h1><span className="icotile"><Icon name="data" /></span>נתונים ואיכות</h1><div className="sub">כיסוי, בדיקות ורעננות לפי מקור · נבנה <span className="num">{pubLabel(c.built)}</span></div></div></div>
 
       <section className="kpis">
         <div className="kpi"><div className="l">כיסוי</div><div className="v num">{fmt((fresh / Math.max(1, applicable)) * 100, 'pct', { d: 0 })}</div><div className="s"><span className="num">{fresh}/{applicable}</span> תאים רלוונטיים עדכניים · {nCo} חברות ושוק × {c.layers.length} שכבות · <span className="num">{nNa}</span> לא רלוונטי</div></div>

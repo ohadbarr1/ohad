@@ -28,8 +28,9 @@ test('company page survives reloads and place switches in WebKit', async ({ page
   for (let i = 1; i <= 3; i++) { await page.reload(); await settle(page); await ok(`reload ${i}`); }
 
   const places = page.getByRole('navigation', { name: 'חברה' });
-  for (const [name, url] of [['מספרים', /\/company\/phoenix\/numbers/], ['דוחות', /\/company\/phoenix\/(financials|review|profit|ifrs17)/], ['חיסכון', /\/company\/phoenix\/savings/], ['מסמכים', /\/company\/phoenix\/filings/], ['תזה', /\/company\/phoenix\/?(\?|$)/]] as const) {
-    await places.getByRole('link', { name, exact: name === 'תזה' }).first().click();
+  // phase 0 (05.11.26): the company opens on its numbers; the thesis is a tab at its own address
+  for (const [name, url] of [['תזה', /\/company\/phoenix\/thesis/], ['דוחות', /\/company\/phoenix\/(financials|review|profit|ifrs17)/], ['חיסכון', /\/company\/phoenix\/savings/], ['מסמכים', /\/company\/phoenix\/filings/], ['מספרים', /\/company\/phoenix\/?(\?|$)/]] as const) {
+    await places.getByRole('link', { name, exact: name === 'תזה' || name === 'מספרים' }).first().click();
     await expect(page).toHaveURL(url);
     await settle(page);
     await ok(`place ${name}`);
@@ -157,7 +158,7 @@ test('funds hub, screener and compare work on the phone in WebKit', async ({ pag
    under an always-true condition (same sheet, same index: the real cascade and specificity) and fails on any element that is still
    sticky on the inline axis inside an RTL overflow-x scroller. */
 const STICKY_ROUTES = ['/', '/company/phoenix/financials', '/industry/peers', '/industry/peers?t=csm&v=series', '/industry/peers?pin=0', '/industry/csm', '/industry/csm?view=sens',
-  '/industry/csm?view=econ', '/industry/csm?view=curve', '/ownership', '/holdings', '/presentations', '/restatements', '/funds', '/funds/screen?prod=%D7%92%D7%9E%D7%9C&track=all', '/funds/compare?k=p2009,g12531', '/funds/p2009', '/managers', '/data', '/scenarios?e=-25&cr=150'];
+  '/industry/csm?view=econ', '/industry/csm?view=curve', '/holdings', '/presentations', '/restatements', '/funds', '/funds/screen?prod=%D7%92%D7%9E%D7%9C&track=all', '/funds/compare?k=p2009,g12531', '/funds/p2009', '/managers', '/data', '/scenarios?e=-25&cr=150'];
 
 test('sticky columns in RTL scrollers are all covered by the iOS override', async ({ page }) => {
   test.setTimeout(240_000);

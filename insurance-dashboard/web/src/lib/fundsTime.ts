@@ -1,11 +1,11 @@
-/* The funds module, wave F2 "time" (funds plan #10 map, #11 rank over time, #12 persistence view, #13 quilt, #15 glide paths, #23 watchlist,
-   and the risk panel). Pure: no React, no browser; tests/fundsTime.unit.ts runs it in node.
+/* The funds module, wave F2 "time" (funds plan #11 rank over time, #15 glide paths, #23 watchlist, and the risk panel; the map #10, the
+   quilt #13 and the persistence view #12 were cut with their pages in phase 0, 05.11.26). Pure: no React, no browser; tests/fundsTime.unit.ts runs it in node.
 
    Data contracts (written by the F2 DATA build, read here; every field optional where the pages can fall back):
    - funds/stats/index.json  {v, asof, cats: [{slug, cat, prod, track, n, rank}]}: the slug of a category is never re-derived here.
    - funds/stats/<slug>.json {v, cat, label, prod, asof, rf: {src, method}, tracks: [StatsRow], cat_median}: 36 months ending at asof.
    - funds/rank/<slug>.json  {v, cat, label, prod, asof, months, metric, basis, tracks, n, sets: [{metric, basis, tracks, n}]}.
-   - funds/persist.json      quartile transition matrices per product and window, pooled over start months (normPersist reads it).
+   - funds/persist.json      quartile transition matrices (still built: the answers Q-220 and Q-221 read it; no page reads it here).
    - funds/glide.json        age tracks per manager (normGlide reads it; the page also stands on funds.json alone).
    Until a file is published the pages compute the same figures in the browser from the published monthly histories, with the same
    formulas as below (riskStats mirrors the build's definitions), and say so. */
@@ -187,105 +187,8 @@ export function rankSeries(members: { k: string; p: number[]; y: (number | null)
 }
 export const quartileOf = (pct: number | null | undefined): 1 | 2 | 3 | 4 | null => (pct == null ? null : pct >= 75 ? 1 : pct >= 50 ? 2 : pct >= 25 ? 3 : 4);
 
-/* ---------- the map: one frame per year ---------- */
-export interface Frame { k: string; ret: number; vol: number; dd: number; st: number | null; a: number | null; months: number[] }
-/** a track at the end of a window of `n` months: annualised return (cumulative for 12 or less), annualised volatility, deepest fall in the
- *  window, its equity exposure and assets in the last month. Null when a month of the window is missing. */
-export function frameOf(k: string, h: { p: number[]; st?: (number | null)[]; a?: (number | null)[] }, y: (number | null)[], end: number, n: number): Frame | null {
-  const ps = backM(end, n), r = alignOn(h.p, y, ps);
-  if (r.some((x) => x == null)) return null;
-  let g = 1, pk = 1, dd = 0;
-  (r as number[]).forEach((x) => { g *= 1 + x / 100; pk = Math.max(pk, g); dd = Math.min(dd, g / pk - 1); });
-  const i = h.p.indexOf(end);
-  return { k, ret: ((n > 12 ? g ** (12 / n) : g) - 1) * 100, vol: sdev(r as number[]) * Math.sqrt(12), dd: dd * 100, st: i < 0 ? null : h.st?.[i] ?? null, a: i < 0 ? null : h.a?.[i] ?? null, months: ps };
-}
-/** the frames of the animation: every December from the first one with `min` tracks, and the latest month */
-export function frameMonths(firsts: number[], asof: number, n: number, min = 5): number[] {
-  const out: number[] = [];
-  for (let y = 1999; y <= Math.floor(asof / 100); y++) {
-    const e = y * 100 + 12; if (e >= asof) break;
-    const start = addM(e, -n + 1);
-    if (firsts.filter((f) => f <= start).length >= min) out.push(e);
-  }
-  out.push(asof);
-  return out;
-}
-/** The points no other point beats on both axes (less risk and more return): the efficient edge, drawn as a thin line, low risk first. */
-export function frontier<T extends { x: number; y: number }>(pts: T[]): T[] {
-  const s = [...pts].sort((a, b) => a.x - b.x || b.y - a.y), out: T[] = [];
-  let best = -Infinity;
-  s.forEach((p) => { if (p.y > best) { out.push(p); best = p.y; } });
-  return out;
-}
-
-/* ---------- the quilt ---------- */
-export interface QuiltCell { k: string; grp: string; r: number; n: number; ps: number[]; gone?: boolean }
-/** Calendar-year returns of each member, compounded from its monthly returns; a year counts only with all its months published (the
- *  current year: every month to `asof`, labelled YTD). Each year's cells are sorted best first. */
-export function quilt(members: { k: string; grp: string; p: number[]; y: (number | null)[]; gone?: boolean }[], asof: number, years: number[]): Map<number, QuiltCell[]> {
-  const out = new Map<number, QuiltCell[]>();
-  years.forEach((yr) => {
-    const need = yr === Math.floor(asof / 100) ? asof % 100 : 12, cells: QuiltCell[] = [];
-    members.forEach((x) => {
-      const ps = Array.from({ length: need }, (_, i) => yr * 100 + i + 1), r = alignOn(x.p, x.y, ps);
-      if (r.some((v) => v == null)) return;
-      const g = (r as number[]).reduce((t, v) => t * (1 + v / 100), 1);
-      cells.push({ k: x.k, grp: x.grp, r: (g - 1) * 100, n: need, ps, ...(x.gone ? { gone: true } : {}) });
-    });
-    out.set(yr, cells.sort((a, b) => b.r - a.r || a.k.localeCompare(b.k)));
-  });
-  return out;
-}
-
-/* ---------- persistence ---------- */
-export interface PersistTest { prod: string; win: number; basis: Basis; label: string; first: number | null; last: number | null; nStarts: number | null; cats: number | null;
-  /** 4 rows (start quartile 1 = top) × 5 columns (quartile in the next window 1..4, then closed): counts */
-  m: number[][];
-  /** stayed in the top quartile: of all who started there (closed in the denominator), and of the survivors; the coin is 25% of survivors */
-  stay: { k: number; n: number; share: number; coin: number; lo: number | null; hi: number | null };
-  surv: { share: number | null; lo: number | null; hi: number | null; n: number | null };
-  /** how the interval was made: a block bootstrap over overlapping start months, or Wilson on non-overlapping ones (thin samples) */
-  ci: 'boot' | 'wilson' | null; eff: number | null; thin: boolean; rho: number | null; rhoN: number | null; gonePct: number | null; goneQ4Pct: number | null }
-export interface PersistData { asof: number | null; method: string | null; note: string | null; src: string | null; tests: PersistTest[] }
+/* ---------- file readers ---------- */
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
-const pair = (v: unknown): [number | null, number | null] => (Array.isArray(v) ? [num(v[0]), num(v[1])] : [null, null]);
-/** reads funds/persist.json (the F2 DATA contract: rows per product family × window × basis, each with its four quartile rows); a
- *  malformed row is skipped. The family "הכל" pools every product. */
-export function normPersist(x: unknown): PersistData {
-  const o = (x && typeof x === 'object' ? x : {}) as Record<string, unknown>;
-  const list = (Array.isArray(o.rows) ? o.rows : Array.isArray(o.tests) ? o.tests : []) as Record<string, unknown>[];
-  const tests: PersistTest[] = [];
-  list.forEach((t) => {
-    const qs = (Array.isArray(t.rows) ? t.rows : []) as Record<string, unknown>[];
-    const m: number[][] = [1, 2, 3, 4].map((q) => { const r = qs.find((z) => num(z.q) === q); const to = Array.isArray(r?.to) ? (r!.to as unknown[]).map((v) => num(v) ?? 0) : []; return to.length === 4 ? [...to, num(r!.gone) ?? 0] : []; });
-    if (m.some((r) => r.length !== 5)) return;
-    const win = Number(t.win), basis: Basis = t.basis === 'gross' ? 'gross' : 'net';
-    if (!(win > 0)) return;
-    const thin = t.thin === true, [lo, hi] = pair(t.ci90), [slo, shi] = pair(t.ci90_surv), w = (t.wilson90 ?? {}) as Record<string, unknown>;
-    const n = num(t.top) ?? m[0].reduce((a, b) => a + b, 0), k = num(t.stay) ?? m[0][0];
-    tests.push({ prod: String(t.fam ?? t.prod ?? ''), win, basis, label: `${win}M → ${win}M הבאים`, first: num(t.from), last: num(t.to), nStarts: num(t.starts), cats: num(t.cats), m,
-      stay: { k, n, share: num(t.stay_pct) ?? (n ? (100 * k) / n : 0), coin: num(t.coin) ?? 25, lo, hi },
-      surv: thin || slo == null ? { share: num(w.pct) ?? num(t.stay_surv_pct), lo: num(w.lo), hi: num(w.hi), n: num(w.n) } : { share: num(t.stay_surv_pct), lo: slo, hi: shi, n: num(t.top_surv) },
-      ci: thin || slo == null ? (num(w.lo) != null ? 'wilson' : null) : 'boot', eff: num(t.eff), thin, rho: num(t.rho), rhoN: num(t.rho_n), gonePct: num(t.gone_pct), goneQ4Pct: num(t.gone_q4_pct) });
-  });
-  return { asof: num(o.asof), method: typeof o.method === 'string' ? o.method : null, note: typeof o.note === 'string' ? o.note : null, src: typeof o.src === 'string' ? o.src : null, tests };
-}
-/** the share of a row in each column, % */
-export const rowShares = (row: number[]) => { const t = row.reduce((a, b) => a + b, 0); return row.map((v) => (t ? (100 * v) / t : 0)); };
-/** Wilson interval of k successes in n (%), z = 1.645 for 90% (the build's level) */
-export function wilson(k: number, n: number, z = 1.645): [number, number] | null {
-  if (!n) return null;
-  const p = k / n, d = 1 + (z * z) / n, c = (p + (z * z) / (2 * n)) / d, h = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / d;
-  return [100 * (c - h), 100 * (c + h)];
-}
-/** the plain verdict, on the survivors (the coin's 25% is of those who were still there to be ranked): above chance when the 90% interval
- *  clears 25%, below when it stays under, else indistinguishable */
-export function persistVerdict(t: PersistTest): 'above' | 'below' | 'coin' {
-  const { lo, hi } = t.surv;
-  if (lo != null && lo > t.stay.coin) return 'above';
-  if (hi != null && hi < t.stay.coin) return 'below';
-  return 'coin';
-}
 
 /* ---------- glide paths ---------- */
 export const BANDS = ['עד 50', '50-60', '60 ומעלה'] as const;
@@ -358,11 +261,6 @@ export function toggleWatch(w: WatchStore, k: string, name: string, snap: WSnap 
   if (n.items.length >= WATCH_MAX) return n;
   return { v: 1, items: [...n.items, { k, name, at: today, base: snap }] };
 }
-/** imported items join the stored ones (the stored snapshot wins for a track in both) */
-export function mergeWatch(a: WatchStore, b: unknown): WatchStore {
-  const x = normWatch(a), y = normWatch(b);
-  return normWatch({ items: [...x.items, ...y.items.filter((i) => !isWatched(x, i.k))] });
-}
 /** the look is over: every item's snapshot becomes what is shown now */
 export function markSeen(w: WatchStore, now: Map<string, WSnap>, asof?: number): WatchStore {
   // a track with nothing to show now (closed) keeps its last figures but counts as seen in this month, so the badge does not stay up
@@ -393,28 +291,6 @@ export function deltaOf(item: WItem, now: WSnap | null): WDelta | null {
 }
 /** the badge on the section tab: watched tracks with a regulator month newer than the reader's last look */
 export const watchBadge = (w: WatchStore, asof: number | null | undefined) => (asof ? normWatch(w).items.filter((i) => i.base && asof > i.base.asof).length : 0);
-/** consecutive latest months of negative net flow (deposits − withdrawals + net transfers) */
-export function outflowStreak(h: { dep?: (number | null)[]; wd?: (number | null)[]; tr?: (number | null)[] }): number {
-  if (!h.dep || !h.wd || !h.tr) return 0;
-  let n = 0;
-  for (let i = h.dep.length - 1; i >= 0; i--) { const d = h.dep[i], w = h.wd[i], t = h.tr[i]; if (d == null || w == null || t == null) break; if (d - w + t < 0) n++; else break; }
-  return n;
-}
-/** today's fall from the all-time peak of the compounded index (%), and the months since that peak */
-export function ddNow(y: (number | null)[]): { dd_cur: number; dd_len: number } {
-  let i = 1, pk = 1, len = 0, cur = 0;
-  for (const x of y) { if (x == null) continue; i *= 1 + x / 100; if (i >= pk) { pk = i; len = 0; } else len++; cur = i / pk - 1; }
-  return { dd_cur: cur * 100, dd_len: len };
-}
-/** compounded return of the months after `from` up to `to` (both yyyymm), null when one is missing */
-export function retBetween(p: number[], y: (number | null)[], from: number, to: number): { r: number; ps: number[] } | null {
-  const ps = p.filter((x) => x > from && x <= to);
-  if (!ps.length || monthsBetween(from, to) !== ps.length) return null;
-  let g = 1;
-  for (const x of ps) { const v = y[p.indexOf(x)]; if (v == null) return null; g *= 1 + v / 100; }
-  return { r: (g - 1) * 100, ps };
-}
-
 /** W5 · the head-to-head's full-history drawdown on one window (red team 3: "ירידה מרבית, כל ההיסטוריה" compared tracks over histories
  *  of different lengths). The common window is the overlap of every track's consecutive run of published months ending at `end`: from
  *  the latest first month to `end`. Each track's drawdown is then measured over that window only. Null when a track has no run. */

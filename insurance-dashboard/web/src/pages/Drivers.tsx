@@ -14,7 +14,8 @@ import {
 import '../styles/drivers.css';
 
 /* A1 · /drivers/:id: the calibrated elasticities of one company (pipeline/build_drivers.py → drivers/<id>.json). Every figure opens its
-   source: the identity's printed inputs, the regression's window and fit, the disclosure's report and page. Not in the navigation. */
+   source: the identity's printed inputs, the regression's window and fit, the disclosure's report and page. Not in the navigation; the
+   list of companies is the "המנגנונים" section of /methodology (phase 0, 05.11.26). */
 
 const lts: LtsResolver = (j) => ltsProv(j.c, j.metric, j.period, j.title, j.unit, j.note, j.value);
 const src = (j: ProvJ) => (): Prov => toProv(j, lts);
@@ -90,13 +91,7 @@ export function Drivers() {
   const f = F.data;
   useEffect(() => { if (f) ltsCos(f).forEach((c) => warmRep(c)); }, [f]);
   const rows = useMemo(() => (f ? elasticityRows(f) : []), [f]);
-  const cos = reg.data ?? [];
-  if (!id) return (
-    <div className="dr">
-      <div className="pagehead"><div><h1><span className="icotile"><Icon name="sliders" /></span>מנגנונים: גמישויות לפי חברה</h1><div className="sub">שכבת המנגנונים: כל קשר עם שיטה, n, חלון ומקור</div></div></div>
-      <Panel><ul className="dr-cos">{cos.map((c) => <li key={c.id}><Link to={`/drivers/${c.id}`}>{c.name_he}</Link></li>)}</ul></Panel>
-    </div>
-  );
+  const cos = reg.data ?? [];  // the index of the companies is a section of /methodology (#drivers); /drivers lands there
   if (F.error) return <ErrorBox what="קובץ המנגנונים" error={F.error} />;
   if (!f) return <Loading what="המנגנונים" />;
   const all = edgesOf(f), miss = all.filter((e) => e.quality === 'missing').length;

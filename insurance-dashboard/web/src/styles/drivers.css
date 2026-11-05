@@ -44,3 +44,9 @@
 .dr-checks li.fail .dr-ck { color: var(--down); }
 .dr-checks .dim { color: var(--muted); }
 /* === end module A1 === */
+
+/* /methodology#drivers (phase 0): the per-company list, inline links underlined */
+.about .dr-cos.dr-mech { display: grid; padding: 0; gap: 4px 16px; margin: 2px 0 10px; }
+.about .dr-mech li { max-width: none; }
+.dr-mech a { text-decoration: underline; text-underline-offset: 2px; }
+.about .dr-mech-h { margin: 10px 0 2px; font-weight: 600; color: var(--muted); }
