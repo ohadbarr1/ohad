@@ -33,6 +33,7 @@ INTERNAL = ("search/ft/", "search/text/", "search/facts/", "prov/reg/", "feed_se
 REG_STEPS = {"build_market", "build_funds", "build_fund_stats", "build_flows", "build_lens", "build_roster", "build_recon", "build_warroom", "build_flow_npv",
              "build_decision", "build_market_home", "build_regulation"}
 CHANGELOG = [  # date, kind (added / breaking / changed), what
+    ("2026-11-05", "added", "corrections.json: the corrections log of /about#corrections, one entry per corrected figure (schema `corrections`); starts empty."),
     ("2026-11-02", "added", "xlsx/<company>.xlsx: one model-ready workbook per company (P&L, Balance sheet, IFRS 17, Solvency, Savings, KPIs, Sources)."),
     ("2026-11-02", "added", "consensus.json: published sell-side price targets and recommendations, each with its source URL (schema `consensus`)."),
     ("2026-11-02", "added", "This page and docs/API.md. No changelog was kept before this date: the contracts in schemas.json as of this date are the baseline."),

@@ -33,6 +33,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 
 | Date | Kind | Change |
 |---|---|---|
+| 2026-11-05 | added | corrections.json: the corrections log of /about#corrections, one entry per corrected figure (schema `corrections`); starts empty. |
 | 2026-11-02 | added | xlsx/<company>.xlsx: one model-ready workbook per company (P&L, Balance sheet, IFRS 17, Solvency, Savings, KPIs, Sources). |
 | 2026-11-02 | added | consensus.json: published sell-side price targets and recommendations, each with its source URL (schema `consensus`). |
 | 2026-11-02 | added | This page and docs/API.md. No changelog was kept before this date: the contracts in schemas.json as of this date are the baseline. |
@@ -342,6 +343,17 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 {"nc":false,"rank":45,"products":[{"s":"gem","he":"גמל והשתלמות","own":true,"aum":{"v":91105.2,"prov":{"k":"ref","r":"c/analyst:products.gem.aum"}},"fy":{"v":0.598,"prov":{"k":"ref","r":"c/analyst:products.gem.fy"}},"ci_t":{"v":74.346311,"prov":{"k":"ref","r":"c/analyst:products.gem.ci"}},"ci_a":{"v":90.455441,"prov":{"k":"ref","r":"c/altshuler:products.gem.ci"}},"gross":{"v":-87.764006,"prov":{"k":"calc","title":"סינרגיה גולמית · אלטשולר שחם ← אנליסט · גמל והשתלמות","value":"−87.8","unit":"מיליוני ש\"ח","formula":"נכסי היעד × תשואת דמי ניהול ÷ 100 × (יחס עלות היעד − יחס עלות הרוכשת) ÷ 100","i…
 ```
 
+### `corrections.json`
+
+- schema: `corrections` · files: 1 · format: json
+- written by: by hand / outside the DAG · cadence: outside the DAG (its own script, on demand)
+- example: [https://fox-research-il.web.app/data/corrections.json](https://fox-research-il.web.app/data/corrections.json)
+- provenance fields: `source`
+
+```json
+{"v":1,"entries":[]}
+```
+
 ### `coverage.json`
 
 - schema: `coverage` · files: 1 · format: json
@@ -351,7 +363,7 @@ A breaking change (a key renamed or removed, a unit changed, a file moved) is li
 - note: /data page: reads every data file (incl. qa.json from the last gate) and today's date
 
 ```json
-{"built":"2026-11-03T02:53:53+02:00","layers":[{"id":"fs","label":"דוחות כספיים","cadence":"quarterly","source":"maya"}]}
+{"built":"2026-11-03T08:44:47+02:00","layers":[{"id":"fs","label":"דוחות כספיים","cadence":"quarterly","source":"maya"}]}
 ```
 
 ### `csm/capital.json`

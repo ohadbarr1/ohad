@@ -1,6 +1,7 @@
 /** A small XLSX writer: real numbers with number formats, live formulas, bold and header rows, frozen panes, right-to-left sheets
  *  and per-cell hyperlinks. No dependency: the workbook is a zip of a few XML parts; `xlsxBlobAsync` deflates it with the browser's
  *  own CompressionStream (a full company workbook is tens of thousands of cells), `xlsxBlob` stores it. Loaded only when a reader exports. */
+import { track } from './track';  // F2: counts a download (the event name only)
 export type XFmt = 'n0' | 'n1' | 'n2' | 'pct1' | 'pct2' | 'x2';
 export type XCell = string | number | null | undefined | {
   v: string | number | null; link?: string; bold?: boolean; fmt?: XFmt; italic?: boolean;
@@ -149,5 +150,5 @@ function saveAs(name: string, blob: Blob) {
   a.href = URL.createObjectURL(blob); a.download = name.endsWith('.xlsx') ? name : `${name}.xlsx`; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
-export function downloadXlsx(name: string, sheets: XSheet[]): void { saveAs(name, xlsxBlob(sheets)); }
-export async function downloadXlsxAsync(name: string, sheets: XSheet[], meta?: { title?: string; author?: string }): Promise<void> { saveAs(name, await xlsxBlobAsync(sheets, meta)); }
+export function downloadXlsx(name: string, sheets: XSheet[]): void { saveAs(name, xlsxBlob(sheets)); track('xlsx_dl'); }
+export async function downloadXlsxAsync(name: string, sheets: XSheet[], meta?: { title?: string; author?: string }): Promise<void> { saveAs(name, await xlsxBlobAsync(sheets, meta)); track('xlsx_dl'); }

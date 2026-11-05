@@ -20,6 +20,8 @@ type Unit = 'v' | 'csm' | 'eq';
 const EFF_L: Record<EffPick, string> = { csm: 'השפעה על CSM', profit: 'השפעה על הרווח', equity: 'השפעה על ההון' };
 const ORDER: Record<string, number> = { rate: 0, equity: 1, morbidity: 2, mortality: 3, lapse: 4, expense: 5, other: 6 };
 const keyOf = (r: SensRow) => `${r.risk}|${r.dir ?? 'x'}|${r.size ?? ''}`;
+/** fox 3.0 phase 0 (no stale figure in the shop window): a disclosure older than FY'24 is hidden behind a toggle; each insurer shows its latest */
+const SENS_FROM = '2024-12-31';
 
 /** The sensitivity disclosures side by side: one row per standard shock, one column per insurer, in shekels or relative to the insurer's own CSM or equity. */
 export function SensView({ L, name }: { L: Ledger; name: (id: string) => string }) {
@@ -31,11 +33,18 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
   const [unit, setUnit] = useParam<Unit>('u', 'v', ['v', 'csm', 'eq']);
   const [co, setCo] = useParam('c', 'phoenix', INSURERS);
   const [ctl, setCtl] = useState(false);
-  const rows = S.data?.rows ?? [];
+  const [old, setOld] = useState(false);
+  const all = useMemo(() => S.data?.rows ?? [], [S.data]);
+  // each insurer's latest disclosure only (two vintages never share a column); one older than FY'24 only on request
+  const last = useMemo(() => { const m = new Map<string, string>(); all.forEach((r) => { if ((m.get(r.c) ?? '') < r.d) m.set(r.c, r.d); }); return m; }, [all]);
+  const nOld = [...last.values()].filter((d) => d < SENS_FROM).length;
+  const rows = useMemo(() => all.filter((r) => r.d === last.get(r.c) && (old || r.d >= SENS_FROM)), [all, last, old]);
   const ids = INSURERS.filter((id) => rows.some((r) => r.c === id));
-  const rp = rows[0]?.rp ?? '';
-  // the denominators: closing CSM and shareholders' equity at the same balance date, from the same report
-  const base = useMemo(() => new Map(ids.map((id) => { const rs = L.byCo.get(id); const c = rs && rows[0] ? closingAt(rs, rows[0].d, basis) : null, a = rs && rp ? at(rs, id, rp, 'fy', basis) : null; return [id, { csm: c?.l ?? null, scope: c?.scope ?? '', eq: a?.eq ?? null }]; })), [L, ids, rp, basis, rows]);
+  const first = (id: string) => rows.find((r) => r.c === id);
+  const rps = [...new Set(ids.map((id) => first(id)!.rp))];
+  const rp = rps.length === 1 ? rps[0] : '';
+  // the denominators: closing CSM and shareholders' equity at the same balance date, from the same report (per insurer: its own date)
+  const base = useMemo(() => new Map(ids.map((id) => { const rs = L.byCo.get(id), r0 = rows.find((r) => r.c === id); const c = rs && r0 ? closingAt(rs, r0.d, basis) : null, a = rs && r0 ? at(rs, id, r0.rp, 'fy', basis) : null; return [id, { csm: c?.l ?? null, scope: c?.scope ?? '', eq: a?.eq ?? null }]; })), [L, ids, basis, rows]);
 
   const shocks = useMemo(() => {
     const m = new Map<string, SensRow>();
@@ -77,7 +86,8 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
 
   if (S.error) return <ErrorBox what="רגישויות" error={S.error} />;
   if (!S.data) return <Loading what="רגישויות" />;
-  if (!rows.length) return <Empty title="לא חולצו גילויי רגישות" />;
+  if (!all.length) return <Empty title="לא חולצו גילויי רגישות" />;
+  if (!rows.length) return <Empty title="אין גילויי רגישות מ-FY'24 ואילך"><button type="button" className="chip" onClick={() => setOld(true)}>הצגת הגילויים הישנים ({nOld})</button></Empty>;
 
   const C = ids.includes(co) ? co : ids[0];
   const tor = shocks.map(([k, s]) => ({ k, s, r: cell(C, (r) => keyOf(r) === k) })).filter((x) => x.r && shown(x.r) != null);
@@ -92,9 +102,9 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
   return (
     <>
       {phone ? <><ContextBar onOpen={() => setCtl(true)}>{EFF_L[eff]} · {BASIS[basis]} · {unit === 'v' ? 'מיליוני ש"ח' : unit === 'csm' ? '% מה-CSM' : '% מההון'}</ContextBar><Sheet open={ctl} onClose={() => setCtl(false)} title="רגישויות">{controls}</Sheet></> : <IndustryTools>{controls}</IndustryTools>}
-      <Panel title={`רגישויות · ${EFF_L[eff]}`} aside={<span>{periodName(rp)} · {unit === 'v' ? 'מיליוני ש"ח, כפי שהודפס' : 'נגזר: ההשפעה ÷ היתרה של החברה'}</span>}>
+      <Panel title={`רגישויות · ${EFF_L[eff]}${rp ? ` · ${periodName(rp)}` : ''}`} aside={<span>{rp ? '' : 'התקופה בכותרת כל חברה · '}{unit === 'v' ? 'מיליוני ש"ח, כפי שהודפס' : 'נגזר: ההשפעה ÷ היתרה של החברה'}{nOld > 0 && <> · <button type="button" className="chip" aria-pressed={old} onClick={() => setOld(!old)}>{old ? `הסתרת גילויים לפני FY'24 (${nOld})` : `גם גילויים לפני FY'24 (${nOld})`}</button></>}</span>}>
         <div className="scroll"><table className="sens csm-sens">
-          <thead><tr><th>תרחיש</th>{ids.map((id) => <th key={id}><button type="button" className={`thsel ${C === id ? 'on' : ''}`} onClick={() => setCo(id)}><Dot id={id} />{name(id)}</button></th>)}</tr></thead>
+          <thead><tr><th>תרחיש</th>{ids.map((id) => <th key={id}><button type="button" className={`thsel ${C === id ? 'on' : ''}`} onClick={() => setCo(id)}><Dot id={id} />{name(id)}</button><span className={`sens-per${first(id)!.d < SENS_FROM ? ' old' : ''}`}>{periodName(first(id)!.rp)}</span></th>)}</tr></thead>
           <tbody>
             {shocks.map(([k, s]) => (
               <tr key={k}><td className="lbl">{shockHe(s)}<span className="dim">{s.risk === 'rate' || s.risk === 'equity' ? 'קבוצה' : 'חיים ובריאות'}</span></td>
@@ -112,7 +122,7 @@ export function SensView({ L, name }: { L: Ledger; name: (id: string) => string 
         <div className="src">כל חברה מגדירה את התרחיש בעצמה (ריבית חסרת סיכון או עקום ההיוון כולו; מניות לפי חשיפה); השוו כיוון וגודל, לא שקל מול שקל. ריבית ומניות: קבוצה; תחלואה ותמותה: מגזרי חיים ובריאות. סימונים: ל = בסיס לא צוין, נ/ב = בסיס אחר מהנבחר, ± = רווח והון בשורה אחת, * = לא צוין לפני או אחרי מס. {MM} אלא אם צוין אחרת.</div>
       </Panel>
 
-      <Panel title={`מפת רגישות · ${name(C)}`} aside={<Field label=""><select aria-label="חברה" value={C} onChange={(e) => setCo(e.target.value)}>{ids.map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>}>
+      <Panel title={`מפת רגישות · ${name(C)} · ${periodName(first(C)!.rp)}`} aside={<Field label=""><select aria-label="חברה" value={C} onChange={(e) => setCo(e.target.value)}>{ids.map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></Field>}>
         {tor.length === 0 ? <Empty title="אין גילוי לתרחישים ולהשפעה שנבחרו" /> : (
           <Chart label={`רגישות ${EFF_L[eff]} · ${name(C)}`} height={Math.max(220, tor.length * 34 + 60)} deps={[C, eff, basis, unit, tor.length]} build={() => {
             const b = chartBase(), xs = [...tor].sort((p, q) => Math.abs(shown(p.r!)!) - Math.abs(shown(q.r!)!));

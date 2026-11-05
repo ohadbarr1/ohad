@@ -9,7 +9,8 @@ export interface FbRow {
   fee?: number; fee_cov?: number; fee_first?: number | null; fee_n?: number; trend?: number | null; eros?: number; floor?: number | null;
   out?: FbOut | null; surv?: number | null; ci?: number | null; ci_ga?: number | null; why?: string | null; ev?: number | null; ev_aum?: number | null; pv_fees?: number | null;
 }
-export interface FbCostOk { q: string[]; fees: number; sm: number; ga: number; ci: number; ci_ga: number; parts: { q: string; fees: number; sm: number; ga: number }[] }
+/** `sf` (fb1.1): the service fee to the controlling company, inside `ga` (Meitav only; see build_feebook SERVICE_FEE) */
+export interface FbCostOk { q: string[]; fees: number; sm: number; ga: number; ci: number; ci_ga: number; sf?: number; parts: { q: string; fees: number; sm: number; ga: number; sf?: number }[] }
 export type FbCost = FbCostOk | { why: string };
 export interface FbCsm {
   date: string; v: number; basis: string; period: string; url: string | null; ym: number; pi: number | null; a_ins: number; csm_aum: number | null;

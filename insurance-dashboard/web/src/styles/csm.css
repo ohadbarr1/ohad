@@ -98,3 +98,6 @@ tr.indrow td .dim { font-weight: 400; }
 /* in one of the two sets of the headline row (balance, or flows and ratios), not both */
 .csm-chip.half { color: var(--muted); }
 .csm-chip.half .iddot { opacity: .6; }
+/* fox 3.0 phase 0: the disclosure period under each insurer in the sensitivity tables (a tint, never dimmed) */
+.csm-sens th .sens-per { display: block; color: var(--fg); font-size: var(--t-1, 12px); font-weight: 400; }
+.csm-sens th .sens-per.old { color: var(--warn); font-weight: 600; }

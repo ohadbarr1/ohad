@@ -115,22 +115,28 @@ function Tiers({ D, cols, hist, name }: { D: SolvFile; cols: Col[]; hist: boolea
   );
 }
 
+/** fox 3.0 phase 0 (no stale figure in the shop window): a sensitivity disclosed before FY'24 is behind a toggle; each column's period is in its header */
+const SENS_FROM = '2024-12-31';
+
 function Sens({ D, rows, hist, name }: { D: SolvFile; rows: SolvSens[]; hist: boolean; name: (id: string) => string }) {
-  const { cols, risks } = useMemo(() => {
+  const [old, setOld] = useState(false);
+  const { cols, risks, nOld } = useMemo(() => {
     const last = new Map<string, string>();
     rows.forEach((r) => { if ((last.get(r.c) ?? '') < r.d) last.set(r.c, r.d); });
-    const use = hist ? rows : rows.filter((r) => last.get(r.c) === r.d);
+    const all = hist ? rows : rows.filter((r) => last.get(r.c) === r.d);
+    const nOld = new Set(all.filter((r) => r.d < SENS_FROM).map((r) => `${r.c}|${r.d}`)).size;
+    const use = old ? all : all.filter((r) => r.d >= SENS_FROM);
     const cs: Col[] = [...new Set(use.map((r) => `${r.c}|${r.d}`))].map((k) => { const [c, d] = k.split('|'); return { c, d }; }).sort((a, b) => (hist ? a.d.localeCompare(b.d) : 0)).slice(hist ? -5 : 0);
     const keyOf = (r: SolvSens) => `${r.risk}|${dirOf(r.l)}`;
     const ks = [...new Set(use.map(keyOf))].sort((a, b) => Object.keys(RISK_HE).indexOf(a.split('|')[0]) - Object.keys(RISK_HE).indexOf(b.split('|')[0]) || a.localeCompare(b));
-    return { cols: cs, risks: ks.map((k) => ({ k, rows: use.filter((r) => keyOf(r) === k) })) };
-  }, [rows, hist]);
+    return { cols: cs, risks: ks.map((k) => ({ k, rows: use.filter((r) => keyOf(r) === k) })), nOld };
+  }, [rows, hist, old]);
   const sign = (v: number) => `${v > 0 ? '+' : ''}${v}`;
   return (
-    <Panel title="רגישות יחס כושר הפירעון" aside={<span>נקודות אחוז · כפי שהודפס</span>}>
-      {!cols.length ? <Empty title="לא הודפסה טבלת רגישות" /> : (
+    <Panel title="רגישות יחס כושר הפירעון" aside={<span>נקודות אחוז · כפי שהודפס{nOld > 0 && <> · <button type="button" className="chip" aria-pressed={old} onClick={() => setOld(!old)}>{old ? `הסתרת גילויים לפני FY'24 (${nOld})` : `גם גילויים לפני FY'24 (${nOld})`}</button></>}</span>}>
+      {!cols.length ? <Empty title={nOld ? "אין גילוי רגישות מ-FY'24 ואילך" : 'לא הודפסה טבלת רגישות'} /> : (
         <div className="scroll"><table className="tight sv-t">
-          <thead><tr><th>תרחיש</th>{cols.map((x) => <th key={x.c + x.d}>{colLab(x, hist, name)}</th>)}</tr></thead>
+          <thead><tr><th>תרחיש</th>{cols.map((x) => <th key={x.c + x.d}>{hist ? null : name(x.c)}<span className={`sens-per${hist ? ' h' : ''}${x.d < SENS_FROM ? ' old' : ''}`}>{dLab(x.d)}</span></th>)}</tr></thead>
           <tbody>{risks.map(({ k, rows: rs }) => (
             <tr key={k}><td>{RISK_HE[k.split('|')[0]]}{k.split('|')[1] && ` · ${k.split('|')[1]}`}<small className="muted sv-sc">{rs[rs.length - 1]?.l}</small></td>
               {cols.map((x) => { const mine = rs.filter((r) => r.c === x.c && r.d === x.d).sort((a, b) => a.b.localeCompare(b.b));

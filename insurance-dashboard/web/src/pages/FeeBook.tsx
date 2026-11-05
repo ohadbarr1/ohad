@@ -17,9 +17,21 @@ import '../styles/feebook.css';
 export function FeeBook() {
   const fb = useFeeBook(), lens = useLens();
   useEffect(() => { document.title = 'ערך ספר דמי הניהול · fox'; }, []);
+  useNoindex();
   if (fb.error || lens.error) return <ErrorBox what="ערך ספר דמי הניהול" error={fb.error ?? lens.error ?? ''} />;
   if (!fb.data || !lens.data) return <Loading what="ערך ספר דמי הניהול" />;
   return <Page d={fb.data} lens={lens.data} />;
+}
+
+/** fox 3.0 phase 0 (no draft in the shop window): <meta name="robots" content="noindex"> while this route is open; firebase.json sends
+ *  the same as an X-Robots-Tag header. The page is a draft until it passes a reasonableness review. */
+function useNoindex() {
+  useEffect(() => {
+    const m = document.createElement('meta');
+    m.name = 'robots'; m.content = 'noindex, nofollow';
+    document.head.appendChild(m);
+    return () => { m.remove(); };
+  }, []);
 }
 
 const PROD: Record<string, string> = { pension_new: 'פנסיה מקיפה', pension_general: 'פנסיה כללית', gemel: 'גמל', hishtalmut: 'השתלמות', gemel_invest: 'גמל להשקעה',
@@ -55,6 +67,7 @@ function Page({ d, lens }: { d: FeeBookData; lens: LensData }) {
   return (
     <>
       <h2 className="band">ערך ספר דמי הניהול<span className="muted"><span className="chip nc-draft">טיוטה</span> כמה שוות הכנסות דמי הניהול מהנכסים שכבר מנוהלים, לפי מנהל ומוצר · רשות עד <span className="num">{ym(d.meta.asof)}</span> · הוצאות: <span className="num">{d.meta.cost_quarters.map(ql).join(', ')}</span> · שיטה {d.meta.method}</span></h2>
+      <div className="fb-draft" role="note"><b>טיוטה · בבדיקת סבירות</b><span>מודל בעבודה: התוצאות עוד לא עברו בדיקת סבירות מול שווי שוק ועסקאות, והפער בין המנהלים נובע בעיקר מיחס ההוצאות המדווח של כל מגזר. לא לציטוט ולא להחלטה.</span></div>
       <Assumptions d={d} a={a} set={set} changed={changed} P={P} />
       <section className="kpis fb-kpis">
         <Kpi label="ערך הספר, כל המנהלים שהוערכו" value={<S className="est-num" src={() => P.sumP(tot.filter((t) => t.ev != null).map((t) => ({ m: t.m, ev: t.ev! })), sumEv)}>{nf(sumEv / 1000, 1)}</S>} sub={`מיליארד ש"ח · ${all.length} מנהלים${base ? ' · מקרה בסיס' : ' · ההנחות שלך'}`} />
@@ -88,7 +101,7 @@ function Page({ d, lens }: { d: FeeBookData; lens: LensData }) {
           <li>ערך = Σ<sub>t=1..H</sub> נכסים × [שרידות × (1 + צמיחה)]<sup>t−1</sup> × דמי ניהול<sub>t</sub> ÷ 100 × (1 − הוצאות להכנסות) ÷ (1 + r)<sup>t</sup>: דמי ניהול על יתרת הפתיחה של כל שנה, מתקבלים בסופה. ללא מס.</li>
           <li>דמי ניהול<sub>t</sub> = max(רצפה, דמי ניהול היום + שחיקה × (t − 1)). שחיקה: שיפוע הקו הישר של דמי הניהול הממוצעים בחודשי {d.assume.win} האחרונים; מגמה עולה אינה מוקרנת (אלא אם בחרת). רצפה בפנסיה: דמי הניהול מצבירה של קרנות ברירת המחדל ({d.assume.floor ? `${pct(d.assume.floor.fee, 2)}, הליך ${d.assume.floor.tender}` : '–'}); כשדמי הניהול כבר מתחתיה, הם נשארים במקום.</li>
           <li>שרידות = 1 − (משיכות + העברות נטו יוצאות) ÷ נכסים, ממוצע {d.assume.win} חודשים. הרשות מפרסמת העברות נטו בלבד: אצל מנהל שגם מקבל העברות, היציאות האמיתיות גבוהות יותר והשרידות כאן גבוהה מדי.</li>
-          <li>הוצאות להכנסות: (שיווק ומכירה + הנהלה וכלליות) ÷ הכנסות מדמי ניהול של המגזר בדוחות, 4 רבעונים. ההכנסות בדוח כוללות דמי ניהול מהפקדה, ולכן יחס ההוצאות מוחל כאן על זרם קטן יותר (הנחה: ההוצאות משתנות עם ההכנסות). &quot;הנהלה וכלליות בלבד&quot;: ספר שאינו מגייס אינו משלם עמלות גיוס, אבל עמלות היקף לסוכנים יושבות בשיווק אצל חלק מהמנהלים: גבול עליון, לא עובדה. מיטב: לפני דמי ניהול לחברה האם (ראו הערת העדשה), ולכן ההוצאות נמוכות מדי והערך גבוה מדי.</li>
+          <li>הוצאות להכנסות: (שיווק ומכירה + הנהלה וכלליות) ÷ הכנסות מדמי ניהול של המגזר בדוחות, 4 רבעונים. ההכנסות בדוח כוללות דמי ניהול מהפקדה, ולכן יחס ההוצאות מוחל כאן על זרם קטן יותר (הנחה: ההוצאות משתנות עם ההכנסות). &quot;הנהלה וכלליות בלבד&quot;: ספר שאינו מגייס אינו משלם עמלות גיוס, אבל עמלות היקף לסוכנים יושבות בשיווק אצל חלק מהמנהלים: גבול עליון, לא עובדה. מיטב: דמי הניהול שהחברה המנהלת משלמת לחברה האם (שורה נפרדת בביאור המגזרים: כשני שלישים מהוצאות מגזר הפנסיה וכרבע בגמל) נכללים כאן בהנהלה וכלליות, כדי שיחס ההוצאות יכלול את עלות הפעלת הספר כמו אצל שאר המנהלים (בלעדיהם ההנהלה וכלליות של מיטב היא כ-2% מההכנסות, מול 22% ומעלה אצל כל האחרים). בעדשת החיסכון הם מחוץ להוצאות.</li>
           <li>שיעור ההיוון וצמיחת הנכסים הם הנחות. בבסיס הצמיחה 0, כפי שהשיטה הוגדרה: ספר נומינלי שמהוון ב-{nf(d.assume.disc, 0)}% נומינלי בלי תשואה על הנכסים הוא קריאה שמרנית; נסו צמיחה של תשואת אג״ח ממשלתית.</li>
         </ul>
       </Panel>
@@ -218,9 +231,11 @@ class FbSrc {
     const c = m.costs[s];
     if (!costOk(c)) return { k: 'none', title: `הוצאות להכנסות · ${m.name} · ${SEG_HE[s]}`, why: 'why' in c ? c.why : '' };
     return { k: 'calc', title: `הוצאות להכנסות · ${m.name} · ${SEG_HE[s]}`, value: pct(c.ci * 100, 2), formula: '(Σ שיווק ומכירה + Σ הנהלה וכלליות) ÷ Σ הכנסות מדמי ניהול, 4 רבעונים מהדוחות. הנהלה וכלליות בלבד: ' + pct(c.ci_ga * 100, 2),
+      note: c.sf != null ? `הנהלה וכלליות כוללת את דמי הניהול לחברה האם ("דמי ניהול לחברה בעלת שליטה", ביאור מגזרי הפעילות): ${m1(c.sf)} מיליוני ש"ח ב-4 הרבעונים. רבעון רביעי: השנה פחות 9 חודשים.` : undefined,
       inputs: c.parts.flatMap((p) => { const r = this.lr(m.g, s, p.q); return [
         { label: `שיווק ומכירה · ${ql(p.q)}`, v: m1(p.sm), src: r ? () => this.ls.rep(r, 'sm', 'q') : undefined },
-        { label: `הנהלה וכלליות · ${ql(p.q)}`, v: m1(p.ga), src: r ? () => this.ls.rep(r, 'ga', 'q') : undefined },
+        { label: `הנהלה וכלליות · ${ql(p.q)}`, v: m1(p.sf != null ? p.ga - p.sf : p.ga), src: r ? () => this.ls.rep(r, 'ga', 'q') : undefined },
+        ...(p.sf != null ? [{ label: `דמי ניהול לחברה האם · ${ql(p.q)}`, v: m1(p.sf) }] : []),
         { label: `הכנסות מדמי ניהול · ${ql(p.q)}`, v: m1(p.fees), src: r ? () => this.ls.rep(r, 'fees', 'q') : undefined }]; }) };
   }
   floorP(): Prov {

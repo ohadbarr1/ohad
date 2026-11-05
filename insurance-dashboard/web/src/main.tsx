@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { ThemeProvider } from './lib/theme';
 import { reloadOnStaleChunk } from './lib/reload';
+import { startPageViews } from './lib/track';
 import '@fontsource/heebo/hebrew-400.css';
 import '@fontsource/heebo/hebrew-500.css';
 import '@fontsource/heebo/hebrew-700.css';
@@ -21,6 +22,9 @@ reloadOnStaleChunk();
 
 // links shared before clean URLs (/#/company/harel) still land on their page
 if (location.hash.startsWith('#/')) history.replaceState(null, '', location.hash.slice(1));
+
+// F2: cookieless page-view counts (a no-op until lib/track ANALYTICS_CODE is set)
+startPageViews();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -270,6 +270,10 @@
    "schema": "feed"
   },
   {
+   "pattern": "corrections.json",
+   "schema": "corrections"
+  },
+  {
    "pattern": "flow_npv.json",
    "schema": "flowNpv"
   },
@@ -6610,6 +6614,68 @@
       "watch",
       "alert"
      ]
+    }
+   }
+  },
+  "corrections": {
+   "$comment": "F3 trust: the corrections log of /about#corrections (web/public/data/corrections.json, kept by hand). One entry per corrected figure: the date as shown on screen (dd.mm.yy), the page, the field, the value before and after, why, and the source that settles it. Starts empty.",
+   "type": "object",
+   "required": [
+    "entries"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "entries": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "date",
+       "route",
+       "field",
+       "before",
+       "after",
+       "note",
+       "source"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+       },
+       "date": {
+        "type": "string",
+        "pattern": "^\\d{2}\\.\\d{2}\\.\\d{2}$"
+       },
+       "route": {
+        "type": "string",
+        "pattern": "^/"
+       },
+       "field": {
+        "type": "string"
+       },
+       "before": {
+        "type": "string"
+       },
+       "after": {
+        "type": "string"
+       },
+       "note": {
+        "type": "string"
+       },
+       "source": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
     }
    }
   },

@@ -262,7 +262,7 @@ STEPS = [
          [D + "under.json", D + "under"], code=["pipeline/funds_lib.py", "pipeline/build_flows.py"], groups={"deploy"},
          note="W11: under.json + under/m/<yyyymm>.json (python3 pipeline/build_under.py --check)"),
     step("build_feebook", "pipeline/build_feebook.py", [D + "market.json", D + "flows/[a-z][a-z].json", D + "lens.json", D + "funds/default.json", D + "csm/summary.json",
-         D + "csm/facts"], [D + "feebook.json"], groups={"deploy"}, note="wave 11: fee-book embedded value per manager x product (/feebook; python3 pipeline/build_feebook.py --check)"),
+         D + "csm/facts", "data/extracted_lts/meitav"], [D + "feebook.json"], groups={"deploy"}, note="wave 11: fee-book embedded value per manager x product (/feebook; python3 pipeline/build_feebook.py --check)"),
     # W2: the decision data for recommending a pension fund (CMA service index, the funds' claims annex B3, default coverage, the
     # managers'-insurance switching checklist). extract_decision reads the raw files on the drive and verifies the register (manual);
     # build_decision is standard library; gate `decision` (rebuild byte-equal + rules)

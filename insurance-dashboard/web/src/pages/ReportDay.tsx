@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { track } from '../lib/track';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Empty, ErrorBox, IncChip, Loading, Menu, Panel, Seg } from '../components/ui';
@@ -272,6 +273,7 @@ function Cell({ h, base, a, b, main, t, la, lb, bp }: { h: string; base: Fig | n
 /** Report day: what one report printed, against a year earlier and the previous quarter, and what it restated in earlier periods. Every figure opens its page. */
 export function ReportDay({ card }: { card?: ReactNode }) {
   const { id = '' } = useParams();
+  useEffect(() => { track('report_day_view'); }, [id]);  // F2: the event name only, not the company
   const [sp, setSp] = useSearchParams();
   const reg = useRegistry();
   const entry = reg.data?.find((c) => c.id === id) ?? null;
