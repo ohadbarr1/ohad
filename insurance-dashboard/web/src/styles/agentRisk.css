@@ -1,0 +1,25 @@
+/* fox 3.0 A6 · "צד הסיכון" in a client folder (components/agent/RiskSide) and the הר הביטוח review in the import */
+.rk { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; max-width: 100%; }
+.rk-empty p { margin: 0; font-size: var(--t-2); color: var(--muted); line-height: 1.55; }
+.rk-empty p b { color: var(--fg); }
+.rk-u { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.rk-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.rk-file { position: relative; overflow: hidden; cursor: pointer; font-size: var(--t-2); padding: 5px 10px; }
+.rk-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.rk-msg { margin: 0; font-size: var(--t-2); color: var(--fg); }
+.rk-flags { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rk-f { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: baseline; padding: 8px 12px; border-radius: var(--r-2); border: 1px solid var(--line-soft); background: var(--panel); font-size: var(--t-2); line-height: 1.5; }
+.rk-f > span:last-child { grid-column: 2; color: var(--fg); }
+.rk-f b { font-size: var(--t-3); }
+.rk-sev { grid-row: span 2; font-size: var(--t-1); font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; align-self: start; }
+.rk-f.high { border-color: var(--accent-line); background: var(--accent-soft); }
+.rk-f.high .rk-sev { border-color: var(--accent-line); color: var(--accent-text); }
+.rk-f.mid .rk-sev { color: var(--warn); border-color: color-mix(in oklch, var(--warn) 50%, var(--line)); }
+.rk-t td, .rk-t th { vertical-align: top; }
+.rk-t tbody th { font-weight: 600; text-align: start; }
+.rk-t tfoot th, .rk-t tfoot td { font-weight: 700; border-top: 1px solid var(--line); text-align: start; }
+.rk-ended th { border-inline-start: 3px solid var(--line); }
+.rk-h { margin: 4px 0 0; font-size: var(--t-3); }
+.rk-co th:last-child { max-width: 260px; white-space: normal; }
+@media (max-width: 640px) { .rk-f { grid-template-columns: 1fr; } .rk-sev { grid-row: auto; justify-self: start; } .rk-f > span:last-child { grid-column: 1; } }
+.ci-harb { display: grid; gap: 8px; }

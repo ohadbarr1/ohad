@@ -2,6 +2,8 @@
  *  the saver's products (lib/mine.ts) and the agent documents. Everything here is optional on the records that carry it,
  *  because older folders and files in the browser were saved without it. */
 
+import type { RiskMeta } from './harbTypes';
+
 /** one deposit row from the file (PerutHafkadotMetchilatShana / PerutHafkadaAchrona): who paid what, for which salary month */
 export interface DepositRow {
   ym: string;                 // 'YYYY-MM' the salary month the deposit is for (TAARICH-ERECH-HAFKADA), or the payment month when that is all the file gives
@@ -23,4 +25,6 @@ export interface HeldExtra {
   salary?: number | null;            // insured monthly salary when stated anywhere in the account
   insTrack?: string | null;          // SHEM-MASLUL-HABITUAH (pension insurance track)
   coefGuaranteed?: GuaranteedCoef | null;
+  /** fox 3.0 A6: a policy from the הר הביטוח file (lib/harbTypes): the risk side of the folder */
+  risk?: RiskMeta | null;
 }

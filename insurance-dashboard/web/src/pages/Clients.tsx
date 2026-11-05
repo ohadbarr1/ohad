@@ -19,7 +19,8 @@ import { docRow } from '../lib/compareDoc';
 import type { FundX } from '../lib/funds';
 import { today } from '../lib/visits';
 import { CallList, Reviews } from '../components/agent/CallList';  // fox 3.0 phase 2: A4, A5
-import { BookSafe } from '../components/agent/BookSafe';  // fox 3.0 phase 2: install, encrypted backup, restore
+import { BookSafe } from '../components/agent/BookSafe';
+import { RiskSide } from '../components/agent/RiskSide';  // fox 3.0 A6: הר הביטוח  // fox 3.0 phase 2: install, encrypted backup, restore
 import { Ico } from '../components/home/glyphs';
 import '../styles/agentDesk.css';
 import { nf } from '../lib/format';
@@ -34,7 +35,8 @@ const ils = (v: number | null | undefined) => (v == null ? '–' : `₪${Math.ro
 const pc = (v: number | null | undefined) => (v == null ? '–' : `${nf(v, 2)}%`);
 
 /** W4: a folder's products from a clearing-house file: the client's balances, fees and cover, as the file gave them */
-function HeldList({ f }: { f: Folder }) {
+function HeldList({ f: f0 }: { f: Folder }) {
+  const f = { ...f0, held: f0.held.filter((h) => !h.risk) };  // fox 3.0 A6: the הר הביטוח policies are in צד הסיכון (RiskSide)
   if (!f.held.length) return null;
   const covers = f.held.flatMap((h) => h.covers.map((c) => ({ ...c, of: `${h.typeHe}${h.provider ? ` · ${h.provider}` : ''}` })));
   const sum = heldSum(f.held);
@@ -111,6 +113,7 @@ export function Clients() {
                 <div className="cl-tracks">{f.keys.map((k) => <Link key={k} to={`/funds/${k}`} className="chip">{f.tags[k] ? `${f.tags[k]} · ` : ''}{nameOf(k)}</Link>)}</div>
                 {f.note && <p className="cl-note">{f.note}</p>}
                 <HeldList f={f} />
+                <RiskSide f={f} />
                 <NyudDetails f={f} data={data} dfile={dfile} coefF={coefF} />
                 <div className="cl-acts">
                   <button type="button" className="cmp-doc" onClick={() => openCmp(f)} disabled={!f.keys.length}><Icon name="compare" />להשוואה</button>
