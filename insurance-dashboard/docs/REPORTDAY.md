@@ -72,6 +72,13 @@ against 6 h. The script exits 2 while it waits for stage B and prints the output
 | `gate.py` (81 checks) | 82 s |
 | `vite build` | 9–10 s |
 
+Runbook on real data (`scripts/reportday.sh harel 2026Q2 --no-fetch`, 05–06.11.26; Q2'26 treated as the new report): stage A 146 s on a cold
+DAG cache (deploy steps 65 s, gate 81 s), 100 s warm (deploy steps 7–12 s, gate 78–88 s); stage C: `verify_fs` 14 s, facts 58 s, deploy
+steps 14 s, gate 68 s, `deploy.sh --check-only` 1,303 s (≈ 22 min: the whole-site route check at 390 and 1440 px dominates); the run end to
+end 26 min. **The duckdb steps stalled on the .venv that lives on the synced drive** (`verify_extraction.py` sat at 0% CPU for 6 min and was
+stopped; the measured run used `FOX_VENV_PY=/nonexistent`, which skips build_kpi / build_ifrs / verify_extraction): before the season,
+build a local venv (`uv venv -p 3.12 ~/code/venv-fox && uv pip install -r pipeline/requirements.txt`) and point `FOX_VENV_PY` at it.
+
 ### LLM extraction budget per report (estimate)
 
 Input is the page text the agent reads (a statement page ≈ 7k characters ≈ 2.5–3.5k tokens; a 180-page report is not read whole); output
