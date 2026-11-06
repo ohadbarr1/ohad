@@ -832,7 +832,7 @@ class Co:
                 pi, v, pg, ui, fl = cell
                 url = self.I.lines["urls"][ui] if ui is not None else None
                 t, d = per
-                return {"v": v / 1000, "pg": pg, "url": url, "der": bool(fl & 1), "label": x["label"]}
+                return {"v": v / 1000, "pg": pg, "url": url, "der": bool(fl & 1), "restated": bool(fl & 8), "label": x["label"]}
         return None
 
     def lineP(self, key, per, title):
@@ -840,7 +840,26 @@ class Co:
         if not c:
             return None, None
         return c["v"], P_rep(f"{title} · {self.name} · {plab(*per)}", nf(c["v"]), MM, c["url"], c["pg"], f"דוח כספי · {c['label']}", plab(*per),
-                             note="Q4 נגזר: FY פחות 9M מאותו דוח" if c["der"] else None, der=True if c["der"] else None)
+                             note="; ".join(x for x in ["Q4 נגזר: FY פחות 9M מאותו דוח" if c["der"] else "",
+                                                        "מספר השוואה כפי שהוצג מחדש בדוח מאוחר; ה-XBRL (דף Pro, כרטיסי KPI) לפי הדיווח המקורי, ולכן ה-ROE שם עשוי להיות שונה בעשיריות" if c["restated"] else ""] if x) or None,
+                             der=True if c["der"] else None)
+
+    def wb_eq(self, end):
+        """attributable equity as the balance sheet prints it (companies/<id>.json, "הון המיוחס לבעלי המניות של החברה"), NIS millions, with
+        its page: for a filer whose statements lines carry total equity only"""
+        f = WEB / "companies" / f"{self.c}.json"
+        if not f.exists():
+            return None
+        W = json.loads(f.read_text(encoding="utf8"))
+        P = W["periods"]
+        rows = [i for i, m in enumerate(W["metrics"]) if m["sheet"].endswith("מאזן") and re.match(r'^(סה"כ |סך )?הון ה?מיוחס לבעל', m["label"]) and "שאינן מקנות" not in m["label"]]
+        for x in W["facts"]:
+            if x[0] in rows and P[x[1]]["id"] == f"I{end}" and x[2] is not None:
+                url = W["urls"][x[4]] if x[4] is not None else None
+                per = ("I", end)
+                return x[2] / 1000, P_rep(f"הון לבעלי המניות · {self.name} · {plab(*per)}", nf(x[2] / 1000), MM, url, x[3], f"דוח כספי · {W['metrics'][x[0]]['label']}", plab(*per),
+                                          note="שורת המאזן; בשורות הדוחות המשווים (lines.json) לחברה רק סך ההון")
+        return None
 
     def ltm_line(self, key, title):
         qs = [("Q", d) for d in ("2025-09-30", "2025-12-31", "2026-03-31", "2026-06-30")]
@@ -881,6 +900,14 @@ class Co:
                                                 note="הנחה אחידה לכל החברות; השיעור האפקטיבי מוצג בנפרד"))
         e0, p0 = self.lineP(eq_key, ("I", "2025-06-30"), "הון לבעלי המניות" if eq_key == "equity_attr" else "סך ההון")
         e1, p1 = self.lineP(eq_key, ("I", "2026-06-30"), "הון לבעלי המניות" if eq_key == "equity_attr" else "סך ההון")
+        if eq_key == "total_equity" and np_key == "np_attr":
+            # the statements carry no attributable-equity line (Meitav): attributable profit over total equity mixes two bases (53.6% for
+            # Meitav against 59.3% on /pro). The balance sheet prints attributable equity (the same figure the XBRL tags and /pro uses):
+            # numerator and denominator on one basis
+            x0, x1 = self.wb_eq("2025-06-30"), self.wb_eq("2026-06-30")
+            if x0 and x1:
+                eq_key = "equity_attr"
+                (e0, p0), (e1, p1) = x0, x1
         if e0 is not None and e1 is not None:
             avg = (e0 + e1) / 2
             n["equity"] = node(avg, MM, "ממוצע Q2'25–Q2'26", P_calc(f"הון ממוצע · {self.name}", nf(avg), MM, "(הון ליום 30.06.25 + הון ליום 30.06.26) ÷ 2",

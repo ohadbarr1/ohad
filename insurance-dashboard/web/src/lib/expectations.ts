@@ -30,7 +30,7 @@ export interface ECompanyOk {
 }
 export interface ECompanyNa { id: string; name: string; kind: string; status: 'na'; why: string; meta: EMeta }
 export type ECompany = ECompanyOk | ECompanyNa;
-export interface EPart { k: LeverKey; he: string; unit: string; status: 'ok' | 'beyond' | 'below' | 'nonbinding'; req: number | null; bound: number | null; trail: number; pct: number | null; reason?: string }
+export interface EPart { k: LeverKey; he: string; unit: string; status: 'ok' | 'beyond' | 'below' | 'nonbinding'; req: number | null; bound: number | null; trail: number; pct: number | null; reason?: string; /** ROE only: the reported LTM ROE and its quarter (trail is the model's FY'28 ROE at today's inputs) */ ltm?: number | null; ltm_q?: string }
 export const NONBINDING = 'לא מנוף מכריע';
 export interface EIndexRow { id: string; name: string; kind: string; status: 'ok' | 'na'; rank?: number; pb?: number; gap?: number; max?: number | null; key?: number[]; verdict?: string; parts?: EPart[]; why?: string; flag?: string }
 export interface EIndex { meta: EMeta; companies: EIndexRow[] }

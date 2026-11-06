@@ -4,15 +4,18 @@ Every row is one figure fox already publishes, with its provenance; nothing is e
 
   kpi        company x period: the Report Day lines (XBRL headline figures as kpi.json carries them, the printed figure where canon_kpi
              replaced the tag; insurance revenue and insurance service result from the statements), segment KPIs (series), company-defined
-             KPIs from the decks (adjusted.json). Q4 of a flow = FY - Q1 - Q2 - Q3 (derived, marked).
+             KPIs from the decks (adjusted.json). Q4 of a flow = FY - Q1 - Q2 - Q3 (derived, marked). Dividends (declared, paid) are
+             positive amounts in every period, whatever sign the statement printed.
   ifrs17     company x segment x basis x period: the standardised IFRS 17 lines (series/<id>.json): CSM roll-forward, RA, insurance
              revenue, new business, onerous contracts, finance result; plus the group CSM in the basis the report prints (csm/facts).
   solvency   company x period: the ratio, own funds, SCR and surplus as printed in the statements (csm/capital.json, series) and the
              Solvency II reports' lines, modules and tiers (csm/solvency.json).
   pnc        insurer x line of business x period: the IFRS 17 general-insurance note (pnc.json): printed lines, the derived periods
              (Q1 = H1 - Q2, LTM) and the loss, expense and combined ratios (fox calculations, formula in the note column).
-  savings_q  manager x segment x quarter: printed AUM, contributions, fees, expenses, profit (savings_econ.json) and the regulator join
-             (lens.json: AUM, organic flow, net transfers, shares, fee yield).
+  savings_q  manager x segment x quarter: printed AUM, contributions, fees, expenses, profit (savings_econ.json: the group report's segment,
+             profit before tax after investment income, financing and other expenses), the managing company's own segment note
+             (dim managing_company|<seg>, lts.json: fees_mc = net fees, op_mc = fees − S&M − G&A, the figures the nowcast scores) and the
+             regulator join (lens.json: AUM, organic flow, net transfers, shares, fee yield).
   savings_m  manager group x product x month (from 01/2022): the regulator's monthly files summed per group (market.json): AUM,
              deposits, withdrawals, net transfers, net flow, the asset-weighted management fee and gross return, track count.
   funds_m    track x month, the last 12 months on file, open tracks (funds.json, funds/<k>.json): gross return as published, net return
@@ -196,6 +199,8 @@ def dim_of(rid):
         return "|".join(x for x in parts[2:] if x) or "group"
     if parts[0] == "lens":
         return f"regulator|{parts[1]}"
+    if parts[0] == "mc":
+        return f"managing_company|{parts[1]}"
     if rid == "csm_resolved":
         return "group|resolved"
     return "group"

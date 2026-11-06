@@ -119,6 +119,18 @@ PRES_ENTITY = {"group": "הקבוצה", "phoenix_group": "הקבוצה", "clal_g
 GROUPISH = {"group", "phoenix_group", "clal_group", "more_group", "menora_holdings", "clal_holdings"}
 
 
+SYNONYM = {"target_core_income": "target_core_profit"}
+
+
+def seg_class(seg):
+    """the entity a deck target is about: the group, the insurance company / segment, or the segment as named"""
+    if seg in GROUPISH:
+        return "group"
+    if seg == "insurance" or (seg.endswith("_insurance") and seg not in PRES_ENTITY):
+        return "insurance"
+    return seg
+
+
 def pres_entity(seg):
     return PRES_ENTITY.get(seg) or ("חברת הביטוח" if seg.endswith("_insurance") else seg)
 
@@ -159,7 +171,11 @@ def deck_rows(docs):
             if x.get("value") is None and x.get("value_low") is None and x.get("value_high") is None:
                 continue
             h = x.get("horizon")
-            key = (c, m, "group" if x["segment"] in GROUPISH else x["segment"], h)
+            # one target, one row: the decks name the same target with synonymous metrics (target_core_income / target_core_profit) and
+            # segments ("insurance" / "phoenix_insurance"); both are folded before the statements are grouped (Phoenix's 2028 insurance
+            # core-profit target 1,900–2,100 was listed twice)
+            m = SYNONYM.get(m, m)
+            key = (c, m, seg_class(x["segment"]), h)
             stmts[key].append({"b": x.get("basis") or "na", "seg": x["segment"], "d": when, "rid": rid, "pg": x.get("page_he"), "v": x.get("value"), "lo": x.get("value_low"), "hi": x.get("value_high"),
                                "q": x.get("label", "")[:220], "n": x.get("note", ""), "img": img})
     rows = []
@@ -173,7 +189,7 @@ def deck_rows(docs):
                 hist.append([y["d"], y["v"], y["lo"], y["hi"], y["rid"], y["pg"]])
                 prev = val
         a, z = ss[0], ss[-1]
-        rows.append({"c": c, "m": m, "l": TARGET_HE.get(m) or METRIC_HE.get(m) or "יעד", "e": pres_entity(seg), "seg": seg, "t": topic(m), "u": pres_unit(m, z["n"]),
+        rows.append({"c": c, "m": m, "l": TARGET_HE.get(m) or METRIC_HE.get(m) or "יעד", "e": pres_entity(seg if seg == "group" else z["seg"]), "seg": seg if seg == "group" else z["seg"], "t": topic(m), "u": pres_unit(m, z["n"]),
                      "h": h, "b": b, "d": f"{h}-12-31" if h else z["d"], "v": z["v"], "lo": z["lo"], "hi": z["hi"], "r": None, "doc": z["rid"], "pg": z["pg"], "q": z["q"],
                      "n": len(ss), "hist": hist if len(hist) > 1 else None, "src": "pres", "st0": [a["d"], a["rid"], a["pg"]], "st1": [z["d"], z["rid"], z["pg"]],
                      **({"img": 1} if z["img"] else {}), "nt": z["n"][:240]})
@@ -184,7 +200,8 @@ def deck_rows(docs):
 # Every target whose horizon has passed is scored against the actual printed for the same definition its wording names; where the site
 # does not carry that actual, or the definition differs (core vs reported, segment vs group, pre- vs after-tax, a basis the wording leaves
 # open and the result depends on), the status is "nc" (not comparable) with the reason. Never forced.
-# st: met (≥ the target, or ≥ the top of a range) · partial (inside a range, below its top) · missed (below the target or the range)
+# st: met (≥ the target, or inside / above a range: a range is the target, so 12,496 against 11,000–13,000 is met) · missed (below the target
+#     or the bottom of the range). "partial" is no longer produced (it marked an achieved range as partly met while the hit rate counted it).
 #     · open (horizon not reached, or not yet reported) · nc (not comparable, `why`) · policy (a standing policy with no horizon: never scored)
 CORE = re.compile(r"core|ליבה", re.I)
 QTR = re.compile(r"\bQ([1-4])\s*[-/]?\s*(?:20)?(\d{2})\b|\b(?:20)?(\d{2})\s*[-/]?\s*Q([1-4])\b", re.I)
@@ -367,7 +384,7 @@ def actuals(rows, docs=None, files=""):
         lo, hi, v = r["lo"], r["hi"], r["v"]
         x = a["v"]
         if lo is not None and hi is not None:
-            r["st"] = "met" if x >= hi else "partial" if x >= lo else "missed"
+            r["st"] = "met" if x >= lo else "missed"
         else:
             goal = v if v is not None else lo
             if goal is None:  # "up to" a ceiling: met when at or below it
@@ -397,7 +414,7 @@ def credibility(rows):
         for r in xs:
             eras[int(((r.get("st0") or r.get("st1") or [r["d"]])[0] or r["d"])[:4])].append(r)
         out[co] = {**agg(xs), "eras": {str(y): agg(v) for y, v in sorted(eras.items())}}
-    return {"era": "year", "rule": "hit = (met + partial) ÷ scored; partial = inside a range below its top; nc and open are not scored", "all": agg([r for r in rows if r["st"] != "policy"]),
+    return {"era": "year", "rule": "hit = met ÷ scored; a range target is met at or above its bottom; nc and open are not scored", "all": agg([r for r in rows if r["st"] != "policy"]),
             "companies": out, "scored": len(scored)}
 
 

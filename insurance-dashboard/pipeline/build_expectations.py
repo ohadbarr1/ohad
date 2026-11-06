@@ -900,7 +900,11 @@ def build():
         else:
             row.update({"pb": c["base"]["pb"]["v"], "gap": c["base"]["gap"]["v"], "max": c["rank"]["max"], "key": c["rank"]["key"], "verdict": c["verdict"],
                         "parts": [dict({"k": L["k"], "he": L["he"], "unit": L["unit"], "status": L["status"], "req": L["req"]["v"] if L.get("req") else None, "bound": L.get("bound"),
-                                         "trail": L["trail"]["v"], "pct": L["hist"]["pct"] if L.get("hist") else None}, **({"reason": L["reason"]} if L.get("reason") else {}))
+                                         "trail": L["trail"]["v"], "pct": L["hist"]["pct"] if L.get("hist") else None}, **({"reason": L["reason"]} if L.get("reason") else {}),
+                                         # ROE: `trail` is the model's FY'28 ROE at today's inputs, not today's ROE; the reported LTM ROE (the
+                                         # figure /pro and the company page show) travels beside it, with its quarter, so the index never
+                                         # labels the model figure "now"
+                                         **({"ltm": c["base"]["roe_ltm"]["v"], "ltm_q": c["base"]["q"]} if L["k"] == "roe" else {}))
                                     for L in c["levers"] + [c["roe"]]]})
             if c.get("flag"):
                 row["flag"] = c["flag"]

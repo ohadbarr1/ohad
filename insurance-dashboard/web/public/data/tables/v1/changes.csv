@@ -1,1 +1,442 @@
 ﻿build_date,table,change,entity_id,entity_name,dim_id,dim_label,metric_id,metric_label,period,period_label,old_value,new_value,unit
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_declared,דיבידנד שהוכרז,2025Q1,Q1'25,-30,30,₪m
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_declared,דיבידנד שהוכרז,2025Q3,Q3'25,-75,75,₪m
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_declared,דיבידנד שהוכרז,2025Q4,Q4'25,260,50,₪m
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_declared,דיבידנד שהוכרז,2026Q2,Q2'26,-30,30,₪m
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_paid,דיבידנד ששולם,2025Q2,Q2'25,-30,30,₪m
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_paid,דיבידנד ששולם,2025Q3,Q3'25,-75,75,₪m
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_paid,דיבידנד ששולם,2025Q4,Q4'25,260,50,₪m
+2026-11-06,kpi,changed,ayalon,איילון,group|na,group,dividend_paid,דיבידנד ששולם,2026Q2,Q2'26,-30,30,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2024Q1,Q1'24,-175,175,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2024Q3,Q3'24,-170,170,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2024Q4,Q4'24,-115.148,115.148,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2024FY,FY'24,-460.148,460.148,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2025Q1,Q1'25,-150,150,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2025Q3,Q3'25,-450,450,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2025FY,FY'25,-600,600,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_declared,דיבידנד שהוכרז,2026Q1,Q1'26,-500,500,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2024Q2,Q2'24,-175,175,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2024Q3,Q3'24,-170,170,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2024Q4,Q4'24,-115.148,115.148,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2024FY,FY'24,-460.148,460.148,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2025Q2,Q2'25,-150,150,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2025Q3,Q3'25,-450,450,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2025FY,FY'25,-600,600,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,group|na,group,dividend_paid,דיבידנד ששולם,2026Q2,Q2'26,-500,500,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,non-controlling interests|na,זכויות שאינן מקנות שליטה,dividend_declared,דיבידנד שהוכרז,2024FY,FY'24,-19.734,19.734,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,non-controlling interests|na,זכויות שאינן מקנות שליטה,dividend_declared,דיבידנד שהוכרז,2025FY,FY'25,-24.485,24.485,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,non-controlling interests|na,זכויות שאינן מקנות שליטה,dividend_paid,דיבידנד ששולם,2024FY,FY'24,-19.734,19.734,₪m
+2026-11-06,kpi,changed,menora,מנורה מבטחים,non-controlling interests|na,זכויות שאינן מקנות שליטה,dividend_paid,דיבידנד ששולם,2025FY,FY'25,-24.485,24.485,₪m
+2026-11-06,kpi,changed,migdal,מגדל,group|na,group,dividend_declared,דיבידנד שהוכרז,2024Q2,Q2'24,-25,25,₪m
+2026-11-06,kpi,changed,migdal,מגדל,group|na,group,dividend_declared,דיבידנד שהוכרז,2024Q4,Q4'24,80,30,₪m
+2026-11-06,kpi,changed,migdal,מגדל,group|na,group,dividend_paid,דיבידנד ששולם,2024Q2,Q2'24,-25,25,₪m
+2026-11-06,kpi,changed,migdal,מגדל,group|na,group,dividend_paid,דיבידנד ששולם,2024Q4,Q4'24,-30,30,₪m
+2026-11-06,kpi,changed,migdal,מגדל,group|na,group,dividend_paid,דיבידנד ששולם,2024FY,FY'24,-55,55,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_declared,דיבידנד שהוכרז,2024Q4,Q4'24,-1070,0,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_declared,דיבידנד שהוכרז,2024FY,FY'24,-535,535,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_declared,דיבידנד שהוכרז,2025Q4,Q4'25,-2709.863,319.999,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_declared,דיבידנד שהוכרז,2025FY,FY'25,-1514.931,1514.931,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_paid,דיבידנד ששולם,2024Q4,Q4'24,-1070,0,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_paid,דיבידנד ששולם,2024FY,FY'24,-535,535,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_paid,דיבידנד ששולם,2025Q4,Q4'25,-2709.863,319.999,₪m
+2026-11-06,kpi,changed,phoenix,הפניקס,group|na,group,dividend_paid,דיבידנד ששולם,2025FY,FY'25,-1514.931,1514.931,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,241.407,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,224.756,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,218.755,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,206.615,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,204.641,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,199.851,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,201.939,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,201.026,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,201.469,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,197.005,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,196.366,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,193.299,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,182.667,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,172.375,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,26.273,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,16.382,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,15.989,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,19.418,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,15.826,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,14.992,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,15.468,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,15.404,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,18.229,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,17.078,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,17.676,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,17.467,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,17.922,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,18.014,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,23.562,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,23.514,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,23.209,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,22.535,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,22.809,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,23.708,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,25.543,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,26.126,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,26.217,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,27.206,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,27.737,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,27.923,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,27.649,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,27.058,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,5.118,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,5.242,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,5.095,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,1.205,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,4.268,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,4.83,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,7.384,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,6.47,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,6.706,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,6.531,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,6.51,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,7.567,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,6.003,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,6.059,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,264.969,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,248.27,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,241.964,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,229.15,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,227.45,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,223.559,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,227.482,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,227.152,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,227.686,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,224.211,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,224.103,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,221.222,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,210.316,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,199.433,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,31.391,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,21.624,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,21.084,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,20.623,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,20.094,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,19.822,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,22.852,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,21.874,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,24.935,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,23.609,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,24.186,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,25.034,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,23.925,₪m
+2026-11-06,savings_q,added,altshuler,אלטשולר שחם,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,24.073,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,30.28,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,32.215,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,36.01,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,40.245,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,49.38,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,59.438,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,68.502,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,75.413,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,83.532,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,93.898,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,107.435,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,119.167,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,127.806,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,135.81,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,4.601,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,4.972,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,3.929,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,3.581,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,6.46,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,9.798,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,11.459,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,15.801,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,17.141,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,21.656,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,25.723,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,26.578,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,38.386,₪m
+2026-11-06,savings_q,added,analyst,אנליסט,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,35.072,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,70.379,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,74.164,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,76.115,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,75.497,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,76.638,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,73.201,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,73.538,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,77.188,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,75.963,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,73.602,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,77.39,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,83.111,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,84.201,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,88.304,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,-0.259,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,5.575,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,5.513,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,1.445,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,5.132,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,1.822,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,0.82,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,-1.461,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,3.44,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,1.504,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,-1.566,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,-3.656,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,1.417,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,2.476,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,84.046,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,87.823,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,91.732,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,91.409,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,92.733,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,94.384,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,98.403,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,100.396,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,100.919,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,103.683,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,108.404,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,110.224,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,112.122,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,115.543,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,3.827,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,8.901,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,15.192,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,5.585,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,7.012,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,10.054,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,7.974,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,4.972,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,11.654,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,12.873,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,9.553,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,4.425,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,12.637,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,12.993,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,154.425,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,161.987,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,167.847,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,166.906,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,169.371,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,167.585,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,171.941,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,177.584,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,176.882,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,177.285,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,185.794,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,193.335,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,196.323,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,203.847,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,3.568,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,14.476,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,20.705,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,7.03,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,12.144,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,11.876,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,8.794,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,3.511,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,15.094,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,14.377,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,7.987,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,0.769,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,14.054,₪m
+2026-11-06,savings_q,added,clal,כלל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,15.469,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,70.045,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,72.829,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,75.609,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,76.59,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,80.282,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,82.245,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,85.303,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,89.204,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,89.831,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,91.138,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,95.791,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,102.159,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,109.403,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,120.975,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,2.036,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,6.361,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,7.865,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,6.756,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,9.851,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,10.727,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,5.856,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,10.321,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,8.801,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,10.072,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,13.816,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,16.825,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,12.133,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,17.864,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,107.922,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,111.667,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,117.371,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,118.412,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,116.647,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,122.98,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,130.724,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,136.591,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,132.222,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,138.56,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,145.987,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,150.61,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,148.6,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,153.417,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,5.635,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,16.726,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,13.173,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,8.766,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,10.855,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,16.921,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,17.494,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,23.694,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,14.382,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,22.897,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,28.517,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,25.055,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,22.16,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,27.885,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,177.967,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,184.496,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,192.98,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,195.002,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,196.929,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,205.225,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,216.027,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,225.795,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,222.053,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,229.698,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,241.778,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,252.769,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,258.003,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,274.392,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,7.671,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,23.087,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,21.038,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,15.522,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,20.706,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,27.648,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,23.35,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,34.015,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,23.183,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,32.969,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,42.333,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,41.88,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,34.293,₪m
+2026-11-06,savings_q,added,harel,הראל,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,45.749,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,82.108,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,84.563,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,91.376,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,95.716,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,107.491,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,114.711,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,121.652,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,129.38,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,135.688,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,143.35,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,158.038,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,173.598,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,190.652,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,213.498,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,33.696,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,35.541,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,38.063,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,39.187,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,49.091,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,50.921,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,55.169,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,57.851,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,59.603,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,63.02,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,71.064,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,78.124,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,85.165,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,94.93,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,28.673,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,29.634,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,31.434,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,32.241,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,34.375,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,38.032,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,39.304,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,41.695,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,42.649,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,44.783,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,48.067,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,50.46,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,51.254,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,53.997,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,22.966,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,24.322,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,25.906,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,26.285,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,28.335,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,34.628,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,31.906,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,34.373,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,34.818,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,36.118,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,39.131,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,40.919,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,40.742,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pen,פנסיה,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,42.985,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,110.781,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,114.197,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,122.81,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,127.957,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,141.866,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,152.743,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,160.956,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,171.075,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,178.337,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,188.133,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,206.105,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,224.058,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,241.906,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,267.495,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,56.662,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,59.863,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,63.969,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,65.472,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,77.426,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,85.549,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,87.075,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,92.224,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,94.421,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,99.138,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,110.195,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,119.043,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,125.907,₪m
+2026-11-06,savings_q,added,meitav,מיטב,managing_company|pg,פנסיה וגמל,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,137.915,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,37.237,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,38.065,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,40.638,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,41.049,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,45.301,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,46.968,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,49.25,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,50.921,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q1,Q1'25,,52.772,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q2,Q2'25,,54.587,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q3,Q3'25,,57.408,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2025Q4,Q4'25,,60.53,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q1,Q1'26,,62.999,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2026Q2,Q2'26,,66.653,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q1,Q1'23,,6.991,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q2,Q2'23,,4.178,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q3,Q3'23,,6.804,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2023Q4,Q4'23,,7.451,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q1,Q1'24,,8.416,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q2,Q2'24,,9.746,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q3,Q3'24,,12.705,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2024Q4,Q4'24,,11.07,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q1,Q1'25,,13.937,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q2,Q2'25,,14.668,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q3,Q3'25,,14.936,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2025Q4,Q4'25,,12.654,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q1,Q1'26,,19.942,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|gem,גמל והשתלמות,op_mc,רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת,2026Q2,Q2'26,,20.504,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q1,Q1'23,,163.865,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q2,Q2'23,,166.379,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q3,Q3'23,,180.414,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2023Q4,Q4'23,,182.026,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q1,Q1'24,,178.054,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q2,Q2'24,,187.207,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q3,Q3'24,,195.468,₪m
+2026-11-06,savings_q,added,menora,מנורה מבטחים,managing_company|pen,פנסיה,fees_mc,"הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",2024Q4,Q4'24,,201.398,₪m

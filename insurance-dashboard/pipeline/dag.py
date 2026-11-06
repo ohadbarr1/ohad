@@ -187,7 +187,7 @@ STEPS = [
     # module A1: the driver graph (mechanisms layer): calibrated edges per company over the published files; gate `drivers`
     step("build_drivers", "pipeline/build_drivers.py",
          [D + "lens.json", D + "flow_npv.json", D + "market.json", D + "funds/cat.json", D + "macro/boi_curve.json", D + "macro/macro.json", D + "lines.json", D + "csm/sens.json",
-          D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", "web/src/lib/valuation.ts"],
+          D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", *WB, "web/src/lib/valuation.ts"],
          [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py"], groups={"deploy"},
          note="A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)"),
     # module A8: the regulatory impact simulator: the hand-curated initiative register through the A1 driver files; gate `regulation`
@@ -293,7 +293,7 @@ STEPS = [
     # Wave 5 (Pro depth): one model-ready workbook per company (P&L, balance sheet, IFRS 17, solvency, savings, KPIs, a Sources row per
     # value) from the published JSON; standard library (pipeline/xlsx_lib.py); gate `model_xlsx` (byte-equal rebuild, opens, every cell sourced)
     step("build_model_xlsx", "pipeline/build_model_xlsx.py",
-         [D + "facts", D + "series", D + "csm/facts", D + "csm/capital.json", D + "csm/solvency.json", D + "savings_econ.json", D + "lens.json",
+         [D + "facts", D + "series", D + "csm/facts", D + "csm/capital.json", D + "csm/solvency.json", D + "savings_econ.json", D + "lens.json", D + "lts_prov",
           D + "kpi.json", D + "adjusted.json", D + "companies/index.json", D + "search/docs.json", "web/src/lib/labels.ts", "web/src/pages/CompanyIfrs.tsx",
           "web/src/lib/solvency.ts"],
          [D + "xlsx"], code=["pipeline/xlsx_lib.py"], groups={"deploy"},
@@ -302,7 +302,7 @@ STEPS = [
     # source on every row, manifest.json (counts, sha256, last-changed), changes.json (dated log of rows added / changed / removed since the
     # previous build), the Power Query M scripts and fox_powerquery.xlsx; reads the published JSON through build_model_xlsx's readers
     step("build_tables", "pipeline/build_tables.py",
-         [D + "facts", D + "series", D + "csm/facts", D + "csm/capital.json", D + "csm/solvency.json", D + "savings_econ.json", D + "lens.json",
+         [D + "facts", D + "series", D + "csm/facts", D + "csm/capital.json", D + "csm/solvency.json", D + "savings_econ.json", D + "lens.json", D + "lts_prov",
           D + "kpi.json", D + "adjusted.json", D + "companies/index.json", D + "search/docs.json", D + "pnc.json", D + "market.json", D + "funds.json",
           D + "funds/[gip]*.json", "web/src/lib/labels.ts", "web/src/pages/CompanyIfrs.tsx", "web/src/lib/solvency.ts", "web/src/lib/pnc.ts"],
          [D + "tables"], code=["pipeline/build_model_xlsx.py", "pipeline/xlsx_lib.py", "pipeline/pq_kit.py"], groups={"deploy"},

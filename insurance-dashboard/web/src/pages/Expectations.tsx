@@ -25,7 +25,9 @@ function Cell({ p }: { p: EPart | undefined }) {
       <span className="v num">{reqText(p)}</span>
       <span className={`exp-chip ${tone}`}>{pctText(p.pct)}</span>
       {p.pct != null && <span className={`exp-meter exp-chip ${tone}`} aria-hidden="true"><i style={{ width: `${Math.max(3, Math.min(100, p.pct))}%` }} /></span>}
-      <span className="s">עכשיו {iso(p.k === 'fee' ? `${fmt(p.trail, 2)}%` : `${fmt(p.trail, 1)}%`)}</span>
+      {p.k === 'roe'
+        ? <span className="s" title="LTM: רווח ארבעת הרבעונים ÷ ממוצע ההון היום ולפני שנה (כמו בדף Pro ובדף החברה). במודל: ROE של FY'28 כשכל המנופים בערכם הנוכחי">{p.ltm != null && <>LTM {p.ltm_q} {iso(`${fmt(p.ltm, 1)}%`)} · </>}במודל, FY'28 {iso(`${fmt(p.trail, 1)}%`)}</span>
+        : <span className="s">עכשיו {iso(p.k === 'fee' ? `${fmt(p.trail, 2)}%` : `${fmt(p.trail, 1)}%`)}</span>}
     </>
   );
 }

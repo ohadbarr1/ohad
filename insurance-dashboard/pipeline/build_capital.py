@@ -258,16 +258,33 @@ class Co:
             kind = "div" if re.search(r"dividend|לחלוקת דיבידנד|for dividend distribution", m + " " + l) else "board"
             rows.append((kind, basis_of(m, s, l, n), t))
         stated = {k for k, b, _ in rows if b != "?"}
+        # the target that applies to this calculation: the newest one stated as effective on or before `end` (the solvency report's
+        # publication when the figures come from one, else the calculation date). A target raised after that (Phoenix: 123% in the FY'25
+        # solvency report, 125% decided 24.08.26 from 30.06.26) is never applied to the earlier own funds and SCR: it is carried as `later`,
+        # so the page can say so. Only when no target is effective by then does the earliest later one stand in (labelled by its period).
+        # build() then prefers the target the solvency report itself prints for the date (csm/solvency.json tg_<basis>).
+        later = {}
         for kind, b, t in rows:
             if b == "?" and kind in stated:
                 continue   # the company states the basis of this target elsewhere: an unstated restatement is the same target
             rp = t.get("rp") or ""
             key = (rp_end(rp) if rp else t["d"], 0 if rp.endswith("FY") else 1, t["d"])
             for bb in (["w", "wo"] if b == "?" else [b]):
+                if t["d"] > end:
+                    cur = later.get((kind, bb))
+                    if cur is None or (t["d"], key) < (cur[1]["d"], cur[0]):
+                        later[(kind, bb)] = (key, t, b)
+                    continue
                 cur = out.get((kind, bb))
-                if cur is None or key > cur[0]:
+                if cur is None or (t["d"], key) > (cur[1]["d"], cur[0]):
                     out[(kind, bb)] = (key, t, b)
-        return {k: (t, b) for k, (_, t, b) in out.items()}
+        res = {}
+        for k in set(out) | set(later):
+            if k in out:
+                res[k] = (out[k][1], out[k][2], later[k][1] if k in later and later[k][1]["v"] != out[k][1]["v"] else None)
+            else:
+                res[k] = (later[k][1], later[k][2], None)
+        return res
 
     def target_prov(self, t):
         rp = t.get("rp")
@@ -338,15 +355,29 @@ class Co:
         return [out[k] for k in ("payout", "total", "buyback") if k in out]
 
     def printed_over(self):
-        """the surplus over the target the company prints itself (newest date), for the cross-check line"""
+        """the surplus over the target the company prints itself (newest date), for the cross-check line: the financial statements' line or
+        the solvency report's own (csm/solvency.json `sut_<basis>`, the report the own funds and SCR come from), whichever is newer"""
         xs = [x for x in self.F if re.match(r"^(solvency_surplus_(over_target|vs_board_target|vs_target)|surplus_vs_(board_)?target|target_excess_capital|target_solvency_surplus_vs_board_target(_without_transitional)?)$", x["m"])
               and not SUBS.search(x.get("s", ""))]
-        if not xs:
-            return None
-        x = max(xs, key=lambda x: (x["d"], rp_end(x["rp"])))
-        b = basis_of(x["m"], x.get("s"), x.get("l"), x.get("n"))
-        return {"v": r6(x["v"]), "d": x["d"], "basis": b if b != "?" else None, "after": bool(re.search(r"after|לאחר", (x.get("l") or "") + (x.get("n") or ""), re.I)),
-                "prov": self.fact_prov(x, f"עודף הון מעל היעד, כפי שהודפס · {self.name} · {dperiod(x['d'])}", fm(x["v"]))}
+        best = None
+        if xs:
+            x = max(xs, key=lambda x: (x["d"], rp_end(x["rp"])))
+            b = basis_of(x["m"], x.get("s"), x.get("l"), x.get("n"))
+            best = {"v": r6(x["v"]), "d": x["d"], "basis": b if b != "?" else None, "after": bool(re.search(r"after|לאחר", (x.get("l") or "") + (x.get("n") or ""), re.I)),
+                    "prov": self.fact_prov(x, f"עודף הון מעל היעד, כפי שהודפס · {self.name} · {dperiod(x['d'])}", fm(x["v"]))}
+        S = self.I.S["companies"].get(self.c, {})
+        for d in sorted(S, reverse=True):
+            row = S[d]
+            for b in ("wo", "w"):
+                cell = row.get(f"sut_{b}")
+                if cell and (best is None or d > best["d"]):
+                    # the solvency reports compute it on own funds after the capital actions to publication when they print those
+                    after = f"ofa_{b}" in row and abs(row[f"ofa_{b}"]["v"] - row[f"scr_{b}"]["v"] * row[f"tg_{b}"]["v"] / 100 - cell["v"]) <= 1.0 if f"tg_{b}" in row and f"scr_{b}" in row else False
+                    return {"v": r6(cell["v"]), "d": d, "basis": b, "after": after,
+                            "prov": self.solv_prov(cell, f"עודף הון מעל היעד, כפי שהודפס · {self.name} · {dperiod(d)}", d, fm(cell["v"]))}
+            if best is not None and d <= best["d"]:
+                break
+        return best
 
     # --- the whole company
     def build(self, bolt=None):
@@ -368,13 +399,31 @@ class Co:
                     "printed": r6(s["sr"][0]) if "sr" in s else None}
             if "sr" in s:
                 B[b]["printed_prov"] = s["sr"][1]
-        T = self.targets(d)
+        S_row = self.I.S["companies"].get(self.c, {}).get(d, {})
+        S_rep = {}
+        for cell in S_row.values():
+            S_rep = self.I.S["reports"].get(str(cell.get("r")), {}) or S_rep
+            if S_rep:
+                break
+        T = self.targets(max(d, S_rep.get("pub") or d))
+        for b, key in (("wo", "tg_wo"), ("w", "tgm_w")):  # the solvency report's own board target for this date wins over the statements' wording
+            cell = S_row.get(key)
+            if cell:
+                t0, tb, nxt = T.get(("board", b)) or ({"m": "target_solvency_ratio"}, b, None)
+                T[("board", b)] = ({"m": t0["m"], "v": cell["v"], "d": d, "rp": None, "l": cell.get("l"), "_prov": self.solv_prov(cell, f"יעד הדירקטוריון, {BH[b]} · {self.name}", d,
+                                   pct(cell["v"], 0 if float(cell["v"]).is_integer() else 1), "%"), "_period": dperiod(d)}, b, nxt if nxt and nxt["v"] != cell["v"] else None)
+        # a target whose basis the wording leaves open (applied to both bases) is one figure: when the solvency report prints it for one
+        # basis, the other basis takes the same printed figure (Menora: 116.9% at 31.12.25, not the 117.3% stated for 31.03.26)
+        if "tg_wo" in S_row and "tgm_w" not in S_row and T.get(("board", "w"), (None, None))[1] == "?":
+            t0, tb, nxt = T[("board", "wo")]
+            T[("board", "w")] = (t0, "?", nxt)
         cons = []
-        for (kind, b), (t, tb) in sorted(T.items()):
+        for (kind, b), (t, tb, nxt) in sorted(T.items()):
             if b not in B:
                 continue
-            cons.append({"id": f"{kind}_{b}", "kind": kind, "basis": b, "stated": tb if tb != "?" else None, "t": r6(t["v"]), "t_prov": self.target_prov(t),
-                         "period": qname(t["rp"]) if t.get("rp") else t["d"]})
+            cons.append({"id": f"{kind}_{b}", "kind": kind, "basis": b, "stated": tb if tb != "?" else None, "t": r6(t["v"]), "t_prov": t.get("_prov") or self.target_prov(t),
+                         "period": t.get("_period") or (qname(t["rp"]) if t.get("rp") else t["d"]),
+                         **({"later": {"t": r6(nxt["v"]), "d": nxt["d"], "period": qname(nxt["rp"]) if nxt.get("rp") else nxt["d"], "prov": self.target_prov(nxt)}} if nxt else {})})
         if not cons:
             for b in B:
                 cons.append({"id": f"reg_{b}", "kind": "reg", "basis": b, "stated": b, "t": 100.0, "period": dperiod(d),
