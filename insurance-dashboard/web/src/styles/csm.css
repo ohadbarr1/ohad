@@ -23,6 +23,7 @@
   .csm-bridge th.wfh, .csm-bridge td:last-child:has(.wf) { min-width: 108px; }
   .dc-grid { grid-template-columns: 1fr 1fr; }
   .dc-grid .v { font-size: 19px; }
+  .dc-grid .dim { min-width: 0; }  /* a derived headline's inputs wrap inside its half-width cell */
 }
 
 /* ---------- the IFRS 17 · CSM · capital ledger (/industry/csm) ---------- */
