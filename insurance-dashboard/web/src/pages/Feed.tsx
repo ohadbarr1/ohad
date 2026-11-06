@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
-import { FeedItem, perText } from '../components/FeedItem';
+import { FeedItem, evAnchor, perText } from '../components/FeedItem';
 import { Empty, ErrorBox, Loading, Pick } from '../components/ui';
 import { pubLabel } from '../lib/format';
 import { DK_HE, eventSource, FEED_TYPES, rowText, TYPE_SHORT, useFeed, type FeedEvent, type FeedType } from '../lib/feed';
@@ -27,6 +27,27 @@ export function Feed() {
   // the RSS of the filter in view: a company's feed, the regulator's months, the fee changes, else everything (pipeline/build_rss.py)
   const rss = feedPath(co ? { co } : { t });
   useFeedAlternate(co || t === 'regmonth' || t === 'fee' ? rss.rss : null, `fox · ${co ? F?.cos[co] ?? co : rss.label}`);
+  // a permalink (/feed#ev-<id>, components/FeedItem evAnchor): once the data is in, a filter that hides the item is dropped, the list grows
+  // to include it, and it is scrolled to and marked (the anchor does not exist when the browser first looks for it: the data loads after)
+  const { hash, pathname } = useLocation();
+  const nav = useNavigate();
+  const want = hash.startsWith('#ev-') ? decodeURIComponent(hash.slice(1)) : '';
+  const at = useMemo(() => (want ? list.findIndex((e) => evAnchor(e.id) === want) : -1), [want, list]);
+  const hidden = !!want && at < 0 && (F?.events ?? []).some((e) => evAnchor(e.id) === want);
+  useEffect(() => { if (hidden) nav({ pathname, search: '', hash }, { replace: true }); }, [hidden, nav, pathname, hash]);
+  useEffect(() => { if (at >= n) setN(at + 1 + PAGE / 2); }, [at, n]);
+  const landed = useRef('');  // once per permalink: "עוד" below must not pull the page back to it
+  useEffect(() => {
+    if (at < 0 || at >= n || landed.current === want) return;
+    const id = requestAnimationFrame(() => {
+      const el = document.getElementById(want);
+      if (!el) return;
+      landed.current = want;
+      el.scrollIntoView({ block: 'center' });
+      el.classList.remove('fd-hit'); void el.offsetWidth; el.classList.add('fd-hit');
+    });
+    return () => cancelAnimationFrame(id);
+  }, [want, at, n]);
 
   if (error) return <ErrorBox what="פיד השינויים" error={error} />;
   if (!F) return <Loading what="פיד השינויים" />;
@@ -37,7 +58,8 @@ export function Feed() {
   const groups: [string, FeedEvent[]][] = [];
   for (const e of shown) { const k = e.d.slice(0, 7); if (!groups.length || groups[groups.length - 1][0] !== k) groups.push([k, []]); groups[groups.length - 1][1].push(e); }
   const monthHe = (k: string) => `${k.slice(5, 7)}/${k.slice(2, 4)}`;
-  const slot = t === 'est';
+  // the estimate type is a slot until the first estimate is frozen (an older feed.json still carries types.est.slot)
+  const slot = t === 'est' && count((e) => e.t === 'est') === 0;
 
   const exportXlsx = () => {
     const head = ['התקבל ב-fox', 'תאריך', 'סוג תאריך', 'תקופה', 'סוג', 'חברה', 'אירוע', 'שורה', 'נוכחי', 'השוואה', 'שינוי', 'שינוי %', 'מקור'];
@@ -65,7 +87,7 @@ export function Feed() {
           {FEED_TYPES.map((x) => {
             const k = count((e) => e.t === x && (!co || e.c === co));
             const isSlot = !!F.types[x]?.slot;
-            const chip = <button key={x} type="button" className={`chip fd-t t-${x}${t === x ? ' on' : ''}`} aria-pressed={t === x} disabled={!isSlot && k === 0} title={isSlot ? 'משבצת ריקה: עדכוני אומדנים ואומדן מול בפועל ייכנסו עם מודול האומדנים' : F.types[x]?.he} onClick={() => set('t', t === x ? '' : x)}>{TYPE_SHORT[x]} <span className="num">{k}</span></button>;
+            const chip = <button key={x} type="button" className={`chip fd-t t-${x}${t === x ? ' on' : ''}`} aria-pressed={t === x} disabled={!isSlot && k === 0} title={isSlot && k === 0 ? 'עוד לא הוקפא אומדן' : F.types[x]?.he} onClick={() => set('t', t === x ? '' : x)}>{TYPE_SHORT[x]} <span className="num">{k}</span></button>;
             // the two types with a feed of their own carry its link next to the chip
             const own = x === 'regmonth' ? '/feed/months.xml' : x === 'fee' ? '/feed/funds.xml' : null;
             return own ? <span key={x} className="fd-tw">{chip}<a className="fd-rss" href={own} type="application/rss+xml" aria-label={`RSS: ${F.types[x]?.he}`}>RSS</a></span> : chip;
@@ -76,7 +98,7 @@ export function Feed() {
       <section className="panel fd-panel">
         <div className="hd"><h2><span className="num">{list.length}</span> שינויים</h2><div className="aside"><span>מהחדש לישן · מיליוני ש"ח (נכסים וצבירה: מיליארד ש"ח) · ערך כפי שהאתר מציג היום, עם עמוד המקור</span></div></div>
         <p className="fd-legend"><b>התקבל</b>: היום שבו fox קלטה את השינוי, מ-<span className="num">{S ? pubLabel(S.since) : '…'}</span> ואילך. לפני כן מוצג תאריך האירוע עצמו: <b>פורסם</b> במאיה, או <b>חודש נתונים</b> · <b>תקופה</b>: התקופה שהנתון מתאר</p>
-        {slot ? <Empty title="אין אומדנים עדיין">משבצת ריקה עד שמודול האומדנים ייכנס</Empty>
+        {slot ? <Empty title="אין אומדנים עדיין">אומדן נכנס לפיד ביום שבו הוא מוקפא, לפני הדוח</Empty>
           : list.length === 0 ? <Empty title="אין שינויים בסינון זה" />
           : groups.map(([k, es]) => (
             <div className="fd-month" key={k}>

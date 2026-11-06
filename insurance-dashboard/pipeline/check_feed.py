@@ -3,7 +3,8 @@
 python3 pipeline/check_feed.py [--quiet]      standard library only; reads the published files; exit 1 on any problem
 
 Every event has a date, a type, a company and a source; no event appears twice (by id, nor by type + company + period + source + headline);
-the type counts add up and the estimate slot stays empty. Every figure is re-read from the file it cites:
+the type counts add up. An estimate event (est) names a frozen stage that is in the published ledger (nowcast.json /
+nowcast_f2e.json), with its date and inputs hash. Every figure is re-read from the file it cites:
   pg     the (report, page, value) is printed in a published file that carries pages: a company workbook (companies/<id>.json; a
          derived Q4 is the workbook's own derived figure), a report card fact, the restatement log (both prints) or targets.json
          (the target and every input of its actual); the report is listed in `docs`
@@ -29,7 +30,7 @@ import reportday as rd  # noqa: E402
 
 DATA = bf.DATA
 UNITS = {"m", "bn", "pct", "pp", "dm", "dbn", "dpct", "n", "r"}
-DK = {"pub", "fetched", "month"}
+DK = {"pub", "fetched", "month", "frozen"}
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -97,6 +98,7 @@ def run(quiet=False):
     pos_ids = {p["id"]: p for p in P["positions"] if p.get("status") == "published"}
     FR = bf.load("fragility.json") if (DATA / "fragility.json").exists() else {"rows": []}
     frag = {r["c"]: r for r in FR["rows"]}
+    ledgers = {m: bf.load(f"{m}.json").get("ledger") or [] for m in bf.EST if (DATA / f"{m}.json").exists()}
 
     def bad(eid, msg):
         probs.append(f"{eid}: {msg}")
@@ -197,6 +199,13 @@ def run(quiet=False):
         elif src.get("k") == "frag":
             if src.get("c") not in frag or src.get("sig") not in frag[src["c"]]["sig"]:
                 bad(eid, f"source signal {src.get('c')}.{src.get('sig')} not in fragility.json")
+        elif src.get("k") == "est":
+            stage = [L for L in ledgers.get(src.get("m"), []) if L["quarter"] == src.get("q") and L.get("stage", 2) == src.get("stage")]
+            first = min(stage, key=lambda L: L["created_at"]) if stage else None
+            if not first:
+                bad(eid, f"source stage {src.get('m')} {src.get('q')} s{src.get('stage')} not in the published ledger")
+            elif first["inputs_hash"][:12] != src.get("hash") or first["created_at"][:10] != e.get("d") or e.get("t") != "est" or e.get("dk") != "frozen":
+                bad(eid, "estimate event: date, hash, type or date kind differs from the ledger")
         else:
             bad(eid, "no source")
         content[(e.get("t"), e.get("c"), e.get("per"), json.dumps(src, sort_keys=True), e.get("h"))] += 1
@@ -214,8 +223,9 @@ def run(quiet=False):
     for t, x in F["types"].items():
         if x["n"] != counts.get(t, 0):
             probs.append(f"types.{t}: n {x['n']} vs {counts.get(t, 0)} events")
-    if F["types"].get("est", {}).get("n") or counts.get("est"):
-        probs.append("est: the estimate slot carries events (module M1 fills it; nothing may be emitted before)")
+    # every frozen stage of the published ledger is in the feed
+    want = {f"est:{m}:{L['quarter']}:s{L.get('stage', 2)}" for m, Ls in ledgers.items() for L in Ls}
+    probs += [f"{x}: a frozen estimate stage without its feed event" for x in sorted(want - set(ids))]
     # the static RSS / Atom feeds and the received-date ledger (pipeline/build_rss.py): equal a rebuild, well-formed, complete
     import build_rss  # noqa: E402
     probs += [f"rss: {x}" for x in build_rss.check()]

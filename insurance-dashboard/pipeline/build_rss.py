@@ -41,11 +41,11 @@ TYPE_SHORT = {"filing": "דוח", "restate": "הצגה מחדש", "regmonth": "�
               "fee": "דמי ניהול", "est": "אומדנים", "pos": "עמדות", "fragility": "שבריריות", "chg": "שינויים", "letter": "מכתב התזרימים"}
 DOC_HE = {"annual": "דוח שנתי", "quarterly": "דוח רבעוני", "presentation": "מצגת", "solvency": "דוח כושר פירעון"}
 DS_HE = {"gemel": "גמל-נט", "pensia": "פנסיה-נט", "insurance": "ביטוח-נט"}
-DK_HE = {"pub": "פורסם במאיה", "fetched": "התקבל מהרשות", "month": "חודש הנתונים"}
+DK_HE = {"pub": "פורסם במאיה", "fetched": "התקבל מהרשות", "month": "חודש הנתונים", "frozen": "הוקפא ב-fox"}
 UNIT_HE = {"m": 'מיליוני ש"ח', "dm": 'מיליוני ש"ח', "bn": 'מיליארד ש"ח', "dbn": 'מיליארד ש"ח', "pp": "נק׳ אחוז"}
 MINUS = "−"
 PKG = {"gemel": "gemelnet", "pensia": "pensia-net", "insurance": "insurance"}   # the CKAN packages (market.json meta.packages)
-TYPE_SINCE = {"chg": "2026-11-05"}   # event types added after the ledger began (LEDGER since): the day each was introduced
+TYPE_SINCE = {"chg": "2026-11-05", "est": "2026-11-06"}   # event types added after the ledger began (LEDGER since): the day each was introduced
 SPECIAL = {"months": ("regmonth",), "funds": ("fee",)}
 NEWS_TYPES = {"fee", "restate", "merger", "tender", "service", "regdec"}   # lib/news.ts: a track's own fee, its manager's company-level events
 NEWS_DAYS = 200                                                             # the page keeps the last 90 days from its own today
@@ -126,6 +126,8 @@ def event_source(F, e):
         return f"ספר העמדות של fox · r{s['rev']}", None
     if s["k"] == "frag":
         return "מוניטור השבריריות של fox", None
+    if s["k"] == "est":
+        return f"ספר האומדנים של fox, שלב {s['stage']} · hash {s['hash']}", None
     return "fox", None
 
 

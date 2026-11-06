@@ -20,8 +20,9 @@ export type FeedSrc =
 export interface FeedFig { v: number; u: FeedUnit; s: FeedSrc; l?: string }
 export interface FeedRow { l: string; ab?: string[]; a: FeedFig; b?: FeedFig; d?: FeedFig; dp?: FeedFig; rng?: 1; note?: string }
 export interface FeedEvent {
-  id: string; t: FeedType; d: string; dk: 'pub' | 'fetched' | 'month'; c: string; per: string; h: string; to: string;
-  src: { k: 'doc'; rid: number; pg?: number | null } | { k: 'reg'; ym: number } | { k: 'fund'; ds: RegDs; id: number; ym: number } | { k: 'pos'; pid: string; rev: number } | { k: 'frag'; c: string; sig: string };
+  id: string; t: FeedType; d: string; dk: 'pub' | 'fetched' | 'month' | 'frozen'; c: string; per: string; h: string; to: string;
+  src: { k: 'doc'; rid: number; pg?: number | null } | { k: 'reg'; ym: number } | { k: 'fund'; ds: RegDs; id: number; ym: number } | { k: 'pos'; pid: string; rev: number } | { k: 'frag'; c: string; sig: string }
+    /** a frozen stage of the nowcast ledger (nowcast.json / nowcast_f2e.json `ledger`) */ | { k: 'est'; m: string; q: string; stage: number; hash: string };
   rows?: FeedRow[]; refs?: string[]; st?: 'met' | 'partial' | 'missed';
   /** position events (t: pos): which ledger or data event */ pk?: 'open' | 'revise' | 'close' | 'drift' | 'falsifier' | 'review' | 'fragility';
   /** fragility events: the state the signal crossed into */ fs?: 'watch' | 'alert';
@@ -40,7 +41,7 @@ export const useFeed = (enabled = true) => useLoad<FeedFile>(enabled ? 'feed.jso
 export const FEED_TYPES: FeedType[] = ['filing', 'chg', 'restate', 'solv', 'target', 'regmonth', 'flow', 'fee', 'fragility', 'letter', 'pos', 'est'];
 /** short labels for chips and filters */
 export const TYPE_SHORT: Record<FeedType, string> = { filing: 'דוח', restate: 'הצגה מחדש', regmonth: 'חודש רשות', flow: 'צבירה נטו', target: 'יעד', solv: 'כושר פירעון', fee: 'דמי ניהול', est: 'אומדנים', pos: 'עמדות', fragility: 'שבריריות', chg: 'שינויים', letter: 'מכתב התזרימים' };
-export const DK_HE: Record<FeedEvent['dk'], string> = { pub: 'פרסום', fetched: 'התקבל מהרשות', month: 'חודש נתונים' };
+export const DK_HE: Record<FeedEvent['dk'], string> = { pub: 'פרסום', fetched: 'התקבל מהרשות', month: 'חודש נתונים', frozen: 'הוקפא ב-fox' };
 const DOC_HE: Record<string, string> = { annual: 'דוח שנתי', quarterly: 'דוח רבעוני', presentation: 'מצגת', solvency: 'דוח כושר פירעון' };
 const DS_HE: Record<string, string> = { gemel: 'גמל-נט', pensia: 'פנסיה-נט', insurance: 'ביטוח-נט' };
 export const UNIT_HE: Partial<Record<FeedUnit, string>> = { m: 'מיליוני ש"ח', dm: 'מיליוני ש"ח', bn: 'מיליארד ש"ח', dbn: 'מיליארד ש"ח', pct: '%', dpct: '%', pp: 'נק׳ אחוז' };
@@ -104,6 +105,7 @@ export function eventSource(F: FeedFile, e: FeedEvent): { text: string; href: st
   if (s.k === 'reg') return { text: `רשות שוק ההון · ${ym(s.ym)}`, href: null };
   if (s.k === 'pos') return { text: `ספר העמדות · r${s.rev}`, href: null };
   if (s.k === 'frag') return { text: 'מוניטור שבריריות', href: null };
+  if (s.k === 'est') return { text: `ספר האומדנים · שלב ${s.stage} · hash ${s.hash}`, href: null };
   return { text: `${DS_HE[s.ds] ?? s.ds} · קופה ${s.id} · ${ym(s.ym)}`, href: null };
 }
 

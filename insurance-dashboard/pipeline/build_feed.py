@@ -21,7 +21,9 @@ source of both. Event types (`t`):
            and derived (own funds ÷ SCR) where such a report prints the two but not the ratio
   fee      a track's average management fee moving by 0.05 points or more month on month (funds/<k>.json), on tracks of NIS 1bn
            or more; months where the regulator's fee series breaks for the product (market.json `breaks`) are skipped
-  est      estimate revision / estimate vs actual: a typed, empty slot (module M1 fills it); no event is emitted
+  est      an estimate frozen before the report (the nowcast's append-only ledger, nowcast.json and nowcast_f2e.json `ledger`): one event
+           per model x quarter x stage, dated the day it was frozen (dk frozen), no rows (the estimate's page carries every figure, its
+           range and, once the reports are out, the actual); a dated addendum to a frozen stage (a manager covered later) joins its stage
   pos      the position book (module A6, positions.json, built by pipeline/build_positions.py): a published position opened, revised
            or closed (the ledger date), evidence drift (a trigger's first crossing since opening: that report's publication day),
            a falsifier met (a suggestion; the author closes), a review due (a print after the last revision), a company of the
@@ -37,9 +39,10 @@ source of both. Event types (`t`):
 Event: {id, t, d, dk, c, per, h, src, rows?, refs?, to, pk?}
   d    ISO date of the event; dk says what the date is: pub (the document's publication day on MAYA), fetched (the day fox received
        the regulator's file: the latest month only), month (the last day of the data month: the regulator's release day of older
-       months is not recorded anywhere in the pipeline)
+       months is not recorded anywhere in the pipeline), frozen (the day fox froze an estimate in its ledger, Israel time)
   src  the event's document: {k: doc, rid, pg?} (a MAYA filing in `docs`) · {k: reg, ym} (the regulator's month) · {k: fund, ds, id, ym}
        · {k: pos, pid, rev} (a revision of a published position, positions.json) · {k: frag, c, sig} (a signal of fragility.json)
+       · {k: est, m, q, stage, hash} (a frozen stage of the nowcast ledger: m nowcast | nowcast_f2e, hash = its inputs_hash)
   rows [{l, ab?, a, b?, d?, dp?, rng?, note?}]: a figure is {v, u, s}; u: m (NIS m) · bn (NIS bn) · pct (%) · pp (points) · dm (NIS m,
        signed) · dbn (NIS bn, signed) · dpct (%, signed) · n (count); s is its source:
          {k: pg, rid, pg, der?}                                        printed on a page of a filing in `docs` (der 1: a flow differenced
@@ -79,7 +82,7 @@ DS = {"pension": "pensia", "gemel": "gemel", "insurance": "insurance"}
 TK = {"pensia": "p", "gemel": "g", "insurance": "i"}
 TYPES = {
     "filing": "דוח כספי חדש", "restate": "הצגה מחדש", "regmonth": "חודש נתוני רשות", "flow": "מעבר בצבירה נטו",
-    "target": "יעד הנהלה הוכרע", "solv": "יחס כושר פירעון", "fee": "שינוי בדמי ניהול", "est": "עדכון אומדן / אומדן מול בפועל",
+    "target": "יעד הנהלה הוכרע", "solv": "יחס כושר פירעון", "fee": "שינוי בדמי ניהול", "est": "אומדן הוקפא לפני הדוח",
     "pos": "ספר העמדות", "fragility": "מוניטור שבריריות", "chg": "שינויים מהותיים בדוח",
     "letter": "מכתב התזרימים",
 }
@@ -475,7 +478,7 @@ def regulator(reg, slug):
         a0, b0 = reg.assets(pi, "all", -1), reg.assets(pi - 1, "all", -1)
         if a0 is not None and b0 is not None:
             fa, fb = fig(a0, "bn", reg.src("assets", pi, "m", "all", -1)), fig(b0, "bn", reg.src("assets", pi - 1, "m", "all", -1))
-            row = {"l": "נכסים מנוהלים, כל המוצרים", "ab": [la, lb], "a": fa, "b": fb, "d": calc_diff(fa, fb, la, lb, "dbn")}
+            row = {"l": "נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי)", "ab": [la, lb], "a": fa, "b": fb, "d": calc_diff(fa, fb, la, lb, "dbn")}
             p = calc_pct(fa, fb, la, lb)
             if p:
                 row["dp"] = p
@@ -686,6 +689,43 @@ def letters():
     return [e for e in load("flows/letters/index.json").get("events") or [] if e.get("t") == "letter"]
 
 
+# ---------------------------------------------------------------------------------------------------------------- estimates
+EST = {  # model file -> (the estimate's name, what it estimates, where it is shown)
+    "nowcast": ("אומדן M1", "הכנסות מדמי ניהול ורווח תפעולי מגזרי, פנסיה וגמל", "/savings?v=now"),
+    "nowcast_f2e": ("האומדן שפורסם", "הכנסות מדמי ניהול, פנסיה וגמל, עם טווח", "/savings?v=now#official"),
+}
+
+
+def q_key(q):
+    """Q3-2026 -> 2026Q3"""
+    n, y = q.split("-")
+    return f"{y}{n}"
+
+
+def estimates():
+    """the nowcast's frozen stages (append-only ledger, as published in nowcast.json / nowcast_f2e.json): one event per model, quarter and
+    stage, dated the day the stage was frozen; an addendum (a manager covered after the freeze) joins its stage's event"""
+    out = []
+    for m, (name, what, to) in EST.items():
+        if not (DATA / f"{m}.json").exists():
+            continue
+        by = collections.defaultdict(list)
+        for L in load(f"{m}.json").get("ledger") or []:
+            by[(L["quarter"], L.get("stage", 2))].append(L)
+        for (q, st), Ls in sorted(by.items()):
+            Ls = sorted(Ls, key=lambda x: x["created_at"])
+            first = Ls[0]
+            cos = []
+            for L in Ls:
+                cos += [r["c"] for r in L["rows"] if r["c"] not in cos]
+            add = f"; כולל תוספת מ-{dt.date.fromisoformat(Ls[-1]['created_at'][:10]).strftime('%d.%m.%y')}" if len(Ls) > 1 else ""
+            pk = q_key(q)
+            out.append({"id": f"est:{m}:{q}:s{st}", "t": "est", "d": first["created_at"][:10], "dk": "frozen", "c": "market", "per": pk,
+                        "h": f"{name} ל-{per_label(pk)} הוקפא, שלב {st}: {what}, {len(cos)} גופים{add}",
+                        "src": {"k": "est", "m": m, "q": q, "stage": st, "hash": first["inputs_hash"][:12]}, "to": to})
+    return out
+
+
 # ---------------------------------------------------------------------------------------------------------------- main
 def main():
     reg_co = load("companies/index.json")
@@ -710,13 +750,14 @@ def main():
     ev += positions()
     ev += fragility()
     ev += letters()
+    ev += estimates()
     order = {t: i for i, t in enumerate(TYPES)}
     ev.sort(key=lambda e: (e["d"], -order[e["t"]], e["id"]), reverse=True)
     counts = collections.Counter(e["t"] for e in ev)
     out = {
         "v": 1, "built": dt.date.today().isoformat(), "from": FROM, "files": FILES,
         "source": "MAYA (דוחות כספיים, דוחות כושר פירעון, מצגות) ורשות שוק ההון (גמל-נט, פנסיה-נט, ביטוח-נט), כפי שהם מפורסמים באתר",
-        "types": {t: {"he": he, "n": counts.get(t, 0), **({"slot": 1} if t == "est" else {})} for t, he in TYPES.items()},
+        "types": {t: {"he": he, "n": counts.get(t, 0)} for t, he in TYPES.items()},
         "rules": {"flow_min_bn": FLOW_MIN, "fee_min_pp": FEE_MIN, "fee_assets_m": FEE_ASSETS, "restate_big_pct": BIG},
         "cos": {**{"market": "השוק"}, **cos},
         "groups": reg.G,

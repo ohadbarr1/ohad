@@ -5,11 +5,20 @@
 <link>https://fox-research-il.web.app/feed</link>
 <description>כל שינוי שהנתונים של fox נושאים: דוחות כספיים במאיה, הצגות מחדש, חודשי נתוני רשות שוק ההון, דמי ניהול, יחסי כושר פירעון, יעדי הנהלה. כל מספר עם המקור שלו.</description>
 <language>he</language>
-<lastBuildDate>Sun, 01 Nov 2026 00:00:00 +0200</lastBuildDate>
+<lastBuildDate>Tue, 03 Nov 2026 00:00:00 +0200</lastBuildDate>
 <ttl>360</ttl>
 <atom:link href="https://fox-research-il.web.app/feed.xml" rel="self" type="application/rss+xml"/>
 <generator>fox pipeline/build_rss.py</generator>
 <image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · מה השתנה</title><link>https://fox-research-il.web.app/feed</link></image>
+<item>
+<title>אומדנים: האומדן שפורסם ל-Q3'26 הוקפא, שלב 2: הכנסות מדמי ניהול, פנסיה וגמל, עם טווח, 10 גופים</title>
+<link>https://fox-research-il.web.app/savings?v=now#official</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/est:nowcast_f2e:Q3-2026:s2</guid>
+<pubDate>Tue, 03 Nov 2026 00:00:00 +0200</pubDate>
+<category>אומדן הוקפא לפני הדוח</category>
+<category>השוק</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;מקור: ספר האומדנים של fox, שלב 2 · hash ba1637369924&lt;/p&gt;&lt;p&gt;הוקפא ב-fox: 03.11.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?v=now#official"&gt;https://fox-research-il.web.app/savings?v=now#official&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
 <item>
 <title>חודש רשות: נתוני 09/26: גמל-נט, פנסיה-נט, ביטוח-נט</title>
 <link>https://fox-research-il.web.app/savings</link>
@@ -17,7 +26,7 @@
 <pubDate>Sun, 01 Nov 2026 00:00:00 +0200</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 3,020.76 מיליארד ש"ח (09/26), לעומת 2,996.01 (08/26); שינוי +24.74 (+0.8%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.29 מיליארד ש"ח (09/26), לעומת 6.98 (08/26); שינוי +0.30&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.12 מיליארד ש"ח (09/26), לעומת 4.13 (08/26); שינוי −0.01&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 09/26&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 01.11.26 · תקופה: 09/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 3,020.76 מיליארד ש"ח (09/26), לעומת 2,996.01 (08/26); שינוי +24.74 (+0.8%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.29 מיליארד ש"ח (09/26), לעומת 6.98 (08/26); שינוי +0.30&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.12 מיליארד ש"ח (09/26), לעומת 4.13 (08/26); שינוי −0.01&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 09/26&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 01.11.26 · תקופה: 09/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>מכתב התזרימים 09/26: 09/26, כל מוצרי הגמל והפנסיה: כלל ⁦+₪3.0⁩ מיליארד בניוד תחרותי; אלטשולר שחם ⁦−₪2.6⁩ מיליארד.</title>
@@ -27,6 +36,24 @@
 <category>מכתב התזרימים</category>
 <category>השוק</category>
 <description>&lt;div dir="rtl"&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 09/26&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 01.11.26 · תקופה: 09/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/flows/letter/202609"&gt;https://fox-research-il.web.app/flows/letter/202609&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אומדנים: אומדן M1 ל-Q3'26 הוקפא, שלב 2: הכנסות מדמי ניהול ורווח תפעולי מגזרי, פנסיה וגמל, 10 גופים</title>
+<link>https://fox-research-il.web.app/savings?v=now</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/est:nowcast:Q3-2026:s2</guid>
+<pubDate>Sun, 01 Nov 2026 00:00:00 +0200</pubDate>
+<category>אומדן הוקפא לפני הדוח</category>
+<category>השוק</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;מקור: ספר האומדנים של fox, שלב 2 · hash 8f8560eade18&lt;/p&gt;&lt;p&gt;הוקפא ב-fox: 01.11.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?v=now"&gt;https://fox-research-il.web.app/savings?v=now&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
+<item>
+<title>אומדנים: אומדן M1 ל-Q3'26 הוקפא, שלב 1: הכנסות מדמי ניהול ורווח תפעולי מגזרי, פנסיה וגמל, 10 גופים; כולל תוספת מ-27.10.26</title>
+<link>https://fox-research-il.web.app/savings?v=now</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/est:nowcast:Q3-2026:s1</guid>
+<pubDate>Tue, 27 Oct 2026 00:00:00 +0200</pubDate>
+<category>אומדן הוקפא לפני הדוח</category>
+<category>השוק</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;מקור: ספר האומדנים של fox, שלב 1 · hash f32e68a85e91&lt;/p&gt;&lt;p&gt;הוקפא ב-fox: 27.10.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?v=now"&gt;https://fox-research-il.web.app/savings?v=now&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>ילין לפידות · שבריריות: שחיקת ביצועים · גמל והשתלמות: תקין ← מעקב</title>
@@ -44,7 +71,7 @@
 <pubDate>Mon, 31 Aug 2026 00:00:00 +0300</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,996.01 מיליארד ש"ח (08/26), לעומת 2,953.42 (07/26); שינוי +42.59 (+1.4%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.98 מיליארד ש"ח (08/26), לעומת 7.44 (07/26); שינוי −0.46&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.13 מיליארד ש"ח (08/26), לעומת 4.57 (07/26); שינוי −0.44&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 08/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 08/26 · תקופה: 08/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,996.01 מיליארד ש"ח (08/26), לעומת 2,953.42 (07/26); שינוי +42.59 (+1.4%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.98 מיליארד ש"ח (08/26), לעומת 7.44 (07/26); שינוי −0.46&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.13 מיליארד ש"ח (08/26), לעומת 4.57 (07/26); שינוי −0.44&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 08/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 08/26 · תקופה: 08/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>הפניקס · שבריריות: ניוד נטו · פנסיה: תקין ← מעקב</title>
@@ -485,7 +512,7 @@
 <pubDate>Fri, 31 Jul 2026 00:00:00 +0300</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,953.42 מיליארד ש"ח (07/26), לעומת 2,942.38 (06/26); שינוי +11.04 (+0.4%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.44 מיליארד ש"ח (07/26), לעומת 6.97 (06/26); שינוי +0.47&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.57 מיליארד ש"ח (07/26), לעומת 4.20 (06/26); שינוי +0.38&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 07/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 07/26 · תקופה: 07/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,953.42 מיליארד ש"ח (07/26), לעומת 2,942.38 (06/26); שינוי +11.04 (+0.4%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.44 מיליארד ש"ח (07/26), לעומת 6.97 (06/26); שינוי +0.47&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.57 מיליארד ש"ח (07/26), לעומת 4.20 (06/26); שינוי +0.38&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 07/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 07/26 · תקופה: 07/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>אינפיניטי · שבריריות: שחיקת ביצועים · פנסיה: תקין ← מעקב</title>
@@ -521,7 +548,7 @@
 <pubDate>Tue, 30 Jun 2026 00:00:00 +0300</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,942.38 מיליארד ש"ח (06/26), לעומת 2,944.15 (05/26); שינוי −1.77 (−0.1%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.97 מיליארד ש"ח (06/26), לעומת 6.63 (05/26); שינוי +0.34&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.20 מיליארד ש"ח (06/26), לעומת 4.29 (05/26); שינוי −0.09&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 06/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 06/26 · תקופה: 06/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,942.38 מיליארד ש"ח (06/26), לעומת 2,944.15 (05/26); שינוי −1.77 (−0.1%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.97 מיליארד ש"ח (06/26), לעומת 6.63 (05/26); שינוי +0.34&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.20 מיליארד ש"ח (06/26), לעומת 4.29 (05/26); שינוי −0.09&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 06/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 06/26 · תקופה: 06/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>הכשרה · כושר פירעון: יחס כושר פירעון ליום Q4'25, דוח רבעוני Q1'26 (114.6% → 120.1%)</title>
@@ -548,7 +575,7 @@
 <pubDate>Sun, 31 May 2026 00:00:00 +0300</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,944.15 מיליארד ש"ח (05/26), לעומת 2,873.74 (04/26); שינוי +70.41 (+2.5%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.63 מיליארד ש"ח (05/26), לעומת 6.34 (04/26); שינוי +0.29&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.29 מיליארד ש"ח (05/26), לעומת 4.20 (04/26); שינוי +0.09&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 05/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 05/26 · תקופה: 05/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,944.15 מיליארד ש"ח (05/26), לעומת 2,873.74 (04/26); שינוי +70.41 (+2.5%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.63 מיליארד ש"ח (05/26), לעומת 6.34 (04/26); שינוי +0.29&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.29 מיליארד ש"ח (05/26), לעומת 4.20 (04/26); שינוי +0.09&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 05/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 05/26 · תקופה: 05/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>אנליסט · שבריריות: ניוד נטו · גמל והשתלמות: תקין ← מעקב</title>
@@ -998,7 +1025,7 @@
 <pubDate>Thu, 30 Apr 2026 00:00:00 +0300</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,873.74 מיליארד ש"ח (04/26), לעומת 2,750.11 (03/26); שינוי +123.63 (+4.5%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.34 מיליארד ש"ח (04/26), לעומת 7.11 (03/26); שינוי −0.77&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.20 מיליארד ש"ח (04/26), לעומת 4.56 (03/26); שינוי −0.36&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 04/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 04/26 · תקופה: 04/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,873.74 מיליארד ש"ח (04/26), לעומת 2,750.11 (03/26); שינוי +123.63 (+4.5%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.34 מיליארד ש"ח (04/26), לעומת 7.11 (03/26); שינוי −0.77&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.20 מיליארד ש"ח (04/26), לעומת 4.56 (03/26); שינוי −0.36&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 04/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 04/26 · תקופה: 04/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>הכשרה · הצגה מחדש: דוח שנתי FY'25 הציג מחדש תקופות קודמות</title>
@@ -1016,7 +1043,7 @@
 <pubDate>Tue, 31 Mar 2026 00:00:00 +0300</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,750.11 מיליארד ש"ח (03/26), לעומת 2,809.82 (02/26); שינוי −59.71 (−2.1%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.11 מיליארד ש"ח (03/26), לעומת 6.70 (02/26); שינוי +0.41&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.56 מיליארד ש"ח (03/26), לעומת 3.97 (02/26); שינוי +0.60&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 03/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 03/26 · תקופה: 03/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,750.11 מיליארד ש"ח (03/26), לעומת 2,809.82 (02/26); שינוי −59.71 (−2.1%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.11 מיליארד ש"ח (03/26), לעומת 6.70 (02/26); שינוי +0.41&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 4.56 מיליארד ש"ח (03/26), לעומת 3.97 (02/26); שינוי +0.60&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 03/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 03/26 · תקופה: 03/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>הכשרה · דוח: דוח שנתי FY'25</title>
@@ -1430,7 +1457,7 @@
 <pubDate>Sat, 28 Feb 2026 00:00:00 +0200</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,809.82 מיליארד ש"ח (02/26), לעומת 2,781.64 (01/26); שינוי +28.18 (+1.0%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.70 מיליארד ש"ח (02/26), לעומת 6.18 (01/26); שינוי +0.52&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 3.97 מיליארד ש"ח (02/26), לעומת 5.51 (01/26); שינוי −1.54&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 02/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 02/26 · תקופה: 02/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,809.82 מיליארד ש"ח (02/26), לעומת 2,781.64 (01/26); שינוי +28.18 (+1.0%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.70 מיליארד ש"ח (02/26), לעומת 6.18 (01/26); שינוי +0.52&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 3.97 מיליארד ש"ח (02/26), לעומת 5.51 (01/26); שינוי −1.54&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 02/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 02/26 · תקופה: 02/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>אלטשולר שחם · שבריריות: שחיקת ביצועים · פנסיה: מעקב ← התראה</title>
@@ -1457,7 +1484,7 @@
 <pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,781.64 מיליארד ש"ח (01/26), לעומת 2,719.84 (12/25); שינוי +61.80 (+2.3%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.18 מיליארד ש"ח (01/26), לעומת 7.16 (12/25); שינוי −0.98&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 5.51 מיליארד ש"ח (01/26), לעומת 8.06 (12/25); שינוי −2.55&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 01/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,781.64 מיליארד ש"ח (01/26), לעומת 2,719.84 (12/25); שינוי +61.80 (+2.3%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.18 מיליארד ש"ח (01/26), לעומת 7.16 (12/25); שינוי −0.98&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 5.51 מיליארד ש"ח (01/26), לעומת 8.06 (12/25); שינוי −2.55&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 01/26&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>אלטשולר שחם · צבירה נטו: פנסיה: קרנות חדשות: מצבירה חיובית לשלילית, LTM</title>
@@ -1727,7 +1754,7 @@
 <pubDate>Wed, 31 Dec 2025 00:00:00 +0200</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,719.84 מיליארד ש"ח (12/25), לעומת 2,686.92 (11/25); שינוי +32.91 (+1.2%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.16 מיליארד ש"ח (12/25), לעומת 6.27 (11/25); שינוי +0.89&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 8.06 מיליארד ש"ח (12/25), לעומת 3.85 (11/25); שינוי +4.21&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 12/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 12/25 · תקופה: 12/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,719.84 מיליארד ש"ח (12/25), לעומת 2,686.92 (11/25); שינוי +32.91 (+1.2%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 7.16 מיליארד ש"ח (12/25), לעומת 6.27 (11/25); שינוי +0.89&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 8.06 מיליארד ש"ח (12/25), לעומת 3.85 (11/25); שינוי +4.21&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 12/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 12/25 · תקופה: 12/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>אלטשולר שחם · שבריריות: שחיקת ביצועים · פנסיה: תקין ← מעקב</title>
@@ -1772,7 +1799,7 @@
 <pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
 <category>חודש נתוני רשות</category>
 <category>השוק</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המוצרים: 2,686.92 מיליארד ש"ח (11/25), לעומת 2,649.03 (10/25); שינוי +37.89 (+1.4%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.27 מיליארד ש"ח (11/25), לעומת 6.11 (10/25); שינוי +0.16&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 3.85 מיליארד ש"ח (11/25), לעומת 3.18 (10/25); שינוי +0.67&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 11/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נכסים מנוהלים, כל המסלולים (כולל סגורים וניהול אישי): 2,686.92 מיליארד ש"ח (11/25), לעומת 2,649.03 (10/25); שינוי +37.89 (+1.4%)&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, פנסיה: 6.27 מיליארד ש"ח (11/25), לעומת 6.11 (10/25); שינוי +0.16&lt;/p&gt;&lt;p&gt;צבירה נטו כולל ניוד, גמל והשתלמות: 3.85 מיליארד ש"ח (11/25), לעומת 3.18 (10/25); שינוי +0.67&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 11/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings"&gt;https://fox-research-il.web.app/savings&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>ילין לפידות · שבריריות: ניוד נטו · גמל והשתלמות: מעקב ← התראה</title>
@@ -1782,33 +1809,6 @@
 <category>מוניטור שבריריות</category>
 <category>ילין לפידות</category>
 <description>&lt;div dir="rtl"&gt;&lt;p&gt;העברות נטו, 3 חודשים · גמל והשתלמות: −2,385 מיליוני ש"ח (11/25), לעומת −1,969 (10/25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=flow"&gt;https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=flow&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
-</item>
-<item>
-<title>מור · שבריריות: שחיקת דמי ניהול · גמל והשתלמות: תקין ← התראה</title>
-<link>https://fox-research-il.web.app/fragility?c=more&amp;s=fee</link>
-<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:more:fee:2025Q3</guid>
-<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
-<category>מוניטור שבריריות</category>
-<category>מור</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;שינוי YoY בתשואת דמי הניהול, נק׳ אחוז · גמל והשתלמות: −0.05 נק׳ אחוז (Q3'25), לעומת +0.01 (Q2'25)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;פורסם במאיה: 30.11.25 · תקופה: Q3'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=more&amp;amp;s=fee"&gt;https://fox-research-il.web.app/fragility?c=more&amp;amp;s=fee&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
-</item>
-<item>
-<title>ילין לפידות · צבירה נטו: קרנות השתלמות: מצבירה חיובית לשלילית, LTM</title>
-<link>https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA</link>
-<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/flow:202511:p:hishtalmut:yelin</guid>
-<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
-<category>מעבר בצבירה נטו</category>
-<category>ילין לפידות</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;צבירה נטו כולל ניוד, LTM: −0.16 מיליארד ש"ח (11/25), לעומת 0.85 (10/25); שינוי −1.00&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 11/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA"&gt;https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
-</item>
-<item>
-<title>ילין לפידות · צבירה נטו: קופות גמל (תגמולים ואישית לפיצויים): מצבירה חיובית לשלילית, LTM</title>
-<link>https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA</link>
-<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/flow:202511:p:gemel:yelin</guid>
-<pubDate>Sun, 30 Nov 2025 00:00:00 +0200</pubDate>
-<category>מעבר בצבירה נטו</category>
-<category>ילין לפידות</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;צבירה נטו כולל ניוד, LTM: −0.36 מיליארד ש"ח (11/25), לעומת 0.44 (10/25); שינוי −0.80&lt;/p&gt;&lt;p&gt;מקור: רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט (data.gov.il) · 11/25&lt;/p&gt;&lt;p&gt;חודש הנתונים: 11/25 · תקופה: 11/25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA"&gt;https://fox-research-il.web.app/savings?g=%D7%99%D7%9C%D7%99%D7%9F%20%D7%9C%D7%A4%D7%99%D7%93%D7%95%D7%AA&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 </channel>
 </rss>
