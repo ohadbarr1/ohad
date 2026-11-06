@@ -102,7 +102,7 @@ export function ClientsNew() {
     for (const c of cands) { const rs = (ny?.rows ?? []).filter((r) => r.cand.k === c); if (rs.length) why[c] = whyText(rs.flatMap((r) => whyLines(r, r.exist.k ? byK.get(r.exist.k) : null, byK.get(c), dec, asofText))); }
     const ms = t0.current ? Date.now() - t0.current : null;
     const inp = wizardSave(folder, cands, { snap: rows.length ? snapOf(rows, bottomLines(rows, true), today(), data.asof, 'net') : null, kind, client, meet, age: ageN, sex: sex || null, ms, today: today(), why, pairs });
-    if (ageN != null && !ageFile) delete inp.fields?.[F.ageSrc];
+    if (!ageFile) delete inp.fields?.[F.ageSrc];
     const r = upsert(clients, inp, today());
     setClients(r.file);
     if (ms != null) setTimes(pushTime(times, ms));

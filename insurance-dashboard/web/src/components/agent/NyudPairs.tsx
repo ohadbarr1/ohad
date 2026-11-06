@@ -16,7 +16,12 @@ const num = (s: string) => { const v = s.trim() === '' ? NaN : Number(s.replace(
 function FeeInputs({ id, ov, cand, onSet }: { id: string; ov: FeeOverride | null; cand: Candidate; onSet: (v: FeeOverride | null) => void }) {
   const [d, setD] = useState(ov ? String(ov.depfee) : '');
   const [a, setA] = useState(ov ? String(ov.fee) : '');
-  useEffect(() => { setD(ov ? String(ov.depfee) : ''); setA(ov ? String(ov.fee) : ''); }, [ov?.depfee, ov?.fee, ov?.src]);  // eslint-disable-line react-hooks/exhaustive-deps
+  // follow a change from outside (the tender preset, a cleared pair), never the echo of what is being typed ("1." stays "1.")
+  useEffect(() => {
+    if (!ov) { if (num(d) != null && num(a) != null) { setD(''); setA(''); } return; }
+    if (num(d) !== ov.depfee) setD(String(ov.depfee));
+    if (num(a) !== ov.fee) setA(String(ov.fee));
+  }, [ov?.depfee, ov?.fee, ov?.src]);  // eslint-disable-line react-hooks/exhaustive-deps
   const tp = tenderPreset(cand);
   const commit = (ds: string, as: string) => {
     if (!ds.trim() && !as.trim()) { onSet(null); return; }
