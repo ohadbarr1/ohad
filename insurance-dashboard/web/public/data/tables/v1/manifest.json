@@ -3,7 +3,7 @@
  "version": "v1",
  "site": "https://fox-research-il.web.app",
  "base": "https://fox-research-il.web.app/data/tables/v1/",
- "built": "2026-11-05",
+ "built": "2026-11-06",
  "promise": "v1: a column never changes meaning, a metric id never changes meaning or unit; new columns are appended at the end, new tables and metrics are added; a breaking change opens v2 beside v1.",
  "columns": [
   {
@@ -1760,14 +1760,14 @@
    "last": "2026Q2",
    "first_label": "Q4'18",
    "last_label": "Q2'26",
-   "changed": "2026-11-05",
+   "changed": "2026-11-06",
    "csv": "kpi.csv",
    "json": "kpi.json",
    "pq": "pq/kpi.pq",
-   "csv_bytes": 6931761,
-   "json_bytes": 7594751,
-   "csv_sha256": "7ede63d1e58b7dcfad142e422ac7baa951260ebd24f1de22a21b884a9d78ad36",
-   "json_sha256": "457769443c4e6bba37cf98a0efa7fd58e18c69f0e046905205f2d835a6caff8c"
+   "csv_bytes": 6931713,
+   "json_bytes": 7594703,
+   "csv_sha256": "a59f95007b7ae20f69bf00b0231387ed6d27daa9f669353ca72035fe81afe729",
+   "json_sha256": "9c1023ea0b75067a44783238470177ae30c2909ce4cbb2d41a405fcb49b27d37"
   },
   {
    "id": "ifrs17",
@@ -3351,7 +3351,7 @@
    "en": "Long-term savings, quarterly (reports and regulator join)",
    "grain": "manager × segment × metric × quarter",
    "grain_he": "מנהל × מגזר × מדד × רבעון",
-   "rows": 5147,
+   "rows": 5855,
    "entities": 12,
    "metrics": [
     {
@@ -3422,6 +3422,15 @@
      ]
     },
     {
+     "id": "fees_mc",
+     "he": "הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)",
+     "unit": "₪m",
+     "kinds": [
+      "derived",
+      "printed"
+     ]
+    },
+    {
      "id": "flow_share",
      "he": "נתח מהצבירה נטו של השוק",
      "unit": "%",
@@ -3455,8 +3464,16 @@
      ]
     },
     {
+     "id": "op_mc",
+     "he": "רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת",
+     "unit": "₪m",
+     "kinds": [
+      "derived"
+     ]
+    },
+    {
      "id": "profit",
-     "he": "רווח לפני מס",
+     "he": "רווח לפני מס (כפי שהודפס: אחרי רווחי השקעות, מימון והוצאות אחרות)",
      "unit": "₪m",
      "kinds": [
       "printed"
@@ -3519,14 +3536,14 @@
    "last": "2026Q2",
    "first_label": "Q1'23",
    "last_label": "Q2'26",
-   "changed": "2026-11-05",
+   "changed": "2026-11-06",
    "csv": "savings_q.csv",
    "json": "savings_q.json",
    "pq": "pq/savings_q.pq",
-   "csv_bytes": 2206303,
-   "json_bytes": 2398770,
-   "csv_sha256": "9edd9256896750384c1c43ad24a3836aff955e501d70d3a558cf1a20cb93e82d",
-   "json_sha256": "33f76fbb85ca395fc9e477b70f5e7ebc8f5f2521460736efe7c3bf1c0b393626"
+   "csv_bytes": 2679157,
+   "json_bytes": 2894008,
+   "csv_sha256": "52f10dc76c79f5b5696472e7088d62ee2b7d522ff3f6301d23f1cfb8c3c61148",
+   "json_sha256": "67950d8f181f99c0898153cd8f5aea90153864bb42986145c6475c680ba258dc"
   },
   {
    "id": "savings_m",
@@ -3687,12 +3704,12 @@
   "json": "changes.json",
   "csv": "changes.csv",
   "pq": "pq/changes.pq",
-  "builds": 1,
-  "last": "2026-11-05"
+  "builds": 2,
+  "last": "2026-11-06"
  },
  "kit": {
   "xlsx": "fox_powerquery.xlsx",
   "bytes": 36333,
-  "sha256": "7d5f45fb4e72de5992e0caa322de70e3c4c517e9b24329dbedfde531dce1a7c1"
+  "sha256": "67e28e4d7f90c6e2e3618aa1c30119e5d3383ff47b782e1daf93fb17a8686a6b"
  }
 }

@@ -75,6 +75,21 @@
  ],
  "changelog": [
   [
+   "2026-11-06",
+   "changed",
+   "tables/v1/kpi, savings_q, solvency: dividends are positive amounts in every period (some printed FY figures carried the parenthesis sign, so Q4 = FY − 9M was wrong, e.g. Phoenix Q4'25 −2,709.9 → 320.1); savings_q adds fees_mc and op_mc (the managing company's segment note: net fees and fees − S&M − G&A, the figures the nowcast scores) beside fees and profit (the group report's pension & provident segment, profit before tax)."
+  ],
+  [
+   "2026-11-06",
+   "changed",
+   "capital/options.json: the board target of each constraint is the one that applies to the solvency figures (the solvency report's own target for that date, else the newest target effective by its publication); a target raised after it is carried as `later` {t, d, period, prov}, never applied (Phoenix: 123% at 31.12.25, 125% from 30.06.26). printed_over also reads the solvency report's own surplus over the target."
+  ],
+  [
+   "2026-11-06",
+   "added",
+   "expectations/index.json: the ROE part carries ltm and ltm_q, the reported LTM ROE beside `trail` (the model's FY'28 ROE at today's inputs)."
+  ],
+  [
    "2026-11-05",
    "added",
    "tables/v1/: fox inside Excel. Seven long tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV (+ JSON, except savings_m and funds_m) with a source on every row, manifest.json, changes.json, Power Query scripts and fox_powerquery.xlsx (schemas `tablesTable`, `tablesManifest`, `tablesChanges`); CORS open on /data/tables/**."

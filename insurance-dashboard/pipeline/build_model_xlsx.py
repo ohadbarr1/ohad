@@ -107,7 +107,7 @@ KPI = [  # key, Hebrew label, unit, instant (kpi.json; the differenced flows and
     ("equity", "הון לבעלי המניות", "₪m", True), ("equity_all", "סך ההון", "₪m", True), ("nci", "זכויות שאינן מקנות שליטה", "₪m", True),
     ("assets", "סך הנכסים", "₪m", True), ("liabilities", "סך ההתחייבויות", "₪m", True)]
 SAV_HE = {"aum": ("נכסים מנוהלים", "₪m"), "deposits": ("דמי גמולים", "₪m"), "fees": ("הכנסות מדמי ניהול", "₪m"), "expenses": ("הוצאות", "₪m"),
-          "profit": ("רווח לפני מס", "₪m"), "margin": ("שיעור רווח (רווח ÷ הכנסות)", "%"), "exp_ratio": ("הוצאות ÷ הכנסות מדמי ניהול", "%"),
+          "profit": ("רווח לפני מס (כפי שהודפס: אחרי רווחי השקעות, מימון והוצאות אחרות)", "₪m"), "margin": ("שיעור רווח (רווח ÷ הכנסות)", "%"), "exp_ratio": ("הוצאות ÷ הכנסות מדמי ניהול", "%"),
           "ga": ("הנהלה וכלליות", "₪m"), "ga_pct": ("הנהלה וכלליות ÷ הכנסות", "%"), "sm": ("שיווק ומכירה", "₪m"), "sm_pct": ("שיווק ומכירה ÷ הכנסות", "%")}
 SAV_SEG = {"provident": "גמל", "pension": "פנסיה", "group": "קבוצה", "investment_contracts": "פוליסות חיסכון (חוזי השקעה)", "pension_provident": "פנסיה וגמל",
            "yelin_total": "סה״כ"}
@@ -123,6 +123,12 @@ LENS_M = [  # key, label, unit, getter, kind
     ("fee_yield_reg", "תשואת דמי ניהול על נכסי הרשות, שנתי", "%", lambda r: r.get("fy_reg"), "calc"),
     ("fee_yield_rep", "תשואת דמי ניהול על נכסים מדווחים, שנתי", "%", lambda r: r.get("fy_rep"), "calc"),
 ]
+# the managing company's own statements (lts.json, lts_prov/<company>.json): the figures the Savings Lens and the nowcast (/savings?v=now)
+# score against. A different document and definition than savings_econ's `fees` / `profit` (the group report's pension & provident
+# segment, profit before tax after investment income, financing and other expenses): both kept, each under its own metric id and label.
+MC_M = [("fees_mc", "הכנסות מדמי ניהול, נטו · דוח החברה המנהלת (באור מגזרים)", "fees"),
+        ("op_mc", "רווח תפעולי: דמי ניהול − שיווק ומכירה − הנהלה וכלליות · דוח החברה המנהלת", "op")]
+MC_SEGS = {"pen": ["pen"], "gem": ["gem"], "pg": ["pen", "gem"]}
 LENS_NOTE = {"reg_aum_end": "סכום מסלולי הקבוצה בחודש סוף הרבעון", "reg_aum_avg": "(A₀÷2 + A₁ + A₂ + A₃÷2) ÷ 3 על ארבעה סופי חודש, A₀ = סוף הרבעון הקודם",
              "reg_organic": "סכום מסלולי הקבוצה ברבעון", "reg_transfers": "סכום מסלולי הקבוצה ברבעון",
              "aum_share": "נכסי הקבוצה ÷ נכסי כל הקבוצות × 100, חודש סוף הרבעון", "flow_share": "(אורגני + העברות) של הקבוצה ÷ של השוק × 100",
@@ -153,6 +159,13 @@ class Ctx:
         self.sav = load("savings_econ.json")
         self.lens = load("lens.json")
         self.adj = load("adjusted.json")
+        self._ltsp = {}
+
+    def ltsp(self, c):
+        """lts_prov/<company>.json: the managing company's printed components behind every lts.json figure"""
+        if c not in self._ltsp:
+            self._ltsp[c] = load(f"lts_prov/{c}.json")
+        return self._ltsp[c]
 
     def doc(self, rid, name):
         d = self.docs.get(rid)
@@ -422,7 +435,50 @@ def savings(ctx, co, name):
                         f"חישוב fox (עדשת החיסכון) על נתוני הרשות{' והדוח' if key.startswith('fee') else ''}, {plabel(p)}"
                     out.put(rid, p, round(v, 6), src(kind, doc, None, None, f"https://data.gov.il/dataset/{ds[0]}", LENS_NOTE[key],
                                                       f"https://data.gov.il/dataset/{ds[1]}" if len(ds) > 1 else None))
+            if seg in MC_SEGS and any((r.get("rep") or {}).get("fees") is not None for r in rs):
+                out.band(f"דוח החברה המנהלת, באור מגזרי פעילות (lts.json) · {LENS_SEG[seg]}")
+                for key, lab, fld in MC_M:
+                    rid = f"mc|{seg}|{key}"
+                    out.get(rid, key, lab, "₪m", LENS_SEG[seg], "")
+                    for r in rs:
+                        rp = r.get("rep") or {}
+                        if rp.get(fld) is None:
+                            continue
+                        qq = re.match(r"Q(\d)-(\d{4})", r["q"])
+                        p = f"{qq.group(2)}Q{qq.group(1)}"
+                        s_ = mc_src(ctx, rp["c"], MC_SEGS[seg], p, fld)
+                        if p in PCOL and s_:
+                            out.put(rid, p, round(rp[fld], 6), s_)
     return out.prune()
+
+
+def mc_src(ctx, lc, segs, p, fld):
+    """the source of a managing-company figure (lts_prov): printed when it is one three-month column, else derived with its formula
+    (Q4 = FY − 9M, a quarter as a YTD difference, pension + provident, fees − S&M − G&A); None when a component is not on file"""
+    P = ctx.ltsp(lc)
+    if not P:
+        return None
+    qq = f"Q{p[5]}-{p[:4]}"
+    parts, forms = [], []
+    for s in segs:
+        f = P["facts"].get(f"{s}.{fld}|{qq}")
+        if not f:
+            return None
+        forms.append(f[0])
+        parts += [P["parts"][i] for i in f[1]]
+    files = list(dict.fromkeys(x[0] for x in parts if x[0]))
+    url = P["urls"].get(files[0]) if files else None
+    if not url:
+        return None
+    # a few managing-company links were recorded as http://; the host answers them with a 301 to the same path over https
+    https = lambda u: "https://" + u[7:] if u and u.startswith("http://") else u  # noqa: E731
+    url = https(url)
+    one = fld == "fees" and len(parts) == 1 and parts[0][6] in ("q",) + (("ytd",) if p.endswith("Q1") else ())
+    url2 = https(P["urls"].get(files[1])) if len(files) > 1 else None
+    pg2 = next((x[1] for x in parts if x[0] == files[1]), None) if len(files) > 1 else None
+    pages = ", ".join(dict.fromkeys(f"{x[0]} עמ׳ {x[1]}" for x in parts if x[1]))
+    note = "דוח החברה המנהלת, באור מגזרי פעילות; " + (" + ".join(forms) if len(segs) > 1 else forms[0]) + (f" ({pages})" if pages else "")
+    return src("printed" if one else "derived", f"הדוח הכספי של החברה המנהלת (פנסיה וגמל), {plabel(p)}", None, parts[0][1], url, note, url2, pg2)
 
 
 def kpis(ctx, co, name):

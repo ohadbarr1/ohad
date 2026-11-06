@@ -73,6 +73,12 @@ Checks
   consistency    every entity × period × metric served by more than one page (kpi, Report Day, statements, peer table, CSM capital/ledger)
                  shows one figure within rounding, last 8 quarters; labelled basis differences listed (pipeline/check_consistency.py, lane Q)
   fund_roles     fund houses: attributable profit and comprehensive income on the company page = XBRL, last 4 quarters
+  pro_consistency  the Pro layer (red team 06.11.26): the long tables equal the JSON the pages read and one metric carries one number or
+                 two labelled definitions: dividends are amounts and Q4 = FY − 9M on every surface (kpi.csv, csm/capital.json, series);
+                 every P&G quarter the nowcast scores is in savings_q.csv under fees_mc / op_mc and equals lens.json, apart from the group
+                 report's fees / profit; the valuation LTM ROE equals /pro (restated comparatives listed) and the index carries it beside
+                 the model's FY'28 ROE; the capital model applies the board target the solvency report prints for its date, quotes the
+                 newest printed surplus, and solvency.csv equals csm/solvency.json (pipeline/check_pro_consistency.py)
   schemas        every built JSON with a data contract (web/src/lib/schemas.json) matches it: pipeline/check_schemas.py, the same
                  contracts the site checks as each file arrives (lane 2H).
   facts          the fact table with vintage (web/public/data/facts/) reproduces every current figure of companies/<id>.json exactly
@@ -654,6 +660,12 @@ def consistency():
         add("consistency_old", False, r["pairs"], r["older"], "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)", level="warn")
 
 
+def pro_consistency():
+    import check_pro_consistency
+    n, bad, exc, summary = check_pro_consistency.run(quiet=True)
+    add("pro_consistency", not bad, n, len(bad), (summary if not bad else f"{bad[0][0]}: {bad[0][1]}")[:200])
+
+
 def schemas():
     n, bad, summary = check_schemas.run(quiet=True)
     add("schemas", not bad, n, len(bad), summary + (f"; e.g. {bad[0][0]}: {bad[0][2][0]}" if bad else ""))
@@ -883,6 +895,7 @@ def main():
     feebook()
     positions()
     consistency()
+    pro_consistency()
     schemas()
     cards()
     changes()

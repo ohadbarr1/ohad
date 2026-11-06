@@ -11361,6 +11361,30 @@
     },
     "pp": {
      "type": "number"
+    },
+    "later": {
+     "type": "object",
+     "required": [
+      "t",
+      "d",
+      "period",
+      "prov"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "t": {
+       "type": "number"
+      },
+      "d": {
+       "type": "string"
+      },
+      "period": {
+       "type": "string"
+      },
+      "prov": {
+       "$ref": "#/$defs/capitalProv"
+      }
+     }
     }
    }
   },
@@ -12716,6 +12740,15 @@
            ]
           },
           "reason": {
+           "type": "string"
+          },
+          "ltm": {
+           "type": [
+            "number",
+            "null"
+           ]
+          },
+          "ltm_q": {
            "type": "string"
           }
          }

@@ -18,7 +18,8 @@ export type CProvJ = ProvJ | { k: 'ref'; r: string } | { k: 'calc'; title: strin
 export interface CFig { v: number | null; prov: CProvJ }
 export type Basis = 'w' | 'wo';
 export interface CBasis { of: CFig; scr: CFig; ratio: CFig; printed: number | null; printed_prov?: CProvJ }
-export interface Con { id: string; kind: 'board' | 'div' | 'reg'; basis: Basis; stated: Basis | null; t: number; t_prov: CProvJ; period: string; he: string; headroom: CFig; pp: number }
+export interface Con { id: string; kind: 'board' | 'div' | 'reg'; basis: Basis; stated: Basis | null; t: number; t_prov: CProvJ; period: string; he: string; headroom: CFig; pp: number;
+  /** a target the board set after the solvency report (not applied to its figures): value, effective date, the report that states it */ later?: { t: number; d: string; period: string; prov: CProvJ } }
 export interface OptRow { id: 'div' | 'org'; cap: CFig; roic: CFig; solv: CFig; per_bn: number; roe: CFig; eps: CFig; eps_bb?: CFig }
 /** the A9 bolt-on (pipeline/build_consolidation.py): the best-ranked target the insurer can afford at a 20% premium, at the file's buffer;
     its provenance table `src` travels with the row (refs `bolt.<pointer>`) */

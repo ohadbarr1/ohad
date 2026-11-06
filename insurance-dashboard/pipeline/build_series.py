@@ -7,6 +7,7 @@ the three-month column of the interim report, or a balance at the quarter end. S
      over the original IFRS 4 figure, so the IFRS 17 series reaches back to 2024
   3. for Q4 only: the annual figure less the nine-month figure (flag `der`), when both come from sources 1 or 2
 `std` records the standard the figure was reported under, so the screen can draw the IFRS 4 / IFRS 17 break.
+Dividends (dividend_declared*, dividend_paid*) are stored as positive amounts whatever sign the extraction kept.
 A row whose figures are all balances carries `w: "i"` (instant), so consumers never add it up across quarters.
 """
 import csv
@@ -21,6 +22,7 @@ pres = json.loads((ROOT / "data" / "registry" / "presentations.json").read_text(
 OUT = ROOT / "web" / "public" / "data" / "series"
 OUT.mkdir(parents=True, exist_ok=True)
 END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "FY": "12-31"}
+DIVIDEND = ("dividend_declared", "dividend_paid")  # and their variants (_after_period, _in_kind): stored as positive amounts
 
 
 def std_segment(s):
@@ -68,6 +70,10 @@ for comp in companies:
                 m, s, b = str(x["metric"]), str(x.get("segment") or "group"), x.get("basis") or "na"
                 if m.startswith(("sensitivity", "csm_expected", "target_", "csm_subtotal")):
                     continue
+                if m.startswith(DIVIDEND):
+                    # the amount declared / paid: the statement of changes in equity prints it in parentheses and some extractions kept the
+                    # sign (Phoenix FY'25 −1,514.9 against +1,194.9 for 9M gave Q4 = −2,709.9); one convention, positive, before Q4 = FY − 9M
+                    v = abs(v)
                 per = period_of(date, w)
                 if not per:
                     continue

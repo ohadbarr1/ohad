@@ -146,7 +146,7 @@ function Live({ d, src, q }: { d: NowcastData; src: NcSrc; q: string }) {
       <div className="lens-note est"><span className="chip est">אומדן</span> שלב 1 קפוא <span className="num">{s1 ? dmy(s1.created_at) : '–'}</span> מחודשי רשות עד <span className="num">{lensMonth(lastM)}</span> · שלב 2 {s2 ? <>קפוא <span className="num">{dmy(s2.created_at)}</span></> : <>ממתין לחודש <span className="num">{lensMonth(lastM + 1)}</span> (נקרא בערך ב-<span className="num">{d.params.PUB_DAY}</span> בחודש שאחריו)</>} · hash <span className="mono">{any.inputs_hash.slice(0, 12)}</span></div>
       <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl nc-tbl">
         <thead><tr><th>מנהל</th><th className="wide-only">היקף</th><th className="wide-only">הכנסות {ql(base)}</th><th>הכנסות, שלב 1</th><th className="wide-only">שלב 2</th><th>בפועל</th><th className="wide-only">סטייה</th>
-          <th className="wide-only">רווח {ql(base)}</th><th>רווח, שלב 1</th><th className="wide-only">שלב 2</th><th className="wide-only">בפועל</th><th className="wide-only">נוסטרו</th><th className="wide-only">דוח צפוי</th></tr></thead>
+          <th className="wide-only">רווח תפעולי {ql(base)}</th><th>רווח תפעולי, שלב 1</th><th className="wide-only">שלב 2</th><th className="wide-only">בפועל</th><th className="wide-only">נוסטרו</th><th className="wide-only">דוח צפוי</th></tr></thead>
         <tbody>
           {d.cover.map((c) => {
             const a = byC(s1, c), b = byC(s2, c), e = (a ?? b) as NcEst | undefined, sc = score(c);
@@ -175,7 +175,7 @@ function Live({ d, src, q }: { d: NowcastData; src: NcSrc; q: string }) {
           {Object.entries(d.not_covered).map(([c, t]) => <tr key={c} className="nc-abstain"><td><Mgr c={c} /></td><td colSpan={12} className="muted">לא מכוסה: {t}</td></tr>)}
         </tbody>
       </table></div>
-      <div className="fnote">הכנסות: דמי ניהול, פנסיה וגמל. רווח: רווח תפעולי מגזרי (דמי ניהול פחות שיווק ומכירה והנהלה וכלליות), אותה הגדרה כמו בדוח. מבטחות: אומדן מגזרי בלבד, לא רווח הקבוצה. מיטב: לפני דמי ניהול לחברה בעלת השליטה. נוסטרו: אומדן בלבד, לא נמדד.</div>
+      <div className="fnote">הכנסות: דמי ניהול נטו, פנסיה וגמל, מבאור המגזרים בדוח הכספי של החברה המנהלת. רווח תפעולי: דמי ניהול פחות שיווק ומכירה והנהלה וכלליות, מאותו באור (לפני רווחי השקעות, מימון והוצאות אחרות). אצל המבטחות זה לא "רווח לפני מס" של מגזר פנסיה וגמל בדוח הקבוצה, ולא הכנסות המגזר שם: מסמך אחר והגדרה אחרת. בטבלת savings_q שתי ההגדרות מופיעות, כל אחת בשמה (fees_mc ו-op_mc כאן; fees ו-profit בדוח הקבוצה). מבטחות: אומדן מגזרי בלבד, לא רווח הקבוצה. מיטב: לפני דמי ניהול לחברה בעלת השליטה. נוסטרו: אומדן בלבד, לא נמדד.</div>
     </Panel>
   );
 }

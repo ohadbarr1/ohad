@@ -69,11 +69,19 @@ export function capacity(rs: Reports, lastP: string): Capacity {
   const target = uniq(latest((f) => TARGET.test(f.m)).sort((a, b) => b.d.localeCompare(a.d)).map((f) => ({ f, tags: stated(f) }))).slice(0, 6);
   const thresh = uniq(latest((f) => THRESH.test(f.m)).map((f) => ({ f, tags: stated(f) })));
   const over = (d: string) => uniq(latest((f) => OVER.test(f.m) && f.d === d).map((f) => ({ f, tags: tags(f) })));
-  // own funds less target times SCR: only when the three are printed for the same date, entity and transitional basis, each exactly once
+  // own funds less target times SCR: only when own funds and SCR are printed for the same date, entity and transitional basis, each exactly
+  // once, against the target in force at that date (the newest one stated as effective on or before it: a target raised later, Phoenix 125%
+  // from 30.06.26, is never applied to the 31.12.25 figures)
   const derived = (d: string): Derived[] => {
     const printed = over(d), out: Derived[] = [];
     const plain = (re: RegExp) => latest((f) => re.test(f.m) && f.d === d && !isAfter(f) && !/mcr/i.test(`${f.m} ${f.l}`));
-    const own = plain(OWN), scr = plain(SCR), tg = uniq(desc.flatMap((r) => r.F.filter((f) => (TARGET.test(f.m) || THRESH.test(f.m)) && f.d === d && basisOf(f) !== '?')).map((f) => ({ f, tags: [entOf(f), basisOf(f)] })));
+    const inForce = new Map<string, RF>();
+    desc.forEach((r) => r.F.forEach((f) => {
+      if (!(TARGET.test(f.m) || THRESH.test(f.m)) || f.d > d || basisOf(f) === '?') return;
+      const k = `${basisOf(f)}|${entOf(f)}|${THRESH.test(f.m) ? 't' : 'b'}`, cur = inForce.get(k);
+      if (!cur || f.d > cur.d) inForce.set(k, f);
+    }));
+    const own = plain(OWN), scr = plain(SCR), tg = uniq([...inForce.values()].map((f) => ({ f, tags: [entOf(f), basisOf(f)] })));
     tg.forEach(({ f: t }) => {
       const b = basisOf(t), e = entOf(t);
       if (printed.some((p) => entOf(p.f) === e) || out.some((o) => o.basis === b && o.ent === e && o.target.v === t.v)) return;
@@ -187,6 +195,8 @@ export function DividendCapacity({ id, ledger }: { id?: string; /** the industry
   const name = (c: string) => reg.data?.find((x) => x.id === c)?.name_he ?? c;
   // the date quoted for a company: the newest one with a ratio without the transitional measures, i.e. a full solvency report rather than an interim estimate
   const full = (cap: Capacity) => cap.dates.find((x) => cap.ratio(x, 'wo').length > 0) ?? cap.dates[0] ?? '';
+  // a headline quotes the newest date that prints the line on that basis (an interim estimate in the quarterly report included), with its date
+  const newest = (cap: Capacity, b: TB) => cap.dates.find((x) => cap.ratio(x, b).length > 0) ?? '';
   const later = (cap: Capacity, D: string): V[] => cap.dates.filter((x) => x > D).flatMap((x) => cap.ratio(x, 'w').map((v) => ({ ...v, tags: [...v.tags, dateLabel(x)] })));
   const surplus = (cap: Capacity, D: string, who: string) => { const p = cap.over(D), der = cap.derived(D); return p.length === 0 && der.length === 0 ? <span className="muted">–</span> : <>{p.length > 0 && <Vals vs={p} d={d} pct={false} t={`עודף מעל היעד · ${who}`} />}{der.map((x, i) => <Der key={i} x={x} d={d} t={who} />)}</>; };
   // the newest solvency date for which a surplus over the target is printed or can be derived; it may be older than the date of the ratios, and then says so
@@ -219,15 +229,15 @@ export function DividendCapacity({ id, ledger }: { id?: string; /** the industry
     );
   }
 
-  const cap = caps[0].cap, D = full(cap), cols = cap.dates.slice(0, 4);
+  const cap = caps[0].cap, cols = cap.dates.slice(0, 4);
   const who = name(caps[0].id);
   const head = (l: string, vs: V[], pct: boolean) => <div><span className="l">{l}</span><span className="v">{vs[0] ? <Val v={{ f: vs[0].f, tags: [] }} d={d} pct={pct} t={`${l} · ${who}`} /> : <span className="muted">–</span>}</span>{vs[0] && <span className="s">{[...vs[0].tags, dateLabel(vs[0].f.d)].filter((x, i, a) => a.indexOf(x) === i).join(' · ')}</span>}</div>;
   const D1 = overDate(cap), over0 = D1 ? cap.over(D1) : [], der0 = D1 ? cap.derived(D1) : [];
   return (
     <Panel title="כושר חלוקה" aside={<span>מיליוני ש"ח · חברת הביטוח, כפי שדווח · מספר נטוי נגזר</span>}>
       <div className="dc-grid">
-        {head('יחס כושר פירעון, עם הוראות מעבר', cap.ratio(D, 'w'), true)}
-        {head('ללא הוראות מעבר', cap.ratio(D, 'wo'), true)}
+        {head('יחס כושר פירעון, עם הוראות מעבר', cap.ratio(newest(cap, 'w'), 'w'), true)}
+        {head('ללא הוראות מעבר', cap.ratio(newest(cap, 'wo'), 'wo'), true)}
         {head('יעד הדירקטוריון', cap.target, true)}
         <div><span className="l">עודף מעל היעד</span>{over0[0] ? <><span className="v"><Val v={{ f: over0[0].f, tags: [] }} d={d} pct={false} t={`עודף מעל היעד · ${who}`} /></span><span className="s">{[...over0[0].tags, dateLabel(D1)].join(' · ')}</span></> : der0[0] ? <>{der0.map((x, i) => <Der key={i} x={x} d={d} t={who} />)}<span className="s num">{dateLabel(D1)}</span></> : <span className="v muted">–</span>}</div>
         <div><span className="l">דיבידנד שהוכרז, LTM</span><span className="v">{ltmSum(cap, cap.declared, who, 'שהוכרז')}</span><span className="s">נגזר: סכום ארבעת הרבעונים עד {qName(lastP)}</span></div>
