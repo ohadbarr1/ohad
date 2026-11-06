@@ -1,4 +1,9 @@
 export const MINUS = '−';
+/** U+2060 WORD JOINER: no line break here. A line may break between a sign and a currency mark ("−" / "₪630", both UAX 14 class PR),
+ *  so a loss could be read on its own line as an inflow; glue() and NumText keep a signed figure in one piece. */
+export const WJ = '\u2060';
+/** a signed figure in running text stays whole: a word joiner after a sign that precedes a currency mark ("−₪630" never wraps after "−") */
+export const glue = (t: string): string => t.replace(/([+\u2212±-])(?=[₪$€])/g, `$1${WJ}`);
 
 /* ---- one formatter for every figure on the site (lane 2H) ----
    fmt(value, unit, opts) is the only place a number becomes text. The helpers below (nf, sn, pct, fmtCell) are thin aliases kept

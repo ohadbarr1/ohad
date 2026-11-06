@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { NumText } from './NumText';
+import { copyText } from './ui';
+import { SITE } from '../lib/seo';
 import { Sourced } from './Source';
 import { pubLabel } from '../lib/format';
 import { idCss } from '../lib/identity';
@@ -37,6 +41,17 @@ function Rows({ F, e, name }: { F: FeedFile; e: FeedEvent; name: string }) {
   );
 }
 
+/** the anchor of an event on /feed: its permalink is /feed#ev-<anchor> (stable: event ids are stable across rebuilds, build_feed.py) */
+export const evAnchor = (id: string) => `ev-${id.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+
+/** a copy-permalink chip: SITE/feed#ev-<id>, the item's address to cite */
+function Permalink({ id }: { id: string }) {
+  const [done, setDone] = useState<'' | 'ok' | 'fail'>('');
+  const url = `${SITE}/feed#${evAnchor(id)}`;
+  return <a className="fd-link" href={`#${evAnchor(id)}`} title={`קישור קבוע לפריט: ${url}`}
+    onClick={(ev) => { ev.preventDefault(); history.replaceState(history.state, '', `#${evAnchor(id)}`); copyText(url, (ok) => { setDone(ok ? 'ok' : 'fail'); setTimeout(() => setDone(''), 1600); }); }}>{done === 'ok' ? 'הועתק' : done === 'fail' ? 'העתקה נכשלה' : 'קישור'}</a>;
+}
+
 /** One event: when, what, who, the headline (a link to the page that shows it), its document, then its figures. */
 /** the period an event describes: a quarter or year of a filing, a data month, a solvency date */
 export const perText = (e: FeedEvent) => (/^\d{6}$/.test(e.per) ? ymLabel(Number(e.per)) : /^\d{4}FY$/.test(e.per) ? `FY'${e.per.slice(2, 4)}` : /^\d{4}Q\d$/.test(e.per) ? `${e.per.slice(4)}'${e.per.slice(2, 4)}` : /^\d{4}-\d{2}-\d{2}$/.test(e.per) ? pubLabel(e.per) : e.per);
@@ -47,21 +62,22 @@ export function FeedItem({ F, e, byId, compact, got }: { F: FeedFile; e: FeedEve
   const name = F.cos[e.c] ?? e.c;
   const src = eventSource(F, e);
   return (
-    <li className={`fd-ev t-${e.t}`} id={compact ? undefined : `ev-${e.id.replace(/[^a-zA-Z0-9_-]/g, '_')}`}>
+    <li className={`fd-ev t-${e.t}`} id={compact ? undefined : evAnchor(e.id)}>
       <div className="fd-hd">
         {got?.[1] === 'r'
           ? <span className="fd-when num" title="היום שבו fox קלטה את השינוי">{pubLabel(got[0])}<small>התקבל</small></span>
-          : <span className="fd-when num" title={`${DK_HE[e.dk]}${e.dk === 'month' ? ' (יום הפרסום של הרשות אינו נשמר)' : ''}`}>{e.dk === 'month' ? <>{ymLabel(Number(e.per))}<small>חודש נתונים</small></> : <>{pubLabel(e.d)}<small>{e.dk === 'fetched' ? 'התקבל' : 'פורסם'}</small></>}</span>}
+          : <span className="fd-when num" title={`${DK_HE[e.dk]}${e.dk === 'month' ? ' (יום הפרסום של הרשות אינו נשמר)' : ''}`}>{e.dk === 'month' ? <>{ymLabel(Number(e.per))}<small>חודש נתונים</small></> : <>{pubLabel(e.d)}<small>{e.dk === 'fetched' ? 'התקבל' : e.dk === 'frozen' ? 'הוקפא' : 'פורסם'}</small></>}</span>}
         {/* the period, unless the date column already is it (a data month shown as its own date): an empty cell keeps the column */}
         {got && (got[1] !== 'r' && e.dk === 'month' ? <span className="fd-per" aria-hidden="true" /> : <span className="fd-per num" title="התקופה שהנתון מתאר"><small>תקופה</small>{perText(e)}</span>)}
         <span className={`chip fd-t t-${e.t}${e.st ? ` st-${e.st}` : ''}${e.fs ? ` fs-${e.fs}` : ''}`}>{TYPE_SHORT[e.t]}{e.fs ? ` · ${e.fs === 'alert' ? 'התראה' : 'מעקב'}` : ''}</span>
         {e.c === 'market' ? <span className="fd-co">{name}</span> : <Link className="fd-co" to={`/company/${e.c}`}><i className="pdot" style={{ background: idCss(e.c) }} />{name}</Link>}
-        <Link className="fd-h" to={e.to}>{e.h}</Link>
+        <Link className="fd-h" to={e.to}><NumText t={e.h} /></Link>
         {!compact && (src.href ? <a className="fd-src" href={src.href} target="_blank" rel="noreferrer" title="המסמך במאיה">{src.text}</a> : <span className="fd-src">{src.text}</span>)}
+        {!compact && <Permalink id={e.id} />}
       </div>
       {!compact && <Rows F={F} e={e} name={name} />}
       {!compact && e.refs?.length ? (
-        <div className="fd-refs">מעברים בצבירה נטו, LTM: {e.refs.map((id, i) => { const x = byId?.get(id); return x ? <span key={id}>{i ? ' · ' : ''}<a href={`#ev-${id.replace(/[^a-zA-Z0-9_-]/g, '_')}`}>{F.cos[x.c] ?? x.c}</a> <span className="dim">{x.h.split(':')[0]}</span></span> : null; })}</div>
+        <div className="fd-refs">מעברים בצבירה נטו, LTM: {e.refs.map((id, i) => { const x = byId?.get(id); return x ? <span key={id}>{i ? ' · ' : ''}<a href={`#${evAnchor(id)}`}>{F.cos[x.c] ?? x.c}</a> <span className="dim">{x.h.split(':')[0]}</span></span> : null; })}</div>
       ) : null}
     </li>
   );

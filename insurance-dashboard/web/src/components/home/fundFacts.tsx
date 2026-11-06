@@ -23,9 +23,16 @@ export function useFundFacts() {
 const LIVE_F = 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים סגורים ומסלולים בניהול אישי';
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; };
 const bn = (fs: FundX[]) => fs.reduce((t, f) => t + (f.assets ?? 0), 0) / 1000;
-const assetsProv = (title: string, fs: FundX[], asof: number): Prov => listP(title, nf(bn(fs), 0), 'מיליארד ש"ח', 'סכום הנכסים של המסלולים (מיליוני ש"ח), חלקי 1,000',
+const assetsProv = (title: string, fs: FundX[], asof: number, scope?: string): Prov => listP(title, nf(bn(fs), 0), 'מיליארד ש"ח', 'סכום הנכסים של המסלולים (מיליוני ש"ח), חלקי 1,000',
   [...fs].sort((a, b) => (b.assets ?? 0) - (a.assets ?? 0)).slice(0, 40).map((f) => ({ label: f.name, v: nf(f.assets ?? 0, 1), src: () => fundP(refOf(f), asof, 'TOTAL_ASSETS', 'נכסים', nf(f.assets ?? 0, 1), 'מיליוני ש"ח') })),
-  fs.length > 40 ? `מוצגים 40 המסלולים הגדולים מתוך ${nf(fs.length, 0)}` : undefined);
+  [scope, fs.length > 40 ? `מוצגים 40 המסלולים הגדולים מתוך ${nf(fs.length, 0)}` : ''].filter(Boolean).join('. ') || undefined);
+/** the scope of the headline assets, against the all-tracks total the feed and the Pro pages quote (market.json: every track the regulator
+ *  publishes, closed and self-directed included): the two figures differ by scope, not by error */
+export function assetsScope(all: FundX[], live: FundX[]): string {
+  const closed = all.filter((f) => f.assets && (f.closed || f.gone)), ira = all.filter((f) => f.assets && !f.closed && !f.gone && selfDirected(f));
+  return `היקף: המסלולים הפתוחים לציבור בלבד (${nf(bn(live), 0)}). בלי מסלולים סגורים (${nf(bn(closed), 0)}) ומסלולים בניהול אישי, IRA (${nf(bn(ira), 0)}): `
+    + `סך כל המסלולים שהרשות מפרסמת, ${nf(bn(all.filter((f) => f.assets)), 0)} מיליארד ש"ח, הוא הנתון "נכסים מנוהלים, כל המסלולים" בפיד ובעמודי Pro`;
+}
 
 /** A slim strip of the month's facts, sourced: how many tracks, how much money, how many managing groups, the month, the basis. */
 export function FundFacts({ className = '' }: { className?: string }) {
@@ -35,7 +42,7 @@ export function FundFacts({ className = '' }: { className?: string }) {
   return (
     <p className={`dfacts ${className}`}>
       <span><Sourced className="num" src={() => countP('מסלולים פתוחים לציבור', live.length, LIVE_F)}>{nf(live.length, 0)}</Sourced> מסלולים</span>
-      <span><Sourced className="num" src={() => assetsProv('נכסים, כל המסלולים הפתוחים לציבור', live, asof)}>{nf(bn(live), 0)}</Sourced> מיליארד ש"ח</span>
+      <span title={assetsScope(data.funds, live)}><Sourced className="num" src={() => assetsProv('נכסים, כל המסלולים הפתוחים לציבור', live, asof, assetsScope(data.funds, live))}>{nf(bn(live), 0)}</Sourced> מיליארד ש"ח, מסלולים פתוחים</span>
       <span><Sourced className="num" src={() => listP('גופים מנהלים', nf(grps.length, 0), undefined, 'ספירת הקבוצות שמנהלות מסלול פתוח לציבור', grps.map((g) => ({ label: g, v: nf(live.filter((f) => f.grp === g).length, 0) + ' מסלולים', src: () => countP(`מסלולים · ${g}`, live.filter((f) => f.grp === g).length, LIVE_F) })))}>{nf(grps.length, 0)}</Sourced> גופים מנהלים</span>
       <span>נתוני <b className="num">{ym(asof)}</b></span>
       {net && <span>תשואה נטו אחרי דמי ניהול <Link to="/about" className="dfacts-q">אומדן</Link></span>}

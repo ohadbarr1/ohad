@@ -4,7 +4,7 @@
    tests/under.unit.ts pins it against the published files. Units: NIS millions; returns and gaps percent per year; months yyyymm. */
 import type { Prov } from './prov';
 import type { RegDs } from './sources';
-import { nf, sn } from './format';
+import { MINUS, WJ, nf, sn } from './format';
 
 export const UNDER_PATH = 'under.json';
 export const underMonthPath = (p: number) => `under/m/${p}.json`;
@@ -33,7 +33,12 @@ export const headRows = (rows: UnderRow[]) => rows.filter((r) => r.head).sort((a
 export const ym = (p: number) => `${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`;
 export const addM = (p: number, d: number) => { const t = Math.floor(p / 100) * 12 + (p % 100 - 1) + d; return Math.floor(t / 12) * 100 + (t % 12) + 1; };
 /** NIS millions as words: "₪1.6 מיליארד" from 1,000, else "₪908 מיליון" */
-export const ilsM = (m: number) => (Math.abs(m) >= 1000 ? `₪${nf(m / 1000, 1)} מיליארד` : `₪${nf(m, 0)} מיליון`);
+/** ₪ millions / billions in text: the sign first and glued to ₪ ("−₪630", never "₪−630"), the figure isolated (LRI … PDI) so it keeps
+ *  its order in Hebrew text and NumText renders it as one unbreakable piece */
+export const ilsM = (m: number) => {
+  const big = Math.abs(m) >= 1000, t = nf(Math.abs(big ? m / 1000 : m), big ? 1 : 0), neg = m < 0 && /[1-9]/.test(t);
+  return `\u2066${neg ? `${MINUS}${WJ}` : ''}₪${t}\u2069 ${big ? 'מיליארד' : 'מיליון'}`;
+};
 export const bp = (pp: number) => Math.round(pp * 100);
 
 /** the track's record at the regulator: g / p / i + id */

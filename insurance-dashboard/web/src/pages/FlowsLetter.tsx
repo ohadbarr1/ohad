@@ -4,6 +4,8 @@ import { FundsHead } from '../components/FundsNav';
 import { Chart } from '../components/Chart';
 import { IdDot } from '../components/MgrChip';
 import { Sourced } from '../components/Source';
+import { NumText } from '../components/NumText';
+import { RegSrc } from '../components/RegSrc';
 import { Empty, Kpi, Loading, Panel, Pick } from '../components/ui';
 import { useOptional, useClosed } from '../lib/fundsLoad';
 import { useFunds, useLoad } from '../lib/useData';
@@ -72,7 +74,7 @@ function Page({ L, latest, ix, go }: { L: Letter; latest: Letter; ix: LetterInde
       {!isLatest && <p className="flows-old" role="note">זו גרסה <span className="num">{ver}</span> של המכתב, כפי שפורסמה ב-<span className="num">{dmy(V.built)}</span>. הגרסה הנוכחית: <button type="button" className="linkbtn sv-u" onClick={() => go(p)}>גרסה {latest.ver}</button>.</p>}
 
       <Panel className="flows" title="השורה התחתונה" aside={<span>{ym(p)}</span>}>
-        <ul className="flows-head" data-testid="letter-headline">{B.headline.map((t, i) => <li key={i}>{t}</li>)}</ul>
+        <ul className="flows-head" data-testid="letter-headline">{B.headline.map((t, i) => <li key={i}><NumText t={t} /></li>)}</ul>
         <section className="kpis">
           <Kpi label={<>הוביל בניוד התחרותי · {W.grp}</>} value={S(W.comp, () => src.across(W, 'comp'))} sub="כל מוצרי הגמל והפנסיה" />
           {Lo && <Kpi label={<>האחרון בניוד התחרותי · {Lo.grp}</>} value={S(Lo.comp, () => src.across(Lo, 'comp'))} sub="כל מוצרי הגמל והפנסיה" />}
@@ -135,6 +137,7 @@ function Page({ L, latest, ix, go }: { L: Letter; latest: Letter; ix: LetterInde
           <li>גרסה <span className="num">{ver}</span> מתוך <span className="num">{latest.ver}</span> · נבנתה <span className="num">{dmy(V.built)}</span> · hash <span className="mono">{V.hash.slice(0, 12)}</span> · קישור קבוע: <Link className="sv-u" to={`/flows/letter/${p}?v=${ver}`}><bdi dir="ltr">/flows/letter/{p}?v={ver}</bdi></Link></li>
           <li>גרסה חדשה נוצרת רק כשמספר במכתב משתנה (הרשות מעדכנת את קבצי החודש); גרסה קודמת נשמרת כפי שפורסמה. המכתב נבנה מחדש כל עוד {ym(p)} הוא החודש האחרון של הרשות.</li>
         </ul>
+        <p className="fnote" data-testid="letter-src"><RegSrc ds={['gemelnet', 'pensia-net']} table={[`/flows?m=${p}`, `טבלת התזרימים ${ym(p)}`]} />.</p>
         {V.changes.length > 0 ? <>
           <h3 className="flows-h3">מה השתנה מגרסה {ver - 1}</h3>
           <div className="scroll" tabIndex={0} role="region" aria-label="טבלה, גלילה לרוחב"><table className="lens-tbl flows-ltbl"><thead><tr><th>מספר</th><th>גרסה {ver - 1}</th><th>גרסה {ver}</th></tr></thead>
@@ -145,7 +148,7 @@ function Page({ L, latest, ix, go }: { L: Letter; latest: Letter; ix: LetterInde
   );
 }
 
-/** "מתחת לחציון ועדיין מקבלים כסף" of the letter's month: the figures and the largest five, each opening its calculation (under.json) */
+/** "ברבעון התחתון ועדיין מקבלים כסף" of the letter's month: the figures and the largest five, each opening its calculation (under.json) */
 function UnderPart({ p, names }: { p: number; names: Map<string, string> }) {
   const U = useOptional<UnderFile>(UNDER_PATH);
   const M = useLoad<UnderMonth>(U && U.asof === p ? underMonthPath(p) : null).data;
@@ -157,7 +160,7 @@ function UnderPart({ p, names }: { p: number; names: Map<string, string> }) {
   const kpi = (what: 'cost' | 'a' | 'fl', text: string) => (M && M.p === p ? <Sourced src={() => pointProv(U, M, name, what)}><span className="num">{text}</span></Sourced> : <span className="num">{text}</span>);
   const yi = j - 12, yoy = yi >= 0 && U.cov[yi]?.length === U.cov[j]?.length;
   return (
-    <Panel title={`מתחת לחציון, ועדיין מקבלים כסף · ${ym(p)}`} aside={<Link className="sv-u" to="/funds/under">הרשימה המלאה</Link>}>
+    <Panel title={`ברבעון התחתון, ועדיין מקבלים כסף · ${ym(p)}`} aside={<Link className="sv-u" to="/funds/under">הרשימה המלאה</Link>}>
       <section className="kpis">
         <Kpi label="מסלולים ברשימה" value={kpi('cost', String(S.n[j]))} sub={<>רבעון תחתון (5 שנים, נטו) מתוך <span className="num">{S.n_rk[j]}</span> מדורגים</>} />
         <Kpi label="נכנס ב-12 החודשים" value={kpi('fl', ilsM(S.fl[j]))} sub="בלי נדידה פנימית" />
@@ -172,7 +175,7 @@ function UnderPart({ p, names }: { p: number; names: Map<string, string> }) {
             <td><Sourced src={() => costProv(U, r, rows)}><span className="num">{nf(r.cost, 1)}</span></Sourced></td>
             <td><Sourced src={() => flowProv(U, r)}><span className="num">{sgn(r.c12)}</span></Sourced></td></tr>))}</tbody>
       </table></div>
-      <div className="fnote">{U.method.past}. מקור: {U.src}.</div>
+      <div className="fnote">{U.method.past}. <RegSrc table={['/funds/under', 'הרשימה המלאה']} />.</div>
     </Panel>
   );
 }

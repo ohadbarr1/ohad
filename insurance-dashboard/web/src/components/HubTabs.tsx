@@ -18,7 +18,7 @@ const HUBS: Record<'feed' | 'questions' | 'data' | 'clients' | 'flows' | 'indust
   clients: { label: 'לקוחות', tabs: [['/clients', 'תיקים', true], ['/clients/book', 'מבחן לחץ לתיק', true]] },
   // "החודש" of the savings hub (P3, wave 2b): who won · the month's leaders and laggards and fee changes (the old /funds hub, Pro) ·
   // under the median and still taking money (/funds/under) · the monthly letter
-  flows: { label: 'החודש', tabs: [['/flows', 'מי ניצח', true], ['/funds', 'מובילים ומאספים', true], ['/funds/under', 'מתחת לחציון', true], ['/flows/letter', 'המכתב החודשי']] },
+  flows: { label: 'החודש', tabs: [['/flows', 'מי ניצח', true], ['/funds', 'מובילים ומאספים', true], ['/funds/under', 'הרבעון התחתון', true], ['/flows/letter', 'המכתב החודשי']] },
   // wave 2b: "השוואה ענפית": peers · IFRS 17 (the standardised view of the CSM ledger) · the CSM ledger's other views · capital (/capital,
   // the canonical capital page) · P&C ratios · investment houses · restatements
   industry: { label: 'השוואה ענפית', tabs: [

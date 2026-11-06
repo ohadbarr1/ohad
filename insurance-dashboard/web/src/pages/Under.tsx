@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
+import { NumText } from '../components/NumText';
+import { RegSrc } from '../components/RegSrc';
 import { DataTable, type Column } from '../components/DataTable';
 import { Empty, Kpi, Loading, Panel, Pick } from '../components/ui';
 import { useOptional, useClosed } from '../lib/fundsLoad';
@@ -15,11 +17,13 @@ import { UNDER_PATH, aumProv, costProv, flowProv, gapProv, gflProv, headline, ic
   type UnderFile, type UnderMonth, type UnderRow } from '../lib/under';
 import '../styles/under.css';
 
-/* Wave 11 · /funds/under "מתחת לחציון, ועדיין מקבלים כסף" (Pro, journalist): the bottom-quartile tracks (5Y net, in their category) that
+/* Wave 11 · /funds/under "ברבעון התחתון, ועדיין מקבלים כסף" (the address keeps its old word, under) (Pro, journalist): the bottom-quartile tracks (5Y net, in their category) that
    still took in money over 12 months, the intra-group migration taken out, and the shekel cost of their gap to the category median, month
    by month since 2016 (pipeline/build_under.py). Every figure opens its calculation; the methodology is stated on the page and in the file. */
 
 type View = 'head' | 'bq' | 'all';
+/** the source line of a chart or a spreadsheet: plain text (the page's own line links the datasets, components/RegSrc) */
+const SRC_TXT = 'רשות שוק ההון, ביטוח וחיסכון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il) · עיבוד fox';
 const VIEWS: [View, string][] = [['head', 'הרשימה'], ['bq', 'כל הרבעון התחתון'], ['all', 'כל המסלולים המדורגים']];
 
 export function Under() {
@@ -66,7 +70,7 @@ export function Under() {
 
   return (
     <div className="under">
-      <FundsHead title="מתחת לחציון, ועדיין מקבלים כסף" sub={<>מסלולים ברבעון התחתון של הקטגוריה (5 שנים, נטו, אומדן) שקיבלו כסף ב-12 החודשים · נתוני <span className="num">{ym(U.asof)}</span> · מיליוני ש"ח · <Link to="/flows">תזרימים לפי קבוצה</Link></>}
+      <FundsHead title="ברבעון התחתון, ועדיין מקבלים כסף" sub={<>מסלולים ברבע התחתון של הקטגוריה (אחוזון <span className="num">{U.bq}</span> ומטה, 5 שנים, נטו, אומדן) שקיבלו כסף ב-12 החודשים; הפער נמדד מחציון הקטגוריה · נתוני <span className="num">{ym(U.asof)}</span> · מיליוני ש"ח · <Link to="/flows">תזרימים לפי קבוצה</Link></>}
         tools={<Pick label="מה מוצג" cap="טבלה" value={view} onChange={(v) => setSp((cur) => { const n = new URLSearchParams(cur); if (v === 'head') n.delete('v'); else n.set('v', v); return n; }, { replace: true })} options={viewOpts} />} />
       <Panel className="under-top" aside={<span>{ym(U.asof)}</span>}>
         <div className="flowdef under-def" data-testid="under-def">
@@ -75,7 +79,7 @@ export function Under() {
           <Link to="/methodology#flows">הגדרות התזרימים</Link>
           <a href="#under-method">שיטה ומגבלות</a>
         </div>
-        {line && <p className="under-line" data-testid="under-headline">{line}</p>}
+        {line && <p className="under-line" data-testid="under-headline"><NumText t={line} /></p>}
         <section className="kpis">
           <Kpi label="מסלולים ברשימה" value={kpi('cost', String(S.n[j]))} sub={<>מתוך {S.n_rk[j]} מדורגים ב-{S.n_cat[j]} קטגוריות</>} />
           <Kpi label="נכסים" value={kpi('a', ilsM(S.a[j]))} sub="סוף החודש" />
@@ -88,7 +92,7 @@ export function Under() {
 
       <Panel title="הסדרה החודשית: עלות הפער של מסלולי הרשימה" aside={<span>{ym(U.months[0])}–{ym(U.asof)}</span>}>
         <Chart label="עלות הפער בשנה, מסלולי הרשימה" height={300} deps={[U.asof, U.months.length]} exportName="fox-under-series" asof={ym(U.asof)}
-          source={`fox · ${U.src}`}
+          source={SRC_TXT}
           onPoint={(_si, di) => { const q = U.months[di]; if (q) void pointAt(q, 'cost')(); }}
           build={() => foxOption({ x: U.months.map(ym), unit: 'מיליוני ש"ח לשנה', dense: true, full: true, total: true, legend: true,
             breakAt: fullAt > 0 ? fullAt : undefined, breakLabel: 'מכאן: כל המוצרים',
@@ -100,9 +104,9 @@ export function Under() {
       </Panel>
 
       <Panel title={view === 'head' ? `הרשימה · ${ym(U.asof)}` : view === 'bq' ? `כל הרבעון התחתון, עם פער · ${ym(U.asof)}` : `כל המסלולים המדורגים · ${ym(U.asof)}`}>
-        <DataTable caption={`מתחת לחציון · ${ym(U.asof)}`} rows={shown} rowKey={(r) => r.k} columns={columns} totalLabel="סה״כ" sort={{ key: 'cost', dir: 'desc' }}
+        <DataTable caption={`ברבעון התחתון · ${ym(U.asof)}`} rows={shown} rowKey={(r) => r.k} columns={columns} totalLabel="סה״כ" sort={{ key: 'cost', dir: 'desc' }}
           rowClass={(r) => (view !== 'head' && r.head ? 'lead' : undefined)}
-          export={{ name: `fox-under-${view}-${U.asof}`, title: `מתחת לחציון, ועדיין מקבלים כסף · ${ym(U.asof)}`, note: `${U.src} · נתוני ${ym(U.asof)} · מיליוני ש"ח · ${U.method.head} · ${U.method.past}` }}
+          export={{ name: `fox-under-${view}-${U.asof}`, title: `ברבעון התחתון, ועדיין מקבלים כסף · ${ym(U.asof)}`, note: `${SRC_TXT} · נתוני ${ym(U.asof)} · מיליוני ש"ח · ${U.method.head} · ${U.method.past}` }}
           empty={<p className="muted">אין מסלולים בתצוגה הזאת בחודש הזה.</p>} />
         {view !== 'head' && <div className="fnote">מסלולי הרשימה מודגשים. מסלול ברבעון התחתון שאינו ברשימה: הצבירה נטו שלו 12M אינה חיובית (כפי שפורסמה או בלי נדידה פנימית), אין לו תזרים מפורסם (ביטוח-נט), או שסומן נדידה והקבוצה במוצר אינה בצבירה חיובית.</div>}
       </Panel>
@@ -123,7 +127,7 @@ export function Under() {
           <li><b>הסדרה.</b> {U.method.series}.</li>
           <li><b>מה לא נמדד.</b> {U.method.not}.</li>
         </ul>
-        <div className="fnote">מקור: {U.src}. <Link to="/methodology">מתודולוגיה</Link>.</div>
+        <div className="fnote" data-testid="under-src"><RegSrc table={['/funds/under?v=all', 'כל המסלולים המדורגים']} />.</div>
       </Panel>
     </div>
   );

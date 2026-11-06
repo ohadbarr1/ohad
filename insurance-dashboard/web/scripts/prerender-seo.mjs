@@ -186,6 +186,54 @@ for (const l of LI?.letters ?? []) {
     h1: `מכתב התזרימים ${mmyy(l.p)}`, ps: [clean(l.h)], src: `מקור: ${SRC_REG}. גרסה ${l.ver}.`, links: [['/flows', 'מי ניצח החודש']] }, l.built);
 }
 
+// the bottom quartile that still takes in money (/funds/under, pipeline/build_under.py): the month's list, its money and its cost
+const U = opt('under.json');
+if (U) {
+  const ur = U.rows.map((r) => Object.fromEntries(U.cols.map((c, i) => [c, r[i]])));
+  const head = ur.filter((r) => r.head), j = U.months.length - 1, S = U.series, um = mmyy(U.asof);
+  const top = [...head].sort((a, b) => b.cost - a.cost)[0];
+  const facts = [S.fl?.[j] != null && `קיבלו ${ils(S.fl[j])} נטו ב-12 החודשים, בלי נדידה פנימית`, S.a?.[j] != null && `מנהלים ${ils(S.a[j])}`,
+    S.cost?.[j] != null && `הפער שלהם מחציון הקטגוריה שווה כ-${ils(S.cost[j])} בשנה (אומדן)`].filter(Boolean);
+  const lead = `${head.length} מסלולים ברבע התחתון של הקטגוריה (5 שנים, נטו) ${facts.length ? facts.join('; ') : 'עדיין מקבלים כסף'}.`;
+  add('/funds/under', `ברבעון התחתון ועדיין קולטים כסף: ${head.length} מסלולים · ${um}`, `${um}: ${lead} מקור: רשות שוק ההון, עיבוד fox.`, {
+    h1: 'ברבעון התחתון, ועדיין מקבלים כסף', ps: [`נתוני ${um}. ${lead}`, top && `הגדול: ${clean(top.name)}, ${top.gap.toFixed(2)} נקודות אחוז לשנה מתחת לחציון.`].filter(Boolean),
+    src: `נתונים ל-${um}. מקור: ${SRC_REG}. עלות הפער: נכסים × פער מחציון הקטגוריה, אומדן; תשואות עבר אינן מנבאות תשואות עתיד.`,
+    links: [['/flows', 'מי ניצח החודש'], ['/funds/screen', 'כל המסלולים'], ['/methodology', 'מתודולוגיה']] }, changed('under.json'));
+}
+
+// the delta feed (/feed, pipeline/build_feed.py): every dated change, newest first
+const FD = opt('feed.json');
+if (FD) {
+  const n = FD.events.length, last = FD.events[0];
+  const byT = Object.entries(FD.types).filter(([, x]) => x.n > 0).sort((a, b) => b[1].n - a[1].n).slice(0, 5).map(([, x]) => `${x.he} (${x.n})`);
+  const ddmmyy = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(2, 4)}`;
+  add('/feed', `מה השתנה: ${n} שינויים בדוחות המבטחות ובנתוני הרשות · עדכון ${ddmmyy(FD.built)}`,
+    `${n} שינויים מתוארכים מ-${ddmmyy(FD.from)}: ${byT.join(', ')}. כל מספר עם עמוד המקור; פיד RSS לכל חברה.`, {
+      h1: 'מה השתנה', ps: [`${n} שינויים מתוארכים מ-${ddmmyy(FD.from)}, מהחדש לישן: ${byT.join(', ')}.`, last && `האחרון: ${clean(FD.cos[last.c] ?? last.c)} · ${clean(last.h)} (${ddmmyy(last.d)}).`].filter(Boolean),
+      src: `מקור: ${clean(FD.source)}. עדכון ${ddmmyy(FD.built)}.`, links: [['/feed.xml', 'RSS'], ['/methodology', 'מתודולוגיה']] }, changed('feed.json'));
+}
+
+// a report card (/card/<company>/<period>, lane S2): the headline lines of one report, each figure with its page
+const CI = opt('cards/index.json');
+const repName = (p) => (p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);
+const plLabel = (t, end) => { const y = end.slice(2, 4), m = Number(end.slice(5, 7)); return t === 'FY' ? `FY'${y}` : t === 'H' ? (m === 6 ? `H1'${y}` : `H2'${y}`) : t === '9M' ? `9M'${y}` : `Q${Math.ceil(m / 3)}'${y}`; };
+const tokText = (card, t) => (typeof t === 'string' ? t : 'f' in t ? card.f?.[t.f]?.t ?? null : 'p' in t ? repName(t.p) : 'pl' in t ? plLabel(t.pl[0], t.pl[1]) : 'd' in t ? `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.${t.d.slice(2, 4)}` : 'y' in t ? String(t.y) : null);
+for (const [c, x] of Object.entries(CI?.co ?? {})) {
+  if (!/^[a-z_]+$/.test(c)) continue;
+  for (const p of x.p ?? []) {
+    if (!/^\d{4}(?:Q[1-4]|FY)$/.test(p)) continue;
+    const card = opt(`cards/${c}/${p}.json`);
+    if (!card) continue;
+    const lines = (card.lead ?? []).map((toks) => { const parts = toks.map((t) => tokText(card, t)); return parts.includes(null) ? null : clean(parts.join('')); }).filter(Boolean);
+    const name = clean(card.name ?? c), rp = repName(p);
+    const doc = card.doc?.pub ? ` פורסם במאי"ה ${card.doc.pub.slice(8, 10)}.${card.doc.pub.slice(5, 7)}.${card.doc.pub.slice(2, 4)}.` : '';
+    add(`/card/${c}/${p}`, `כרטיס דוח ${name} ${rp}: ${card.kind === 'ins' ? 'רווח, הון, CSM וכושר פירעון' : 'רווח, הון והכנסות'}`,
+      `${lines.slice(0, 3).join('. ')}.${doc} כל מספר עם עמוד המקור.`, {
+        h1: `כרטיס דוח · ${name} · ${rp}`, ps: lines.slice(0, 6).map((l) => l + '.'),
+        src: `מקור: הדוח${card.w === 'FY' ? ' השנתי' : ' הרבעוני'} של ${name} ל-${rp}, מערכת מאי"ה.${doc}`, links: [[`/company/${c}`, name], ['/feed', 'מה השתנה']] }, changed(`cards/${c}/${p}.json`));
+  }
+}
+
 // ------------------------------------------------------------------------------------------------ write
 const shell = readFileSync(join(DIST, 'index.html'), 'utf8');
 const need = [/<title>[^<]*<\/title>/, /<meta name="description" content="[^"]*"\s*\/?>/, /<meta property="og:title" content="[^"]*"\s*\/?>/, /<meta property="og:description" content="[^"]*"\s*\/?>/, /<div id="root"><\/div>/];

@@ -39,6 +39,13 @@
 .fd-h { color: var(--link); min-width: 0; overflow-wrap: anywhere; }
 .fd-src { margin-inline-start: auto; font-size: var(--t-1); color: var(--faint); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 a.fd-src:hover { color: var(--accent-text); }
+/* the item's permalink (/feed#ev-<id>): copy chip; the item a permalink lands on is marked for a moment */
+.fd-link { font-size: var(--t-1); color: var(--muted); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.fd-link:hover { color: var(--accent-text); }
+.fd-ev { scroll-margin-top: 96px; }
+.fd-ev.fd-hit { animation: fd-hit 2.4s ease-out 1; border-radius: 8px; }
+@keyframes fd-hit { 0%, 40% { background: color-mix(in oklch, var(--accent) 16%, transparent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent) 45%, transparent); } 100% { background: transparent; box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .fd-ev.fd-hit { animation: none; box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent) 45%, transparent); } }
 
 /* the figures: line · current · comparison · change, aligned under the headline */
 .fd-rows { margin: 5px 0 0; margin-inline-start: 74px; display: grid; grid-template-columns: minmax(170px, 2.2fr) minmax(86px, 1fr) minmax(86px, 1fr) minmax(110px, 1.2fr); font-size: var(--t-2); min-width: 0; }

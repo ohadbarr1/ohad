@@ -13,7 +13,7 @@ export const DEFAULT_DESC = 'תשואה נטו ודמי ניהול של כל מ�
 /** the private, draft and utility routes: noindex here and in firebase.json (scripts/hosting-check.mjs checks the header side) */
 const PRIVATE = /^\/(?:my|book|feebook|search|nowcast|fragility|data\/autopilot|(?:clients|brief|positions|consolidation)(?:\/.*)?|doc\/.+)$/;
 /** the addresses scripts/prerender-seo.mjs writes a file for (anything else is the shell: no request) */
-const PRERENDERED = /^\/(?:funds\/[gip]\d+|funds\/(?:default|compare|tools\/fees)|company\/[a-z_]+|my\/(?:moment(?:\/[a-z]+)?|statement|checkup)|savings|about|methodology|questions(?:\/Q-\d+)?|flows\/letter\/\d{6})$/;
+const PRERENDERED = /^\/(?:funds\/[gip]\d+|funds\/(?:default|compare|tools\/fees)|company\/[a-z_]+|my\/(?:moment(?:\/[a-z]+)?|statement|checkup)|savings|about|methodology|questions(?:\/Q-\d+)?|flows\/letter\/\d{6}|funds\/under|feed|card\/[a-z_]+\/\d{4}(?:Q[1-4]|FY))$/;
 
 interface Head { title: string; desc: string }
 const norm = (p: string) => p.replace(/\/+$/, '') || '/';
