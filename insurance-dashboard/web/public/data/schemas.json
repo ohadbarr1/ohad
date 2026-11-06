@@ -6534,7 +6534,8 @@
      "enum": [
       "pub",
       "fetched",
-      "month"
+      "month",
+      "frozen"
      ]
     },
     "c": {
@@ -6568,7 +6569,8 @@
         "reg",
         "fund",
         "pos",
-        "frag"
+        "frag",
+        "est"
        ]
       },
       "rid": {
@@ -6605,6 +6607,28 @@
       },
       "sig": {
        "type": "string"
+      },
+      "m": {
+       "type": "string",
+       "enum": [
+        "nowcast",
+        "nowcast_f2e"
+       ]
+      },
+      "q": {
+       "type": "string",
+       "pattern": "^Q[1-4]-\\d{4}$"
+      },
+      "stage": {
+       "type": "integer",
+       "enum": [
+        1,
+        2
+       ]
+      },
+      "hash": {
+       "type": "string",
+       "pattern": "^[0-9a-f]{12}$"
       }
      }
     },
@@ -6885,24 +6909,17 @@
        "type": "object",
        "required": [
         "he",
-        "n",
-        "slot"
+        "n"
        ],
        "properties": {
         "he": {
          "type": "string"
         },
         "n": {
-         "type": "integer",
-         "enum": [
-          0
-         ]
+         "type": "integer"
         },
         "slot": {
-         "type": "integer",
-         "enum": [
-          1
-         ]
+         "type": "integer"
         }
        }
       },

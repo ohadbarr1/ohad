@@ -1,5 +1,5 @@
 {
- "built": "2026-11-06T03:13:41+02:00",
+ "built": "2026-11-06T11:06:18+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -231,7 +231,7 @@
    "level": "fail",
    "n": 15,
    "fail": 0,
-   "note": "findings: 15 findings (div:5 brk:1 peer:3 sd:2 disc:1 rank:3), 5 top, 26 suppressed, 0 problems"
+   "note": "findings: 15 findings (div:5 brk:1 peer:3 sd:2 disc:1 rank:3), 5 top, 25 suppressed, 0 problems"
   },
   {
    "id": "watch",
@@ -263,15 +263,15 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "capital: 7 insurers computed, 10 marked not available; 41 identities; rebuild matches; 0 misses; forward: 18 capacity identities, rebuild matches, 0 misses"
+   "note": "capital: 7 insurers computed, 10 marked not available; 40 identities; rebuild matches; 0 misses; forward: 18 capacity identities, rebuild matches, 0 misses"
   },
   {
    "id": "capital_lib",
    "ok": true,
    "level": "fail",
-   "n": 674,
+   "n": 659,
    "fail": 0,
-   "note": "674 passed, 0 failed"
+   "note": "659 passed, 0 failed"
   },
   {
    "id": "expectations",
@@ -362,6 +362,14 @@
    "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
   },
   {
+   "id": "pro_consistency",
+   "ok": true,
+   "level": "fail",
+   "n": 929,
+   "fail": 0,
+   "note": "pro_consistency: 929 comparisons (dividends 188 rows; P&G 188 scored figures; ROE 12 companies; solvency 19 constraints, 522 table cells); 1 labelled exceptions; 0 failures"
+  },
+  {
    "id": "schemas",
    "ok": true,
    "level": "fail",
@@ -373,7 +381,7 @@
    "id": "cards",
    "ok": true,
    "level": "fail",
-   "n": 7229,
+   "n": 7219,
    "fail": 0,
    "note": "302 report cards, every digit a published fact"
   },
@@ -389,9 +397,9 @@
    "id": "feed",
    "ok": true,
    "level": "fail",
-   "n": 381,
+   "n": 384,
    "fail": 0,
-   "note": "381 events, 10294 figures, 0 problems"
+   "note": "384 events, 10294 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -509,17 +517,17 @@
    "id": "model_xlsx",
    "ok": true,
    "level": "fail",
-   "n": 43918,
+   "n": 44626,
    "fail": 0,
-   "note": "model_xlsx: 13 workbooks, 43918 value cells, every one sourced; largest menora 484 KB; 0 problems"
+   "note": "model_xlsx: 13 workbooks, 44626 value cells, every one sourced; largest menora 492 KB; 0 problems"
   },
   {
    "id": "tables",
    "ok": true,
    "level": "fail",
-   "n": 132590,
+   "n": 133298,
    "fail": 0,
-   "note": "tables: 7 tables, 132590 rows, every row sourced; 0 problems"
+   "note": "tables: 7 tables, 133298 rows, every row sourced; 0 problems"
   },
   {
    "id": "consensus",
@@ -581,9 +589,9 @@
    "id": "targets_page",
    "ok": true,
    "level": "fail",
-   "n": 175,
+   "n": 172,
    "fail": 0,
-   "note": "targets (targets.json; a figure, else the quoted words): 175/175 on the cited page; 0 new misses; 32 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "targets (targets.json; a figure, else the quoted words): 172/172 on the cited page; 0 new misses; 32 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "decks_page",
@@ -663,7 +671,7 @@
    "level": "fail",
    "n": 6,
    "fail": 0,
-   "note": "6 scored targets (met 5, partial 1, missed 0), 23 not comparable with a reason; target page + actual page on every scored row"
+   "note": "6 scored targets (met 6, partial 0, missed 0), 23 not comparable with a reason; target page + actual page on every scored row"
   }
  ]
 }
