@@ -139,7 +139,8 @@ export function rowFacts(r: Row): string[] {
   return f;
 }
 
-export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; mine: MyProduct[]; onSave: (next: MyProduct[], msg: string) => void; today: string }) {
+/** `compact` (red team 06.11.26, /my after a check-up): one line and the button, not the generic pitch, until opened */
+export function MaslakaImport({ funds, mine, onSave, today, compact = false }: { funds: FundX[]; mine: MyProduct[]; onSave: (next: MyProduct[], msg: string) => void; today: string; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [pick, setPick] = useState<Record<string, boolean>>({});
   const [manual, setManual] = useState<Record<string, string>>({});
@@ -214,10 +215,10 @@ export function MaslakaImport({ funds, mine, onSave, today }: { funds: FundX[]; 
 
   return (
     <section className="panel sv-add mk" aria-labelledby="mk-h">
-      <div className="hd"><h2 id="mk-h">ייבוא מהמסלקה <span className="sv-tag">בטא</span></h2><div className="aside"><span>במקום להקליד</span></div></div>
+      <div className="hd"><h2 id="mk-h">{compact && !open ? 'קובץ חדש מהמסלקה' : <>ייבוא מהמסלקה <span className="sv-tag">בטא</span></>}</h2>{!compact && <div className="aside"><span>במקום להקליד</span></div>}</div>
       {!open ? (
         <div className="mk-intro">
-          <p>טוענים את הדוח מהמסלקה הפנסיונית ורואים את המוצרים, ההפקדות ודמי הניהול <b>שלכם</b> לפני שמירה. עובד גם בטלפון.</p>
+          {!compact && <p>טוענים את הדוח מהמסלקה הפנסיונית ורואים את המוצרים, ההפקדות ודמי הניהול <b>שלכם</b> לפני שמירה. עובד גם בטלפון.</p>}
           <button type="button" className="btn" onClick={() => setOpen(true)}>לייבוא קובץ מהמסלקה</button>
         </div>
       ) : (

@@ -7,7 +7,9 @@ import { useActiveDoor } from './doorState';
 import { ClientsPanel } from './ClientsPanel';
 import { ClientImport } from '../agent/ClientImport';  // P0 · A1: the agent's home opens on a new client
 import { useState } from 'react';
-import { useMine, type MyProduct } from '../../lib/mine';
+import { useMine, useMy, type MyProduct } from '../../lib/mine';
+import { CK_STATUS_KEY, normStatus, statusLine } from '../../lib/ckStatus';  // red team 06.11.26: the status after a check-up
+import { HomeHint } from '../saver/HomeHint';
 import { nf } from '../../lib/format';
 import { fundP } from '../../lib/market';
 import { NET_LABEL, netProv, refOf, retOf, ym, type FundX } from '../../lib/funds';
@@ -45,13 +47,13 @@ export function DoorPicker() {
       <div className="doors-grid">
         <article className="door door-saver" aria-labelledby="door-saver-t">
           <div className="door-hd"><span className="icotile lg"><Ico name="mine" /></span><span className="door-k">חוסך</span></div>
-          <h3 id="door-saver-t">מה יש לך?</h3>
-          <p>בוחרים מוצר, חברה ומסלול, ורואים במילים פשוטות כמה אתם משלמים ואיפה המסלול שלכם עומד מול מסלולים דומים.</p>
+          <h3 id="door-saver-t">הבדיקה השנתית</h3>
+          <p>פותחים כאן את הקובץ מהמסלקה הפנסיונית ומקבלים שלוש שורות: דמי הניהול שלכם מול המחיר שאפשר לקבל, ההפקדות מהמעסיק ומסלול הגיל. לכל שורה מכתב מוכן.</p>
           <ol className="door-steps" aria-label="שלושה צעדים">
-            <li><span className="num">1</span>מוצר</li><li><span className="num">2</span>חברה</li><li><span className="num">3</span>מסלול</li>
+            <li><span className="num">1</span>קובץ מהמסלקה</li><li><span className="num">2</span>שלוש שורות</li><li><span className="num">3</span>מכתב מוכן</li>
           </ol>
           <div className="door-act">
-            <Go to="/my" door="saver" primary>מה יש לי</Go>
+            <Go to="/my/checkup" door="saver" primary>לבדיקה השנתית</Go>
             <button type="button" className="door-alt" onClick={() => enter('saver')}>לבית של החוסך</button>
           </div>
         </article>
@@ -104,9 +106,23 @@ const SAVER_CARDS: Card[] = [
 export function SaverHome() {
   const [mine] = useMine();
   const has = mine.length > 0;
+  // red team 06.11.26 (bring-back): after a check-up, its status and the next date in place of the import pitch (first visit keeps it)
+  const [stRaw] = useMy<unknown>(CK_STATUS_KEY, null);
+  const st = has ? normStatus(stRaw) : null;
   return (
     <div className="dhome dhome-saver">
-      <header className="dlead dcheck" aria-labelledby="dcheck-t">
+      {st ? <header className="dlead dcheck" aria-labelledby="dcheck-t">
+        <span className="icotile lg"><Ico name="mine" /></span>
+        <div className="dlead-t">
+          <span className="eyebrow">חוסך · הבדיקה השנתית</span>
+          <h1 id="dcheck-t">{statusLine(st)}</h1>
+          <p>לפי הבדיקה מ-{st.at.slice(8, 10)}.{st.at.slice(5, 7)}.{st.at.slice(2, 4)}. קובץ חדש מהמסלקה מעדכן את הכול.</p>
+        </div>
+        <div className="dcheck-go">
+          <Link to="/my/checkup" className="door-go primary">לבדיקה השנתית<Ico name="arrow" /></Link>
+          <Link to="/my" className="dcheck-alt">למוצרים שלי</Link>
+        </div>
+      </header> : <header className="dlead dcheck" aria-labelledby="dcheck-t">
         <span className="icotile lg"><Ico name="mine" /></span>
         <div className="dlead-t">
           <span className="eyebrow">חוסך · הבדיקה השנתית</span>
@@ -117,7 +133,8 @@ export function SaverHome() {
           <Link to="/my/checkup" className="door-go primary">ייבוא מהמסלקה<Ico name="arrow" /></Link>
           <Link to={has ? '/my' : '/my#sv-add-h'} className="dcheck-alt">{has ? 'לבדיקה של המוצרים שלי' : 'או לבחור מוצר ידנית'}</Link>
         </div>
-      </header>
+      </header>}
+      <HomeHint />
       {has && <MineSummary mine={mine} />}
       <Cards cards={SAVER_CARDS} label="מה אפשר לבדוק" />
       <FundFacts />

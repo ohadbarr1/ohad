@@ -26,6 +26,7 @@ import { Icon } from '../components/Icon';
 import { CROSS_HE, LEAD_HE, OLD_HE, compareSummary, type CmpSummary, type Lead } from '../lib/compareSummary';
 import { bottomLines, docRow, snapOf, dmyIso } from '../lib/compareDoc';
 import { useActiveDoor } from '../components/home/doorState';
+import { useMine } from '../lib/mine';
 import { defaultNow, isPension, periodText } from '../lib/pensionPack';
 import { rulesOf, RULES_NOTE } from '../lib/productRules';
 import { actProv, ruleProv, tenderProv, pc2 } from '../lib/agentProv';
@@ -95,8 +96,16 @@ export function FundsCompare() {
   const [roll, setRoll] = useState<'12' | '36'>('36');
   const set = (patch: Record<string, string | null>) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k))); setSp(n, { replace: true }); };
   const setKeys = (ks: string[]) => { const v = [...new Set(ks)].slice(0, TRAY_MAX); set({ k: v.join(',') || null }); tray.set(v); };
-  // a bare /funds/compare opens what the tray holds
-  useEffect(() => { if (!sp.get('k') && tray.keys.length) set({ k: tray.keys.join(',') }); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // a bare /funds/compare opens what the tray holds; red team 06.11.26: in the saver door, with an empty tray, the saver's own saved
+  // products ("השוואה" in the saver nav opened on an empty state with five products saved)
+  const [myList] = useMine();
+  const mineKeys = useMemo(() => (Array.isArray(myList) ? myList : []).map((m) => m?.k).filter((k): k is string => typeof k === 'string' && /^[gip]\d+$/.test(k)).slice(0, TRAY_MAX), [myList]);
+  const [fromMine, setFromMine] = useState(false);
+  useEffect(() => {
+    if (sp.get('k')) return;
+    if (tray.keys.length) set({ k: tray.keys.join(',') });
+    else if (saver && mineKeys.length) { set({ k: mineKeys.join(',') }); setFromMine(true); }
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // closed tracks are not in funds.json: look them up in funds/closed.json when a key is unknown
   const [gone, setGone] = useState<FundX[]>([]);
@@ -345,7 +354,8 @@ export function FundsCompare() {
         : null}
       {pickerOpen && phone && keys.length > 0 && <div className="cmp-actions"><button type="button" className="chip" onClick={() => setEdit(false)}>סיום הבחירה</button></div>}
       {!pickerOpen && <div className="cmp-actions"><button type="button" className="chip" onClick={() => setEdit(true)} aria-expanded={false}>עריכת הבחירה · <span className="num">{keys.length}</span> מסלולים</button><Seg label="חלון" value={win} onChange={(w) => set({ win: w })} options={WINDOWS} /></div>}
-      {keys.length === 0 ? <Empty title="בחרו מסלולים להשוואה" icon="compare">הוסיפו מסלולים בחיפוש למעלה, או בכפתור "+" בטבלת המסלולים ובכרטיס המסלול.</Empty> : items.length === 0 && unknown.length < keys.length ? <Loading what="היסטוריות" /> : (
+      {fromMine && keys.length > 0 && <p className="muted cmp-mine" role="status">המוצרים שלכם מ<Link className="sv-u" to="/my">"המוצרים שלי"</Link>. אפשר להוסיף או להסיר מסלולים למעלה.</p>}
+      {keys.length === 0 ? <Empty title="בחרו מסלולים להשוואה" icon="compare">{saver && !mineKeys.length ? <>אחרי <Link className="sv-u" to="/my/checkup">ייבוא מהמסלקה</Link> ההשוואה נפתחת על המוצרים שלכם. </> : null}הוסיפו מסלולים בחיפוש למעלה, או בכפתור "+" בטבלת המסלולים ובכרטיס המסלול.</Empty> : items.length === 0 && unknown.length < keys.length ? <Loading what="היסטוריות" /> : (
         <>
           {(mixedProd || !sameCat || loadingN > 0 || unknown.length > 0 || real || dropped > 0) && <div className="fwarn">
             {dropped > 0 && <span className="chip est" role="status">עד {TRAY_MAX} מסלולים; {dropped === 1 ? 'מסלול אחד הושמט' : `${dropped} מסלולים הושמטו`} ({askedKeys.slice(TRAY_MAX).map((k) => fundOf(k)?.name ?? k).join(', ')})</span>}

@@ -6,8 +6,9 @@ import type { DepositRow } from '../../lib/clientTypes';
 import type { FundX } from '../../lib/funds';
 import type { MyProduct } from '../../lib/mine';
 import { ilsRound } from '../../lib/retire';
-import { AVG_WAGE, DEADLINE_DAY, HISH_CAP_MONTHLY, PENSION_RATES, PENSION_SINCE, RATES_YEAR, SEVERANCE_FULL, SRC, addMonths, auditDeposits, dateHe, defaultRates, depSummary, kindOf, letterOf, monthsWindow, rateTotal, ymHe, type Audit, type DepKind, type Rates } from '../../lib/deposits';
+import { AVG_WAGE, DEADLINE_DAY, HISH_CAP_MONTHLY, PENSION_RATES, PENSION_SINCE, RATES_YEAR, SEVERANCE_FULL, SRC, addMonths, dateHe, defaultRates, depSummary, kindOf, letterOf, monthsWindow, rateTotal, ymHe, type Audit, type DepKind, type Rates } from '../../lib/deposits';
 import { Script } from './Script';
+import { depAuditOf, isoDay } from '../../lib/checkup';
 
 /* W7 saver · the deposit watchdog on the card: the 12 rows of the statement's table ה' (typed here, or imported from the clearing-house
    file), the expected monthly deposit on the insured salary and the rates (editable), what is missing, short or late, in ₪, and the letter
@@ -17,14 +18,17 @@ import { Script } from './Script';
 const num = (s: string): number | null => { const t = s.replace(/[,\s₪]/g, ''); if (t === '') return null; const x = Number(t); return Number.isFinite(x) ? x : null; };
 const N = 12;
 
-/** the saver's deposit rows, the salary they are read against and the audit, shared by the folded line and the section */
+/** the saver's deposit rows, the salary they are read against and the audit, shared by the folded line and the section.
+ *  Red team 06.11.26 (one deposit engine): the audit is lib/checkup depRow, the very function /my/checkup runs, over the rows' own
+ *  window (no "missing" months before the file starts, a payment-dated row not doubled, a dormant account not audited), so the card
+ *  and the check-up can never disagree on the same product. */
 export function useDepAudit(f: FundX, my: MyProduct | undefined, profileSalary: number | null): { kind: DepKind | null; rows: DepositRow[]; salary: number | null; rates: Rates; audit: Audit | null } {
   const kind = kindOf(f.prod);
   const rows = useMemo(() => (Array.isArray(my?.deposits) ? my!.deposits!.filter((r) => r && typeof r.ym === 'string') : []), [my?.deposits]);
   const rates = my?.depRates ?? (kind ? defaultRates(kind) : defaultRates('pension'));
   const rowSal = rows.map((r) => r.salary).filter((x): x is number => x != null && x > 0).pop() ?? null;
   const salary = my?.salary ?? profileSalary ?? rowSal;
-  const audit = useMemo(() => (kind && salary && rows.length ? auditDeposits(rows, salary, rates, kind) : null), [kind, salary, rows, rates]);
+  const audit = useMemo(() => (my ? depAuditOf(f, my, profileSalary, isoDay(new Date()).slice(0, 7)) : null), [f, my, profileSalary]);
   return { kind, rows, salary, rates, audit };
 }
 
@@ -48,7 +52,7 @@ export function Deposits({ f, my, onChange, profileSalary, third, focus }: { f: 
   const isPen = kind === 'pension';
   const minimum = isPen && rateTotal(rates) === rateTotal(PENSION_RATES) && rates.employee === PENSION_RATES.employee;
   const gapProv = (): Prov => ({ k: 'calc', est: false, title: `הפרש ההפקדות ב-${N} החודשים · ${f.name}`, value: ilsRound(audit?.totalGap ?? 0),
-    formula: `לכל חודש: ההפקדה הצפויה (שכר מבוטח × ${rateTotal(rates)}%${kind === 'hishtalmut' ? `, עד תקרת שכר של ${HISH_CAP_MONTHLY.toLocaleString('en-US')} ש"ח` : ''}) פחות מה שהגיע לקרן לפי השורות; חודש בלי שורה נספר במלואו. הפרש של עד 1% (לפחות 20 ש"ח) נחשב עיגול`,
+    formula: `לכל חודש: ההפקדה הצפויה (שכר מבוטח × ${rateTotal(rates)}%${kind === 'hishtalmut' ? `, עד תקרת שכר של ${HISH_CAP_MONTHLY.toLocaleString('en-US')} ש"ח` : ''}) פחות מה שהגיע לקרן לפי השורות; חודש בלי שורה בין הראשון לאחרון נספר במלואו (כמו בבדיקה השנתית). הפרש של עד 1% (לפחות 20 ש"ח) נחשב עיגול`,
     note: `השורות: ${my?.imp ? 'מקובץ המסלקה ומה שהוקלד' : 'מה שהוקלד מטבלה ה\' בדוח השנתי'}. ${isPen ? `השיעורים: ${minimum ? 'המינימום בצו ההרחבה ממשכורת ' + PENSION_SINCE : 'לפי מה שהוזן כאן'}` : 'השיעורים לפי ההסכם עם המעסיק; אין חובה בחוק להפקיד להשתלמות'}`,
     inputs: [{ label: 'שכר מבוטח לחודש', v: ilsRound(salary ?? 0) }, { label: 'עובד', v: `${rates.employee}%` }, { label: 'מעסיק', v: `${rates.employer}%` }, ...(isPen ? [{ label: 'פיצויים', v: `${rates.severance}%` }] : []),
       ...(audit ? [{ label: 'צפוי בסך הכול', v: ilsRound(audit.totalExp) }, { label: 'הגיע לקרן', v: ilsRound(audit.totalGot) }] : [])] });

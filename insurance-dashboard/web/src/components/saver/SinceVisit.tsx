@@ -33,7 +33,6 @@ export function SinceVisit({ data, dfile, list }: { data: FundsFile; dfile: Defa
   // W4: the visit is recorded on arrival (and again whenever the list changes), not only on leaving: iOS Safari often never fires
   // pagehide or the unmount, and then the baseline never started (red team 02.11.26). nextSeen keeps this month's baseline, so writing
   // early loses nothing: on a new month the old snapshot becomes `prev` and baselineOf still compares against it.
-  const first = useRef(seen);  // what this browser had before this visit: the quiet line reads it, not the snapshot just written
   const ref = useRef({ raw, now }); ref.current = { raw, now };
   const mark = () => { const { raw: r, now: n } = ref.current; if (!Object.keys(n.p).length) return; const nx = nextSeen(normSeen(r), n); if (JSON.stringify(nx) !== JSON.stringify(normSeen(r))) setRaw(nx); };
   useEffect(() => { mark(); }, [now]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -41,9 +40,8 @@ export function SinceVisit({ data, dfile, list }: { data: FundsFile; dfile: Defa
 
   if (!rows.length) return null;
   const base = baselineOf(seen, asof);
-  if (!base) {
-    return <p className="sv-muted ms-quiet">{first.current.cur ? `מה השתנה: אין נתונים חדשים מאז הביקור הקודם (${ym(asof)}).` : 'מה השתנה: יופיע כאן בעדכון הנתונים הבא.'}</p>;
-  }
+  // red team 06.11.26 (/my word budget): with nothing new (or nothing to compare yet), nothing is said (was a "quiet" line)
+  if (!base) return null;
   const gap = monthsBetween(base.asof, asof);
   return (
     <section className="panel sv-card ms" aria-labelledby="ms-h">

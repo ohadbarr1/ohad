@@ -5,13 +5,16 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type VFund, verdictOf } from '../src/lib/verdict';
-import { cardCalc, gapOf } from '../src/lib/myCalc';
+import { cardCalc, gapOf, monthlyFor, summaryOf } from '../src/lib/myCalc';
 import { feeGap, retireAgeOf, type Plan } from '../src/lib/retire';
 import {
-  MIN_GAP, ST_FAR, addDays, ageAsk, ageRow, bandOf, checkupOf, depRow, depWindow, dueNegos, dueOf, feeLetter, feeRow, feeShort, icsOf, mailHref, normNegos, savingOf,
-  startNego, waHref, worst, yearSaving, type CProd, type CRow,
+  MIN_GAP, ST_FAR, addDays, addMonthsIso, ageAsk, ageRow, bandOf, checkupOf, depAuditOf, depRow, depWindow, dormantOf, dueNegos, dueOf, feeLetter, feeRow, feeShort, icsOf, mailHref,
+  mergeLetter, nextCheckOf, normNegos, normStatus, redCount, savingOf, startNego, statusLine, waHref, worst, yearSaving, type CProd, type CRow,
 } from '../src/lib/checkup';
-import { letterOf } from '../src/lib/deposits';
+import { auditDeposits, defaultRates, depSummary, letterOf } from '../src/lib/deposits';
+import { unpackZip } from '../src/lib/zipRead';
+import { mergeMFiles, readTree } from '../src/lib/maslaka';
+import { decryptSaver, encryptSaver, saverKeys } from '../src/lib/saverBackup';
 import { normGlide, type GlideData } from '../src/lib/fundsTime';
 import { applyRows, decodeXml, parseMaslaka, rowsOf, xmlTree, type MFund } from '../src/lib/maslaka';
 import type { DefaultFile } from '../src/lib/fundsTools';
@@ -35,7 +38,7 @@ const row = (f: VFund, m: CProd, all = cat): CRow => ({ f, m, c: cardCalc(f, all
   const own = row(cat[4], { k: 'p5', balance: 200000, monthly: 2500, fee: 0.3, depfee: 2.5 });
   const r = feeRow(own);
   ok(r.anchor === 'tender' && r.own && r.tone === 'red', `own pension fees 0.30% / 2.5% vs the tender 0.22% / 1%: red on the tender anchor (${r.anchor}, ${r.tone})`);
-  ok(r.gap != null && r.gap >= MIN_GAP && Math.abs(r.gap - own.c.tBest!.g.balReal) < 1e-6, 'the ₪ is the card\'s own tender gap (lib/myCalc tBest), so /my and the check-up agree');
+  ok(r.gap != null && r.gap >= MIN_GAP && Math.abs(r.gap - own.c.tBase!.g.balReal) < 1e-6, 'the ₪ is the card\'s own gap against the tender\'s base price (lib/myCalc tBase), so /my and the check-up agree');
   const g = gapOf(own.c);
   ok(g?.ref === 'dflt' && Math.abs(g.v - r.gap!) < 1e-6, 'the same figure /my\'s "one thing to do" uses (gapOf → the default-fund price)');
   ok(r.ask?.fee === 0.22 && r.ask.depfee === 1 && r.avg.fee === 0.2, 'the letter asks for the tender\'s base price; the track\'s average (0.20%) is context');
@@ -151,6 +154,61 @@ const row = (f: VFund, m: CProd, all = cat): CRow => ({ f, m, c: cardCalc(f, all
   ok(!/\d+\.\d+%|ש"ח|קרן /.test(ics), 'the ICS carries no figure and no fund');
 }
 
+
+/* ---- red team 06.11.26: the money must be trustworthy (example deposits, one anchor, one deposit engine) ---- */
+{
+  // the deposit rule, on its own
+  ok(monthlyFor(2500, 'פנסיה מקיפה').src === 'own' && monthlyFor(null, 'פנסיה מקיפה').src === 'ex' && monthlyFor(null, 'פנסיה מקיפה').v === 2220, 'monthlyFor: own, else the example (2,220 ₪ on a 12,000 ₪ salary)');
+  ok(monthlyFor(null, 'פנסיה מקיפה', { imp: '2026-09-30' }).v === 0 && monthlyFor(null, 'פנסיה מקיפה', { imp: '2026-09-30' }).src === 'none', 'monthlyFor: an imported product with no deposit in the file projects 0, never the example');
+  ok(monthlyFor(null, 'פנסיה מקיפה', { depositWhenMissing: 0 }).v === 0 && monthlyFor(null, 'פנסיה מקיפה', { imp: 'x', depositWhenMissing: null }).src === 'ex', 'monthlyFor: depositWhenMissing overrides both ways');
+  const dorm: CProd = { k: 'p5', balance: 23411, monthly: null, fee: 0.5, depfee: 6, imp: '2026-09-30', deposits: [{ ym: '2022-01', total: 1210 }] };
+  const dr = row(cat[4], dorm);
+  ok(dr.c.plan.monthly === 0 && !dr.c.exMonthly && dr.c.noDep, `a dormant imported account is projected on its balance only (monthly ${dr.c.plan.monthly}, not the 2,220 example)`);
+  const dfr = feeRow(dr);
+  ok(dfr.dormant && dfr.last === '2022-01' && !dfr.ex, 'the fee row knows it is dormant (last deposit 01/2022) and is not an example row');
+  ok(dormantOf({ k: 'x', monthly: 1000 }).dormant === false && dormantOf({ k: 'x', imp: '2026-09-30' }).dormant === true && dormantOf({ k: 'x', deposits: [{ ym: '2026-08' }] }, '2026-10').dormant === false, 'dormantOf: a typed deposit or a recent row is active; an imported product with no deposits is dormant');
+  // a manual product with no deposit typed stays an example, labelled, and is left out of the red headline total
+  const exRow = row(cat[4], { k: 'p5', balance: 200000, fee: 0.5, depfee: 4 });
+  const ownRow = row(cat[3], { k: 'p4', balance: 200000, monthly: 2500, fee: 0.3, depfee: 2.5 });
+  const L = checkupOf([exRow, ownRow], { age: 38, profileSalary: null, glide: null }).fee!;
+  const exF = L.rows.find((x) => x.k === 'p5')!, ownF = L.rows.find((x) => x.k === 'p4')!;
+  ok(exF.ex && exF.tone === 'red' && ownF.tone === 'red' && !ownF.ex, 'both rows red; the one with no deposit typed is an example row');
+  ok(Math.abs(L.total - ownF.gap!) < 1e-6 && L.exN === 1, `the red headline total sums only the reader's own figures (${Math.round(L.total)} = ${Math.round(ownF.gap!)}; ${L.exN} example row left out)`);
+  ok(L.top?.k === 'p4', 'the product named first is the one on the reader\'s own figures, even when an example row shows a larger gap');
+  const S = summaryOf([{ k: 'p5', name: 'a', prod: 'פנסיה מקיפה', c: exRow.c }, { k: 'p4', name: 'b', prod: 'פנסיה מקיפה', c: ownRow.c }]);
+  ok(S.act.kind === 'fee' && S.act.k === 'p4', '/my\'s "one thing to do" prefers the reader\'s own figures over example amounts too');
+  // one anchor per product: the row, its source (CardCalc.tBase), the letter and /my all use the tender's base price
+  const own = row(cat[4], { k: 'p5', balance: 200000, monthly: 2500, fee: 0.22, depfee: 1.49 });
+  const fr = feeRow(own);
+  const base = { fee: 0.22, depfee: 1 };
+  ok(fr.ref?.fee === base.fee && fr.ref.depfee === base.depfee && fr.ask?.fee === base.fee && fr.ask.depfee === base.depfee, `the row's anchor and the letter's request are the same pair (ref ${fr.ref?.fee}/${fr.ref?.depfee}, ask ${fr.ask?.fee}/${fr.ask?.depfee})`);
+  ok(Math.abs(fr.gap! - feeGap(own.c.plan, own.c.mine, base).balReal) < 1e-6, 'the row\'s ₪ is the plan run on the base price, not on the conversion-table pair that leaves the most');
+  ok(Math.abs(gapOf(own.c)!.v - fr.gap!) < 1e-6, '/my\'s "one thing to do" shows the same figure');
+  const lt = feeLetter(fr, { id: 5, src: 'פנסיה-נט, 09/26', retire: '67' });
+  ok(lt.includes('לעומת מחיר ההליך (0.22% מהצבירה ו-1% מהפקדה)') && lt.includes('אבקש להפחית את דמי הניהול שלי ל-0.22% מהצבירה ו-1% מהפקדה') && !lt.includes('הכי הרבה כסף'), 'the letter computes and asks against the one pair');
+  // the consolidation request, the annual reminder, the status line
+  const ml = mergeLetter({ name: 'קרן א', id: 2015, last: '2022-01' }, { name: 'קרן ב', id: 2184 });
+  ok(ml.includes('מאז 01/2022') && ml.includes('קרן ב (מספר קופה 2184)') && ml.includes('לאחד') && !BANNED.test(ml) && !/דמי הניהול שלי ל-/.test(ml), 'the dormant account\'s letter asks to consolidate, first person, no advice, no fee cut');
+  ok(addMonthsIso('2026-11-06', 11) === '2027-10-06' && addMonthsIso('2026-03-31', 11) === '2027-02-28' && nextCheckOf('2026-11-06') === '2027-10-06', 'the annual reminder is 11 months on');
+  const yi = icsOf(nextCheckOf('2026-11-06'), 'https://fox-research-il.web.app/my/checkup', new Date('2026-11-06T10:00:00Z'), 'year');
+  ok(yi.includes('DTSTART;VALUE=DATE:20271006') && yi.includes('SUMMARY:fox · הבדיקה השנתית') && !/\d+\.\d+%|ש"ח/.test(yi), 'the annual ICS: an all-day event 11 months on, no figure');
+  ok(statusLine({ v: 1, at: '2026-11-06', red: 2, saved: 126040 }) === '2 לטיפול · חסכתם כ-126,000 ש"ח · הבדיקה הבאה 10/27' && statusLine({ v: 1, at: '2026-11-06', red: 0, saved: 0 }) === 'אין פריטים לטיפול · הבדיקה הבאה 10/27', 'the status line');
+  ok(normStatus({ v: 1, at: '2026-11-06', red: 2, saved: 5 }) !== null && normStatus({ v: 1, at: 'x', red: 1, saved: 0 }) === null && normStatus(null) === null, 'the stored status is read defensively');
+}
+
+/* ---- the saver's encrypted backup (lib/saverBackup on the agent's AES-GCM envelope) ---- */
+{
+  const vals = { mine: [{ k: 'p2184', added: '2026-11-06', balance: 1 }], 'my:age': 38, 'my:nego@spouse': [], 'my:profiles': { v: 1, active: 'me', list: ['me'] }, 'clients': { folders: [] } };
+  ok(saverKeys(Object.keys(vals)).join() === 'mine,my:age,my:nego@spouse,my:profiles', 'the saver backup carries the saver\'s keys only (never the agent\'s book)');
+  const text = await encryptSaver(vals, 'pass-1234', '2026-11-06');
+  ok(!text.includes('p2184') && JSON.parse(text).kind === 'fox-saver-backup' && JSON.parse(text).alg === 'AES-GCM', 'the file is sealed (no figure in clear), with its own kind');
+  const back = await decryptSaver(text, 'pass-1234');
+  ok(JSON.stringify(back.values.mine) === JSON.stringify(vals.mine) && back.values['my:age'] === 38 && !('clients' in back.values) && back.exported === '2026-11-06', 'the round trip restores the saver\'s values');
+  let wrong = '';
+  try { await decryptSaver(text, 'nope-nope-1'); } catch (e) { wrong = (e as Error).message; }
+  ok(/סיסמה/.test(wrong), `a wrong passphrase fails in Hebrew (${wrong})`);
+}
+
 /* ---- the clearing-house fixtures through the real import and the published data ---- */
 const D = join(process.cwd(), 'public', 'data');
 const FIX = join(process.cwd(), 'tests', 'fixtures', 'maslaka');
@@ -203,6 +261,46 @@ if (existsSync(join(D, 'funds.json'))) {
     const fr = feeRow(r);
     if (fr.own && v.fee.basis === 'tender' && v.lever) ok(fr.tone !== 'green', `${r.f.k}: the card says above the default funds, the check-up is not green`);
     if (fr.own && v.fee.basis === 'avg' && v.fee.word === 'high') ok(fr.tone !== 'green', `${r.f.k}: the card says above the median, the check-up is not green`);
+  }
+
+  /* red team 06.11.26 · the synthetic fixture-plain.zip (Menora pension + Migdal policy) through the zip reader and the real import: the
+     dormant account is not fed an example deposit, the red total holds only the reader's own figures, the row, the letter and /my agree on
+     one anchor, and the card on /my and the check-up read the deposits through one engine */
+  {
+    const u = await unpackZip(new Uint8Array(readFileSync(join(FIX, 'fixture-plain.zip'))), null);
+    const merged = mergeMFiles(u.xml.map((x) => ({ name: x.name, file: parseMaslaka(readTree(decodeXml(x.data))) })));
+    const saved = applyRows([], rowsOf(merged, d.funds, 'zip'), '2026-11-06').list as CProd[];
+    const rows: CRow[] = saved.flatMap((m) => { const f = byK.get(m.k); return f ? [{ f, m, c: cardCalc(f, d.funds, d.asof, df, m, null, { age: 38, coef: 200, ret: 4, retire: 67 }) }] : []; });
+    const ck = checkupOf(rows, { age: 38, profileSalary: null, glide: gl, nowYm: '2026-11' });
+    const frozen = rows.find((r) => r.f.k === 'p2015'), active = rows.find((r) => r.f.k === 'p2184');
+    ok(saved.length === 3 && frozen && active, `fixture-plain.zip: 3 products saved (${saved.map((m) => m.k)})`);
+    ok(frozen!.c.plan.monthly === 0 && !frozen!.c.exMonthly && frozen!.c.noDep, `zip: the dormant Menora account (last deposit 01/2022) is projected with no future deposit (monthly ${frozen!.c.plan.monthly})`);
+    const fz = ck.fee!.rows.find((r) => r.k === 'p2015')!;
+    ok(fz.dormant && fz.last === '2022-01' && !fz.ex, 'zip: the dormant row is flagged for consolidation, not an example');
+    const exFree = ck.fee!.rows.filter((r) => r.tone === 'red' && !r.ex).reduce((s0, r) => s0 + (r.gap ?? 0), 0);
+    ok(Math.abs(ck.fee!.total - exFree) < 1e-6 && ck.fee!.rows.every((r) => !r.ex), `zip: the red headline total ${Math.round(ck.fee!.total)} ₪ = the reader's own red gaps; no row on example amounts`);
+    ok((fz.gap ?? 0) < 20000, `zip: the dormant account's gap is the balance's alone (${Math.round(fz.gap ?? 0)} ₪, was ~104,000 on an example deposit)`);
+    const ac = ck.fee!.rows.find((r) => r.k === 'p2184')!;
+    ok(ac.anchor === 'tender' && ac.ref?.fee === ac.ask?.fee && ac.ref?.depfee === ac.ask?.depfee && Math.abs(ac.gap! - active!.c.tBase!.g.balReal) < 1e-6 && Math.abs(gapOf(active!.c)!.v - ac.gap!) < 1e-6,
+      `zip: the pension row, its source, the letter and /my use one anchor (${ac.ref?.fee}/${ac.ref?.depfee}, ${Math.round(ac.gap ?? 0)} ₪)`);
+    // one deposit engine: the card's audit (components/saver/Deposits useDepAudit → depAuditOf) is the check-up's line 2, row for row
+    for (const r of rows) {
+      const card = depAuditOf(r.f, r.m, null, '2026-11'), line = ck.dep?.rows.find((x) => x.k === r.f.k)?.audit ?? null;
+      ok(JSON.stringify(card) === JSON.stringify(line), `zip: ${r.f.k}: /my's deposit audit and the check-up's agree`);
+    }
+    const ca = depAuditOf(active!.f, active!.m, null, '2026-11')!;
+    ok(ca.totalGap === 0 && depSummary(ca) === null, `zip: /my no longer says "10 months missing" for the Menora fund (${ca.months.length} months read, gap ${ca.totalGap})`);
+    const old = auditDeposits(active!.m.deposits!, 17500, defaultRates('pension'), 'pension');
+    ok(old.missing.length + old.short.length === 10, `zip: (the old 12-month window would have counted ${old.missing.length + old.short.length} months: the bug the red team saw)`);
+    ok(ck.dep!.rows.find((x) => x.k === 'p2015')?.why === 'inactive' && depAuditOf(frozen!.f, frozen!.m, null, '2026-11') === null, 'zip: the dormant account has no deposit audit on either page');
+    ok(redCount(ck) === ck.fee!.rows.filter((r) => r.tone === 'red').length + (ck.dep?.rows.filter((r) => r.tone === 'red').length ?? 0) + (ck.age?.rows.filter((r) => r.tone === 'red').length ?? 0), 'zip: the status counts the red items of the three lines');
+    // fixture-mor.xml: the study fund and the provident fund agree across both engines too
+    const mp = parseMaslaka(xmlTree(decodeXml(new Uint8Array(readFileSync(join(FIX, 'fixture-mor.xml'))))));
+    const ms = applyRows([], rowsOf(mp, d.funds, 'mor'), '2026-11-06').list as CProd[];
+    const mrows: CRow[] = ms.flatMap((m) => { const f = byK.get(m.k); return f ? [{ f, m, c: cardCalc(f, d.funds, d.asof, df, m, null, { age: 52, coef: 200, ret: 4, retire: 67 }) }] : []; });
+    const mck = checkupOf(mrows, { age: 52, profileSalary: 15000, glide: gl, nowYm: '2026-11' });
+    for (const r of mrows) ok(JSON.stringify(depAuditOf(r.f, r.m, 15000, '2026-11')) === JSON.stringify(mck.dep?.rows.find((x) => x.k === r.f.k)?.audit ?? null), `mor: ${r.f.k}: one deposit engine`);
+    ok(mck.fee!.rows.every((r) => !r.ex || r.tone !== 'red' || mck.fee!.total === mck.fee!.rows.filter((x) => x.tone === 'red' && !x.ex).reduce((s0, x) => s0 + (x.gap ?? 0), 0)), 'mor: the red total never carries an example row');
   }
 } else console.log('  (no web/public/data: the fixture walkthrough was skipped)');
 

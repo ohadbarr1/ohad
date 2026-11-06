@@ -8,8 +8,8 @@
    The anchor hierarchy for the fee line, one rule for every product (stated on the page; the same order as lib/myCalc gapOf and the
    report card's verdict, so the two cannot contradict each other):
      1. The reader's OWN fees on a comprehensive pension fund → the default-fund tender price in force (funds/default.json): the price
-        any member can get by joining through it, both parts, and the pair of the tender's conversion table that leaves the most money
-        on the reader's balance and deposit (CardCalc.tBest).
+        any member can get by joining through it, both parts. The ₪ gap is read against the tender's BASE price, the very pair the
+        letter asks for (CardCalc.tBase; red team 06.11.26: the row, its source and the letter showed three anchors for one product).
      2. The reader's own fees on any other product (השתלמות, גמל, general pension, policies) → the median of the averages actually paid
         in the category (רשות שוק ההון, גמל-נט / פנסיה-נט / ביטוח-נט), with the cheapest quarter as the figure to ask for and the legal
         ceiling as the upper bound. A השתלמות is read at its 6-year liquidity horizon.
@@ -18,7 +18,10 @@
    reader's own fee (red team 3, 02.11.26: an own fee read against the others' averages contradicted the verdict).
    Red: the reader's fees cost at least MIN_GAP ₪ (today's money) by the horizon against the anchor. Amber: the figure is unknown (no
    own fees), or the report card calls a part of the fee above its anchor while the ₪ gap stays under MIN_GAP (so the check-up is never
-   green where the card says "above"). Green: neither. */
+   green where the card says "above"). Green: neither.
+   Red team 06.11.26: a row on example amounts (no balance, or no deposit and no file) is labelled "לדוגמה" and left out of the red
+   headline total; a product the file shows with no current deposit is projected on its balance alone (lib/myCalc monthlyFor), and a
+   dormant account's action is consolidation ("איחוד חשבונות"), never a fee-cut letter. */
 import type { FeePair } from './fundsCalc';
 import type { CardCalc } from './myCalc';
 import type { VFund } from './verdict';
@@ -64,24 +67,41 @@ export interface FeeRow {
   tender: Tender | null;
   /** the part of an own pension fee above the tender's base price */
   lever: 'fee' | 'dep' | 'both' | null;
+  /** no deposit in the file for INACTIVE months or more (a frozen account): the action is consolidation, not a fee letter; `last`: the
+   *  last deposit month the file shows ('YYYY-MM'), when any */
+  dormant: boolean; last: string | null;
 }
 
-export function feeRow(r: CRow): FeeRow {
-  const { f, c } = r, v = c.v;
+/** the reference month of a product: the as-of month of the clearing-house file it came from, else `nowYm` */
+export const refYm = (m: CProd, nowYm?: string): string | undefined => (m.imp && validYm(m.imp.slice(0, 7)) ? m.imp.slice(0, 7) : nowYm);
+/** A dormant account: the reader typed no monthly deposit, and the clearing-house file (or the deposit rows) shows none in the INACTIVE
+ *  months before the reference month. An imported product with no deposit rows at all and no monthly deposit counts as dormant too. */
+export function dormantOf(m: CProd, nowYm?: string): { dormant: boolean; last: string | null } {
+  const yms = (Array.isArray(m.deposits) ? m.deposits : []).map((r) => r?.ym).filter(validYm).sort();
+  const last = yms.length ? yms[yms.length - 1] : null;
+  if (m.monthly != null) return { dormant: false, last };
+  const ref = refYm(m, nowYm);
+  if (last) return { dormant: !!ref && last < addMonths(ref, -INACTIVE), last };
+  return { dormant: !!m.imp, last };
+}
+
+export function feeRow(r: CRow, nowYm?: string): FeeRow {
+  const { f, c, m } = r, v = c.v;
   const tenderBasis = v.fee.basis === 'tender' || v.dep?.basis === 'tender';
   const own = c.ownAny;
   const cap = capOf(f.prod);
   const base = v.dflt && v.dflt.fee != null && v.dflt.depfee != null ? { fee: v.dflt.fee, depfee: v.dflt.depfee } : null;
   const ex = c.exBalance || c.exMonthly;
   const common = { k: f.k, name: f.name, prod: f.prod, track: f.track, own, mine: c.mine, ex, avg: { fee: f.fee, depfee: f.depfee },
-    med: v.fee.med, depMed: v.dep?.med ?? null, q1: v.fee.q1, cap: cap.legal ? { fee: cap.fee, depfee: cap.depfee } : null, tender: v.dflt?.tender ?? null, lever: v.lever };
-  if (own && tenderBasis && c.tBest) {
+    med: v.fee.med, depMed: v.dep?.med ?? null, q1: v.fee.q1, cap: cap.legal ? { fee: cap.fee, depfee: cap.depfee } : null, tender: v.dflt?.tender ?? null, lever: v.lever, ...dormantOf(m, nowYm) };
+  if (own && tenderBasis && c.tBase) {
     // above the tender's terms only when an allowed pair is no higher on both parts (the verdict's `above`); a part above the base
     // price on a pair the tender allows (a row of its conversion table) is the verdict's `lever`: amber. At the price: green, no gap,
     // even when another row of the table would leave more on the reader's amounts (that is a choice of mix, not an overcharge).
-    const above = !!v.dflt?.above, g = c.tBest.g.balReal;
+    // the ₪ is against the base price, the pair the letter asks for (one anchor: the row, its source and the letter agree)
+    const above = !!v.dflt?.above, g = c.tBase.g.balReal;
     const tone: Tone = above ? (g >= MIN_GAP ? 'red' : 'amber') : v.lever ? 'amber' : 'green';
-    return { ...common, tone, anchor: 'tender', ref: c.tBest.p, ask: base, gap: above || v.lever ? g : null, years: c.tBest.g.years, horizon: 'retire' };
+    return { ...common, tone, anchor: 'tender', ref: c.tBase.p, ask: base, gap: above || v.lever ? g : null, years: c.tBase.g.years, horizon: 'retire' };
   }
   const liq = c.liq;
   const g = liq ? liq.gMed : c.gMed;
@@ -93,15 +113,17 @@ export function feeRow(r: CRow): FeeRow {
   return { ...common, tone, anchor: 'avg', ref: c.med, ask, gap, years: g ? g.years : liq ? liq.years : c.plan.retire - c.plan.age, horizon: liq ? 'liq' : 'retire' };
 }
 
-export interface FeeLine { tone: Tone; rows: FeeRow[]; top: FeeRow | null; total: number }
-/** the fee line across the products: the worst tone; `top`: the product to act on first (the largest red gap, else amber, else the
- *  first); `total`: the red gaps added up (₪ today's money; each at its own horizon) */
-export function feeLine(rows: CRow[]): FeeLine | null {
+export interface FeeLine { tone: Tone; rows: FeeRow[]; top: FeeRow | null; total: number; exN: number }
+/** the fee line across the products: the worst tone; `top`: the product to act on first (the largest red gap on the reader's own
+ *  figures, then on example amounts, then amber, then the first); `total`: the red gaps on the reader's own figures added up (₪ today's
+ *  money; each at its own horizon): a row on example amounts is never summed into it; `exN`: the red rows left out for that reason */
+export function feeLine(rows: CRow[], nowYm?: string): FeeLine | null {
   if (!rows.length) return null;
-  const fr = rows.map(feeRow);
-  const by = (t: Tone) => fr.filter((x) => x.tone === t).sort((a, b) => (b.gap ?? 0) - (a.gap ?? 0))[0];
+  const fr = rows.map((r) => feeRow(r, nowYm));
+  const by = (t: Tone) => fr.filter((x) => x.tone === t).sort((a, b) => Number(a.ex) - Number(b.ex) || (b.gap ?? 0) - (a.gap ?? 0))[0];
   const top = by('red') ?? by('amber') ?? fr[0];
-  return { tone: worst(fr.map((x) => x.tone)), rows: fr, top, total: fr.filter((x) => x.tone === 'red').reduce((s, x) => s + (x.gap ?? 0), 0) };
+  const red = fr.filter((x) => x.tone === 'red');
+  return { tone: worst(fr.map((x) => x.tone)), rows: fr, top, total: red.filter((x) => !x.ex).reduce((s, x) => s + (x.gap ?? 0), 0), exN: red.filter((x) => x.ex).length };
 }
 
 /* ======================= line 2: deposits ======================= */
@@ -150,9 +172,13 @@ export function depRow(f: VFund, m: CProd, profileSalary: number | null, nowYm?:
   const tone: Tone = gapN ? (kind === 'pension' ? 'red' : 'amber') : audit.late.length || unsure.length ? 'amber' : 'green';
   return { ...base, months, unsure, tone, why: null, audit };
 }
+/** The one deposit engine (red team 06.11.26: /my said "10 months missing" where the check-up said "all deposited"): the audit of one
+ *  product as the check-up reads it, at the product's own reference month. The card on /my (components/saver/Deposits useDepAudit) and
+ *  the check-up's line 2 both call this. */
+export const depAuditOf = (f: VFund, m: CProd, profileSalary: number | null, nowYm?: string): Audit | null => depRow(f, m, profileSalary, refYm(m, nowYm))?.audit ?? null;
 export interface DepLine { tone: Tone; rows: DepRowOut[]; total: number }
 export function depLine(rows: CRow[], profileSalary: number | null, nowYm?: string): DepLine | null {
-  const out = rows.map((r) => depRow(r.f, r.m, profileSalary, r.m.imp && validYm(r.m.imp.slice(0, 7)) ? r.m.imp.slice(0, 7) : nowYm)).filter((x): x is DepRowOut => !!x);
+  const out = rows.map((r) => depRow(r.f, r.m, profileSalary, refYm(r.m, nowYm))).filter((x): x is DepRowOut => !!x);
   if (!out.length) return null;
   return { tone: worst(out.map((x) => x.tone)), rows: out, total: out.reduce((s, x) => s + (x.audit?.totalGap ?? 0), 0) };
 }
@@ -197,7 +223,13 @@ export function ageLine(rows: CRow[], age: number, glide: GlideData | null | und
 
 export interface Checkup { fee: FeeLine | null; dep: DepLine | null; age: AgeLine | null }
 export function checkupOf(rows: CRow[], o: { age: number; profileSalary: number | null; glide: GlideData | null | undefined; nowYm?: string }): Checkup {
-  return { fee: feeLine(rows), dep: depLine(rows, o.profileSalary, o.nowYm), age: ageLine(rows, o.age, o.glide) };
+  return { fee: feeLine(rows, o.nowYm), dep: depLine(rows, o.profileSalary, o.nowYm), age: ageLine(rows, o.age, o.glide) };
+}
+
+/** The items "לטיפול" (red) across the three lines: red fee rows, red deposit rows, red age rows; the count on the status line of the
+ *  saver home and /my after a check-up */
+export function redCount(ck: Checkup): number {
+  return (ck.fee?.rows.filter((r) => r.tone === 'red').length ?? 0) + (ck.dep?.rows.filter((r) => r.tone === 'red').length ?? 0) + (ck.age?.rows.filter((r) => r.tone === 'red').length ?? 0);
 }
 
 /* ======================= S2: the letters ======================= */
@@ -228,7 +260,7 @@ export function feeLetter(r: FeeRow, x: LetterCtx): string {
   }
   if (r.avg.fee != null) out.push(`הממוצע שמשלמים בפועל העמיתים במסלול שלי: ${pc(r.avg.fee)} מהצבירה${r.avg.depfee != null ? ` ו-${pc(r.avg.depfee)} מהפקדה` : ''} (${x.src}).`);
   if (r.cap) out.push(`התקרה בחוק: ${pc(r.cap.fee)} מהצבירה ו-${pc(r.cap.depfee)} מהפקדה (${CAPS_REG}).`);
-  const vs = r.ref ? (r.anchor === 'tender' ? `לעומת הצירוף מבין מחירי ההליך שמשאיר הכי הרבה כסף על הסכומים שלי (${pc(r.ref.fee)} מהצבירה ו-${pc(r.ref.depfee)} מהפקדה)` : `לעומת החציון בקטגוריה`) : '';
+  const vs = r.ref ? (r.anchor === 'tender' ? `לעומת מחיר ההליך (${pc(r.ref.fee)} מהצבירה ו-${pc(r.ref.depfee)} מהפקדה)` : `לעומת החציון בקטגוריה`) : '';
   if (r.gap != null && r.gap >= MIN_GAP) out.push(`לפי חישוב על ${r.ex ? 'סכומים לדוגמה' : 'היתרה וההפקדה שלי'}${vs ? `, ${vs}` : ''}, ההפרש מסתכם בכ-${ils(r.gap)} ${r.horizon === 'liq' ? `בעוד ${r.years} שנים` : `עד גיל ${x.retire}`} (אומדן, בשקלי היום).`);
   if (r.ask) out.push(r.anchor === 'tender'
     ? `אבקש להפחית את דמי הניהול שלי ל-${pc(r.ask.fee)} מהצבירה ו-${pc(r.ask.depfee)} מהפקדה, או לצירוף שווה ערך מטבלת ההמרה של ההליך, ולשלוח לי אישור בכתב.`
@@ -281,14 +313,38 @@ export function yearSaving(plan: Plan, before: FeePair, after: FeePair): number 
 }
 export { project };
 
-/** The 30-day reminder as a calendar file: one all-day event, a 09:00 alert, the page's address. No figure and no name in it. */
-export function icsOf(due: string, url: string, stamp: Date = new Date()): string {
+const ICS_TEXT = {
+  nego: { sum: 'fox · מה דמי הניהול עכשיו?', desc: (url: string) => `עברו 30 יום מהבקשה להפחית את דמי הניהול. בודקים בדוח או באזור האישי מה דמי הניהול עכשיו ומזינים אותם כאן: ${url}` },
+  year: { sum: 'fox · הבדיקה השנתית', desc: (url: string) => `עברה כמעט שנה מהבדיקה הקודמת. מורידים קובץ חדש מהמסלקה הפנסיונית ומריצים את הבדיקה שוב: ${url}` },
+} as const;
+/** The 30-day reminder (`kind` 'nego') or the annual one ('year') as a calendar file: one all-day event, a 09:00 alert, the page's
+ *  address. No figure and no name in it. */
+export function icsOf(due: string, url: string, stamp: Date = new Date(), kind: keyof typeof ICS_TEXT = 'nego'): string {
+  const T = ICS_TEXT[kind];
   const d = due.replace(/-/g, ''), d2 = addDays(due, 1).replace(/-/g, '');
   const ts = stamp.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//fox//checkup//HE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
-    `UID:fox-checkup-${d}-${Math.random().toString(36).slice(2, 10)}@fox-research-il.web.app`, `DTSTAMP:${ts}`, `DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${d2}`,
-    `SUMMARY:${esc('fox · מה דמי הניהול עכשיו?')}`, `DESCRIPTION:${esc(`עברו 30 יום מהבקשה להפחית את דמי הניהול. בודקים בדוח או באזור האישי מה דמי הניהול עכשיו ומזינים אותם כאן: ${url}`)}`,
-    `URL:${url}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc('fox · מה דמי הניהול עכשיו?')}`, 'TRIGGER;RELATED=START:PT9H', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'];
+    `UID:fox-${kind === 'year' ? 'year' : 'checkup'}-${d}-${Math.random().toString(36).slice(2, 10)}@fox-research-il.web.app`, `DTSTAMP:${ts}`, `DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${d2}`,
+    `SUMMARY:${esc(T.sum)}`, `DESCRIPTION:${esc(T.desc(url))}`,
+    `URL:${url}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(T.sum)}`, 'TRIGGER;RELATED=START:PT9H', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'];
   return lines.join('\r\n') + '\r\n';
 }
+
+/* ======================= the dormant account: consolidation ======================= */
+/** The request to consolidate a dormant account into the active one, first person, to the receiving (active) fund: under the transfer
+ *  regulations the member files the transfer request with the receiving fund, which handles it with the old one. It asks first which
+ *  rights the old account carries (insurance seniority, a guaranteed coefficient, the track) and the fee on the money moved: a request
+ *  and questions, never advice. `into`: the active product, when the list has one. */
+export function mergeLetter(r: { name: string; id?: number | null; last?: string | null }, into: { name: string; id?: number | null } | null): string {
+  const ym = (x: string) => `${x.slice(5, 7)}/${x.slice(0, 4)}`;
+  return ['שלום,',
+    `יש לי חשבון ב${r.name}${r.id ? ` (מספר קופה ${r.id})` : ''} שאין אליו הפקדות${r.last ? ` מאז ${ym(r.last)}` : ''}.`,
+    `אבקש לאחד אותו עם החשבון הפעיל שלי${into ? ` ב${into.name}${into.id ? ` (מספר קופה ${into.id})` : ''}` : ''}: להעביר אליו את כל הכסף שנצבר בחשבון שאין אליו הפקדות.`,
+    'לפני הביצוע אבקש לדעת בכתב אם באיחוד תאבד לי זכות כלשהי בחשבון הישן (למשל ותק בביטוח, מקדם המרה או מסלול), ומה יהיו דמי הניהול על הכסף שיועבר.',
+    'אבקש אישור בכתב כשההעברה מסתיימת.',
+    'תודה,'].join('\n');
+}
+
+/* the status after a check-up and the next date: lib/ckStatus (a small module the saver home can load without this one) */
+export { CK_STATUS_KEY, YEAR_MONTHS, addMonthsIso, nextCheckOf, normStatus, statusLine, type CkStatus } from './ckStatus';
