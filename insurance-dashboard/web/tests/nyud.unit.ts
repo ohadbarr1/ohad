@@ -3,7 +3,7 @@
    Run: npm run test:nyud */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { A1_COLS, BASIS_TEXT, UNCHANGED, allocOf, familyOf, annexPair, candLeg, checkDigit, coefDiff, coverDiff, feeDiff, fullCost, nyudTable, ownLeg, planOf, riskCost, seniority, type Candidate } from '../src/lib/nyud';
+import { A1_COLS, AGE_MISSING, BASIS_TEXT, UNCHANGED, agreedFor, allocOf, familyOf, annexPair, candLeg, checkDigit, coefDiff, coverDiff, feeDiff, fullCost, kindOf, nyudTable, ownLeg, pairKinds, pairsOf, pairsToFields, planOf, riskCost, seniority, tenderPreset, type Candidate } from '../src/lib/nyud';
 import { A1, DEFAULT_RULE, DOC_B, DOC_KINDS, FOLLOWED, FORBIDDEN, LETTER, PART_B, PART_C, PART_E, RULES, allQuotes } from '../src/lib/hanmaka';
 import { EMPTY_BRAND, LOGO_MAX_BYTES, brandLine, hasBrand, logoBytes, normBranding } from '../src/lib/branding';
 import { brandOfFile, decryptShare, encryptFolder, exportText, isShareFile, normClients, normFolder, type Folder, type Held } from '../src/lib/clients';
@@ -26,7 +26,10 @@ const COEF: CoefFile = { v: 1, asof: '2026-10', method: '', ages: [60, 62, 64, 6
 {
   const h = H(), c = C('p2'), t = C('i1', { prod: 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', pen: false, fee: 1.1, depfee: 3.5 });
   ok(ownLeg(h, t).basis === 'file' && ownLeg(H({ fee: null }), t).basis === 'avg' && ownLeg(H({ fee: null }), null).basis === 'none', 'own fee: the file, else the matched track\'s average, else none');
-  ok(candLeg(c).basis === 'avg' && candLeg(C('p9', { dflt: { t: '2024', fee: 0.22, depfee: 1 } })).basis === 'tender' && near(candLeg(C('p9', { dflt: { t: '2024', fee: 0.22, depfee: 1 } })).pair.fee, 0.22), 'candidate fee: the tender price when a default fund, else the average');
+  const dc = C('p9', { dflt: { t: '2024', fee: 0.22, depfee: 1 } });
+  ok(candLeg(c).basis === 'avg' && candLeg(dc).basis === 'avg' && /הנחה/.test(candLeg(dc).how), 'candidate fee: the published average, labelled an assumption; a default fund too (the tender price is no longer the silent default)');
+  ok(candLeg(dc, tenderPreset(dc)).basis === 'tender' && near(candLeg(dc, tenderPreset(dc)).pair.fee, 0.22) && tenderPreset(c) === null, 'the tender price as a preset the agent picks');
+  ok(candLeg(dc, { depfee: 1.5, fee: 0.18, src: 'agreed' }).basis === 'agreed' && near(candLeg(dc, { depfee: 1.5, fee: 0.18, src: 'agreed' }).pair.depfee, 1.5), 'the fee agreed with the client wins');
   const d = feeDiff(h, t, c, IN).d!;
   ok(d && d.balRealDiff > 0 && d.feesRealDiff > 0 && d.balCand > d.balOwn && near(d.years, 27), 'a cheaper candidate leaves more money by retirement (27 years)');
   ok(near(d.annualOwn, 300000 * 0.01 + 24000 * 0.03) && near(d.annualCand, 300000 * 0.003 + 24000 * 0.02), 'this year\'s fee cost: balance × fee + 12 × deposit × deposit fee');
@@ -38,8 +41,14 @@ const COEF: CoefFile = { v: 1, asof: '2026-10', method: '', ages: [60, 62, 64, 6
   const db = feeDiff(h, t, c, { ...IN, basis: 'annexB' }).d!;
   ok(db.balRealDiff > 0 && Math.abs(db.balRealDiff - d.balRealDiff) > 1, 'annex B basis gives a different (still positive) figure');
   ok(/4\.86/.test(BASIS_TEXT.annexB) && /lib\/retire/.test(BASIS_TEXT.fox), 'each basis says what it is, annex B names the designated-bond slice it does not model');
-  const ex = feeDiff(H({ balance: null, monthly: null }), t, c, IN).d!;
-  ok(ex.exBalance && ex.exMonthly && ex.balance === 100000, 'no balance in the file: the example amounts, flagged');
+  // red team 06.11.26: nothing invented. No deposit in the file: zero future deposits; no balance: zero; neither: no figure
+  const nd = feeDiff(H({ monthly: null }), t, c, IN).d!;
+  ok(nd.exMonthly && nd.monthly === 0 && nd.balance === 300000, 'no deposit in the file: projected with zero future deposits, flagged');
+  ok(feeDiff(H({ monthly: null }), t, c, { ...IN, depositWhenMissing: 1000 }).d!.monthly === 1000, 'a caller may pass its own deposit for a product the file has none for (depositWhenMissing)');
+  const nb = feeDiff(H({ balance: null }), t, c, IN).d!;
+  ok(nb.exBalance && nb.balance === 0 && nb.monthly === 2000, 'no balance in the file: zero, flagged (never ₪100,000)');
+  ok(feeDiff(H({ balance: null, monthly: null }), t, c, IN).d === null, 'no balance and no deposit: no projection');
+  ok(feeDiff(h, t, c, { ...IN, age: null }).d === null && feeDiff(h, t, c, { ...IN, age: null }).why === AGE_MISSING && coefDiff(H({ coefGuaranteed: { v: 160, at: 67, src: 'file' } }), c, null, COEF, { ...IN, age: null }).d === null, 'no age: no projection, the reason instead (never a silent 38)');
 }
 
 /* ---- covers ---- */
@@ -73,8 +82,29 @@ const COEF: CoefFile = { v: 1, asof: '2026-10', method: '', ages: [60, 62, 64, 6
   const s = seniority(h, C('g2', { prod: 'השתלמות', pen: false }))!;
   ok(/6 שנים/.test(s.text) && /הוותק נשמר/.test(s.text) && /2008/.test(s.src) && /לא נבדק/.test(s.src), 'another fund: the clock, both cases, the source (with its unverified part named)');
   ok(seniority(H(), C('p2')) === null, 'not השתלמות: no seniority line');
-  const t = nyudTable([H(), h], [C('i1', { prod: 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', pen: false }), C('p2', { dflt: { t: '2024', fee: 0.22, depfee: 1 } }), C('p3')], { i1: 'קיים', p2: 'נבחן', p3: 'מומלץ' }, COEF, IN, '09/2026');
-  ok(t.rows.length === 2 && t.cands.map((c) => c.k).join() === 'p3,p2' && t.exist.length === 2 && t.skipped.length === 2 && t.skipped.every((x) => /לא ניוד באותה משפחת מוצרים/.test(x)), 'two existing × two candidates, recommended first; the השתלמות product is not paired with pension candidates (not a ניוד), said so');
+  const cs = [C('i1', { prod: 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', pen: false }), C('p2', { dflt: { t: '2024', fee: 0.22, depfee: 1 } }), C('p3')];
+  const tg = { i1: 'קיים', p2: 'נבחן', p3: 'מומלץ' };
+  // red team 06.11.26: one pension pick no longer pairs every product. Auto: none (a managers' policy waits; השתלמות has no השתלמות candidate)
+  const t0 = nyudTable([H(), h], cs, tg, COEF, IN, '09/2026');
+  ok(t0.rows.length === 0 && t0.cands.map((c) => c.k).join() === 'p3,p2' && t0.slots.length === 2 && t0.slots[0].pick === null && /ביטוח מנהלים/.test(t0.slots[0].block!) && t0.skipped.length === 2, 'auto pairing: the managers\' policy is not paired with a pension candidate; the השתלמות fund has no candidate of its kind');
+  ok(t0.slots[0].options.map((o) => o.k).join() === 'p3,p2' && t0.slots[1].options.length === 0, 'by hand: the managers\' policy may go to an annuity product; השתלמות only to השתלמות');
+  // the agent pairs the managers' policy with p3 by hand: one row, one candidate
+  const t = nyudTable([H(), h], cs, tg, COEF, IN, '09/2026', { pick: { 0: 'p3' } });
+  ok(t.rows.length === 1 && t.rows[0].cand.k === 'p3' && t.rows[0].i === 0 && t.exist.length === 2, 'one product, one candidate: the pick');
+  ok(nyudTable([H(), h], cs, tg, COEF, IN, '09/2026', { pick: { 0: 'zz' } }).rows.length === 0, 'a pick that is not a candidate is ignored');
+  // pension ↔ pension automatically; gemel never with a pension candidate; a closed track and an unmatched one not automatically
+  const P = (o: Partial<Held>) => H({ typeHe: 'קרן פנסיה', coefGuaranteed: null, covers: [], ...o });
+  const pens = nyudTable([P({ k: 'p5' }), P({ k: 'p6', monthly: null }), H({ k: 'g7', typeHe: 'קופת גמל', covers: [] }), P({ k: 'p8', track: 'מסלול שנסגר לדוגמה' }), P({ k: null })],
+    [C('p5'), C('p6'), C('g7', { prod: 'גמל', pen: false }), C('p8'), C('p3')], { p5: 'קיים', p6: 'קיים', g7: 'קיים', p8: 'קיים', p3: 'מומלץ' }, COEF, IN, '09/2026');
+  ok(pens.rows.map((r) => r.i).join() === '0,1' && pens.rows.every((r) => r.cand.k === 'p3'), `pension ↔ pension only: the two active-track pension funds (${pens.rows.map((r) => r.i)})`);
+  ok(pens.slots.find((x) => x.i === 2)!.options.length === 0 && /סגור/.test(pens.slots.find((x) => x.i === 3)!.block!) && /סגור|בלי מסלול/.test(pens.slots.find((x) => x.i === 4)!.block!), 'the provident fund has no pension option; the closed and the unmatched tracks wait for the agent');
+  ok(kindOf('קרן פנסיה') === 'pension' && kindOf('פנסיה מקיפה') === 'pension' && kindOf('קופת גמל') === 'gemel' && kindOf('גמל') === 'gemel' && kindOf('קרן השתלמות') === 'hish' && kindOf('ביטוח מנהלים (ביטוח חיים משולב חיסכון)') === 'managers' && kindOf('פוליסות חיסכון וביטוחי מנהלים (מ-2004)') === 'managers' && kindOf('גמל להשקעה') === 'invest', 'product kinds');
+  ok(pairKinds('pension').join() === 'pension' && pairKinds('managers').join() === 'managers,pension,gemel' && pairKinds('other').length === 0, 'the kinds a product may be paired with');
+  // the pairing inputs in the folder's fields
+  const pf = pairsToFields({ x: '1', 'nyud:pair:9': 'p1' }, { pick: { 0: 'p3', 1: '-' }, ok: { 0: true }, fee: { 0: { depfee: 1.5, fee: 0.2, src: 'agreed' } }, cover: { 0: 120 } });
+  const pb = pairsOf(pf);
+  ok(pf.x === '1' && !pf['nyud:pair:9'] && pb.pick!['0'] === 'p3' && pb.pick!['1'] === '-' && pb.ok!['0'] && pb.fee!['0'].depfee === 1.5 && pb.fee!['0'].src === 'agreed' && pb.cover!['0'] === 120 && agreedFor(pb, 'p3')!.fee === 0.2, 'pairs round-trip through the folder fields; old pairing fields dropped');
+  ok(Object.keys(pairsOf({ 'nyud:pair:0': 'bad', 'nyud:fee:0': '50/1/agreed', 'nyud:cov:0': '-3' }).pick!).length === 0 && Object.keys(pairsOf({ 'nyud:fee:0': '50/1/agreed' }).fee!).length === 0, 'malformed pairing fields are dropped');
   ok(familyOf('קרן השתלמות') === 'hish' && familyOf('השתלמות') === 'hish' && familyOf('ביטוח מנהלים') === 'kitzba' && familyOf('פנסיה מקיפה') === 'kitzba' && familyOf('גמל') === 'kitzba' && familyOf('גמל להשקעה') === 'invest' && familyOf('מרכזית לפיצויים') === 'other', 'families: annuity products together, השתלמות apart, גמל להשקעה apart');
   const hh = nyudTable([h], [C('g2', { prod: 'השתלמות', pen: false, fee: 0.5, depfee: 0 })], { g2: 'מומלץ' }, COEF, IN, '09/2026');
   ok(hh.rows.length === 1 && hh.rows[0].seniority != null && hh.rows[0].fee != null, 'השתלמות against השתלמות: a row with the seniority line');
@@ -83,14 +113,20 @@ const COEF: CoefFile = { v: 1, asof: '2026-10', method: '', ages: [60, 62, 64, 6
   ok(A1_COLS.length === 10 && Object.keys(r.annex.before).length === 10 && Object.keys(r.annex.after).length === 10, 'ten columns of part א.1');
   const same = annexPair(H({ k: 'p9' }), C('p9', { st: 55 }), C('p8', { st: 55 }), null, null, '09/2026');
   ok(same.after['רמת הסיכון של מסלול ההשקעה'] === UNCHANGED && same.after['המלצה'] === '', '"לא שונה" where a parameter does not change (§5א(1)(ח)), never in the recommendation column');
-  const dr = t.rows.find((x) => x.cand.k === 'p2')!;
-  ok(dr.fee!.cand.basis === 'tender' && dr.notes.some((n) => /ברירת מחדל/.test(n) && /10 שנים/.test(n)), 'a default-fund candidate: the tender price and its note');
+  const dr = nyudTable([H(), h], cs, tg, COEF, IN, '09/2026', { pick: { 0: 'p2' }, fee: { 0: tenderPreset(cs[1])! } }).rows[0];
+  ok(dr.fee!.cand.basis === 'tender' && dr.annex.after['דמי ניהול מהפקדות'].includes('מחיר המכרז') && /מחיר המכרז/.test(dr.annex.assume.after['דמי ניהול מהפקדות']!) && dr.notes.some((n) => /ברירת מחדל/.test(n) && /10 שנים/.test(n)), 'a default-fund candidate with the tender preset: the price stamped "הנחה" and its note');
   ok(r.notes.some((n) => /קרן פנסיה, נזילות/.test(n)) && r.notes.some((n) => /ביטוח מנהלים/.test(n) && /מקדם/.test(n)), 'the rules\' liquidity line and the managers\'-insurance reminder');
-  const g = nyudTable([H({ coefGuaranteed: { v: 150, at: null, src: 'agent' } })], [C('p2')], { p2: 'מומלץ' }, COEF, IN, '09/2026');
+  const g0 = nyudTable([H({ coefGuaranteed: { v: 150, at: null, src: 'agent' } })], [C('p2')], { p2: 'מומלץ' }, COEF, IN, '09/2026', { pick: { 0: 'p2' } });
+  ok(g0.rows.length === 0 && g0.slots[0].needOk && g0.skipped.some((x) => /מקדם מובטח 150 יאבד/.test(x)), 'a guaranteed coefficient: picked, still out of the table until confirmed');
+  const g = nyudTable([H({ coefGuaranteed: { v: 150, at: null, src: 'agent' } })], [C('p2')], { p2: 'מומלץ' }, COEF, IN, '09/2026', { pick: { 0: 'p2' }, ok: { 0: true } });
   ok(g.rows[0].questions.length === 1 && g.rows[0].questions[0].id === 'א' && /מקדם 150/.test(g.rows[0].questions[0].detail), 'a guaranteed coefficient answers question (א) in the affirmative');
   ok(r.questions.length === 0, 'no guaranteed coefficient, no old fund: no question');
-  const fc = fullCost(t.rows)!;
-  ok(fc.n === 2 && fc.own > 0 && fc.cand > 0, 'the full cost line sums the rows that have a figure');
+  // the managers' policy has covers with a cost; the pension candidate's is unknown: not comparable, no headline, out of the full cost
+  ok(r.incomplete && /לא בר השוואה/.test(r.incomplete) && fullCost(t.rows) === null, 'managers\' policy against a pension with an unknown cover cost: not comparable yet, not in the full cost');
+  const tf = nyudTable([H(), h], cs, tg, COEF, IN, '09/2026', { pick: { 0: 'p3' }, cover: { 0: 150 } });
+  const fc = fullCost(tf.rows)!;
+  ok(tf.rows[0].incomplete === null && near(tf.rows[0].cover.diff, 50) && fc.n === 1 && fc.own > 0 && fc.cand > 0 && fc.left === 0, 'the agent fills the proposed cover cost: comparable, in the full cost');
+  ok(pens.rows.every((x) => x.incomplete === null), 'pension against pension keeps its fee line');
   ok(nyudTable([H({ k: 'p3' })], [C('p3')], { p3: 'מומלץ' }, COEF, IN, '').skipped.length === 1, 'a product already in the candidate\'s track is skipped and said');
   ok(JSON.stringify(t.rows).indexOf('אשתקד') < 0 && !FORBIDDEN.test(JSON.stringify(t.rows)), 'no forbidden words in the rows');
 }

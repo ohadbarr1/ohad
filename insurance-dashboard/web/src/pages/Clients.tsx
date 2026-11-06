@@ -10,7 +10,8 @@ import { useStored, writeStored } from '../lib/local';
 import { BrandPanel } from '../components/agent/BrandPanel';  // W7
 import { ShareFolder, ShareImport } from '../components/agent/ShareFolder';  // W7
 import { NyudTable } from '../components/agent/NyudTable';  // W7
-import { nyudTable, type Basis } from '../lib/nyud';
+import { nyudTable, pairsOf, type Basis } from '../lib/nyud';
+import { nyudInOf } from '../components/agent/DocBar';
 import { hasBrand, normBranding, useBranding } from '../lib/branding';
 import { useOptional } from '../lib/fundsLoad';
 import { COEF_PATH, type CoefFile } from '../lib/coef';
@@ -19,6 +20,9 @@ import { docRow } from '../lib/compareDoc';
 import type { FundX } from '../lib/funds';
 import { today } from '../lib/visits';
 import { CallList, Reviews } from '../components/agent/CallList';  // fox 3.0 phase 2: A4, A5
+import { CALLS_KEY, bookCsv, callList, normCalls } from '../lib/agentDesk';  // red team 06.11.26: the CRM export
+import { DECISION_PATH, type DecisionFile } from '../lib/decision';
+import type { FeesFile } from '../lib/flows';
 import { BookSafe } from '../components/agent/BookSafe';
 import { RiskSide } from '../components/agent/RiskSide';  // fox 3.0 A6: הר הביטוח  // fox 3.0 phase 2: install, encrypted backup, restore
 import { Ico } from '../components/home/glyphs';
@@ -61,7 +65,7 @@ function NyudDetails({ f, data, dfile, coefF }: { f: Folder; data: FundsFile | u
   const rows: SnapRow[] = f.snap?.rows.length ? f.snap.rows : (data ? f.keys.map((k) => data.funds.find((x) => x.k === k)).filter((x): x is FundX => !!x).map((x) => docRow(x, { net: f.b === 'net', asof: data.asof, dfile })) : []);
   if (!rows.length) return null;
   const asof = f.snap?.asof ?? data?.asof ?? 0;
-  const out = nyudTable(f.held, rows, f.tags, coefF, { basis }, ym(asof));
+  const out = nyudTable(f.held, rows, f.tags, coefF, { basis, ...nyudInOf(f) }, ym(asof), pairsOf(f.fields));
   return <details className="cl-nyud"><summary>ניוד: לפני ואחרי ({out.rows.length} זוגות) · {f.snap ? 'על הצילום' : 'על נתוני היום'}</summary><NyudTable out={out} basis={basis} onBasis={setBasis} asofText={ym(asof)} /></details>;
 }
 
@@ -79,6 +83,15 @@ export function Clients() {
   const openDoc = (f: Folder) => { writeStored(LAST_FOLDER_KEY, f.id); nav(`/funds/compare/print?k=${f.keys.join(',')}&b=${f.b}`, { state: { folder: f.id } }); };
   // W5: the folders live in this browser only; the page says when they were last exported (no cloud copy: owner decision pending)
   const [, setLastBackup] = useStored<string>(BACKUP_KEY, '');
+  // red team 06.11.26: one click, the book as a CSV for the agent's CRM (UTF-8 with BOM, Hebrew headers); the call list's open lines
+  const fees = useOptional<FeesFile>('flows/fees.json');
+  const dec = useOptional<DecisionFile>(DECISION_PATH);
+  const [callsRaw] = useStored<unknown>(CALLS_KEY, null);
+  const exportCsv = () => {
+    const calls = data ? callList({ folders: list, funds: data.funds as FundX[], asof: data.asof, today: today(), ranks: null, fees, dfile, dec }) : [];
+    const blob = new Blob([bookCsv(list, { today: today(), calls, handled: normCalls(callsRaw).handled })], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fox-clients-crm-${today()}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
   const exportFile = () => {
     const blob = new Blob([exportText(file, today(), hasBrand(brand) ? brand : undefined)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fox-clients-${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -138,11 +151,12 @@ export function Clients() {
       <Panel title="העברה בין מכשירים" aside={<span>קובץ JSON</span>}>
         <div className="cl-io">
           <button type="button" className="chip" onClick={exportFile} disabled={!list.length}><Icon name="download" /> ייצוא לקובץ לא מוצפן</button>
+          <button type="button" className="chip" onClick={exportCsv} disabled={!list.length}><Icon name="download" /> ייצוא ל-CRM (CSV)</button>
           <label className="chip cl-imp">ייבוא מקובץ / שחזור<input type="file" accept="application/json,.json" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} /></label>
           {msg && <span role="status" className="muted">{msg}</span>}
         </div>
         <ShareImport />
-        <div className="fnote">שום דבר מהתיקים לא נשלח לשרת ולא נכנס לכתובת העמוד. הקובץ כולל את שמות הלקוחות כפי שהקלדתם, את טיוטות ההנמקה ואת פרטי בעל הרישיון: שמרו אותו כמו כל מסמך לקוח. "שיתוף תיק" (בכל תיק) מייצא תיק אחד כקובץ מוצפן בסיסמה, לסוכן אחר או למכשיר אחר. בייבוא, תיק שכבר קיים מתעדכן רק כשהעותק בקובץ חדש יותר.</div>
+        <div className="fnote">שום דבר מהתיקים לא נשלח לשרת ולא נכנס לכתובת העמוד. הקובץ כולל את שמות הלקוחות כפי שהקלדתם, את טיוטות ההנמקה ואת פרטי בעל הרישיון: שמרו אותו כמו כל מסמך לקוח. "שיתוף תיק" (בכל תיק) מייצא תיק אחד כקובץ מוצפן בסיסמה, לסוכן אחר או למכשיר אחר. בייבוא, תיק שכבר קיים מתעדכן רק כשהעותק בקובץ חדש יותר. "ייצוא ל-CRM": שורה לכל תיק (מזהה ושם כפי שנשמרו, מוצרים, נושאים פתוחים מרשימת השיחות, מועד הסקירה הבא), קובץ CSV שנפתח ב-Excel ונטען ל-CRM; בלי מספרי זהות.</div>
       </Panel>
       <Reminders door="agent" />
     </div>

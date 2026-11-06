@@ -25,7 +25,8 @@ import { catKey, type FundX } from './funds';
 import { isoYm, priceOf, tendersOf, type DefaultFile, type Tender } from './fundsTools';
 import { defaultHits, isPension, periodText } from './pensionPack';
 import { SEG_HE, segOf, srcOf, svcOf, type DecisionFile } from './decision';
-import { addMonths, tenderHits } from './agentBook';
+import { addMonths, feeMedians, tenderHits } from './agentBook';
+import { KIND_HE, kindOf, type Kind } from './nyud';
 import type { FeesFile } from './flows';
 
 /* ---------- small helpers ---------- */
@@ -43,13 +44,26 @@ export const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b
 const heldName = (h: Held) => [h.typeHe, h.provider].filter(Boolean).join(' · ');
 
 /* ---------- A4 · the call list ---------- */
-export type TrigId = 'q4' | 'act' | 'fee' | 'tender' | 'svc';
+/** Red team 06.11.26: the list leads with what the agent bills on, from the client's OWN file (level 'client'):
+ *    depfee  the client's deposit fee above the tender price in force (pension) or above the category's median published average
+ *    accfee  the client's fee from savings above the category's median published average
+ *    merge   two or more accounts of the same kind (pension, provident, study fund) to consolidate
+ *    coef    a policy with a guaranteed annuity coefficient (the cohort to handle with care)
+ *  then the market-level lines about the client's tracks (level 'market': act, q4, fee, tender, svc), shown below. */
+export type TrigId = 'depfee' | 'accfee' | 'merge' | 'coef' | 'q4' | 'act' | 'fee' | 'tender' | 'svc';
 export const TRIG_HE: Record<TrigId, string> = {
+  depfee: 'דמי ניהול מהפקדה גבוהים', accfee: 'דמי ניהול מצבירה גבוהים', merge: 'חשבונות לאיחוד', coef: 'מקדם קצבה מובטח',
   q4: 'רבע תחתון 3 חודשים ברצף', act: 'מאזן אקטוארי שלילי', fee: 'עליית דמי ניהול', tender: 'מכרז ברירת המחדל', svc: 'ירידה במדד השירות',
 };
-export const TRIG_ORDER: TrigId[] = ['act', 'q4', 'fee', 'tender', 'svc'];
+export const CLIENT_TRIGS: TrigId[] = ['depfee', 'accfee', 'merge', 'coef'];
+export const TRIG_ORDER: TrigId[] = [...CLIENT_TRIGS, 'act', 'q4', 'fee', 'tender', 'svc'];
+export const levelOf = (id: TrigId): 'client' | 'market' => (CLIENT_TRIGS.includes(id) ? 'client' : 'market');
 export interface Trigger {
   id: TrigId;
+  /** 'client': from the client's own file (fees, accounts, coefficient); 'market': published data about the client's track */
+  level: 'client' | 'market';
+  /** ₪ a year the line is about, when the file gives what it needs (fee gap × balance or deposits); never in the message */
+  amount?: number | null;
   /** stable: the trigger, the track and the data it rests on */
   key: string;
   /** the client's product(s) it is about */
@@ -81,7 +95,75 @@ export const SRC = {
   act: 'פנסיה-נט: האיזון האקטוארי כפי שהקרן דיווחה, באחוזים מהעתודות, פעם ברבעון (funds.json)',
   fee: 'הרשות לשוק ההון: דמי ניהול מצבירה, ממוצע בפועל של המסלול (AVG_ANNUAL_MANAGEMENT_FEE), חודשים שבהם השיעור זז ב-5 נ"ב או יותר (flows/fees.json); לא בהכרח דמי הניהול של הלקוח',
   tender: 'רשות שוק ההון: הודעות התוצאות של הליכי קרנות ברירת המחדל (funds/default.json)',
+  file: 'קובץ המסלקה של הלקוח (דמי הניהול, היתרות וההפקדות שלו)',
+  med: 'הרשות לשוק ההון: חציון הממוצע בפועל שפורסם למסלולי אותה קטגוריה (מוצר | מסלול; 3 מסלולים לפחות, אחרת המוצר כולו), חישוב האתר',
 } as const;
+const ilsT = (v: number) => `₪${Math.round(v).toLocaleString('en-US')}`;
+const KIND_PL: Partial<Record<Kind, string>> = { pension: 'קרנות פנסיה', gemel: 'קופות גמל', hish: 'קרנות השתלמות' };
+/** materiality, so the list stays a call list (fox's thresholds, not a rule): a deposit fee 0.25 points or more above the reference;
+ *  a fee from savings above the median worth ₪200 a year or more on the client's balance */
+export const DEP_MIN_GAP = 0.25, ACC_MIN_ILS = 200;
+
+/** red team 06.11.26 · the client-level money lines of one folder, from the client's own file against published references */
+export function clientTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>, meds = feeMedians(inp.funds)): Trigger[] {
+  const out: Trigger[] = [];
+  const ts = tendersOf(inp.dfile);
+  const cur = ts.find((t) => isoYm(t.from) <= inp.asof && inp.asof <= isoYm(t.to)) ?? ts[0] ?? null;
+  const tp = cur ? cur.winners.map((w) => priceOf(cur, w)) : [];
+  const tDep = tp.map((p) => p.depfee).filter((v): v is number => v != null), tFee = tp.map((p) => p.fee).filter((v): v is number => v != null);
+  const tender = cur && tDep.length ? { depfee: Math.max(...tDep), fee: tFee.length ? Math.max(...tFee) : null, label: cur.label ?? cur.id, src: cur.src_title ?? cur.src } : null;
+  const asofT = ymShort(inp.asof);
+  f.held.forEach((h, i) => {
+    if (h.risk) return;
+    const x = h.k ? byK.get(h.k) : undefined;
+    const kind = kindOf(x ? x.prod : h.typeHe) === 'other' ? kindOf(h.typeHe) : kindOf(x ? x.prod : h.typeHe);
+    const what = `${heldName(h)}${x ? ` · ${x.name}` : h.track ? ` · ${h.track}` : ''}`;
+    const cm = x ? meds.cat.get(catKey(x)) : undefined, pm = x ? meds.prod.get(x.prod) : undefined;
+    // the deposit fee: the tender price in force for a pension fund; else the category's (or product's) median
+    if (h.depfee != null && h.depfee > 0) {
+      const pen = kind === 'pension' && tender;
+      // a managers' policy: its own track's published average (the category mixes in pure savings policies, whose deposit fee is ~0)
+      const ref = pen ? { v: tender!.depfee, what: `המחיר הגבוה בהליך ברירת המחדל שבתוקף (${tender!.label})`, src: `${SRC.tender}; ${tender!.src}` }
+        : kind === 'managers' && x && x.depfee != null ? { v: x.depfee, what: `הממוצע בפועל במסלול ${x.name} (${asofT})`, src: 'הרשות לשוק ההון: הממוצע בפועל של המסלול מהפקדות (AVG_DEPOSIT_FEE)' }
+        : kind === 'managers' ? null
+        : cm && cm.depfee != null && cm.nd >= 3 ? { v: cm.depfee, what: `חציון "${catKey(x!)}" (${cm.nd} מסלולים, ${asofT})`, src: SRC.med }
+        : pm && pm.depfee != null && pm.nd >= 3 ? { v: pm.depfee, what: `חציון ${x!.prod} (${pm.nd} מסלולים, ${asofT})`, src: SRC.med } : null;
+      if (ref && h.depfee >= ref.v + DEP_MIN_GAP) {
+        const amt = h.monthly != null && h.monthly > 0 ? (h.monthly * 12 * (h.depfee - ref.v)) / 100 : null;
+        out.push({ id: 'depfee', level: 'client', amount: amt, key: `depfee|${i}|${h.depfee}|${ref.v}`, what, k: h.k, month: null,
+          title: `דמי ניהול מהפקדה ${pc2(h.depfee)} מול ${pc2(ref.v)}`,
+          detail: `${ref.what}${amt != null ? `; על ההפקדה בקובץ: ${ilsT(amt)} בשנה` : '; אין הפקדה בקובץ (חשבון לא פעיל): משמעותי אם ההפקדות יחודשו'}`,
+          src: `${SRC.file}; ${ref.src}`, msg: `דמי הניהול מהפקדה ב${KIND_HE[kind] === 'אחר' ? 'חשבון' : KIND_HE[kind]} שלך הם ${pc2(h.depfee)}, מעל ${pen ? 'מחיר המכרז של קרנות ברירת המחדל' : kind === 'managers' ? 'הממוצע במסלול שלך' : 'החציון של מסלולים דומים'} (${pc2(ref.v)}). כדאי לבדוק אם אפשר להוריד אותם.` });
+      }
+    }
+    // the fee from savings against the category's median
+    const m = cm && cm.fee != null && cm.n >= 3 ? { v: cm.fee, what: `חציון "${catKey(x!)}" (${cm.n} מסלולים, ${asofT})` } : null;
+    const accAmt = m && h.fee != null ? ((h.fee - m.v) / 100) * (h.balance ?? 0) : 0;
+    if (m && h.fee != null && (h.balance ?? 0) > 0 && h.fee > m.v + 0.005 && accAmt >= ACC_MIN_ILS) {
+      const amt = accAmt;
+      out.push({ id: 'accfee', level: 'client', amount: amt, key: `accfee|${i}|${h.fee}|${m.v}`, what, k: h.k, month: inp.asof,
+        title: `דמי ניהול מצבירה ${pc2(h.fee)} מול ${pc2(m.v)}`, detail: `${m.what}; על היתרה בקובץ: ${ilsT(amt)} בשנה`,
+        src: `${SRC.file}; ${SRC.med}`, msg: `דמי הניהול מהצבירה ב${KIND_HE[kind] === 'אחר' ? 'חשבון' : KIND_HE[kind]} שלך הם ${pc2(h.fee)}, מעל החציון של מסלולים דומים (${pc2(m.v)}). כדאי לבדוק אם אפשר להוריד אותם.` });
+    }
+    // the guaranteed-coefficient cohort
+    const g = h.coefGuaranteed;
+    if (g && g.v > 0) out.push({ id: 'coef', level: 'client', key: `coef|${i}|${g.v}`, what, k: h.k, month: null,
+      title: `מקדם קצבה מובטח ${g.v}${g.at ? ` לגיל ${g.at}` : ''}`, detail: 'ניוד או הפסקת הפקדות מוותרים על המקדם; לבדוק את תנאי הפוליסה ואת כדאיות ההפקדות אליה (§5א(1)(ט)(6)(א) בחוזר מסמך הנמקה)',
+      src: g.src === 'file' ? `${SRC.file} (מקדם מובטח לפרישה)` : 'המקדם כפי שבעל הרישיון הזין בתיק', msg: 'בפוליסה שלך רשום מקדם קצבה מובטח. לפני כל שינוי בה כדאי לעבור יחד על המשמעות.' });
+  });
+  // accounts of the same kind to consolidate
+  const by = new Map<Kind, { h: Held; i: number }[]>();
+  f.held.forEach((h, i) => { if (h.risk || !((h.balance ?? 0) > 0)) return; const x = h.k ? byK.get(h.k) : undefined; const k = kindOf(h.typeHe) !== 'other' ? kindOf(h.typeHe) : kindOf(x?.prod ?? ''); if (k === 'pension' || k === 'gemel' || k === 'hish') by.set(k, [...(by.get(k) ?? []), { h, i }]); });
+  for (const [k, hs] of by) {
+    if (hs.length < 2) continue;
+    const idle = hs.filter((x) => x.h.monthly == null || x.h.monthly <= 0).length;
+    out.push({ id: 'merge', level: 'client', key: `merge|${k}|${hs.map((x) => x.i).join(',')}`, what: hs.map((x) => heldName(x.h)).join('; '), k: null, month: null,
+      title: `${hs.length} ${KIND_PL[k]}${idle ? `, ${idle === 1 ? 'אחת' : idle === hs.length ? 'כולן' : idle} בלי הפקדות` : ''}: לבדוק איחוד`,
+      detail: hs.map((x) => `${x.h.provider ?? KIND_HE[k]}${x.h.track ? ` · ${x.h.track}` : ''}: ${ilsT(x.h.balance ?? 0)}${x.h.monthly ? `, הפקדה ${ilsT(x.h.monthly)}` : ', אין הפקדה בקובץ'}${x.h.fee != null ? `, ${pc2(x.h.fee)} מצבירה` : ''}${x.h.depfee != null ? ` / ${pc2(x.h.depfee)} מהפקדה` : ''}`).join(' · '),
+      src: SRC.file, msg: `יש לך ${hs.length} ${KIND_PL[k]} נפרדות${idle === 1 ? ', ואחת מהן בלי הפקדות' : idle === hs.length ? ', ואין הפקדות לאף אחת מהן' : idle ? ', וחלקן בלי הפקדות' : ''}. כדאי לבדוק אם לאחד אותן.` });
+  }
+  return out.sort((a, b) => TRIG_ORDER.indexOf(a.id) - TRIG_ORDER.indexOf(b.id) || (b.amount ?? 0) - (a.amount ?? 0));
+}
 
 /** the trailing run of months in the bottom quartile, ending in `asof`: its length, its first month and the values */
 export function bottomRun(s: RankSeries | null | undefined, asof: number): { run: number; from: number | null; vals: number[]; n: number | null } {
@@ -100,10 +182,11 @@ export function bottomRun(s: RankSeries | null | undefined, asof: number): { run
   return { run: vals.length, from: vals.length ? s.months[j + 1] : null, vals, n: s.n?.[i] ?? null };
 }
 
-/** every trigger on one folder's products */
-export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>): Trigger[] {
+/** every trigger on one folder's products: the client-level money lines first, then the market-level lines about its tracks */
+export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>, meds?: ReturnType<typeof feeMedians>): Trigger[] {
   const out: Trigger[] = [];
   const seen = new Set<string>();
+  const push0 = (t: Omit<Trigger, 'level'>) => push({ ...t, level: levelOf(t.id) });
   const push = (t: Trigger) => { if (seen.has(t.key)) { const o = out.find((x) => x.key === t.key); if (o && !o.what.includes(t.what)) o.what += `; ${t.what}`; return; } seen.add(t.key); out.push(t); };
   const ts = tendersOf(inp.dfile);
   const cur = ts.find((t) => isoYm(t.from) <= inp.asof && inp.asof <= isoYm(t.to)) ?? null;
@@ -119,7 +202,7 @@ export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>)
     if (br.run >= Q4_RUN && br.from != null) {
       const ms = inp.ranks![h.k].months, i = ms.lastIndexOf(inp.asof);
       const shown = br.vals.slice(-6).map((v, j, a) => `${ymShort(ms[i - (a.length - 1 - j)])}: ${v}`).join(' · ');
-      push({ id: 'q4', key: `q4|${h.k}|${br.from}`, what, k: h.k, month: inp.asof,
+      push0({ id: 'q4', key: `q4|${h.k}|${br.from}`, what, k: h.k, month: inp.asof,
         title: `${br.run} חודשים ברצף ברבע התחתון של "${catKey(x)}"`,
         detail: `אחוזון התשואה נטו ל-12 חודשים (100 = הגבוה בקטגוריה${br.n ? `, ${br.n} מסלולים` : ''}): ${shown}`,
         src: SRC.rank, msg: `המסלול "${x.name}" נמצא ${br.run} חודשים ברצף ברבע התחתון של המסלולים הדומים לו, לפי תשואה נטו ל-12 חודשים (נתוני ${ymShort(inp.asof)}).` });
@@ -129,7 +212,7 @@ export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>)
       const last = x.act_h?.length ? x.act_h[x.act_h.length - 1] : x.act != null && x.act_p ? [x.act_p, x.act] as [number, number] : null;
       if (last && last[1] < 0) {
         const q = `${String(last[0] % 100).padStart(2, '0')}/${Math.floor(last[0] / 100)}`;
-        push({ id: 'act', key: `act|${h.k}|${last[0]}`, what, k: h.k, month: last[0],
+        push0({ id: 'act', key: `act|${h.k}|${last[0]}`, what, k: h.k, month: last[0],
           title: `מאזן אקטוארי ${pc2(last[1])} ברבעון שהסתיים ב-${q}`,
           detail: `${x.name}: ${(x.act_h ?? []).slice(-4).map(([p, v]) => `${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}: ${pc2(v)}`).join(' · ') || pc2(last[1])}`,
           src: SRC.act, msg: `בקרן "${x.name}" פורסם איזון אקטוארי שלילי (${pc2(last[1])}) לרבעון שהסתיים ב-${q}: הקרן הקטינה את הזכויות של העמיתים בשיעור הזה.` });
@@ -140,7 +223,7 @@ export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>)
     const up = (fr?.log ?? []).filter(([m, a, b]) => m > feeFrom && m <= inp.asof && b > a).sort((a, b) => b[0] - a[0])[0];
     if (up) {
       const [m, a, b] = up;
-      push({ id: 'fee', key: `fee|${h.k}|${m}`, what, k: h.k, month: m,
+      push0({ id: 'fee', key: `fee|${h.k}|${m}`, what, k: h.k, month: m,
         title: `דמי הניהול הממוצעים מצבירה עלו מ-${pc2(a)} ל-${pc2(b)} (${ymShort(m)})`,
         detail: `${x.name}: הממוצע בפועל של המסלול${h.fee != null ? `; דמי הניהול של הלקוח בקובץ המסלקה: ${pc2(h.fee)}` : ''}`,
         src: SRC.fee, msg: `דמי הניהול הממוצעים מצבירה במסלול "${x.name}" עלו מ-${pc2(a)} ל-${pc2(b)} (נתוני ${ymShort(m)}). כדאי לבדוק מה משולם בפועל אצלך.` });
@@ -153,7 +236,7 @@ export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>)
         const wonPrev = prevT && hits.some((t) => t.t.id === prevT.id);
         if (wonPrev) {
           const names = [...new Set(cur.winners.map((w) => w.grp))].join(', ');
-          push({ id: 'tender', key: `tender|${x.grp}|${cur.id}`, what, k: h.k, month: isoYm(cur.from),
+          push0({ id: 'tender', key: `tender|${x.grp}|${cur.id}`, what, k: h.k, month: isoYm(cur.from),
             title: `${x.grp} זכתה בהליך ${prevT.label ?? prevT.id} ואינה בין הזוכות בהליך שבתוקף`,
             detail: `ההליך שבתוקף: ${cur.label ?? cur.id} (${periodText(cur)}), הזוכות: ${names}; ${x.grp}: ${prevT.label ?? prevT.id} (${periodText(prevT)})`,
             src: `${SRC.tender}; ${cur.src_title ?? cur.src}`, msg: `${x.grp} אינה עוד בין קרנות ברירת המחדל שנבחרו בהליך שבתוקף (${periodText(cur)}). כדאי לוודא אילו תנאי דמי ניהול חלים עליך.` });
@@ -162,7 +245,7 @@ export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>)
       const th = tenderHits(h, ts).find((t) => t.byFee);
       if (th && th.end && th.end[0] <= horizon && th.end[1] >= inp.today) {
         const p = priceOf(th.t, th.w);
-        push({ id: 'tender', key: `tenderEnd|${h.k}|${th.t.id}`, what, k: h.k, month: null,
+        push0({ id: 'tender', key: `tenderEnd|${h.k}|${th.t.id}`, what, k: h.k, month: null,
           title: `מחיר מכרז ${th.t.label ?? th.t.id} עשוי להסתיים בין ${my(th.end[0])} ל-${my(th.end[1])}`,
           detail: `דמי הניהול של הלקוח בקובץ (${pc2(h.depfee ?? 0)} מהפקדה, ${pc2(h.fee ?? 0)} מצבירה) שווים למחיר ההליך (${p.depfee != null ? pc2(p.depfee) : '–'} / ${p.fee != null ? pc2(p.fee) : '–'}); המחיר מובטח ${th.t.fee_years} שנים מההצטרפות, ומועד ההצטרפות אינו בקובץ`,
           src: `${SRC.tender}; ${th.t.src_title ?? th.t.src}`, msg: `דמי הניהול שלך שווים למחיר שנקבע בהליך קרן ברירת המחדל, והמחיר הזה מובטח ל-${th.t.fee_years} שנים מההצטרפות: הוא עשוי להסתיים בין ${my(th.end[0])} ל-${my(th.end[1])}.` });
@@ -173,21 +256,25 @@ export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>)
     const r = seg && inp.dec ? svcOf(inp.dec, x.grp, seg) : null;
     if (r && seg && r.prev != null && r.total < r.prev) {
       const s = srcOf(inp.dec, r.src), sg = inp.dec!.segments[seg];
-      push({ id: 'svc', key: `svc|${x.grp}|${seg}|${r.year}`, what, k: h.k, month: null,
+      push0({ id: 'svc', key: `svc|${x.grp}|${seg}|${r.year}`, what, k: h.k, month: null,
         title: `מדד השירות של ${x.grp} (${SEG_HE[seg]}) ירד מ-${r.prev} ל-${r.total}`,
         detail: `${r.year}: ${r.total}, מקום ${r.rank} מתוך ${r.of}; ${sg?.prev_year ?? r.year - 1}: ${r.prev}${sg?.avg?.total != null ? `; ממוצע הענף ${sg.avg.total}` : ''}`,
         src: `${s?.title ?? 'רשות שוק ההון, מדד השירות'}, עמ' ${r.pg}${r.pg_prev ? ` (השנה הקודמת: עמ' ${r.pg_prev})` : ''}`,
         msg: `במדד השירות של רשות שוק ההון ל-${r.year}, הציון של ${x.grp} ב${SEG_HE[seg]} ירד מ-${r.prev} ל-${r.total} (מקום ${r.rank} מתוך ${r.of}).` });
     }
   }
-  return out.sort((a, b) => TRIG_ORDER.indexOf(a.id) - TRIG_ORDER.indexOf(b.id));
+  return [...clientTriggers(f, inp, byK, meds), ...out.sort((a, b) => TRIG_ORDER.indexOf(a.id) - TRIG_ORDER.indexOf(b.id))];
 }
 
 /** the call list: folders with at least one trigger, the most triggers first */
 export function callList(inp: CallsIn): CallRow[] {
   const byK = new Map(inp.funds.map((f) => [f.k, f]));
-  return inp.folders.map((f) => ({ folder: f.id, label: f.label, triggers: folderTriggers(f, inp, byK) })).filter((r) => r.triggers.length)
-    .sort((a, b) => b.triggers.length - a.triggers.length || a.label.localeCompare(b.label, 'he'));
+  const meds = feeMedians(inp.funds);
+  const nC = (r: CallRow) => r.triggers.filter((t) => t.level === 'client').length;
+  const amt = (r: CallRow) => r.triggers.reduce((t, x) => t + (x.amount ?? 0), 0);
+  // red team 06.11.26: the clients with money lines from their own file first (most lines, then the most ₪ a year), market-only after
+  return inp.folders.map((f) => ({ folder: f.id, label: f.label, triggers: folderTriggers(f, inp, byK, meds) })).filter((r) => r.triggers.length)
+    .sort((a, b) => nC(b) - nC(a) || amt(b) - amt(a) || b.triggers.length - a.triggers.length || a.label.localeCompare(b.label, 'he'));
 }
 
 /** the categories whose rank files the call list needs: the held tracks' categories */
@@ -296,4 +383,42 @@ export const normMark = (x: unknown): BackupMark | null => {
 export function whenText(at: string, today: string): string {
   const d = daysBetween(at.slice(0, 10), today), t = at.length >= 16 ? at.slice(11, 16) : '';
   return d === 0 ? `היום${t ? ` ${t}` : ''}` : d === 1 ? `אתמול${t ? ` ${t}` : ''}` : dmy(at.slice(0, 10));
+}
+
+/* ---------- red team 06.11.26 · the book to the agent's CRM: one CSV row per folder ---------- */
+/** the next annual review of a folder (ISO): the anniversary of the meeting date (else the import) still open this year, an overdue one
+ *  within the late window, else next year's */
+export function nextReview(f: Folder, today: string, lateMonths = 2): string | null {
+  const meet = f.fields[MEET_KEY];
+  const anchor = isoOk(meet) ? meet.slice(0, 10) : f.created;
+  if (!isoOk(anchor)) return null;
+  const y = +today.slice(0, 4);
+  const first = anniversary(anchor, +anchor.slice(0, 4) + 1);
+  if (first > today) return first;
+  const due = anniversary(anchor, y);
+  const last = isoOk(f.fields[REVIEW_KEY]) ? f.fields[REVIEW_KEY].slice(0, 10) : null;
+  const done = !!last && daysBetween(last, due) <= 45;
+  const lateFrom = addMonths(`${today.slice(0, 7)}-01`, -lateMonths);
+  if (!done && (due >= today || due >= lateFrom)) return due;
+  return anniversary(anchor, y + 1);
+}
+export const CSV_HEAD = ['מזהה תיק', 'שם הלקוח (כפי שנשמר)', 'שם הלקוח במסמך', 'מוצרים', 'נושאים פתוחים', 'מועד הסקירה הבא', 'עודכן'] as const;
+/** one CSV cell: quoted when needed; a leading = + - @ is neutralised so a spreadsheet does not run it as a formula */
+export const csvCell = (v: string | number | null | undefined) => {
+  let s = v == null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+const dmyCsv = (iso: string | null) => (iso ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : '');
+/** The book as a CSV for a CRM: UTF-8 with a BOM (Excel opens Hebrew correctly), Hebrew headers, one row per folder: its id and label as
+ *  stored, the client's name for the document, the products (type · provider · track · balance), the open call-list lines (those not
+ *  marked handled), the next review date and the last update. Built in the browser; nothing is sent. */
+export function bookCsv(folders: Folder[], opts: { today: string; calls?: CallRow[]; handled?: Record<string, string> }): string {
+  const byF = new Map((opts.calls ?? []).map((r) => [r.folder, r.triggers]));
+  const rows = folders.map((f) => {
+    const prods = f.held.map((h) => [h.typeHe, h.provider, h.track ?? h.plan, h.balance != null ? `₪${Math.round(h.balance).toLocaleString('en-US')}` : null].filter(Boolean).join(' · ')).join(' | ');
+    const open = (byF.get(f.id) ?? []).filter((t) => !opts.handled?.[t.key]).map((t) => `${TRIG_HE[t.id]}: ${t.title}`).join(' | ');
+    return [f.id, f.label, f.fields['doc:client'] ?? '', prods, open, dmyCsv(nextReview(f, opts.today)), dmyCsv(f.updated?.slice(0, 10) ?? null)];
+  });
+  return '﻿' + [CSV_HEAD as readonly string[], ...rows].map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
 }

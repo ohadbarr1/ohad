@@ -4,7 +4,7 @@ import { useOptional } from '../../lib/fundsLoad';
 import { upsert, useClients, type Folder } from '../../lib/clients';
 import { COVERS_PATH, SEX_HE, rawProv, type CoversFile, type CSex } from '../../lib/coverPrice';
 import { HARB_ACCEPT, HARB_WARN, heldFromHarb, readHarb } from '../../lib/harb';
-import { CAT_HE, riskOf, shortIns, withHarb, type RiskFlag } from '../../lib/harbRisk';
+import { CAT_HE, confirmPer, riskOf, shortIns, withHarb, type RiskFlag } from '../../lib/harbRisk';
 import { F } from '../../lib/wizard';
 import { today } from '../../lib/visits';
 import '../../styles/agentRisk.css';
@@ -52,6 +52,9 @@ function HarbPick({ f, label }: { f: Folder; label: string }) {
 
 export function RiskSide({ f }: { f: Folder }) {
   const cov = useOptional<CoversFile>(COVERS_PATH);
+  const [file, setFile] = useClients();
+  // red team 06.11.26: the agent confirms the period of a "monthly" premium that looks annual
+  const confirm = (i: number, per: 'month' | 'year') => { const cur = file.folders.find((y) => y.id === f.id) ?? f; setFile(upsert(file, { id: cur.id, label: cur.label, keys: cur.keys, held: confirmPer(cur.held, i, per) }, today()).file); };
   const ageN = Number(f.fields[F.age]);
   const sexF = f.fields[F.sex];
   const out = riskOf(f.held, today(), { cov, age: Number.isFinite(ageN) && ageN >= 16 && ageN <= 80 ? ageN : null, sex: sexF === 'm' || sexF === 'f' ? sexF as CSex : null });
@@ -81,12 +84,14 @@ export function RiskSide({ f }: { f: Folder }) {
               return <><b>{name}</b>{sub && <span className="ci-sub">{sub}</span>}</>; })()}</td>
             <td>{[r.ptype, r.group == null ? null : r.group ? 'קבוצתי' : 'אישי'].filter(Boolean).join(' · ') || '–'}</td>
             <td><span className="num">{dmy(r.start)}</span>{r.end && <> עד <span className="num">{dmy(r.end)}</span></>}{!x.active && <span className="ci-sub">הסתיימה לפי הקובץ</span>}</td>
-            <td>{x.monthly != null ? <span className="num">{n2(x.monthly)}</span> : r.premium != null ? <><span className="num">{n2(r.premium)}</span><span className="ci-sub">לא צוין אם חודשית או שנתית</span></> : '–'}{r.per === 'year' && <span className="ci-sub">שנתית {ils(r.premium)}, חולקה ב-12</span>}</td>
+            <td>{r.perDoubt ? <><span className="num">{n2(r.premium)}</span><span className="ci-sub rk-doubt">ייתכן שזו פרמיה שנתית · לא בסכום</span>
+              <span className="rk-per"><button type="button" className="chip" onClick={() => confirm(x.i, 'year')}>שנתית</button><button type="button" className="chip" onClick={() => confirm(x.i, 'month')}>חודשית</button></span></>
+              : x.monthly != null ? <span className="num">{n2(x.monthly)}</span> : r.premium != null ? <><span className="num">{n2(r.premium)}</span><span className="ci-sub">לא צוין אם חודשית או שנתית</span></> : '–'}{r.per === 'year' && !r.perDoubt && <span className="ci-sub">שנתית {ils(r.premium)}, חולקה ב-12</span>}</td>
             <td><span className="num">{r.pol ?? '–'}</span></td>
           </tr>); })}</tbody>
         <tfoot><tr><th scope="row" colSpan={4}>סה"כ לחודש, פוליסות בתוקף{out.rows.some((x) => x.r.cats.includes('lifeSave')) ? ' (בלי ביטוח חיים עם חיסכון)' : ''}</th><td><span className="num">{ils(out.monthly)}</span><span className="ci-sub">{ils(out.annual)} לשנה</span></td><td /></tr></tfoot>
       </table></div>
-      {(out.unknownPer > 0 || out.noPremium > 0) && <p className="cl-note">{[out.unknownPer ? `${out.unknownPer} פוליסות עם פרמיה שהקובץ לא אומר אם היא חודשית או שנתית` : null, out.noPremium ? `${out.noPremium} בלי פרמיה בקובץ` : null].filter(Boolean).join('; ')}: לא נכנסו לסכום.</p>}
+      {(out.unknownPer > 0 || out.noPremium > 0 || out.doubt > 0) && <p className="cl-note">{[out.doubt ? `${out.doubt === 1 ? 'פוליסה אחת' : `${out.doubt} פוליסות`} עם פרמיה "חודשית" שנראית שנתית (מסומנות בטבלה: לאשר שנתית או חודשית)` : null, out.unknownPer ? `${out.unknownPer} פוליסות עם פרמיה שהקובץ לא אומר אם היא חודשית או שנתית` : null, out.noPremium ? `${out.noPremium} בלי פרמיה בקובץ` : null].filter(Boolean).join('; ')}: לא נכנסו לסכום.</p>}
       <h4 className="rk-h">לפי חברה{withPrice.length ? ': הפרמיה ומחיר הכיסוי בקרן הפנסיה של הקבוצה' : ''}</h4>
       <div className="scroll"><table className="fsimple rk-t rk-co">
         <caption className="sr-only">צד הסיכון לפי חברה, עם מחיר כיסוי הנכות והשאירים בקרן הפנסיה לפי התקנון</caption>

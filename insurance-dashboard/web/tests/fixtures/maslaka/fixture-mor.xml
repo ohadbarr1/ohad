@@ -7,7 +7,7 @@
     <SHEM-YATZRAN>מור גמל ופנסיה בע"מ</SHEM-YATZRAN>
     <Mutzarim>
       <Mutzar>
-        <NetuneiMutzar><SUG-MUTZAR>4</SUG-MUTZAR><KOD-MEZAHE-YATZRAN>514956465</KOD-MEZAHE-YATZRAN></NetuneiMutzar>
+        <NetuneiMutzar><SUG-MUTZAR>4</SUG-MUTZAR><KOD-MEZAHE-YATZRAN>514956465</KOD-MEZAHE-YATZRAN><!-- red team 06.11.26: an invented birth date (XSD 008 YeshutLakoach/TAARICH-LEYDA), the only holder element the reader opens --><YeshutLakoach><TAARICH-LEYDA>19810415</TAARICH-LEYDA></YeshutLakoach></NetuneiMutzar>
         <HeshbonotOPolisot><HeshbonOPolisa>
           <MISPAR-POLISA-O-HESHBON>55500123</MISPAR-POLISA-O-HESHBON>
           <SHEM-TOCHNIT>מור קרן השתלמות</SHEM-TOCHNIT>

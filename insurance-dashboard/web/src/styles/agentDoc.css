@@ -155,6 +155,11 @@
 .a1x tr.before th { color: #5B6273; } .a1x tr.after th { color: #111C3F; font-weight: 700; }
 .a1x tr.after td { border-bottom: 1pt solid #8A90A0; }
 .a1x .blank { display: inline-block; min-width: 10mm; border-bottom: 0.5pt solid #9AA0AC; height: 3.5mm; }
+/* red team 06.11.26 · every projected or assumed figure carries a "הנחה" stamp, its assumption under it in print */
+.assume { display: inline-block; font-size: 0.82em; font-weight: 700; color: #8A5A00; border: 0.6pt solid #C08A1E; border-radius: 1mm; padding: 0 0.8mm; line-height: 1.35; white-space: nowrap; background: #FFF8E6; }
+.assume-why { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.nyud-inc b { color: #8A5A00; }
+@media print { .a1x .assume-why { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; display: block; font-size: 5.6pt; color: #5B6273; margin-top: 0.4mm; } }
 
 /* ---- W7 · the הנמקה in the binding wording ---- */
 .hnm-q { quotes: none; margin: 0; }

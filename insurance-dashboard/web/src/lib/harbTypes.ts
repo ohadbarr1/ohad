@@ -28,6 +28,9 @@ export interface RiskMeta {
   start: string | null; end: string | null;
   pol: string | null;
   who: number | null;
+  /** red team 06.11.26: the file says "monthly" but the amount is implausible for the cover (lib/harb perDoubt): the text of the doubt;
+   *  the premium stays out of the monthly total until the agent confirms (`per` set by the agent, `perDoubt` cleared) */
+  perDoubt?: string | null;
 }
 
 export const RISK_CATS: RiskCat[] = ['surg1', 'surgShaban', 'surgAbroad', 'transplant', 'drugs', 'ambul', 'dental', 'healthOther', 'ltc', 'ci', 'pa', 'di', 'life', 'lifeSave', 'travel', 'car', 'carMand', 'home', 'foreign', 'other'];
@@ -46,5 +49,6 @@ export function normRisk(x: unknown): RiskMeta | null {
     src: 'harb', cats: cats.length ? cats : ['other'], main: s(o.main, 80), sub: s(o.sub, 80), domain: s(o.domain, 60), ptype: s(o.ptype, 40),
     group: typeof o.group === 'boolean' ? o.group : null, premium: n(o.premium), per: o.per === 'month' || o.per === 'year' ? o.per : null,
     start: iso(o.start), end: iso(o.end), pol, who: who != null && Number.isInteger(who) && who > 0 && who < 50 ? who : null,
+    ...(typeof o.perDoubt === 'string' && o.perDoubt.trim() ? { perDoubt: o.perDoubt.slice(0, 200) } : {}),
   };
 }

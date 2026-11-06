@@ -6,7 +6,7 @@ import { decodeXml, mergeMFiles, parseMaslaka, readTree, rowsOf, sniff, type MFi
 
 export const ACCEPT = '.zip,.xml,application/zip,application/x-zip-compressed,text/xml,application/xml';
 const MAX_BYTES = 40_000_000;
-export interface Read { name: string; rows: Row[]; error?: string; warn: string[]; parts?: number }
+export interface Read { name: string; rows: Row[]; error?: string; warn: string[]; parts?: number; /** the holder's birth date when the file gives it (lib/maslaka; turned into an age at save) */ birth?: string | null }
 /** a lib/zipRead ZipError asking for (or refusing) the password */
 export class NeedPassword extends Error { wrong: boolean; constructor(wrong: boolean) { super(wrong ? WRONG_PW : NEED_PW); this.wrong = wrong; this.name = 'NeedPassword'; } }
 export const NEED_PW = 'קובץ ה-zip מהמסלקה מוגן בסיסמה. הסיסמה כתובה במייל שבו הגיע הקובץ מהמסלקה הפנסיונית.';
@@ -40,12 +40,12 @@ export async function readClientFiles(files: File[] | { name: string; size: numb
         }
         if (!parts.length) throw new Error(warn.join(' · ') || 'לא נקרא אף קובץ מתוך ה-zip');
         const merged = mergeMFiles(parts);
-        out.push({ name: file.name, rows: rowsOf(merged, funds, `f${n}`), warn: [...merged.warn, ...warn], parts: parts.length });
+        out.push({ name: file.name, rows: rowsOf(merged, funds, `f${n}`), warn: [...merged.warn, ...warn], parts: parts.length, birth: merged.birth ?? null });
         continue;
       }
       if (kind !== 'xml') throw new Error('זה לא נראה כמו קובץ מהמסלקה הפנסיונית. בוחרים את קובץ ה-zip שהגיע מהמסלקה או את קובצי ה-XML שבתוכו.');
       const parsed = parseMaslaka(readTree(decodeXml(buf)));
-      out.push({ name: file.name, rows: rowsOf(parsed, funds, `f${n}`), warn: parsed.warn });
+      out.push({ name: file.name, rows: rowsOf(parsed, funds, `f${n}`), warn: parsed.warn, birth: parsed.birth ?? null });
     } catch (e) {
       if (e instanceof NeedPassword) throw e;
       out.push({ name: file.name, rows: [], warn: [], error: e instanceof Error ? e.message : String(e) });

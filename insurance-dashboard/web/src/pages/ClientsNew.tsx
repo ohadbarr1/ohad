@@ -10,7 +10,7 @@ import { DECISION_PATH, type DecisionFile } from '../lib/decision';
 import { COEF_PATH, type CoefFile } from '../lib/coef';
 import { upsert, useClients, coverOnly, type Folder } from '../lib/clients';
 import { bottomLines, docRow, snapOf } from '../lib/compareDoc';
-import { nyudTable, type Basis } from '../lib/nyud';
+import { ageOk, nyudTable, pairsOf, type Basis, type NyudPairs } from '../lib/nyud';
 import { brandLine, hasBrand, useBranding } from '../lib/branding';
 import { useStored } from '../lib/local';
 import { today } from '../lib/visits';
@@ -19,6 +19,7 @@ import * as H from '../lib/hanmaka';
 import { F, MAX_CANDS, TIMES_KEY, WIZ_STEPS, candOptions, fmtDur, medianMs, prodsFor, pushTime, whyLines, whyText, wizardKeys, wizardSave } from '../lib/wizard';
 import { ClientImport } from '../components/agent/ClientImport';
 import { NyudTable } from '../components/agent/NyudTable';
+import { NyudPairsPick } from '../components/agent/NyudPairs';
 import { BrandPanel } from '../components/agent/BrandPanel';
 import { BookSafeLine } from '../components/agent/BookSafe';
 import '../styles/agent.css';
@@ -63,12 +64,13 @@ export function ClientsNew() {
   const [kind, setKind] = useState<H.DocKind>('full');
   const [client, setClient] = useState('');
   const [meet, setMeet] = useState(today());
+  const [pairs, setPairs] = useState<NyudPairs>({});
   useEffect(() => {
     if (!folder) return;
     setCands(folder.keys.filter((k) => folder.tags[k] === 'מומלץ').slice(0, MAX_CANDS));
     setAge(folder.fields[F.age] ?? ''); setSex(folder.fields[F.sex] === 'm' || folder.fields[F.sex] === 'f' ? folder.fields[F.sex] as 'm' | 'f' : '');
     const k = folder.fields[F.kind]; setKind(k === 'focused' || k === 'summary' ? k : 'full');
-    setClient(folder.fields[F.client] ?? ''); setMeet(folder.fields[F.meet] ?? today()); setProd(null);
+    setClient(folder.fields[F.client] ?? ''); setMeet(folder.fields[F.meet] ?? today()); setProd(null); setPairs(pairsOf(folder.fields));
   }, [folder?.id]);  // eslint-disable-line react-hooks/exhaustive-deps
   // a step change scrolls to the top and moves focus to the step's heading
   const head = useRef<HTMLHeadingElement>(null);
@@ -79,11 +81,14 @@ export function ClientsNew() {
   const opts = useMemo(() => (folder && prodNow && data ? candOptions(funds, prodNow, folder.held, dfile, data.asof, q, 40) : []), [folder, prodNow, data, funds, dfile, q]);
   const plan = folder ? wizardKeys(folder, cands) : { keys: [], tags: {} };
   const { hist, pending } = useHists(step >= 2 ? plan.keys : []);
-  const ageN = age.trim() && Number.isFinite(+age) && +age >= 16 && +age <= 80 ? Math.round(+age) : null;
+  // red team 06.11.26: the age comes from the file (lib/maslaka, at import) or is typed; no projection without it
+  const ageN = age.trim() ? ageOk(+age) : null;
+  const ageFile = folder?.fields[F.ageSrc] === 'file' && folder.fields[F.age] === age.trim();
   const rows = useMemo(() => (data && folder ? plan.keys.map((k) => byK.get(k)).filter((x): x is FundX => !!x).map((x) => docRow(x, { net: true, asof: data.asof, hist: hist[x.k] as HistX | undefined, dfile, dec })) : []),
     [data, folder, plan.keys.join(), byK, hist, dfile, dec]);  // eslint-disable-line react-hooks/exhaustive-deps
   const asofText = data ? ym(data.asof) : '';
-  const ny = folder && rows.length ? nyudTable(folder.held, rows, plan.tags, coefF, { basis, age: ageN, sex: sex || null }, asofText) : null;
+  const ny = folder && rows.length ? nyudTable(folder.held, rows, plan.tags, coefF, { basis, age: ageN, sex: sex || null }, asofText, pairs) : null;
+  const needAge = !!ny && ny.rows.length > 0 && ageN == null;
 
   if (!data) return <div className="wiz"><p className="muted" aria-busy="true">טוען את נתוני המסלולים…</p></div>;
   const elapsed = t0.current ? Date.now() - t0.current : null;
@@ -96,7 +101,8 @@ export function ClientsNew() {
     const why: Record<string, string> = {};
     for (const c of cands) { const rs = (ny?.rows ?? []).filter((r) => r.cand.k === c); if (rs.length) why[c] = whyText(rs.flatMap((r) => whyLines(r, r.exist.k ? byK.get(r.exist.k) : null, byK.get(c), dec, asofText))); }
     const ms = t0.current ? Date.now() - t0.current : null;
-    const inp = wizardSave(folder, cands, { snap: rows.length ? snapOf(rows, bottomLines(rows, true), today(), data.asof, 'net') : null, kind, client, meet, age: ageN, sex: sex || null, ms, today: today(), why });
+    const inp = wizardSave(folder, cands, { snap: rows.length ? snapOf(rows, bottomLines(rows, true), today(), data.asof, 'net') : null, kind, client, meet, age: ageN, sex: sex || null, ms, today: today(), why, pairs });
+    if (ageN != null && !ageFile) delete inp.fields?.[F.ageSrc];
     const r = upsert(clients, inp, today());
     setClients(r.file);
     if (ms != null) setTimes(pushTime(times, ms));
@@ -108,7 +114,7 @@ export function ClientsNew() {
       <div className="pagehead"><div>
         <span className="eyebrow">סוכן · לקוח חדש</span>
         <h1><span className="icotile"><Ico name="clients" /></span>מקובץ המסלקה למסמך הנמקה</h1>
-        <div className="sub">שלושה צעדים, בדפדפן הזה בלבד. {med != null ? `הזמן החציוני שלכם מהקובץ למסמך: ${fmtDur(med)} דקות.` : ''}</div>
+        <div className="sub">שלושה צעדים, בדפדפן הזה בלבד. {med != null ? `הזמן החציוני שלכם מהקובץ למסמך: ${fmtDur(med)}.` : ''}</div>
       </div></div>
       <ol className="wiz-steps" aria-label="צעדי האשף">
         {WIZ_STEPS.map((s, i) => <li key={s} className={i + 1 === step ? 'on' : i + 1 < step ? 'done' : undefined} aria-current={i + 1 === step ? 'step' : undefined}>
@@ -140,9 +146,9 @@ export function ClientsNew() {
           </li>; })}</ul>
         </div>
         <div className="wiz-who" role="group" aria-label="פרטי החישוב">
-          <label>גיל הלקוח <input type="number" inputMode="numeric" min={16} max={80} value={age} onChange={(e) => setAge(e.target.value)} placeholder="38 (הנחה)" /></label>
+          <label>גיל הלקוח{ageFile ? ' (מקובץ המסלקה)' : ' (חובה)'} <input type="number" inputMode="numeric" min={16} max={80} required aria-required="true" aria-invalid={needAge || undefined} value={age} onChange={(e) => setAge(e.target.value)} placeholder="16–80" /></label>
           <label>מין (לטבלאות המקדמים) <select value={sex} onChange={(e) => setSex(e.target.value as '' | 'm' | 'f')}><option value="">לא צוין</option><option value="m">גבר</option><option value="f">אישה</option></select></label>
-          <span className="wiz-note">לחישוב בלבד: גיל הפרישה 67, ומקדם הקצבה של הקרן המוצעת לפי התקנון. נשמר בתיק, לא נשלח.</span>
+          <span className="wiz-note">{ageFile ? 'הגיל חושב מתאריך הלידה בקובץ המסלקה (התאריך עצמו לא נשמר). ' : 'בקובץ לא נמצא תאריך לידה: בלי גיל אין תחזית בשקלים. '}לחישוב בלבד: גיל הפרישה 67, ומקדם הקצבה של הקרן המוצעת לפי התקנון. נשמר בתיק, לא נשלח.</span>
         </div>
         <div className="wiz-pick">
           <h3>מסלולים מוצעים <span className="wiz-cnt">{cands.length} מתוך {MAX_CANDS}</span></h3>
@@ -160,7 +166,9 @@ export function ClientsNew() {
             <p className="wiz-note">כל המסלולים הפתוחים של המוצר, מסודרים: אותו מסלול השקעה כמו של הלקוח, אחר כך קרנות ברירת מחדל, אחר כך לפי גודל. ד"נ: מהפקדה / מצבירה, הממוצע בפועל ({asofText}); נטו 3Y: ממוצע שנתי. הבחירה של בעל הרישיון.</p>
           </> : <p className="wiz-note">אין בתיק מוצר עם יתרה או הפקדה שאפשר לנייד (למשל: רק כיסויים ביטוחיים). אפשר להמשיך למסמך.</p>}
         </div>
-        {ny && ny.rows.length > 0 ? <>
+        {ny && cands.length > 0 && <NyudPairsPick slots={ny.slots} rows={ny.rows} pairs={pairs} onPairs={setPairs} />}
+        {needAge ? <p className="wiz-warn" role="alert">כדי לחשב את הניוד בשקלים צריך את גיל הלקוח: הזינו אותו למעלה.</p>
+        : ny && ny.rows.length > 0 ? <>
           <NyudTable out={ny} basis={basis} onBasis={setBasis} asofText={asofText} />
           <div className="wiz-whys">
             <h3>למה: השורות מתחת לכל זוג, עם המקור</h3>
@@ -174,7 +182,7 @@ export function ClientsNew() {
         </> : cands.length > 0 && ny ? <NyudTable out={ny} basis={basis} onBasis={setBasis} asofText={asofText} /> : null}
         {loose.length > 0 && <p className="wiz-note">במסמך גם {loose.length === 1 ? 'מוצר אחד' : `${loose.length} מוצרים`} מהקובץ בלי מסלול באתר (או שלא נכנס לשמונת המסלולים): {loose.map((h) => `${h.typeHe}${h.provider ? ` · ${h.provider}` : ''}`).join('; ')}.</p>}
         <div className="wiz-acts">
-          <button type="button" className="btn primary" onClick={() => setStep(3)}>המשך: מסמך ההנמקה <Icon name="statement" /></button>
+          <button type="button" className="btn primary" onClick={() => setStep(3)} disabled={needAge}>המשך: מסמך ההנמקה <Icon name="statement" /></button>
           <button type="button" className="btn" onClick={() => { setFolderId(null); setStep(1); }}>תיק אחר</button>
           {cands.length === 0 && <span className="wiz-note">לא נבחר מסלול מוצע: המסמך יכלול את המצב הקיים בלבד (מתאים לסיכום שיחה).</span>}
         </div>
@@ -202,7 +210,7 @@ export function ClientsNew() {
           <button type="button" className="cmp-doc wiz-go" onClick={() => finish(true)} disabled={pending > 0}><Icon name="download" />שמירה בתיק והפקת PDF</button>
           <button type="button" className="btn" onClick={() => finish(false)} disabled={pending > 0}>שמירה ופתיחת המסמך בלי הדפסה</button>
           <button type="button" className="btn" onClick={() => setStep(2)}>חזרה לניוד</button>
-          {elapsed != null && <span className="wiz-clock" role="status">מהקובץ עד כאן: {fmtDur(elapsed)} דקות</span>}
+          {elapsed != null && <span className="wiz-clock" role="status">מהקובץ עד כאן: {fmtDur(elapsed)}</span>}
         </div>
         <p className="wiz-note">PDF: בחלון ההדפסה בוחרים "שמירה כ-PDF". המסמך נפתח על התיק; אפשר להשלים בו את השדות לפני ההדפסה. <Link className="sv-u" to="/clients">תיקי לקוחות</Link></p>
       </section>}

@@ -18,7 +18,7 @@ import { today as todayIso } from '../lib/visits';
 import { COEF_PATH, birthYearOf, coefFor, type CoefFile } from '../lib/coef';  // W6
 import { AGE_DEFAULT, BALANCE_EX, GROWTH_DEFAULT, INFL_DEFAULT, RETIRE_AGE, RET_FALLBACK, exampleMonthly, project } from '../lib/retire';
 import { brandLine, hasBrand, useBranding } from '../lib/branding';  // W7
-import { nyudTable, type Basis } from '../lib/nyud';  // W7
+import { agreedFor, nyudTable, pairsOf, type Basis, type NyudPairs } from '../lib/nyud';  // W7
 import { NyudTable } from '../components/agent/NyudTable';  // W7
 import { track } from '../lib/track';
 import * as H from '../lib/hanmaka';  // W7: the binding wording
@@ -125,7 +125,8 @@ export function FundsComparePrint() {
   const diffs = snap && live ? snap.rows.map((t) => { const n = liveRows.find((r) => r.k === t.k); return n ? { r: n, d: snapDiff(t, n, data.asof) } : null; }).filter((x): x is { r: SnapRow; d: ReturnType<typeof snapDiff> } => !!x && x.d.length > 0) : [];
   // W7: the ניוד table of the folder's imported products against the candidate tracks
   const tagMap = Object.fromEntries(rows.map((r) => [r.k, tagOf(r.k)]));
-  const ny = held.length ? nyudTable(held, rows, tagMap, coefF, { basis, ...nyudInOf(folder) }, ym(asof)) : null;
+  const pairs = pairsOf(folder?.fields);  // red team 06.11.26: the wizard's per-product pairs, agreed fees and cover costs
+  const ny = held.length ? nyudTable(held, rows, tagMap, coefF, { basis, ...nyudInOf(folder) }, ym(asof), pairs) : null;
   const next = rows.filter((r) => tagOf(r.k) === 'מומלץ');
   const brandTxt = hasBrand(brand) ? brandLine(brand) : '';
   const kindOf = H.DOC_KINDS.find((d) => d.k === kind)!;
@@ -233,7 +234,7 @@ export function FundsComparePrint() {
           <p className="disc">המסמך מציג נתונים שפרסמה רשות שוק ההון, ביטוח וחיסכון, כפי שהם, ותיאור עובדתי שלהם. אין בו ייעוץ השקעות, ייעוץ פנסיוני, שיווק פנסיוני או ייעוץ מס, ואין בו התחשבות בנתונים ובצרכים של לקוח מסוים. תשואות העבר אינן מבטיחות תשואות בעתיד. דמי הניהול המוצגים הם ממוצע בפועל של המסלול. לפני החלטה יש לבדוק את תנאי המוצר מול הגוף המנהל ואת המידע האישי במסלקה הפנסיונית.</p>
         </section>
 
-        {annex && <Hanmaka rows={rows} tagOf={tagOf} client={client.trim()} asof={asof} held={held} kind={kindOf} brandTxt={brandTxt} logo={brand.logo} />}
+        {annex && <Hanmaka rows={rows} tagOf={tagOf} client={client.trim()} asof={asof} held={held} kind={kindOf} brandTxt={brandTxt} logo={brand.logo} pairs={pairs} />}
         {docB && next.length > 0 && <DocB rows={next} held={held} asof={asof} />}
         <footer className="adoc-foot">
           <span>מסמך גרסה {DOC_VERSION} · הופק {todayHe()} · נתוני הרשות עד {ym(asof)}{useSnap ? ` · צילום מ-${dmyIso(snap!.at)}` : ''}</span>
@@ -297,7 +298,7 @@ function AnnuityTable({ rows, coefF }: { rows: SnapRow[]; coefF: CoefFile | null
 
 /** W7 · the הנמקה in the circular's wording: נספח א' parts א–ה in its order, every sentence the circular prints verbatim (lib/hanmaka),
  *  the data fox has filled in, and the agent's fields as inline blanks. Field ids are W3's (a folder's saved text refills them). */
-function Hanmaka({ rows, tagOf, client, asof, held, kind, brandTxt, logo }: { rows: SnapRow[]; tagOf: (k: string) => Tag; client: string; asof: number; held: Held[]; kind: (typeof H.DOC_KINDS)[number]; brandTxt: string; logo: string | null }) {
+function Hanmaka({ rows, tagOf, client, asof, held, kind, brandTxt, logo, pairs }: { rows: SnapRow[]; tagOf: (k: string) => Tag; client: string; asof: number; held: Held[]; kind: (typeof H.DOC_KINDS)[number]; brandTxt: string; logo: string | null; pairs: NyudPairs }) {
   const [brand] = useBranding();
   const own = (k: string) => { const hs = held.filter((h) => h.k === k); return hs.length ? heldOne(hs) : undefined; };
   const pcv = (v: number | null | undefined) => (v == null ? undefined : `${nf(v, 2)}%`);
@@ -323,8 +324,8 @@ function Hanmaka({ rows, tagOf, client, asof, held, kind, brandTxt, logo }: { ro
         <div><dt>השם המסחרי של מסלול ההשקעה ומספרו</dt><dd>{f.name}{f.id != null && <span className="q">מס' {f.id}</span>}</dd></div>
         <div><dt>הבטחת תשואה</dt><dd><Fill label="הבטחת תשואה" inline fk={`a1:${f.k}:guar`} value={tagOf(f.k) === 'קיים' ? guarOf(hs.find((h) => h.coefGuaranteed)) : undefined} />{f.old && <span className="q">דור ישן: לבדוק בפוליסה</span>}</dd></div>
         <div><dt>תשואה ברוטו</dt><dd><bdi dir="ltr">{f.a3g == null ? '–' : `${sn(f.a3g, 2)}%`}</bdi><span className="q">ממוצע שנתי, 36 חודשים (הרשות, {ym(asof)})</span></dd></div>
-        <div><dt>דמי ניהול מהפקדות</dt><dd><Fill label="דמי ניהול מהפקדות ללקוח" inline fk={`a1:${f.k}:dep`} value={tagOf(f.k) === 'קיים' ? pcv(own(f.k)?.depfee) : f.dflt?.depfee != null ? `${nf(f.dflt.depfee, 2)}% (מחיר המכרז, הליך ${f.dflt.t})` : undefined} /><span className="q">ממוצע בפועל במסלול: <bdi dir="ltr">{f.depfee == null ? '–' : `${nf(f.depfee, 2)}%`}</bdi></span></dd></div>
-        <div><dt>דמי ניהול מחיסכון מצטבר</dt><dd><Fill label="דמי ניהול מחיסכון מצטבר ללקוח" inline fk={`a1:${f.k}:acc`} value={tagOf(f.k) === 'קיים' ? pcv(own(f.k)?.fee) : f.dflt?.fee != null ? `${nf(f.dflt.fee, 2)}% (מחיר המכרז, הליך ${f.dflt.t})` : undefined} /><span className="q">{f.old ? 'משתנים (השתתפות ברווחים); ' : ''}ממוצע בפועל במסלול: <bdi dir="ltr">{f.fee == null ? '–' : `${nf(f.fee, 2)}%`}</bdi></span></dd></div>
+        <div><dt>דמי ניהול מהפקדות</dt><dd><Fill label="דמי ניהול מהפקדות ללקוח" inline fk={`a1:${f.k}:dep`} value={tagOf(f.k) === 'קיים' ? pcv(own(f.k)?.depfee) : agreedFor(pairs, f.k) ? `${nf(agreedFor(pairs, f.k)!.depfee, 2)}% (${agreedFor(pairs, f.k)!.src === 'agreed' ? 'שסוכמו' : `מחיר המכרז, הליך ${f.dflt?.t ?? ''}; הנחה`})` : f.dflt?.depfee != null ? `${nf(f.dflt.depfee, 2)}% (מחיר המכרז, הליך ${f.dflt.t}; הנחה: לא בהכרח המחיר ללקוח)` : undefined} /><span className="q">ממוצע בפועל במסלול: <bdi dir="ltr">{f.depfee == null ? '–' : `${nf(f.depfee, 2)}%`}</bdi></span></dd></div>
+        <div><dt>דמי ניהול מחיסכון מצטבר</dt><dd><Fill label="דמי ניהול מחיסכון מצטבר ללקוח" inline fk={`a1:${f.k}:acc`} value={tagOf(f.k) === 'קיים' ? pcv(own(f.k)?.fee) : agreedFor(pairs, f.k) ? `${nf(agreedFor(pairs, f.k)!.fee, 2)}% (${agreedFor(pairs, f.k)!.src === 'agreed' ? 'שסוכמו' : `מחיר המכרז, הליך ${f.dflt?.t ?? ''}; הנחה`})` : f.dflt?.fee != null ? `${nf(f.dflt.fee, 2)}% (מחיר המכרז, הליך ${f.dflt.t}; הנחה: לא בהכרח המחיר ללקוח)` : undefined} /><span className="q">{f.old ? 'משתנים (השתתפות ברווחים); ' : ''}ממוצע בפועל במסלול: <bdi dir="ltr">{f.fee == null ? '–' : `${nf(f.fee, 2)}%`}</bdi></span></dd></div>
         <div><dt>רמת הסיכון של מסלול ההשקעה</dt><dd><Fill label="רמת הסיכון של המסלול" inline fk={`a1:${f.k}:risk`} /><span className="q">חשיפה למניות: <bdi dir="ltr">{f.st == null ? '–' : `${nf(f.st, 0)}%`}</bdi>{f.sd != null ? <>; סטיית תקן <bdi dir="ltr">{nf(f.sd, 2)}</bdi></> : null}</span></dd></div>
         <div><dt>סכום צפוי (יתרת חסכון ואומדן קצבה צפויה)</dt><dd><Fill label="סכום צפוי" inline fk={`a1:${f.k}:exp`} value={tagOf(f.k) === 'קיים' ? expOf(own(f.k)?.balance, own(f.k)?.asof) : undefined} />{tagOf(f.k) === 'קיים' && onRow.has(f.k) && <span className="q">היתרה מקובץ המסלקה; החיסכון הצפוי: בטבלת הניוד</span>}</dd></div>
         <div><dt>השיקולים העיקריים</dt><dd><Fill label={`השיקולים העיקריים: ${f.name}`} inline fk={`a1:${f.k}:why`} /></dd></div>

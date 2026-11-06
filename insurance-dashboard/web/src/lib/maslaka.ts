@@ -18,8 +18,10 @@ import type { DepositRow, GuaranteedCoef, HeldExtra } from './clientTypes';  // 
    · The unified code: חוזר גופים מוסדיים 2015-231 "קידוד אחיד", section 3 (quoted at code30 below).
 
    Pure: no React, no fetch, no storage. The page hands it the file's bytes; nothing leaves the device, and the parser never reads the
-   holder's name, ID number, account number, employer or beneficiaries (it does not even look at YeshutLakoach / YeshutMaasik /
-   MISPAR-POLISA-O-HESHBON: for a new pension fund the "account number" is the holder's ID number).
+   holder's name, ID number, account number, employer or beneficiaries (it does not look at YeshutMaasik / MISPAR-POLISA-O-HESHBON:
+   for a new pension fund the "account number" is the holder's ID number). Red team 06.11.26: from YeshutLakoach it reads ONE element,
+   the birth date (TAARICH-LEYDA, XSD 008 line 875 ff.), so a projection never runs on a guessed age; the page keeps the age in whole
+   years only (ageAt), never the date.
 
    The format. The clearing house (המסלקה הפנסיונית, swiftness.co.il) delivers the regulator's uniform holdings interface ("ממשק אחזקות",
    מבנה אחיד להעברת מידע ונתונים בשוק החיסכון הפנסיוני, רשות שוק ההון, ביטוח וחיסכון): one XML per provider (root `Mimshak`), inside a
@@ -171,12 +173,16 @@ export const MAP = {
   // W7 · the guaranteed annuity coefficient of an insurance policy: schema 008 "מקדם מובטח לפרישה … עבור מוצרי ביטוח בלבד",
   // …/HeshbonOPolisa/YitraLefiGilPrisha/MEKADEM-MOVTACH-LEPRISHA, one block per retirement age (GIL-PRISHA)
   coefBlock: 'YitraLefiGilPrisha', coefAge: 'GIL-PRISHA', coef: 'MEKADEM-MOVTACH-LEPRISHA',
+  // red team 06.11.26 · the holder's birth date: …/Mutzar/NetuneiMutzar/YeshutLakoach/TAARICH-LEYDA (XSD 008; the survivors' block
+  // spells it TAARICH-LEIDA, kept as an alias). The only element of YeshutLakoach the reader opens.
+  holder: 'YeshutLakoach', birth: 'TAARICH-LEYDA',
 } as const;
 
 /** W7 · other names the same element was seen under. Only names with a source are here: the 008 schema itself lists both
  *  TOTAL-HAFKADA and TOTAL-HAFKADA-ACHRONA for the last deposit's total; SHEUR-KISUY-ALMAN-O-ALMANA is the spelling in the 009 sample
  *  set (inferred: no 009 schema to confirm it). Add a line here if 009 renamed something. */
 export const ALIAS: Partial<Record<string, string[]>> = {
+  [MAP.birth]: ['TAARICH-LEIDA'],
   [MAP.lastDepositTotal]: ['TOTAL-HAFKADA'],
   [MAP.survRate]: ['SHEUR-KISUY-ALMAN-O-ALMANA'],  // inferred
 };
@@ -263,6 +269,8 @@ export interface MAccount extends HeldExtra {
 }
 export interface MFile {
   version: string | null; runDate: string | null; providerName: string | null; accounts: MAccount[]; warn: string[];
+  /** red team 06.11.26: the holder's birth date (yyyy-mm-dd) when the file gives it; the page turns it into an age and drops it */
+  birth?: string | null;
   /** W7: when several provider files were merged (one zip): each file's name, provider and its accounts' index range */
   parts?: { file: string; provider: string | null; from: number; to: number }[];
 }
@@ -271,7 +279,7 @@ export interface MFile {
  *  already names its provider; `providerName` is the first one. A version or run date is kept when all parts agree. */
 export function mergeMFiles(files: { name: string; file: MFile }[]): MFile {
   if (files.length === 1) return { ...files[0].file, parts: [{ file: files[0].name, provider: files[0].file.providerName, from: 0, to: files[0].file.accounts.length }] };
-  const out: MFile = { version: null, runDate: null, providerName: null, accounts: [], warn: [], parts: [] };
+  const out: MFile = { version: null, runDate: null, providerName: null, accounts: [], warn: [], parts: [], birth: files.map((f) => f.file.birth).find((b) => b) ?? null };
   const vs = new Set<string | null>(), ds = new Set<string | null>();
   for (const { name, file } of files) {
     const from = out.accounts.length;
@@ -450,12 +458,21 @@ export function parseMaslaka(root: XNode): MFile {
   const provs = desc(root, MAP.provider);
   for (const prov of provs) {
     out.providerName = out.providerName ?? txt(kid(prov, MAP.providerName));
+    if (!out.birth) for (const hd of desc(prov, MAP.holder)) { const b = isoDate(txt(kid(hd, MAP.birth))); if (b && b.length === 10) { out.birth = b; break; } }
     for (const prod of desc(prov, MAP.product)) for (const acc of desc(prod, MAP.account)) out.accounts.push(readAccount(acc, prod, prov));
   }
   if (!provs.length) out.warn.push('לא נמצא גוף מנהל בקובץ');
   const ver = out.version ? parseInt(out.version.replace(/\D/g, ''), 10) : NaN;
   if (Number.isFinite(ver) && ver !== 8 && ver !== 9) out.warn.push(`גרסת הממשק בקובץ ${out.version}; הקורא נבנה לגרסאות 008–009`);
   return out;
+}
+
+/** whole years between a birth date and a day (both yyyy-mm-dd), or null when out of 0–120 */
+export function ageAt(birth: string | null | undefined, today: string): number | null {
+  if (!birth || !/^\d{4}-\d{2}-\d{2}$/.test(birth) || !/^\d{4}-\d{2}-\d{2}/.test(today)) return null;
+  let a = +today.slice(0, 4) - +birth.slice(0, 4);
+  if (today.slice(5, 10) < birth.slice(5, 10)) a--;
+  return a >= 0 && a <= 120 ? a : null;
 }
 
 /* ---------- matching to fox's tracks ---------- */

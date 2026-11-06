@@ -49,6 +49,23 @@ export function catMedians(funds: FundX[]): Map<string, { fee: number | null; n:
   for (const f of funds) if (!f.gone && f.fee != null) by.set(catKey(f), [...(by.get(catKey(f)) ?? []), f.fee]);
   return new Map([...by].map(([k, v]) => [k, { fee: median(v), n: v.length }]));
 }
+/** red team 06.11.26 · the median of the published average fees, from savings and from deposits, by category (prod | track) and by
+ *  product (the fallback when a category has fewer than 3 tracks); `n` / `nd`: how many tracks each median rests on */
+export interface FeeMed { fee: number | null; n: number; depfee: number | null; nd: number }
+export function feeMedians(funds: FundX[]): { cat: Map<string, FeeMed>; prod: Map<string, FeeMed> } {
+  const acc = (key: (f: FundX) => string) => {
+    const a = new Map<string, { f: number[]; d: number[] }>();
+    for (const f of funds) {
+      if (f.gone) continue;
+      const k = key(f), e = a.get(k) ?? { f: [], d: [] };
+      if (f.fee != null) e.f.push(f.fee);
+      if (f.depfee != null) e.d.push(f.depfee);
+      a.set(k, e);
+    }
+    return new Map([...a].map(([k, e]) => [k, { fee: median(e.f), n: e.f.length, depfee: median(e.d), nd: e.d.length }]));
+  };
+  return { cat: acc(catKey), prod: acc((f) => f.prod) };
+}
 
 /** the default-fund tender a held product may be on: the tenders whose winner lists its track, the one whose price equals the
  *  product's own fees first (`byFee`), and the window in which that price's `fee_years` end for members who joined in the tender's period */
