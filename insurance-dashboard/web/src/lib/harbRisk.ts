@@ -37,6 +37,8 @@ export interface RiskOut {
   monthly: number; annual: number;
   /** active policies with a premium whose period the file does not give, and with no premium at all */
   unknownPer: number; noPremium: number;
+  /** red team 06.11.26: active policies whose "monthly" premium looks annual (lib/harb perDoubt), out of the total until confirmed */
+  doubt: number;
   flags: RiskFlag[];
   companies: CompanyRow[];
   /** the age and sex the cover price is shown for, and whether they came from the folder */
@@ -63,7 +65,8 @@ export function fundOfName(cov: CoversFile | null | undefined, name: string | nu
 export const nearAge = (age: number | null, ages: number[]) => (age == null || !ages.length ? 40 : ages.reduce((b, a) => (Math.abs(a - age) < Math.abs(b - age) ? a : b), ages[0]));
 
 export function riskOf(held: Held[], today: string, opts: { cov?: CoversFile | null; age?: number | null; sex?: CSex | null } = {}): RiskOut {
-  const rows: RiskRow[] = held.flatMap((h, i) => (h.risk?.src === 'harb' ? [{ i, h, r: h.risk, monthly: monthlyOf(h.risk.premium, h.risk.per), active: !h.risk.end || h.risk.end >= today }] : []));
+  // a premium in doubt (lib/harb perDoubt) has no monthly figure until the agent confirms its period
+  const rows: RiskRow[] = held.flatMap((h, i) => (h.risk?.src === 'harb' ? [{ i, h, r: h.risk, monthly: h.risk.perDoubt ? null : monthlyOf(h.risk.premium, h.risk.per), active: !h.risk.end || h.risk.end >= today }] : []));
   const act = rows.filter((x) => x.active);
   const risky = act.filter((x) => !x.r.cats.includes('lifeSave'));
   const monthly = risky.reduce((t, x) => t + (x.monthly ?? 0), 0);
@@ -131,14 +134,28 @@ export function riskOf(held: Held[], today: string, opts: { cov?: CoversFile | n
     if (!by.has(k)) { const fund = fundOfName(cov, name); by.set(k, { name: fund?.grp ?? shortIns(name), grp: fund?.grp ?? null, n: 0, monthly: null, unknown: 0, pension: false, fund, cell: fund ? cellOf(fund, sex ?? 'm', age) : null, cellF: fund && !sex ? cellOf(fund, 'f', age) : null }); }
     return by.get(k)!;
   };
-  for (const x of act) { const c = touch(x.h.provider); c.n++; if (x.monthly != null && !x.r.cats.includes('lifeSave')) c.monthly = (c.monthly ?? 0) + x.monthly; else if (x.r.premium != null && x.r.per == null) c.unknown++; }
+  for (const x of act) { const c = touch(x.h.provider); c.n++; if (x.monthly != null && !x.r.cats.includes('lifeSave')) c.monthly = (c.monthly ?? 0) + x.monthly; else if (x.r.premium != null && (x.r.per == null || x.r.perDoubt)) c.unknown++; }
   for (const h of pens) touch(h.provider).pension = true;
   const companies = [...by.values()].sort((a, b) => (b.monthly ?? 0) - (a.monthly ?? 0) || b.n - a.n || a.name.localeCompare(b.name, 'he'));
 
   return {
     rows, monthly, annual: monthly * 12, flags, companies, age, sex, ageFromFolder: opts.age != null, people,
     unknownPer: risky.filter((x) => x.r.premium != null && x.r.per == null).length, noPremium: risky.filter((x) => x.r.premium == null).length,
+    doubt: risky.filter((x) => x.r.perDoubt).length,
   };
+}
+
+/** red team 06.11.26 · the agent confirms the period of a premium in doubt: the policy at `i` gets that period, the doubt is cleared and
+ *  its cover cost (a month) is set from it */
+export function confirmPer(held: Held[], i: number, per: 'month' | 'year'): Held[] {
+  return held.map((h, j) => {
+    if (j !== i || h.risk?.src !== 'harb') return h;
+    const r = { ...h.risk };
+    delete r.perDoubt;
+    const cost = monthlyOf(r.premium, per);
+    return { ...h, risk: { ...r, per }, covers: h.covers.map((c, k) => (k === 0 ? { ...c, cost } : c)),
+      note: (h.note ?? '').replace(/ייתכן שזו פרמיה שנתית/, per === 'year' ? 'אושר: פרמיה שנתית, חולקה ב-12' : 'אושר: פרמיה חודשית') };
+  });
 }
 
 /** the folder after a new הר הביטוח read: the policies of an earlier read are replaced, everything else is kept */

@@ -334,6 +334,21 @@ export function decodeText(b: Uint8Array): string {
   try { return new TextDecoder('utf-8', { fatal: true }).decode(b); } catch { return new TextDecoder('windows-1255').decode(b); }
 }
 
+/** Red team 06.11.26 · the highest monthly premium that is plausible for a cover billed monthly (₪). Covers usually billed once a year
+ *  (compulsory and comprehensive car, home, travel) have low ceilings: a "₪1,230 a month" compulsory-car premium is almost surely the
+ *  year's premium. These are a reading heuristic of fox (round numbers, set well above usual prices), not a market price: a premium
+ *  above them is flagged and kept out of the monthly total until the agent confirms the period. */
+export const MONTHLY_MAX: Partial<Record<RiskCat, number>> = { carMand: 400, car: 800, home: 400, travel: 300, foreign: 800 };
+export const MONTHLY_MAX_ANY = 3000;
+export const PER_DOUBT = 'ייתכן שזו פרמיה שנתית';
+/** the doubt about a premium the file calls monthly, or null */
+export function perDoubt(cats: RiskCat[], premium: number | null, per: 'month' | 'year' | null): string | null {
+  if (per !== 'month' || premium == null || premium <= 0) return null;
+  const caps = cats.map((c) => MONTHLY_MAX[c]).filter((v): v is number => v != null);
+  const cap = caps.length ? Math.max(...caps) : MONTHLY_MAX_ANY;
+  return premium > cap ? `${PER_DOUBT}: ₪${Math.round(premium).toLocaleString('en-US')} "לחודש" גבוה מהרגיל לכיסוי הזה (מעל ₪${cap.toLocaleString('en-US')}); לא נכנס לסכום החודשי עד שמאשרים` : null;
+}
+
 /** the premium a month, ₪: a monthly premium as is, an annual one ÷ 12; null when the file gives no premium or does not say which */
 export const monthlyOf = (premium: number | null, per: 'month' | 'year' | null): number | null =>
   premium == null || per == null ? null : per === 'year' ? +(premium / 12).toFixed(2) : premium;
@@ -344,12 +359,13 @@ const dmy = (iso: string) => iso.split('-').reverse().join('.');
 export function heldFromHarb(rows: HarbRow[], asof: string | null): Held[] {
   return rows.map((r) => {
     const name = r.product ?? r.sub ?? r.main ?? 'פוליסה';
-    const risk: RiskMeta = { src: 'harb', cats: r.cats, main: r.main, sub: r.sub, domain: r.domain, ptype: r.ptype, group: r.group, premium: r.premium, per: r.premiumPer, start: r.start, end: r.end, pol: r.pol, who: r.who };
+    const doubt = perDoubt(r.cats, r.premium, r.premiumPer);
+    const risk: RiskMeta = { src: 'harb', cats: r.cats, main: r.main, sub: r.sub, domain: r.domain, ptype: r.ptype, group: r.group, premium: r.premium, per: r.premiumPer, start: r.start, end: r.end, pol: r.pol, who: r.who, ...(doubt ? { perDoubt: doubt } : {}) };
     return {
       k: null, typeHe: `ביטוח: ${(r.sub ?? r.main ?? r.kind ?? 'פוליסה').slice(0, 70)}`, provider: r.insurer, plan: r.product, track: null,
       balance: null, monthly: null, fee: null, feeHow: null, depfee: null, depHow: null, asof,
-      covers: [{ name, kind: r.sub ?? r.main, sum: r.sum, cost: monthlyOf(r.premium, r.premiumPer), rate: null }],
-      note: ['מהר הביטוח', r.start ? `מ-${dmy(r.start)}` : null, r.end ? `עד ${dmy(r.end)}` : null, r.premiumPer === 'year' ? 'הפרמיה בקובץ שנתית: חולקה ב-12' : r.premiumPer == null && r.premium != null ? 'לא צוין אם הפרמיה חודשית או שנתית' : null].filter(Boolean).join(' · '),
+      covers: [{ name, kind: r.sub ?? r.main, sum: r.sum, cost: doubt ? null : monthlyOf(r.premium, r.premiumPer), rate: null }],
+      note: ['מהר הביטוח', r.start ? `מ-${dmy(r.start)}` : null, r.end ? `עד ${dmy(r.end)}` : null, doubt ? PER_DOUBT : r.premiumPer === 'year' ? 'הפרמיה בקובץ שנתית: חולקה ב-12' : r.premiumPer == null && r.premium != null ? 'לא צוין אם הפרמיה חודשית או שנתית' : null].filter(Boolean).join(' · '),
       risk,
     };
   });

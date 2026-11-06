@@ -4,7 +4,7 @@ not real data:** every person, number and amount is invented; the structure foll
 registration numbers and the fund numbers are public (data.gov.il) so the matcher can find fox tracks.
 
 - `fixture-pension.xml` · מנורה: two pension accounts (one with deposit rows, insurance track and pension covers) and a risk policy.
-- `fixture-mor.xml` · מור: a study fund, a provident fund, one fund not in the data.
+- `fixture-mor.xml` · מור: a study fund, a provident fund, one fund not in the data; an invented birth date (YeshutLakoach/TAARICH-LEYDA) for the age read.
 - `fixture-bituach.xml` · מגדל: a managers' insurance policy with a guaranteed coefficient, covers with cost, salary-month deposits and a
   transfer row; a mortgage risk policy.
 - `fixture-plain.zip`, `fixture-zipcrypto.zip` (password `fox-2026`, written by `/usr/bin/zip -e`), `fixture-aes.zip` (AES-256, password

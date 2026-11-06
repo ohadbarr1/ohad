@@ -7,7 +7,7 @@
    Nothing here recommends a track: the candidate list is every open track of the product, the agent's pick decides. */
 import type { Folder, FolderIn, Held, SnapRow, Tag } from './clients';
 import { catKey, selfDirected, type FundX } from './funds';
-import { familyOf, ilsSigned, type NyudRow } from './nyud';
+import { familyOf, ilsSigned, pairsToFields, type NyudPairs, type NyudRow } from './nyud';
 import { companyOf, segOf, srcOf, svcOf, SEG_HE, SELF_REPORT, type DecisionFile } from './decision';
 import { defaultKeys } from './pensionPack';
 import type { DefaultFile } from './fundsTools';
@@ -16,7 +16,7 @@ import { MEET_KEY } from './agentDesk';
 export const WIZ_STEPS = ['ייבוא הקובץ', 'ניוד: לפני ואחרי', 'מסמך הנמקה'] as const;
 export const MAX_CANDS = 3, MAX_KEYS = 8;
 /** the folder fields the wizard writes (lib/clients `fields`, saved in this browser only) */
-export const F = { age: 'nyud:age', sex: 'nyud:sex', kind: 'doc:kind', client: 'doc:client', meet: MEET_KEY, wizAt: 'wiz:at', wizMs: 'wiz:ms' } as const;
+export const F = { age: 'nyud:age', ageSrc: 'nyud:ageSrc', sex: 'nyud:sex', kind: 'doc:kind', client: 'doc:client', meet: MEET_KEY, wizAt: 'wiz:at', wizMs: 'wiz:ms' } as const;
 
 /** the products a candidate may be for an existing product's family (a transfer stays within the family: lib/nyud familyOf) */
 export const FAMILY_PRODS: Record<'kitzba' | 'hish' | 'invest', string[]> = {
@@ -75,9 +75,10 @@ export function wizardKeys(f: Pick<Folder, 'keys' | 'tags' | 'held'>, cands: str
 }
 /** the save of step 3: keys and tags, the snapshot, and the fields (the doc kind, the client's name for the document, the meeting
  *  date, the age and sex the ניוד table used, the time the flow took); fields the agent typed before are kept */
-export function wizardSave(f: Folder, cands: string[], opts: { snap: Folder['snap']; kind: string; client: string; meet: string; age: number | null; sex: 'm' | 'f' | null; ms: number | null; today: string; why?: Record<string, string> }): FolderIn {
+export function wizardSave(f: Folder, cands: string[], opts: { snap: Folder['snap']; kind: string; client: string; meet: string; age: number | null; sex: 'm' | 'f' | null; ms: number | null; today: string; why?: Record<string, string>; pairs?: NyudPairs }): FolderIn {
   const { keys, tags } = wizardKeys(f, cands);
-  const fields: Record<string, string> = { ...f.fields };
+  // the per-product pairing (red team 06.11.26), so the document shows the pairs the wizard showed
+  const fields: Record<string, string> = opts.pairs ? pairsToFields(f.fields, opts.pairs) : { ...f.fields };
   const set = (k: string, v: string | null | undefined) => { if (v && v.trim()) fields[k] = v.trim(); else delete fields[k]; };
   set(F.kind, opts.kind); set(F.client, opts.client); set(F.meet, opts.meet); set(F.age, opts.age != null ? String(opts.age) : null); set(F.sex, opts.sex);
   set(F.wizAt, opts.today); if (opts.ms != null) set(F.wizMs, String(Math.round(opts.ms)));
@@ -119,9 +120,11 @@ export function whyLines(r: NyudRow, exist: FundX | null | undefined, cand: Fund
   const out: Why[] = [];
   const f = r.fee;
   if (f) {
-    out.push({ text: `דמי ניהול: ${pc(f.own.pair.depfee)} מהפקדה / ${pc(f.own.pair.fee)} מצבירה ← ${pc(f.cand.pair.depfee)} / ${pc(f.cand.pair.fee)}; ${ils(f.annualOwn)} ← ${ils(f.annualCand)} בשנה על היתרה וההפקדה של היום`,
+    out.push({ text: `דמי ניהול: ${pc(f.own.pair.depfee)} מהפקדה / ${pc(f.own.pair.fee)} מצבירה ← ${pc(f.cand.pair.depfee)} / ${pc(f.cand.pair.fee)}${f.cand.basis === 'agreed' ? ' (שסוכמו)' : ' (הנחה)'}; ${ils(f.annualOwn)} ← ${ils(f.annualCand)} בשנה על היתרה וההפקדה של היום`,
       src: `${f.own.how}; ${f.cand.how} (${asofText})` });
-    out.push({ text: `חיסכון צפוי בגיל הפרישה, מדמי הניהול בלבד: ${ils(f.balOwn)} ← ${ils(f.balCand)} (${ilsSigned(f.balRealDiff)}, ${Math.round(f.years)} שנים)`,
+    // red team 06.11.26: a pair that is not comparable yet gets no headline gain; a projection is labelled an assumption
+    if (r.incomplete) out.push({ text: r.incomplete, src: 'קובץ המסלקה; עלות הביטוח במוצר המוצע אינה במאגרי הרשות' });
+    else out.push({ text: `חיסכון צפוי בגיל הפרישה (הנחה), מדמי הניהול בלבד: ${ils(f.balOwn)} ← ${ils(f.balCand)} (${ilsSigned(f.balRealDiff)}, ${Math.round(f.years)} שנים${f.exMonthly ? ', בלי הפקדות עתידיות: אין הפקדה בקובץ' : ''})`,
       src: 'חישוב האתר (lib/nyud, lib/retire) על היתרה וההפקדה מקובץ המסלקה, בשקלים של היום; תשואה זהה לשני הצדדים' });
   } else if (r.feeWhy) out.push({ text: `דמי ניהול: ${r.feeWhy}`, src: 'קובץ המסלקה; הרשות' });
   if (r.cover.diff != null) out.push({ text: `כיסוי נכות ושאירים: ${ils(r.cover.exist!)} ← ${ils(r.cover.cand!)} לחודש (${ilsSigned(r.cover.diff)})`, src: 'העלות החודשית בקובץ המסלקה, בשני הצדדים' });
@@ -140,7 +143,8 @@ export type RowsOf = (keys: string[]) => SnapRow[];
 
 /* ---------- the clock: the agent's own times, kept in this browser ---------- */
 export const TIMES_KEY = 'agent:wizard:times';
-export const fmtDur = (ms: number) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+/** a duration in words: "16 שניות" under a minute, "1:05 דקות" from a minute (red team 06.11.26: "0:16 דקות" read as minutes) */
+export const fmtDur = (ms: number) => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? (s === 1 ? 'שנייה אחת' : `${s} שניות`) : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} דקות`; };
 export const medianMs = (xs: number[]) => { const s = xs.filter((x) => Number.isFinite(x) && x > 0).sort((a, b) => a - b); const n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; };
 export const pushTime = (xs: unknown, ms: number) => [...(Array.isArray(xs) ? xs.filter((x): x is number => typeof x === 'number' && Number.isFinite(x) && x > 0) : []), Math.round(ms)].slice(-20);
 

@@ -5,7 +5,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  CALLS_SUM_KEY, EMPTY_CALLS, Q4_MAX, TRIG_ORDER, addYm, anniversary, bookHash, bottomRun, callList, callMsg, daysBetween, folderTriggers, isFreshMonth, markHandled, normCalls, normMark, normSummary,
+  CALLS_SUM_KEY, CLIENT_TRIGS, CSV_HEAD, EMPTY_CALLS, Q4_MAX, TRIG_ORDER, bookCsv, clientTriggers, csvCell, nextReview, addYm, anniversary, bookHash, bottomRun, callList, callMsg, daysBetween, folderTriggers, isFreshMonth, markHandled, normCalls, normMark, normSummary,
   rankCats, reviewMsg, reviewsDue, rollCalls, signOff, waLink, whenText, ymShort, MEET_KEY, REVIEW_KEY, type CallsIn, type RankSeries,
 } from '../src/lib/agentDesk';
 import { backupName, decryptBook, encryptBook, isBookBackup, restoreInto } from '../src/lib/bookBackup';
@@ -13,7 +13,8 @@ import { F, MAX_CANDS, candOptions, fmtDur, medianMs, prodFor, prodsFor, pushTim
 import { NEED_PW, NeedPassword, readClientFiles, readSum } from '../src/lib/clientRead';
 import { coverOnly, folderFromImport, heldForDoc, normClients, normFolder, upsert, decryptShare, encryptFolder, type ClientsFile, type Folder, type Held } from '../src/lib/clients';
 import { heldOf, type MFund } from '../src/lib/maslaka';
-import { nyudTable } from '../src/lib/nyud';
+import { AGE_MISSING, kindOf, nyudTable } from '../src/lib/nyud';
+import { ageAt } from '../src/lib/maslaka';
 import { docRow, bottomLines, snapOf } from '../src/lib/compareDoc';
 import { FORBIDDEN } from '../src/lib/hanmaka';
 import type { FundX } from '../src/lib/funds';
@@ -91,7 +92,8 @@ const byK = new Map(funds.map((f) => [f.k, f]));
   const t2 = folderTriggers(f2, IN([f2]), byK);
   ok(t2.filter((t) => t.id === 'q4').length === 1 && /שני/.test(t2.find((t) => t.id === 'q4')!.what), 'one line per track, both products named');
   // no data: no trigger
-  ok(folderTriggers(f, IN([f], { ranks: null, fees: null, dfile: null, dec: null }), byK).map((t) => t.id).join() === 'act', 'without the optional files only the actuarial line (from funds.json) remains');
+  ok(folderTriggers(f, IN([f], { ranks: null, fees: null, dfile: null, dec: null }), byK).filter((t) => t.level === 'market').map((t) => t.id).join() === 'act', 'without the optional files only the actuarial line (from funds.json) remains among the market lines');
+  ok(ts.every((t) => t.level === (CLIENT_TRIGS.includes(t.id) ? 'client' : 'market')), 'every trigger carries its level');
   ok(folderTriggers(FD('a3', 'ג', [HX({ k: null })]), IN([]), byK).length === 0, 'an unmatched product has no trigger');
   const list = callList(IN([FD('z', 'ריק', [HX({ k: 'p2', fee: 0.22, depfee: 1 })]), f]));
   ok(list.length === 1 && list[0].label === 'ד.כ.', 'the call list keeps folders with a trigger');
@@ -100,6 +102,43 @@ const byK = new Map(funds.map((f) => [f.k, f]));
   const m = callMsg(ts, 202609, signOff({ name: 'יוסי כהן', phone: '050-0000000' }));
   ok(m.includes('נתוני 09/26') && m.includes('יוסי כהן · 050-0000000') && !m.includes('ד.כ.') && !/200,000|200000/.test(m) && !FORBIDDEN.test(m), 'the draft: data month, sign-off, no client label, no balance');
   ok(waLink('שלום\nא').startsWith('https://wa.me/?text=') && decodeURIComponent(waLink('שלום\nא').split('=')[1]) === 'שלום\nא', 'WhatsApp link carries the text');
+}
+
+/* ---- red team 06.11.26 · client-level money triggers lead the call list ---- */
+{
+  const mf = [...funds, FX('p3', { depfee: 1.2, fee: 0.18 }), FX('p4', { depfee: 1.4, fee: 0.2 }), FX('p5', { depfee: 1.6, fee: 0.25 })];
+  const bk = new Map(mf.map((x) => [x.k, x]));
+  const f = FD('c1', 'לקוח', [
+    HX({ k: 'p1', depfee: 1.0, fee: 0.22 }),                                    // active pension at the tender price: no fee line
+    HX({ k: 'p3', depfee: 6, fee: 0.5, monthly: null, balance: 123411 }),        // inactive pension, 6% from deposits: above the tender
+    HX({ k: null, typeHe: 'ביטוח מנהלים (ביטוח חיים משולב חיסכון)', depfee: 3, fee: 1.05, coefGuaranteed: { v: 161.85, at: 67, src: 'file' } }),
+  ]);
+  const inp = IN([f], { funds: mf });
+  const ct = clientTriggers(f, inp, bk);
+  const ids = ct.map((t) => t.id);
+  ok(ids.includes('depfee') && ids.includes('merge') && ids.includes('coef') && ct.every((t) => t.level === 'client'), `client lines: deposit fee, two pensions to merge, the coefficient (${ids})`);
+  const dep = ct.find((t) => t.id === 'depfee')!;
+  ok(/6\.00% מול 1\.00%/.test(dep.title) && /הליך/.test(dep.detail) && /חשבון לא פעיל/.test(dep.detail) && dep.amount == null && /קובץ המסלקה/.test(dep.src), 'depfee: 6% against the tender price in force; no deposit in the file, no ₪ invented');
+  const acc = ct.find((t) => t.id === 'accfee' && t.k === 'p3');
+  ok(acc && acc.amount != null && Math.abs(acc.amount - (0.5 - 0.2) / 100 * 123411) < 1 && /0\.20%/.test(acc.title), `accfee: above the category median, ₪ a year on the balance (${acc?.title})`);
+  ok(!ct.some((t) => t.id === 'accfee' && t.k === 'p1') && !ct.some((t) => t.id === 'depfee' && t.k === 'p1'), 'materiality: ₪40 a year above the median, or the tender price itself, is not a call');
+  const mg = ct.find((t) => t.id === 'merge')!;
+  ok(/2 קרנות פנסיה/.test(mg.title) && /בלי הפקדות/.test(mg.title) && !/123,411|123411/.test(mg.msg), 'merge: two pension funds, one idle; the message has no balance');
+  ok(ct.find((t) => t.id === 'coef')!.title.includes('161.85'), 'the guaranteed-coefficient cohort');
+  const all = folderTriggers(f, inp, bk);
+  const firstMkt = all.findIndex((t) => t.level === 'market');
+  ok(all[0].level === 'client' && (firstMkt < 0 || all.slice(firstMkt).every((t) => t.level === 'market')), 'client lines first, market lines below');
+  ok(all.some((t) => t.level === 'market'), 'the market lines are still there, below');
+  const list = callList(IN([FD('mk', 'שוק בלבד', [HX({ k: 'p1' })]), f], { funds: mf }));
+  ok(list[0].label === 'לקוח', 'a client with money lines ranks above a market-only one');
+  ok(ct.every((t) => !FORBIDDEN.test(t.msg) && !FORBIDDEN.test(t.title) && t.src), 'client lines: sourced, none recommending');
+  // the CRM export
+  const csv = bookCsv([f], { today: TODAY, calls: list, handled: { [dep.key]: TODAY } });
+  const lines = csv.slice(1).trim().split('\r\n');
+  ok(csv.charCodeAt(0) === 0xFEFF && lines[0] === CSV_HEAD.join(',') && lines.length === 2, 'CSV: BOM, Hebrew headers, one row per folder');
+  ok(lines[1].startsWith('c1,לקוח,') && /ביטוח מנהלים/.test(lines[1]) && !lines[1].includes('6.00% מול') && /חשבונות לאיחוד/.test(lines[1]) && /10\.11\.2026/.test(lines[1]), `CSV row: id and label as stored, products, open lines only (handled left out), next review (${lines[1].slice(0, 120)}…)`);
+  ok(csvCell('=SUM(A1)') === "'=SUM(A1)" && csvCell('א,ב') === '"א,ב"' && csvCell('a"b') === '"a""b"', 'CSV cells: formulas neutralised, commas and quotes quoted');
+  ok(nextReview(FD('n1', 'n', [], { created: '2026-03-01' }), TODAY) === '2027-03-01' && nextReview(FD('n2', 'n', [], { created: '2025-03-01', fields: { [REVIEW_KEY]: '2026-03-01' } }), TODAY) === '2027-03-01' && nextReview(FD('n3', 'n', [], { created: '2025-10-01' }), TODAY) === '2026-10-01', 'next review: first anniversary; after a review, next year; overdue within the window stays');
 }
 
 /* ---- the look: new month, handled marks ---- */
@@ -171,7 +210,7 @@ const byK = new Map(funds.map((f) => [f.k, f]));
   ok(sv.fields!['a1:g2:why'] === 'כתבתי' && sv.fields!['a1:p2:why'] === 'שורה' && sv.fields![F.client] === 'דנה' && sv.fields![F.meet] === '2026-11-05' && sv.fields![F.age] === '41' && sv.fields![F.wizMs] === '183000' && sv.id === 'w', 'save: the agent\'s text kept, prefills only empty fields, the settings and the time');
   const u = upsert({ kind: 'fox-clients', v: 2, folders: [f0] }, sv, TODAY);
   ok(u.folder.tags.g2 === 'מומלץ' && u.folder.tags.g1 === 'קיים' && u.folder.held.length === 3 && !u.created, 'the saved folder: candidates "מומלץ", the held products all kept');
-  ok(fmtDur(183000) === '3:03' && medianMs([3, 1, 2]) === 2 && medianMs([]) === null && pushTime([1, 'x'], 5).join() === '1,5', 'the clock');
+  ok(fmtDur(183000) === '3:03 דקות' && fmtDur(16000) === '16 שניות' && fmtDur(65000) === '1:05 דקות' && fmtDur(1000) === 'שנייה אחת' && fmtDur(59400) === '59 שניות' && medianMs([3, 1, 2]) === 2 && medianMs([]) === null && pushTime([1, 'x'], 5).join() === '1,5', 'the clock');
   const sc = svcClaims(dec, { grp: 'קבוצה א', fam: 'pensia', prod: 'פנסיה מקיפה' }, { grp: 'קבוצה ב', fam: 'pensia', prod: 'פנסיה מקיפה' });
   ok(sc.length === 2 && /74, מקום 8 מתוך 9 ← קבוצה ב 88, מקום 1 מתוך 9/.test(sc[0].text) && /עמ' 28/.test(sc[0].src) && /81\.5%/.test(sc[1].text) && /לא פורסם/.test(sc[1].text) && /דיווח החברה/.test(sc[1].src), 'service and claims, both companies, sourced');
 }
@@ -196,6 +235,8 @@ if (existsSync(join(DATA, 'funds.json'))) {
   const t0 = performance.now();
   const reads = await readClientFiles([fileOf('fixture-zipcrypto.zip'), fileOf('fixture-mor.xml')], mf, 'fox-2026');
   const rows = reads.flatMap((r) => r.rows);
+  // 5 · the age from the file: the study-fund file carries an (invented) birth date; the pension zip does not
+  ok(reads[1].birth === '1981-04-15' && (reads[0].birth ?? null) === null && ageAt(reads[1].birth, '2026-11-06') === 45 && ageAt('1981-11-07', '2026-11-06') === 44, `the birth date read from YeshutLakoach/TAARICH-LEYDA → age 45 (${reads[1].birth})`);
   const uniq = rows;
   const sum = readSum(uniq);
   ok(reads[0].parts === 2 && rows.length > 0 && sum.rows === uniq.length && sum.matched + sum.unmatched + sum.skipped === sum.rows, `reader: the zip's 2 provider files and the study-fund file (${JSON.stringify(sum)})`);
@@ -213,8 +254,41 @@ if (existsSync(join(DATA, 'funds.json'))) {
   const plan = wizardKeys(f, cands);
   const byKR = new Map(d.funds.map((x) => [x.k, x]));
   const docRows = plan.keys.map((k) => byKR.get(k)!).map((x) => docRow(x, { net: true, asof: d.asof, dfile: realDf, dec: realDec }));
-  const ny = nyudTable(f.held, docRows, plan.tags, null, { basis: 'fox', age: 45, sex: 'm' }, ymShort(d.asof));
-  ok(ny.rows.length >= 2 && ny.rows.some((r) => r.coef || r.coefWhy) && ny.rows.every((r) => r.fee || r.feeWhy), `ניוד: ${ny.rows.length} pairs, the coefficient line on the managers' policy`);
+  // red team 06.11.26 · pairing product by product, within the kind: the pension candidate takes the two pension funds only
+  const ny0 = nyudTable(f.held, docRows, plan.tags, null, { basis: 'fox', age: 45, sex: 'm' }, ymShort(d.asof));
+  const pens = f.held.filter((h) => /פנסיה/.test(h.typeHe) && (h.balance != null || h.monthly != null));
+  const toPen = ny0.rows.filter((r) => r.cand.k === cands[0]);
+  ok(toPen.length === pens.length && toPen.every((r) => /פנסיה/.test(r.exist.typeHe)), `the pension pick pairs the ${pens.length} pension funds only, not every product (${toPen.map((r) => r.exist.typeHe).join('; ')})`);
+  ok(ny0.rows.every((r) => kindOf(r.exist.typeHe) === kindOf(r.cand.prod)) && ny0.rows.filter((r) => r.cand.k === cands[1]).every((r) => /השתלמות/.test(r.exist.typeHe)), 'every pair stays within its kind: pension ↔ pension, השתלמות ↔ השתלמות');
+  ok(!ny0.rows.some((r) => /ביטוח מנהלים|גמל/.test(r.exist.typeHe)), 'no managers\' policy or provident fund paired automatically');
+  const one = nyudTable(f.held, docRows, { ...plan.tags, [cands[1]]: 'קיים' }, null, { basis: 'fox', age: 45, sex: 'm' }, ymShort(d.asof));
+  ok(one.rows.length === pens.length, `with only the pension track proposed: ${one.rows.length} pairs, not "5 זוגות"`);
+  const bmI = f.held.findIndex((h) => /ביטוח מנהלים/.test(h.typeHe));
+  const closedI = f.held.findIndex((h) => /נסגר/.test(`${h.track ?? ''} ${h.plan ?? ''}`));
+  ok(ny0.slots.find((s) => s.i === bmI)!.pick === null && /ביטוח מנהלים/.test(ny0.slots.find((s) => s.i === bmI)!.block!), 'the managers\' policy is not auto-paired, and says why');
+  ok(closedI < 0 || (ny0.slots.find((s) => s.i === closedI)?.pick ?? null) === null, 'the closed track is not auto-paired');
+  // 2 · no invented deposit: the pension fund with no deposit in the file projects with zero deposits
+  const idle = ny0.rows.find((r) => r.exist.monthly == null);
+  ok(idle && idle.fee && idle.fee.exMonthly && idle.fee.monthly === 0, `no deposit in the file: projected with ₪0 a month, flagged (${idle?.fee?.monthly})`);
+  ok(idle && idle.annex.assume.before['סכום צפוי (יתרת חסכון ואומדן קצבה צפויה)']?.includes('בלי הפקדות עתידיות'), 'A.1: the projection is stamped as an assumption, with "no future deposits"');
+  // the managers' policy by hand: its guaranteed coefficient keeps it out until the agent confirms
+  const pick = { pick: { [String(bmI)]: cands[0] } };
+  const ny1 = nyudTable(f.held, docRows, plan.tags, null, { basis: 'fox', age: 45, sex: 'm' }, ymShort(d.asof), pick);
+  ok(!ny1.rows.some((r) => r.i === bmI) && ny1.skipped.some((x) => /מקדם מובטח 161\.85 יאבד/.test(x)) && ny1.slots.find((s) => s.i === bmI)!.needOk, 'picked by hand, a guaranteed coefficient still needs the confirmation "מקדם מובטח יאבד"');
+  const ny = nyudTable(f.held, docRows, plan.tags, null, { basis: 'fox', age: 45, sex: 'm' }, ymShort(d.asof), { ...pick, ok: { [String(bmI)]: true } });
+  const bmRow = ny.rows.find((r) => r.i === bmI)!;
+  ok(bmRow && bmRow.coef && ny.rows.every((r) => r.fee || r.feeWhy), `ניוד: ${ny.rows.length} pairs after the confirmation, the coefficient line on the managers' policy`);
+  // 3 · the managers' policy has a cover cost in the file and the pension's is unknown: no fees-only headline until it is filled
+  ok(bmRow.incomplete && /לא בר השוואה/.test(bmRow.incomplete) && bmRow.annex.after['סכום צפוי (יתרת חסכון ואומדן קצבה צפויה)'] === '', 'the managers\' policy pair is "not comparable" while the proposed cover cost is unknown');
+  const filled = nyudTable(f.held, docRows, plan.tags, null, { basis: 'fox', age: 45, sex: 'm' }, ymShort(d.asof), { ...pick, ok: { [String(bmI)]: true }, cover: { [String(bmI)]: 150 } }).rows.find((r) => r.i === bmI)!;
+  ok(filled.incomplete === null && filled.cover.agent && filled.cover.cand === 150, 'once the agent fills the proposed cover cost, the pair is comparable');
+  // 4 · the agreed fee replaces the assumption; the tender price is a labelled preset
+  const agreed = nyudTable(f.held, docRows, plan.tags, null, { basis: 'fox', age: 45, sex: 'm' }, ymShort(d.asof), { fee: { [String(ny0.rows[0].i)]: { depfee: 1.5, fee: 0.2, src: 'agreed' } } }).rows[0];
+  ok(agreed.fee!.cand.basis === 'agreed' && agreed.annex.after['דמי ניהול מהפקדות'].includes('שסוכמו') && !agreed.annex.assume.after['דמי ניהול מהפקדות'], 'an agreed fee is used and printed "שסוכמו", without the assumption stamp');
+  ok(ny0.rows[0].fee!.cand.basis !== 'tender' && /הנחה/.test(ny0.rows[0].annex.assume.after['דמי ניהול מהפקדות'] ?? ''), 'without an agreed fee the tender price is not the silent default; the figure says "הנחה"');
+  // 5 · no age, no projection
+  const noAge = nyudTable(f.held, docRows, plan.tags, null, { basis: 'fox', age: null }, ymShort(d.asof));
+  ok(noAge.rows.length > 0 && noAge.rows.every((r) => r.fee === null && r.feeWhy === AGE_MISSING), 'no age: no projected figure, the reason instead');
   const whys = ny.rows.map((r) => whyLines(r, r.exist.k ? byKR.get(r.exist.k) : null, byKR.get(r.cand.k), realDec, ymShort(d.asof)));
   ok(whys.every((w) => w.length >= 3 && w.every((x) => x.text && x.src)) && whys.flat().some((x) => /מדד השירות/.test(x.text)) && whys.flat().every((x) => !FORBIDDEN.test(x.text)), 'every pair has sourced why lines, the service index among them, none recommending');
   ok(whyText(whys[0]).split('\n').length === whys[0].length, 'the why text: one line each');
@@ -233,6 +307,13 @@ if (existsSync(join(DATA, 'funds.json'))) {
   // the call list on the published data, for the fixture folder
   const calls = callList({ folders: [saved], funds: d.funds, asof: d.asof, today: TODAY, ranks: null, fees: realFees, dfile: realDf, dec: realDec });
   ok(calls.every((c) => c.triggers.every((t) => t.src && t.title && !FORBIDDEN.test(t.msg))), `smoke: the call list on the published data (${calls.reduce((t, c) => t + c.triggers.length, 0)} triggers)`);
+  // 9 · red team 06.11.26: on the fixture client the list leads with what the agent bills on, from the client's own file
+  const ft = calls[0]?.triggers ?? [];
+  const fids = ft.filter((t) => t.level === 'client').map((t) => t.id);
+  ok(ft[0]?.level === 'client' && fids.includes('depfee') && fids.includes('merge') && fids.includes('coef'), `fixture client: deposit fee, two pensions to merge and the guaranteed coefficient first (${ft.map((t) => t.id).join(',')})`);
+  ok(ft.some((t) => t.id === 'depfee' && /6\.00%/.test(t.title)) && ft.some((t) => t.id === 'depfee' && /3\.00%/.test(t.title)), 'the 6% pension deposit fee and the managers\' policy 3% deposit fee are both on the list');
+  const fm = ft.findIndex((t) => t.level === 'market');
+  ok(fm < 0 || ft.slice(fm).every((t) => t.level === 'market'), 'market lines (actuarial balance, service score) only below the client lines');
   const rankIdx = JSON.parse(readFileSync(join(DATA, 'funds/stats/index.json'), 'utf8')) as { cats: { cat: string; slug: string; rank?: boolean }[] };
   const cs = rankCats([saved], d.funds);
   ok(cs.length > 0 && cs.every((c) => rankIdx.cats.some((x) => x.cat === c)), 'smoke: every held category has a rank file in the index');

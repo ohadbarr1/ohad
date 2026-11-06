@@ -23,3 +23,6 @@
 .rk-co th:last-child { max-width: 260px; white-space: normal; }
 @media (max-width: 640px) { .rk-f { grid-template-columns: 1fr; } .rk-sev { grid-row: auto; justify-self: start; } .rk-f > span:last-child { grid-column: 1; } }
 .ci-harb { display: grid; gap: 8px; }
+/* red team 06.11.26 · a "monthly" premium that looks annual: flagged, out of the total until the agent confirms the period */
+.rk-doubt { color: #8A5A00; font-weight: 600; }
+.rk-per { display: inline-flex; gap: 4px; margin-top: 2px; }

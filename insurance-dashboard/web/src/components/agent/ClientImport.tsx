@@ -2,15 +2,16 @@ import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../Icon';
 import type { FundX } from '../../lib/funds';
-import { heldOf, MATCH_BY, type MFund, type Row } from '../../lib/maslaka';
+import { ageAt, heldOf, MATCH_BY, type MFund, type Row } from '../../lib/maslaka';
 import { folderFromImport, upsert, useClients, type Folder, type Held } from '../../lib/clients';
 import { ACCEPT, NeedPassword, PW_HINT, readClientFiles, readSum, type Read } from '../../lib/clientRead';
 import { today } from '../../lib/visits';
 import { nf } from '../../lib/format';
 import { track } from '../../lib/track';
-import { HARB_ACCEPT, HARB_WARN, heldFromHarb, looksHarb, readHarb, type HarbRow } from '../../lib/harb';
+import { HARB_ACCEPT, HARB_WARN, PER_DOUBT, heldFromHarb, looksHarb, perDoubt, readHarb, type HarbRow } from '../../lib/harb';
 import { riskOf, shortIns } from '../../lib/harbRisk';
 import { HARB_HOW } from './RiskSide';
+import { F } from '../../lib/wizard';
 
 /* W4 · the agent's clearing-house import: the client's files are read in this browser (lib/clientRead → lib/maslaka), shown for
    review, and saved as a NEW client folder: the products with their balances, the client's own fees and the insurance cover; the
@@ -92,7 +93,10 @@ export function ClientImport({ funds, onDone, startOpen = false, toWizard, nextL
     if (!all.length) { setErr('לא נמצאו מוצרים בקבצים'); return; }
     const f = folderFromImport(lab, all);
     const from = held.length && hHeld.length ? 'מהמסלקה ומהר הביטוח' : hHeld.length ? 'מהר הביטוח' : 'מהמסלקה';
-    const r = upsert(file, { ...f, b: 'net', note: `ייבוא ${from}, ${today().split('-').reverse().join('.')}` }, today());
+    // red team 06.11.26: the age from the file's birth date (whole years; the date itself is not kept)
+    const age = ageAt((reads ?? []).map((x) => x.birth).find((b) => b) ?? null, today());
+    const fields = age != null && age >= 16 && age <= 80 ? { [F.age]: String(age), [F.ageSrc]: 'file' } : undefined;
+    const r = upsert(file, { ...f, b: 'net', note: `ייבוא ${from}, ${today().split('-').reverse().join('.')}`, ...(fields ? { fields } : {}) }, today());
     setFile(r.file);
     track('import_done');  // F2: the event name only
     const start = t0.current ?? Date.now();
@@ -103,14 +107,14 @@ export function ClientImport({ funds, onDone, startOpen = false, toWizard, nextL
 
   if (!open) return (
     <div className="ci-intro">
-      <p>קובץ המסלקה הפנסיונית של הלקוח (zip או XML), ולצידו הקובץ מהר הביטוח (Excel או CSV), נקראים כאן, בדפדפן הזה, ונשמרים כתיק חדש: המוצרים, היתרות, דמי הניהול <b>של הלקוח</b> והכיסויים הביטוחיים, ופוליסות הביטוח כצד הסיכון. לא נשמרים שם, תעודת זהות, מספר חשבון, מספר פוליסה מלא או מעסיק.</p>
+      <p>קובץ המסלקה הפנסיונית של הלקוח (zip או XML), ולצידו הקובץ מהר הביטוח (Excel או CSV), נקראים כאן, בדפדפן הזה, ונשמרים כתיק חדש: המוצרים, היתרות, דמי הניהול <b>של הלקוח</b> והכיסויים הביטוחיים, ופוליסות הביטוח כצד הסיכון. לא נשמרים שם, תעודת זהות, מספר חשבון, מספר פוליסה מלא או מעסיק; מתאריך הלידה נשמר רק הגיל.</p>
       <button type="button" className="btn" onClick={() => setOpen(true)}><Icon name="inbox" /> ייבוא מהמסלקה ללקוח</button>
     </div>
   );
   return (
     <div className={`ci-body${over ? ' ci-over' : ''}`} onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setOver(true); } }} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(false); }}
       onDrop={(e) => { if (!e.dataTransfer.files.length) return; e.preventDefault(); setOver(false); void run(Array.from(e.dataTransfer.files), null); }}>
-      <p className="csave-priv">גררו לכאן את קובץ ה-zip מהמסלקה (או את קובצי ה-XML שבתוכו), ואם יש, גם את הקובץ מהר הביטוח; או בחרו אותם. {HARB_HOW} הקבצים נקראים בדפדפן הזה בלבד ולא יוצאים מהמכשיר; הקורא אינו פותח את פרטי הלקוח, המעסיק או המבוטח בכיסוי.</p>
+      <p className="csave-priv">גררו לכאן את קובץ ה-zip מהמסלקה (או את קובצי ה-XML שבתוכו), ואם יש, גם את הקובץ מהר הביטוח; או בחרו אותם. {HARB_HOW} הקבצים נקראים בדפדפן הזה בלבד ולא יוצאים מהמכשיר; הקורא אינו פותח את שם הלקוח, מספר הזהות, המעסיק או המבוטח בכיסוי. מתאריך הלידה נשמר רק הגיל, לחישוב.</p>
       <label className="btn primary ci-file">{busy ? 'קורא…' : reads && !harb ? 'הוספת הקובץ מהר הביטוח' : 'בחירת קובצי הלקוח (מסלקה, הר הביטוח)'}<input ref={inp} type="file" accept={`${ACCEPT},${HARB_ACCEPT}`} multiple onChange={(e) => { void run(Array.from(e.target.files ?? []), null); e.target.value = ''; }} /></label>
       {pending && <form className="csave-form ci-pw" onSubmit={(e) => { e.preventDefault(); if (pw.trim()) void run(pending, pw.trim()); }}>
         <label htmlFor="ci-pw">הסיסמה לקובץ {pending.length === 1 ? pending[0].name : ''}</label>
@@ -141,7 +145,7 @@ export function ClientImport({ funds, onDone, startOpen = false, toWizard, nextL
           {harb && <div className="ci-harb">
             {harb.map((h) => <p key={h.name} className={h.error ? 'ci-err' : 'ci-warn'}><b>{h.name}:</b> {h.error ?? h.warn.filter((w) => w !== HARB_WARN).join(' · ')}</p>)}
             {hRows.length > 0 && <>
-              <p className="ci-sum" role="status"><b>צד הסיכון: {hRows.length} פוליסות מהר הביטוח</b>{risk ? ` · ₪${Math.round(risk.monthly).toLocaleString('en-US')} לחודש` : ''}{risk?.flags.length ? ` · ${risk.flags.length} נקודות לבדיקה, מוצגות בתיק` : ''}</p>
+              <p className="ci-sum" role="status"><b>צד הסיכון: {hRows.length} פוליסות מהר הביטוח</b>{risk ? ` · ₪${Math.round(risk.monthly).toLocaleString('en-US')} לחודש${risk.doubt ? ` (בלי ${risk.doubt === 1 ? 'פרמיה אחת שנראית שנתית' : `${risk.doubt} פרמיות שנראות שנתיות`})` : ''}` : ''}{risk?.flags.length ? ` · ${risk.flags.length} נקודות לבדיקה, מוצגות בתיק` : ''}</p>
               <div className="scroll"><table className="fsimple ci-t">
                 <caption className="sr-only">הפוליסות שבקובץ מהר הביטוח</caption>
                 <thead><tr><th>חברה</th><th>כיסוי</th><th>תקופה</th><th>פרמיה</th></tr></thead>
@@ -149,7 +153,8 @@ export function ClientImport({ funds, onDone, startOpen = false, toWizard, nextL
                   <td>{shortIns(r.insurer)}</td>
                   <td><b>{r.product ?? r.sub ?? r.main ?? '–'}</b>{(r.sub || r.main) && r.product && <span className="ci-sub">{r.sub ?? r.main}</span>}</td>
                   <td><span className="num">{r.start ? r.start.split('-').reverse().join('.') : '–'}</span>{r.end && <> עד <span className="num">{r.end.split('-').reverse().join('.')}</span></>}</td>
-                  <td><span className="num">{ils(r.premium)}</span><span className="ci-sub">{r.premiumPer === 'month' ? 'לחודש' : r.premiumPer === 'year' ? 'לשנה' : 'לא צוין לאיזו תקופה'}</span></td>
+                  <td><span className="num">{ils(r.premium)}</span><span className="ci-sub">{r.premiumPer === 'month' ? 'לחודש' : r.premiumPer === 'year' ? 'לשנה' : 'לא צוין לאיזו תקופה'}</span>
+                    {perDoubt(r.cats, r.premium, r.premiumPer) && <span className="ci-sub ci-warn">{PER_DOUBT}: לא נכנס לסכום החודשי; מאשרים בתיק</span>}</td>
                 </tr>)}</tbody>
               </table></div>
               <p className="csave-priv">{HARB_WARN}. נשמרים בתיק רק החברה, הענף, התקופה, הפרמיה וארבע הספרות האחרונות של מספר הפוליסה.</p>

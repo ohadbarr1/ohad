@@ -3,8 +3,8 @@
    docs/harb-format.md). Run: npm run test:harb */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CODE_SUB, HARB_WARN, XLS_BIN, catsOf, harbDate, harbKind, harbRows, heldFromHarb, htmlCells, looksHarb, monthlyOf, readHarb, splitTable } from '../src/lib/harb';
-import { fundOfName, nearAge, riskOf, shortIns, withHarb } from '../src/lib/harbRisk';
+import { CODE_SUB, HARB_WARN, PER_DOUBT, XLS_BIN, catsOf, harbDate, harbKind, harbRows, heldFromHarb, htmlCells, looksHarb, monthlyOf, perDoubt, readHarb, splitTable } from '../src/lib/harb';
+import { confirmPer, fundOfName, nearAge, riskOf, shortIns, withHarb } from '../src/lib/harbRisk';
 import { normRisk } from '../src/lib/harbTypes';
 import { coverOnly, folderFromImport, heldSum, normClients, type Held } from '../src/lib/clients';
 import { cellOf, type CoversFile } from '../src/lib/coverPrice';
@@ -172,6 +172,24 @@ async function makeXlsx(rows: (string | number)[][]): Promise<Uint8Array> {
   ok(c.rows[0].premiumPer === null && c.warn.some((w) => w.includes('חודשית או שנתית')) && heldFromHarb(c.rows, null)[0].covers[0].cost === null, 'no period for the premium: said, and not put in the monthly cost');
   ok(harbRows([['שלום', 'עולם'], ['1', '2']]).rows.length === 0, 'no header row: no rows');
   ok(splitTable('a;b;c\n"x;y";2;3')[1][0] === 'x;y', 'semicolon CSV with a quoted separator');
+}
+
+/* ---- red team 06.11.26 · a "monthly" premium implausible for its cover (רכב חובה ₪1,230 a month) ---- */
+{
+  const r = await readHarb(new Uint8Array(readFileSync(join(process.cwd(), 'tests', 'fixtures', 'maslaka', 'harb-sample.csv'))));
+  const car = r.rows.find((x) => x.cats.includes('carMand'))!;
+  ok(car && car.premium === 1230 && car.premiumPer === 'month', `the sample file calls the compulsory-car premium monthly (${car?.premium} ${car?.premiumPer})`);
+  ok(perDoubt(car.cats, car.premium, car.premiumPer)?.startsWith(PER_DOUBT) && perDoubt(['carMand'], 150, 'month') === null && perDoubt(['carMand'], 1230, 'year') === null && perDoubt(['surg1'], 186.4, 'month') === null && perDoubt(['other'], 5000, 'month') != null, 'the doubt: only a monthly premium above the cover\'s ceiling');
+  const held = heldFromHarb(r.rows, r.asof ?? TODAY);
+  const ci = held.findIndex((h) => h.risk?.cats.includes('carMand'));
+  ok(held[ci].risk!.perDoubt && held[ci].covers[0].cost === null && /ייתכן שזו פרמיה שנתית/.test(held[ci].note!), 'the policy keeps the doubt; its cover has no monthly cost');
+  const out = riskOf(held, TODAY);
+  ok(Math.abs(out.monthly - (186.4 + 92)) < 0.01 && out.doubt === 1, `the monthly total leaves it out until confirmed (₪${out.monthly}, was ₪1,508)`);
+  ok(normRisk(JSON.parse(JSON.stringify(held[ci].risk))).perDoubt === held[ci].risk!.perDoubt, 'the doubt survives the folder\'s storage');
+  const yr = riskOf(confirmPer(held, ci, 'year'), TODAY);
+  ok(Math.abs(yr.monthly - (186.4 + 92 + 102.5)) < 0.01 && yr.doubt === 0, `confirmed annual: ÷ 12 into the total (₪${yr.monthly})`);
+  const mo = confirmPer(held, ci, 'month');
+  ok(Math.abs(riskOf(mo, TODAY).monthly - (186.4 + 92 + 1230)) < 0.01 && mo[ci].covers[0].cost === 1230 && !mo[ci].risk!.perDoubt, 'confirmed monthly: as is');
 }
 
 console.log(`harb: ${pass} passed, ${fail} failed`);

@@ -11,7 +11,7 @@ import { DECISION_PATH, type DecisionFile } from '../../lib/decision';
 import type { FeesFile } from '../../lib/flows';
 import { pickSet, slugOf, type RankFile, type StatsIndex } from '../../lib/fundsTime';
 import { upsert, useClients } from '../../lib/clients';
-import { CALLS_KEY, CALLS_SUM_KEY, REVIEW_KEY, TRIG_HE, callList, callMsg, isFreshMonth, markHandled, my, normCalls, rankCats, reviewMsg, reviewsDue, rollCalls, signOff, waLink, ymShort, type RankSeries } from '../../lib/agentDesk';
+import { CALLS_KEY, CALLS_SUM_KEY, REVIEW_KEY, TRIG_HE, callList, type Trigger, callMsg, isFreshMonth, markHandled, my, normCalls, rankCats, reviewMsg, reviewsDue, rollCalls, signOff, waLink, ymShort, type RankSeries } from '../../lib/agentDesk';
 import { useBranding } from '../../lib/branding';
 import { useStored, writeStored } from '../../lib/local';
 import { today } from '../../lib/visits';
@@ -76,7 +76,8 @@ export function CallList() {
   const [raw, setRaw] = useStored<unknown>(CALLS_KEY, null);
   const calls = normCalls(raw);
   const [showDone, setShowDone] = useState(false);
-  const withHeld = file.folders.filter((f) => f.held.some((h) => h.k));
+  // red team 06.11.26: every folder with savings products from the file (the client-level lines need no matched track)
+  const withHeld = file.folders.filter((f) => f.held.some((h) => !h.risk && (h.k || h.balance != null)));
   const cats = useMemo(() => (funds.length ? rankCats(withHeld, funds) : []), [withHeld.map((f) => f.id + f.updated).join(), funds]);  // eslint-disable-line react-hooks/exhaustive-deps
   const keys = useMemo(() => [...new Set(withHeld.flatMap((f) => f.held.map((h) => h.k).filter((k): k is string => !!k)))], [withHeld.map((f) => f.id + f.updated).join()]);  // eslint-disable-line react-hooks/exhaustive-deps
   const { ranks, done } = useRanks(cats, keys);
@@ -88,6 +89,7 @@ export function CallList() {
     [ready, asof, withHeld.map((f) => f.id + f.updated).join(), funds, ranks, fees, dfile, dec]);  // eslint-disable-line react-hooks/exhaustive-deps
   const open = rows.map((r) => ({ ...r, open: r.triggers.filter((t) => !calls.handled[t.key]) }));
   const nOpen = open.filter((r) => r.open.length).length, nTrig = open.reduce((t, r) => t + r.open.length, 0);
+  const nMoney = open.reduce((t, r) => t + r.open.filter((x) => x.level === 'client').length, 0);
   // the agent's home reads this summary (components/home/ClientsPanel) without loading the data again
   useEffect(() => { if (ready && asof) writeStored(CALLS_SUM_KEY, { asof, clients: nOpen, open: nTrig, at: today() }); }, [ready, asof, nOpen, nTrig]);
   const fresh = asof != null && isFreshMonth(calls, asof, today());
@@ -101,28 +103,33 @@ export function CallList() {
         <h2 id="calls-h"><span className="icotile"><Ico name="clients" /></span>למי להתקשר החודש</h2>
         <div className="aside">{asof ? <span className={`calls-month${fresh ? ' fresh' : ''}`}>{fresh ? 'חודש חדש · ' : ''}נתוני {ymShort(asof)}{calls.prev && calls.month === asof ? ` · הקודם שנבדק: ${ymShort(calls.prev)}` : ''}</span> : null}</div>
       </div>
-      {!withHeld.length ? <p className="calls-empty">כשיש תיקים עם קובץ מסלקה, כאן מופיעה בכל חודש של הרשות רשימת הלקוחות שבמסלולים שלהם קרה משהו: רבע תחתון 3 חודשים ברצף, מאזן אקטוארי שלילי, עליית דמי ניהול, שינוי במכרז ברירת המחדל או ירידה במדד השירות. <Link className="sv-u" to="/clients/new">לקוח חדש מקובץ מסלקה</Link></p>
+      {!withHeld.length ? <p className="calls-empty">כשיש תיקים עם קובץ מסלקה, כאן מופיעה רשימת הלקוחות שכדאי להתקשר אליהם: קודם מה שבקובץ שלהם (דמי ניהול מעל מחיר המכרז או החציון, חשבונות מאותו סוג לאיחוד, מקדם קצבה מובטח), ומתחת נתוני שוק על המסלולים שלהם. <Link className="sv-u" to="/clients/new">לקוח חדש מקובץ מסלקה</Link></p>
         : !ready ? <p className="calls-empty" aria-busy="true">בודק את {withHeld.length} התיקים מול נתוני החודש…</p>
         : <>
-          <p className="calls-sum" role="status">{nOpen ? <><b>{nOpen === 1 ? 'לקוח אחד' : `${nOpen} לקוחות`}</b> עם {nTrig === 1 ? 'נושא פתוח אחד' : `${nTrig} נושאים פתוחים`}, מתוך {withHeld.length} תיקים עם קובץ מסלקה.</> : <><Icon name="check" /> אין נושא פתוח החודש ב-{withHeld.length} התיקים.</>}
+          <p className="calls-sum" role="status">{nOpen ? <><b>{nOpen === 1 ? 'לקוח אחד' : `${nOpen} לקוחות`}</b> עם {nTrig === 1 ? 'נושא פתוח אחד' : `${nTrig} נושאים פתוחים`}{nMoney ? ` (${nMoney} מהקובץ של הלקוח: דמי ניהול, איחוד, מקדם)` : ''}, מתוך {withHeld.length} תיקים עם קובץ מסלקה.</> : <><Icon name="check" /> אין נושא פתוח החודש ב-{withHeld.length} התיקים.</>}
             {rows.length > nOpen && <> <button type="button" className="chip" aria-pressed={showDone} onClick={() => setShowDone(!showDone)}>{showDone ? 'הסתרת מה שטופל' : `הצגת מה שטופל (${rows.length - nOpen})`}</button></>}</p>
           {shown.length > 0 && <ul className="calls-l">{shown.map((r) => (
             <li key={r.folder} className={`call${r.open.length ? '' : ' handled'}`}>
               <div className="call-h"><b>{r.label}</b><span className="call-n">{r.open.length ? `${r.open.length} פתוחים` : 'טופל'}</span>
                 {r.open.length > 0 && <button type="button" className="chip" onClick={() => set(r.open.map((t) => t.key), true)}><Icon name="check" /> סימון הכול כטופל</button>}</div>
-              <ul className="call-t">{r.triggers.map((t) => { const h = !!calls.handled[t.key]; return (
-                <li key={t.key} className={h ? 'done' : undefined}>
-                  <label className="call-chk"><input type="checkbox" checked={h} onChange={(e) => set([t.key], e.target.checked)} /><span className="sr-only">טופל: {t.title}</span></label>
-                  <div>
-                    <span className={`trig trig-${t.id}`}>{TRIG_HE[t.id]}</span> <b>{t.title}</b>
-                    <span className="call-what">{t.what}</span>
-                    <span className="call-d">{t.detail}</span>
-                    <span className="src">מקור: {t.src}</span>
-                  </div>
-                </li>); })}</ul>
-              {r.open.length > 0 && <details className="call-msg"><summary>טיוטת הודעה ללקוח</summary><MsgBox text={callMsg(r.open, asof!, sign)} label={`טיוטת הודעה: ${r.label}`} /></details>}
+              {(() => { const cl = r.triggers.filter((t) => t.level === 'client'), mk = r.triggers.filter((t) => t.level === 'market');
+                const item = (t: Trigger) => { const h = !!calls.handled[t.key]; return (
+                  <li key={t.key} className={h ? 'done' : undefined}>
+                    <label className="call-chk"><input type="checkbox" checked={h} onChange={(e) => set([t.key], e.target.checked)} /><span className="sr-only">טופל: {t.title}</span></label>
+                    <div>
+                      <span className={`trig trig-${t.id}`}>{TRIG_HE[t.id]}</span> <b>{t.title}</b>
+                      <span className="call-what">{t.what}</span>
+                      <span className="call-d">{t.detail}</span>
+                      <span className="src">מקור: {t.src}</span>
+                    </div>
+                  </li>); };
+                return <>
+                  {cl.length > 0 && <ul className="call-t">{cl.map(item)}</ul>}
+                  {mk.length > 0 && <details className="call-mkt" open={!cl.length}><summary>נתוני שוק על המסלולים של הלקוח ({mk.length})</summary><ul className="call-t">{mk.map(item)}</ul></details>}
+                </>; })()}
+              {r.open.length > 0 && <details className="call-msg"><summary>טיוטת הודעה ללקוח</summary><MsgBox text={callMsg(r.open.some((t) => t.level === 'client') ? r.open.filter((t) => t.level === 'client') : r.open, asof!, sign)} label={`טיוטת הודעה: ${r.label}`} /></details>}
             </li>))}</ul>}
-          <p className="fnote">כל שורה מתארת נתון שפורסם על המסלול של הלקוח, לא המלצה. "טופל" נשמר בדפדפן הזה, וחוזר רק כשהנתון עצמו משתנה (רבעון חדש, חודש חדש של דמי ניהול, הליך חדש). ההודעה אינה כוללת שם, יתרה או מספר זהות, ולכן אפשר לשלוח אותה בקישור. דמי ניהול: הממוצע בפועל של המסלול, לא בהכרח של הלקוח.</p>
+          <p className="fnote">קודם השורות מקובץ המסלקה של הלקוח מול נתון שפורסם (מחיר המכרז, חציון הקטגוריה); אחריהן נתוני שוק על המסלול. כל שורה מתארת נתון, לא המלצה. "טופל" נשמר בדפדפן הזה, וחוזר רק כשהנתון עצמו משתנה (רבעון חדש, חודש חדש של דמי ניהול, הליך חדש). ההודעה אינה כוללת שם, יתרה או מספר זהות, ולכן אפשר לשלוח אותה בקישור. דמי ניהול: הממוצע בפועל של המסלול, לא בהכרח של הלקוח.</p>
         </>}
     </section>
   );

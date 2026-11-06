@@ -47,7 +47,7 @@ export function DocBar({ folder, nav: st, ready, annex }: { folder: Folder | nul
     const ms = s.t0 ? Date.now() - s.t0 : null;
     return (
       <div className="docbar" role="region" aria-label="אשף לקוח חדש">
-        <span className="docbar-step"><span className="n">3</span> שלב 3 מתוך 3 · מסמך ההנמקה של <b>{folder.label}</b>{ms != null ? ` · מהקובץ: ${fmtDur(ms)} דקות` : ''}</span>
+        <span className="docbar-step"><span className="n">3</span> שלב 3 מתוך 3 · מסמך ההנמקה של <b>{folder.label}</b>{ms != null ? ` · מהקובץ: ${fmtDur(ms)}` : ''}</span>
         <span className="docbar-acts">
           <button type="button" className="cmp-doc" onClick={() => { if (annex) track('hanmaka_pdf'); window.print(); }}><Icon name="download" />הדפסה / PDF</button>
           <Link className="chip" to="/clients/new" state={{ folder: folder.id, step: 2, t0: s.t0 ?? null }}>חזרה לאשף</Link>
