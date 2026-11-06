@@ -90,7 +90,7 @@ test('three doors: picker, ?door=, per-door bottom bar and the door menu in WebK
   await page.setViewportSize({ width: 375, height: 812 });
   await page.addInitScript(() => { try { localStorage.setItem('theme2', 'phoenix'); localStorage.setItem('fox:seen', JSON.stringify('2099-01-01')); } catch { /* blocked */ } });
   await page.goto('/'); await settle(page);
-  await expect(page.getByRole('heading', { level: 3, name: 'מה יש לך?' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'הבדיקה השנתית' })).toBeVisible();
   await expect(page.locator('.dfacts .src').first()).toBeVisible();
   const bar = page.getByRole('navigation', { name: 'ראשי' });
   for (const [door, places] of DOOR_BARS) {
@@ -112,7 +112,7 @@ test('three doors: picker, ?door=, per-door bottom bar and the door menu in WebK
   await expect(bar.locator('.lib-btn')).toBeVisible();
   await pill.click();
   await page.getByRole('menuitem', { name: 'כל הדלתות' }).click();
-  await expect(page.getByRole('heading', { level: 3, name: 'מה יש לך?' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'הבדיקה השנתית' })).toBeVisible();
   // a Pro page from the saver's door: it opens, with the chip and the saver's bar
   await page.goto('/warroom?door=saver'); await settle(page);
   await expect(boundary(page)).toHaveCount(0);
@@ -264,7 +264,8 @@ test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards 
   expect(m.side, 'page scrolls sideways').toBeLessThanOrEqual(1);
   await expect(page.locator('.sv-sum')).toContainText('דבר אחד לעשות');
   // a "?" opens on a tap and closes on a tap elsewhere
-  const tip = page.locator('main .tip-b').first();  // red team 06.11.26: the glossary bar folds away once products are saved (word budget)
+  await page.locator('article#p9757 .sv-mine summary').click();  // red team 06.11.26: the glossary bar folds away once products are saved; the card's own "?" remains
+  const tip = page.locator('article#p9757 .tip-b:visible').first();  // red team 06.11.26: the glossary bar folds away once products are saved (word budget)
   await tip.scrollIntoViewIfNeeded(); await tip.tap();
   await expect(tip).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('.tip-p')).toBeVisible();
