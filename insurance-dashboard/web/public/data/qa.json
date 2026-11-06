@@ -1,5 +1,5 @@
 {
- "built": "2026-11-05T22:22:50+02:00",
+ "built": "2026-11-06T01:32:00+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -237,17 +237,17 @@
    "id": "watch",
    "ok": true,
    "level": "fail",
-   "n": 5,
+   "n": 6,
    "fail": 0,
-   "note": "watch: 5 snapshots, 55 changes (answer 21, finding 1, new 32, gone 1), 17 upcoming, 0 problems"
+   "note": "watch: 6 snapshots, 55 changes (answer 21, finding 1, new 32, gone 1), 17 upcoming, 0 problems"
   },
   {
    "id": "watch_ledger",
    "ok": true,
    "level": "fail",
-   "n": 4,
+   "n": 5,
    "fail": 0,
-   "note": "4 answer snapshots at HEAD unchanged"
+   "note": "5 answer snapshots at HEAD unchanged"
   },
   {
    "id": "watch_lib",
@@ -365,9 +365,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3902,
+   "n": 3925,
    "fail": 0,
-   "note": "3902 files under contract, 0 failing; 87 contracts; 899 files without a contract"
+   "note": "3925 files under contract, 0 failing; 94 contracts; 899 files without a contract"
   },
   {
    "id": "cards",
@@ -378,12 +378,20 @@
    "note": "302 report cards, every digit a published fact"
   },
   {
+   "id": "changes",
+   "ok": true,
+   "level": "fail",
+   "n": 1523,
+   "fail": 0,
+   "note": "78 reports, every printed figure on its page"
+  },
+  {
    "id": "feed",
    "ok": true,
    "level": "fail",
-   "n": 302,
+   "n": 381,
    "fail": 0,
-   "note": "302 events, 4740 figures, 0 problems"
+   "note": "381 events, 10294 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -432,6 +440,14 @@
    "n": 15594,
    "fail": 0,
    "note": "flows ok: 10 products, 16 groups, 189 months (201101-202609), 15594 group-months, 189 month files, 1026 track signals, 1177 fee rows"
+  },
+  {
+   "id": "flows_letter",
+   "ok": true,
+   "level": "fail",
+   "n": 1,
+   "fail": 0,
+   "note": "flows letter ok: 09/26 v1, 0 integrity, 0 stale"
   },
   {
    "id": "coef",
@@ -496,6 +512,14 @@
    "n": 43918,
    "fail": 0,
    "note": "model_xlsx: 13 workbooks, 43918 value cells, every one sourced; largest menora 484 KB; 0 problems"
+  },
+  {
+   "id": "tables",
+   "ok": true,
+   "level": "fail",
+   "n": 132590,
+   "fail": 0,
+   "note": "tables: 7 tables, 132590 rows, every row sourced; 0 problems"
   },
   {
    "id": "consensus",
