@@ -238,7 +238,7 @@ test('scenario studio reprices in WebKit without sideways scroll', async ({ page
   expect(errors).toEqual([]);
 });
 
-/* W4 · the saver's /my on the owner's engine (red team 02.11.26): the picker's "מה יש לי" enters the saver door; the visit's baseline
+/* W4 · the saver's /my on the owner's engine (red team 02.11.26): the picker's saver card (now "לבדיקה השנתית") enters the saver door; the visit's baseline
    is stored on arrival (iOS may never fire pagehide); a "?" opens on a tap; a deposit fee above the legal ceiling is refused inline;
    two products fold to under 400 words with nothing sideways; and the fee tool opens on the saver's own track and a 4% return. */
 test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards in WebKit', async ({ page }) => {
@@ -246,8 +246,9 @@ test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards 
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/'); await settle(page);
   await expect(page.locator('.door-pill span').first()).toHaveText('בחירת דלת');
-  await page.locator('a.door-go.primary', { hasText: 'מה יש לי' }).first().click();
-  await expect(page).toHaveURL(/\/my$/);
+  // red team 06.11.26: the saver door card teaches the check-up and opens it
+  await page.locator('a.door-go.primary', { hasText: 'לבדיקה השנתית' }).first().click();
+  await expect(page).toHaveURL(/\/my\/checkup$/);
   expect(await page.evaluate(() => localStorage.getItem('fox:door'))).toBe('"saver"');
   await expect(page.locator('.door-pill span').first()).toHaveText('חוסך');
   await page.evaluate(() => localStorage.setItem('fox:mine', JSON.stringify([
@@ -263,7 +264,7 @@ test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards 
   expect(m.side, 'page scrolls sideways').toBeLessThanOrEqual(1);
   await expect(page.locator('.sv-sum')).toContainText('דבר אחד לעשות');
   // a "?" opens on a tap and closes on a tap elsewhere
-  const tip = page.locator('.sv-gloss .tip-b').first();
+  const tip = page.locator('main .tip-b').first();  // red team 06.11.26: the glossary bar folds away once products are saved (word budget)
   await tip.scrollIntoViewIfNeeded(); await tip.tap();
   await expect(tip).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('.tip-p')).toBeVisible();

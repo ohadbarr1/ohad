@@ -18,7 +18,7 @@ import { cardCalc } from '../lib/myCalc';
 import { pcf } from '../lib/verdict';
 import { DECISION_PATH, type DecisionFile } from '../lib/decision';
 import { feeError, KZ_CAPS } from '../lib/feeCaps';
-import { PENSION_RATES, SRC as DEP_SRC, letterOf, rateTotal, ymHe } from '../lib/deposits';
+import { PENSION_RATES, SRC as DEP_SRC, kindOf, letterOf, rateTotal, ymHe } from '../lib/deposits';
 import { dsName } from '../lib/script';
 import { defaultFor, digitOf } from '../lib/momentsCalc';
 import { winnerTrack } from '../lib/pensionPack';
@@ -26,9 +26,11 @@ import { S as MS } from '../lib/momentsContent';
 import { track } from '../lib/track';
 import { headTitle } from '../lib/seo';
 import {
-  CAPS_REG, MIN_GAP, ST_FAR, ageAsk, checkupOf, dueNegos, dueOf, feeLetter, feeShort, icsOf, isoDay, mailHref, normNegos, savingOf, startNego, waHref, yearSaving,
-  type AgeRowOut, type CRow, type DepRowOut, type FeeRow, type Nego, type Tone,
+  CAPS_REG, CK_STATUS_KEY, MIN_GAP, ST_FAR, ageAsk, checkupOf, dueNegos, dueOf, feeLetter, feeShort, icsOf, isoDay, mailHref, mergeLetter, nextCheckOf, normNegos, normStatus,
+  redCount, savingOf, startNego, waHref, yearSaving, type AgeRowOut, type CRow, type DepRowOut, type FeeRow, type Nego, type Tone,
 } from '../lib/checkup';
+import { SaverSafe } from '../components/saver/SaverSafe';
+import { HomeHint } from '../components/saver/HomeHint';
 import { figsOf, tenderProv, ymOf } from '../components/saver/figs';
 import { MaslakaImport } from '../components/saver/MaslakaImport';
 import { Script } from '../components/saver/Script';
@@ -87,6 +89,15 @@ export function MyCheckup() {
   // F2: one checkup counted per visit, once the three lines stand on at least one product
   const counted = useRef(false);
   useEffect(() => { if (!counted.current && rows.length && (ck.fee || ck.dep || ck.age)) { counted.current = true; track('checkup_done'); } }, [rows.length, ck]);
+  // red team 06.11.26 (bring-back): the status the saver home and /my show after a check-up: the red items, the saving, the next date
+  const [stRaw, setSt] = useMy<unknown>(CK_STATUS_KEY, null);
+  const savedTotal = useMemo(() => negos.filter((n) => n.after).reduce((s, n) => { const r = rows.find((x) => x.f.k === n.k); const v = r ? savingOf(r.c.plan, n.before, n.after!) : 0; return s + (v >= 500 ? v : 0); }, 0), [negos, rows]);
+  useEffect(() => {
+    if (!rows.length || !(ck.fee || ck.dep || ck.age)) return;
+    const next = { v: 1 as const, at: today(), red: redCount(ck), saved: Math.round(savedTotal) };
+    const cur = normStatus(stRaw);
+    if (!cur || cur.at !== next.at || cur.red !== next.red || cur.saved !== next.saved) setSt(next);
+  }, [rows.length, ck, savedTotal]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data || dfile === undefined) return <Loading what="הבדיקה השנתית" />;
@@ -128,6 +139,7 @@ export function MyCheckup() {
           <DepCard line={ck.dep} />
           <AgeCard line={ck.age} ageSet={ageS != null} />
         </ol>
+        {!ck.fee?.rows.some((r) => r.tone !== 'green' && r.own && !r.dormant) && <YearNext />}
         <Anchors />
         <Link to="/my/statement" className="panel sv-stmt">
           <span className="icotile"><Icon name="statement" /></span>
@@ -138,6 +150,8 @@ export function MyCheckup() {
       </>}
 
       <p className="sv-privacy"><Icon name="shield" /> הכול מחושב ונשמר רק בדפדפן הזה, בלי הרשמה; שום נתון לא נשלח. המכתבים נשלחים רק אם אתם שולחים אותם.</p>
+      {rows.length > 0 && <HomeHint />}
+      <SaverSafe />
       <p className="sv-legal">מידע תיאורי מנתוני רשות שוק ההון, עם מקור לכל מספר. לא ייעוץ השקעות, לא ייעוץ או שיווק פנסיוני, ואין המלצה לעבור או להישאר. האומדנים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
     </div>
   );
@@ -195,16 +209,18 @@ function anchorText(r: FeeRow) {
 }
 function gapProv(r: FeeRow, c: CRow['c'], retire: number): () => Prov {
   return () => ({ k: 'calc', est: true, title: `הפער בחיסכון ${when(r, retire)} · ${r.name}`, value: ilsRound(r.gap ?? 0),
-    formula: `אותה תוכנית פעמיים: פעם בדמי הניהול ${r.own ? 'שלכם' : 'הממוצעים במסלול'}, ופעם ב${r.anchor === 'tender' ? 'צירוף של מחיר ההליך (או של טבלת ההמרה שלו) שמשאיר הכי הרבה כסף' : 'חציון הממוצע בפועל בקטגוריה'}; ההפרש בחיסכון, בשקלי היום. הפקדה שעולה 2% בשנה, תשואה ${pcf(c.plan.ret)} ברוטו, אינפלציה 2%`,
-    note: `אומדן על הנחות, לא תחזית. פער מתחת ל-${MIN_GAP.toLocaleString('en-US')} ש"ח לא נחשב "לטיפול".${r.ex ? ' חלק מהסכומים לדוגמה: הזינו יתרה והפקדה.' : ''}`,
+    formula: `אותה תוכנית פעמיים: פעם בדמי הניהול ${r.own ? 'שלכם' : 'הממוצעים במסלול'}, ופעם ב${r.anchor === 'tender' ? 'מחיר ההליך של קרנות ברירת המחדל, אותו מחיר שהמכתב מבקש' : 'חציון הממוצע בפועל בקטגוריה'}; ההפרש בחיסכון, בשקלי היום. הפקדה שעולה 2% בשנה, תשואה ${pcf(c.plan.ret)} ברוטו, אינפלציה 2%`,
+    note: `אומדן על הנחות, לא תחזית. פער מתחת ל-${MIN_GAP.toLocaleString('en-US')} ש"ח לא נחשב "לטיפול".${r.ex ? ' חלק מהסכומים לדוגמה: הזינו יתרה והפקדה. לא נספר בסך הכול.' : ''}`,
     inputs: [{ label: r.own ? 'דמי הניהול שלכם (מהפקדה / מצבירה)' : 'הממוצע במסלול (מהפקדה / מצבירה)', v: `${pcf(r.mine.depfee)} / ${pcf(r.mine.fee)}` },
       ...(r.ref ? [{ label: `${anchorText(r)} (מהפקדה / מצבירה)`, v: `${pcf(r.ref.depfee)} / ${pcf(r.ref.fee)}` }] : []),
-      { label: c.exBalance ? 'יתרה (לדוגמה)' : 'יתרה (שלכם)', v: ilsRound(c.plan.balance) }, { label: c.exMonthly ? 'הפקדה חודשית (לדוגמה)' : 'הפקדה חודשית (שלכם)', v: ilsRound(c.plan.monthly) },
+      { label: c.exBalance ? 'יתרה (לדוגמה)' : 'יתרה (שלכם)', v: ilsRound(c.plan.balance) }, { label: c.exMonthly ? 'הפקדה חודשית (לדוגמה)' : c.noDep ? 'הפקדה חודשית (אין הפקדה שוטפת בקובץ)' : 'הפקדה חודשית (שלכם)', v: ilsRound(c.plan.monthly) },
       { label: 'גיל היום', v: String(c.plan.age) }, { label: 'גיל הפרישה', v: ageText(retire) }] });
 }
 
 function FeeCard({ line, rows, ...x }: Ctx & { line: ReturnType<typeof checkupOf>['fee']; rows: CRow[] }) {
-  const actRows = line ? line.rows.filter((r) => r.tone !== 'green' && r.own) : [];
+  // a dormant account gets the consolidation request, never a fee letter (red team 06.11.26)
+  const actRows = line ? line.rows.filter((r) => r.tone !== 'green' && r.own && !r.dormant) : [];
+  const dormRows = line ? line.rows.filter((r) => r.dormant) : [];
   const [pickK, setPickK] = useState<string | null>(null);
   if (!line) return <Line n={1} id="ck-fee" icon="savings" title="דמי ניהול" tone={null}><p className="ck-sum">אין מוצרים לבדוק.</p></Line>;
   const top = line.top!;
@@ -216,7 +232,7 @@ function FeeCard({ line, rows, ...x }: Ctx & { line: ReturnType<typeof checkupOf
   return (
     <Line n={1} id="ck-fee" icon="savings" title="דמי ניהול" tone={line.tone}>
       <p className="ck-sum">
-        {line.tone === 'red' ? <><b>{top.name}:</b> דמי הניהול שלכם עולים כ-{sumAmt} {when(top, x.retire)} לעומת {anchorText(top)}.{line.rows.filter((r) => r.tone === 'red').length > 1 ? <> בכל המוצרים יחד: כ-{ilsRound(line.total)}.</> : null}</>
+        {line.tone === 'red' ? <><b>{top.name}:</b> דמי הניהול שלכם עולים כ-{sumAmt} {when(top, x.retire)} לעומת {anchorText(top)}{top.ex ? ' (על סכומים לדוגמה)' : ''}.{line.rows.filter((r) => r.tone === 'red' && !r.ex).length > 1 ? <> בכל המוצרים יחד: כ-{ilsRound(line.total)}.</> : null}{line.exN > 0 && !top.ex ? <> {line.exN === 1 ? 'מוצר אחד על סכומים לדוגמה לא נספר.' : `${line.exN} מוצרים על סכומים לדוגמה לא נספרו.`}</> : null}</>
           : line.tone === 'amber' && !top.own ? <>החישוב לפי <b>הממוצע במסלול</b>, לא לפי דמי הניהול שלכם{top.gap != null && top.gap >= MIN_GAP ? <> (לפיו, כ-{sumAmt} {when(top, x.retire)} לעומת {anchorText(top)})</> : null}. את דמי הניהול שלכם מייבאים מהמסלקה או מקלידים מהדוח השנתי.</>
           : line.tone === 'amber' ? <><b>{top.name}:</b> חלק מדמי הניהול מעל {anchorText(top)}, אבל על הסכומים שלכם הפער {top.gap != null && top.gap > 0 ? <>כ-{sumAmt}</> : 'זניח'} {when(top, x.retire)}.</>
           : <>דמי הניהול שלכם לא עולים יותר מ{anchorText(top)} באף מוצר{line.rows.length > 1 ? ` (${line.rows.length} מוצרים)` : ''}.</>}
@@ -229,7 +245,9 @@ function FeeCard({ line, rows, ...x }: Ctx & { line: ReturnType<typeof checkupOf
       {top.anchor === 'tender' && <MyDefault data={x.data} />}
       {act ? <Nego key={act.k} r={act} C={rowOf(act.k)} choose={actRows.length > 1 ? actRows : null} onPick={setPickK} {...x} />
         : line.tone === 'amber' && !top.own ? <div className="ck-act"><a className="btn primary" href="#mk-h">ייבוא מהמסלקה</a> <Link className="btn" to={`/my#${top.k}`}>להקליד את דמי הניהול</Link></div>
+        : dormRows.length ? null
         : <div className="ck-act"><p className="sv-note">אין מה לבקש כרגע. כדאי לבדוק שוב כשמגיע הדוח השנתי הבא (עד 31.3).</p></div>}
+      {dormRows.length > 0 && <Merge rows={dormRows} all={line.rows} C={rows} />}
     </Line>
   );
 }
@@ -248,7 +266,7 @@ function FeeRowLi({ r, C, retire, data, dec }: { r: FeeRow; C: CRow; retire: num
           : r.med != null ? <span className="ck-kv">חציון בקטגוריה: <Sourced src={figs.feeMed}><span className="num">{pcf(r.med)}</span></Sourced> מצבירה{r.ref && r.ref.depfee > 0 ? <>, <Sourced src={figs.depMed}><span className="num">{pcf(r.ref.depfee)}</span></Sourced> מהפקדה</> : null}</span> : null}
         {r.own && r.avg.fee != null && <span className="ck-kv ck-ctx">להקשר, הממוצע במסלול: <Sourced src={avgP('fee')}><span className="num">{pcf(r.avg.fee)}</span></Sourced> מצבירה{r.avg.depfee != null ? <>, <Sourced src={avgP('depfee')}><span className="num">{pcf(r.avg.depfee)}</span></Sourced> מהפקדה</> : null}</span>}
         {/^ביטוח/.test(r.prod) && <span className="ck-kv ck-ctx">בביטוח מנהלים ייתכן מקדם קצבה מובטח: הבקשה היא להפחתה באותה פוליסה.</span>}
-        <span className="ck-kv"><b>{r.gap == null ? (r.anchor === 'tender' && r.own ? 'במחיר קרנות ברירת המחדל' : '–') : r.gap >= MIN_GAP ? <>כ-<Sourced src={gapProv(r, C.c, retire)}><span>{ilsRound(r.gap)}</span></Sourced> פחות {when(r, retire)}</> : r.gap > 0 ? `פער קטן מ-${MIN_GAP.toLocaleString('en-US')} ש"ח` : 'לא יקר מהעוגן'}</b>{r.ex ? ' · על סכומים לדוגמה' : ''}{r.gap != null ? ' · אומדן' : ''}</span>
+        <span className="ck-kv"><b>{r.gap == null ? (r.anchor === 'tender' && r.own ? 'במחיר קרנות ברירת המחדל' : '–') : r.gap >= MIN_GAP ? <>כ-<Sourced src={gapProv(r, C.c, retire)}><span>{ilsRound(r.gap)}</span></Sourced> פחות {when(r, retire)}</> : r.gap > 0 ? `פער קטן מ-${MIN_GAP.toLocaleString('en-US')} ש"ח` : 'לא יקר מהעוגן'}</b>{r.ex ? <> · <span className="chip est">לדוגמה</span> לא נספר בסך הכול</> : ''}{r.dormant ? ` · אין הפקדות${r.last ? ` מאז ${ymHe(r.last)}` : ''}: על היתרה בלבד` : ''}{r.gap != null ? ' · אומדן' : ''}</span>
       </span>
     </li>
   );
@@ -297,10 +315,52 @@ function Nego({ r, C, choose, onPick, ...x }: Ctx & { r: FeeRow; C: CRow; choose
         <a className="btn" href={waHref(feeShort(r))} target="_blank" rel="noreferrer" onClick={() => { track('letter_copied'); start(); }}>WhatsApp</a>
         <a className="btn" href={mailHref(`דמי ניהול ב${r.name}`, letter)} onClick={() => { track('letter_copied'); start(); }}>דוא"ל</a>
         <button type="button" className="btn" onClick={remind}><Icon name="calendar" /> תזכורת בעוד 30 יום</button>
+        <YearIcs />
       </div>
       <p className="sv-note" role="status">{rem ? <>נשמר קובץ ליומן לתאריך {dmy(rem)}. גם כאן, בדפדפן הזה, נשאל אחרי התאריך מה דמי הניהול עכשיו.</> : open ? <>הבקשה נרשמה ב-{dmy(open.at)}; ב-{dmy(dueOf(open))} נשאל כאן מה דמי הניהול עכשיו.</> : 'WhatsApp ודוא"ל פותחים טיוטה; אתם בוחרים למי לשלוח. שום דבר לא נשלח מכאן.'}</p>
       {!showNew ? <button type="button" className="linkbtn sv-u" onClick={() => setShowNew(true)}>כבר קיבלתם תשובה? הזינו את דמי הניהול החדשים</button>
         : <NewFees r={C} n={open ?? { k: r.k, at: today(), before: r.mine }} {...x} />}
+    </div>
+  );
+}
+
+/** red team 06.11.26 (bring-back): the annual reminder as a calendar file, 11 months from today (before the statement's anniversary) */
+function YearIcs() {
+  const [got, setGot] = useState<string | null>(null);
+  const save = () => { const due = nextCheckOf(today()); saveBlob('fox-bdika-shnatit.ics', new Blob([icsOf(due, SITE, new Date(), 'year')], { type: 'text/calendar;charset=utf-8' })); setGot(due); };
+  return <button type="button" className="btn" onClick={save} title={got ? `נשמר ליומן: ${dmy(got)}` : undefined}><Icon name="calendar" /> {got ? `תזכורת שנתית ל-${dmy(got)} ✓` : 'תזכורת שנתית'}</button>;
+}
+/** the next check-up and its reminder, when the fee line has no letter to send (the letter block carries the same button) */
+function YearNext() {
+  const n = nextCheckOf(today());
+  return (
+    <div className="panel ck-year">
+      <p><b>הבדיקה הבאה: {n.slice(5, 7)}/{n.slice(2, 4)}.</b> קובץ חדש מהמסלקה, אותן שלוש שורות.</p>
+      <div className="ck-send"><YearIcs /></div>
+    </div>
+  );
+}
+
+/** red team 06.11.26: a dormant account (no deposits for INACTIVE months) gets a consolidation request to the active fund, not a fee
+ *  letter. Under the transfer regulations the request goes to the receiving fund, which handles the old one. Questions first: what the
+ *  old account would lose. A request, never advice. */
+function Merge({ rows, all, C }: { rows: FeeRow[]; all: FeeRow[]; C: CRow[] }) {
+  const [pickK, setPickK] = useState(rows[0].k);
+  const r = rows.find((x) => x.k === pickK) ?? rows[0];
+  const f = C.find((x) => x.f.k === r.k)!.f;
+  const fam = (p: string) => kindOf(p) ?? p;
+  const into = all.filter((x) => !x.dormant && fam(x.prod) === fam(r.prod)).map((x) => C.find((c) => c.f.k === x.k)!).sort((a, b) => (b.m.balance ?? 0) - (a.m.balance ?? 0))[0] ?? null;
+  const letter = mergeLetter({ name: r.name, id: f.id, last: r.last }, into ? { name: into.f.name, id: into.f.id } : null);
+  return (
+    <div className="ck-act ck-merge">
+      <h3>איחוד חשבונות{rows.length > 1 ? '' : `: ${r.name}`}</h3>
+      <p className="sv-note">אין הפקדות לחשבון הזה{r.last ? ` מאז ${ymHe(r.last)}` : ''}. במקום מכתב על דמי ניהול: בקשה לאחד אותו עם {into ? <b>{into.f.name}</b> : 'החשבון הפעיל'}, כך שהחיסכון מנוהל בחשבון אחד. את הבקשה שולחים לקרן הפעילה, והיא מטפלת מול הקרן הישנה (<SrcA s={MS.move} />). כדאי לשאול קודם מה יאבד באיחוד.</p>
+      {rows.length > 1 && <div className="sv-chips" role="group" aria-label="איזה חשבון לאחד">{rows.map((c) => <button key={c.k} type="button" className="sv-chip sm" aria-pressed={c.k === r.k} onClick={() => setPickK(c.k)}>{c.name}</button>)}</div>}
+      <Script text={letter} label={`בקשה לאיחוד החשבון ב${r.name}`} note="בקשה ושאלות, לא המלצה. כדאי לבדוק מול הדוח לפני השליחה." />
+      <div className="ck-send">
+        <a className="btn" href={waHref(letter)} target="_blank" rel="noreferrer" onClick={() => track('letter_copied')}>WhatsApp</a>
+        <a className="btn" href={mailHref(`איחוד חשבונות: ${r.name}`, letter)} onClick={() => track('letter_copied')}>דוא"ל</a>
+      </div>
     </div>
   );
 }

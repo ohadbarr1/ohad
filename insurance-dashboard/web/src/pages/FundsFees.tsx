@@ -64,6 +64,8 @@ export function FundsFees() {
   /** the fees of a row: the reader's own on their own track when entered (W5: the row and the card agree), else the track's average */
   const pairOf = (f: FundX): FeePair => (own && f.k === own.k ? { depfee: own.depfee ?? f.depfee ?? 0, fee: own.fee ?? f.fee! } : { depfee: f.depfee ?? 0, fee: f.fee! });
   const ownRow = (f: FundX) => !!own && f.k === own.k && (own.fee != null || own.depfee != null);
+  // red team 06.11.26: plain words for the two fee pairs (was "זוג א / זוג ב"); "שלך" only for a product the reader saved
+  const LA = own ? 'דמי הניהול שלך' : 'המסלול שנבחר', LB = 'דמי ניהול להשוואה';
 
   // the return assumption: the reader's, else the category's 10-year gross (asset-weighted average of its tracks)
   const c = cats?.[cat];
@@ -110,7 +112,7 @@ export function FundsFees() {
     return { k: 'calc', est: true, title: `${T[what]} · ${who}`, value: ils(v), formula: `${F}.${extra}${what.startsWith('pension') ? ' קצבה = יתרה ÷ מקדם ההמרה.' : ''}${what.startsWith('fees') ? ' סך = דמי ניהול מהפקדה + מצבירה, על כל החודשים.' : ''}`,
       note: 'הנחות, לא תחזית: התשואה, השכר, האינפלציה ומקדם ההמרה. מקדם בפועל תלוי בגיל, במין ובתקנון', inputs: [...assumptions(), ...pairInputs(f, who), { label: 'חודשים עד הפרישה', v: nf(o.months, 0) }] };
   };
-  const diffProv = (what: 'bal' | 'balReal' | 'fees' | 'feesReal' | 'pensionReal'): Prov => ({ k: 'calc', est: true, title: 'ההפרש בין שני זוגות דמי הניהול', value: ils(ob[what] - oa[what]), formula: 'זוג ב פחות זוג א', inputs: [{ label: 'זוג א', v: ils(oa[what]), src: () => outProv(oa, A, 'זוג א', what) }, { label: 'זוג ב', v: ils(ob[what]), src: () => outProv(ob, B, 'זוג ב', what) }] });
+  const diffProv = (what: 'bal' | 'balReal' | 'fees' | 'feesReal' | 'pensionReal'): Prov => ({ k: 'calc', est: true, title: `ההפרש: ${LB} מול ${LA}`, value: ils(ob[what] - oa[what]), formula: `${LB} פחות ${LA}`, inputs: [{ label: LA, v: ils(oa[what]), src: () => outProv(oa, A, LA, what) }, { label: LB, v: ils(ob[what]), src: () => outProv(ob, B, LB, what) }] });
   const feeP = (f: FundX, which: 'fee' | 'depfee') => () => fundP(refOf(f), asof, which === 'fee' ? 'AVG_ANNUAL_MANAGEMENT_FEE' : 'AVG_DEPOSIT_FEE', which === 'fee' ? 'דמי ניהול מצבירה' : 'דמי ניהול מהפקדה', pc(f[which]));
   const medFee = median(members.map((f) => f.fee!)), medDep = median(members.map((f) => f.depfee).filter((v): v is number => v != null));
 
@@ -150,10 +152,10 @@ export function FundsFees() {
   const answer = saver && cheap && mine ? (
     <section className="panel ffees-ans" aria-label="התשובה בקצרה">
       <p className="fans-big">{bDefault && cheap.k === mine.k ? <>המסלול {own ? 'שלך' : 'שבחרת'} הוא הזול בקטגוריה ({cat}).</>
-        : Math.abs(dPen) < 10 ? <>בהנחות האלה, {bDefault ? `המסלול הזול בקטגוריה (${cheap.name})` : 'זוג ב'} כמעט לא משנה את הקצבה.</>
-        : <>{bDefault ? <>במסלול הזול בקטגוריה, <Link to={`/funds/${cheap.k}`}>{cheap.name}</Link>,</> : 'עם דמי הניהול של זוג ב'} הקצבה הייתה <Sourced src={() => diffProv('pensionReal')}><b className="num">{dPen > 0 ? 'גבוהה' : 'נמוכה'} בכ-{ilsRound(Math.abs(dPen))}</b></Sourced> לחודש, ויהיו <Sourced src={() => diffProv('balReal')}><b className="num">כ-{ilsRound(Math.abs(dBal))}</b></Sourced> {dBal > 0 ? 'יותר' : 'פחות'} בחיסכון בגיל הפרישה ({ageText(C.retire)}).</>}</p>
+        : Math.abs(dPen) < 10 ? <>בהנחות האלה, {bDefault ? `המסלול הזול בקטגוריה (${cheap.name})` : 'דמי הניהול להשוואה'} כמעט לא משנה את הקצבה.</>
+        : <>{bDefault ? <>במסלול הזול בקטגוריה, <Link to={`/funds/${cheap.k}`}>{cheap.name}</Link>,</> : 'עם דמי הניהול להשוואה'} הקצבה הייתה <Sourced src={() => diffProv('pensionReal')}><b className="num">{dPen > 0 ? 'גבוהה' : 'נמוכה'} בכ-{ilsRound(Math.abs(dPen))}</b></Sourced> לחודש, ויהיו <Sourced src={() => diffProv('balReal')}><b className="num">כ-{ilsRound(Math.abs(dBal))}</b></Sourced> {dBal > 0 ? 'יותר' : 'פחות'} בחיסכון בגיל הפרישה ({ageText(C.retire)}).</>}</p>
       {!(bDefault && cheap.k === mine.k) && Math.abs(dPen) >= 10 && <p className="muted">{dFees > 0 ? <>עם דמי הניהול {own ? 'שלך' : 'של המסלול'} ({pc(A.depfee)} מהפקדה, {pc(A.fee)} מצבירה) {sex === 'f' ? 'תשלמי' : sex === 'm' ? 'תשלם' : 'תשלמו'} <b className="num">כ-{ilsRound(dFees)}</b> יותר בדמי ניהול עד הפרישה. </> : null}בשקלי היום, על הנחות: תשואה {pc(C.ret)} ברוטו בשנה, {saver && sp.get('age') == null && ageS == null ? 'גיל 38 לדוגמה' : `גיל ${nf(C.age, 0)}`}, שכר {ils(C.salary)}. ההנחות למטה, ואפשר לשנות.</p>}
-      <p className="fans-note">{own ? <>לפי המוצר והנתונים שלך מ<Link to="/my">"המוצרים שלי"</Link>.</> : ownF ? <>לפי המוצר הראשון ב<Link to="/my">"המוצרים שלי"</Link>, עם דמי הניהול הממוצעים במסלול.</> : <>לפי המסלול הגדול בקטגוריה, עם דמי הניהול הממוצעים בו. את המוצר שלך מוסיפים ב<Link to="/my">"המוצרים שלי"</Link>.</>} אין כאן המלצה לעבור.</p>
+      <p className="fans-note">{own && bDefault && cheap.k !== mine.k ? <>ההשוואה כאן: מול הממוצע בפועל במסלול הזול בקטגוריה. <Link to="/my/checkup">בבדיקה השנתית</Link> העוגן הוא {prod.startsWith('פנסיה') ? 'מחיר קרנות ברירת המחדל, המחיר שהמכתב מבקש' : 'חציון הממוצע בפועל בקטגוריה'}, ולכן הסכום שם שונה. </> : null}{own ? <>לפי המוצר והנתונים שלך מ<Link to="/my">"המוצרים שלי"</Link>.</> : ownF ? <>לפי המוצר הראשון ב<Link to="/my">"המוצרים שלי"</Link>, עם דמי הניהול הממוצעים במסלול.</> : <>לפי המסלול הגדול בקטגוריה, עם דמי הניהול הממוצעים בו. את המוצר שלך מוסיפים ב<Link to="/my">"המוצרים שלי"</Link>.</>} אין כאן המלצה לעבור.</p>
     </section>
   ) : null;
 
@@ -189,20 +191,20 @@ export function FundsFees() {
       </Assumptions>
 
       <div className="fpairs">
-        <PairBox who="זוג א" f={A} o={oa} keys={['da', 'fa']} color="var(--warn)" />
-        <PairBox who="זוג ב" f={B} o={ob} keys={['db', 'fb']} color="var(--accent)" />
+        <PairBox who={LA} f={A} o={oa} keys={['da', 'fa']} color="var(--warn)" />
+        <PairBox who={LB} f={B} o={ob} keys={['db', 'fb']} color="var(--accent)" />
       </div>
 
       <Panel title="בפרישה" aside={<span className="chip est">הנחות · גיל {nf(C.retire, 0)}</span>}>
-        <p className="fread"><Sourced src={() => ({ k: 'calc', est: true, title: '0.1% נוסף מהצבירה, בקצבה החודשית', value: ils(read), formula: 'הקצבה בשקלי היום עם דמי ניהול מצבירה של זוג א + 0.1, פחות הקצבה של זוג א', inputs: [{ label: 'זוג א', v: ils(oa.pensionReal), src: () => outProv(oa, A, 'זוג א', 'pensionReal') }, { label: 'זוג א + 0.1% מצבירה', v: ils(tenth.pensionReal), src: () => outProv(tenth, { ...A, fee: A.fee + 0.1 }, 'זוג א + 0.1%', 'pensionReal') }] })}><b className="num">0.1%</b></Sourced> נוסף מהצבירה = <b className="num">{ils(Math.abs(read))}</b> לחודש בקצבה, בשקלי היום.</p>
+        <p className="fread"><Sourced src={() => ({ k: 'calc', est: true, title: '0.1% נוסף מהצבירה, בקצבה החודשית', value: ils(read), formula: `הקצבה בשקלי היום עם ${LA} ועוד 0.1 מהצבירה, פחות הקצבה עם ${LA}`, inputs: [{ label: LA, v: ils(oa.pensionReal), src: () => outProv(oa, A, LA, 'pensionReal') }, { label: `${LA} + 0.1% מצבירה`, v: ils(tenth.pensionReal), src: () => outProv(tenth, { ...A, fee: A.fee + 0.1 }, `${LA} + 0.1%`, 'pensionReal') }] })}><b className="num">0.1%</b></Sourced> נוסף מהצבירה = <b className="num">{ils(Math.abs(read))}</b> לחודש בקצבה, בשקלי היום.</p>
         <div className="scroll"><table className="fsimple fcards">
-          <caption className="sr-only">זוג א מול זוג ב בפרישה</caption>
-          <thead><tr><th scope="col">בפרישה</th><th scope="col">זוג א</th><th scope="col">זוג ב</th><th scope="col">ב פחות א</th></tr></thead>
+          <caption className="sr-only">{LA} מול {LB} בפרישה</caption>
+          <thead><tr><th scope="col">בפרישה</th><th scope="col">{LA}</th><th scope="col">{LB}</th><th scope="col">ההפרש</th></tr></thead>
           <tbody>{([['יתרה, בשקלי היום', 'balReal'], ['סך דמי ניהול, בשקלי היום', 'feesReal'], ['קצבה חודשית, בשקלי היום', 'pensionReal']] as const).map(([l, w]) => (
             <tr key={w}><th scope="row">{l}</th>
-              <td data-label="זוג א"><Sourced src={() => outProv(oa, A, 'זוג א', w)}><span className="num">{ils(oa[w])}</span></Sourced></td>
-              <td data-label="זוג ב"><Sourced src={() => outProv(ob, B, 'זוג ב', w)}><span className="num">{ils(ob[w])}</span></Sourced></td>
-              <td data-label="ב פחות א"><Sourced src={() => diffProv(w)}><span className={`num ${(ob[w] - oa[w]) * (w.startsWith('fees') ? -1 : 1) >= 0 ? 'pos' : 'neg'}`}>{ob[w] - oa[w] >= 0 ? '+' : '−'}{nf(Math.abs(ob[w] - oa[w]), 0)}</span></Sourced></td></tr>))}</tbody>
+              <td data-label={LA}><Sourced src={() => outProv(oa, A, LA, w)}><span className="num">{ils(oa[w])}</span></Sourced></td>
+              <td data-label={LB}><Sourced src={() => outProv(ob, B, LB, w)}><span className="num">{ils(ob[w])}</span></Sourced></td>
+              <td data-label="ההפרש"><Sourced src={() => diffProv(w)}><span className={`num ${(ob[w] - oa[w]) * (w.startsWith('fees') ? -1 : 1) >= 0 ? 'pos' : 'neg'}`}>{ob[w] - oa[w] >= 0 ? '+' : '−'}{nf(Math.abs(ob[w] - oa[w]), 0)}</span></Sourced></td></tr>))}</tbody>
         </table></div>
         <div className="fnote">סך ההפקדות: <span className="num">{ils(oa.dep)}</span> על פני <span className="num">{nf(oa.months, 0)}</span> חודשים. ההפקדה מחושבת על כל השכר שהוקלד; בפועל ההפקדה לפנסיה מוגבלת בתקרות.</div>
       </Panel>
@@ -213,13 +215,13 @@ export function FundsFees() {
         <summary>נומינלי ורגישות: יתרה ודמי ניהול במונחים נומינליים, ורשת דמי ניהול מהפקדה × מצבירה</summary>
         <Panel title="בפרישה, נומינלי" aside={<span className="chip est">הנחות · לפני ניכוי אינפלציה</span>}>
           <div className="scroll"><table className="fsimple fcards">
-            <caption className="sr-only">זוג א מול זוג ב בפרישה, נומינלי</caption>
-            <thead><tr><th scope="col">בפרישה</th><th scope="col">זוג א</th><th scope="col">זוג ב</th><th scope="col">ב פחות א</th></tr></thead>
+            <caption className="sr-only">{LA} מול {LB} בפרישה, נומינלי</caption>
+            <thead><tr><th scope="col">בפרישה</th><th scope="col">{LA}</th><th scope="col">{LB}</th><th scope="col">ההפרש</th></tr></thead>
             <tbody>{([['יתרה, נומינלי', 'bal'], ['סך דמי ניהול, נומינלי', 'fees']] as const).map(([l, w]) => (
               <tr key={w}><th scope="row">{l}</th>
-                <td data-label="זוג א"><Sourced src={() => outProv(oa, A, 'זוג א', w)}><span className="num">{ils(oa[w])}</span></Sourced></td>
-                <td data-label="זוג ב"><Sourced src={() => outProv(ob, B, 'זוג ב', w)}><span className="num">{ils(ob[w])}</span></Sourced></td>
-                <td data-label="ב פחות א"><Sourced src={() => diffProv(w)}><span className={`num ${(ob[w] - oa[w]) * (w === 'fees' ? -1 : 1) >= 0 ? 'pos' : 'neg'}`}>{ob[w] - oa[w] >= 0 ? '+' : '−'}{nf(Math.abs(ob[w] - oa[w]), 0)}</span></Sourced></td></tr>))}</tbody>
+                <td data-label={LA}><Sourced src={() => outProv(oa, A, LA, w)}><span className="num">{ils(oa[w])}</span></Sourced></td>
+                <td data-label={LB}><Sourced src={() => outProv(ob, B, LB, w)}><span className="num">{ils(ob[w])}</span></Sourced></td>
+                <td data-label="ההפרש"><Sourced src={() => diffProv(w)}><span className={`num ${(ob[w] - oa[w]) * (w === 'fees' ? -1 : 1) >= 0 ? 'pos' : 'neg'}`}>{ob[w] - oa[w] >= 0 ? '+' : '−'}{nf(Math.abs(ob[w] - oa[w]), 0)}</span></Sourced></td></tr>))}</tbody>
           </table></div>
         </Panel>
         <Panel title="רגישות: דמי ניהול מהפקדה × מצבירה" aside={<span>קצבה חודשית בשקלי היום</span>}>
@@ -229,22 +231,22 @@ export function FundsFees() {
           <tbody>{DEPS.map((dd, i) => <tr key={dd}><th scope="row" className="num">{nf(dd, 1)}%</th>{ACCS.map((a, j) => { const o = grid[i][j]; const hit = (near(dd, A.depfee) && near(a, A.fee)) || (near(dd, B.depfee) && near(a, B.fee));
             return <td key={a} className={hit ? 'hit' : undefined} style={{ background: tone(o.pensionReal) }}><Sourced src={() => outProv(o, { depfee: dd, fee: a }, `${nf(dd, 1)}% / ${nf(a, 2)}%`, 'pensionReal')}><span className="num">{nf(o.pensionReal, 0)}</span></Sourced></td>; })}</tr>)}</tbody>
         </table></div>
-        <div className="fnote">כל תא: אותן הנחות, דמי ניהול אחרים. ככל שהתא כהה יותר, הקצבה נמוכה יותר. תא ממוסגר = אחד הזוגות למעלה.</div>
+        <div className="fnote">כל תא: אותן הנחות, דמי ניהול אחרים. ככל שהתא כהה יותר, הקצבה נמוכה יותר. תא ממוסגר = אחד משני צמדי דמי הניהול למעלה.</div>
         </Panel>
 
       </details>}
 
-      <Panel title={<>דמי הניהול שלך מול הזול בקטגוריה · {cat}</>} aside={<span>{rowsT.length === members.length ? `${members.length} מסלולים פתוחים` : `${TOP_N} הזולים מתוך ${members.length} מסלולים פתוחים${mine && !members.slice(0, TOP_N).includes(mine) ? ', ועוד שלך' : ''}`} · {ym(asof)}</span>}>
+      <Panel title={<>{own ? 'דמי הניהול שלך' : 'המסלול שנבחר'} מול הזול בקטגוריה · {cat}</>} aside={<span>{rowsT.length === members.length ? `${members.length} מסלולים פתוחים` : `${TOP_N} הזולים מתוך ${members.length} מסלולים פתוחים${mine && !members.slice(0, TOP_N).includes(mine) ? `, ועוד ${own ? 'שלך' : 'המסלול שנבחר'}` : ''}`} · {ym(asof)}</span>}>
         <div className="scroll"><table className="fsimple fcards">
           <caption className="sr-only">דמי ניהול בקטגוריה והקצבה בהנחות למעלה</caption>
-          <thead><tr><th scope="col">מסלול</th><th scope="col">מהפקדה</th><th scope="col">מצבירה</th><th scope="col">קצבה, שקלי היום</th><th scope="col">מול שלך</th></tr></thead>
+          <thead><tr><th scope="col">מסלול</th><th scope="col">מהפקדה</th><th scope="col">מצבירה</th><th scope="col">קצבה, שקלי היום</th><th scope="col">{own ? 'מול שלך' : 'מול שנבחר'}</th></tr></thead>
           <tbody>{rowsT.map((f) => { const p = pairOf(f), o = career(C, p), base = mine ? career(C, pairOf(mine)) : null;
-            return <tr key={f.k} className={f === mine ? 'fme' : undefined}><td><Link to={`/funds/${f.k}`}>{f.name}</Link>{f === cheap && <span className="chip">הזול</span>}{f === mine && <span className="chip">שלך</span>}</td>
+            return <tr key={f.k} className={f === mine ? 'fme' : undefined}><td><Link to={`/funds/${f.k}`}>{f.name}</Link>{f === cheap && <span className="chip">הזול</span>}{f === mine && <span className="chip">{own ? 'שלך' : ownF || sp.get('k') ? 'שנבחר' : 'לדוגמה: הגדול בקטגוריה'}</span>}</td>
               <td data-label="מהפקדה">{ownRow(f) ? <span className="num">{pc(p.depfee)}<span className="dim"> שלך</span></span> : <Sourced src={feeP(f, 'depfee')}><span className="num">{pc(f.depfee)}</span></Sourced>}</td><td data-label="מצבירה">{ownRow(f) ? <span className="num">{pc(p.fee)}<span className="dim"> שלך</span></span> : <Sourced src={feeP(f, 'fee')}><span className="num">{pc(f.fee)}</span></Sourced>}</td>
               <td data-label="קצבה, שקלי היום"><Sourced src={() => ({ ...outProv(o, p, f.name, 'pensionReal'), inputs: [...assumptions(), ...(ownRow(f) ? pairInputs(p, 'שלך') : [{ label: 'דמי ניהול מהפקדה', v: pc(f.depfee), src: feeP(f, 'depfee') }, { label: 'דמי ניהול מצבירה', v: pc(f.fee), src: feeP(f, 'fee') }])] })}><span className="num">{ils(o.pensionReal)}</span></Sourced></td>
-              <td data-label="מול שלך">{base ? <span className={`num ${o.pensionReal >= base.pensionReal ? 'pos' : 'neg'}`}>{o.pensionReal >= base.pensionReal ? '+' : '−'}{nf(Math.abs(o.pensionReal - base.pensionReal), 0)}</span> : '–'}</td></tr>; })}</tbody>
+              <td data-label={own ? 'מול שלך' : 'מול שנבחר'}>{base ? <span className={`num ${o.pensionReal >= base.pensionReal ? 'pos' : 'neg'}`}>{o.pensionReal >= base.pensionReal ? '+' : '−'}{nf(Math.abs(o.pensionReal - base.pensionReal), 0)}</span> : '–'}</td></tr>; })}</tbody>
         </table></div>
-        <div className="fnote">דמי הניהול: הממוצע בפועל של כל מסלול ב-{ym(asof)}, מנתוני רשות שוק ההון{own && ownRow(mine!) ? '; בשורה שלך, דמי הניהול שהזנת' : ''}. חוסך מסוים משלם את מה שסיכם; עמית חדש בקרן ברירת מחדל משלם את מחיר המכרז. ממוין מהזול. {mine && <>מהלך: <Link to={`/funds/compare?k=${[mine.k, cheap?.k].filter(Boolean).join(',')}`}>השוואת המסלול שלך לזול</Link>.</>}</div>
+        <div className="fnote">דמי הניהול: הממוצע בפועל של כל מסלול ב-{ym(asof)}, מנתוני רשות שוק ההון{own && ownRow(mine!) ? '; בשורה שלך, דמי הניהול שהזנת' : ''}. חוסך מסוים משלם את מה שסיכם; עמית חדש בקרן ברירת מחדל משלם את מחיר המכרז. ממוין מהזול. {mine && <>מהלך: <Link to={`/funds/compare?k=${[mine.k, cheap?.k].filter(Boolean).join(',')}`}>{own ? 'השוואת המסלול שלך לזול' : 'השוואת המסלול שנבחר לזול'}</Link>.</>}</div>
       </Panel>
     </>
   );

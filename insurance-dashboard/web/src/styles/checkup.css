@@ -96,3 +96,16 @@ div.ck-act:has(> a.btn) { flex-direction: row; flex-wrap: wrap; }
 /* the link on /my (pages/My CheckupLink) */
 .sv-ck .icotile { box-shadow: 0 1px 0 var(--hi) inset, 0 6px 14px -8px color-mix(in oklch, var(--accent) 60%, transparent); }
 .sv-ck.due { border-color: var(--accent-line); background: linear-gradient(160deg, var(--accent-soft), var(--panel)); }
+
+/* red team 06.11.26: the next check-up, the consolidation request, the saver's backup, the home-screen line */
+.ck-year { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.ck-year p { margin: 0; font-size: var(--t-4); }
+.ck-merge { margin-top: 4px; }
+.sv-safe summary { cursor: pointer; list-style: none; }
+.sv-safe summary h2 { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: var(--t-4); }
+.sv-safe summary h2 svg.ico { width: 16px; height: 16px; }
+.sv-safe[open] { display: flex; flex-direction: column; gap: 10px; }
+.sv-safe .sv-form { align-items: end; }
+.sv-safe label.btn { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; min-height: 40px; color: inherit; }
+.sv-safe label.btn[aria-disabled="true"] { opacity: .6; cursor: not-allowed; }
+.sv-a2hs { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }

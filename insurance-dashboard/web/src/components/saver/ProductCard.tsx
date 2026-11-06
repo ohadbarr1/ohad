@@ -14,6 +14,7 @@ import { brief, isPension, pcf, pcr, singleIndex, type Verdict } from '../../lib
 import { AGE_DEFAULT, GROWTH_DEFAULT, INFL_DEFAULT, KZ_RETIRE, RETIRE_AGE, RET_FALLBACK, ageText, ilsRound, type FeeGap, type Plan } from '../../lib/retire';
 import { COEF_PATH, birthYearOf, coefFor, coverageOf, trackAgeNote, type CoefFile } from '../../lib/coef';  // W6
 import { cardCalc } from '../../lib/myCalc';
+import { dormantOf, isoDay, mergeLetter } from '../../lib/checkup';  // red team 06.11.26: a dormant account → consolidation
 import { capOf, feeError, KZ_CAPS } from '../../lib/feeCaps';
 import { RULE } from '../../lib/productRules';
 import { dsName, scriptOf } from '../../lib/script';
@@ -72,7 +73,9 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const cov = isPension(f.prod) ? coverageOf(coefF, f.grp, f.prod) : null;
   const ret = retQ ?? RET_FALLBACK;
   const C = useMemo(() => cardCalc(f, data.funds as FundX[], asof, dfile, my, dec, { age, coef, ret, retire: R.v }), [f, data, asof, dfile, my, dec, age, coef, ret, R.v]);
-  const { v, plan, mine, ownAny, med, gMed, tBest, out, annual, liq } = C;
+  const { v, plan, mine, ownAny, med, gMed, tBase, out, annual, liq } = C;
+  const dorm = my && !example ? dormantOf(my, isoDay(new Date()).slice(0, 7)) : { dormant: false, last: null };
+  const monLabel = my?.monthly != null ? 'הפקדה חודשית (שלך)' : C.noDep ? 'הפקדה חודשית (אין הפקדה שוטפת בקובץ)' : `הפקדה חודשית (הנחה: ${C.exWhy})`;
   const figs = figsOf(f, v, asof, data, dec);
   const [open, setOpen] = useState(!!focus);
   const [copied, setCopied] = useState<'idle' | 'ok' | 'manual'>('idle');
@@ -90,7 +93,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const assumptions = (p: Plan = plan) => [
     { label: ageS != null ? 'גיל היום (שלך)' : 'גיל היום (לדוגמה)', v: String(p.age) }, { label: p === plan ? `גיל פרישה (${R.own ? 'שלך' : R.why})` : 'אופק (שנים מהיום)', v: p === plan ? ageText(p.retire) : String(p.retire - p.age) },
     { label: my?.balance != null ? 'יתרה היום (שלך)' : 'יתרה היום (הנחה לדוגמה)', v: ilsRound(p.balance) },
-    { label: my?.monthly != null ? 'הפקדה חודשית (שלך)' : `הפקדה חודשית (הנחה: ${C.exWhy})`, v: ilsRound(p.monthly) },
+    { label: monLabel, v: ilsRound(p.monthly) },
     { label: 'עליית ההפקדה בשנה (הנחה)', v: pcf(GROWTH_DEFAULT) },
     { label: `תשואה שנתית ברוטו (${retWhy})`, v: pcr(ret), src: retSrc },
     { label: 'אינפלציה בשנה (הנחה, יעד בנק ישראל 1%–3%)', v: pcf(INFL_DEFAULT) },
@@ -104,7 +107,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const annualProv = (): Prov => ({ k: 'calc', est: true, title: `דמי הניהול בשנה, בשקלים · ${f.name}`, value: ilsRound(annual.total),
     formula: 'היתרה × דמי הניהול מצבירה, ועוד 12 הפקדות חודשיות × דמי הניהול מהפקדה. אומדן לשנה הקרובה, לפני תשואה',
     note: ownAny ? undefined : 'לפי דמי הניהול הממוצעים במסלול; מה שאתם משלמים בפועל כתוב בדוח השנתי',
-    inputs: [{ label: my?.balance != null ? 'יתרה (שלך)' : 'יתרה (לדוגמה)', v: ilsRound(plan.balance) }, { label: my?.monthly != null ? 'הפקדה חודשית (שלך)' : 'הפקדה חודשית (לדוגמה)', v: ilsRound(plan.monthly) },
+    inputs: [{ label: my?.balance != null ? 'יתרה (שלך)' : 'יתרה (לדוגמה)', v: ilsRound(plan.balance) }, { label: monLabel, v: ilsRound(plan.monthly) },
       ...pairIn(mine, who), { label: 'מצבירה בשנה', v: ilsRound(annual.acc) }, { label: 'מהפקדה בשנה', v: ilsRound(annual.dep) }] });
   const penProv = (what: 'bal' | 'pen'): Prov => ({ k: 'calc', est: true, title: what === 'bal' ? `חיסכון בגיל ${ageText(plan.retire)}, בשקלי היום · אומדן` : 'קצבה חודשית, בשקלי היום · אומדן', value: ilsRound(what === 'bal' ? out.balReal : out.pensionReal),
     formula: `${F}.${what === 'pen' ? ' קצבה = החיסכון ÷ מקדם ההמרה.' : ''}`, note: 'אומדן גס על הנחות. לא מנכה את עלות הכיסוי הביטוחי (נכות ושארים) שהקרן גובה מההפקדות, ולכן נוטה להיות גבוה. המקדם בפועל נקבע בתקנון הקרן',
@@ -112,7 +115,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const medSrc = () => figs.feeMed();
   const tSrc = (p: FeePair) => () => tenderProv(v.dflt!.tender, 'צירוף דמי ניהול שההליך מתיר', `${pcf(p.depfee)} / ${pcf(p.fee)} (מהפקדה / מצבירה)`);
 
-  const script = scriptOf({ name: f.name, id: f.id, prod: f.prod, track: f.track, src: `${dsName(f.fam)}, ${ymOf(asof)}`, v, sex, third });
+  const script = dorm.dormant ? mergeLetter({ name: f.name, id: f.id, last: dorm.last }, null) : scriptOf({ name: f.name, id: f.id, prod: f.prod, track: f.track, src: `${dsName(f.fam)}, ${ymOf(asof)}`, v, sex, third });
   const peersLink = useMemo(() => {
     const rk = [...(v.ret?.ranked ?? [])].filter((x) => x.k !== f.k);
     const top = rk[0], cheap = [...v.peers].filter((x) => x.k !== f.k && x.fee != null).sort((a, b) => a.fee! - b.fee!)[0];
@@ -132,11 +135,12 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const liqPlan = liq ? { ...plan, retire: plan.age + liq.years } : plan;
   // W5: the reader's own pension fees are read against the default-fund price (what a member can get), not the others' averages
   const vsT = isPension(f.prod) && (v.fee.basis === 'tender' || v.dep?.basis === 'tender');
-  const tLine = tBest && v.dflt ? gapLine(tBest.g, 'לעומת תנאי קרנות ברירת המחדל', atRet, () => gapProv(tBest.p, 'תנאי ברירת המחדל', tBest.g, tSrc(tBest.p))) : null;
+  // red team 06.11.26: one anchor per product, the tender's base price (the pair the letter asks for and the check-up reads)
+  const tLine = tBase && v.dflt ? gapLine(tBase.g, 'לעומת מחיר קרנות ברירת המחדל', atRet, () => gapProv(tBase.p, 'מחיר ברירת המחדל', tBase.g, tSrc(tBase.p))) : null;
   const fold = liq
     ? medLine(liq.gMed, `בעוד ${liq.years} שנים, כשהכסף נזיל`, () => gapProv(med!, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))
     : vsT ? null : medLine(gMed, atRet, () => gapProv(med!, 'החציון בקטגוריה', gMed!, medSrc));
-  const paid = tBest && tBest.g.feesReal > 500 ? <> {g('תשלמי', 'תשלם', 'תשלמו')} <span className="sv-nw">כ-<Est src={() => gapProv(tBest.p, 'תנאי ברירת המחדל', tBest.g, tSrc(tBest.p))}>{ilsRound(tBest.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
+  const paid = tBase && tBase.g.feesReal > 500 ? <> {g('תשלמי', 'תשלם', 'תשלמו')} <span className="sv-nw">כ-<Est src={() => gapProv(tBase.p, 'מחיר ברירת המחדל', tBase.g, tSrc(tBase.p))}>{ilsRound(tBase.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
 
   const copy = () => copyText(script, (ok) => { if (ok) { setCopied('ok'); track('letter_copied'); } else { setCopied('manual'); setOpen(true); } });
   const B = brief(v, C.lever);
@@ -154,13 +158,15 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
       </header>
 
       <ul className="sv-lines sv-brief">
-        {B.map((l, i) => <li key={`${l.key}${i}`} className={`t-${l.tone}`}><span className="sv-dot" aria-hidden="true" /><span><Parts parts={l.parts} figs={figs} /></span></li>)}
+        {/* red team 06.11.26 (/my word budget): two lines folded; every line of the report card is under "עוד פרטים" */}
+        {B.slice(0, 2).map((l, i) => <li key={`${l.key}${i}`} className={`t-${l.tone}`}><span className="sv-dot" aria-hidden="true" /><span><Parts parts={l.parts} figs={figs} /></span></li>)}
       </ul>
 
       <div className="sv-money">
         <p className="sv-big">דמי הניהול {ownAny ? 'שלך' : 'במסלול'}: <span className="sv-nw">כ-<Est src={annualProv}>{ilsRound(annual.total)}</Est> בשנה</span>{(C.exBalance || C.exMonthly) && <span className="sv-a">על {C.exBalance && C.exMonthly ? 'יתרה והפקדה' : C.exBalance ? 'יתרה' : 'הפקדה'} לדוגמה</span>}</p>
         {fold && <p>{fold}{liq && gMed && Math.abs(gMed.balReal) >= 500 && <> עד הפרישה: <span className="sv-nw">כ-<Est src={() => gapProv(med!, 'החציון בקטגוריה', gMed, medSrc)}>{ilsRound(Math.abs(gMed.balReal))}</Est></span> {gMed.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון.</>} <span className="sv-a">אומדן, בשקלי היום</span></p>}
-        {tLine && <p>{tLine}{tBest!.g.balReal > 0 && paid} <span className="sv-a">אומדן, בשקלי היום</span></p>}
+        {tLine && <p>{tLine} <span className="sv-a">אומדן, בשקלי היום</span></p>}
+        {dorm.dormant && <p className="sv-note">אין הפקדות{dorm.last ? ` מאז ${dorm.last.slice(5, 7)}/${dorm.last.slice(2, 4)}` : ''}: החישוב על היתרה בלבד. בקשה לאיחוד עם הקרן הפעילה בכפתור.</p>}
       </div>
 
       {!example && <FlowLine f={f} R={refOf(f)} />}
@@ -170,7 +176,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
       {!example && onChange && <Mine my={my} f={f} onChange={onChange} />}
 
       <div className="sv-acts">
-        <button type="button" className="btn primary" onClick={copy}>{copied === 'ok' ? 'ההודעה הועתקה ✓' : 'העתקת הודעה לסוכן'}</button>
+        <button type="button" className="btn primary" onClick={copy}>{copied === 'ok' ? 'ההודעה הועתקה ✓' : dorm.dormant ? 'העתקת בקשה לאיחוד' : 'העתקת הודעה לסוכן'}</button>
         <button type="button" className="btn sv-more-b" aria-expanded={open} aria-controls={moreId} onClick={() => setOpen((o) => !o)}>{open ? 'פחות פרטים' : 'עוד פרטים'}</button>
         {example && onAdd && <button type="button" className="btn" onClick={onAdd}>זה המסלול שלי</button>}
       </div>
@@ -185,15 +191,15 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
           {med && gMed && <p>{liq ? <>{medLine(liq.gMed, `בעוד ${liq.years} שנים`, () => gapProv(med, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))} {medLine(gMed, 'אם הכסף נשאר עד גיל הפרישה', () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}</> : medLine(gMed, atRet, () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}
             {' '}החציון: <Est src={medSrc}>{pcf(med.fee)}</Est> מצבירה{v.dep?.med != null ? <>, <Est src={() => figs.depMed()}>{pcf(med.depfee)}</Est> מהפקדה</> : null}.</p>}
           {C.med0 && mine.depfee > 0 && <p className="sv-note">בקטגוריה לא מתפרסמים דמי ניהול מהפקדה, ולכן ההשוואה מניחה 0% מהפקדה (הנחה).</p>}
-          {tBest && v.dflt && <p>{tBest.g.balReal > 0 ? tLine : 'לעומת תנאי ברירת המחדל: אף צירוף שההליך מתיר לא היה משאיר יותר בהנחות האלה.'}
+          {tBase && v.dflt && <p>{tBase.g.balReal > 0 ? <>{tLine}{paid}</> : 'לעומת מחיר קרנות ברירת המחדל: דמי הניהול שלך לא יקרים ממנו בהנחות האלה.'}
             {' '}מחיר הבסיס של ההליך הוא <Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.depfee)}</Est> מהפקדה ו-<Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.fee)}</Est> מצבירה{C.tPairs.length > 1 ? ', ואפשר להמיר אותו לצירוף שווה ערך מטבלת ההמרה' : ''}.
-            {tBest.g.balReal > 0 && <> החישוב לפי <Est src={tSrc(tBest.p)}>{`${pcf(tBest.p.depfee)} מהפקדה ו-${pcf(tBest.p.fee)} מצבירה`}</Est>, הצירוף שמשאיר הכי הרבה בהנחות האלה.</>}
+            {tBase.g.balReal > 0 && <> החישוב לפי מחיר הבסיס, הצירוף שהבדיקה השנתית והמכתב מבקשים.</>}
             {' '}התנאים חלים על מי שמצטרף דרך ברירת המחדל{v.dflt.years ? `, ל-${v.dflt.years} שנים` : ''}.</p>}
           {!ownAny && <p className="sv-note">החישוב לפי דמי הניהול <b>הממוצעים</b> במסלול. מה שאתם משלמים בפועל כתוב בדוח השנתי; {example ? 'אחרי הוספת המוצר שלכם אפשר להזין אותו.' : 'אפשר להזין אותו למעלה.'}</p>}
           <Assume plan={plan} rWhy={R.own ? 'שלך, מראש העמוד' : R.why} my={my} ex={C.exWhy} ageSet={ageS != null} retSrc={retSrc} retWhy={retWhy} r10={r10} idx={singleIndex(f)} retQ={retQ} setRetQ={setRetQ} />
         </Sec>
 
-        <Sec title="ההודעה לסוכן או לחברה" tag="להעתקה">
+        <Sec title={dorm.dormant ? 'איחוד חשבונות: בקשה לקרן הפעילה' : 'ההודעה לסוכן או לחברה'} tag="להעתקה">
           <Script text={script} />
         </Sec>
 
@@ -261,7 +267,7 @@ function Mine({ my, f, onChange }: { my?: MyProduct; f: FundX; onChange: (p: Par
   };
   return (
     <details className="sv-mine" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
-      <summary>{has ? `הנתונים שלך מהדוח (${has} מתוך 4)` : 'הנתונים שלך מהדוח השנתי (לא חובה)'}</summary>
+      <summary>{has ? `הנתונים שלך (${has}/4)` : 'הנתונים שלך מהדוח השנתי (לא חובה)'}</summary>
       <div className="sv-form">
         {field('balance', 'יתרה היום, ש"ח', 'למשל 150000', 1000)}
         {field('monthly', 'הפקדה חודשית, ש"ח', 'למשל 2200', 100)}
@@ -318,7 +324,7 @@ function CoverLine({ covers, insTrack, salary }: { covers: MCover[]; insTrack?: 
   if (sur?.sum != null) bits.push(<span key="s">שארים: <span className="num">{ilsRound(sur.sum)}</span> לחודש</span>);
   if (cost > 0) bits.push(<span key="c">עלות הכיסויים כ-<span className="num">{ilsRound(cost)}</span> בחודש (מתוך ההפקדה)</span>);
   if (!bits.length) return null;
-  return <p className="sv-cov">{bits.map((b, i) => <span key={i}>{i ? '; ' : ''}{b}</span>)}{insTrack ? <> · מסלול ביטוח: {insTrack}</> : null} <Tip k="covers" /><span className="sv-a">מקובץ המסלקה</span></p>;
+  return <p className="sv-cov" title={insTrack ? `מסלול ביטוח: ${insTrack}` : undefined}>{bits.map((b, i) => <span key={i}>{i ? '; ' : ''}{b}</span>)}<Tip k="covers" /><span className="sv-a">מקובץ המסלקה</span></p>;
 }
 
 export type { Verdict };

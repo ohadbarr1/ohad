@@ -125,6 +125,19 @@ test('entries: the saver home and the moments lead to the check-up; /my stays un
   expect(words, '/my with two products').toBeLessThan(400);
 });
 
+test('bring-back: the annual reminder, and the status on the saver home and /my after a check-up', async ({ page }) => {
+  await seed(page, 'phoenix', true);
+  await go(page, '/my/checkup');
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('.ck-line').nth(0).locator('button', { hasText: 'תזכורת שנתית' }).click()]);
+  expect(dl.suggestedFilename()).toBe('fox-bdika-shnatit.ics');
+  await expect(page.locator('#sv-safe')).toBeVisible();
+  await go(page, '/?door=saver');
+  await expect(page.locator('#dcheck-t')).toContainText('הבדיקה הבאה');
+  await expect(page.locator('#dcheck-t')).toContainText('לטיפול');
+  await go(page, '/my');
+  await expect(page.locator('a.sv-ck')).toContainText('הבדיקה הבאה');
+});
+
 for (const theme of ['phoenix', 'dark'] as const) {
   for (const route of ['/my/checkup', '/my', '/my/moment', '/', '/my/statement']) {
     test(`a11y ${route} with products · ${theme}`, async ({ page }, info) => {

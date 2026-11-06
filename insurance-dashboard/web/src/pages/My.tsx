@@ -27,7 +27,7 @@ import { GlossBar } from '../components/saver/Gloss';
 import { MaslakaImport } from '../components/saver/MaslakaImport';
 import { SinceVisit } from '../components/saver/SinceVisit';
 import { MomentChips } from '../components/saver/MomentChips';  // W9: life moments
-import { dueNegos, isoDay, normNegos } from '../lib/checkup';  // S1+S2: the check-up's 30-day reminder
+import { CK_STATUS_KEY, dueNegos, isoDay, normNegos, normStatus, statusLine } from '../lib/checkup';  // S1+S2: the check-up's 30-day reminder; its status line
 import '../styles/moments.css';
 import '../styles/saver.css';
 import '../styles/my-watch.css';
@@ -95,7 +95,7 @@ export function My() {
       <div className="pagehead"><div>
         <span className="eyebrow">החיסכון שלי</span>
         <h1><span className="icotile"><Icon name="mine" /></span>המוצרים שלי</h1>
-        <div className="sub sv-sub">כמה אתם משלמים ואיפה המסלול עומד, בשקלים. נתוני רשות שוק ההון עד {asof}.</div>
+        <div className="sub sv-sub">{shown.length ? <>נתוני רשות שוק ההון עד {asof}.</> : <>כמה אתם משלמים ואיפה המסלול עומד, בשקלים. נתוני רשות שוק ההון עד {asof}.</>}</div>
       </div></div>
 
       <Household />
@@ -115,12 +115,12 @@ export function My() {
       </div>}
 
       <section className="panel sv-add" aria-labelledby="sv-add-h">
-        <div className="hd"><h2 id="sv-add-h">{shown.length ? 'עוד מוצר' : 'מה יש לך?'}</h2><div className="aside"><span>פנסיה, השתלמות, גמל ופוליסות</span></div></div>
+        <div className="hd"><h2 id="sv-add-h">{shown.length ? 'עוד מוצר' : 'מה יש לך?'}</h2>{!shown.length && <div className="aside"><span>פנסיה, השתלמות, גמל ופוליסות</span></div>}</div>
         {shown.length && !adding ? <button type="button" className="btn" onClick={() => setAdding(true)}>+ הוספת מוצר</button>
           : <Picker funds={data.funds as FundX[]} have={list.map((m) => m.k)} onPick={add} />}
       </section>
 
-      <MaslakaImport funds={data.funds as FundX[]} mine={list} today={today()} onSave={(next, m) => { setMine(next); setMsg(m); requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' })); }} />
+      <MaslakaImport compact={shown.length > 0} funds={data.funds as FundX[]} mine={list} today={today()} onSave={(next, m) => { setMine(next); setMsg(m); requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' })); }} />
 
 
       {shown.length === 0 && ex && <section className="sv-exwrap" aria-label="דוגמה">
@@ -129,8 +129,8 @@ export function My() {
       </section>}
 
       <p className="sv-privacy"><Icon name="shield" /> הכול נשמר רק בדפדפן הזה, בלי הרשמה; שום נתון לא נשלח.</p>
-      <GlossBar />
-      <p className="sv-legal">מידע תיאורי מנתוני רשות שוק ההון, עם מקור לכל מספר. לא ייעוץ השקעות, לא ייעוץ או שיווק פנסיוני, ואין המלצה לעבור או להישאר. תשואות עבר אינן מבטיחות תשואות בעתיד. האומדנים על הנחות שמוצגות לצדם. <Link to="/about">על האתר והמקורות</Link></p>
+      {shown.length === 0 && <GlossBar />}
+      <p className="sv-legal">מידע תיאורי, לא ייעוץ השקעות או ייעוץ פנסיוני, ואין המלצה לעבור או להישאר. תשואות עבר אינן מבטיחות תשואות בעתיד. <Link to="/about">על האתר והמקורות</Link></p>
     </div>
   );
 }
@@ -184,10 +184,13 @@ function Watching({ data }: { data: FundsFile }) {
 function CheckupLink({ has }: { has: boolean }) {
   const [raw] = useMy<unknown>('my:nego', []);
   const due = dueNegos(normNegos(raw), isoDay(new Date())).length > 0;
+  // red team 06.11.26: after a check-up, its status ("2 לטיפול · חסכתם כ-… · הבדיקה הבאה 10/27") in place of the generic line
+  const [stRaw] = useMy<unknown>(CK_STATUS_KEY, null);
+  const st = has ? normStatus(stRaw) : null;
   return (
     <Link to="/my/checkup" className={`panel sv-stmt sv-ck${due ? ' due' : ''}`}>
       <span className="icotile"><Icon name={due ? 'calendar' : 'check'} /></span>
-      <span className="sv-stmt-t"><b>{due ? 'עברו 30 יום: מה דמי הניהול עכשיו?' : 'הבדיקה השנתית'}</b><span>{due ? 'הזינו ונחשב כמה חסכתם.' : has ? 'דמי ניהול, הפקדות ומסלול גיל.' : 'מקובץ המסלקה, בשלוש שורות.'}</span></span>
+      <span className="sv-stmt-t"><b>{due ? 'עברו 30 יום: מה דמי הניהול עכשיו?' : 'הבדיקה השנתית'}</b><span>{due ? 'הזינו ונחשב כמה חסכתם.' : st ? statusLine(st) : has ? 'דמי ניהול, הפקדות ומסלול גיל.' : 'מקובץ המסלקה, בשלוש שורות.'}</span></span>
       <span className="sv-stmt-go" aria-hidden="true">←</span>
     </Link>
   );
@@ -306,7 +309,7 @@ function Strip({ rows, retire, coefF }: { rows: SumRow[]; retire: number; coefF:
       </dl>
       {rep && coefF && <ReplaceLines rep={rep} coefF={coefF} salary={salary!} pension={s.pension!} />}
       <p className="sv-one"><b>דבר אחד לעשות:</b>{' '}
-        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>. {a.ref === 'med' ? (a.own ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה') : 'לעומת תנאי קרנות ברירת המחדל'}, יהיו לך כ-{ilsRound(a.v)} פחות בחיסכון {a.prod === 'השתלמות' ? `בעוד ${a.years} שנים` : 'בגיל הפרישה'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. ההודעה מוכנה בכרטיס.</>
+        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>: כ-{ilsRound(a.v)} פחות בחיסכון {a.prod === 'השתלמות' ? `בעוד ${a.years} שנים` : 'בגיל הפרישה'}, {a.ref === 'med' ? (a.own ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה') : 'לעומת מחיר קרנות ברירת המחדל'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. ההודעה בכרטיס.</>
           : a.kind === 'enter' ? <>להזין את דמי הניהול מהדוח השנתי ב<a href={`#${a.k}`}>{a.name}</a>: בלי זה החישוב לפי הממוצע במסלול.</>
           : <>לבדוק בדוח השנתי שהמוטבים מעודכנים (<Link to="/my/statement#st-ben">איפה זה בדוח</Link>). דמי הניהול שלך לא גבוהים מהחציון באף מוצר.</>}
       </p>
