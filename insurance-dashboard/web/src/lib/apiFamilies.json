@@ -1471,6 +1471,22 @@
    ]
   },
   {
+   "pattern": "mkt.json",
+   "schema": "mkt",
+   "example": "mkt.json",
+   "files": 1,
+   "kind": "open",
+   "format": "json",
+   "step": "fetch_prices",
+   "note": "valuation input only (labelled)",
+   "cadence": "manual (valuation input only)",
+   "prov": [
+    "asof",
+    "source",
+    "url"
+   ]
+  },
+  {
    "pattern": "news.json",
    "schema": null,
    "example": "news.json",
@@ -1557,7 +1573,7 @@
    "pattern": "peers/m/*.json",
    "schema": "peersMetric",
    "example": "peers/m/adj-adj_comprehensive_income_before_special_provision.json",
-   "files": 285,
+   "files": 288,
    "kind": "open",
    "format": "json",
    "step": "build_registry",
