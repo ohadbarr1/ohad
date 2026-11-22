@@ -63,7 +63,7 @@ table.pb-table .num.stale { opacity: .75; }
 .pb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .pb-grid > .panel { min-width: 0; }
 .pb .hd .aside { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.linkbtn { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.linkbtn { all: unset; cursor: pointer; color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 1100px) { .pb-grid, .pb-maps { grid-template-columns: 1fr; } }
 @media (max-width: 760px) {
