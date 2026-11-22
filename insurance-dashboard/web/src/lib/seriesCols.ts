@@ -135,4 +135,7 @@ export const TEMPLATES: Template[] = [
   { id: 'reg', key: '6', n: 'רגולטור', s: 'lts', f: 'Q', c: ['reg:assets@all', 'reg:share@all', 'y!reg:assets@all', 'reg:netflow@pension', 'reg:netflow@gemel', 'reg:transfers@all', 'reg:fee@pension', 'reg:fee@gemel'] },
   { id: 'seg', key: '7', n: 'מגזרים', s: 'ins', f: 'LTM', c: ['ifrs:comprehensive_income_before_tax@life', 'ifrs:comprehensive_income_before_tax@health', 'ifrs:comprehensive_income_before_tax@pc',
     'ifrs:insurance_service_result@life', 'ifrs:insurance_service_result@health', 'ifrs:insurance_service_result@pc', 'ifrs:csm_closing@life', 'ifrs:csm_closing@health'] },
+  // the stock at each quarter end (TASE close on the quarter's last trading day) over the printed figures
+  { id: 'mkt', key: '8', n: 'שוק ומכפילים', s: 'ins', f: 'LTM', c: ['mkt:mcap', 'y!mkt:px', formulaTok('P/E', 'x', 'mcap / np'), formulaTok('P/B', 'x', 'mcap / eq'),
+    formulaTok('P/(B+CSM)', 'x', 'mcap / (eq + csm * 0.6581)'), formulaTok('תשואת דיבידנד', 'pct', 'dps / px * 100'), formulaTok(ROE_NAME, 'pct', ROE_EXPR)] },
 ];

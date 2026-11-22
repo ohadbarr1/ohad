@@ -14,6 +14,10 @@
    "schema": "price"
   },
   {
+   "pattern": "mkt.json",
+   "schema": "mkt"
+  },
+  {
    "pattern": "companies/*.notes.json",
    "schema": "notes"
   },
@@ -542,6 +546,7 @@
     }
    }
   },
+  "mkt": {"type": "object", "required": ["asof", "source", "ents"], "properties": {"asof": {"$ref": "#/$defs/date"}, "source": {"type": "string"}, "ents": {"type": "object", "additionalProperties": {"type": "object", "required": ["ticker", "name", "url", "q", "div", "w", "first", "last"], "properties": {"ticker": {"type": "string"}, "name": {"type": "string"}, "url": {"type": "string"}, "q": {"type": "object", "additionalProperties": {"type": "array", "prefixItems": [{"type": "number"}, {"type": ["number", "null"]}, {"$ref": "#/$defs/date"}, {"type": ["integer", "null"]}], "minItems": 4}}, "div": {"type": "array", "items": {"type": "array", "prefixItems": [{"$ref": "#/$defs/date"}, {"type": "number"}], "minItems": 2}}, "w": {"type": "array", "items": {"type": "array", "prefixItems": [{"$ref": "#/$defs/date"}, {"type": "number"}, {"type": "number"}], "minItems": 3}}, "first": {"$ref": "#/$defs/date"}, "last": {"$ref": "#/$defs/date"}}}}}},
   "price": {
    "type": "object",
    "required": [

@@ -58,7 +58,7 @@ STEPS = [
          note="the CMA's register of tracks (transfer_bank): official track taxonomy, committed slim copy"),
     step("fetch_macro", "pipeline/fetch_macro.py", [], ["data/raw/macro"], {"network", "drive"}),
     step("fetch_boi", "pipeline/fetch_boi.py", [], ["data/raw/boi"], {"network", "drive"}),
-    step("fetch_prices", "pipeline/fetch_prices.py", [REG + "companies.json"], [D + "companies/*.price.json"], {"network", "drive"},
+    step("fetch_prices", "pipeline/fetch_prices.py", [REG + "companies.json"], [D + "companies/*.price.json", D + "mkt.json"], {"network", "drive"},
          note="valuation input only (labelled)"),
     step("fetch_holders", "pipeline/fetch_holders.py", [REG + "companies.json"], ["data/raw/maya_holders"], {"network", "drive"}),
     step("fetch_liabilities", "pipeline/fetch_liabilities.py", [REG + "companies.json", REG + "documents.csv"], ["data/raw/maya_liabilities"], {"network", "drive"}),
@@ -144,7 +144,7 @@ STEPS = [
          [], code=["pipeline/reportday.py"], edits=[D + "kpi.json"], groups={"deploy"}, note="printed figure over the XBRL tag, in place"),
     step("build_registry", "pipeline/build_registry.py",
          [D + "adjusted.json", D + "companies/index.json", D + "csm/solvency.json", D + "ifrs.json", D + "ifrs_*.json", D + "kpi.json", D + "lines.json",
-          D + "lts.json", D + "market.json", D + "savings_econ.json", D + "series", D + "sop", "web/src/lib/labels.ts"],
+          D + "lts.json", D + "market.json", D + "mkt.json", D + "savings_econ.json", D + "series", D + "sop", "web/src/lib/labels.ts"],
          [D + "peers"], groups={"deploy"}, note="Peer Table metric registry (follows the canon)"),
     step("build_market_home", "pipeline/build_market_home.py", [D + "market.json"], [D + "market_home.json"], groups={"deploy"}),
     # lane S2: report card per filing (numbers only, every digit a fact; pipeline/check_cards.py validates) and the per-company "new since" events

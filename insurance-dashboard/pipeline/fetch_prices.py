@@ -2,6 +2,11 @@
 
 python3 pipeline/fetch_prices.py            -> data/raw/tase/<security>.json  and  web/public/data/companies/<id>.price.json
 python3 pipeline/fetch_prices.py --build    -> rebuild the price files from the raw files only (no network)
+python3 pipeline/fetch_prices.py --hist     -> also the long daily history since 2019 (data/raw/tase/<security>.hist.json)
+
+The long history feeds web/public/data/mkt.json: per company the close and market value at each quarter end, dividends per share by
+ex-day, and a weekly total-return index (dividends reinvested at the ex-day close). The peer table reads the quarter ends as the
+market metrics mkt:* (build_registry.py), so P/E, P/B and dividend yield are formulas over printed figures and TASE closes.
 
 Source: the public end-of-day data behind market.tase.co.il (free, no key). Prices are in agorot, as quoted on TASE.
 The security of each company is its main listed share, found in the exchange's entity list by the MAYA company id
@@ -66,10 +71,14 @@ def history(sec: str, d_from: date, d_to: date) -> list[dict]:
         r = call("security/historyeod", {"dFrom": d_from.isoformat(), "dTo": d_to.isoformat(), "oId": sec, "pageNum": page, "pType": "8", "TotalRec": 1, "lang": "0"})
         got = r.get("Items") or []
         items += got
-        if len(got) < 30 or page > 40:
+        if len(got) < 30 or page > 120:
             return items
         page += 1
         time.sleep(0.6)
+
+
+HIST_FROM = date(2019, 1, 1)
+KEEP = ("TradeDate", "CloseRate", "BaseRate", "MarketValue", "RegisteredCapital", "ExeDesc")
 
 
 def iso(d: str) -> str:
@@ -104,6 +113,62 @@ def build(raw: dict) -> dict | None:
     }
 
 
+def divs_of(rows: list[dict]) -> list[list]:
+    out = []
+    for prev, x in zip(rows, rows[1:]):
+        if "דיבידנד" in (x.get("ExeDesc") or "") and x.get("BaseRate"):
+            amt = round(float(prev["CloseRate"]) - float(x["BaseRate"]), 2)
+            if amt > 0:
+                out.append([x["d"], amt])
+    return out
+
+
+def market_history(secs: dict) -> dict:
+    """mkt.json: quarter-end close and market value, dividends per share by ex-day, weekly total-return index; one entry per listed company."""
+    ents = {}
+    for cid, s in secs.items():
+        rows: dict[str, dict] = {}
+        for f in (RAW / f"{s['security']}.hist.json", RAW / f"{s['security']}.json"):  # the recent file overrides the long one
+            if f.exists():
+                for x in json.loads(f.read_text(encoding="utf-8"))["items"]:
+                    if x.get("CloseRate"):
+                        rows[iso(x["TradeDate"])] = x
+        if not rows:
+            continue
+        days = [{**rows[d], "d": d} for d in sorted(rows)]
+        divs = divs_of(days)
+        dmap = {d: a for d, a in divs}
+        # quarter ends: the last trading day on or before each calendar quarter end
+        q = {}
+        for x in days:
+            y, m = int(x["d"][:4]), int(x["d"][5:7])
+            key = f"{y}Q{(m - 1) // 3 + 1}"
+            q[key] = x  # rows are sorted, so the last one of the quarter stays
+        last_d = days[-1]["d"]
+        qend = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "Q4": "12-31"}
+        qout = {}
+        for k, x in q.items():
+            end = f"{k[:4]}-{qend[k[4:]]}"
+            if end > last_d:
+                continue  # the running quarter is not a quarter end yet
+            mv = round(float(x["MarketValue"]) / 1000, 1) if x.get("MarketValue") else None
+            qout[k] = [float(x["CloseRate"]), mv, x["d"], x.get("RegisteredCapital")]
+        # weekly total-return index: dividend reinvested at the ex-day close
+        tr, weeks, daily = 1.0, {}, []
+        prev = None
+        for x in days:
+            c = float(x["CloseRate"])
+            if prev is not None:
+                tr *= (c + dmap.get(x["d"], 0.0)) / prev
+            prev = c
+            weeks[date.fromisoformat(x["d"]).isocalendar()[:2]] = [x["d"], c, round(tr, 5)]
+            if x["d"] >= (date.fromisoformat(last_d) - timedelta(days=400)).isoformat():
+                daily.append([x["d"], round(tr, 5)])  # exact window ends for 3M / YTD / 12M
+        ents[cid] = {"ticker": s["security"], "name": s["name"], "url": PAGE.format(sec=s["security"]), "q": qout, "div": divs, "w": list(weeks.values()), "dl": daily,
+                     "first": days[0]["d"], "last": last_d}
+    return ents
+
+
 def main() -> None:
     companies = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
     RAW.mkdir(parents=True, exist_ok=True)
@@ -121,6 +186,20 @@ def main() -> None:
             (RAW / f"{s['security']}.json").write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
             print(cid, s["security"], s["name"], len(items), "days")
             time.sleep(1)
+            if "--hist" in sys.argv:
+                # the long history in yearly windows (the feed pages 30 rows at a time), slim rows only
+                hist = []
+                for y in range(HIST_FROM.year, today.year + 1):
+                    a, b = date(y, 1, 1), min(date(y, 12, 31), today - timedelta(days=MONTHS * 31))
+                    if a > b:
+                        continue
+                    try:
+                        hist += [{k: x.get(k) for k in KEEP} for x in history(s["security"], a, b)]
+                    except RuntimeError as e:
+                        print(cid, y, "FAILED", e)
+                    time.sleep(0.6)
+                (RAW / f"{s['security']}.hist.json").write_text(json.dumps({**s, "fetched": today.isoformat(), "items": hist}, ensure_ascii=False), encoding="utf-8")
+                print(cid, "history", len(hist), "days")
     secs = json.loads((RAW / "securities.json").read_text(encoding="utf-8"))
     for cid, s in secs.items():
         f = RAW / f"{s['security']}.json"
@@ -133,6 +212,13 @@ def main() -> None:
             continue
         (OUT / f"{cid}.price.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
         print(cid, out["ticker"], out["asof"], "last", out["last"], "mcap", out["mcap"], "divs", out["dividends"])
+    ents = market_history(secs)
+    if ents:
+        mk = {"asof": max(e["last"] for e in ents.values()), "source": "TASE · הבורסה לניירות ערך", "unit": "agorot; market value in NIS millions",
+              "note": "quarter end = last trading day on or before the calendar quarter end; dividend per share = previous close less the ex-day base price (derived); "
+                      "total-return index reinvests the dividend at the ex-day close", "ents": ents}
+        (OUT.parent / "mkt.json").write_text(json.dumps(mk, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print("mkt.json", len(ents), "companies", (OUT.parent / "mkt.json").stat().st_size // 1024, "KB")
 
 
 if __name__ == "__main__":

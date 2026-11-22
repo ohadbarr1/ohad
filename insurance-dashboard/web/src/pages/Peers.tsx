@@ -21,12 +21,13 @@ import '../styles/peers.css';
 import '../styles/restate.css';
 
 const Deck = lazy(() => import('./IndustrySectors').then((m) => ({ default: m.IndustrySectors })));
+const Board = lazy(() => import('./PeersBoard').then((m) => ({ default: m.PeersBoard })));
 
-type View = 'table' | 'series' | 'deck';
+type View = 'board' | 'table' | 'series' | 'deck';
 interface St { s: string; e: string[] | null; f: Freq; p: string; n: number; v: View; k: number; c: string[]; o: { c: number; i: number; d: 1 | -1 } | null; h: boolean; pin: number; hl: string; w: number }
 const KEYS = ['s', 'e', 'f', 'p', 'n', 'v', 'k', 'c', 'o', 'h', 'pin', 'hl', 'w', 't'];
 // a series opens on five years (20 quarters): the analyst's "7 insurers × one line × 5 years" in two taps
-const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'table' as View, w: 20 };
+const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'board' as View, w: 20 };
 const NOTE: Record<number, string> = { 1: 'נגזר מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM); הנוסחה במקור', 2: 'לפי IFRS 4, כפי שדווח במקור', 3: 'נקרא מגרף או מטקסט בדוח', 4: 'בסיס שונה מרוב החברות בעמודה', 5: 'תג XBRL שתוקן מול הדוח המודפס',
   6: 'הרכב השתנה: החברות שיש להן נתון שונות בין התקופה לשנה שלפניה, ולכן הנתח אינו בר השוואה כמות שהוא', 7: 'כולל קופות חדשות במאגר הרגולטור: חלק מהשינוי הוא קופות שנכנסו לקבוצה, לא כסף שנכנס' };
 const SUP = ['', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷'];
@@ -36,7 +37,7 @@ function readSt(sp: URLSearchParams): St {
   const o = /^(\d+)\.(\d+)\.(-?1)$/.exec(sp.get('o') ?? '');
   return {
     s: sp.get('s') ?? DEF.s, e: sp.get('e') ? sp.get('e')!.split(',').filter(Boolean) : null, f, p: sp.get('p') ?? '',
-    n: Math.min(12, Math.max(1, Number(sp.get('n')) || DEF.n)), v: (['table', 'series', 'deck'] as View[]).find((x) => x === sp.get('v')) ?? DEF.v,
+    n: Math.min(12, Math.max(1, Number(sp.get('n')) || DEF.n)), v: (['board', 'table', 'series', 'deck'] as View[]).find((x) => x === sp.get('v')) ?? DEF.v,
     k: Number(sp.get('k')) || 0, c: sp.getAll('c').map((t) => (t.replace(/^[a-z]!/, '') === ROE_OLD_TOK ? t.replace(ROE_OLD_TOK, formulaTok(ROE_NAME, 'pct', ROE_EXPR)) : t)), o: o ? { c: +o[1], i: +o[2], d: +o[3] as 1 | -1 } : null, h: sp.get('h') === '1',
     pin: sp.has('pin') ? Number(sp.get('pin')) : -1, hl: sp.get('hl') ?? '', w: Number(sp.get('w')) || DEF.w,
   };
@@ -76,7 +77,7 @@ export function Peers() {
   const [cards, setCards] = useState(true);
 
   // a template in the address (?t=, from an old link or a hotkey) or an empty address opens a full view
-  const apply = (t: Template, keep: Partial<St> = {}) => set({ c: t.c, s: t.s, e: null, f: t.f, n: 1, o: null, pin: -1, k: 0, p: '', ...keep });
+  const apply = (t: Template, keep: Partial<St> = {}) => set({ c: t.c, s: t.s, e: null, f: t.f, n: 1, o: null, pin: -1, k: 0, p: '', ...(st.v === 'board' ? { v: 'table' as View } : {}), ...keep });
   useEffect(() => {
     const t = sp.get('t');
     if (!sp.getAll('c').length) {
@@ -119,7 +120,9 @@ export function Peers() {
   if (!reg || !book) return <Loading what="טבלת העמיתים" />;
 
   // the axis: the latest period any column has for the set, then n periods back
-  const pend = st.p || cols.reduce<string | null>((best, c) => { const id = c.ids[0]; const l = id ? book.latest(id, st.f, ents) : null; return l && (!best || pord(l) > pord(best)) ? l : best; }, null) || '';
+  // market closes (mkt:*) run ahead of the filings: the axis follows the reported columns when there are any
+  const fin = cols.filter((c) => c.ids.some((id) => !id.startsWith('mkt:'))), axisCols = fin.length ? fin : cols;
+  const pend = st.p || axisCols.reduce<string | null>((best, c) => { const id = c.ids.find((x) => !x.startsWith('mkt:')) ?? c.ids[0]; const l = id ? book.latest(id, st.f, ents) : null; return l && (!best || pord(l) > pord(best)) ? l : best; }, null) || '';
   const periods = pend ? Array.from({ length: st.n }, (_, i) => back(st.f, pend, i)) : [];
   const setName = st.e ? 'קבוצה מותאמת' : allSets.find((x) => x.id === st.s)?.n ?? '';
   const loading = pending > 0;
@@ -131,13 +134,13 @@ export function Peers() {
         <Pick label="קבוצת עמיתים" cap="קבוצה" value={st.e ? '' : st.s} onChange={(v) => set({ s: v, e: null })} options={[...(st.e ? [['', `מותאמת (${st.e.length})`] as [string, string]] : []), ...allSets.map((x) => [x.id, `${x.n}${x.own ? ' ·' : ''}`] as [string, string])]} />
         <button type="button" className={`btn${panel === 'set' ? ' primary' : ''}`} aria-expanded={panel === 'set'} onClick={() => setPanel(panel === 'set' ? '' : 'set')} title="עריכת הקבוצה">עריכה</button>
       </span>
-      {st.v !== 'deck' && <><Seg<Freq> label="תדירות" value={st.f} onChange={(f) => set({ f, p: '', o: null })} options={FREQS} />
+      {st.v !== 'deck' && st.v !== 'board' && <><Seg<Freq> label="תדירות" value={st.f} onChange={(f) => set({ f, p: '', o: null })} options={FREQS} />
         <Pick label="עד" cap="עד" value={st.p} onChange={(v) => set({ p: v })} options={[['', `האחרון${pend ? ` · ${plab(st.f, pend)}` : ''}`], ...(pend ? Array.from({ length: 24 }, (_, i) => back(st.f, pend, i + 1)).filter((p) => Number(p.slice(0, 4)) >= 2012).map((p) => [p, plab(st.f, p)] as [string, string]) : [])]} />
       </>}
       {st.v === 'table' && <Pick label="תקופות לכל מדד" cap="תקופות" value={String(st.n)} onChange={(n) => set({ n: Number(n), o: null })} options={[['1', '1'], ['3', '3'], ['5', '5'], ['8', '8']]} />}
       {st.v === 'series' && <Pick label="טווח הסדרה" cap="טווח" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={st.f === 'Q' ? [['8', '2 שנים'], ['12', '3 שנים'], ['20', '5 שנים'], ['40', '10 שנים']] : [['8', '8'], ['12', '12'], ['20', '20']]} />}
-      <Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} />
-      {st.v !== 'deck' && <>
+      <Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['board', 'השוואה'], ['table', 'טבלה חופשית'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} />
+      {st.v !== 'deck' && st.v !== 'board' && <>
         <button type="button" className={`btn${panel === 'add' ? ' primary' : ''}`} aria-expanded={panel === 'add'} onClick={() => setPanel(panel === 'add' ? '' : 'add')}>+ מדד</button>
         <Menu label="תבניות" summary="תבניות" items={[
           ...TEMPLATES.map((t) => ({ key: t.id, label: t.n, hint: <kbd>{t.key}</kbd>, group: 'תבניות', run: () => apply(t) })),
@@ -164,11 +167,11 @@ export function Peers() {
     <div className="pr">
       {phone ? (
         <>
-          {st.v !== 'deck' && <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</ContextBar>}
+          {st.v !== 'deck' && <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b>{st.v === 'board' ? ' · השוואה' : <> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</>}</ContextBar>}
           {/* table or series without opening the sheet: one tap */}
-          <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['table', 'טבלה'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
+          <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['board', 'השוואה'], ['table', 'טבלה חופשית'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
           <Sheet open={sheet} onClose={() => setSheet(false)} title="טבלת עמיתים">{controls}{panels}
-            {st.v !== 'deck' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
+            {st.v !== 'deck' && st.v !== 'board' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
               <div key={i} className="pr-ci"><span>{c.name}</span>
                 <select aria-label={`תצוגת ${c.name}`} value={c.tr} onChange={(e) => { const n = [...st.c]; n[i] = withTr(c, e.target.value as Tr); set({ c: n }); }}>{(Object.keys(TR_HE) as Tr[]).map((t) => <option key={t} value={t}>{TR_HE[t]}</option>)}</select>
                 <button type="button" className="btn" aria-label={`הסרת ${c.name}`} title={`הסרת ${c.name}`} onClick={() => set({ c: st.c.filter((_, j) => j !== i), o: null, pin: -1, k: 0 })}>×</button>
@@ -178,11 +181,12 @@ export function Peers() {
       ) : <IndustryTools>{controls}</IndustryTools>}
       {!phone && panels}
 
-      {st.v === 'deck' ? <Suspense fallback={<Loading what="מצגת החיסכון" />}><Deck /></Suspense>
+      {st.v === 'board' ? <Suspense fallback={<Loading what="לוח ההשוואה" />}><Board reg={reg} ents={ents} setName={setName} /></Suspense>
+        : st.v === 'deck' ? <Suspense fallback={<Loading what="מצגת החיסכון" />}><Deck /></Suspense>
         : !cols.length ? <Empty title="אין עמודות"><button type="button" className="btn" onClick={() => apply(TEMPLATES[0])}>תבנית רווחיות</button></Empty>
         : st.v === 'series' ? <SeriesView book={book} cols={cols} st={st} set={set} ents={ents} pend={pend} loading={loading} />
         : <TableView book={book} cols={cols} st={st} set={set} ents={ents} periods={periods} loading={loading} phone={phone} cards={cards} setCards={setCards} setName={setName} />}
-      <div className="src pr-foot">מקורות: {[...new Set(cols.flatMap((c) => c.ids.map((id) => book.byId.get(id)?.src)).filter(Boolean))].map((s) => reg.src[s!]).join(' · ')} · כל מספר נפתח במקור שלו · עדכון {pubLabel(reg.asof)}</div>
+      {st.v !== 'board' && <div className="src pr-foot">מקורות: {[...new Set(cols.flatMap((c) => c.ids.map((id) => book.byId.get(id)?.src)).filter(Boolean))].map((s) => reg.src[s!]).join(' · ')} · כל מספר נפתח במקור שלו · עדכון {pubLabel(reg.asof)}</div>}
     </div>
   );
 }

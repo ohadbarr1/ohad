@@ -575,6 +575,32 @@ for s in SETS:
         add(f"reg:{key}@{s}", f"{label} · {SET_HE[s]}", "reg", "reg", unit, kind, ch, note="רשות שוק ההון: גמל-נט, פנסיה-נט, ביטוח-נט; מצטבר לפי קבוצה, סוף רבעון", breaks=brs or None)
 
 # kind: f flow (additive), s balance or a rate measured at a date (read at the period end), r a rate of a period (never summed)
+# ---------------------------------------------------------------- mkt: mkt.json (TASE closes at quarter ends, fetch_prices.py)
+# The market side of the peer table: market value and close on the last trading day of each quarter, and dividends per share by
+# ex-day quarter (a flow, so LTM sums four quarters). P/E, P/B and yields are formulas over these and the printed figures.
+MKT = DATA / "mkt.json"
+if MKT.exists():
+    mk = json.loads(MKT.read_text(encoding="utf-8"))
+    ch_cap, ch_px, ch_dps = Chunk(), Chunk(), Chunk()
+    for ent, e in mk["ents"].items():
+        ent = ALIAS.get(ent, ent)
+        meta = {"l": f"TASE · נייר {e['ticker']} · {e['name']}"}
+        for q, (close, mv, d, _sh) in e["q"].items():
+            if mv:
+                ch_cap.cell(ent, q, mv, u=e["url"], meta=meta)
+            ch_px.cell(ent, q, close / 100, u=e["url"], meta=meta)
+        per = defaultdict(float)
+        for d, a in e["div"]:
+            per[f"{d[:4]}Q{(int(d[5:7]) - 1) // 3 + 1}"] += a / 100
+        for q in e["q"]:
+            if q > f"{e['first'][:4]}Q{(int(e['first'][5:7]) - 1) // 3 + 1}":  # the first, partial quarter is left out
+                ch_dps.cell(ent, q, per.get(q, 0.0), u=e["url"], fl=1 if per.get(q) else 0, meta=meta)
+    NOTE_MKT = "בורסה לניירות ערך תל אביב: יום המסחר האחרון בכל רבעון; שווי שוק כפי שמפרסמת הבורסה"
+    add("mkt:mcap", "שווי שוק", "mkt", "mkt", "m", "s", ch_cap, note=NOTE_MKT)
+    add("mkt:px", "מחיר מניה", "mkt", "mkt", "nis", "s", ch_px, note=NOTE_MKT)
+    add("mkt:dps", "דיבידנד למניה (לפי יום האקס)", "mkt", "mkt", "nis", "f", ch_dps,
+        note="דיבידנד למניה לפי יום האקס: שער הסגירה הקודם פחות שער הבסיס ביום האקס (נגזר)")
+
 # ---------------------------------------------------------------- registry
 ents_used = sorted({e for m in metrics for e in m["e"]})
 entities = [{"id": c["id"], "n": NAME[c["id"]], **({"sh": SHORT[c["id"]]} if c["id"] in SHORT else {}), "k": KIND[c["id"]], "mg": c.get("market_group")} for c in reg_companies if c["id"] in ents_used]
@@ -586,8 +612,8 @@ sets = [
     {"id": "fund", "n": "בתי השקעות", "ids": [e["id"] for e in entities if e["k"] == "fund" and e["id"] != "more_gemel"]},
     {"id": "all", "n": "כולן", "ids": [e["id"] for e in entities]},
 ]
-groups_he = [["pl", "רווח והפסד"], ["bs", "מאזן, הון וכושר פירעון"], ["csm", "IFRS 17 · CSM"], ["seg", "מגזרים"], ["cf", "תזרים"], ["lts", "חיסכון ארוך טווח"], ["econ", "כלכלת החברה המנהלת"], ["adj", "מדדים מותאמים · לפי הגדרת החברה"], ["reg", "רגולטור"]]
-src_he = {"ifrs": "דוחות · IFRS 17", "fs": "דוחות כספיים", "xbrl": "XBRL", "lts": "דוחות החברות המנהלות", "econ": "דוחות החברות המנהלות", "sop": "פילוח מגזרי", "reg": "רשות שוק ההון", "solv": "דוחות כושר פירעון כלכלי", "adj": "מצגות · לפי הגדרת החברה"}
+groups_he = [["pl", "רווח והפסד"], ["bs", "מאזן, הון וכושר פירעון"], ["csm", "IFRS 17 · CSM"], ["seg", "מגזרים"], ["cf", "תזרים"], ["lts", "חיסכון ארוך טווח"], ["econ", "כלכלת החברה המנהלת"], ["adj", "מדדים מותאמים · לפי הגדרת החברה"], ["reg", "רגולטור"], ["mkt", "שוק ומכפילים"]]
+src_he = {"ifrs": "דוחות · IFRS 17", "fs": "דוחות כספיים", "xbrl": "XBRL", "lts": "דוחות החברות המנהלות", "econ": "דוחות החברות המנהלות", "sop": "פילוח מגזרי", "reg": "רשות שוק ההון", "solv": "דוחות כושר פירעון כלכלי", "adj": "מצגות · לפי הגדרת החברה", "mkt": "הבורסה לניירות ערך (TASE)"}
 order = {g: i for i, (g, _) in enumerate(groups_he)}
 eidx = {e["id"]: i for i, e in enumerate(entities)}
 notes = []

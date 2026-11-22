@@ -23,6 +23,7 @@ export const ALIASES: Record<string, string> = {
   csm: 'ifrs:csm_closing', csm0: 'ifrs:csm_opening', nb: 'ifrs:csm_new_business', rel: 'ifrs:csm_release', ra: 'ifrs:risk_adjustment', onerous: 'ifrs:losses_on_onerous_contracts',
   div: 'ifrs:dividend_paid', divd: 'ifrs:dividend_declared', sr: 'ifrs:solvency_ratio_without_transitional', srt: 'ifrs:solvency_ratio_with_transitional',
   scr: 'ifrs:scr', own: 'ifrs:own_funds',
+  mcap: 'mkt:mcap', px: 'mkt:px', dps: 'mkt:dps',
   xnp: 'xbrl:profit', xci: 'xbrl:oci', xpbt: 'xbrl:pretax', xeq: 'xbrl:equity', xta: 'xbrl:assets', xeps: 'xbrl:eps', xcfo: 'xbrl:cfo',
 };
 const CODE_OF = new Map(Object.entries(ALIASES).map(([a, id]) => [id, a]));
