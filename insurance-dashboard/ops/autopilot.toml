@@ -65,7 +65,7 @@ claude_bin = "claude"
 #   origin? skip (never pushes your work); else commit the data, push, wait for fox-ci on that commit (later ticks, up to
 #   ci_wait_minutes), then ./deploy.sh (which re-checks everything). macOS notification on success and on failure.
 # It needs, on this Mac: git push rights to origin without a prompt, `gh auth login`, `firebase login`.
-auto = false
+auto = true                    # turned on by the owner 23.11.26 (daily TASE closes + regulator months publish from this Mac)
 remote = "origin"
 ci_wait_minutes = 120          # give up waiting for fox-ci on the pushed commit after this long (notified)
 deploy_timeout_minutes = 30    # ./deploy.sh is stopped after this long (notified)
