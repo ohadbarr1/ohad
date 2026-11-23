@@ -185,10 +185,13 @@ class Land(Repo):
 
     def test_a_new_tase_close_is_published_too(self):
         pre = publish.preflight(self.root, cfg(), ops=self.ops)
+        self.write(self.root, "data/ledger/answers/2026-11-21.json", {"left": "by an earlier run"})  # untracked before the tick
+        pre = publish.preflight(self.root, cfg(), ops=self.ops)
         self.write(self.root, "web/public/data/mkt.json", {"asof": "2026-11-23"})
         r = publish.land(self.root, cfg(), prices_run(), pre, self.st, now=self.now, ops=self.ops)
         self.assertEqual((r["result"], r["prices"]), ("pushed", "2026-11-23"))
         self.assertIn("TASE closes to 2026-11-23", sh(self.mac, "log", "-1", "--format=%s"))
+        self.assertIn("2026-11-21.json", sh(self.mac, "show", "--stat", "--format=", "HEAD"), "the ledger goes in, as deploy.sh does")
         self.assertEqual(self.st["deploy"]["pending"]["months"], ["מחירי הבורסה עד 23.11.26"])
         no_new = {**prices_run(), "prices": {"ok": True, "new": False, "asof": "2026-11-23"}}
         self.assertIsNone(publish.land(self.root, cfg(), no_new, pre, {}, now=self.now, ops=self.ops), "a holiday publishes nothing")

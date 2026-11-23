@@ -178,6 +178,10 @@ def land(root, cfg, res, pre, st, now=None, ops=None):
         ops.show("fox · פרסום אוטומטי דולג", f"{label}: יש {ahead} commit מקומיים שלא נדחפו; לא נדחף דבר. לפרסום ידני: push, ./deploy.sh")
         return _record(st, at=now, months=months, prices=px, result="skipped", why=f"{ahead} local commit(s) not on {remote}")
     ops.git(root, "add", "-u", "--", ".")
+    # as deploy.sh (S10): the answer-snapshot ledger is committed even when its files were lying around before the tick, since
+    # watch.json is built from them and fox-ci rebuilds it from git
+    if (Path(root) / "data" / "ledger" / "answers").is_dir():
+        ops.git(root, "add", "--", "data/ledger/answers")
     _, now_untracked, _ = ops.git(root, "ls-files", "--others", "--exclude-standard", "--", ".")
     new = sorted(set(_lines(now_untracked)) - set(pre.get("untracked") or []))
     if new:
