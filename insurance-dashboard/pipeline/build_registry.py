@@ -425,7 +425,9 @@ SEG_SLUG = {"life": "life", "health": "health", "pc": "pc", "group": "group", "i
             "pc:רכב חובה": "pc.motor_comp", "pc:רכב רכוש": "pc.motor_prop", "pc:אחר": "pc.other",
             "life:פוליסות הכוללות רכיב חיסכון תלוי תשואה": "life.sav_linked", "life:פוליסות הכוללות רכיב חיסכון שאינו תלוי תשואה": "life.sav_guar",
             "life:פוליסות ללא רכיב חיסכון": "life.risk", "health:הוצאות רפואיות ונכויות קבוצתי": "health.med_grp", "health:הוצאות רפואיות ונכויות פרט": "health.med_ind",
-            "health:סיעודי פרט": "health.ltc_ind"}
+            "health:סיעודי פרט": "health.ltc_ind",
+            # the consolidated total under its printed label (Ayalon prints the company, its subsidiary and the consolidated table)
+            'pc:סה"כ': "pc", "life:ביטוח חיים": "life"}
 SEG_LABEL = {"life": "חיים וחיסכון", "health": "בריאות", "pc": "ביטוח כללי", "group": "קבוצה", "ic": "חוזי השקעה", "pc.motor_comp": "רכב חובה", "pc.motor_prop": "רכב רכוש",
              "pc.other": "כללי אחר", "life.sav_linked": "חיסכון תלוי תשואה", "life.sav_guar": "חיסכון שאינו תלוי תשואה", "life.risk": "ללא רכיב חיסכון",
              "health.med_grp": "הוצאות רפואיות, קבוצתי", "health.med_ind": "הוצאות רפואיות, פרט", "health.ltc_ind": "סיעודי פרט"}

@@ -4423,28 +4423,169 @@
    "label": "פוליסות ללא רכיב חיסכון",
    "source": "image",
    "note": "NIS millions as printed (במיליוני ש\"ח); board report 6.5.3.3 \"תוצאות הרווח הליבה (לפני מס) בענפים השונים בביטוח חיים\", bar chart; core profit before tax. Line labels as printed. Q4 chart."
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "life",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 3954.465,
+   "page_he": 428,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בגין חוזי ביטוח בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "life",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 4122.24,
+   "page_he": 430,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בגין חוזי ביטוח בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "health",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2278.543,
+   "page_he": 433,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "health",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 2122.239,
+   "page_he": 435,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 5250.58,
+   "page_he": 438,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 4881.664,
+   "page_he": 440,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc:רכב חובה",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 948.893,
+   "page_he": 438,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc:רכב רכוש",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2117.881,
+   "page_he": 438,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc:אחר",
+   "basis": "na",
+   "window": "fy",
+   "date": "2025-12-31",
+   "value": 2183.806,
+   "page_he": 438,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc:רכב חובה",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 811.754,
+   "page_he": 440,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc:רכב רכוש",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 2027.331,
+   "page_he": 440,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
+  },
+  {
+   "metric": "gross_written_premiums",
+   "segment": "pc:אחר",
+   "basis": "na",
+   "window": "fy",
+   "date": "2024-12-31",
+   "value": 2042.579,
+   "page_he": 440,
+   "doc": "he_1731064",
+   "label": "פרמיות ברוטו בניכוי החזרי פרמיות",
+   "source": "table",
+   "note": "באור מגזרי פעילות, נתונים נוספים לפי קבוצות תיקים; אלפי ש\"ח במקור, הומר למיליונים; נקרא מהדוח (שכבת הטקסט) ע\"י fox, סכום העמודות = סך הכל"
   }
  ],
  "not_found": [
   {
-   "metric": "pc by line: insurance_revenue, insurance_service_result, gross_written_premiums",
-   "segment": "pc:*",
-   "why": "the image pages (p289-291) print only comprehensive income before tax and core profit by line (read from images and added); revenue, service result and premiums by line are not printed in the board report"
-  },
-  {
    "metric": "combined_ratio / loss_ratio for other P&C lines; loss_ratio",
    "segment": "pc:*",
    "why": "only compulsory motor, motor property and total P&C combined ratios are printed; loss_ratio not printed"
-  },
-  {
-   "metric": "health by line (long-term care, medical expenses, critical illness): insurance_revenue, insurance_service_result, gross_written_premiums, combined_ratio, loss_ratio",
-   "segment": "health:*",
-   "why": "the image pages (p293-295) print only comprehensive income before tax and core profit by line (read from images and added); no other metric by line is printed"
-  },
-  {
-   "metric": "life by line (risk, disability, investment contracts): all metrics; policies with savings component: insurance_revenue, insurance_service_result, gross_written_premiums",
-   "segment": "life:*",
-   "why": "the image pages (p296-298) split life only into three groups (savings component yield-dependent, savings component not yield-dependent, no savings component) and print only comprehensive income before tax and core profit for them (read from images and added); risk, disability and investment contracts are not printed as separate lines"
   },
   {
    "metric": "nostro asset allocation (הרכב ההשקעות / תיק הנוסטרו)",
@@ -4455,6 +4596,11 @@
    "metric": "sop_total:תחום ביטוח / תחום ניהול נכסים (comparative periods)",
    "segment": "group",
    "why": "the p284 brackets print the insurance and asset-management subtotals for the current period only; the comparative-period subtotals are not printed"
+  },
+  {
+   "metric": "gross_written_premiums by line (health, life)",
+   "segment": "health:* / life:*",
+   "why": "segment totals extracted from the segment note (pp 428-440); the sub-line column mapping of the health and life tables is not unambiguous in the text layer, so only totals (and the P&C lines, which sum to the total) are kept"
   }
  ]
 }
