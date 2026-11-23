@@ -5,7 +5,7 @@ two never fight: whoever pushes first wins, the other sees origin ahead and skip
 
   preflight  (every acting tick, before the run)  git fetch; when origin is ahead and the tree is clean with no local commits: pull --ff-only
              (so a month CI already published is not fetched and rebuilt again here). Records whether the tree was clean.
-  land       (after the run)  only when a regulator month landed and the gate passed, on a tree that was clean before the tick:
+  land       (after the run)  only when a regulator month or a new TASE close (discovery.prices) landed and the gate passed, on a tree that was clean before the tick:
              fetch again; origin ahead (CI first) -> put back what the run regenerated, pull --ff-only, skip; local commits that are not on
              origin -> skip (it never pushes the owner's own work); else commit the data, push, and record a pending deploy.
   advance    (every tick)  a pending deploy waits for fox-ci on the pushed commit (gh run list); green -> ./deploy.sh (which re-checks
@@ -119,6 +119,12 @@ def regulator_landed(res):
     return sorted({rg.month_label(d["upstream"]) for d in reg.get("datasets", []) if d.get("new") and d.get("upstream")})
 
 
+def prices_landed(res):
+    """The new last close (ISO date) of a run whose TASE pull succeeded with a new trading day, else None."""
+    px = res.get("prices") or {}
+    return px.get("asof") if px.get("ok") and px.get("new") else None
+
+
 def _put_back(root, ops, pre):
     """Undo what the run regenerated in a tree that was clean before it: tracked changes back to HEAD, new files removed."""
     _, changed, _ = ops.git(root, "diff", "--name-only", "--relative", "HEAD", "--", ".")
@@ -139,30 +145,32 @@ def land(root, cfg, res, pre, st, now=None, ops=None):
     ops = ops or Ops()
     now = (now or dt.datetime.now()).isoformat(timespec="seconds")
     months = regulator_landed(res)
-    if not months:
+    px = prices_landed(res)
+    if not months and not px:
         return None
-    label = ", ".join(months)
+    pxl = f"מחירי הבורסה עד {px[8:10]}.{px[5:7]}.{px[2:4]}" if px else ""
+    label = ", ".join(months + ([pxl] if pxl else []))
     branch, remote, _ = _cfg(cfg)
     gate = res.get("gate") or {}
     if not pre.get("clean"):
         ops.show("fox · פרסום אוטומטי דולג", f"{label}: היו שינויים לא שמורים לפני הריצה; לפרסום ידני: commit, push, ./deploy.sh")
-        return _record(st, at=now, months=months, result="skipped", why="the tree had uncommitted changes before the tick")
+        return _record(st, at=now, months=months, prices=px, result="skipped", why="the tree had uncommitted changes before the tick")
     if not gate.get("ok") or res.get("_problems"):
-        return _record(st, at=now, months=months, result="skipped", why="gate did not pass" if not gate.get("ok") else "run problems")
+        return _record(st, at=now, months=months, prices=px, result="skipped", why="gate did not pass" if not gate.get("ok") else "run problems")
     counts = _counts(root, ops, remote, branch)
     if counts is None:
         ops.show("fox · פרסום אוטומטי נכשל", f"{label}: אין גישה ל-{remote}; הנתונים נשארו בתיקייה, לפרסום ידני")
-        return _record(st, at=now, months=months, result="failed", why=f"cannot fetch {remote}/{branch}")
+        return _record(st, at=now, months=months, prices=px, result="failed", why=f"cannot fetch {remote}/{branch}")
     ahead, behind = counts
     if behind > 0:
         n = _put_back(root, ops, pre)
         rc, _, err = ops.git(root, "pull", "--ff-only", "--quiet", remote, branch)
         ops.show("fox · CI הקדים", f"{label} כבר ב-{remote}; עודכן מקומית" + ("" if rc == 0 else " (pull נכשל: בדיקה ידנית)") + ", ללא פרסום מה-Mac")
-        return _record(st, at=now, months=months, result="ci-first", why=f"{remote}/{branch} was {behind} commit(s) ahead",
+        return _record(st, at=now, months=months, prices=px, result="ci-first", why=f"{remote}/{branch} was {behind} commit(s) ahead",
                        restored=n, pulled=rc == 0)
     if ahead > 0:
         ops.show("fox · פרסום אוטומטי דולג", f"{label}: יש {ahead} commit מקומיים שלא נדחפו; לא נדחף דבר. לפרסום ידני: push, ./deploy.sh")
-        return _record(st, at=now, months=months, result="skipped", why=f"{ahead} local commit(s) not on {remote}")
+        return _record(st, at=now, months=months, prices=px, result="skipped", why=f"{ahead} local commit(s) not on {remote}")
     ops.git(root, "add", "-u", "--", ".")
     _, now_untracked, _ = ops.git(root, "ls-files", "--others", "--exclude-standard", "--", ".")
     new = sorted(set(_lines(now_untracked)) - set(pre.get("untracked") or []))
@@ -170,12 +178,13 @@ def land(root, cfg, res, pre, st, now=None, ops=None):
         ops.git(root, "add", "--", *new)
     rc, _, _ = ops.git(root, "diff", "--cached", "--quiet")
     if rc == 0:
-        return _record(st, at=now, months=months, result="nothing", why="the run changed no tracked file")
-    msg = f"data: regulator {label} (gemel-net, pensia-net, bituach-net), autopilot on the Mac"
+        return _record(st, at=now, months=months, prices=px, result="nothing", why="the run changed no tracked file")
+    msg = (f"data: regulator {', '.join(months)} (gemel-net, pensia-net, bituach-net)" + (f" and TASE closes to {px}" if px else "")
+           if months else f"data: TASE closes to {px} (peer multiples, total return)") + ", autopilot on the Mac"
     rc, _, err = ops.git(root, "commit", "--quiet", "-m", msg, "-m", "Built and gated by pipeline/autopilot (ops/autopilot.toml [deploy] auto).")
     if rc != 0:
         ops.show("fox · פרסום אוטומטי נכשל", f"{label}: commit נכשל: {err[:80]}")
-        return _record(st, at=now, months=months, result="failed", why="commit failed: " + err[:200])
+        return _record(st, at=now, months=months, prices=px, result="failed", why="commit failed: " + err[:200])
     _, sha, _ = ops.git(root, "rev-parse", "HEAD")
     rc, _, err = ops.git(root, "push", "--quiet", remote, f"HEAD:refs/heads/{branch}")
     if rc != 0:
@@ -183,12 +192,12 @@ def land(root, cfg, res, pre, st, now=None, ops=None):
         if c and c[1] > 0:  # CI pushed in between: drop our commit (the tree was clean before it), take theirs
             ops.git(root, "reset", "--quiet", "--keep", f"{remote}/{branch}")
             ops.show("fox · CI הקדים", f"{label} נדחף ל-{remote} רגע לפני; עודכן מקומית, ללא פרסום מה-Mac")
-            return _record(st, at=now, months=months, result="ci-first", why="push rejected: origin moved", sha=sha)
+            return _record(st, at=now, months=months, prices=px, result="ci-first", why="push rejected: origin moved", sha=sha)
         ops.show("fox · פרסום אוטומטי נכשל", f"{label}: push נכשל ({err[:60]}); ה-commit נשאר מקומי, לדחיפה ידנית")
-        return _record(st, at=now, months=months, result="failed", why="push failed: " + err[:200], sha=sha)
-    st.setdefault("deploy", {})["pending"] = {"sha": sha, "branch": branch, "months": months, "since": now}
+        return _record(st, at=now, months=months, prices=px, result="failed", why="push failed: " + err[:200], sha=sha)
+    st.setdefault("deploy", {})["pending"] = {"sha": sha, "branch": branch, "months": months + ([pxl] if pxl else []), "since": now}
     ops.show("fox · נדחף, ממתין ל-CI", f"{label}: commit {sha[:8]} ב-{remote}; פרסום אוטומטי אחרי ש-fox-ci ירוק")
-    return _record(st, at=now, months=months, result="pushed", sha=sha)
+    return _record(st, at=now, months=months, prices=px, result="pushed", sha=sha)
 
 
 def advance(root, cfg, st, now=None, ops=None):

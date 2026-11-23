@@ -9,6 +9,7 @@ Spec: `research/program_2026-10/README.md` §4 Phase 3 (W7-R1, W3-R1/R4, W5-R4);
 tick.py      launchd entry (ops/com.fox.autopilot.plist, every quarter hour) -> schedule.py decides -> run.run(apply, trigger=schedule)
 schedule.py  cadence: 15 min in filing windows (calendar.json expected ± 10 days) on filing days 07:00-22:00, hourly otherwise,
              data.gov.il daily; "report due" reminders
+prices       [discovery] prices: once per trading day after 18:30, pipeline/fetch_prices.py --update (TASE closes, ~15 requests) -> mkt.json
 regulator.py data.gov.il CKAN probe (max REPORT_PERIOD, last_modified) -> new month -> dag fetch_regulator + builders
 poll.py      MAYA -> new filings since the last report id seen. MANUAL only (run.py --maya-once, <= 1 request / 2 s): MAYA's robots.txt
              disallows /api/; the schedule calls it only with TASE's written permission in ops/autopilot.toml

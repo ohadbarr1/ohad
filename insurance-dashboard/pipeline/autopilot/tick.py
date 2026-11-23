@@ -5,7 +5,8 @@
 /usr/bin/python3 pipeline/autopilot/tick.py --force    # act now whatever the cadence (still permitted channels only)
 
 A tick that acts runs run.run(apply=True, trigger="schedule") over the permitted channels: the data.gov.il probe when it is due (daily),
-local pickup, and MAYA only when ops/autopilot.toml carries TASE's permission (conf.maya_scheduled). It also sends at most one reminder a
+local pickup, the day's TASE closes once per trading day after 18:30 (discovery.prices; fetch_prices.py --update, ~15 requests),
+and MAYA only when ops/autopilot.toml carries TASE's permission (conf.maya_scheduled). It also sends at most one reminder a
 day per company whose report is due and not yet in fox, with the manual command. By default it never deploys, pushes or commits.
 
 Opt-in auto-publish (ops/autopilot.toml [deploy] auto = true; publish.py): an acting tick first syncs with origin (pull --ff-only when
@@ -130,7 +131,7 @@ def tick(paths=None, cfg=None, now=None, force=False, log=print, runner=None, ht
             tr = Live(interval=max(2.0, float(cfg["discovery"]["maya_interval_seconds"])), log=log)
         pre = publish.preflight(paths.root, cfg, ops=ops) if auto and not (st.get("deploy") or {}).get("pending") else None
         res = (runner or runmod.run)(paths, tr, apply=True, do_poll=maya, regulator=dec["regulator"], http=http, cfg=cfg,
-                                     trigger="schedule", today=nowil.date(), log=log)
+                                     trigger="schedule", today=nowil.date(), log=log, prices=dec.get("prices", False))
         rec.update(acted=True, landed=res.get("_landed", []), problems=res.get("_problems", []), written=res.get("_written"))
         if pre is not None:
             pub = publish.land(paths.root, cfg, res, pre, st, now=nowil.replace(tzinfo=None), ops=ops)
@@ -140,6 +141,11 @@ def tick(paths=None, cfg=None, now=None, force=False, log=print, runner=None, ht
         reg = res.get("regulator") if dec["regulator"] else None
         if dec["regulator"] and reg and not reg.get("errors"):
             st["last_regulator"] = rec["at"]
+        if dec.get("prices"):
+            px = st.setdefault("prices", {})
+            px["tried"] = rec["at"]
+            if (res.get("prices") or {}).get("ok"):
+                px.update(session=dec["prices_session"], asof=res["prices"].get("asof"))
     rec["reminded"] = reminders(cfg, calendar, st, nowil, log=log)
     st["last_tick"] = rec
     save_state(st)

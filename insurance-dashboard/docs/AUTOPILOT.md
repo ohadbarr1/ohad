@@ -53,9 +53,10 @@ Two things keep fox's data current without the owner:
   אחרי rollback ה-commit עדיין בענף הפריסה; כדי לנסות שוב: Actions ← fox-data ← Run workflow עם `force` ובלי `dry_run`, או מה-Mac:
   `git pull` ואז `./deploy.sh`.
 - **מה נשאר ידני:** כל מה שנגזר מ-MAYA: דוחות החברות (PDF/XBRL) וכל מה שמחולץ מהם (רווח והפסד ב-lts.json, savings_econ.json, IFRS,
-  סולבנסי, מצבת התחייבויות, בעלי שליטה, AUM מודפס ב-recon), מחירי הבורסה (`fetch_prices`), רשימות נכסים של מנהלים שחוסמים גישה
+  סולבנסי, מצבת התחייבויות, בעלי שליטה, AUM מודפס ב-recon), ההיסטוריה הארוכה של מחירי הבורסה (`fetch_prices --hist`, פעם אחת), רשימות נכסים של מנהלים שחוסמים גישה
   אוטומטית, וחילוץ LLM. החצי הרגולטורי של העדשה (נכסים, תזרימים, דמי ניהול, nowcast) מתעדכן לבד; חצי הרווח והפסד מתעדכן כשמריצים את
-  MAYA one-shot והחילוץ.
+  MAYA one-shot והחילוץ. **מחירי הבורסה** (סגירות יומיות לדף ההשוואה) נמשכים לבד ב-Mac פעם ביום מסחר אחרי 18:30
+  (`fetch_prices.py --update`, כ-15 בקשות); כדי שיגיעו לאתר צריך פריסה (או `[deploy] auto = true`).
 - **שימו לב:** החודש הראשון שנכנס אוטומטית מקפיא שלב nowcast ביומן (append-only). זה מכוון ואי אפשר לבטל.
 - **מה-Mac:** `./deploy.sh` מסרב עכשיו לפרוס HEAD שמאחורי origin (אחרי שה-CI פרסם חודש: `git pull --ff-only` קודם), ומקבל commit נתונים
   של ה-CI לפי הסטטוס "fox-ci (fox-data)".
@@ -103,7 +104,7 @@ the run stops after the probe; tick `force` as well to exercise the fetch, build
   run and opens the issue. By hand: Firebase console → Hosting → Release history → ⋮ on the previous release → **Rollback**. The deploy
   branch keeps the data commit; to retry, run fox-data with `force` and without `dry_run`, or on the Mac `git pull && ./deploy.sh`.
 - **Stays manual (MAYA-derived):** company filings (PDF/XBRL) and everything extracted from them (`lts.json` P&L, `savings_econ.json`,
-  IFRS, solvency, liabilities, ownership/holders, printed AUM in `recon`), TASE prices (`fetch_prices`), holdings of WAF-blocked
+  IFRS, solvency, liabilities, ownership/holders, printed AUM in `recon`), the long TASE price history (`fetch_prices --hist`, once), holdings of WAF-blocked
   managers, LLM extraction. The Lens updates its regulator half by itself and its P&L half when the owner runs the MAYA one-shot.
 - **Note:** the first automated month appends a nowcast stage to the append-only ledger. Intended, and irreversible.
 
@@ -150,6 +151,7 @@ included in the log. Check out the deploy branch in `~/code/ohad` (or point `[re
 | MAYA RSS | does not exist | `maya.tase.co.il/rss`, `/rss.xml`, `/feed`, `/he/rss` answer 403 (the site's bot wall); no feed is linked or documented; `sitemap.xml` lists only static section pages |
 | TASE DataHub API | **no free channel** | the free products are Funds, Indices Basic, Indices Online and Securities Basic; the company-announcements feed is a paid product |
 | `mayafiles.tase.co.il` | **no** (no permitted feed points to it) | even `/robots.txt` answers 403 (Incapsula "security violation"); terms cannot be read, so nothing is scheduled against it |
+| TASE end-of-day closes (`api.tase.co.il/api/security/historyeod`, the public feed behind market.tase.co.il) | **yes, by the owner's decision of 23.11.26**, the Mac only, once per trading day, ≈15 requests (`fetch_prices.py --update`) | `market.tase.co.il/robots.txt` allows crawling and "query-based retrieval" and asks authorization for "systematic scraping, bulk data extraction"; fox's footprint is one small query per listed company a day (what a person reading 14 quote pages sees). The 20-minute `--hist` backfill stays manual. If TASE objects, `prices = false` stops it; the authorized route is the DataHub "Securities Basic" product (free, needs the owner's API key) |
 | TASE mobile app push / MAYA email alerts | human channel | free, for a person; fox does not read the owner's phone or mail |
 
 So the schedule covers the regulator months automatically, and company filings get a **reminder** (not a fetch) when they are due.
@@ -163,6 +165,10 @@ launchd wakes `pipeline/autopilot/tick.py` on every quarter hour; `schedule.py` 
   date of its next report in `calendar.json`, widened by its own lo/hi range and ±10 days; overlapping windows merge
   (Q3'26: 26.10–10.12.26);
 - **hourly** at every other time;
+- **TASE closes once per trading day** (`[discovery] prices`, Mon–Fri after 18:30): `fetch_prices.py --update` pulls the days since the
+  last close on disk (10-day overlap for corrections; days leaving the 15-month recent file move into the long history), rebuilds
+  `mkt.json` and the price files; a new close lands as "מחירי הבורסה עד dd.mm.yy" and the DAG rebuilds the registry (`mkt:*`). A failed
+  pull is retried after `prices_retry_minutes`; a Mac asleep at 18:30 catches up on its next tick (it pulls the latest close it missed);
 - **data.gov.il daily**: max `REPORT_PERIOD` and `last_modified` of the current resource of each dataset; a month newer than the one in
   `market.json` triggers `dag.py --only fetch_regulator,build_market,build_funds --manual`, then the rest as below. A revision of an
   old month (the resources refresh daily) is shown, not fetched.
@@ -181,6 +187,7 @@ branch other than `[repo] branch` (the deploy branch; auto-publish skips too).
 |---|---|
 | data.gov.il probe + fetch + rebuild + gate | `python3 pipeline/autopilot/run.py --maya-once [--companies harel,clal]`: one MAYA pass at ≤ 1 request / 2 s, fetches the new filings' PDFs/XBRL, then the same run; a 403/429 stops it and says so. `--maya-once --dry-run` lists what is new and writes nothing |
 | local pickup: XBRL instances already in `data/sources/xbrl` that the registry has not parsed | publishing: `git add web/public/data data/registry pipeline/taxonomy && git commit`, `git push`, wait for fox-ci, `./deploy.sh` (the notification and `/data/autopilot` show the exact lines) |
+| TASE closes, once per trading day (`fetch_prices.py --update`, then the rebuild and the gate) | the long price backfill `fetch_prices.py --hist` (≈20 min, once, or to repair a gap) |
 | "report due" reminders | turning on the LLM hook, granting MAYA scheduling after TASE's written permission |
 
 ## Install
@@ -206,7 +213,9 @@ Edit by hand and commit; no script flips a switch.
 
 - `[schedule]`: days, hours, window width, the two cadences, the regulator interval.
 - `[discovery]`: `regulator = true`; `maya_scheduled = false` and `maya_permission_ref = ""`: the schedule calls MAYA only with **both**
-  set (TASE's written permission on record), then at `maya_interval_seconds` ≥ 2.
+  set (TASE's written permission on record), then at `maya_interval_seconds` ≥ 2. `prices = true` (owner, 23.11.26), `prices_days`,
+  `prices_after`, `prices_retry_minutes`: the daily TASE closes. With `[deploy] auto = true` each new close is also published (a commit,
+  fox-ci and a deploy per trading day); `prices_days = ["thu"]` makes it weekly.
 - `[notify]`: notifications and daily reminders.
 - `[deploy]`: `auto = false` (opt-in auto-publish from this Mac, section below), `remote`, `ci_wait_minutes`,
   `deploy_timeout_minutes`. Acts only on `[repo] branch`.

@@ -18,7 +18,8 @@ disallows /api/ ("bulk extraction ... require[s] explicit authorization"). So:
   manual      --maya-once: the owner's own one-shot pass over the existing poller, 2 s between requests; a 403/429 stops it.
 
 Steps
-  1. discover    regulator probe (regulator.py), MAYA pass (poll.py, manual), local pickup
+  1. discover    regulator probe (regulator.py), MAYA pass (poll.py, manual), local pickup; TASE closes once per trading day
+                 (fetch_prices.py --update; a new close lands "מחירי הבורסה עד ..." and rebuilds mkt.json -> registry mkt:*)
   2. fetch       regulator: dag fetch_regulator + build_market + build_funds; MAYA: the PDFs/XBRL of the new filings (poll.py --apply)
   3. skeleton    each new quarterly/annual XBRL instance -> xbrl_facts.json -> kpi.json (t0.py), status "unverified" until the printed
                  figure of the same report agrees
@@ -110,11 +111,20 @@ def preview_skeleton(paths, tr, filings, log):
     return kpi, res
 
 
-def run_script(paths, name, log):
-    p = subprocess.run([PY, str(paths.root / "pipeline" / name)], cwd=paths.root, capture_output=True, text=True, timeout=3600)
+def run_script(paths, name, log, args=()):
+    p = subprocess.run([PY, str(paths.root / "pipeline" / name), *args], cwd=paths.root, capture_output=True, text=True, timeout=3600)
     tail = (p.stdout.strip().splitlines() or [""])[-1][:200]
     log(f"  {name}: {'ok' if p.returncode == 0 else 'FAILED'} {tail}")
     return {"script": name, "ok": p.returncode == 0, "tail": tail if p.returncode == 0 else (p.stderr.strip().splitlines() or [""])[-1][:300]}
+
+
+def mkt_asof(paths):
+    """The last TASE close in web/public/data/mkt.json (ISO date), or None."""
+    return (read_json(paths.data / "mkt.json", {}) or {}).get("asof")
+
+
+def il_day(d):
+    return f"{d[8:10]}.{d[5:7]}.{d[2:4]}" if d else "-"
 
 
 def gate(paths, log):
@@ -302,7 +312,7 @@ def _name(paths, cid):
 
 
 def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, skip_build=False, status_out=None, today=None, log=print,
-        regulator=False, http=None, cfg=None, trigger="manual", notify_on=None):
+        regulator=False, http=None, cfg=None, trigger="manual", notify_on=None, prices=False, price_script=None):
     """One run. do_poll: a MAYA pass over `tr` (manual --maya-once, a replay, or the schedule with TASE's permission). regulator: the
     data.gov.il probe over `http`. trigger: schedule | manual | maya-once (a scheduled no-op run writes nothing)."""
     cfg = cfg if cfg is not None else conf.load()
@@ -328,6 +338,20 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
         steps.append({"step": "poll", "ok": not poll_res["blocked"], "note": f"{poll_res['mode']}: {sum(1 for f in poll_res['filings'] if f.get('wanted'))} חדשים"})
         if poll_res["blocked"]:
             problems.append("MAYA חסמה: " + str(poll_res["blocked"])[:80])
+    px_res = None
+    if prices and apply and not skip_build:
+        before = mkt_asof(paths)
+        r = (price_script or run_script)(paths, "fetch_prices.py", log, ("--update",))
+        after = mkt_asof(paths)
+        px_res = {"ok": r["ok"], "asof": after, "new": bool(r["ok"] and after and after > (before or ""))}
+        steps.append({"step": "prices", "ok": r["ok"], "note": (f"סגירות עד {il_day(after)}" if px_res["new"] else f"ללא יום מסחר חדש ({il_day(after)})")
+                      if r["ok"] else r["tail"][:120]})
+        if px_res["new"]:
+            landed.append(f"מחירי הבורסה עד {il_day(after)}")
+        elif not r["ok"]:
+            problems.append("משיכת מחירי הבורסה (TASE) נכשלה")
+    elif prices:
+        steps.append({"step": "prices", "ok": True, "planned": ["pipeline/fetch_prices.py --update"], "note": "dry run" if not apply else "skipped"})
     filings = [f for f in (poll_res or {}).get("filings", []) if f.get("wanted")]
     periodic = [f for f in filings if f["type"] in pl.PERIODIC and f.get("xbrl")]
     picked = pickup(paths) if not periodic else []
@@ -377,7 +401,7 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
                       "est_tokens": sum((f["llm"].get("est_tokens") or 0) for f in filings),
                       "note": "כבוי עד אישור הבעלים" if not conf.llm_on(cfg) else f"{len(ran)} חולצו · לא מאומת"})
     # 5. rebuild -------------------------------------------------------------------------------------------------------------
-    changed = bool(reg_new or filings or (t0res and (t0res["new"] or t0res["replaced"] or t0res["ext"] or t0res["verified"])))
+    changed = bool(reg_new or filings or (px_res and px_res["new"]) or (t0res and (t0res["new"] or t0res["replaced"] or t0res["ext"] or t0res["verified"])))
     if changed or from_disk:
         if apply and not skip_build:
             r = run_dag(paths, DAG_DEPLOY, log)
@@ -406,7 +430,8 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
         schedule=sch.summary(cfg, read_json(paths.data / "calendar.json", {}), today),
         discovery={"regulator": bool(cfg["discovery"].get("regulator")), "maya_scheduled": conf.maya_scheduled(cfg),
                    "maya_permission_ref": cfg["discovery"].get("maya_permission_ref") or None, "maya_manual": "python3 pipeline/autopilot/run.py --maya-once",
-                   "maya_interval_seconds": max(2.0, float(cfg["discovery"].get("maya_interval_seconds") or 2.0)), **CHANNEL},
+                   "maya_interval_seconds": max(2.0, float(cfg["discovery"].get("maya_interval_seconds") or 2.0)),
+                   "prices": bool(cfg["discovery"].get("prices")), "prices_asof": mkt_asof(paths), **CHANNEL},
         regulator=reg_res if reg_res else prev.get("regulator"),
         runs=([entry] + [r for r in prev.get("runs", []) if r.get("at") != entry["at"]])[:RUNS_KEPT] if substantive and apply else prev.get("runs", []),
         publish={"pending": pend, "commands": publish_commands(paths, landed or [x for r in prev.get("runs", [])[:3] for x in r.get("landed", [])], cfg),
@@ -436,6 +461,7 @@ def run(paths, tr=None, apply=False, do_poll=True, only=None, skip_gate=False, s
         write_json(paths.filings, lg, compact=False)
     status["_poll"] = poll_res  # for --json (the CI artifact): every new filing, wanted or not, with its classification
     status["_landed"], status["_problems"], status["_written"] = landed, problems, str(out) if out else None
+    status["prices"] = px_res
     # 8. publish: printed and notified, never run ----------------------------------------------------------------------------
     if apply and (landed or problems):
         ok = gate_res.get("ok")
@@ -458,6 +484,7 @@ def main(argv=None):
         ap.add_argument("--dry-run", action="store_true", help="with --maya-once: list what is new, write nothing")
         ap.add_argument("--no-regulator", action="store_true", help="skip the data.gov.il probe")
         ap.add_argument("--no-notify", action="store_true")
+        ap.add_argument("--prices", action="store_true", help="also pull the TASE closes since the last one on disk (fetch_prices.py --update)")
         ap.add_argument("--skip-gate", action="store_true")
         ap.add_argument("--skip-build", action="store_true")
         ap.add_argument("--status-out", help="where to write status.json")
@@ -476,7 +503,8 @@ def main(argv=None):
              skip_gate=a.skip_gate, skip_build=a.skip_build, status_out=a.status_out,
              today=dt.date.fromisoformat(a.today) if a.today else None,
              regulator=not (a.no_regulator or a.no_poll or a.replay) and bool(cfg["discovery"].get("regulator")),
-             cfg=cfg, trigger=a.trigger or ("maya-once" if a.maya_once else "manual"), notify_on=False if a.no_notify else None)
+             cfg=cfg, trigger=a.trigger or ("maya-once" if a.maya_once else "manual"), notify_on=False if a.no_notify else None,
+             prices=bool(a.prices))
     if a.json:
         write_json(a.json, {"status": {k: v for k, v in st.items() if not k.startswith("_")}, "poll": st.get("_poll")}, compact=False)
     blocked = (st.get("poll") or {}).get("blocked")

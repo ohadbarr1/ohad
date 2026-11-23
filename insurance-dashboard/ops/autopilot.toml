@@ -28,6 +28,14 @@ regulator = true
 maya_scheduled = false
 maya_permission_ref = ""   # e.g. "TASE letter of 01.12.26, ref 1234": shown on /data/autopilot
 maya_interval_seconds = 2.0
+# TASE end-of-day closes (api.tase.co.il, the free public feed behind market.tase.co.il; no key): once per trading day after prices_after,
+# pipeline/fetch_prices.py --update (~15 requests, ~15 s) -> mkt.json -> registry mkt:* (peer multiples, total return). Turned on by the
+# owner 23.11.26. A failed pull is retried after prices_retry_minutes. With [deploy] auto = true each new close is also published
+# (one commit + fox-ci + deploy per trading day); prices_days = ["thu"] makes that weekly.
+prices = true
+prices_days = ["mon", "tue", "wed", "thu", "fri"]
+prices_after = "18:30"      # after the TASE close, with margin for the end-of-day file
+prices_retry_minutes = 120
 
 [notify]
 enabled = true             # macOS notification (osascript) when data landed, a run failed, or a source blocked

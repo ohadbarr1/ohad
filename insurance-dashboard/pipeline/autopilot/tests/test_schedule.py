@@ -44,6 +44,7 @@ def at(y, mo, d, h, mi=0):
 
 def cfg(**over):
     c = conf.load(HERE.parent.parent.parent / "ops" / "autopilot.toml")
+    c["discovery"] = {**c["discovery"], "prices": False}  # the TASE closes channel has its own tests (Prices, Tick); off for the cadence ones
     for sec, vals in over.items():
         c[sec] = {**c[sec], **vals}
     return c
@@ -244,6 +245,24 @@ class Entry(unittest.TestCase):
         self.assertTrue(any(x["step"] == "poll" for x in s["steps"]))
 
 
+class Prices(unittest.TestCase):
+    def test_session_is_the_last_close_in(self):
+        c = cfg(discovery={"prices": True})
+        self.assertEqual(sch.prices_session(c, at(2026, 11, 23, 6, 31)), "2026-11-20", "Monday morning: Friday's close")
+        self.assertEqual(sch.prices_session(c, at(2026, 11, 23, 18, 30)), "2026-11-23")
+        self.assertEqual(sch.prices_session(c, at(2026, 11, 28, 22, 0)), "2026-11-27", "Saturday: Friday's close")
+        self.assertEqual(sch.prices_session(c, at(2026, 11, 29, 19, 0)), "2026-11-27", "no TASE trading on Sunday")
+        self.assertIsNone(sch.prices_session(cfg(discovery={"prices": False}), at(2026, 11, 23, 19, 0)))
+
+    def test_due_until_pulled(self):
+        c = cfg(discovery={"prices": True})
+        now = at(2026, 11, 23, 19, 0)
+        self.assertEqual(sch.prices_due(c, {}, now), (True, "2026-11-23"))
+        self.assertEqual(sch.prices_due(c, {"prices": {"session": "2026-11-23"}}, now)[0], False)
+        self.assertTrue(sch.prices_due(c, {"prices": {"session": "2026-11-20"}}, now)[0], "a Mac asleep on Friday catches up")
+        self.assertTrue(sch.decide(c, CAL, {"last_run": now.isoformat(), "last_regulator": now.isoformat()}, now)["act"])
+
+
 class Tick(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="fox-ap-")
@@ -281,6 +300,40 @@ class Tick(unittest.TestCase):
         self.assertEqual(r3["decision"]["cadence"], 15)
         st = json.loads((Path(self.tmp) / "state" / "state.json").read_text(encoding="utf-8"))
         self.assertEqual(st["reminded"]["harel"], "2026-11-29")
+
+    def test_tase_closes_once_per_trading_day(self):
+        c = cfg(discovery={"prices": True})
+        seen = []
+
+        def runner(paths, tr, **kw):
+            seen.append(kw)
+            return {"_landed": [], "_problems": [], "_written": None, "regulator": {"errors": []},
+                    "prices": {"ok": True, "new": True, "asof": "2026-11-23"}}
+        st_file = Path(self.tmp) / "state" / "state.json"
+        r = tick.tick(self.paths, c, now=at(2026, 11, 23, 19, 0), runner=runner, log=lambda *a: None)  # Monday after the close
+        self.assertTrue(r["acted"])
+        self.assertTrue(seen[-1]["prices"])
+        st = json.loads(st_file.read_text(encoding="utf-8"))
+        self.assertEqual((st["prices"]["session"], st["prices"]["asof"]), ("2026-11-23", "2026-11-23"))
+        tick.tick(self.paths, c, now=at(2026, 11, 23, 20, 0), runner=runner, log=lambda *a: None)
+        self.assertFalse(seen[-1]["prices"], "the day's close is pulled once")
+        tick.tick(self.paths, c, now=at(2026, 11, 24, 12, 0), runner=runner, log=lambda *a: None)
+        self.assertFalse(seen[-1]["prices"], "Tuesday's close is not in before 18:30")
+        tick.tick(self.paths, c, now=at(2026, 11, 24, 18, 45), runner=runner, log=lambda *a: None)
+        self.assertTrue(seen[-1]["prices"])
+
+    def test_failed_pull_waits_before_the_retry(self):
+        c = cfg(discovery={"prices": True, "prices_retry_minutes": 120})
+        seen = []
+
+        def runner(paths, tr, **kw):
+            seen.append(kw)
+            return {"_landed": [], "_problems": ["TASE"], "_written": None, "regulator": {"errors": []}, "prices": {"ok": False}}
+        tick.tick(self.paths, c, now=at(2026, 11, 23, 19, 0), runner=runner, log=lambda *a: None)
+        tick.tick(self.paths, c, now=at(2026, 11, 23, 20, 0), runner=runner, log=lambda *a: None)
+        self.assertEqual([k["prices"] for k in seen], [True, False])
+        tick.tick(self.paths, c, now=at(2026, 11, 23, 21, 5), runner=runner, log=lambda *a: None)
+        self.assertTrue(seen[-1]["prices"])
 
     def test_branch_guard(self):
         with mock.patch.object(tick, "guard", lambda root, c: "on branch feature, the autopilot runs on main"):

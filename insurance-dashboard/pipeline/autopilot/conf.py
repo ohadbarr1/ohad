@@ -15,7 +15,9 @@ DEFAULTS = {
     "repo": {"path": str(ROOT), "branch": ""},
     "schedule": {"timezone": "Asia/Jerusalem", "days": ["sun", "mon", "tue", "wed", "thu", "fri"], "start": "07:00", "end": "22:00",
                  "window_days": 10, "in_window_minutes": 15, "outside_minutes": 60, "regulator_hours": 24},
-    "discovery": {"regulator": True, "maya_scheduled": False, "maya_permission_ref": "", "maya_interval_seconds": 2.0},
+    "discovery": {"regulator": True, "maya_scheduled": False, "maya_permission_ref": "", "maya_interval_seconds": 2.0,
+                  # TASE end-of-day closes (api.tase.co.il, the public feed behind market.tase.co.il): one incremental pull per trading day
+                  "prices": False, "prices_days": ["mon", "tue", "wed", "thu", "fri"], "prices_after": "18:30", "prices_retry_minutes": 60},
     "notify": {"enabled": True, "reminders": True},
     "llm": {"enabled": False, "approved_by": "", "approved_on": "", "season": "", "season_budget_tokens": 1_000_000,
             "per_filing_tokens": 120_000, "per_run_tokens": 300_000, "per_filing_max_usd": 4.0, "max_turns": 40, "model": "",

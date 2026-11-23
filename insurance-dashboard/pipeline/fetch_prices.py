@@ -2,7 +2,10 @@
 
 python3 pipeline/fetch_prices.py            -> data/raw/tase/<security>.json  and  web/public/data/companies/<id>.price.json
 python3 pipeline/fetch_prices.py --build    -> rebuild the price files from the raw files only (no network)
-python3 pipeline/fetch_prices.py --hist     -> also the long daily history since 2019 (data/raw/tase/<security>.hist.json)
+python3 pipeline/fetch_prices.py --hist     -> also the long daily history since 2019 (data/raw/tase/<security>.hist.json), ~20 min
+python3 pipeline/fetch_prices.py --update   -> incremental: only the days since the last close on disk (about one request per security,
+                                               ~30 s; what the autopilot runs after each trading day). Days that leave the 15-month
+                                               recent window move into the long history, so the series stays continuous.
 
 The long history feeds web/public/data/mkt.json: per company the close and market value at each quarter end, dividends per share by
 ex-day, and a weekly total-return index (dividends reinvested at the ex-day close). The peer table reads the quarter ends as the
@@ -10,7 +13,8 @@ market metrics mkt:* (build_registry.py), so P/E, P/B and dividend yield are for
 
 Source: the public end-of-day data behind market.tase.co.il (free, no key). Prices are in agorot, as quoted on TASE.
 The security of each company is its main listed share, found in the exchange's entity list by the MAYA company id
-(data/registry/companies.json, "maya_id"). A price is an input of the valuation pages only; nothing else on the site uses it.
+(data/registry/companies.json, "maya_id"). A price is an input of the valuation pages and of the peer comparison (multiples, total
+return); it is never a headline.
 
 Dividends are not published in this feed as amounts: an ex-dividend day carries the exchange's base-price adjustment, and the
 dividend per share is read as the previous close less the adjusted base price of the ex-day (the rule TASE sets it by).
@@ -169,10 +173,51 @@ def market_history(secs: dict) -> dict:
     return ents
 
 
+def merge_update(recent: list[dict], new: list[dict], hist: list[dict], today: date) -> tuple[list[dict], list[dict]]:
+    """(recent, hist) after an incremental fetch: new rows override the same trading day, the recent file keeps MONTHS of days (newest
+    first, as the feed returns them) and the days older than that move into the long history (slim rows), replacing the same day there."""
+    rows = {iso(x["TradeDate"]): x for x in recent}
+    rows.update({iso(x["TradeDate"]): x for x in new})
+    cut = (today - timedelta(days=MONTHS * 31)).isoformat()
+    keep = [rows[d] for d in sorted(rows, reverse=True) if d >= cut]
+    old = {iso(x["TradeDate"]): x for x in hist}
+    old.update({d: {k: rows[d].get(k) for k in KEEP} for d in rows if d < cut})
+    return keep, [old[d] for d in sorted(old)]
+
+
+def update(secs: dict, today: date) -> None:
+    """--update: per security, the days since the last close on disk (less a 10-day overlap that picks up late corrections)."""
+    for cid, s in secs.items():
+        f, fh = RAW / f"{s['security']}.json", RAW / f"{s['security']}.hist.json"
+        cur = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {"items": []}
+        days = [iso(x["TradeDate"]) for x in cur["items"]]
+        d_from = date.fromisoformat(max(days)) - timedelta(days=10) if days else today - timedelta(days=MONTHS * 31)
+        try:
+            new = history(s["security"], d_from, today)
+        except RuntimeError as e:
+            print(cid, "FAILED", e)
+            continue
+        hist = json.loads(fh.read_text(encoding="utf-8")) if fh.exists() else {**s, "items": []}
+        keep, hrows = merge_update(cur["items"], new, hist["items"], today)
+        if keep == cur["items"]:
+            print(cid, s["security"], "update", d_from.isoformat(), "-> no new trading day")
+            continue  # the files (and their "fetched" stamp) stay as they are: a day without a close changes nothing downstream
+        (RAW / f"{s['security']}.json").write_text(json.dumps({**s, "fetched": today.isoformat(), "url": f"{API}/security/historyeod", "items": keep},
+                                                              ensure_ascii=False), encoding="utf-8")
+        if len(hrows) != len(hist["items"]):
+            fh.write_text(json.dumps({**hist, "fetched": hist.get("fetched") or today.isoformat(), "items": hrows}, ensure_ascii=False), encoding="utf-8")
+        print(cid, s["security"], "update", d_from.isoformat(), "->", max(days + [iso(x["TradeDate"]) for x in new]) if days or new else "-", len(new), "rows")
+        time.sleep(0.6)
+
+
 def main() -> None:
     companies = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
     RAW.mkdir(parents=True, exist_ok=True)
-    if "--build" not in sys.argv:
+    if "--update" in sys.argv:
+        secs = securities(companies)
+        (RAW / "securities.json").write_text(json.dumps(secs, ensure_ascii=False, indent=1), encoding="utf-8")
+        update(secs, date.today())
+    elif "--build" not in sys.argv:
         secs = securities(companies)
         (RAW / "securities.json").write_text(json.dumps(secs, ensure_ascii=False, indent=1), encoding="utf-8")
         today = date.today()

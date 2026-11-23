@@ -13,6 +13,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -186,3 +187,44 @@ class RunPlan(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PricesRun(unittest.TestCase):
+    """run.run(prices=True): fetch_prices.py --update (faked), a new close lands and the rebuild + gate run; no new close, nothing lands."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="fox-px-")
+        self.paths = make_root(self.tmp)
+        (self.paths.data / "mkt.json").write_text(json.dumps({"asof": "2026-11-20"}), encoding="utf-8")
+        self.built = []
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def go(self, asof, ok=True):
+        def script(paths, name, log, args=()):
+            self.assertEqual((name, tuple(args)), ("fetch_prices.py", ("--update",)))
+            if ok:
+                (paths.data / "mkt.json").write_text(json.dumps({"asof": asof}), encoding="utf-8")
+            return {"script": name, "ok": ok, "tail": "" if ok else "RuntimeError: TASE security/historyeod: HTTP 403"}
+        with mock.patch.object(run, "run_dag", lambda paths, argv, log, step="build": self.built.append(argv) or {"step": step, "ok": True}), \
+             mock.patch.object(run, "gate", lambda paths, log: {"ran": True, "ok": True, "fails": []}):
+            return run.run(self.paths, None, apply=True, do_poll=False, regulator=False, trigger="schedule", prices=True,
+                           price_script=script, notify_on=False, log=lambda *a: None)
+
+    def test_new_close_lands_and_rebuilds(self):
+        st = self.go("2026-11-23")
+        self.assertEqual(st["prices"], {"ok": True, "asof": "2026-11-23", "new": True})
+        self.assertIn("מחירי הבורסה עד 23.11.26", st["_landed"])
+        self.assertEqual(self.built, [run.DAG_DEPLOY])
+        self.assertEqual(st["discovery"]["prices_asof"], "2026-11-23")
+
+    def test_no_new_trading_day_writes_nothing(self):
+        st = self.go("2026-11-20")
+        self.assertEqual((st["prices"]["new"], st["_landed"], self.built, st["_written"]), (False, [], [], None))
+
+    def test_a_failed_pull_is_a_problem_not_a_landing(self):
+        st = self.go(None, ok=False)
+        self.assertFalse(st["prices"]["ok"])
+        self.assertEqual(st["_landed"], [])
+        self.assertTrue(any("TASE" in p for p in st["_problems"]))

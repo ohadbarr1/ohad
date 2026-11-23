@@ -3,6 +3,7 @@
   inside a filing window, on a filing day, 07:00-22:00 Israel time  -> every tick (15 min)
   any other time                                                      -> at most hourly
   data.gov.il regulator probe                                         -> at most once a day (regulator_hours)
+  TASE closes (discovery.prices)                                      -> once per trading day, after prices_after (18:30)
 
 A filing window is built from web/public/data/calendar.json: each active company's expected date of its next report, widened by its own
 lo/hi range and by window_days on both sides; overlapping windows merge (the Q3'26 season: 10.11-10.12.26). All pure functions over
@@ -83,6 +84,32 @@ def _since(state, key, now):
     return None if not t else now - dt.datetime.fromisoformat(t)
 
 
+def prices_session(cfg, now):
+    """The latest trading day whose close is in (prices_after passed on it), as an ISO date; None when the channel is off."""
+    d = cfg["discovery"]
+    if not d.get("prices"):
+        return None
+    days = [x.lower()[:3] for x in d.get("prices_days") or []]
+    day = now.date() if now.time() >= _hm(d.get("prices_after") or "18:30") else now.date() - dt.timedelta(days=1)
+    for _ in range(8):
+        if DAYS[day.weekday()] in days:
+            return day.isoformat()
+        day -= dt.timedelta(days=1)
+    return None
+
+
+def prices_due(cfg, state, now):
+    """(due, session): a close not pulled yet, and no failed try within prices_retry_minutes (a TASE outage is not hammered)."""
+    sess = prices_session(cfg, now)
+    st = (state or {}).get("prices") or {}
+    if not sess or (st.get("session") or "") >= sess:
+        return False, sess
+    tried = st.get("tried")
+    if tried and now - dt.datetime.fromisoformat(tried) < dt.timedelta(minutes=float(cfg["discovery"].get("prices_retry_minutes") or 60)):
+        return False, sess
+    return True, sess
+
+
 def decide(cfg, calendar, state, now=None):
     """What this tick does: {act, cadence, why, regulator, window}. state: the local tick state (tick.py), ISO times."""
     now = now_il(cfg, now)
@@ -93,7 +120,9 @@ def decide(cfg, calendar, state, now=None):
     reg_last = _since(state, "last_regulator", now)
     regulator = bool(cfg["discovery"].get("regulator")) and (reg_last is None or reg_last >= dt.timedelta(hours=float(cfg["schedule"]["regulator_hours"])) - dt.timedelta(minutes=30))
     w = window_on(now.date(), wins)
-    return {"act": act or regulator, "cadence": minutes, "why": why, "regulator": regulator, "now": now.isoformat(timespec="seconds"),
+    prices, session = prices_due(cfg, state, now)
+    return {"act": act or regulator or prices, "cadence": minutes, "why": why, "regulator": regulator, "prices": prices,
+            "prices_session": session, "now": now.isoformat(timespec="seconds"),
             "window": {"start": w["start"].isoformat(), "end": w["end"].isoformat()} if w else None}
 
 

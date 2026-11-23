@@ -52,7 +52,7 @@ const pl = (p?: string | null) => (!p ? '–' : /^\d{4}-\d{2}-\d{2}$/.test(p) ? 
 const TYPE_HE: Record<string, string> = { annual: 'דוח שנתי', quarterly: 'דוח רבעוני', presentation: 'מצגת', solvency: 'סולבנסי', liabilities: 'מצבת התחייבויות' };
 const ST_HE: Record<string, string> = { verified: 'אומת', fy: 'שנתי', corrected: 'תוקן', unverified: 'לא מאומת', withheld: 'הושמט' };
 const BASIS: Record<string, string> = { yoy: 'YoY', qoq: 'QoQ', prev: 'מול הקודם' };
-const STEP_HE: Record<string, string> = { regulator: 'רשות שוק ההון', 'regulator-fetch': 'שליפת נתוני הרשות', pickup: 'קליטה מקומית', poll: 'בדיקה ב-MAYA', skeleton: 'שלד XBRL', extraction: 'חילוץ מה-PDF', build: 'בנייה מחדש', xbrl: 'XBRL למחסן', kpi: 'kpi.json', gate: 'שער איכות' };
+const STEP_HE: Record<string, string> = { regulator: 'רשות שוק ההון', prices: 'מחירי הבורסה', 'regulator-fetch': 'שליפת נתוני הרשות', pickup: 'קליטה מקומית', poll: 'בדיקה ב-MAYA', skeleton: 'שלד XBRL', extraction: 'חילוץ מה-PDF', build: 'בנייה מחדש', xbrl: 'XBRL למחסן', kpi: 'kpi.json', gate: 'שער איכות' };
 const val = (u: Delta['unit'], v: number) => (u === 'pp' ? `${fmt(v, 'n', { d: 0 })}%` : fmt(v, 'm'));
 
 function srcProv(s: Src, d: Delta, v: number, co: Co, which: string): Prov {

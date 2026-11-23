@@ -52,6 +52,13 @@ def landed_run(gate_ok=True, month=202610):
             "_landed": [f"רשות שוק ההון {rg.month_label(month)} (gemel)"]}
 
 
+def prices_run(asof="2026-11-23"):
+    """What run.run returns after a tick that pulled a new TASE close (no regulator month)."""
+    return {"steps": [{"step": "prices", "ok": True}, {"step": "build", "ok": True}], "regulator": None,
+            "prices": {"ok": True, "new": True, "asof": asof}, "gate": {"ran": True, "ok": True, "fails": []}, "_problems": [],
+            "_landed": ["מחירי הבורסה עד 23.11.26"]}
+
+
 class Repo(unittest.TestCase):
     """origin (bare) <- mac (the owner's checkout, insurance-dashboard/ inside) and ci (another clone)."""
 
@@ -164,6 +171,16 @@ class Land(Repo):
         self.assertEqual((r["result"], self.deploys), ("deployed", [sha]))
         self.assertNotIn("pending", self.st["deploy"])
         self.assertIn("עלה לאתר", self.shown[-1][0])
+
+    def test_a_new_tase_close_is_published_too(self):
+        pre = publish.preflight(self.root, cfg(), ops=self.ops)
+        self.write(self.root, "web/public/data/mkt.json", {"asof": "2026-11-23"})
+        r = publish.land(self.root, cfg(), prices_run(), pre, self.st, now=self.now, ops=self.ops)
+        self.assertEqual((r["result"], r["prices"]), ("pushed", "2026-11-23"))
+        self.assertIn("TASE closes to 2026-11-23", sh(self.mac, "log", "-1", "--format=%s"))
+        self.assertEqual(self.st["deploy"]["pending"]["months"], ["מחירי הבורסה עד 23.11.26"])
+        no_new = {**prices_run(), "prices": {"ok": True, "new": False, "asof": "2026-11-23"}}
+        self.assertIsNone(publish.land(self.root, cfg(), no_new, pre, {}, now=self.now, ops=self.ops), "a holiday publishes nothing")
 
     def test_ci_first_pulls_and_skips(self):
         pre = publish.preflight(self.root, cfg(), ops=self.ops)

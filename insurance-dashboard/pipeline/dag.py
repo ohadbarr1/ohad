@@ -59,7 +59,7 @@ STEPS = [
     step("fetch_macro", "pipeline/fetch_macro.py", [], ["data/raw/macro"], {"network", "drive"}),
     step("fetch_boi", "pipeline/fetch_boi.py", [], ["data/raw/boi"], {"network", "drive"}),
     step("fetch_prices", "pipeline/fetch_prices.py", [REG + "companies.json"], [D + "companies/*.price.json", D + "mkt.json"], {"network", "drive"},
-         note="valuation input only (labelled)"),
+         note="TASE closes: valuation and peer multiples; --update daily by the autopilot, --hist once"),
     step("fetch_holders", "pipeline/fetch_holders.py", [REG + "companies.json"], ["data/raw/maya_holders"], {"network", "drive"}),
     step("fetch_liabilities", "pipeline/fetch_liabilities.py", [REG + "companies.json", REG + "documents.csv"], ["data/raw/maya_liabilities"], {"network", "drive"}),
     step("build_pages", "pipeline/build_pages.py", [REG + "documents.csv", "data/sources/pdf"], [D + "search/text", REG + "pages_manifest.json"],
