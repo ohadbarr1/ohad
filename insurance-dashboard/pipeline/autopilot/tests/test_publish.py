@@ -174,6 +174,15 @@ class Land(Repo):
         self.assertNotIn("pending", self.st["deploy"])
         self.assertIn("עלה לאתר", self.shown[-1][0])
 
+    def test_the_autopilots_own_status_file_does_not_block_publishing(self):
+        self.write(self.root, "web/public/data/autopilot/status.json", {"runs": []})
+        sh(self.mac, "add", "-A")
+        sh(self.mac, "commit", "--quiet", "-m", "status")
+        self.write(self.root, "web/public/data/autopilot/status.json", {"runs": ["a failed pull"]})  # a tracked file, modified
+        self.assertTrue(publish.preflight(self.root, cfg(), ops=self.ops)["clean"])
+        self.write(self.root, "web/public/data/market.json", {"asof": 202699})
+        self.assertFalse(publish.preflight(self.root, cfg(), ops=self.ops)["clean"], "any other change is the owner's work")
+
     def test_a_new_tase_close_is_published_too(self):
         pre = publish.preflight(self.root, cfg(), ops=self.ops)
         self.write(self.root, "web/public/data/mkt.json", {"asof": "2026-11-23"})

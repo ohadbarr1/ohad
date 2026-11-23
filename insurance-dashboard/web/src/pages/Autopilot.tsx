@@ -45,7 +45,7 @@ interface Sched {
 interface Discovery { regulator: boolean; maya_scheduled: boolean; maya_permission_ref: string | null; maya_manual: string; maya_interval_seconds: number; finding: string; checked: string }
 interface Reg { datasets: { id: string; fox: number | null; upstream: number | null; new: boolean; last_modified?: string }[]; new: boolean; errors: { id: string }[] }
 interface Run { at: string; trigger: 'schedule' | 'manual' | 'maya-once'; mode: string; landed: string[]; problems: string[]; gate: boolean | null }
-interface Publish { pending: { files: string[]; count: number; ahead: number | null; head: string | null } | null; commands: string[]; auto: false; note: string }
+interface Publish { pending: { files: string[]; count: number; ahead: number | null; head: string | null } | null; commands: string[]; auto: boolean; note: string }
 interface LlmBudget { season: string; budget: number; spent: number; calls: number; per_filing: number; per_run: number; enabled: boolean }
 
 const pl = (p?: string | null) => (!p ? '–' : /^\d{4}-\d{2}-\d{2}$/.test(p) ? pubLabel(p) : p.endsWith('FY') ? `FY'${p.slice(2, 4)}` : p.endsWith('Q4') ? `Q4'${p.slice(2, 4)}` : `${p.slice(4)}'${p.slice(2, 4)}`);

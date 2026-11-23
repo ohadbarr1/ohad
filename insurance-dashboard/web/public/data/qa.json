@@ -1,5 +1,5 @@
 {
- "built": "2026-11-23T00:23:13+02:00",
+ "built": "2026-11-23T09:30:37+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -213,9 +213,9 @@
    "id": "brief_lib",
    "ok": true,
    "level": "fail",
-   "n": 257,
+   "n": 263,
    "fail": 0,
-   "note": "257 passed, 0 failed"
+   "note": "263 passed, 0 failed"
   },
   {
    "id": "deliver_lib",
@@ -237,17 +237,17 @@
    "id": "watch",
    "ok": true,
    "level": "fail",
-   "n": 8,
+   "n": 11,
    "fail": 0,
-   "note": "watch: 8 snapshots, 77 changes (answer 43, finding 1, new 32, gone 1), 17 upcoming, 0 problems"
+   "note": "watch: 11 snapshots, 80 changes (answer 46, finding 1, new 32, gone 1), 17 upcoming, 0 problems"
   },
   {
    "id": "watch_ledger",
    "ok": true,
    "level": "fail",
-   "n": 7,
+   "n": 8,
    "fail": 0,
-   "note": "7 answer snapshots at HEAD unchanged"
+   "note": "8 answer snapshots at HEAD unchanged"
   },
   {
    "id": "watch_lib",

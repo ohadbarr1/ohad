@@ -23,6 +23,9 @@ import conf
 import notify
 
 
+OWN_STATUS = "web/public/data/autopilot/status.json"
+
+
 def _git(root, *args, timeout=120):
     try:
         p = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=timeout)
@@ -96,6 +99,9 @@ def preflight(root, cfg, ops=None, st=None):
     ops = ops or Ops()
     branch, remote, _ = _cfg(cfg)
     _, dirty, _ = ops.git(root, "status", "--porcelain", "--untracked-files=no", "--", ".")
+    # the autopilot's own status file (rewritten by every run that found something, a failed pull included) does not count as the
+    # owner's work: otherwise one failed run would block every later publish until a manual commit; the next landing commits it
+    dirty = "\n".join(l for l in _lines(dirty) if not l.endswith(OWN_STATUS))
     _, untracked, _ = ops.git(root, "ls-files", "--others", "--exclude-standard", "--", ".")
     pre = {"clean": not dirty, "untracked": _lines(untracked), "counts": _counts(root, ops, remote, branch), "pulled": 0}
     if pre["counts"] and pre["counts"][1] > 0 and pre["counts"][0] == 0 and pre["clean"]:

@@ -1,4 +1,5 @@
 data/raw/
+data/tase/
 __pycache__/
 *.pyc
 web/node_modules

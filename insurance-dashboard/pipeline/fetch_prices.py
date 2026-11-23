@@ -1,8 +1,8 @@
 """Closing prices, market value, registered shares and ex-dividend days from the Tel Aviv Stock Exchange (TASE), for listed groups.
 
-python3 pipeline/fetch_prices.py            -> data/raw/tase/<security>.json  and  web/public/data/companies/<id>.price.json
+python3 pipeline/fetch_prices.py            -> data/tase/<security>.json  and  web/public/data/companies/<id>.price.json
 python3 pipeline/fetch_prices.py --build    -> rebuild the price files from the raw files only (no network)
-python3 pipeline/fetch_prices.py --hist     -> also the long daily history since 2019 (data/raw/tase/<security>.hist.json), ~20 min
+python3 pipeline/fetch_prices.py --hist     -> also the long daily history since 2019 (data/tase/<security>.hist.json), ~20 min
 python3 pipeline/fetch_prices.py --update   -> incremental: only the days since the last close on disk (about one request per security,
                                                ~30 s; what the autopilot runs after each trading day). Days that leave the 15-month
                                                recent window move into the long history, so the series stays continuous.
@@ -23,6 +23,8 @@ Those amounts are marked as derived in the output ("div_derived").
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import sys
 import time
 import urllib.request
@@ -31,7 +33,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "web" / "public" / "data" / "companies"
-RAW = ROOT / "data" / "raw" / "tase"
+# local disk, not the synced drive: the scheduled autopilot (launchd) may not write into ~/Library/CloudStorage (macOS privacy
+# protection), and these files are regenerable (--hist). FOX_TASE_RAW points elsewhere; the old drive folder seeds a fresh checkout.
+RAW = Path(os.environ.get("FOX_TASE_RAW") or ROOT / "data" / "tase")
+OLD_RAW = ROOT / "data" / "raw" / "tase"
 API = "https://api.tase.co.il/api"
 PAGE = "https://market.tase.co.il/he/market_data/security/{sec}/major_data"
 HEADERS = {
@@ -212,6 +217,12 @@ def update(secs: dict, today: date) -> None:
 
 def main() -> None:
     companies = json.loads((ROOT / "data" / "registry" / "companies.json").read_text(encoding="utf-8"))
+    if not RAW.exists() and OLD_RAW.is_dir():
+        try:
+            shutil.copytree(OLD_RAW, RAW)
+            print("seeded", RAW, "from", OLD_RAW)
+        except OSError as e:
+            print("could not seed from", OLD_RAW, e)
     RAW.mkdir(parents=True, exist_ok=True)
     if "--update" in sys.argv:
         secs = securities(companies)

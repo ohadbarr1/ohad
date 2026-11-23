@@ -357,7 +357,7 @@ def main():
          "asof": curve.get("months", [None])[-1] if curve.get("months") else None, "checked": first(macro["series"].get("rate", {}).get("retrieved"), curve.get("retrieved")), "feeds": [], "behind": []},
         {"id": "cbs", "label": 'הלמ"ס · מדד המחירים לצרכן', "url": "https://www.cbs.gov.il/", "cadence": "monthly", "sla_days": 35,
          "asof": None, "checked": macro["series"].get("cpi", {}).get("retrieved"), "feeds": [], "behind": []},
-        {"id": "tase", "label": "הבורסה לניירות ערך · מחירים (קלט להערכת שווי בלבד)", "url": "https://market.tase.co.il/", "cadence": "daily", "sla_days": 7,
+        {"id": "tase", "label": "הבורסה לניירות ערך · מחירים (קלט להערכת שווי ולהשוואה ענפית)", "url": "https://market.tase.co.il/", "cadence": "daily", "sla_days": 7,
          "asof": max((p["asof"] for p in prices), default=None), "checked": max((p["fetched"] for p in prices), default=None), "feeds": ["price"], "behind": []},
         {"id": "gate", "label": "fox · בדיקות איכות (gate)", "url": "https://fox-research-il.web.app/data", "cadence": "event", "sla_days": 35,
          "asof": (qa.get("built") or "")[:10] or None, "checked": (qa.get("built") or "")[:10] or None, "feeds": [], "behind": []},
