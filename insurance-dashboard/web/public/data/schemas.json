@@ -2768,9 +2768,7 @@
        "type": "string"
       },
       "auto": {
-       "enum": [
-        false
-       ]
+       "type": "boolean"
       }
      }
     },
@@ -3198,7 +3196,7 @@
        }
       },
       "auto": {
-       "const": false
+       "type": "boolean"
       },
       "pending": {
        "type": [

@@ -1,5 +1,5 @@
 {
- "built": "2026-11-23T09:30:37+02:00",
+ "built": "2026-11-23T12:05:46+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -245,9 +245,9 @@
    "id": "watch_ledger",
    "ok": true,
    "level": "fail",
-   "n": 8,
+   "n": 11,
    "fail": 0,
-   "note": "8 answer snapshots at HEAD unchanged"
+   "note": "11 answer snapshots at HEAD unchanged"
   },
   {
    "id": "watch_lib",
@@ -373,9 +373,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3929,
+   "n": 3938,
    "fail": 0,
-   "note": "3929 files under contract, 0 failing; 95 contracts; 899 files without a contract"
+   "note": "3938 files under contract, 0 failing; 95 contracts; 899 files without a contract"
   },
   {
    "id": "cards",
