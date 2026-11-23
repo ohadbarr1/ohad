@@ -123,12 +123,14 @@ class Repo(unittest.TestCase):
 
 class Switch(unittest.TestCase):
     def test_off_by_default_and_needs_the_deploy_branch(self):
+        # the committed toml carries the owner's choice (auto-publish on since 23.11.26); the code default stays off
         c = conf.load(HERE.parent.parent.parent / "ops" / "autopilot.toml")
-        self.assertFalse(c["deploy"]["auto"], "the committed toml keeps auto-publish off")
-        self.assertFalse(conf.deploy_on(c))
+        self.assertIsInstance(c["deploy"]["auto"], bool)
+        self.assertEqual(conf.deploy_on(c), c["deploy"]["auto"] and bool(c["repo"]["branch"]))
         text = (HERE.parent.parent.parent / "ops" / "autopilot.toml").read_text(encoding="utf-8")
-        with mock.patch.dict(sys.modules, {"tomllib": None}):  # the 3.9 fallback reader
-            self.assertEqual(conf.parse_toml(text)["deploy"]["auto"], False)
+        with mock.patch.dict(sys.modules, {"tomllib": None}):  # the 3.9 fallback reader agrees with tomllib
+            self.assertEqual(conf.parse_toml(text)["deploy"]["auto"], c["deploy"]["auto"])
+        self.assertFalse(conf.DEFAULTS["deploy"]["auto"])
         self.assertFalse(conf.deploy_on(conf.load(os.devnull)), "defaults: off")
         self.assertTrue(conf.deploy_on({"deploy": {"auto": True}, "repo": {"branch": "main"}}))
         self.assertFalse(conf.deploy_on({"deploy": {"auto": True}, "repo": {"branch": ""}}), "never without a named deploy branch")

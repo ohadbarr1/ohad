@@ -45,6 +45,7 @@ def at(y, mo, d, h, mi=0):
 def cfg(**over):
     c = conf.load(HERE.parent.parent.parent / "ops" / "autopilot.toml")
     c["discovery"] = {**c["discovery"], "prices": False}  # the TASE closes channel has its own tests (Prices, Tick); off for the cadence ones
+    c["deploy"] = {**c["deploy"], "auto": False}  # auto-publish has its own tests (test_publish.py), whatever the owner's toml says
     for sec, vals in over.items():
         c[sec] = {**c[sec], **vals}
     return c

@@ -19,6 +19,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 FIX = HERE / "fixtures"
 sys.path.insert(0, str(HERE.parent))
+import conf  # noqa: E402
 import poll  # noqa: E402
 import run  # noqa: E402
 import t0  # noqa: E402
@@ -168,7 +169,7 @@ class RunPlan(unittest.TestCase):
         self.assertEqual(d["profit"]["prev_period"], "2025Q2")
         self.assertEqual(d["profit"]["src"][0]["rid"], 1765739)
         self.assertIn("הפניקס Q2'26", co["phoenix"]["deltas"]["push"]["title"])
-        self.assertEqual(s["deploy"]["auto"], False)
+        self.assertEqual(s["deploy"]["auto"], conf.deploy_on(conf.load()), "status.json shows the owner's switch")
         self.assertTrue(any(x["step"] == "extraction" and x["ran"] == 0 for x in s["steps"]))
         # idempotent: a second apply run adds nothing and keeps the verified period
         self.go(apply=True)
