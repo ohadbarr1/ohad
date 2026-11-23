@@ -521,17 +521,19 @@ for r in mk["rows"]:
 def flows(pi, n, s, g):
     if pi - n + 1 < 0:
         return None
-    org = tr = 0.0
+    org = tr = dep = wd = 0.0
     for i in range(pi - n + 1, pi + 1):
         c = cell.get((i, s, g))
         if not c or not (c[1] > 0) or c[5] < 0.98 * c[1]:
             return None
-        org += c[2] - c[3]; tr += c[4]
-    return org, tr
+        org += c[2] - c[3]; tr += c[4]; dep += c[2]; wd += c[3]
+    return org, tr, dep, wd
 
 
 REG = {"assets": ("נכסים מנוהלים", "bn", "s"), "share": ("נתח שוק בנכסים", "pct", "s"), "netflow": ("צבירה נטו כולל ניוד", "bn", "f"),
-       "organic": ("צבירה אורגנית (הפקדות פחות משיכות)", "bn", "f"), "transfers": ("ניוד נטו", "bn", "f"), "fee": ("דמי ניהול ממוצעים", "pct", "s")}
+       "organic": ("צבירה אורגנית (הפקדות פחות משיכות)", "bn", "f"), "transfers": ("ניוד נטו", "bn", "f"), "fee": ("דמי ניהול ממוצעים", "pct", "s"),
+       # the gross legs of the organic flow (the peer board's operating section): deposits and withdrawals (incl. redemptions)
+       "deposits": ("הפקדות", "bn", "f"), "withdrawals": ("משיכות ופדיונות", "bn", "f")}
 breaks = mk.get("breaks") or []
 for s in SETS:
     for key, (label, unit, kind) in REG.items():
@@ -565,7 +567,7 @@ for s in SETS:
                     for pp, n in wins:
                         f = flows(pi, n, s, gi)
                         if f:
-                            v = f[0] if key == "organic" else f[1] if key == "transfers" else f[0] + f[1]
+                            v = {"organic": f[0], "transfers": f[1], "deposits": f[2], "withdrawals": f[3]}.get(key, f[0] + f[1])
                             ch.cell(ent, pp, v / 1000, aux=pi)
         brs = []
         for b in breaks:

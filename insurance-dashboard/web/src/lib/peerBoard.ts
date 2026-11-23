@@ -11,10 +11,14 @@ import type { TasePrice } from './valuation';
 
 export const TAX = 34.19;  // the valuation pages' tax assumption on CSM (corporate 23% + profit tax 17% at financial institutions)
 export type Better = 'hi' | 'lo' | null;
-export type Sec = 'mkt' | 'biz';
+export type Sec = 'mkt' | 'biz' | 'ops';
+/** the operating section's two tables: long-term savings (regulator + presentations) and insurance (IFRS 17 segments, premiums) */
+export type OpsGrp = 'sav' | 'ins';
 export type Kind = 'ins' | 'fund';
 export interface BMetric {
-  key: string; l: string; sh: string; u: Unit | 'pctx'; dec: number; better: Better; sec: Sec;
+  key: string; l: string; sh: string; u: Unit | 'pctx' | 'pp'; dec: number; better: Better; sec: Sec;
+  /** operating table; ax 'reg': read at the regulator's latest quarter (monthly files, ahead of the filings) */
+  grp?: OpsGrp; ax?: 'reg';
   /** a token of the peer table per company kind (insurer / fund house); absent kind = not applicable */
   tok?: Partial<Record<Kind, string>>;
   /** spot market metric, computed from the price file */
@@ -24,8 +28,10 @@ export interface BMetric {
   /** the formula on the LTM axis for the history chart (quarter-end close) */
   hist?: Partial<Record<Kind, string>>;
   note?: string;
-  /** read on the annual axis (a disclosure made once a year): the last full year up to the board's quarter */
+  /** read on the annual axis (a disclosure made once a year): the last full year up to the board's quarter; 'H': the latest half or year */
   freq?: Freq;
+  /** a flow published only for halves and years: LTM = last FY + this H1 − last H1 when the quarterly chain is missing */
+  ltmh?: boolean;
 }
 export interface MktFile {
   asof: string; source: string;
@@ -69,6 +75,50 @@ export const METRICS: BMetric[] = [
   { key: 'eq', l: 'הון לבעלי המניות', sh: 'הון', u: 'm', dec: 0, better: null, sec: 'biz', tok: { ins: 'ifrs:equity_attributable', fund: 'xbrl:equity' } },
   { key: 'eqy', l: 'צמיחת הון, YoY', sh: 'הון YoY', u: 'pctx', dec: 1, better: 'hi', sec: 'biz', tok: { ins: 'y!ifrs:equity_attributable', fund: 'y!xbrl:equity' } },
   { key: 'sr', l: 'יחס כושר פירעון, ללא הוראות מעבר', sh: 'כושר פירעון', u: 'pct', dec: 0, better: 'hi', sec: 'biz', tok: { ins: 'solv:sr_wo' }, lb: 3 },
+  // operations: long-term savings (Capital Market Authority files: gemel-net, pensia-net, bituach-net; LTM to the latest quarter)
+  ...([
+    { key: 'oaum', l: 'נכסים מנוהלים, כל המוצרים', sh: 'נכסים', u: 'bn', dec: 1, better: null, t: 'reg:assets@all' },
+    { key: 'open', l: 'נכסים מנוהלים · פנסיה', sh: 'פנסיה', u: 'bn', dec: 1, better: null, t: 'reg:assets@pension' },
+    { key: 'ogem', l: 'נכסים מנוהלים · גמל והשתלמות', sh: 'גמל והשתלמות', u: 'bn', dec: 1, better: null, t: 'reg:assets@gemel' },
+    { key: 'opol', l: 'נכסים מנוהלים · פוליסות חיסכון (ביטוח-נט)', sh: 'פוליסות', u: 'bn', dec: 1, better: null, t: 'reg:assets@insurance' },
+    { key: 'oshare', l: 'נתח שוק בנכסים, כל המוצרים', sh: 'נתח שוק', u: 'pct', dec: 2, better: 'hi', t: 'reg:share@all', h: true },
+    { key: 'oshd', l: 'שינוי נתח השוק, שנה', sh: 'Δ נתח, YoY', u: 'pp', dec: 2, better: 'hi', t: T('Δ נתח שוק', 'pct', 'reg_share__all - yago(reg_share__all)'), h: true },
+    { key: 'odep', l: 'הפקדות, LTM', sh: 'הפקדות', u: 'bn', dec: 1, better: null, t: 'reg:deposits@all' },
+    { key: 'odepy', l: 'צמיחת הפקדות, YoY', sh: 'הפקדות YoY', u: 'pctx', dec: 1, better: 'hi', t: 'y!reg:deposits@all' },
+    { key: 'owd', l: 'משיכות ופדיונות, LTM', sh: 'משיכות', u: 'bn', dec: 1, better: null, t: 'reg:withdrawals@all' },
+    { key: 'owdr', l: 'שיעור משיכות ופדיונות, מנכסים ממוצעים', sh: 'שיעור משיכות', u: 'pct', dec: 1, better: 'lo', h: true,
+      t: T('שיעור משיכות', 'pct', 'reg_withdrawals__all / avg(reg_assets__all, yago(reg_assets__all)) * 100'), note: 'משיכות כוללות קצבאות ותשלומי פרישה, לא רק ביטולים' },
+    { key: 'otr', l: 'ניוד נטו, LTM', sh: 'ניוד נטו', u: 'bn', dec: 1, better: 'hi', t: 'reg:transfers@all' },
+    { key: 'onet', l: 'צבירה נטו כולל ניוד, LTM', sh: 'צבירה נטו', u: 'bn', dec: 1, better: 'hi', t: 'reg:netflow@all' },
+    { key: 'onetr', l: 'צבירה נטו לנכסים בתחילת השנה', sh: 'צבירה / נכסים', u: 'pct', dec: 1, better: 'hi', h: true,
+      t: T('צבירה נטו / נכסים', 'pct', 'reg_netflow__all / yago(reg_assets__all) * 100'), note: 'צמיחה אורגנית: הפקדות פחות משיכות ועוד ניוד נטו, ביחס לנכסים לפני שנה' },
+    { key: 'ofee', l: 'דמי ניהול ממוצעים מנכסים', sh: 'דמי ניהול', u: 'pct', dec: 2, better: null, t: 'reg:fee@all', h: true },
+  ] as const).map((x) => ({ key: x.key, l: x.l, sh: x.sh, u: x.u, dec: x.dec, better: x.better, sec: 'ops' as Sec, grp: 'sav' as OpsGrp, ax: 'reg' as const,
+    tok: { ins: x.t, fund: x.t }, ...('h' in x ? { hist: { ins: x.t, fund: x.t } } : {}), ...('note' in x ? { note: x.note } : {}) })),
+  // operations from the companies' presentations (half-yearly): outgoing transfers (the savings "cancellation" rate) and new pension business
+  { key: 'pout', l: 'פנסיה: שיעור ניוד יוצא, שנתי (מצגת החברה)', sh: 'ניוד יוצא פנסיה', u: 'pct', dec: 1, better: 'lo', sec: 'ops', grp: 'sav', freq: 'H', tok: { ins: 'lts:pen.out_rate', fund: 'lts:pen.out_rate' } },
+  { key: 'gout', l: 'גמל: שיעור ניוד יוצא, שנתי (מצגת החברה)', sh: 'ניוד יוצא גמל', u: 'pct', dec: 1, better: 'lo', sec: 'ops', grp: 'sav', freq: 'H', tok: { ins: 'lts:gem.out_rate', fund: 'lts:gem.out_rate' } },
+  { key: 'pnb', l: 'פנסיה: פרמיה משונתת מעסק חדש (מצגת החברה)', sh: 'עסק חדש פנסיה', u: 'bn', dec: 2, better: 'hi', sec: 'ops', grp: 'sav', freq: 'FY', tok: { ins: 'lts:pen.nb', fund: 'lts:pen.nb' } },
+  // operations: insurance (IFRS 17 segment note; premiums where the company reports them)
+  ...([
+    { key: 'rlife', l: 'הכנסות מביטוח · חיים וחיסכון, LTM', sh: 'חיים', u: 'm', dec: 0, better: null, t: 'ifrs:insurance_revenue@life' },
+    { key: 'rhealth', l: 'הכנסות מביטוח · בריאות, LTM', sh: 'בריאות', u: 'm', dec: 0, better: null, t: 'ifrs:insurance_revenue@health' },
+    { key: 'rpc', l: 'הכנסות מביטוח · ביטוח כללי, LTM', sh: 'כללי', u: 'm', dec: 0, better: null, t: 'ifrs:insurance_revenue@pc' },
+    { key: 'rlifey', l: 'צמיחת הכנסות מביטוח · חיים, YoY', sh: 'חיים YoY', u: 'pctx', dec: 1, better: 'hi', t: 'y!ifrs:insurance_revenue@life' },
+    { key: 'rhealthy', l: 'צמיחת הכנסות מביטוח · בריאות, YoY', sh: 'בריאות YoY', u: 'pctx', dec: 1, better: 'hi', t: 'y!ifrs:insurance_revenue@health' },
+    { key: 'rpcy', l: 'צמיחת הכנסות מביטוח · כללי, YoY', sh: 'כללי YoY', u: 'pctx', dec: 1, better: 'hi', t: 'y!ifrs:insurance_revenue@pc' },
+    { key: 'mhealth', l: 'מרווח שירותי ביטוח · בריאות', sh: 'מרווח בריאות', u: 'pct', dec: 1, better: 'hi',
+      t: T('מרווח בריאות', 'pct', 'ifrs_insurance_service_result__health / ifrs_insurance_revenue__health * 100') },
+    { key: 'mpc', l: 'מרווח שירותי ביטוח · כללי', sh: 'מרווח כללי', u: 'pct', dec: 1, better: 'hi',
+      t: T('מרווח כללי', 'pct', 'ifrs_insurance_service_result__pc / ifrs_insurance_revenue__pc * 100') },
+    { key: 'gpc', l: 'פרמיות ברוטו · ביטוח כללי, LTM', sh: 'פרמיות כללי', u: 'm', dec: 0, better: null, t: 'sop:gross_written_premiums@pc', g: 1, note: 'פרמיות ברוטו: מדווח בחלק מהחברות' },
+    { key: 'ghealth', l: 'פרמיות ברוטו · בריאות, LTM', sh: 'פרמיות בריאות', u: 'm', dec: 0, better: null, t: 'sop:gross_written_premiums@health', g: 1 },
+    { key: 'glife', l: 'פרמיות ברוטו · חיים וחיסכון, LTM', sh: 'פרמיות חיים', u: 'm', dec: 0, better: null, t: 'sop:gross_written_premiums@life', g: 1 },
+    { key: 'gpcy', l: 'צמיחת פרמיות ברוטו · כללי, H1 מול H1', sh: 'פרמיות כללי YoY', u: 'pctx', dec: 1, better: 'hi', t: 'y!sop:gross_written_premiums@pc', h1: 1 },
+    { key: 'ghealthy', l: 'צמיחת פרמיות ברוטו · בריאות, H1 מול H1', sh: 'פרמיות בריאות YoY', u: 'pctx', dec: 1, better: 'hi', t: 'y!sop:gross_written_premiums@health', h1: 1 },
+    { key: 'glifey', l: 'צמיחת פרמיות ברוטו · חיים, H1 מול H1', sh: 'פרמיות חיים YoY', u: 'pctx', dec: 1, better: 'hi', t: 'y!sop:gross_written_premiums@life', h1: 1 },
+  ] as const).map((x) => ({ key: x.key, l: x.l, sh: x.sh, u: x.u, dec: x.dec, better: x.better, sec: 'ops' as Sec, grp: 'ins' as OpsGrp, tok: { ins: x.t },
+    ...('note' in x ? { note: x.note } : {}), ...('g' in x ? { ltmh: true } : {}), ...('h1' in x ? { freq: 'H' as Freq } : {}) })),
 ];
 export const MBY = new Map(METRICS.map((m) => [m.key, m]));
 
@@ -80,9 +130,10 @@ export const fmtB = (m: BMetric, v: number): string => {
   if (m.u === 'x') return `${nf(v, m.dec)}x`;
   if (m.u === 'pct') return `${nf(v, m.dec)}%`;
   if (m.u === 'pctx') return `${v > 0 ? '+' : v < 0 ? '−' : ''}${nf(Math.abs(v), m.dec)}%`;
+  if (m.u === 'pp') return `${v > 0 ? '+' : v < 0 ? '−' : ''}${nf(Math.abs(v), m.dec)} נק׳`;
   return nf(v, m.dec);
 };
-export const unitB = (m: BMetric) => (m.u === 'm' ? 'מיליוני ש"ח' : m.u === 'bn' ? 'מיליארדי ש"ח' : m.u === 'x' ? 'מכפיל' : '%');
+export const unitB = (m: BMetric) => (m.u === 'm' ? 'מיליוני ש"ח' : m.u === 'bn' ? 'מיליארדי ש"ח' : m.u === 'x' ? 'מכפיל' : m.u === 'pp' ? 'נק׳ אחוז' : '%');
 const mil = (v: number) => `${nf(v, 0)} מיליוני ש"ח`;
 
 /** which metrics a set shows: insurers see CSM and solvency, fund houses AUM and margin; a mixed set shows what applies to its majority */
@@ -110,17 +161,40 @@ export function bizVal(book: Book, m: BMetric, ent: string, kind: Kind, p: strin
   const tok = m.tok?.[kind];
   if (!tok) return none(m.l, kind === 'ins' ? 'לא רלוונטי למבטחת' : 'לא רלוונטי לבית השקעות');
   const c = colOf(book, tok);
+  if (m.freq === 'H') {
+    // a half-yearly disclosure: the latest half or full year up to the board's quarter
+    const y = Number(p.slice(0, 4)), q = Number(p.slice(-1));
+    const cand: [Freq, string][] = [...(q >= 4 ? [['FY', `${y}FY`] as [Freq, string]] : []), ...(q >= 2 ? [['H', `${y}H1`] as [Freq, string]] : []), ['FY', `${y - 1}FY`], ['H', `${y - 1}H1`]];
+    for (const [i, [f, pp]] of cand.entries()) { const x = cellVal(book, c, ent, f, pp, peers); if (x.v != null && Number.isFinite(x.v)) return { ...x, p: pp, stale: i > 0 }; }
+    return none(m.l, 'אין נתון מהמצגת');
+  }
   if (m.freq === 'FY') {
     const y = Number(p.slice(0, 4)) - (p.endsWith('Q4') ? 0 : 1);
     for (const fy of [`${y}FY`, `${y - 1}FY`]) { const x = cellVal(book, c, ent, 'FY', fy, peers); if (x.v != null && Number.isFinite(x.v)) return { ...x, p: fy, stale: fy !== `${y}FY` }; }
     return none(m.l, 'אין נתון שנתי');
   }
+  let last: BVal | null = null;
   for (let i = 0; i <= (m.lb ?? 1); i++) {
     const q = back('LTM', p, i), x = cellVal(book, c, ent, 'LTM', q, peers);
     if (x.v != null && Number.isFinite(x.v)) return { ...x, p: q, stale: i > 0 };
-    if (i === (m.lb ?? 1)) return { ...x, p: q };
+    if (i === (m.lb ?? 1)) last = { ...x, p: q };
   }
-  return none(m.l, 'אין נתון');
+  if (m.ltmh) { const h = ltmFromHalves(book, c, m, ent, p, peers); if (h) return h; }
+  return last ?? none(m.l, 'אין נתון');
+}
+/** LTM from halves and years: at Q4 the year itself; at Q2/Q3 last FY + this H1 − last H1; at Q1 last FY (marked earlier) */
+function ltmFromHalves(book: Book, c: Col, m: BMetric, ent: string, p: string, peers: string[]): BVal | null {
+  const y = Number(p.slice(0, 4)), q = Number(p.slice(-1));
+  const get = (f: Freq, pp: string) => { const x = cellVal(book, c, ent, f, pp, peers); return x.v != null && Number.isFinite(x.v) ? x : null; };
+  if (q === 4) { const fy = get('FY', `${y}FY`); return fy ? { ...fy, p: `${y}Q4` } : null; }
+  const fy = get('FY', `${y - 1}FY`);
+  if (!fy) return null;
+  if (q === 1) return { ...fy, p: `${y - 1}Q4`, stale: true };
+  const h1 = get('H', `${y}H1`), h0 = get('H', `${y - 1}H1`);
+  if (!h1 || !h0) return { ...fy, p: `${y - 1}Q4`, stale: true };
+  const v = fy.v! + h1.v! - h0.v!, title = `${m.l} · ${book.name(ent)}`;
+  return { v, fl: 0, p: `${y}Q2`, stale: q === 3, prov: () => ({ k: 'calc', title, value: fmtB(m, v), unit: unitB(m), formula: `LTM = שנת ${y - 1} + H1 ${y} − H1 ${y - 1} (הנתון מתפרסם לחציונים ולשנים)`,
+    inputs: [{ label: `FY${y - 1}`, v: mil(fy.v!), src: fy.prov }, { label: `H1 ${y}`, v: mil(h1.v!), src: h1.prov }, { label: `H1 ${y - 1}`, v: mil(h0.v!), src: h0.prov }] }) };
 }
 /** a metric on the LTM axis at quarter end (the history chart) */
 export function histVal(book: Book, m: BMetric, ent: string, kind: Kind, p: string, peers: string[]): Val | null {
