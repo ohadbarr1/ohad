@@ -25,6 +25,7 @@ interface Props { reg: Registry; ents: string[]; setName: string }
 type Win = '12' | '36' | '60';
 type HWin = '12' | '24' | '40';
 type FMode = 'bn' | 'pct';
+const BAL = new Set(['oaum', 'open', 'ogem', 'opol']);
 const HK = ['bx', 'by', 'bm', 'bh', 'bw', 'bs', 'bf'];
 
 export function PeersBoard({ reg, ents, setName }: Props) {
@@ -79,10 +80,10 @@ export function PeersBoard({ reg, ents, setName }: Props) {
   const mkt = ms.filter((m) => m.sec === 'mkt'), biz = ms.filter((m) => m.sec === 'biz');
   const sav = ms.filter((m) => m.grp === 'sav'), insOps = ms.filter((m) => m.grp === 'ins');
   const anyOf = (xs: BMetric[]) => xs.filter((m) => ents.some((e) => cells.get(m.key)?.get(e)?.v != null));
-  const savShown = anyOf(sav), insShown = anyOf(insOps);
+  const savShown = anyOf(sav).filter((m) => !m.hide), insShown = anyOf(insOps);
   const insOrder = order.filter((e) => kindOf(e) === 'ins');
-  const sumOf = (rows: string[]) => (m: BMetric) => { if (m.u !== 'bn' && m.u !== 'm') return null; const xs = rows.map((e) => v(m.key, e)).filter((x): x is number => x != null); return xs.length && (m.ax === 'reg' || xs.length === rows.length) ? xs.reduce((a, x) => a + x, 0) : null; };
-  // a total over the whole set only: in the regulator's files a missing product is none (zero), elsewhere it is an undisclosed figure
+  const sumOf = (rows: string[]) => (m: BMetric) => { if (m.u !== 'bn' && m.u !== 'm') return null; const xs = rows.map((e) => v(m.key, e)).filter((x): x is number => x != null); return xs.length && (BAL.has(m.key) || (xs.length === rows.length && !rows.some((e) => cells.get(m.key)?.get(e)?.stale))) ? xs.reduce((a, x) => a + x, 0) : null; };
+  // a total over the whole set only, of one period; an asset balance by product is the exception: a group without the product holds none
   const has = (k: string) => ms.some((m) => m.key === k);
 
   return (
@@ -252,7 +253,7 @@ function CompsTable({ title, sub, ms, order, cells, stats, focus, book, onFocus,
 /* ---------- scatter: any two metrics, with the set's least-squares line ---------- */
 function Scatter({ book, ents, ms, cells, focus, x, y, setX, setY }: { book: NonNullable<ReturnType<typeof useBook>['book']>; ents: string[]; ms: BMetric[]; cells: Map<string, Map<string, BVal>>; focus: string; x: string; y: string; setX: (k: string) => void; setY: (k: string) => void }) {
   const { open } = useSource();
-  const opts = ms.filter((m) => m.u !== 'm' && m.u !== 'bn').map((m) => [m.key, m.sh] as [string, string]);
+  const opts = ms.filter((m) => !m.hide && m.u !== 'm' && m.u !== 'bn').map((m) => [m.key, m.sh] as [string, string]);
   const mx = MBY.get(x) ?? MBY.get('roe')!, my = MBY.get(y) ?? MBY.get('pb')!;
   const pts = ents.map((e) => ({ e, a: cells.get(mx.key)?.get(e), b: cells.get(my.key)?.get(e), s: cells.get('mcap')?.get(e)?.v ?? null })).filter((q) => q.a?.v != null && q.b?.v != null);
   const fit = ols(pts.map((q) => [q.a!.v!, q.b!.v!]));
@@ -307,7 +308,7 @@ function Bars({ book, ents, ms, cells, stats, focus, k, setK }: { book: NonNulla
   };
   return (
     <section className="panel">
-      <div className="hd"><h2>דירוג · {m.l}</h2><div className="aside"><Pick label="מדד לדירוג" cap="מדד" value={k} onChange={setK} options={ms.map((x) => [x.key, x.sh] as [string, string])} /></div></div>
+      <div className="hd"><h2>דירוג · {m.l}</h2><div className="aside"><Pick label="מדד לדירוג" cap="מדד" value={k} onChange={setK} options={ms.filter((x) => !x.hide).map((x) => [x.key, x.sh] as [string, string])} /></div></div>
       {!rows.length ? <Empty title="אין נתונים למדד" /> : <Chart label={`דירוג ${m.sh}`} height={Math.max(300, rows.length * 30)} deps={[k, ents.join(), focus, rows.length]} build={build} onPoint={(_, di) => open(rows[di].x!.prov())} source="דוחות החברות · TASE · fox" />}
       <div className="src">{unitB(m)} · מודגש: החברה במיקוד · קו מקווקו: חציון הקבוצה{m.note ? ` · ${m.note}` : ''}</div>
     </section>
@@ -397,9 +398,9 @@ function Flows({ book, ents, cells, focus, mode, setMode, p }: { book: NonNullab
   const { open } = useSource();
   const legs: [string, string, number][] = [['odep', 'הפקדות', 1], ['owd', 'משיכות ופדיונות', -1], ['otr', 'ניוד נטו', 1], ['onet', 'צבירה נטו', 1]];
   const val = (k: string, e: string) => cells.get(k)?.get(e)?.v ?? null;
-  const rows = ents.filter((e) => val('odep', e) != null && val('onet', e) != null && (mode === 'bn' || (val('oaum', e) ?? 0) > 0))
-    .sort((a, b) => (mode === 'pct' ? (val('onet', b)! / val('oaum', b)!) - (val('onet', a)! / val('oaum', a)!) : val('onet', b)! - val('onet', a)!));
-  const at = (k: string, sgn: number, e: string) => { const x = val(k, e); if (x == null) return null; const y = sgn * x; return mode === 'pct' ? +((y / val('oaum', e)!) * 100).toFixed(2) : +y.toFixed(2); };
+  const rows = ents.filter((e) => val('odep', e) != null && val('onet', e) != null && (mode === 'bn' || (val('oflowa', e) ?? 0) > 0))
+    .sort((a, b) => (mode === 'pct' ? (val('onet', b)! / val('oflowa', b)!) - (val('onet', a)! / val('oflowa', a)!) : val('onet', b)! - val('onet', a)!));
+  const at = (k: string, sgn: number, e: string) => { const x = val(k, e); if (x == null) return null; const y = sgn * x; return mode === 'pct' ? +((y / val('oflowa', e)!) * 100).toFixed(2) : +y.toFixed(2); };
   const build = (): EChartsCoreOption => {
     const b = chartBase(), pal = palette(), col = [b.up, b.down, pal[2], b.accent];
     const cats = rows.map((e) => book.short(e) + (e === focus ? ' ◂' : ''));
@@ -422,7 +423,7 @@ function Flows({ book, ents, cells, focus, mode, setMode, p }: { book: NonNullab
       <div className="hd"><h2>גשר הצבירה · {plab('LTM', p)}</h2><div className="aside"><Seg<FMode> label="יחידה" value={mode} onChange={setMode} options={[['bn', 'מיליארדי ש"ח'], ['pct', '% מהנכסים']]} /></div></div>
       {rows.length < 2 ? <Empty title="אין נתוני תזרים" /> : <Chart label="גשר הצבירה" height={Math.max(320, rows.length * (typeof window !== 'undefined' && window.innerWidth < 760 ? 92 : 34))} deps={[mode, ents.join(), focus, rows.length, p]} build={build} source="רשות שוק ההון · fox"
         onPoint={(si, di) => { const x = cells.get(legs[si][0])?.get(rows[di]); if (x?.v != null) open(x.prov()); }} />}
-      <div className="src">הפקדות פחות משיכות ופדיונות ועוד ניוד נטו = צבירה נטו (LTM, כל המוצרים){mode === 'pct' ? ' · באחוזים מהנכסים בסוף התקופה' : ''} · משיכות כוללות קצבאות ותשלומי פרישה, לא רק ביטולים · ◂ החברה במיקוד</div>
+      <div className="src">הפקדות פחות משיכות ופדיונות ועוד ניוד נטו = צבירה נטו (LTM, כל המוצרים){mode === 'pct' ? ' · באחוזים מנכסי פנסיה וגמל בסוף התקופה (לפוליסות אין נתוני תזרים)' : ''} · משיכות כוללות קצבאות ותשלומי פרישה, לא רק ביטולים · ◂ החברה במיקוד</div>
     </section>
   );
 }
@@ -444,7 +445,7 @@ async function exportBoard(book: NonNullable<ReturnType<typeof useBook>['book']>
   const fmt = (m: BMetric) => (m.u === 'm' ? 'n0' : m.u === 'x' || m.u === 'bn' ? 'n2' : 'n1') as 'n0' | 'n1' | 'n2';
   const NAME = { mkt: 'המניה', biz: 'העסק', ops: 'הפעילות' } as const;
   const sheet = (sec: 'mkt' | 'biz' | 'ops') => {
-    const mm = ms.filter((m) => m.sec === sec && order.some((e) => cells.get(m.key)?.get(e)?.v != null));
+    const mm = ms.filter((m) => m.sec === sec && !m.hide && order.some((e) => cells.get(m.key)?.get(e)?.v != null));
     const rows: XC[][] = [[{ v: `fox · השוואה ענפית · ${NAME[sec]}`, bold: true }], [`${setName} · נתונים כספיים ${plab('LTM', p)} · שוק: סגירה ${asof}${sec === 'ops' ? ` · רגולטור ${plab('LTM', pOps)}` : ''}`], [],
       [{ v: 'חברה', head: true }, ...mm.map((m) => ({ v: `${m.sh} (${unitB(m)})`, head: true }))]];
     order.forEach((e) => rows.push([book.name(e), ...mm.map((m) => { const x = cells.get(m.key)?.get(e); return x?.v == null ? null : { v: +x.v.toFixed(4), fmt: fmt(m) }; })]));

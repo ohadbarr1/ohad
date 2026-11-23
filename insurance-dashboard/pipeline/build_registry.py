@@ -533,11 +533,13 @@ def flows(pi, n, s, g):
 REG = {"assets": ("נכסים מנוהלים", "bn", "s"), "share": ("נתח שוק בנכסים", "pct", "s"), "netflow": ("צבירה נטו כולל ניוד", "bn", "f"),
        "organic": ("צבירה אורגנית (הפקדות פחות משיכות)", "bn", "f"), "transfers": ("ניוד נטו", "bn", "f"), "fee": ("דמי ניהול ממוצעים", "pct", "s"),
        # the gross legs of the organic flow (the peer board's operating section): deposits and withdrawals (incl. redemptions)
-       "deposits": ("הפקדות", "bn", "f"), "withdrawals": ("משיכות ופדיונות", "bn", "f")}
+       "deposits": ("הפקדות", "bn", "f"), "withdrawals": ("משיכות ופדיונות", "bn", "f"),
+       # the base of flow rates: assets of the products whose files publish flows (pension, gemel; not the savings policies of bituach-net)
+       "flowassets": ("נכסים במוצרים עם נתוני תזרים (פנסיה, גמל והשתלמות)", "bn", "s")}
 breaks = mk.get("breaks") or []
 for s in SETS:
     for key, (label, unit, kind) in REG.items():
-        if s == "insurance" and kind == "f":
+        if s == "insurance" and (kind == "f" or key == "flowassets"):
             continue  # the insurance file publishes no flows
         ch = Chunk()
         for gi, gname in enumerate(groups):
@@ -555,6 +557,9 @@ for s in SETS:
                 q = f"{y}Q{mo // 3}"
                 if key == "assets":
                     ch.cell(ent, q, c[0] / 1000, aux=pi)
+                elif key == "flowassets":
+                    if c[1] > 0:
+                        ch.cell(ent, q, c[1] / 1000, aux=pi)
                 elif key == "share":
                     m_all = cell.get((pi, s, -1))
                     if m_all and m_all[0] > 0:
