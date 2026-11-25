@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ckanDataset, REG_SITE } from '../lib/sources';
-import { DEFAULT_PER, TIE_BP } from '../lib/fundsTie';
+import { DEFAULT_PER, TIE_BP, TIE_M1 } from '../lib/fundsTie';
 import { EXP_HI, EXP_LO } from '../lib/flags';
 import { useRegistry } from '../lib/useData';
 import '../styles/about.css';
@@ -56,7 +56,7 @@ export function Methodology() {
           <dt>חלון ברירת המחדל</dt><dd>{win}, נטו. חלונות אחרים נבחרים בכל טבלה ונשמרים בכתובת.</dd>
           <dt>קטגוריה</dt><dd>אותו מוצר ואותו מסלול (למשל ״השתלמות | כללי״), לפי הסיווג הרשמי של הרשות כשיש, ואחרת לפי שם המסלול. מדורגים מסלולים פתוחים לכלל הציבור עם נכסים; מסלולים בניהול אישי (IRA) אינם מדורגים.</dd>
           <dt>אחוזון</dt><dd>100 × (מספר המסלולים שתשואתם נמוכה + חצי ממספר השווים) ÷ (מספר המסלולים − 1); 100 = הגבוה בקטגוריה. מחושב רק בקטגוריה עם חמישה מסלולים לפחות.</dd>
-          <dt>תיקו</dt><dd>שני מסלולים שהפער ביניהם קטן מ-<span className="num">{TIE_BP}</span> נקודות בסיס בשנה חולקים מקום (״2–3״), ואף אחד מהם אינו ״מוביל״ או ״מאסף״. על חודש ועל YTD הרצועה יחסית לאורך החלון. זו מוסכמת הצגה, לא מבחן סטטיסטי: פער כזה קטן מרעש המעקב הרגיל בין מסלולים באותה קטגוריה.</dd>
+          <dt>תיקו</dt><dd>שני מסלולים שהפער ביניהם קטן מ-<span className="num">{TIE_BP}</span> נקודות בסיס בשנה חולקים מקום (״2–3״), ואף אחד מהם אינו ״מוביל״ או ״מאסף״. על חודש בודד הרצועה היא <span className="num">{TIE_M1}</span> נקודות אחוז; על YTD היא יחסית לאורך החלון. זו מוסכמת הצגה, לא מבחן סטטיסטי: פער כזה קטן מרעש המעקב הרגיל בין מסלולים באותה קטגוריה.</dd>
         </dl>
       </section>
 
