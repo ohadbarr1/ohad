@@ -5,11 +5,20 @@
 <link>https://fox-research-il.web.app/feed?co=analyst</link>
 <description>כל שינוי בנתונים של אנליסט ב-fox, עם המקור של כל מספר.</description>
 <language>he</language>
-<lastBuildDate>Thu, 20 Aug 2026 00:00:00 +0300</lastBuildDate>
+<lastBuildDate>Wed, 25 Nov 2026 00:00:00 +0200</lastBuildDate>
 <ttl>360</ttl>
 <atom:link href="https://fox-research-il.web.app/feed/analyst.xml" rel="self" type="application/rss+xml"/>
 <generator>fox pipeline/build_rss.py</generator>
 <image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · אנליסט</title><link>https://fox-research-il.web.app/feed?co=analyst</link></image>
+<item>
+<title>אנליסט · שבריריות: ניוד נטו · גמל והשתלמות: תקין ← מעקב</title>
+<link>https://fox-research-il.web.app/fragility?c=analyst&amp;s=flow</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:analyst:flow:202610</guid>
+<pubDate>Wed, 25 Nov 2026 00:00:00 +0200</pubDate>
+<category>מוניטור שבריריות</category>
+<category>אנליסט</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;העברות נטו, 3 חודשים · גמל והשתלמות: −1,188 מיליוני ש"ח (10/26), לעומת −542.3 (09/26)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 25.11.26 · תקופה: 10/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=analyst&amp;amp;s=flow"&gt;https://fox-research-il.web.app/fragility?c=analyst&amp;amp;s=flow&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
 <item>
 <title>אנליסט · דוח: דוח רבעוני Q2'26</title>
 <link>https://fox-research-il.web.app/card/analyst/2026Q2</link>

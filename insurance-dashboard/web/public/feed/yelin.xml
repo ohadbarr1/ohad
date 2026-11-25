@@ -5,7 +5,7 @@
 <link>https://fox-research-il.web.app/feed?co=yelin</link>
 <description>כל שינוי בנתונים של ילין לפידות ב-fox, עם המקור של כל מספר.</description>
 <language>he</language>
-<lastBuildDate>Wed, 30 Sep 2026 00:00:00 +0300</lastBuildDate>
+<lastBuildDate>Wed, 25 Nov 2026 00:00:00 +0200</lastBuildDate>
 <ttl>360</ttl>
 <atom:link href="https://fox-research-il.web.app/feed/yelin.xml" rel="self" type="application/rss+xml"/>
 <generator>fox pipeline/build_rss.py</generator>
@@ -13,11 +13,11 @@
 <item>
 <title>ילין לפידות · שבריריות: שחיקת ביצועים · גמל והשתלמות: תקין ← מעקב</title>
 <link>https://fox-research-il.web.app/fragility?c=yelin&amp;s=perf</link>
-<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:yelin:perf:202609</guid>
-<pubDate>Wed, 30 Sep 2026 00:00:00 +0300</pubDate>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/frag:yelin:perf:202610</guid>
+<pubDate>Wed, 25 Nov 2026 00:00:00 +0200</pubDate>
 <category>מוניטור שבריריות</category>
 <category>ילין לפידות</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;פער שארפ 3Y מול חציון העמיתים · גמל והשתלמות: −0.09 (09/26), לעומת −0.12 (08/26)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;חודש הנתונים: 09/26 · תקופה: 09/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=perf"&gt;https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=perf&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;פער שארפ 3Y מול חציון העמיתים · גמל והשתלמות: −0.19 (10/26), לעומת −0.09 (09/26)&lt;/p&gt;&lt;p&gt;מקור: מוניטור השבריריות של fox&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 25.11.26 · תקופה: 10/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=perf"&gt;https://fox-research-il.web.app/fragility?c=yelin&amp;amp;s=perf&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>ילין לפידות · הצגה מחדש: דוח רבעוני Q2'26 הציג מחדש תקופות קודמות</title>

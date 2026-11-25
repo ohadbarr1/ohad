@@ -3,7 +3,7 @@
  "version": "v1",
  "site": "https://fox-research-il.web.app",
  "base": "https://fox-research-il.web.app/data/tables/v1/",
- "built": "2026-11-06",
+ "built": "2026-11-25",
  "promise": "v1: a column never changes meaning, a metric id never changes meaning or unit; new columns are appended at the end, new tables and metrics are added; a breaking change opens v2 beside v1.",
  "columns": [
   {
@@ -3542,8 +3542,8 @@
    "pq": "pq/savings_q.pq",
    "csv_bytes": 2679157,
    "json_bytes": 2894008,
-   "csv_sha256": "52f10dc76c79f5b5696472e7088d62ee2b7d522ff3f6301d23f1cfb8c3c61148",
-   "json_sha256": "67950d8f181f99c0898153cd8f5aea90153864bb42986145c6475c680ba258dc"
+   "csv_sha256": "f52aa15c56a4fd55c0021b77b88c41270ec42861f4d30dd17e381f71956d612e",
+   "json_sha256": "7d7495a8bd2b1e5cddad45f75c31fe4924e21a6d984fa027190bb9290a0c8796"
   },
   {
    "id": "savings_m",
@@ -3551,7 +3551,7 @@
    "en": "Long-term savings, monthly by group and product (regulator)",
    "grain": "group × product × metric × month, from 01/22",
    "grain_he": "קבוצה × מוצר × מדד × חודש, מ-01/22",
-   "rows": 40695,
+   "rows": 41435,
    "entities": 16,
    "metrics": [
     {
@@ -3628,16 +3628,16 @@
     }
    ],
    "first": "2022-01",
-   "last": "2026-09",
+   "last": "2026-10",
    "first_label": "01/22",
-   "last_label": "09/26",
-   "changed": "2026-11-05",
+   "last_label": "10/26",
+   "changed": "2026-11-25",
    "csv": "savings_m.csv",
    "json": null,
    "pq": "pq/savings_m.pq",
-   "csv_bytes": 10916843,
+   "csv_bytes": 11115118,
    "json_bytes": null,
-   "csv_sha256": "be098387bc4db8e4691cacf00a0d80888cb8172e2b37affb20f3ad922d958fe2",
+   "csv_sha256": "b0f3e047111f5c324e4c999f95703460e47a855b697e8072306b13d15b033c0d",
    "json_sha256": null
   },
   {
@@ -3646,8 +3646,8 @@
    "en": "Tracks, monthly (regulator)",
    "grain": "track × metric × month, last 12 months",
    "grain_he": "מסלול × מדד × חודש, 12 החודשים האחרונים",
-   "rows": 56114,
-   "entities": 1257,
+   "rows": 56366,
+   "entities": 1262,
    "metrics": [
     {
      "id": "aum",
@@ -3686,17 +3686,17 @@
      "def": "אומדן fox: התשואה ברוטו פחות שיעור דמי הניהול מהצבירה ÷ 12; שיעור ממוצע של המסלול, לא של חוסך מסוים"
     }
    ],
-   "first": "2025-10",
-   "last": "2026-09",
-   "first_label": "10/25",
-   "last_label": "09/26",
-   "changed": "2026-11-05",
+   "first": "2025-11",
+   "last": "2026-10",
+   "first_label": "11/25",
+   "last_label": "10/26",
+   "changed": "2026-11-25",
    "csv": "funds_m.csv",
    "json": null,
    "pq": "pq/funds_m.pq",
-   "csv_bytes": 17875305,
+   "csv_bytes": 17954191,
    "json_bytes": null,
-   "csv_sha256": "ea9bcb03fd6c5cfbe80431b5dadcdcb0de2a44fa772383a4dd3522fc40ba0a06",
+   "csv_sha256": "e880aea5c53183880e20168dacb28e40af590d15e3d22734c531c994f1bcff29",
    "json_sha256": null
   }
  ],
@@ -3704,12 +3704,12 @@
   "json": "changes.json",
   "csv": "changes.csv",
   "pq": "pq/changes.pq",
-  "builds": 2,
-  "last": "2026-11-06"
+  "builds": 3,
+  "last": "2026-11-25"
  },
  "kit": {
   "xlsx": "fox_powerquery.xlsx",
-  "bytes": 36333,
-  "sha256": "67e28e4d7f90c6e2e3618aa1c30119e5d3383ff47b782e1daf93fb17a8686a6b"
+  "bytes": 36341,
+  "sha256": "245060105cef5325170a57e18235b336c92056502f96b015fedf982afc97ac08"
  }
 }
