@@ -131,6 +131,9 @@ def gate(paths, log):
     p = subprocess.run([PY, str(paths.root / "pipeline" / "gate.py")], cwd=paths.root, capture_output=True, text=True, timeout=3600)
     qa = read_json(paths.data / "qa.json", {})
     fails = [c["id"] for c in qa.get("checks", []) if not c.get("ok") and c.get("level") == "fail"]
+    if p.returncode != 0 and not fails:  # the gate stopped before writing qa.json: say why instead of an empty list
+        err = [l for l in (p.stderr or p.stdout or "").strip().splitlines() if l.strip()]
+        fails = ["crash: " + (err[-1][:160] if err else f"exit {p.returncode}")]
     log(f"gate: {'passed' if p.returncode == 0 else 'FAILED'}" + (f" ({', '.join(fails)})" if fails else ""))
     return {"ran": True, "ok": p.returncode == 0, "fails": fails, "built": qa.get("built")}
 

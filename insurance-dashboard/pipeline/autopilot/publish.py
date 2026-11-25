@@ -24,6 +24,15 @@ import notify
 
 
 OWN_STATUS = "web/public/data/autopilot/status.json"
+# what the pipeline regenerates by itself (date-stamped outputs of the DAG's daily steps, the answer-snapshot ledger, the regulator
+# taxonomy): a change there is not the owner's work, and the next landing commits it. Anything else dirty still blocks publishing.
+GENERATED = ("web/public/data/", "data/ledger/answers/", "data/regulation/")
+
+
+def _generated(path):
+    """porcelain paths are relative to the repository root (insurance-dashboard/web/...): match by path segment"""
+    q = "/" + path.strip('"')
+    return any("/" + g in q for g in GENERATED)
 
 
 def _git(root, *args, timeout=120):
@@ -99,9 +108,9 @@ def preflight(root, cfg, ops=None, st=None):
     ops = ops or Ops()
     branch, remote, _ = _cfg(cfg)
     _, dirty, _ = ops.git(root, "status", "--porcelain", "--untracked-files=no", "--", ".")
-    # the autopilot's own status file (rewritten by every run that found something, a failed pull included) does not count as the
-    # owner's work: otherwise one failed run would block every later publish until a manual commit; the next landing commits it
-    dirty = "\n".join(l for l in _lines(dirty) if not l.endswith(OWN_STATUS))
+    # the autopilot's own status file and everything else the pipeline regenerates (GENERATED) do not count as the owner's work:
+    # otherwise the first build of each day (date-stamped files) would block every later publish until a manual commit
+    dirty = "\n".join(l for l in _lines(dirty) if not _generated(l[3:].strip()))
     _, untracked, _ = ops.git(root, "ls-files", "--others", "--exclude-standard", "--", ".")
     pre = {"clean": not dirty, "untracked": _lines(untracked), "counts": _counts(root, ops, remote, branch), "pulled": 0}
     if pre["counts"] and pre["counts"][1] > 0 and pre["counts"][0] == 0 and pre["clean"]:
