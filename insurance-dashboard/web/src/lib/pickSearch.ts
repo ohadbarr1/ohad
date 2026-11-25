@@ -40,6 +40,8 @@ const prodRank = (prod: string) => { const i = PRODUCT_ORDER.indexOf(prod); retu
 const TRACK_RANK: Record<string, number> = { 'כללי': 1.5, 'עד 50': 1.3, '50-60': 1.2, '60 ומעלה': 1.1, 'מקבלי קצבה': 0.6 };
 
 const nz = (s: string) => normalize(s);
+/** tracks for a special population or a legacy promise: after the mainstream tracks, unless the query names them ("מגדל מקבלי קצבה") */
+const NICHE = new Set(['מקבלי קצבה', 'מבטיח תשואה', 'אחר']);
 const STOP = new Set(['קופת', 'קופה', 'קופות', 'קרן', 'קרנות', 'מסלול', 'מסלולי', 'מסלולים', 'של', 'את', 'עם', 'חברת', 'חברה', 'בחברת', 'אצל', 'תכנית', 'תוכנית', 'מוצר', 'כמו', 'אני', 'רוצה', 'להשוות'].map(nz));
 const SPLIT = /\s+(?:מול|נגד|לעומת|vs\.?|versus)\s+/i;
 /** words that mean the same word once normalised: "בהשקעה", "להשקעות" → "השקעה" */
@@ -58,13 +60,46 @@ const PHRASES: [string[], string[]][] = [
   [['גמל'], [P.gemel, P.hash, P.gOther]],
 ].map(([w, p]) => [(w as string[]).map(nz), p as string[]]);
 
+/** B1 polish: light tolerance for COMPANY names only (never track words). An alias list for the spellings savers actually type, then the
+ *  matres lectionis: an extra or missing י/ו ("מיגדל", "אלטשלר") finds the company when the word is not one of the fund index's own track/product words. */
+const ALIAS: Record<string, string> = Object.fromEntries(([
+  ['מיגדל', 'מגדל'], ['מגדל', 'מגדל'], ['migdal', 'מגדל'], ['הפניכס', 'הפניקס'], ['הפיניקס', 'הפניקס'], ['הפינקס', 'הפניקס'], ['פניקס', 'הפניקס'], ['פיניקס', 'הפניקס'], ['phoenix', 'הפניקס'],
+  ['הארל', 'הראל'], ['harel', 'הראל'], ['clal', 'כלל'], ['מנורא', 'מנורה'], ['menora', 'מנורה'], ['אלטשלר', 'אלטשולר'], ['אלטשולר', 'אלטשולר'], ['altshuler', 'אלטשולר'],
+  ['מיטב', 'מיטב'], ['meitav', 'מיטב'], ['איילון', 'איילון'], ['ayalon', 'איילון'], ['לפידות', 'לפידות'],
+] as [string, string][]).map(([a, b]) => [nz(a), nz(b)]));
+const skel = (w: string) => w.replace(/[יו]/g, '');
+const companyMaps = new WeakMap<PickFund[], { names: Map<string, string>; other: Set<string> }>();
+/** company words of the index (skeleton → word, '' when two different words share a skeleton) and the track/product words that are never corrected */
+function companyMap(idx: PickFund[]) {
+  let m = companyMaps.get(idx);
+  if (m) return m;
+  const names = new Map<string, string>(), other = new Set<string>();
+  for (const f of idx) {
+    for (const w of terms(canon([f.track, f.prod].join(' ')))) other.add(w);
+    for (const w of terms(canon(f.grp ?? ''))) { const k = skel(w), cur = names.get(k); names.set(k, cur === undefined || cur === w ? w : ''); }
+  }
+  m = { names, other }; companyMaps.set(idx, m);
+  return m;
+}
+/** one query word → the company word it most likely means, else itself */
+function fixCompany(w: string, idx: PickFund[]): string {
+  const { names, other } = companyMap(idx);
+  if (other.has(w)) return w;
+  const a = ALIAS[w];
+  if (a) return a;
+  const k = skel(w);
+  if (k.length < 3) return w;
+  const c = names.get(k);
+  return c && c !== w ? c : w;
+}
+
 interface Side { raw: string; fq: FundQ; prods: string[] | null; empty: boolean }
 /** one side of a query: stop-words out, the product phrase lifted into a filter, the rest as the fund matcher's words */
-function readSide(raw: string): Side {
+function readSide(raw: string, idx: PickFund[]): Side {
   const t = raw.trim();
   const fq0 = fundQuery(t);
   if (fq0.num || fq0.key) return { raw: t, fq: fq0, prods: null, empty: false };
-  let w = terms(canon(t)).map((x) => SYN[x] ?? x).filter((x) => !STOP.has(x));
+  let w = terms(canon(t)).map((x) => SYN[x] ?? x).filter((x) => !STOP.has(x)).map((x) => fixCompany(x, idx));
   let prods: string[] | null = null;
   for (const [ph, ps] of PHRASES) {
     for (let i = 0; i + ph.length <= w.length; i++) {
@@ -78,22 +113,22 @@ function readSide(raw: string): Side {
 function sideHits(s: Side, idx: PickFund[], prods: string[] | null, cat?: Cat, n = 8): PickFund[] {
   if (s.empty) return [];
   const pf = prods ?? s.prods;
-  const scored: { f: PickFund; sc: number; ok: boolean }[] = [];
+  const scored: { f: PickFund; sc: number; ok: boolean; niche: number }[] = [];
   for (const f of idx) {
     const sc = s.fq.words.length || s.fq.num || s.fq.key ? fundMatch(s.fq, f) : 1;
-    if (sc > 0) scored.push({ f, sc, ok: !pf || pf.includes(f.prod) });
+    if (sc > 0) scored.push({ f, sc, ok: !pf || pf.includes(f.prod), niche: NICHE.has(f.track) && !terms(f.track).some((t) => s.fq.words.includes(t)) ? 1 : 0 });
   }
   // a product named in the words is a filter; when it leaves nothing, the words alone speak (a soft filter)
   const filtered = pf && scored.some((x) => x.ok) ? scored.filter((x) => x.ok) : scored;
   return filtered.sort((a, b) => cmp(a, b, cat)).slice(0, n).map((x) => x.f);
 }
-function cmp(a: { f: PickFund; sc: number }, b: { f: PickFund; sc: number }, cat?: Cat): number {
+function cmp(a: { f: PickFund; sc: number; niche: number }, b: { f: PickFund; sc: number; niche: number }, cat?: Cat): number {
   const d = (f: PickFund) => (isOldGen(f.prod) || f.closed ? 1 : 0);
   const idA = isIdHit(a.sc), idB = isIdHit(b.sc);
   if (idA !== idB) return idA ? -1 : 1;
   if (!idA && d(a.f) !== d(b.f)) return d(a.f) - d(b.f);
   const inC = (f: PickFund) => (cat && (!cat.prod || f.prod === cat.prod) && (!cat.track || f.track === cat.track) ? 0 : 1);
-  return inC(a.f) - inC(b.f) || b.sc - a.sc || prodRank(a.f.prod) - prodRank(b.f.prod)
+  return inC(a.f) - inC(b.f) || b.sc - a.sc || a.niche - b.niche || prodRank(a.f.prod) - prodRank(b.f.prod)
     || (TRACK_RANK[b.f.track] ?? 0) - (TRACK_RANK[a.f.track] ?? 0) || b.f.assets - a.f.assets || a.f.k.localeCompare(b.f.k);
 }
 
@@ -108,7 +143,7 @@ export function pickSearch(q: string, idx: PickFund[], opts: { n?: number; cat?:
   if (!text) return none;
   const parts = text.split(SPLIT).map((x) => x.trim()).filter(Boolean);
   if (parts.length >= 2) {
-    const A = readSide(parts[0]), B = readSide(parts[1]);
+    const A = readSide(parts[0], idx), B = readSide(parts[1], idx);
     if (A.empty || B.empty) return { ...none, hits: sideHits(A.empty ? B : A, idx, null, cat, n) };
     const own = A.prods ?? B.prods;                       // a product named on one side stands for both
     const cands = (own ?? PRODUCT_ORDER).filter((p) => !isOldGen(p) || own);
@@ -122,7 +157,7 @@ export function pickSearch(q: string, idx: PickFund[], opts: { n?: number; cat?:
     // no product holds both sides: the sides' own best tracks, no pair
     return { hits: dedupe([...sideHits(A, idx, null, cat, n), ...sideHits(B, idx, null, cat, n)]).slice(0, n), pair: null, prods: own };
   }
-  const s = readSide(text);
+  const s = readSide(text, idx);
   if (!s.fq.num && !s.fq.key && text.length < 2) return none;
   return { hits: sideHits(s, idx, null, cat, n), pair: null, prods: s.prods };
 }

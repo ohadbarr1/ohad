@@ -121,13 +121,13 @@ function CompareEntry({ mine }: { mine: MyProduct[] }) {
   const m = useMineCompare(mine);
   return (
     <section className="dentry-w" aria-labelledby="dentry-t">
-      <Link to="/funds/compare" className="dentry" id="home-compare">
+      <Link to="/funds/compare?v=months" className="dentry" id="home-compare">
         <span className="icotile lg"><Ico name="compare" /></span>
         <span className="dentry-t"><b id="dentry-t">כמה הרוויח המסלול שלי?</b><small>חודש אחרי חודש, מול מסלולים דומים בחברות אחרות.</small></span>
         <span className="dentry-go">להשוואה ›</span>
       </Link>
       {m && (
-        <Link to={`/funds/compare?k=${m.keys.join(',')}`} className="dmineRow" id="home-mine">
+        <Link to={`/funds/compare?k=${m.keys.join(',')}&v=months`} className="dmineRow" id="home-mine">
           <span className="dmineRow-t"><b>המסלול שלי: {m.label}</b><small>ישר להשוואה מול שני הגדולים מאותו סוג</small></span>
           <span className="dmineRow-go" aria-hidden="true">›</span>
         </Link>
@@ -144,7 +144,7 @@ function FeesCard({ mine }: { mine: MyProduct[] }) {
       <span className="icotile"><Ico name="fee" /></span>
       <b>כמה עולים לי דמי הניהול?</b>
       <div className="dfee-l">
-        <Link to={m ? `/funds/compare?k=${m.keys.join(',')}&focus=fee` : '/funds/compare?focus=fee'} id="home-fees" className="dlink">להשוות דמי ניהול בין מסלולים ›</Link>
+        <Link to={m ? `/funds/compare?k=${m.keys.join(',')}&v=months&focus=fee` : '/funds/compare?v=months&focus=fee'} id="home-fees" className="dlink">להשוות דמי ניהול בין מסלולים ›</Link>
         <Link to="/funds/tools/fees" className="dlink q">מחשבון עד הפרישה ›</Link>
       </div>
     </div>

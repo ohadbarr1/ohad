@@ -45,5 +45,26 @@ ok(pickSearch('', idx).hits.length === 0 && pickSearch('מ', idx).hits.length ==
   const i = r.hits.findIndex((f) => f.closed || isOldGen(f.prod));
   ok(i < 0 || r.hits.slice(i).every((f) => f.closed || isOldGen(f.prod)), 'closed / old-generation tracks only at the tail');
 }
+// B1 polish: pensioner / special tracks rank after the mainstream ones unless named
+{
+  const r = pickSearch('מגדל', idx, { n: 8 });
+  const first = r.hits.findIndex((f) => f.track === 'מקבלי קצבה');
+  ok(first < 0 || r.hits.slice(0, first).every((f) => f.track !== 'מקבלי קצבה') && r.hits.some((f) => f.track === 'מניות'), `"מגדל": מניות before מקבלי קצבה (${r.hits.map((f) => f.track).join()})`);
+  ok(r.hits.filter((f) => f.track === 'מקבלי קצבה').length < 3, '"מגדל": not a screen of מקבלי קצבה');
+  const n = pickSearch('מגדל מקבלי קצבה', idx, { n: 5 });
+  ok(n.hits.every((f) => f.track === 'מקבלי קצבה'), 'a query that names מקבלי קצבה gets them');
+  ok(pickSearch('מגדל פנסיה', idx, { n: 4 }).hits.every((f) => f.track !== 'מקבלי קצבה'), '"מגדל פנסיה": mainstream first');
+}
+// B1 polish: company-name tolerance (matres lectionis + aliases); track words are never corrected
+{
+  const same = (a: string, b: string) => top(a, 8) === top(b, 8) && top(a, 8) !== '';
+  ok(same('מיגדל', 'מגדל'), '"מיגדל" = "מגדל"');
+  ok(same('מיגדל השתלמות', 'מגדל השתלמות'), '"מיגדל השתלמות" = "מגדל השתלמות"');
+  ok(same('הפניכס', 'הפניקס') && same('הפיניקס', 'הפניקס'), 'הפניכס / הפיניקס → הפניקס');
+  ok(same('אלטשלר', 'אלטשולר') && same('אלטשולר', 'אלטשולר שחם'), 'אלטשלר / אלטשולר → אלטשולר שחם');
+  ok(pickSearch('מגדל כללי', idx).hits[0]?.track === 'כללי', '"כללי" is a track word, not company כלל');
+  ok(pickSearch('כללי', idx).hits[0]?.track === 'כללי', '"כללי" alone still finds the general track');
+  ok(pickSearch('מיגדל מול הראל', idx).hits.length > 0, '"מיגדל מול הראל" resolves both sides');
+}
 console.log(`pickSearch: ${pass} passed, ${fail} failed`);
 if (fail) { bad.forEach((b) => console.log('  ✗ ' + b)); process.exit(1); }
