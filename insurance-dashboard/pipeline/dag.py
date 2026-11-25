@@ -204,7 +204,7 @@ STEPS = [
     # It runs the A7 capital logic in memory (pipeline/build_capital.py as code), and A7 reads its bolt-on row back: no cycle
     step("build_consolidation", "pipeline/build_consolidation.py",
          [D + "drivers", D + "csm/solvency.json", D + "csm/facts", D + "csm/capital.json", D + "companies/index.json", D + "lens.json",
-          D + "market.json", D + "funds.json", D + "flow_npv.json"],
+          D + "market.json", D + "funds.json", D + "flow_npv.json", D + "companies/*.price.json"],
          [D + "consolidation"], code=["pipeline/build_capital.py"], groups={"deploy"},
          note="A9: synergy (AUM x fee yield x c/i gap), capacity (A7 + debt headroom), accretion at 0/20/40% premia, solvency cost, fit components"),
     # module A7: capital and strategic options per insurer (distributable capital, the option set, its ranking); gate `capital`
