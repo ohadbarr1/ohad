@@ -130,9 +130,13 @@ export function Search({ big = false }: { big?: boolean }) {
 
   const go = (it: Item) => {
     if (s.length >= 2) rememberQuery(s);
+    // the phone's full-screen layer has a history entry of its own: the result takes its place (replace), so Back from the result returns
+    // to the page the search was opened on. (Going back first and pushing after raced: WebKit's popstate landed after the push and undid
+    // it, and the effect's cleanup above, still seeing the layer's entry, went back a second time.) Navigating before closing also clears
+    // the entry's `search` flag before that cleanup runs, so it does not go back.
+    const over = full && !!history.state?.search;
+    nav(it.to, over ? { replace: true } : undefined);
     setOpen(false); setQ(''); input.current?.blur();
-    // leave the full-screen layer's history entry before moving on
-    if (full && history.state?.search) { history.back(); setTimeout(() => nav(it.to), 0); } else nav(it.to);
   };
   const optId = (i: number) => `sr-opt-${i}`;
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
