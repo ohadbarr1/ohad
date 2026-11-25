@@ -63,7 +63,7 @@ export function DoorPicker() {
           <p>פנסיה קודם. כל המסלולים של המוצר, נטו, עם דמי הניהול בפועל, להשוואה ולפגישה.</p>
           <ul className="door-prods" aria-label="מוצרים">
             {rows.slice(0, 5).map((r) => (
-              <li key={r.prod}><Link to={screenHref(r.prod)} onClick={() => setDoor('agent')}>{r.label}</Link><span className="dim"><ProdFigs r={r} asof={asof} /></span></li>
+              <li key={r.prod}><Link to={`${screenHref(r.prod)}&track=all`}>{r.label}</Link><span className="dim"><ProdFigs r={r} asof={asof} /></span></li>
             ))}
             {rows.length === 0 && <li className="door-prods-sk" aria-hidden="true" />}
           </ul>

@@ -37,9 +37,11 @@ type Place = [to: string, icon: string, label: string, short: string, also: (str
  *  reference screens and the lab sit behind "ספרייה" (components/LibraryMenu) */
 const NAV: Place[] = [
   ['/', 'home', 'בית', 'בית', ['/company/', '/pro']],
-  ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה', ['/industry', '/capital', '/restatements']],
+  ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה ענפית', ['/industry', '/capital', '/restatements']],
+  // B3 (O5): the track comparison has its own place; the insurer comparison above is no longer called just "השוואה"
+  ['/funds/compare', 'funds', 'מסלולים', 'מסלולים', []],
   // the long-term-savings section: the lens, flows, managers, the funds pages (and the old /market links)
-  ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', '/funds', '/feebook', '/nowcast', '/market']],
+  ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', /^\/funds(?!\/compare)/, '/feebook', '/nowcast', '/market']],
   ['/valuation', 'value', 'שווי', 'שווי', [], true],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', ['/warroom', '/fragility'], true],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
