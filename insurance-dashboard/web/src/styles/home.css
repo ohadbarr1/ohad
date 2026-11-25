@@ -112,6 +112,7 @@ html[data-density="compact"] :is(.home, .home-grid, .home-side, .home-main) { ga
 /* lane P1: companies that reported in the last 7 days, each a link to its report's changes (Report Day) */
 .hm-s-ticks i.nw { outline: 2px solid var(--accent); outline-offset: 1px; }
 .hm-s-new { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; flex-basis: 100%; font-size: var(--t-2); }
+.hm-s-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .hm-s-chg { display: inline-flex; align-items: center; gap: 5px; color: var(--fg); text-decoration: none; }
 .hm-s-chg i { width: 8px; height: 8px; border-radius: 50%; }
 .hm-s-chg:hover { border-color: var(--accent-line); }

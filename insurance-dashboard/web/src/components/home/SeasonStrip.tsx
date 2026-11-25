@@ -57,14 +57,17 @@ export function SeasonStrip() {
         )}
       </div>
       {fresh.length > 0 && (
-        <div className="hm-s-new" role="list" aria-label="דיווחו ב-7 הימים האחרונים">
+        <div className="hm-s-new">
           <span className="hm-s-k muted">חדש · <span className="num">7</span> ימים</span>
+          {/* only listitems inside the list (axe aria-required-children): the label and the "+N" link stay outside it */}
+          <span className="hm-s-list" role="list" aria-label="דיווחו ב-7 הימים האחרונים">
           {fresh.map(([c, x]) => (
             <Link role="listitem" key={c} className="chip hm-s-chg" to={`/company/${c}?p=${x.p}#rd-changes`} title={`${x.name}: ${x.n} שינויים בדוח ${repName(x.p)}, פורסם ${pubLabel(x.pub)}`}>
               <i aria-hidden="true" style={{ background: idCss(c) }} /><span className="num">{repName(x.p)}</span> {x.name} · <span className="num">{x.n}</span> שינויים{x.st === 'unverified' && <span className="est"> · XBRL</span>}
             </Link>
           ))}
-          {fresh.length > 4 && <Link className="hm-s-more" to="/calendar">+<span className="num">{fresh.length - 4}</span> עוד</Link>}
+          </span>
+          {fresh.length > 4 &&<Link className="hm-s-more" to="/calendar">+<span className="num">{fresh.length - 4}</span> עוד</Link>}
         </div>
       )}
       <div className="hm-s-aside">
