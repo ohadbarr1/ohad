@@ -1,5 +1,5 @@
 {
- "built": "2026-11-25T08:47:26+02:00",
+ "built": "2026-11-25T09:33:15+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -245,9 +245,9 @@
    "id": "watch_ledger",
    "ok": true,
    "level": "fail",
-   "n": 11,
+   "n": 13,
    "fail": 0,
-   "note": "11 answer snapshots at HEAD unchanged"
+   "note": "13 answer snapshots at HEAD unchanged"
   },
   {
    "id": "watch_lib",
