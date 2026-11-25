@@ -1,5 +1,5 @@
 {
- "built": "2026-11-25T20:38:06+02:00",
+ "built": "2026-11-26T00:14:22+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -85,17 +85,17 @@
    "id": "ifrs_page",
    "ok": true,
    "level": "fail",
-   "n": 17188,
+   "n": 0,
    "fail": 0,
-   "note": "17120/17188 on the cited page; 0 new misses; 0 facts without page text (not checked)"
+   "note": "0/0 on the cited page; 0 new misses; 17188 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
-   "ok": false,
+   "ok": true,
    "level": "warn",
-   "n": 17188,
-   "fail": 68,
-   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'ayalon': 18, 'hachshara': 26, 'migdal': 14, 'clal': 8, 'phoenix': 2}"
+   "n": 0,
+   "fail": 0,
+   "note": "known misses, extraction layer (graphics, image pages, targets in words): {}"
   },
   {
    "id": "balance",
@@ -197,17 +197,17 @@
    "id": "answers",
    "ok": true,
    "level": "fail",
-   "n": 192,
+   "n": 193,
    "fail": 0,
-   "note": "answers: 193 questions, 192 answered, 0 problems"
+   "note": "answers: 193 questions, 193 answered, 0 problems"
   },
   {
    "id": "answers_lib",
    "ok": true,
    "level": "fail",
-   "n": 4506,
+   "n": 4526,
    "fail": 0,
-   "note": "4506 passed, 0 failed"
+   "note": "4526 passed, 0 failed"
   },
   {
    "id": "brief_lib",
@@ -221,9 +221,9 @@
    "id": "deliver_lib",
    "ok": true,
    "level": "fail",
-   "n": 32595,
+   "n": 32732,
    "fail": 0,
-   "note": "32595 passed, 0 failed · 1242 docs, 8 files of each kind built"
+   "note": "32732 passed, 0 failed · 1248 docs, 8 files of each kind built"
   },
   {
    "id": "findings",
@@ -543,7 +543,7 @@
    "level": "warn",
    "n": 38,
    "fail": 1,
-   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: Deserializing page header failed.)"
+   "note": "38 manager-quarters; rebuild skipped (no data/work/asset_lists)"
   },
   {
    "id": "solvency",
