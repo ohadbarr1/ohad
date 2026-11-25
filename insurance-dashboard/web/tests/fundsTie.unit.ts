@@ -3,7 +3,7 @@
    esbuild as scripts/funds-calc-test.mjs does. */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { DEFAULT_PER, TIE_BP, edges, isTie, rankText, tieBand, tieRanks } from '../src/lib/fundsTie';
+import { DEFAULT_PER, TIE_BP, TIE_M1, edges, isTie, rankText, tieBand, tieRanks } from '../src/lib/fundsTie';
 
 let fail = 0, pass = 0;
 const bad: string[] = [];
@@ -13,7 +13,10 @@ const near = (a: number, b: number) => Math.abs(a - b) < 1e-12;
 /* ---- the band ---- */
 ok(TIE_BP === 10 && DEFAULT_PER === 'a5', 'the convention: 10bp, 5Y by default');
 ok(near(tieBand('a5', 202609), 0.1) && near(tieBand('a3', 202609), 0.1) && near(tieBand('y12', 202609), 0.1), '0.10 pp on annualised windows and LTM');
-ok(near(tieBand('m1', 202609), 0.1 / 12) && near(tieBand('ytd', 202609), 0.1 * 9 / 12), 'pro rata on a month and on YTD');
+ok(near(tieBand('m1', 202609), 0.05) && near(tieBand('m1', 202610), 0.05) && TIE_M1 === 0.05, 'a single month: 0.05 pp (O4), not pro rata');
+ok(near(tieBand('ytd', 202609), 0.1 * 9 / 12), 'pro rata on YTD');
+ok(isTie(-0.73, -0.74, tieBand('m1', 202610)) && !isTie(-0.73, -0.78, tieBand('m1', 202610)) && !isTie(-0.73, -1.45, tieBand('m1', 202610)), 'a month: −0.73 vs −0.74 is a tie; a 5bp gap is not');
+ok(near(tieBand('y12', 202610), 0.1) && near(tieBand('a3', 202610), 0.1) && near(tieBand('a5', 202610), 0.1), '0.10 unchanged for LTM, 3Y, 5Y');
 ok(isTie(5.0, 4.96, 0.1) && !isTie(5.0, 4.9, 0.1) && !isTie(5.0, 4.85, 0.1), 'a 4bp gap is a tie; exactly 10bp is not (float-safe)');
 
 /* ---- shared places ---- */
