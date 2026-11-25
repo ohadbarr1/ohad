@@ -127,6 +127,8 @@ class OldDefects(unittest.TestCase):
         O = json.loads(f.read_text(encoding="utf-8"))
         ph = next(c for c in O["companies"] if c["id"] == "phoenix")
         k = next(k for k in ph["constraints"] if k["id"] == "board_wo")
+        # pin the calculation to the FY'25 solvency report (live data moves it: the Q3'26 reports print 30.06.26 ratios)
+        ph["date"], ph["period"] = "2025-12-31", "FY'25"
         k["t"] = 125.0
         k.pop("later", None)
         ph["dividend"]["printed_over"]["d"] = "2025-06-30"

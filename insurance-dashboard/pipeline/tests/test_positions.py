@@ -178,8 +178,8 @@ class Positions(unittest.TestCase):
         self.assertEqual(x["outcome"]["st"], "open")
         self.assertTrue(x["drift"])
         self.assertGreater(x["triggers"][0]["first"]["p"], "2025Q2")
-        # a fragility event depends on the live month (Altshuler's monitor fired on 10/26), not on this position: left out
-        kinds = sorted(ev["pk"] for ev in out["events"] if ev["pk"] != "fragility")
+        # fragility and review events follow the live month and report calendar (Altshuler: monitor fired on 10/26, Q3'26 report), not this position
+        kinds = sorted(ev["pk"] for ev in out["events"] if ev["pk"] not in ("fragility", "review"))
         self.assertEqual(kinds, ["drift", "falsifier", "open"])
         for ev in out["events"]:
             self.assertEqual(self.schema_errs(ev, "feedEvent"), [], ev["id"])

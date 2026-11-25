@@ -1,5 +1,5 @@
 {
- "built": "2026-11-25T10:21:10+02:00",
+ "built": "2026-11-25T10:29:11+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -263,7 +263,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "capital: 7 insurers computed, 10 marked not available; 40 identities; rebuild matches; 0 misses; forward: 12 capacity identities, rebuild matches, 0 misses"
+   "note": "capital: 7 insurers computed, 10 marked not available; 40 identities; rebuild matches; 0 misses; forward: 18 capacity identities, rebuild matches, 0 misses"
   },
   {
    "id": "capital_lib",
@@ -365,9 +365,9 @@
    "id": "pro_consistency",
    "ok": true,
    "level": "fail",
-   "n": 956,
+   "n": 958,
    "fail": 0,
-   "note": "pro_consistency: 956 comparisons (dividends 193 rows; P&G 188 scored figures; ROE 12 companies; solvency 16 constraints, 547 table cells); 1 labelled exceptions; 0 failures"
+   "note": "pro_consistency: 958 comparisons (dividends 193 rows; P&G 188 scored figures; ROE 12 companies; solvency 18 constraints, 547 table cells); 1 labelled exceptions; 0 failures"
   },
   {
    "id": "schemas",

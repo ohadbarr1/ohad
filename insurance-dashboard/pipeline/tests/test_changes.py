@@ -119,7 +119,7 @@ class Feed(unittest.TestCase):
         F2 = copy.deepcopy(F_)
         F2["built"] = "2026-11-25"
         old = copy.deepcopy(next(x for x in F_["events"] if x["t"] == "chg"))
-        old["id"] = "chg:test:2026Q2"
+        old["id"], old["d"] = "chg:test:2026Q2", "2026-08-25"   # dated before the ledger was introduced, whatever the live feed holds
         new = copy.deepcopy(old)
         new["id"], new["d"] = "chg:test:2026Q3", "2026-11-24"
         F2["events"] += [old, new]

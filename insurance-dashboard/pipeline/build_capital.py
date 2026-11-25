@@ -611,9 +611,13 @@ def cap_facts(c):
 def forward_co(I, c, files):
     S = I.S
     name = I.reg[c]["name_he"] if c in I.reg else c
-    L = S.get("latest", {}).get(c)
-    if not L:
-        return {"id": c, "name": name, "status": "na", "why": "אין דוח כושר פירעון במאגר"}
+    # the capacity model is built on the annual (31.12) report: its targets, walk and post-report distributions are read from that report.
+    # A newer half-year report (30.06, e.g. Harel/Migdal 30.06.26) is shown on the solvency pages but does not move this model yet.
+    fy = sorted(x for x, m in S.get("companies", {}).get(c, {}).items() if x.endswith("-12-31") and "sr_w" in m)
+    if not fy:
+        return {"id": c, "name": name, "status": "na", "why": "אין דוח כושר פירעון שנתי במאגר"}
+    r_fy = S["companies"][c][fy[-1]]["sr_w"]["r"]
+    L = {"d": fy[-1], "r": r_fy, "pub": S.get("reports", {}).get(str(r_fy), {}).get("pub")}
     d = L["d"]
     row = S["companies"][c][d]
     rep_meta = S["reports"].get(str(L["r"]), {})
