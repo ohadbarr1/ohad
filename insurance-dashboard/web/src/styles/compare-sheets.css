@@ -1,0 +1,79 @@
+/* track compare, the sheets (lane L2-b: month, fee, track, risk note, share, display, "איך מחשבים?"), on <DeeperSheet> (styles/sheet.css)
+   and <CompareGrid> (styles/compare.css). Mockup v3 frames; tokens only from styles.css. Bars use the heat colours (O6: heat fills and
+   month-sheet bars only); signed text stays --up / --down. */
+
+/* ---------- shared ---------- */
+.cs-facts { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: var(--t-3); line-height: 1.5; color: var(--fg); }
+.cs-facts li { display: flex; gap: 8px; }
+.cs-facts li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 9px; flex: none; }
+.cs-facts b { font-weight: 700; }
+.cs-note { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.45; }
+.cs-subh { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; margin: 16px 2px 4px; }
+.cs-nav { display: flex; gap: 8px; width: 100%; }
+.cs-nav.in { margin-top: 14px; flex-wrap: wrap; }
+.cs-btn { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border-radius: var(--r-3); border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; cursor: pointer; transition: transform var(--fast), background var(--fast); }
+.cs-btn:hover { background: var(--panel2); text-decoration: none; }
+.cs-btn:active { transform: scale(0.97); }
+.cs-btn:disabled { opacity: 0.4; cursor: default; }
+.cs-btn.pri { background: var(--sel-bg); color: var(--sel-fg); border-color: var(--sel-bg); }
+.cs-btn.rm { flex: none; padding: 0 16px; color: var(--down); }
+.cs-nav.three .cs-btn:first-child { flex: 1.1; }
+.cs-seg { display: flex; gap: 2px; padding: 3px; border-radius: var(--r-3); background: var(--panel3, var(--panel2)); margin-bottom: 12px; }
+.cs-seg button { flex: 1; height: 44px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; font-weight: 500; font-size: 14px; cursor: pointer; }
+.cs-seg button.on { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
+.cs-fld { margin-bottom: 16px; }
+.cs-fld > b { display: block; margin-bottom: 6px; }
+.cs-fld .cs-seg { margin-bottom: 0; }
+.cs-fld p { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.cs-url { direction: ltr; text-align: left; font-size: 12px; padding: 10px; border-radius: var(--r-2); background: var(--panel2); word-break: break-all; color: var(--muted); user-select: all; -webkit-user-select: all; }
+.cs-skel { height: 120px; border-radius: 12px; background: var(--panel2); }
+#month-sheet .n, #fee-sheet .n, #track-sheet .n, #risk-note .n, #why-sheet bdi { direction: ltr; unicode-bidi: isolate; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dsheet .n.pos { color: var(--up); } .dsheet .n.neg { color: var(--down); }
+/* a figure that opens its source keeps the weight and size of its place (prov.css resets a.src / button.src to `font: inherit`) */
+.dsheet :is(a, button).src.n { font-variant-numeric: tabular-nums; }
+.dsheet .ms-v :is(a, button).src.n { font-weight: 700; font-size: 15px; }
+.dsheet .ms-bar.avg .ms-v :is(a, button).src.n { font-weight: 500; }
+.dsheet .ts-tile :is(a, button).src.n.big { font-weight: 700; font-size: 17px; }
+.dsheet .ts-tile :is(a, button).src.n.avg { font-weight: 700; font-size: 13.5px; color: var(--muted); }
+.dsheet .ts-dl :is(a, button).src.n.b, .dsheet .ts-dl .n.b { font-weight: 700; }
+.dsheet table.cg.fee-main :is(a, button).src.n.big { font-weight: 700; font-size: 22px; }
+
+/* ---------- month sheet: ranked bars from a zero line ---------- */
+.ms-bar { display: grid; grid-template-columns: 84px minmax(0, 1fr) 66px; align-items: center; gap: 8px; padding: 7px 0; --c: var(--neutral); }
+.ms-l { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.ms-l i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+.ms-t { position: relative; height: 22px; direction: ltr; }
+.ms-t::before { content: ""; position: absolute; top: -4px; bottom: -4px; left: var(--z); width: 1px; background: var(--line); }
+.ms-t i { position: absolute; top: 3px; bottom: 3px; left: var(--l); width: var(--w); border-radius: 5px; animation: ms-grow 480ms var(--ease) both; animation-delay: calc(var(--i, 0) * 65ms); }
+.ms-t i.pos { background: rgb(var(--heat-up)); transform-origin: left; }
+.ms-t i.neg { background: rgb(var(--heat-down)); transform-origin: right; }
+.ms-t i.avg { background: repeating-linear-gradient(135deg, var(--line) 0 4px, transparent 4px 7px); }
+@keyframes ms-grow { from { transform: scaleX(0); } }
+.ms-v { text-align: end; font-weight: 700; font-size: 15px; }
+.ms-bar.avg .ms-l { font-weight: 500; color: var(--muted); font-size: 12.5px; }
+.ms-bar.avg .ms-v, .ms-bar.avg .ms-v .n { font-weight: 500; }
+.ms-bar.skel .ms-l .mg-skel { width: 60px; }
+.ms-bar.skel .ms-t { background: var(--panel2); border-radius: 5px; }
+#month-sheet .dsec { margin-top: 12px; border-top: 1px solid var(--line-soft); }
+
+/* ---------- fee sheet ---------- */
+table.cg.fee-main td { padding-block: 8px; }
+table.cg.fee-main .n.big { font-size: 22px; font-weight: 700; color: var(--fg); padding: 2px 8px; border-radius: 8px; }
+table.cg.fee-main td.lead > .n.big { background: color-mix(in oklch, var(--down) 9%, var(--panel)); padding: 2px 8px; }
+table.cg.fee-main small.own { color: var(--accent-text); font-weight: 700; }
+table.cg.fee-main th:first-child { font-size: var(--t-3); }
+
+/* ---------- track sheet ---------- */
+.ts-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ts-tile { border-radius: var(--r-3); background: var(--panel2); padding: 8px 6px 9px; text-align: center; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.ts-tile small { display: block; font-size: 11.5px; color: var(--muted); }
+.ts-tile .n.big { font-size: 17px; font-weight: 700; }
+.ts-tile em { display: block; font-style: normal; font-size: 10.5px; color: var(--faint); margin-top: 2px; }
+.ts-tile .n.avg { font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.ts-dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; font-size: 14px; margin: 0; align-items: baseline; }
+.ts-dl dt { color: var(--muted); }
+.ts-dl dd { margin: 0; text-align: end; }
+.ts-dl .n.b { font-weight: 700; }
+.ts-dl dd small { font-weight: 500; color: var(--muted); font-size: 11.5px; }
+
+@media (prefers-reduced-motion: reduce) { .ms-t i, .cs-btn { animation: none !important; transition: none !important; } .cs-btn:active { transform: none; } }

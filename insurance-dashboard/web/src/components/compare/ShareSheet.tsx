@@ -1,3 +1,69 @@
-/* STUB created by the coordinator so lanes can build in parallel; the owning lane replaces this file entirely. */
+/* C10 · sharing (spec §4.10, 10A.2 C10; mockup v3 frame "share"): the page ends with "שליחה בווטסאפ" (primary) and "קישור", which opens
+   this sheet: the exact address, "ווטסאפ", "העתקת קישור", and the phone's own share menu (navigator.share) when there is one.
+   The link carries the tracks, the view, the range or period and the basis (b=gross when it is not the default) and nothing personal:
+   the sheet state (sheet=…), an open source (src=…) and a focus hint are dropped.
+   For the shell (lane L2-a): `useShareLink(keys, basis)` → { url, text, wa } gives the page-end WhatsApp button the same link and text:
+   "השוואת מסלולים ב-fox: מגדל, הראל, מנורה · פנסיה מקיפה כללי · עד 10/26" + the link, wa = https://wa.me/?text=… */
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { SheetProps } from '../../pages/compare/contract';
-export function ShareSheet(_props: SheetProps): null { return null; }
+import { DeeperSheet } from '../DeeperSheet';
+import type { Basis } from '../../lib/funds';
+import { monthLabel } from '../../lib/format';
+import { useCmpData } from './sheetKit';
+
+/** query keys that are state of the moment, not of the view */
+const DROP = ['sheet', 'src', 'focus'];
+
+/** the shareable address of the current view */
+export function shareUrl(pathname: string, search: string, keys: string[], basis: Basis): string {
+  const q = new URLSearchParams(search);
+  DROP.forEach((k) => q.delete(k));
+  if (keys.length) q.set('k', keys.join(','));
+  if (basis === 'gross' && !q.has('b')) q.set('b', 'gross');
+  const s = q.toString().replace(/%2C/gi, ',');
+  return `${location.origin}${pathname}${s ? `?${s}` : ''}`;
+}
+/** "השוואת מסלולים ב-fox: מגדל, הראל, מנורה · פנסיה מקיפה כללי · עד 10/26" */
+export function shareText(labels: string[], cat: { prod: string; track: string } | null, asof: number | null): string {
+  return ['השוואת מסלולים ב-fox: ' + labels.filter(Boolean).join(', '), cat ? `${cat.prod} ${cat.track}` : null, asof ? `עד ${monthLabel(asof)}` : null].filter(Boolean).join(' · ');
+}
+export const waHref = (text: string, url: string) => `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
+
+/** the link, its text and the WhatsApp address, for the sheet and the page-end button */
+export function useShareLink(keys: string[], basis: Basis, enabled = true): { url: string; text: string; wa: string } {
+  const loc = useLocation();
+  const d = useCmpData(keys, enabled);
+  const url = shareUrl(loc.pathname, loc.search, keys, basis);
+  const text = shareText(d.cols.map((c) => c.label), d.ck && d.cols[0] ? d.cols[0].f : null, d.asof);
+  return { url, text, wa: waHref(text, url) };
+}
+
+export function ShareSheet({ keys, basis, open, onClose }: SheetProps) {
+  const { url, text, wa } = useShareLink(keys, basis, open);
+  const [done, setDone] = useState<string | null>(null);
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(url); setDone('הקישור הועתק'); }
+    catch {
+      // no clipboard permission: select the address so the reader can copy it by hand
+      const el = document.getElementById('share-url');
+      if (el) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s?.removeAllRanges(); s?.addRange(r); }
+      setDone('הקישור מסומן: להעתקה ידנית');
+    }
+  };
+  const share = async () => { try { await navigator.share({ title: 'השוואת מסלולים', text, url }); } catch { /* the reader closed the menu */ } };
+  return (
+    <DeeperSheet open={open} onClose={onClose} id="share-sheet-dlg" title="שיתוף" sub="מי שיפתח יראה בדיוק את המסך הזה">
+      <div id="share-sheet">
+        <div className="cs-url" id="share-url" dir="ltr">{url}</div>
+        <div className="cs-nav in">
+          <a className="cs-btn pri" id="share-wa" href={wa} target="_blank" rel="noreferrer">ווטסאפ</a>
+          <button type="button" className="cs-btn" id="share-copy" onClick={copy}>העתקת קישור</button>
+          {canShare ? <button type="button" className="cs-btn" id="share-native" onClick={share}>שיתוף…</button> : null}
+        </div>
+        <p className="cs-note" role="status" aria-live="polite">{done ?? 'הקישור שומר את המסלולים, התצוגה, התקופה ואם התשואה אחרי דמי ניהול או לפניהם. אין בו שום פרט אישי.'}</p>
+      </div>
+    </DeeperSheet>
+  );
+}
