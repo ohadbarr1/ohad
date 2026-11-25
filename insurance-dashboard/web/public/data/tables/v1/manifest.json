@@ -134,7 +134,7 @@
    "en": "Headline KPIs by company and period",
    "grain": "company × metric × period (quarter, FY)",
    "grain_he": "חברה × מדד × תקופה (רבעון, שנה)",
-   "rows": 18126,
+   "rows": 18271,
    "entities": 15,
    "metrics": [
     {
@@ -1757,17 +1757,17 @@
     }
    ],
    "first": "2018Q4",
-   "last": "2026Q2",
+   "last": "2026Q3",
    "first_label": "Q4'18",
-   "last_label": "Q2'26",
-   "changed": "2026-11-06",
+   "last_label": "Q3'26",
+   "changed": "2026-11-25",
    "csv": "kpi.csv",
    "json": "kpi.json",
    "pq": "pq/kpi.pq",
-   "csv_bytes": 6931713,
-   "json_bytes": 7594703,
-   "csv_sha256": "a59f95007b7ae20f69bf00b0231387ed6d27daa9f669353ca72035fe81afe729",
-   "json_sha256": "9c1023ea0b75067a44783238470177ae30c2909ce4cbb2d41a405fcb49b27d37"
+   "csv_bytes": 6983404,
+   "json_bytes": 7651847,
+   "csv_sha256": "20d63389394e44661d258645eefc39086e8f2042c7f52783b99c147da69d06f8",
+   "json_sha256": "a10af3725af6ece93a9cdb48324c535cc585b728f2ba79db2caf2ac41d252e62"
   },
   {
    "id": "ifrs17",
@@ -1775,7 +1775,7 @@
    "en": "IFRS 17 standardised lines and CSM roll-forward",
    "grain": "insurer × segment|basis × metric × period",
    "grain_he": "מבטחת × מגזר ובסיס × מדד × תקופה",
-   "rows": 5384,
+   "rows": 5517,
    "entities": 7,
    "metrics": [
     {
@@ -2358,17 +2358,17 @@
     }
    ],
    "first": "2021Q1",
-   "last": "2026Q2",
+   "last": "2026Q3",
    "first_label": "Q1'21",
-   "last_label": "Q2'26",
-   "changed": "2026-11-05",
+   "last_label": "Q3'26",
+   "changed": "2026-11-25",
    "csv": "ifrs17.csv",
    "json": "ifrs17.json",
    "pq": "pq/ifrs17.pq",
-   "csv_bytes": 2085087,
-   "json_bytes": 2277424,
-   "csv_sha256": "aa1ff6765d111e667e6182bfe36b797fd457296626663dfff4b2d0da9c7f2d3d",
-   "json_sha256": "17be6a433da2cdd47afaedfbf1ec909ff8e08aa9f26152cb78fd03cb24be7434"
+   "csv_bytes": 2129928,
+   "json_bytes": 2327086,
+   "csv_sha256": "c8dd8d13ffe9fa0e276c9b66ea6759e37082933375c00e993c182175ef89245d",
+   "json_sha256": "7d8f586487c4f9d4a9b1788570f86b0596ad011c58511b57ecc705a6079a4e1c"
   },
   {
    "id": "solvency",
@@ -2376,7 +2376,7 @@
    "en": "Solvency (statements and Solvency II reports)",
    "grain": "insurer × source × metric × date",
    "grain_he": "מבטחת × מקור × מדד × תאריך",
-   "rows": 3988,
+   "rows": 4100,
    "entities": 7,
    "metrics": [
     {
@@ -3189,17 +3189,17 @@
     }
    ],
    "first": "2018Q4",
-   "last": "2026Q1",
+   "last": "2026Q3",
    "first_label": "Q4'18",
-   "last_label": "Q1'26",
-   "changed": "2026-11-05",
+   "last_label": "Q3'26",
+   "changed": "2026-11-25",
    "csv": "solvency.csv",
    "json": "solvency.json",
    "pq": "pq/solvency.pq",
-   "csv_bytes": 1578014,
-   "json_bytes": 1717407,
-   "csv_sha256": "89b113b0daeab4f7305ba36e969182d1d5cc6812245e99bd55ed86ce5bce8359",
-   "json_sha256": "540dae0714cefdf50e633444111228cee5a6003bf35507130441bf1a32ac5dad"
+   "csv_bytes": 1621327,
+   "json_bytes": 1764764,
+   "csv_sha256": "d3423ee506c41630a424de646800319055b6a234875de42e7de0967f196f5bfc",
+   "json_sha256": "78dbe3bcd53cbc1c9b42ccbe7ea4c8b8c1e8120cc50f922d0bb3245461a38928"
   },
   {
    "id": "pnc",
@@ -3704,12 +3704,12 @@
   "json": "changes.json",
   "csv": "changes.csv",
   "pq": "pq/changes.pq",
-  "builds": 3,
+  "builds": 5,
   "last": "2026-11-25"
  },
  "kit": {
   "xlsx": "fox_powerquery.xlsx",
-  "bytes": 36341,
-  "sha256": "245060105cef5325170a57e18235b336c92056502f96b015fedf982afc97ac08"
+  "bytes": 36339,
+  "sha256": "2260ee4473fbf0b95d32a8f2e5a6e65d9a4892306326398e1cdc10eb9991b771"
  }
 }

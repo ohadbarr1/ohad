@@ -1,0 +1,16 @@
+{
+ "company": "migdal",
+ "period": "2026Q3",
+ "report_id": 1781923,
+ "entity": "מגדל חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its 30.6.2026 solvency report was published (the report already deducts those declared before)",
+ "facts": [],
+ "not_found": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "why": "the Q3'26 report prints only the NIS 500m dividend the insurer's board decided on 17.11.2026 (p8, p26); the solvency report as of 30.6.2026 was published on 18.11.2026 and, per the report (p26, p29), already deducts it, so no distribution after the solvency report's publication is printed"
+  }
+ ]
+}

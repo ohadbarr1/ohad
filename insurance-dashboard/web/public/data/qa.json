@@ -1,5 +1,5 @@
 {
- "built": "2026-11-25T09:33:15+02:00",
+ "built": "2026-11-25T10:21:10+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -21,7 +21,7 @@
    "id": "additivity",
    "ok": true,
    "level": "fail",
-   "n": 2868,
+   "n": 3143,
    "fail": 0,
    "note": "same-report misses (IFRS 17, 2024+): none"
   },
@@ -29,23 +29,23 @@
    "id": "additivity_vintage",
    "ok": false,
    "level": "warn",
-   "n": 2868,
-   "fail": 166,
-   "note": "misses across reports (restated between reports; full vintage model is Phase 3): ayalon 47/338, clal 14/459, hachshara 16/311, harel 37/439, menora 30/454, migdal 3/356, phoenix 19/511"
+   "n": 3143,
+   "fail": 170,
+   "note": "misses across reports (restated between reports; full vintage model is Phase 3): ayalon 47/338, clal 14/459, hachshara 16/311, harel 40/532, menora 30/454, migdal 3/431, phoenix 20/618"
   },
   {
    "id": "additivity_funds",
    "ok": false,
    "level": "warn",
-   "n": 1629,
-   "fail": 124,
-   "note": "fund houses, 2024+: 0 same-report misses, 124 across reports"
+   "n": 1762,
+   "fail": 129,
+   "note": "fund houses, 2024+: 0 same-report misses, 129 across reports"
   },
   {
    "id": "units",
    "ok": true,
    "level": "fail",
-   "n": 1096,
+   "n": 1116,
    "fail": 0,
    "note": "0 per-share values outside [0.01, 500], 0 share-count lines not tagged shares"
   },
@@ -53,7 +53,7 @@
    "id": "latin",
    "ok": true,
    "level": "fail",
-   "n": 12668,
+   "n": 12672,
    "fail": 0,
    "note": "labels with 3+ consecutive Latin words"
   },
@@ -61,7 +61,7 @@
    "id": "placeholder",
    "ok": true,
    "level": "fail",
-   "n": 12668,
+   "n": 12672,
    "fail": 0,
    "note": "placeholder captions"
   },
@@ -69,7 +69,7 @@
    "id": "derived",
    "ok": true,
    "level": "fail",
-   "n": 16554,
+   "n": 16576,
    "fail": 0,
    "note": "derived Q4/H2 figures on non-flow lines"
   },
@@ -77,7 +77,7 @@
    "id": "ifrs_slices",
    "ok": true,
    "level": "fail",
-   "n": 42,
+   "n": 45,
    "fail": 0,
    "note": "web/public/data/ifrs/<company>/<period>.json equal to the company's rows of ifrs_<period>.json"
   },
@@ -85,15 +85,15 @@
    "id": "ifrs_page",
    "ok": true,
    "level": "fail",
-   "n": 16458,
+   "n": 17181,
    "fail": 0,
-   "note": "16394/16458 on the cited page; 0 new misses; 0 facts without page text (not checked)"
+   "note": "17117/17181 on the cited page; 0 new misses; 0 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
    "ok": false,
    "level": "warn",
-   "n": 16458,
+   "n": 17181,
    "fail": 64,
    "note": "known misses, extraction layer (graphics, image pages, targets in words): {'ayalon': 18, 'hachshara': 26, 'migdal': 10, 'clal': 8, 'phoenix': 2}"
   },
@@ -101,7 +101,7 @@
    "id": "balance",
    "ok": true,
    "level": "fail",
-   "n": 240,
+   "n": 241,
    "fail": 0,
    "note": "A = L+E at every balance date; >1% off: 0"
   },
@@ -205,25 +205,25 @@
    "id": "answers_lib",
    "ok": true,
    "level": "fail",
-   "n": 4509,
+   "n": 4506,
    "fail": 0,
-   "note": "4509 passed, 0 failed"
+   "note": "4506 passed, 0 failed"
   },
   {
    "id": "brief_lib",
    "ok": true,
    "level": "fail",
-   "n": 293,
+   "n": 290,
    "fail": 0,
-   "note": "293 passed, 0 failed"
+   "note": "290 passed, 0 failed"
   },
   {
    "id": "deliver_lib",
    "ok": true,
    "level": "fail",
-   "n": 32615,
+   "n": 32595,
    "fail": 0,
-   "note": "32615 passed, 0 failed · 1242 docs, 8 files of each kind built"
+   "note": "32595 passed, 0 failed · 1242 docs, 8 files of each kind built"
   },
   {
    "id": "findings",
@@ -231,7 +231,7 @@
    "level": "fail",
    "n": 14,
    "fail": 0,
-   "note": "findings: 14 findings (div:5 brk:0 peer:3 sd:2 disc:1 rank:3), 5 top, 25 suppressed, 0 problems"
+   "note": "findings: 14 findings (div:5 brk:0 peer:3 sd:2 disc:1 rank:3), 5 top, 21 suppressed, 0 problems"
   },
   {
    "id": "watch",
@@ -263,7 +263,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "capital: 7 insurers computed, 10 marked not available; 40 identities; rebuild matches; 0 misses; forward: 18 capacity identities, rebuild matches, 0 misses"
+   "note": "capital: 7 insurers computed, 10 marked not available; 40 identities; rebuild matches; 0 misses; forward: 12 capacity identities, rebuild matches, 0 misses"
   },
   {
    "id": "capital_lib",
@@ -341,9 +341,9 @@
    "id": "consistency",
    "ok": true,
    "level": "fail",
-   "n": 26214,
+   "n": 26646,
    "fail": 0,
-   "note": "22535 equal within rounding, 3365 labelled basis differences (alt 14, filer 762, restated 1108, std 1481), last 8 quarters"
+   "note": "22958 equal within rounding, 3374 labelled basis differences (alt 14, filer 762, restated 1117, std 1481), last 8 quarters"
   },
   {
    "id": "fund_roles",
@@ -357,7 +357,7 @@
    "id": "consistency_old",
    "ok": false,
    "level": "warn",
-   "n": 26214,
+   "n": 26646,
    "fail": 314,
    "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
   },
@@ -365,41 +365,41 @@
    "id": "pro_consistency",
    "ok": true,
    "level": "fail",
-   "n": 929,
+   "n": 956,
    "fail": 0,
-   "note": "pro_consistency: 929 comparisons (dividends 188 rows; P&G 188 scored figures; ROE 12 companies; solvency 19 constraints, 522 table cells); 1 labelled exceptions; 0 failures"
+   "note": "pro_consistency: 956 comparisons (dividends 193 rows; P&G 188 scored figures; ROE 12 companies; solvency 16 constraints, 547 table cells); 1 labelled exceptions; 0 failures"
   },
   {
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3945,
+   "n": 3955,
    "fail": 0,
-   "note": "3945 files under contract, 0 failing; 95 contracts; 901 files without a contract"
+   "note": "3955 files under contract, 0 failing; 95 contracts; 906 files without a contract"
   },
   {
    "id": "cards",
    "ok": true,
    "level": "fail",
-   "n": 7219,
+   "n": 7418,
    "fail": 0,
-   "note": "302 report cards, every digit a published fact"
+   "note": "307 report cards, every digit a published fact"
   },
   {
    "id": "changes",
    "ok": true,
    "level": "fail",
-   "n": 1523,
+   "n": 1627,
    "fail": 0,
-   "note": "78 reports, every printed figure on its page"
+   "note": "83 reports, every printed figure on its page"
   },
   {
    "id": "feed",
    "ok": true,
    "level": "fail",
-   "n": 389,
+   "n": 408,
    "fail": 0,
-   "note": "389 events, 10318 figures, 0 problems"
+   "note": "408 events, 10926 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -407,7 +407,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "fragility: 15 managers, 67 signals with data, 19 in watch/alert, 32 events, 0 problems"
+   "note": "fragility: 15 managers, 67 signals with data, 18 in watch/alert, 33 events, 0 problems"
   },
   {
    "id": "fragility_lib",
@@ -477,9 +477,9 @@
    "id": "attribution",
    "ok": true,
    "level": "fail",
-   "n": 668,
+   "n": 676,
    "fail": 0,
-   "note": "attribution: 15 files, 406 bridges, 668 decompositions sum to their totals, every contribution opens to a report page; 0 problems"
+   "note": "attribution: 15 files, 410 bridges, 676 decompositions sum to their totals, every contribution opens to a report page; 0 problems"
   },
   {
    "id": "ifrs_std",
@@ -495,7 +495,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "houses: 6 houses, 582 segment-revenue cells; file equals a rebuild"
+   "note": "houses: 6 houses, 606 segment-revenue cells; file equals a rebuild"
   },
   {
    "id": "csm_rollforward",
@@ -509,25 +509,25 @@
    "id": "facts",
    "ok": true,
    "level": "fail",
-   "n": 115510,
+   "n": 116911,
    "fail": 0,
-   "note": "facts: 115510 workbook figures and 1200 statement restatement pairs checked over 190070 rows of 13 companies; (1200 with the original as the cell's first print; the rest were first printed under an ol"
+   "note": "facts: 116911 workbook figures and 1256 statement restatement pairs checked over 193584 rows of 13 companies; (1256 with the original as the cell's first print; the rest were first printed under an ol"
   },
   {
    "id": "model_xlsx",
    "ok": true,
    "level": "fail",
-   "n": 44626,
+   "n": 44791,
    "fail": 0,
-   "note": "model_xlsx: 13 workbooks, 44626 value cells, every one sourced; largest menora 492 KB; 0 problems"
+   "note": "model_xlsx: 13 workbooks, 44791 value cells, every one sourced; largest menora 492 KB; 0 problems"
   },
   {
    "id": "tables",
    "ok": true,
    "level": "fail",
-   "n": 134290,
+   "n": 134680,
    "fail": 0,
-   "note": "tables: 7 tables, 134290 rows, every row sourced; 0 problems"
+   "note": "tables: 7 tables, 134680 rows, every row sourced; 0 problems"
   },
   {
    "id": "consensus",
@@ -549,31 +549,31 @@
    "id": "solvency",
    "ok": true,
    "level": "fail",
-   "n": 2246,
+   "n": 2321,
    "fail": 0,
-   "note": "2246 cells and sensitivities: report with file + publication date, page, numeric, ratio in (0, 1000)%"
+   "note": "2321 cells and sensitivities: report with file + publication date, page, numeric, ratio in (0, 1000)%"
   },
   {
    "id": "solvency_page",
    "ok": true,
    "level": "fail",
-   "n": 2262,
+   "n": 2337,
    "fail": 0,
-   "note": "solvency (Solvency II reports): 2262/2262 on the cited page; 0 new misses; 62 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "solvency (Solvency II reports): 2337/2337 on the cited page; 0 new misses; 62 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "capital_page",
    "ok": true,
    "level": "fail",
-   "n": 1080,
+   "n": 1110,
    "fail": 0,
-   "note": "capital use (csm/capital.json; 101 derived Q4 = FY less 9M not printed): 1080/1080 on the cited page; 0 new misses; 8 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "capital use (csm/capital.json; 101 derived Q4 = FY less 9M not printed): 1110/1110 on the cited page; 0 new misses; 8 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "capital_page_noimgflag",
    "ok": false,
    "level": "warn",
-   "n": 1090,
+   "n": 1120,
    "fail": 10,
    "note": "cited page has no text layer (an image page) but the value carries no image flag: 10, e.g. menora sr_w 2022FY"
   },
@@ -581,33 +581,33 @@
    "id": "adjusted_page",
    "ok": true,
    "level": "fail",
-   "n": 95,
+   "n": 99,
    "fail": 0,
-   "note": "adjusted KPIs (adjusted.json): 95/95 on the cited page; 0 new misses; 43 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "adjusted KPIs (adjusted.json): 99/99 on the cited page; 0 new misses; 43 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "targets_page",
    "ok": true,
    "level": "fail",
-   "n": 172,
+   "n": 174,
    "fail": 0,
-   "note": "targets (targets.json; a figure, else the quoted words): 172/172 on the cited page; 0 new misses; 32 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "targets (targets.json; a figure, else the quoted words): 174/174 on the cited page; 0 new misses; 35 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "decks_page",
    "ok": true,
    "level": "fail",
-   "n": 939,
+   "n": 993,
    "fail": 0,
-   "note": "deck facts (data/extracted_pres): 939/939 on the cited page; 0 new misses; 384 read from the image (note checked separately); 0 skipped (no sources)"
+   "note": "deck facts (data/extracted_pres): 993/993 on the cited page; 0 new misses; 387 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "image_notes",
    "ok": true,
    "level": "fail",
-   "n": 502,
+   "n": 505,
    "fail": 0,
-   "note": "442 values read from a page or slide image, each with its reading note; 60 flagged solvency cells"
+   "note": "445 values read from a page or slide image, each with its reading note; 60 flagged solvency cells"
   },
   {
    "id": "debt",
@@ -645,9 +645,9 @@
    "id": "cell_sources",
    "ok": true,
    "level": "warn",
-   "n": 115510,
+   "n": 116911,
    "fail": 0,
-   "note": "115510 current statement figures; 0 without a MAYA report id + publication date"
+   "note": "116911 current statement figures; 0 without a MAYA report id + publication date"
   },
   {
    "id": "links",

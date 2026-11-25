@@ -1,0 +1,308 @@
+{
+ "filings": [
+  {
+   "rid": 1783655,
+   "company": "phoenix",
+   "type": "quarterly",
+   "period": "2026Q3",
+   "period_from": "xbrl",
+   "period_title": null,
+   "title": "דוח רבעון 3 לשנת 2026",
+   "publish": "2026-11-25T07:41:03",
+   "form": "ת930",
+   "xbrl": "xbrl/1783001-1784000/X1783655.xbrl",
+   "xbrl_local": "data/sources/xbrl/phoenix_1783655.xbrl",
+   "fetched": [
+    "data/sources/pdf/phoenix/2026Q3/1783655_quarterly.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1783658,
+   "company": "phoenix",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "מצגת משקיעים רבעון 3 2026",
+   "publish": "2026-11-25T08:02:07",
+   "form": "ת053",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/phoenix/2026Q3/1783658_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1783660,
+   "company": "phoenix",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "Phoenix Financial Investor Presentation Q3/2026",
+   "publish": "2026-11-25T08:04:02",
+   "form": "ת150",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/phoenix/2026Q3/1783660_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782906,
+   "company": "harel",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "מצגת משקיעים רבעון 3 2026",
+   "publish": "2026-11-23T07:32:02",
+   "form": "ת053",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/harel/2026Q3/1782906_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782908,
+   "company": "harel",
+   "type": "solvency",
+   "period": "2026Q2",
+   "period_from": "title",
+   "period_title": null,
+   "title": "דוח יחס כושר פירעון כלכלי 30.6.2026- הראל ביטוח",
+   "publish": "2026-11-23T07:34:05",
+   "form": "ת053",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/harel/2026Q2/1782908_solvency.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782914,
+   "company": "harel",
+   "type": "quarterly",
+   "period": "2026Q3",
+   "period_from": "xbrl",
+   "period_title": null,
+   "title": "דוח רבעון 3 לשנת 2026",
+   "publish": "2026-11-23T07:31:06",
+   "form": "ת930",
+   "xbrl": "xbrl/1782001-1783000/X1782914.xbrl",
+   "xbrl_local": "data/sources/xbrl/harel_1782914.xbrl",
+   "fetched": [
+    "data/sources/pdf/harel/2026Q3/1782914_quarterly.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782968,
+   "company": "harel",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "Financial Statements Q3 2026 Investor Presentation",
+   "publish": "2026-11-23T09:00:18",
+   "form": "ת150",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/harel/2026Q3/1782968_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1776908,
+   "company": "migdal",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "window",
+   "period_title": null,
+   "title": "מצגת משקיעים בשפה האנגלית",
+   "publish": "2026-10-20T09:22:04",
+   "form": "ת121",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/migdal/2026Q3/1776908_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1781915,
+   "company": "migdal",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "מצגת למשקיעים-תוצאות כספיות רבעון 3 2026",
+   "publish": "2026-11-18T07:45:07",
+   "form": "ת053",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/migdal/2026Q3/1781915_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1781916,
+   "company": "migdal",
+   "type": "solvency",
+   "period": "2026Q2",
+   "period_from": "title",
+   "period_title": null,
+   "title": "דוח יחס כושר פירעון כלכלי של מגדל חברה לביטוח (בת) ליום 30.6.26",
+   "publish": "2026-11-18T07:45:08",
+   "form": "ת053",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/migdal/2026Q2/1781916_solvency.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1781923,
+   "company": "migdal",
+   "type": "quarterly",
+   "period": "2026Q3",
+   "period_from": "xbrl",
+   "period_title": null,
+   "title": "דוח רבעון 3 לשנת 2026",
+   "publish": "2026-11-18T07:45:11",
+   "form": "ת930",
+   "xbrl": "xbrl/1781001-1782000/X1781923.xbrl",
+   "xbrl_local": "data/sources/xbrl/migdal_1781923.xbrl",
+   "fetched": [
+    "data/sources/pdf/migdal/2026Q3/1781923_quarterly.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782303,
+   "company": "meitav",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "מצגת משקיעים-רבעון 3, 2026",
+   "publish": "2026-11-19T08:40:06",
+   "form": "ת053",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/meitav/2026Q3/1782303_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782307,
+   "company": "meitav",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "Investor Presentation Q3, 2026",
+   "publish": "2026-11-19T08:45:15",
+   "form": "ת150",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/meitav/2026Q3/1782307_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782311,
+   "company": "meitav",
+   "type": "quarterly",
+   "period": "2026Q3",
+   "period_from": "xbrl",
+   "period_title": null,
+   "title": "דוח רבעון 3 לשנת 2026",
+   "publish": "2026-11-19T08:30:21",
+   "form": "ת930",
+   "xbrl": "xbrl/1782001-1783000/X1782311.xbrl",
+   "xbrl_local": "data/sources/xbrl/meitav_1782311.xbrl",
+   "fetched": [
+    "data/sources/pdf/meitav/2026Q3/1782311_quarterly.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782350,
+   "company": "altshuler",
+   "type": "quarterly",
+   "period": "2026Q3",
+   "period_from": "xbrl",
+   "period_title": null,
+   "title": "דוח רבעון 3 לשנת 2026",
+   "publish": "2026-11-19T09:00:28",
+   "form": "ת930",
+   "xbrl": "xbrl/1782001-1783000/X1782350.xbrl",
+   "xbrl_local": "data/sources/xbrl/altshuler_1782350.xbrl",
+   "fetched": [
+    "data/sources/pdf/altshuler/2026Q3/1782350_quarterly.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782773,
+   "company": "altshuler",
+   "type": "quarterly",
+   "period": "2026Q3",
+   "period_from": "title",
+   "period_title": null,
+   "title": "דוח רבעון 3 לשנת 2026 - דוח iXBRL",
+   "publish": "2026-11-22T10:22:02",
+   "form": "ת950",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782233,
+   "company": "more_gemel",
+   "type": "quarterly",
+   "period": "2026Q3",
+   "period_from": "xbrl",
+   "period_title": null,
+   "title": "דוח רבעון 3 לשנת 2026",
+   "publish": "2026-11-18T18:03:05",
+   "form": "ת930",
+   "xbrl": "xbrl/1782001-1783000/X1782233.xbrl",
+   "xbrl_local": "data/sources/xbrl/more_gemel_1782233.xbrl",
+   "fetched": [
+    "data/sources/pdf/more_gemel/2026Q3/1782233_quarterly.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  },
+  {
+   "rid": 1782235,
+   "company": "more_gemel",
+   "type": "presentation",
+   "period": "2026Q3",
+   "period_from": "window",
+   "period_title": null,
+   "title": "מצגת משקיעים",
+   "publish": "2026-11-18T18:25:07",
+   "form": "ת053",
+   "xbrl": null,
+   "xbrl_local": null,
+   "fetched": [
+    "data/sources/pdf/more_gemel/2026Q3/1782235_presentation.pdf"
+   ],
+   "polled": "2026-11-25T07:47:18+00:00"
+  }
+ ]
+}

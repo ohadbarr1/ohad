@@ -1,0 +1,97 @@
+{
+ "company": "more_gemel",
+ "period": "2026Q3",
+ "report_id": 1782235,
+ "pres_date": "2026-11-18",
+ "unit": "as stated in note",
+ "facts": [
+  {
+   "metric": "adj_profit_before_tax",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-09-30",
+   "value": 122,
+   "page_he": 5,
+   "label": "רווח מתואם לפני מס Q1-Q3/2026 122 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; adjusted pre-tax profit, not based on GAAP, per slide footnote; definition in the legal-disclaimer slide"
+  },
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-09-30",
+   "value": 63,
+   "page_he": 5,
+   "label": "סך הדיבידנד שהוכרז מתחילת השנה בגין שנת 2026 63 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; declared since start of 2026, in respect of 2026"
+  },
+  {
+   "metric": "target_profit",
+   "segment": "more_gemel",
+   "basis": "pre_tax",
+   "window": "fy",
+   "date": "2026-12-31",
+   "value": null,
+   "page_he": 5,
+   "label": "תחזית רווח מתואם לפני מס לשנת 2026 160-170 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; updated forecast of adjusted pre-tax profit for 2026 (slide heading: עדכון תחזית הרווח); forward-looking",
+   "value_low": 160,
+   "value_high": 170,
+   "horizon": 2026
+  },
+  {
+   "metric": "kpi_aum",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-11-10",
+   "value": 144,
+   "page_he": 5,
+   "label": "כ-144 מיליארד ₪ היקף נכסים מנוהלים",
+   "source": "text",
+   "note": "NIS billions, approx.; as of 10.11.2026; growth of about NIS 22bn since start of 2026"
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "gemel",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-09-30",
+   "value": 10.6,
+   "page_he": 13,
+   "label": "נתח שוק – *10.6%",
+   "source": "text",
+   "note": "percent; footnote on slide 13: data from Gemel-Net as of 30.09.2026"
+  },
+  {
+   "metric": "revenue",
+   "segment": "more_gemel",
+   "basis": "na",
+   "window": "ytd",
+   "date": "2026-09-30",
+   "value": 616,
+   "page_he": 5,
+   "label": "הכנסות Q1-Q3/2026 616 מיליון ₪",
+   "source": "text",
+   "note": "NIS millions; revenues Q1-Q3/2026; data taken from the Q3 2026 reports per slide footnote"
+  },
+  {
+   "metric": "kpi_market_share",
+   "segment": "pension",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-09-30",
+   "value": 1.78,
+   "page_he": 18,
+   "label": "מור גמל ופנסיה מנהלת כ-23 מיליארד ש\"ח עם נתח שוק של **1.78%",
+   "source": "text",
+   "note": "percent; pension activity share; footnote: excludes legacy pension funds; Gemel-Net / Pension-Net data as of 30.09.2026"
+  }
+ ],
+ "not_found": []
+}

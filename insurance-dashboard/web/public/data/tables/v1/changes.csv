@@ -1,4 +1,394 @@
 ﻿build_date,table,change,entity_id,entity_name,dim_id,dim_label,metric_id,metric_label,period,period_label,old_value,new_value,unit
+2026-11-25,kpi,added,migdal,מגדל,company_def,קבוצה,adj_core_profit,רווח ליבה (הגדרת החברה),2026Q3,Q3'26,,831,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,company_def,קבוצה,core_profit,רווח ליבה (הגדרת החברה),2026Q3,Q3'26,,704,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|gross,group · ברוטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,19206,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|gross,group · ברוטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,425,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|na,group,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,3675,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|na,group,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,692,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,csm_changes_in_estimates,CSM: שינויי אומדן,2026Q3,Q3'26,,-89,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,17893,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,csm_interest_accretion,CSM: צבירת ריבית,2026Q3,Q3'26,,152,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,460,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,csm_opening,CSM: יתרת פתיחה,2026Q3,Q3'26,,17717,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,csm_other:Changes in reinsurance CSM,CSM: אחר · Changes in reinsurance CSM,2026Q3,Q3'26,,78,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-84,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|net,group · נטו,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,3700,₪m
+2026-11-25,ifrs17,added,harel,הראל,group|resolved,,csm_resolved,"CSM, יתרת סגירה, בבסיס שהדוח מציג",2026Q3,Q3'26,,17893,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|gross,health · ברוטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,12812,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|gross,health · ברוטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,224,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|gross,health · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q3,Q3'25,,73,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|gross,health · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q4,Q4'25,,64,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|gross,health · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2026Q3,Q3'26,,72,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|gross,health · ברוטו,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,3340,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|na,health,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,1628,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|na,health,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,373,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|net,health · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,11712,₪m
+2026-11-25,ifrs17,added,harel,הראל,health|net,health · נטו,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,2319,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|gross,life · ברוטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,6394,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|gross,life · ברוטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,201,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|gross,life · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q3,Q3'25,,52,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|gross,life · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q4,Q4'25,,13,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|gross,life · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2026Q3,Q3'26,,54,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|gross,life · ברוטו,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,1284,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|na,life,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,773,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|na,life,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,226,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|net,life · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,6181,₪m
+2026-11-25,ifrs17,added,harel,הראל,life|net,life · נטו,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,1227,₪m
+2026-11-25,ifrs17,added,harel,הראל,pc_incl_overseas|na,"כללי כולל חו""ל",insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,93,₪m
+2026-11-25,ifrs17,added,harel,הראל,pc|na,pc,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,1164,₪m
+2026-11-25,ifrs17,added,harel,הראל,pc|na,pc,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,104,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,group|na,group,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,2264,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,group|na,group,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,550,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,group|resolved,,csm_resolved,"CSM, יתרת סגירה, בבסיס שהדוח מציג",2026Q3,Q3'26,,15808,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|gross,health · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q3,Q3'25,,32,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|gross,health · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q4,Q4'25,,29,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|gross,health · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2026Q3,Q3'26,,35,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,csm_closing,CSM: יתרת סגירה,2025Q3,Q3'25,,6377,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,7166,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,608,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,239,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,loss_component,רכיב הפסד,2025Q3,Q3'25,,44,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,loss_component,רכיב הפסד,2026Q3,Q3'26,,45,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,risk_adjustment,התאמת סיכון (RA),2025Q3,Q3'25,,2119,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|na,health,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,2337,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,health|net,health · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,6530,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|gross,life · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q3,Q3'25,,33,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|gross,life · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2025Q4,Q4'25,,39,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|gross,life · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2026Q3,Q3'26,,31,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,csm_closing,CSM: יתרת סגירה,2025Q3,Q3'25,,7835,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,9411,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,965,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,213,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,loss_component,רכיב הפסד,2025Q3,Q3'25,,0,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,loss_component,רכיב הפסד,2026Q3,Q3'26,,273,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,risk_adjustment,התאמת סיכון (RA),2025Q3,Q3'25,,1227,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|na,life,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,1158,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,life|net,life · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,9278,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,pc|na,pc,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,691,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,pc|na,pc,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,98,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,pc|na,pc,loss_component,רכיב הפסד,2025Q3,Q3'25,,6,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,pc|na,pc,loss_component,רכיב הפסד,2026Q3,Q3'26,,34,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,pc|na,pc,risk_adjustment,התאמת סיכון (RA),2025Q3,Q3'25,,140,₪m
+2026-11-25,ifrs17,added,migdal,מגדל,pc|na,pc,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,166,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Growth|net,בריאות: צמיחה · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,5085,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Growth|net,בריאות: צמיחה · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,0,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Growth|net,בריאות: צמיחה · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,113,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Growth|net,בריאות: צמיחה · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-139,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Run-off|net,בריאות: ראן-אוף · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,1272,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Run-off|net,בריאות: ראן-אוף · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,3,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Run-off|net,בריאות: ראן-אוף · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,0,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Health - Run-off|net,בריאות: ראן-אוף · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-18,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Investment policies|net,פוליסות חיסכון (חוזי השקעה) · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,797,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Investment policies|net,פוליסות חיסכון (חוזי השקעה) · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,36,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Investment policies|net,פוליסות חיסכון (חוזי השקעה) · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,27,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Investment policies|net,פוליסות חיסכון (חוזי השקעה) · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-32,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Growth|net,חיים: צמיחה · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,443,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Growth|net,חיים: צמיחה · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,-51,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Growth|net,חיים: צמיחה · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,43,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Growth|net,חיים: צמיחה · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-20,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Run-off|net,חיים: ראן-אוף · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,2115,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Run-off|net,חיים: ראן-אוף · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,430,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Run-off|net,חיים: ראן-אוף · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,0,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,Life - Run-off|net,חיים: ראן-אוף · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-46,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|gross,group · ברוטו,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,2522.891,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|gross,group · ברוטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,677.035,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|net,group · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,9712,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|net,group · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,418,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|net,group · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,183,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|net,group · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-256,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|net,group · נטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,556.649,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,group|resolved,,csm_resolved,"CSM, יתרת סגירה, בבסיס שהדוח מציג",2026Q3,Q3'26,,8915,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|gross,health · ברוטו,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,714.313,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|gross,health · ברוטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,233.989,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|gross,health · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2026Q3,Q3'26,,31.661,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,csm_closing,CSM: יתרת סגירה,2025Q3,Q3'25,,7405.088,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,7418.782,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,csm_release,CSM: שחרור לרווח,2025Q3,Q3'25,,183.616,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,174.778,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,loss_component,רכיב הפסד,2025Q3,Q3'25,,0.002,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,loss_component,רכיב הפסד,2026Q3,Q3'26,,0.002,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,risk_adjustment,התאמת סיכון (RA),2025Q3,Q3'25,,1452.458,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|na,health,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,1555.255,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|net,health · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,6357,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|net,health · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,3,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|net,health · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,113,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|net,health · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-158,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,health|net,health · נטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,211.208,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,investment_contracts|na,פוליסות חיסכון (חוזי השקעה),new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2026Q3,Q3'26,,16.408,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|gross,life · ברוטו,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,539.154,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|gross,life · ברוטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,198.077,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|gross,life · ברוטו,new_business_annualized_premiums,"פרמיה משונתת, עסק חדש",2026Q3,Q3'26,,18.421,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,csm_closing,CSM: יתרת סגירה,2025Q3,Q3'25,,2837.861,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,2786.479,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,csm_release,CSM: שחרור לרווח,2025Q3,Q3'25,,79.397,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,75.729,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,loss_component,רכיב הפסד,2025Q3,Q3'25,,2.199,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,loss_component,רכיב הפסד,2026Q3,Q3'26,,3.206,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,risk_adjustment,התאמת סיכון (RA),2025Q3,Q3'25,,693.921,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|na,life,risk_adjustment,התאמת סיכון (RA),2026Q3,Q3'26,,712.911,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|net,life · נטו,csm_closing,CSM: יתרת סגירה,2026Q3,Q3'26,,2558,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|net,life · נטו,csm_economic_interest_and_other_effects,CSM: ריבית והשפעות כלכליות אחרות,2026Q3,Q3'26,,379,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|net,life · נטו,csm_new_business,CSM: עסק חדש,2026Q3,Q3'26,,43,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|net,life · נטו,csm_release,CSM: שחרור לרווח,2026Q3,Q3'26,,-66,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,life|net,life · נטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,172.981,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,pc|gross,pc · ברוטו,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,1269.424,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,pc|gross,pc · ברוטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,244.969,₪m
+2026-11-25,ifrs17,added,phoenix,הפניקס,pc|net,pc · נטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,172.46,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,assets,סך הנכסים,2026Q3,Q3'26,,1921.053,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,cfo,תזרים מפעילות שוטפת,2026Q3,Q3'26,,36.006,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,eps,רווח בסיסי למניה,2026Q3,Q3'26,,0.13,₪
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,equity,הון לבעלי המניות,2026Q3,Q3'26,,620.235,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,equity_all,סך ההון,2026Q3,Q3'26,,641.634,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,liabilities,סך ההתחייבויות,2026Q3,Q3'26,,1279.419,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,nci,זכויות שאינן מקנות שליטה,2026Q3,Q3'26,,21.399,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,oci,רווח כולל לבעלי המניות,2026Q3,Q3'26,,26.157,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,pretax,רווח לפני מס,2026Q3,Q3'26,,36.552,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,profit,רווח נקי לבעלי המניות,2026Q3,Q3'26,,25.227,₪m
+2026-11-25,kpi,added,altshuler,אלטשולר שחם,xbrl,קבוצה,revenue,הכנסות (תג XBRL Revenue),2026Q3,Q3'26,,208.903,₪m
+2026-11-25,kpi,added,harel,הראל,financial_services|na,שירותים פיננסיים,aum_total,"נכסים מנוהלים, סך הכול",2025Q3,Q3'25,,141000,₪m
+2026-11-25,kpi,added,harel,הראל,financial_services|na,שירותים פיננסיים,aum_total,"נכסים מנוהלים, סך הכול",2026Q3,Q3'26,,162000,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,aum_total,"נכסים מנוהלים, סך הכול",2026Q3,Q3'26,,654400,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,comprehensive_income_attributable,רווח כולל לבעלי המניות,2026Q3,Q3'26,,477,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,691,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,dividend_declared,דיבידנד שהוכרז,2026Q3,Q3'26,,401,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,dividend_paid,דיבידנד ששולם,2026Q3,Q3'26,,901,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,equity_attributable,הון לבעלי המניות,2026Q3,Q3'26,,12676,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,3675,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,692,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2026Q3,Q3'26,,251,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,profit_attributable,רווח נקי לבעלי המניות,2026Q3,Q3'26,,462,₪m
+2026-11-25,kpi,added,harel,הראל,group|na,group,roe_reported,"תשואה להון, כפי שדווחה",2026Q3,Q3'26,,16,%
+2026-11-25,kpi,added,harel,הראל,group|na,group,total_assets,סך נכסים,2026Q3,Q3'26,,174137,₪m
+2026-11-25,kpi,added,harel,הראל,health|gross,health · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,1616,₪m
+2026-11-25,kpi,added,harel,הראל,health|na,health,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,550,₪m
+2026-11-25,kpi,added,harel,הראל,life|gross,life · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,1039,₪m
+2026-11-25,kpi,added,harel,הראל,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,2,₪m
+2026-11-25,kpi,added,harel,הראל,pc_incl_overseas|na,"כללי כולל חו""ל",comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,35,₪m
+2026-11-25,kpi,added,harel,הראל,pc|gross,pc · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,1146,₪m
+2026-11-25,kpi,added,harel,הראל,pc|na,pc,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,46,₪m
+2026-11-25,kpi,added,harel,הראל,pension_funds|na,קרנות פנסיה,management_fees,דמי ניהול,2026Q3,Q3'26,,163,₪m
+2026-11-25,kpi,added,harel,הראל,pension_gemel|na,pension_gemel,aum_gemel,נכסים מנוהלים: גמל,2026Q3,Q3'26,,109100,₪m
+2026-11-25,kpi,added,harel,הראל,pension_gemel|na,pension_gemel,aum_pension,נכסים מנוהלים: פנסיה,2026Q3,Q3'26,,243100,₪m
+2026-11-25,kpi,added,harel,הראל,pension_gemel|na,pension_gemel,management_fees,דמי ניהול,2025Q3,Q3'25,,248,₪m
+2026-11-25,kpi,added,harel,הראל,pension_gemel|na,pension_gemel,management_fees,דמי ניהול,2026Q3,Q3'26,,296,₪m
+2026-11-25,kpi,added,harel,הראל,pension_gemel|na,pension_gemel,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2025Q3,Q3'25,,51,₪m
+2026-11-25,kpi,added,harel,הראל,pension_gemel|na,pension_gemel,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2025Q4,Q4'25,,50,₪m
+2026-11-25,kpi,added,harel,הראל,pension_gemel|na,pension_gemel,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2026Q3,Q3'26,,59,₪m
+2026-11-25,kpi,added,harel,הראל,pension|na,פנסיה,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2026Q3,Q3'26,,37,₪m
+2026-11-25,kpi,added,harel,הראל,provident_funds|na,קופות גמל,management_fees,דמי ניהול,2026Q3,Q3'26,,133,₪m
+2026-11-25,kpi,added,harel,הראל,provident|na,גמל,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2026Q3,Q3'26,,22,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,assets,סך הנכסים,2026Q3,Q3'26,,174137,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,cfo,תזרים מפעילות שוטפת,2026Q3,Q3'26,,-76,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,eps,רווח בסיסי למניה,2026Q3,Q3'26,,2.25,₪
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,equity,הון לבעלי המניות,2026Q3,Q3'26,,12676,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,equity_all,סך ההון,2026Q3,Q3'26,,12703,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,liabilities,סך ההתחייבויות,2026Q3,Q3'26,,161434,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,nci,זכויות שאינן מקנות שליטה,2026Q3,Q3'26,,27,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,oci,רווח כולל לבעלי המניות,2026Q3,Q3'26,,477,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,pretax,רווח לפני מס,2026Q3,Q3'26,,670,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,profit,רווח נקי לבעלי המניות,2026Q3,Q3'26,,462,₪m
+2026-11-25,kpi,added,harel,הראל,xbrl,קבוצה,revenue,הכנסות (תג XBRL Revenue),2026Q3,Q3'26,,5252,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,assets,סך הנכסים,2026Q3,Q3'26,,7254,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,cfo,תזרים מפעילות שוטפת,2026Q3,Q3'26,,314,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,eps,רווח בסיסי למניה,2026Q3,Q3'26,,1.74,₪
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,equity,הון לבעלי המניות,2026Q3,Q3'26,,2364,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,equity_all,סך ההון,2026Q3,Q3'26,,2458,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,liabilities,סך ההתחייבויות,2026Q3,Q3'26,,4796,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,nci,זכויות שאינן מקנות שליטה,2026Q3,Q3'26,,94,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,oci,רווח כולל לבעלי המניות,2026Q3,Q3'26,,149,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,pretax,רווח לפני מס,2026Q3,Q3'26,,230,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,profit,רווח נקי לבעלי המניות,2026Q3,Q3'26,,148,₪m
+2026-11-25,kpi,added,meitav,מיטב,xbrl,קבוצה,revenue,הכנסות (תג XBRL Revenue),2026Q3,Q3'26,,643,₪m
+2026-11-25,kpi,added,migdal,מגדל,financial_services|na,שירותים פיננסיים,aum_total,"נכסים מנוהלים, סך הכול",2026Q3,Q3'26,,114000,₪m
+2026-11-25,kpi,added,migdal,מגדל,gemel|na,גמל,management_fees,דמי ניהול,2026Q3,Q3'26,,73,₪m
+2026-11-25,kpi,added,migdal,מגדל,gemel|na,גמל,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2026Q3,Q3'26,,7,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,aum_total,"נכסים מנוהלים, סך הכול",2026Q3,Q3'26,,644000,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,comprehensive_income_attributable,רווח כולל לבעלי המניות,2026Q3,Q3'26,,526,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,819,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,equity_attributable,הון לבעלי המניות,2026Q3,Q3'26,,11376,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,2264,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,550,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,management_fees,דמי ניהול,2026Q3,Q3'26,,334,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2026Q3,Q3'26,,395,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,profit_attributable,רווח נקי לבעלי המניות,2026Q3,Q3'26,,526,₪m
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,roe_reported,"תשואה להון, כפי שדווחה",2026Q3,Q3'26,,19.3,%
+2026-11-25,kpi,added,migdal,מגדל,group|na,group,total_assets,סך נכסים,2026Q3,Q3'26,,255054,₪m
+2026-11-25,kpi,added,migdal,מגדל,health|gross,health · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,579,₪m
+2026-11-25,kpi,added,migdal,מגדל,health|na,health,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,386,₪m
+2026-11-25,kpi,added,migdal,מגדל,life|gross,life · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,1602,₪m
+2026-11-25,kpi,added,migdal,מגדל,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,487,₪m
+2026-11-25,kpi,added,migdal,מגדל,pc|gross,pc · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,668,₪m
+2026-11-25,kpi,added,migdal,מגדל,pc|na,pc,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,81,₪m
+2026-11-25,kpi,added,migdal,מגדל,pension|na,פנסיה,management_fees,דמי ניהול,2026Q3,Q3'26,,153,₪m
+2026-11-25,kpi,added,migdal,מגדל,pension|na,פנסיה,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2026Q3,Q3'26,,25,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,assets,סך הנכסים,2026Q3,Q3'26,,255054,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,cfo,תזרים מפעילות שוטפת,2026Q3,Q3'26,,984,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,eps,רווח בסיסי למניה,2026Q3,Q3'26,,0.5,₪
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,equity,הון לבעלי המניות,2026Q3,Q3'26,,11376,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,equity_all,סך ההון,2026Q3,Q3'26,,11390,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,liabilities,סך ההתחייבויות,2026Q3,Q3'26,,243664,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,nci,זכויות שאינן מקנות שליטה,2026Q3,Q3'26,,14,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,oci,רווח כולל לבעלי המניות,2026Q3,Q3'26,,526,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,pretax,רווח לפני מס,2026Q3,Q3'26,,819,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,profit,רווח נקי לבעלי המניות,2026Q3,Q3'26,,526,₪m
+2026-11-25,kpi,added,migdal,מגדל,xbrl,קבוצה,revenue,הכנסות (תג XBRL Revenue),2026Q3,Q3'26,,945,₪m
+2026-11-25,kpi,added,more_gemel,מור גמל ופנסיה,xbrl,קבוצה,assets,סך הנכסים,2026Q3,Q3'26,,772.049,₪m
+2026-11-25,kpi,added,more_gemel,מור גמל ופנסיה,xbrl,קבוצה,equity,הון לבעלי המניות,2026Q3,Q3'26,,253.665,₪m
+2026-11-25,kpi,added,more_gemel,מור גמל ופנסיה,xbrl,קבוצה,equity_all,סך ההון,2026Q3,Q3'26,,253.665,₪m
+2026-11-25,kpi,added,more_gemel,מור גמל ופנסיה,xbrl,קבוצה,liabilities,סך ההתחייבויות,2026Q3,Q3'26,,518.384,₪m
+2026-11-25,kpi,added,more_gemel,מור גמל ופנסיה,xbrl,קבוצה,nci,זכויות שאינן מקנות שליטה,2026Q3,Q3'26,,0,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,Compulsory Motor|gross,רכב חובה · ברוטו,combined_ratio,יחס משולב,2026Q3,Q3'26,,83.9,%
+2026-11-25,kpi,added,phoenix,הפניקס,Compulsory Motor|net,רכב חובה · נטו,combined_ratio,יחס משולב,2026Q3,Q3'26,,84.4,%
+2026-11-25,kpi,added,phoenix,הפניקס,Motor Property|gross,רכב רכוש · ברוטו,combined_ratio,יחס משולב,2026Q3,Q3'26,,90.1,%
+2026-11-25,kpi,added,phoenix,הפניקס,Motor Property|net,רכב רכוש · נטו,combined_ratio,יחס משולב,2026Q3,Q3'26,,90.1,%
+2026-11-25,kpi,added,phoenix,הפניקס,Wealth & Investments|na,עושר והשקעות,management_fees,דמי ניהול,2026Q3,Q3'26,,347.069,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|gross,group · ברוטו,insurance_revenue,הכנסות משירותי ביטוח,2026Q3,Q3'26,,2522.891,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|gross,group · ברוטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,677.035,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,aum_total,"נכסים מנוהלים, סך הכול",2026Q3,Q3'26,,672000,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,comprehensive_income_attributable,רווח כולל לבעלי המניות,2026Q3,Q3'26,,529.295,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,816.885,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,dividend_declared,דיבידנד שהוכרז,2026Q3,Q3'26,,400,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,dividend_declared_after_period,דיבידנד שהוכרז לאחר תאריך המאזן,2026Q3,Q3'26,,300,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,dividend_paid,דיבידנד ששולם,2026Q3,Q3'26,,400,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,equity_attributable,הון לבעלי המניות,2026Q3,Q3'26,,13194.709,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,management_fees,דמי ניהול,2026Q3,Q3'26,,609.085,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2026Q3,Q3'26,,49.101,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,profit_attributable,רווח נקי לבעלי המניות,2026Q3,Q3'26,,518.234,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|na,group,total_assets,סך נכסים,2026Q3,Q3'26,,213128.38,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,group|net,group · נטו,insurance_service_result,תוצאות שירותי ביטוח,2026Q3,Q3'26,,556.649,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,health|gross,health · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,619.266,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,health|na,health,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,152.98,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,life|gross,life · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,1082.642,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,67.087,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,pc|gross,pc · ברוטו,combined_ratio,יחס משולב,2026Q3,Q3'26,,80.7,%
+2026-11-25,kpi,added,phoenix,הפניקס,pc|gross,pc · ברוטו,gross_written_premiums,פרמיות ברוטו,2026Q3,Q3'26,,1165.142,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,pc|na,pc,comprehensive_income_before_tax,רווח כולל לפני מס,2026Q3,Q3'26,,283.13,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,pc|net,pc · נטו,combined_ratio,יחס משולב,2026Q3,Q3'26,,83.1,%
+2026-11-25,kpi,added,phoenix,הפניקס,pension_gemel|na,pension_gemel,management_fees,דמי ניהול,2026Q3,Q3'26,,284.304,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,pension_gemel|na,pension_gemel,pension_gemel_profit_before_tax,"רווח לפני מס, פנסיה וגמל",2026Q3,Q3'26,,27.875,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,assets,סך הנכסים,2026Q3,Q3'26,,213128.38,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,cfo,תזרים מפעילות שוטפת,2026Q3,Q3'26,,-266.572,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,eps,רווח בסיסי למניה,2026Q3,Q3'26,,2.06,₪
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,equity,הון לבעלי המניות,2026Q3,Q3'26,,13194.709,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,equity_all,סך ההון,2026Q3,Q3'26,,13655.027,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,liabilities,סך ההתחייבויות,2026Q3,Q3'26,,199473.353,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,nci,זכויות שאינן מקנות שליטה,2026Q3,Q3'26,,460.318,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,oci,רווח כולל לבעלי המניות,2026Q3,Q3'26,,529.295,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,pretax,רווח לפני מס,2026Q3,Q3'26,,805.824,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,profit,רווח נקי לבעלי המניות,2026Q3,Q3'26,,518.234,₪m
+2026-11-25,kpi,added,phoenix,הפניקס,xbrl,קבוצה,revenue,הכנסות (תג XBRL Revenue),2026Q3,Q3'26,,3939.836,₪m
+2026-11-25,solvency,added,harel,הראל,harel_insurance|na,הראל ביטוח,solvency_ratio_with_transitional,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,172,%
+2026-11-25,solvency,added,harel,הראל,harel_insurance|na,הראל ביטוח,solvency_ratio_without_transitional,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,158,%
+2026-11-25,solvency,added,harel,הראל,harel_insurance|na,הראל ביטוח,solvency_surplus,עודף הון,2026Q2,Q2'26,,8183,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,bscr,BSCR (לפני תפעולי והתאמות),2026Q2,Q2'26,,16312,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_counterparty,SCR · צד נגדי,2026Q2,Q2'26,,360,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_div,SCR · השפעת פיזור,2026Q2,Q2'26,,-8083,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_health,SCR · חיתום בריאות,2026Q2,Q2'26,,9958,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_intangible,SCR · בלתי מוחשיים,2026Q2,Q2'26,,85,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_lac_dt,"SCR · ספיגת הפסדים, מס נדחה",2026Q2,Q2'26,,-5434,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_life,SCR · חיתום חיים,2026Q2,Q2'26,,5274,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_managers,SCR · חברות מנהלות,2026Q2,Q2'26,,23,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_market,SCR · שוק,2026Q2,Q2'26,,6598,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_nonlife,SCR · חיתום כללי,2026Q2,Q2'26,,2120,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,m_operational,SCR · תפעולי,2026Q2,Q2'26,,510,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,mcr,MCR,2026Q2,Q2'26,,3379,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,of_w,הון עצמי לעניין SCR,2026Q2,Q2'26,,19594,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,of_wo,"הון עצמי לעניין SCR, ללא הוראות מעבר",2026Q2,Q2'26,,18764,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,ofa_w,הון עצמי לעניין הון נדרש לכושר פירעון (אחרי גיוס/פדיון הון),2026Q2,Q2'26,,20094,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,ofa_wo,הון עצמי לעניין הון נדרש לכושר פירעון (אחרי גיוס מכשירי הון),2025Q4,Q4'25,,17351,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,ofa_wo,הון עצמי לעניין הון נדרש לכושר פירעון (אחרי גיוס מכשירי הון),2026Q2,Q2'26,,18803,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,ofm,הון עצמי לעניין MCR,2026Q2,Q2'26,,15567,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,scr_w,SCR,2026Q2,Q2'26,,11411,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,scr_wo,"SCR, ללא הוראות מעבר",2026Q2,Q2'26,,11854,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sr_w,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,172,%
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sr_wo,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,158,%
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sra_w,יחס כושר פירעון כלכלי,2026Q2,Q2'26,,176,%
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sra_wo,יחס כושר פירעון (ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות),2025Q4,Q4'25,,148,%
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sra_wo,יחס כושר פירעון (ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות),2026Q2,Q2'26,,159,%
+2026-11-25,solvency,added,harel,הראל,solvency_report,,su_w,עודף הון,2026Q2,Q2'26,,8183,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,su_wo,"עודף הון, ללא הוראות מעבר",2026Q2,Q2'26,,6910,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sua_w,עודף הון,2026Q2,Q2'26,,8683,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sua_wo,עודף (גירעון),2025Q4,Q4'25,,5646,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sua_wo,עודף (גירעון),2026Q2,Q2'26,,6949,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,sut_wo,עודף הון ביחס ליעד,2026Q2,Q2'26,,4815,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,t1,רובד 1,2026Q2,Q2'26,,14891,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,t1b,רובד 1 בסיסי,2026Q2,Q2'26,,12816,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,t1r,רובד 1 נוסף,2026Q2,Q2'26,,2075,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,t2,רובד 2,2026Q2,Q2'26,,4703,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,tdt,"סך התחייבויות ביטוח, לרבות מרווח הסיכון - השפעת הכללה של ניכוי בתקופת הפריסה",2025Q4,Q4'25,,-1416,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,tdt,"סך התחייבויות ביטוח, לרבות מרווח הסיכון - השפעת הכללה של ניכוי בתקופת הפריסה",2026Q2,Q2'26,,-1273,₪m
+2026-11-25,solvency,added,harel,הראל,solvency_report,,tg_w,"יחס כושר פירעון כלכלי מינימאלי, בהתחשב בהוראות הפריסה, בשיעור של 135%",2026Q2,Q2'26,,135,%
+2026-11-25,solvency,added,harel,הראל,solvency_report,,tg_wo,יעד יחס כושר הפירעון הכלכלי של הדירקטוריון,2026Q2,Q2'26,,118,%
+2026-11-25,solvency,added,harel,הראל,statements,,of,הון עצמי כלכלי מוכר,2026Q2,Q2'26,,19594,₪m
+2026-11-25,solvency,added,harel,הראל,statements,,scr,הון נדרש (SCR),2026Q2,Q2'26,,11411,₪m
+2026-11-25,solvency,added,harel,הראל,statements,,sr_w,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,172,%
+2026-11-25,solvency,added,harel,הראל,statements,,sr_wo,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,158,%
+2026-11-25,solvency,added,harel,הראל,statements,,su,עודף הון,2026Q2,Q2'26,,8183,₪m
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,mcr,סף הון (MCR),2026Q2,Q2'26,,3714,₪m
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,own_funds,הון עצמי לעניין SCR,2026Q2,Q2'26,,21856,₪m
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,scr,הון נדרש (SCR),2026Q2,Q2'26,,14857,₪m
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,solvency_ratio_with_transitional,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,147,%
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,solvency_ratio_with_transitional,"יחס כושר פירעון, עם הוראות מעבר",2026Q3,Q3'26,,159,%
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,solvency_ratio_without_transitional,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,121,%
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,solvency_ratio_without_transitional,"יחס כושר פירעון, ללא הוראות מעבר",2026Q3,Q3'26,,132,%
+2026-11-25,solvency,added,migdal,מגדל,group|na,group,solvency_surplus,עודף הון,2026Q2,Q2'26,,6999,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,bscr,BSCR (לפני תפעולי והתאמות),2026Q2,Q2'26,,17673,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_counterparty,SCR · צד נגדי,2026Q2,Q2'26,,204,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_div,SCR · השפעת פיזור,2026Q2,Q2'26,,-8057,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_health,SCR · חיתום בריאות,2026Q2,Q2'26,,7271,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_intangible,SCR · בלתי מוחשיים,2026Q2,Q2'26,,46,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_lac_dt,"SCR · ספיגת הפסדים, מס נדחה",2026Q2,Q2'26,,-3574,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_life,SCR · חיתום חיים,2026Q2,Q2'26,,6571,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_managers,SCR · חברות מנהלות,2026Q2,Q2'26,,276,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_market,SCR · שוק,2026Q2,Q2'26,,10395,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_nonlife,SCR · חיתום כללי,2026Q2,Q2'26,,1243,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,m_operational,SCR · תפעולי,2026Q2,Q2'26,,482,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,mcr,MCR,2026Q2,Q2'26,,3714,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,of_w,הון עצמי לעניין SCR,2026Q2,Q2'26,,21856,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,of_wo,"הון עצמי לעניין SCR, ללא הוראות מעבר",2026Q2,Q2'26,,19494,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,ofa_w,הון עצמי לעניין הון נדרש לכושר פירעון -ראה סעיף 3,2026Q2,Q2'26,,22325,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,ofa_wo,הון עצמי לעניין הון נדרש לכושר פירעון,2025Q4,Q4'25,,18212,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,ofa_wo,הון עצמי לעניין הון נדרש לכושר פירעון,2026Q2,Q2'26,,19963,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,ofm,הון עצמי לעניין MCR,2026Q2,Q2'26,,16080,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,scr_w,SCR,2026Q2,Q2'26,,14857,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,scr_wo,"SCR, ללא הוראות מעבר",2026Q2,Q2'26,,16065,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sr_w,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,147,%
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sr_wo,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,121,%
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sra_w,יחס כושר פירעון כלכלי (באחוזים),2026Q2,Q2'26,,150,%
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sra_wo,(ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות) מניות),2025Q4,Q4'25,,116,%
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sra_wo,(ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות) מניות),2026Q2,Q2'26,,124,%
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,su_w,עודף הון,2026Q2,Q2'26,,6999,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,su_wo,"עודף הון, ללא הוראות מעבר",2026Q2,Q2'26,,3429,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sua_w,עודף (גירעון),2026Q2,Q2'26,,7468,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sua_wo,עודף (ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות),2025Q4,Q4'25,,2457,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sua_wo,עודף (ללא התחשבות בהוראות לתקופת הפריסה ובהתאמת תרחיש מניות),2026Q2,Q2'26,,3898,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sut_wo,עודף הון ביחס ליעד,2025Q4,Q4'25,,93,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,sut_wo,עודף הון ביחס ליעד,2026Q2,Q2'26,,1488,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,t1,רובד 1,2026Q2,Q2'26,,15337,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,t1b,רובד 1 בסיסי,2026Q2,Q2'26,,14794,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,t2,רובד 2,2026Q2,Q2'26,,6519,₪m
+2026-11-25,solvency,added,migdal,מגדל,solvency_report,,tg_wo,יעד הדירקטוריון לתקופה,2026Q2,Q2'26,,115,%
+2026-11-25,solvency,added,migdal,מגדל,statements,,of,הון עצמי כלכלי מוכר,2026Q2,Q2'26,,21856,₪m
+2026-11-25,solvency,added,migdal,מגדל,statements,,scr,הון נדרש (SCR),2026Q2,Q2'26,,14857,₪m
+2026-11-25,solvency,added,migdal,מגדל,statements,,sr_w,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,147,%
+2026-11-25,solvency,added,migdal,מגדל,statements,,sr_w,"יחס כושר פירעון, עם הוראות מעבר",2026Q3,Q3'26,,159,%
+2026-11-25,solvency,added,migdal,מגדל,statements,,sr_wo,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,121,%
+2026-11-25,solvency,added,migdal,מגדל,statements,,sr_wo,"יחס כושר פירעון, ללא הוראות מעבר",2026Q3,Q3'26,,132,%
+2026-11-25,solvency,added,migdal,מגדל,statements,,su,עודף הון,2026Q2,Q2'26,,6999,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance_without_transitional|na,"הפניקס ביטוח, ללא הוראות מעבר",own_funds,הון עצמי לעניין SCR,2026Q2,Q2'26,,16793.649,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance_without_transitional|na,"הפניקס ביטוח, ללא הוראות מעבר",scr,הון נדרש (SCR),2026Q2,Q2'26,,11016.562,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance_without_transitional|na,"הפניקס ביטוח, ללא הוראות מעבר",solvency_surplus,עודף הון,2026Q2,Q2'26,,5777.087,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance|na,הפניקס ביטוח,mcr,סף הון (MCR),2026Q2,Q2'26,,2641.23,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance|na,הפניקס ביטוח,own_funds,הון עצמי לעניין SCR,2026Q2,Q2'26,,17722.632,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance|na,הפניקס ביטוח,scr,הון נדרש (SCR),2026Q2,Q2'26,,10564.921,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance|na,הפניקס ביטוח,solvency_ratio_with_transitional,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,168,%
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance|na,הפניקס ביטוח,solvency_ratio_without_transitional,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,152,%
+2026-11-25,solvency,added,phoenix,הפניקס,phoenix_insurance|na,הפניקס ביטוח,solvency_surplus,עודף הון,2026Q2,Q2'26,,7157.711,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,statements,,of,הון עצמי כלכלי מוכר,2026Q2,Q2'26,,17722.632,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,statements,,scr,הון נדרש (SCR),2026Q2,Q2'26,,10564.921,₪m
+2026-11-25,solvency,added,phoenix,הפניקס,statements,,sr_w,"יחס כושר פירעון, עם הוראות מעבר",2026Q2,Q2'26,,168,%
+2026-11-25,solvency,added,phoenix,הפניקס,statements,,sr_wo,"יחס כושר פירעון, ללא הוראות מעבר",2026Q2,Q2'26,,152,%
+2026-11-25,solvency,added,phoenix,הפניקס,statements,,su,עודף הון,2026Q2,Q2'26,,7157.711,₪m
 2026-11-25,funds_m,added,g1008,הפניקס קופה לתשלום דמי מחלה,phoenix|gemel,הפניקס · גמל · כללי,aum,נכסים,2026-10,10/26,,4,₪m
 2026-11-25,funds_m,added,g1008,הפניקס קופה לתשלום דמי מחלה,phoenix|gemel,הפניקס · גמל · כללי,fee_rate,דמי ניהול מהצבירה,2026-10,10/26,,0.81,%
 2026-11-25,funds_m,added,g1008,הפניקס קופה לתשלום דמי מחלה,phoenix|gemel,הפניקס · גמל · כללי,return_gross,תשואה ברוטו,2026-10,10/26,,-0.38,%

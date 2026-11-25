@@ -2772,3 +2772,45 @@ report_id,company,publish_date,doc_type,period,title,file_type,size_kb,pages,url
 1766813,yelin,2026-08-27 17:48:01.433,quarterly,2026Q2,דוח רבעון 2/חצי שנתי לשנת 2026,pdf1,886,41,rpdf/1766001-1767000/P1766813-00.pdf,data/sources/pdf/yelin/2026Q2/1766813_quarterly.pdf,8b8601c08db7dad2eb7ebf7dd80bb79fb48cb21d0eeb918fed17f84c4164539f
 1766813,yelin,2026-08-27 17:48:01.433,quarterly,2026Q2,דוח רבעון 2/חצי שנתי לשנת 2026,xbrl,17,,xbrl/1766001-1767000/X1766813.xbrl,,
 1766818,yelin,2026-08-27 17:54:01.763,liabilities,2026Q2,"מצבת התחייבות החברה ליום 30.6.26, לפי מועדי פרעון",htm,221,,rhtm/1766001-1767000/H1766818.htm,,
+1783655,phoenix,2026-11-25 07:41:03,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,htm,120,,rhtm/1783001-1784000/H1783655.htm,,
+1783655,phoenix,2026-11-25 07:41:03,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,pdf1,10515,,rpdf/1783001-1784000/P1783655-00.pdf,data/sources/pdf/phoenix/2026Q3/1783655_quarterly.pdf,5e7c9453d3e2f609f059a22d6ce3427e088cf6386513bcdbcf297047488ac8d0
+1783655,phoenix,2026-11-25 07:41:03,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,xbrl,18,,xbrl/1783001-1784000/X1783655.xbrl,,
+1783658,phoenix,2026-11-25 08:02:07,presentation,2026Q3,מצגת משקיעים רבעון 3 2026,htm,46,,rhtm/1783001-1784000/H1783658.htm,,
+1783658,phoenix,2026-11-25 08:02:07,presentation,2026Q3,מצגת משקיעים רבעון 3 2026,pdf1,1452,,rpdf/1783001-1784000/P1783658-00.pdf,data/sources/pdf/phoenix/2026Q3/1783658_presentation.pdf,cd8ccc8617a06f3ee85af061dcee3e5d8f60d0d631304d82281bef285932aa69
+1783660,phoenix,2026-11-25 08:04:02,presentation,2026Q3,Phoenix Financial Investor Presentation Q3/2026,htm,41,,rhtm/1783001-1784000/H1783660.htm,,
+1783660,phoenix,2026-11-25 08:04:02,presentation,2026Q3,Phoenix Financial Investor Presentation Q3/2026,pdf1,1565,,rpdf/1783001-1784000/P1783660-00.pdf,data/sources/pdf/phoenix/2026Q3/1783660_presentation.pdf,52d130a2df962f363d1e878238b22bfda8f58e98715a8ce0451b2534fbb38649
+1782906,harel,2026-11-23 07:32:02,presentation,2026Q3,מצגת משקיעים רבעון 3 2026,htm,44,,rhtm/1782001-1783000/H1782906.htm,,
+1782906,harel,2026-11-23 07:32:02,presentation,2026Q3,מצגת משקיעים רבעון 3 2026,pdf1,1997,,rpdf/1782001-1783000/P1782906-00.pdf,data/sources/pdf/harel/2026Q3/1782906_presentation.pdf,934feaeac2f3db70a1bb50a68e992d301007a09ec72b21f3688f7b78091c0093
+1782908,harel,2026-11-23 07:34:05,solvency,2026Q2,דוח יחס כושר פירעון כלכלי 30.6.2026- הראל ביטוח,htm,45,,rhtm/1782001-1783000/H1782908.htm,,
+1782908,harel,2026-11-23 07:34:05,solvency,2026Q2,דוח יחס כושר פירעון כלכלי 30.6.2026- הראל ביטוח,pdf1,638,,rpdf/1782001-1783000/P1782908-00.pdf,data/sources/pdf/harel/2026Q2/1782908_solvency.pdf,1d4c12ef65bde4ff8f26799d4b775879568b65b4e93f8ba2e87100a1e49b2920
+1782914,harel,2026-11-23 07:31:06,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,htm,120,,rhtm/1782001-1783000/H1782914.htm,,
+1782914,harel,2026-11-23 07:31:06,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,pdf1,3895,,rpdf/1782001-1783000/P1782914-00.pdf,data/sources/pdf/harel/2026Q3/1782914_quarterly.pdf,0d6f69fd42185d26ef166915f47a777439f62ccf55446b51cc2f761ed1372433
+1782914,harel,2026-11-23 07:31:06,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,xbrl,19,,xbrl/1782001-1783000/X1782914.xbrl,,
+1782968,harel,2026-11-23 09:00:18,presentation,2026Q3,Financial Statements Q3 2026 Investor Presentation,htm,40,,rhtm/1782001-1783000/H1782968.htm,,
+1782968,harel,2026-11-23 09:00:18,presentation,2026Q3,Financial Statements Q3 2026 Investor Presentation,pdf1,2460,,rpdf/1782001-1783000/P1782968-00.pdf,data/sources/pdf/harel/2026Q3/1782968_presentation.pdf,157e79fa88f175311418f54385da65959b01ca78a89406ce26fd22b8fc805ede
+1776908,migdal,2026-10-20 09:22:04,presentation,2026Q3,מצגת משקיעים בשפה האנגלית,htm,42,,rhtm/1776001-1777000/H1776908.htm,,
+1776908,migdal,2026-10-20 09:22:04,presentation,2026Q3,מצגת משקיעים בשפה האנגלית,pdf1,2231,,rpdf/1776001-1777000/P1776908-00.pdf,data/sources/pdf/migdal/2026Q3/1776908_presentation.pdf,8c9e48bb99ecbe8be30d72d016c1957ae84c68a700189ac7e6ff3b49df4a7ca4
+1781915,migdal,2026-11-18 07:45:07,presentation,2026Q3,מצגת למשקיעים-תוצאות כספיות רבעון 3 2026,htm,44,,rhtm/1781001-1782000/H1781915.htm,,
+1781915,migdal,2026-11-18 07:45:07,presentation,2026Q3,מצגת למשקיעים-תוצאות כספיות רבעון 3 2026,pdf1,756,,rpdf/1781001-1782000/P1781915-00.pdf,data/sources/pdf/migdal/2026Q3/1781915_presentation.pdf,ecf0886f0073f9801b7af4bc8cff72cdb645b3034521617155fa2eb8d908b552
+1781916,migdal,2026-11-18 07:45:08,solvency,2026Q2,דוח יחס כושר פירעון כלכלי של מגדל חברה לביטוח (בת) ליום 30.6.26,htm,45,,rhtm/1781001-1782000/H1781916.htm,,
+1781916,migdal,2026-11-18 07:45:08,solvency,2026Q2,דוח יחס כושר פירעון כלכלי של מגדל חברה לביטוח (בת) ליום 30.6.26,pdf1,1850,,rpdf/1781001-1782000/P1781916-00.pdf,data/sources/pdf/migdal/2026Q2/1781916_solvency.pdf,8c8be722c2cb0d511ebd50d413ae5c0ff8ad57385fe0d50c5341016d2ec95ff2
+1781923,migdal,2026-11-18 07:45:11,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,htm,120,,rhtm/1781001-1782000/H1781923.htm,,
+1781923,migdal,2026-11-18 07:45:11,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,pdf1,5422,,rpdf/1781001-1782000/P1781923-00.pdf,data/sources/pdf/migdal/2026Q3/1781923_quarterly.pdf,e74308ce5f4a23de5f284c8119e19b991951841f835ac137956beea39961c91e
+1781923,migdal,2026-11-18 07:45:11,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,xbrl,18,,xbrl/1781001-1782000/X1781923.xbrl,,
+1782303,meitav,2026-11-19 08:40:06,presentation,2026Q3,"מצגת משקיעים-רבעון 3, 2026",htm,44,,rhtm/1782001-1783000/H1782303.htm,,
+1782303,meitav,2026-11-19 08:40:06,presentation,2026Q3,"מצגת משקיעים-רבעון 3, 2026",pdf1,1373,,rpdf/1782001-1783000/P1782303-00.pdf,data/sources/pdf/meitav/2026Q3/1782303_presentation.pdf,9a2646b9e3b64ca8727ff10a309ec816667c3c224ac2277d03a024df80429142
+1782307,meitav,2026-11-19 08:45:15,presentation,2026Q3,"Investor Presentation Q3, 2026",htm,40,,rhtm/1782001-1783000/H1782307.htm,,
+1782307,meitav,2026-11-19 08:45:15,presentation,2026Q3,"Investor Presentation Q3, 2026",pdf1,1098,,rpdf/1782001-1783000/P1782307-00.pdf,data/sources/pdf/meitav/2026Q3/1782307_presentation.pdf,a37022b58d4f7a74271fa5a17fce3db6d2ef632af84d012e116d0f02b94706e0
+1782311,meitav,2026-11-19 08:30:21,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,htm,118,,rhtm/1782001-1783000/H1782311.htm,,
+1782311,meitav,2026-11-19 08:30:21,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,pdf1,3211,,rpdf/1782001-1783000/P1782311-00.pdf,data/sources/pdf/meitav/2026Q3/1782311_quarterly.pdf,f09b2349f2f6f4b4939ec977dc9d759fa489e1c9a30bd8189076c33d3177d0ee
+1782311,meitav,2026-11-19 08:30:21,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,xbrl,18,,xbrl/1782001-1783000/X1782311.xbrl,,
+1782350,altshuler,2026-11-19 09:00:28,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,htm,118,,rhtm/1782001-1783000/H1782350.htm,,
+1782350,altshuler,2026-11-19 09:00:28,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,pdf1,1223,,rpdf/1782001-1783000/P1782350-00.pdf,data/sources/pdf/altshuler/2026Q3/1782350_quarterly.pdf,37c3ab059f0b08e4ef851efd2f07bfd2ccb31e334843d81886deab848229b567
+1782350,altshuler,2026-11-19 09:00:28,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,xbrl,18,,xbrl/1782001-1783000/X1782350.xbrl,,
+1782773,altshuler,2026-11-22 10:22:02,quarterly,2026Q3,דוח רבעון 3 לשנת 2026 - דוח iXBRL,htm,43,,rhtm/1782001-1783000/H1782773.htm,,
+1782773,altshuler,2026-11-22 10:22:02,quarterly,2026Q3,דוח רבעון 3 לשנת 2026 - דוח iXBRL,ixbrl,8934,,ixbrl/1782001-1783000/X1782773.htm,,
+1782233,more_gemel,2026-11-18 18:03:05,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,htm,119,,rhtm/1782001-1783000/H1782233.htm,,
+1782233,more_gemel,2026-11-18 18:03:05,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,pdf1,1812,,rpdf/1782001-1783000/P1782233-00.pdf,data/sources/pdf/more_gemel/2026Q3/1782233_quarterly.pdf,57b40eed40632e9896db0a3bc2f6a1676d676bd710c2c258fd4c45bbd443b0f7
+1782233,more_gemel,2026-11-18 18:03:05,quarterly,2026Q3,דוח רבעון 3 לשנת 2026,xbrl,18,,xbrl/1782001-1783000/X1782233.xbrl,,
+1782235,more_gemel,2026-11-18 18:25:07,presentation,2026Q3,מצגת משקיעים,htm,45,,rhtm/1782001-1783000/H1782235.htm,,
+1782235,more_gemel,2026-11-18 18:25:07,presentation,2026Q3,מצגת משקיעים,pdf1,1151,,rpdf/1782001-1783000/P1782235-00.pdf,data/sources/pdf/more_gemel/2026Q3/1782235_presentation.pdf,c98e1f6940473a86e509c1a6a368ffc0c4604a337597be0294814b047cd56831

@@ -1,0 +1,21 @@
+{
+ "company": "harel",
+ "period": "2026Q3",
+ "report_id": 1782914,
+ "entity": "הראל חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its 30.06.2026 solvency report was published (the report already deducts those declared before)",
+ "facts": [],
+ "not_found": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "why": "No insurer distribution is declared after the 30.06.2026 economic solvency report (rid 1782908, approved 22 Nov 2026 together with the Q3 statements). That report (p13, p25 of the solvency report) states that its capital surplus is already net of NIS 500m (declared 21 Jun 2026), NIS 150m (declared 25 Aug 2026) and NIS 200m (declared 22 Nov 2026, Q3 report p166). The Q2 entries (NIS 500m on 21 Jun 2026 and NIS 150m on 25 Aug 2026) are therefore already deducted and must not be deducted again. Q3 report page 166 lists the insurer dividends: NIS 800m (25 Mar 2026), 500m (21 Jun 2026), 150m (25 Aug 2026) and 200m declared after the period (22 Nov 2026)."
+  },
+  {
+   "metric": "insurer_capital_raise_after_solvency_date",
+   "segment": "insurer",
+   "why": "Not a distribution: NIS 500m Tier 2 raise on 22 Sep 2026 (Q3 report p46, p48) is reported by the company as pro-forma 176% with and 159% without transitional measures; recorded in the extracted file, not here."
+  }
+ ]
+}

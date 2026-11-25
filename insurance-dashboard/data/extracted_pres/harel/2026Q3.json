@@ -1,0 +1,103 @@
+{
+ "company": "harel",
+ "period": "2026Q3",
+ "report_id": 1782906,
+ "pres_date": "2026-11-23",
+ "unit": "NIS millions",
+ "facts": [
+  {
+   "metric": "dividend_announced",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 300,
+   "page_he": 3,
+   "label": "הכרזה על דיבידנד בסך 300 מיליון ש\"ח ב-Q3.26",
+   "source": "text",
+   "note": "NIS m; Harel Investments, announced with Q3 2026 results, in line with the quarterly distribution policy; declaration date not stated on slide 3 (slide 23 chart caption: announced in November; the Q3 report p165 gives 22 Nov 2026, NIS 1.46/share). English twin rid 1782968 slide 3 reads the same."
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "group",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 40,
+   "page_he": 23,
+   "label": "מדיניות הדיבידנד בהראל השקעות: שיעור חלוקת הדיבידנד לפחות 40%",
+   "source": "text",
+   "note": "Harel Investments dividend policy: minimum payout of annual comprehensive income per Harel Insurance annual consolidated statements, as long as Harel Insurance meets minimum solvency targets; paid on a quarterly basis. Percent, minimum.",
+   "horizon": null
+  },
+  {
+   "metric": "target_dividend_payout",
+   "segment": "harel_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": null,
+   "value": 45,
+   "page_he": 23,
+   "label": "מדיניות חלוקת דיבידנד בהראל ביטוח: דיבידנד בשיעור של לפחות 45% מהרווח הכולל, על בסיס רבעוני",
+   "source": "text",
+   "note": "Harel Insurance dividend policy (slide 23 left panel and slide 24): minimum payout of comprehensive income on a quarterly basis, subject to the minimum solvency thresholds (118% without transitional measures, 135% with transitional measures, per slide 23 footnote). Percent, minimum.",
+   "horizon": null
+  },
+  {
+   "metric": "solvency_ratio_with_transitional_after_capital_actions",
+   "segment": "harel_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 176,
+   "page_he": 24,
+   "label": "יחס כושר פירעון 176% נכון ל-30.6.2026 (עם הוראות מעבר, לאחר הנפקת הון רובד 2 לאחר תאריך החישוב)",
+   "source": "text",
+   "note": "Percent; Harel Insurance at 30 Jun 2026, with transitional measures, after the Tier 2 issue after the calculation date (the report-date ratio before the issue is 172%, quarterly report p46)."
+  },
+  {
+   "metric": "solvency_ratio_without_transitional_after_capital_actions",
+   "segment": "harel_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 159,
+   "page_he": 24,
+   "label": "יחס כושר הפירעון הכלכלי ללא הוראות המעבר עמד על 159% (לאחר הנפקת הון רובד 2 לאחר תאריך החישוב)",
+   "source": "text",
+   "note": "Percent; 30 Jun 2026, without transitional measures, after the Tier 2 issue after the calculation date (before the issue 158%, quarterly report p48)."
+  },
+  {
+   "metric": "solvency_surplus_after_capital_actions",
+   "segment": "harel_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 8700,
+   "page_he": 24,
+   "label": "עודף ההון עמד על כ-8.7 מיליארד ש\"ח (עם הוראות מעבר, לאחר הנפקת הון רובד 2)",
+   "source": "text",
+   "note": "Approximate (\"כ-\"); printed in NIS billions, converted to NIS m; 30 Jun 2026, with transitional measures, after the Tier 2 issue."
+  },
+  {
+   "metric": "solvency_surplus_after_capital_actions",
+   "segment": "harel_insurance",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-06-30",
+   "value": 6900,
+   "page_he": 24,
+   "label": "עודף ההון עמד על כ-6.9 מיליארד ש\"ח (ללא הוראות מעבר, לאחר הנפקת הון רובד 2)",
+   "source": "text",
+   "note": "Approximate (\"כ-\"); printed in NIS billions, converted to NIS m; 30 Jun 2026, without transitional measures, after the Tier 2 issue."
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "buyback_announced",
+   "segment": "group",
+   "why": "No new buy-back announcement on the Q3 slides; slide 23 shows executed dividends and buy-backs per period only (2024, 2025, to 23.11.26) as a chart with ambiguous series labels in the text layer."
+  }
+ ],
+ "note": "English twin rid 1782968 (36 slides) cross-checked: slides 3, 23 and 24 carry the same figures. 2028 strategic targets are extracted from the quarterly report; chart actuals not read."
+}

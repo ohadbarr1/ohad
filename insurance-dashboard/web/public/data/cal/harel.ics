@@ -10,21 +10,8 @@ X-WR-TIMEZONE:Asia/Jerusalem
 REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
-UID:fox-harel-2026Q3@fox-research-il.web.app
-DTSTAMP:20261125T062758Z
-DTSTART;VALUE=DATE:20261128
-DTEND;VALUE=DATE:20261129
-SUMMARY:הראל · דוח Q3'26 (אומדן)
-DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
- ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
-  חלון 25.11.26 עד 28.11.26. לא מועד סטטוטורי. https://
- fox-research-il.web.app/company/harel
-URL;VALUE=URI:https://fox-research-il.web.app/company/harel
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
 UID:fox-harel-2026FY@fox-research-il.web.app
-DTSTAMP:20261125T062758Z
+DTSTAMP:20261125T081228Z
 DTSTART;VALUE=DATE:20270326
 DTEND;VALUE=DATE:20270327
 SUMMARY:הראל · דוח FY'26 (אומדן)
@@ -37,7 +24,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-harel-2027Q1@fox-research-il.web.app
-DTSTAMP:20261125T062758Z
+DTSTAMP:20261125T081228Z
 DTSTART;VALUE=DATE:20270529
 DTEND;VALUE=DATE:20270530
 SUMMARY:הראל · דוח Q1'27 (אומדן)
@@ -50,13 +37,26 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:fox-harel-2027Q2@fox-research-il.web.app
-DTSTAMP:20261125T062758Z
+DTSTAMP:20261125T081228Z
 DTSTART;VALUE=DATE:20270828
 DTEND;VALUE=DATE:20270829
 SUMMARY:הראל · דוח Q2'27 (אומדן)
 DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
  ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
   חלון 26.08.27 עד 29.08.27. לא מועד סטטוטורי. https://
+ fox-research-il.web.app/company/harel
+URL;VALUE=URI:https://fox-research-il.web.app/company/harel
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:fox-harel-2027Q3@fox-research-il.web.app
+DTSTAMP:20261125T081228Z
+DTSTART;VALUE=DATE:20271125
+DTEND;VALUE=DATE:20271126
+SUMMARY:הראל · דוח Q3'27 (אומדן)
+DESCRIPTION:אומדן לפי 3 השנים האחרונות: חציון ה
+ ימים מסוף התקופה לפרסום במאיה\, אותו דוח\;
+  חלון 23.11.27 עד 28.11.27. לא מועד סטטוטורי. https://
  fox-research-il.web.app/company/harel
 URL;VALUE=URI:https://fox-research-il.web.app/company/harel
 TRANSP:TRANSPARENT

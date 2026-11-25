@@ -1,0 +1,46 @@
+{
+ "company": "phoenix",
+ "period": "2026Q3",
+ "report_id": 1783655,
+ "entity": "הפניקס חברה לביטוח בע\"מ",
+ "unit": "NIS millions",
+ "purpose": "distributions by the insurer subsidiary declared after its latest solvency report was published (the report already deducts those declared before). In the Q3 report the latest solvency report is the 30.6.2026 one, and the report states that the 24.8.2026 and 24.11.2026 distributions are already included in its ratio, so none is recorded as outstanding; they are listed under insurer_dividend_included_in_solvency_report for transparency",
+ "facts": [
+  {
+   "metric": "insurer_dividend_included_in_solvency_report",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-08-24",
+   "value": 360,
+   "page_he": 23,
+   "label": "ביום 24 באוגוסט 2026 ... החליט דירקטוריון הפניקס ביטוח לאשר חלוקת דיבידנד בעין של החזקותיה במספר חברות אינשורטק ... כ-133 מיליון ש\"ח. בנוסף, הוחלט על חלוקת דיבידנד במזומן בסך של 227 מיליון ש\"ח. סך הדיבידנד (בעין ובמזומן) שיחולק הינו בסך של 360",
+   "source": "text",
+   "note": "NIS m (133 in kind + 227 cash), section 4.7.2. The solvency tables (p18, p20) say the dividend included in the 30.6.2026 ratio is detailed in sections 4.7.2 and 4.7.3 (p18 refers to 4.7.2 and 4.7.3; p20 to 4.6.13.2 and 4.6.13.3), i.e. it is already deducted; not an after-report deduction. The in-kind part was executed (text: 'בוצעה')."
+  },
+  {
+   "metric": "insurer_dividend_included_in_solvency_report",
+   "segment": "insurer",
+   "basis": "na",
+   "window": "instant",
+   "date": "2026-11-24",
+   "value": 170,
+   "page_he": 23,
+   "label": "ביום 24 בנובמבר 2026 ... החליט דירקטוריון הפניקס ביטוח על חלוקת דיבידנד בהתאם למדיניות חלוקת דיבידנד בסך של 170 מיליון ש\"ח. חלוקת דיבידנד זאת כלולה בתוצאות יחס כושר פירעון ליום 30 ביוני 2026",
+   "source": "text",
+   "note": "NIS m, section 4.7.3; declared after the reporting period with approval of the 30.9.2026 statements; the report states it is included in the 30.6.2026 solvency ratio, i.e. already deducted."
+  }
+ ],
+ "not_found": [
+  {
+   "metric": "insurer_dividend_after_solvency_report",
+   "segment": "insurer",
+   "why": "No insurer distribution is printed as declared after the 30.6.2026 solvency report and outside it: both the 360 (24.8.2026) and the 170 (24.11.2026) are stated as included in the 30.6.2026 ratio."
+  },
+  {
+   "metric": "pending_in_kind_distribution",
+   "segment": "insurer",
+   "why": "Q2 carried the unexecuted Beit Hored in-kind distribution (about 574); the Q3 board report no longer mentions the asset, section 4.7.4 now covers the final Capital Market Authority audit report on the December 2024 in-kind distribution."
+  }
+ ]
+}
