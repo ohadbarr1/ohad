@@ -24,15 +24,45 @@ export interface FeeParts {
 /** Does the product have an example deposit (pension, hishtalmut)? The "עם הפקדה חודשית / בלי הפקדות" switch shows only then. */
 export const hasDeposit = (prod: string) => exampleMonthly(prod).v > 0;
 
+/** The reader's own amounts in place of the example (approved O9, lane L2-b): a balance, and a monthly deposit (null: the product's
+ *  example deposit). */
+export interface FeeBase { balance: number; monthly: number | null }
+
 /** The example's parts for one track. `deposits` false: the balance only. A missing deposit fee counts as 0 (gemel lehashkaa
- *  publishes none); a missing accumulation fee makes the total null. */
-export function feeParts(f: FeeF, deposits = true): FeeParts {
-  const ex = exampleMonthly(f.prod), monthly = deposits ? ex.v : 0;
-  const acc = ((f.fee ?? 0) / 100) * BALANCE_EX, dep = ((f.depfee ?? 0) / 100) * monthly * 12;
-  return { balance: BALANCE_EX, monthly, why: deposits ? ex.why : 'בלי הפקדות', acc, dep, total: f.fee == null ? null : Math.round((acc + dep) / 10) * 10 };
+ *  publishes none); a missing accumulation fee makes the total null. `base`: the reader's own balance and deposit (O9). */
+export function feeParts(f: FeeF, deposits = true, base?: FeeBase | null): FeeParts {
+  const ex = exampleMonthly(f.prod), own = base?.monthly != null;
+  const monthly = deposits ? (own ? base!.monthly! : ex.v) : 0, balance = base?.balance ?? BALANCE_EX;
+  const acc = ((f.fee ?? 0) / 100) * balance, dep = ((f.depfee ?? 0) / 100) * monthly * 12;
+  return { balance, monthly, why: deposits ? (own ? 'ההפקדה החודשית שלך' : ex.why) : 'בלי הפקדות', acc, dep, total: f.fee == null ? null : Math.round((acc + dep) / 10) * 10 };
 }
 /** `fee% × 100,000 + depfee% × exampleMonthly(prod) × 12`, rounded to 10 ₪; null when the track publishes no accumulation fee. */
-export const feeCost = (f: FeeF, deposits = true): number | null => feeParts(f, deposits).total;
+export const feeCost = (f: FeeF, deposits = true, base?: FeeBase | null): number | null => feeParts(f, deposits, base).total;
+
+/* ---- the fee row and the fee sheet together (lane L2-b): one function, so the table's row and the sheet always agree ---- */
+
+/** A product the reader holds (lib/mine MyProduct, structurally: kept free of React for the node test). `fee` / `depfee` are the
+ *  reader's own fees from their statement or the clearing-house import, percent. */
+export interface OwnFee { k: string; fee?: number | null; depfee?: number | null; balance?: number | null; monthly?: number | null }
+export interface FeeCol { k: string; parts: FeeParts; cost: number | null; own: boolean; fee: number | null; depfee: number | null }
+export interface FeeTable { cols: FeeCol[]; ring: number[]; base: FeeBase | null; deposits: boolean }
+
+/** The fee of every track on screen, in column order. Approved O9: when the reader holds one of the tracks and their own fee is known
+ *  ("לפי הדוח שלך"), that track is costed with their fee and deposit fee, and every track is costed on the reader's balance and monthly
+ *  deposit (when they gave them); the other tracks keep their published average fees. Else the example for everyone. */
+export function feeTable(funds: (FeeF & { k: string } | null | undefined)[], deposits = true, mine: OwnFee[] = []): FeeTable {
+  const ks = new Set(funds.map((f) => f?.k));
+  const ownOf = (k: string) => mine.find((m) => m.k === k && m.fee != null && Number.isFinite(m.fee));
+  const first = funds.map((f) => (f ? ownOf(f.k) : undefined)).find(Boolean);
+  const base: FeeBase | null = first && first.balance != null && first.balance > 0 && ks.has(first.k) ? { balance: first.balance, monthly: first.monthly != null && first.monthly >= 0 ? first.monthly : null } : null;
+  const cols = funds.flatMap((f) => {
+    if (!f) return [];
+    const o = ownOf(f.k), x = o ? { prod: f.prod, fee: o.fee!, depfee: o.depfee ?? f.depfee } : f;
+    const parts = feeParts(x, deposits, base);
+    return [{ k: f.k, parts, cost: parts.total, own: !!o, fee: x.fee, depfee: x.depfee }];
+  });
+  return { cols, ring: feeRing(cols.map((c) => c.cost)), base, deposits };
+}
 
 /** Indexes of the costs less than FEE_TIE above the lowest (the lowest included). Not chained. */
 export function feeLow(costs: (number | null)[], tie = FEE_TIE): number[] {
@@ -52,7 +82,8 @@ const ils = (v: number) => `${LRI}${v.toLocaleString('en-US')}${PDI}`;
 const list = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ו${xs[xs.length - 1]}`);
 
 /** The fee sentence of section 6.1, figures in LRI…PDI (components/NumText):
- *  - "דמי ניהול: הראל ומגדל הזולים, כ-550 ש״ח בשנה. מנורה: כ-610." (two or more cheapest; the figure is the lowest)
+ *  - "דמי ניהול: הכי נמוכים אצל הראל ומגדל, כ-550 ש״ח בשנה. מנורה: כ-610." (two or more cheapest; the figure is the lowest;
+ *    worded on the fees, not "X ו-Y הזולים", so no adjective agrees with a company name: coordinator, stage 2)
  *  - "דמי ניהול: כמעט זהים, כ-550 ש״ח בשנה." (every cost inside the tie)
  *  - one cheapest (not in 6.1; worded on the fees, so no adjective agrees with a company name): "דמי ניהול: הכי נמוכים אצל הראל, כ-550 ש״ח בשנה. מנורה: כ-610."
  *  Costs above the tie follow cheapest first, one clause each. Rows without a cost are left out; null when none has one. */
@@ -61,6 +92,6 @@ export function feeSentence(rows: { label: string; cost: number | null }[]): str
   if (!r.length) return null;
   const lo = r[0].cost, low = r.filter((x) => x.cost - lo < FEE_TIE), rest = r.filter((x) => x.cost - lo >= FEE_TIE);
   if (!rest.length) return `דמי ניהול: ${r.length > 1 ? 'כמעט זהים, ' : ''}כ-${ils(lo)} ש״ח בשנה.`;
-  const head = low.length > 1 ? `${list(low.map((x) => x.label))} הזולים` : `הכי נמוכים אצל ${low[0].label}`;
+  const head = `הכי נמוכים אצל ${list(low.map((x) => x.label))}`;
   return `דמי ניהול: ${head}, כ-${ils(lo)} ש״ח בשנה. ${rest.map((x) => `${x.label}: כ-${ils(x.cost)}.`).join(' ')}`;
 }

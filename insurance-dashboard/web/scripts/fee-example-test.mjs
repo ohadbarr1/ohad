@@ -13,7 +13,7 @@ try {
   await build({ entryPoints: [new URL('../src/lib/feeExample.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' } });
   M = await import(pathToFileURL(out).href);
 } finally { rmSync(dir, { recursive: true, force: true }); }
-const { FEE_TIE, feeCost, feeParts, feeLow, feeRing, feeSentence, hasDeposit } = M;
+const { FEE_TIE, feeCost, feeParts, feeLow, feeRing, feeSentence, feeTable, hasDeposit } = M;
 
 let pass = 0, fail = 0;
 const bad = [];
@@ -36,11 +36,11 @@ ok(eq(feeRing([500, 600, null]), [0]) && eq(feeLow([null, null]), []), 'one clea
 
 /* ---- sentences (section 6.1) ---- */
 const S = (xs) => plain(feeSentence(xs.map(([label, cost]) => ({ label, cost }))));
-ok(S([['מגדל', 560], ['הראל', 550], ['מנורה', 610]]) === 'דמי ניהול: הראל ומגדל הזולים, כ-550 ש״ח בשנה. מנורה: כ-610.', '6.1 "Fees, clear": ' + S([['מגדל', 560], ['הראל', 550], ['מנורה', 610]]));
+ok(S([['מגדל', 560], ['הראל', 550], ['מנורה', 610]]) === 'דמי ניהול: הכי נמוכים אצל הראל ומגדל, כ-550 ש״ח בשנה. מנורה: כ-610.', '6.1 "Fees, clear" (stage-2 wording): ' + S([['מגדל', 560], ['הראל', 550], ['מנורה', 610]]));
 ok(S([['מגדל', 560], ['הראל', 550], ['מנורה', 565]]) === 'דמי ניהול: כמעט זהים, כ-550 ש״ח בשנה.', '6.1 "Fees, within 20 ₪"');
 ok(S([['מגדל', 620], ['הראל', 550], ['מנורה', 590]]) === 'דמי ניהול: הכי נמוכים אצל הראל, כ-550 ש״ח בשנה. מנורה: כ-590. מגדל: כ-620.', 'one cheapest: ' + S([['מגדל', 620], ['הראל', 550], ['מנורה', 590]]));
-ok(S([['א', 540], ['ב', 550], ['ג', 560]]) === 'דמי ניהול: א וב הזולים, כ-540 ש״ח בשנה. ג: כ-560.', 'no chain in the sentence either');
-ok(S([['א', 1240], ['ב', 1245], ['ג', 1300], ['ד', 1230]]) === 'דמי ניהול: ד, א וב הזולים, כ-1,230 ש״ח בשנה. ג: כ-1,300.', 'three cheapest listed; thousands comma');
+ok(S([['א', 540], ['ב', 550], ['ג', 560]]) === 'דמי ניהול: הכי נמוכים אצל א וב, כ-540 ש״ח בשנה. ג: כ-560.', 'no chain in the sentence either');
+ok(S([['א', 1240], ['ב', 1245], ['ג', 1300], ['ד', 1230]]) === 'דמי ניהול: הכי נמוכים אצל ד, א וב, כ-1,230 ש״ח בשנה. ג: כ-1,300.', 'three cheapest listed; thousands comma');
 ok(S([['א', 550]]) === 'דמי ניהול: כ-550 ש״ח בשנה.' && feeSentence([{ label: 'א', cost: null }]) === null, 'one track; no costs: null');
 ok(feeSentence([{ label: 'מגדל', cost: 560 }, { label: 'הראל', cost: 550 }]).includes('⁦550⁩'), 'figures in LRI…PDI');
 
@@ -54,8 +54,24 @@ ok(eq(c3n, [140, 160, 150]), `P3 without deposits 140, 160, 150 (got ${c3n})`);
 ok(eq(g3, [620, 550, 590]) && eq(g3n, g3), `G3 620, 550, 590, deposits make no difference (got ${g3})`);
 ok(eq(feeRing(c3), [0, 1]) && eq(feeRing(c3n), [0, 2]) && eq(feeRing(g3), [1]), 'rings: P3 Migdal + Harel; without deposits Migdal + Menora (150 − 140 < 20); G3 Harel');
 const lab = ['מגדל', 'הראל', 'מנורה'];
-ok(plain(feeSentence(P3.map((f, i) => ({ label: lab[i], cost: feeCost(f) })))) === 'דמי ניהול: הראל ומגדל הזולים, כ-550 ש״ח בשנה. מנורה: כ-610.', 'P3 sentence = 6.1 fixture');
-ok(plain(feeSentence(P3.map((f, i) => ({ label: lab[i], cost: feeCost(f, false) })))) === 'דמי ניהול: מגדל ומנורה הזולים, כ-140 ש״ח בשנה. הראל: כ-160.', 'P3 without deposits');
+ok(plain(feeSentence(P3.map((f, i) => ({ label: lab[i], cost: feeCost(f) })))) === 'דמי ניהול: הכי נמוכים אצל הראל ומגדל, כ-550 ש״ח בשנה. מנורה: כ-610.', 'P3 sentence = coordinator wording');
+ok(plain(feeSentence(P3.map((f, i) => ({ label: lab[i], cost: feeCost(f, false) })))) === 'דמי ניהול: הכי נמוכים אצל מגדל ומנורה, כ-140 ש״ח בשנה. הראל: כ-160.', 'P3 without deposits');
+ok(!plain(feeSentence([{ label: 'א', cost: 100 }, { label: 'ב', cost: 110 }, { label: 'ג', cost: 200 }])).includes('הזולים'), 'no "הזולים" (no adjective on company names)');
+
+/* ---- feeTable: the row and the sheet from one function (lane L2-b), with the reader's own fee (O9) ---- */
+const T = feeTable(P3), Tn = feeTable(P3, false);
+ok(eq(T.cols.map((c) => c.cost), [560, 550, 610]) && eq(T.ring, [0, 1]) && T.base === null && T.cols.every((c) => !c.own), 'feeTable P3 = feeCost + feeRing, example base');
+ok(eq(Tn.cols.map((c) => c.cost), [140, 160, 150]) && eq(Tn.ring, [0, 2]), 'feeTable P3 without deposits');
+// a seeded "mine" entry for Migdal with its own fees, balance and deposit
+const mine = [{ k: 'p2102', fee: 0.1, depfee: 1.0, balance: 250000, monthly: 3000 }, { k: 'g1', fee: 9 }];
+const To = feeTable(P3, true, mine);
+// Migdal: 0.1% × 250,000 + 1.0% × 3,000 × 12 = 250 + 360 = 610; Harel: 0.16% × 250,000 + 1.47% × 36,000 = 400 + 529.2 = 929.2 → 930;
+// Menora: 0.15% × 250,000 + 1.73% × 36,000 = 375 + 622.8 = 997.8 → 1,000
+ok(eq(To.cols.map((c) => c.cost), [610, 930, 1000]) && eq(To.cols.map((c) => c.own), [true, false, false]) && eq(To.base, { balance: 250000, monthly: 3000 }), `own fee + the reader's base for all (got ${To.cols.map((c) => c.cost)})`);
+ok(eq(feeTable(P3, false, mine).cols.map((c) => c.cost), [250, 400, 380]), 'own base without deposits: 250 / 400 / 375 → 380');
+const Tf = feeTable(P3, true, [{ k: 'p2172', fee: 0.05 }]);
+ok(eq(Tf.cols.map((c) => c.cost), [560, 440, 610]) && Tf.base === null && eq(Tf.cols.map((c) => c.own), [false, true, false]), 'own fee without a balance: the example base, Harel 0.05% × 100,000 + 1.47% × 26,640 = 441.6 → 440');
+ok(feeTable(P3, true, [{ k: 'p2102', fee: null, balance: 1 }]).base === null && feeTable([null, P3[1]]).cols.length === 1, 'no own fee: no base; missing funds skipped');
 
 console.log(`feeExample: ${pass} passed, ${fail} failed`);
 if (fail) { bad.forEach((b) => console.log('  ✗ ' + b)); process.exit(1); }
