@@ -171,7 +171,7 @@ def write_components(d, groups, prod_keys, ds_of):
     fields = [("a", "TOTAL_ASSETS"), ("fee", "AVG_ANNUAL_MANAGEMENT_FEE"), ("y", "MONTHLY_YIELD"), ("prev", "prev_assets"),
               ("dep", "DEPOSITS"), ("wd", "WITHDRAWLS"), ("tr", "INTERNAL_TRANSFERS")]
     d = d.assign(year=d["REPORT_PERIOD"] // 100)
-    total = 0
+    total, written = 0, set()
     for (g, year), part in d.groupby(["group", "year"]):
         months = sorted(part["REPORT_PERIOD"].unique().tolist())
         mi = {p: i for i, p in enumerate(months)}
@@ -190,9 +190,15 @@ def write_components(d, groups, prod_keys, ds_of):
         folder = base / str(groups.index(g))
         folder.mkdir(parents=True, exist_ok=True)
         (folder / f"{year}.json").write_text(json.dumps({"group": g, "months": months, "funds": funds, **out}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        written.add(folder / f"{year}.json")
         total += 1
         # the components must add up to the aggregate the site shows
-    print(f"components: {total} group-year files -> {base}")
+    # group indices follow the latest ranking, so a reorder (e.g. More passing Altshuler Shaham in 10/26) leaves another group's old
+    # years under an index: remove every file this run did not write
+    stale = [f for f in base.glob("*/*.json") if f not in written]
+    for f in stale:
+        f.unlink()
+    print(f"components: {total} group-year files -> {base}" + (f"; {len(stale)} stale removed" if stale else ""))
 
 
 def qa(raw_df, d, agg, latest):

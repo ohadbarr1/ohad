@@ -90,6 +90,8 @@ def q082(A):
 def q083(A):
     xs = [(c, s, v, f) for s in ("pen", "gem", "ins") for c, v, f in perf_items(s) if c in MAIN8 + ["analyst", "yelin", "hachshara", "ayalon"]]
     xs.sort(key=lambda x: x[2])
+    if len(xs) < 2:
+        return nodata("אות הביצועים של מוניטור השבריריות חסר")
     c, s, v, f = xs[0]
     flagged = [(x, y) for x, y, _, g in xs if g["st"] in ("watch", "alert")]
     figs = {"w": f_gapS(c, s, f)}

@@ -22,11 +22,15 @@ function ok(cond: unknown, what: string) { if (cond) pass++; else { fail++; bad.
 const ALLOWED = new RegExp(
   "(Q[1-4]'\\d\\d|H[12]'\\d\\d|FY'\\d\\d|9M'\\d\\d|\\b\\d\\d/\\d\\d\\b|\\b\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}\\b|\\b(19|20)\\d\\d\\b|\\b[QF]-\\d{3}\\b|\\b\\d{1,2}M\\b|\\b\\d{1,2}Y\\b|" +
   '\\b\\d{1,2} (רבעונים|רבעונים רצופים|חודשים|שנים|מנהלים|חברות|קבוצות|מתחרים|עמיתים|מסלולים|רבעון|חודש|שנה|מוצרים|קטגוריות)(?![\\u0590-\\u05FF])|' +
-  '(?<![\\u0590-\\u05FF])(ב|ל|מ|ה)-\\d{1,2} ה?(רבעונים|חודשים|שנים|מנהלים|חברות)(?![\\u0590-\\u05FF]))', 'g');  // JS \\b is ASCII-only: Hebrew edges by lookaround (Python's \\b is Unicode)
+  '(?<![\\u0590-\\u05FF])(ב|ל|מ|ה)-\\d{1,2} ה?(רבעונים|חודשים|שנים|מנהלים|חברות)(?![\\u0590-\\u05FF])|' +
+  '(ל?גילאי|לבני) \\d{2}(( ?- ?| עד )\\d{2}| ומטה| ומעלה)?|[Ss]&[Pp] ?500|עד \\d{1,2}% ב?מניות)', 'g');  // + track-name digits (age tracks, S&P 500, equity caps). JS \\b is ASCII-only: Hebrew edges by lookaround (Python's \\b is Unicode)
 /** the plain text with every quoted figure's display text removed and the allowed labels removed: what is left must hold no digit */
 function strayDigits(text: string, b: OkBody, ids: string[]): string | null {
   let t = text;
-  for (const id of [...ids].sort((x, y) => b.figs[y].t.length - b.figs[x].t.length)) t = t.split(b.figs[id].t).join(' ');
+  // a figure's text is removed only as a whole number: figure "10" must not eat the "10" of the period label "10/26"
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  for (const id of [...ids].sort((x, y) => b.figs[y].t.length - b.figs[x].t.length))
+    t = t.replace(new RegExp(`(?<![\\d/.,])${esc(b.figs[id].t)}(?![\\d/.,]\\d|/)`, 'g'), ' ');
   t = t.replace(ALLOWED, ' ');
   const m = /.{0,12}\d.{0,12}/.exec(t);
   return m ? m[0] : null;
