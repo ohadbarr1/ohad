@@ -10,13 +10,14 @@ import { isOldGen, svcCell } from '../../lib/decision';
 import { isPension } from '../../lib/pensionPack';
 import { RETIRE_AGE } from '../../lib/retire';
 import { tieBand } from '../../lib/fundsTie';
+import { actProv } from '../../lib/agentProv';
 import { bottomLines, docRow, dmyIso, snapOf } from '../../lib/compareDoc';
 import { folderOfState, useClients } from '../../lib/clients';
 import { today as todayIso } from '../../lib/visits';
 import { useCompareData, useKpiRows, exportPack, type CompareData, type KCell, type KpiRows } from './panels';
 import { trackColor, trackLabels } from './tracks';
 import { Stamp } from './CompareMonths';
-import { billions, groupLead, signed, type Better } from './decisionLead';
+import { billions, groupLead, lastAct, signed, type Better } from './decisionLead';
 import type { CmpCtx } from './contract';
 import '../../styles/compare-decision.css';
 
@@ -94,6 +95,19 @@ function DecisionBody({ ctx, d }: { ctx: CmpCtx; d: CompareData }) {
   const assetsSrc = (f: FundX) => () => fundP(refOf(f), f.end ?? asof, 'TOTAL_ASSETS', 'נכסים', billions(f.assets), 'מיליארדי ש"ח');
   const coefSub = (c: KCell | null) => (c?.sub ? split2(c.sub)[0] : undefined);
   const pair = (row: string) => (k: string) => { const c = kc(row, k); if (!c) return wait; const [a, b] = split2(c.t); return <Fig c={c} text={a} sub={b} />; };
+  // the actuarial balance: funds.json when it carries one, else the last quarter in the track's own history (funds/<k>.json `act`),
+  // at most two quarters old; sourced as before (lib/agentProv actProv, the reported quarter)
+  const loaded = items.every(Boolean);
+  const act = keys.map((k): KCell | null => {
+    const it = items[at(k)];
+    if (!it) return null;
+    if (!isPension(it.f)) return { v: null, t: '–' };
+    const x = it.f.act != null && it.f.act_p != null ? { v: it.f.act, p: it.f.act_p } : lastAct(it.h.p, it.h.act, asof);
+    return x ? { v: x.v, t: signed(x.v, 2), sub: ym(x.p), src: () => actProv({ ...it.f, act: x.v, act_p: x.p }), txt: true } : { v: null, t: 'לא דווח' };
+  });
+  // a row with no value for any track on screen is not drawn as a row of "לא דווח"/"לא פורסם": one quiet line under the grid instead
+  const none = (cs: (KCell | null)[]) => loaded && cs.every((c) => !c || c.v == null);
+  const actNone = none(act), clmNone = none(keys.map((k) => kc('clm', k)));
 
   const rows: CompareGridRow[] = [
     mk('fee', 'דמי ניהול מצבירה', (k) => <Fig c={kc('fee', k)} />, led('fee', 'lo')),
@@ -105,8 +119,8 @@ function DecisionBody({ ctx, d }: { ctx: CmpCtx; d: CompareData }) {
     mk('assets', 'נכסים, מיליארדי ש״ח', (k) => { const f = d.fundOf(k); return f ? <Fig c={{ v: f.assets, t: billions(f.assets), src: assetsSrc(f) }} /> : wait; }),
     ...(anySvc ? [mk('svc', 'מדד השירות 2025', (k) => { const c = svc[at(k)]; if (!c) return wait; const [a, b] = split2(c.t); return <Fig c={c} text={a} sub={b} />; })] : []),
     ...(pension ? [
-      mk('act', 'איזון אקטוארי, רבעון אחרון', pair('act')),
-      mk('clm', 'תביעות נכות שאושרו, 2025', (k) => { const c = kc('clm', k); if (!c) return wait; const m = /^(.*?) \((.*)\)$/.exec(c.t); return <Fig c={c} text={m ? m[1] : c.t} sub={m ? m[2] : undefined} />; }),
+      ...(actNone ? [] : [mk('act', 'איזון אקטוארי, רבעון אחרון', (k) => { const c = act[at(k)]; return c ? <Fig c={c} sub={c.sub} /> : wait; })]),
+      ...(clmNone ? [] : [mk('clm', 'תביעות נכות שאושרו, 2025', (k) => { const c = kc('clm', k); if (!c) return wait; const m = /^(.*?) \((.*)\)$/.exec(c.t); return <Fig c={c} text={m ? m[1] : c.t} sub={m ? m[2] : undefined} />; })]),
       mk('dflt', 'קרן ברירת מחדל', pair('dflt')),
       mk('annM', `קצבה בגיל ${RETIRE_AGE}, גבר`, (k) => { const c = kc('annM', k); return <Fig c={c} sub={coefSub(c)} />; }, undefined, 'אומדן, לחודש'),
       mk('annF', `קצבה בגיל ${RETIRE_AGE}, אישה`, (k) => { const c = kc('annF', k); return <Fig c={c} sub={coefSub(c)} />; }, undefined, 'אומדן, לחודש'),
@@ -120,6 +134,12 @@ function DecisionBody({ ctx, d }: { ctx: CmpCtx; d: CompareData }) {
         <div className={`cmp-dec-scroll${wide ? ' wide' : ''}`} style={{ '--n': keys.length } as CSSProperties}>
           <CompareGrid id="dec-grid" cols={cols} rows={rows} onCol={(k) => openSheet({ t: 'track', k })} className="cmp-dec-grid" />
         </div>
+        {pension && (actNone || clmNone) && (
+          <p className="cmp-dec-gap" id="dec-gap">
+            {actNone && <span>איזון אקטוארי: לא פורסם לחודש הזה</span>}
+            {clmNone && <span>תביעות נכות שאושרו: לא פורסם</span>}
+          </p>
+        )}
         <p className="cmp-dec-note">
           מסומן: הנמוך (דמי ניהול) או הגבוה (תשואה, שארפ) בשורה, רק בין מסלולים מאותה קטגוריה{cross ? '; כאן יש מסלולים מקטגוריות שונות, והסימון הוא בתוך כל קטגוריה בלבד' : ''}.
           {' '}תשואות: {d.lbl}, עד {ym(asof)}. דמי ניהול: ממוצע בפועל של המסלול, לא של חוסך מסוים.

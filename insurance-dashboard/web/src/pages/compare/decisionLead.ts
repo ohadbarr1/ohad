@@ -36,3 +36,18 @@ export function signed(v: number | null | undefined, d = 1, unit = '%'): string 
 
 /** assets in "מיליארד ש״ח", one decimal, from the file's millions */
 export const billions = (m: number | null | undefined): string => (m == null || !Number.isFinite(m) ? '–' : (m / 1000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
+
+/** months from p to asof (both yyyymm) */
+export const monthsAgo = (asof: number, p: number): number => (Math.floor(asof / 100) * 12 + (asof % 100)) - (Math.floor(p / 100) * 12 + (p % 100));
+/** The actuarial balance a fund last reported, from the track history (funds/<k>.json `act`, quarterly, aligned with `p`): the latest
+ *  value no older than `maxAge` months before the data month (two quarters by default: a quarter is published with a lag), else null. */
+export function lastAct(p: number[] | undefined, act: (number | null)[] | undefined, asof: number, maxAge = 6): { v: number; p: number } | null {
+  if (!p || !act) return null;
+  for (let j = Math.min(p.length, act.length) - 1; j >= 0; j--) {
+    const v = act[j];
+    if (v == null || !Number.isFinite(v)) continue;
+    const age = monthsAgo(asof, p[j]);
+    return age >= 0 && age <= maxAge ? { v, p: p[j] } : null;
+  }
+  return null;
+}

@@ -24,6 +24,7 @@ table.cg.cmp-dec-grid td .src.pos { color: var(--up); }
 table.cg.cmp-dec-grid td .src.neg { color: var(--down); }
 table.cg.cmp-dec-grid td.lead > .src.num { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
 table.cg.cmp-dec-grid td small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmp-dec-gap { display: flex; flex-direction: column; gap: 2px; margin: 8px 2px 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .cmp-dec-note { margin: 8px 2px 0; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
 
 /* pinned actions: stick above the phone's bottom rail while the grid scrolls; in place at the lens end */

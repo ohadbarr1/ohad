@@ -13,7 +13,7 @@ try {
   await build({ entryPoints: [new URL('../src/pages/compare/decisionLead.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error' });
   M = await import(pathToFileURL(out).href);
 } finally { rmSync(dir, { recursive: true, force: true }); }
-const { groupLead, signed, billions } = M;
+const { groupLead, signed, billions, lastAct, monthsAgo } = M;
 
 let pass = 0, fail = 0;
 const bad = [];
@@ -42,6 +42,18 @@ eq(signed(-0.04, 1), '0.0%', 'rounds to zero: no sign');
 eq(signed(null), '–', 'missing');
 eq(billions(6812.4), '6.8', 'billions one decimal');
 eq(billions(null), '–', 'billions missing');
+
+// the actuarial balance from the track history (quarterly, aligned with p)
+const P = [202601, 202602, 202603, 202604, 202605, 202606, 202607, 202608, 202609, 202610];
+const ACT = [null, null, -0.12, null, null, -0.05, null, null, null, null];
+eq(monthsAgo(202610, 202606), 4, 'months ago across a year: same year');
+eq(monthsAgo(202601, 202510), 3, 'months ago across a year end');
+eq(lastAct(P, ACT, 202610), { v: -0.05, p: 202606 }, 'last reported quarter, 4 months old');
+eq(lastAct(P, ACT, 202612), { v: -0.05, p: 202606 }, '6 months old still shown');
+eq(lastAct(P, ACT, 202701), null, '7 months old: not shown');
+eq(lastAct(P, ACT.map(() => null), 202610), null, 'nothing reported');
+eq(lastAct(P, undefined, 202610), null, 'no act series');
+eq(lastAct(P, [null, null, 0, null, null, null, null, null, null, null], 202606), { v: 0, p: 202603 }, 'a zero balance is a value');
 
 console.log(`compare-decision: ${pass} passed, ${fail} failed`);
 if (fail) { bad.forEach((b) => console.log('  ✗ ' + b)); process.exit(1); }
