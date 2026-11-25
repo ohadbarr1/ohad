@@ -1,0 +1,141 @@
+/* track compare: <MonthGrid>, <CompareGrid>, <TrackBar>, <Scoreboard>, <GuardLine> (spec §4.3, §5, mockup v3).
+   Tokens only from styles.css: --heat-up / --heat-down for fills, --up / --down for signed text, --s1… for track colours (passed in --c).
+   Colour never carries a meaning alone: every figure has its sign, the lead of a row has weight + ring + dot. */
+
+/* ---------- track chips ---------- */
+.trackbar { display: flex; gap: 6px; padding: 2px 0 4px; overflow-x: auto; scrollbar-width: none; }
+.trackbar::-webkit-scrollbar { display: none; }
+.trackbar.wrap { flex-wrap: wrap; overflow: visible; }
+.tchip { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; border-radius: var(--r-pill); background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); color: var(--fg); font-weight: 500; font-size: var(--t-3); white-space: nowrap; flex: none; cursor: pointer; transition: transform var(--fast), border-color var(--fast); }
+.tchip:hover { border-color: var(--line); }
+.tchip:active { transform: scale(0.96); }
+.tchip .dot { width: 10px; height: 10px; margin: 0; border-radius: 3px; background: var(--c); flex: none; }
+.tchip .mine { font-size: 10px; font-weight: 700; color: var(--accent-text); background: var(--accent-soft); padding: 0 6px; border-radius: var(--r-pill); line-height: 1.6; }
+.tchip .tag { font-size: 10px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); padding: 0 5px; border-radius: var(--r-pill); line-height: 1.5; }
+.tchip.closed { color: var(--muted); }
+.tchip.add { border-style: dashed; border-color: var(--line); color: var(--muted); background: transparent; box-shadow: none; }
+
+/* ---------- month grid ---------- */
+/* the card: clips its rounded corners without becoming a scroll container (so the head can stick to the page); with five columns
+   or more it scrolls sideways itself, the label column pinned */
+.mgw { border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); max-width: 100%; overflow: hidden; overflow: clip; }
+.mgw.scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.mgw.scroll table.mg thead th { top: 0; }   /* inside its own scroller the head cannot stick to the page */
+.mgw.scroll table.mg th.m { box-shadow: inset 1px 0 0 var(--line-soft); }   /* the pinned label column over the cells sliding under it */
+[dir="ltr"] .mgw.scroll table.mg th.m { box-shadow: inset -1px 0 0 var(--line-soft); }
+table.mg { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: var(--t-3); }
+table.mg th, table.mg td { padding: 0; border: 0; text-align: center; height: auto; white-space: nowrap; line-height: 1.2; background: transparent; box-shadow: none; }
+table.mg tbody tr:hover td { background: transparent; }
+table.mg thead th { position: sticky; top: var(--mg-top, 0px); z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line-soft); color: var(--fg); letter-spacing: 0; vertical-align: bottom; }
+.mg-col { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; min-height: 32px; justify-content: flex-end; padding: 6px 2px; background: none; border: 0; font: inherit; color: inherit; font-size: var(--t-2); font-weight: 700; line-height: 1.15; cursor: pointer; }
+.mg-col:disabled { cursor: default; }
+/* (beats the site's phone rule that sets 40 px on any button in a table head: the head is 32 px, wider than tall) */
+table.mg th .mg-col, table.cg th .mg-col { min-height: 32px; }
+.mg-col b { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mg-col small { display: block; font-weight: 500; font-size: 10.5px; color: var(--muted); }
+.mg-col small.mg-closed { color: var(--warn); font-weight: 700; }
+.mg-bar { display: block; width: 18px; height: 4px; border-radius: 4px; background: var(--c); }
+/* the label column: sticky at the start edge, page-coloured panel under it */
+table.mg th.m { position: sticky; inset-inline-start: 0; z-index: 1; background: var(--panel); text-align: start; padding-inline: 10px 0; font-weight: 500; font-size: var(--t-2); color: var(--muted); white-space: nowrap; }
+table.mg thead th.m { z-index: 3; vertical-align: middle; }
+table.mg th.m small { display: block; font-size: 10.5px; font-weight: 500; color: var(--muted); line-height: 1.1; }
+.mg-unit { display: block; font-size: 10.5px; line-height: 1.25; color: var(--muted); font-weight: 500; white-space: nowrap; }
+/* cells: a rounded heat tile, the ink colour on top */
+table.mg td { padding: 1.5px 2px; }
+/* (the site's phone rule that grows the tap area of a button in a table cell with negative margins does not apply: these cells are 32–36 px already) */
+table.mg td > button.mg-cell { margin: 0; padding: 0; }
+.mg-cell { position: relative; display: block; width: 100%; height: 32px; padding: 0; border: 0; border-radius: 9px; background: rgb(var(--k, 0 0 0) / var(--a, 0)); color: var(--fg); font: inherit; font-size: var(--t-3); font-weight: 500; cursor: pointer; transition: transform var(--fast); }
+.mg-cell:active { transform: scale(0.94); }
+.mg-cell .num { direction: ltr; unicode-bidi: isolate; }
+td.avg .mg-cell { color: var(--muted); }
+/* the lead of a row: weight, a ring and a dot */
+.mg-cell.best { font-weight: 700; box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--fg) 50%, transparent); }
+.mg-dot { position: absolute; top: 4px; inset-inline-end: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--fg); }
+/* the newest row leads the page */
+table.mg tr.first th.m { color: var(--fg); font-weight: 700; font-size: var(--t-3); }
+table.mg tr.first .mg-cell { height: 36px; font-size: 15.5px; font-weight: 700; }
+table.mg.c4 tr.first .mg-cell { font-size: var(--t-3); }
+table.mg.yrs th.m { white-space: normal; }
+/* footer: summary rows and the fee row */
+table.mg tfoot th, table.mg tfoot td { padding-block: 2px; }
+table.mg tfoot tr:first-child th, table.mg tfoot tr:first-child td { border-top: 1px solid var(--line); padding-top: 3px; }
+table.mg tr.sum th.m { color: var(--fg); font-weight: 700; font-size: var(--t-2); white-space: normal; line-height: 1.15; }
+table.mg tr.sum th.m small { color: var(--link); font-weight: 500; font-size: 11.5px; }
+table.mg tr.sum.open { cursor: pointer; }
+table.mg tfoot tr.open th, table.mg tfoot tr.open td { padding-block: 0; }
+table.mg th .mg-sumlbl { min-height: 32px; }
+.mg-sumlbl { display: block; width: 100%; min-height: 32px; padding: 0; background: none; border: 0; font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.sumc { display: inline-block; padding: 1px 6px; border-radius: 7px; line-height: 1.5; }
+.sumc .num { font-weight: 700; font-size: 14px; }
+table.mg tr.ils .sumc .num { color: var(--fg); }
+.sumc.best { box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--fg) 50%, transparent); }
+.sumc.mut, .sumc.mut .num { color: var(--muted); font-weight: 500; }
+.mg-more { display: block; width: 100%; height: 44px; border: 0; border-top: 1px solid var(--line-soft); background: transparent; text-align: center; color: var(--link); font: inherit; font-size: var(--t-2); font-weight: 500; cursor: pointer; }
+/* skeleton */
+.mg-skel { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--panel2), var(--panel3), var(--panel2)); background-size: 200% 100%; animation: mg-sk 1.2s linear infinite; }
+.mg-skelcell { display: block; height: 32px; border-radius: 9px; background: var(--panel2); }
+table.mg tr.first .mg-skelcell { height: 36px; }
+@keyframes mg-sk { to { background-position: -200% 0; } }
+/* rows arrive one by one (first paint and a range change: the body re-mounts) */
+table.mg tbody tr { animation: mg-rowin 300ms var(--ease) both; animation-delay: calc(var(--i, 0) * 28ms); }
+@keyframes mg-rowin { from { opacity: 0; transform: translateY(5px); } }
+
+/* ---------- compare grid (entities × metrics) ---------- */
+table.cg { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+table.cg th, table.cg td { padding: 7px 4px; border: 0; border-top: 1px solid var(--line-soft); text-align: center; white-space: normal; height: auto; line-height: 1.35; background: transparent; box-shadow: none; }
+table.cg tbody tr:hover td { background: transparent; }
+table.cg thead th { position: static; border-top: 0; padding-top: 0; color: var(--fg); font-size: var(--t-2); vertical-align: bottom; }
+table.cg thead .mg-col { min-height: 36px; padding: 2px; }
+table.cg th:first-child { text-align: start; font-weight: 500; color: var(--muted); width: 34%; font-size: var(--t-2); }
+table.cg th:first-child small { display: block; font-size: 10.5px; }
+table.cg td small { display: block; font-size: 10.5px; color: var(--muted); }
+table.cg td .num { direction: ltr; unicode-bidi: isolate; }
+table.cg td.lead { font-weight: 700; }
+table.cg td.lead > .num { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
+table.cg.quiet td, table.cg.quiet th { color: var(--muted); font-size: var(--t-2); }
+table.cg.quiet thead { display: none; }
+
+/* ---------- guard line ---------- */
+.guard { --guard-ink: #5F3F00; display: flex; gap: 8px; align-items: flex-start; width: 100%; padding: 9px 12px; border-radius: var(--r-3); background: color-mix(in oklch, var(--warn) 9%, var(--panel)); border: 1px solid color-mix(in oklch, var(--warn) 30%, transparent); color: var(--guard-ink); font: inherit; font-size: var(--t-3); line-height: 1.4; text-align: start; }
+:root[data-theme="dark"] .guard { --guard-ink: var(--warn); }
+button.guard { cursor: pointer; }
+.guard svg { width: 16px; height: 16px; flex: none; margin-top: 2px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.guard.one { align-items: center; min-height: 44px; padding: 6px 12px; }
+.guard.one svg { margin-top: 0; }
+.guard.one > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guard u { flex: none; font-weight: 700; text-decoration: none; white-space: nowrap; }
+
+/* ---------- scoreboard ---------- */
+.board { border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); overflow: hidden; }
+.board .sb-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 14px; align-items: center; gap: 3px 8px; width: 100%; padding: 8px 12px 9px; border: 0; border-bottom: 1px solid var(--line-soft); background: transparent; font: inherit; color: var(--fg); text-align: start; position: relative; cursor: pointer; transition: background var(--fast); }
+.board .sb-row:last-of-type { border-bottom: 0; }
+.board .sb-row:active { background: var(--panel2); }
+.board .sb-place { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 3px; border-radius: 8px; background: color-mix(in oklch, var(--c) 14%, var(--panel)); color: color-mix(in oklch, var(--c) 72%, var(--fg)); font-weight: 700; font-size: 12px; }
+.board .sb-place .sq { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.board .nm { min-width: 0; }
+.board .nm b { display: block; font-size: var(--t-4); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.board .nm small { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.board .val { text-align: end; }
+.board .val .num { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+.board .val .num.mut { font-size: var(--t-3); font-weight: 500; color: var(--muted); }
+.board .val small { display: block; color: var(--muted); font-size: var(--t-1); margin-top: -2px; }
+.board .chev { color: var(--line); font-size: 16px; }
+.board .tie { display: inline-block; font-size: 10.5px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 0 6px; margin-inline-start: 6px; vertical-align: 2px; }
+/* the bar from zero, LTR so a gain grows right and a loss grows left; a tick at the benchmark */
+.board .track { grid-column: 2 / 4; height: 5px; border-radius: 5px; background: var(--panel2); direction: ltr; position: relative; }
+.board .track i { display: block; height: 100%; width: var(--w); border-radius: 5px; background: var(--c); transform-origin: left; animation: sb-grow 520ms var(--ease) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.board .track i.neg { margin-left: auto; transform-origin: right; background: rgb(var(--heat-down)); }
+.board .track u { position: absolute; top: -3px; bottom: -3px; width: 2px; border-radius: 2px; background: var(--fg); left: var(--x); opacity: 0.55; text-decoration: none; }
+@keyframes sb-grow { from { transform: scaleX(0); } }
+.board .riskrow { grid-column: 2 / 4; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.board .kv { font-size: 11.5px; color: var(--muted); background: var(--panel2); border-radius: 6px; padding: 1px 7px; }
+.board .kv b { color: var(--fg); font-weight: 700; }
+.avgline { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 12px; background: var(--panel2); font-size: 12px; color: var(--muted); }
+.avgline u { display: inline-block; width: 2px; height: 11px; border-radius: 2px; background: var(--fg); opacity: 0.55; vertical-align: -1px; margin-inline-end: 6px; }
+
+/* motion off: nothing moves */
+@media (prefers-reduced-motion: reduce) {
+  table.mg tbody tr, .board .track i, .mg-skel { animation: none !important; }
+  .mg-cell, .tchip, .board .sb-row { transition: none !important; }
+  .mg-cell:active, .tchip:active { transform: none; }
+}

@@ -17,6 +17,9 @@
   --accent: #FF4E31; --accent-text: #C2391C; --accent-2: #E8431F; --accent-ink: #FFFFFF; --accent-soft: rgb(255 78 49 / 0.1); --accent-line: rgb(255 78 49 / 0.45);
   --sel-bg: #111C3F; --sel-fg: #FFFFFF;
   --up: #0B7F56; --down: #C8102E; --warn: #8A5A00;
+  /* heat fills (compare grid cells, month-sheet bars only; text stays --up / --down): teal and vermilion as rgb triplets, used at 7–40% over
+     --panel with the ink colour on top; the pair stays apart under deuteranopia and protanopia, and the sign is always written */
+  --heat-up: 10 127 110; --heat-down: 200 64 30;
   /* categorical: fixed order, validated for colour-blind separation on this surface */
   --s1: #2B54B8; --s2: #D4451F; --s3: #5B67D6; --s4: #00978A; --s5: #9A5A2C; --s6: #8A4FC2; --s7: #B07A0A; --s8: #B03A76; --s9: #2E86D1; --s10: #C7337A; --s11: #6E8B00; --neutral: #7A7F8C;
   /* elevation: e-1 a hairline and a breath of shadow (panels at rest), e-2 a lifted sheet (menus, drawers, the source sheet) */
@@ -32,6 +35,7 @@
   --accent: oklch(0.76 0.17 50); --accent-text: oklch(0.8 0.15 55); --accent-2: oklch(0.68 0.21 22); --accent-ink: oklch(0.18 0.03 52); --accent-soft: oklch(0.76 0.17 50 / 0.13); --accent-line: oklch(0.76 0.17 50 / 0.5);
   --sel-bg: oklch(0.94 0.006 75); --sel-fg: oklch(0.16 0.01 55);
   --up: oklch(0.8 0.15 160); --down: oklch(0.72 0.18 18); --warn: oklch(0.85 0.14 88);
+  --heat-up: 52 196 172; --heat-down: 238 112 78;
   --s1: #6A8EE7; --s2: #E26940; --s3: #8289DA; --s4: #00AA98; --s5: #C77F3F; --s6: #A579DB; --s7: #BA8900; --s8: #D4689E; --s9: #439AD6; --s10: #E15C97; --s11: #85A000; --neutral: #8E949E;
   --e-1: 0 1px 0 var(--hi) inset, 0 1px 2px oklch(0 0 0 / 0.25);
   --shadow: 0 1px 0 var(--hi) inset, 0 12px 36px oklch(0 0 0 / 0.5); --e-2: var(--shadow); --glow: 0 0 0 1px var(--accent-line);

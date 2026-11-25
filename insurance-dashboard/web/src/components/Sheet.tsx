@@ -9,6 +9,23 @@ import { useLocation, useNavigate, type Location } from 'react-router-dom';
  *  (the screener's period reverted to 5Y on "סגירה"). So the sheet keeps the last address set while it was open and, once back on the
  *  page's entry, writes it there (replace): the choices stay, and no extra history entry is left. */
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
+  useSheetHistory(open, onClose);
+  if (!open) return null;
+  return createPortal(
+    <div className="sheetwrap" onClick={(e) => { if (e.target === e.currentTarget) history.back(); }}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="sheet-hd"><span className="grip" aria-hidden="true" /><b>{title}</b><button type="button" className="btn" onClick={() => history.back()}>סגירה</button></div>
+        <div className="sheet-body">{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** The history behaviour of a phone sheet, shared by <Sheet> and <DeeperSheet>: while `open`, one history entry over the page's own, so
+ *  Back (the button or the gesture) and Escape close it (call `history.back()` to close from a button or the scrim); the page's
+ *  scroll is locked; an address a picker in the sheet wrote is carried down to the page's entry once the sheet closes. */
+export function useSheetHistory(open: boolean, onClose: () => void) {
   const closing = useRef(false);
   const close = useRef(onClose); close.current = onClose;
   const loc = useLocation();
@@ -43,16 +60,6 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       if (ours) { addEventListener('popstate', carry, { once: true }); history.back(); } else { last.current = null; base.current = null; }
     };
   }, [open]);
-  if (!open) return null;
-  return createPortal(
-    <div className="sheetwrap" onClick={(e) => { if (e.target === e.currentTarget) history.back(); }}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="sheet-hd"><span className="grip" aria-hidden="true" /><b>{title}</b><button type="button" className="btn" onClick={() => history.back()}>סגירה</button></div>
-        <div className="sheet-body">{children}</div>
-      </div>
-    </div>,
-    document.body,
-  );
 }
 
 /** The state of a page's pickers in one sticky line on a phone; a tap opens them in a sheet. */
