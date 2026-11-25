@@ -131,6 +131,11 @@ export function FundsScreen() {
   const [opts, setOpts] = useState(false);
   const [saved, setSaved] = useStored<Saved[]>('funds:screens', []);
   const [naming, setNaming] = useState<string | null>(null);
+  // B10: a choice that would leave no track at all is refused, with the reason; the previous filter stays
+  const [refused, setRefused] = useState(false);
+  useEffect(() => { setRefused(false); }, [sp]);
+  // B9: the phone's control row scrolls sideways; after the ranking window or the scope changes it starts at its start again
+  useEffect(() => { document.querySelectorAll<HTMLElement>('.tbar-ctl').forEach((el) => el.scrollTo({ left: 0 })); }, [sp, phone]);
 
   // closed (ceased) tracks: a separate file, loaded only when asked
   const [goneRows, setGoneRows] = useState<FundX[] | null>(null);
@@ -149,11 +154,12 @@ export function FundsScreen() {
   const dfKeys = useMemo(() => defaultKeys(dfile, asof), [dfile, asof]);
   const val = (f: FundX, p: Per) => (real ? realOf(f, p, basis, asof, cpi).v : retOf(f, p, basis).v);
 
-  const screened = (f: FundX) => {
+  const screened = (f: FundX, o: { fams?: FamKey[]; mk?: string } = {}) => {
+    const fm = o.fams ?? fams, mkx = o.mk ?? mk;
     const t = q.trim();
     if (t && !(f.name.includes(t) || f.mgr.includes(t) || f.grp.includes(t))) return false;
-    if (fams.length && !fams.includes(famOf(f.track))) return false;
-    if (mk && f.grp !== mk) return false;
+    if (fm.length && !fm.includes(famOf(f.track))) return false;
+    if (mkx && f.grp !== mkx) return false;
     if (F.fmax != null && !(f.fee != null && f.fee <= F.fmax)) return false;
     if (F.dmax != null && !(f.depfee != null && f.depfee <= F.dmax)) return false;
     if (F.amin != null && !(f.assets != null && f.assets >= F.amin)) return false;
@@ -165,6 +171,9 @@ export function FundsScreen() {
     if (dfOnly && !dfKeys.has(f.k)) return false;
     return true;
   };
+  // how many tracks a choice would leave (every other filter kept)
+  const reach = (o: { track?: string; fams?: FamKey[]; mk?: string }) => all.filter((f) => inProd(f) && (closed || !f.closed) && (o.track == null || o.track === ALL || f.track === o.track) && screened(f, o)).length;
+  const trackCount = (t: string) => reach({ track: t });
   const sortKey = (sp.get('s') ?? (sortPersist ? 'persist' : '')) as ColKey | '';
   const persistOn = cols.includes('persist') || sortKey === 'persist';
   const persistCats = useMemo(() => [...new Set(all.filter((f) => inProd(f) && (T === ALL || f.track === T)).map(catKey))], [all, prod, T]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -182,7 +191,7 @@ export function FundsScreen() {
       const rk = new Map<string, RankInfo>([...ord].map(([k, r]) => [k, { ...r, lo: tie.get(k)?.lo ?? r.rank, hi: tie.get(k)?.hi ?? r.rank }]));
       const by = sortKey && sortKey !== 'pct' ? sortKey : null;
       const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : by === 'persist' ? (() => { const x = persistOf(f); return x ? x.top / x.of : null; })() : by === 'svc' ? (isPension(f) ? svcOf(dec, f.grp, 'pension')?.total ?? null : null) : by === 'clm' ? (isPension(f) && dec ? companyOf(dec, f.grp)?.claims?.disability.approved ?? null : null) : (f as unknown as Record<string, number | null>)[by] ?? null);
-      const list = shown.filter(screened).sort((a, b) => {
+      const list = shown.filter((f) => screened(f)).sort((a, b) => {
         if (a.gone !== b.gone) return a.gone ? 1 : -1;
         if (by) { const x = sv(a), y = sv(b); if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1; return by === 'fee' || by === 'depfee' || by === 'sd' ? x - y : y - x; }
         const ra = rk.get(a.k)?.rank, rb = rk.get(b.k)?.rank; return ra == null || rb == null ? (ra == null ? (rb == null ? (b.assets ?? 0) - (a.assets ?? 0) : 1) : -1) : ra - rb;
@@ -255,15 +264,21 @@ export function FundsScreen() {
   );
 
   /* ---- controls ---- */
-  const famChip = (k: FamKey) => <button key={k} type="button" className="chip" aria-pressed={fams.includes(k)} onClick={() => set({ fam: (fams.includes(k) ? fams.filter((x) => x !== k) : [...fams, k]).join(',') || null })}>{FAM_LABEL[k]}</button>;
+  const famChip = (k: FamKey) => {
+    const on = fams.includes(k), n = on ? 1 : reach({ track: T, fams: [...fams, k] }), none = n === 0;
+    return <button key={k} type="button" className="chip" aria-pressed={on} disabled={none} title={none ? 'אין מסלולים כאלה בבחירה הנוכחית' : undefined} style={none ? { opacity: 0.45, cursor: 'default' } : undefined}
+      onClick={() => set({ fam: (on ? fams.filter((x) => x !== k) : [...fams, k]).join(',') || null })}>{FAM_LABEL[k]}{none && <> · <span className="num">0</span></>}</button>;
+  };
+  const Refused = refused ? <div className="fnote" role="status">אין מסלולים כאלה; הסינון הקודם נשמר</div> : null;
   const numIn = (k: keyof typeof F, label: string, unit: string, step: string) => (
     <label className="fnum">{label} <input type="number" inputMode="decimal" step={step} value={F[k] ?? ''} onChange={(e) => set({ [k]: e.target.value === '' ? null : e.target.value })} aria-label={`${label} ${unit}`} />{unit}</label>
   );
   const Options = (
     <div className="fopts">
+      {Refused}
       <Field label="חיפוש"><input type="search" value={q} onChange={(e) => set({ q: e.target.value || null })} placeholder="שם מסלול או גוף" /></Field>
       <div className="field"><span>משפחת מסלול <Tip k="family" /></span><div className="fchips">{FAMS.map(([k]) => famChip(k))}</div></div>
-      <div className="field"><span>גוף מנהל</span><Pick label="גוף מנהל" value={mk || ALL} onChange={(v) => set({ mk: v === ALL ? null : v })} options={[[ALL, 'כל הגופים'], ...groupsAll.map((g) => [g, g] as [string, string])]} /></div>
+      <div className="field"><span>גוף מנהל</span><Pick label="גוף מנהל" value={mk || ALL} onChange={(v) => { if (v !== ALL && reach({ track: T, mk: v }) === 0) { setRefused(true); return; } set({ mk: v === ALL ? null : v }); }} options={[[ALL, 'כל הגופים'], ...groupsAll.map((g) => [g, g] as [string, string])]} /></div>
       <div className="field"><span>סינון{nFilters > 0 && <button type="button" className="linkbtn" onClick={() => { const n = new URLSearchParams(); ['prod', 'track', 'per', 'b', 'cols', 'real'].forEach((k) => { const v = sp.get(k); if (v) n.set(k, v); }); setSp(n, { replace: true }); }}>ניקוי</button>}</span>
         <div className="fnums">
           {numIn('eqmin', 'מניות מ-', '%', '5')}{numIn('eqmax', 'מניות עד', '%', '5')}
@@ -289,7 +304,7 @@ export function FundsScreen() {
   );
   const tools = <>
     <Pick label="מוצר" value={prod} onChange={(p) => set({ prod: p, track: null })} options={[[ALL, 'כל המוצרים'], ...prods.map((p) => [p, p] as [string, string])]} />
-    <Pick label="מסלול" className="trackpick" value={T} onChange={(t) => set({ track: t })} options={[[ALL, 'כל המסלולים', nf(tracks.reduce((u, [, c]) => u + c, 0), 0)], ...tracks.map(([t, c]) => [t, t, nf(c, 0)] as [string, string, string])]} />
+    <Pick label="מסלול" className="trackpick" value={T} onChange={(t) => { if (t !== ALL && trackCount(t) === 0) { setRefused(true); return; } set({ track: t }); }} options={[[ALL, 'כל המסלולים', nf(tracks.reduce((u, [, c]) => u + c, 0), 0)], ...tracks.map(([t, c]) => [t, t, nf(c, 0)] as [string, string, string])]} />
     {isPenProd(prod) && <button type="button" className="chip" aria-pressed={dfOnly} onClick={() => set({ df: dfOnly ? null : '1' })} title="קרנות שנבחרו בהליך שבתוקף כקרנות ברירת מחדל">ברירת מחדל</button>}
     {!phone && <Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} />}
     <button type="button" className={`btn${opts ? ' primary' : ''}`} aria-expanded={opts} onClick={() => setOpts((v) => !v)}>{phone ? `${PERIODS.find(([k]) => k === per)?.[1]} · ${lbl}${nFilters ? ` · ${nFilters}` : ''}` : `סינון${nFilters ? ` · ${nFilters}` : ''}`}</button>
@@ -301,9 +316,10 @@ export function FundsScreen() {
       <FundsHead sub={<>מסלולים · <Sourced src={() => countP('מסלולים מוצגים', shownN, 'המסלולים שעוברים את הסינון')}><span className="num">{nf(shownN, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} tools={<>{tools}{!phone && <BasisToggle netReady={netOk} />}</>} />
       {phone ? <Sheet open={opts} onClose={() => setOpts(false)} title="דירוג וסינון"><div className="fopts"><div className="field"><span>דירוג לפי</span><Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} /></div><div className="field"><span>בסיס</span><BasisToggle netReady={netOk} /></div>{Options}</div></Sheet> : opts && <section className="controls opts">{Options}</section>}
 
+      {!opts && Refused}
       <Panel title={<>{prod === ALL ? 'כל המוצרים' : prod} · {T === ALL ? 'כל המסלולים' : T}</>} aside={<>
         {multi && groups.length > 2 && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.k))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}
-        <span className={`chip${basis === 'net' || real ? ' est' : ''}`}>{lbl}</span><span className="chip">3Y ו-5Y: שנתי ממוצע</span>
+        <span className={`chip${basis === 'net' || real ? ' est' : ''}`}>{lbl}</span>{(per === 'a3' || per === 'a5') && <span className="chip">3Y ו-5Y: שנתי ממוצע</span>}
         {prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">מסלול משותף לשני המוצרים</span>}
       </>}>
         {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה">{nFilters > 0 && 'נסו לנקות חלק מהסינונים.'}</Empty> : phone ? (
