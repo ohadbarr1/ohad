@@ -594,7 +594,8 @@ def example(I):
     L = I.lens
     g = next(i for i, x in enumerate(L["groups"]) if x["id"] == "more")
     rows = {r["q"]: r for r in L["rows"] if r["g"] == g and r["s"] == "pen"}
-    q = L["quarters"][-1]
+    # More's latest reported quarter (the lens runs ahead of More during a season: Q3'26 opened before More reported)
+    q = next(x for x in reversed(L["quarters"]) if (rows.get(x) or {}).get("rep"))
     r = rows[q]
     rp = r["rep"]
     qn = f"{q[:2]}'{q[-2:]}"

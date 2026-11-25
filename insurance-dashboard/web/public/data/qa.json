@@ -1,5 +1,5 @@
 {
- "built": "2026-11-25T12:00:14+02:00",
+ "built": "2026-11-25T14:11:42+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -85,17 +85,17 @@
    "id": "ifrs_page",
    "ok": true,
    "level": "fail",
-   "n": 17181,
+   "n": 17188,
    "fail": 0,
-   "note": "17117/17181 on the cited page; 0 new misses; 0 facts without page text (not checked)"
+   "note": "17120/17188 on the cited page; 0 new misses; 0 facts without page text (not checked)"
   },
   {
    "id": "ifrs_page_known",
    "ok": false,
    "level": "warn",
-   "n": 17181,
-   "fail": 64,
-   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'ayalon': 18, 'hachshara': 26, 'migdal': 10, 'clal': 8, 'phoenix': 2}"
+   "n": 17188,
+   "fail": 68,
+   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'ayalon': 18, 'hachshara': 26, 'migdal': 14, 'clal': 8, 'phoenix': 2}"
   },
   {
    "id": "balance",
@@ -381,7 +381,7 @@
    "id": "cards",
    "ok": true,
    "level": "fail",
-   "n": 7418,
+   "n": 7416,
    "fail": 0,
    "note": "307 report cards, every digit a published fact"
   },
@@ -389,7 +389,7 @@
    "id": "changes",
    "ok": true,
    "level": "fail",
-   "n": 1627,
+   "n": 1626,
    "fail": 0,
    "note": "83 reports, every printed figure on its page"
   },
@@ -399,7 +399,7 @@
    "level": "fail",
    "n": 408,
    "fail": 0,
-   "note": "408 events, 10926 figures, 0 problems"
+   "note": "408 events, 10928 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -487,7 +487,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "ifrs_std: 7 insurers, 119 CSM roll-forwards checked, 119 close, 0 breaks listed; files equal a rebuild"
+   "note": "ifrs_std: 7 insurers, 128 CSM roll-forwards checked, 128 close, 0 breaks listed; files equal a rebuild"
   },
   {
    "id": "houses",
@@ -501,9 +501,9 @@
    "id": "csm_rollforward",
    "ok": true,
    "level": "warn",
-   "n": 119,
+   "n": 128,
    "fail": 0,
-   "note": "119/119 printed CSM roll-forwards close; 8 partial (one or two chart rows) not tested"
+   "note": "128/128 printed CSM roll-forwards close; 8 partial (one or two chart rows) not tested"
   },
   {
    "id": "facts",
@@ -655,7 +655,7 @@
    "level": "warn",
    "n": 223,
    "fail": 1,
-   "note": "223 source URLs checked 2026-10-25 (30 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867; older than 8 days"
+   "note": "223 source URLs checked 2026-10-25 (31 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867; older than 8 days"
   },
   {
    "id": "stress",

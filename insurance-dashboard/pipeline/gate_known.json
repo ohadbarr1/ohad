@@ -53,9 +53,14 @@
   "migdal 2026Q2 p12 csm_interest_accretion 133.0 [he_1763684]",
   "migdal 2026Q2 p12 csm_new_business 242.0 [he_1763684]",
   "migdal 2026Q2 p12 csm_changes_in_estimates 312.0 [he_1763684]",
-  "migdal 2026Q2 p12 csm_closing 15276.0 [he_1763684]"
+  "migdal 2026Q2 p12 csm_closing 15276.0 [he_1763684]",
+  "migdal 2026Q3 p14 csm_opening 14411.0 [he]",
+  "migdal 2026Q3 p14 csm_interest_accretion 208.0 [he]",
+  "migdal 2026Q3 p14 csm_new_business 411.0 [he]",
+  "migdal 2026Q3 p14 csm_changes_in_estimates 489.0 [he]"
  ],
  "notes": {
-  "ifrs_page_w10": "03.11.26: 28 CSM-movement values for Ayalon (FY'25 pp.142-143, Q1'26 p.19 = the FY'25 chart reprinted, tagged fy 2025) and Migdal (FY'25 p.108, Q2'26 p.12) are read from the board report's labelled waterfall charts (no text layer). Checked: Ayalon release 90+81 = the 171 stated in the text, new business 210 = 122% of release as stated; Migdal FY'25 bridge 13,104 -> 14,414 vs closing 14,411, H1'26 14,411 -> 15,275 vs 15,276 (rounding)."
+  "ifrs_page_w10": "03.11.26: 28 CSM-movement values for Ayalon (FY'25 pp.142-143, Q1'26 p.19 = the FY'25 chart reprinted, tagged fy 2025) and Migdal (FY'25 p.108, Q2'26 p.12) are read from the board report's labelled waterfall charts (no text layer). Checked: Ayalon release 90+81 = the 171 stated in the text, new business 210 = 122% of release as stated; Migdal FY'25 bridge 13,104 -> 14,414 vs closing 14,411, H1'26 14,411 -> 15,275 vs 15,276 (rounding).",
+  "migdal 2026Q3 p14": "CSM waterfall chart in the board report (2.3), values are chart labels in the image; checked against the rendered page 25.11.26: 14,411 + 208 + 1,096 + 411 + 489 − 808 = 15,807"
  }
 }

@@ -81,7 +81,9 @@ def build():
     reg = docs()
     reps, cos = {}, {}
     for c in INSURERS:
-        files = sorted((SRC / c).glob("*.json"))
+        # the comparison is built on one base report per insurer (BASE / PERIODS: H1'26, LTM Q2'26); a newer report (Q3'26, nine-month
+        # windows) waits until the builder is rolled forward, so all insurers stay on the same base
+        files = sorted(f for f in (SRC / c).glob("*.json") if f.stem[:6] <= "2026Q2")
         if not files:
             continue
         d = json.loads(files[-1].read_text(encoding="utf-8"))

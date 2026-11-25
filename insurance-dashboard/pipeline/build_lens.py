@@ -144,12 +144,18 @@ def build():
         mm = q * 3
         return f"{y}-{mm:02d}"
 
-    last_rep = None
+    # the last reported quarter of the lens is a season-complete one: a quarter counts once its reporters cover everyone who reported
+    # the quarter before (one late filer allowed). Mid-season (Q3'26 on 25.11.26: 4 of 9) the lens stays on the previous quarter, so
+    # the cross-industry pages and answers keep a full peer set; the early reporters' new quarter is on their own company pages.
+    by_q = {}
     for (mm, c, p) in F:
         if mm.endswith(".fees") and p.startswith("Q"):
-            q, y = int(p[1]), int(p[3:])
-            if last_rep is None or (y, q) > last_rep:
-                last_rep = (y, q)
+            by_q.setdefault((int(p[3:]), int(p[1])), set()).add(c)
+    qs = sorted(by_q)
+    last_rep = qs[0]
+    for prev, cur in zip(qs, qs[1:]):
+        if len(by_q[cur]) >= max(1, len(by_q[prev]) - 1):
+            last_rep = cur
     quarters = []
     y, q = FIRST_Q
     while (y, q) <= last_rep:
@@ -160,7 +166,9 @@ def build():
         e = y * 100 + q * 3
         o, m1, m2 = madd(e, -3), madd(e, -2), madd(e, -1)
         ms = [A(g, s, x) for x in (o, m1, m2, e)]
-        avg = (ms[0] / 2 + ms[1] + ms[2] + ms[3] / 2) / 3 if all(v is not None for v in ms) else None
+        if ms[0] is None and all(v is not None for v in ms[1:]):
+            ms[0] = 0.0   # the group opened this product during the quarter (Ayalon gemel, 07/26): opening assets were 0, not unknown
+        avg =(ms[0] / 2 + ms[1] + ms[2] + ms[3] / 2) / 3 if all(v is not None for v in ms) else None
         fl = [flows(g, s, x) for x in (m1, m2, e)]
         org = fsum(x[0] for x in fl) if all(fl) else None
         tr = fsum(x[1] for x in fl) if all(fl) else None

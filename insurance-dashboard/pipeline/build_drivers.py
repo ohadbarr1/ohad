@@ -528,7 +528,7 @@ class Co:
         lrow = I.by.get((self.g, "ins" if s == "ic" else s, I.last))
         if not lrow:
             return None
-        rows = [I.by.get((self.g, "ins" if s == "ic" else s, q)) for q in I.ltm]
+        rows =[I.by.get((self.g, "ins" if s == "ic" else s, q)) for q in I.ltm]
         rep = lrow.get("rep") or {}
         own = rep.get("c") is not None and self.c in (rep.get("c"), "more_gemel") or (self.c == "idi" and rep.get("c") == "direct")
         P = {"s": s, "he": SEG_HE[s], "g": self.g, "group": self.gname()}
@@ -1264,7 +1264,10 @@ class Co:
 
     def build(self, built):
         I = self.I
-        out = {"meta": {"company": self.c, "name": self.name, "kind": self.kind, "built": built, "base": {"q": ql(I.last), "end": "2026-06-30", "ltm": [ql(q) for q in I.ltm]},
+        # the valuation base is the quarter the group figures are built on (group(): LTM Q3'25–Q2'26, equity at 30.06.26), not the lens's
+        # latest quarter: the lens moves to Q3'26 as the savings reports arrive, the group model does not until it is rolled forward
+        out = {"meta": {"company": self.c, "name": self.name, "kind": self.kind, "built": built,
+                        "base": {"q": "Q2'26", "end": "2026-06-30", "ltm": ["Q3'25", "Q4'25", "Q1'26", "Q2'26"]},
                         "assume": {"tax": I.A["tax"], "g": I.A["g"], "beta": I.A["beta"], "erp": I.A["erp"], "ke": I.npv["meta"]["ke"]["v"], "rf": I.npv["meta"]["ke"]["rf"], "rf_month": I.npv["meta"]["ke"]["rf_month"]}}}
         if self.c == EMPLOYER:
             out["meta"]["flag"] = "employer"

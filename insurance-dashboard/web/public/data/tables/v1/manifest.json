@@ -2365,10 +2365,10 @@
    "csv": "ifrs17.csv",
    "json": "ifrs17.json",
    "pq": "pq/ifrs17.pq",
-   "csv_bytes": 2129928,
-   "json_bytes": 2327086,
-   "csv_sha256": "c8dd8d13ffe9fa0e276c9b66ea6759e37082933375c00e993c182175ef89245d",
-   "json_sha256": "7d8f586487c4f9d4a9b1788570f86b0596ad011c58511b57ecc705a6079a4e1c"
+   "csv_bytes": 2129751,
+   "json_bytes": 2326909,
+   "csv_sha256": "8d798ac817229ccd1794d59ea205cf27df4edb3b8d6ef53b41ee757c41a973f5",
+   "json_sha256": "63ec3040c900240a94a12b791371ae43376cbcfe1b67453de99c515a817e7932"
   },
   {
    "id": "solvency",
@@ -3336,7 +3336,7 @@
    "last": "LTM2026Q2",
    "first_label": "Q1'25",
    "last_label": "LTM Q2'26",
-   "changed": "2026-11-05",
+   "changed": "2026-11-25",
    "csv": "pnc.csv",
    "json": "pnc.json",
    "pq": "pq/pnc.pq",
@@ -3536,7 +3536,7 @@
    "last": "2026Q2",
    "first_label": "Q1'23",
    "last_label": "Q2'26",
-   "changed": "2026-11-06",
+   "changed": "2026-11-25",
    "csv": "savings_q.csv",
    "json": "savings_q.json",
    "pq": "pq/savings_q.pq",
@@ -3704,12 +3704,12 @@
   "json": "changes.json",
   "csv": "changes.csv",
   "pq": "pq/changes.pq",
-  "builds": 5,
+  "builds": 8,
   "last": "2026-11-25"
  },
  "kit": {
   "xlsx": "fox_powerquery.xlsx",
-  "bytes": 36339,
-  "sha256": "2260ee4473fbf0b95d32a8f2e5a6e65d9a4892306326398e1cdc10eb9991b771"
+  "bytes": 36336,
+  "sha256": "134734802ff87333f15c4619db9c25c359961aadb3ff55d5bf069711ccced787"
  }
 }
