@@ -6,20 +6,27 @@
    "השוואת מסלולים ב-fox: מגדל, הראל, מנורה · פנסיה מקיפה כללי · עד 10/26" + the link, wa = https://wa.me/?text=… */
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import type { SheetProps } from '../../pages/compare/contract';
+import type { SheetProps, View } from '../../pages/compare/contract';
 import { DeeperSheet } from '../DeeperSheet';
 import type { Basis } from '../../lib/funds';
 import { monthLabel } from '../../lib/format';
 import { useCmpData } from './sheetKit';
+import { count } from '../../lib/count';
 
 /** query keys that are state of the moment, not of the view */
 const DROP = ['sheet', 'src', 'focus'];
 
-/** the shareable address of the current view */
-export function shareUrl(pathname: string, search: string, keys: string[], basis: Basis): string {
+/** the shareable address of the current view. The view is written out (v=months&r=6 too): without it the receiver's own remembered
+ *  lens would open instead, so the page-end WhatsApp button and this sheet give one and the same link (review B1 #11) */
+export function shareUrl(pathname: string, search: string, keys: string[], basis: Basis, view?: View): string {
   const q = new URLSearchParams(search);
   DROP.forEach((k) => q.delete(k));
   if (keys.length) q.set('k', keys.join(','));
+  if (view) {
+    const months = view === 'm6' || view === 'm12' || view === 'y';
+    q.set('v', months ? 'months' : view);
+    if (months) q.set('r', view === 'm12' ? '12' : view === 'y' ? 'y' : '6'); else q.delete('r');
+  }
   if (basis === 'gross' && !q.has('b')) q.set('b', 'gross');
   const s = q.toString().replace(/%2C/gi, ',');
   return `${location.origin}${pathname}${s ? `?${s}` : ''}`;
@@ -31,19 +38,20 @@ export function shareText(labels: string[], cat: { prod: string; track: string }
 export const waHref = (text: string, url: string) => `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
 
 /** the link, its text and the WhatsApp address, for the sheet and the page-end button */
-export function useShareLink(keys: string[], basis: Basis, enabled = true): { url: string; text: string; wa: string } {
+export function useShareLink(keys: string[], basis: Basis, enabled = true, view?: View): { url: string; text: string; wa: string } {
   const loc = useLocation();
   const d = useCmpData(keys, enabled);
-  const url = shareUrl(loc.pathname, loc.search, keys, basis);
+  const url = shareUrl(loc.pathname, loc.search, keys, basis, view);
   const text = shareText(d.cols.map((c) => c.label), d.ck && d.cols[0] ? d.cols[0].f : null, d.asof);
   return { url, text, wa: waHref(text, url) };
 }
 
-export function ShareSheet({ keys, basis, open, onClose }: SheetProps) {
-  const { url, text, wa } = useShareLink(keys, basis, open);
+export function ShareSheet({ keys, basis, view, open, onClose }: SheetProps) {
+  const { url, text, wa } = useShareLink(keys, basis, open, view);
   const [done, setDone] = useState<string | null>(null);
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const copy = async () => {
+    count('cmp_share', { channel: 'copy' });
     try { await navigator.clipboard.writeText(url); setDone('הקישור הועתק'); }
     catch {
       // no clipboard permission: select the address so the reader can copy it by hand
@@ -52,13 +60,13 @@ export function ShareSheet({ keys, basis, open, onClose }: SheetProps) {
       setDone('הקישור מסומן: להעתקה ידנית');
     }
   };
-  const share = async () => { try { await navigator.share({ title: 'השוואת מסלולים', text, url }); } catch { /* the reader closed the menu */ } };
+  const share = async () => { count('cmp_share', { channel: 'native' }); try { await navigator.share({ title: 'השוואת מסלולים', text, url }); } catch { /* the reader closed the menu */ } };
   return (
     <DeeperSheet open={open} onClose={onClose} id="share-sheet-dlg" title="שיתוף" sub="מי שיפתח יראה בדיוק את המסך הזה">
       <div id="share-sheet">
         <div className="cs-url" id="share-url" dir="ltr">{url}</div>
         <div className="cs-nav in">
-          <a className="cs-btn pri" id="share-wa" href={wa} target="_blank" rel="noreferrer">ווטסאפ</a>
+          <a className="cs-btn pri" id="share-wa" href={wa} target="_blank" rel="noreferrer" onClick={() => count('cmp_share', { channel: 'wa' })}>ווטסאפ</a>
           <button type="button" className="cs-btn" id="share-copy" onClick={copy}>העתקת קישור</button>
           {canShare ? <button type="button" className="cs-btn" id="share-native" onClick={share}>שיתוף…</button> : null}
         </div>

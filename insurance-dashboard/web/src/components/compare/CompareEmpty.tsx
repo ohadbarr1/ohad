@@ -6,6 +6,7 @@ import { TRAY_MAX, useTray } from '../../lib/funds';
 import { TILES, capOf, house, prodShort, tileOf, trackLabels } from '../../lib/pickTiles';
 import type { VFund } from '../../lib/verdict';
 import { ProdIcon, SEARCH_PH, SearchSvg, openPicker, useFundRows, useRecents } from './PickerSheet';
+import { count } from '../../lib/count';
 import './picker.css';
 
 /* <CompareEmpty> (C6, spec §4.1, mockup v3 frame 1): the compare page with no tracks yet. "איזה מסלול יש לך?"; one search field that
@@ -43,7 +44,7 @@ export function CompareEmpty(ctx: CmpCtx) {
           <div className="pk-h" id="cmp-mine"><span>המסלול שלי</span></div>
           <div className="pk-sugg">
             {mineF.map((f) => (
-              <button key={f.k} type="button" className="pk-sg" onClick={() => open(compareKeys([{ k: f.k }], funds as unknown as VFund[], cap))}>
+              <button key={f.k} type="button" className="pk-sg" onClick={() => { const ks = compareKeys([{ k: f.k }], funds as unknown as VFund[], cap); if (ks.length) count('cmp_picker_done', { n: Math.min(ks.length, cap), route: 'mine' }); open(ks); }}>
                 <span className="ic"><ProdIcon art={(tileOf(f.prod) ?? TILES[0]).art} size={38} /></span>
                 <span><b>{house(f.grp)} · {prodShort(f.prod)} {f.track}</b><small>מול שני הגדולים מאותו סוג</small></span>
                 <span className="go">השוואה ›</span>

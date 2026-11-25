@@ -7,6 +7,7 @@
 import { Link } from 'react-router-dom';
 import type { SheetProps } from '../../pages/compare/contract';
 import { DeeperSheet, SheetSection, SheetSwatch } from '../DeeperSheet';
+import { backThen } from '../Sheet';
 import { Sourced } from '../Source';
 import { useMine } from '../../lib/mine';
 import { useOptional } from '../../lib/fundsLoad';
@@ -43,13 +44,14 @@ export function TrackSheet({ keys, basis, door, open, onClose, setKeys, k }: She
   const mid = f && d.file ? feeMid(d.file.funds as FundX[], f) : null;
   const seg = f ? segOf(f) : null, svc = f && seg && dec ? svcOf(dec, f.grp, seg) : null;
   const basisHe = basis === 'net' ? 'אחרי דמי ניהול' : 'לפני דמי ניהול';
-  const remove = () => { setKeys(keys.filter((x) => x !== k)); history.back(); };
+  const remove = () => { const v = keys.filter((x) => x !== k); backThen(() => setKeys(v)); };
   const toggleMine = () => setMine(own ? mine.filter((m) => m.k !== k) : [...mine, { k, added: today() }]);
 
   const midProv = (): Prov => ({ k: 'calc', title: `דמי ניהול מצבירה, האמצעי בסוג · ${ck}`, value: pc(mid?.v ?? null), formula: 'החציון של דמי הניהול מצבירה (ממוצע בפועל, AVG_ANNUAL_MANAGEMENT_FEE) של המסלולים הפתוחים בסוג', inputs: (mid?.xs ?? []).map((x) => ({ label: x.name, v: pc(x.fee), src: () => fundP(refOf(x), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', pc(x.fee)) })) });
   const ddProv = (): Prov => ({ k: 'calc', est: basis === 'net', title: `${MAX_DROP}, 5 שנים · ${f?.name ?? ''}`, value: pc(ex?.dd ?? null, 1), formula: 'הירידה הכי גדולה של ערך החיסכון מהשיא שלפניה, מתוך התשואות החודשיות של 60 החודשים האחרונים בריבית דריבית',
     inputs: ex && c ? [{ label: `השיא שלפני הירידה · סוף ${monthShortYear(ex.ddPeak)}`, v: '', src: () => monthProv(c.f, c.h, ex.ddPeak, basis) }, { label: `השפל · סוף ${monthShortYear(ex.low)}`, v: '', src: () => monthProv(c.f, c.h, ex.low, basis) }] : [] });
-  const pctV = f ? (basis === 'net' ? f.prn?.a5 : f.pr?.a5) ?? null : null, pctN = f ? (basis === 'net' ? f.pnn?.a5 : f.pn?.a5) ?? null : null;
+  // pr / pn = the gross / net percentile (0–100); prn / pnn = the number of peers behind each (lib/fundsTimeLoad snapOf)
+  const pctV = f ? (basis === 'net' ? f.pn?.a5 : f.pr?.a5) ?? null : null, pctN = f ? (basis === 'net' ? f.pnn?.a5 : f.prn?.a5) ?? null : null;
   const pctProv = (): Prov => ({ k: 'calc', est: basis === 'net', title: `אחוזון 5Y בקטגוריה · ${f?.name ?? ''}`, value: pctV == null ? '–' : nf(pctV, 0), formula: d.file && (d.file as { pr_method?: string }).pr_method || PCT_F,
     inputs: f ? [{ label: 'תשואה שנתית ממוצעת, 5Y', v: pc(retOf(f, 'a5', basis).v, 1), src: () => winProv(f, 'a5', basis, asof, d.file) }, ...(pctN != null ? [{ label: 'מסלולים מדורגים', v: String(pctN) }] : [])] : [] });
 

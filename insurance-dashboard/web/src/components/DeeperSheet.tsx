@@ -26,6 +26,16 @@ export interface DeeperSheetProps {
 }
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
+/** FOCUSABLE inside one part of the sheet: every alternative of the list scoped (a bare prefix would scope only the first one) */
+const within = (scope: string) => FOCUSABLE.split(',').map((x) => `${scope} ${x}`).join(',');
+/** the first visible control of the sticky strip, else of the body (the picker's search field #pkq) */
+function firstControl(el: HTMLElement): HTMLElement | null {
+  for (const scope of ['.dsheet-sticky', '.dsheet-b']) {
+    const f = [...el.querySelectorAll<HTMLElement>(within(scope))].find((x) => x.getClientRects().length > 0);
+    if (f) return f;
+  }
+  return null;
+}
 
 export function DeeperSheet({ open, onClose, title, label, sub, lead, sticky, footer, detent = 'auto', id, bodyId, initialFocus = 'dialog', children }: DeeperSheetProps) {
   useSheetHistory(open, onClose);
@@ -37,7 +47,7 @@ export function DeeperSheet({ open, onClose, title, label, sub, lead, sticky, fo
     const prev = document.activeElement as HTMLElement | null;
     const el = ref.current;
     if (el && initialFocus !== 'none') {
-      const target = initialFocus === 'first' ? el.querySelector<HTMLElement>(`.dsheet-sticky ${FOCUSABLE}, .dsheet-b ${FOCUSABLE}`) : initialFocus === 'close' ? el.querySelector<HTMLElement>('.dsheet-x') : null;
+      const target = initialFocus === 'first' ? firstControl(el) : initialFocus === 'close' ? el.querySelector<HTMLElement>('.dsheet-x') : null;
       (target ?? el).focus({ preventScroll: true });
     }
     // Tab and Shift+Tab walk the sheet's own controls in a loop (moved by hand: WebKit would otherwise leave the sheet for the page)

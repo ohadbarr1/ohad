@@ -6,8 +6,10 @@ import { NumText } from '../../components/NumText';
 import { SimilarChips } from '../../components/compare/SimilarChips';
 import { halfYear, lastYear, monthRows, periodRow, rowBand, rowMarks, seriesOf, yearRows, yearsAvailable, type GridOpts } from '../../lib/compareMonths';
 import { monthInsight, monthShortYear, ONE_TRACK, OLD_POLICY_LINE, PRODUCTS_LINE, RISK_BANNER, RISK_MORE, WORST_MONTH, BEST_MONTH, MAX_DROP } from '../../lib/compareWords';
-import { feeCost, feeRing } from '../../lib/feeExample';
-import { useStored } from '../../lib/local';
+import { feeRing } from '../../lib/feeExample';
+import { useFeeCosts } from '../../components/compare/FeeSheet';
+import { useShareLink } from '../../components/compare/ShareSheet';
+import { count } from '../../lib/count';
 import type { CatX, FundX, HistX } from '../../lib/funds';
 import type { CmpCtx } from './contract';
 import { extremes } from './extremes';
@@ -33,25 +35,17 @@ export interface MonthsModel {
   labels: string[]; colors: string[];
   cat: CatX | null;                 // the category's average (cat.json), same-category sets only
   asof: number;
-  cross: boolean;                   // different categories (risk levels) among the comparable tracks
+  cross: boolean;                   // different categories among the comparable tracks (no marks, no ranking sentence)
+  riskDiff?: boolean;               // …and their risk differs (lib/compareSummary riskDiffers): the risk banner; else the products line alone
   mixed: boolean;                   // different products
   old: boolean[];                   // an old-generation policy, per column
   closed: boolean[];                // a closed track, per column
   mine: boolean[];
-  shareHref: string;                // the wa.me link
   loading: boolean;
 }
 
 const Spark = () => <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" /></svg>;
 const Sliders = () => <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8M14 5v4M8 15v4" /></svg>;
-
-/** the fee row's costs and ring. Same switch as the fee sheet (FEE_DEP_KEY 'cmp:feedep'); after the merge with lane L2-b this is
- *  replaced by FeeSheet's useFeeCosts (which also applies the reader's own fees, O9). */
-function useFeeRow(funds: (FundX | null)[]) {
-  const [dep] = useStored<boolean>('cmp:feedep', true);
-  const costs = funds.map((f) => (f ? feeCost(f, dep) : null));
-  return { costs, ring: feeRing(costs) };
-}
 
 export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; setRange: (r: Range) => void }) {
   const { range, m, door, openSheet, basis, keys, cap = 4 } = props;
@@ -66,7 +60,10 @@ export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; se
   // tracks left out of every mark and of the sentence: old-generation policies and closed tracks
   const out = m.funds.map((_, i) => m.old[i] || m.closed[i]);
   const mask = (vals: (number | null)[]) => vals.map((v, i) => (out[i] ? null : v));
-  const fee = useFeeRow(m.funds);
+  // the fee row: the fee sheet's own costs (lane L2-b useFeeCosts: the deposits switch, and the reader's own fees from their report, O9),
+  // ringed among the comparable tracks only (old-generation and closed tracks are left out of the ring)
+  const fee = useFeeCosts(m.funds);
+  const ownFee = m.funds.map((_, i) => i).filter((i) => fee.own[i]).map((i) => m.labels[i]).filter(Boolean);
   const nMonths = range === 'm6' ? 6 : Math.min(60, 12 + extra);
   const nYearsAll = useMemo(() => (yrs ? Math.min(12, yearsAvailable(m.hists, basis, o)) : 0), [yrs, m.hists, basis, m.asof]);  // eslint-disable-line react-hooks/exhaustive-deps
   const nYears = allYears ? Math.max(5, nYearsAll) : 5;
@@ -86,7 +83,7 @@ export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; se
       footer = [halfYear(m.hists, basis, o), lastYear(m.funds, basis, o)].map((s, i) => ({ key: s.key, label: i ? 'שנה אחרונה' : 'חצי שנה', vals: s.vals, avg: s.avg,
         lead: m.cross ? [] : rowMarks(mask(s.vals), rowBand(i ? 'y12' : 'half'), 1) }));
     }
-    footer.push({ key: 'fee', id: 'fee-line', label: 'דמי ניהול', sub: 'בשנה ›', unit: 'ils', vals: fee.costs, avg: null,
+    footer.push({ key: 'fee', id: 'fee-line', label: 'דמי ניהול', sub: fee.deposits ? 'בשנה ›' : 'בלי הפקדות ›', unit: 'ils', vals: fee.costs, avg: null,
       lead: m.cross ? [] : feeRing(mask(fee.costs)), onOpen: () => openSheet({ t: 'fee' }) });
   }
 
@@ -116,7 +113,7 @@ export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; se
 
   return (
     <div className="cmp-body" id="lens-months">
-      {m.cross && <GuardLine kind="risk" id="cross-line" textId="month-insight" text={RISK_BANNER} more={RISK_MORE} onOpen={() => openSheet({ t: 'risknote' })} />}
+      {m.cross && m.riskDiff && <GuardLine kind="risk" id="cross-line" textId="month-insight" text={RISK_BANNER} more={RISK_MORE} onOpen={() => openSheet({ t: 'risknote' })} />}
       {m.mixed && <GuardLine kind="product" id="product-line" text={PRODUCTS_LINE} onOpen={() => openSheet({ t: 'rules' })} />}
       {anyOld && <GuardLine kind="oldgen" id="old-line" text={OLD_POLICY_LINE} onOpen={() => openSheet({ t: 'rules' })} wrap />}
       <MonthGrid id="month-grid" cols={cols} rows={rows} footer={footer} kind={yrs ? 'years' : 'months'} mark={m.cross ? 'none' : 'row-max'} basis={basis} showAvg={showAvg}
@@ -128,6 +125,7 @@ export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; se
       <div className="cmp-legend">
         {!m.cross && n > 1 && <span><i />הגבוה בשורה (בדמי ניהול: הזול)</span>}
         <span>הקשה על מספר פותחת פירוט</span>
+        {ownFee.length > 0 && <span id="fee-own">דמי ניהול ב{ownFee.join(', ')}: לפי הדוח שלך</span>}
       </div>
       {!m.cross && keys.length < cap && <SimilarChips {...props} />}
       {door !== 'saver' && (
@@ -145,22 +143,33 @@ export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; se
           </div>
         </details>
       )}
-      <div className="cmp-share">
-        <a className="cmp-btn wa" id="wa" href={m.shareHref} target="_blank" rel="noopener noreferrer">שליחה בווטסאפ</a>
-        <button type="button" className="cmp-btn" id="share" onClick={() => openSheet({ t: 'share' })} aria-haspopup="dialog">קישור</button>
-      </div>
+      <ShareRow ctx={props} />
       <Stamp asof={m.asof} basis={basis} onWhy={() => openSheet({ t: 'why' })} />
     </div>
   );
 }
 
-/** One line: source, month, basis, the five words on the past, and "איך מחשבים?" (spec §5.3 StampLine) */
-export function Stamp({ asof, basis, onWhy }: { asof: number; basis: 'net' | 'gross'; onWhy: () => void }) {
+/** The page's end: "שליחה בווטסאפ" (the same link and text as the share sheet, lib ShareSheet useShareLink) and "קישור" (the sheet).
+ *  The month views and "לאורך זמן" end with it alike (review B1 P8). */
+export function ShareRow({ ctx }: { ctx: CmpCtx }) {
+  const share = useShareLink(ctx.keys, ctx.basis, true, ctx.view);
+  return (
+    <div className="cmp-share">
+      <a className="cmp-btn wa" id="wa" href={share.wa} target="_blank" rel="noopener noreferrer" onClick={() => count('cmp_share', { channel: 'wa_page' })}>שליחה בווטסאפ</a>
+      <button type="button" className="cmp-btn" id="share" onClick={() => ctx.openSheet({ t: 'share' })} aria-haspopup="dialog">קישור</button>
+    </div>
+  );
+}
+
+/** One line: source, month, basis, the five words on the past, and "איך מחשבים?" (spec §5.3 StampLine). `onSrc` (the long view, agent
+ *  and Pro doors) adds "מקור המספרים ›", the list of the figures with their sources. */
+export function Stamp({ asof, basis, onWhy, onSrc }: { asof: number; basis: 'net' | 'gross'; onWhy: () => void; onSrc?: () => void }) {
   const at = `${HEM[(asof % 100) - 1]} ${String(Math.floor(asof / 100)).slice(2)}`;
   return (
     <div className="cmp-stamp" id="stamp">
       רשות שוק ההון, עד {at} · {basis === 'net' ? 'אומדן אחרי דמי ניהול' : 'לפני דמי ניהול'} · העבר אינו מבטיח עתיד
       <button type="button" onClick={onWhy} aria-haspopup="dialog">איך מחשבים?</button>
+      {onSrc ? <button type="button" onClick={onSrc}>מקור המספרים ›</button> : null}
     </div>
   );
 }

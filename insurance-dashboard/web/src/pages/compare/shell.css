@@ -66,8 +66,14 @@ details.cmp-x table.cg td small { white-space: nowrap; }
 .cmp-stamp button { display: block; min-height: 44px; min-width: 88px; padding: 0; border: 0; background: none; font: inherit; color: var(--muted); text-align: start; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
 
 /* ?focus=fee: the fee row draws the eye once */
-table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: cmp-flash 2.2s var(--ease) both; }
-@keyframes cmp-flash { 0%, 55% { background: var(--accent-soft); } 100% { background: var(--panel); } }
+/* (review B1 #8: the soft tint alone went unnoticed) two warm pulses and an accent ring along the row, then back to the panel */
+table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: cmp-flash 2.6s var(--ease) both; box-shadow: inset 0 2px 0 var(--accent-line), inset 0 -2px 0 var(--accent-line); }
+@keyframes cmp-flash {
+  0%, 14% { background: color-mix(in srgb, var(--accent) 26%, var(--panel)); }
+  30% { background: var(--accent-soft); }
+  44%, 62% { background: color-mix(in srgb, var(--accent) 26%, var(--panel)); }
+  100% { background: var(--accent-soft); }
+}
 
 /* a short notice */
 .cmp-toast { position: fixed; inset-inline: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 60; margin-inline: auto; max-width: 420px; padding: 10px 14px; border-radius: 12px; background: var(--fg); color: var(--bg); font-size: 13.5px; line-height: 1.4; text-align: center; box-shadow: var(--e-1); animation: cmp-fade var(--mid) var(--ease) both; }
@@ -76,3 +82,20 @@ table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: cmp-flash 2.2s v
   .cmp-lens, .cmp-toast, table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: none !important; }
   table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { background: var(--accent-soft); }
 }
+
+/* review B1 #6: the rows pass under the sticky column head; a soft shade under the head reads as "under", not as a clipped sliver */
+.cmpx table.mg thead th { box-shadow: 0 1px 0 var(--line-soft), 0 10px 12px -10px rgb(15 23 42 / 0.28); clip-path: inset(0 0 -22px 0); }
+:root[data-theme="dark"] .cmpx table.mg thead th { box-shadow: 0 1px 0 var(--line-soft), 0 10px 12px -10px rgb(0 0 0 / 0.6); }
+
+/* review B1 #3: the long view's readout stays in sight above the chart while a finger is on it (the card scrolls under the strip) */
+.cmpx .cl-card .cl-ro { position: sticky; top: var(--mg-top, 0px); z-index: 2; background: var(--panel); padding-block: 6px; margin-block: -6px 0; }
+
+/* review B1 #9: a guard line (different risk levels, different products, an old policy) and the equity line under each column; tighten the head so the fee row stays
+   on screen one at 390×664 (mockup v3 frame 20). Spacing only: every control keeps its 44 / 32 px */
+.cmpx:has(.cmp-body > .guard) .cmp-eyebrow { padding-block: 2px 1px; }
+.cmpx:has(.cmp-body > .guard) .trackbar { padding-block: 0 2px; }
+.cmpx:has(.cmp-body > .guard) .cmp-stick { padding-bottom: 4px; }
+.cmpx:has(.cmp-body > .guard) .cmp-body { padding-top: 5px; }
+.cmpx:has(.cmp-body > .guard) .cmp-body > .guard { margin-bottom: 5px; }
+.cmpx:has(.cmp-body > .guard) table.mg thead .mg-col { padding-block: 3px 4px; gap: 1px; }
+.cmpx:has(.cmp-body > .guard) table.mg tfoot th, .cmpx:has(.cmp-body > .guard) table.mg tfoot td { padding-block: 1px; }

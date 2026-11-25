@@ -6,15 +6,15 @@
    labelled "לפי הדוח שלך", and every track is then costed on the reader's balance and deposit (lib/feeExample feeTable).
 
    Shared with the table's fee row (lane L2-a): `useFeeCosts(funds)` returns the same costs and ring as this sheet, and the switch is
-   kept under FEE_DEP_KEY ('cmp:feedep' → localStorage 'fox:cmp:feedep', JSON boolean, default true = with deposits) through
-   lib/local useStored, which syncs every component on the key: the row follows the switch, also after the sheet closes. No URL param
-   (the shared link carries tracks, lens, range and basis only, spec 4.10). */
+   kept for this visit only (sessionStorage 'fox:cmp:feedep' = '0' when off; default with deposits), synced across the page by one
+   event: the row follows the switch, also after the sheet closes, and reads "בלי הפקדות ›" while it is off. A returning visitor and a
+   shared link (no URL param: tracks, lens, range and basis only, spec 4.10) open on the default (review B1 P3). */
 import { Link } from 'react-router-dom';
 import type { SheetProps } from '../../pages/compare/contract';
 import { DeeperSheet } from '../DeeperSheet';
 import { CompareGrid } from '../CompareGrid';
 import { Sourced } from '../Source';
-import { useStored } from '../../lib/local';
+import { useCallback, useEffect, useState } from 'react';
 import { useMine } from '../../lib/mine';
 import { feeTable, hasDeposit, FEE_TIE, type FeeCol, type FeeTable } from '../../lib/feeExample';
 import { exampleMonthly, BALANCE_EX } from '../../lib/retire';
@@ -24,22 +24,35 @@ import { nf } from '../../lib/format';
 import type { Prov } from '../../lib/prov';
 import { Facts, Plain, useCmpData } from './sheetKit';
 
-/** the switch "עם הפקדה חודשית / בלי הפקדות": stored, shared with the table's fee row */
+/** the switch "עם הפקדה חודשית / בלי הפקדות", shared with the table's fee row. For this visit only (sessionStorage, as in the mockup):
+ *  a returning visitor and a shared link open on the default (with deposits), and the row says so when it is off ("בלי הפקדות ›").
+ *  Every component on the page follows a change at once (one event). */
 export const FEE_DEP_KEY = 'cmp:feedep';
-export const useFeeDeposits = (): [boolean, (v: boolean) => void] => useStored<boolean>(FEE_DEP_KEY, true);
+const DEP_EVENT = 'fox:feedep';
+const readDep = (): boolean => { try { return sessionStorage.getItem(`fox:${FEE_DEP_KEY}`) !== '0'; } catch { return true; } };
+export function useFeeDeposits(): [boolean, (v: boolean) => void] {
+  const [v, setV] = useState(readDep);
+  useEffect(() => { const on = () => setV(readDep()); addEventListener(DEP_EVENT, on); return () => removeEventListener(DEP_EVENT, on); }, []);
+  const set = useCallback((next: boolean) => {
+    try { if (next) sessionStorage.removeItem(`fox:${FEE_DEP_KEY}`); else sessionStorage.setItem(`fox:${FEE_DEP_KEY}`, '0'); } catch { /* blocked: this component only */ }
+    setV(next); dispatchEvent(new Event(DEP_EVENT));
+  }, []);
+  return [v, set];
+}
 
 /** The fee row's cells, in column order, the same as the sheet's: ₪ a year (rounded to 10), the cells to ring, which are the reader's
  *  own ("לפי הדוח שלך"), and the deposits switch in force. Missing funds get null. */
-export function useFeeCosts(funds: (FundX | null | undefined)[]): { costs: (number | null)[]; ring: number[]; own: boolean[]; deposits: boolean } {
+export function useFeeCosts(funds: (FundX | null | undefined)[]): { costs: (number | null)[]; ring: number[]; own: boolean[]; deposits: boolean; switchable: boolean } {
   const [dep] = useFeeDeposits();
   const [mine] = useMine();
-  const deposits = funds.some((f) => f && hasDeposit(f.prod)) ? dep : true;  // as in the sheet: no example deposit, no switch
+  const switchable = funds.some((f) => f && hasDeposit(f.prod));
+  const deposits = switchable ? dep : true;  // as in the sheet: no example deposit, no switch
   const t = feeTable(funds, deposits, mine);
   const by = new Map(t.cols.map((c) => [c.k, c]));
   const cols = funds.map((f) => (f ? by.get(f.k) ?? null : null));
   // ring indexes are over the present columns; map them back to the column order
   const present = funds.flatMap((f, i) => (f ? [i] : []));
-  return { costs: cols.map((c) => c?.cost ?? null), ring: t.ring.map((i) => present[i]), own: cols.map((c) => !!c?.own), deposits };
+  return { costs: cols.map((c) => c?.cost ?? null), ring: t.ring.map((i) => present[i]), own: cols.map((c) => !!c?.own), deposits, switchable };
 }
 
 const ils = (v: number) => v.toLocaleString('en-US');

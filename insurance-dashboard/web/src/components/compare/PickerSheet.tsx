@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { DeeperSheet } from '../DeeperSheet';
+import { backThen } from '../Sheet';
 import type { SheetProps, CmpCtx } from '../../pages/compare/contract';
 import { useLoad } from '../../lib/useData';
 import { TRAY_MAX, useTray, type FundsFile } from '../../lib/funds';
@@ -7,6 +8,7 @@ import { useMine } from '../../lib/mine';
 import { useStored } from '../../lib/local';
 import { isOldGen, pickIndex, pickSearch, type PickFund } from '../../lib/pickSearch';
 import { nf } from '../../lib/format';
+import { count } from '../../lib/count';
 import {
   RECENT_KEY, TILES, a5Of, capOf, capToast, companiesOf, house, labelsOf, prodShort, pushRecent, siblingWords, siblingsOf, tileOf, trackColor,
   trackLabels, tracksOf, twinNote, type IsoMat, type PFund, type Tile,
@@ -94,6 +96,7 @@ export function PickerSheet({ open, onClose, keys, basis, door, setKeys }: Sheet
   useLayoutEffect(() => {
     if (open && !wasOpen.current) {
       const i = intent; intent = null;
+      typed.current = new Set();
       const sel = keys.filter((k) => !funds || by.has(k)).slice(0, cap);
       const f0 = sel.length ? by.get(sel[0]) : undefined;
       const t = i?.tile ? TILES.find((x) => x.id === i.tile) ?? null : f0 ? tileOf(f0.prod) : null;
@@ -126,31 +129,29 @@ export function PickerSheet({ open, onClose, keys, basis, door, setKeys }: Sheet
     const body = document.getElementById(bodyId), s3 = body?.querySelector<HTMLElement>('#pk-step3');
     if (body && s3) s3.style.minHeight = `${body.clientHeight - 16}px`;
   });
-  // the entry screen's search field opens the sheet with the cursor in #pkq. (DeeperSheet initialFocus 'first' scopes only the first
-  // selector of its focusable list to the sticky strip and lands on the close button, so the field is focused here, after it.)
-  useEffect(() => {
-    if (!open || !st.focus) return;
-    const id = setTimeout(() => document.getElementById('pkq')?.focus({ preventScroll: true }), 0);
-    return () => clearTimeout(id);
-  }, [open, st.focus]);
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(null), 2800); return () => clearTimeout(id); }, [toast]);
   const say = (m: string) => setToast({ m, n: Date.now() });
 
   const set = (p: Partial<St>, scroll?: string) => { setSt((s) => ({ ...s, ...p })); if (scroll) scrollTo.current = { sel: scroll, smooth: true }; };
   const searchingRef = useRef(false);
+  const typed = useRef(new Set<string>());   // keys picked from typed words (M1 route "text"); the rest came by the three steps
   const toggle = (k: string) => {
     const f = by.get(k); if (!f) return;
     if (st.sel.includes(k)) { set({ sel: st.sel.filter((x) => x !== k) }); return; }
     if (st.sel.length >= cap) { say(capToast(cap)); return; }
     const sel = [...st.sel, k];
+    if (searchingRef.current) typed.current.add(k); else typed.current.delete(k);
     // a row chosen from typed words: the words go, and step 3 of its category opens ("אותו מסלול בחברות אחרות", one tap per company)
     if (searchingRef.current) set({ sel, q: '', sib: null, prod: f.prod, track: f.track, tile: tileOf(f.prod, st.tile ?? undefined)?.id ?? null }, '#pk-step3');
     else set({ sel });
   };
-  const commit = (ks: string[]) => {
+  const commit = (ks: string[], text = false) => {
     const v = ks.slice(0, cap);
-    setKeys(v); tray.set(v); remember(v);
-    history.back();   // a button inside the sheet closes it through history (DeeperSheet / useSheetHistory)
+    count('cmp_picker_done', { n: v.length, route: text || v.some((k) => typed.current.has(k)) ? 'text' : 'guided' });
+    remember(v);
+    // close first (back over the sheet's entry), then write the tracks on the page's own entry: one entry, and Back from the comparison
+    // returns to the page the reader came from, never to a reopened picker
+    backThen(() => { setKeys(v); tray.set(v); });
   };
   const go = () => { if (st.sel.length < 2) { say('צריך לפחות שני מסלולים כדי להשוות.'); return; } commit(st.sel); };
 
@@ -172,14 +173,14 @@ export function PickerSheet({ open, onClose, keys, basis, door, setKeys }: Sheet
   const searching = !!res && (res.hits.length > 0 || res.pair != null || q.length >= 2);
   searchingRef.current = searching;
 
-  const row = (f: PFund, title?: ReactNode) => {
+  const row = (f: PFund, title?: ReactNode, sub?: ReactNode) => {
     const on = st.sel.includes(f.k);
     return (
       <button key={f.k} type="button" className={`pk-row${on ? ' on' : ''}`} onClick={() => toggle(f.k)} aria-pressed={on}>
         <Check />
         <span>
           <b>{title ?? labIn(f)}{mineKs.has(f.k) ? <> <span className="pk-mine">שלי</span></> : null}{f.closed ? <> <span className="pk-tag">נסגר</span></> : null}{isOldGen(f.prod) ? <> <span className="pk-tag">פוליסה ישנה</span></> : null}</b>
-          <small>{f.name}</small>
+          <small>{sub ?? f.name}</small>
         </span>
         <span className="a"><Five v={a5Of(f, basis)} br /></span>
       </button>
@@ -189,16 +190,21 @@ export function PickerSheet({ open, onClose, keys, basis, door, setKeys }: Sheet
   let body: ReactNode;
   if (!funds) body = <p className="pk-note">טוען את רשימת המסלולים…</p>;
   else if (searching && res) {
-    // results grouped by category, in the order the search ranked them (the category already chosen first)
-    const groups: { ck: string; fs: PFund[] }[] = [];
-    for (const h of res.hits) { const f = by.get(h.k); if (!f) continue; const ck = `${f.prod} | ${f.track}`; const g = groups.find((x) => x.ck === ck); if (g) g.fs.push(f); else groups.push({ ck, fs: [f] }); }
+    // results grouped by product, in the order the search ranked them (the category already chosen first). A row reads company and
+    // track ("מגדל · כללי"), with the word that tells two funds of one company apart; the formal name below it, and the fund number
+    // there only when that word is missing (review B1 P11: no "מגדל · מס׳ 12145" titles, no heading per category)
+    const groups: { prod: string; fs: PFund[] }[] = [];
+    for (const h of res.hits) { const f = by.get(h.k); if (!f) continue; const g = groups.find((x) => x.prod === f.prod); if (g) g.fs.push(f); else groups.push({ prod: f.prod, fs: [f] }); }
+    const hitTitle = (f: PFund) => { const l = labIn(f), alt = l.includes(' · ') ? l.split(' · ').slice(1).join(' · ') : '';
+      return alt && !alt.startsWith('מס׳') ? `${house(f.grp)} · ${f.track} · ${alt}` : `${house(f.grp)} · ${f.track}`; };
+    const hitSub = (f: PFund) => { const l = labIn(f); return /· מס׳/.test(l) ? `${f.name} · מס׳ ${f.id ?? f.k.replace(/^\D+/, '')}` : f.name; };
     const pa = res.pair ? by.get(res.pair.a.k) : undefined, pb = res.pair ? by.get(res.pair.b.k) : undefined;
     body = (
       <div id="pkres">
         {pa && pb ? (
           <div className="pk-understood" id="pk-pair">
             <b>הבנתי: {q.split(/\s+(?:מול|נגד|לעומת|vs\.?|versus)\s+/i).join(' מול ')}</b>
-            <button type="button" className="pk-sg" onClick={() => commit([pa.k, pb.k])}>
+            <button type="button" className="pk-sg" onClick={() => commit([pa.k, pb.k], true)}>
               <span><b>{trackLabels([pa, pb]).join(' מול ')}</b><small>{prodShort(pa.prod)} · {pa.track === pb.track ? pa.track : `${pa.track} / ${pb.track}`}</small></span>
               <span className="go">השוואה ›</span>
             </button>
@@ -206,9 +212,9 @@ export function PickerSheet({ open, onClose, keys, basis, door, setKeys }: Sheet
           </div>
         ) : null}
         {groups.map((g) => (
-          <div key={g.ck}>
-            <div className="pk-h"><span>{prodShort(g.fs[0].prod)} · {g.fs[0].track}</span></div>
-            {g.fs.map((f) => row(f))}
+          <div key={g.prod}>
+            <div className="pk-h"><span>{prodShort(g.prod)}</span></div>
+            {g.fs.map((f) => row(f, hitTitle(f), hitSub(f)))}
           </div>
         ))}
         {!groups.length && !(pa && pb) ? (
@@ -296,8 +302,11 @@ export function PickerSheet({ open, onClose, keys, basis, door, setKeys }: Sheet
   }
 
   const n = st.sel.length;
+  // the entry screen's search field opens the sheet with the cursor in the search (#pkq, the first control of the sticky strip). Read
+  // on the very first render too (the intent is consumed in the layout effect), so DeeperSheet focuses once, on open
+  const focusFirst = st.focus || (open && !wasOpen.current && !!intent?.focus);
   return (
-    <DeeperSheet open={open} onClose={onClose} id="picker" bodyId={bodyId} detent="full" initialFocus="dialog"
+    <DeeperSheet open={open} onClose={onClose} id="picker" bodyId={bodyId} detent="full" initialFocus={focusFirst ? 'first' : 'dialog'}
       title="איזה מסלול יש לך?" sub="כותבים שם חברה, או בוחרים בשלושה צעדים"
       sticky={
         <label className="pk-search">

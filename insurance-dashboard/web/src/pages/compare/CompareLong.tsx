@@ -6,7 +6,6 @@ import { NumText } from '../../components/NumText';
 import { Scoreboard, type ScoreRowData } from '../../components/Scoreboard';
 import { signed } from '../../components/MonthGrid';
 import { foxOption } from '../../lib/foxchart';
-import { palette } from '../../lib/theme';
 import { nf } from '../../lib/format';
 import { catKey, grossProv, netMonthIn, netProv, netSeries, pc, refOf, ym, GROSS_LABEL, NET_LABEL, NET_NOTE, PER_LABEL, type CatX, type FundX, type FundsFile, type HistX } from '../../lib/funds';
 import { monthIn, seedHist, listP } from '../../lib/market';
@@ -16,9 +15,11 @@ import { tieBand } from '../../lib/fundsTie';
 import { isOldGen } from '../../lib/decision';
 import { OLD_POLICY_LINE, PRODUCTS_LINE, longWords, monthShortYear, riskLongWords } from '../../lib/compareWords';
 import {
-  PER_UNIT, boardRows, catCount, chartSeries, labelsOf, perFrom, periodFigures, persOf, readoutTitle, riskOf, windowAxis, type LongMode, type LongPer,
+  PER_UNIT, boardRows, catCount, chartSeries, perFrom, periodFigures, persOf, readoutTitle, riskOf, windowAxis, type LongMode, type LongPer,
 } from '../../lib/compareLong';
 import type { CmpCtx } from './contract';
+import { trackLabels, trackRgb } from './tracks';
+import { ShareRow, Stamp } from './CompareMonths';
 import '../../styles/compare.css';
 import '../../styles/compare-long.css';
 
@@ -29,7 +30,9 @@ import '../../styles/compare-long.css';
 
 type Hist = Record<string, HistX>;
 
-export function CompareLong({ keys, basis, door, openSheet }: CmpCtx) {
+/** `aside`: beside the month table on a wide screen (D5): the page's end (share, stamp) is the month lens's, not repeated here */
+export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
+  const { keys, basis, door, openSheet } = ctx;
   const { data: raw } = useFunds();
   const data = raw as FundsFile | undefined;
   const cats = useFundCats().data as Record<string, CatX> | undefined;
@@ -50,7 +53,9 @@ export function CompareLong({ keys, basis, door, openSheet }: CmpCtx) {
   useEffect(() => { keys.filter((k) => !hist[k] && !failed.includes(k)).forEach((k) => load<HistX>(`funds/${k}.json`).then((h) => setHist((c) => ({ ...c, [k]: h })), () => setFailed((c) => [...c, k]))); }, [keys, hist, failed]);
 
   const have = useMemo(() => keys.map((k) => data?.funds.find((f) => f.k === k) ?? gone.find((f) => f.k === k)).filter((f): f is FundX => !!f), [keys, data, gone]);
-  const labels = useMemo(() => labelsOf(have), [have]);
+  // labels and colours from the page's one source (./tracks): by column position in `keys`, so a track keeps the name and colour of its
+  // column chip even when another key is missing
+  const labels = useMemo(() => { const all = trackLabels(keys.map((k) => have.find((f) => f.k === k) ?? null)); return have.map((f) => all[keys.indexOf(f.k)]); }, [keys, have]);
   const asof = data?.asof ?? 0;
 
   if (!data || !asof) return <div className="cl" id="lens-long"><div className="cl-empty" role="status">טוען…</div></div>;
@@ -60,7 +65,7 @@ export function CompareLong({ keys, basis, door, openSheet }: CmpCtx) {
   const cross = new Set(have.map(catKey)).size > 1;
   const mixed = new Set(have.map((f) => f.prod)).size > 1;
   const old = have.some((f) => isOldGen(f));
-  const colors = palette(), colorOf = (i: number) => colors[i % colors.length];
+  const colorOf = (i: number) => trackRgb(Math.max(0, keys.indexOf(have[i]?.k)));
   const cat = !cross ? cats?.[catKey(have[0])] ?? null : null;
 
   const { vals, avg } = periodFigures(have, basis, per, asof, cat);
@@ -113,8 +118,10 @@ export function CompareLong({ keys, basis, door, openSheet }: CmpCtx) {
       : { k: 'calc', est: net, title: `מתחת לשיא · ${f.name} · ${ym(axis[di])}`, value: pc(v, 1), formula: `מדד התשואה המצטברת (${lbl}) חלקי השיא שלפניו בחלון, פחות 1`, inputs: axis.slice(1, di + 1).map((p) => monthRow(f, p)) };
   };
   const build = () => {
-    const o = foxOption({ x: axis.map(ym), unit: mode === 'g' ? 'ש"ח' : '%', dense: true, full: true, scale: mode === 'g', legend: true,
+    const o = foxOption({ x: axis.map(ym), unit: mode === 'g' ? 'ש"ח' : '%', dense: true, full: true, scale: mode === 'g', legend: false,
       series: have.map((_f, i) => ({ name: labels[i], data: series[i], kind: 'line' as const, color: colorOf(i), dec: 1, pct: mode === 'd', area: mode === 'd' && have.length === 1 })) });
+    // the readout above the chart is the legend (the chips' names and colours): no chart legend, no axis title (review B1 P6)
+    for (const a of ((o as { yAxis?: { name?: string }[] }).yAxis ?? [])) a.name = '';
     // the finger drives the readout above the chart, not a floating box: the axis tooltip reports its position and draws nothing
     const t = (o as { tooltip: Record<string, unknown> }).tooltip;
     (o as { tooltip: Record<string, unknown> }).tooltip = { ...t, backgroundColor: 'transparent', borderWidth: 0, padding: 0, extraCssText: 'visibility:hidden;pointer-events:none;box-shadow:none', formatter: (ps: { dataIndex?: number }[]) => { const j = ps?.[0]?.dataIndex; if (j != null) setTouch(j); return ''; } };
@@ -133,10 +140,7 @@ export function CompareLong({ keys, basis, door, openSheet }: CmpCtx) {
       {sentence ? <div className="cl-take" id="takeaway"><NumText t={sentence} /></div> : null}
 
       <Scoreboard id="board" rows={rows} decimals={1} benchmark={benchmark} onOpen={(k) => openSheet({ t: 'track', k })} />
-      <div className="cl-stamp">
-        <span>מקור: הרשות לשוק ההון, נכון ל-{ym(asof)}.{net ? ' נטו: אומדן של האתר.' : ' ברוטו: לפני דמי ניהול.'}</span>
-        <button type="button" onClick={() => open(boardSrc())}>מקור המספרים ›</button>
-      </div>
+
 
       <div className="cl-card" id="chart-card">
         <div className="cl-ro" id="readout" aria-live="polite">
@@ -159,8 +163,13 @@ export function CompareLong({ keys, basis, door, openSheet }: CmpCtx) {
           <button type="button" aria-pressed={mode === 'g'} data-mode="g" onClick={() => { setMode('g'); setTouch(null); }}>כמה שווים 100 ש״ח</button>
           <button type="button" aria-pressed={mode === 'd'} data-mode="d" onClick={() => { setMode('d'); setTouch(null); }}>כמה ירד מהשיא</button>
         </div>
-        <div className="cl-note">גררו אצבע על הגרף כדי לראות כל חודש. בלי הפקדות נוספות.{net ? ' נטו: אומדן.' : ''}</div>
+        <div className="cl-note">גררו אצבע על הגרף כדי לראות כל חודש. בלי הפקדות נוספות.</div>
       </div>
+
+      {ctx.aside ? null : <>
+        <ShareRow ctx={ctx} />
+        <Stamp asof={asof} basis={basis} onWhy={() => openSheet({ t: 'why' })} onSrc={saver ? undefined : () => open(boardSrc())} />
+      </>}
     </div>
   );
 }

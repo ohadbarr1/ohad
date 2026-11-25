@@ -9,6 +9,7 @@
    - similar chips: the open same-category tracks not on screen, largest first;
    - recents: the last three sets, newest first. */
 import type { Door } from './door';
+import { shortGrp, trackColor, trackLabels } from '../pages/compare/tracks';
 
 /** the fields the picker reads from a funds.json row */
 export interface PFund {
@@ -63,34 +64,11 @@ export function tracksOf(funds: PFund[], prod: string): TrackChip[] {
 }
 
 /* ---------- names ---------- */
-/* ---- TODO: use pages/compare/tracks.ts (lane L2-a, branch cmp-l2a) after merge: shortGrp, trackLabels, trackColor are a private copy
-   of that file's rules, so the picker's tray and the similar chips name and colour a track exactly as the page's columns do. ---- */
-const SHORT_GRP: Record<string, string> = { 'מנורה מבטחים': 'מנורה', 'אלטשולר שחם': 'אלטשולר' };
+/* One source with the page's columns (pages/compare/tracks.ts, lane L2-a): the picker's tray and the similar chips name and colour a
+   track exactly as the grid's column chips, the long view and the sheets do. */
 /** the company in a saver's words: "מנורה" for "מנורה מבטחים" (pages/compare/tracks.ts shortGrp) */
-export const house = (grp: string) => SHORT_GRP[grp] ?? grp;
-const TRACK_VARS = ['--s1', '--s2', '--s4', '--s6', '--s7', '--s8', '--s9', '--s11'];
-/** a column's colour by position (pages/compare/tracks.ts trackColor) */
-export const trackColor = (i: number) => `var(${TRACK_VARS[i % TRACK_VARS.length]})`;
-type TF = Pick<PFund, 'k' | 'name' | 'grp' | 'prod' | 'track'>;
-const T_STOP = new Set(['-', '–', 'קרן', 'קופת', 'גמל', 'פנסיה', 'מקיפה', 'השתלמות', 'להשקעה', 'מסלול', 'של', 'ביטוח', 'מנהלים', 'פוליסות', 'חיסכון', 'כללי', 'אישית', 'מקפת']);
-function distinct(f: TF): string | null {
-  const drop = new Set([...f.grp.split(/\s+/), ...f.prod.split(/\s+/), ...f.track.split(/\s+/)]);
-  const w = f.name.replace(/[()"]/g, ' ').split(/\s+/).filter((x) => x && !drop.has(x) && !T_STOP.has(x) && !/^\d+$/.test(x));
-  return w.length ? w.slice(0, 2).join(' ') : null;
-}
-/** one short label per column, in column order, as the page's columns are labelled (pages/compare/tracks.ts trackLabels) */
-export function trackLabels(funds: (TF | null | undefined)[]): string[] {
-  const cat = (f: TF) => `${f.prod} | ${f.track}`;
-  return funds.map((f) => {
-    if (!f) return '';
-    const g = house(f.grp), same = funds.filter((x): x is TF => !!x && x.grp === f.grp);
-    if (same.length < 2) return g;
-    if (new Set(same.map(cat)).size > 1 && same.filter((x) => cat(x) === cat(f)).length < 2) return `${g} ${f.track}`;
-    const d = distinct(f), others = same.filter((x) => x !== f && cat(x) === cat(f)).map(distinct);
-    return d && !others.includes(d) ? `${g} ${d}` : `${g} ${f.k.replace(/^\D+/, '')}`;
-  });
-}
-/* ---- end of the private copy ---- */
+export const house = shortGrp;
+export { trackColor, trackLabels };
 
 const GENERIC = new Set(['מסלול', 'מסלולית', 'השקעה', 'להשקעה', 'חברה', 'לביטוח', 'בע"מ', 'בעמ', 'מנוהל', 'באמצעות', 'עי', 'ע"י', 'ניהול', 'תיקים', 'תיקי',
   'השקעות', 'בית', 'קופה', 'קופת', 'קרן', 'פנסיה', 'גמל', 'השתלמות', 'לתגמולים', 'לבני', 'ומטה', 'לגילאי', 'עד', 'ומעלה', 'ביטוח', 'מנהלים', 'חיסכון', 'פוליסת', 'פוליסות', 'של', 'ו']);
@@ -167,6 +145,9 @@ export const DOOR_CAP: Record<Door, number> = { saver: 4, agent: 6, pro: 8 };
 export const capOf = (door: Door | null | undefined, hard = 8) => Math.min(DOOR_CAP[door ?? 'saver'] ?? 4, hard);
 export const capToast = (cap: number) => `עד ${cap} מסלולים במסך אחד, כדי שיהיה אפשר לקרוא בלי לגלול הצידה`;
 
+/** at least this many similar chips when any room is left (mockup v3: "＋ כלל ＋ הראל מנוף" at three of four); one tap adds one, and
+ *  at the cap the row goes, so a choice of two never adds past the cap */
+export const SIMILAR_MIN = 2;
 /** "אותו מסלול בחברה אחרת": open tracks of the first track's category not on screen, largest first; none when the tracks on screen
  *  span categories (different risk levels or products) or the cap is reached */
 export function similarOf(funds: PFund[], keys: string[], cap: number, max = 4): PFund[] {
@@ -176,7 +157,7 @@ export function similarOf(funds: PFund[], keys: string[], cap: number, max = 4):
   const f0 = on[0];
   if (on.some((f) => f.prod !== f0.prod || f.track !== f0.track)) return [];
   return funds.filter((f) => f.prod === f0.prod && f.track === f0.track && !f.closed && !keys.includes(f.k) && (f.assets ?? 0) > 0)
-    .sort((a, b) => (b.assets ?? 0) - (a.assets ?? 0) || a.k.localeCompare(b.k)).slice(0, Math.min(max, cap - keys.length));
+    .sort((a, b) => (b.assets ?? 0) - (a.assets ?? 0) || a.k.localeCompare(b.k)).slice(0, Math.min(max, Math.max(SIMILAR_MIN, cap - keys.length)));
 }
 
 /** recents ("השוואות אחרונות", this browser only): newest first, a set seen again moves to the top, at most three */

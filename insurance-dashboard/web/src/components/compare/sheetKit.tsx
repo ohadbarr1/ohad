@@ -1,10 +1,11 @@
 /* Track compare, the sheets' shared kit (lane L2-b): the data a sheet loads for its `keys`, the columns' labels and colours, and the
    provenance of every figure a sheet shows (repo convention: a figure is a <Sourced> that opens where it came from).
-   - Labels and colours: a private copy of lane L2-a's `pages/compare/tracks.ts` (trackLabels, trackColor) so the sheets build on their
-     own; after the merge, this file re-exports that module instead (one import line).
+   - Labels and colours: re-exported from `pages/compare/tracks.ts` (trackLabels, trackColor), the page's one source, so a sheet names
+     and colours a track exactly as the grid's column chips do.
    - Data: funds.json, funds/cat.json and the histories of the keys (lib/fundsLoad useHists: cached, shared with the page). */
 import type { ReactNode } from 'react';
-import { useFundCats, useFunds, type Fund } from '../../lib/useData';
+import { useFundCats, useFunds } from '../../lib/useData';
+import { trackColor, trackLabels } from '../../pages/compare/tracks';
 import { useHists } from '../../lib/fundsLoad';
 import { catKey, netMonthIn, netSeries, pc, refOf, shownProv, type Basis, type CatX, type FundX, type FundsFile, type HistX, type Per } from '../../lib/funds';
 import { fundP, addMonths } from '../../lib/market';
@@ -14,29 +15,8 @@ import type { Prov } from '../../lib/prov';
 import { Sourced } from '../Source';
 import '../../styles/compare-sheets.css';
 
-/* ---------- labels and colours (copy of pages/compare/tracks.ts, lane L2-a) ---------- */
-export const SHORT_GRP: Record<string, string> = { 'מנורה מבטחים': 'מנורה', 'אלטשולר שחם': 'אלטשולר' };
-export const shortGrp = (grp: string) => SHORT_GRP[grp] ?? grp;
-type LF = Pick<Fund, 'k' | 'name' | 'grp' | 'prod' | 'track'>;
-const STOP = new Set(['-', '–', 'קרן', 'קופת', 'גמל', 'פנסיה', 'מקיפה', 'השתלמות', 'להשקעה', 'מסלול', 'של', 'ביטוח', 'מנהלים', 'פוליסות', 'חיסכון', 'כללי', 'אישית', 'מקפת']);
-function distinct(f: LF): string | null {
-  const drop = new Set([...f.grp.split(/\s+/), ...f.prod.split(/\s+/), ...f.track.split(/\s+/)]);
-  const w = f.name.replace(/[()"]/g, ' ').split(/\s+/).filter((x) => x && !drop.has(x) && !STOP.has(x) && !/^\d+$/.test(x));
-  return w.length ? w.slice(0, 2).join(' ') : null;
-}
-export function trackLabels(funds: (LF | null | undefined)[]): string[] {
-  const cat = (f: LF) => `${f.prod} | ${f.track}`;
-  return funds.map((f) => {
-    if (!f) return '';
-    const g = shortGrp(f.grp), same = funds.filter((x): x is LF => !!x && x.grp === f.grp);
-    if (same.length < 2) return g;
-    if (new Set(same.map(cat)).size > 1 && same.filter((x) => cat(x) === cat(f)).length < 2) return `${g} ${f.track}`;
-    const d = distinct(f), others = same.filter((x) => x !== f && cat(x) === cat(f)).map(distinct);
-    return d && !others.includes(d) ? `${g} ${d}` : `${g} ${f.k.replace(/^\D+/, '')}`;
-  });
-}
-export const TRACK_VARS = ['--s1', '--s2', '--s4', '--s6', '--s7', '--s8', '--s9', '--s11'];
-export const trackColor = (i: number) => `var(${TRACK_VARS[i % TRACK_VARS.length]})`;
+/* ---------- labels and colours: one source, pages/compare/tracks.ts (lane L2-a) ---------- */
+export { SHORT_GRP, shortGrp, trackLabels, TRACK_VARS, trackColor } from '../../pages/compare/tracks';
 
 /* ---------- data ---------- */
 export interface Col { k: string; i: number; f: FundX; h: HistX | null; label: string; color: string }
