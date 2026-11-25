@@ -388,7 +388,7 @@ test.describe('doors (D1–D4, B3)', () => {
     await expect(page.locator('#lens-switch')).toHaveCount(0);
     const pill = page.locator('#simple-hint');
     await expect(pill).toHaveText('תצוגה פשוטה: חוסך ›');
-    expect((await pill.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    expect((await pill.boundingBox())!.height).toBeGreaterThanOrEqual(43.9);  // 44 px in CSS; WebKit's box can read 43.99998 at a fractional y
     expect(await smallTargets(page, '#lens-dec')).toEqual([]);
     await pill.click();
     await page.waitForSelector('#month-grid tbody .mg-cell:not(.mg-skelcell)');
