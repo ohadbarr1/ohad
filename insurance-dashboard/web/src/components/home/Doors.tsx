@@ -6,12 +6,14 @@ import { FundFacts, ProdFigs, screenHref, useFundFacts, useProducts } from './fu
 import { useActiveDoor } from './doorState';
 import { ClientsPanel } from './ClientsPanel';
 import { ClientImport } from '../agent/ClientImport';  // P0 · A1: the agent's home opens on a new client
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useMine, useMy, type MyProduct } from '../../lib/mine';
 import { CK_STATUS_KEY, normStatus, statusLine } from '../../lib/ckStatus';  // red team 06.11.26: the status after a check-up
 import { HomeHint } from '../saver/HomeHint';
 import { nf } from '../../lib/format';
 import { fundP } from '../../lib/market';
+import { compareKeys } from '../../lib/saverCompare';  // C13: the reader's track and its two largest peers
+import { isPension, type VFund } from '../../lib/verdict';
 import { NET_LABEL, netProv, refOf, retOf, ym, type FundX } from '../../lib/funds';
 import type { Door } from '../../lib/door';
 import '../../styles/doors.css';
@@ -85,9 +87,10 @@ export function DoorPicker() {
 }
 
 type Card = [to: string, icon: string, title: string, line: string];
-function Cards({ cards, label }: { cards: Card[]; label: string }) {
+function Cards({ cards, label, lead }: { cards: Card[]; label: string; lead?: ReactNode }) {
   return (
     <nav className="dcards" aria-label={label}>
+      {lead}
       {cards.map(([to, icon, t, d]) => <Link key={to} to={to} className="dcard"><span className="icotile"><Ico name={icon} /></span><b>{t}</b><span>{d}</span></Link>)}
     </nav>
   );
@@ -95,11 +98,58 @@ function Cards({ cards, label }: { cards: Card[]; label: string }) {
 
 /** P0 (fox 3.0 plan, 05.11.26): four cards under the annual check-up; the watchlist folds into /my, "רגעים" takes its card */
 const SAVER_CARDS: Card[] = [
-  ['/funds/tools/fees', 'fee', 'כמה עולים לי דמי הניהול?', 'הפער בשקלים עד הפרישה, לפי דמי הניהול שלכם ומול השוק.'],
   ['/funds/default', 'shield', 'קרן ברירת המחדל', 'הקרנות שנבחרו במכרז המדינה ודמי הניהול שנקבעו להן.'],
   ['/funds/compare', 'compare', 'השוואת מסלולים', 'כמה מסלולים זה לצד זה: תשואה נטו, סיכון ודמי ניהול.'],
   ['/my/moment', 'moment', 'רגעים', 'עבודה חדשה, העלאה, הצעה לעבור קרן או גיל 60: מה בודקים ומה שואלים.'],
 ];
+
+/** C13 · the reader's own track (the comprehensive pension first) and the keys that open the comparison on it: the track and its two
+ *  largest open peers (lib/saverCompare). Null until funds.json is in or when no saved track is in it. */
+function useMineCompare(mine: MyProduct[]): { keys: string[]; label: string } | null {
+  const { data } = useFundFacts();
+  if (!data || !mine.length) return null;
+  const funds = data.funds as unknown as VFund[];
+  const keys = compareKeys(mine, funds);
+  const by = new Map(funds.map((f) => [f.k, f]));
+  const own = mine.map((m) => by.get(m.k)).filter((f): f is VFund => !!f);
+  const lead = own.find((f) => isPension(f.prod)) ?? own[0];
+  return keys.length && lead ? { keys, label: `${lead.grp} · ${lead.prod} ${lead.track}` } : null;
+}
+
+/** C13 · "כמה הרוויח המסלול שלי?": the saver home's one entry to the comparison, with a second row for the saved track */
+function CompareEntry({ mine }: { mine: MyProduct[] }) {
+  const m = useMineCompare(mine);
+  return (
+    <section className="dentry-w" aria-labelledby="dentry-t">
+      <Link to="/funds/compare" className="dentry" id="home-compare">
+        <span className="icotile lg"><Ico name="compare" /></span>
+        <span className="dentry-t"><b id="dentry-t">כמה הרוויח המסלול שלי?</b><small>חודש אחרי חודש, מול מסלולים דומים בחברות אחרות.</small></span>
+        <span className="dentry-go">להשוואה ›</span>
+      </Link>
+      {m && (
+        <Link to={`/funds/compare?k=${m.keys.join(',')}`} className="dmineRow" id="home-mine">
+          <span className="dmineRow-t"><b>המסלול שלי: {m.label}</b><small>ישר להשוואה מול שני הגדולים מאותו סוג</small></span>
+          <span className="dmineRow-go" aria-hidden="true">›</span>
+        </Link>
+      )}
+    </section>
+  );
+}
+
+/** C13 · the fees card: the comparison first (on the saved track when there is one), the career calculator as the quieter link */
+function FeesCard({ mine }: { mine: MyProduct[] }) {
+  const m = useMineCompare(mine);
+  return (
+    <div className="dcard dfee">
+      <span className="icotile"><Ico name="fee" /></span>
+      <b>כמה עולים לי דמי הניהול?</b>
+      <div className="dfee-l">
+        <Link to={m ? `/funds/compare?k=${m.keys.join(',')}&focus=fee` : '/funds/compare?focus=fee'} id="home-fees" className="dlink">להשוות דמי ניהול בין מסלולים ›</Link>
+        <Link to="/funds/tools/fees" className="dlink q">מחשבון עד הפרישה ›</Link>
+      </div>
+    </div>
+  );
+}
 
 /** the saver's home (P0, S1 entry): the annual check-up from the clearing-house file comes first; the products the reader already
  *  entered under it; then the four questions a saver asks */
@@ -111,6 +161,7 @@ export function SaverHome() {
   const st = has ? normStatus(stRaw) : null;
   return (
     <div className="dhome dhome-saver">
+      <CompareEntry mine={mine} />
       {st ? <header className="dlead dcheck" aria-labelledby="dcheck-t">
         <span className="icotile lg"><Ico name="mine" /></span>
         <div className="dlead-t">
@@ -136,7 +187,7 @@ export function SaverHome() {
       </header>}
       <HomeHint />
       {has && <MineSummary mine={mine} />}
-      <Cards cards={SAVER_CARDS} label="מה אפשר לבדוק" />
+      <Cards cards={SAVER_CARDS} label="מה אפשר לבדוק" lead={<FeesCard mine={mine} />} />
       <FundFacts />
       <p className="doors-note">מה שאתם מזינים נשמר בדפדפן הזה בלבד ולא נשלח לשום מקום. <Link className="sv-u" to="/about">מי אנחנו ומאיפה הנתונים</Link></p>
     </div>

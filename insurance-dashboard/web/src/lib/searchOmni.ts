@@ -70,6 +70,16 @@ export function forDoor(list: Item[], door: 'saver' | 'agent' | 'pro' | null | u
   if (door !== 'saver') return list.filter((x) => x.kind !== 'רגע');  // W9: the life moments are the saver's
   return list.filter((x) => x.kind === 'חיפושים' || x.kind === 'אחרונים' || x.kind === 'רגע' || x.kind === 'חברה' || x.kind === 'קופה' || (x.kind === 'פונקציה' && SAVER_TO.has(x.to.split('?')[0])));
 }
+/** C14 · the saver's list: fund tracks (`/funds/<key>`) before the market groups and the rest of the "קופה" kind. `best` is the picker's
+ *  answer to the query (lib/pickSearch: the saver's likely product and default track first, old-generation policies last); its first
+ *  `n` tracks lead, the tracks the omnibox found beyond them follow. Pure; other kinds are untouched. */
+export function tracksFirst(list: Item[], best: (FundIdx & { k: string; name: string })[] = [], n = 6): Item[] {
+  const key = (x: Item) => x.kind === 'קופה' && x.to.startsWith('/funds/') ? x.to.split('/')[2].split(/[?#]/)[0] : null;
+  const lead = best.slice(0, n).map<Item>((f, i) => ({ kind: 'קופה', label: f.name, meta: fundMeta(f), to: `/funds/${f.k}`, score: 80 - i }));
+  const have = new Set(lead.map((x) => key(x)));
+  const rest = list.filter((x) => key(x) && !have.has(key(x)));
+  return [...lead, ...rest, ...list.filter((x) => !key(x))];
+}
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
