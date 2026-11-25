@@ -27,6 +27,7 @@ import { compareKeys } from '../lib/saverCompare';
 import { BM_HREF, OLD_WARN, isOldGen } from '../lib/decision';
 import { rulesOf } from '../lib/productRules';
 import './compare/shell.css';
+import '../styles/compare-desktop.css';  // D5 desktop (lane L3-c)
 
 /* /funds/compare — the track comparison (redesign spec v3, lane L2-a: C1, C3, C5, C9, D1, D4). The page file is the shell:
    - State in the address: ?k= the tracks (column order), ?v= the lens (months | long | dec | risk), ?r= the range of the month table
