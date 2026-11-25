@@ -7,13 +7,15 @@ import { today } from '../../lib/visits';
 /* W3 · "שמור ללקוח" (agent door): saves what is on screen (the tracks, and on the client document the tags and the typed הנמקה draft)
    under a client label, in this browser only. `folder`: the folder this page was opened from, so a save updates it. `collect` reads the
    page's extra state at the moment of saving. */
-export function ClientSave({ keys, b, folder, collect, onSaved, compact, suggest, busy }: {
+export function ClientSave({ keys, b, folder, collect, onSaved, compact, suggest, busy, label: btnLabel }: {
   keys: string[]; b: 'net' | 'gross'; folder?: Folder | null;
   collect?: () => Partial<Pick<Folder, 'tags' | 'fields' | 'snap' | 'held'>>; onSaved?: (f: Folder) => void; compact?: boolean;
   /** W4: a name typed elsewhere on the page (the client document's "שם הלקוח"), offered when the form opens */
   suggest?: string;
   /** W4: the figures to freeze are still loading */
   busy?: boolean;
+  /** the button's words when no folder is open (default "שמור ללקוח"; the compare "להחלטה" lens: "שמירה לתיק לקוח") */
+  label?: string;
 }) {
   const [file, setFile] = useClients();
   const [open, setOpen] = useState(false);
@@ -39,7 +41,7 @@ export function ClientSave({ keys, b, folder, collect, onSaved, compact, suggest
     <div className={`csave${compact ? ' compact' : ''}`}>
       {!open ? (
         <span className="csave-row">
-          <button type="button" className="chip csave-btn" onClick={() => { if (!label.trim() && suggest?.trim()) setLabel(suggest.trim().slice(0, 80)); setOpen(true); setMsg(null); }} disabled={!keys.length || busy} title={busy ? 'הנתונים עוד נטענים' : undefined}><Icon name="inbox" /> {folder ? `שמירה בתיק: ${folder.label}` : 'שמור ללקוח'}</button>
+          <button type="button" className="chip csave-btn" onClick={() => { if (!label.trim() && suggest?.trim()) setLabel(suggest.trim().slice(0, 80)); setOpen(true); setMsg(null); }} disabled={!keys.length || busy} title={busy ? 'הנתונים עוד נטענים' : undefined}><Icon name="inbox" /> {folder ? `שמירה בתיק: ${folder.label}` : (btnLabel ?? 'שמור ללקוח')}</button>
           {msg && <span role="status" className="csave-msg">{msg} · <Link to="/clients">תיקי לקוחות</Link></span>}
         </span>
       ) : (
