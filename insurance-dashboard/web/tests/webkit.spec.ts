@@ -286,3 +286,67 @@ test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards 
   await expect(boundary(page)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+/* Regression (fix-compare-bugs 25.11.26): the screener's "דירוג וסינון" sheet on the phone. A picker in the sheet writes the address
+   (replace) over the sheet's own history entry; closing went back to the page's entry and the period reverted to 5Y. The choices must
+   stay after "סגירה" and after the phone's Back, and the sheet must leave no history entry behind. */
+test('screener sheet keeps its choices after closing in WebKit', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  for (const how of ['button', 'back'] as const) {
+    await open(page, '/data', 'phoenix');
+    await page.goto('/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99'); await settle(page);
+    const toggle = page.locator('.tbar-ctl > button.btn[aria-expanded]');
+    await toggle.click();
+    const sheet = page.getByRole('dialog', { name: 'דירוג וסינון' });
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole('group', { name: 'דירוג לפי' }).getByRole('button', { name: '1M', exact: true }).click();
+    await sheet.getByRole('button', { name: 'כולל קופות ענפיות' }).click();
+    await sheet.getByRole('spinbutton').first().fill('20');
+    await expect(page).toHaveURL(/per=m1.*closed=1.*eqmin=20/);
+    if (how === 'button') await sheet.getByRole('button', { name: 'סגירה' }).click(); else await page.goBack();
+    await expect(sheet).toBeHidden();
+    await page.waitForTimeout(800);
+    await expect(page, `choices kept after closing (${how})`).toHaveURL(/per=m1.*closed=1.*eqmin=20/);
+    await expect(toggle).toContainText('1M');
+    await page.goBack();
+    await expect(page, `no leftover sheet entry (${how})`).toHaveURL(/\/data$/);
+  }
+  expect(errors).toEqual([]);
+});
+
+/* Regression (fix-compare-bugs 25.11.26): the phone's full-screen search. Tapping a result went back over the layer's history entry and
+   pushed the result after a timeout; WebKit's late popstate undid the push (the page bounced back) and the cleanup went back twice.
+   The result must stay, Back must return to the page the search was opened on, and Back while the search is open only closes it. */
+test('phone search result stays and Back returns to the origin in WebKit', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  for (const origin of ['/', '/funds/p2009', '/funds/compare?k=p2009,g12531']) {
+    await open(page, '/data', 'phoenix');
+    await page.goto(origin); await settle(page);
+    const here = page.url();
+    await page.locator('input[type=search][aria-label="חיפוש"]:visible').first().click();
+    const layer = page.locator('.omni-full');
+    await expect(layer).toBeVisible();
+    await layer.getByRole('combobox').fill('הראל');
+    const opt = layer.getByRole('option').first();
+    await expect(opt).toBeVisible({ timeout: 15_000 });
+    const to = (await opt.getAttribute('href'))!;
+    await opt.click();
+    await page.waitForTimeout(1500);
+    expect(new URL(page.url()).pathname + new URL(page.url()).search, `result kept from ${origin}`).toBe(to);
+    await expect(layer).toBeHidden();
+    await page.goBack();
+    await expect(page, `Back returns to ${origin}`).toHaveURL(here);
+  }
+  // Back while the search is open closes it and stays on the page
+  await page.locator('input[type=search][aria-label="חיפוש"]:visible').first().click();
+  await expect(page.locator('.omni-full')).toBeVisible();
+  const here = page.url();
+  await page.goBack();
+  await expect(page.locator('.omni-full')).toBeHidden();
+  await expect(page).toHaveURL(here);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/data$/);
+  expect(errors).toEqual([]);
+});
