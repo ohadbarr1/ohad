@@ -10,7 +10,7 @@ import { pathToFileURL } from 'node:url';
 const dir = mkdtempSync(join(tmpdir(), 'cmpdectest-')), out = join(dir, 'decisionLead.mjs');
 let M;
 try {
-  await build({ entryPoints: [new URL('../src/pages/compare/decisionLead.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error' });
+  await build({ entryPoints: [new URL('../src/pages/compare/decisionLead.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' } });
   M = await import(pathToFileURL(out).href);
 } finally { rmSync(dir, { recursive: true, force: true }); }
 const { groupLead, signed, billions, lastAct, monthsAgo } = M;
@@ -40,6 +40,11 @@ eq(signed(6.649, 1), '+6.6%', 'plus');
 eq(signed(-5.32, 2), '−5.32%', 'true minus U+2212');
 eq(signed(-0.04, 1), '0.0%', 'rounds to zero: no sign');
 eq(signed(null), '–', 'missing');
+// one half-up rule with the rest of the site (review B2 N1): the binary 8.85 is 8.8499…; toFixed gave 8.8, the site shows 8.9
+eq(signed(8.85, 1), '+8.9%', 'half-up 8.85');
+eq(signed(-8.85, 1), '−8.9%', 'half-up −8.85');
+eq(signed(1.005, 2), '+1.01%', 'half-up 1.005');
+eq(signed(0.05, 1), '+0.1%', 'half-up 0.05');
 eq(billions(6812.4), '6.8', 'billions one decimal');
 eq(billions(null), '–', 'billions missing');
 

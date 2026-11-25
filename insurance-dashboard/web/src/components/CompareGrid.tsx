@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { leadOf } from './MonthGrid';
 import '../styles/compare.css';
@@ -5,7 +6,15 @@ import '../styles/compare.css';
 /* <CompareGrid>: entities × metrics, the lead of a row marked (spec §5.3; "להחלטה", "סיכון", the fee sheet, the risk note, the extremes
    block; later the peers board and managers' fees). Presentational: each row brings its own cell renderer and the value its lead is judged
    on. The lead is marked by weight and a soft pill (never by colour alone), only when the row has a direction, the values differ, and
-   `mark` is on (off across risk levels or products). Columns carry the track's colour as a bar over the name. */
+   `mark` is on (off across risk levels or products). Columns carry the track's colour as a bar over the name.
+   A cell whose figure opens its source (Sourced) is tappable as a whole: a tap anywhere in the cell opens the figure's source (review B2
+   N4: the figure alone was 17 px high); the keyboard and screen readers still reach the figure's own button. */
+
+/** a tap on a cell, not on a control in it: the cell's first sourced figure opens */
+const cellTap = (e: React.MouseEvent<HTMLTableCellElement>) => {
+  if ((e.target as HTMLElement).closest('a, button, input, select, label')) return;
+  e.currentTarget.querySelector<HTMLElement>('a.src, button.src')?.click();
+};
 
 export interface CompareGridCol { k: string; label: string; color: string; sub?: string }
 export interface CompareGridRow {
@@ -53,7 +62,7 @@ export function CompareGrid({ id, cols, rows, mark = true, head = true, corner, 
           return (
             <tr key={r.key ?? ri}>
               <th scope="row">{r.label}{r.sub ? <small>{r.sub}</small> : null}</th>
-              {cols.map((c, i) => <td key={c.k} className={lead.includes(i) ? 'lead' : undefined}>{r.cell(c.k)}</td>)}
+              {cols.map((c, i) => <td key={c.k} className={lead.includes(i) ? 'lead' : undefined} onClick={cellTap}>{r.cell(c.k)}</td>)}
             </tr>
           );
         })}

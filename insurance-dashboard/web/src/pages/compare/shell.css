@@ -78,6 +78,11 @@ table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: cmp-flash 2.6s v
 /* a short notice */
 .cmp-toast { position: fixed; inset-inline: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 60; margin-inline: auto; max-width: 420px; padding: 10px 14px; border-radius: 12px; background: var(--fg); color: var(--bg); font-size: 13.5px; line-height: 1.4; text-align: center; box-shadow: var(--e-1); animation: cmp-fade var(--mid) var(--ease) both; }
 
+/* the simple view's notice: the line and the way back (a 44-px button) */
+.cmp-toast-undo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px 4px 4px; padding-inline-start: 14px; text-align: start; }
+.cmp-toast-undo button { flex: none; min-height: 44px; padding: 0 14px; border: 0; border-radius: 9px; background: color-mix(in oklch, var(--bg) 16%, transparent); color: var(--bg); font: inherit; font-weight: 700; cursor: pointer; }
+.cmp-toast-undo button:active { transform: scale(0.97); }
+
 @media (prefers-reduced-motion: reduce) {
   .cmp-lens, .cmp-toast, table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: none !important; }
   table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { background: var(--accent-soft); }

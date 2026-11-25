@@ -5,7 +5,7 @@ import { ErrorBox, Loading } from '../components/ui';
 import { CompareEmpty } from '../components/compare/CompareEmpty';
 import { PickerSheet, openPicker } from '../components/compare/PickerSheet';
 import { MonthSheet } from '../components/compare/MonthSheet';
-import { FeeSheet } from '../components/compare/FeeSheet';
+import { FeeSheet, adoptDepParam } from '../components/compare/FeeSheet';
 import { TrackSheet } from '../components/compare/TrackSheet';
 import { RiskNoteSheet } from '../components/compare/RiskNoteSheet';
 import { ShareSheet } from '../components/compare/ShareSheet';
@@ -19,6 +19,7 @@ import { CompareMonths, type MonthsModel, type Range } from './compare/CompareMo
 import { TaxLiqBody, useCompareData, type CompareData } from './compare/panels';
 import { trackColor, trackLabels } from './compare/tracks';
 import { DOOR_CAP, type CmpCtx, type SheetId, type View } from './compare/contract';
+import type { Door } from '../lib/door';
 import { useActiveDoor } from '../components/home/doorState';
 import { catKey, useBasis, useTray, type FundX } from '../lib/funds';
 import { useMine } from '../lib/mine';
@@ -41,6 +42,10 @@ import '../styles/compare-desktop.css';  // D5 desktop (lane L3-c)
    - Doors set depth, never facts (D1): the same first screen in every door; the door sets the cap (4 / 6 / 8), the words of the lenses
      and the strip's fifth tab (none / "להחלטה" / "מקצועי"). Switching door keeps the tracks.
    - One sticky, opaque strip under the site's top bar; it sets --mg-top (its bottom edge) so the grid's head sticks under it.
+   - ?dep=0 (a shared link, lane ShareSheet): the fee row's "בלי הפקדות" is applied for this visit before the page renders, then the
+     parameter is dropped from the address (review B2 N2).
+   - "תצוגה פשוטה: חוסך ›" (agent / Pro lenses) switches the door with a short notice and a one-tap way back to the door and lens the
+     reader came from (review B2 novice #5).
    - Sheets are mounted from the address; Back / Escape close them (components/Sheet useSheetHistory), and the shell clears ?sheet= with
      replace. Lenses and sheets of other lanes load their own data through the cached hooks; the shell passes keys, not data.
    - C9: what the page used to show (bottom-line tiles, cards, tax and liquidity, rolling and drawdown charts, exports, footnotes, the
@@ -72,6 +77,8 @@ function viewOf(v: string | null, r: string | null, door: CmpCtx['door']): View 
 export function FundsCompare() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
+  // a shared link's deposits switch (dep=0): applied before anything on the page reads it
+  const [depLink] = useState(() => adoptDepParam(window.location.search));
   const [doorRaw, setDoorStored] = useActiveDoor();
   const door = doorRaw ?? 'saver';
   const cap = DOOR_CAP[door];
@@ -134,8 +141,16 @@ export function FundsCompare() {
   const setKeys = useCallback((ks: string[]) => { const v = [...new Set(ks)].filter((k) => KEY_RE.test(k)); write({ k: v.join(',') || null }); tray.set(v); }, [write, tray]);
   const openSheet = useCallback((s: SheetId) => write({ sheet: sheetParam(s) }), [write]);
   const closeSheet = useCallback(() => write({ sheet: null }), [write]);
-  const setDoor = useCallback((dr: CmpCtx['door']) => { setDoorStored(dr); setLensMem('months'); write({ door: null, v: null }); }, [setDoorStored, write, setLensMem]);
+  // the simple view: the door changes for good (as the door menu would), so the notice offers the way back in one tap
+  const [undo, setUndo] = useState<{ door: Door; view: View } | null>(null);
+  const setDoor = useCallback((dr: CmpCtx['door']) => {
+    if (dr === 'saver' && door !== 'saver') setUndo({ door, view }); else setUndo(null);
+    setDoorStored(dr); setLensMem('months'); write({ door: null, v: null });
+  }, [setDoorStored, write, setLensMem, door, view]);
+  const undoDoor = useCallback(() => { if (!undo) return; setDoorStored(undo.door); applyView(undo.view); setUndo(null); }, [undo, setDoorStored, applyView]);
+  useEffect(() => { if (!undo) return; const t = setTimeout(() => setUndo(null), 8000); return () => clearTimeout(t); }, [undo]);
   const sheet = parseSheet(sp.get('sheet'));
+  useEffect(() => { if (depLink && sp.get('dep') != null) write({ dep: null }); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // toasts: a key in the link that is not in the data; more tracks than the door shows
   const [toast, setToast] = useState<string | null>(null);
@@ -212,7 +227,13 @@ export function FundsCompare() {
       {sheet?.t === 'display' && <DisplaySheet {...ctx} open onClose={closeSheet} />}
       {sheet?.t === 'why' && <WhySheet {...ctx} open onClose={closeSheet} />}
       {sheet?.t === 'rules' && <RulesSheet d={data} open onClose={closeSheet} />}
-      {toast && <div className="cmp-toast" role="status">{toast}</div>}
+      {toast && !undo && <div className="cmp-toast" role="status">{toast}</div>}
+      {undo && (
+        <div className="cmp-toast cmp-toast-undo" role="status" id="door-toast">
+          <span>עברת לתצוגת חוסך</span>
+          <button type="button" id="door-undo" onClick={undoDoor}>{undo.door === 'pro' ? 'חזרה ל-Pro' : 'חזרה לסוכן'}</button>
+        </div>
+      )}
     </>
   );
 

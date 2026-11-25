@@ -40,7 +40,7 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
   const [sp, setSp] = useSearchParams();
   const saver = door === 'saver';
   const per: LongPer = perFrom(sp.get('per'), saver);
-  const setPer = (p: LongPer) => { const n = new URLSearchParams(sp); n.set('per', p); setSp(n, { replace: true }); };
+  const setPer = (p: LongPer) => { const n = new URLSearchParams(sp); n.set('per', p); setSp(n, { replace: true }); setTouch(null); };
   const [mode, setMode] = useState<LongMode>('g');
   const [touch, setTouch] = useState<number | null>(null);   // axis index under the finger; null = the end of the period
 
@@ -122,6 +122,8 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
       series: have.map((_f, i) => ({ name: labels[i], data: series[i], kind: 'line' as const, color: colorOf(i), dec: 1, pct: mode === 'd', area: mode === 'd' && have.length === 1 })) });
     // the readout above the chart is the legend (the chips' names and colours): no chart legend, no axis title (review B1 P6)
     for (const a of ((o as { yAxis?: { name?: string }[] }).yAxis ?? [])) a.name = '';
+    // a tap reads every track at once (the readout): no series is brought forward and the others faded, which a finger could not undo
+    for (const se of ((o as { series?: { emphasis?: unknown }[] }).series ?? [])) se.emphasis = { focus: 'none' };
     // the finger drives the readout above the chart, not a floating box: the axis tooltip reports its position and draws nothing
     const t = (o as { tooltip: Record<string, unknown> }).tooltip;
     (o as { tooltip: Record<string, unknown> }).tooltip = { ...t, backgroundColor: 'transparent', borderWidth: 0, padding: 0, extraCssText: 'visibility:hidden;pointer-events:none;box-shadow:none', formatter: (ps: { dataIndex?: number }[]) => { const j = ps?.[0]?.dataIndex; if (j != null) setTouch(j); return ''; } };
@@ -153,7 +155,9 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
             </div>
           ) : null}
         </div>
-        <div className="cl-plot" onPointerUp={() => setTouch(null)} onPointerLeave={() => setTouch(null)} onPointerCancel={() => setTouch(null)} onTouchEnd={() => setTouch(null)}>
+        {/* a tap or a drag leaves the readout on the month touched (review B2 N/novice #2: the release used to reset it to today, so a tap
+            changed nothing); a mouse leaving the chart returns it to the period's end; a new period or chart type starts at the end */}
+        <div className="cl-plot" onPointerLeave={(e) => { if (e.pointerType === 'mouse') setTouch(null); }}>
           {ready ? (
             <Chart label={mode === 'g' ? 'צמיחה של 100 ש"ח' : 'מרחק מהשיא'} height={230} tools={false} bookable={false} asof={ym(asof)} deps={[keys.join(), per, mode, basis, ready]}
               onPoint={(si, di) => { const p = pointSrc(si, di); if (p) open(p); }} build={build} />
@@ -163,7 +167,6 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
           <button type="button" aria-pressed={mode === 'g'} data-mode="g" onClick={() => { setMode('g'); setTouch(null); }}>כמה שווים 100 ש״ח</button>
           <button type="button" aria-pressed={mode === 'd'} data-mode="d" onClick={() => { setMode('d'); setTouch(null); }}>כמה ירד מהשיא</button>
         </div>
-        <div className="cl-note">גררו אצבע על הגרף כדי לראות כל חודש. בלי הפקדות נוספות.</div>
       </div>
 
       {ctx.aside ? null : <>
