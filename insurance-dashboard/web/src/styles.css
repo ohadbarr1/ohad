@@ -300,7 +300,9 @@ td.heat { transition: background var(--mid); }
   .rail { position: fixed; inset: auto 0 0 0; height: auto; flex-direction: row; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); border-inline-end: 0; border-top: 1px solid var(--line-soft); box-shadow: 0 -1px 0 var(--hi) inset, 0 -8px 24px rgb(17 28 63 / 0.06); }
   .rail .brand, .rail .foot, .rail .rail-ev { display: none; }
   .rail nav { flex-direction: row; justify-content: space-around; padding: 0; gap: 4px; }
-  .rail a.item { flex: 1; font-size: var(--t-1); min-height: 50px; min-width: 44px; justify-content: center; white-space: nowrap; gap: 3px; }
+  /* equal slots, but never narrower than the label: a long one ("השוואה ענפית", 67 px at 375 px) takes the width it needs from the others
+     (each still >= 44 px: the label box is at least 40 px plus the 2 px sides) instead of spilling past its slot */
+  .rail a.item { flex: 1; font-size: var(--t-1); min-height: 50px; min-width: max-content; justify-content: center; white-space: nowrap; gap: 3px; }
   .rail a.item svg.ico { width: 24px; height: 24px; }
   .rail a.item.active::before { inset: auto 20% 0 20%; top: auto; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
   .top-in { padding: calc(9px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 9px max(14px, env(safe-area-inset-left, 0px)); } .wordmark { display: none; }
@@ -558,7 +560,7 @@ table.dense tr.sec td { padding-top: 8px; }
 .scroll table tbody tr.on td:first-child { background: color-mix(in oklch, var(--fg) 7%, var(--panel)); }
 /* the rail's labels: full on a wide screen, short on the phone's bottom bar */
 .rail a.item .lbl-p { display: none; }
-@media (max-width: 760px) { .rail a.item .lbl-w { display: none; } .rail a.item .lbl-p { display: inline; } .rail a.item.wide-item { display: none; } }
+@media (max-width: 760px) { .rail a.item .lbl-w { display: none; } .rail a.item .lbl-p { display: inline-block; min-width: 40px; } .rail a.item.wide-item { display: none; } }
 /* the second row of tabs (under "דוחות"): quieter than the first, the current one underlined */
 .subnav.sub2 { margin-top: -10px; padding: 2px; gap: 2px; }
 .subnav.sub2 a { padding: 3px 10px; font-size: var(--t-2); }

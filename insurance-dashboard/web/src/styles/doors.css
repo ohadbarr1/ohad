@@ -216,7 +216,9 @@
 .dentry-t { display: grid; gap: 3px; min-width: 0; }
 .dentry-t b { font-size: var(--t-5); line-height: 1.25; }
 .dentry-t small { font-size: var(--t-2); line-height: 1.5; color: var(--muted); }
-.dentry-go { margin-inline-start: auto; flex: none; padding: 11px 14px; border-radius: 12px; background: var(--accent); color: #fff; font-weight: 700; font-size: var(--t-2); white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; }
+.dentry-go { margin-inline-start: auto; flex: none; padding: 11px 14px; border-radius: 12px; background: var(--accent-text); color: #fff; font-weight: 700; font-size: var(--t-2); white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; }
+/* contrast as .door-go.primary: white on the deep ember in the light look (5.2:1), ink on the ember in the dark */
+:root[data-theme="dark"] .dentry-go { background: var(--accent); color: var(--accent-ink); }
 .dmineRow { display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 44px; border-radius: var(--r-3); background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); color: var(--fg); text-decoration: none !important; }
 .dmineRow:hover { border-color: var(--accent-line); }
 .dmineRow-t { display: grid; gap: 1px; min-width: 0; }

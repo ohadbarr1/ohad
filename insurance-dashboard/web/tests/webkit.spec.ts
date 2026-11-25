@@ -43,10 +43,10 @@ test('company page survives reloads and place switches in WebKit', async ({ page
 });
 
 /* The phone's bottom bar (the owner's iPhone), Pro door (P0 shell, fox 3.0 plan 05.11.26; track-compare B3/O5 and B1 polish, 26.11.26):
-   five places (בית, מסלולים = the track comparison, השוואה ענפית = the insurer comparison, חיסכון, שאלות) and "עוד" (שווי, תרחישים, מה השתנה
-   and the library sheet behind it), each label whole on one line at 375 px (the narrowest iPhone in use), the active place lit for a
-   company page, and the bar inside the screen. */
-const PLACES = ['בית', 'מסלולים', 'השוואה ענפית', 'חיסכון', 'שאלות'];
+   five places (בית, מסלולים = the track comparison, חיסכון, השוואה ענפית = the insurer comparison, שאלות; review B2: "חיסכון" between the two
+   comparisons) and "עוד" (שווי, תרחישים, מה השתנה and the library sheet behind it), each label whole on one line at 375 and 390 px (the
+   narrowest iPhones in use), the active place lit for a company page, and the bar inside the screen. */
+const PLACES = ['בית', 'מסלולים', 'חיסכון', 'השוואה ענפית', 'שאלות'];
 test('phone bottom bar shows the Pro places and the library sheet in WebKit', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await open(page, '/company/phoenix', 'phoenix');
@@ -55,9 +55,14 @@ test('phone bottom bar shows the Pro places and the library sheet in WebKit', as
   await expect(items).toHaveCount(5);
   expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(PLACES);
   await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'בית');
-  const fit = await bar.locator(':is(a.item, .lib-btn):visible').evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1 }; }));
-  expect(fit.length).toBe(6);
-  expect(fit.filter((f) => f.cut || f.out), 'a bottom-bar label wraps, is cut or leaves the screen').toEqual([]);
+  for (const width of [375, 390]) {
+    await page.setViewportSize({ width, height: 812 });
+    const fit = await bar.locator(':is(a.item, .lib-btn):visible').evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1, small: r.width < 44 || r.height < 44 }; }));
+    expect(fit.length).toBe(6);
+    expect(fit.filter((f) => f.cut || f.out), `a bottom-bar label wraps, is cut or leaves the screen at ${width} px`).toEqual([]);
+    expect(fit.filter((f) => f.small), `a bottom-bar target under 44 px at ${width} px`).toEqual([]);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
   for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/savings/], ['השוואה ענפית', /\/industry\/peers/], ['מסלולים', /\/funds\/compare/], ['בית', /\/$/]] as const) {
     await bar.getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(url);
@@ -318,6 +323,9 @@ test('screener sheet keeps its choices after closing in WebKit', async ({ page }
     await expect(toggle).toContainText('1M');
     await page.goBack();
     await expect(page, `no leftover sheet entry (${how})`).toHaveURL(/\/data$/);
+    // let /data finish loading before the next navigation: WebKit logs a fetch that a navigation cancels ("Fetch API cannot load
+    // …/data/consistency.json due to access control checks") as a JavaScript error, which Playwright reports as a page error
+    await settle(page);
   }
   expect(errors).toEqual([]);
 });
