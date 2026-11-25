@@ -1,18 +1,6 @@
 /* Track compare, the Pro "סיכון" lens (lane L3-b, D3; mockup v3 frame 30). Tokens only from styles.css. Phone first: one calm card at
    the top, then collapsed sections with a 44-px header each; no horizontal page scroll (wide tables scroll inside their own box). */
 
-/* the lens head: identical to lane L3-a's (styles/compare-decision.css), scoped here so the lens stands on its own branch */
-#lens-risk .cmp-lhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-#lens-risk .cmp-lsw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--panel3); flex: none; }
-#lens-risk .cmp-lsw button { height: 44px; min-width: 72px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background var(--mid), color var(--mid); }
-#lens-risk .cmp-lsw button.on { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
-#lens-risk .cmp-lsw button:active, #lens-risk .cmp-hintp:active { transform: scale(0.97); }
-#lens-risk .cmp-hintp { height: 44px; padding: 0 14px; flex: none; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 13px; font-weight: 500; color: var(--link); white-space: nowrap; cursor: pointer; }
-@media (max-width: 380px) {
-  #lens-risk .cmp-hintp { padding: 0 10px; font-size: 12.5px; }
-  #lens-risk .cmp-lsw button { padding: 0 10px; min-width: 64px; }
-}
-
 .cr { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; min-width: 0; }
 .cr-empty { padding: 28px 8px; text-align: center; color: var(--muted); font-size: var(--t-3); }
 
@@ -99,7 +87,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .cr-menu, .cr-sb { animation: none; }
-  .cr-chev, #lens-risk .cmp-lsw button { transition: none; }
+  .cr-chev { transition: none; }
 }
 
 /* touch targets in the lens chrome on every width (the site's default .seg / tip are smaller on a desktop) */

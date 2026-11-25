@@ -17,13 +17,14 @@ import {
 import { extremes } from './extremes';
 import { trackColor, trackLabels } from './tracks';
 import type { CmpCtx } from './contract';
+import { LensHead } from './CompareDecision';
 import '../../styles/compare.css';
 import '../../styles/compare-risk.css';
 
 /* The Pro "סיכון" lens (D3; spec §8 Pro door, §10A.2 D2/D3, mockup v3 frame 30). Nothing the Pro compare page had before the redesign is
    lost (the list-diff test, scratchpad build/L3b/labels.cjs, against the snapshot L2a/pro_labels_before_full.json), and the phone stays calm:
-   - Head: the Pro switch "להחלטה | סיכון" and the pill "תצוגה פשוטה: חוסך ›" (door saver, same tracks, back to the month table). The same
-     markup as lane L3-a's LensHead (cmp-lhead, #lens-switch, #simple-hint.cmp-hintp), so the two lenses read as one.
+   - Head: the Pro switch "להחלטה | סיכון" and the pill "תצוגה פשוטה: חוסך ›" (door saver, same tracks, back to the month table). LensHead is imported from ./CompareDecision
+     (cmp-lhead, #lens-switch, #simple-hint.cmp-hintp), so the two lenses are one component.
    - At a glance (mockup v3): one CompareGrid card: sd and Sharpe as the regulator publishes them; the worst and the best month and the
      largest drop over the 60 months to the data month (computed here from the monthly returns, net or gross as the page shows; pure
      ./extremes); equity, abroad and FX exposure; the 5Y percentile in the category (computed by the data build, with the count of ranked
@@ -42,25 +43,10 @@ const mmyy = (p: number) => `${String(p % 100).padStart(2, '0')}/${String(Math.f
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const WIN_SHORT: Record<Win, string> = { '12': '1Y', '36': '3Y', '60': '5Y', '120': '10Y', max: 'הכול' };
 
-/** The head of the agent / Pro lenses: the Pro switch and the way back to the simple view (same markup as L3-a's LensHead). */
-export function RiskLensHead({ door, view, setView, setDoor }: Pick<CmpCtx, 'door' | 'view' | 'setView' | 'setDoor'>) {
-  return (
-    <div className="cmp-lhead">
-      {door === 'pro' ? (
-        <div className="cmp-lsw" id="lens-switch" role="tablist" aria-label="מקצועי">
-          <button type="button" role="tab" aria-selected={view === 'dec'} className={view === 'dec' ? 'on' : undefined} onClick={() => setView?.('dec')}>להחלטה</button>
-          <button type="button" role="tab" aria-selected={view !== 'dec'} className={view !== 'dec' ? 'on' : undefined} onClick={() => setView?.('risk')}>סיכון</button>
-        </div>
-      ) : <span />}
-      <button type="button" id="simple-hint" className="cmp-hintp" onClick={() => setDoor?.('saver')}>תצוגה פשוטה: חוסך ›</button>
-    </div>
-  );
-}
-
 export function CompareRisk(props: CmpCtx) {
   const { keys, basis } = props;
   const d = useCompareData(keys, basis);
-  const head = <RiskLensHead door={props.door} view={props.view ?? 'risk'} setView={props.setView} setDoor={props.setDoor} />;
+  const head = <LensHead {...props} view={props.view ?? 'risk'} />;
   const shell = (body: ReactNode, role?: 'status' | 'alert') => <div className="cr" id="lens-risk">{head}<div className="cr-empty" role={role}>{body}</div></div>;
   if (!d) return shell('טוען…', 'status');
   if ('error' in d) return shell('הנתונים לא נטענו. נסו לרענן את העמוד.', 'alert');
@@ -122,7 +108,7 @@ function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNo
       const it = itemOf(k), p = pctOf(it);
       return p.v == null ? fig(null, '–') : fig(() => ({ k: 'calc', est: netAsk, title: `אחוזון 5Y${netAsk ? ', נטו' : ''} בקטגוריה · ${it.f.name}`, value: nf(p.v!, 0),
         formula: 'מחושב בבניית הנתונים: מקום התשואה השנתית הממוצעת של 5 השנים בין מסלולי הקטגוריה באותו חודש; 100 = הגבוהה בקטגוריה, 0 = הנמוכה',
-        inputs: [{ label: 'מסלולים מדורגים', v: p.n == null ? '–' : nf(p.n, 0) }, { label: `תשואה 5Y, שנתי (${lbl})`, v: pc(d.kret(it, 'a5').v), src: d.kret(it, 'a5').src }] }), nf(p.v, 0), '', p.n != null ? `מתוך ${p.n}` : undefined); } },
+        inputs: [{ label: 'מסלולים מדורגים', v: p.n == null ? '–' : nf(p.n, 0) }, { label: `תשואה 5Y, שנתי (${lbl})`, v: pc(d.kret(it, 'a5').v), src: d.kret(it, 'a5').src }] }), nf(p.v, 0), '', p.n != null ? `${p.n} מסלולים בדירוג` : undefined); } },
   ];
 
   /* ---- the sections ---- */
