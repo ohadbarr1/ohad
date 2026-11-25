@@ -178,7 +178,8 @@ class Positions(unittest.TestCase):
         self.assertEqual(x["outcome"]["st"], "open")
         self.assertTrue(x["drift"])
         self.assertGreater(x["triggers"][0]["first"]["p"], "2025Q2")
-        kinds = sorted(ev["pk"] for ev in out["events"])
+        # a fragility event depends on the live month (Altshuler's monitor fired on 10/26), not on this position: left out
+        kinds = sorted(ev["pk"] for ev in out["events"] if ev["pk"] != "fragility")
         self.assertEqual(kinds, ["drift", "falsifier", "open"])
         for ev in out["events"]:
             self.assertEqual(self.schema_errs(ev, "feedEvent"), [], ev["id"])
