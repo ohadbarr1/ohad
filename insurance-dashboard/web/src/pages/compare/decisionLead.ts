@@ -8,6 +8,8 @@
    - Bands: fees and Sharpe tie at their published precision (equal values share; band ~0); returns use the section's band
      (lib/fundsTie tieBand: 0.10 points on LTM, 3Y, 5Y). */
 
+import { roundHalf } from '../../lib/compareMonths';
+
 export type Better = 'hi' | 'lo';
 const EPS = 1e-9;
 
@@ -26,10 +28,12 @@ export function groupLead(vals: (number | null | undefined)[], groups: (string |
   return out;
 }
 
-/** a signed figure with a true minus (U+2212) and its unit; "–" when missing */
+/** a signed figure with a true minus (U+2212) and its unit; "–" when missing. Rounded half-up on the decimal figure (lib/compareMonths
+ *  roundHalf), the site's one rule: 8.85 reads "+8.9%" here as in the month table, "לאורך זמן", the picker and the track sheet (review B2
+ *  N1: toFixed rounded the binary 8.8499… down to 8.8) */
 export function signed(v: number | null | undefined, d = 1, unit = '%'): string {
   if (v == null || !Number.isFinite(v)) return '–';
-  const r = Number(v.toFixed(d));
+  const r = roundHalf(v, d);
   const body = Math.abs(r).toFixed(d);
   return `${r > 0 ? '+' : r < 0 ? '−' : ''}${body}${unit}`;
 }

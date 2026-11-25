@@ -15,8 +15,20 @@ async function bundle(rel, name) {
     define: { 'import.meta.env.BASE_URL': '"/"' } });
   return import(pathToFileURL(out).href);
 }
-let E, T;
-try { E = await bundle('../src/pages/compare/extremes.ts', 'extremes.mjs'); T = await bundle('../src/pages/compare/tracks.ts', 'tracks.mjs'); }
+let E, T, S, FS;
+// the share link and the deposits switch (review B2 N2) live in .tsx sheets: stub the browser globals they touch, drop their styles
+const store = new Map();
+globalThis.location = { origin: 'https://fox.test', search: '' };
+globalThis.sessionStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
+globalThis.addEventListener ??= () => {}; globalThis.removeEventListener ??= () => {}; globalThis.dispatchEvent ??= () => true;
+async function bundleTsx(rel, name) {
+  const out = join(dir, name);
+  await build({ entryPoints: [new URL(rel, import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error', jsx: 'automatic',
+    loader: { '.css': 'empty' }, define: { 'import.meta.env.BASE_URL': '"/"', __BUILD__: '{}', __HAS_FINDINGS__: 'false', __HAS_WATCH__: 'false' } });
+  return import(pathToFileURL(out).href);
+}
+try { E = await bundle('../src/pages/compare/extremes.ts', 'extremes.mjs'); T = await bundle('../src/pages/compare/tracks.ts', 'tracks.mjs');
+  S = await bundleTsx('../src/components/compare/ShareSheet.tsx', 'share.mjs'); FS = await bundleTsx('../src/components/compare/FeeSheet.tsx', 'fee.mjs'); }
 finally { rmSync(dir, { recursive: true, force: true }); }
 const { extremes } = E, { trackLabels, shortGrp, TRACK_VARS, trackColor } = T;
 
@@ -65,6 +77,22 @@ const om = trackLabels(['i17012', 'p2102'].map(F));
 ok(om[0] === 'מגדל פוליסה ישנה' && om[1] === 'מגדל פנסיה', `one company, two products with the same track name: ${om.join(' / ')}`);
 ok(trackLabels([null, F('p2102')])[0] === '' && trackLabels([null, F('p2102')])[1] === 'מגדל', 'a missing fund keeps its column');
 ok(TRACK_VARS.join() === '--s1,--s2,--s4,--s6,--s7,--s8,--s9,--s11' && trackColor(0) === 'var(--s1)' && trackColor(8) === 'var(--s1)', 'colours: the mockup order of the site tokens, wrapping');
+
+/* ---- the share link carries the deposits switch when it is off; a link's dep= is applied for the visit (review B2 N2) ---- */
+{
+  const { shareUrl } = S, { adoptDepParam } = FS;
+  const ks = ['p2102', 'p2172', 'p2009'];
+  const on = shareUrl('/funds/compare', '?k=p2102,p2172,p2009&sheet=share', ks, 'net', 'm6');
+  ok(on === 'https://fox.test/funds/compare?k=p2102,p2172,p2009&v=months&r=6', `deposits on: no dep in the link, got ${on}`);
+  const off = shareUrl('/funds/compare', '?k=p2102,p2172,p2009&sheet=share', ks, 'net', 'long', false);
+  ok(off === 'https://fox.test/funds/compare?k=p2102,p2172,p2009&dep=0&v=long', `deposits off: dep=0, got ${off}`);
+  ok(!shareUrl('/funds/compare', '?k=p2102&dep=0', ['p2102'], 'net', 'm6', true).includes('dep='), 'switched back on: a stale dep=0 is dropped');
+  ok(adoptDepParam('?k=p2102&dep=0') === true && store.get('fox:cmp:feedep') === '0', 'dep=0 in a link: without deposits for this visit');
+  ok(adoptDepParam('?k=p2102&dep=1') === true && !store.has('fox:cmp:feedep'), 'dep=1: with deposits');
+  store.set('fox:cmp:feedep', '0');
+  ok(adoptDepParam('?k=p2102') === false && store.get('fox:cmp:feedep') === '0', 'no dep in the link: the visit keeps its own choice');
+  ok(adoptDepParam('?dep=zz') === false, 'a malformed dep is ignored');
+}
 
 console.log(`compare-shell: ${pass} passed, ${fail} failed`);
 if (fail) { console.log(bad.map((b) => '  FAIL ' + b).join('\n')); process.exit(1); }

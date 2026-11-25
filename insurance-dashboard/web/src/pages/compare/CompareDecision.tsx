@@ -65,7 +65,8 @@ function Fig({ c, text, sub, tone }: { c: KCell | null; text?: string; sub?: Rea
   if (!c) return <span className="muted">…</span>;
   const t = text ?? c.t;
   const cls = ['num', tone && c.v != null ? (c.v > 0 ? 'pos' : c.v < 0 ? 'neg' : '') : ''].filter(Boolean).join(' ');
-  const fig = c.src && (c.v != null || c.txt) ? <Sourced src={c.src} className={cls}>{t}</Sourced> : <span className={t === '–' || t === '…' ? 'muted' : cls}>{t}</span>;
+  // the source button is the cell's 44×32 tap box (compare-decision.css); the lead's soft pill sits on the figure inside it (.fig)
+  const fig = c.src && (c.v != null || c.txt) ? <Sourced src={c.src} className={cls}><span className="fig">{t}</span></Sourced> : <span className={t === '–' || t === '…' ? 'muted' : cls}>{t}</span>;
   return <>{fig}{sub ? <small>{sub}</small> : null}</>;
 }
 /** "a · b" → [a, b] (the old KPI cells pack a figure and its period in one string) */
@@ -169,11 +170,13 @@ function DecisionActions({ d, kp }: { d: CompareData; kp: KpiRows }) {
   useLayoutEffect(() => {
     const el = bar.current, rail = document.querySelector<HTMLElement>('.rail');
     if (!el) return;
-    const set = () => { const fixed = !!rail && getComputedStyle(rail).position === 'fixed'; el.style.setProperty('--abar-b', `${fixed ? Math.round(rail!.getBoundingClientRect().height) : 0}px`); };
+    // the page reserves what the bar and the rail cover at the bottom (scroll-padding: a row scrolled into view lands above the bar)
+    const set = () => { const fixed = !!rail && getComputedStyle(rail).position === 'fixed', rb = fixed ? Math.round(rail!.getBoundingClientRect().height) : 0;
+      el.style.setProperty('--abar-b', `${rb}px`); document.documentElement.style.setProperty('--abar-h', `${rb + Math.round(el.getBoundingClientRect().height)}px`); };
     set();
-    const ro = new ResizeObserver(set); if (rail) ro.observe(rail);
+    const ro = new ResizeObserver(set); if (rail) ro.observe(rail); ro.observe(el);
     window.addEventListener('resize', set);
-    return () => { ro.disconnect(); window.removeEventListener('resize', set); };
+    return () => { ro.disconnect(); window.removeEventListener('resize', set); document.documentElement.style.removeProperty('--abar-h'); };
   }, []);
   return (
     <>

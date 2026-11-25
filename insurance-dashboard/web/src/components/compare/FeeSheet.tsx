@@ -7,8 +7,9 @@
 
    Shared with the table's fee row (lane L2-a): `useFeeCosts(funds)` returns the same costs and ring as this sheet, and the switch is
    kept for this visit only (sessionStorage 'fox:cmp:feedep' = '0' when off; default with deposits), synced across the page by one
-   event: the row follows the switch, also after the sheet closes, and reads "בלי הפקדות ›" while it is off. A returning visitor and a
-   shared link (no URL param: tracks, lens, range and basis only, spec 4.10) open on the default (review B1 P3). */
+   event: the row follows the switch, also after the sheet closes, and reads "בלי הפקדות ›" while it is off. A returning visitor opens on
+   the default (review B1 P3); a shared link carries the switch when it is off (dep=0, lane ShareSheet) and the shell applies it for that
+   visit with adoptDepParam (review B2 N2). */
 import { Link } from 'react-router-dom';
 import type { SheetProps } from '../../pages/compare/contract';
 import { DeeperSheet } from '../DeeperSheet';
@@ -30,6 +31,15 @@ import { Facts, Plain, useCmpData } from './sheetKit';
 export const FEE_DEP_KEY = 'cmp:feedep';
 const DEP_EVENT = 'fox:feedep';
 const readDep = (): boolean => { try { return sessionStorage.getItem(`fox:${FEE_DEP_KEY}`) !== '0'; } catch { return true; } };
+/** A link's `dep` (0 = without deposits, 1 = with): applied for this visit, as if the reader had flipped the switch. Called by the shell
+ *  before the page renders; returns whether the address carried one (the shell then drops it from the address). */
+export function adoptDepParam(search: string): boolean {
+  const v = new URLSearchParams(search).get('dep');
+  if (v !== '0' && v !== '1') return false;
+  try { if (v === '0') sessionStorage.setItem(`fox:${FEE_DEP_KEY}`, '0'); else sessionStorage.removeItem(`fox:${FEE_DEP_KEY}`); } catch { /* blocked */ }
+  dispatchEvent(new Event(DEP_EVENT));
+  return true;
+}
 export function useFeeDeposits(): [boolean, (v: boolean) => void] {
   const [v, setV] = useState(readDep);
   useEffect(() => { const on = () => setV(readDep()); addEventListener(DEP_EVENT, on); return () => removeEventListener(DEP_EVENT, on); }, []);

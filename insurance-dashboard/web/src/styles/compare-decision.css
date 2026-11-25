@@ -22,13 +22,24 @@ table.cg.cmp-dec-grid td { vertical-align: middle; }
 table.cg.cmp-dec-grid td .src { font: inherit; color: inherit; }
 table.cg.cmp-dec-grid td .src.pos { color: var(--up); }
 table.cg.cmp-dec-grid td .src.neg { color: var(--down); }
-table.cg.cmp-dec-grid td.lead > .src.num { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
+table.cg.cmp-dec-grid td.lead > .src.num > .fig { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
+/* each figure is a 44×32 tap box (review B2 N4) with the row's height unchanged: the box's extra height is pulled back by an equal negative
+   margin (8 px above and below); the cell around it forwards a tap too (components/CompareGrid) */
+table.cg.cmp-dec-grid td > .src { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 44px; min-height: 32px; padding: 0 6px; margin: -8px -2px; vertical-align: middle; border-radius: 8px; background: none; }
+table.cg.cmp-dec-grid td > .src::after { content: none; }
+table.cg.cmp-dec-grid td:has(> .src) { cursor: pointer; }
 table.cg.cmp-dec-grid td small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cmp-dec-gap { display: flex; flex-direction: column; gap: 2px; margin: 8px 2px 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .cmp-dec-note { margin: 8px 2px 0; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
 
 /* pinned actions: stick above the phone's bottom rail while the grid scrolls; in place at the lens end */
-.cmp-abar { position: sticky; bottom: calc(var(--abar-b, 0px) + 8px); z-index: 5; display: flex; gap: 8px; margin-top: 10px; padding: 6px; border-radius: 14px; background: color-mix(in oklch, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+/* opaque and full-bleed (review B2 N5: a see-through bar showed a row through it): rows pass under a solid band with a hairline and a soft
+   shade, never half-visible behind the buttons; the page reserves the bar's height (html scroll-padding, set by the lens) so a row brought
+   into view by focus or a link never lands under it */
+.cmp-abar { position: sticky; bottom: var(--abar-b, 0px); z-index: 5; display: flex; gap: 8px; margin: 10px -14px 0; padding: 8px 14px; background: var(--bg); border-top: 1px solid var(--line-soft); box-shadow: 0 -8px 14px -12px rgb(15 23 42 / 0.28); }
+:root[data-theme="dark"] .cmp-abar { box-shadow: 0 -8px 14px -12px rgb(0 0 0 / 0.6); }
+@media (min-width: 761px) { .cmp-abar { margin-inline: -26px; padding-inline: 26px; } }
+html:has(#dec-actions) { scroll-padding-bottom: calc(var(--abar-h, 64px) + 8px); }
 .cmp-abar > * { flex: 1 1 0; min-width: 0; }
 .cmp-abtn, .cmp-abar .csave-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 44px; padding: 0 14px; border-radius: var(--r-3); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 14px; font-weight: 700; color: var(--fg); text-decoration: none; white-space: nowrap; cursor: pointer; transition: transform var(--fast); }
 .cmp-abtn:hover { text-decoration: none; }
@@ -39,7 +50,7 @@ table.cg.cmp-dec-grid td small { white-space: nowrap; overflow: hidden; text-ove
 .cmp-abar .csave-btn svg.ico { width: 16px; height: 16px; }
 .cmp-abar .csave-msg { font-size: 11.5px; line-height: 1.4; }
 /* the save form opened: the bar stops sticking and stacks, so the form is read in place */
-.cmp-abar:has(.csave-form) { position: static; flex-direction: column; background: none; padding: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.cmp-abar:has(.csave-form) { position: static; flex-direction: column; background: none; padding: 0; margin-inline: 0; border-top: 0; box-shadow: none; }
 .cmp-abar .csave-form { max-width: none; }
 
 /* the quiet line under the bar: the open folder, the Excel pack, the privacy line */
