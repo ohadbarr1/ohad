@@ -215,8 +215,9 @@ const dfile: DefaultFile = { tenders: [
 /* ---- W5: the saver's compare tab opens on their tracks and the cheapest of the category ---- */
 {
   const hs = cat.map((x) => ({ ...x, k: 'h' + x.k.slice(1), prod: 'השתלמות', track: 'כללי' }));
-  const ks = compareKeys([{ k: 'h1' }, { k: 'p7' }], [...cat, ...hs]);
-  ok(ks[0] === 'p7' && ks.length === 4 && ks.includes('p3') && !ks.some((k) => k.startsWith('h')), `pension first, then the 3 cheapest of its category by fee (${ks.join(',')})`);
+  const big = cat.map((x, i) => ({ ...x, assets: 1000 + i * 10 }));
+  const ks = compareKeys([{ k: 'h1' }, { k: 'p7' }], [...big, ...hs]);
+  ok(ks.join() === 'p7,p6,p5', `pension first, then the 2 largest of its category by assets (${ks.join(',')})`);
   ok(compareKeys([], cat).length === 0 && compareKeys([{ k: 'nope' }], cat).length === 0, 'nothing saved: no keys');
 }
 
