@@ -66,6 +66,9 @@ jobs:
       - name: Typecheck and build
         working-directory: insurance-dashboard/web
         run: npx tsc --noEmit && npx vite build && node scripts/prerender-seo.mjs dist
+      - name: Track compare unit tests (lib logic of /funds/compare, on the committed data; npm run test:compare, ~3 s)
+        working-directory: insurance-dashboard/web
+        run: npm run -s test:compare
       - name: Route check (390 and 1440 px)
         working-directory: insurance-dashboard/web
         env: { CHROME: /usr/bin/google-chrome }
@@ -82,7 +85,7 @@ jobs:
       - name: Playwright browsers (chromium + webkit, versions from the lockfile)
         working-directory: insurance-dashboard/web
         run: npx playwright install --with-deps chromium webkit
-      - name: Playwright (visual + axe in chromium phone/desktop; WebKit crash regression + sticky lint in iPhone 13)
+      - name: Playwright (visual + axe in chromium phone/desktop; WebKit crash regression + sticky lint in iPhone 13; track compare in iPhone 14 WebKit + Chromium)
         working-directory: insurance-dashboard/web
         env: { CI: 'true', E2E_CHROME: '0', E2E_WRITE_BASELINES: '1' }
         run: |
