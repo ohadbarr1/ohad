@@ -1,0 +1,112 @@
+/* Track compare, the Pro "סיכון" lens (lane L3-b, D3; mockup v3 frame 30). Tokens only from styles.css. Phone first: one calm card at
+   the top, then collapsed sections with a 44-px header each; no horizontal page scroll (wide tables scroll inside their own box). */
+
+/* the lens head: identical to lane L3-a's (styles/compare-decision.css), scoped here so the lens stands on its own branch */
+#lens-risk .cmp-lhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+#lens-risk .cmp-lsw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--panel3); flex: none; }
+#lens-risk .cmp-lsw button { height: 44px; min-width: 72px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background var(--mid), color var(--mid); }
+#lens-risk .cmp-lsw button.on { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
+#lens-risk .cmp-lsw button:active, #lens-risk .cmp-hintp:active { transform: scale(0.97); }
+#lens-risk .cmp-hintp { height: 44px; padding: 0 14px; flex: none; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 13px; font-weight: 500; color: var(--link); white-space: nowrap; cursor: pointer; }
+@media (max-width: 380px) {
+  #lens-risk .cmp-hintp { padding: 0 10px; font-size: 12.5px; }
+  #lens-risk .cmp-lsw button { padding: 0 10px; min-width: 64px; }
+}
+
+.cr { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; min-width: 0; }
+.cr-empty { padding: 28px 8px; text-align: center; color: var(--muted); font-size: var(--t-3); }
+
+/* at a glance */
+.cr-card { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 16px; box-shadow: var(--e-1); padding: 10px 12px 8px; min-width: 0; }
+.cr-gw { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; margin-inline: -4px; padding-inline: 4px; }
+.cr-gw.many table.cg { min-width: calc(110px + var(--n) * 74px); }
+.cr-gw table.cg th:first-child { width: 30%; }
+.cr-gw.many table.cg th:first-child { width: 110px; position: sticky; inset-inline-start: 0; background: var(--panel); z-index: 1; }
+.cr-gw table.cg tbody th { color: var(--fg); font-weight: 500; font-size: 12.5px; line-height: 1.3; }
+.cr-gw table.cg tbody th small { color: var(--muted); font-weight: 400; }
+.cr-gw table.cg td { font-size: 13.5px; }
+.cr-gw table.cg td .pos { color: var(--up); } .cr-gw table.cg td .neg { color: var(--down); }
+/* a figure and its month are one tap target (the source sheet), at least 44 px; the lead pill sits on the figure only */
+#lens-risk .cr-gw table.cg td > .src { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -6px 0; padding: 0 2px; background: none; border: 0; font: inherit; color: inherit; cursor: pointer; }
+#lens-risk .cr-gw table.cg td.lead > .src { background: none; padding: 0 2px; }
+#lens-risk .cr-gw table.cg td.lead > .src > .num { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
+.cr-gw table.cg td .cr-sub { display: block; font-size: 10.5px; color: var(--muted); direction: ltr; unicode-bidi: isolate; }
+.cr-gw table.cg td.lead .cr-sub { font-weight: 700; color: var(--fg); }
+.cr-gw table.cg a.src, .cr-gw table.cg .src { text-decoration: none; }
+.cr-corner { display: block; font-size: 10.5px; font-weight: 500; color: var(--muted); line-height: 1.3; }
+.cr-note { margin: 6px 2px 0; font-size: 11px; line-height: 1.45; color: var(--muted); }
+
+/* the window, net / gross and the export button: one row, wraps on a phone */
+.cr-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.cr-ctl-g { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
+.cr-ctl-l { font-size: 12px; color: var(--muted); }
+.cr-ctl .seg { flex: none; }
+.cr-ctl .seg button { min-height: 36px; padding: 4px 10px; font-size: 13px; }
+.cr-exp { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; margin-inline-start: auto; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 13px; font-weight: 500; color: var(--fg); cursor: pointer; }
+.cr-exp svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.cr-exp small { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+@media (max-width: 760px) { .cr-exp { flex: 1 1 100%; justify-content: center; margin-inline-start: 0; } }
+.cr-exp.on small { color: inherit; }
+.cr-exp.on { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-text); }
+
+/* the export menu */
+.cr-menu { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 14px; box-shadow: var(--e-1); padding: 8px 12px; animation: cr-in var(--mid) var(--ease) both; }
+@keyframes cr-in { from { opacity: 0; transform: translateY(-4px); } }
+.cr-mbig { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; min-height: 52px; padding: 8px 12px; margin-bottom: 4px; border: 1px solid var(--accent-line); border-radius: 12px; background: var(--accent-soft); font: inherit; text-align: start; cursor: pointer; color: var(--fg); }
+.cr-mbig b { font-size: 13.5px; } .cr-mbig small { font-size: 11.5px; color: var(--muted); }
+.cr-mrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 8px; padding: 4px 0; border-top: 1px solid var(--line-soft); }
+.cr-mrow:first-of-type { border-top: 0; }
+.cr-mt { font-size: 12.5px; font-weight: 500; color: var(--fg); }
+.cr-mb { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.cr-mb button { min-width: 44px; height: 36px; padding: 0 9px; border: 1px solid var(--line-soft); border-radius: 9px; background: var(--panel2); font: inherit; font-size: 12px; font-weight: 600; color: var(--fg); cursor: pointer; }
+.cr-mb button:hover { border-color: var(--accent-line); }
+.cr-mnote { margin: 6px 0 2px; font-size: 11px; color: var(--muted); }
+.cr-busy { min-height: 0; font-size: 12px; color: var(--muted); padding-inline: 2px; }
+.cr-busy:empty { display: none; }
+
+/* the sections */
+.cr-secs { display: flex; flex-direction: column; gap: 8px; }
+.cr-sec { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 14px; box-shadow: var(--e-1); min-width: 0; }
+.cr-sh { display: flex; align-items: center; gap: 4px; padding-inline-end: 6px; }
+.cr-sh .tip, .cr-sh > button:not(.cr-tg) { flex: none; }
+.cr-tg { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 8px 12px; border: 0; background: transparent; font: inherit; text-align: start; color: var(--fg); cursor: pointer; border-radius: 14px; }
+.cr-tt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cr-tt b { font-size: 14px; font-weight: 700; line-height: 1.3; }
+.cr-tt small { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+.cr-chev { width: 18px; height: 18px; flex: none; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform var(--mid) var(--ease); }
+.cr-sec.open .cr-chev { transform: rotate(180deg); }
+.cr-sb { padding: 0 10px 10px; min-width: 0; animation: cr-in var(--mid) var(--ease) both; }
+.cr-none { padding: 18px 6px; text-align: center; color: var(--muted); font-size: var(--t-2); }
+
+/* the old panels inside a section: flat, their title is the section's header (the aside, e.g. "12M | 36M, שנתי", stays) */
+.cr-sb .panel { border: 0; box-shadow: none; background: transparent; padding: 0; gap: 10px; }
+.cr-sb .panel + .panel { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); border-radius: 0; }
+.cr-sb .panel > .hd > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cr-sb .panel > .hd { justify-content: flex-start; }
+.cr-sb .panel > .hd:not(:has(.aside)) { display: none; }
+.cr-sec[data-sec="kpi"] .cr-sb .panel > .hd > h2 { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; font-size: 13.5px; }
+.cr-sb .scroll, .cr-sb .dt-wrap, .cr-sb .tablewrap { max-width: 100%; overflow-x: auto; }
+.cr-sb table { max-width: none; }
+.cr-sb .fnote { font-size: 11px; }
+/* the exports are driven from the lens's one menu */
+#lens-risk .cr-sb .charttools, #lens-risk .cr-sb .dt-export { display: none; }
+
+.cr-stamp { font-size: 11.5px; color: var(--muted); padding: 2px 2px 0; line-height: 1.45; }
+
+@media (min-width: 761px) {
+  .cr-tg { min-height: 48px; }
+  .cr-sb { padding: 0 16px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cr-menu, .cr-sb { animation: none; }
+  .cr-chev, #lens-risk .cmp-lsw button { transition: none; }
+}
+
+/* touch targets in the lens chrome on every width (the site's default .seg / tip are smaller on a desktop) */
+.cr-ctl .seg button { min-width: 44px; min-height: 36px; }
+@media (max-width: 760px) {
+  .cr-ctl { gap: 6px; justify-content: space-between; }
+  .cr-ctl-l { display: none; }
+  .cr-ctl .seg button { min-width: 36px; min-height: 44px; padding: 0 8px; }
+}
+.cr-sh > .tip > .tip-b { min-width: 36px; min-height: 44px; }
