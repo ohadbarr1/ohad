@@ -1,0 +1,27 @@
+/* track compare, "לאורך זמן" lens (C8): period switch, takeaway, readout and chart card. The ranked rows are <Scoreboard> (compare.css). */
+.cl { display: flex; flex-direction: column; gap: 10px; padding-block: 8px 4px; }
+.cl-per { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+.cl-per button { height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-size: var(--t-4); font-weight: 500; cursor: pointer; transition: background var(--fast), color var(--fast); }
+.cl-per button:active { transform: scale(0.97); }
+.cl-per button[aria-pressed="true"] { background: var(--navy); color: #fff; font-weight: 700; }
+:root[data-theme="dark"] .cl-per button[aria-pressed="true"] { background: var(--panel3, var(--panel2)); color: var(--fg); box-shadow: 0 0 0 1px var(--line); }
+.cl-take { padding: 12px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); border-inline-start: 4px solid var(--accent); font-size: 16px; line-height: 1.45; font-weight: 500; }
+.cl-empty { padding: 18px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); color: var(--muted); text-align: center; }
+.cl-card { padding: 12px 12px 10px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); }
+.cl-ro { min-height: 58px; }
+.cl-ro .t { font-size: var(--t-3); color: var(--muted); line-height: 1.35; }
+.cl-ro .vals { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 2px 10px; margin-top: 4px; }
+.cl-ro .v { display: grid; font-size: var(--t-2); color: var(--muted); min-width: 0; }
+.cl-ro .v span { display: flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cl-ro .v i { width: 9px; height: 9px; border-radius: 3px; background: var(--c); flex: none; }
+.cl-ro .v b { font-size: 18px; font-weight: 700; color: var(--fg); direction: ltr; unicode-bidi: isolate; text-align: end; }
+.cl-ro .v b.neg { color: var(--down); }
+.cl-plot { touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.cl-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin-top: 8px; border-radius: 12px; background: var(--panel2); }
+.cl-mode button { height: 40px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; font-size: var(--t-3); font-weight: 500; cursor: pointer; }
+.cl-mode button[aria-pressed="true"] { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: 0 0 0 1px var(--line-soft), 0 1px 2px rgb(17 28 63 / 0.08); }
+.cl-note { margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+.cl-stamp { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; font-size: 11.5px; color: var(--muted); padding-inline: 2px; }
+.cl-stamp button { background: none; border: 0; padding: 4px 0; color: var(--link); font: inherit; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .cl-per button { transition: none; } }
+.cl .board .kv b { direction: ltr; unicode-bidi: isolate; display: inline-block; }
