@@ -152,7 +152,7 @@ export function FundsCompare() {
   const focus = sp.get('focus');
   useEffect(() => {
     if (focus !== 'fee' || !model) return;
-    if (!keys.length) { write({ focus: null }); return; }
+    if (!keys.length) return;   // the entry screen: kept until tracks are chosen, then the fee row draws the eye
     if (model.loading) return;
     if (view === 'long' || view === 'dec' || view === 'risk') setView('m6');
     const t = setTimeout(() => {
