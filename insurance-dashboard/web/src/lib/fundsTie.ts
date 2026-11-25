@@ -9,10 +9,13 @@ export const TIE_BP = 10;
 export const DEFAULT_PER: Per = 'a5';
 const EPS = 1e-9;
 
-/** The band in percentage points on a window: 0.10 on annualised windows and LTM; pro rata on the shorter cumulative ones. */
+/** The band on a single month, percentage points (approved O4, compare redesign 25.11.26). The old pro-rata band (0.10 ÷ 12 ≈ 0.008)
+ *  sat below the published two decimals and never fired, so −0.73 against −0.74 crowned a winner; 0.05 is half a tenth of a point. */
+export const TIE_M1 = 0.05;
+/** The band in percentage points on a window: 0.10 on annualised windows and LTM; 0.05 on a single month; pro rata on YTD. */
 export function tieBand(per: Per, asof: number): number {
   const pp = TIE_BP / 100;
-  if (per === 'm1') return pp / 12;
+  if (per === 'm1') return TIE_M1;
   if (per === 'ytd') return (pp * Math.max(1, asof % 100)) / 12;
   return pp;
 }
@@ -43,5 +46,5 @@ export function edges<R>(rows: R[], v: (r: R) => number, band: number): { top: R
   return { top, low, all: top.length === rows.length };
 }
 
-export const TIE_F = `מסלולים בפער של פחות מ-${(TIE_BP / 100).toFixed(2)} נ"א לשנה חולקים מקום (בחלון קצר משנה: יחסית לאורכו). מוסכמת הצגה, לא מבחן סטטיסטי`;
+export const TIE_F = `מסלולים בפער של פחות מ-${(TIE_BP / 100).toFixed(2)} נ"א לשנה חולקים מקום (בחודש בודד: פחות מ-${TIE_M1.toFixed(2)} נ"א; ב-YTD: יחסית לאורכו). מוסכמת הצגה, לא מבחן סטטיסטי`;
 export const TIE_NOTE = `צמודים ומקום משותף (למשל 2–3): פער של פחות מ-${(TIE_BP / 100).toFixed(2)} נ"א לשנה; מוסכמת הצגה, לא מבחן סטטיסטי`;
