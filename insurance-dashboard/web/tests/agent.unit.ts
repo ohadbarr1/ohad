@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { BAND_HE, MIN_N, bandOf, categoriesOf, counted, feeDist, pcts, wmean, type FeeObs } from '../src/lib/feeDist';
 import { RULES, RULES_NOTE, rulesFor, rulesOf } from '../src/lib/productRules';
 import { actCompound, actHistory, defaultHits, defaultKeys, defaultNow, isPension, periodText } from '../src/lib/pensionPack';
-import { compareSummary, type CmpIn } from '../src/lib/compareSummary';
+import { compareSummary, riskDiffers, type CmpIn } from '../src/lib/compareSummary';
 import type { DefaultFile } from '../src/lib/fundsTools';
 import { bmKind, bmProv, claimProv, claimsWhy, claimsWhyTech, clmCell, coverProv, isOldGen, segOf, svcCell, svcProv, type DecisionFile } from '../src/lib/decision';
 import { bottomLines, cmpOf, docRow, metricsOf, pagesOf, shortUrl, snapDiff, snapOf, DOC_METRICS } from '../src/lib/compareDoc';
@@ -238,6 +238,12 @@ if (existsSync(fj)) {
   const pj = join(data, 'funds/p2009.json');
   if (existsSync(pj)) ok(actHistory(JSON.parse(readFileSync(pj, 'utf8'))).length === 8, 'smoke: a pension history has 8 quarters to show');
 }
+
+// P4: the risk banner only when the risk differs (equity 10 points apart, else a different track name)
+ok(!riskDiffers([{ st: 51, track: 'כללי' }, { st: 50, track: 'כללי' }]), 'riskDiffers: pension general 51% vs gemel general 50% is the same risk');
+ok(riskDiffers([{ st: 51, track: 'כללי' }, { st: 96, track: 'מניות' }]), 'riskDiffers: general vs equity');
+ok(!riskDiffers([{ st: 40, track: 'עד 50' }, { st: 45, track: 'כללי' }]), 'riskDiffers: exposure wins over the name when both publish it');
+ok(riskDiffers([{ st: null, track: 'כללי' }, { st: 50, track: 'מניות' }]) && !riskDiffers([{ st: null, track: 'כללי' }, { st: 50, track: 'כללי' }]), 'riskDiffers: the track name when one exposure is missing');
 
 console.log(`agent: ${pass} passed, ${fail} failed`);
 if (fail) { bad.forEach((b) => console.log('  ✗ ' + b)); process.exit(1); }

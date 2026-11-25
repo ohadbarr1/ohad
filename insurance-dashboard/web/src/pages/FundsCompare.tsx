@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { DeeperSheet, SheetSection } from '../components/DeeperSheet';
 import { ErrorBox, Loading } from '../components/ui';
 import { CompareEmpty } from '../components/compare/CompareEmpty';
-import { PickerSheet } from '../components/compare/PickerSheet';
+import { PickerSheet, openPicker } from '../components/compare/PickerSheet';
 import { MonthSheet } from '../components/compare/MonthSheet';
 import { FeeSheet } from '../components/compare/FeeSheet';
 import { TrackSheet } from '../components/compare/TrackSheet';
@@ -20,12 +20,15 @@ import { TaxLiqBody, useCompareData, type CompareData } from './compare/panels';
 import { trackColor, trackLabels } from './compare/tracks';
 import { DOOR_CAP, type CmpCtx, type SheetId, type View } from './compare/contract';
 import { useActiveDoor } from '../components/home/doorState';
-import { catKey, useBasis, useTray, ym, type FundX } from '../lib/funds';
+import { catKey, useBasis, useTray, type FundX } from '../lib/funds';
 import { useMine } from '../lib/mine';
+import { useMedia } from '../lib/useMedia';
 import { useStored } from '../lib/local';
 import { compareKeys } from '../lib/saverCompare';
 import { BM_HREF, OLD_WARN, isOldGen } from '../lib/decision';
 import { rulesOf } from '../lib/productRules';
+import { riskDiffers } from '../lib/compareSummary';
+import { count, familyOf, setCountContext } from '../lib/count';
 import './compare/shell.css';
 import '../styles/compare-desktop.css';  // D5 desktop (lane L3-c)
 
@@ -101,7 +104,7 @@ export function FundsCompare() {
     if (!data) return;
     seeded.current = true;
     const ks = compareKeys(mine, data.data.funds, cap);
-    if (ks.length) write({ k: ks.join(',') });
+    if (ks.length) { write({ k: ks.join(',') }); count('cmp_picker_done', { n: ks.length, route: 'mine' }); }
   }, [data, sp, tray.keys, myList, cap, write]);
 
   // the tracks on screen: known ones, up to the door's cap (the address keeps the rest, so switching door back restores them)
@@ -110,9 +113,13 @@ export function FundsCompare() {
   const keys = useMemo(() => known.slice(0, cap), [known.join(), cap]);  // eslint-disable-line react-hooks/exhaustive-deps
   const over = known.length - keys.length;
 
-  const view = viewOf(sp.get('v') ?? (lensMem === 'months' ? null : lensMem), sp.get('r') ?? rangeMem, door);
+  // D5 desktop (1024 px and wider): the month table and "לאורך זמן" side by side (styles/compare-desktop.css hides the strip's fourth
+  // tab there), so a long view asked for (link, memory) opens the months with the long view beside them
+  const wide = useMedia('(min-width: 1024px)');
+  const view0 = viewOf(sp.get('v') ?? (lensMem === 'months' ? null : lensMem), sp.get('r') ?? rangeMem, door);
+  const view: View = wide && view0 === 'long' ? viewOf(null, sp.get('r') ?? rangeMem, door) : view0;
   const lensEl = useRef<HTMLDivElement>(null);
-  const setView = useCallback((v: View) => {
+  const applyView = useCallback((v: View) => {
     const lens = v === 'm6' || v === 'm12' || v === 'y' ? 'months' : v;
     // the strip is stuck and the lens scrolled under it: bring the new view's top back under the strip
     const el = lensEl.current;
@@ -122,6 +129,8 @@ export function FundsCompare() {
     if (lens === 'months') { const r = v === 'm12' ? '12' : v === 'y' ? 'y' : '6'; setRangeMem(r); write({ v: null, r: r === '6' ? null : r }); }
     else write({ v: lens });
   }, [write, setLensMem, setRangeMem]);
+  /** the reader changes the view (the strip, the range, Pro's "להחלטה | סיכון"): counted (M1); the page's own moves use applyView */
+  const setView = useCallback((v: View) => { count('cmp_lens', { lens: v }); applyView(v); }, [applyView]);
   const setKeys = useCallback((ks: string[]) => { const v = [...new Set(ks)].filter((k) => KEY_RE.test(k)); write({ k: v.join(',') || null }); tray.set(v); }, [write, tray]);
   const openSheet = useCallback((s: SheetId) => write({ sheet: sheetParam(s) }), [write]);
   const closeSheet = useCallback(() => write({ sheet: null }), [write]);
@@ -130,7 +139,10 @@ export function FundsCompare() {
 
   // toasts: a key in the link that is not in the data; more tracks than the door shows
   const [toast, setToast] = useState<string | null>(null);
-  useEffect(() => { if (unknownKs.length) setToast(unknownKs.length === 1 ? 'מסלול אחד בקישור לא נמצא' : `${unknownKs.length} מסלולים בקישור לא נמצאו`); }, [unknownKs.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
+  // a key in the link that is not a track key at all ("zz999") is not found either (review B1 P10: it used to drop silently)
+  const malformed = (sp.get('k') ?? '').split(',').map((x) => x.trim()).filter((x) => x && !KEY_RE.test(x));
+  const lost = data ? unknownKs.length + malformed.length : 0;
+  useEffect(() => { if (lost) setToast(lost === 1 ? 'מסלול אחד בקישור לא נמצא' : `${lost} מסלולים בקישור לא נמצאו`); }, [lost, unknownKs.join(), malformed.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (over > 0) setToast(CAP_TOAST(cap)); }, [over, cap]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 3800); return () => clearTimeout(t); }, [toast]);
 
@@ -147,25 +159,44 @@ export function FundsCompare() {
   }, [!!data, keys.length > 0]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const ctx: CmpCtx = { keys, basis, door, setKeys, openSheet, view, setView, setDoor, asof: data?.asof, cap };
-  const model = useModel(data, keys, basis, myList);
+
+  // M1 usage counter (lib/count: no-op until the site's analytics code is set): the door and product family every hit carries, the
+  // page opened once, and a month / fee / track sheet each time one opens (not on the month sheet's previous / next)
+  const fam = familyOf(keys.map((k) => data?.fundOf(k)?.prod));
+  useEffect(() => { setCountContext(door, fam); }, [door, fam]);
+  const opened = useRef(false);
+  useEffect(() => { if (!data || opened.current) return; opened.current = true; setCountContext(door, fam); count('cmp_open'); }, [!!data]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const sheetT = sheet?.t === 'year' ? 'month' : sheet?.t ?? null;
+  useEffect(() => {
+    if (!data) return;
+    if (sheetT === 'month') count('cmp_month_sheet'); else if (sheetT === 'fee') count('cmp_fee_sheet'); else if (sheetT === 'track') count('cmp_track_sheet');
+  }, [sheetT, !!data]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const model = useModel(data, keys, myList);
 
   // ?focus=fee (the home page's fee card): scroll to the fee row and draw the eye to it once, then drop the parameter
   const focus = sp.get('focus');
+  const focusPicked = useRef(false);
   useEffect(() => {
     if (focus !== 'fee' || !model) return;
-    if (!keys.length) return;   // the entry screen: kept until tracks are chosen, then the fee row draws the eye
+    if (!keys.length) {
+      // the entry screen: the picker opens once (nothing to seed from the tray or the reader's tracks); the parameter is kept until
+      // tracks are chosen, then the table opens with the fee row drawing the eye
+      const seeds = tray.keys.length > 0 || (Array.isArray(myList) && myList.some((x) => typeof x?.k === 'string' && KEY_RE.test(x.k)));
+      if (!seeds && !sheet && !focusPicked.current) { focusPicked.current = true; openPicker(ctx); }
+      return;
+    }
     if (model.loading) return;
-    if (view === 'long' || view === 'dec' || view === 'risk') setView('m6');
+    if (view === 'long' || view === 'dec' || view === 'risk') applyView('m6');
     const t = setTimeout(() => {
       const el = document.getElementById('fee-line');
       if (el) {
         el.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-        el.classList.add('cmp-flash'); setTimeout(() => el.classList.remove('cmp-flash'), 2400);
+        el.classList.add('cmp-flash'); setTimeout(() => el.classList.remove('cmp-flash'), 3200);
       }
       write({ focus: null });
     }, 150);
     return () => clearTimeout(t);
-  }, [focus, model?.loading, keys.length, view]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [focus, model?.loading, keys.length, view, !!data]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (d && 'error' in d) return <ErrorBox what="נתוני הקופות" error={d.error} />;
   if (!data) return <Loading what="השוואה" />;
@@ -203,16 +234,21 @@ export function FundsCompare() {
   return (
     <div className="cmpx" ref={root}>
       <CompareHeader title={title} items={keys.map((k, i) => ({ k, label: m.labels[i] || k, color: m.colors[i], mine: m.mine[i], closed: m.closed[i] }))}
-        onOpen={(k) => openSheet({ t: 'track', k })} onAdd={keys.length < cap ? () => openSheet({ t: 'picker' }) : undefined} />
+        onOpen={(k) => openSheet({ t: 'track', k })} onAdd={keys.length < cap ? () => openPicker(ctx) : undefined} />
       <ViewStrip ref={strip} door={door} view={view} onChange={setView} />
-      <div className="cmp-lens" ref={lensEl} key={months ? 'months' : view}>{lens}</div>
+      {months && wide ? (
+        <div className="cmp-cols">
+          <div className="cmp-lens cmp-col-a" ref={lensEl} key="months">{lens}</div>
+          <aside className="cmp-col-b" aria-label="לאורך זמן"><CompareLong {...ctx} aside /></aside>
+        </div>
+      ) : <div className="cmp-lens" ref={lensEl} key={months ? 'months' : view}>{lens}</div>}
       {sheets}
     </div>
   );
 }
 
 /** what the head, the month lens and the share link need about the tracks on screen */
-function useModel(d: CompareData | null, keys: string[], basis: 'net' | 'gross', myList: unknown): MonthsModel | null {
+function useModel(d: CompareData | null, keys: string[], myList: unknown): MonthsModel | null {
   return useMemo(() => {
     if (!d) return null;
     const funds: (FundX | null)[] = keys.map((k) => d.fundOf(k) ?? null);
@@ -221,20 +257,16 @@ function useModel(d: CompareData | null, keys: string[], basis: 'net' | 'gross',
     const old = funds.map((f) => !!f && isOldGen(f)), closed = funds.map((f) => !!f?.gone);
     const live = funds.filter((f, i): f is FundX => !!f && !old[i]);
     const cross = new Set(live.map(catKey)).size > 1;
+    const riskDiff = cross && riskDiffers(live);
     const mixed = new Set(funds.filter((f): f is FundX => !!f).map((f) => f.prod)).size > 1;
     const sameCat = live.length > 0 && !cross && funds.every((f) => !f || catKey(f) === catKey(live[0]));
     const cat = sameCat && d.cats ? d.cats[catKey(live[0])] ?? null : null;
     const mineKs = new Set((Array.isArray(myList) ? myList : []).map((x: { k?: string }) => x?.k));
-    const f0 = funds.find(Boolean);
-    const per = new URLSearchParams(window.location.search).get('per');
-    const url = `${window.location.origin}/funds/compare?k=${keys.join(',')}&v=months&r=6${basis === 'gross' ? '&b=gross' : ''}${per ? `&per=${per}` : ''}`;
-    const text = `השוואת מסלולים ב-fox: ${labels.filter(Boolean).join(', ')}${f0 ? ` · ${cross ? f0.prod : `${f0.prod} ${f0.track}`}` : ''} · עד ${ym(d.asof)}\n${url}`;
     return {
-      funds, hists, labels, colors, cat, asof: d.asof, cross, mixed, old, closed, mine: keys.map((k) => mineKs.has(k)),
-      shareHref: `https://wa.me/?text=${encodeURIComponent(text)}`,
+      funds, hists, labels, colors, cat, asof: d.asof, cross, riskDiff, mixed, old, closed, mine: keys.map((k) => mineKs.has(k)),
       loading: keys.some((k, i) => !hists[i] && !d.unknown.includes(k)) || funds.some((f) => !f),
     };
-  }, [d, keys, basis, myList]);
+  }, [d, keys, myList]);
 }
 
 /** Different products: the tax and liquidity rule of each (lib/productRules); an old-generation policy: what the comparison cannot show. */

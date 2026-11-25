@@ -95,3 +95,15 @@ export const LEAD_HE = {
 export const CROSS_HE = 'המסלולים שנבחרו שייכים לקטגוריות שונות, ברמות סיכון שונות. השוואת תשואה בין רמות סיכון שונות אינה בעלת משמעות, ולכן מוצגים הנתונים של כל מסלול לצד החשיפה שלו למניות, בלי "גבוה" ו"נמוך" ביניהם. השוואה מוצגת רק בין מסלולים מאותה קטגוריה';
 /** what it says about the old-generation policies */
 export const OLD_HE = 'ביטוח מנהלים מדור ישן (פוליסות 1990-2003) אינו נכלל בשום שורת השוואה: מקדם קצבה מובטח או הבטחת תשואה, אם יש בפוליסה, אינם מופיעים בנתוני התשואה ודמי הניהול';
+
+/** equity shares this many points apart or more are a different risk level (P4: pension general 51% vs gemel lehashkaa general 50% is not) */
+export const RISK_ST_GAP = 10;
+/** Do the tracks carry different risk? Across categories (compareSummary `cross`) the answer is the equity exposure: when every track
+ *  publishes it, a spread of RISK_ST_GAP points or more; when one does not, a different track name ("כללי" vs "מניות"). Two products
+ *  with the same investment track and the same exposure differ in tax and liquidity (the products line), not in risk. */
+export function riskDiffers(xs: { st?: number | null; track?: string | null }[]): boolean {
+  if (xs.length < 2) return false;
+  const sts = xs.map((x) => x.st);
+  if (sts.every((v): v is number => v != null && Number.isFinite(v))) return Math.max(...sts) - Math.min(...sts) >= RISK_ST_GAP;
+  return new Set(xs.map((x) => (x.track ?? '').trim())).size > 1;
+}

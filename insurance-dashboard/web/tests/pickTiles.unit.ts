@@ -64,7 +64,7 @@ ok(capOf('saver') === 4 && capOf('agent') === 6 && capOf('pro') === 8 && capOf(n
 // similar chips: same category, not on screen, largest first; none across categories or at the cap
 {
   const s = similarOf(funds, ['p2102', 'p2172', 'p2009'], 4).map((f) => f.k);
-  ok(s.join() === 'p2002', `P3 saver: one chip (cap 4) = כלל p2002 (${s})`);
+  ok(s.join() === 'p2002,p2177', `P3 saver: two chips at three of four (mockup v3) = כלל, הראל מנוף (${s})`);
   const s8 = similarOf(funds, ['p2102', 'p2172', 'p2009'], 8).map((f) => f.k);
   ok(s8.join() === 'p2002,p2177', `P3 Pro: כלל then הראל מנוף (${s8})`);
   ok(similarOf(funds, ['p2102', 'p2142'], 4).length === 0, 'X2 (different risk levels): no chips');

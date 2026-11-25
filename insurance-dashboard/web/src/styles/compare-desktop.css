@@ -1,1 +1,65 @@
-/* D5 desktop layout for track compare (lane L3-c). */
+/* D5 desktop layout for track compare (lane L3-c; spec 4.11). Everything below is inside min-width media queries of 768px and up:
+   the phone (up to 767px) is untouched, byte for byte in effect.
+   - 768+  : the page is a centred column (--cmp-w) instead of stretching across the screen; the grid's cells stop growing at 120px;
+             bottom sheets keep their shape but are capped at 600px and centred.
+   - 900+  : sheets become side drawers (the source-drawer pattern: a full-height panel on the end side, scrim over the page).
+   - 1024+ : when the shell wraps the months view in `.cmp-cols` (hook, see the report) the grid and "לאורך זמן" sit side by side,
+             the tabs shrink to the grid's width. Without the hook the page stays one centred column.
+   Tokens only; no new colours. */
+
+@media (min-width: 768px) {
+  .cmpx { --cmp-w: 720px; }
+  /* one measure for the head, the chips, the strip's tabs and the lens, so every edge lines up; the strip itself stays full width
+     (its opaque background and hairline run across the screen under the top bar) */
+  .cmpx > .cmp-eyebrow, .cmpx > .trackbar, .cmpx > .cmp-lens { max-width: var(--cmp-w); margin-inline: auto; }
+  .cmpx .cmp-stick { padding-inline: calc(max(0px, (100% - var(--cmp-w)) / 2) + 26px); }
+  .cmpx > .cmp-eyebrow { padding-top: 10px; }
+  .cmpx > .cmp-eyebrow h1 { font-size: 18px; }
+  /* no giant stretched cells: a tile is at most 120px wide, centred in its column */
+  table.mg td > .mg-cell, table.mg td > button.mg-cell { max-width: 120px; margin-inline: auto; }
+  table.mg td.avg > .mg-cell { max-width: 120px; }
+  /* five or more columns: the component sets a fixed pixel width (columns x 74); on a wide card the table fills it instead of leaving a gap */
+  .mgw.scroll table.mg.wide { width: 100% !important; min-width: 560px; }
+  /* bottom sheets (the tablet): a centred sheet, not a full-width slab */
+  body:has(.cmpx) .dsheet-wrap { justify-content: center; }
+  body:has(.cmpx) .sheet.dsheet { max-width: 600px; }
+}
+
+@media (min-width: 900px) {
+  /* side drawer: full height on the end side (the left in RTL), as the source drawer does; the close stays 44px */
+  body:has(.cmpx) .dsheet-wrap { justify-content: flex-end; align-items: stretch; }
+  body:has(.cmpx) .sheet.dsheet, body:has(.cmpx) .sheet.dsheet.full {
+    width: min(480px, 100%); max-width: none; height: 100%; max-height: none; border-radius: 0; border-inline-start: 1px solid var(--line);
+    padding-bottom: 0; animation: cmp-drawer-in var(--mid) var(--ease) both;
+  }
+  body:has(.cmpx) .dsheet > .grip { display: none; }
+  body:has(.cmpx) .dsheet-h { padding: 14px 18px 12px; }
+  body:has(.cmpx) .dsheet-b { padding: 14px 18px 24px; }
+  body:has(.cmpx) .dsheet-sticky, body:has(.cmpx) .dsheet-f { padding-inline: 18px; }
+}
+@keyframes cmp-drawer-in { from { transform: translateX(-28px); opacity: 0; } }
+
+@media (min-width: 1024px) {
+  .cmpx { --cmp-w: 760px; }
+  .cmpx:has(.cmp-cols) { --cmp-w: 1180px; }
+  /* the two columns (hook: .cmp-cols > .cmp-col-a (months lens) + .cmp-col-b (the long view)); the start side (right) holds the grid */
+  .cmp-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(360px, 1fr); gap: 22px; align-items: start; max-width: var(--cmp-w); margin-inline: auto; }
+  .cmp-col-a, .cmp-col-b { min-width: 0; }
+  .cmp-col-b .cl { padding-block: 8px 4px; }
+  /* the tabs stay a compact block over the grid, not a bar the width of the page */
+  .cmpx:has(.cmp-cols) .cmp-views { max-width: 520px; margin-inline-end: auto; }
+  /* the long view is always visible here, so its tab is redundant */
+  .cmpx:has(.cmp-cols) .cmp-views button:nth-child(4) { display: none; }
+}
+
+/* five or more tracks (the grid scrolls sideways itself): the grid needs the width, so it gets the wider share on a big screen and the
+   whole row on a small one, with "לאורך זמן" under it and its tab back in the strip */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .cmpx:has(.cmp-cols .mgw.scroll) { --cmp-w: 880px; }
+  .cmp-cols:has(.mgw.scroll) { grid-template-columns: minmax(0, 1fr); }
+  .cmpx:has(.cmp-cols .mgw.scroll) .cmp-views button:nth-child(4) { display: revert; }
+  .cmpx:has(.cmp-cols .mgw.scroll) .cmp-views { max-width: none; margin-inline-end: 0; }
+}
+@media (min-width: 1280px) { .cmp-cols:has(.mgw.scroll) { grid-template-columns: minmax(0, 1.7fr) minmax(340px, 1fr); } }
+
+@media (min-width: 1440px) { .cmpx:has(.cmp-cols) { --cmp-w: 1240px; } }

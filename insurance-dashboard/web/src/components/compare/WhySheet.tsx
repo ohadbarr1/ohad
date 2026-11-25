@@ -38,7 +38,7 @@ export function WhySheet({ door, open, onClose }: SheetProps) {
           <><b>דמי ניהול בשקלים.</b> דמי הניהול מהחיסכון כפול <bdi dir="ltr">{ils(BALANCE_EX)}</bdi> ש״ח, ועוד דמי הניהול מהפקדה כפול 12 הפקדות חודשיות (פנסיה: שכר <bdi dir="ltr">{ils(SALARY_EX)}</bdi> ש״ח × <bdi dir="ltr">18.5%</bdi> = <bdi dir="ltr">{ils(pen)}</bdi> ש״ח; השתלמות: × <bdi dir="ltr">10%</bdi> = <bdi dir="ltr">{ils(hish)}</bdi> ש״ח; גמל להשקעה: בלי הפקדות). שנה אחת, מעוגל לעשרות.</>,
           <><b>עבר אינו עתיד.</b> חודש אחד לא אומר הרבה; 3 ו-5 שנים אומרות יותר.</>,
           door === 'pro' ? <><b>מסלולים שנסגרו.</b> ממוצע הסוג בכל חודש כולל את המסלולים שהיו בסוג באותו חודש, גם אם נסגרו מאז, כך שהממוצע לא מוטה לטובת מי ששרד.</> : null,
-          <><b>מקור.</b> {(file?.source ?? 'רשות שוק ההון').replace(/\s*\([^)]*[A-Za-z][^)]*\)/g, '')}{file?.asof ? <>, עד <bdi dir="ltr">{monthLabel(file.asof)}</bdi></> : null}. הקשה על כל מספר פותחת את המקור שלו.</>,
+          <><b>מקור.</b> {(file?.source ?? 'רשות שוק ההון').replace(/\s*\([^)]*[A-Za-z][^)]*\)/g, '')}{file?.asof ? <>, עד <bdi dir="ltr">{monthLabel(file.asof)}</bdi></> : null}. כל מספר בחלון החודש פותח את המקור שלו.</>,
         ]} />
       </div>
     </DeeperSheet>
