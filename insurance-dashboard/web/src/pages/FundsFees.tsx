@@ -26,7 +26,7 @@ import { shortGrp } from './compare/tracks';
 import { BALANCE_EX, exampleMonthly } from '../lib/retire';
 import { FeesBoard } from './fees/FeesBoard';
 import { FeesEntry } from './fees/FeesEntry';
-import { AGE_EX, AfterRetire, AgeStep, AssumeSheet, RetLens, SensLens, feeModel, feesLensOf, useCareerOut } from './fees/FeesCareer';
+import { AGE_EX, AfterRetire, AgeStep, AssumeSheet, RetFig, RetLens, SensLens, feeModel, feesLensOf, useCareerOut } from './fees/FeesCareer';
 import '../styles/lens.css';
 import '../styles/fundsTools.css';
 import '../styles/rollout.css';
@@ -143,7 +143,7 @@ export function FundsFees() {
   else if (career && model.C.age >= model.C.retire) body = <AfterRetire />;
   else body = (
     <FeesBoard members={members} typeKey={key} prod={prod} mineK={saver ? mineK : null} ownFee={saver && mineP ? { fee: mineP.fee, depfee: mineP.depfee } : null}
-      amounts={boardAmounts} deposits={deposits} mode={career ? 'career' : 'yr'} career={career ? model.assume : undefined} ageOwn={model.ageOwn}
+      amounts={boardAmounts} deposits={deposits} mode={career ? 'career' : 'yr'} career={career ? model.assume : undefined} ageOwn={model.ageOwn} retNote={<>התשואה: <RetFig m={model} /></>}
       saver={saver} asof={asof} onRow={(k) => host.openSheet({ t: 'track', k })} onAmounts={openAmounts} onAssume={openAssume} />
   );
 

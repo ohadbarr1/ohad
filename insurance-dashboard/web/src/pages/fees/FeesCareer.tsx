@@ -82,12 +82,14 @@ export function feeModel(m: FeeModelIn) {
   const ownRow = (f: FundX) => !!ownT && f.k === ownT.k && (ownT.fee != null || ownT.depfee != null);
   const LA = ownT ? 'דמי הניהול שלך' : 'המסלול שנבחר', LB = 'דמי ניהול להשוואה';
 
-  // the return assumption: the reader's, else a conservative 4% (mockup v4, every door); the category's 10-year gross one tap away
+  // the return: the reader's; else, agent and Pro: the category's published 10-year gross return (asset-weighted, sourced; real data
+  // over an assumption, coordinator 26.11.26), and 4% labelled "הנחה" when the category has no 10 full years; the saver: a conservative
+  // 4% (mockup v4), the category's 10 years one tap away
   const c = cats?.[cat];
   const cat10 = c ? annualised(c.y, 120) : null;
   const retQ = sp.get('r');
-  const ret = numQ(retQ, RET_FALLBACK, -10, 30);
-  const retSrc: 'user' | 'safe' = retQ != null && retQ !== '' ? 'user' : 'safe';
+  const retSrc: 'user' | 'cat' | 'default' | 'safe' = retQ != null && retQ !== '' ? 'user' : saver ? 'safe' : cat10 != null ? 'cat' : 'default';
+  const ret = numQ(retQ, retSrc === 'cat' ? +cat10!.toFixed(2) : RET_FALLBACK, -10, 30);
   const rate = numQ(sp.get('rate'), 18.5, 0, 100);
   const dep0 = m.monthly ?? exampleMonthly(prod).v;
   const salary0 = rate > 0 ? Math.round(dep0 / (rate / 100) / 10) * 10 : 12000;
@@ -109,20 +111,32 @@ export function feeModel(m: FeeModelIn) {
   /** the "עד הפרישה" board's assumptions: the same as the calculator's, so every lens agrees */
   const assume: CareerAssume = { age: C.age, retire: C.retire, ret: C.ret, infl: C.infl, growth: C.growth, coef: C.coef };
 
+  /* ---- what each input is: the reader's, an example ("לדוגמה"), an assumption ("הנחה") or published data ---- */
+  const typed = (k: string) => { const v = sp.get(k); return v != null && v !== ''; };
+  const EX = 'לדוגמה', AS = 'הנחה', IN = 'קלט שלך';
+  const tags = {
+    age: ageEx ? EX : typed('age') ? IN : saver && ageS != null ? 'שלך, מ"המוצרים שלי"' : EX,
+    ra: typed('ra') ? IN : saver ? (m.retire.own ? 'שלך, מ"המוצרים שלי"' : m.retire.why) : `${EX}: גיל הפרישה בחוק לגבר`,
+    sal: typed('sal') ? IN : m.monthly != null ? 'נגזר מההפקדה החודשית שלך' : `${EX}: הפקדה ${nf(exampleMonthly(prod).v, 0)} ש"ח בחודש`,
+    rate: typed('rate') ? IN : EX,
+    b0: typed('b0') ? IN : m.balance != null ? 'שלך' : EX,
+    g: typed('g') ? IN : AS, inf: typed('inf') ? IN : AS, coef: typed('coef') ? IN : AS,
+    r: retSrc === 'user' ? 'הנחה שלך' : retSrc === 'cat' ? 'ממוצע הקטגוריה ב-10 השנים האחרונות, כפי שפורסם' : retSrc === 'safe' ? 'הנחה שמרנית' : `${AS}: לקטגוריה אין 10 שנים מלאות`,
+  };
   /* ---- sources ---- */
   const assumptions = () => [
-    { label: ageEx ? 'גיל היום (לדוגמה)' : saver && ageQ == null ? (ageS != null ? 'גיל היום (שלך, מ"המוצרים שלי")' : 'גיל היום (לדוגמה)') : 'גיל היום (קלט שלך)', v: nf(C.age, 0) },
-    { label: saver && sp.get('ra') == null ? `גיל פרישה (${m.retire.own ? 'שלך, מ"המוצרים שלי"' : m.retire.why})` : 'גיל פרישה (קלט שלך)', v: ageText(C.retire) }, { label: 'שכר ברוטו חודשי היום (קלט שלך)', v: ils(C.salary) },
-    { label: 'עליית שכר בשנה, נומינלי (הנחה)', v: pc(C.growth, 1) }, { label: 'שיעור הפקדה מהשכר (קלט שלך)', v: pc(C.rate, 1) },
-    { label: retSrc === 'user' ? 'תשואה שנתית ברוטו (הנחה שלך)' : 'תשואה שנתית ברוטו (הנחה שמרנית)', v: pc(C.ret) },
-    { label: 'אינפלציה בשנה (הנחה)', v: pc(C.infl, 1) }, { label: m.balance != null && sp.get('b0') == null ? 'יתרה היום (שלך)' : sp.get('b0') == null ? 'יתרה היום (לדוגמה)' : 'יתרה היום (קלט שלך)', v: ils(C.start) }, { label: 'מקדם המרה לקצבה (הנחה)', v: nf(C.coef, 0) },
+    { label: `גיל היום (${tags.age})`, v: nf(C.age, 0) },
+    { label: `גיל פרישה (${tags.ra})`, v: ageText(C.retire) }, { label: `שכר ברוטו חודשי היום (${tags.sal})`, v: ils(C.salary) },
+    { label: `עליית שכר בשנה, נומינלי (${tags.g})`, v: pc(C.growth, 1) }, { label: `שיעור הפקדה מהשכר (${tags.rate})`, v: pc(C.rate, 1) },
+    { label: `תשואה שנתית ברוטו (${tags.r})`, v: pc(C.ret), src: retSrc === 'cat' ? retProv : undefined },
+    { label: `אינפלציה בשנה (${tags.inf})`, v: pc(C.infl, 1) }, { label: `יתרה היום (${tags.b0})`, v: ils(C.start) }, { label: `מקדם המרה לקצבה (${tags.coef})`, v: nf(C.coef, 0) },
   ];
-  const retProv = (): Prov => {
+  function retProv(): Prov {
     const ms = c!.p.slice(-120);
     return { k: 'calc', title: `תשואה שנתית ברוטו, 10Y · ${cat}`, value: pc(cat10), formula: '((1 + r₁) × … × (1 + r₁₂₀)) בחזקת 12 ÷ 120, פחות 1, על ממוצע הקטגוריה המשוקלל בנכסים של כל חודש (ברוטו, לפני דמי ניהול; דמי הניהול מנוכים במחשבון)',
       note: 'הנחה: תשואת העבר של הקטגוריה כאומדן לעתיד. אינה תחזית',
       inputs: ms.map((p, i) => ({ label: `ממוצע הקטגוריה · ${ym(p)}`, v: pc(c!.y[c!.y.length - 120 + i]) })) };
-  };
+  }
   const pairInputs = (f: FeePair, who: string) => [{ label: `${who}: דמי ניהול מהפקדה`, v: pc(f.depfee) }, { label: `${who}: דמי ניהול מצבירה, שנתי`, v: pc(f.fee) }];
   const F = 'כל חודש: הפקדה = שכר × שיעור ההפקדה (השכר עולה כל 12 חודשים); דמי הניהול מהפקדה יורדים מההפקדה; היתרה גדלה ב-(1 + תשואה שנתית)^(1/12) − 1; דמי הניהול מצבירה (שנתי ÷ 12) יורדים מהיתרה בסוף החודש';
   type W = 'bal' | 'balReal' | 'fees' | 'feesReal' | 'pensionReal' | 'pension';
@@ -144,8 +158,9 @@ export function feeModel(m: FeeModelIn) {
     ...(tender && tp?.fee != null && tp.depfee != null ? [{ label: `מחיר מכרז ברירת המחדל ${tender.id}${tender.verified ? '' : ' (לא אומת)'}`, p: { depfee: tp.depfee, fee: tp.fee } }] : []),
     ...(dfile?.caps?.[prod.startsWith('פנסיה') ? 'pension' : 'gemel'] ? [(() => { const cp = dfile.caps![prod.startsWith('פנסיה') ? 'pension' : 'gemel']!; return { label: `התקרה החוקית${cp.verified ? '' : ' (לא אומת)'}`, p: { depfee: cp.depfee, fee: cp.fee } }; })()] : []),
   ];
+  const isSaver = saver;
   const coefWhy = saver && sex != null && sp.get('coef') == null ? coefOf(sex).why : 'הנחה עגולה';
-  return { coefWhy, C, A, B, mine, cheap, ownT, pairOf, ownRow, LA, LB, cat10, retSrc, ageOwn, ageEx, cap, errOf, assume, assumptions, retProv, pairInputs, outProv, feeP, presets, members };
+  return { isSaver, coefWhy, tags, C, A, B, mine, cheap, ownT, pairOf, ownRow, LA, LB, cat10, retSrc, ageOwn, ageEx, cap, errOf, assume, assumptions, retProv, pairInputs, outProv, feeP, presets, members };
 }
 
 /** the career results of a model (memoised by the page; the 6×6 grid only when the sensitivity lens is open) */
@@ -192,25 +207,29 @@ export function AssumeSheet({ open, onClose, m, prod, cat, set, amountsLine, onA
       <div className="fb-assume">
         <span className="chip est">הנחות וקלט שלך · לא נשלח</span>
         <div className="fform">
-          <label><span>גיל היום</span><input type="number" inputMode="numeric" min={15} max={80} value={C.age} onChange={(e) => set({ age: e.target.value })} /></label>
-          <label><span>גיל פרישה</span><input type="number" inputMode="numeric" min={40} max={80} value={C.retire} onChange={(e) => set({ ra: e.target.value })} /></label>
+          <label><span>גיל היום <small className="fb-tag" data-tag="age">{m.tags.age}</small></span><input type="number" inputMode="numeric" min={15} max={80} value={C.age} onChange={(e) => set({ age: e.target.value })} /></label>
+          <label><span>גיל פרישה <small className="fb-tag" data-tag="ra">{m.tags.ra}</small></span><input type="number" inputMode="numeric" min={40} max={80} value={C.retire} onChange={(e) => set({ ra: e.target.value })} /></label>
           {amountsLine ? null : <>
-            <label><span>שכר ברוטו לחודש, ש"ח</span><input type="number" inputMode="decimal" step={500} min={0} value={C.salary} onChange={(e) => set({ sal: e.target.value })} /></label>
-            <label><span>הפקדה מהשכר, %</span><input type="number" inputMode="decimal" step={0.5} min={0} value={C.rate} onChange={(e) => set({ rate: e.target.value })} /></label>
-            <label><span>יתרה היום, ש"ח</span><input type="number" inputMode="decimal" step={1000} min={0} value={C.start} onChange={(e) => set({ b0: e.target.value })} /></label>
+            <label><span>שכר ברוטו לחודש, ש"ח <small className="fb-tag" data-tag="sal">{m.tags.sal}</small></span><input type="number" inputMode="decimal" step={500} min={0} value={C.salary} onChange={(e) => set({ sal: e.target.value })} /></label>
+            <label><span>הפקדה מהשכר, % <small className="fb-tag" data-tag="rate">{m.tags.rate}</small></span><input type="number" inputMode="decimal" step={0.5} min={0} value={C.rate} onChange={(e) => set({ rate: e.target.value })} /></label>
+            <label><span>יתרה היום, ש"ח <small className="fb-tag" data-tag="b0">{m.tags.b0}</small></span><input type="number" inputMode="decimal" step={1000} min={0} value={C.start} onChange={(e) => set({ b0: e.target.value })} /></label>
           </>}
-          <label><span>עליית שכר בשנה, %</span><input type="number" inputMode="decimal" step={0.5} value={C.growth} onChange={(e) => set({ g: e.target.value })} /></label>
-          <label><span>תשואה שנתית ברוטו, % (הנחה)</span><input type="number" inputMode="decimal" step={0.25} value={C.ret} onChange={(e) => set({ r: e.target.value })} /></label>
-          <label><span>אינפלציה בשנה, % (הנחה)</span><input type="number" inputMode="decimal" step={0.25} value={C.infl} onChange={(e) => set({ inf: e.target.value })} /></label>
-          <label><span>מקדם המרה (הנחה)</span><input type="number" inputMode="decimal" step={5} min={50} value={C.coef} onChange={(e) => set({ coef: e.target.value })} /></label>
+          <label><span>עליית שכר בשנה, % <small className="fb-tag" data-tag="g">{m.tags.g}</small></span><input type="number" inputMode="decimal" step={0.5} value={C.growth} onChange={(e) => set({ g: e.target.value })} /></label>
+          <label><span>תשואה שנתית ברוטו, % <small className="fb-tag" data-tag="r">{m.tags.r}</small></span><input type="number" inputMode="decimal" step={0.25} value={C.ret} onChange={(e) => set({ r: e.target.value })} /></label>
+          <label><span>אינפלציה בשנה, % <small className="fb-tag" data-tag="inf">{m.tags.inf}</small></span><input type="number" inputMode="decimal" step={0.25} value={C.infl} onChange={(e) => set({ inf: e.target.value })} /></label>
+          <label><span>מקדם המרה <small className="fb-tag" data-tag="coef">{m.tags.coef}</small></span><input type="number" inputMode="decimal" step={5} min={50} value={C.coef} onChange={(e) => set({ coef: e.target.value })} /></label>
           {!amountsLine && m.members.length > 1 ? (
             <label className="wide"><span>המסלול שנבחר</span><select value={m.mine?.k ?? ''} onChange={(e) => set({ k: e.target.value, da: null, fa: null })}>{m.members.map((f) => <option key={f.k} value={f.k}>{f.name}</option>)}</select></label>
           ) : null}
         </div>
         {amountsLine ? <p className="fb-assume-amt">{amountsLine}</p> : null}
         <div className="fprivacy">
-          תשואה: {m.retSrc === 'safe' ? <>הנחה שמרנית של {pc(RET_FALLBACK)} ברוטו בשנה. {m.cat10 != null && !(m.mine && singleIndex(m.mine)) && <button type="button" className="linkbtn" onClick={() => set({ r: m.cat10!.toFixed(2) })}>תשואת העבר של הקטגוריה ב-10 שנים, לא תחזית ({pc(m.cat10)})</button>} </> : <>ההנחה שלך{m.cat10 != null && Math.abs(C.ret - +m.cat10.toFixed(2)) < 1e-9 ? <>: ממוצע הקטגוריה ב-10 השנים האחרונות, <Sourced src={m.retProv}>{pc(m.cat10)}</Sourced> ברוטו (תשואת עבר כהנחה, לא תחזית)</> : null}. </>}
-          {m.retSrc === 'user' && <button type="button" className="linkbtn" onClick={() => set({ r: null })}>חזרה להנחה השמרנית ({pc(RET_FALLBACK)})</button>}
+          תשואה: {m.retSrc === 'safe' ? <>הנחה שמרנית של {pc(RET_FALLBACK)} ברוטו בשנה. {m.cat10 != null && !(m.mine && singleIndex(m.mine)) && <button type="button" className="linkbtn" onClick={() => set({ r: m.cat10!.toFixed(2) })}>תשואת העבר של הקטגוריה ב-10 שנים, לא תחזית ({pc(m.cat10)})</button>} </>
+            : m.retSrc === 'cat' ? <>ממוצע הקטגוריה ב-10 השנים האחרונות, <Sourced src={m.retProv}>{pc(m.cat10)}</Sourced> ברוטו, כפי שפורסם (תשואת עבר כהנחה לעתיד, לא תחזית). </>
+            : m.retSrc === 'default' ? <>הנחה של {pc(RET_FALLBACK)} ברוטו בשנה: לקטגוריה אין 10 שנים מלאות של תשואות. </>
+            : <>ההנחה שלך{m.cat10 != null && Math.abs(C.ret - +m.cat10.toFixed(2)) < 1e-9 ? <>: ממוצע הקטגוריה ב-10 השנים האחרונות, <Sourced src={m.retProv}>{pc(m.cat10)}</Sourced> ברוטו (תשואת עבר כהנחה, לא תחזית)</> : null}. </>}
+          {m.retSrc === 'user' && (saverDoor(m) ? <button type="button" className="linkbtn" onClick={() => set({ r: null })}>חזרה להנחה השמרנית ({pc(RET_FALLBACK)})</button>
+            : m.cat10 != null ? <button type="button" className="linkbtn" onClick={() => set({ r: null })}>חזרה לממוצע הקטגוריה ({pc(m.cat10)})</button> : <button type="button" className="linkbtn" onClick={() => set({ r: null })}>חזרה להנחה ({pc(RET_FALLBACK)})</button>)}
           {' '}אינפלציה: {BOI}. מקדם המרה {nf(C.coef, 0)}: {m.coefWhy}; המקדם בפועל תלוי בגיל, במין, במסלול הקצבה ובתקנון. החישוב רץ בדפדפן ולא נשלח.
         </div>
         <p className="fb-legal">דמי הניהול: הממוצע בפועל של כל מסלול, מנתוני רשות שוק ההון ({cat}). חוסך מסוים משלם את מה שסיכם; עמית חדש בקרן ברירת מחדל משלם את מחיר המכרז. {prod.startsWith('פנסיה') ? 'בפנסיה ההפקדה מוגבלת בתקרות. ' : ''}אין כאן המלצה לעבור.</p>
@@ -244,7 +263,7 @@ export function SensLens({ m, out, nominal, setNominal, onAssume }: { m: FeeMode
         </table></div>
         <div className="fnote">כל תא: אותן הנחות, דמי ניהול אחרים. ככל שהתא כהה יותר, הקצבה נמוכה יותר. תא ממוסגר = אחד משני צמדי דמי הניהול בעדשה ״בפרישה״.</div>
       </Panel>
-      <p className="ro-stamp">אומדן על הנחות: תשואה <bdi dir="ltr" className="sgnum">{`${+C.ret.toFixed(2)}%`}</bdi> בשנה, אינפלציה <bdi dir="ltr" className="sgnum">{pc(C.infl, 1)}</bdi> · <button type="button" onClick={onAssume} aria-haspopup="dialog">ההנחות ›</button></p>
+      <p className="ro-stamp">אומדן על הנחות: תשואה <RetFig m={m} /> בשנה, אינפלציה <bdi dir="ltr" className="sgnum">{pc(C.infl, 1)}</bdi> · <button type="button" onClick={onAssume} aria-haspopup="dialog">ההנחות ›</button></p>
     </>
   );
 }
@@ -329,7 +348,15 @@ export function RetLens({ m, out, sp, set, asof, cat, onAssume }: { m: FeeModel;
           <div className="fnote">דמי הניהול: הממוצע בפועל של כל מסלול ב-{ym(asof)}, מנתוני רשות שוק ההון{m.ownT && mine && m.ownRow(mine) ? '; בשורה שלך, דמי הניהול שהזנת' : ''}. חוסך מסוים משלם את מה שסיכם; עמית חדש בקרן ברירת מחדל משלם את מחיר המכרז. ממוין מהזול. {mine && <>מהלך: <Link to={`/funds/compare?k=${[mine.k, cheap?.k].filter(Boolean).join(',')}`}>השוואת המסלול שנבחר לזול</Link>.</>} אין כאן המלצה לעבור.</div>
         </div>
       </details>
-      <p className="ro-stamp">אומדן על הנחות: גיל <bdi dir="ltr" className="sgnum">{nf(C.age, 0)}</bdi> עד <bdi dir="ltr" className="sgnum">{ageText(C.retire)}</bdi>, תשואה <bdi dir="ltr" className="sgnum">{`${+C.ret.toFixed(2)}%`}</bdi> ברוטו, אינפלציה <bdi dir="ltr" className="sgnum">{pc(C.infl, 1)}</bdi> · <button type="button" onClick={onAssume} aria-haspopup="dialog">ההנחות ›</button></p>
+      <p className="ro-stamp">אומדן על הנחות: גיל <bdi dir="ltr" className="sgnum">{nf(C.age, 0)}</bdi> עד <bdi dir="ltr" className="sgnum">{ageText(C.retire)}</bdi>, תשואה <RetFig m={m} /> ברוטו, אינפלציה <bdi dir="ltr" className="sgnum">{pc(C.infl, 1)}</bdi> · <button type="button" onClick={onAssume} aria-haspopup="dialog">ההנחות ›</button></p>
     </>
   );
+}
+
+const saverDoor = (m: FeeModel) => m.isSaver;
+/** the return in a stamp, with what it is: the category's published 10 years (opens its source), the reader's, or an assumption */
+export function RetFig({ m }: { m: FeeModel }) {
+  const v = <bdi dir="ltr" className="sgnum">{`${+m.C.ret.toFixed(2)}%`}</bdi>;
+  if (m.retSrc === 'cat') return <><Sourced src={m.retProv}>{v}</Sourced> (ממוצע הקטגוריה, 10 שנים)</>;
+  return <>{v} ({m.retSrc === 'user' ? 'הנחה שלך' : m.retSrc === 'safe' ? 'הנחה שמרנית' : 'הנחה'})</>;
 }

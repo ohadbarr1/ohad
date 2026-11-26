@@ -51,6 +51,8 @@
 /* ---------- "ההנחות ›" sheet ---------- */
 .fb-assume .chip.est { display: inline-block; margin-bottom: 10px; }
 .fb-assume .fform input, .fb-assume .fform select { min-height: 44px; font-size: 16px; }
+.fb-tag { display: inline-block; margin-inline-start: 4px; font-size: 11.5px; font-weight: 500; color: var(--warn); }
+.fb-tag[data-tag] { white-space: normal; }
 .fb-assume-amt { margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--panel2); font-size: 13.5px; line-height: 1.5; }
 .fb-assume .fprivacy { font-size: 12px; line-height: 1.6; }
 .fb-assume .linkbtn { min-height: 44px; }

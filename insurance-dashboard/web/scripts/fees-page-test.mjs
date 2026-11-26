@@ -38,19 +38,31 @@ ok(M.feesLensOf(Q('cat=x&k=p2102'), PRO, false) === 'rank', 'cat and k are not c
 /* ---- live data ---- */
 const FF = JSON.parse(readFileSync(new URL('../public/data/funds.json', import.meta.url)));
 const FUNDS = FF.funds, ASOF = FF.asof;
+const CATS = JSON.parse(readFileSync(new URL('../public/data/funds/cat.json', import.meta.url)));
 const PG = 'פנסיה מקיפה | כללי', HG = 'השתלמות | כללי';
 const pg = M.typeMembers(FUNDS, PG), hg = M.typeMembers(FUNDS, HG);
 const calc = (mem) => mem.filter((f) => !/בניהול אישי|\bIRA\b/.test(f.name) && f.fee != null).sort((a, b) => (a.fee - b.fee) || ((a.depfee ?? 0) - (b.depfee ?? 0)));
 const RT = { v: 67, why: 'x', own: false };
-const model = (q, o = {}) => M.feeModel({ sp: Q(q), saver: o.saver ?? true, cat: o.cat ?? PG, prod: (o.cat ?? PG).split(' | ')[0], asof: ASOF, members: calc(o.mem ?? pg), ageS: o.ageS ?? null, sex: null, retire: RT, balance: o.balance ?? null, monthly: o.monthly ?? null, own: o.own });
+const model = (q, o = {}) => M.feeModel({ sp: Q(q), saver: o.saver ?? true, cat: o.cat ?? PG, prod: (o.cat ?? PG).split(' | ')[0], asof: ASOF, cats: CATS, members: calc(o.mem ?? pg), ageS: o.ageS ?? null, sex: null, retire: RT, balance: o.balance ?? null, monthly: o.monthly ?? null, own: o.own });
 
-// mockup v4 defaults in every door: age 38, retirement 67, 4% gross, coefficient 200, 100,000 ₪ and the example deposit (2,220 ₪ a month)
+// example inputs in every door (mockup v4): age 38, retirement 67, coefficient 200, 100,000 ₪ and the example deposit (2,220 ₪ a month),
+// each labelled "לדוגמה". The return: saver a conservative 4%; agent and Pro the category's published 10-year gross return (sourced),
+// 4% labelled "הנחה" when the category has no 10 full years (coordinator 26.11.26)
+const a10 = (y) => { let f = 1; for (const r of y.slice(-120)) f *= 1 + r / 100; return +((f ** (12 / 120) - 1) * 100).toFixed(2); };
 for (const saver of [true, false]) {
   const m = model('', { saver });
-  ok(m.C.age === 38 && m.C.retire === 67 && m.C.ret === 4 && m.C.coef === 200 && m.C.start === 100000, `defaults (${saver ? 'saver' : 'Pro'})`, m.C);
+  ok(m.C.age === 38 && m.C.retire === 67 && m.C.coef === 200 && m.C.start === 100000, `example inputs (${saver ? 'saver' : 'Pro'})`, m.C);
+  ok(m.tags.age === 'לדוגמה' && m.tags.rate === 'לדוגמה' && m.tags.b0 === 'לדוגמה' && /^לדוגמה/.test(m.tags.sal), `example inputs labelled לדוגמה (${saver ? 'saver' : 'Pro'})`, m.tags);
+  ok(saver ? m.C.ret === 4 && m.retSrc === 'safe' : m.C.ret === a10(CATS[PG].y) && m.retSrc === 'cat', `default return (${saver ? 'saver 4%' : 'Pro: category 10Y'})`, [m.C.ret, m.retSrc]);
   ok(Math.round(m.C.salary * m.C.rate / 100) === 2220, `example deposit 2,220 (${saver ? 'saver' : 'Pro'})`, m.C.salary);
   ok(!m.ageOwn, `example age is not the reader's (${saver ? 'saver' : 'Pro'})`);
 }
+const U50 = 'פנסיה מקיפה | עד 50', pu = M.typeMembers(FUNDS, U50);
+const mp = model('', { saver: false, cat: U50, mem: pu });
+ok(mp.C.ret === a10(CATS[U50].y) && mp.C.ret === 8.96 && /ממוצע הקטגוריה/.test(mp.tags.r), 'Pro pension עד 50: default return 8.96% (category 10Y, published)', [mp.C.ret, mp.tags.r]);
+ok(mp.assume.ret === mp.C.ret, 'Pro: the "עד הפרישה" board uses the same return');
+const NO10 = 'ביטוחי מנהלים 1992-2003 | עד 50', pn = M.typeMembers(FUNDS, NO10);
+if (pn.length) { const mn = model('', { saver: false, cat: NO10, mem: pn }); ok(mn.C.ret === 4 && mn.retSrc === 'default' && /^הנחה/.test(mn.tags.r), 'no 10 full years → 4% labelled הנחה', [mn.C.ret, mn.tags.r]); }
 const ms = model('', { ageS: 50 });
 ok(ms.C.age === 50 && ms.ageOwn, 'saver: the stored age is used and is the reader\'s');
 ok(model('', { ageS: 50, saver: false }).C.age === 38, 'Pro: the stored age is not a client\'s');

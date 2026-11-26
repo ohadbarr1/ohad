@@ -35,6 +35,8 @@ export interface FeesBoardProps {
   mode: FeeMode;
   career?: CareerAssume;
   ageOwn?: boolean;
+  /** "עד הפרישה": what the return is (the category's published 10 years, sourced; or an assumption), after the stamp */
+  retNote?: ReactNode;
   saver: boolean;
   asof: number;
   onRow: (k: string) => void;
@@ -100,7 +102,7 @@ export function FeesBoard(p: FeesBoardProps) {
       <button type="button" className="ro-rowlink fb-calc" id="calc-mine" onClick={p.onAmounts} aria-haspopup="dialog">
         <span className="fb-ic" aria-hidden="true">✎</span><span className="fb-calct">{calcMine(amounts.own, deposits)}</span><span aria-hidden="true">›</span>
       </button>
-      <p className="ro-stamp" id="stamp"><NumText t={stamp} /> · <button type="button" onClick={p.onAssume} aria-haspopup="dialog">{ASSUME_LINK}</button></p>
+      <p className="ro-stamp" id="stamp"><NumText t={stamp} />{mode === 'career' && p.retNote ? <> · {p.retNote}</> : null} · <button type="button" onClick={p.onAssume} aria-haspopup="dialog">{ASSUME_LINK}</button></p>
     </>
   );
 }
