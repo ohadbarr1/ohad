@@ -1,0 +1,122 @@
+/* P6 primitives (spec p6 §2.2, §13.1 F3, §13.3 F3+, §14.1 N5, §14.3 rule 7, §14.4 F3; tester round 3 P2/P3): the quarters grid
+   (<MonthGrid kind="quarters">), the reading seg (<PeriodSeg mode="quarter">, <RowsSeg>), the track board (<Scoreboard layout="track">).
+   Every rule is scoped under a class that only the new props emit (p6-*), so the compare page and the rollout pages are untouched.
+   Page lanes tune density through the custom properties: --p6-cell-h (grid cell height), --p6-name-w / --p6-val-w / --p6-row-h (board). */
+
+/* ---------- the seg: 32-px face, 44-px hit area, aria-pressed ---------- */
+.p6-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--panel3); flex: none; max-width: 100%; }
+.p6-seg button { position: relative; flex: 0 0 auto; height: 34px; min-width: 46px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; text-align: center; cursor: pointer; direction: ltr; unicode-bidi: isolate; transition: background var(--mid), color var(--mid); }
+.p6-seg button::before { content: ""; position: absolute; inset: -5px 0; }
+.p6-seg button[aria-pressed="true"] { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
+.p6-seg button:active { transform: scale(0.97); }
+.p6-seg button:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; }
+@media (min-width: 1000px) { .p6-seg button { height: 30px; font-size: 12.5px; } .p6-seg button::before { inset: -3px 0; } }
+
+/* ---------- the quarters grid ---------- */
+.mgw.p6-qw { container: p6mg / inline-size; }
+table.mg.p6-q { --p6-cell-h: 34px; font-size: 12px; }
+table.mg.p6-q col.p6-lc { width: 50px; }
+table.mg.p6-q thead th { vertical-align: bottom; }
+table.mg.p6-q thead th.m { vertical-align: bottom; padding-bottom: 6px; }
+table.mg.p6-q .mg-unit { white-space: normal; font-size: 10.5px; line-height: 1.15; }
+table.mg.p6-q .mg-col { padding: 6px 1px 4px; gap: 3px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+table.mg.p6-q .mg-col b { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.15; font-weight: 600; }
+table.mg.p6-q .mg-bar { width: 10px; height: 10px; border-radius: 3px; }
+table.mg.p6-q th.fc .mg-col, table.mg.p6-q th.fc .mg-col b { color: var(--fg); font-weight: 800; }
+/* P3: the quarter's label sits on the middle of its own cells */
+table.mg.p6-q tbody th.m { vertical-align: middle; padding-inline: 6px 0; font-size: 12px; font-weight: 700; color: var(--fg); white-space: nowrap; direction: ltr; unicode-bidi: isolate; text-align: end; }
+:root[dir="ltr"] table.mg.p6-q tbody th.m { text-align: start; }
+table.mg.p6-q tr.cur th.m { color: var(--accent-text); }
+table.mg.p6-q td { padding: 1px; vertical-align: middle; }
+table.mg.p6-q .mg-cell { height: var(--p6-cell-h); line-height: var(--p6-cell-h); border-radius: 7px; font-size: 12px; font-weight: 500; letter-spacing: -0.01em; background-color: var(--panel2); background-image: linear-gradient(rgb(var(--k, 0 0 0) / var(--a, 0)), rgb(var(--k, 0 0 0) / var(--a, 0))); text-align: center; white-space: nowrap; }
+table.mg.p6-q .mg-cell, table.p6-mr .mg-cell { direction: ltr; }   /* the figure, then its "†", "*" and n, left to right */
+table.mg.p6-q td.fc .mg-cell { font-weight: 700; }
+table.mg.p6-q td.p6-na .mg-cell { color: var(--faint); cursor: default; background-image: repeating-linear-gradient(135deg, var(--panel2) 0 4px, var(--panel) 4px 8px); }
+table.mg.p6-q .mg-cell.p6-x { padding: 0; }
+table.mg.p6-q .mg-cell.p6-x > :is(a.src, button.src) { display: block; width: 100%; height: 100%; min-width: 0; margin: 0; padding: 0; line-height: inherit; border-radius: inherit; text-decoration: none; direction: ltr; unicode-bidi: isolate; }
+table.mg.p6-q td.avg .mg-cell, .p6-medrow td .mg-cell { position: relative; }
+table.mg.p6-q td.avg .mg-cell { background: none; color: var(--muted); font-weight: 600; }
+/* a median drawn by the page: the figure takes the cell, its n right after it on the same line */
+:is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med { display: flex; align-items: center; justify-content: center; }
+:is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > :is(a.src, button.src) { flex: none; width: auto; position: relative; }
+:is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > :is(a.src, button.src)::after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(min(0px, (100% - 44px) / 2)); right: calc(min(0px, (100% - 44px) / 2)); }
+:is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > sup.p6-n { flex: none; margin-top: -8px; }
+sup.p6-n { font-size: 8.5px; line-height: 0; color: var(--warn); font-weight: 700; margin-inline-start: 1px; vertical-align: super; text-decoration: none; }
+table.mg.p6-q th.avg .mg-col b { color: var(--muted); }
+/* the medians: a last column when the grid can give eight columns ≥ 44 px, else a bold row block under the grid (P2) */
+.p6-medrow { display: none; border-top: 1px solid var(--line); padding: 3px 0 2px; }
+.mgw.p6-at-row .p6-medrow { display: block; }
+table.p6-mr { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+table.p6-mr th, table.p6-mr td { padding: 0; border: 0; height: auto; line-height: 1.2; text-align: center; white-space: nowrap; background: transparent; box-shadow: none; position: static; }
+table.p6-mr tbody tr:hover td { background: transparent; }
+table.p6-mr + table.p6-mr { margin-top: 2px; }
+table.p6-mr th { padding: 3px 0 1px; font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; vertical-align: middle; white-space: nowrap; direction: ltr; unicode-bidi: isolate; }
+table.p6-mr thead th.cur { color: var(--accent-text); }
+table.p6-mr th.m { width: 50px; padding-inline-start: 6px; text-align: start; color: var(--fg); direction: rtl; }
+table.p6-mr thead th.m { color: var(--muted); font-weight: 500; font-size: 10.5px; }
+table.p6-mr td { padding: 1px; }
+table.p6-mr .mg-cell { display: block; width: 100%; height: 34px; line-height: 34px; padding: 0; border: 0; border-radius: 7px; background: var(--panel2); color: var(--fg); font: inherit; font-size: 12.5px; font-weight: 700; text-align: center; cursor: pointer; white-space: nowrap; }
+table.p6-mr .mg-cell .num, table.p6-mr .mg-cell.p6-x > * { direction: ltr; unicode-bidi: isolate; }
+table.p6-mr .mg-cell.p6-x > :is(a.src, button.src) { display: block; width: 100%; height: 100%; min-width: 0; margin: 0; padding: 0; line-height: inherit; text-decoration: none; }
+table.p6-mr td > button.mg-cell { margin: 0; padding: 0; }   /* the site's coarse-pointer hit box (styles.css) is not wanted: the cell is 34 px */
+table.p6-mr .mg-cell.p6-na { color: var(--faint); cursor: default; }
+@container p6mg (max-width: 459px) {
+  .p6-at-auto .p6-avgc { display: none; }
+  .p6-at-auto .p6-medrow { display: block; }
+  table.mg.p6-q col.p6-lc { width: 32px; }
+  /* seven companies keep cells ≥ 44 px wide in a 344-px grid: the gap between cells is a panel-coloured border inside the button */
+  table.mg.p6-q td { padding: 1px 0; }
+  table.mg.p6-q td .mg-cell { border-inline: 1px solid var(--panel); background-clip: padding-box; border-radius: 8px; }
+  table.mg.p6-q tbody th.m { padding-inline: 2px 0; font-size: 11px; }
+  table.mg.p6-q .mg-cell { font-size: 11.5px; letter-spacing: -0.02em; }
+  table.mg.p6-q .mg-col { font-size: 10.5px; padding-inline: 0; }
+  table.p6-mr th.m { width: 36px; padding-inline-start: 2px; }
+}
+@container p6mg (min-width: 600px) {
+  table.mg.p6-q { --p6-cell-h: 26px; }
+  table.mg.p6-q col.p6-lc { width: 56px; }
+  table.mg.p6-q td { padding: 1px 2px; }
+}
+
+/* ---------- the track board ---------- */
+.board.p6-sb { --p6-name-w: 128px; --p6-val-w: 74px; --p6-row-h: 44px; padding: 2px 6px 4px; }
+.board .sb-row.p6-tr { display: grid; grid-template-columns: var(--p6-name-w) minmax(30px, 1fr) var(--p6-val-w); align-items: stretch; gap: 0 10px; min-height: var(--p6-row-h); padding: 0 6px; border: 0; border-top: 1px solid var(--line-soft); border-radius: 0; background: transparent; cursor: default; transition: none; }
+.board .sb-row.p6-tr:first-of-type, .board .p6-sb-sub + .sb-row.p6-tr { border-top-color: transparent; }
+.board .sb-row.p6-tr:active { background: transparent; }
+.board .sb-row.p6-tr.mine { background: var(--accent-soft); border-radius: var(--r-2); }
+.p6-sb-open { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 6px; min-width: 0; min-height: var(--p6-row-h); padding: 3px 0; border: 0; background: none; font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.p6-sb-open:disabled, .p6-sb-open:not([aria-haspopup]) { cursor: default; }
+.p6-sb-open:focus-visible { outline: 2px solid var(--accent-line); outline-offset: -2px; border-radius: var(--r-1); }
+.board .p6-tr .sb-place { display: block; min-width: 0; height: auto; padding: 0; background: none; color: var(--muted); font-size: 13px; font-weight: 700; text-align: center; }
+.p6-sb-nm { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; line-height: 1.25; }
+.p6-sb-n { display: flex; align-items: center; gap: 6px; max-width: 100%; font-size: 14px; }
+.p6-sb-n b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p6-sb-n .sq { flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.p6-tr.mine .p6-sb-n b { font-weight: 800; }
+.p6-sb-tag { display: inline-block; max-width: 100%; padding: 0 6px; border-radius: var(--r-pill); background: var(--panel2); color: var(--muted); font-size: 10.5px; line-height: 15px; font-weight: 600; white-space: normal; overflow-wrap: anywhere; }
+.p6-sb-tag.warn { background: color-mix(in oklch, var(--warn) 13%, var(--panel)); color: color-mix(in oklch, var(--warn) 80%, var(--fg)); }
+.p6-sb-nm small { color: var(--muted); font-size: 11.5px; white-space: normal; }
+.p6-sb-track { position: relative; align-self: stretch; min-width: 30px; }
+.p6-sb-track::before { content: ""; position: absolute; inset-inline: 0; top: 50%; height: 10px; margin-top: -5px; border-radius: 5px; background: var(--panel2); }
+.p6-sb-track i { position: absolute; top: 50%; height: 10px; margin-top: -5px; border-radius: 5px; background: color-mix(in oklch, var(--c) 62%, var(--panel)); }
+.p6-tr.mine .p6-sb-track i { background: var(--accent); }
+.p6-sb-track i.pin:not(.neg) { border-start-end-radius: 0; border-end-end-radius: 0; }
+.p6-sb-track i.pin.neg { border-start-start-radius: 0; border-end-start-radius: 0; }
+/* the zero line (only when a value is negative) and the median: one x on every ranked row, running through the row borders */
+.p6-sb-track s { position: absolute; top: -1px; bottom: 0; width: 0; margin-inline-start: -0.5px; border-inline-start: 1px solid var(--muted); opacity: 0.7; text-decoration: none; }
+.p6-sb-track em { position: absolute; top: -1px; bottom: 0; width: 0; margin-inline-start: -1px; border-inline-start: 2px solid var(--fg); opacity: 0.5; }
+.p6-sb-val { display: flex; align-items: center; justify-content: flex-end; min-width: 0; text-align: end; font-size: 15px; font-weight: 700; }
+.p6-sb-val .num { direction: ltr; unicode-bidi: isolate; }
+.p6-sb-val :is(a.src, button.src) { display: inline-block; min-width: 44px; min-height: 32px; line-height: 32px; text-align: end; }
+.p6-sb-sub { padding: 10px 6px 4px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--muted); line-height: 1.4; }
+.board .sb-row.p6-tr.out .p6-sb-val { font-weight: 500; color: var(--muted); }
+.board .sb-row.p6-tr.out .p6-sb-n b { color: var(--muted); }
+.board .sb-row.p6-tr.out .p6-sb-track::before { opacity: 0.45; }
+@media (min-width: 1000px) {
+  .board.p6-sb { --p6-name-w: 160px; --p6-val-w: 70px; --p6-row-h: 34px; }
+  .p6-sb-nm { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 1px 6px; }
+  .p6-sb-n { font-size: 13.5px; }
+  .p6-sb-val { font-size: 14px; }
+  .p6-sb-val :is(a.src, button.src) { min-height: 0; line-height: inherit; }
+}
+@media (prefers-reduced-motion: reduce) { .p6-seg button { transition: none !important; } .p6-seg button:active { transform: none; } }
