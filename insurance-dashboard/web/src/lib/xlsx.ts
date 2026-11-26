@@ -80,7 +80,7 @@ function sheetXml(sh: XSheet, links: { ref: string; id: string; url: string }[],
       // a formula always carries its computed value, so a reader that does not recalculate (a preview, a mail client) still shows it:
       // a number as <v>, a text result (HYPERLINK's label) as t="str"
       if ('f' in o && o.f) cells.push(typeof o.v === 'number' && Number.isFinite(o.v) ? `<c r="${ref}" s="${s}"><f>${esc(o.f)}</f><v>${o.v}</v></c>`
-        : o.v != null && o.v !== '' ? `<c r="${ref}" s="${s}" t="str"><f>${esc(o.f)}</f><v>${esc(String(o.v))}</v></c>`
+        : o.v != null ? `<c r="${ref}" s="${s}" t="str"><f>${esc(o.f)}</f><v>${esc(String(o.v))}</v></c>`
         : `<c r="${ref}" s="${s}"><f>${esc(o.f)}</f></c>`);
       else if (typeof o.v === 'number') cells.push(`<c r="${ref}" s="${s}"><v>${o.v}</v></c>`);
       else cells.push(`<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(String(o.v))}</t></is></c>`);
