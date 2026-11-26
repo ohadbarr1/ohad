@@ -134,6 +134,10 @@
    "schema": "fundRank"
   },
   {
+   "pattern": "funds/months/*.json",
+   "schema": "fundMonths"
+  },
+  {
    "pattern": "funds/persist.json",
    "schema": "fundsPersist"
   },
@@ -15499,6 +15503,82 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/fundRankSet"
+     }
+    },
+    "method": {
+     "type": "string"
+    },
+    "src": {
+     "type": "string"
+    }
+   }
+  },
+  "fundMonths": {
+   "type": "object",
+   "required": [
+    "v",
+    "cat",
+    "prod",
+    "track",
+    "slug",
+    "asof",
+    "months",
+    "tracks",
+    "avg",
+    "n",
+    "src"
+   ],
+   "properties": {
+    "v": {
+     "type": "integer"
+    },
+    "cat": {
+     "type": "string"
+    },
+    "prod": {
+     "type": "string"
+    },
+    "track": {
+     "type": "string"
+    },
+    "slug": {
+     "type": "string"
+    },
+    "asof": {
+     "$ref": "#/$defs/month"
+    },
+    "months": {
+     "type": "array",
+     "minItems": 24,
+     "items": {
+      "$ref": "#/$defs/month"
+     }
+    },
+    "tracks": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     }
+    },
+    "avg": {
+     "type": "array",
+     "items": {
+      "type": [
+       "number",
+       "null"
+      ]
+     }
+    },
+    "n": {
+     "type": "array",
+     "items": {
+      "type": "integer"
      }
     },
     "method": {
