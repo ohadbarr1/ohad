@@ -4,6 +4,8 @@ import { useFunds } from './useData';
 import { TRAY_MAX, useTray } from './funds';
 import type { VFund } from './verdict';
 import { compareKeys } from './saverCompare';
+import { inMonth, pctAbs, pctSigned } from './pageWords';
+import { roundHalf } from './compareMonths';
 
 /* W5 saver (red team 3): the saver's "השוואה" tab opened empty even after products were added on /my. When the compare tray is empty
    and /my holds products, the tab's link carries the keys the compare page already reads (?k=): the reader's own tracks in one
@@ -22,4 +24,29 @@ export function useSaverCompareHref(on: boolean): string | null {
     const ks = data ? compareKeys(list, data.funds as unknown as VFund[], TRAY_MAX) : list.map((m) => m.k).slice(0, TRAY_MAX);
     return ks.length ? `/funds/compare?k=${ks.join(',')}` : null;
   }, [need, data, list.map((m) => m.k).join()]);  // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+/* Rollout R1 (spec 8, 16, 18): the saver home's two tiles and the "my track" row. Pure; node-tested (scripts/home-links-test.mjs). */
+
+export interface HomeLead { k: string; prod: string; track: string; m1?: number | null; y12?: number | null }
+const sh = (v: number, d: number) => Math.sign(roundHalf(v, d));
+const moved = (v: number) => (sh(v, 2) > 0 ? `עלה ${pctAbs(v, 2)}` : sh(v, 2) < 0 ? `ירד ${pctAbs(v, 2)}` : 'לא זז');
+
+/** The three links of the saver's first screen. `lead`: the reader's first saved track (comprehensive pension first), or null.
+ *  The screener opens on the reader's type and on "חודש" (per=m1, 4e); the hub on the reader's product (?prod=, kept by FundsRoot);
+ *  the "my track" row opens the card, the compare entry above keeps its route. */
+export function homeLinks(lead: HomeLead | null) {
+  return {
+    screen: `/funds/screen?${lead ? `prod=${encodeURIComponent(lead.prod)}&track=${encodeURIComponent(lead.track)}&` : ''}per=m1`,
+    hub: lead ? `/funds?prod=${encodeURIComponent(lead.prod)}` : '/funds',
+    card: lead ? `/funds/${encodeURIComponent(lead.k)}` : null,
+  };
+}
+
+/** "באוקטובר ירד 1.45% · בשנה האחרונה ⁦+9.0%⁩": month and year of the reader's track, as published (gross) */
+export function homeMineLine(asof: number, m1?: number | null, y12?: number | null): string {
+  const parts: string[] = [];
+  if (asof && typeof m1 === 'number' && Number.isFinite(m1)) parts.push(`${inMonth(asof)} ${moved(m1)}`);
+  if (typeof y12 === 'number' && Number.isFinite(y12)) parts.push(`בשנה האחרונה ${pctSigned(y12, 1)}`);
+  return parts.join(' · ');
 }

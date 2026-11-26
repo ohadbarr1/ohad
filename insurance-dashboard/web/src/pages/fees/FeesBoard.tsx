@@ -11,6 +11,7 @@ import {
 import { trackLabels } from '../compare/tracks';
 import { BALANCE_EX, RETIRE_AGE, exampleMonthly } from '../../lib/retire';
 import type { FeeBase } from '../../lib/feeExample';
+import { OWN_FEE_TAG } from '../../components/saver/MyProductRow';
 
 /* The fees tool's board (rollout spec §7.2 #4–#7, §16.1 2b, §17.1 1f, §18.2 #2/#3/#5, mockup v4 `pageFees`; T-F1, T-F2):
    the sentence (mine first), the reader's row pinned above the list when it is not among the first four, the like-for-like board in
@@ -64,7 +65,7 @@ export function FeesBoard(p: FeesBoardProps) {
   const own = (f: FundX) => !!mineK && f.k === mineK && !!ownFee && (ownFee.fee != null || ownFee.depfee != null);
   const row = (r: FeeRow, o: { color?: string; tag?: boolean } = {}): ScoreRowData => ({
     k: r.k, label: lab.get(r.k) ?? r.f.grp, color: o.color ?? GOLD, value: r.v, place: null,
-    sub: <><NumText t={feeSub(r.f.fee, r.f.depfee)} />{own(r.f) ? ' · שלך' : null}</>,
+    sub: <><NumText t={feeSub(r.f.fee, r.f.depfee)} />{own(r.f) ? ` · ${OWN_FEE_TAG}` : null}</>,
     tag: o.tag && r.cheapest ? TAG_CHEAPEST : undefined, mine: saver && r.mine,
   });
   const rows = b.rows.map((r) => row(r, { tag: true }));

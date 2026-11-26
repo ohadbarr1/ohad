@@ -551,10 +551,11 @@ for (const door of ['saver', 'agent', 'pro'] as Door[]) {
       await page.goto('/', { waitUntil: 'networkidle' });
       const row = page.locator('#home-mine');
       if (await row.count()) {
+        // rollout R1 (spec 8): the "my track" row states the month and the year and opens the card (the compare entry above keeps its route)
+        await expect(row).toContainText('בשנה האחרונה');
         await row.click();
-        await landed(page, 3);
-        expect(keysOf(page)[0]).toBe('p2102');
-        await expect(page.locator('#fee-own')).toContainText('לפי הדוח שלך');
+        await expect(page).toHaveURL(/\/funds\/p2102/);
+        await expect(page.locator('#fee-line')).toContainText('לפי הדוח שלך');
         await backTo(page, '/');
       } else {
         await page.goto('/funds/compare', { waitUntil: 'networkidle' });

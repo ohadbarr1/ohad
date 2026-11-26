@@ -8,6 +8,14 @@ import { ClientsPanel } from './ClientsPanel';
 import { ClientImport } from '../agent/ClientImport';  // P0 · A1: the agent's home opens on a new client
 import { useState, type ReactNode } from 'react';
 import { useMine, useMy, type MyProduct } from '../../lib/mine';
+import { homeLinks, homeMineLine } from '../../lib/saverLinks';
+import { NumText } from '../NumText';
+import { heMonth } from '../../lib/compareWords';
+import { typeName } from '../../lib/pageWords';
+import { catKey } from '../../lib/funds';
+import { ProdIcon } from '../compare/PickerSheet';  // the isometric product icons the hub, the fees entry and the picker use
+import { tileOf } from '../../lib/pickTiles';
+import type { Tile } from '../../lib/pickTiles';
 import { CK_STATUS_KEY, normStatus, statusLine } from '../../lib/ckStatus';  // red team 06.11.26: the status after a check-up
 import { HomeHint } from '../saver/HomeHint';
 import { nf } from '../../lib/format';
@@ -86,6 +94,9 @@ export function DoorPicker() {
   );
 }
 
+/** isometric art for the two tiles: a podium (who was first) and rising bars (the month) */
+const ART_RANK: Tile['art'] = [[24, 'navy'], [46, 'orange'], [34, 'blue']], ART_MONTH: Tile['art'] = [[16, 'blue'], [28, 'navy'], [42, 'orange']];
+
 type Card = [to: string, icon: string, title: string, line: string];
 function Cards({ cards, label, lead }: { cards: Card[]; label: string; lead?: ReactNode }) {
   return (
@@ -105,7 +116,7 @@ const SAVER_CARDS: Card[] = [
 
 /** C13 · the reader's own track (the comprehensive pension first) and the keys that open the comparison on it: the track and its two
  *  largest open peers (lib/saverCompare). Null until funds.json is in or when no saved track is in it. */
-function useMineCompare(mine: MyProduct[]): { keys: string[]; label: string } | null {
+function useMineCompare(mine: MyProduct[]): { keys: string[]; label: string; lead: VFund } | null {
   const { data } = useFundFacts();
   if (!data || !mine.length) return null;
   const funds = data.funds as unknown as VFund[];
@@ -113,12 +124,17 @@ function useMineCompare(mine: MyProduct[]): { keys: string[]; label: string } | 
   const by = new Map(funds.map((f) => [f.k, f]));
   const own = mine.map((m) => by.get(m.k)).filter((f): f is VFund => !!f);
   const lead = own.find((f) => isPension(f.prod)) ?? own[0];
-  return keys.length && lead ? { keys, label: `${lead.grp} · ${lead.prod} ${lead.track}` } : null;
+  return keys.length && lead ? { keys, label: `${lead.grp} · ${lead.prod} ${lead.track}`, lead } : null;
 }
 
 /** C13 · "כמה הרוויח המסלול שלי?": the saver home's one entry to the comparison, with a second row for the saved track */
 function CompareEntry({ mine }: { mine: MyProduct[] }) {
   const m = useMineCompare(mine);
+  const { asof } = useFundFacts();
+  const lead = m ? (m.lead as unknown as { k: string; prod: string; track: string; m1?: number | null; y12?: number | null }) : null;
+  const L = homeLinks(lead);
+  const line = lead ? homeMineLine(asof, lead.m1, lead.y12) : '';
+  const type = lead ? typeName(catKey(lead)) : null;
   return (
     <section className="dentry-w" aria-labelledby="dentry-t">
       <Link to="/funds/compare?v=months" className="dentry" id="home-compare">
@@ -126,12 +142,23 @@ function CompareEntry({ mine }: { mine: MyProduct[] }) {
         <span className="dentry-t"><b id="dentry-t">כמה הרוויח המסלול שלי?</b><small>חודש אחרי חודש, מול מסלולים דומים בחברות אחרות.</small></span>
         <span className="dentry-go">להשוואה ›</span>
       </Link>
-      {m && (
-        <Link to={`/funds/compare?k=${m.keys.join(',')}&v=months`} className="dmineRow" id="home-mine">
-          <span className="dmineRow-t"><b>המסלול שלי: {m.label}</b><small>ישר להשוואה מול שני הגדולים מאותו סוג</small></span>
-          <span className="dmineRow-go" aria-hidden="true">›</span>
+      {m && L.card && (
+        <Link to={L.card} className="dtile" id="home-mine">
+          <ProdIcon art={(tileOf(lead!.prod) ?? { art: ART_MONTH }).art} size={42} />
+          <span className="dtile-t"><b>המסלול שלי: {m.label}</b>{line ? <small><NumText t={line} /></small> : <small>לכרטיס של המסלול</small>}</span>
+          <span className="dtile-go" aria-hidden="true">›</span>
         </Link>
       )}
+      <Link to={L.screen} className="dtile" id="home-screen">
+        <ProdIcon art={ART_RANK} size={42} />
+        <span className="dtile-t"><b>{type ? 'המסלולים מהסוג שלי' : 'כל המסלולים'}</b><small>{type ? `${type}: מי היה ראשון החודש ובשנה` : 'מי היה ראשון החודש ובשנה, לפי סוג'}</small></span>
+        <span className="dtile-go" aria-hidden="true">›</span>
+      </Link>
+      <Link to={L.hub} className="dtile" id="home-hub">
+        <ProdIcon art={ART_MONTH} size={42} />
+        <span className="dtile-t"><b>החודש בחיסכון</b><small>{asof ? `מה קרה ב${heMonth(asof)}, בכל סוג מסלול` : 'מה קרה החודש, בכל סוג מסלול'}</small></span>
+        <span className="dtile-go" aria-hidden="true">›</span>
+      </Link>
     </section>
   );
 }
@@ -258,6 +285,11 @@ export function AgentHome() {
         </section>
         {/* W3 */}<ClientsPanel />
       </div>
+      <Link to="/funds" className="dtile dtile-hub" id="ahome-hub">
+        <ProdIcon art={ART_MONTH} size={42} />
+        <span className="dtile-t"><b>החודש בחיסכון</b><small>{asof ? `מה קרה ב${heMonth(asof)}, בכל סוג מסלול` : 'מה קרה החודש, בכל סוג מסלול'}</small></span>
+        <span className="dtile-go" aria-hidden="true">›</span>
+      </Link>
       <Cards cards={AGENT_CARDS} label="כלים לסוכן" />
       <section className="panel dprods" aria-labelledby="dprods-t">
         <div className="hd"><h2 id="dprods-t">בחירת מוצר</h2><div className="aside"><span>דמי ניהול: ממוצע בפועל, חציון המסלולים</span><Link to="/funds/screen">לכל המסלולים</Link></div></div>

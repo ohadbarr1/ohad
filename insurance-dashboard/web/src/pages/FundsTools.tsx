@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 import { FundsHead } from '../components/FundsNav';
 import { Icon } from '../components/Icon';
+import { useActiveDoor } from '../components/home/doorState';
 import '../styles/fundsTools.css';
 
 /* /funds/tools (wave F2, TOOLS; phase 0, 05.11.26: a list, not an interstitial): the calculators and trackers of the "חיסכון" section,
@@ -16,6 +17,9 @@ export const TOOLS: [string, string, string, string, string][] = [
   ['/funds/glide', 'savings', 'מסלולי גיל', 'כמה מניות יש באמת במסלול לפי הגיל שלי?', 'עד 50, 50–60, 60 ומעלה: החשיפה למניות בפועל בכל גוף, ומה הפער בין המדרגות'],
 ];
 
+/** T-A1 (rollout 16.1 3a): the agent's hub is not in the bar, so it is the first item of "כלים" (a full tile, far over 44 px) */
+export const HUB_TOOL: [string, string, string, string, string] = ['/funds', 'calendar', 'החודש בחיסכון', 'מה קרה החודש, בכל סוג מסלול?', 'מי הוביל, מי פיגר ומה השתנה לעומת הממוצע: לפי סוג מסלול, כפי שהרשות מפרסמת'];
+
 /** the tools as a row of links under the section's tabs */
 export function ToolLinks() {
   return (
@@ -26,12 +30,14 @@ export function ToolLinks() {
 }
 
 export function FundsTools() {
+  const [door] = useActiveDoor();
+  const list = door === 'agent' ? [HUB_TOOL, ...TOOLS] : TOOLS;
   return (
     <>
-      <FundsHead sub={<><span className="num">{TOOLS.length}</span> כלים על הנתונים שהרשות מפרסמת · החישוב רץ בדפדפן; שום נתון שמוקלד לא נשלח</>} />
+      <FundsHead sub={<><span className="num">{list.length}</span> כלים על הנתונים שהרשות מפרסמת · החישוב רץ בדפדפן; שום נתון שמוקלד לא נשלח</>} />
       <ul className="ftiles ftools-list" aria-label="כלי החיסכון">
-        {TOOLS.map(([to, icon, t, q, d]) => (
-          <li key={to}><Link to={to} className="ftile"><span className="icotile lg"><Icon name={icon} /></span><b>{t}</b><span className="ftile-q">{q}</span><span>{d}</span></Link></li>
+        {list.map(([to, icon, t, q, d]) => (
+          <li key={to}><Link to={to} className="ftile" id={to === '/funds' ? 'tool-hub' : undefined}><span className="icotile lg"><Icon name={icon} /></span><b>{t}</b><span className="ftile-q">{q}</span><span>{d}</span></Link></li>
         ))}
       </ul>
       <div className="fnote">כל מספר נפתח למקורו: נתון שפורסם מוביל לרשומה ברשות שוק ההון, ונתון מחושב מציג את הנוסחה, את הקלטים ואת ההנחות. אין כאן המלצה: תוצאות עבר אינן מבטיחות תוצאות בעתיד. חבילת ההשוואה ל-Excel נמצאת ב<Link className="sv-u" to="/funds/compare">השוואת מסלולים</Link>.</div>

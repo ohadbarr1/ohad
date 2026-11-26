@@ -159,7 +159,7 @@ export function ScreenPhone(p: ScreenPhoneProps) {
   const prodName = p.prod === p.all ? 'כל המוצרים' : prodLabel(p.prod);
   const trackName = p.T === p.all ? 'כל הסוגים' : typeLabel(p.T);
   // the hub opens on the reader's own product (D5). Not /funds?prod=…: App.tsx (frozen) still redirects /funds?prod= to this page.
-  const hubTo = '/funds';
+  const hubTo = p.prod === p.all ? '/funds' : `/funds?prod=${encodeURIComponent(p.prod)}`;
 
   /* ---- the track sheet ---- */
   const tk = host.cmp?.t === 'track' ? host.cmp.k : null;

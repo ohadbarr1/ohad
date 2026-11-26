@@ -1,4 +1,5 @@
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
+import { myFeeCost, OWN_FEE_TAG } from '../../components/saver/MyProductRow';
 import { Link, useNavigate } from 'react-router-dom';
 import { MonthGrid, monthFull, shekels, type MonthGridSum } from '../../components/MonthGrid';
 import { Takeaway } from '../../components/Takeaway';
@@ -15,7 +16,7 @@ import { catKey, type CatX, type FundX, type HistX } from '../../lib/funds';
 import type { Door } from '../../lib/door';
 import type { SheetHost } from '../../lib/sheetHost';
 import { useMyAmounts } from '../../lib/myAmounts';
-import { feeParts, type FeeBase } from '../../lib/feeExample';
+import { feeParts } from '../../lib/feeExample';
 import type { MyProduct } from '../../lib/mine';
 import { compareKeys } from '../../lib/saverCompare';
 import type { VFund } from '../../lib/verdict';
@@ -68,18 +69,6 @@ export interface CardCtx {
   my?: Pick<MyProduct, 'fee' | 'depfee'> | null;
 }
 
-/** "לפי הדוח שלך": the tag of a cost priced on the reader's own fee (the same words as /my, components/saver/MyProductRow OWN_FEE_TAG) */
-export const OWN_FEE_TAG = 'לפי הדוח שלך';
-/** The card's fee in ₪ a year: the SAME rule as /my (lane L2-c, components/saver/MyProductRow `myFeeCost`, replicated here because that
- *  file is not on this lane's base; the coordinator reconciles at merge): when the reader typed or imported their own fee for this
- *  track, the cost uses it (their deposit fee, else the published one) and carries "לפי הדוח שלך"; otherwise the published fee. The
- *  amounts come from useMyAmounts. The type's average beside it stays on the published fees (typeFeeAvg), on the same amounts. */
-export function cardFeeCost(f: Pick<FundX, 'prod' | 'fee' | 'depfee'>, my: Pick<MyProduct, 'fee' | 'depfee'> | null | undefined, base: FeeBase | null): { cost: number | null; ownFee: boolean; x: Pick<FundX, 'prod' | 'fee' | 'depfee'> } {
-  const ownFee = my?.fee != null && Number.isFinite(my.fee);
-  const x = ownFee ? { prod: f.prod, fee: my!.fee!, depfee: my!.depfee ?? f.depfee } : f;
-  return { cost: feeParts(x, true, base).total, ownFee, x };
-}
-
 /** the product tile's isometric art */
 export const prodArt = (prod: string) => (tileOf(prod) ?? TILES[0]).art;
 
@@ -87,7 +76,7 @@ export function CardMonths({ c, n }: { c: CardCtx; n: 6 | 12 }) {
   const { f, h, cat, members, tn, host, door } = c;
   const tv = useMemo(() => trackVsType(h, f, cat, n), [h, f, cat, n]);
   const amt = useMyAmounts({ k: f.k });
-  const { cost, ownFee } = cardFeeCost(f, c.my, amt.base);
+  const { cost, ownFee } = myFeeCost(f, c.my, amt.base);
   const avgFee = cat ? typeFeeAvg(members, amt.base) : null;
   const newest = tv.newest ?? c.asof;
   const first = tv.rows[0];
@@ -223,7 +212,7 @@ export function CardFeeSheet({ c, onClose }: { c: CardCtx; onClose: () => void }
   const { f, host } = c;
   const nav = useNavigate();
   const amt = useMyAmounts({ k: f.k });
-  const own = cardFeeCost(f, c.my, amt.base), x = feeParts(own.x, true, amt.base);
+  const own = myFeeCost(f, c.my, amt.base), x0 = own.ownFee ? { prod: f.prod, fee: c.my!.fee!, depfee: c.my!.depfee ?? f.depfee } : f, x = feeParts(x0, true, amt.base);
   const deposits = prodHasDeposit(f.prod) && typeHasDepositFee(c.members);
   const base = amountsBase({ own: amt.own, depositOwn: amt.depositOwn, deposits });
   const tool = `/funds/tools/fees?cat=${encodeURIComponent(catKey(f))}&k=${encodeURIComponent(f.k)}`;
@@ -231,8 +220,8 @@ export function CardFeeSheet({ c, onClose }: { c: CardCtx; onClose: () => void }
     <DeeperSheet open onClose={onClose} id="fee-sheet-dlg" title={FEE_SHEET_TITLE} sub={<NumText t={feeSheetSub(amt.own, base)} />}
       footer={<button type="button" className="cs-btn pri" id="fee-to-tool" onClick={() => backThen(() => nav(tool))}>{FEE_SHEET_TO_TOOL}</button>}>
       <dl className="fc-dl" id="fee-sheet">
-        <dt><NumText t={feeFromBalance(x.balance, own.x.fee ?? 0)} /></dt><dd><NumText t={ilsSym(x.acc)} /></dd>
-        {x.monthly > 0 && (own.x.depfee ?? 0) > 0 ? <><dt><NumText t={feeFromDeposits(x.monthly, own.x.depfee ?? 0)} /></dt><dd><NumText t={ilsSym(x.dep)} /></dd></> : null}
+        <dt><NumText t={feeFromBalance(x.balance, x0.fee ?? 0)} /></dt><dd><NumText t={ilsSym(x.acc)} /></dd>
+        {x.monthly > 0 && (x0.depfee ?? 0) > 0 ? <><dt><NumText t={feeFromDeposits(x.monthly, x0.depfee ?? 0)} /></dt><dd><NumText t={ilsSym(x.dep)} /></dd></> : null}
         <dt><b>{FEE_TOTAL_YEAR}</b>{own.ownFee ? <small className="fc-own"> · {OWN_FEE_TAG}</small> : null}</dt><dd><b>{shekels(x.total)}</b></dd>
       </dl>
       {c.saved && !amt.own ? (
