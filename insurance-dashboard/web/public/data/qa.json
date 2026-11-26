@@ -1,5 +1,5 @@
 {
- "built": "2026-11-26T23:08:26+02:00",
+ "built": "2026-11-26T23:26:51+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -195,11 +195,11 @@
   },
   {
    "id": "answers",
-   "ok": true,
+   "ok": false,
    "level": "fail",
    "n": 193,
-   "fail": 0,
-   "note": "answers: 193 questions, 193 answered, 0 problems"
+   "fail": 1,
+   "note": "answers: 193 questions, 193 answered, 1 problems; answers/targets.json differs from a rebuild · FAIL answers/targets.json differs from a rebuild"
   },
   {
    "id": "answers_lib",
@@ -381,7 +381,7 @@
    "id": "cards",
    "ok": true,
    "level": "fail",
-   "n": 7416,
+   "n": 7418,
    "fail": 0,
    "note": "307 report cards, every digit a published fact"
   },
@@ -397,9 +397,9 @@
    "id": "feed",
    "ok": true,
    "level": "fail",
-   "n": 408,
+   "n": 409,
    "fail": 0,
-   "note": "408 events, 10934 figures, 0 problems"
+   "note": "409 events, 10960 figures, 0 problems"
   },
   {
    "id": "fragility",

@@ -105,7 +105,8 @@ export function KpiLedger({ groups, asOf, sel, onSel }: { groups: LedgerGroup[];
       <div className="panel ledger">
         <table>
           {live.map((g) => {
-            const lead = g.rows.map((r) => readRow(r, asOf)).find((x) => x.cur) ?? null;
+            // the column is the group's latest period; a row that has no figure for it shows none there (never another period's figure)
+            const lead = g.rows.map((r) => readRow(r, asOf)).filter((x) => x.cur).reduce<ReturnType<typeof readRow> | null>((a, x) => (!a || x.cur!.end > a.cur!.end ? x : a), null);
             return (
               <tbody key={g.key}>
                 <tr className="sec"><td colSpan={7}>{g.title}{g.note && <span className="dim">{g.note}</span>}</td></tr>
@@ -114,11 +115,12 @@ export function KpiLedger({ groups, asOf, sel, onSel }: { groups: LedgerGroup[];
                   <th scope="col" className="wide-only"><span className="num">{lead?.y?.label ?? ''}</span></th><th scope="col">YoY</th><th scope="col" className="spk">12 תקופות</th><th scope="col" className="lsrc">מקור</th>
                 </tr>
                 {g.rows.map((row) => {
-                  const r = readRow(row, asOf), on = cur?.key === row.key;
+                  const r0 = readRow(row, asOf), on = cur?.key === row.key, behind = !!r0.cur && !!lead?.cur && r0.cur.end < lead.cur.end;
+                  const r = behind ? { ...r0, cur: undefined, q: undefined, y: undefined, yoy: null } : r0;
                   return (
                     <tr key={row.key} className={on ? 'on' : ''} onClick={(e) => { if (!(e.target as HTMLElement).closest('.src')) pick(row); }} tabIndex={-1}>
                       <td className="lbl"><span className="lblin"><button type="button" className="rowbtn" onClick={(e) => { e.stopPropagation(); pick(row); }} aria-pressed={on} aria-label={`${row.title}: גרף`}>{row.title}</button>{row.tag && <span className="chip est">{row.tag}</span>}</span></td>
-                      <td className="v"><Val row={row} p={r.cur} />{r.cur && r.cur.end !== lead?.cur?.end && <span className="dim num">{r.cur.label}</span>}</td>
+                      <td className="v">{behind ? <span className="muted" title={`אין נתון ל-${lead!.cur!.label} (הנתון האחרון: ${r0.cur!.label}); לחיצה על השורה פותחת את הסדרה`}>–</span> : <Val row={row} p={r.cur} />}</td>
                       <td className="wide-only"><Val row={row} p={r.q} /></td>
                       <td className="wide-only"><Val row={row} p={r.y} /></td>
                       <td>{r.yoy ? <Sourced src={r.yoy.src}><span className={`num ${r.yoy.tone ?? ''}`}>{r.yoy.text}</span></Sourced> : <span className="muted">–</span>}</td>

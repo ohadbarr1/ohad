@@ -2365,10 +2365,10 @@
    "csv": "ifrs17.csv",
    "json": "ifrs17.json",
    "pq": "pq/ifrs17.pq",
-   "csv_bytes": 2130262,
-   "json_bytes": 2327406,
-   "csv_sha256": "fd6a38e9733e1188fa3803f4022e0bde084a5029665af254c92948d3f4ec1701",
-   "json_sha256": "96c61f56a1e0fc3f1a1d3702177061bfd44f39511f3fb81c15ea44a628edcd96"
+   "csv_bytes": 2130306,
+   "json_bytes": 2327450,
+   "csv_sha256": "024f797098bc029d02a08b7e4d661192391fd6e8a2399a44bc050e50ac88ddb9",
+   "json_sha256": "938a069372d5a80b3f4deb8c32e1f28015e510d09d670df3261c313299cb2a07"
   },
   {
    "id": "solvency",

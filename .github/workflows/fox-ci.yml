@@ -69,6 +69,9 @@ jobs:
       - name: Track compare unit tests (lib logic of /funds/compare, on the committed data; npm run test:compare, ~3 s)
         working-directory: insurance-dashboard/web
         run: npm run -s test:compare
+      - name: Peer board season rules (B2/B3/B17 of P6, on the committed data; npm run test:peers)
+        working-directory: insurance-dashboard/web
+        run: npm run -s test:peers
       - name: Rollout unit tests (lib logic of the card, screener, /my, hub and fees tool, on the committed data; npm run test:rollout)
         working-directory: insurance-dashboard/web
         run: npm run -s test:rollout

@@ -37,7 +37,9 @@ OUT = DATA / "restatements.json"
 STMT = {"X.מאזן": "bs", "X.רווח_והפסד": "pl", "X.רווח_כולל": "oci", "X.תזרים_מזומנים": "cf", "X.שינויים_בהון": "eq"}
 INSURERS = ["phoenix", "harel", "migdal", "clal", "menora", "ayalon", "hachshara"]
 Q_OF = {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "FY"}
-REPORTS = ["2025Q1", "2025Q2", "2025Q3", "2025FY", "2026Q1", "2026Q2"]  # ifrs_<period>.json, oldest first
+# ifrs_<period>.json, oldest first: every IFRS 17 report period on file (was a fixed list to 2026Q2, so the Q3'26 notes' reprints were missed)
+_PK = lambda p: (int(p[:4]), {"Q1": 1, "Q2": 2, "Q3": 3, "FY": 4}[p[4:]])
+REPORTS = sorted({x["period"] for x in json.loads((DATA / "ifrs.json").read_text(encoding="utf-8"))["files"] if x["period"][:4] >= "2025"}, key=_PK)
 RATIO = re.compile(r"ratio|_pct|roe|payout|yield|rate")
 PROFIT = ["סך הכל רווח נקי", "רווח לתקופה", "רווח נקי", "רווח נקי (הפסד)", "רווח (הפסד) לתקופה", "רווח (הפסד) נקי", "רווח לשנה", "רווח (הפסד) לשנה", "רווח (הפסד) לתקופה המיוחס לבעלי המניות של החברה", "הפסד נקי לתקופה"]
 BASIS_HE = {"net": "בשייר", "gross": "ברוטו", "reinsurance": "ביטוח משנה"}

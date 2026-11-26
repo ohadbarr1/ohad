@@ -14,7 +14,7 @@ import { mayaReport } from '../lib/sources';
 import { usePhone } from '../lib/useMedia';
 import { useSource, type Prov } from '../lib/prov';
 import { back, F_CHART, F_DER, F_FIXED, F_OLD, F_RE, FREQS, fmtV, plab, pord, UNIT_HE, usePeerRegistry, useBook, warmLts, yearAgo, type Book, type Freq, type MetricDef, type PeerSet, type Registry, type Unit, type Val } from '../lib/registry';
-import { cellVal, colLabel, fmtCol, formulaTok, lexOf, parseCol, resolver, ROE_EXPR, ROE_NAME, ROE_OLD_TOK, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
+import { carriedVal, cellVal, colLabel, fmtCol, formulaTok, lexOf, parseCol, resolver, ROE_EXPR, ROE_NAME, ROE_OLD_TOK, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
 import { ALIASES, autoAlias, codeOf, ExprError, FUNCS, parse, toCode } from '../lib/seriesExpr';
 import { fundRoster, monthOf, rosterDiff, rosterText, useRosterFile } from '../lib/roster';
 import '../styles/peers.css';
@@ -29,8 +29,16 @@ const KEYS = ['s', 'e', 'f', 'p', 'n', 'v', 'k', 'c', 'o', 'h', 'pin', 'hl', 'w'
 // a series opens on five years (20 quarters): the analyst's "7 insurers × one line × 5 years" in two taps
 const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'board' as View, w: 20 };
 const NOTE: Record<number, string> = { 1: 'נגזר מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM); הנוסחה במקור', 2: 'לפי IFRS 4, כפי שדווח במקור', 3: 'נקרא מגרף או מטקסט בדוח', 4: 'בסיס שונה מרוב החברות בעמודה', 5: 'תג XBRL שתוקן מול הדוח המודפס',
-  6: 'הרכב השתנה: החברות שיש להן נתון שונות בין התקופה לשנה שלפניה, ולכן הנתח אינו בר השוואה כמות שהוא', 7: 'כולל קופות חדשות במאגר הרגולטור: חלק מהשינוי הוא קופות שנכנסו לקבוצה, לא כסף שנכנס' };
-const SUP = ['', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷'];
+  6: 'הרכב השתנה: החברות שיש להן נתון שונות בין התקופה לשנה שלפניה, ולכן הנתח אינו בר השוואה כמות שהוא', 7: 'כולל קופות חדשות במאגר הרגולטור: חלק מהשינוי הוא קופות שנכנסו לקבוצה, לא כסף שנכנס',
+  8: 'החברה טרם דיווחה על התקופה: הנתון המדווח האחרון (תקופה אחת אחורה) ונתוני השוק לסוף התקופה, כמו בתצוגת ההשוואה; נכלל בחציון ובממוצע (מתודולוגיה: השוואת עמיתים בעונת דוחות)' };
+const SUP = ['', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '*'];
+/** a cell of the latest column (the table's end period): a company that has not reported it is read by the board's rule (seriesCols.carriedVal) */
+type CVal = Val & { from?: string };
+function cellAt(book: Book, c: Col, e: string, f: Freq, p: string, latest: boolean, ents: string[]): CVal {
+  const x = cellVal(book, c, e, f, p, ents);
+  if (!latest || (x.v != null && Number.isFinite(x.v))) return x;
+  return carriedVal(book, c, e, f, p, ents) ?? x;
+}
 
 function readSt(sp: URLSearchParams): St {
   const f = FREQS.map(([x]) => x).find((x) => x === sp.get('f')) ?? DEF.f;
@@ -198,7 +206,8 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
   if (st.pin >= 0 && st.pin < cols.length) { order.splice(order.indexOf(st.pin), 1); order.unshift(st.pin); }
   const sub = order.flatMap((ci) => periods.map((p, pi) => ({ ci, pi, p, col: cols[ci] })));
   const vals = new Map<string, Val>();
-  const V = (ci: number, pi: number, e: string): Val => { const k = `${ci}|${pi}|${e}`; let v = vals.get(k); if (!v) { v = cellVal(book, cols[ci], e, st.f, periods[pi], ents); vals.set(k, v); } return v; };
+  const vals2 = vals as Map<string, CVal>;
+  const V = (ci: number, pi: number, e: string): CVal => { const k = `${ci}|${pi}|${e}`; let v = vals2.get(k); if (!v) { v = cellAt(book, cols[ci], e, st.f, periods[pi], pi === 0, ents); vals2.set(k, v); } return v; };
   // majority basis per column: a figure on another basis carries note 4
   const usual = cols.map((c) => { if (!c.mid) return null; const n = new Map<string, number>(); ents.forEach((e) => { const b = book.meta(c.mid!, e)?.b; if (b) n.set(b, (n.get(b) ?? 0) + 1); }); return [...n.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null; });
   const sorted = (() => {
@@ -238,9 +247,10 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
       }
     }
   };
-  const marks = (ci: number, e: string, x: Val, pi = 0): number[] => {
+  const marks = (ci: number, e: string, x: CVal, pi = 0): number[] => {
     if (x.fl & F_RE) anyRe = true;
     const c = cols[ci], m: number[] = [];
+    if (x.from) { m.push(8); detail.set(`${ci}|${pi}|${e}`, `${book.name(e)}: נתון ${plab(st.f, x.from)}`); }
     if (c.tr === 'v' && !c.expr && st.f !== 'LTM' && x.fl & F_DER && book.byId.get(c.mid ?? '')?.src !== 'lts') m.push(1);
     if (x.fl & F_OLD) m.push(2);
     if (x.fl & F_CHART) m.push(3);
@@ -289,7 +299,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
         <div className="pr-cards">{sorted.map((e, ri) => (
           <section key={e} className={`panel pr-card${st.hl === e ? ' lead' : ''}`}>
             <h3><i className="pdot" style={{ background: idCss(e) }} />{st.o && <span className="rk num">{ri + 1}</span>}<Link to={`/company/${e}`}>{book.name(e)}</Link></h3>
-            <dl>{order.map((ci) => { const x = V(ci, 0, e); return <div key={ci}><dt>{colLabel(cols[ci])}</dt><dd>{x.v == null ? <span className="muted" title={x.why}>–</span> : <Sourced className={`num${x.v < 0 ? ' neg' : ''}${x.fl & F_RE ? ' re' : ''}`} href={cols[ci].tr === 'v' ? x.href : null} src={x.prov}>{fmtCol(cols[ci], x.v)}</Sourced>}</dd></div>; })}</dl>
+            <dl>{order.map((ci) => { const x = V(ci, 0, e); return <div key={ci}><dt>{colLabel(cols[ci])}</dt><dd>{x.v == null ? <span className="muted" title={x.why}>–</span> : <Sourced className={`num${x.v < 0 ? ' neg' : ''}${x.fl & F_RE ? ' re' : ''}`} href={cols[ci].tr === 'v' ? x.href : null} src={x.prov} title={x.from ? `נתון ${plab(st.f, x.from)}: טרם דווח על ${plab(st.f, periods[0])}` : undefined}>{fmtCol(cols[ci], x.v)}{x.from ? '*' : ''}</Sourced>}</dd></div>; })}</dl>
           </section>
         ))}</div>
         <div className="src">{periods[0] ? plab(st.f, periods[0]) : ''} · {setName}</div>
@@ -410,8 +420,9 @@ function Coverage({ book, name, miss, total }: { book: Book; name: string; miss:
 function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; cols: Col[]; st: St; set: (p: Partial<St>) => void; ents: string[]; pend: string; loading: boolean }) {
   const k = Math.min(st.k, cols.length - 1), col = cols[k];
   const ps = pend ? Array.from({ length: st.w }, (_, i) => back(st.f, pend, st.w - 1 - i)) : [];
-  const grid = ents.map((e) => ps.map((p) => cellVal(book, col, e, st.f, p, ents)));
-  const has = ps.map((_, i) => grid.some((r) => r[i].v != null));
+  // the last point is the axis end: a company that has not reported it is read by the board's rule (hollow point, * in the table)
+  const grid = ents.map((e) => ps.map((p, i) => cellAt(book, col, e, st.f, p, i === ps.length - 1, ents)));
+  const has = ps.map((_, i) => grid.some((r) => r[i].v != null && !r[i].from));
   const lo = has.indexOf(true), shown = lo < 0 ? [] : ps.slice(lo), g = grid.map((r) => r.slice(lo));
   // break band: IFRS 4 figures before IFRS 17 ones, or a regulator definition change
   let brkAt = -1, brkLabel = '';
@@ -432,9 +443,13 @@ function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; 
           <Chart label={`${colLabel(col)} · ${st.f}`} height={380} deps={[st.c.join('|'), k, st.f, st.w, pend, ents.join(), st.hl, book.files.size]}
             source={`${[...new Set(col.ids.map((id) => book.reg.src[book.byId.get(id)?.src ?? '']).filter(Boolean))].join(' · ')} · fox`}
             onPoint={(si, di) => { const x = g[si]?.[di]; if (x && x.v != null) open(x.prov()); }}
-            build={() => identify(foxOption({ x: shown.map((p) => plab(st.f, p).replace('LTM ', '')), unit: shownUnit(col), legend: false, labels: false, scale: true, breakAt: brkAt > 0 ? brkAt : undefined, breakLabel: brkLabel,
-              series: ents.map((e, i) => ({ name: book.short(e), kind: 'line' as const, color: idColor(e), pct, lead: st.hl === e, dim: !!st.hl && st.hl !== e, dec: col.unit === 'm' && col.tr === 'v' ? 0 : 2,
-                faded: g[i].map((x) => !!(x.fl & F_OLD)), data: g[i].map((x) => (x.v == null ? null : +x.v.toFixed(4))) })) }), { height: 380 })} />
+            build={() => {
+              const o = foxOption({ x: shown.map((p) => plab(st.f, p).replace('LTM ', '')), unit: shownUnit(col), legend: false, labels: false, scale: true, breakAt: brkAt > 0 ? brkAt : undefined, breakLabel: brkLabel,
+                series: ents.map((e, i) => ({ name: book.short(e), kind: 'line' as const, color: idColor(e), pct, lead: st.hl === e, dim: !!st.hl && st.hl !== e, dec: col.unit === 'm' && col.tr === 'v' ? 0 : 2,
+                  faded: g[i].map((x) => !!(x.fl & F_OLD)), data: g[i].map((x) => (x.v == null ? null : +x.v.toFixed(4))) })) }) as { series: { data: unknown[] }[] };
+              ents.forEach((_, i) => { const x = g[i][g[i].length - 1], d = o.series[i]?.data; if (x?.from && x.v != null && d) d[d.length - 1] = { value: +x.v.toFixed(4), symbol: 'emptyCircle', symbolSize: 9 }; });
+              return identify(o as Parameters<typeof identify>[0], { height: 380 });
+            }} />
         )}
       </section>
       <section className="panel pr-panel">
@@ -446,12 +461,12 @@ function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; 
               <td className="pr-ent"><i className="pdot" style={{ background: idCss(e) }} /><Link to={`/company/${e}`}>{book.short(e)}</Link></td>
               {[...g[i]].reverse().map((x, j) => {
                 const idx = shown.length - 1 - j, cls = brkAt > 0 && idx === brkAt ? 'brk' : undefined;
-                return <td key={j} className={cls}>{x.v == null ? <span className="muted" title={x.why}>–</span> : <Sourced className={`num${x.v < 0 ? ' neg' : ''}${x.fl & F_OLD ? ' old' : ''}${x.fl & F_RE ? ' re' : ''}${col.tr === 'v' && !col.expr && st.f !== 'LTM' && x.fl & F_DER ? ' der' : ''}`} href={col.tr === 'v' ? x.href : null} src={x.prov}>{fmtCol(col, x.v)}</Sourced>}</td>;
+                return <td key={j} className={cls}>{x.v == null ? <span className="muted" title={x.why}>–</span> : <Sourced className={`num${x.v < 0 ? ' neg' : ''}${x.fl & F_OLD ? ' old' : ''}${x.fl & F_RE ? ' re' : ''}${col.tr === 'v' && !col.expr && st.f !== 'LTM' && x.fl & F_DER ? ' der' : ''}`} href={col.tr === 'v' ? x.href : null} src={x.prov} title={x.from ? `נתון ${plab(st.f, x.from)}: טרם דווח` : undefined}>{fmtCol(col, x.v)}{x.from ? '*' : ''}</Sourced>}</td>;
               })}
             </tr>
           ))}</tbody>
         </table></div>
-        <div className="src">אפור: לפי IFRS 4 כפי שדווח. נטוי: נגזר (Q4 מהשנתי, H מרבעונים, LTM). נקודה: הוצג מחדש.{brkAt > 0 ? ' הקו בגרף ובטבלה מסמן את שבר ההגדרה.' : ''}</div>
+        <div className="src">אפור: לפי IFRS 4 כפי שדווח. נטוי: נגזר (Q4 מהשנתי, H מרבעונים, LTM). נקודה: הוצג מחדש.{brkAt > 0 ? ' הקו בגרף ובטבלה מסמן את שבר ההגדרה.' : ''}{g.some((r) => r[r.length - 1]?.from && r[r.length - 1]?.v != null) ? ` *, נקודה חלולה: טרם דווח על ${plab(st.f, shown[shown.length - 1])}; הנתון המדווח האחרון, כמו בתצוגת ההשוואה.` : ''}</div>
       </section>
     </>
   );
@@ -655,7 +670,7 @@ function describe(p: Prov): [string, string, number | string, string] {
 function grid(book: Book, cols: Col[], ents: string[], st: St, periods: string[]) {
   const sub = st.v === 'series' ? (() => { const c = cols[Math.min(st.k, cols.length - 1)], end = periods[0]; return end ? Array.from({ length: st.w }, (_, i) => ({ col: c, p: back(st.f, end, i) })) : []; })()
     : cols.flatMap((col) => periods.map((p) => ({ col, p })));
-  return { sub, cell: (e: string, j: number) => cellVal(book, sub[j].col, e, st.f, sub[j].p, ents) };
+  return { sub, cell: (e: string, j: number): CVal => cellAt(book, sub[j].col, e, st.f, sub[j].p, sub[j].p === periods[0], ents) };
 }
 async function exportXlsx(book: Book, cols: Col[], ents: string[], st: St, periods: string[], setName: string) {
   const { downloadXlsx } = await import('../lib/xlsx');
@@ -668,10 +683,11 @@ async function exportXlsx(book: Book, cols: Col[], ents: string[], st: St, perio
   const src: import('../lib/xlsx').XCell[][] = [['חברה', 'עמודה', 'תקופה', 'ערך', 'יחידה', 'סוג מקור', 'מסמך / נוסחה ורכיבים', 'עמוד', 'קישור'].map((v) => ({ v, bold: true }))];
   ents.forEach((e) => {
     rows.push([book.name(e), ...sub.map(({ col }, j) => { const x = cell(e, j); return x.v == null ? null : { v: +x.v.toFixed(4), link: col.tr === 'v' ? x.href : undefined, fmt: fmt(col) }; })]);
-    sub.forEach(({ col, p }, j) => { const x = cell(e, j); if (x.v == null) return; const [k, d, pg, url] = describe(x.prov()); src.push([book.name(e), colLabel(col), plab(st.f, p), { v: +x.v.toFixed(4), fmt: fmt(col) }, shownUnit(col), k, d, pg, url ? { v: url, link: url } : '']); });
+    sub.forEach(({ col, p }, j) => { const x = cell(e, j); if (x.v == null) return; const [k, d, pg, url] = describe(x.prov()); src.push([book.name(e), colLabel(col), plab(st.f, p) + (x.from ? ` (נתון ${plab(st.f, x.from)}*)` : ''), { v: +x.v.toFixed(4), fmt: fmt(col) }, shownUnit(col), k, d, pg, url ? { v: url, link: url } : '']); });
   });
   (['חציון', 'ממוצע'] as const).forEach((nm, kind) => rows.push([{ v: nm, bold: true }, ...sub.map((_, j) => { const xs = ents.map((e) => cell(e, j).v).filter((v): v is number => v != null); if (xs.length < (kind ? 2 : 3)) return null; return { v: +(kind ? xs.reduce((s, x) => s + x, 0) / xs.length : median(xs)).toFixed(4), bold: true, fmt: fmt(sub[j].col) }; })]));
-  rows.push([], ['הערות: נגזר = מחושב מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM = ארבעה רבעונים). לפני 2025 רוב השורות לפי IFRS 4 כפי שדווח. שינוי באחוזים בין ערכים בסימנים שונים אינו מחושב.']);
+  rows.push([], ['הערות: נגזר = מחושב מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM = ארבעה רבעונים). לפני 2025 רוב השורות לפי IFRS 4 כפי שדווח. שינוי באחוזים בין ערכים בסימנים שונים אינו מחושב.'],
+    [`בתקופה האחרונה: חברה שטרם דיווחה עליה מוצגת בנתון המדווח האחרון שלה (תקופה אחת אחורה; בגיליון "מקורות" מסומן *), ונכללת בחציון ובממוצע, כמו בתצוגת ההשוואה של האתר.`]);
   downloadXlsx(`fox-peers-${st.f}-${periods[0] ?? ''}`, [{ name: 'טבלה', rows, freeze: { rows: 5, cols: 1 }, widths: [18, ...sub.map(() => 16)] }, { name: 'מקורות', rows: src, freeze: { rows: 1, cols: 0 }, widths: [14, 30, 10, 12, 12, 12, 70, 6, 50] }]);
 }
 function exportCsv(book: Book, cols: Col[], ents: string[], st: St, periods: string[]) {

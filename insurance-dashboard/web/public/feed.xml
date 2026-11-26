@@ -5,11 +5,20 @@
 <link>https://fox-research-il.web.app/feed</link>
 <description>כל שינוי שהנתונים של fox נושאים: דוחות כספיים במאיה, הצגות מחדש, חודשי נתוני רשות שוק ההון, דמי ניהול, יחסי כושר פירעון, יעדי הנהלה. כל מספר עם המקור שלו.</description>
 <language>he</language>
-<lastBuildDate>Wed, 25 Nov 2026 00:00:00 +0200</lastBuildDate>
+<lastBuildDate>Thu, 26 Nov 2026 00:00:00 +0200</lastBuildDate>
 <ttl>360</ttl>
 <atom:link href="https://fox-research-il.web.app/feed.xml" rel="self" type="application/rss+xml"/>
 <generator>fox pipeline/build_rss.py</generator>
 <image><url>https://fox-research-il.web.app/icons/icon-192.png</url><title>fox · מה השתנה</title><link>https://fox-research-il.web.app/feed</link></image>
+<item>
+<title>הפניקס · הצגה מחדש: דוח רבעוני Q3'26 הציג מחדש תקופות קודמות</title>
+<link>https://fox-research-il.web.app/restatements?co=phoenix&amp;season=2026Q3</link>
+<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/restate:phoenix:1783655</guid>
+<pubDate>Thu, 26 Nov 2026 00:00:00 +0200</pubDate>
+<category>הצגה מחדש</category>
+<category>הפניקס</category>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 7&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 7&lt;/p&gt;&lt;p&gt;רווח כולל לפני מס · בריאות · 9M'25: 706.2 מיליוני ש"ח (לראשונה), לעומת 995.5 (מחדש); שינוי +289.2 (+41.0%)&lt;/p&gt;&lt;p&gt;רווח כולל לפני מס · חיים וחיסכון · 9M'25: 306.7 מיליוני ש"ח (לראשונה), לעומת 575.8 (מחדש); שינוי +269.1 (+87.7%)&lt;/p&gt;&lt;p&gt;רווח כולל לפני מס · בריאות · Q3'25: 315.8 מיליוני ש"ח (לראשונה), לעומת 406.1 (מחדש); שינוי +90.3 (+28.6%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1783001-1784000/P1783655-00.pdf"&gt;הפניקס, דוח רבעוני Q3'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 26.11.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=phoenix&amp;amp;season=2026Q3"&gt;https://fox-research-il.web.app/restatements?co=phoenix&amp;amp;season=2026Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+</item>
 <item>
 <title>הפניקס · כושר פירעון: יחס כושר פירעון ליום Q2'26, דוח רבעוני Q3'26 (177.0% → 168.0%)</title>
 <link>https://fox-research-il.web.app/card/phoenix/2026Q3</link>
@@ -80,7 +89,7 @@
 <pubDate>Wed, 25 Nov 2026 00:00:00 +0200</pubDate>
 <category>הצגה מחדש</category>
 <category>הראל</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 20&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 9&lt;/p&gt;&lt;p&gt;שינוי בהתחייבויות פיננסיות · Q3'25: 4,640 מיליוני ש"ח (לראשונה), לעומת 3,645 (מחדש); שינוי −995.0 (−21.4%)&lt;/p&gt;&lt;p&gt;אשראי לזמן קצר מתאגידים בנקאיים, נטו · FY'25: −1,526 מיליוני ש"ח (לראשונה), לעומת −853.0 (מחדש); שינוי +673.0&lt;/p&gt;&lt;p&gt;השקעות פיננסיות אחרות הנמדדות בשווי הוגן · Q3'25: 44,989 מיליוני ש"ח (לראשונה), לעומת 44,792 (מחדש); שינוי −197.0 (−0.4%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1782001-1783000/P1782914-00.pdf"&gt;הראל, דוח רבעוני Q3'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 25.11.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=harel&amp;amp;season=2026Q3"&gt;https://fox-research-il.web.app/restatements?co=harel&amp;amp;season=2026Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 25&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 13&lt;/p&gt;&lt;p&gt;שינוי בהתחייבויות פיננסיות · Q3'25: 4,640 מיליוני ש"ח (לראשונה), לעומת 3,645 (מחדש); שינוי −995.0 (−21.4%)&lt;/p&gt;&lt;p&gt;אשראי לזמן קצר מתאגידים בנקאיים, נטו · FY'25: −1,526 מיליוני ש"ח (לראשונה), לעומת −853.0 (מחדש); שינוי +673.0&lt;/p&gt;&lt;p&gt;השקעות פיננסיות אחרות הנמדדות בשווי הוגן · Q3'25: 44,989 מיליוני ש"ח (לראשונה), לעומת 44,792 (מחדש); שינוי −197.0 (−0.4%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1782001-1783000/P1782914-00.pdf"&gt;הראל, דוח רבעוני Q3'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 25.11.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=harel&amp;amp;season=2026Q3"&gt;https://fox-research-il.web.app/restatements?co=harel&amp;amp;season=2026Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>הראל · דוח: דוח רבעוני Q3'26</title>
@@ -179,7 +188,7 @@
 <pubDate>Wed, 25 Nov 2026 00:00:00 +0200</pubDate>
 <category>הצגה מחדש</category>
 <category>מגדל</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 4&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 1&lt;/p&gt;&lt;p&gt;רכוש קבוע אחר · Q3'25: 258.0 מיליוני ש"ח (לראשונה), לעומת 237.0 (מחדש); שינוי −21.0 (−8.1%)&lt;/p&gt;&lt;p&gt;רכוש קבוע הנמדד בשווי הוגן · Q3'25: 1,043 מיליוני ש"ח (לראשונה), לעומת 1,063 (מחדש); שינוי +20.0 (+1.9%)&lt;/p&gt;&lt;p&gt;זכאים ויתרות זכות · Q3'25: 4,041 מיליוני ש"ח (לראשונה), לעומת 4,036 (מחדש); שינוי −5.0 (−0.1%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1781001-1782000/P1781923-00.pdf"&gt;מגדל, דוח רבעוני Q3'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 25.11.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q3"&gt;https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;נתונים שהוצגו מחדש: 5&lt;/p&gt;&lt;p&gt;מהם בשינוי של 2% ומעלה: 1&lt;/p&gt;&lt;p&gt;רכוש קבוע אחר · Q3'25: 258.0 מיליוני ש"ח (לראשונה), לעומת 237.0 (מחדש); שינוי −21.0 (−8.1%)&lt;/p&gt;&lt;p&gt;רכוש קבוע הנמדד בשווי הוגן · Q3'25: 1,043 מיליוני ש"ח (לראשונה), לעומת 1,063 (מחדש); שינוי +20.0 (+1.9%)&lt;/p&gt;&lt;p&gt;זכאים ויתרות זכות · Q3'25: 4,041 מיליוני ש"ח (לראשונה), לעומת 4,036 (מחדש); שינוי −5.0 (−0.1%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1781001-1782000/P1781923-00.pdf"&gt;מגדל, דוח רבעוני Q3'26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;התקבל ב-fox: 25.11.26 · תקופה: Q3'26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q3"&gt;https://fox-research-il.web.app/restatements?co=migdal&amp;amp;season=2026Q3&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>מור גמל ופנסיה · דוח: דוח רבעוני Q3'26</title>
@@ -1448,7 +1457,7 @@
 <pubDate>Thu, 26 Mar 2026 00:00:00 +0200</pubDate>
 <category>דוח כספי חדש</category>
 <category>הפניקס</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 899.3 מיליוני ש"ח (Q4'25), לעומת 813.6 (Q3'25); שינוי +85.8 (+10.5%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 887.0 מיליוני ש"ח (Q4'25), לעומת 802.9 (Q3'25); שינוי +84.1 (+10.5%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 369.6 מיליוני ש"ח (Q4'25), לעומת 466.5 (Q3'25); שינוי −96.9 (−20.8%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 12,496 מיליוני ש"ח (Q4'25), לעומת 12,065 (Q3'25); שינוי +431.3 (+3.6%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 8,392 מיליוני ש"ח (Q4'25)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 179.0% (Q3'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1731001-1732000/P1731064-00.pdf"&gt;הפניקס, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/phoenix/2025FY"&gt;https://fox-research-il.web.app/card/phoenix/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח נקי לבעלי המניות: 899.3 מיליוני ש"ח (Q4'25), לעומת 813.6 (Q3'25); שינוי +85.8 (+10.5%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 887.0 מיליוני ש"ח (Q4'25), לעומת 802.9 (Q3'25); שינוי +84.1 (+10.5%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 369.6 מיליוני ש"ח (Q4'25), לעומת 466.5 (Q3'25); שינוי −96.9 (−20.8%)&lt;/p&gt;&lt;p&gt;הון לבעלי המניות: 12,496 מיליוני ש"ח (Q4'25), לעומת 12,065 (Q3'25); שינוי +431.3 (+3.6%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 8,392 מיליוני ש"ח (Q4'25), לעומת 8,766 (Q3'25); שינוי −374.0 (−4.3%)&lt;/p&gt;&lt;p&gt;יחס כושר פירעון, עם הוראות מעבר, ליום: 179.0% (Q3'25)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1731001-1732000/P1731064-00.pdf"&gt;הפניקס, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/card/phoenix/2025FY"&gt;https://fox-research-il.web.app/card/phoenix/2025FY&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>כלל · דוח: דוח שנתי FY'25</title>
@@ -1475,7 +1484,7 @@
 <pubDate>Thu, 26 Mar 2026 00:00:00 +0200</pubDate>
 <category>שינויים מהותיים בדוח</category>
 <category>הפניקס</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח מהשקעות ומימון, נטו: 2,596 מיליוני ש"ח (FY'25), לעומת 1,655 (FY'24); שינוי +941.1 (+56.9%)&lt;/p&gt;&lt;p&gt;רווחים אחרים מהשקעות, נטו: 3,339 מיליוני ש"ח (FY'25), לעומת 2,446 (FY'24); שינוי +893.1 (+36.5%). הוצג מחדש&lt;/p&gt;&lt;p&gt;רווח נקי לבעלי המניות: 3,223 מיליוני ש"ח (FY'25), לעומת 2,391 (FY'24); שינוי +831.7 (+34.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 3,186 מיליוני ש"ח (FY'25), לעומת 2,369 (FY'24); שינוי +817.4 (+34.5%)&lt;/p&gt;&lt;p&gt;מסים על הכנסה: 1,669 מיליוני ש"ח (FY'25), לעומת 1,160 (FY'24); שינוי +508.6 (+43.8%)&lt;/p&gt;&lt;p&gt;הוצאות משירותי ביטוח: 7,832 מיליוני ש"ח (FY'25), לעומת 6,930 (FY'24); שינוי +902.9 (+13.0%)&lt;/p&gt;&lt;p&gt;הכנסות מדמי ניהול: 1,887 מיליוני ש"ח (FY'25), לעומת 1,561 (FY'24); שינוי +326.4 (+20.9%)&lt;/p&gt;&lt;p&gt;הכנסות מביטוח משנה: 1,433 מיליוני ש"ח (FY'25), לעומת 887.8 (FY'24); שינוי +545.6 (+61.5%)&lt;/p&gt;&lt;p&gt;הכנסות משירותי ביטוח: 9,802 מיליוני ש"ח (FY'25), לעומת 9,278 (FY'24); שינוי +523.5 (+5.6%)&lt;/p&gt;&lt;p&gt;רווח משירותי ביטוח: 1,961 מיליוני ש"ח (FY'25), לעומת 1,738 (FY'24); שינוי +223.6 (+12.9%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1731001-1732000/P1731064-00.pdf"&gt;הפניקס, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/company/phoenix?p=2025FY#rd-changes"&gt;https://fox-research-il.web.app/company/phoenix?p=2025FY#rd-changes&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
+<description>&lt;div dir="rtl"&gt;&lt;p&gt;רווח מהשקעות ומימון, נטו: 2,596 מיליוני ש"ח (FY'25), לעומת 1,655 (FY'24); שינוי +941.1 (+56.9%)&lt;/p&gt;&lt;p&gt;רווחים אחרים מהשקעות, נטו: 3,339 מיליוני ש"ח (FY'25), לעומת 2,446 (FY'24); שינוי +893.1 (+36.5%). הוצג מחדש&lt;/p&gt;&lt;p&gt;רווח נקי לבעלי המניות: 3,223 מיליוני ש"ח (FY'25), לעומת 2,391 (FY'24); שינוי +831.7 (+34.8%)&lt;/p&gt;&lt;p&gt;רווח כולל לבעלי המניות: 3,186 מיליוני ש"ח (FY'25), לעומת 2,369 (FY'24); שינוי +817.4 (+34.5%)&lt;/p&gt;&lt;p&gt;מסים על הכנסה: 1,669 מיליוני ש"ח (FY'25), לעומת 1,160 (FY'24); שינוי +508.6 (+43.8%)&lt;/p&gt;&lt;p&gt;הוצאות משירותי ביטוח: 7,832 מיליוני ש"ח (FY'25), לעומת 6,930 (FY'24); שינוי +902.9 (+13.0%)&lt;/p&gt;&lt;p&gt;CSM, יתרת סגירה (נטו · קבוצה): 8,392 מיליוני ש"ח (Q4'25), לעומת 8,766 (Q3'25); שינוי −374.0 (−4.3%). מטקסט הדוח&lt;/p&gt;&lt;p&gt;הכנסות מדמי ניהול: 1,887 מיליוני ש"ח (FY'25), לעומת 1,561 (FY'24); שינוי +326.4 (+20.9%)&lt;/p&gt;&lt;p&gt;הכנסות מביטוח משנה: 1,433 מיליוני ש"ח (FY'25), לעומת 887.8 (FY'24); שינוי +545.6 (+61.5%)&lt;/p&gt;&lt;p&gt;הכנסות משירותי ביטוח: 9,802 מיליוני ש"ח (FY'25), לעומת 9,278 (FY'24); שינוי +523.5 (+5.6%)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://mayafiles.tase.co.il/rpdf/1731001-1732000/P1731064-00.pdf"&gt;הפניקס, דוח שנתי FY'25&lt;/a&gt;&lt;/p&gt;&lt;p&gt;פורסם במאיה: 26.03.26 · תקופה: FY'25 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/company/phoenix?p=2025FY#rd-changes"&gt;https://fox-research-il.web.app/company/phoenix?p=2025FY#rd-changes&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 <item>
 <title>FY'25 הראל · 10 שינויים</title>
@@ -1800,15 +1809,6 @@
 <category>שינוי בדמי ניהול</category>
 <category>הפניקס</category>
 <description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.77% (01/26), לעומת 0.72% (12/25); שינוי +0.05&lt;/p&gt;&lt;p&gt;נכסי המסלול: 4,969 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9593 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9593"&gt;https://fox-research-il.web.app/funds/i9593&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
-</item>
-<item>
-<title>הפניקס · דמי ניהול: הפניקס בסיסי למקבלי קצבה (0.36% → 0.00%)</title>
-<link>https://fox-research-il.web.app/funds/i9587</link>
-<guid isPermaLink="false">tag:fox-research-il.web.app,2026:feed/fee:i9587:202601</guid>
-<pubDate>Sat, 31 Jan 2026 00:00:00 +0200</pubDate>
-<category>שינוי בדמי ניהול</category>
-<category>הפניקס</category>
-<description>&lt;div dir="rtl"&gt;&lt;p&gt;דמי ניהול ממוצעים מהנכסים: 0.00% (01/26), לעומת 0.36% (12/25); שינוי −0.36&lt;/p&gt;&lt;p&gt;נכסי המסלול: 6,691 מיליוני ש"ח (01/26)&lt;/p&gt;&lt;p&gt;מקור: &lt;a href="https://data.gov.il/dataset/insurance"&gt;רשות שוק ההון, ביטוח-נט · קופה 9587 · 01/26&lt;/a&gt;&lt;/p&gt;&lt;p&gt;חודש הנתונים: 01/26 · תקופה: 01/26 · כל מספר נפתח בעמוד המקור ב-fox: &lt;a href="https://fox-research-il.web.app/funds/i9587"&gt;https://fox-research-il.web.app/funds/i9587&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</description>
 </item>
 </channel>
 </rss>

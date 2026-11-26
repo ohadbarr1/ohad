@@ -12,6 +12,8 @@ import { nf } from './format';
      1 group · net               printed
      2 life and health · net     one combined printed line
      3 life + health · net       the two segment lines added (flag 1)
+     3b group · net, proven      a group line printed without a stated basis that equals life + health gross less their reinsurance CSM in
+                                 the same report, within 1 (Phoenix 30.09.25: 8,766); basis net, labelled as proven, the four lines kept as `proof`
      4 group · gross             printed
      5 group · basis not stated  printed
      6 life and health · gross / not stated, printed combined line
@@ -28,20 +30,23 @@ export interface CsmClose {
   /** "נטו · קבוצה" */ label: string; /** the report period the figure was read from */ rp: string; own: boolean;
   /** 1 derived (a sum, or a printed total less the savings-policy row) · 4 sign turned · 16 read from a chart or text · 64 comparative column of a later report */
   flags: number; line: Line;
+  /** tier 3b: life gross, life reinsurance, health gross, health reinsurance of the same report */
+  proof?: RF[];
 }
 
 const ALIAS: Record<string, string[]> = {
   group: ['group'], life: ['life', 'life insurance and long-term savings'], health: ['health', 'health insurance'],
   life_health: ['life_health', 'life+health', 'life_and_health', 'life and health segments', 'life_health_combined'],
 };
-const TIERS: [CsmScope, ('net' | 'gross' | 'na')[], boolean][] = [
-  ['group', ['net'], false], ['life_health', ['net'], false], ['lh', ['net'], true],
+const TIERS: [CsmScope, ('net' | 'gross' | 'na' | 'proven')[], boolean][] = [
+  ['group', ['net'], false], ['life_health', ['net'], false], ['lh', ['net'], true], ['group', ['proven'], false],
   ['group', ['gross'], false], ['group', ['na'], false],
   ['life_health', ['gross', 'na'], false], ['lh', ['gross', 'na'], true],
   ['life', ['net'], false], ['life', ['gross', 'na'], false],
 ];
 export const CSM_SCOPE_HE: Record<CsmScope, string> = { group: 'קבוצה', life_health: 'חיים ובריאות', lh: 'חיים ועוד בריאות', life: 'חיים וחיסכון' };
 export const CSM_BASIS_HE: Record<string, string> = { net: 'נטו', gross: 'ברוטו', na: 'בסיס לא צוין' };
+const PROVEN_HE = ' (ברוטו פחות ביטוח משנה באותו דוח)';  // tier 3b: the report printed no basis
 
 const usable = (f: RF) => (f.m === 'csm_closing' || f.m === 'csm_opening') && f.w === 'instant' && !f.tr && !f.model && !f.bk && f.inc !== 1;
 const whole = (f: RF, g: string) => f.g === g && (ALIAS[g] ?? []).includes(String(f.s).toLowerCase());
@@ -53,6 +58,15 @@ const pick = (F: RF[], g: string, b: string, date: string): RF | null => {
   const key = (f: RF): number[] => [Number(f.m !== 'csm_closing'), Number(chart(f)), Number(f.dv == null), f.pg ?? 0];
   return c.sort((x, y) => { const a = key(x), z = key(y); for (let i = 0; i < a.length; i++) if (a[i] !== z[i]) return a[i] - z[i]; return 0; })[0];
 };
+/** tier 3b: the group line printed without a basis, and the four segment lines that prove it net */
+function provenNet(F: RF[], date: string): [RF, RF[]] | null {
+  const x = pick(F, 'group', 'na', date);
+  if (!x) return null;
+  const parts = (['life', 'health'] as const).flatMap((g) => (['gross', 'reinsurance'] as const).map((b) => pick(F, g, b, date)));
+  if (parts.some((f) => !f)) return null;
+  const [lg, lr, hg, hr] = parts.map((f) => valueOf(f!)[0]);
+  return Math.abs(lg - lr + hg - hr - valueOf(x)[0]) <= 1 ? [x, parts as RF[]] : null;
+}
 const pk = (p: string) => Number(p.slice(0, 4)) * 10 + ({ Q1: 1, Q2: 2, Q3: 3, FY: 4 } as Record<string, number>)[p.slice(4)];
 /** 2026-06-30 → 2026Q2; 2025-12-31 → 2025FY */
 export const ownPeriod = (date: string) => date.slice(0, 4) + ({ '03-31': 'Q1', '06-30': 'Q2', '09-30': 'Q3', '12-31': 'FY' } as Record<string, string>)[date.slice(5, 10)];
@@ -69,8 +83,12 @@ export function resolveCsm(rs: Reports, date: string): CsmClose | null {
     if (scope === 'life' && !lifeOnly) continue;
     for (const r of order) {
       for (const b of bases) {
-        let fs: RF[], v: number, turned: boolean;
-        if (sum) {
+        let fs: RF[], v: number, turned: boolean, proof: RF[] | undefined;
+        if (b === 'proven') {
+          const pr = provenNet(r.F, date);
+          if (!pr) continue;
+          [v, turned] = valueOf(pr[0]); fs = [pr[0]]; proof = pr[1];
+        } else if (sum) {
           const a = pick(r.F, 'life', b, date), h = pick(r.F, 'health', b, date);
           if (!a || !h) continue;
           const [va, ta] = valueOf(a), [vh, th] = valueOf(h);
@@ -81,8 +99,8 @@ export function resolveCsm(rs: Reports, date: string): CsmClose | null {
           [v, turned] = valueOf(x); fs = [x];
         }
         const flags = (sum || fs.some((f) => f.cl === 1) ? 1 : 0) | (turned ? 4 : 0) | (fs.some(chart) ? 16 : 0) | (r.p !== own ? 64 : 0);
-        const line: Line = sum ? { v, fs, sum: true } : { v, fs };
-        return { v: Math.round(v * 1000) / 1000, b, scope, label: `${CSM_BASIS_HE[b]} · ${CSM_SCOPE_HE[scope]}`, rp: r.p, own: r.p === own, flags, line };
+        const line: Line = sum ? { v, fs, sum: true } : { v, fs }, bb = b === 'proven' ? 'net' : b;
+        return { v: Math.round(v * 1000) / 1000, b: bb, scope, label: `${CSM_BASIS_HE[bb]}${proof ? PROVEN_HE : ''} · ${CSM_SCOPE_HE[scope]}`, rp: r.p, own: r.p === own, flags, line, ...(proof ? { proof } : {}) };
       }
     }
   }
@@ -96,7 +114,7 @@ const amt = (v: number) => nf(v, Math.abs(v) < 100 ? 1 : 0);
 /** The source sheet of a resolved CSM: the printed row (with its basis and scope), or the two segment rows it adds up. */
 export function csmProv(c: CsmClose, d: IfrsData, title: string): Prov {
   const t = `${title} · ${c.label}`;
-  const why = [c.flags & 64 ? `כפי שהודפס בדוח ${periodName(c.rp)}` : '', c.scope !== 'group' ? `החברה אינה מדפיסה CSM נטו לקבוצה; נבחר: ${c.label}` : c.b !== 'net' ? `החברה אינה מדפיסה CSM נטו לתאריך; נבחר: ${c.label}` : ''].filter(Boolean).join(' · ');
+  const why = [c.flags & 64 ? `כפי שהודפס בדוח ${periodName(c.rp)}` : '', c.proof ? `הדוח לא ציין בסיס; נטו לפי אותו דוח: חיים ${amt(Math.abs(c.proof[0].v))} ובריאות ${amt(Math.abs(c.proof[2].v))} ברוטו פחות ביטוח משנה ${amt(Math.abs(c.proof[1].v))} ו-${amt(Math.abs(c.proof[3].v))} (עמ׳ ${[...new Set(c.proof.map((f) => f.pg))].join(', ')})` : '', c.scope !== 'group' ? `החברה אינה מדפיסה CSM נטו לקבוצה; נבחר: ${c.label}` : c.b !== 'net' ? `החברה אינה מדפיסה CSM נטו לתאריך; נבחר: ${c.label}` : ''].filter(Boolean).join(' · ');
   if (!c.line.sum) { const p = factProv(c.line.fs[0], d, t, amt(c.v)); return p.k === 'report' ? { ...p, note: [p.note, why].filter(Boolean).join(' · ') } : p; }
   return { k: 'calc', title: t, value: amt(c.v), unit: 'מיליוני ש"ח', formula: `חיים ועוד בריאות, ${CSM_BASIS_HE[c.b]}${why ? ` · ${why}` : ''}`,
     inputs: c.line.fs.map((f) => ({ label: f.g === 'life' ? 'חיים וחיסכון' : 'בריאות', v: amt(Math.abs(f.dv ?? f.v)), src: () => factProv(f, d, `${t} · ${f.g === 'life' ? 'חיים וחיסכון' : 'בריאות'}`) })) };

@@ -322,10 +322,12 @@ function History({ book, ents, kindOf, focus, p, k, setK, w, setW, major }: { bo
   const m = hm.find((x) => x.key === k) ?? hm.find((x) => x.key === 'pb') ?? hm[0];
   const n = (Number(w) || 12) + 1;  // quarters
   const ps = Array.from({ length: n }, (_, i) => back('LTM', p, n - 1 - i));
-  const g = ents.map((e) => ps.map((q) => histVal(book, m, e, kindOf(e), q, ents)));
-  const shown = ps.map((_, i) => g.some((r) => r[i]?.v != null));
-  const lo = shown.indexOf(true), xs = lo < 0 ? [] : ps.slice(lo), gg = g.map((r) => r.slice(lo));
+  // the last point is the board's quarter: a company that has not reported it is read on its latest figures, marked (the board's rule)
+  const g = ents.map((e) => ps.map((q, i) => histVal(book, m, e, kindOf(e), q, ents, i === ps.length - 1)));
+  const shown = ps.map((_, i) => g.some((r) => r[i]?.v != null && !r[i]?.stale));
+  const lo = shown.indexOf(true), hiI = shown.lastIndexOf(true), xs = lo < 0 ? [] : ps.slice(lo, hiI + 1), gg = g.map((r) => r.slice(lo, hiI + 1));
   const med = xs.map((_, i) => median(gg.map((r) => r[i]?.v).filter((v): v is number => v != null)));
+  const nStale = gg.filter((r) => r[r.length - 1]?.stale && r[r.length - 1]?.v != null).length;
   const pct = m.u === 'pct' || m.u === 'pctx';
   return (
     <section className="panel">
@@ -335,11 +337,16 @@ function History({ book, ents, kindOf, focus, p, k, setK, w, setW, major }: { bo
       {xs.length < 2 ? <Empty title="אין רצף למדד ולטווח" /> : (
         <Chart label={`${m.sh} לאורך זמן`} height={340} deps={[m.key, w, ents.join(), focus, p, book.files.size]} source="דוחות החברות · TASE (סגירה ביום המסחר האחרון ברבעון) · fox"
           onPoint={(si, di) => { const x = gg[si]?.[di]; if (x && x.v != null) open(x.prov()); }}
-          build={() => identify(foxOption({ x: xs.map((q) => plab('Q', q)), unit: unitB(m), legend: false, labels: false, scale: true,
-            series: [...ents.map((e, i) => ({ name: book.short(e), kind: 'line' as const, color: idColor(e), pct, lead: e === focus, dim: e !== focus, dec: m.dec, data: gg[i].map((x) => (x?.v == null ? null : +x.v.toFixed(4))) })),
-              { name: 'חציון', kind: 'line' as const, color: chartBase().mu, dashed: true, pct, dec: m.dec, data: med.map((x) => (x == null ? null : +x.toFixed(4))) }] }), { height: 340 })} />
+          build={() => {
+            const o = foxOption({ x: xs.map((q) => plab('Q', q)), unit: unitB(m), legend: false, labels: false, scale: true,
+              series: [...ents.map((e, i) => ({ name: book.short(e), kind: 'line' as const, color: idColor(e), pct, lead: e === focus, dim: e !== focus, dec: m.dec, data: gg[i].map((x) => (x?.v == null ? null : +x.v.toFixed(4))) })),
+                { name: 'חציון', kind: 'line' as const, color: chartBase().mu, dashed: true, pct, dec: m.dec, data: med.map((x) => (x == null ? null : +x.toFixed(4))) }] }) as EChartsCoreOption & { series: { data: unknown[] }[] };
+            // a company read on its latest figures at the last quarter: a hollow point
+            ents.forEach((_, i) => { const x = gg[i][gg[i].length - 1], d = o.series[i]?.data; if (x?.stale && x.v != null && d) d[d.length - 1] = { value: +x.v.toFixed(4), symbol: 'emptyCircle', symbolSize: 9 }; });
+            return identify(o, { height: 340 });
+          }} />
       )}
-      <div className="src">מכפיל בסוף כל רבעון: שווי שוק ביום המסחר האחרון ברבעון ÷ הנתון המדווח לאותו רבעון (רווח: LTM). קו מקווקו: חציון. אחרי סוף רבעון ועד פרסום הדוחות הנקודה האחרונה חסרה.</div>
+      <div className="src">מכפיל בסוף כל רבעון: שווי שוק ביום המסחר האחרון ברבעון ÷ הנתון המדווח לאותו רבעון (רווח: LTM). קו מקווקו: חציון של כל החברות בכל רבעון.{nStale > 0 && <> ב-<span className="num">{plab('Q', xs[xs.length - 1])}</span>, <span className="num">{nStale}</span> חברות שטרם דיווחו נקראות על הנתון האחרון שדיווחו (נקודה חלולה; מכפיל: שווי השוק בסוף הרבעון ÷ המכנה האחרון), כמו בטבלאות הלוח, והחציון כולל אותן.</>}</div>
     </section>
   );
 }
@@ -373,14 +380,21 @@ function Perf({ book, ents, mk, focus, w, setW }: { book: NonNullable<ReturnType
 function Mix({ title, book, ents, cells, focus, keys, total, src }: { title: string; book: NonNullable<ReturnType<typeof useBook>['book']>; ents: string[]; cells: Map<string, Map<string, BVal>>; focus: string; keys: string[]; total?: string; src: string }) {
   const { open } = useSource();
   const ms = keys.map((k) => MBY.get(k)!);
-  const rows = ents.map((e) => {
-    const parts = keys.map((k) => cells.get(k)?.get(e)?.v ?? null), t = (total ? cells.get(total)?.get(e)?.v : null) ?? parts.reduce<number>((a, x) => a + (x ?? 0), 0);
-    return { e, parts, t };
-  }).filter((r) => r.t > 0 && r.parts.some((x) => x != null)).sort((a, b) => b.t - a.t);
+  // a mix is drawn only from figures of one period: without a printed total every part must be there (a missing segment is not zero),
+  // and every part of a company must be of the same period; a company that fails is listed under the chart with the reason
+  const all = ents.map((e) => {
+    const xs = keys.map((k) => cells.get(k)?.get(e)), parts = xs.map((x) => x?.v ?? null), tx = total ? cells.get(total)?.get(e) : undefined;
+    const t = tx?.v ?? (parts.every((x) => x != null) ? parts.reduce<number>((a, x) => a + x!, 0) : null);
+    const miss = keys.flatMap((_, i) => (parts[i] == null ? [ms[i].sh] : [])), pers = new Set([...xs, tx].filter((x) => x?.v != null).map((x) => x!.p ?? ''));
+    const why = !parts.some((x) => x != null) ? null : !total && miss.length ? `חסר ${miss.join(', ')}` : pers.size > 1 ? 'הרכיבים מתקופות שונות' : null;
+    return { e, parts, t: t ?? 0, why, stale: [...xs, tx].some((x) => x?.v != null && x.stale) };
+  });
+  const out = all.filter((r) => r.why);
+  const rows = all.filter((r) => !r.why && r.t > 0 && r.parts.some((x) => x != null)).sort((a, b) => b.t - a.t);
   const u = ms[0].u, tot = (t: number) => (u === 'bn' ? `${nf(t, 0)} מ״ד` : `${nf(t / 1000, 1)} מ״ד`);
   const build = (): EChartsCoreOption => {
     const pal = palette();
-    return foxPeers({ cats: rows.map((r) => book.short(r.e) + (r.e === focus ? ' ◂' : '')), sub: rows.map((r) => tot(r.t)), stack: true, pct: true, dec: 0, max: 100, lead: rows.findIndex((r) => r.e === focus),
+    return foxPeers({ cats: rows.map((r) => book.short(r.e) + (r.stale ? '*' : '') + (r.e === focus ? ' ◂' : '')), sub: rows.map((r) => tot(r.t)), stack: true, pct: true, dec: 0, max: 100, lead: rows.findIndex((r) => r.e === focus),
       series: ms.map((m, i) => ({ name: m.sh, color: pal[i % pal.length], data: rows.map((r) => (r.parts[i] == null ? null : +((r.parts[i]! / r.t) * 100).toFixed(2))) })) }) as EChartsCoreOption;
   };
   return (
@@ -388,7 +402,7 @@ function Mix({ title, book, ents, cells, focus, keys, total, src }: { title: str
       <div className="hd"><h2>{title}</h2><div className="aside"><span>חלק כל מוצר מסך החברה, %</span></div></div>
       {rows.length < 2 ? <Empty title="אין מספיק נתונים" /> : <Chart label={title} height={Math.max(300, rows.length * 30 + 60)} deps={[keys.join(), ents.join(), focus, rows.length]} build={build} source="fox"
         onPoint={(si, di) => { const x = cells.get(keys[si])?.get(rows[di].e); if (x?.v != null) open(x.prov()); }} />}
-      <div className="src">{src} · ◂ החברה במיקוד</div>
+      <div className="src">{src} · ◂ החברה במיקוד{rows.some((r) => r.stale) && ' · * נתון מהרבעון הקודם (טרם דווח)'}{out.length > 0 && <> · לא בגרף: {out.map((r) => `${book.short(r.e)} (${r.why})`).join(', ')}</>}</div>
     </section>
   );
 }

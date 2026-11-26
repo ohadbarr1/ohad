@@ -176,7 +176,10 @@ export class Book {
   /** a metric's value for a company on a frequency's axis */
   get(mid: string, ent: string, freq: Freq, p: string): Val {
     const m = this.byId.get(mid);
-    const title = `${m?.l ?? mid} · ${this.name(ent)} · ${plab(freq, p)}`;
+    // a balance or a ratio at a date (solvency, CSM, equity) is named by its quarter end, never "LTM": on the LTM axis it is read at the
+    // quarter, on the annual and half-year axes at Q4 / Q2
+    const at = m?.k === 's' && freq !== 'Q' ? (freq === 'LTM' ? p : freq === 'FY' ? `${Y(p)}Q4` : `${Y(p)}Q${p.endsWith('H1') ? 2 : 4}`) : null;
+    const title = `${m?.l ?? mid} · ${this.name(ent)} · ${at ? plab('Q', at) : plab(freq, p)}`;
     if (!m) return none(title, 'מדד לא מוכר');
     if (!this.files.has(m.f)) return none(title, 'הנתונים נטענים');
     const y = Y(p), yy = String(y).slice(2);

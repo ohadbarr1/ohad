@@ -54,14 +54,15 @@ export function fmtCol(c: Col, v: number): string {
 }
 
 /** the column's own figure (before any transform) */
-export function base(book: Book, c: Col, ent: string, freq: Freq, p: string): Val {
+export function base(book: Book, c: Col, ent: string, freq: Freq, p: string, shift = 0): Val {
   const title = `${c.name} · ${book.name(ent)} · ${plab(freq, p)}`;
   if (c.err) return none(title, c.err);
-  if (c.mid) return book.get(c.mid, ent, freq, p);
+  if (c.mid) return book.get(c.mid, ent, freq, c.mid.startsWith('mkt:') ? p : back(freq, p, shift));
   if (!c.tree) return none(title, 'הנוסחה נטענת');
   const inputs: { label: string; v: string; src: () => Prov; fl: number }[] = [];
   const v = evaluate(c.tree, (id, lag) => {
-    const pp = back(freq, p, lag), x = book.get(id, ent, freq, pp), def = book.byId.get(id);
+    // shift (carriedVal): a reported input `shift` periods back, a market input (closes, market value) at the period itself
+    const pp = back(freq, p, lag + (id.startsWith('mkt:') ? 0 : shift)), x = book.get(id, ent, freq, pp), def = book.byId.get(id);
     const label = `${lexOf(book).labelOf.get(id) ?? def?.l ?? id} · ${plab(freq, pp)}`;
     if (!inputs.some((q) => q.label === label)) inputs.push({ label, v: x.v == null ? '–' : fmtV(def?.u ?? 'm', x.v), src: x.prov, fl: x.fl });
     return x.v;
@@ -80,9 +81,22 @@ function brk(book: Book, c: Col, freq: Freq, a: Val, b: Val, pa: string, pb: str
   return null;
 }
 
-/** what a cell shows: the figure, or its transform */
-export function cellVal(book: Book, c: Col, ent: string, freq: Freq, p: string, peers: string[]): Val {
-  const a = base(book, c, ent, freq, p);
+/** A period not every company has reported yet (the board, the free table, the history chart and their medians: one rule, CARRY_RULE in
+ *  lib/peerBoard.ts): a company with no figure for the period is read one period back, every reported input of the column at that period
+ *  and a market input at the period itself (a multiple = the quarter-end market value ÷ the latest reported denominator). `from`: the period
+ *  the reported inputs are of; null when the company has no figure a period back either, or the column reads the market alone. */
+export function carriedVal(book: Book, c: Col, ent: string, freq: Freq, p: string, peers: string[]): (Val & { from: string }) | null {
+  if (!c.ids.length || c.ids.every((id) => id.startsWith('mkt:'))) return null;
+  const q = back(freq, p, 1);
+  const x = c.tr === 's' ? cellVal(book, c, ent, freq, q, peers) : cellVal(book, c, ent, freq, p, peers, 1);
+  if (x.v == null || !Number.isFinite(x.v)) return null;
+  const why = `טרם דווח על ${plab(freq, p)}: הנתון המדווח האחרון (${plab(freq, q)})${c.ids.some((id) => id.startsWith('mkt:')) ? `, נתוני השוק לסוף ${plab(freq, p)}` : ''}`;
+  return { ...x, from: q, prov: () => { const pr = x.prov(); return pr.k === 'calc' ? { ...pr, note: [why, pr.note].filter(Boolean).join(' · ') } : pr.k === 'report' ? { ...pr, note: [why, pr.note].filter(Boolean).join(' · ') } : pr; } };
+}
+
+/** what a cell shows: the figure, or its transform. `shift`: see carriedVal */
+export function cellVal(book: Book, c: Col, ent: string, freq: Freq, p: string, peers: string[], shift = 0): Val {
+  const a = base(book, c, ent, freq, p, shift);
   if (c.tr === 'v' || a.v == null) return c.tr === 'v' ? a : { ...a, v: null };
   const title = `${colLabel(c)} · ${book.name(ent)} · ${plab(freq, p)}`;
   if (c.tr === 's') {
@@ -95,7 +109,7 @@ export function cellVal(book: Book, c: Col, ent: string, freq: Freq, p: string, 
       inputs: all.map(([e, x]) => ({ label: book.name(e), v: fmtV(c.unit, x.v!), src: x.prov })) }) };
   }
   const pb = c.tr === 'y' ? yearAgo(freq, p) : c.tr === 'q' ? back(freq, p, 1) : back(freq, p, 3 * (freq === 'FY' ? 1 : freq === 'H' ? 2 : 4));
-  const b = base(book, c, ent, freq, pb);
+  const b = base(book, c, ent, freq, pb, shift);
   if (b.v == null) return none(title, `אין ערך ל-${plab(freq, pb)}`);
   const w = brk(book, c, freq, a, b, p, pb);
   if (w) return { ...none(title, `שבר בהגדרה בין התקופות: ${w}`), fl: a.fl };

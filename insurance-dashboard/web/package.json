@@ -66,6 +66,7 @@
     "test:count": "node scripts/count-test.mjs",
     "test:rollout": "node scripts/page-words-test.mjs && node scripts/page-months-test.mjs && node scripts/my-amounts-test.mjs && node scripts/my-rows-test.mjs && node scripts/scoreboard-test.mjs && node scripts/screen-test.mjs && node scripts/fees-page-test.mjs && node scripts/fund-card-test.mjs && node scripts/month-grid-test.mjs && node scripts/home-links-test.mjs",
     "test:rollout-budgets": "node scripts/rollout-budgets.mjs",
+    "test:peers": "node scripts/peers-season-test.mjs",
     "test:compare": "node scripts/compare-months-test.mjs && node scripts/fee-example-test.mjs && node scripts/compare-words-test.mjs && node scripts/pick-search-test.mjs && node scripts/saver-compare-test.mjs && node scripts/pick-tiles-test.mjs && node scripts/search-tracks-test.mjs && node scripts/compare-long-test.mjs && node scripts/compare-shell-test.mjs && node scripts/compare-decision-test.mjs && node scripts/month-grid-test.mjs && node scripts/heat-contrast-test.mjs && node scripts/foxtick-test.mjs && node scripts/count-test.mjs && node scripts/funds-tie-test.mjs"
   },
   "dependencies": {

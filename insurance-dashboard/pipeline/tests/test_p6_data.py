@@ -7,6 +7,8 @@ cd pipeline && /usr/bin/python3 -m unittest tests.test_p6_data -v
   B7   Harel's Q3'26 statement rewords the pre-tax line ("רווח תפעולי לפני מסים על ההכנסה"): one line, role pbt, Q3'26 = 670 (p. 54)
   B11  the ROE bridge runs to Q3'26 (the pre-tax line is no longer missing there)
   B1   the model workbook a company page links runs to the latest filed quarter
+  W7   Phoenix's 30.09.25 CSM (printed without a basis) is proven net by the same report's segment lines, so the industry CSM balance
+       counts Phoenix at Q3'26 against a year earlier
 """
 import json
 import re
@@ -117,6 +119,24 @@ class HarelPretax(unittest.TestCase):
         ids = {b["id"] for b in a["bridges"]}
         self.assertTrue({"qoq:2026Q3", "yoy:2026Q3", "ltm:2026Q3"} <= ids)
         self.assertFalse([g for g in a["gaps"] if g["id"].endswith("2026Q3")])
+
+
+class CsmProvenNet(unittest.TestCase):
+    """W7: tier 3b of csm_resolve (mirrored in web/src/lib/csmResolve.ts; parity: web/scripts/csm-parity.mjs)"""
+
+    def test_phoenix_q3_25(self):
+        import csm_resolve
+        reps = [(per, [x for x in load(f"ifrs_{per}.json") if x["c"] == "phoenix"]) for per in ("2025Q2", "2025Q3", "2025FY", "2026Q1", "2026Q2", "2026Q3")]
+        r = csm_resolve.resolve(reps, "2025Q3", "2025-09-30")
+        self.assertEqual((r["v"], r["b"], r["scope"]), (8766, "net", "group"))
+        self.assertEqual([round(f["v"], 1) for f in r["proof"]], [2837.9, 228.5, 7405.1, 1248.1])
+        r = csm_resolve.resolve(reps, "2025Q2", "2025-06-30")  # 8,736 printed against 8,739.7 from the segments: not proven, stays unstated
+        self.assertEqual((r["v"], r["b"]), (8736, "na"))
+
+    def test_published(self):
+        got = load("csm/facts/phoenix.json")["resolved"]["2025-09-30"]
+        self.assertEqual(got[0], 8766)
+        self.assertTrue(got[1].startswith("נטו"))
 
 
 class ModelWorkbookWindow(unittest.TestCase):

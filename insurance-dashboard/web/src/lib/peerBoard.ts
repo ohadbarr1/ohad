@@ -6,7 +6,7 @@
 import { nf, pubLabel } from './format';
 import type { Prov } from './prov';
 import { back, plab, type Book, type Freq, type Unit, type Val } from './registry';
-import { cellVal, formulaTok, parseCol, ROE_EXPR, type Col } from './seriesCols';
+import { carriedVal, cellVal, formulaTok, parseCol, ROE_EXPR, type Col } from './seriesCols';
 import type { TasePrice } from './valuation';
 
 export const TAX = 34.19;  // the valuation pages' tax assumption on CSM (corporate 23% + profit tax 17% at financial institutions)
@@ -82,7 +82,8 @@ export const METRICS: BMetric[] = [
     { key: 'oaum', l: 'נכסים מנוהלים, כל המוצרים', sh: 'נכסים', u: 'bn', dec: 1, better: null, t: 'reg:assets@all' },
     { key: 'open', l: 'נכסים מנוהלים · פנסיה', sh: 'פנסיה', u: 'bn', dec: 1, better: null, t: 'reg:assets@pension' },
     { key: 'ogem', l: 'נכסים מנוהלים · גמל והשתלמות', sh: 'גמל והשתלמות', u: 'bn', dec: 1, better: null, t: 'reg:assets@gemel' },
-    { key: 'opol', l: 'נכסים מנוהלים · פוליסות חיסכון (ביטוח-נט)', sh: 'פוליסות', u: 'bn', dec: 1, better: null, t: 'reg:assets@insurance' },
+    { key: 'opol', l: 'נכסים מנוהלים · ביטוחי מנהלים ופוליסות חיסכון (ביטוח-נט)', sh: 'ביטוח-נט', u: 'bn', dec: 1, better: null, t: 'reg:assets@insurance',
+      note: 'ביטוח-נט: כל הנכסים בפוליסות ביטוח החיים המשתתפות ברווחים, ביטוחי מנהלים ופוליסות חיסכון; "פוליסות השקעה" במצגות החברות הן חוזי השקעה בלבד (IFRS 9), חלק מהסכום' },
     { key: 'oshare', l: 'נתח שוק בנכסים, כל המוצרים', sh: 'נתח שוק', u: 'pct', dec: 2, better: 'hi', t: 'reg:share@all', h: true },
     { key: 'oshd', l: 'שינוי נתח השוק, שנה', sh: 'Δ נתח, YoY', u: 'pp', dec: 2, better: 'hi', t: T('Δ נתח שוק', 'pct', 'reg_share__all - yago(reg_share__all)'), h: true },
     { key: 'odep', l: 'הפקדות, LTM', sh: 'הפקדות', u: 'bn', dec: 1, better: null, t: 'reg:deposits@all' },
@@ -93,7 +94,7 @@ export const METRICS: BMetric[] = [
     { key: 'otr', l: 'ניוד נטו, LTM', sh: 'ניוד נטו', u: 'bn', dec: 1, better: 'hi', t: 'reg:transfers@all' },
     { key: 'onet', l: 'צבירה נטו כולל ניוד, LTM', sh: 'צבירה נטו', u: 'bn', dec: 1, better: 'hi', t: 'reg:netflow@all' },
     { key: 'onetr', l: 'צבירה נטו לנכסים בתחילת השנה', sh: 'צבירה / נכסים', u: 'pct', dec: 1, better: 'hi', h: true,
-      t: T('צבירה נטו / נכסים', 'pct', 'reg_netflow__all / yago(reg_flowassets__all) * 100'), note: 'צמיחה אורגנית: הפקדות פחות משיכות ועוד ניוד נטו, ביחס לנכסי פנסיה וגמל לפני שנה' },
+      t: T('צבירה נטו / נכסים', 'pct', 'reg_netflow__all / yago(reg_flowassets__all) * 100'), note: 'צבירה נטו: הפקדות פחות משיכות ועוד ניוד נטו (צבירה אורגנית, כמו בדף החברה, היא בלי ניוד), ביחס לנכסי פנסיה וגמל לפני שנה' },
     { key: 'ofee', l: 'דמי ניהול ממוצעים מנכסים', sh: 'דמי ניהול', u: 'pct', dec: 2, better: null, t: 'reg:fee@all', h: true },
     { key: 'oflowa', l: 'נכסים במוצרים עם נתוני תזרים (פנסיה, גמל והשתלמות)', sh: 'בסיס תזרים', u: 'bn', dec: 1, better: null, t: 'reg:flowassets@all', hide: true },
   ] as const).map((x) => ({ key: x.key, l: x.l, sh: x.sh, u: x.u, dec: x.dec, better: x.better, sec: 'ops' as Sec, grp: 'sav' as OpsGrp, ax: 'reg' as const,
@@ -199,15 +200,20 @@ function ltmFromHalves(book: Book, c: Col, m: BMetric, ent: string, p: string, p
   return { v, fl: 0, p: `${y}Q2`, stale: q >= 3, prov: () => ({ k: 'calc', title, value: fmtB(m, v), unit: unitB(m), formula: `LTM = שנת ${y - 1} + H1 ${y} − H1 ${y - 1} (הנתון מתפרסם לחציונים ולשנים)`,
     inputs: [{ label: `FY${y - 1}`, v: mil(fy.v!), src: fy.prov }, { label: `H1 ${y}`, v: mil(h1.v!), src: h1.prov }, { label: `H1 ${y - 1}`, v: mil(h0.v!), src: h0.prov }] }) };
 }
-/** a metric on the LTM axis at quarter end (the history chart) */
-export function histVal(book: Book, m: BMetric, ent: string, kind: Kind, p: string, peers: string[]): Val | null {
+/** a metric on the LTM axis at quarter end (the history chart). `carry` (the board's quarter only): a company that has not reported the
+ *  quarter yet is read by the board's rule (CARRY_RULE, seriesCols.carriedVal): its latest reported figures, the market at the quarter end. */
+export function histVal(book: Book, m: BMetric, ent: string, kind: Kind, p: string, peers: string[], carry = false): BVal | null {
   const tok = m.hist?.[kind];
   if (!tok) return null;
-  const x = cellVal(book, colOf(book, tok), ent, 'LTM', p, peers);
+  const c = colOf(book, tok);
+  let x: BVal = cellVal(book, c, ent, 'LTM', p, peers);
+  if ((x.v == null || !Number.isFinite(x.v)) && carry) { const y = carriedVal(book, c, ent, 'LTM', p, peers); if (y) x = { ...y, p: y.from, stale: true }; }
   if (x.v == null || !Number.isFinite(x.v)) return x;
   if ((m.key === 'pe' || m.key === 'pb' || m.key === 'pbc') && x.v <= 0) return { ...x, v: null, why: 'רווח או הון שלילי: המכפיל אינו בעל משמעות' };
   return x;
 }
+/** the rule for a quarter not every company has reported (the board, the free table, the history chart and their medians; Methodology #peers) */
+export const CARRY_RULE = 'חברה שטרם דיווחה על הרבעון: הנתון האחרון שדיווחה (רבעון אחד אחורה; כושר פירעון עד שלושה), מסומן * עם התקופה שלו, ונכלל בחציון, בממוצע ובדירוג. מכפיל לאורך זמן: שווי השוק בסוף הרבעון ÷ הנתון המדווח האחרון. סכום מוצג רק כשכל הרכיבים מאותה תקופה.';
 
 /* ---------- spot market cells ---------- */
 const vendor = (p: TasePrice) => `${p.source}${p.ticker ? ` · נייר ${p.ticker}` : ''}`;

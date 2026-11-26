@@ -111,6 +111,15 @@ def qof(d):
     return f"{d[:4]}{q}" if q else None
 
 
+def first_print(c):
+    """a restated cell's note (the source sheet prints it): the figure as first printed and the report that printed it"""
+    if c.get("rst") is None:
+        return None
+    r = c.get("rfrom") or ""
+    lab = f"FY'{r[2:4]}" if r.endswith("FY") else f"{r[4:]}'{r[2:4]}" if r else "דוח קודם"
+    return f"כפי שהודפס לראשונה (דוח {lab}): {c['rst']:,.0f}" if abs(c["rst"]) >= 100 else f"כפי שהודפס לראשונה (דוח {lab}): {c['rst']:,.1f}"
+
+
 # ---------------------------------------------------------------- ifrs: series/<company>.json
 SEG_HE = {"group": "", "life": " · חיים וחיסכון", "health": " · בריאות", "pc": " · ביטוח כללי", "savings": " · פנסיה וגמל"}
 B_ORDER = ["net", "na", "gross", "reinsurance"]
@@ -170,7 +179,7 @@ for per in sorted({f["period"] for f in ifrs_meta["files"]}):
 for slot in fx.values():
     for k, prints in slot.items():
         c, first = restate_rule.pick(prints, lambda c: c["from"], lambda c: c["own"])
-        slot[k] = {**c, **({"rst": first["v"]} if c is not first and restate_rule.restated(first["v"], c["v"]) else {})}
+        slot[k] = {**c, **({"rst": first["v"], "rfrom": first["from"]} if c is not first and restate_rule.restated(first["v"], c["v"]) else {})}
 MERGED = []
 for (c, m, g, b), cells in fx.items():
     key = (m, g)
@@ -198,7 +207,7 @@ for (c, m, g, b), cells in fx.items():
         if k in vals or (row.get("w") == "i") != x["inst"]:
             continue
         vals[k] = {"v": round(x["v"], 3), "pg": x["pg"], "u": x["u"], "std": "IFRS 17", **({"cmp": 1} if not x["own"] else {}), **({"src": x["src"]} if x.get("src") else {}),
-                   **({"rst": x["rst"]} if x.get("rst") is not None else {})}
+                   **({"rst": x["rst"], "rfrom": x["rfrom"]} if x.get("rst") is not None else {})}
     row["vals"] = dict(sorted(vals.items()))
 
 print("basis merged (na <-> stated):", len(MERGED))
@@ -273,7 +282,7 @@ for (m, seg), comps in sorted(by_key.items()):
                 sg = -1 if (m in TURN and c["v"] < 0) else 1
                 ch.cell(comp, p, v, None, None, fl, parts=[[lab, x["v"] * sg, x.get("pg"), ch.url(x.get("u"))] for lab, x in c["parts"]])
             else:
-                ch.cell(comp, p, v, c.get("pg"), c.get("u"), fl, meta=meta)
+                ch.cell(comp, p, v, c.get("pg"), c.get("u"), fl, meta=meta, aux=first_print(c))
     topic = "seg" if seg != "group" else next((t for t, keys in TOPIC_IFRS.items() if any(m.startswith(x) or x in m for x in keys)), "pl")
     BH = {"na": "ללא פיצול בסיס", "net": "בשייר", "gross": "ברוטו", "reinsurance": "ביטוח משנה"}
     note = "סכום כפי שהודפס בטבלת הקבוצה; כל חברה על הבסיס שהיא מדפיסה" + (f" (רוב החברות: {BH.get(bases.most_common(1)[0][0], bases.most_common(1)[0][0])})" if len(bases) > 1 else "")

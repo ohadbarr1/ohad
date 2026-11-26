@@ -110,7 +110,7 @@ STEPS = [
          [D + "facts/*.json", D + "ifrs.json", D + "ifrs_*.json", D + "search/docs.json", D + "companies/index.json", "web/src/lib/labels.ts",
           "web/src/pages/CompanyIfrs.tsx", "web/src/pages/IndustryIfrs.tsx"], [D + "restatements.json"], groups={"facts"}),
     step("build_csm", "pipeline/build_csm.py", [D + "ifrs.json", D + "ifrs_*.json", D + "series/*.json", D + "csm/solvency.json"],
-         [D + "csm/facts", D + "csm/summary.json", D + "csm/sens.json", D + "csm/rates.json", D + "csm/capital.json"]),
+         [D + "csm/facts", D + "csm/summary.json", D + "csm/sens.json", D + "csm/rates.json", D + "csm/capital.json"], code=["pipeline/csm_resolve.py"]),
     # W10: the standardised IFRS 17 layer (portfolio-group note, CSM / RA / loss-component movements, expected CSM release); gate `ifrs_std`
     step("build_ifrs_std", "pipeline/build_ifrs_std.py", ["data/extracted_ifrs_std"], [D + "ifrs17"], code=["pipeline/bridge.py"],
          note="every cell page-cited or a labelled difference of printed figures; CSM roll-forward identity per insurer-quarter"),
@@ -231,7 +231,7 @@ STEPS = [
          [D + "lens.json", D + "market.json", D + "companies/index.json", D + "fragility.json", D + "targets.json", D + "kpi.json", D + "csm",
           D + "capital", D + "consolidation", D + "expectations", D + "warroom", D + "regulation", D + "attribution", D + "drivers", D + "funds.json",
           D + "nowcast.json", D + "flow_npv.json", D + "funds/closed.json", D + "funds/persist.json", D + "funds/default.json", D + "funds/trackers.json",
-          D + "funds/glide.json", D + "funds/stats"],
+          D + "funds/glide.json", D + "funds/stats", D + "restatements.json", D + "lts.json"],
          [D + "answers"], code=["pipeline/answer_core.py", "pipeline/questions"], groups={"deploy"},
          note="S1: answers/index.json + answers/<topic>.json; every figure a token with provenance (answer_core rules)"),
     # module S2: the Finding Engine (six detectors over the published files, ranked by materiality x surprise, top 3-5 per build); gate `findings`
