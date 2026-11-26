@@ -77,6 +77,7 @@
 {"metric":"ic.aum","period":"2025-12","deck":12174.0,"ours":12174.0,"ours_exact":12174.0,"ok":true},
 {"metric":"ic.aum","period":"2026-03","deck":13260.0,"ours":13260.0,"ours_exact":13260.0,"ok":true},
 {"metric":"ic.aum","period":"2026-06","deck":15201.0,"ours":15201.0,"ours_exact":15201.0,"ok":true},
+{"metric":"ic.aum","period":"2026-09","deck":16588.0,"ours":16588.0,"ours_exact":16588.0,"ok":true},
 {"metric":"ic.dep","period":"FY2021","deck":1180.429,"ours":1180.0,"ours_exact":1180.429,"ok":false},
 {"metric":"ic.dep","period":"FY2022","deck":2152.388,"ours":2152.0,"ours_exact":2152.388,"ok":false},
 {"metric":"ic.dep","period":"Q1-2023","deck":221.586,"ours":222.0,"ours_exact":221.586,"ok":false},
@@ -102,7 +103,9 @@
 {"metric":"ic.dep","period":"Q4-2025","deck":1540.0,"ours":1540.0,"ours_exact":1540.0,"ok":true},
 {"metric":"ic.dep","period":"Q1-2026","deck":1569.0,"ours":1569.0,"ours_exact":1569.0,"ok":true},
 {"metric":"ic.dep","period":"H1-2026","deck":3117.0,"ours":3117.0,"ours_exact":3117.0,"ok":true},
-{"metric":"ic.dep","period":"Q2-2026","deck":1548.0,"ours":1548.0,"ours_exact":1548.0,"ok":true}
+{"metric":"ic.dep","period":"Q2-2026","deck":1548.0,"ours":1548.0,"ours_exact":1548.0,"ok":true},
+{"metric":"ic.dep","period":"9M-2026","deck":4738.0,"ours":4738.0,"ours_exact":4738.0,"ok":true},
+{"metric":"ic.dep","period":"Q3-2026","deck":1621.0,"ours":1621.0,"ours_exact":1621.0,"ok":true}
 ],
 "notes":[
 {"series":"ic.dep","key":"Q3-2024","used":869.0,"used_file":"2025Q3","other":829.007,"other_files":["2024Q3"],"rule":"IFRS 4 report of 2024, superseded by the IFRS 17 comparative of the 2025 reports"},

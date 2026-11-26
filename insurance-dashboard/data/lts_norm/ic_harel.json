@@ -74,6 +74,7 @@
 {"metric":"ic.aum","period":"2025-12","deck":23025.0,"ours":23025.0,"ours_exact":23025.0,"ok":true},
 {"metric":"ic.aum","period":"2026-03","deck":23133.0,"ours":23133.0,"ours_exact":23133.0,"ok":true},
 {"metric":"ic.aum","period":"2026-06","deck":24814.0,"ours":24814.0,"ours_exact":24814.0,"ok":true},
+{"metric":"ic.aum","period":"2026-09","deck":25401.0,"ours":25401.0,"ours_exact":25401.0,"ok":true},
 {"metric":"ic.dep","period":"FY2021","deck":3939.0,"ours":3939.0,"ours_exact":3939.0,"ok":true},
 {"metric":"ic.dep","period":"FY2022","deck":3936.0,"ours":3936.0,"ours_exact":3936.0,"ok":true},
 {"metric":"ic.dep","period":"Q1-2023","deck":656.0,"ours":656.0,"ours_exact":656.0,"ok":true},
@@ -99,7 +100,9 @@
 {"metric":"ic.dep","period":"Q4-2025","deck":973.0,"ours":973.0,"ours_exact":973.0,"ok":true},
 {"metric":"ic.dep","period":"Q1-2026","deck":1120.0,"ours":1120.0,"ours_exact":1120.0,"ok":true},
 {"metric":"ic.dep","period":"H1-2026","deck":2293.0,"ours":2293.0,"ours_exact":2293.0,"ok":true},
-{"metric":"ic.dep","period":"Q2-2026","deck":1173.0,"ours":1173.0,"ours_exact":1173.0,"ok":true}
+{"metric":"ic.dep","period":"Q2-2026","deck":1173.0,"ours":1173.0,"ours_exact":1173.0,"ok":true},
+{"metric":"ic.dep","period":"9M-2026","deck":3521.0,"ours":3521.0,"ours_exact":3521.0,"ok":true},
+{"metric":"ic.dep","period":"Q3-2026","deck":1228.0,"ours":1228.0,"ours_exact":1228.0,"ok":true}
 ],
 "notes":[
 {"series":"ic.sm","key":"all","rule":"not output: the reports print no selling / acquisition or general / administrative expenses for this activity, only one line 'הוצאות תפעוליות אחרות' (metric other_expenses), which is neither; nothing is derived."},
