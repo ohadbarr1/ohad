@@ -1,0 +1,106 @@
+/* Track compare, the page shell and the month lens (lane L2-a; mockup v3 frames 3, 8, 28). Tokens only from styles.css; the grid,
+   chips, guard lines and sheets have their own styles (styles/compare.css, styles/sheet.css). Measured to fit, at 390 × 664, the table,
+   its three summary rows and the sentence above the phone's bottom bar for three tracks. */
+
+/* the page: one root, so the site's 18-px page gap does not open between the eyebrow, the chips and the strip */
+.cmpx { display: block; min-width: 0; margin-top: -10px; }
+@media (min-width: 761px) { .cmpx { margin-top: -16px; } }
+
+/* eyebrow: the pink icon tile and the category, one line */
+.cmp-eyebrow { display: flex; align-items: center; gap: 8px; padding: 6px 2px 3px; }
+.cmp-tile { display: grid; place-items: center; width: 24px; height: 24px; flex: none; border-radius: 8px; background: var(--accent-soft); color: var(--accent-text); }
+.cmp-tile svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; }
+.cmp-eyebrow h1 { margin: 0; flex: 1; min-width: 0; font-size: 16px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmpx .trackbar { padding: 2px 0 4px; }
+
+/* the view strip: sticky under the top bar, opaque, a hairline under it; five tabs at most, never scrolls */
+.cmp-stick { position: sticky; top: var(--cmp-top, 0px); z-index: 15; margin-inline: -14px; padding: 2px 14px 6px; background: var(--bg); box-shadow: 0 1px 0 var(--line-soft); }
+@media (min-width: 761px) { .cmp-stick { margin-inline: -26px; padding-inline: 26px; } }
+.cmp-views { display: flex; gap: 2px; padding: 3px; border-radius: var(--r-3); background: var(--panel3); overflow: hidden; }
+.cmp-views button { flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 6px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--muted); white-space: nowrap; text-align: center; cursor: pointer; transition: background var(--mid), color var(--mid); }
+.cmp-views button.on { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
+.cmp-views button:active { transform: scale(0.97); }
+@media (max-width: 380px) { .cmp-views button { padding: 0 4px; font-size: 12.5px; } }
+
+/* the lens body; a lens change cross-fades it */
+.cmp-lens { animation: cmp-fade var(--mid) var(--ease) both; }
+@keyframes cmp-fade { from { opacity: 0; transform: translateY(4px); } }
+.cmp-body { padding-top: 8px; }
+.cmp-body > .guard { margin-bottom: 8px; }
+
+/* the sentence */
+.cmp-insight { display: flex; gap: 8px; align-items: flex-start; margin: 7px 2px 0; font-size: 13.5px; font-weight: 500; line-height: 1.35; color: var(--fg); }
+.cmp-spark { display: grid; place-items: center; flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 7px; background: var(--accent-soft); color: var(--accent-text); }
+.cmp-spark svg { width: 13px; height: 13px; fill: currentColor; }
+
+/* hint line */
+.cmp-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 2px 0; font-size: 11.5px; color: var(--muted); }
+.cmp-legend i { display: inline-block; width: 6px; height: 6px; margin-inline-end: 4px; border-radius: 50%; background: var(--fg); vertical-align: 1px; }
+
+/* agent / Pro: the category-average chip and the basis pill */
+.cmp-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cmp-chip { height: 44px; padding: 0 14px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 13.5px; font-weight: 500; color: var(--fg); cursor: pointer; }
+.cmp-chip[aria-pressed="true"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-text); font-weight: 700; }
+.cmp-dpill { display: inline-flex; align-items: center; gap: 5px; height: 44px; padding: 0 12px; border-radius: var(--r-2); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 12.5px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.cmp-dpill svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+
+/* the collapsed extremes block */
+details.cmp-x { margin-top: 8px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); }
+details.cmp-x > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding: 10px 14px; font-weight: 700; font-size: 14px; cursor: pointer; }
+details.cmp-x > summary::-webkit-details-marker { display: none; }
+details.cmp-x > summary::after { content: "▾"; color: var(--muted); font-size: 12px; transition: transform var(--fast); }
+details.cmp-x[open] > summary::after { transform: rotate(180deg); }
+details.cmp-x .in { padding: 0 10px 10px; }
+details.cmp-x table.cg td small { white-space: nowrap; }
+.cmp-note { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+/* sharing at the page's end (C10) */
+.cmp-share { display: flex; gap: 8px; margin-top: 8px; }
+.cmp-btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 16px; flex: none; border-radius: var(--r-3); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 14px; font-weight: 700; color: var(--fg); text-decoration: none; cursor: pointer; transition: transform var(--fast); }
+.cmp-btn:active { transform: scale(0.97); }
+.cmp-btn.wa { flex: 1; --wa-bg: #E9F6EE; --wa-line: #BFE3CC; --wa-ink: #0B5D3B; background: var(--wa-bg); border-color: var(--wa-line); color: var(--wa-ink); }
+:root[data-theme="dark"] .cmp-btn.wa { --wa-bg: color-mix(in oklch, #25D366 14%, var(--panel)); --wa-line: color-mix(in oklch, #25D366 35%, transparent); --wa-ink: #8EE0B0; }
+
+/* the stamp */
+.cmp-stamp { margin: 10px 2px 0; font-size: 11.5px; line-height: 1.6; color: var(--faint); }
+.cmp-stamp button { display: block; min-height: 44px; min-width: 88px; padding: 0; border: 0; background: none; font: inherit; color: var(--muted); text-align: start; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+
+/* ?focus=fee: the fee row draws the eye once */
+/* (review B1 #8: the soft tint alone went unnoticed) two warm pulses and an accent ring along the row, then back to the panel */
+table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: cmp-flash 2.6s var(--ease) both; box-shadow: inset 0 2px 0 var(--accent-line), inset 0 -2px 0 var(--accent-line); }
+@keyframes cmp-flash {
+  0%, 14% { background: color-mix(in srgb, var(--accent) 26%, var(--panel)); }
+  30% { background: var(--accent-soft); }
+  44%, 62% { background: color-mix(in srgb, var(--accent) 26%, var(--panel)); }
+  100% { background: var(--accent-soft); }
+}
+
+/* a short notice */
+.cmp-toast { position: fixed; inset-inline: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 60; margin-inline: auto; max-width: 420px; padding: 10px 14px; border-radius: 12px; background: var(--fg); color: var(--bg); font-size: 13.5px; line-height: 1.4; text-align: center; box-shadow: var(--e-1); animation: cmp-fade var(--mid) var(--ease) both; }
+
+/* the simple view's notice: the line and the way back (a 44-px button) */
+.cmp-toast-undo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px 4px 4px; padding-inline-start: 14px; text-align: start; }
+.cmp-toast-undo button { flex: none; min-height: 44px; padding: 0 14px; border: 0; border-radius: 9px; background: color-mix(in oklch, var(--bg) 16%, transparent); color: var(--bg); font: inherit; font-weight: 700; cursor: pointer; }
+.cmp-toast-undo button:active { transform: scale(0.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cmp-lens, .cmp-toast, table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { animation: none !important; }
+  table.mg tr.cmp-flash th, table.mg tr.cmp-flash td { background: var(--accent-soft); }
+}
+
+/* review B1 #6: the rows pass under the sticky column head; a soft shade under the head reads as "under", not as a clipped sliver */
+.cmpx table.mg thead th { box-shadow: 0 1px 0 var(--line-soft), 0 10px 12px -10px rgb(15 23 42 / 0.28); clip-path: inset(0 0 -22px 0); }
+:root[data-theme="dark"] .cmpx table.mg thead th { box-shadow: 0 1px 0 var(--line-soft), 0 10px 12px -10px rgb(0 0 0 / 0.6); }
+
+/* review B1 #3: the long view's readout stays in sight above the chart while a finger is on it (the card scrolls under the strip) */
+.cmpx .cl-card .cl-ro { position: sticky; top: var(--mg-top, 0px); z-index: 2; background: var(--panel); padding-block: 6px; margin-block: -6px 0; }
+
+/* review B1 #9: a guard line (different risk levels, different products, an old policy) and the equity line under each column; tighten the head so the fee row stays
+   on screen one at 390×664 (mockup v3 frame 20). Spacing only: every control keeps its 44 / 32 px */
+.cmpx:has(.cmp-body > .guard) .cmp-eyebrow { padding-block: 2px 1px; }
+.cmpx:has(.cmp-body > .guard) .trackbar { padding-block: 0 2px; }
+.cmpx:has(.cmp-body > .guard) .cmp-stick { padding-bottom: 4px; }
+.cmpx:has(.cmp-body > .guard) .cmp-body { padding-top: 5px; }
+.cmpx:has(.cmp-body > .guard) .cmp-body > .guard { margin-bottom: 5px; }
+.cmpx:has(.cmp-body > .guard) table.mg thead .mg-col { padding-block: 3px 4px; gap: 1px; }
+.cmpx:has(.cmp-body > .guard) table.mg tfoot th, .cmpx:has(.cmp-body > .guard) table.mg tfoot td { padding-block: 1px; }

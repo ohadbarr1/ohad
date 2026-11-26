@@ -57,6 +57,22 @@ export interface FoxSpec {
 const LRM = '‎';
 export const fmtNum = (v: number, dec?: number): string => `${LRM}${nf(v, dec ?? (Math.abs(v) >= 100 ? 0 : 1))}`;
 
+/** An axis tick: whole numbers plain, a fraction with the decimals it needs, so neighbouring ticks never print the same label
+ *  (a −0.5% step used to read −1%, −1%, −2%, −2%). */
+export const tickNum = (v: number): string => fmtNum(v, Number.isInteger(v) ? 0 : Math.abs(v * 10 - Math.round(v * 10)) < 1e-6 ? 1 : 2);
+
+/** The legend: scrolls on a wide screen; on a phone it wraps onto as many rows as the names need, so no name hides behind "1/3".
+ *  `rows` is the number of rows it takes, for the plot's top margin. */
+function legendBox(names: string[]): { legend: Record<string, unknown>; rows: number } {
+  const narrow = typeof window !== 'undefined' && window.innerWidth < 760;
+  const base = { top: 0, textStyle: { color: chartBase().fg, fontSize: 11.5 }, itemWidth: 10, itemHeight: 10, itemGap: 14, icon: 'rect' };
+  if (!narrow) return { legend: { ...base, type: 'scroll' }, rows: 1 };
+  const w = Math.max(200, window.innerWidth - 40);
+  let rows = 1, used = 0;
+  for (const n of names) { const l = n.length * 6.6 + 24; if (used && used + l > w) { rows++; used = 0; } used += l + 14; }
+  return { legend: { ...base, type: 'plain', left: 'center', width: w, itemGap: 12 }, rows };
+}
+
 export function foxOption(spec: FoxSpec): EChartsCoreOption {
   const b = chartBase();
   // only the span in which something is plotted
@@ -69,6 +85,7 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
   const room = typeof window === 'undefined' ? 14 : Math.floor(Math.min(window.innerWidth, 1280) / 44 / Math.max(1, spec.series.filter((q) => (q.kind ?? (q.pct ? 'line' : 'bar')) === 'bar').length));
   const showLabels = spec.labels ?? (!spec.dense && !stacked && spec.series.length <= 2 && x.length <= Math.min(14, room));
   const legend = spec.legend ?? spec.series.length > 1;
+  const lg = legend ? legendBox(spec.series.map((q) => q.name)) : null;
   const rot = spec.rotate ?? (!spec.dense && x.length > 14 ? 45 : 0);
   const texts: ((v: number | null) => string)[] = [];
   const series: Record<string, unknown>[] = spec.series.map((s) => {
@@ -91,13 +108,13 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
     series[0].markLine = { silent: true, symbol: 'none', lineStyle: { color: b.mu, type: 'dashed', width: 1 }, label: { formatter: spec.breakLabel ?? '', color: b.mu, fontSize: 11, position: 'insideEndTop' }, data: [{ xAxis: brk - 0.5 }] };
   }
   const axis = (name: string, pct: boolean, grid: boolean) => ({
-    type: 'value', name, nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `${fmtNum(v, 0)}${pct ? '%' : ''}` },
+    type: 'value', name, nameTextStyle: { color: b.mu, fontSize: 11, align: 'left' }, axisLabel: { color: b.mu, fontSize: 11, formatter: (v: number) => `${tickNum(v)}${pct ? '%' : ''}` },
     splitLine: grid ? { lineStyle: { color: b.ln2, type: 'solid' } } : { show: false },
   });
   return {
     animation: false, textStyle: { fontFamily: CHART_FONT, color: b.fg },
-    grid: { left: 8, right: second ? 8 : 14, top: legend ? 58 : 34, bottom: 6, containLabel: true },
-    legend: legend ? { top: 0, type: 'scroll', textStyle: { color: b.fg, fontSize: 11.5 }, itemWidth: 10, itemHeight: 10, itemGap: 14, icon: 'rect' } : undefined,
+    grid: { left: 8, right: second ? 8 : 14, top: lg ? 36 + 22 * lg.rows : 34, bottom: 6, containLabel: true },
+    legend: lg?.legend,
     tooltip: { trigger: 'axis', axisPointer: { type: allLines ? 'line' : 'shadow', shadowStyle: { opacity: 0.08 } }, confine: true, backgroundColor: b.panel, borderColor: b.ln, extraCssText: tooltipCss(), textStyle: { color: b.fg, fontSize: 12 },
       // one tooltip everywhere: the period, each series with its figure, the sum where the parts add up, and the unit
       formatter: (ps: { axisValueLabel: string; marker: string; seriesName: string; seriesIndex: number; value: number | null | { value: number } }[]) => {

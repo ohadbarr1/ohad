@@ -49,7 +49,22 @@
     "test:moments": "node scripts/moments-test.mjs",
     "test:checkup": "node scripts/checkup-test.mjs",
     "test:feebook": "node scripts/feebook-test.mjs",
-    "test:ifrsstd": "node scripts/ifrsstd-test.mjs"
+    "test:ifrsstd": "node scripts/ifrsstd-test.mjs",
+    "test:comparemonths": "node scripts/compare-months-test.mjs",
+    "test:feeexample": "node scripts/fee-example-test.mjs",
+    "test:comparewords": "node scripts/compare-words-test.mjs",
+    "test:picksearch": "node scripts/pick-search-test.mjs",
+    "test:savercompare": "node scripts/saver-compare-test.mjs",
+    "test:picktiles": "node scripts/pick-tiles-test.mjs",
+    "test:searchtracks": "node scripts/search-tracks-test.mjs",
+    "test:comparelong": "node scripts/compare-long-test.mjs",
+    "test:compareshell": "node scripts/compare-shell-test.mjs",
+    "test:comparedecision": "node scripts/compare-decision-test.mjs",
+    "test:monthgrid": "node scripts/month-grid-test.mjs",
+    "test:heatcontrast": "node scripts/heat-contrast-test.mjs",
+    "test:foxtick": "node scripts/foxtick-test.mjs",
+    "test:count": "node scripts/count-test.mjs",
+    "test:compare": "node scripts/compare-months-test.mjs && node scripts/fee-example-test.mjs && node scripts/compare-words-test.mjs && node scripts/pick-search-test.mjs && node scripts/saver-compare-test.mjs && node scripts/pick-tiles-test.mjs && node scripts/search-tracks-test.mjs && node scripts/compare-long-test.mjs && node scripts/compare-shell-test.mjs && node scripts/compare-decision-test.mjs && node scripts/month-grid-test.mjs && node scripts/heat-contrast-test.mjs && node scripts/foxtick-test.mjs && node scripts/count-test.mjs && node scripts/funds-tie-test.mjs"
   },
   "dependencies": {
     "@fontsource/heebo": "5.3.0",

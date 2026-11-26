@@ -17,6 +17,9 @@
   --accent: #FF4E31; --accent-text: #C2391C; --accent-2: #E8431F; --accent-ink: #FFFFFF; --accent-soft: rgb(255 78 49 / 0.1); --accent-line: rgb(255 78 49 / 0.45);
   --sel-bg: #111C3F; --sel-fg: #FFFFFF;
   --up: #0B7F56; --down: #C8102E; --warn: #8A5A00;
+  /* heat fills (compare grid cells, month-sheet bars only; text stays --up / --down): teal and vermilion as rgb triplets, used at 7–40% over
+     --panel with the ink colour on top; the pair stays apart under deuteranopia and protanopia, and the sign is always written */
+  --heat-up: 10 127 110; --heat-down: 200 64 30;
   /* categorical: fixed order, validated for colour-blind separation on this surface */
   --s1: #2B54B8; --s2: #D4451F; --s3: #5B67D6; --s4: #00978A; --s5: #9A5A2C; --s6: #8A4FC2; --s7: #B07A0A; --s8: #B03A76; --s9: #2E86D1; --s10: #C7337A; --s11: #6E8B00; --neutral: #7A7F8C;
   /* elevation: e-1 a hairline and a breath of shadow (panels at rest), e-2 a lifted sheet (menus, drawers, the source sheet) */
@@ -32,6 +35,7 @@
   --accent: oklch(0.76 0.17 50); --accent-text: oklch(0.8 0.15 55); --accent-2: oklch(0.68 0.21 22); --accent-ink: oklch(0.18 0.03 52); --accent-soft: oklch(0.76 0.17 50 / 0.13); --accent-line: oklch(0.76 0.17 50 / 0.5);
   --sel-bg: oklch(0.94 0.006 75); --sel-fg: oklch(0.16 0.01 55);
   --up: oklch(0.8 0.15 160); --down: oklch(0.72 0.18 18); --warn: oklch(0.85 0.14 88);
+  --heat-up: 52 196 172; --heat-down: 238 112 78;
   --s1: #6A8EE7; --s2: #E26940; --s3: #8289DA; --s4: #00AA98; --s5: #C77F3F; --s6: #A579DB; --s7: #BA8900; --s8: #D4689E; --s9: #439AD6; --s10: #E15C97; --s11: #85A000; --neutral: #8E949E;
   --e-1: 0 1px 0 var(--hi) inset, 0 1px 2px oklch(0 0 0 / 0.25);
   --shadow: 0 1px 0 var(--hi) inset, 0 12px 36px oklch(0 0 0 / 0.5); --e-2: var(--shadow); --glow: 0 0 0 1px var(--accent-line);
@@ -74,11 +78,13 @@ svg.ico.ink .f { fill: var(--sel-bg); opacity: 0.18; }
 .shell { display: grid; grid-template-columns: 80px minmax(0, 1fr); min-height: 100dvh; }
 .rail { position: sticky; top: 0; height: 100dvh; background: var(--rail); border-inline-end: 1px solid var(--line-soft); display: flex; flex-direction: column; align-items: center; padding: 10px 0 10px; gap: 4px; z-index: 30; }
 .rail .brand { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; margin-bottom: 8px; transition: background var(--fast); }
-.rail .brand:hover { background: var(--accent-soft); }
+.rail .brand:active { background: var(--accent-soft); }
+@media (hover: hover) { .rail .brand:hover { background: var(--accent-soft); } }
 .rail nav { display: flex; flex-direction: column; gap: 4px; width: 100%; padding-inline: 8px; }
 .rail a.item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 2px 7px; border-radius: var(--r-2); color: var(--muted); font-size: 11.5px; font-weight: 500; line-height: 1.2; text-align: center; transition: color var(--fast), background var(--fast); }
-.rail a.item:hover { color: var(--fg); background: var(--panel2); text-decoration: none; }
-.rail a.item:hover svg.ico .f { opacity: 0.22; }
+/* hover only where a pointer exists: on touch a tapped item must not stay grey after the tap */
+@media (hover: hover) { .rail a.item:hover { color: var(--fg); background: var(--panel2); text-decoration: none; } .rail a.item:hover svg.ico .f { opacity: 0.22; } }
+.rail a.item:hover { text-decoration: none; }
 .rail a.item svg.ico { width: 22px; height: 22px; }
 .rail a.item.active { color: var(--fg); font-weight: 700; background: var(--accent-soft); }
 .rail a.item.active svg.ico { color: var(--accent-text); } .rail a.item.active svg.ico .f { fill: var(--accent); opacity: 0.3; }
@@ -294,7 +300,9 @@ td.heat { transition: background var(--mid); }
   .rail { position: fixed; inset: auto 0 0 0; height: auto; flex-direction: row; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); border-inline-end: 0; border-top: 1px solid var(--line-soft); box-shadow: 0 -1px 0 var(--hi) inset, 0 -8px 24px rgb(17 28 63 / 0.06); }
   .rail .brand, .rail .foot, .rail .rail-ev { display: none; }
   .rail nav { flex-direction: row; justify-content: space-around; padding: 0; gap: 4px; }
-  .rail a.item { flex: 1; font-size: var(--t-1); min-height: 50px; justify-content: center; white-space: nowrap; gap: 3px; }
+  /* equal slots, but never narrower than the label: a long one ("השוואה ענפית", 67 px at 375 px) takes the width it needs from the others
+     (each still >= 44 px: the label box is at least 40 px plus the 2 px sides) instead of spilling past its slot */
+  .rail a.item { flex: 1; font-size: var(--t-1); min-height: 50px; min-width: max-content; justify-content: center; white-space: nowrap; gap: 3px; }
   .rail a.item svg.ico { width: 24px; height: 24px; }
   .rail a.item.active::before { inset: auto 20% 0 20%; top: auto; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
   .top-in { padding: calc(9px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 9px max(14px, env(safe-area-inset-left, 0px)); } .wordmark { display: none; }
@@ -552,7 +560,7 @@ table.dense tr.sec td { padding-top: 8px; }
 .scroll table tbody tr.on td:first-child { background: color-mix(in oklch, var(--fg) 7%, var(--panel)); }
 /* the rail's labels: full on a wide screen, short on the phone's bottom bar */
 .rail a.item .lbl-p { display: none; }
-@media (max-width: 760px) { .rail a.item .lbl-w { display: none; } .rail a.item .lbl-p { display: inline; } .rail a.item.wide-item { display: none; } }
+@media (max-width: 760px) { .rail a.item .lbl-w { display: none; } .rail a.item .lbl-p { display: inline-block; min-width: 40px; } .rail a.item.wide-item { display: none; } }
 /* the second row of tabs (under "דוחות"): quieter than the first, the current one underlined */
 .subnav.sub2 { margin-top: -10px; padding: 2px; gap: 2px; }
 .subnav.sub2 a { padding: 3px 10px; font-size: var(--t-2); }

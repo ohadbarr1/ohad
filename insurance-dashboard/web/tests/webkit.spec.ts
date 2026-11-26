@@ -42,10 +42,11 @@ test('company page survives reloads and place switches in WebKit', async ({ page
   expect(seen.length).toBe(13);
 });
 
-/* The phone's bottom bar (the owner's iPhone), Pro door (P0 shell, fox 3.0 plan 05.11.26): five places and "עוד" (שווי, תרחישים and the
-   library sheet behind it), each label whole on one line at 375 px (the narrowest iPhone in use), the active place lit for a company page,
-   and the bar inside the screen. */
-const PLACES = ['בית', 'השוואה', 'חיסכון', 'שאלות', 'מה השתנה'];
+/* The phone's bottom bar (the owner's iPhone), Pro door (P0 shell, fox 3.0 plan 05.11.26; track-compare B3/O5 and B1 polish, 26.11.26):
+   five places (בית, מסלולים = the track comparison, חיסכון, השוואה ענפית = the insurer comparison, שאלות; review B2: "חיסכון" between the two
+   comparisons) and "עוד" (שווי, תרחישים, מה השתנה and the library sheet behind it), each label whole on one line at 375 and 390 px (the
+   narrowest iPhones in use), the active place lit for a company page, and the bar inside the screen. */
+const PLACES = ['בית', 'מסלולים', 'חיסכון', 'השוואה ענפית', 'שאלות'];
 test('phone bottom bar shows the Pro places and the library sheet in WebKit', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await open(page, '/company/phoenix', 'phoenix');
@@ -54,10 +55,15 @@ test('phone bottom bar shows the Pro places and the library sheet in WebKit', as
   await expect(items).toHaveCount(5);
   expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(PLACES);
   await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'בית');
-  const fit = await bar.locator(':is(a.item, .lib-btn):visible').evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1 }; }));
-  expect(fit.length).toBe(6);
-  expect(fit.filter((f) => f.cut || f.out), 'a bottom-bar label wraps, is cut or leaves the screen').toEqual([]);
-  for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/savings/], ['השוואה ענפית', /\/industry\/peers/], ['מה השתנה', /\/feed/], ['בית', /\/$/]] as const) {
+  for (const width of [375, 390]) {
+    await page.setViewportSize({ width, height: 812 });
+    const fit = await bar.locator(':is(a.item, .lib-btn):visible').evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1, small: r.width < 44 || r.height < 44 }; }));
+    expect(fit.length).toBe(6);
+    expect(fit.filter((f) => f.cut || f.out), `a bottom-bar label wraps, is cut or leaves the screen at ${width} px`).toEqual([]);
+    expect(fit.filter((f) => f.small), `a bottom-bar target under 44 px at ${width} px`).toEqual([]);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
+  for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/savings/], ['השוואה ענפית', /\/industry\/peers/], ['מסלולים', /\/funds\/compare/], ['בית', /\/$/]] as const) {
     await bar.getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(url);
     await settle(page);
@@ -69,7 +75,7 @@ test('phone bottom bar shows the Pro places and the library sheet in WebKit', as
   await bar.locator('.lib-btn').click();
   const sheet = bar.locator('.lib-pop');
   await expect(sheet).toBeVisible();
-  for (const name of ['שווי', 'תרחישים', 'מצגות משקיעים', 'מסך האיחודים']) await expect(sheet.getByRole('link', { name, exact: true })).toBeVisible();
+  for (const name of ['שווי', 'תרחישים', 'מה השתנה', 'מצגות משקיעים', 'מסך האיחודים']) await expect(sheet.getByRole('link', { name, exact: true })).toBeVisible();
   await sheet.getByRole('link', { name: 'תרחישים', exact: true }).click();
   await expect(page).toHaveURL(/\/scenarios/);
   await expect(sheet).toBeHidden();
@@ -78,6 +84,9 @@ test('phone bottom bar shows the Pro places and the library sheet in WebKit', as
     await page.goto(route); await settle(page);
     await expect(bar.locator('a.item.active:visible'), `חיסכון lit on ${route}`).toHaveAttribute('aria-label', 'חיסכון');
   }
+  // the track comparison lights its own place, not "חיסכון"
+  await page.goto('/funds/compare?k=p2102,p2172'); await settle(page);
+  await expect(bar.locator('a.item.active:visible'), 'מסלולים lit on /funds/compare').toHaveAttribute('aria-label', 'מסלולים');
 });
 
 /* W1 · three doors (plan 01.11.26): a first visit lands on the picker; ?door= opens a door and keeps it; each door has its own bottom bar
@@ -145,9 +154,9 @@ test('funds hub, screener and compare work on the phone in WebKit', async ({ pag
   await tray.getByRole('link').click();
   await expect(page).toHaveURL(/\/funds\/compare\?k=[gip]\d+,[gip]\d+/);
   await settle(page);
-  // on a phone compare shows one card per track (W1 agent door), not the wide table
-  await expect(page.locator('.cmp-cards')).toBeVisible();
-  expect(await page.locator('.cmp-cards > *').count()).toBeGreaterThanOrEqual(2);
+  // the track comparison (redesign 26.11.26): the month-by-month grid, one column per track (no more per-track cards)
+  await expect(page.locator('#month-grid tbody .mg-cell:not(.mg-skelcell)').first()).toBeVisible({ timeout: 15_000 });
+  expect(await page.locator('#month-grid thead th:not(.m):not(.avg)').count()).toBeGreaterThanOrEqual(2);
   await flat('/funds/compare');
   // closed tracks (funds/closed.json, F1 data) join their category when asked, flagged and unranked
   if ((await page.request.get('/data/funds/closed.json')).ok()) {
@@ -263,13 +272,16 @@ test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards 
   expect(m.words, '/my with two products, folded').toBeLessThan(400);
   expect(m.side, 'page scrolls sideways').toBeLessThanOrEqual(1);
   await expect(page.locator('.sv-sum')).toContainText('דבר אחד לעשות');
-  // a "?" opens on a tap and closes on a tap elsewhere
+  // a "?" opens on a tap: on a phone the explanation is a sheet (lane L0-c, B5), closed by its "סגירה"
   await page.locator('article#p9757 .sv-mine summary').click();  // red team 06.11.26: the glossary bar folds away once products are saved; the card's own "?" remains
   const tip = page.locator('article#p9757 .tip-b:visible').first();  // red team 06.11.26: the glossary bar folds away once products are saved (word budget)
   await tip.scrollIntoViewIfNeeded(); await tip.tap();
   await expect(tip).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator('.tip-p')).toBeVisible();
-  await page.locator('.sv-legal').tap();
+  const tipSheet = page.getByRole('dialog').filter({ has: page.locator('.tip-sheet') });
+  await expect(tipSheet).toBeVisible();
+  expect((await tipSheet.locator('.tip-sheet').innerText()).trim().length, 'the sheet explains the term').toBeGreaterThan(10);
+  await tipSheet.getByRole('button', { name: 'סגירה' }).tap();
+  await expect(tipSheet).toBeHidden();
   await expect(tip).toHaveAttribute('aria-expanded', 'false');
   // a 7% deposit fee in a השתלמות is refused (the ceiling is 4%)
   const card = page.locator('article#g13502');
@@ -311,6 +323,9 @@ test('screener sheet keeps its choices after closing in WebKit', async ({ page }
     await expect(toggle).toContainText('1M');
     await page.goBack();
     await expect(page, `no leftover sheet entry (${how})`).toHaveURL(/\/data$/);
+    // let /data finish loading before the next navigation: WebKit logs a fetch that a navigation cancels ("Fetch API cannot load
+    // …/data/consistency.json due to access control checks") as a JavaScript error, which Playwright reports as a page error
+    await settle(page);
   }
   expect(errors).toEqual([]);
 });

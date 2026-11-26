@@ -33,17 +33,21 @@ import { usePositions } from '../lib/positions';  // W8 feeds: a notification on
 // A place: [route, icon, label, label on the phone (the same word, shortened), other addresses that light it, wide only (on the phone it
 // moves into the "עוד" sheet)]. Search lives in the top bar on every screen.
 type Place = [to: string, icon: string, label: string, short: string, also: (string | RegExp)[], wide?: boolean];
-/** Pro: seven places. The war room is a tab of the scenarios (its address stays); the positions join only once one is published; the
+/** Pro: eight places; the phone's bar holds five (בית, מסלולים, חיסכון, השוואה ענפית, שאלות) and "עוד" the rest (the feed is a stream to browse, not a job). The war room is a tab of the scenarios (its address stays); the positions join only once one is published; the
  *  reference screens and the lab sit behind "ספרייה" (components/LibraryMenu) */
 const NAV: Place[] = [
   ['/', 'home', 'בית', 'בית', ['/company/', '/pro']],
-  ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה', ['/industry', '/capital', '/restatements']],
+  // B3 (O5): the track comparison has its own place; the insurer comparison after it is no longer called just "השוואה".
+  // B1 polish: "מסלולים" comes first (a saver looking for "השוואה" meets it before the industry one); review B2: "חיסכון" sits between
+  // the two comparisons, so "מסלולים" and "השוואה ענפית" are not neighbours a thumb can confuse (labels as the owner approved)
+  ['/funds/compare', 'funds', 'מסלולים', 'מסלולים', []],
   // the long-term-savings section: the lens, flows, managers, the funds pages (and the old /market links)
-  ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', '/funds', '/feebook', '/nowcast', '/market']],
+  ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', /^\/funds(?!\/compare)/, '/feebook', '/nowcast', '/market']],
+  ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה ענפית', ['/industry', '/capital', '/restatements']],
   ['/valuation', 'value', 'שווי', 'שווי', [], true],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', ['/warroom', '/fragility'], true],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
-  ['/feed', 'spark', 'מה השתנה', 'מה השתנה', ['/watch', '/calendar']],
+  ['/feed', 'spark', 'מה השתנה', 'מה השתנה', ['/watch', '/calendar'], true],
 ];
 const POSITIONS: Place = ['/positions', 'positions', 'עמדות', 'עמדות', [], true];
 /** the saver: five places; "רגעים" (life moments and the annual statement) took the watchlist's place (it folds into /my) */
@@ -161,7 +165,7 @@ function SiteFoot({ path, door }: { path: string; door: Door | null }) {
   return (
     <footer className="site-foot">
       {/* W6 doors: the agent reads one professional line; the saver's sentences ("שלכם") are the saver's */}
-      {savings && (door === 'agent'
+      {savings && !path.startsWith('/funds/compare') && (door === 'agent'
         ? <span className="disc">נתוני רשות שוק ההון, עובדתיים ומשווים; אינם ייעוץ או שיווק פנסיוני ללקוח מסוים. תשואות עבר אינן מבטיחות תשואות עתיד; ״נטו״: אומדן לפי דמי הניהול הממוצעים בפועל.</span>
         : <span className="disc">המידע עובדתי ומשווה, ואינו ייעוץ השקעות או שיווק פנסיוני ואינו מתחשב בנתונים האישיים שלכם. תשואות עבר אינן מבטיחות תשואות בעתיד. ״נטו״ הוא אומדן לפי דמי הניהול הממוצעים בפועל.</span>)}
       <NavLink to="/about">על fox ומקורות הנתונים</NavLink>

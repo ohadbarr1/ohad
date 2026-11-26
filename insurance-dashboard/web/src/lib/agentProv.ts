@@ -16,9 +16,9 @@ export const tenderProv = (t: Tender, what: string, v: string): Prov => ({ k: 'r
   period: `${dateHe(t.from)}–${dateHe(t.to)}`, note: `${t.verified ? '' : 'לא אומת מול ההודעה הרשמית של הרשות. '}${t.note ?? ''} שיוך הזוכה למסלולי הקרן בפנסיה-נט: של האתר, לפי שם הקרן.`.trim() });
 
 /** the latest actuarial balance of a track, as published */
-export const actProv = (f: FundX) => fundP(refOf(f), f.act_p ?? 0, 'ACTUARIAL_ADJUSTMENT', 'איזון אקטוארי', pc2(f.act), '%', ACT_F);
+export const actProv = (f: FundX) => fundP(refOf(f), f.act_p ?? 0, 'ACTUARIAL_ADJUSTMENT', 'איזון אקטוארי', pc2(f.act), undefined, ACT_F);
 /** one quarter of the history */
-export const actQProv = (f: FundX, x: ActPoint) => fundP(refOf(f), x.p, 'ACTUARIAL_ADJUSTMENT', `איזון אקטוארי ${ym(x.p)}`, pc2(x.v), '%', ACT_F);
+export const actQProv = (f: FundX, x: ActPoint) => fundP(refOf(f), x.p, 'ACTUARIAL_ADJUSTMENT', `איזון אקטוארי ${ym(x.p)}`, pc2(x.v), undefined, ACT_F);
 export const actSumProv = (f: FundX, xs: ActPoint[]): Prov => ({ k: 'calc', title: `איזון אקטוארי מצטבר, ${xs.length} רבעונים · ${f.name}`, value: pc2(actCompound(xs)),
   formula: '(1 + a₁) × … × (1 + aₙ) − 1 על האיזונים הרבעוניים שפורסמו', inputs: xs.map((x) => ({ label: `איזון אקטוארי · ${ym(x.p)}`, v: pc2(x.v), src: () => actQProv(f, x) })), note: ACT_F });
 

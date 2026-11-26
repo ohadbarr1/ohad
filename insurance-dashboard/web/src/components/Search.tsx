@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { useLoad, useRegistry } from '../lib/useData';
+import { useFunds, useLoad, useRegistry } from '../lib/useData';
+import { pairHref, pairLabel, pickIndex, pickSearch } from '../lib/pickSearch';
 import { sheetName } from '../lib/company';
 import { SinceDot } from './SinceBadge';
 import { usePhone } from '../lib/useMedia';
 import { loadCorpus, recentQueries, readerHref, rememberQuery, searchText, type Corpus } from '../lib/search';
-import { buildPool, docLabel, forDoor, FUNCS, orderFor, ordered, parse, rank, SAVER_TO, type FundEnt, type Item, type Kind } from '../lib/searchOmni';
+import { buildPool, docLabel, forDoor, FUNCS, orderFor, ordered, parse, rank, SAVER_TO, tracksFirst, type FundEnt, type Item, type Kind } from '../lib/searchOmni';
 import { useDoor } from '../lib/door';
 import '../styles/search.css';
 
@@ -87,14 +88,26 @@ export function Search({ big = false }: { big?: boolean }) {
   const saver = door === 'saver';
   const ranked = useMemo(() => (pool && s.length >= 2 ? forDoor(rank(s, pool, sheetName, corpus), door) : []), [s, pool, corpus, door]);
   const ft = useFullText(s, pool, corpus, !saver);
+  // C11: "X מול Y" between two funds of one product offers the comparison first (lib/pickSearch: the picker's parser, one pair of one product)
+  // C14: the saver's tracks are ordered by the same index, so the funds file loads for every saver query
+  const fundsFile = useFunds(open && (saver || /\s(?:מול|נגד|לעומת|vs\.?|versus)\s/i.test(q)));
+  const pickIdx = useMemo(() => (fundsFile.data ? pickIndex(fundsFile.data.funds) : null), [fundsFile.data]);
+  const pairItem = useMemo<Item | null>(() => {
+    if (!pickIdx || s.length < 5) return null;
+    const pair = pickSearch(s, pickIdx, { n: 2 }).pair;
+    return pair ? { kind: 'פונקציה', label: pairLabel(pair), meta: 'השוואה', to: pairHref(pair), score: 100 } : null;
+  }, [pickIdx, s]);
   const all: Item = { kind: 'מסמך', label: `חיפוש בכל הדוחות: ${s}`, meta: ft.total != null ? `${ft.total.toLocaleString()} עמ׳` : ft.busy ? '…' : '', to: `/search?q=${encodeURIComponent(s)}`, score: -1 };
   const hits = useMemo(() => {
     if (s.length < 2) return [];
     const docs = ranked.filter((x) => x.kind === 'מסמך');
     const out = ranked.filter((x) => x.kind !== 'מסמך');
-    return saver ? out : [...out, ...docs, ...(ft.q === s ? ft.items : []), all];
+    const lead = pairItem ? [pairItem] : [];
+    // C14: in the saver door the tracks come before the groups, best-ranked first (old-generation policies last); Pro keeps companies first
+    if (saver) return [...lead, ...tracksFirst(out, pickIdx && !pairItem ? pickSearch(s, pickIdx, { n: 6 }).hits : [])];
+    return [...lead, ...out, ...docs, ...(ft.q === s ? ft.items : []), all];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ranked, ft, s, saver]);
+  }, [ranked, ft, s, saver, pairItem, pickIdx]);
   const fundsFirst = door === 'saver' || door === 'agent';  // W4: savers and agents look for funds, not report pages
   const shown = useMemo(() => ordered(s.length >= 2 ? hits : recent, fundsFirst), [hits, recent, s, fundsFirst]);
   const order = useMemo(() => orderFor(shown, fundsFirst), [shown, fundsFirst]);

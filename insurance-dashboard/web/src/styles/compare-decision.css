@@ -1,0 +1,66 @@
+/* Track compare, the "להחלטה" lens (lane L3-a, D2; mockup v3 frames 26 and 29). Tokens only from styles.css. The lens head
+   (.cmp-lhead: Pro's switch "להחלטה | סיכון" and the pill "תצוגה פשוטה: חוסך ›") is shared with "סיכון" (lane L3-b). */
+
+/* the lens head: switch at the start (Pro), the pill at the end; 44-px controls */
+.cmp-lhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.cmp-lsw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--panel3); flex: none; }
+.cmp-lsw button { height: 44px; min-width: 72px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background var(--mid), color var(--mid); }
+.cmp-lsw button.on { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
+.cmp-lsw button:active, .cmp-hintp:active { transform: scale(0.97); }
+.cmp-hintp { height: 44px; padding: 0 14px; flex: none; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 13px; font-weight: 500; color: var(--link); white-space: nowrap; cursor: pointer; }
+
+/* the decision grid, in a card */
+.cmp-dec-card { border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); padding: 10px 10px 8px; }
+.cmp-dec-scroll { max-width: 100%; }
+.cmp-dec-scroll.wide { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; margin-inline: -10px; padding-inline: 10px; }
+.cmp-dec-scroll.wide table.cg { min-width: calc(112px + var(--n, 5) * 72px); }
+.cmp-dec-scroll.wide table.cg th:first-child { position: sticky; inset-inline-start: 0; z-index: 1; background: var(--panel); width: 112px; }
+table.cg.cmp-dec-grid tbody th { line-height: 1.3; }
+/* the column heads stay readable while the rows scroll under the sticky strip (up to four columns; past four the grid scrolls sideways) */
+.cmp-dec-scroll:not(.wide) table.cg.cmp-dec-grid thead th { position: sticky; top: var(--mg-top, 0px); z-index: 2; background: var(--panel); box-shadow: 1px 0 0 var(--panel), -1px 0 0 var(--panel); }
+table.cg.cmp-dec-grid td { vertical-align: middle; }
+table.cg.cmp-dec-grid td .src { font: inherit; color: inherit; }
+table.cg.cmp-dec-grid td .src.pos { color: var(--up); }
+table.cg.cmp-dec-grid td .src.neg { color: var(--down); }
+table.cg.cmp-dec-grid td.lead > .src.num > .fig { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
+/* each figure is a 44×32 tap box (review B2 N4) with the row's height unchanged: the box's extra height is pulled back by an equal negative
+   margin (8 px above and below); the cell around it forwards a tap too (components/CompareGrid) */
+table.cg.cmp-dec-grid td > .src { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 44px; min-height: 32px; padding: 0 6px; margin: -8px -2px; vertical-align: middle; border-radius: 8px; background: none; }
+table.cg.cmp-dec-grid td > .src::after { content: none; }
+table.cg.cmp-dec-grid td:has(> .src) { cursor: pointer; }
+table.cg.cmp-dec-grid td small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmp-dec-gap { display: flex; flex-direction: column; gap: 2px; margin: 8px 2px 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.cmp-dec-note { margin: 8px 2px 0; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+
+/* pinned actions: stick above the phone's bottom rail while the grid scrolls; in place at the lens end */
+/* opaque and full-bleed (review B2 N5: a see-through bar showed a row through it): rows pass under a solid band with a hairline and a soft
+   shade, never half-visible behind the buttons; the page reserves the bar's height (html scroll-padding, set by the lens) so a row brought
+   into view by focus or a link never lands under it */
+.cmp-abar { position: sticky; bottom: var(--abar-b, 0px); z-index: 5; display: flex; gap: 8px; margin: 10px -14px 0; padding: 8px 14px; background: var(--bg); border-top: 1px solid var(--line-soft); box-shadow: 0 -8px 14px -12px rgb(15 23 42 / 0.28); }
+:root[data-theme="dark"] .cmp-abar { box-shadow: 0 -8px 14px -12px rgb(0 0 0 / 0.6); }
+@media (min-width: 761px) { .cmp-abar { margin-inline: -26px; padding-inline: 26px; } }
+html:has(#dec-actions) { scroll-padding-bottom: calc(var(--abar-h, 64px) + 8px); }
+.cmp-abar > * { flex: 1 1 0; min-width: 0; }
+.cmp-abtn, .cmp-abar .csave-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 44px; padding: 0 14px; border-radius: var(--r-3); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 14px; font-weight: 700; color: var(--fg); text-decoration: none; white-space: nowrap; cursor: pointer; transition: transform var(--fast); }
+.cmp-abtn:hover { text-decoration: none; }
+.cmp-abtn.pri { background: var(--sel-bg); color: var(--sel-fg); border-color: var(--sel-bg); }
+.cmp-abtn:active, .cmp-abar .csave-btn:active { transform: scale(0.97); }
+.cmp-abar .csave, .cmp-abar .csave-row { display: flex; width: 100%; }
+.cmp-abar .csave-row { flex-direction: column; align-items: stretch; gap: 4px; }
+.cmp-abar .csave-btn svg.ico { width: 16px; height: 16px; }
+.cmp-abar .csave-msg { font-size: 11.5px; line-height: 1.4; }
+/* the save form opened: the bar stops sticking and stacks, so the form is read in place */
+.cmp-abar:has(.csave-form) { position: static; flex-direction: column; background: none; padding: 0; margin-inline: 0; border-top: 0; box-shadow: none; }
+.cmp-abar .csave-form { max-width: none; }
+
+/* the quiet line under the bar: the open folder, the Excel pack, the privacy line */
+.cmp-dec-more { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin: 2px 2px 0; font-size: 12px; color: var(--muted); }
+.cmp-linkbtn { min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 500; color: var(--link); cursor: pointer; }
+
+@media (max-width: 380px) {
+  .cmp-hintp { padding: 0 10px; font-size: 12.5px; }
+  .cmp-lsw button { padding: 0 10px; min-width: 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cmp-lsw button, .cmp-abtn, .cmp-abar .csave-btn { transition: none; }
+}

@@ -325,7 +325,7 @@ def main():
             xs = [tr.nd[j] for j in ix] if ix else None
             opt["nd12"] = round(fsum(xs), 1) if xs and all(x is not None for x in xs) else None
         if tr.act is not None:
-            j = next((j for j in range(i, -1, -1) if tr.act[j] is not None and tr.p[j] > FL.madd(T, -4)), None)
+            j = next((j for j in range(i, -1, -1) if tr.act[j] is not None and tr.p[j] >= FL.madd(T, -4)), None)
             if j is not None:
                 opt["act"], opt["act_p"] = round(tr.act[j], 2), tr.p[j]
                 # W2: the last 8 reported quarters up to month T, oldest first, [[yyyymm, percent], ...]: the same values as the track
