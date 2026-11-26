@@ -431,17 +431,18 @@ test.describe('doors (D1–D4, B3)', () => {
     await noErrors(errors);
   });
 
-  test('Pro phone bar: "מסלולים" → /funds/compare, no "השוואה" to /industry (B3)', async ({ page }) => {
+  // rollout B8 (rollout spec §9, §18.3): Pro's "מסלולים" now opens the screener (/funds/screen); compare stays one tap away from it
+  test('Pro phone bar: "מסלולים" → /funds/screen (rollout B8), no "השוואה" to /industry (B3)', async ({ page }) => {
     const errors = await visitor(page, 'pro');
     await page.goto('/?door=pro', { waitUntil: 'networkidle' });
     const bar = page.getByRole('navigation', { name: 'ראשי' });
     const tracks = bar.getByRole('link', { name: 'מסלולים', exact: true });
     await expect(tracks).toBeVisible();
-    expect(new URL(await tracks.evaluate((a) => (a as HTMLAnchorElement).href)).pathname).toBe('/funds/compare');
+    expect(new URL(await tracks.evaluate((a) => (a as HTMLAnchorElement).href)).pathname).toBe('/funds/screen');
     const wrong = await bar.locator('a').evaluateAll((as) => as.filter((a) => (a as HTMLElement).innerText.trim() === 'השוואה' && /\/industry/.test((a as HTMLAnchorElement).getAttribute('href') ?? '')).length);
     expect(wrong).toBe(0);
     await tracks.click();
-    await expect(page).toHaveURL(/\/funds\/compare/);
+    await expect(page).toHaveURL(/\/funds\/screen/);
     await noErrors(errors);
   });
 });
