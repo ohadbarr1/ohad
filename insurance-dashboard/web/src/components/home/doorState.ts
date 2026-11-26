@@ -25,3 +25,10 @@ export const PRO_SECTIONS = new Set(['pro', 'company', 'companies', 'industry', 
   'presentations', 'credibility', 'nowcast', 'debt', 'facts', 'ownership', 'card', 'attribution', 'feed', 'positions', 'drivers', 'scenarios', 'warroom', 'capital',
   'fragility', 'expectations', 'consolidation', 'questions', 'findings', 'brief', 'watch', 'doc', 'market']);
 export const isProPage = (path: string) => PRO_SECTIONS.has(path.split('/')[1] ?? '');
+
+/** P6-B2 (D5): no door chosen on a Pro page = the Pro view (Pro navigation, the Pro search). Nothing is stored; the door switch still offers the choice. */
+export function useViewDoor(): Door | null {
+  const [door] = useActiveDoor();
+  const { pathname } = useLocation();
+  return door ?? (isProPage(pathname) ? 'pro' : null);
+}
