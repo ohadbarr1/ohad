@@ -1,4 +1,4 @@
-import type { EChartsCoreOption } from 'echarts/core';
+import type { ECharts, EChartsCoreOption } from 'echarts/core';
 import { CHART_FONT, chartBase, cssColor, tooltipCss } from './theme';
 import { nf } from './format';
 
@@ -132,6 +132,44 @@ export function foxOption(spec: FoxSpec): EChartsCoreOption {
 type Loose = Record<string, unknown>;
 const list = (v: unknown): Loose[] => (Array.isArray(v) ? (v as Loose[]) : v && typeof v === 'object' ? [v as Loose] : []);
 
+/** a line's name at its end: the series, its text and colour */
+export interface EndName { seriesIndex: number; name: string; color: string }
+const ENDS = new WeakMap<object, EndName[]>();
+/** extra room at the right of the plot for the leader lines, px */
+const END_LEAD = 22;
+/** the end names `polish` took from an option (empty when it drew none) */
+export const endNamesOf = (o: EChartsCoreOption): EndName[] => ENDS.get(o as object) ?? [];
+
+/** Draws the end names of `endNamesOf(option)` on a chart that has been laid out: one column right of the plot, in the order of the lines' ends,
+ *  at least 13 px apart, each joined to its line's last point by a leader line; nothing is drawn over the lines. Called after every setOption and resize. */
+export function layoutEnds(chart: ECharts, ends: EndName[]): void {
+  if (!ends.length) return;
+  type Ser = { data?: unknown[]; yAxisIndex?: number };
+  const ser = ((chart.getOption() as { series?: Ser[] }).series ?? []);
+  const val = (d: unknown): number | null => (d == null ? null : typeof d === 'number' ? d : typeof d === 'object' && 'value' in (d as object) ? ((d as { value: number | null }).value ?? null) : null);
+  const model = (chart as unknown as { getModel: () => unknown }).getModel() as { getComponent: (k: string, i: number) => { coordinateSystem?: { getRect: () => { x: number; y: number; width: number; height: number } } } | undefined };
+  const rect = model.getComponent('grid', 0)?.coordinateSystem?.getRect();
+  if (!rect) return;
+  const b = chartBase(), right = rect.x + rect.width;
+  const pts = ends.flatMap((e) => {
+    const sr = ser[e.seriesIndex]; const d = sr?.data ?? [];
+    let i = d.length - 1; while (i >= 0 && val(d[i]) == null) i--;
+    if (i < 0) return [];
+    const p = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: sr?.yAxisIndex ?? 0 }, [i, val(d[i])!]) as number[];
+    return Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]) ? [{ ...e, x: p[0], y: p[1] }] : [];
+  }).sort((a, c) => a.y - c.y);
+  // spread: at least 13 px apart, kept inside the plot's height (a little below it at most)
+  const GAP = 13, top = rect.y, floor = rect.y + rect.height + 6, pos = pts.map((q) => Math.min(Math.max(q.y, top), floor));
+  for (let i = 1; i < pos.length; i++) pos[i] = Math.max(pos[i], pos[i - 1] + GAP);
+  if (pos.length && pos[pos.length - 1] > floor) { pos[pos.length - 1] = floor; for (let i = pos.length - 2; i >= 0; i--) pos[i] = Math.min(pos[i], pos[i + 1] - GAP); }
+  const tx = right + END_LEAD - 4;
+  const elements = pts.flatMap((q, i) => [
+    { id: `end-l-${q.seriesIndex}`, type: 'polyline', z: 90, silent: true, shape: { points: [[q.x + 6, q.y], [right + 6, q.y], [tx - 3, pos[i]]] }, style: { stroke: q.color, lineWidth: 1, opacity: 0.7, fill: 'none' } },
+    { id: `end-t-${q.seriesIndex}`, type: 'text', z: 91, silent: true, x: tx, y: pos[i], style: { text: q.name, fill: q.color, font: `600 11px ${CHART_FONT}`, textVerticalAlign: 'middle', textAlign: 'left', textBorderColor: b.panel, textBorderWidth: 3 } },
+  ]);
+  chart.setOption({ graphic: { elements } } as EChartsCoreOption);
+}
+
 /** House defaults for any chart option: the site typeface, a tooltip that stays inside the chart and prints numbers the way tables do,
     value axes with thousands separators that keep their sign in right-to-left text. Explicit settings of a chart always win. */
 export function polish(option: EChartsCoreOption): EChartsCoreOption {
@@ -143,6 +181,18 @@ export function polish(option: EChartsCoreOption): EChartsCoreOption {
     if (t.extraCssText === undefined) t.extraCssText = tooltipCss();
     if (t.valueFormatter === undefined && t.formatter === undefined) t.valueFormatter = (v: unknown) => (typeof v === 'number' ? fmtNum(v) : v == null ? '–' : String(v));
   });
+  // P6-B4: a line's name at its end is drawn by `layoutEnds` (Chart.tsx), in one column in the right margin with a leader line, never on the lines;
+  // here the series' own end label is switched off and the margin widened for the leaders
+  const ends: EndName[] = [];
+  list(o.series).forEach((s, i) => {
+    const el = s.endLabel as Loose | undefined;
+    if (s.type !== 'line' || !el || el.show === false) return;
+    ends.push({ seriesIndex: i, name: String(s.name ?? ''), color: String(el.color ?? (s.lineStyle as Loose | undefined)?.color ?? b.fg) });
+    s.endLabel = { show: false };
+  });
+  if (ends.length) { const g = list(o.grid)[0]; if (g) g.right = Number(g.right ?? 14) + END_LEAD; ENDS.set(o, ends); }
+  // a halo under every value label, so a figure crossing a line or a median stays whole
+  list(o.series).forEach((s) => { const l = s.label as Loose | undefined; if (l && l.show !== false && l.textBorderWidth === undefined) { l.textBorderColor = b.panel; l.textBorderWidth = 3; } });
   [...list(o.xAxis), ...list(o.yAxis)].forEach((a) => {
     if (a.type !== 'value') return;
     const lab = (a.axisLabel ??= {}) as Loose;

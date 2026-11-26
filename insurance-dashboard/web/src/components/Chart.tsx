@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ECharts, EChartsCoreOption } from 'echarts/core';
 import { useTheme } from '../lib/theme';
-import { polish } from '../lib/foxchart';
+import { endNamesOf, layoutEnds, polish, type EndName } from '../lib/foxchart';
 import { captureSpec, enrich, readBook, routeNow, sameData, sameShape, useBook, type ChartSpec } from '../lib/book';
 import { citeLine } from '../lib/exportProv';
 import { load } from '../lib/useData';
@@ -60,6 +60,7 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
   const [ready, setReady] = useState(false);
   const { theme } = useTheme();
   const point = useRef(onPoint); point.current = onPoint;
+  const ends = useRef<EndName[]>([]);  // P6-B4: the names at the lines' ends of the option on screen (drawn by layoutEnds)
   const book = useBook();
   const key = `${routeNow()}|${label}`;
   const inBook = bookable && book.has(key);
@@ -67,24 +68,34 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
   const [deck, setDeck] = useState<string | null>(null);
 
   useEffect(() => {
-    let live = true, ro: ResizeObserver | null = null;
+    let live = true, ro: ResizeObserver | null = null, off: (() => void) | null = null;
     void lib().then(({ echarts }) => {
       if (!live || !el.current) return;
       const c = echarts.init(el.current);
       chart.current = c;
-      ro = new ResizeObserver(() => c.resize());
+      ro = new ResizeObserver(() => { c.resize(); layoutEnds(c, ends.current); });
       ro.observe(el.current);
+      // P6-B4: a value box never stays open over the chart after the page scrolls or a touch lands elsewhere
+      const hide = () => c.dispatchAction({ type: 'hideTip' });
+      const away = (e: Event) => { if (el.current && !el.current.contains(e.target as Node)) hide(); };
+      window.addEventListener('scroll', hide, { passive: true, capture: true });
+      document.addEventListener('pointerdown', away, { passive: true });
+      c.getZr().on('globalout', hide);
+      off = () => { window.removeEventListener('scroll', hide, { capture: true }); document.removeEventListener('pointerdown', away); };
       c.on('click', (e) => { if (e.componentType === 'series' && e.seriesIndex != null) point.current?.(e.seriesIndex, e.dataIndex, e.seriesName ?? ''); });
       setReady(true);
     });
-    return () => { live = false; ro?.disconnect(); chart.current?.dispose(); chart.current = null; };
+    return () => { live = false; ro?.disconnect(); off?.(); chart.current?.dispose(); chart.current = null; };
   }, []);
 
   useEffect(() => {
     if (!ready) return;
     // wait one frame so the new theme's CSS variables are applied before we read them
     const id = requestAnimationFrame(() => {
-      chart.current?.setOption(polish(build()), true);
+      const opt = polish(build());
+      chart.current?.setOption(opt, true);
+      ends.current = endNamesOf(opt);
+      if (chart.current) layoutEnds(chart.current, ends.current);
       // a chart that is in the book refreshes its copy there when it is drawn with new figures (same series, same periods)
       if (!bookable || !exportName) return;
       const k = `${routeNow()}|${label}`, held = readBook().items.find((x) => x.key === k);
