@@ -146,3 +146,57 @@ main .panel .heat-scroll table.heat-m td > :is(a, button).src:not(.bar)::after {
 }
 .fcard-fig .l { font-size: 11px; line-height: 1.25; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 .fcard-fig { align-items: end; }
+
+/* ---------- Rollout L2-b: the screener on a phone (pages/screen/ScreenBoard; spec 4.2, 16.1 4a–4e, 17.1 3a; mockup v4 frames 6–7) ----------
+   Every rule is scoped under .scr-page (or a .scr- class only the screener emits), so nothing else on the site moves. */
+.scr-page { display: grid; gap: 7px; }
+.scr-page > * { min-width: 0; }
+.scr-head { margin-top: -8px; }
+.scr-head h1 { font-size: 21px; gap: 4px 8px; }
+.scr-head h1 .icotile { width: 30px; height: 30px; border-radius: 9px; }
+.scr-head h1 .icotile svg.ico { width: 18px; height: 18px; }
+.scr-head .sub { margin-top: 0; font-size: 12.5px; color: var(--muted); }
+.scr-pick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 7px; }
+.scr-pill { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; height: 44px; padding: 0 12px; border-radius: var(--r-3); border: 1.5px solid var(--line); background: var(--panel); box-shadow: var(--e-1); font: inherit; font-size: 14.5px; font-weight: 700; color: var(--fg); cursor: pointer; transition: transform var(--fast); }
+.scr-pill > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scr-pill > i { flex: none; font-style: normal; font-size: 15px; line-height: 1; color: var(--muted); transform: translateY(-3px); }
+.scr-pill.f { justify-content: center; padding: 0 12px; font-weight: 500; color: var(--muted); }
+.scr-pill.f svg { width: 16px; height: 16px; flex: none; }
+.scr-pill:active { transform: scale(0.97); }
+.scr-page .ro-seg button { font-size: 12.5px; padding: 0 3px; }
+.scr-page .ro-quiet { margin: 0 2px; }
+.scr-page .board .sb-row { min-height: 62px; }
+.scr-page .board .sb-place { color: var(--link); background: color-mix(in oklch, var(--link) 12%, var(--panel)); }
+.scr-page .board .track i { background: var(--link); }
+.scr-page .board .val .num.mut { white-space: nowrap; }
+.scr-page .avgline { display: flex; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--panel2); border-top: 1px solid var(--line-soft); color: var(--muted); }
+.scr-add { flex: 1; display: grid; place-items: center; min-height: 44px; border: 0; background: transparent; font: inherit; font-size: 22px; color: var(--muted); cursor: pointer; }
+.scr-add[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-fg); }
+.scr-add:disabled { opacity: 0.35; cursor: default; }
+.scr-self { display: grid; gap: 6px; }
+.scr-self-h { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 8px 12px; border-radius: var(--r-3); border: 1px solid var(--line-soft); background: var(--panel2); font: inherit; color: var(--fg); text-align: start; cursor: pointer; }
+.scr-self-h > span { flex: 1; display: grid; gap: 2px; }
+.scr-self-h b { font-size: 14px; }
+.scr-self-h small { font-size: 12px; line-height: 1.45; color: var(--muted); }
+.scr-self-h i { font-style: normal; color: var(--muted); }
+.scr-grp { display: grid; gap: 6px; }
+.scr-grp-h { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border-radius: var(--r-3); border: 1px solid var(--line-soft); background: var(--panel2); font: inherit; color: var(--fg); text-align: start; cursor: pointer; }
+.scr-grp-h:disabled { cursor: default; opacity: 1; }
+.scr-grp-h b { font-size: 14.5px; }
+.scr-grp-h small { flex: 1; font-size: 12px; color: var(--muted); }
+.scr-grp-h i { font-style: normal; color: var(--muted); }
+.scr-by { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 4px; font-size: 13.5px; color: var(--fg); }
+.scr-by .linkbtn { min-height: 44px; }
+.scr-empty { display: grid; gap: 10px; justify-items: start; }
+.scr-tiles .ts-tile { gap: 2px; }
+.scr-tiles .ts-tile.on { box-shadow: inset 0 0 0 1.5px var(--line); }
+.scr-tiles .big { font-size: 16px; font-weight: 700; }
+.scr-dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; margin: 14px 2px 0; font-size: 14px; }
+.scr-dl dt { color: var(--muted); }
+.scr-dl dd { margin: 0; text-align: end; font-weight: 700; }
+.scr-flags { margin-top: 10px; }
+.scr-trk .chip, .scr-rankby .chip, #prod-chips .chip { min-height: 44px; }
+.scr-trk .chip small { margin-inline-start: 4px; color: var(--muted); font-weight: 500; }
+.scr-show { flex: 1; }
+@media (max-width: 360px) { .scr-pill { padding: 0 9px; font-size: 13.5px; } .scr-page .ro-seg button { font-size: 11.5px; } }
+@media (prefers-reduced-motion: reduce) { .scr-pill { transition: none; } }
