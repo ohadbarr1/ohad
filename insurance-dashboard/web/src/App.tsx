@@ -145,7 +145,8 @@ function FundsRoot() {
   const loc = useLocation(), q = new URLSearchParams(loc.search);
   const sel = q.get('sel');
   if (sel && !q.get('prod') && !q.get('q')) return <Navigate to={`/funds/compare?k=${sel}`} replace />;
-  if (['prod', 'track', 'q', 'per', 'fmax', 'smin', 'amin', 'mk'].some((k) => q.has(k))) { q.delete('sel'); return <Navigate to={`/funds/screen?${q}`} replace />; }
+  // rollout L2-d: ?prod= alone (with the hub's own v / win / sheet) is the hub's product; with a screener parameter, or with sel, it is an old table link
+  if (['track', 'q', 'per', 'fmax', 'smin', 'amin', 'mk'].some((k) => q.has(k)) || (q.has('prod') && sel)) { q.delete('sel'); return <Navigate to={`/funds/screen?${q}`} replace />; }
   return <FundsHub />;
 }
 /** P5: the nowcast is published as the "אומדן" view of /savings; an old /nowcast link keeps its quarter and managers (?q= &m= &fm=) */

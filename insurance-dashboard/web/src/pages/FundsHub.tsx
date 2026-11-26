@@ -1,220 +1,151 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { BasisToggle, CompareAdd, FundsHead } from '../components/FundsNav';
-import { MgrChip } from '../components/MgrChip';
+import { useCallback, useMemo } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { FundsHead } from '../components/FundsNav';
+import { LensTabs } from '../components/LensTabs';
+import { StampLine } from '../components/StampLine';
+import { TypeMonthSheet } from '../components/TypeMonthSheet';
+import { DeeperSheet } from '../components/DeeperSheet';
+import { WhySheet } from '../components/compare/WhySheet';
+import { ProdIcon } from '../components/compare/PickerSheet';
+import { Facts } from '../components/compare/sheetKit';
 import { Sourced } from '../components/Source';
-import { Icon } from '../components/Icon';
-import { Tip } from '../components/Explain';
-import { Empty, ErrorBox, Loading, Panel, Pick, Seg } from '../components/ui';
-import { countP, fundP, listP, trackKey } from '../lib/market';
+import { ErrorBox, Loading } from '../components/ui';
+import { backThen } from '../components/Sheet';
+import { useActiveDoor } from '../components/home/doorState';
+import { useFundCats, useFunds } from '../lib/useData';
+import { useMine } from '../lib/mine';
+import { useAddressWrite, useSheetHost } from '../lib/sheetHost';
+import { countP, fundP, listP } from '../lib/market';
+import { catKey, refOf, selfDirected, type CatX, type FundX, type FundsFile, type Per } from '../lib/funds';
 import type { Prov } from '../lib/prov';
-import { useMacro } from '../lib/macro';
-import { nf, sn } from '../lib/format';
-import { useFunds } from '../lib/useData';
-import { GROSS_LABEL, PER_LABEL, catKey, pc, rankAll, realOf, refOf, retOf, shownProv, useReal, ym, ytdPrev, type Basis, type FundX, type FundsFile, type Per, prevMonth, selfDirected, SELF_NOTE } from '../lib/funds';
-import { DEFAULT_PER, TIE_F, TIE_NOTE, edges, tieBand } from '../lib/fundsTie';
-import '../styles/lens.css';
-import '../styles/market.css';
+import { nf } from '../lib/format';
+import { HUB_TITLE, hubLenses, monthYear, prodLabel, typeName } from '../lib/pageWords';
+import { RISK_NOTE_TITLE } from '../lib/compareWords';
+import { HubMonth, type HubCtx } from './hub/HubMonth';
+import { HubLeaders, HUB_WINS } from './hub/HubLeaders';
+import { HubChanges } from './hub/HubChanges';
+import type { CmpCtx, SheetId } from './compare/contract';
+import type { IsoMat } from '../lib/pickTiles';
+import '../styles/rollout.css';
+import '../styles/funds-hub.css';
 
-/* /funds, the front door of "חיסכון" (funds plan #1, hub v1): the month in one screen. Per product, the leaders and laggards of its
-   largest categories; where choosing a track mattered most; the tracks that moved most in their category; the fee changes; and the
-   doors to every tool. Net of fee by default when the file carries it. Every figure opens its source; nothing is a score. */
+/* /funds, "החודש בחיסכון" (rollout spec §6 as amended by §16–18, mockup v4 ?page=hub; tickets T-H1 … T-H4, B6).
+   The question for every door: what happened this month in savings. Head, the product chips, the lens strip, one lens:
+   - "החודש" (default): the sentence, then track types × six months (hub/HubMonth);
+   - "ראשונים ואחרונים" / agent and Pro "מובילים ומאספים": a small board per type (hub/HubLeaders);
+   - "שינויים": the gap inside each type; agent and Pro also the old hub's spread, movers and fee changes (hub/HubChanges);
+   - "עוד": the six destinations with their isometric icons and the two totals (tracks open to the public, assets).
+   Address (B6): ?prod= (the product), ?v= (the lens), ?win= (the agent's and Pro's leaders window), ?sheet= (the open sheet); all written
+   with replace, so Back leaves the page and a reload keeps them (App.tsx FundsRoot keeps ?prod= alone on the hub). Default product (D5):
+   the reader's first saved product, else pension. Pro keeps the section's tab row (FundsNav, inside FundsHead) above the head.
+   Returns are the published gross; the page never reads or passes a basis. */
 
-const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'פנסיה מקיפה', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'פנסיה כללית', 'חיסכון לילד', 'מרכזית לפיצויים'];
-const HUB_WIN: [Per, string][] = [['m1', 'החודש'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']];
-const MIN_N = 5;
-
-type Row = { f: FundX; v: number };
-/** a category (published gross returns): its ranked tracks (open to everyone, with assets), best first */
-function ranked(fs: FundX[], per: Per, basis: Basis, real: boolean, asof: number, cpi: ReturnType<typeof useMacro>['data']): Row[] {
-  return fs.map((f) => ({ f, v: real ? realOf(f, per, basis, asof, cpi?.series.cpi).v : retOf(f, per, basis).v })).filter((r): r is Row => r.v != null).sort((a, b) => b.v - a.v);
-}
-const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; };
-
-/** fee of every track in the latest month and the month before, from the per-group monthly files (prov/reg), when funds.json has no `fee1` */
-function useRegFees(asof: number | undefined, need: boolean, groups: number): Map<string, [number | null, number | null]> | null {
-  const [m, setM] = useState<Map<string, [number | null, number | null]> | null>(null);
-  useEffect(() => {
-    if (!asof || !need) return;
-    let live = true;
-    const y = Math.floor(asof / 100), years = asof % 100 === 1 ? [y - 1, y] : [y];
-    const prev = asof % 100 === 1 ? (y - 1) * 100 + 12 : asof - 1;
-    type RF = { months: number[]; funds: [string, number, string, number, string][]; fee: (number | null)[][] };
-    const get = (g: number, yr: number) => fetch(`${import.meta.env.BASE_URL}data/prov/reg/${g}/${yr}.json`).then((r) => (r.ok ? r.json() as Promise<RF> : null)).catch(() => null);
-    Promise.all(Array.from({ length: groups }, (_, g) => Promise.all(years.map((yr) => get(g, yr))))).then((all) => {
-      const out = new Map<string, [number | null, number | null]>();
-      all.flat().forEach((f) => {
-        if (!f || !Array.isArray(f.funds)) return;
-        f.funds.forEach((fu, i) => {
-          const k = trackKey(fu[0] as 'gemel' | 'pensia' | 'insurance', fu[1]), cur = out.get(k) ?? [null, null];
-          const a = f.months.indexOf(asof), b = f.months.indexOf(prev);
-          if (a >= 0) cur[0] = f.fee[i]?.[a] ?? null;
-          if (b >= 0) cur[1] = f.fee[i]?.[b] ?? null;
-          out.set(k, cur);
-        });
-      });
-      if (live) setM(out);
-    });
-    return () => { live = false; };
-  }, [asof, need, groups]);
-  return m;
-}
+/** the product chips: the saver's five (6.2 #2); the agent and Pro also get every other product the old hub listed */
+const PRODS5 = ['פנסיה מקיפה', 'השתלמות', 'גמל להשקעה', 'גמל', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)'];
+const PRODS_MORE = ['פנסיה כללית', 'חיסכון לילד', 'מרכזית לפיצויים'];
+const DEFAULT_PROD = 'פנסיה מקיפה';
+const LENSES = ['month', 'lead', 'chg', 'tools'] as const;
+type Lens = (typeof LENSES)[number];
+/* the guard line's sheet (mockup v4 "risk") */
+const RISK_TEXT = 'יותר מניות: עולה ויורד חזק יותר. סוגי מסלולים שונים הם רמות סיכון שונות, ולכן לא מסמנים ראשון ואחרון ביניהם.';
+const RISK_MORE_TEXT = 'כדי לראות מי היה ראשון ומי אחרון, בוחרים סוג אחד: לחיצה על משבצת או על שם הסוג פותחת את כל המסלולים שלו באותו חודש.';
 
 export function FundsHub() {
   const { data: raw, error } = useFunds();
-  const data = raw as FundsFile | undefined;
-  const cpi = useMacro().data;
-  const [real] = useReal();
-  const [prod, setProd] = useState('השתלמות');
-  const [per, setPer] = useState<Per>(DEFAULT_PER);
-  const live = useMemo(() => (data?.funds ?? []).filter((f) => f.assets && !f.closed && !f.gone && !selfDirected(f)), [data]);
-  const basis: Basis = 'gross';  // owner 26.11.26: every return is the published gross
-  const asof = data?.asof ?? 0;
-  const C = cpi?.series.cpi;
-  const hasFee1 = useMemo(() => (data?.funds ?? []).some((f) => f.fee1 != null), [data]);
-  // one file per managing group (market.json's group list, the same names as the tracks' `grp`)
-  const nGroups = useMemo(() => new Set((data?.funds ?? []).map((f) => f.grp)).size, [data]);
-  const regFees = useRegFees(data?.asof, !!data && !hasFee1, nGroups);
+  const file = raw as FundsFile | null;
+  const cats = (useFundCats().data as Record<string, CatX> | null) ?? null;
+  const [doorRaw] = useActiveDoor();
+  const door = doorRaw === 'agent' || doorRaw === 'pro' ? doorRaw : 'saver';   // no door = the saver (B1, D3)
+  const saver = door === 'saver';
+  const [mine] = useMine();
+  const [sp] = useSearchParams();
+  const write = useAddressWrite();
+  const nav = useNavigate();
+  const { sheet, cmp, openSheet, closeSheet, own } = useSheetHost();
 
-  const cats = useMemo(() => {
-    const by = new Map<string, FundX[]>();
-    live.forEach((f) => by.set(catKey(f), [...(by.get(catKey(f)) ?? []), f]));
-    return by;
-  }, [live]);
-  // the product's largest categories (by assets), each with its ranking on the chosen window
-  const board = useMemo(() => [...cats.entries()].filter(([, fs]) => fs[0].prod === prod)
-    .map(([k, fs]) => ({ k, track: fs[0].track, fs, assets: fs.reduce((t, f) => t + (f.assets ?? 0), 0), r: ranked(fs, per, basis, real, asof, cpi) }))
-    .filter((c) => c.r.length >= 3).sort((a, b) => b.assets - a.assets).slice(0, 6), [cats, prod, per, basis, real, asof, cpi]);
-  // where the choice mattered most: the widest spread between the best and worst track of a category (any product)
-  const spread = useMemo(() => [...cats.values()].map((fs) => ({ fs, r: ranked(fs, per, basis, real, asof, cpi) })).filter((c) => c.r.length >= MIN_N)
-    .map((c) => ({ ...c, d: c.r[0].v - c.r[c.r.length - 1].v })).sort((a, b) => b.d - a.d).slice(0, 5), [cats, per, basis, real, asof, cpi]);
-  // rank movers: last month's gross percentile (pr1) when the build ships it, else the YTD rank a month ago vs today
-  const movers = useMemo(() => {
-    const out: { f: FundX; from: number; to: number; n: number; how: 'pct' | 'ytd' }[] = [];
-    const pubPrev = live.some((f) => f.pr1?.y12 != null);
-    [...cats.values()].filter((fs) => fs[0].prod === prod).forEach((fs) => {
-      if (pubPrev) {
-        fs.forEach((f) => { const a = f.pr1?.y12, b = f.pr?.y12, n = f.prn?.y12; if (a != null && b != null && n != null) out.push({ f, from: a, to: b, n, how: 'pct' }); });
-        return;
-      }
-      if (asof % 100 === 1) return;
-      const now = rankAll(fs, (f) => retOf(f, 'ytd', basis).v), was = rankAll(fs, (f) => { const r = retOf(f, 'ytd', basis).v, m = retOf(f, 'm1', basis).v; return r == null || m == null ? null : ytdPrev({ ytd: r, m1: m }, asof); });
-      fs.forEach((f) => { const a = was.get(f.k), b = now.get(f.k); if (a && b && b.n >= MIN_N && a.n === b.n) out.push({ f, from: a.rank, to: b.rank, n: b.n, how: 'ytd' }); });
-    });
-    return out.filter((x) => x.from !== x.to).sort((a, b) => (b.how === 'pct' ? Math.abs(b.to - b.from) - Math.abs(a.to - a.from) : Math.abs(b.from - b.to) / b.n - Math.abs(a.from - a.to) / a.n)).slice(0, 8);
-  }, [cats, prod, basis, asof, live]);
-  // fee changes against last month
-  const fees = useMemo(() => {
-    const rows: { f: FundX; a: number; b: number; pub: boolean }[] = [];
-    live.filter((f) => f.prod === prod).forEach((f) => {
-      if (hasFee1) { if (f.fee != null && f.fee1 != null && Math.abs(f.fee - f.fee1) >= 0.005) rows.push({ f, a: f.fee, b: f.fee1, pub: true }); return; }
-      const x = regFees?.get(f.k);
-      if (x && x[0] != null && x[1] != null && Math.abs(x[0] - x[1]) >= 0.005) rows.push({ f, a: x[0], b: x[1], pub: false });
-    });
-    return rows.sort((p, q) => Math.abs(q.a - q.b) - Math.abs(p.a - p.b));
-  }, [live, prod, hasFee1, regFees]);
+  const byK = useMemo(() => new Map((file?.funds ?? []).map((f) => [f.k, f as FundX])), [file]);
+  const mineFunds = useMemo(() => (Array.isArray(mine) ? mine : []).map((m) => byK.get(m.k)).filter((f): f is FundX => !!f), [mine, byK]);
+  const prods = useMemo(() => (saver ? PRODS5 : [...PRODS5, ...PRODS_MORE]).filter((p) => !file || file.funds.some((f) => f.prod === p && !f.closed && !(f as FundX).gone)), [saver, file]);
+  const asked = sp.get('prod');
+  const prod = asked && prods.includes(asked) ? asked : mineFunds.find((f) => prods.includes(f.prod))?.prod ?? DEFAULT_PROD;
+  const vq = sp.get('v');
+  const lens: Lens = (LENSES as readonly string[]).includes(vq ?? '') ? (vq as Lens) : 'month';
+  const wq = sp.get('win') as Per | null;
+  const win: Per = wq && HUB_WINS.includes(wq) ? wq : 'm1';
+  // "שלי" and the tint are the saver's (§16.1 6d); the reader's type of this product: their first saved track of it (not self-managed)
+  const mineKeys = useMemo(() => (saver ? mineFunds.map((f) => f.k) : []), [saver, mineFunds]);
+  const mineF = saver ? mineFunds.find((f) => f.prod === prod && !selfDirected(f)) ?? null : null;
+  const mineKey = mineF ? catKey(mineF) : null;
+
+  const openType = useCallback((key: string, p: number) => openSheet(`type:${p}:${key}`), [openSheet]);
+  // ?sheet=type:<yyyymm>:<catKey>
+  const tSheet = own && own[0] === 'type' ? (() => { const i = own[1].indexOf(':'), p = Number(own[1].slice(0, i)), key = own[1].slice(i + 1); return i > 0 && p > 0 && key.includes(' | ') ? { p, key } : null; })() : null;
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
-  if (!data) return <Loading what="קופות" />;
-  const lbl = real ? 'ריאלי' : GROSS_LABEL;
-  const V = ({ f, v }: { f: FundX; v: number }) => <Sourced src={() => shownProv(f, per, basis, real, asof, C, data)}><span className="num">{pc(v, per === 'm1' ? 2 : 1)}</span></Sourced>;
-  const totalA = live.reduce((t, f) => t + (f.assets ?? 0), 0);
-  const prods = PRODUCTS.filter((p) => live.some((f) => f.prod === p));
-  const medProv = (c: (typeof board)[number], m: number): Prov => listP(`חציון ${PER_LABEL[per]} · ${c.k}`, pc(m), undefined, 'החציון של תשואות המסלולים המדורגים בקטגוריה', c.r.map((x) => ({ label: x.f.name, v: pc(x.v), src: () => shownProv(x.f, per, basis, real, asof, C, data) })));
-  const spreadProv = (c: (typeof spread)[number]): Prov => ({ k: 'calc', title: `פער בין התשואה הגבוהה לנמוכה · ${catKey(c.fs[0])} · ${PER_LABEL[per]}`, value: `${nf(c.d, 2)} נ"א`, formula: 'התשואה הגבוהה בקטגוריה פחות הנמוכה',
-    inputs: [{ label: `הגבוהה: ${c.r[0].f.name}`, v: pc(c.r[0].v), src: () => shownProv(c.r[0].f, per, basis, real, asof, C, data) }, { label: `הנמוכה: ${c.r[c.r.length - 1].f.name}`, v: pc(c.r[c.r.length - 1].v), src: () => shownProv(c.r[c.r.length - 1].f, per, basis, real, asof, C, data) }, { label: 'מסלולים מדורגים', v: nf(c.r.length, 0) }] });
-  const feeProv = (x: (typeof fees)[number]): Prov => ({ k: 'calc', title: `שינוי בדמי הניהול מצבירה · ${x.f.name}`, value: `${sn(x.a - x.b, 2)} נ"א`, formula: `דמי הניהול הממוצעים ב-${ym(asof)} פחות דמי הניהול בחודש הקודם (AVG_ANNUAL_MANAGEMENT_FEE)`,
-    inputs: [{ label: ym(asof), v: nf(x.a, 2) + '%', src: () => fundP(refOf(x.f), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(x.a, 2) + '%') }, { label: ym(prevMonth(asof)), v: nf(x.b, 2) + '%', src: () => fundP(refOf(x.f), prevMonth(asof), 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', nf(x.b, 2) + '%') }] });
-  const moverProv = (x: (typeof movers)[number]): Prov => x.how === 'pct'
-    ? { k: 'calc', title: `אחוזון LTM, שינוי מהחודש הקודם · ${x.f.name}`, value: `${nf(x.from, 0)} → ${nf(x.to, 0)}`, formula: 'האחוזון בקטגוריה על תשואת LTM, החודש מול החודש הקודם (מחושב בבניית הנתונים)', inputs: [{ label: 'חודש קודם', v: nf(x.from, 0) }, { label: ym(asof), v: nf(x.to, 0) }, { label: 'מסלולים מדורגים', v: nf(x.n, 0) }] }
-    : { k: 'calc', title: `מקום YTD, שינוי מהחודש הקודם · ${x.f.name}`, value: `${x.from} → ${x.to}`, formula: 'המקום בקטגוריה לפי תשואת YTD בסוף החודש הקודם מול היום. YTD של החודש הקודם: (1 + YTD) ÷ (1 + תשואת החודש) − 1',
-      inputs: [{ label: 'תשואה YTD', v: pc(retOf(x.f, 'ytd', basis).v), src: () => shownProv(x.f, 'ytd', basis, false, asof, C, data) }, { label: 'תשואת החודש', v: pc(retOf(x.f, 'm1', basis).v), src: () => shownProv(x.f, 'm1', basis, false, asof, C, data) }, { label: 'מסלולים מדורגים', v: nf(x.n, 0) }] };
-  const big = board[0];
-  // ties: an edge inside the band crowns no one (lib/fundsTie)
-  const band = tieBand(per, asof), win = HUB_WIN.find(([k]) => k === per)?.[1];
-  const tieProv = (ck: string, rs: Row[], where: string): Prov => listP(`${where} · ${ck} · ${PER_LABEL[per]}`, nf(rs.length, 0), 'מסלולים', TIE_F, rs.map((x) => ({ label: x.f.name, v: pc(x.v), src: () => shownProv(x.f, per, basis, real, asof, C, data) })));
-  const Ties = ({ ck, rs, where }: { ck: string; rs: Row[]; where: string }) => (rs.length > 1 ? <Sourced className="chip" src={() => tieProv(ck, rs, where)}>{`+${rs.length - 1} צמודים`}</Sourced> : null);
-  const bigE = big ? edges(big.r, (x) => x.v, band) : null;
+  if (!file || !cats) return <Loading what="קופות" />;
+  const asof = file.asof;
+  const ctx: HubCtx = { file, cats, asof, prod, door, saver, mineKeys, mineKey, openType, openSheet };
+  const cmpCtx: CmpCtx = { keys: [], basis: 'gross', door, setKeys: (k) => nav(`/funds/compare?k=${k.join(',')}`), openSheet: openSheet as (s: SheetId) => void, asof };
 
   return (
-    <>
-      <FundsHead sub={<>החודש בקופות · <span className="num">{ym(asof)}</span> · <Sourced src={() => countP('מסלולים פעילים', live.length, 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים בניהול אישי')}><span className="num">{nf(live.length, 0)}</span></Sourced> מסלולים · {data.source}</>} tools={<BasisToggle />} />
-
-      <section className="kpis fhub-kpis">
-        <div className="kpi"><div className="l">מסלולים פתוחים לציבור</div><div className="v num"><Sourced src={() => countP('מסלולים פעילים', live.length, 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים בניהול אישי')}>{nf(live.length, 0)}</Sourced></div><div className="s">{ym(asof)}</div></div>
-        <div className="kpi"><div className="l">נכסים במסלולים</div><div className="v num"><Sourced src={() => ({ k: 'calc', title: 'נכסים, כל המסלולים הפתוחים לציבור', value: nf(totalA / 1000, 0), unit: 'מיליארד ש"ח', formula: 'סכום TOTAL_ASSETS של המסלולים הפתוחים לציבור, חלקי 1,000', note: 'מוצגות 40 הקטגוריות הגדולות',
-          inputs: [...cats.entries()].map(([k, fs]) => ({ k, fs, a: fs.reduce((t, f) => t + (f.assets ?? 0), 0) })).sort((x, y) => y.a - x.a).slice(0, 40).map((x) => ({ label: x.k, v: nf(x.a / 1000, 1), src: () => listP(`נכסים · ${x.k}`, nf(x.a, 0), 'מיליוני ש"ח', 'סכום TOTAL_ASSETS של המסלולים בקטגוריה', x.fs.map((f) => ({ label: f.name, v: nf(f.assets ?? 0, 1), src: () => fundP(refOf(f), asof, 'TOTAL_ASSETS', 'נכסים', nf(f.assets ?? 0, 1), 'מיליוני ש"ח') }))) })) })}>{nf(totalA / 1000, 0)}</Sourced></div><div className="s">מיליארד ש"ח</div></div>
-        <div className="kpi"><div className="l">בסיס התשואה <Tip k="gross" /></div><div className="v">{lbl}</div><div className="s">כפי שהרשות מפרסמת, לפני דמי ניהול</div></div>
-      </section>
-
-      {big && big.r.length > 1 && (
-        <Panel title="בקצרה" className="fhub-brief">
-          <ul className="fbrief">
-            <li>ב{prod} {big.track}, הקטגוריה הגדולה במוצר, {bigE!.all
-              ? <>כל <Sourced src={() => tieProv(big.k, big.r, 'צמודים')}><span className="num">{big.r.length}</span></Sourced> המסלולים המדורגים בפער של פחות מ-0.10 נ"א ב-{win}.</>
-              : <><Link to={`/funds/${big.r[0].f.k}`}>{big.r[0].f.name}</Link> {bigE!.top.length > 1 ? <>ועוד <Sourced src={() => tieProv(big.k, bigE!.top, 'צמודים בראש')}><span className="num">{bigE!.top.length - 1}</span></Sourced> צמודים בראש</> : 'מוביל'} עם <V f={big.r[0].f} v={big.r[0].v} /> ב-{win}; {bigE!.low.length > 1 ? 'בתחתית' : 'המאסף'}, <Link to={`/funds/${big.r[big.r.length - 1].f.k}`}>{big.r[big.r.length - 1].f.name}</Link>{bigE!.low.length > 1 && <> ועוד <Sourced src={() => tieProv(big.k, bigE!.low, 'צמודים בתחתית')}><span className="num">{bigE!.low.length - 1}</span></Sourced> צמודים</>}, עם <V f={big.r[big.r.length - 1].f} v={big.r[big.r.length - 1].v} />.</>}</li>
-            {spread[0] && <li>הבחירה השפיעה הכי הרבה ב{spread[0].fs[0].prod} {spread[0].fs[0].track}: פער של <Sourced src={() => spreadProv(spread[0])}><span className="num">{nf(spread[0].d, 1)}</span></Sourced> נקודות אחוז בין התשואה הגבוהה לנמוכה.</li>}
-            {fees.length > 0 && <li>ב{prod}, <Sourced src={() => listP(`שינויי דמי ניהול · ${prod}`, nf(fees.length, 0), undefined, 'המסלולים שדמי הניהול מצבירה שלהם השתנו מהחודש הקודם', fees.map((x) => ({ label: x.f.name, v: `${nf(x.b, 2)}% → ${nf(x.a, 2)}%`, src: () => feeProv(x) })))}><span className="num">{fees.length}</span></Sourced> מסלולים שינו את דמי הניהול מצבירה מהחודש הקודם.</li>}
-          </ul>
-        </Panel>
-      )}
-
-      <Panel title={<>מובילים ומאספים · {prod}</>} aside={<><Pick label="מוצר" value={prod} onChange={setProd} options={prods.map((p) => [p, p] as [string, string])} /><Seg label="חלון" value={per} onChange={setPer} options={HUB_WIN} /><span className={`chip${real ? ' est' : ''}`}>{lbl}</span></>}>
-        {board.length === 0 ? <Empty title="אין קטגוריות מדורגות במוצר הזה בחלון שנבחר" /> : (
-          <div className="fcats">
-            {board.map((c) => { const m = median(c.r.map((x) => x.v)); const e = edges(c.r, (x) => x.v, band), miss = c.fs.length - c.r.length;
-              // a head or a tail of more than one is a tie: "צמודים", never a single leader or laggard
-              const lines: [string, Row[], string][] = e.all ? [['כולם צמודים', c.r, '']] : [[e.top.length > 1 ? 'צמודים בראש' : 'מוביל', e.top, 'up'], [e.low.length > 1 ? 'צמודים בתחתית' : 'מאסף', [...e.low].reverse(), 'down']];
-              return (
-                <article className="fcat" key={c.k}>
-                  <header><Link to={`/funds/screen?prod=${encodeURIComponent(prod)}&track=${encodeURIComponent(c.track)}&per=${per}`} className="fcat-t">{c.track}</Link>
-                    <span className="muted"><Sourced src={() => countP(`מסלולים מדורגים · ${c.k}`, c.r.length, 'המסלולים בקטגוריה שיש להם תשואה בחלון')}><span className="num">{c.r.length}</span></Sourced> מסלולים{miss > 0 && <> · <Sourced src={() => listP(`בלי ${win} · ${c.k}`, nf(miss, 0), 'מסלולים', 'מסלולים בקטגוריה בלי תשואה בחלון (היסטוריה קצרה ממנו), ולכן מחוץ לדירוג', c.fs.filter((f) => !c.r.some((x) => x.f.k === f.k)).map((f) => ({ label: f.name, v: '–', src: () => countP(`חודשי היסטוריה · ${f.name}`, f.n, 'החודשים שבהם פורסמה תשואה חודשית למסלול') })))}><span className="num">{miss}</span></Sourced> בלי {win}</>} · חציון {m == null ? '–' : <Sourced src={() => medProv(c, m)}><span className="num">{pc(m, per === 'm1' ? 2 : 1)}</span></Sourced>}</span></header>
-                  {lines.map(([l, rs, t]) => { const r = rs[0]; return (
-                    <div className={`fline ${t}`} key={l}><span className="fl-l">{l}</span><span className="fl-n"><Link to={`/funds/${r.f.k}`}>{r.f.name}</Link><span style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}><MgrChip grp={r.f.grp} mgr={r.f.mgr} short /><Ties ck={c.k} rs={rs} where={l} /></span></span><span className="fl-v"><V f={r.f} v={r.v} /></span><CompareAdd k={r.f.k} name={r.f.name} small /></div>
-                  ); })}
-                </article>
-              ); })}
-          </div>
-        )}
-        <div className="fnote">הקטגוריות הגדולות במוצר לפי נכסים; מדורגים מסלולים פתוחים לציבור עם נכסים; מסלול בלי היסטוריה לחלון מחוץ לדירוג. התשואות לפני דמי ניהול, כפי שהרשות מפרסמת. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.series.cpi?.points.length ?? 0} חודשים.` : ''} 3Y ו-5Y: שנתי ממוצע. {TIE_NOTE}. {SELF_NOTE}.</div>
-      </Panel>
-
-      <div className="grid2">
-        <Panel title="איפה הבחירה שינתה הכי הרבה" aside={<span>פער בין התשואה הגבוהה לנמוכה · {win}</span>}>
-          {spread.length === 0 ? <Empty title="אין קטגוריות עם 5 מסלולים מדורגים לפחות" /> : (
-            <div className="scroll"><table className="fsimple">
-              <thead><tr><th>קטגוריה</th><th>מסלולים</th><th>פער, נ"א</th></tr></thead>
-              <tbody>{spread.map((c) => <tr key={catKey(c.fs[0])}><td><Link to={`/funds/screen?prod=${encodeURIComponent(c.fs[0].prod)}&track=${encodeURIComponent(c.fs[0].track)}&per=${per}`}>{c.fs[0].prod} · {c.fs[0].track}</Link></td><td className="num">{c.r.length}</td><td><Sourced src={() => spreadProv(c)}><span className="num">{nf(c.d, 2)}</span></Sourced></td></tr>)}</tbody>
-            </table></div>
-          )}
-        </Panel>
-        <Panel title={<>מקומות שזזו · {prod}</>} aside={<span>{movers[0]?.how === 'pct' ? 'אחוזון LTM, מול החודש הקודם' : 'מקום YTD בקטגוריה, מול החודש הקודם'}</span>}>
-          {movers.length === 0 ? <Empty title={asof % 100 === 1 ? 'בינואר אין YTD של חודש קודם להשוואה' : 'אין שינויי מקום בקטגוריות של 5 מסלולים לפחות'} /> : (
-            <div className="scroll"><table className="fsimple">
-              <thead><tr><th>מסלול</th><th>קטגוריה</th><th>{movers[0].how === 'pct' ? 'אחוזון' : 'מקום'}</th></tr></thead>
-              <tbody>{movers.map((x) => { const up = x.how === 'pct' ? x.to > x.from : x.to < x.from;
-                return <tr key={x.f.k}><td><Link to={`/funds/${x.f.k}`}>{x.f.name}</Link></td><td className="muted">{x.f.track}</td><td><Sourced src={() => moverProv(x)}><span className={`num ${up ? 'pos' : 'neg'}`}>{x.from} → {x.to}</span></Sourced>{x.how === 'ytd' && <span className="dim num"> מתוך {x.n}</span>}</td></tr>; })}</tbody>
-            </table></div>
-          )}
-        </Panel>
+    <div className="ro-page ro-hub">
+      <FundsHead title={<>{HUB_TITLE} · <span className="hub-asof">{monthYear(asof)}</span></>} />
+      <div className="hub-chips" id="prod-chips" role="group" aria-label="מוצר">
+        {prods.map((p) => <button key={p} type="button" className={p === prod ? 'on' : undefined} aria-pressed={p === prod} onClick={() => p !== prod && write({ prod: p, sheet: null })}>{prodLabel(p)}</button>)}
+      </div>
+      <LensTabs tabs={hubLenses(door)} value={lens} onChange={(v) => write({ v: v === 'month' ? null : v, sheet: null })} />
+      <div className="hub-body">
+        {lens === 'month' ? <HubMonth ctx={ctx} />
+          : lens === 'lead' ? <HubLeaders ctx={ctx} win={win} setWin={(w) => write({ win: w === 'm1' ? null : w })} />
+            : lens === 'chg' ? <HubChanges ctx={ctx} />
+              : <HubTools ctx={ctx} />}
+        <StampLine asof={asof} onWhy={() => openSheet({ t: 'why' })} />
       </div>
 
-      <Panel title={<>שינויי דמי ניהול · {prod}</>} aside={<><span>מצבירה, ממוצע בפועל · {ym(asof)} מול החודש הקודם</span><Tip k="fee" /></>}>
-        {!hasFee1 && !regFees ? <Loading what="דמי ניהול" /> : fees.length === 0 ? <Empty title="דמי הניהול מצבירה לא השתנו החודש במוצר הזה" /> : (
-          <div className="scroll"><table className="fsimple">
-            <thead><tr><th>מסלול</th><th>קטגוריה</th><th>קודם</th><th>{ym(asof)}</th><th>שינוי, נ"א</th></tr></thead>
-            <tbody>{fees.slice(0, 12).map((x) => <tr key={x.f.k}><td><Link to={`/funds/${x.f.k}`}>{x.f.name}</Link></td><td className="muted">{x.f.track}</td><td className="num">{nf(x.b, 2)}%</td><td className="num">{nf(x.a, 2)}%</td><td><Sourced src={() => feeProv(x)}><span className={`num ${x.a < x.b ? 'pos' : 'neg'}`}>{sn(x.a - x.b, 2)}</span></Sourced></td></tr>)}</tbody>
-          </table></div>
-        )}
-        {fees.length > 12 && <div className="fnote">מוצגים 12 השינויים הגדולים מתוך {fees.length}.</div>}
-      </Panel>
+      {tSheet ? (
+        <TypeMonthSheet open onClose={closeSheet} typeKey={tSheet.key} p={tSheet.p} mineKeys={mineKeys} door={door} typeName={typeName(tSheet.key)}
+          onTrack={(k) => backThen(() => nav(`/funds/${k}`))} />
+      ) : null}
+      {sheet === 'risk' ? (
+        <DeeperSheet open onClose={closeSheet} id="risk-sheet" title={RISK_NOTE_TITLE}>
+          <Facts items={[RISK_TEXT, RISK_MORE_TEXT]} />
+        </DeeperSheet>
+      ) : null}
+      {cmp?.t === 'why' ? <WhySheet {...cmpCtx} open onClose={closeSheet} /> : null}
+    </div>
+  );
+}
 
-      <nav className="ftiles" aria-label="כלי החיסכון">
-        {([['/funds/screen', 'funds', 'כל המסלולים', 'סינון לפי מוצר, משפחה, דמי ניהול וחשיפה; שמירת סינונים'], ['/funds/compare', 'compare', 'השוואה ראש בראש', '2–4 מסלולים: צמיחה, חלונות מתגלגלים, ירידות, שנים'], ['/funds/tools', 'sliders', 'כלים', 'מה היה לי, דמי ניהול לאורך קריירה, קרנות ברירת מחדל, עוקבי מדד'],
-          ['/savings', 'savings', 'הענף', 'נכסים, צבירה, ניוד והכנסות דמי ניהול של הגופים'], ['/managers', 'companies', 'מנהלים', 'החברות המנהלות ודירוגן לאורך זמן'], ['/holdings', 'statement', 'הרכב נכסים', 'מה הגופים מחזיקים, ברמת גוף ומוצר']] as const).map(([to, icon, t, d]) => (
-          <Link key={to} to={to} className="ftile"><span className="icotile lg"><Icon name={icon} /></span><b>{t}</b><span>{d}</span></Link>
+/* ---------- "עוד": the six destinations and the two totals (6.2 #7, T-H3, T-H4) ---------- */
+type Art = [number, IsoMat][];
+function HubTools({ ctx }: { ctx: HubCtx }) {
+  const { file, asof, prod, saver } = ctx;
+  const live = file.funds.filter((f) => f.assets && !f.closed && !f.gone && !selfDirected(f));
+  const totalA = live.reduce((t, f) => t + (f.assets ?? 0), 0);
+  const tiles: [string, string, string, Art, string][] = [
+    [`/funds/screen?${new URLSearchParams({ prod }).toString()}`, 'כל המסלולים', 'דירוג וסינון לפי סוג', [[18, 'blue'], [30, 'navy'], [44, 'orange']], 'hub-t-screen'],
+    ['/funds/compare', 'השוואה', 'חודש מול חודש, עד 4 מסלולים', [[22, 'navy'], [40, 'orange'], [30, 'blue']], 'hub-t-compare'],
+    saver ? ['/funds/tools/fees', 'דמי ניהול', 'כמה זה עולה בשנה, בשקלים', [[14, 'blue'], [24, 'blue'], [36, 'orange']], 'hub-t-fees']
+      : ['/funds/tools', 'כלים', 'דמי ניהול לאורך קריירה, ברירת מחדל, עוקבי מדד', [[14, 'blue'], [24, 'blue'], [36, 'orange']], 'hub-t-tools'],
+    ['/savings', 'הענף', 'נכסים, צבירה וניוד', [[30, 'blue'], [38, 'navy'], [26, 'blue']], 'hub-t-savings'],
+    ['/managers', 'מנהלים', 'החברות המנהלות לאורך זמן', [[40, 'navy'], [20, 'blue'], [32, 'navy']], 'hub-t-managers'],
+    ['/holdings', 'הרכב נכסים', 'מה הגופים מחזיקים', [[38, 'orange'], [18, 'blue'], [28, 'navy']], 'hub-t-holdings'],
+  ];
+  const byCat = [...live.reduce((m, f) => m.set(catKey(f), [...(m.get(catKey(f)) ?? []), f]), new Map<string, FundX[]>()).entries()]
+    .map(([k, fs]) => ({ k, fs, a: fs.reduce((t, f) => t + (f.assets ?? 0), 0) })).sort((x, y) => y.a - x.a).slice(0, 40);
+  const assetsProv = (): Prov => ({ k: 'calc', title: 'נכסים, כל המסלולים הפתוחים לציבור', value: nf(totalA / 1000, 0), unit: 'מיליארד ש"ח', formula: 'סכום TOTAL_ASSETS של המסלולים הפתוחים לציבור, חלקי 1,000', note: 'מוצגות 40 הקטגוריות הגדולות',
+    inputs: byCat.map((x) => ({ label: x.k, v: nf(x.a / 1000, 1), src: () => listP(`נכסים · ${x.k}`, nf(x.a, 0), 'מיליוני ש"ח', 'סכום TOTAL_ASSETS של המסלולים בקטגוריה', x.fs.map((f) => ({ label: f.name, v: nf(f.assets ?? 0, 1), src: () => fundP(refOf(f), asof, 'TOTAL_ASSETS', 'נכסים', nf(f.assets ?? 0, 1), 'מיליוני ש"ח') }))) })) });
+  return (
+    <div className="hub-tools-w">
+      <nav className="hub-tools" id="hub-tools" aria-label="עוד בחיסכון">
+        {tiles.map(([to, t, s, art, id]) => (
+          <Link key={id} id={id} to={to} className="hub-tile"><ProdIcon art={art} size={50} /><b>{t}</b><small>{s}</small></Link>
         ))}
       </nav>
-    </>
+      <p className="hub-totals" id="hub-totals">
+        <Sourced src={() => countP('מסלולים פתוחים לציבור', live.length, 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, בלי מסלולים בניהול אישי')}><bdi dir="ltr" className="sgnum">{nf(live.length, 0)}</bdi></Sourced> מסלולים פתוחים לציבור · נכסים{' '}
+        <Sourced src={assetsProv}><bdi dir="ltr" className="sgnum">{nf(totalA / 1000, 0)}</bdi></Sourced> מיליארד ש״ח
+      </p>
+    </div>
   );
 }
