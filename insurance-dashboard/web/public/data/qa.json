@@ -1,5 +1,5 @@
 {
- "built": "2026-11-26T05:13:48+02:00",
+ "built": "2026-11-26T10:01:08+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -205,9 +205,9 @@
    "id": "answers_lib",
    "ok": true,
    "level": "fail",
-   "n": 4526,
+   "n": 4523,
    "fail": 0,
-   "note": "4526 passed, 0 failed"
+   "note": "4523 passed, 0 failed"
   },
   {
    "id": "brief_lib",
@@ -221,9 +221,9 @@
    "id": "deliver_lib",
    "ok": true,
    "level": "fail",
-   "n": 32732,
+   "n": 32406,
    "fail": 0,
-   "note": "32732 passed, 0 failed · 1248 docs, 8 files of each kind built"
+   "note": "32406 passed, 0 failed · 1248 docs, 8 files of each kind built"
   },
   {
    "id": "findings",
@@ -373,9 +373,9 @@
    "id": "schemas",
    "ok": true,
    "level": "fail",
-   "n": 3955,
+   "n": 3957,
    "fail": 0,
-   "note": "3955 files under contract, 0 failing; 95 contracts; 906 files without a contract"
+   "note": "3957 files under contract, 0 failing; 95 contracts; 906 files without a contract"
   },
   {
    "id": "cards",
@@ -431,7 +431,7 @@
    "level": "fail",
    "n": 1262,
    "fail": 0,
-   "note": "fund_stats ok: 132 categories with stats (1262 tracks), 109 rank files, 52 persistence rows, 4 default-fund tenders, 249 trackers, 21 glide managers"
+   "note": "fund_stats ok: 132 categories with stats (1262 tracks), 109 rank files, 26 persistence rows, 4 default-fund tenders, 249 trackers, 21 glide managers"
   },
   {
    "id": "decision",
@@ -455,7 +455,7 @@
    "level": "fail",
    "n": 1,
    "fail": 0,
-   "note": "flows letter ok: 10/26 v1, 0 integrity, 0 stale"
+   "note": "flows letter ok: 10/26 v3, 0 integrity, 0 stale"
   },
   {
    "id": "coef",
@@ -525,9 +525,9 @@
    "id": "tables",
    "ok": true,
    "level": "fail",
-   "n": 134680,
+   "n": 120926,
    "fail": 0,
-   "note": "tables: 7 tables, 134680 rows, every row sourced; 0 problems"
+   "note": "tables: 7 tables, 120926 rows, every row sourced; 0 problems"
   },
   {
    "id": "consensus",
