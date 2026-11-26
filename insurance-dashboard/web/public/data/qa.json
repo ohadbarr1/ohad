@@ -1,5 +1,5 @@
 {
- "built": "2026-11-26T23:26:51+02:00",
+ "built": "2026-11-26T23:29:43+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -195,11 +195,11 @@
   },
   {
    "id": "answers",
-   "ok": false,
+   "ok": true,
    "level": "fail",
    "n": 193,
-   "fail": 1,
-   "note": "answers: 193 questions, 193 answered, 1 problems; answers/targets.json differs from a rebuild · FAIL answers/targets.json differs from a rebuild"
+   "fail": 0,
+   "note": "answers: 193 questions, 193 answered, 0 problems"
   },
   {
    "id": "answers_lib",
