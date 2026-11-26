@@ -1,5 +1,5 @@
 /* P6-2c (T-I1, decision D3): the industry hub on a phone is one 44 px row: "השוואה ענפית ▾" (the pages and the peer-table views), then the page's own controls */
-.p6-hubbar { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-height: 44px; margin-bottom: 2px; }
+.p6-hubbar { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-height: 44px; margin-top: -12px; margin-bottom: 2px; }
 .p6-hubbar .tools-slot { display: contents; }
 .p6-hubbar .p6-hublead { flex: 1 1 auto; }
 .p6-hubh { margin: 0; font-size: inherit; line-height: 1; flex: none; }
