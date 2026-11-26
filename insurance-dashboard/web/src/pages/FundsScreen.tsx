@@ -3,21 +3,21 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { BasisToggle, CompareAdd, FundsHead } from '../components/FundsNav';
 import { MgrChip } from '../components/MgrChip';
 import { Sourced } from '../components/Source';
-import { Sheet } from '../components/Sheet';
 import { Tip } from '../components/Explain';
-import { Empty, ErrorBox, Field, Loading, Panel, Pick, Seg } from '../components/ui';
+import { Empty, ErrorBox, Loading, Panel, Pick, Seg } from '../components/ui';
+import { NumText } from '../components/NumText';
 import { countP, expP, fundP, listP } from '../lib/market';
 import type { Prov } from '../lib/prov';
 import { useMacro } from '../lib/macro';
 import { nf, pubLabel } from '../lib/format';
 import { useStored } from '../lib/local';
 import { usePhone } from '../lib/useMedia';
-import { load, useFunds } from '../lib/useData';
+import { load, useFundCats, useFunds } from '../lib/useData';
 import {
   FAMS, FAM_F, FAM_LABEL, GROSS_LABEL, PCT_F, PERIODS, PER_LABEL, catKey, equityOutlier, equitySpread, famOf, outlierProv, pc, rankAll, realOf, refOf,
-  retOf, selfDirected, SELF_NOTE, shownProv, useReal, ym, type Basis, type FamKey, type FundX, type FundsFile, type Per,
+  retOf, selfDirected, SELF_NOTE, shownProv, useReal, ym, type Basis, type CatX, type FamKey, type FundX, type FundsFile, type Per,
 } from '../lib/funds';
-import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../lib/fundsTie';
+import { DEFAULT_PER, tieBand } from '../lib/fundsTie';
 import { useOptional } from '../lib/fundsLoad';
 import { useStatsIndex } from '../lib/fundsTimeLoad';
 import { pickSet, slugOf, ymL, type RankFile } from '../lib/fundsTime';
@@ -27,30 +27,37 @@ import { defaultKeys, defaultNow, isPension, periodText } from '../lib/pensionPa
 import { claimProv, claimsWhy, companyOf, DECISION_PATH, isOldGen, pc1, svcOf, svcProv, type DecisionFile } from '../lib/decision';  // W2, W6 claims
 import { actProv, pc2, tenderProv } from '../lib/agentProv';
 import '../components/agent/glossary';
-import { useDoor } from '../lib/door';
+import { useActiveDoor } from '../components/home/doorState';
+import { useMine } from '../lib/mine';
+import { useAddressWrite } from '../lib/sheetHost';
+import { tieNote } from '../lib/pageWords';
+import { sn } from '../lib/format';
+import { ASC_MEASURES, COLS, COL_LABEL, EXACT_BAND, RET, isColKey, screenBoard, screenDefault, windowAvg, type ColKey } from './screen/screenCalc';
+import { FilterOptions, FiltersSheet, RankBy, type DoorW, type Saved } from './screen/ScreenFilters';
+import { ScreenPhone, type Measure, type ScreenGroup } from './screen/ScreenBoard';
 import '../styles/lens.css';
 import '../styles/market.css';
 
 /* /funds/screen, the screener 2.0 (funds plan #2, #3, #6): every track the regulator publishes, filtered across products by what a
-   track holds as well as what it is called, ranked inside its own category on one stated window and basis. Phone: one card per track.
-   Saved screens live in this browser. The rank and the percentile are always among the tracks of the category on screen (open to the
-   public unless the reader includes the closed ones); filters hide rows without changing a rank. */
+   track holds as well as what it is called, ranked inside its own category on one stated window and basis. Saved screens live in this
+   browser. The place and the percentile are always among the tracks of the category on screen (open to the public unless the reader
+   includes the closed ones); filters hide rows without changing a place.
+   Rollout L2-b (spec 4, 16–18): the phone is one ranked board for one period (pages/screen/ScreenBoard), the filters a sheet
+   (pages/screen/ScreenFilters); the desktop keeps its table and columns. Places on both come from lib/pageMonths `placeGroups` (18.5:
+   anchored groups, standard competition places 1, 1, 3; self-managed / IRA and old-generation tracks unranked), the one ranking of the
+   rollout pages. Opening type without an address: the saver's saved product (else pension · general), the agent's pension · up to 50,
+   Pro's hishtalmut · general; period five years (D7); every old parameter keeps working. */
 
 const PRODUCTS = ['השתלמות', 'גמל', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 const ALL = 'all';
-type ColKey = 'pct' | 'm1' | 'ytd' | 'y12' | 'a3' | 'a5' | 'fee' | 'depfee' | 'assets' | 'sharpe' | 'sd' | 'alpha' | 'st' | 'fo' | 'fx' | 'liq' | 'age' | 'top' | 'persist' | 'act' | 'svc' | 'clm';
-const COLS: [ColKey, string][] = [['pct', 'אחוזון'], ['m1', '1M'], ['ytd', 'YTD'], ['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y'], ['fee', 'ד"נ מצבירה'], ['depfee', 'ד"נ מהפקדה'], ['assets', 'נכסים'], ['sharpe', 'שארפ'], ['sd', 'סטיית תקן'], ['alpha', 'אלפא'], ['st', 'מניות'], ['fo', 'חו"ל'], ['fx', 'מט"ח'], ['liq', 'נזיל'], ['age', 'ותק'], ['top', 'רבע עליון'], ['persist', 'התמדה'], ['act', 'איזון אקטוארי'], ['svc', 'מדד שירות'], ['clm', 'תביעות נכות']];  // act: W1-agent, svc: W2, clm: W6 (the company's own claims report), pension only
-const COL_LABEL = Object.fromEntries(COLS) as Record<ColKey, string>;
 const DEFAULT_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'assets', 'sharpe', 'st', 'top'];
 /** W1-agent: a pension product opens with its decision columns (both fees, the actuarial balance) */
 const PENSION_COLS: ColKey[] = ['pct', 'y12', 'a3', 'a5', 'fee', 'depfee', 'act', 'svc', 'clm', 'assets', 'sharpe', 'st'];
 const isPenProd = (p: string) => /^פנסיה/.test(p);
 const TIP: Partial<Record<ColKey, string>> = { pct: 'pct', fee: 'fee', depfee: 'depfee', sharpe: 'sharpe', sd: 'sd', alpha: 'alpha', st: 'equity', act: 'actuarial', svc: 'svcidx', clm: 'claims' };
-const RET = new Set<ColKey>(['m1', 'ytd', 'y12', 'a3', 'a5']);
 const EXP = { st: ['STOCK_MARKET_EXPOSURE', 'חשיפה למניות'], fo: ['FOREIGN_EXPOSURE', 'חשיפה לחו"ל'], fx: ['FOREIGN_CURRENCY_EXPOSURE', 'חשיפה למט"ח'] } as const;
-interface Saved { name: string; qs: string }
 /** ordinal rank and percentile (rankAll) plus the shared place inside the tie band (lo–hi) */
-type RankInfo = { rank: number; n: number; pct: number | null; lo: number; hi: number };
+type RankInfo = { rank: number; n: number; pct: number | null; lo: number; hi: number; place: number };
 /** the fee columns: the regulator's average actual fee of the track, not a quote */
 const FEE_SUB: Partial<Record<ColKey, string>> = { fee: 'ממוצע בפועל', depfee: 'ממוצע בפועל', act: 'רבעון אחרון', svc: 'הרשות, 2025', clm: 'אושרו · דיווח החברה', persist: 'חודשים ברבע העליון מ-60' };
 
@@ -92,28 +99,36 @@ export function FundsScreen() {
   const { data: raw, error } = useFunds();
   const data = raw as FundsFile | undefined;
   const cpi = useMacro().data?.series.cpi;
-  const [sp, setSp] = useSearchParams();
+  const [sp] = useSearchParams();
   const phone = usePhone();
   const [real] = useReal();
   const basis: Basis = 'gross';  // owner 26.11.26: every return is the published gross
-  const set = (patch: Record<string, string | null>) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k))); setSp(n, { replace: true }); };
+  // every write reads the address fresh and replaces it (a sheet may have changed it; lenses and sheets never push)
+  const write = useAddressWrite();
+  const set = (patch: Record<string, string | null>) => write(Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, v || null])));
   const num = (k: string) => { const v = sp.get(k); return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null; };
   // the old /funds?q= links and the search palette: open the product and track of the first match
   const q = sp.get('q') ?? '';
   const hit = !sp.get('prod') && q ? data?.funds.find((f) => f.name.includes(q.trim())) : undefined;
   // W4: the agent door shows shared ranks and percentiles (facts) but not the "רבע עליון x/5" badge
-  const [door] = useDoor();
+  const [door0] = useActiveDoor();
+  const door: DoorW = door0 ?? 'saver';  // B1 / D3: no door reads as the saver
   const agentDoor = door === 'agent';
-  // W6 doors (agent red team 02.11.26): the agent opens on the comprehensive pension, age track up to 50, with the decision columns
-  // (PENSION_COLS: both fees, actuarial balance, service index, claims, the default-fund flag); saver and Pro keep השתלמות · כללי
-  const prod = sp.get('prod') ?? hit?.prod ?? (agentDoor ? 'פנסיה מקיפה' : 'השתלמות');
+  const [mine] = useMine();
+  const byK = useMemo(() => new Map((data?.funds ?? []).map((f) => [f.k, f])), [data]);
+  const own = useMemo(() => (door === 'saver' ? mine.map((m) => byK.get(m.k)).filter((f): f is FundX => !!f) : []), [door, mine, byK]);
+  const mineKeys = useMemo(() => new Set(own.map((f) => f.k)), [own]);
+  // spec 4.2 defaults: the saver on the type of the first saved product (pension first), else pension · general; the agent on pension ·
+  // up to 50 with the decision columns (W6: PENSION_COLS); Pro on hishtalmut · general
+  const def = screenDefault(door, own);
+  const prod = sp.get('prod') ?? hit?.prod ?? def.prod;
   const perRaw = sp.get('per') ?? sp.get('win') ?? DEFAULT_PER;
   const per: Per = (PERIODS.some(([k]) => k === perRaw) ? perRaw : DEFAULT_PER) as Per;
   const fams = (sp.get('fam') ?? '').split(',').filter((x): x is FamKey => FAMS.some(([k]) => k === x));
   const mk = sp.get('mk') ?? '';
   const closed = sp.get('closed') === '1', gone = sp.get('gone') === '1', outOnly = sp.get('out') === '1';
   const F = { fmax: num('fmax'), dmax: num('dmax'), amin: num('amin'), smin: num('smin'), hist: num('hist'), eqmin: num('eqmin'), eqmax: num('eqmax') };
-  const colsQ = (sp.get('cols') ?? '').split(',').filter((x): x is ColKey => COLS.some(([k]) => k === x));
+  const colsQ = (sp.get('cols') ?? '').split(',').filter(isColKey);
   // ?sort=persist (the address /funds/rank lands on): sorted by persistence, with its column on screen
   const sortPersist = sp.get('sort') === 'persist' && !sp.get('s');
   const colsAll = agentDoor ? COLS.filter(([k]) => k !== 'top') : COLS;
@@ -128,7 +143,7 @@ export function FundsScreen() {
   const [open, setOpen] = useState<string[]>([]);
   const [opts, setOpts] = useState(false);
   const [saved, setSaved] = useStored<Saved[]>('funds:screens', []);
-  const [naming, setNaming] = useState<string | null>(null);
+  const cats = useFundCats(phone).data as Record<string, CatX> | undefined;
   // B10: a choice that would leave no track at all is refused, with the reason; the previous filter stays
   const [refused, setRefused] = useState(false);
   useEffect(() => { setRefused(false); }, [sp]);
@@ -145,7 +160,8 @@ export function FundsScreen() {
   const inProd = (f: FundX) => prod === ALL || f.prod === prod;
   const tracks = useMemo(() => { const m = new Map<string, number>(); all.filter(inProd).forEach((f) => m.set(f.track, (m.get(f.track) ?? 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [all, prod]);  // eslint-disable-line react-hooks/exhaustive-deps
   // W4: a comprehensive pension opens on the age track up to 50, where the default funds and most members are (כללי there holds 5 funds)
-  const trackQ = sp.get('track') ?? hit?.track ?? (prod === ALL ? ALL : prod === 'פנסיה מקיפה' && tracks.some(([t]) => t === 'עד 50') ? 'עד 50' : 'כללי');
+  const ownTrack = own.find((f) => f.prod === prod)?.track;
+  const trackQ = sp.get('track') ?? hit?.track ?? (prod === ALL ? ALL : prod === def.prod ? def.track : ownTrack ? ownTrack : door !== 'saver' && prod === 'פנסיה מקיפה' && tracks.some(([t]) => t === 'עד 50') ? 'עד 50' : 'כללי');
   const T = trackQ === ALL || tracks.some(([t]) => t === trackQ) ? trackQ : tracks[0]?.[0] ?? ALL;
   const groupsAll = useMemo(() => [...new Set(all.map((f) => f.grp))].sort((a, b) => a.localeCompare(b, 'he')), [all]);
   const asof = data?.asof ?? 0;
@@ -185,19 +201,26 @@ export function FundsScreen() {
       // W5 (red team 3): a generation closed to new members (managers' insurance sold 1990-2003, e.g. קרן י') is no choice a client can
       // make: it gets no rank and no percentile, and does not move the others'
       const peers = shown.filter((f) => !f.gone && !selfDirected(f) && !isOldGen(f));
-      const ord = rankAll(peers, (f) => val(f, per)), tie = tieRanks(peers, (f) => val(f, per), tieBand(per, asof));
-      const rk = new Map<string, RankInfo>([...ord].map(([k, r]) => [k, { ...r, lo: tie.get(k)?.lo ?? r.rank, hi: tie.get(k)?.hi ?? r.rank }]));
+      // the percentile: rankAll (unchanged); the place: placeGroups (18.5), the one ranking of the rollout pages
+      const ord = rankAll(peers, (f) => val(f, per)), board = screenBoard(shown, (f) => val(f, per), tieBand(per, asof));
+      const pl = new Map(board.rows.filter((r) => r.pl).map((r) => [r.f.k, r.pl!]));
+      const rk = new Map<string, RankInfo>([...ord].filter(([k]) => pl.has(k)).map(([k, r]) => { const x = pl.get(k)!; return [k, { ...r, n: x.n, lo: x.lo!, hi: x.hi!, place: x.place! }]; }));
       const by = sortKey && sortKey !== 'pct' ? sortKey : null;
       const sv = (f: FundX): number | null => (by == null ? null : RET.has(by) ? val(f, by as Per) : by === 'age' ? yearsOf(f, asof) : by === 'top' ? f.top : by === 'persist' ? (() => { const x = persistOf(f); return x ? x.top / x.of : null; })() : by === 'svc' ? (isPension(f) ? svcOf(dec, f.grp, 'pension')?.total ?? null : null) : by === 'clm' ? (isPension(f) && dec ? companyOf(dec, f.grp)?.claims?.disability.approved ?? null : null) : (f as unknown as Record<string, number | null>)[by] ?? null);
+      // the phone's board: the period's return, or (agent / Pro "דירוג לפי") another measure in its own unit, lower first for fees
+      const mby = sortKey && !RET.has(sortKey) ? sortKey : null;
+      const mv = (f: FundX): number | null => (mby === 'pct' ? ord.get(f.k)?.pct ?? null : mby === 'persist' ? persistOf(f)?.top ?? null : sv(f));
+      const pboard = mby ? screenBoard(shown, mv, EXACT_BAND, { asc: ASC_MEASURES.has(mby) }) : board;
       const list = shown.filter((f) => screened(f)).sort((a, b) => {
         if (a.gone !== b.gone) return a.gone ? 1 : -1;
         if (by) { const x = sv(a), y = sv(b); if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1; return by === 'fee' || by === 'depfee' || by === 'sd' ? x - y : y - x; }
-        const ra = rk.get(a.k)?.rank, rb = rk.get(b.k)?.rank; return ra == null || rb == null ? (ra == null ? (rb == null ? (b.assets ?? 0) - (a.assets ?? 0) : 1) : -1) : ra - rb;
+        const ra = rk.get(a.k)?.place, rb = rk.get(b.k)?.place; return ra == null || rb == null ? (ra == null ? (rb == null ? (b.assets ?? 0) - (a.assets ?? 0) : 1) : -1) : ra - rb || (val(b, per) ?? 0) - (val(a, per) ?? 0);
       });
-      return { k, prod: shown[0].prod, track: shown[0].track, list, rk, n: rk.size ? [...rk.values()][0].n : 0, assets: peers.reduce((t, f) => t + (f.assets ?? 0), 0) };
+      return { k, prod: shown[0].prod, track: shown[0].track, list, rk, n: board.n, assets: peers.reduce((t, f) => t + (f.assets ?? 0), 0), shown, pboard };
     }).filter((g) => g.list.length).sort((a, b) => b.assets - a.assets);
-  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp, dfKeys, dec, persist]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [all, prod, T, closed, gone, goneRows, per, basis, real, cpi, sortKey, q, sp, dfKeys, dec, persist, asof]);  // eslint-disable-line react-hooks/exhaustive-deps
   const shownN = groups.reduce((t, g) => t + g.list.length, 0);
+  const rkOf = (f: FundX) => { for (const g of groups) { const r = g.rk.get(f.k); if (r) return r; } return undefined; };
   const multi = groups.length > 1 || T === ALL;
   const nFilters = [q, fams.length ? '1' : '', mk, closed ? '1' : '', gone ? '1' : '', outOnly ? '1' : '', dfOnly ? '1' : '', ...Object.values(F).map((v) => (v == null ? '' : '1'))].filter(Boolean).length;
 
@@ -206,11 +229,11 @@ export function FundsScreen() {
   const lbl = real ? 'ריאלי' : GROSS_LABEL;
 
   /* ---- cells: every figure opens its source ---- */
-  const rankSrc = (f: FundX, r: RankInfo): Prov => ({ k: 'calc', title: `מקום לפי ${PER_LABEL[per]} (${lbl}) · ${f.name}`, value: `${rankText(r)} מתוך ${r.n}`,
-    formula: `מקום = מספר המסלולים בקטגוריה (אותו מוצר ומסלול) עם תשואה גבוהה יותר בחלון, ועוד 1. ${TIE_F}. מדורגים המסלולים שעל המסך שיש להם תשואה בחלון; סינונים מסתירים שורות ולא משנים מקום`,
-    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מסלולים מדורגים', v: nf(r.n, 0) }, { label: 'צמודים למסלול', v: nf(r.hi - r.lo, 0) }] });
+  const rankSrc = (f: FundX, r: RankInfo): Prov => ({ k: 'calc', title: `מקום לפי ${PER_LABEL[per]} (${lbl}) · ${f.name}`, value: `${r.place} מתוך ${r.n}`,
+    formula: `ממיינים את מסלולי הקטגוריה (אותו מוצר ומסלול) מהתשואה הגבוהה לנמוכה. מסלול שהפער שלו מהמסלול הראשון בקבוצה קטן מ-${nf(tieBand(per, asof), 2)} נקודות אחוז מצטרף לקבוצה וחולק את מקומה, והקבוצה הבאה ממשיכה לפי הסדר (1, 1, 3). מוסכמת הצגה, לא מבחן סטטיסטי. מדורגים המסלולים שעל המסך שיש להם תשואה בחלון; מסלולים בניהול אישי (IRA) ודורות ישנים של ביטוח מנהלים אינם מדורגים; סינונים מסתירים שורות ולא משנים מקום`,
+    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מסלולים מדורגים', v: nf(r.n, 0) }, { label: 'חולקים את המקום', v: nf(r.hi - r.lo + 1, 0) }] });
   const pctSrc = (f: FundX, r: RankInfo): Prov => ({ k: 'calc', title: `אחוזון · ${PER_LABEL[per]} (${lbl}) · ${f.name}`, value: r.pct == null ? '–' : nf(r.pct, 0), formula: PCT_F,
-    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מקום', v: `${rankText(r)} מתוך ${r.n}`, src: () => rankSrc(f, r) }] });
+    inputs: [{ label: PER_LABEL[per], v: pc(val(f, per)), src: () => shownProv(f, per, basis, real, asof, cpi, data) }, { label: 'מקום', v: `${r.place} מתוך ${r.n}`, src: () => rankSrc(f, r) }] });
   const plain = (f: FundX, col: string, label: string, v: string, unit?: string) => () => fundP(refOf(f), f.end ?? asof, col, label, v, unit);
   const Ret = ({ f, p }: { f: FundX; p: Per }) => {
     const v = val(f, p);
@@ -260,57 +283,66 @@ export function FundsScreen() {
   );
 
   /* ---- controls ---- */
-  const famChip = (k: FamKey) => {
-    const on = fams.includes(k), n = on ? 1 : reach({ track: T, fams: [...fams, k] }), none = n === 0;
-    return <button key={k} type="button" className="chip" aria-pressed={on} disabled={none} title={none ? 'אין מסלולים כאלה בבחירה הנוכחית' : undefined} style={none ? { opacity: 0.45, cursor: 'default' } : undefined}
-      onClick={() => set({ fam: (on ? fams.filter((x) => x !== k) : [...fams, k]).join(',') || null })}>{FAM_LABEL[k]}{none && <> · <span className="num">0</span></>}</button>;
+  const clear = () => { const keep = new Set(['prod', 'track', 'per', 'b', 'cols', 'real', 'sheet']); const cur = new URLSearchParams(window.location.search); write(Object.fromEntries([...cur.keys()].filter((k) => !keep.has(k)).map((k) => [k, null]))); };
+  const filterProps = {
+    door, phone, q, fams, mk, F, closed, gone, outOnly, nFilters, groupsAll, refused, setRefused, set, clear, cols, colsAll, baseCols, saved, setSaved, qs: sp.toString(),
+    reachFam: (fx: FamKey[]) => reach({ track: T, fams: fx }), reachMk: (m: string) => reach({ track: T, mk: m }),
   };
   const Refused = refused ? <div className="fnote" role="status">אין מסלולים כאלה; הסינון הקודם נשמר</div> : null;
-  const numIn = (k: keyof typeof F, label: string, unit: string, step: string) => (
-    <label className="fnum">{label} <input type="number" inputMode="decimal" step={step} value={F[k] ?? ''} onChange={(e) => set({ [k]: e.target.value === '' ? null : e.target.value })} aria-label={`${label} ${unit}`} />{unit}</label>
-  );
-  const Options = (
-    <div className="fopts">
-      {Refused}
-      <Field label="חיפוש"><input type="search" value={q} onChange={(e) => set({ q: e.target.value || null })} placeholder="שם מסלול או גוף" /></Field>
-      <div className="field"><span>משפחת מסלול <Tip k="family" /></span><div className="fchips">{FAMS.map(([k]) => famChip(k))}</div></div>
-      <div className="field"><span>גוף מנהל</span><Pick label="גוף מנהל" value={mk || ALL} onChange={(v) => { if (v !== ALL && reach({ track: T, mk: v }) === 0) { setRefused(true); return; } set({ mk: v === ALL ? null : v }); }} options={[[ALL, 'כל הגופים'], ...groupsAll.map((g) => [g, g] as [string, string])]} /></div>
-      <div className="field"><span>סינון{nFilters > 0 && <button type="button" className="linkbtn" onClick={() => { const n = new URLSearchParams(); ['prod', 'track', 'per', 'b', 'cols', 'real'].forEach((k) => { const v = sp.get(k); if (v) n.set(k, v); }); setSp(n, { replace: true }); }}>ניקוי</button>}</span>
-        <div className="fnums">
-          {numIn('eqmin', 'מניות מ-', '%', '5')}{numIn('eqmax', 'מניות עד', '%', '5')}
-          {numIn('fmax', 'ד"נ מצבירה עד', '%', '0.05')}{numIn('dmax', 'ד"נ מהפקדה עד', '%', '0.1')}
-          {numIn('amin', 'נכסים מ-', 'מ׳ ש"ח', '100')}{numIn('smin', 'שארפ מ-', '', '0.1')}{numIn('hist', 'היסטוריה מ-', 'שנים', '1')}
-        </div></div>
-      <div className="fchips">
-        <button type="button" className="chip" aria-pressed={outOnly} onClick={() => set({ out: outOnly ? null : '1' })}>רק תווית מול מציאות</button><Tip k="outlier" />
-        <button type="button" className="chip" aria-pressed={closed} onClick={() => set({ closed: closed ? null : '1' })}>כולל קופות ענפיות</button><Tip k="closed" />
-        <button type="button" className="chip" aria-pressed={gone} onClick={() => set({ gone: gone ? null : '1' })}>כולל מסלולים שנסגרו</button>
-      </div>
-      {!phone && <div className="field"><span>עמודות</span><div className="fchips">{colsAll.map(([k, l]) => <button key={k} type="button" className="chip" aria-pressed={cols.includes(k)} onClick={() => { const next = cols.includes(k) ? cols.filter((x) => x !== k) : COLS.map(([x]) => x).filter((x) => cols.includes(x) || x === k); set({ cols: next.join(',') === baseCols.join(',') ? null : next.join(','), sort: null }); }}>{l}</button>)}</div></div>}
-      <div className="field"><span>סינונים שמורים <span className="muted">· בדפדפן הזה בלבד</span></span>
-        <div className="fchips">
-          {saved.map((s) => <span key={s.name} className="fsaved"><Link className="chip" to={`/funds/screen?${s.qs}`}>{s.name}</Link><button type="button" className="fsaved-x" aria-label={`מחיקת הסינון ${s.name}`} onClick={() => setSaved(saved.filter((x) => x.name !== s.name))}>×</button></span>)}
-          {naming == null ? <button type="button" className="chip" onClick={() => setNaming('')}>+ שמירת הסינון הזה</button> : (
-            <form className="fsave" onSubmit={(e) => { e.preventDefault(); const n = naming.trim(); if (!n) return; setSaved([...saved.filter((x) => x.name !== n), { name: n, qs: sp.toString() }]); setNaming(null); }}>
-              <input autoFocus value={naming} onChange={(e) => setNaming(e.target.value)} placeholder="שם לסינון" aria-label="שם לסינון" maxLength={40} /><button type="submit" className="chip">שמירה</button><button type="button" className="chip" onClick={() => setNaming(null)}>ביטול</button>
-            </form>
-          )}
-        </div></div>
-    </div>
-  );
+  const Options = <FilterOptions {...filterProps} />;
+  const dfChip = isPenProd(prod) && <button type="button" className="chip" aria-pressed={dfOnly} onClick={() => set({ df: dfOnly ? null : '1' })} title="קרנות שנבחרו בהליך שבתוקף כקרנות ברירת מחדל">ברירת מחדל</button>;
   const tools = <>
     <Pick label="מוצר" value={prod} onChange={(p) => set({ prod: p, track: null })} options={[[ALL, 'כל המוצרים'], ...prods.map((p) => [p, p] as [string, string])]} />
     <Pick label="מסלול" className="trackpick" value={T} onChange={(t) => { if (t !== ALL && trackCount(t) === 0) { setRefused(true); return; } set({ track: t }); }} options={[[ALL, 'כל המסלולים', nf(tracks.reduce((u, [, c]) => u + c, 0), 0)], ...tracks.map(([t, c]) => [t, t, nf(c, 0)] as [string, string, string])]} />
-    {isPenProd(prod) && <button type="button" className="chip" aria-pressed={dfOnly} onClick={() => set({ df: dfOnly ? null : '1' })} title="קרנות שנבחרו בהליך שבתוקף כקרנות ברירת מחדל">ברירת מחדל</button>}
-    {!phone && <Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} />}
-    <button type="button" className={`btn${opts ? ' primary' : ''}`} aria-expanded={opts} onClick={() => setOpts((v) => !v)}>{phone ? `${PERIODS.find(([k]) => k === per)?.[1]} · ${lbl}${nFilters ? ` · ${nFilters}` : ''}` : `סינון${nFilters ? ` · ${nFilters}` : ''}`}</button>
+    {dfChip}
+    <Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} />
+    <button type="button" className={`btn${opts ? ' primary' : ''}`} aria-expanded={opts} onClick={() => setOpts((v) => !v)}>{`סינון${nFilters ? ` · ${nFilters}` : ''}`}</button>
   </>;
+  const placeCell = (f: FundX) => { const r = rkOf(f); return r ? <Sourced src={() => rankSrc(f, r)}><span><bdi className="num">{r.place}</bdi> מתוך <bdi className="num">{r.n}</bdi></span></Sourced> : isOldGen(f) ? <span className="muted">סגור להצטרפות</span> : <span className="muted">–</span>; };
+  const methodFacts = <>
+    <li>מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; מסלול בלי היסטוריה לחלון מוצג &quot;אין עדיין&quot; ובסוף הרשימה; סינונים מסתירים שורות ולא משנים מקום.</li>
+    <li>דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים. {agentDoor ? SELF_NOTE_AGENT : SELF_NOTE}.</li>
+    <li>ממוצע הסוג: הממוצע המשוקלל בנכסים שהרשות מפרסמת לכל סוג מסלול בכל חודש; לתקופה של כמה חודשים בריבית דריבית, ל-3 ו-5 שנים בממוצע לשנה.</li>
+    <li>דמי ניהול: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים.{door === 'saver' ? '' : ' ▲▼ ליד החשיפה למניות: תווית מול מציאות.'}</li>
+    {real ? <li>ריאלי: מנוכה במדד המחירים לצרכן (הלמ&quot;ס); המדד בקובץ מכסה {cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג &quot;–&quot;.</li> : null}
+    <li>{gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'}</li>
+    {agentDoor && cols.includes('clm') ? <li>תביעות נכות: שיעור התביעות שאושרו מתוך אלה שנסגרו בשנה, מדיווח החברה עצמה (נספח ב3), ברמת החברה המנהלת.</li> : null}
+  </>;
+
+  /* ---- phone: one ranked board for one period (rollout L2-b) ---- */
+  if (phone) {
+    const mkey = sortKey && !RET.has(sortKey) ? sortKey : null;
+    const pc0 = (d: number) => (v: number) => `${nf(v, d)}`;
+    const MFMT: Partial<Record<ColKey, (v: number) => string>> = { fee: (v) => `${nf(v, 2)}%`, depfee: (v) => `${nf(v, 2)}%`, st: (v) => `${nf(v, 0)}%`, fo: (v) => `${nf(v, 0)}%`, fx: (v) => `${nf(v, 0)}%`, liq: (v) => `${nf(v, 0)}%`, act: (v) => `${sn(v, 2)}%`, clm: (v) => `${nf(v, 1)}%`, sharpe: pc0(2), sd: pc0(2), alpha: pc0(2), age: pc0(1) };
+    const measure: Measure | null = mkey ? {
+      key: mkey, label: COL_LABEL[mkey], asc: ASC_MEASURES.has(mkey), fmt: (v) => <bdi dir="ltr" className="sgnum">{(MFMT[mkey] ?? pc0(0))(v)}</bdi>,
+      unit: (f) => (mkey === 'assets' ? 'מ׳ ש"ח' : mkey === 'age' ? 'שנים' : mkey === 'top' ? (f.yrs ? `מתוך ${f.yrs}` : undefined) : mkey === 'persist' ? (persistOf(f) ? `מתוך ${persistOf(f)!.of}` : undefined) : undefined),
+    } : null;
+    const pgroups: ScreenGroup[] = groups.map((g) => ({
+      k: g.k, prod: g.prod, track: g.track, board: g.pboard, members: g.shown,
+      rows: g.pboard.rows.filter((r) => screened(r.f)), self: g.pboard.self.filter((r) => screened(r.f)),
+      avg: windowAvg(cats?.[g.k], per, asof),
+    })).filter((g) => g.rows.length + g.self.length > 0);
+    return (
+      <ScreenPhone door={door} asof={asof} per={per} setPer={(v) => set({ per: v, win: null })} prod={prod} T={T} all={ALL} prods={prods} tracks={tracks} trackCount={trackCount}
+        setProdTrack={(p, t) => set({ prod: p, track: t })} groups={pgroups} shownN={pgroups.reduce((t, g) => t + g.rows.length + g.self.length, 0)} nFilters={nFilters} real={real}
+        measure={measure} clearMeasure={() => set({ s: null, sort: null })} mineKeys={mineKeys} val={val}
+        cell={(f, c) => cell(f, c, rkOf(f))} place={placeCell} ret={(f, p) => <Ret f={f} p={p} />} flags={(f) => <Flags f={f} />} mgr={(f) => <MgrChip grp={f.grp} mgr={f.mgr} short />}
+        find={(k) => byK.get(k) ?? goneRows?.find((x) => x.k === k)} clearFilters={clear} refused={refused} sharedPolicy={prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)'} method={methodFacts}
+        filters={(o, onClose) => (
+          <FiltersSheet open={o} onClose={onClose} door={door} shown={shownN} extra={dfChip || null}
+            rankBy={door === 'saver' ? null : <RankBy sortKey={sortKey} per={per} cols={colsAll} onPick={(k) => (k == null ? set({ s: null, sort: null }) : RET.has(k) ? set({ per: k, win: null, s: null, sort: null }) : set({ s: k, sort: null }))} />}>
+            {Options}
+          </FiltersSheet>
+        )} />
+    );
+  }
 
   const shown = (g: (typeof groups)[number]) => !multi || open.includes(g.k) || groups.length <= 2;
   return (
     <>
-      <FundsHead sub={<span><Sourced src={() => countP('מסלולים מוצגים', shownN, 'המסלולים שעוברים את הסינון')}><span className="num">{nf(shownN, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</span>} tools={<>{tools}{!phone && <BasisToggle />}</>} />
-      {phone ? <Sheet open={opts} onClose={() => setOpts(false)} title="דירוג וסינון"><div className="fopts"><div className="field"><span>דירוג לפי</span><Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} /></div><div className="field"><span>בסיס</span><BasisToggle /></div>{Options}</div></Sheet> : opts && <section className="controls opts">{Options}</section>}
+      <FundsHead sub={<span><Sourced src={() => countP('מסלולים מוצגים', shownN, 'המסלולים שעוברים את הסינון')}><span className="num">{nf(shownN, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</span>} tools={<>{tools}<BasisToggle /></>} />
+      {opts && <section className="controls opts">{Options}</section>}
 
       {!opts && Refused}
       <Panel title={<>{prod === ALL ? 'כל המוצרים' : prod} · {T === ALL ? 'כל המסלולים' : T}</>} aside={<>
@@ -318,28 +350,7 @@ export function FundsScreen() {
         <span className={`chip${real ? ' est' : ''}`}>{lbl}</span>{(per === 'a3' || per === 'a5') && <span className="chip">3Y ו-5Y: שנתי ממוצע</span>}
         {prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">מסלול משותף לשני המוצרים</span>}
       </>}>
-        {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה">{nFilters > 0 && 'נסו לנקות חלק מהסינונים.'}</Empty> : phone ? (
-          <div className="fcards">
-            {groups.map((g) => (
-              <Fragment key={g.k}>
-                {multi && <div className="fcards-h"><button type="button" className="twist" aria-expanded={shown(g)} aria-label={shown(g) ? `כווץ את ${g.k}` : `פתח את ${g.k}`} onClick={() => setOpen(open.includes(g.k) ? open.filter((x) => x !== g.k) : [...open, g.k])}>{shown(g) ? '▾' : '◂'}</button><CatHead g={g} /></div>}
-                {shown(g) && g.list.map((f) => { const r = g.rk.get(f.k); return (
-                  <article className={`fcard${f.gone ? ' gone' : ''}`} key={f.k}>
-                    <div className="fcard-top"><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link><CompareAdd k={f.k} name={f.name} small /></div>
-                    <div className="fcard-meta"><MgrChip grp={f.grp} mgr={f.mgr} short /><Flags f={f} /></div>
-                    <div className="fcard-fig">
-                      <div className="big"><span className="l">{PERIODS.find(([k]) => k === per)?.[1]} · {lbl}</span><Ret f={f} p={per} /></div>
-                      <div><span className="l">מקום</span>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num">{rankText(r)}/{r.n}</span></Sourced> : isOldGen(f) ? <span className="muted">סגור להצטרפות</span> : <span className="muted">–</span>}</div>
-                      <div><span className="l">אחוזון</span>{cell(f, 'pct', r)}</div>
-                      <div><span className="l" title="דמי ניהול מצבירה, הממוצע בפועל של המסלול">ד"נ ממוצע בפועל</span>{cell(f, 'fee', r)}</div>
-                      {isPension(f) ? <><div><span className="l" title="דמי ניהול מהפקדה, הממוצע בפועל של המסלול">ד"נ מהפקדה</span>{cell(f, 'depfee', r)}</div><div><span className="l">איזון אקטוארי</span>{cell(f, 'act', r)}</div></> : <div><span className="l">מניות</span>{cell(f, 'st', r)}</div>}
-                    </div>
-                  </article>
-                ); })}
-              </Fragment>
-            ))}
-          </div>
-        ) : (
+        {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה">{nFilters > 0 && 'נסו לנקות חלק מהסינונים.'}</Empty>  : (
           <div className="scroll" style={{ maxHeight: 720 }}><table className="rank fscreen">
             <thead><tr><th>מסלול</th><th>#</th>{cols.map((c) => <th key={c} aria-sort={sortKey === c ? 'descending' : undefined}><button type="button" className="thbtn" onClick={() => set({ s: sortKey === c ? null : c, sort: null })}>{RET.has(c) && c === per ? <b>{COL_LABEL[c]}</b> : COL_LABEL[c]}{FEE_SUB[c] && <span className="dim">{FEE_SUB[c]}</span>}</button>{TIP[c] && <Tip k={TIP[c]!} />}</th>)}<th><span className="sr-only">השוואה</span></th></tr></thead>
             <tbody>
@@ -350,7 +361,7 @@ export function FundsScreen() {
                   {shown(g) && g.list.map((f) => { const r = g.rk.get(f.k); return (
                     <tr key={f.k} className={f.gone ? 'gone' : undefined}>
                       <td><span className="fname"><Link className="name" to={`/funds/${f.k}`}>{f.name}</Link><span className="fund-mgr"><MgrChip grp={f.grp} mgr={f.mgr} short /><Flags f={f} /></span></span></td>
-                      <td>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num muted">{rankText(r)}</span></Sourced> : <span className="muted" title={isOldGen(f) ? 'סגור להצטרפות: לא מדורג' : undefined}>–</span>}</td>
+                      <td>{r ? <Sourced src={() => rankSrc(f, r)}><span className="num muted">{r.place}</span></Sourced> : <span className="muted" title={isOldGen(f) ? 'סגור להצטרפות: לא מדורג' : undefined}>–</span>}</td>
                       {cols.map((c) => <td key={c} className={c === per ? 'lead' : undefined}>{cell(f, c, r)}</td>)}
                       <td>{!f.gone && <CompareAdd k={f.k} name={f.name} small />}</td>
                     </tr>
@@ -360,7 +371,7 @@ export function FundsScreen() {
             </tbody>
           </table></div>
         )}
-        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת; דמי הניהול בעמודה נפרדת. ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {agentDoor ? SELF_NOTE_AGENT : SELF_NOTE}.{agentDoor && cols.includes('clm') ? ' תביעות נכות: שיעור התביעות שאושרו מתוך אלה שנסגרו בשנה, מדיווח החברה עצמה (נספח ב3), ברמת החברה המנהלת.' : ''}</div>
+        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. <NumText t={tieNote(per, asof)} /> ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת; דמי הניהול בעמודה נפרדת. ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {agentDoor ? SELF_NOTE_AGENT : SELF_NOTE}.{agentDoor && cols.includes('clm') ? ' תביעות נכות: שיעור התביעות שאושרו מתוך אלה שנסגרו בשנה, מדיווח החברה עצמה (נספח ב3), ברמת החברה המנהלת.' : ''}</div>
       </Panel>
     </>
   );
