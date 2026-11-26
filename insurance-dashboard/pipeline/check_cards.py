@@ -143,6 +143,8 @@ def computed(card, f):
         return ins[0] / ins[1]
     if op == "sum":
         return sum(ins)
+    if op == "less":  # gross less reinsurance, scope by scope: g1 − r1 (+ g2 − r2)
+        return sum(v if i % 2 == 0 else -v for i, v in enumerate(ins))
     if op == "roe":
         return ins[0] / ((ins[1] + ins[2]) / 2) * 100
     if op == "nbrel":

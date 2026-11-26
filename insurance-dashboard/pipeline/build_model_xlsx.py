@@ -4,7 +4,8 @@ One workbook per company fox covers (insurers and investment houses), built from
   P&L            the statement lines of the fact table (facts/<id>.json, stmt pl + oci, consolidated), the figure the site shows
   Balance sheet  the same for stmt bs (balances at quarter ends; the FY column is a formula on Q4)
   IFRS 17        CSM bridge, RA, insurance revenue, new business, onerous contracts, finance result, by segment (series/<id>.json)
-                 and the resolved group CSM (csm/facts/<id>.json)
+                 and, first, the resolved group CSM (pipeline/csm_resolve.py over csm/facts/<id>.json: the peer board's figure, one
+                 vintage rule, a restated comparative with its first print in the Sources note)
   Solvency       the solvency ratio, own funds, SCR and surplus from the statements (csm/capital.json, series/<id>.json) and the
                  Solvency II reports' SCR modules and tiers (csm/solvency.json)
   Savings        the managers' printed AUM, contributions, fees, expenses, profit (savings_econ.json) and the regulator join
@@ -31,6 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from xlsx_lib import Book, Cell, qsheet, read_book, ref, split_ref  # noqa: E402
+import csm_resolve  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "web" / "public" / "data"
@@ -320,29 +322,55 @@ def series_rows(ctx, co, name, pick, out=None, band=None):
     return out
 
 
-def ifrs17(ctx, co, name):
-    out = series_rows(ctx, co, name, lambda m: bool(IFRS17.match(m)), band="IFRS 17")
+CSM_KEY = "csm_resolved"
+CSM_SEG = {"life": "חיים וחיסכון", "health": "בריאות", "group": "קבוצה"}
+
+
+def csm_rows(co):
+    """the CSM of every quarter-end by the site's one rule (pipeline/csm_resolve.py over csm/facts/<co>.json): exactly the figure the peer
+    board (peers/m/ifrs-csm_closing.json), the CSM ledger and the company page show, restated comparatives included -> {date: resolved}"""
     cf = load(f"csm/facts/{co}.json")
-    if cf and cf.get("resolved"):
-        urls = {f["period"]: f["url"] for f in cf["files"]}
-        out.band("CSM לפי הבסיס שהחברה מציגה (csm_resolve)")
-        out.get("csm_resolved", "csm_resolved", "CSM, יתרת סגירה, בבסיס שהדוח מציג", "₪m", "", "IFRS 17", inst=True)
-        for d, x in cf["resolved"].items():
-            v, basis, per = x[0], x[1], x[2]
-            # the page: the closing-CSM fact(s) of that report and date that make up the value (one, or life + health)
-            fs = [f for f in (cf["reports"].get(per) or []) if f.get("d") == d and f["m"] == "csm_closing" and f.get("pg")]
-            one = [f for f in fs if abs(abs(f["v"]) - abs(v)) < 0.6]
-            two = [(a, b) for i, a in enumerate(fs) for b in fs[i + 1:] if abs(abs(a["v"]) + abs(b["v"]) - abs(v)) < 0.6]
-            if one:
-                pgs = (one[0]["pg"], None)
-            elif two:
-                pgs = (two[0][0]["pg"], two[0][1]["pg"])
-            else:
+    if not cf or not cf.get("reports"):
+        return {}, {}
+    rs = list(cf["reports"].items())
+    out = {}
+    for d in csm_resolve.dates_of([f for _, F in rs for f in F]):
+        r = csm_resolve.resolve(rs, csm_resolve.own_period(d), d)
+        if r:
+            out[d] = r
+    return out, {f["period"]: f["url"] for f in cf["files"]}
+
+
+def ifrs17(ctx, co, name):
+    out = Rows()
+    res, urls = csm_rows(co)
+    if res:
+        # first in the sheet: "the CSM", one vintage with the peer board (a restated comparative carries its first print in the note)
+        out.band("CSM, כלל האתר: נטו מביטוח משנה, קבוצה; ההדפסה האחרונה (csm_resolve, כמו לוח העמיתים)")
+        out.get(CSM_KEY, CSM_KEY, "CSM, יתרת סגירה", "₪m", "", "IFRS 17", inst=True)
+        for d, r in res.items():
+            fs = r["fs"]
+            u = lambda f: f.get("u") or urls.get(r["rp"])
+            notes = [f"בסיס: {r['label']}", f"מהדוח {plabel(r['rp'])}" + (" (עמודת השוואה)" if r["flags"] & 64 else "")]
+            if r.get("less"):
+                notes.append("נטו מחושב: " + " ".join(("+ " if sg > 0 else "− ") + f"{CSM_SEG.get(f['g'], f['g'])} {'ביטוח משנה' if sg < 0 else 'ברוטו'} {abs(f['dv'] if f.get('dv') is not None else f['v']):,.1f}"
+                                                      + (f" (עמ׳ {f.get('pg')})" if f.get("pg") else "") for f, sg in zip(fs, r["sg"])).lstrip("+ "))
+            elif r["sum"]:
+                notes.append("סכום: " + " + ".join(f"{CSM_SEG.get(f['g'], f['g'])} {abs(f['dv'] if f.get('dv') is not None else f['v']):,.1f}" + (f" (עמ׳ {f.get('pg')})" if f.get("pg") else "") for f in fs))
+            if r.get("proof"):
+                notes.append("הדוח לא ציין בסיס; נטו לפי אותו דוח: ברוטו פחות ביטוח משנה, עמ׳ " + ", ".join(sorted({str(f.get('pg')) for f in r["proof"]})))
+            if r["flags"] & 16:
+                notes.append("נקרא מגרף או מטקסט בדוח")
+            if r.get("rst") is not None:
+                notes.append(csm_resolve.first_note(r))
+            if not fs[0].get("pg"):
                 continue  # no page for it: not published here
-            s_ = printed(ctx, name, urls.get(per), pgs[0], f"בסיס: {basis}; מהדוח {plabel(per)}" + ("; סכום שני רכיבים (חיים ועוד בריאות)" if pgs[1] else ""))
-            if pgs[1]:
-                s_.update(url2=urls.get(per), pg2=pgs[1])
-            out.put("csm_resolved", qkey(d), v, s_)
+            two = [f for f in fs[1:] if f.get("pg") and (f.get("pg") != fs[0].get("pg") or u(f) != u(fs[0]))]
+            s_ = printed(ctx, name, u(fs[0]), fs[0].get("pg"), "; ".join(notes), "derived" if r["sum"] else "printed")
+            if two:
+                s_.update(url2=u(two[0]), pg2=two[0].get("pg"))
+            out.put(CSM_KEY, qkey(d), r["v"], s_)
+    series_rows(ctx, co, name, lambda m: bool(IFRS17.match(m)), out=out, band="IFRS 17")
     return out.prune()
 
 

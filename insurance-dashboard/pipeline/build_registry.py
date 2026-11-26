@@ -11,7 +11,9 @@ Inputs are the site's own published outputs, so the registry never disagrees wit
 Each metric carries: label, topic group, unit, kind (f flow = additive, s stock = balance, r rate = never summed), source,
 coverage, and definition breaks. Each cell: [period, value, page, url index, flags, aux]; flags 1 derived, 2 IFRS 4, 4 sign turned,
 8 restated, 16 read from a chart or text, 32 XBRL tag corrected, 64 comparative column of a later report; aux = MAYA report id (xbrl)
-or regulator month index (reg). Periods: 2026Q2 (quarter flow or quarter-end balance), 2026H1 / 2026H2, 2026FY.
+or regulator month index (reg), or a note (the first print of a restated cell). The resolved CSM (ifrs:csm_closing) cell's aux is its basis
+label first, "<basis> · <scope>" (נטו · קבוצה; ברוטו · חיים ועוד בריאות), then after "; " the derivation of a computed cell and the first print
+of a restated one; its page and link are those of its first printed line, and a computed cell lists its signed lines in a 7th slot. Periods: 2026Q2 (quarter flow or quarter-end balance), 2026H1 / 2026H2, 2026FY.
 """
 import json
 import re
@@ -232,7 +234,8 @@ for (m, seg), comps in list(by_key.items()):
             comps[comp] = {"m": m, "s": "life+health", "g": "group", "b": lr["b"], "vals": dict(sorted(vals.items())), **({"w": "i"} if lr.get("w") == "i" or (gr and gr.get("w") == "i") else {})}
 # the CSM balance follows the one rule every page uses (csm_resolve.py, mirrored in web/src/lib/csmResolve.ts): net of reinsurance,
 # group level, never the savings-policy future profit; fallbacks labelled per cell (aux) and flagged.
-CSM_DATES = sorted({x["d"][:10] for rs in ifrs_reports.values() for _, F in rs for x in F if x["m"] in ("csm_closing", "csm_opening") and x["d"][5:10] in ("03-31", "06-30", "09-30", "12-31")})
+CSM_DATES = csm_resolve.dates_of([x for rs in ifrs_reports.values() for _, F in rs for x in F])
+CSM_SEG = {"life": "חיים וחיסכון", "health": "בריאות", "group": "קבוצה"}
 csm_rows = {}
 for comp, rs in ifrs_reports.items():
     vals = {}
@@ -241,11 +244,21 @@ for comp, rs in ifrs_reports.items():
         if not r:
             continue
         x0 = r["fs"][0]
-        cell = {"v": r["v"], "std": "IFRS 17", "lab": r["label"], "b": r["b"], "fl": r["flags"]}
+        # the cell's page and link are those of its first printed line (a sum or a net computed from gross less reinsurance keeps every
+        # line in `parts`, signed, and spells them out in the note), so its source sheet always opens a document at a page
+        cell = {"v": r["v"], "std": "IFRS 17", "lab": r["label"], "b": r["b"], "fl": r["flags"], "pg": x0.get("pg"), "u": x0.get("u") or furl.get((comp, r["rp"]))}
+        notes = []
         if r["sum"]:
-            cell["parts"] = [(("חיים וחיסכון" if f["g"] == "life" else "בריאות"), {"v": abs(f["dv"] if f.get("dv") is not None else f["v"]), "pg": f.get("pg"), "u": f.get("u") or furl.get((comp, r["rp"]))}) for f in r["fs"]]
-        else:
-            cell.update({"pg": x0.get("pg"), "u": x0.get("u") or furl.get((comp, r["rp"]))})
+            lab = lambda f, i: CSM_SEG.get(f["g"], f["g"]) + ((" · ביטוח משנה" if i % 2 else " · ברוטו") if r.get("less") else "")
+            cell["parts"] = [(lab(f, i), {"v": sg * abs(f["dv"] if f.get("dv") is not None else f["v"]), "pg": f.get("pg"), "u": f.get("u") or furl.get((comp, r["rp"]))})
+                             for i, (f, sg) in enumerate(zip(r["fs"], r["sg"]))]
+            pg = sorted({x["pg"] for _, x in cell["parts"] if x["pg"] is not None})
+            terms = " ".join(("+ " if x["v"] >= 0 else "− ") + f"{l} {abs(x['v']):,.1f}" for l, x in cell["parts"]).lstrip("+ ")
+            notes.append(f"{'נטו מחושב: ברוטו פחות ביטוח משנה, אותו דוח' if r.get('less') else 'סכום מגזרים'}: {terms}" + (f" (עמ׳ {', '.join(map(str, pg))})" if pg else ""))
+        if r.get("rst") is not None:
+            notes.append(csm_resolve.first_note(r))
+        if notes:
+            cell["note"] = "; ".join(notes)
         vals[qof(d)] = cell
     if vals:
         last = vals[max(vals, key=pkey)]
@@ -268,19 +281,23 @@ for (m, seg), comps in sorted(by_key.items()):
         for p, c in r["vals"].items():
             if kind == "s" and p.endswith("FY"):
                 continue  # a balance at the year end is the Q4 figure
-            if r.get("resolved"):  # flags and basis label from the resolver; the label travels in aux so each cell can print its basis
-                if c.get("parts"):
-                    ch.cell(comp, p, c["v"], None, None, c["fl"], aux=c["lab"], parts=[[lab, x["v"], x.get("pg"), ch.url(x.get("u"))] for lab, x in c["parts"]])
-                else:
-                    ch.cell(comp, p, c["v"], c.get("pg"), c.get("u"), c["fl"], aux=c["lab"], meta=meta)
+            if r.get("resolved"):  # flags and basis label from the resolver; the label travels in aux so each cell can print its basis:
+                # aux = "<basis> · <scope>" then, after "; ", the derivation and the first print of a restated figure (registry CSM_AUX)
+                aux = c["lab"] + (f"; {c['note']}" if c.get("note") else "")
+                parts = [[lab, x["v"], x.get("pg"), ch.url(x.get("u"))] for lab, x in c["parts"]] if c.get("parts") else None
+                ch.cell(comp, p, c["v"], c.get("pg"), c.get("u"), c["fl"], aux=aux, meta=meta, parts=parts)
                 continue
             fl = (1 if c.get("der") else 0) | (2 if c.get("std") == "IFRS 4" else 0) | (8 if c.get("rst") is not None else 0) | (16 if c.get("src") else 0) | (64 if c.get("cmp") else 0)
             v = c["v"]
             if m in TURN and v < 0:  # a release printed as a reduction of the CSM in the roll-forward: shown as the amount released (flag 4)
                 v, fl = -v, fl | 4
             if c.get("parts"):
+                # P4: a segment sum opens its first line's document at its page, and its note names the lines it adds
                 sg = -1 if (m in TURN and c["v"] < 0) else 1
-                ch.cell(comp, p, v, None, None, fl, parts=[[lab, x["v"] * sg, x.get("pg"), ch.url(x.get("u"))] for lab, x in c["parts"]])
+                x0 = c["parts"][0][1]
+                pgs = sorted({x.get("pg") for _, x in c["parts"] if x.get("pg") is not None})
+                note = "סכום מגזרים: " + " + ".join(f"{lab} {x['v'] * sg:,.1f}" for lab, x in c["parts"]) + (f" (עמ׳ {', '.join(map(str, pgs))})" if pgs else "")
+                ch.cell(comp, p, v, x0.get("pg"), x0.get("u"), fl, aux=note, parts=[[lab, x["v"] * sg, x.get("pg"), ch.url(x.get("u"))] for lab, x in c["parts"]])
             else:
                 ch.cell(comp, p, v, c.get("pg"), c.get("u"), fl, meta=meta, aux=first_print(c))
     topic = "seg" if seg != "group" else next((t for t, keys in TOPIC_IFRS.items() if any(m.startswith(x) or x in m for x in keys)), "pl")
