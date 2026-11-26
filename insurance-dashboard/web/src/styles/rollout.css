@@ -1,0 +1,109 @@
+/* Rollout primitives (spec §2.3, §16.2 G1; lane L1-c): the lens strip, the sentence, the six-month strip, the stamp, the period
+   segment, the number field and the amounts sheet, the board's additions, the isolate helper, fact lists and the font floor.
+   Tokens only from styles.css; compare.css, sheet.css and styles.css are frozen and only read here. Every class is prefixed `ro-`
+   (or scoped under a Scoreboard / MonthGrid class that only the new props emit), so nothing on the shipped pages changes. */
+
+/* ---------- the font floor and the isolate helper (G1) ----------
+   A rollout page wraps its content in .ro-page: no text under 11 px; footnotes and stamps 12 px. A figure, range or bracketed figure in
+   running text is one LTR-isolated run: <bdi dir="ltr" class="sgnum"> (components/NumText) or .ro-iso. */
+.ro-iso { direction: ltr; unicode-bidi: isolate; white-space: nowrap; font-variant-numeric: tabular-nums lining-nums; }
+.ro-page .board .tie, .ro-page .mg-col small, .ro-page .mg-unit { font-size: 11px; }
+.ro-page .board .nm small, .ro-page .board .val small { font-size: 12px; }
+.ro-page .avgline, .ro-page .cs-note { font-size: 12px; }
+
+/* ---------- fact lists (G1, §16.1 8b): block items with a positioned bullet, so figures keep normal word spacing ---------- */
+.ro-facts { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: var(--t-3); line-height: 1.5; color: var(--fg); }
+.ro-facts li { display: block; position: relative; padding-inline-start: 13px; }
+.ro-facts li::before { content: ""; position: absolute; inset-inline-start: 0; top: 0; margin-top: 9px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.ro-facts b { font-weight: 700; }
+
+/* ---------- <LensTabs> ---------- */
+.ro-tabs { z-index: 15; margin-inline: -14px; padding: 2px 14px 6px; background: var(--bg); box-shadow: 0 1px 0 var(--line-soft); }
+.ro-tabs.sticky { position: sticky; top: var(--ro-top, 0px); }
+@media (min-width: 761px) { .ro-tabs { margin-inline: -26px; padding-inline: 26px; } }
+.ro-tabs-in { display: flex; gap: 2px; padding: 3px; border-radius: var(--r-3); background: var(--panel3); overflow: hidden; }
+.ro-tabs-in.scroll { overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.ro-tabs-in.scroll::-webkit-scrollbar { display: none; }
+.ro-tabs-in button { flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 6px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--muted); white-space: nowrap; text-align: center; cursor: pointer; transition: background var(--mid), color var(--mid); }
+.ro-tabs-in.scroll button { flex: 1 0 auto; padding: 0 10px; }
+.ro-tabs-in button.on { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
+.ro-tabs-in button:active { transform: scale(0.97); }
+.ro-tabs-in button:focus-visible { outline: 2px solid var(--link); outline-offset: -2px; }
+@media (max-width: 380px) { .ro-tabs-in button { padding: 0 4px; font-size: 12.5px; } .ro-seg button { padding: 0 3px; font-size: 12px; } }
+
+/* ---------- <Takeaway> ---------- */
+.ro-take { position: relative; margin: 8px 0 0; padding: 10px 14px 10px 12px; padding-inline-start: 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1); font-size: 14.5px; line-height: 1.42; font-weight: 500; color: var(--fg); }
+.ro-take::before { content: ""; position: absolute; inset-block: 12px; inset-inline-start: 0; width: 3px; border-radius: 3px; background: var(--accent); }
+.ro-take-after { color: var(--muted); font-weight: 500; }
+.ro-quiet { display: flex; gap: 8px; align-items: flex-start; margin: 8px 2px 0; font-size: 13.5px; font-weight: 500; line-height: 1.35; color: var(--fg); }
+.ro-spark { display: grid; place-items: center; flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 7px; background: var(--accent-soft); color: var(--accent-text); }
+.ro-spark svg { width: 13px; height: 13px; fill: currentColor; }
+
+/* ---------- <MonthStrip> ---------- */
+.ro-strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; }
+.ro-sc { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; min-height: 52px; padding: 6px 2px 7px; border: 0; border-radius: 10px; background: rgb(var(--k) / var(--a)); font: inherit; color: var(--fg); text-align: center; }
+button.ro-sc { cursor: pointer; transition: transform var(--fast); }
+button.ro-sc:active { transform: scale(0.96); }
+.ro-sc small { display: block; max-width: 100%; font-size: 11px; line-height: 1.3; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ro-sc .num { font-weight: 700; font-size: 15px; line-height: 1.3; direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums lining-nums; }
+.ro-sc.now { box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--fg) 72%, transparent); }
+.ro-sc.now small { color: var(--fg); font-weight: 700; }
+@media (max-width: 360px) { .ro-strip { gap: 4px; } .ro-sc .num { font-size: 13.5px; } }
+
+/* ---------- <StampLine> ---------- */
+.ro-stamp { margin: 10px 2px 0; font-size: 12px; line-height: 1.6; color: var(--faint); }
+.ro-stamp button { display: inline; min-height: 0; min-width: 0; padding: 14px 0; margin: -14px 0; border: 0; background: none; font: inherit; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+
+/* ---------- <PeriodSeg> ---------- */
+.ro-seg { display: flex; gap: 2px; padding: 3px; border-radius: var(--r-3); background: var(--panel3); }
+.ro-seg button { flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 6px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 12.5px; font-weight: 500; color: var(--muted); white-space: nowrap; text-align: center; cursor: pointer; transition: background var(--mid), color var(--mid); }
+.ro-seg button.on { background: var(--panel); color: var(--fg); font-weight: 700; box-shadow: var(--e-1); }
+.ro-seg button:active { transform: scale(0.97); }
+
+/* ---------- <NumField> and the amounts sheet ---------- */
+.ro-fld { display: block; margin-bottom: 12px; }
+.ro-fld > b { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 700; color: var(--fg); }
+.ro-num { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--panel); transition: border-color var(--fast), box-shadow var(--fast); }
+.ro-num:focus-within { border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ro-num input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 18px; font-weight: 700; color: var(--fg); direction: ltr; text-align: right; font-variant-numeric: tabular-nums lining-nums; }
+.ro-num input::placeholder { color: var(--faint); font-weight: 500; font-size: 16px; }
+.ro-num em { flex: none; font-style: normal; font-size: 13px; color: var(--muted); }
+.ro-fld-hint { display: block; margin-top: 5px; font-size: 12px; color: var(--muted); }
+.ro-amt { margin: 0; }
+.ro-amt .cs-note { line-height: 1.6; }
+.ro-zero { margin: 4px 0 12px; padding: 12px 14px; border-radius: var(--r-3); background: color-mix(in oklch, var(--warn) 9%, var(--panel)); border: 1px solid color-mix(in oklch, var(--warn) 30%, transparent); color: var(--fg); font-size: var(--t-3); line-height: 1.55; }
+.ro-zero p { margin: 0; }
+.ro-zero-btns { display: flex; gap: 8px; margin-top: 10px; }
+.ro-flexnone { flex: none !important; padding: 0 16px; }
+
+/* ---------- <Scoreboard> additions (rendered only with the new props) ---------- */
+.board .sb-row.mine { background: var(--accent-soft); }
+.board .sb-mine { display: inline-block; margin-inline-start: 6px; padding: 0 6px; border: 1px solid var(--accent-line); border-radius: var(--r-pill); font-size: 11px; font-weight: 700; color: var(--accent-text); vertical-align: 2px; }
+.board .sb-row.nobar { padding-bottom: 8px; }
+.board.ro .sb-row .nm b { white-space: normal; }
+.board.ro .sb-row .nm small { white-space: normal; overflow: visible; line-height: 1.3; }
+.board .sb-rowx { display: flex; align-items: stretch; border-bottom: 1px solid var(--line-soft); }
+.board .sb-rowx:last-of-type { border-bottom: 0; }
+.board .sb-rowx > .sb-row { flex: 1; min-width: 0; border-bottom: 0; }
+.board .sb-trail { flex: none; display: flex; width: 46px; border-inline-start: 1px solid var(--line-soft); }
+.board .sb-trail > button, .board .sb-trail > a { flex: 1; display: grid; place-items: center; min-height: 44px; border: 0; background: transparent; font: inherit; font-size: 20px; color: var(--muted); cursor: pointer; }
+.board .sb-trail > [aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-fg); }
+.board .sb-note { padding: 6px 12px 8px; border-top: 1px solid var(--line-soft); font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* ---------- <MonthGrid> average head as a button (onAvg) ---------- */
+table.mg th .mg-avgh { min-height: 44px; cursor: pointer; }
+table.mg th .mg-avgh b { color: var(--link); }
+table.mg th .mg-avgh small { font-size: 11px; }
+
+/* ---------- a full-width row link ("מי היה ראשון באוקטובר מבין 5 המסלולים? ›", the screener's hub row) ---------- */
+.ro-rowlink { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 46px; margin-top: 8px; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--line-soft); background: var(--panel); box-shadow: var(--e-1); font: inherit; font-size: 14px; font-weight: 700; color: var(--link); text-align: start; text-decoration: none; cursor: pointer; }
+.ro-rowlink:active { transform: scale(0.99); }
+
+/* ---------- loading, the notice ---------- */
+.ro-skel { height: 220px; border-radius: 16px; background: var(--panel2); }
+.ro-toast { position: fixed; inset-inline: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 120; margin-inline: auto; max-width: 420px; padding: 10px 14px; border-radius: 12px; background: var(--sel-bg); color: var(--sel-fg); font-size: 13.5px; line-height: 1.4; text-align: center; box-shadow: var(--e-1); opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity var(--slow) var(--ease), transform var(--slow) var(--ease); }
+.ro-toast.on { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ro-tabs-in button, .ro-seg button, button.ro-sc, .ro-num, .ro-toast { transition: none !important; }
+}
