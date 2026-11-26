@@ -1,59 +1,80 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ErrorBox, Loading } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { Sourced } from '../components/Source';
+import { DeeperSheet } from '../components/DeeperSheet';
+import { Takeaway } from '../components/Takeaway';
+import { StampLine } from '../components/StampLine';
+import { NumText } from '../components/NumText';
+import { AmountsSheet } from '../components/AmountsSheet';
+import { TypeMonthSheet } from '../components/TypeMonthSheet';
+import { backThen } from '../components/Sheet';
+import { CardMonthSheet, type CardCtx } from './fund/CardMonths';
+import { WhySheet } from '../components/compare/WhySheet';
 import { useFundCats, useFunds } from '../lib/useData';
-import { useOptional } from '../lib/fundsLoad';
-import { SALARY_KEY, useMine, useMy, useMyAge, useMyRetire, useMySalary, useMySex, useProfiles, useRetire, type MyProduct } from '../lib/mine';
-import { writeStored } from '../lib/local';
-import { PROFILE_ADD, PROFILE_LABEL, addProfile, removeProfile, setActive, type ProfileId } from '../lib/household';  // W7
-import { useSaverDoor } from '../lib/door';
-import { grossProv, type CatX, type FundX, type FundsFile } from '../lib/funds';
+import { useHists, useOptional } from '../lib/fundsLoad';
+import { useActiveProfile, useMine, useProfiles, useMy, useMyAge, useMySex, useRetire, type MyProduct } from '../lib/mine';
+import { PROFILE_LABEL } from '../lib/household';
+import { useDoor, useSaverDoor } from '../lib/door';
+import { catKey, grossProv, type CatX, type FundX, type FundsFile } from '../lib/funds';
 import { deltaOf, markSeen, ymL, type WSnap } from '../lib/fundsTime';  // phase 0: the watchlist (was /funds/watch)
 import { snapOf, useWatch } from '../lib/fundsTimeLoad';
 import { WatchStar } from '../components/FundsTime';
 import { nf } from '../lib/format';
 import type { DefaultFile } from '../lib/fundsTools';
-import type { Prov } from '../lib/prov';
-import { AGE_DEFAULT, KZ_RETIRE, RET_FALLBACK, ageText, ilsRound } from '../lib/retire';
-import { COEF_PATH, birthYearOf, coefFor, pct0, replacementOf, type CoefFile } from '../lib/coef';  // W6
-import { cardCalc, summaryOf, type SumRow } from '../lib/myCalc';
-import { pcf } from '../lib/verdict';
+import { AGE_DEFAULT, RET_FALLBACK } from '../lib/retire';
+import { COEF_PATH, birthYearOf, coefFor, type CoefFile } from '../lib/coef';  // W6
+import { cardCalc, type SumRow } from '../lib/myCalc';
 import { DECISION_PATH, type DecisionFile } from '../lib/decision';
+import { compareKeys } from '../lib/saverCompare';
+import { hasTypeAvg, oldGeneration, typeCount, typeMembers } from '../lib/pageMonths';
+import {
+  ME_BTN, MY_EMPTY_LINE, MY_EXAMPLE, MY_EXAMPLE_TAG, MY_FEES_NOTE, MY_FEES_TITLE, MY_FEES_TOTAL, MY_GONE, MY_IMPORT,
+  MY_PRIVACY, MY_TITLE, fullLabel, ilsSym, monthYear, myFeeSum, myFeesRowTag, myFeesSub, myWords, todoAmounts, typeName,
+} from '../lib/pageWords';
+import { useSheetHost } from '../lib/sheetHost';
+import type { SheetId } from './compare/contract';
 import { Picker } from '../components/saver/Picker';
 import { ProductCard } from '../components/saver/ProductCard';
-import { GlossBar } from '../components/saver/Gloss';
+import { MyProductRow, myRowFigures, type ProductFee } from '../components/saver/MyProductRow';
+import { ProfileSheet } from '../components/saver/ProfileSheet';
 import { MaslakaImport } from '../components/saver/MaslakaImport';
 import { SinceVisit } from '../components/saver/SinceVisit';
 import { MomentChips } from '../components/saver/MomentChips';  // W9: life moments
 import { CK_STATUS_KEY, dueNegos, isoDay, normNegos, normStatus, statusLine } from '../lib/checkup';  // S1+S2: the check-up's 30-day reminder; its status line
 import '../styles/moments.css';
+import '../styles/rollout.css';
 import '../styles/saver.css';
 import '../styles/my-watch.css';
 import '../styles/checkup.css';
+import '../styles/compare-sheets.css';
 
-/* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26): the reader's age once, a strip that adds up what they
-   pay and what the pension funds may pay, the one thing worth asking for, then a folded card per product. The list lives in this
-   browser only (lib/mine). Descriptive, never advice: no "move", no "stay". With nothing saved yet: the picker, and one example card
-   clearly marked "דוגמה". Entering /my with no door chosen is entering the saver door.
-   W6: the pension estimate of each fund divides by that fund's own conversion coefficient from its bylaws (lib/coef, funds/coef.json)
-   when the file has one, else by the site's assumption, and the strip says which; a salary (optional, this browser only) adds the
-   replacement rate without and with the National Insurance old-age pension against the 70% benchmark. No headline pension figure is
-   shown before a balance is entered.
-   W7 (wave 2): household profiles ("אני", "+ בן/בת זוג", "+ הורה"; lib/household) in one chip row, each with its own products, age, sex,
-   retirement age, salary and "what changed" snapshot; "אני" keeps the keys the page always used, so nothing is lost. The deposit
-   watchdog, the coverage line and "חבר אמר לעבור ל…" live on the card (components/saver). /my#deposits opens the first pension or
-   השתלמות card on its watchdog (the link from /my/statement).
-   W9: a row of five chips, the life moments (/my/moment/<id>, pages/Moments), the labels only (the page's 400-word budget).
-   Phase 0 (05.11.26): "במעקב", the tracks this browser follows (the ☆ on every track; formerly /funds/watch, which lands on /my#watch):
-   one line per track, folded unless the address asks for it, so it costs the page's word budget nothing until opened. */
-export { SALARY_KEY };
-const EXAMPLE = 'p9757';
+/* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26; rollout phase 4, spec 5 as amended by 16–18, mockup v4
+   frames 8–9, tickets T-M1 … T-M4). One page for every door: "מה שלום החיסכון שלי?".
+   - Head: the title, the data month and one 44-px pill "הפרטים שלי" (#me-btn) that opens the profile sheet (household profiles, age,
+     sex, retirement age, salary, and today's summary strip). No form above the content.
+   - The sentence (#takeaway, lib/pageWords myWords): the month and the last year of the reader's tracks; never a sum, never a ₪ gain.
+   - One row per product (components/saver/MyProductRow): six-month strip (each square opens that month's sheet for that product),
+     against the type's average, the last year with its place, the yearly fee in ₪ on the reader's amounts for THAT product or "לדוגמה",
+     "השוואה ›". The head row opens the product sheet: today's ProductCard, unchanged, inside a full-height sheet.
+   - #fee-sum: the yearly fees of all products, with how many stand on the example; opens the breakdown per product, each row a button
+     into that product's amounts. #todo-amt (amber): the first product still on the example → its amounts sheet.
+   - Chips: "＋ מוצר נוסף" (the three-tap add flow in place of the list), "ייבוא מהמסלקה" (today's import, in a sheet), "הבדיקה השנתית";
+     then the life moments, "since the last visit", the watch list, the stamp and the privacy line.
+   - Empty: the add flow (six tiles first), the import row, and one example row marked "דוגמה · לא המוצר שלך".
+   Sheets are in the address (?sheet=, lib/sheetHost, replace): "product:<k>", "mmonth:<k>:<yyyymm>" (the card's month sheet), "mtype:<k>:<yyyymm>" (the type-month sheet), "amounts:<k>", "myfees",
+   "profile", "import", and compare's "why". The list lives in this browser only (lib/mine); amounts only through lib/myAmounts.
+   Descriptive, never advice. Entering /my with no door chosen is entering the saver door. /my#<k> lands on that product's row,
+   /my#deposits opens the first pension or השתלמות product on its deposit watchdog, /my#watch opens the watch list. */
+const EXAMPLE = 'p2009';
 const today = () => new Date().toISOString().slice(0, 10);
+const who = (pid: string) => (pid === 'spouse' ? 'בן/בת הזוג' : pid === 'parent' ? 'ההורה' : null);
 
 export function My() {
   useSaverDoor();
+  const [doorS] = useDoor();
+  const door = doorS ?? 'saver';
   const { data: raw, error } = useFunds();
   const data = raw as FundsFile | undefined;
   const cats = useFundCats().data as Record<string, CatX> | undefined;
@@ -63,16 +84,33 @@ export function My() {
   const [mine, setMine] = useMine();
   const [ageS] = useMyAge(), [sex] = useMySex();
   const R = useRetire();
+  const pid = useActiveProfile();
+  const [P] = useProfiles();
+  const host = useSheetHost();
+  const nav = useNavigate();
   const [adding, setAdding] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [msg, setMsg] = useState<string | null>(null);
+  const [fees, setFees] = useState<Record<string, ProductFee>>({});
+  const onFee = useCallback((k: string, x: ProductFee) => setFees((o) => (o[k] === x ? o : { ...o, [k]: x })), []);
   const loc = useLocation();
-  const focusDep = loc.hash === '#deposits';
   const byK = useMemo(() => new Map(((data?.funds ?? []) as FundX[]).map((f) => [f.k, f])), [data]);
   const list = (Array.isArray(mine) ? mine : []).filter((m) => m && typeof m.k === 'string');
-
-  // a link from the fund card (/my#p9757) lands on that product
-  useEffect(() => { if (data && loc.hash && !focusDep) document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' }); }, [data, loc.hash, focusDep]);
+  const keys = list.map((m) => m.k);
+  const empty = list.length === 0;
+  const histKeys = useMemo(() => (empty ? [EXAMPLE] : keys), [empty, keys.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const { hist } = useHists(histKeys);
   const firstDep = shownDepKey(list, byK);
+  const [depFocus, setDepFocus] = useState(false);
+
+  // a link from the fund card (/my#p9757) lands on that product's row; /my#deposits opens the first pension or השתלמות on its watchdog
+  const did = useRef('');
+  useEffect(() => {
+    if (!data || !loc.hash || did.current === loc.hash) return;
+    did.current = loc.hash;
+    if (loc.hash === '#deposits') { if (firstDep) { setDepFocus(true); host.openSheet(`product:${firstDep}`); } return; }
+    if (loc.hash !== '#watch') document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' });
+  }, [data, loc.hash, firstDep]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const rows: SumRow[] = useMemo(() => (!data || dfile === undefined ? [] : list.flatMap((m) => { const f = byK.get(m.k); if (!f) return [];
     // W6: the fund's own coefficient (its bylaws) for the reader's sex, retirement age and birth year; the assumption where there is none
@@ -80,57 +118,162 @@ export function My() {
     return [{ k: f.k, name: f.name, prod: f.prod, coefReal: pick.real, c: cardCalc(f, data.funds as FundX[], data.asof, dfile, m, dec, { age: ageS ?? AGE_DEFAULT, coef: pick.v, ret: RET_FALLBACK, retire: R.v }) }]; })),
     [data, dfile, dec, coefF, list, byK, ageS, sex, R.v]);  // eslint-disable-line react-hooks/exhaustive-deps
 
+  const membersOf = useMemo(() => {
+    const m = new Map<string, FundX[]>();
+    return (f: FundX) => { const k = catKey(f); if (!m.has(k)) m.set(k, typeMembers((data?.funds ?? []) as FundX[], k)); return m.get(k)!; };
+  }, [data]);
+
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data || dfile === undefined) return <Loading what="המוצרים שלך" />;
 
-  const add = (k: string) => { if (!list.some((m) => m.k === k)) setMine([...list, { k, added: today() }]); setAdding(false); requestAnimationFrame(() => document.getElementById(k)?.scrollIntoView({ block: 'start', behavior: 'smooth' })); };
+  const funds = data.funds as FundX[];
+  const asof = data.asof;
+  const add = (k: string) => {
+    if (!list.some((m) => m.k === k)) setMine([...list, { k, added: today() }]);
+    setAdding(false); setStep(1);
+    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(k)?.scrollIntoView({ block: 'start' })));
+  };
   const patch = (k: string) => (p: Partial<MyProduct>) => setMine(list.map((m) => (m.k === k ? { ...m, ...p } : m)));
   const remove = (k: string) => setMine(list.filter((m) => m.k !== k));
-  const ex = byK.get(EXAMPLE);
   const shown = list.map((m) => ({ m, f: byK.get(m.k) }));
-  const asof = `${String(data.asof % 100).padStart(2, '0')}/${String(Math.floor(data.asof / 100)).slice(2)}`;
+  const live = shown.filter((x): x is { m: MyProduct; f: FundX } => !!x.f);
+  const cmpHref = (k: string) => { const ks = compareKeys([{ k }], funds); return ks.length > 1 ? `/funds/compare?k=${ks.join(',')}` : null; };
+  const figOf = (f: FundX) => myRowFigures(f, hist[f.k], membersOf(f), cats?.[catKey(f)], asof);
 
+  // sheets (?sheet=): a page's own ids, and compare's "why"
+  const [sid, sarg] = host.own ?? ['', ''];
+  const close = host.closeSheet;
+  const open = (s: string) => host.openSheet(s);
+  const prodK = sid === 'product' ? sarg : null, prodF = prodK ? byK.get(prodK) : undefined, prodM = prodK ? list.find((m) => m.k === prodK) : undefined;
+  const [mK, mP] = sid === 'mmonth' ? sarg.split(':') : [null, null];
+  const amtK = sid === 'amounts' ? sarg : null, amtF = amtK ? byK.get(amtK) : undefined;
+  const monthCtx = (k: string) => ({
+    keys: [k], basis: 'gross' as const, door, asof,
+    setKeys: (ks: string[]) => nav(`/funds/compare?k=${ks.join(',')}`),
+    openSheet: (s: SheetId) => (s.t === 'month' ? open(`mmonth:${k}:${s.p}`) : host.openSheet(s)),
+  });
+  /* build review B1 (P2-2): a month square opens the CARD's month sheet for that one product (keys = [k]): "כמה עשה המסלול", the type
+     named, "כל N המסלולים באוקטובר ›" to the type-month sheet ("mtype:<k>:<yyyymm>"); previous / next stay on this product. */
+  const cardCtx = (k: string): CardCtx | null => {
+    const f = byK.get(k), h = hist[k];
+    if (!f || !h) return null;
+    const members = membersOf(f), key = catKey(f), tc = typeCount(members, 'm1', { asof });
+    const c = cats?.[key] ?? null;
+    return {
+      f, h, cat: c && hasTypeAvg(members) ? c : null, members, funds, typeKey: key, tn: typeName(key), avgN: tc.ranked, rankN: tc.ranked, selfN: tc.self,
+      asof, door, saved: true, old: oldGeneration(f), setView: () => {}, onMine: () => {}, my: list.find((m) => m.k === k) ?? null,
+      host: { ...host, openSheet: (s) => (typeof s === 'string' ? (s.startsWith('type:') ? open(`mtype:${k}:${s.slice(5)}`) : open(s)) : s.t === 'month' ? open(`mmonth:${k}:${s.p}`) : host.openSheet(s)) },
+    };
+  };
+  const mCtx = mK && mP ? cardCtx(mK) : null;
+  const [tK, tP] = sid === 'mtype' ? sarg.split(':') : [null, null], tF = tK ? byK.get(tK) : undefined;
+  const feeItems = live.map(({ f }) => ({ f, x: fees[f.k] })).filter((r): r is { f: FundX; x: ProductFee } => !!r.x);
+  const sum = myFeeSum(feeItems.map(({ x }) => ({ cost: x.cost, own: x.own })));
+  const todo = feeItems.find(({ x }) => !x.own);
+  const msgEl = msg && <p className="sv-done" role="status">{msg}</p>;
+  const meBtn = <button type="button" className="my-me" id="me-btn" onClick={() => open('profile')} aria-haspopup="dialog">{ME_BTN}</button>;
+
+  const sheets = (
+    <>
+      <ProfileSheet open={sid === 'profile'} onClose={close} rows={rows} coefF={coefF} onProduct={(k) => open(`product:${k}`)} onAmounts={(k) => open(`amounts:${k}`)} />
+      {prodF && <DeeperSheet open onClose={() => { setDepFocus(false); close(); }} id="sheet-product" detent="full" title={fullLabel(prodF.grp, catKey(prodF))} sub={prodF.name}>
+        {/* T-N1 (tests lane, 26.11.26): a page link inside the sheet closes the sheet's history entry first, then moves (as compare's
+            sheets do), so one Back from the card is /my and the next leaves it; today's ProductCard stays unchanged */}
+        <div style={{ display: 'contents' }} onClickCapture={(e) => {
+          const a = (e.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
+          const to = a?.getAttribute('href');
+          if (!a || !to || !to.startsWith('/') || a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          e.preventDefault(); e.stopPropagation(); backThen(() => nav(to));
+        }}>
+        <ProductCard sheet f={prodF} data={data} cats={cats} dfile={dfile} my={prodM} onChange={prodM ? patch(prodF.k) : undefined}
+          onRemove={prodM ? () => { remove(prodF.k); close(); } : undefined} onAmounts={prodM ? () => open(`amounts:${prodF.k}`) : undefined}
+          focus={depFocus && prodF.k === firstDep ? 'deposits' : undefined} />
+        </div>
+      </DeeperSheet>}
+      {mCtx && mP ? <CardMonthSheet key={`${mK}:${mP}`} c={mCtx} p={mP} onClose={close} /> : null}
+      {tF && tP ? <TypeMonthSheet open onClose={close} typeKey={catKey(tF)} p={Number(tP)} mineKeys={door === 'saver' ? keys : []} door={door} typeName={typeName(catKey(tF))} onTrack={(x) => backThen(() => nav(`/funds/${x}`))} /> : null}
+      {amtF && <AmountsSheet open onClose={close} target={{ k: amtF.k }} name={fullLabel(amtF.grp, catKey(amtF))} deposits={fees[amtF.k]?.deposits ?? true} />}
+      <DeeperSheet open={sid === 'myfees'} onClose={close} id="sheet-myfees" title={MY_FEES_TITLE} sub={<NumText t={myFeesSub(feeItems.map(({ x }) => x))} />}>
+        <dl className="my-fees" id="myfees">
+          {feeItems.map(({ f, x }) => (
+            <div key={f.k}>
+              <dt>{fullLabel(f.grp, catKey(f))}
+                <button type="button" className={`my-fees-tag ${x.own ? 'own' : 'ex'}`} onClick={() => open(`amounts:${f.k}`)}>{myFeesRowTag(x.own)}</button></dt>
+              <dd><NumText t={x.cost == null ? '–' : ilsSym(x.cost)} /></dd>
+            </div>
+          ))}
+          <div className="tot"><dt>{MY_FEES_TOTAL}</dt><dd><NumText t={ilsSym(feeItems.reduce((t, { x }) => t + (x.cost ?? 0), 0))} /></dd></div>
+        </dl>
+        <p className="cs-note">{MY_FEES_NOTE}</p>
+      </DeeperSheet>
+      <DeeperSheet open={sid === 'import'} onClose={close} id="sheet-import" title="ייבוא מהמסלקה" sub="הקובץ נקרא בדפדפן הזה בלבד" detent="full">
+        <MaslakaImport funds={funds} mine={list} today={today()} onSave={(next, m) => { setMine(next); setMsg(m); close(); requestAnimationFrame(() => window.scrollTo({ top: 0 })); }} />
+      </DeeperSheet>
+      {host.cmp?.t === 'why' && <WhySheet {...monthCtx(keys[0] ?? EXAMPLE)} open onClose={close} />}
+    </>
+  );
+
+  // ---------- empty, or adding: the three-tap flow in place of the list ----------
+  if (empty || adding) {
+    const ex = byK.get(EXAMPLE);
+    return (
+      <div className="sv-page ro-page my-page">
+        <div className="my-hero">
+          <div><h1>{empty ? MY_TITLE : 'מוצר נוסף'}</h1><p>{MY_EMPTY_LINE}</p></div>
+          {empty ? (P.list.length > 1 ? meBtn : null) : <button type="button" className="my-me" onClick={() => { setAdding(false); setStep(1); }}>ביטול</button>}
+        </div>
+        {msgEl}
+        <Picker funds={funds} have={keys} onPick={add} onStep={setStep} />
+        {empty && step === 1 && <>
+          <button type="button" className="my-line" onClick={() => open('import')}><span className="ic" aria-hidden="true">⇪</span><span>{MY_IMPORT}</span><u aria-hidden="true">›</u></button>
+          {ex && <>
+            <div className="my-exlab">{MY_EXAMPLE} <span className="my-demo">{MY_EXAMPLE_TAG}</span></div>
+            <MyProductRow example f={ex} i={0} fig={figOf(ex)} members={membersOf(ex)} cmpHref={cmpHref(ex.k)} />
+          </>}
+        </>}
+        {/* build review B1 (P3-5): the empty state ends on the stamp too (the budget is measured to it) */}
+        {empty && step === 1 ? <StampLine asof={asof} onWhy={() => host.openSheet({ t: 'why' })} /> : null}
+        <p className="sv-privacy"><Icon name="shield" /> {MY_PRIVACY} <Link to="/about">על האתר והמקורות</Link></p>
+        {sheets}
+      </div>
+    );
+  }
+
+  // ---------- with products ----------
+  const w = myWords(asof, live.map(({ f }) => ({ m: f.m1, y: f.y12 })), { who: who(pid) });
   return (
-    <div className="sv-page">
-      <div className="pagehead"><div>
-        <span className="eyebrow">החיסכון שלי</span>
-        <h1><span className="icotile"><Icon name="mine" /></span>המוצרים שלי</h1>
-        <div className="sub sv-sub">{shown.length ? <>נתוני רשות שוק ההון עד {asof}.</> : <>כמה אתם משלמים ואיפה המסלול עומד, בשקלים. נתוני רשות שוק ההון עד {asof}.</>}</div>
-      </div></div>
-
-      <Household />
-      <AgeRow />
-      {msg && <p className="sv-done" role="status">{msg}</p>}
-      {rows.length > 0 && <Strip rows={rows} retire={R.v} coefF={coefF} />}
-      <CheckupLink has={shown.length > 0} />
+    <div className="sv-page ro-page my-page">
+      <div className="my-head">
+        <span className="icotile"><Icon name="mine" /></span>
+        <h1>{MY_TITLE}<small>{monthYear(asof)}{pid !== 'me' ? ` · ${PROFILE_LABEL[pid]}` : ''}</small></h1>
+        {meBtn}
+      </div>
+      {msgEl}
+      <Takeaway text={w} />
+      <div className="my-list">
+        {shown.map(({ m, f }, i) => f
+          ? <MyProductRow key={m.k} f={f} i={i} fig={figOf(f)} members={membersOf(f)} my={m} cmpHref={cmpHref(f.k)} onFee={onFee}
+              onOpen={() => open(`product:${f.k}`)} onMonth={(p) => open(`mmonth:${f.k}:${p}`)} />
+          : <div key={m.k} className="my-row my-gone" id={m.k}><p><b>{m.k}</b> · {MY_GONE} ({ymL(asof)}).</p><button type="button" className="sv-chip" onClick={() => remove(m.k)}>הסרה מהרשימה</button></div>)}
+      </div>
+      {feeItems.length > 0 && <button type="button" className="my-line" id="fee-sum" onClick={() => open('myfees')} aria-haspopup="dialog">
+        <span className="ic" aria-hidden="true">₪</span><span><NumText t={sum.text} />{sum.sub && <small className="ex"><NumText t={sum.sub} /></small>}</span><u aria-hidden="true">›</u>
+      </button>}
+      {todo && <button type="button" className="my-line todo" id="todo-amt" onClick={() => open(`amounts:${todo.f.k}`)} aria-haspopup="dialog">
+        <span className="ic" aria-hidden="true">!</span><span>{todoAmounts(fullLabel(todo.f.grp, catKey(todo.f)), todo.x.deposits)}</span><u aria-hidden="true">›</u>
+      </button>}
+      <div className="my-chips">
+        <button type="button" className="sv-chip my-chip" id="add-more" onClick={() => { setAdding(true); setStep(1); requestAnimationFrame(() => window.scrollTo({ top: 0 })); }}>＋ מוצר נוסף</button>
+        <button type="button" className="sv-chip my-chip" onClick={() => open('import')}>ייבוא מהמסלקה</button>
+        <CheckupLink has chip />
+      </div>
+      <CheckupLink has />
       <MomentChips lead={false} />
-
-      {shown.length > 0 && <SinceVisit data={data} dfile={dfile} list={list} />}
+      <SinceVisit data={data} dfile={dfile} list={list} />
       <Watching data={data} />
-
-      {shown.length > 0 && <div className="sv-list">
-        {shown.map(({ m, f }) => f
-          ? <ProductCard key={m.k} f={f} data={data} cats={cats} dfile={dfile} my={m} onChange={patch(m.k)} onRemove={() => remove(m.k)} focus={focusDep && m.k === firstDep ? 'deposits' : undefined} />
-          : <div key={m.k} className="panel sv-card sv-gone"><p>המסלול {m.k} כבר לא מופיע בנתוני הרשות ({asof}). ייתכן שנסגר או מוזג.</p><button type="button" className="btn" onClick={() => remove(m.k)}>הסרה מהרשימה</button></div>)}
-      </div>}
-
-      <section className="panel sv-add" aria-labelledby="sv-add-h">
-        <div className="hd"><h2 id="sv-add-h">{shown.length ? 'עוד מוצר' : 'מה יש לך?'}</h2>{!shown.length && <div className="aside"><span>פנסיה, השתלמות, גמל ופוליסות</span></div>}</div>
-        {shown.length && !adding ? <button type="button" className="btn" onClick={() => setAdding(true)}>+ הוספת מוצר</button>
-          : <Picker funds={data.funds as FundX[]} have={list.map((m) => m.k)} onPick={add} />}
-      </section>
-
-      <MaslakaImport compact={shown.length > 0} funds={data.funds as FundX[]} mine={list} today={today()} onSave={(next, m) => { setMine(next); setMsg(m); requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' })); }} />
-
-
-      {shown.length === 0 && ex && <section className="sv-exwrap" aria-label="דוגמה">
-        <p className="sv-exlead">כך נראה כרטיס של מוצר. <b>זו דוגמה, לא המוצר שלך:</b> קרן פנסיה אמיתית מהנתונים, עם דמי הניהול הממוצעים בה.</p>
-        <ProductCard f={ex} data={data} cats={cats} dfile={dfile} example onAdd={() => add(EXAMPLE)} />
-      </section>}
-
-      <p className="sv-privacy"><Icon name="shield" /> הכול נשמר רק בדפדפן הזה, בלי הרשמה; שום נתון לא נשלח.</p>
-      {shown.length === 0 && <GlossBar />}
-      <p className="sv-legal">מידע תיאורי, לא ייעוץ השקעות או ייעוץ פנסיוני, ואין המלצה לעבור או להישאר. תשואות עבר אינן מבטיחות תשואות בעתיד. <Link to="/about">על האתר והמקורות</Link></p>
+      <StampLine asof={asof} onWhy={() => host.openSheet({ t: 'why' })} />
+      <p className="sv-privacy"><Icon name="shield" /> {MY_PRIVACY} <Link to="/about">על האתר והמקורות</Link></p>
+      {sheets}
     </div>
   );
 }
@@ -180,12 +323,16 @@ function Watching({ data }: { data: FundsFile }) {
 /** S1 (fox 3.0): the way into the annual check-up (/my/checkup), and its 30-day reminder when one is due (S2). It takes the place of
  *  the "איך קוראים את הדוח השנתי?" card (the plan merges the statement guide into "רגעים" as "הדוח השנתי הגיע"; the check-up links
  *  to it), so the page stays inside its 400-word budget */
-function CheckupLink({ has }: { has: boolean }) {
+function CheckupLink({ has, chip }: { has: boolean; chip?: boolean }) {
   const [raw] = useMy<unknown>('my:nego', []);
   const due = dueNegos(normNegos(raw), isoDay(new Date())).length > 0;
   // red team 06.11.26: after a check-up, its status ("2 לטיפול · חסכתם כ-… · הבדיקה הבאה 10/27") in place of the generic line
   const [stRaw] = useMy<unknown>(CK_STATUS_KEY, null);
   const st = has ? normStatus(stRaw) : null;
+  // rollout 5.2 #6: a chip ("הבדיקה השנתית") in the row under the products; the full row only when there is something to say
+  if (chip && !due && !st) return <Link to="/my/checkup" className="sv-chip my-chip sv-ck">הבדיקה השנתית</Link>;
+  if (chip) return null;
+  if (!due && !st && has) return null;
   return (
     <Link to="/my/checkup" className={`panel sv-stmt sv-ck${due ? ' due' : ''}`}>
       <span className="icotile"><Icon name={due ? 'calendar' : 'check'} /></span>
@@ -199,142 +346,4 @@ function CheckupLink({ has }: { has: boolean }) {
 function shownDepKey(list: MyProduct[], byK: Map<string, FundX>): string | null {
   const pen = list.find((m) => { const p = byK.get(m.k)?.prod; return p === 'פנסיה מקיפה' || p === 'פנסיה כללית'; });
   return (pen ?? list.find((m) => byK.get(m.k)?.prod === 'השתלמות'))?.k ?? null;
-}
-
-/** W7: the household's profiles in one chip row. Each profile keeps its own products, age, sex, retirement age, salary and snapshot
- *  in this browser; no names are stored, and the note to the agent calls anyone but "אני" simply "החוסך/ת". */
-function Household() {
-  const [P, setP] = useProfiles();
-  const others = (['spouse', 'parent'] as const).filter((id) => !P.list.includes(id));
-  const drop = (id: ProfileId) => {
-    if (!confirm(`להסיר את הפרופיל "${PROFILE_LABEL[id]}" ומה שנשמר בו בדפדפן הזה?`)) return;
-    const r = removeProfile(P, id); r.drop.forEach((k) => writeStored(k, undefined)); setP(r.profiles);
-  };
-  return (
-    <div className="sv-hh" role="group" aria-label="של מי המוצרים: כל פרופיל עם המוצרים והגיל שלו, בדפדפן הזה בלבד" title="כל פרופיל עם המוצרים והגיל שלו, בדפדפן הזה בלבד">
-      {P.list.map((id) => <button key={id} type="button" className="sv-chip sm" aria-pressed={P.active === id} onClick={() => setP(setActive(P, id))}>{PROFILE_LABEL[id]}</button>)}
-      {others.map((id) => <button key={id} type="button" className="sv-chip sm ghost" onClick={() => setP(addProfile(P, id))} aria-label={`הוספת פרופיל: ${PROFILE_LABEL[id]}`}>{PROFILE_ADD[id]}</button>)}
-      {P.active !== 'me' && <button type="button" className="linkbtn" onClick={() => drop(P.active)}>הסרת הפרופיל</button>}
-    </div>
-  );
-}
-
-/** the reader's age (and, for the conversion coefficient, sex), asked once and used on every card and in the fee tool */
-function AgeRow() {
-  const [age, setAge] = useMyAge();
-  const [sex, setSex] = useMySex();
-  const [raw, setRaw] = useState(age == null ? '' : String(age));
-  const [was, setWas] = useState(age);
-  if (was !== age) { setWas(age); setRaw(age == null ? '' : String(age)); }
-  const bad = raw !== '' && !(Number(raw) >= 16 && Number(raw) <= 66);
-  return (
-    <div className="sv-who" role="group" aria-label="הגיל שלך">
-      <label className="sv-who-age"><span>גיל</span>
-        <input type="number" inputMode="numeric" min={16} max={66} step={1} placeholder={String(AGE_DEFAULT)} value={raw} aria-invalid={bad}
-          onChange={(e) => { const t = e.target.value; setRaw(t); const x = Number(t); if (t !== '' && Number.isInteger(x) && x >= 16 && x <= 66) setAge(x); }} />
-      </label>
-      {age == null ? <span className="sv-a sv-who-ex">{AGE_DEFAULT} לדוגמה, שנו</span> : bad ? <span className="sv-err">גיל בין 16 ל-66</span> : null}
-      <span className="sv-rets" role="group" aria-label="מין, למקדם הקצבה">
-        {([['f', 'אישה'], ['m', 'גבר']] as const).map(([k, l]) => <button key={k} type="button" className="sv-chip sm" aria-pressed={sex === k} onClick={() => setSex(sex === k ? null : k)}>{l}</button>)}
-      </span>
-      <span className="sv-a">לא חובה</span>
-      <RetireIn />
-      <SalaryIn />
-    </div>
-  );
-}
-
-/** W5: the retirement age, statutory by sex and age (lib/retire), and the reader's own when typed */
-function RetireIn() {
-  const R = useRetire();
-  const [own, setOwn] = useMyRetire();
-  const [raw, setRaw] = useState(own == null ? '' : String(own));
-  const [was, setWas] = useState(own);
-  if (was !== own) { setWas(own); setRaw(own == null ? '' : String(own)); }
-  const bad = raw !== '' && !(Number(raw) >= 50 && Number(raw) <= 75);
-  return (
-    <span className="sv-who-ret">
-      <label className="sv-who-age"><span>גיל פרישה</span>
-        <input type="number" inputMode="decimal" min={50} max={75} step={1} placeholder={ageText(R.v)} value={raw} aria-invalid={bad}
-          onChange={(e) => { const t = e.target.value; setRaw(t); const x = Number(t); if (t === '') setOwn(null); else if (Number.isFinite(x) && x >= 50 && x <= 75) setOwn(x); }} />
-      </label>
-      {bad ? <span className="sv-err">גיל בין 50 ל-75</span> : <span className="sv-a">{own != null ? <>שלך · <button type="button" className="linkbtn" onClick={() => setOwn(null)}>לגיל בחוק</button></> : <a className="sv-u" href={KZ_RETIRE} target="_blank" rel="noreferrer" title={R.why}>לפי החוק</a>}</span>}
-    </span>
-  );
-}
-
-/** W6: the reader's gross monthly salary, for the replacement rate (optional; this browser only) */
-function SalaryIn() {
-  const [sal, setSal] = useMySalary();
-  const [raw, setRaw] = useState(sal == null ? '' : String(sal));
-  const [was, setWas] = useState(sal);
-  if (was !== sal) { setWas(sal); setRaw(sal == null ? '' : String(sal)); }
-  const bad = raw !== '' && !(Number(raw) >= 1000 && Number(raw) <= 200000);
-  return (
-    <span className="sv-who-ret">
-      <label className="sv-who-age"><span>שכר ברוטו לחודש</span>
-        <input type="number" inputMode="numeric" min={1000} max={200000} step={100} placeholder="למשל 15000" value={raw} aria-invalid={bad} style={{ width: 124 }}
-          onChange={(e) => { const t = e.target.value; setRaw(t); const x = Number(t); if (t === '') setSal(null); else if (Number.isFinite(x) && x >= 1000 && x <= 200000) setSal(Math.round(x)); }} />
-      </label>
-      {bad ? <span className="sv-err">סכום בין 1,000 ל-200,000</span> : <span className="sv-a">לא חובה</span>}
-    </span>
-  );
-}
-
-/** the strip at the top: what the reader pays this year, the pension estimate, and the one thing worth asking for */
-function Strip({ rows, retire, coefF }: { rows: SumRow[]; retire: number; coefF: CoefFile | null | undefined }) {
-  const at = `בגיל ${ageText(retire)}`;
-  const s = summaryOf(rows);
-  const [salary] = useMySalary();
-  const nReal = rows.filter((r) => r.prod.startsWith('פנסיה') && r.coefReal).length, nPen = rows.filter((r) => r.prod.startsWith('פנסיה')).length;
-  const coefWhy = nPen === 0 ? '' : nReal === nPen ? 'מקדם מהתקנון' : nReal === 0 ? 'מקדם לפי הנחה' : `מקדם מהתקנון ב-${nReal} מתוך ${nPen}`;
-  const rep = salary != null && s.pension != null && s.penBal > 0 && coefF ? replacementOf(s.pension, salary, coefF) : null;
-  const firstPen = rows.find((r) => r.prod.startsWith('פנסיה'));
-  const feesProv = (): Prov => ({ k: 'calc', est: true, title: 'דמי ניהול בשנה, כל המוצרים', value: ilsRound(s.fees), formula: 'לכל מוצר: היתרה × דמי הניהול מצבירה, ועוד 12 הפקדות × דמי הניהול מהפקדה. דמי הניהול שלך כשהזנת, אחרת הממוצע במסלול',
-    note: [s.feesAvg ? 'בחלק מהמוצרים: דמי הניהול הממוצעים במסלול, לא שלך' : null, s.feesEx ? 'בחלק מהמוצרים: יתרה או הפקדה לדוגמה' : null].filter(Boolean).join('. ') || undefined,
-    inputs: rows.map((r) => ({ label: `${r.name} (${r.c.v.fee.own ? 'שלך' : 'ממוצע'}: ${pcf(r.c.mine.fee)} / ${pcf(r.c.mine.depfee)})`, v: ilsRound(r.c.annual.total) })) });
-  const penProv = (): Prov => ({ k: 'calc', est: true, title: `קצבה חודשית מקרנות הפנסיה ${at}, בשקלי היום · אומדן`, value: ilsRound(s.pension ?? 0),
-    formula: `סכום האומדנים של כל קרן פנסיה ברשימה: החיסכון ${at} ÷ מקדם ההמרה של הקרן. ${coefWhy}. תשואה שמרנית של 4% ברוטו, הפקדה שעולה 2% בשנה, אינפלציה 2%`,
-    note: 'אומדן גס. לא מנכה את עלות הכיסוי הביטוחי, לא כולל מוצרים שאינם קרן פנסיה, קצבת זקנה מביטוח לאומי או מס. המקדם של כל קרן: בכרטיס שלה, עם העמוד בתקנון',
-    inputs: rows.filter((r) => r.prod.startsWith('פנסיה')).map((r) => ({ label: r.name, v: ilsRound(r.c.out.pensionReal) })) });
-  const a = s.act;
-  return (
-    <section className="panel sv-sum" aria-label="התמונה בקצרה">
-      <dl className="sv-kpis">
-        <div><dt>דמי ניהול בשנה</dt><dd><Sourced src={feesProv}><b className="num">{ilsRound(s.fees)}</b></Sourced></dd><dd className="sv-a">{rows.length > 1 ? `כל ${rows.length} המוצרים` : 'המוצר'}{s.feesAvg ? ', חלקם לפי הממוצע במסלול' : ', לפי דמי הניהול שלך'}{s.feesEx ? ', עם נתונים לדוגמה' : ''}</dd></div>
-        {s.pension != null && (s.penBal > 0
-          ? <div><dt>קצבה מהפנסיה, אומדן</dt><dd><Sourced src={penProv}><b className="num">{ilsRound(s.pension)}</b></Sourced> לחודש</dd><dd className="sv-a">{at}, בשקלי היום, תשואה 4%; {coefWhy}</dd></div>
-          : <div><dt>קצבה מהפנסיה, אומדן</dt><dd><a href={firstPen ? `#${firstPen.k}` : '#'} className="sv-u">הזינו יתרה</a></dd><dd className="sv-a">בלי היתרה שלך מהדוח אין מה לאמוד; {coefWhy}</dd></div>)}
-      </dl>
-      {rep && coefF && <ReplaceLines rep={rep} coefF={coefF} salary={salary!} pension={s.pension!} />}
-      <p className="sv-one"><b>דבר אחד לעשות:</b>{' '}
-        {a.kind === 'fee' ? <>לבקש הפחתת דמי ניהול ב<a href={`#${a.k}`}>{rows.filter((r) => r.prod === a.prod).length === 1 ? shortName(a.name, a.prod) : a.name}</a>: כ-{ilsRound(a.v)} פחות בחיסכון {a.prod === 'השתלמות' ? `בעוד ${a.years} שנים` : 'בגיל הפרישה'}, {a.ref === 'med' ? (a.own ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה') : 'לעומת מחיר קרנות ברירת המחדל'}{a.own ? '' : ' (לפי הממוצע במסלול)'}. ההודעה בכרטיס.</>
-          : a.kind === 'enter' ? <>להזין את דמי הניהול מהדוח השנתי ב<a href={`#${a.k}`}>{a.name}</a>: בלי זה החישוב לפי הממוצע במסלול.</>
-          : <>לבדוק בדוח השנתי שהמוטבים מעודכנים (<Link to="/my/statement#st-ben">איפה זה בדוח</Link>). דמי הניהול שלך לא גבוהים מהחציון באף מוצר.</>}
-      </p>
-    </section>
-  );
-}
-/** W6: the replacement rate in three lines: pension ÷ last salary, the same with the National Insurance basic old-age pension, and the
- *  benchmark the literature uses (70%). Facts of the arithmetic on the estimate above, not a recommendation. */
-function ReplaceLines({ rep, coefF, salary, pension }: { rep: NonNullable<ReturnType<typeof replacementOf>>; coefF: CoefFile; salary: number; pension: number }) {
-  const b = coefF.btl, t = coefF.target;
-  const from = `${b.from.slice(8, 10)}.${b.from.slice(5, 7)}.${b.from.slice(0, 4)}`;
-  const btlProv = (): Prov => ({ k: 'report', title: 'קצבת אזרח ותיק (זקנה) בסיסית ליחיד', value: `${b.single.toLocaleString('en-US')} ש"ח לחודש`, url: b.url, pg: null, doc: b.title, period: `מ-${from}`, note: `${b.quote}. ${b.note ?? ''} נקרא ${b.retrieved}` });
-  const tgtProv = (): Prov => ({ k: 'report', title: 'יחס תחלופה מקובל', value: `${t.rate}%`, url: t.url, pg: t.pg ?? null, doc: t.title, note: `${t.quote ? `"${t.quote}". ` : ''}${t.note ?? ''}` });
-  const rateProv = (withBtl: boolean) => (): Prov => ({ k: 'calc', est: true, title: `יחס תחלופה ${withBtl ? 'עם' : 'בלי'} קצבת זקנה מביטוח לאומי`, value: pct0(withBtl ? rep.withBtl : rep.noBtl),
-    formula: withBtl ? '(אומדן הקצבה מהפנסיה + קצבת אזרח ותיק בסיסית ליחיד) ÷ השכר ברוטו לחודש' : 'אומדן הקצבה מהפנסיה ÷ השכר ברוטו לחודש שהזנת',
-    note: 'הקצבה באומדן לפני מס ובשקלי היום; השכר ברוטו. יחס התחלופה במאמר האוצר הוא נטו, מול ההכנסה הפנויה, ולכן אינו זהה',
-    inputs: [{ label: 'קצבה מהפנסיה, אומדן', v: ilsRound(pension) }, ...(withBtl ? [{ label: `קצבת אזרח ותיק בסיסית ליחיד (מ-${from})`, v: ilsRound(rep.btl), src: btlProv }] : []), { label: 'שכר ברוטו לחודש (שלך)', v: ilsRound(salary) }] });
-  return (
-    <ul className="sv-lines sv-rep" aria-label="יחס תחלופה">
-      <li><span className="sv-dot" aria-hidden="true" /><span>יחס תחלופה בלי ביטוח לאומי: <Sourced src={rateProv(false)}><b className="num">{pct0(rep.noBtl)}</b></Sourced> מהשכר ברוטו.</span></li>
-      <li><span className="sv-dot" aria-hidden="true" /><span>עם קצבת אזרח ותיק בסיסית ליחיד (<Sourced src={btlProv}><span className="num">{b.single.toLocaleString('en-US')} ש"ח</span></Sourced>, מ-{from}): <Sourced src={rateProv(true)}><b className="num">{pct0(rep.withBtl)}</b></Sourced>.</span></li>
-      <li><span className="sv-dot" aria-hidden="true" /><span>יעד מקובל: <Sourced src={tgtProv}><span className="num">{t.rate}%</span></Sourced> ומעלה (משרד האוצר, 2016: "המינימום המקובל"; יחס נטו, לא יעד רשמי). תיאור, לא המלצה.</span></li>
-    </ul>
-  );
-}
-/** "קרן הפנסיה" / "קרן ההשתלמות" when the reader has one of each; the full name otherwise */
-function shortName(name: string, prod: string) {
-  return prod === 'פנסיה מקיפה' || prod === 'פנסיה כללית' ? 'קרן הפנסיה' : prod === 'השתלמות' ? 'קרן ההשתלמות' : name;
 }

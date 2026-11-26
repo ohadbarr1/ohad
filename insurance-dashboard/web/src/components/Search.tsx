@@ -7,7 +7,9 @@ import { sheetName } from '../lib/company';
 import { SinceDot } from './SinceBadge';
 import { usePhone } from '../lib/useMedia';
 import { loadCorpus, recentQueries, readerHref, rememberQuery, searchText, type Corpus } from '../lib/search';
-import { buildPool, docLabel, forDoor, FUNCS, orderFor, ordered, parse, rank, SAVER_TO, tracksFirst, type FundEnt, type Item, type Kind } from '../lib/searchOmni';
+import { askItems, buildPool, docLabel, forDoor, FUNCS, orderFor, ordered, parse, rank, SAVER_TO, tracksFirst, yearAsk, type AskCtx, type FundEnt, type Item, type Kind } from '../lib/searchOmni';
+import { useMine } from '../lib/mine';
+import { isOldGen } from '../lib/decision';
 import { useDoor } from '../lib/door';
 import '../styles/search.css';
 
@@ -57,7 +59,9 @@ function useFullText(q: string, pool: ReturnType<typeof usePool>['pool'], corpus
 /** the word to type after a company for a function: its Hebrew badge when it is a search key, else its first Hebrew key (CSM and DCF stay) */
 const word = (f: (typeof FUNCS)[number]) => (/^[A-Z]+$/.test(f.badge) && !['CSM', 'DCF'].includes(f.badge) ? f.keys.find((k) => /[\u0590-\u05FF]/.test(k)) ?? f.badge : f.badge.split(' ')[0]);
 /** W6 doors: the saver's four pages, offered when nothing is typed (SAVER_TO, lib/searchOmni) */
-const SAVER_HINTS: [string, string][] = [['המוצרים שלי', '/my'], ['רגעים: עזבתי עבודה, פרישה…', '/my/moment'], ['איך קוראים את הדוח השנתי', '/my/statement'], ['דמי ניהול לאורך קריירה', '/funds/tools/fees'], ['קרנות ברירת מחדל', '/funds/default']].filter(([, to]) => SAVER_TO.has(to)) as [string, string][];
+const SAVER_HINTS: [string, string][] = [['המוצרים שלי', '/my'], ['רגעים: עזבתי עבודה, פרישה…', '/my/moment'], ['איך קוראים את הדוח השנתי', '/my/statement'], ['דמי ניהול, בשקלים', '/funds/tools/fees'], ['קרנות ברירת מחדל', '/funds/default']].filter(([, to]) => SAVER_TO.has(to)) as [string, string][];
+/** B10: with nothing typed, the saver is offered questions to ask (R3: each opens the page that answers it) */
+const SAVER_ASKS = ['מי הכי טוב בפנסיה', 'מסלולים', 'מה קרה החודש', 'מגדל פנסיה'];
 const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'רגע': 'רגעים בשנה', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'שאלה': 'שאלות', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
 
 export function Search({ big = false }: { big?: boolean }) {
@@ -85,30 +89,48 @@ export function Search({ big = false }: { big?: boolean }) {
 
   // W6 doors: the saver's search lists funds, companies and the saver's pages only (no filing pages, lines or Pro questions)
   const [door] = useDoor();
-  const saver = door === 'saver';
-  const ranked = useMemo(() => (pool && s.length >= 2 ? forDoor(rank(s, pool, sheetName, corpus), door) : []), [s, pool, corpus, door]);
-  const ft = useFullText(s, pool, corpus, !saver);
+  const saver = door == null || door === 'saver';  // B10 / D3: no door chosen = the saver's search (as the shell, the card and the fees tool)
+  const [mine] = useMine();
+  const yr = useMemo(() => yearAsk(s), [s]);  // R3: "… בשנה האחרונה" is a question about the year, not part of a fund's name
+  const qq = yr.year && yr.q.length >= 2 && !askItems(s).length ? yr.q : s;  // ("כמה משלם בשנה" is a question about fees, not the year)
+  const yearOn = qq !== s;
   // C11: "X מול Y" between two funds of one product offers the comparison first (lib/pickSearch: the picker's parser, one pair of one product)
   // C14: the saver's tracks are ordered by the same index, so the funds file loads for every saver query
   const fundsFile = useFunds(open && (saver || /\s(?:מול|נגד|לעומת|vs\.?|versus)\s/i.test(q)));
   const pickIdx = useMemo(() => (fundsFile.data ? pickIndex(fundsFile.data.funds) : null), [fundsFile.data]);
+  // what the reader's own products are (their type is the default of "מסלולים" and "דירוג"), and the data month ("באוקטובר")
+  const byK = useMemo(() => new Map((fundsFile.data?.funds ?? []).map((f) => [f.k, f] as const)), [fundsFile.data]);
+  const ask = useMemo<AskCtx>(() => ({ asof: fundsFile.data?.asof, mine: mine.map((m) => byK.get(m.k)).filter((f): f is NonNullable<typeof f> => !!f).map((f) => ({ prod: f.prod, track: f.track })) }), [fundsFile.data, mine, byK]);
+  const ranked = useMemo(() => (pool && s.length >= 2 ? forDoor(rank(qq, pool, sheetName, corpus, ask), saver ? 'saver' : door) : []), [qq, s, pool, corpus, door, saver, ask]);
+  const ft = useFullText(s, pool, corpus, !saver);
   const pairItem = useMemo<Item | null>(() => {
     if (!pickIdx || s.length < 5) return null;
-    const pair = pickSearch(s, pickIdx, { n: 2 }).pair;
+    const pair = pickSearch(qq, pickIdx, { n: 2 }).pair;
     return pair ? { kind: 'פונקציה', label: pairLabel(pair), meta: 'השוואה', to: pairHref(pair), score: 100 } : null;
-  }, [pickIdx, s]);
+  }, [pickIdx, qq, s]);
   const all: Item = { kind: 'מסמך', label: `חיפוש בכל הדוחות: ${s}`, meta: ft.total != null ? `${ft.total.toLocaleString()} עמ׳` : ft.busy ? '…' : '', to: `/search?q=${encodeURIComponent(s)}`, score: -1 };
+  // R3: the saver's tracks: the reader's own first ("שלי ·"), old-generation policies last, and on 12 months when the question was about the year
+  const forSaver = (list: Item[]): Item[] => {
+    const mineK = new Set(mine.map((m) => m.k));
+    const kOf = (x: Item) => (x.kind === 'קופה' ? /^\/funds\/([gip]\d+)(?:[?#].*)?$/.exec(x.to)?.[1] ?? null : null);
+    const rankOf = (x: Item) => { const k = kOf(x); return k == null ? 1 : mineK.has(k) ? 0 : isOldGen(byK.get(k) ?? {}) ? 2 : 1; };
+    const dec = list.map((x) => { const k = kOf(x); return k == null ? x : { ...x, ...(mineK.has(k) ? { meta: `שלי · ${x.meta}` } : {}), ...(yearOn ? { to: `${x.to.split(/[?#]/)[0]}?v=m12`, meta: `${mineK.has(k) ? 'שלי · ' : ''}${x.meta.replace(/^שלי · /, '')} · 12 חודשים` } : {}) }; });
+    // the track items keep their slots; only their own order changes (stable)
+    const slots = dec.map((x, i) => (x.kind === 'קופה' ? i : -1)).filter((i) => i >= 0);
+    const sorted = slots.map((i) => [dec[i], i] as const).sort(([a, i], [b, j]) => rankOf(a) - rankOf(b) || i - j).map(([x]) => x);
+    return dec.map((x, i) => { const at = slots.indexOf(i); return at < 0 ? x : sorted[at]; });
+  };
   const hits = useMemo(() => {
     if (s.length < 2) return [];
     const docs = ranked.filter((x) => x.kind === 'מסמך');
     const out = ranked.filter((x) => x.kind !== 'מסמך');
     const lead = pairItem ? [pairItem] : [];
     // C14: in the saver door the tracks come before the groups, best-ranked first (old-generation policies last); Pro keeps companies first
-    if (saver) return [...lead, ...tracksFirst(out, pickIdx && !pairItem ? pickSearch(s, pickIdx, { n: 6 }).hits : [])];
+    if (saver) return [...lead, ...forSaver(tracksFirst(out, pickIdx && !pairItem ? pickSearch(qq, pickIdx, { n: 6 }).hits : []))];
     return [...lead, ...out, ...docs, ...(ft.q === s ? ft.items : []), all];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ranked, ft, s, saver, pairItem, pickIdx]);
-  const fundsFirst = door === 'saver' || door === 'agent';  // W4: savers and agents look for funds, not report pages
+  }, [ranked, ft, s, saver, pairItem, pickIdx, mine, byK, yearOn]);
+  const fundsFirst = saver || door === 'agent';  // W4: savers and agents look for funds, not report pages
   const shown = useMemo(() => ordered(s.length >= 2 ? hits : recent, fundsFirst), [hits, recent, s, fundsFirst]);
   const order = useMemo(() => orderFor(shown, fundsFirst), [shown, fundsFirst]);
   const keyOf = (it: Item) => `${it.to}|${it.label}`;
@@ -161,7 +183,8 @@ export function Search({ big = false }: { big?: boolean }) {
 
   const field = (auto: boolean) => (
     <input ref={input} autoFocus={auto}
-      type="search" value={q} placeholder={saver ? 'קופה, מספר קופה, או "עזבתי עבודה"' : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
+      type="search" value={q} placeholder={phone && !auto ? (saver ? 'חיפוש קופה' : 'חיפוש') /* build review B2 (novice #1): the header field on a phone shows its whole hint; the open search keeps the long one */
+        : saver ? (phone ? 'קופה, מספר או שאלה' : 'קופה, מספר קופה, או "עזבתי עבודה"') : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
       role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
       enterKeyHint="search" autoComplete="off" spellCheck={false}
       onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKey}
@@ -188,7 +211,7 @@ export function Search({ big = false }: { big?: boolean }) {
           </div>
         ) : null;
       })}
-      {!s && saver && <div className="codes"><h4>מה אפשר לחפש</h4><div>{SAVER_HINTS.map(([l, to]) => <Link key={to} to={to} className="chip" onClick={(e) => { e.preventDefault(); go({ kind: 'פונקציה', label: l, meta: '', to, score: 0 }); }}>{l}</Link>)}</div><div className="muted omni-tip">לדוגמה: <bdi>2155</bdi> · <bdi>הראל השתלמות</bdi> · <bdi>עזבתי עבודה</bdi> · <bdi>פיצויים</bdi></div></div>}
+      {!s && saver && <div className="codes"><h4>אפשר לשאול</h4><div>{SAVER_ASKS.map((t) => <button key={t} type="button" className="chip" onClick={() => { setQ(t); input.current?.focus(); }}>{t}</button>)}</div><h4>מה אפשר לחפש</h4><div>{SAVER_HINTS.map(([l, to]) => <Link key={to} to={to} className="chip" onClick={(e) => { e.preventDefault(); go({ kind: 'פונקציה', label: l, meta: '', to, score: 0 }); }}>{l}</Link>)}</div><div className="muted omni-tip">לדוגמה: <bdi>2155</bdi> · <bdi>הראל השתלמות</bdi> · <bdi>עזבתי עבודה</bdi> · <bdi>פיצויים</bdi></div></div>}
       {!s && !saver && <div className="codes"><h4>חברה + נושא · לדוגמה: הראל סקירה</h4><div>{FUNCS.map((f) => <span key={f.code} className="chip" title={`${f.label} · גם באנגלית: ${f.code}`}><b>{word(f)}</b> {f.label !== word(f) && <span className="muted">{f.label}</span>}</span>)}</div><div className="muted omni-tip">לדוגמה: <bdi>הראל CSM</bdi> · <bdi>כלל מצגת Q2'26</bdi> · <bdi>רכיב הפסד</bdi> · <bdi>17,717</bdi>{!phone && <> · מקש <kbd>?</kbd> לכל הקיצורים</>}</div></div>}
     </div>
   );

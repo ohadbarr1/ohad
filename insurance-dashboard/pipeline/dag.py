@@ -251,9 +251,9 @@ STEPS = [
     step("build_fund_stats", "pipeline/build_fund_stats.py",
          [D + "funds.json", D + "funds/[gpi][0-9]*.json", D + "funds/cat.json", D + "funds/closed.json", D + "macro/boi_curve.json",
           "data/regulation/default_funds.json"],
-         [D + "funds/stats", D + "funds/rank", D + "funds/persist.json", D + "funds/default.json", D + "funds/trackers.json", D + "funds/glide.json"],
+         [D + "funds/stats", D + "funds/rank", D + "funds/months", D + "funds/persist.json", D + "funds/default.json", D + "funds/trackers.json", D + "funds/glide.json"],
          code=["pipeline/fund_stats_lib.py", "pipeline/funds_lib.py"], groups={"deploy"},
-         note="F2: funds/stats/<slug>.json, funds/rank/<slug>.json, persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)"),
+         note="F2: funds/stats/<slug>.json, funds/rank/<slug>.json, funds/months/<slug>.json (P1), persist / default / trackers / glide (python3 pipeline/build_fund_stats.py --check)"),
     # Wave 3 flows: who really won, month by month (group x product flows since 2011, the intra-group migration netted, the default-fund
     # tender effect and closing transfers taken apart), the fund card's flow signal and the fee history; standard library; gate `flows`
     step("build_flows", "pipeline/build_flows.py",

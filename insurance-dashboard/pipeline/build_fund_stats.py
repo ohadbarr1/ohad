@@ -7,6 +7,7 @@ python3 pipeline/build_fund_stats.py --check    rebuild in memory: byte-equal to
   -> web/public/data/funds/stats/index.json        the categories: {slug, cat, prod, track, n, rank}
   -> web/public/data/funds/stats/<slug>.json       risk panel per live track of a category, 36 months ending at asof, and the category median
   -> web/public/data/funds/rank/<slug>.json        percentile rank in category over time (12M and 3Y annualised; gross, as published), point-in-time
+  -> web/public/data/funds/months/<slug>.json      the last 24 months of a type, gross only: each member's published monthly return, the type average (cat.json y), members per month
   -> web/public/data/funds/persist.json            do winners stay winners: quartile transition matrices per product, 12M→12M and 36M→36M
   -> web/public/data/funds/default.json            the default (selected) pension funds: tenders, winners, fees (data/regulation/default_funds.json)
                                                    and each winner's deposits / assets / net return before, during and after its period
@@ -35,6 +36,7 @@ FD = D / "funds"
 DEF = ROOT / "data" / "regulation" / "default_funds.json"
 V = 1
 WIN = 36
+MONTHS_WIN = 24          # funds/months: the type-month sheet (P1)
 RANK_FROM = 201201       # the rank files start here (pensia-net starts 10/11; earlier gemel months stay in the persistence pool)
 MIN_PEERS = FL.MIN_PEERS  # percentile ranks: as funds.json pr / pn
 PERSIST_MIN = 8           # a category-month enters the persistence pool with at least 8 ranked tracks
@@ -332,6 +334,38 @@ def build_ranks(P, asof):
     return out
 
 
+# ------------------------------------------------------------------------------------------------ 2b. the last 24 months of a type (P1)
+MONTHS_METHOD = ("תשואה חודשית ברוטו כפי שפורסמה (לפני דמי ניהול), 24 החודשים שמסתיימים ב-asof, לכל מסלול שהיה חבר בסוג באותו חודש "
+                 "(הסוג כפי שהיה ב-ct באותו חודש, נכסים חיוביים; כולל מסלולים שנסגרו; חשבונות בניהול אישי ו-IRA נכללים, והדף מסמן אותם); "
+                 "null = המסלול לא היה חבר או לא דיווח באותו חודש. avg = ממוצע הסוג כפי שהאתר מפרסם אותו (funds/cat.json y, אותם חברים); "
+                 "n = מספר החברים עם תשואה באותו חודש")
+
+
+def build_months(H, cats, cat_names, asof):
+    """{cat: doc}: the type's members' monthly gross returns over the last MONTHS_WIN months (point-in-time members, assets > 0)"""
+    W = months_between(FL.madd(asof, -(MONTHS_WIN - 1)), asof)
+    out = {}
+    for c in sorted(cat_names):
+        tracks = {}
+        for h in H.values():
+            row = []
+            for T in W:
+                i = h.at(T)
+                ok = i is not None and (h.a[i] or 0) > 0 and h.cat_at(T) == c and h.y[i] is not None
+                row.append(h.y[i] if ok else None)
+            if any(x is not None for x in row):
+                tracks[h.k] = row
+        if not tracks:
+            continue
+        n = [sum(1 for xs in tracks.values() if xs[j] is not None) for j in range(len(W))]
+        cy = cats.get(c)
+        ay = dict(zip(cy["p"], cy["y"])) if cy else {}
+        prod, track = c.split(" | ", 1)
+        out[c] = {"v": V, "cat": c, "prod": prod, "track": track, "slug": slug(c), "asof": asof, "months": W,
+                  "tracks": {k: tracks[k] for k in sorted(tracks)}, "avg": [ay.get(T) for T in W], "n": n, "method": MONTHS_METHOD, "src": SRC}
+    return out
+
+
 def build_persist(H, P, asof):
     """quartile transitions per product family x window x basis, pooled over start months"""
     res = []
@@ -618,6 +652,8 @@ def build():
         files[f"funds/stats/{slug(c)}.json"] = doc
     for c, doc in ranks.items():
         files[f"funds/rank/{slug(c)}.json"] = doc
+    for c, doc in build_months(H, cats, set(stats) | set(ranks), asof).items():
+        files[f"funds/months/{slug(c)}.json"] = doc
     files["funds/persist.json"] = build_persist(H, P, asof)
     files["funds/default.json"] = build_default(H, asof)
     files["funds/trackers.json"] = build_trackers(F, asof)
@@ -663,6 +699,17 @@ def rules(files):
                         bad.append(f"{path}: {k} ranked with fewer than {MIN_PEERS} peers")
             if doc["months"][-1] > asof:
                 bad.append(f"{path}: month beyond asof")
+    for path, doc in files.items():
+        if path.startswith("funds/months/"):
+            m = len(doc["months"])
+            if m != MONTHS_WIN or doc["months"][-1] != asof or len(doc["avg"]) != m or len(doc["n"]) != m:
+                bad.append(f"{path}: months / avg / n length or end")
+            for k, xs in doc["tracks"].items():
+                if len(xs) != m:
+                    bad.append(f"{path}: {k} misaligned")
+            for j in range(m):
+                if doc["n"][j] != sum(1 for xs in doc["tracks"].values() if xs[j] is not None):
+                    bad.append(f"{path}: n[{j}] disagrees with the members")
     for row in files["funds/persist.json"]["rows"]:
         tot = sum(q["n"] for q in row["rows"])
         if any(q["n"] != sum(q["to"]) + q["gone"] for q in row["rows"]):
@@ -704,12 +751,12 @@ def main(argv):
     bad = rules(files)
     n_tr = sum(len(d["tracks"]) for p, d in files.items() if p.startswith("funds/stats/c"))
     summary = (f"{sum(1 for p in files if p.startswith('funds/stats/c'))} categories with stats ({n_tr} tracks), "
-               f"{sum(1 for p in files if p.startswith('funds/rank/'))} rank files, {len(files['funds/persist.json']['rows'])} persistence rows, "
+               f"{sum(1 for p in files if p.startswith('funds/rank/'))} rank files, {sum(1 for p in files if p.startswith('funds/months/'))} months files, {len(files['funds/persist.json']['rows'])} persistence rows, "
                f"{len(files['funds/default.json']['tenders'])} default-fund tenders, {sum(g['n'] for g in files['funds/trackers.json']['groups'])} trackers, "
                f"{sum(len(p['mgrs']) for p in files['funds/glide.json']['prods'])} glide managers")
     if check:
         diff = [p for p, b in blobs.items() if not (D / p).exists() or (D / p).read_bytes() != b]
-        stale = [str(f.relative_to(D)) for sub in ("stats", "rank") for f in sorted((FD / sub).glob("*.json")) if str(f.relative_to(D)) not in blobs] \
+        stale = [str(f.relative_to(D)) for sub in ("stats", "rank", "months") for f in sorted((FD / sub).glob("*.json")) if str(f.relative_to(D)) not in blobs] \
             if FD.exists() else []
         for p in diff[:5]:
             print(f"  differs from a rebuild: {p}")
@@ -720,7 +767,7 @@ def main(argv):
         ok = not diff and not stale and not bad
         print(("fund_stats ok: " if ok else f"fund_stats FAILED ({len(diff)} differ, {len(stale)} stale, {len(bad)} rule): ") + summary)
         return 0 if ok else 1
-    for sub in ("stats", "rank"):
+    for sub in ("stats", "rank", "months"):
         (FD / sub).mkdir(parents=True, exist_ok=True)
         for f in (FD / sub).glob("*.json"):
             if str(f.relative_to(D)) not in blobs:

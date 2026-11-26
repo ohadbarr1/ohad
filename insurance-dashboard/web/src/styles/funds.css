@@ -76,7 +76,7 @@ table.fscreen tr.gone td { opacity: 0.72; }
 .fcard-meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
 .fcard-fig { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 6px; align-items: end; }
 .fcard-fig > div { display: grid; gap: 1px; min-width: 0; }
-.fcard-fig .l { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fcard-fig .l { color: var(--muted); }
 .fcard-fig .big .num { font-size: var(--t-5); font-weight: 700; }
 @media (max-width: 380px) { .fcard-fig { grid-template-columns: 1.4fr repeat(4, 1fr); gap: 4px; } }
 
@@ -121,3 +121,82 @@ table.fscreen tr.gone td { opacity: 0.72; }
   .subnav .snmore summary { padding: 9px 12px 9px 14px; min-height: 36px; }
   .subnav:has(.snmore[open]) { overflow: visible; mask-image: none; }
 }
+
+/* B2/B3: the card's monthly heat table. 12 months + the year's total fit a 390 px phone; narrower screens scroll sideways with the year column
+   and the month header pinned (header above the body cells), and the box opens on the latest months (Heatmap's layout effect). */
+.panel .heat-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+.panel .heat-scroll table.heat-m { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: 100%; min-width: 332px; direction: rtl; font-size: 11px; }
+.panel .heat-scroll table.heat-m th, .panel .heat-scroll table.heat-m td { padding: 0; font-size: 11px; line-height: 1.2; text-align: center; border: 1px solid var(--panel); background-clip: padding-box; box-shadow: none; }
+.panel .heat-scroll table.heat-m thead th { height: 22px; color: var(--muted); font-weight: 600; position: relative; z-index: 3; background: var(--panel); }
+.panel .heat-scroll table.heat-m th.y, .panel .heat-scroll table.heat-m td.y { width: 36px; min-width: 0; max-width: none; position: sticky; inset-inline-start: auto; right: 0; left: auto; z-index: 2; background: var(--panel); font-weight: 600; color: var(--muted); }
+.panel .heat-scroll table.heat-m thead th.y { z-index: 4; }
+.panel .heat-scroll table.heat-m th.t, .panel .heat-scroll table.heat-m td.tot { width: 34px; font-weight: 700; }
+.panel .heat-scroll table.heat-m td.c { height: 26px; border-radius: 4px; letter-spacing: -0.02em; overflow: hidden; }
+.panel .heat-scroll table.heat-m td.c .num { font-size: 11px; }
+main .panel .heat-scroll table.heat-m td > :is(a, button).src:not(.bar) { display: block; width: 100%; height: 100%; min-width: 0; margin: 0; padding: 0; font-size: 11px; line-height: 24px; color: inherit; }
+main .panel .heat-scroll table.heat-m td > :is(a, button).src:not(.bar)::after { content: none; }
+/* iOS WebKit paints a sticky cell inside an RTL scroller off its origin (the real cause of B2 on an iPhone; see styles.css): there the year
+   column scrolls with the table. At 334 px and wider the table does not scroll at all. */
+@supports (-webkit-touch-callout: none) { [dir="rtl"] .panel .heat-scroll table.heat-m :is(th, td).y { position: static; } }
+
+/* B5: the screener's phone head. The tools row wraps instead of sliding under a fade; the card's figure labels wrap to two lines. */
+@media (max-width: 760px) {
+  .tbar-ctl:has(> .trackpick) { flex-wrap: wrap; overflow-x: visible; mask-image: none; padding-inline-end: 0; }
+  .tbar-ctl:has(> .trackpick) > * { flex: 0 1 auto; max-width: 100%; }
+}
+.fcard-fig .l { font-size: 11px; line-height: 1.25; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.fcard-fig { align-items: end; }
+
+/* ---------- Rollout L2-b: the screener on a phone (pages/screen/ScreenBoard; spec 4.2, 16.1 4a–4e, 17.1 3a; mockup v4 frames 6–7) ----------
+   Every rule is scoped under .scr-page (or a .scr- class only the screener emits), so nothing else on the site moves. */
+.scr-page { display: grid; gap: 7px; }
+.scr-page > * { min-width: 0; }
+.scr-head { margin-top: -8px; }
+.scr-head h1 { font-size: 21px; gap: 4px 8px; }
+.scr-head h1 .icotile { width: 30px; height: 30px; border-radius: 9px; }
+.scr-head h1 .icotile svg.ico { width: 18px; height: 18px; }
+.scr-head .sub { margin-top: 0; font-size: 12.5px; color: var(--muted); }
+.scr-pick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 7px; }
+.scr-pill { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; height: 44px; padding: 0 12px; border-radius: var(--r-3); border: 1.5px solid var(--line); background: var(--panel); box-shadow: var(--e-1); font: inherit; font-size: 14.5px; font-weight: 700; color: var(--fg); cursor: pointer; transition: transform var(--fast); }
+.scr-pill > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scr-pill > i { flex: none; font-style: normal; font-size: 15px; line-height: 1; color: var(--muted); transform: translateY(-3px); }
+.scr-pill.f { justify-content: center; padding: 0 12px; font-weight: 500; color: var(--muted); }
+.scr-pill.f svg { width: 16px; height: 16px; flex: none; }
+.scr-pill:active { transform: scale(0.97); }
+.scr-page .ro-seg button { font-size: 12.5px; padding: 0 3px; }
+.scr-page .ro-quiet { margin: 0 2px; }
+.scr-page .board .sb-row { min-height: 62px; }
+.scr-page .board .sb-place { color: var(--link); background: color-mix(in oklch, var(--link) 12%, var(--panel)); }
+.scr-page .board .track i { background: var(--link); }
+.scr-page .board .val .num.mut { white-space: nowrap; }
+.scr-page .avgline { display: flex; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--panel2); border-top: 1px solid var(--line-soft); color: var(--muted); }
+.scr-add { flex: 1; display: grid; place-items: center; min-height: 44px; border: 0; background: transparent; font: inherit; font-size: 22px; color: var(--muted); cursor: pointer; }
+.scr-add[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-fg); }
+.scr-add:disabled { opacity: 0.35; cursor: default; }
+.scr-self { display: grid; gap: 6px; }
+.scr-self-h { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 8px 12px; border-radius: var(--r-3); border: 1px solid var(--line-soft); background: var(--panel2); font: inherit; color: var(--fg); text-align: start; cursor: pointer; }
+.scr-self-h > span { flex: 1; display: grid; gap: 2px; }
+.scr-self-h b { font-size: 14px; }
+.scr-self-h small { font-size: 12px; line-height: 1.45; color: var(--muted); }
+.scr-self-h i { font-style: normal; color: var(--muted); }
+.scr-grp { display: grid; gap: 6px; }
+.scr-grp-h { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border-radius: var(--r-3); border: 1px solid var(--line-soft); background: var(--panel2); font: inherit; color: var(--fg); text-align: start; cursor: pointer; }
+.scr-grp-h:disabled { cursor: default; opacity: 1; }
+.scr-grp-h b { font-size: 14.5px; }
+.scr-grp-h small { flex: 1; font-size: 12px; color: var(--muted); }
+.scr-grp-h i { font-style: normal; color: var(--muted); }
+.scr-by { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 4px; font-size: 13.5px; color: var(--fg); }
+.scr-by .linkbtn { min-height: 44px; }
+.scr-empty { display: grid; gap: 10px; justify-items: start; }
+.scr-tiles .ts-tile { gap: 2px; }
+.scr-tiles .ts-tile.on { box-shadow: inset 0 0 0 1.5px var(--line); }
+.scr-tiles .big { font-size: 16px; font-weight: 700; }
+.scr-dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; margin: 14px 2px 0; font-size: 14px; }
+.scr-dl dt { color: var(--muted); }
+.scr-dl dd { margin: 0; text-align: end; font-weight: 700; }
+.scr-flags { margin-top: 10px; }
+.scr-trk .chip, .scr-rankby .chip, #prod-chips .chip { min-height: 44px; }
+.scr-trk .chip small { margin-inline-start: 4px; color: var(--muted); font-weight: 500; }
+.scr-show { flex: 1; }
+@media (max-width: 360px) { .scr-pill { padding: 0 9px; font-size: 13.5px; } .scr-page .ro-seg button { font-size: 11.5px; } }
+@media (prefers-reduced-motion: reduce) { .scr-pill { transition: none; } }

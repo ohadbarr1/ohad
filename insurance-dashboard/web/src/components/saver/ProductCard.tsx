@@ -27,6 +27,8 @@ import { Script } from './Script';
 import { DepLine, Deposits, useDepAudit } from './Deposits';  // W7
 import { FriendSays } from './FriendSays';  // W7
 import type { MCover } from '../../lib/maslaka';
+import { useMyAmounts } from '../../lib/myAmounts';  // rollout T-M2 / 17.2: the one reader of the reader's amounts
+import { BALANCE_EX } from '../../lib/retire';
 import { FlowLine } from '../flows/FlowLine';  // W8 flows: the one flow line, only when it fires
 import { NewsForFund } from '../NewsForFund';  // W8 feeds: one line per event that concerns this fund, 90 days
 import { UnderLine } from './UnderLine';  // W11 under: the gap to the category median, only bottom-quartile and ≥25bp
@@ -40,19 +42,32 @@ import { UnderLine } from './UnderLine';  // W11 under: the gap to the category 
    line under the title.
    W7 (wave 2): the deposit watchdog (components/saver/Deposits) and "חבר אמר לעבור ל…" (components/saver/FriendSays) open from the card;
    a pension card with imported covers shows one plain coverage line; the note to the agent says "החוסך/ת" for a household profile
-   other than "אני". */
+   other than "אני".
+   Rollout (T-M1, T-M2; spec 5.2, 17.2): on /my the card opens in a sheet (`sheet`: no panel chrome, no anchor id; the page's row
+   carries the id). The balance and the monthly deposit are read ONLY through lib/myAmounts useMyAmounts and typed in the shared
+   amounts sheet (`onAmounts`), never in this card's own form (which keeps the reader's own fees). Example amounts are never phrased as
+   the reader's (D6): until a balance is typed the gap lines read "בדוגמה (חיסכון 100,000 ש״ח, גיל 38): …", and "יהיו לך" appears
+   only after. */
 
 export const KOLZCHUT_HISHTALMUT = 'https://www.kolzchut.org.il/he/%D7%A7%D7%A8%D7%9F_%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA';
 export const COEF_SRC = 'https://www.bizportal.co.il/longtermsavings/news/article/20036400';
 const num = (s: string): number | null => { const t = s.replace(/[,\s₪%]/g, ''); if (t === '') return null; const x = Number(t); return Number.isFinite(x) ? x : null; };
 
-export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRemove, onAdd, focus }: {
+export function ProductCard({ f, data, cats, dfile, my: myRaw, example, onChange, onRemove, onAdd, focus, sheet, onAmounts }: {
   f: FundX; data: FundsFile; cats: Record<string, CatX> | undefined; dfile: DefaultFile | null | undefined;
   my?: MyProduct; example?: boolean; onChange?: (patch: Partial<MyProduct>) => void; onRemove?: () => void; onAdd?: () => void;
   /** W7: open the card on its deposit watchdog (a link from /my/statement) */
   focus?: 'deposits';
+  /** rollout: the card inside /my's product sheet */
+  sheet?: boolean;
+  /** rollout: open the amounts sheet of this product (balance and monthly deposit) */
+  onAmounts?: () => void;
 }) {
   const asof = data.asof;
+  // the balance and the deposit: the one reader (lib/myAmounts), over the saved record's other fields
+  const A = useMyAmounts({ k: example ? null : f.k });
+  const my: MyProduct | undefined = myRaw ? { ...myRaw, balance: A.balance, monthly: A.monthly } : undefined;
+  const ownBal = !example && A.own;
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service-index line
   const coefF = useOptional<CoefFile>(COEF_PATH);  // W6: the funds' conversion coefficients
   const [ageS] = useMyAge(), [sex] = useMySex();
@@ -128,9 +143,15 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const gapLine = (gp: FeeGap | null, vs: string, when: string, src: () => Prov) => {
     if (!gp) return null;
     if (Math.abs(gp.balReal) < 500) return <>{vs}: דמי הניהול {ownAny ? 'שלך' : 'במסלול'} כמעט לא משנים את החיסכון {when} (פחות מ-500 ש"ח).</>;
-    return <>{vs}: יהיו לך <span className="sv-nw">כ-<Est src={src}>{ilsRound(Math.abs(gp.balReal))}</Est></span> {gp.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון {when}.</>;
+    const fig = <span className="sv-nw">כ-<Est src={src}>{ilsRound(Math.abs(gp.balReal))}</Est></span>;
+    // D6 (5.2): "יהיו לך" only once the reader typed a balance; before that the example says it is one. Build review B1 (novice #3):
+    // and an at-retirement figure on the reader's own balance only once the reader's age is known (no figure on an assumed age)
+    if (ownBal && ageS == null) return null;
+    return ownBal
+      ? <>{vs}: יהיו לך {fig} {gp.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון {when}.</>
+      : <>{vs}: בדוגמה (חיסכון {ilsRound(BALANCE_EX)}, גיל {age}): {fig} {gp.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון {when}.</>;
   };
-  const medLine = (gp: FeeGap | null, when: string, src: () => Prov) => (med ? gapLine(gp, ownAny ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה', when, src) : null);
+  const medLine = (gp: FeeGap | null, when: string, src: () => Prov) => (med ? gapLine(gp, ownAny ? 'לעומת האמצעי בפועל בקטגוריה' : 'לעומת המסלול האמצעי בקטגוריה', when, src) : null);
   const atRet = `בגיל הפרישה (${ageText(plan.retire)})`;
   const liqPlan = liq ? { ...plan, retire: plan.age + liq.years } : plan;
   // W5: the reader's own pension fees are read against the default-fund price (what a member can get), not the others' averages
@@ -140,13 +161,13 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
   const fold = liq
     ? medLine(liq.gMed, `בעוד ${liq.years} שנים, כשהכסף נזיל`, () => gapProv(med!, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))
     : vsT ? null : medLine(gMed, atRet, () => gapProv(med!, 'החציון בקטגוריה', gMed!, medSrc));
-  const paid = tBase && tBase.g.feesReal > 500 ? <> {g('תשלמי', 'תשלם', 'תשלמו')} <span className="sv-nw">כ-<Est src={() => gapProv(tBase.p, 'מחיר ברירת המחדל', tBase.g, tSrc(tBase.p))}>{ilsRound(tBase.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
+  const paid = tBase && tBase.g.feesReal > 500 ? <> {ownBal && ageS != null ? g('תשלמי', 'תשלם', 'תשלמו') : 'בדוגמה:'} <span className="sv-nw">כ-<Est src={() => gapProv(tBase.p, 'מחיר ברירת המחדל', tBase.g, tSrc(tBase.p))}>{ilsRound(tBase.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
 
   const copy = () => copyText(script, (ok) => { if (ok) { setCopied('ok'); track('letter_copied'); } else { setCopied('manual'); setOpen(true); } });
   const B = brief(v, C.lever);
 
   return (
-    <article className={`panel sv-card${example ? ' sv-example' : ''}`} id={example ? undefined : f.k} aria-label={example ? `דוגמה: ${f.name}` : f.name}>
+    <article className={`${sheet ? 'sv-card sv-insheet' : 'panel sv-card'}${example ? ' sv-example' : ''}`} id={example || sheet ? undefined : f.k} aria-label={example ? `דוגמה: ${f.name}` : f.name}>
       {example && <div className="sv-ribbon">דוגמה · לא המוצר שלך</div>}
       <header className="sv-card-h">
         <div className="sv-card-t">
@@ -173,7 +194,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
       <NewsForFund k={f.k} grp={f.grp} door="saver" />
       {!example && isPension(f.prod) && my?.covers?.length ? <CoverLine covers={my.covers} insTrack={my.insTrack} salary={my.salary ?? profSalary} /> : null}
       {!example && <DepLine audit={dep.audit} onOpen={() => { setOpen(true); requestAnimationFrame(() => document.getElementById(`${f.k}-deposits`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })); }} />}
-      {!example && onChange && <Mine my={my} f={f} onChange={onChange} />}
+      {!example && onChange && <Mine my={my} f={f} onChange={onChange} onAmounts={onAmounts} />}
 
       <div className="sv-acts">
         <button type="button" className="btn primary" onClick={copy}>{copied === 'ok' ? 'ההודעה הועתקה ✓' : dorm.dormant ? 'העתקת בקשה לאיחוד' : 'העתקת הודעה לסוכן'}</button>
@@ -189,7 +210,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         <Sec title="כמה זה עולה בשקלים" tag="אומדן">
           <p>בשנה: <Est src={annualProv}>{ilsRound(annual.acc)}</Est> מצבירה (היתרה × {pcf(mine.fee)}){mine.depfee > 0 && <>, ועוד <Est src={annualProv}>{ilsRound(annual.dep)}</Est> מהפקדות (12 הפקדות × {pcf(mine.depfee)})</>}.</p>
           {med && gMed && <p>{liq ? <>{medLine(liq.gMed, `בעוד ${liq.years} שנים`, () => gapProv(med, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))} {medLine(gMed, 'אם הכסף נשאר עד גיל הפרישה', () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}</> : medLine(gMed, atRet, () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}
-            {' '}החציון: <Est src={medSrc}>{pcf(med.fee)}</Est> מצבירה{v.dep?.med != null ? <>, <Est src={() => figs.depMed()}>{pcf(med.depfee)}</Est> מהפקדה</> : null}.</p>}
+            {' '}האמצעי: <Est src={medSrc}>{pcf(med.fee)}</Est> מצבירה{v.dep?.med != null ? <>, <Est src={() => figs.depMed()}>{pcf(med.depfee)}</Est> מהפקדה</> : null}.</p>}
           {C.med0 && mine.depfee > 0 && <p className="sv-note">בקטגוריה לא מתפרסמים דמי ניהול מהפקדה, ולכן ההשוואה מניחה 0% מהפקדה (הנחה).</p>}
           {tBase && v.dflt && <p>{tBase.g.balReal > 0 ? <>{tLine}{paid}</> : 'לעומת מחיר קרנות ברירת המחדל: דמי הניהול שלך לא יקרים ממנו בהנחות האלה.'}
             {' '}מחיר הבסיס של ההליך הוא <Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.depfee)}</Est> מהפקדה ו-<Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.fee)}</Est> מצבירה{C.tPairs.length > 1 ? ', ואפשר להמיר אותו לצירוף שווה ערך מטבלת ההמרה' : ''}.
@@ -204,7 +225,7 @@ export function ProductCard({ f, data, cats, dfile, my, example, onChange, onRem
         </Sec>
 
         {isPension(f.prod) && <Sec title="כמה פנסיה זה יכול להיות" tag="אומדן גס">
-          <p className="sv-big">בגיל {ageText(plan.retire)}: <span className="sv-nw">כ-<Est src={() => penProv('bal')}>{ilsRound(out.balReal)}</Est></span> בחיסכון, וקצבה של <span className="sv-nw">כ-<Est src={() => penProv('pen')}>{ilsRound(out.pensionReal)}</Est></span> לחודש. בשקלי היום, לפני מס.</p>
+          <p className="sv-big">{ownBal ? null : <>בדוגמה (חיסכון {ilsRound(BALANCE_EX)}): </>}בגיל {ageText(plan.retire)}: <span className="sv-nw">כ-<Est src={() => penProv('bal')}>{ilsRound(out.balReal)}</Est></span> בחיסכון, וקצבה של <span className="sv-nw">כ-<Est src={() => penProv('pen')}>{ilsRound(out.pensionReal)}</Est></span> לחודש. בשקלי היום, לפני מס.</p>
           <p className="sv-note">רק מהמוצר הזה, על אותן הנחות (תשואה {pcf(ret)} ברוטו בשנה). האומדן לא מנכה את עלות הכיסוי הביטוחי (נכות ושארים) שהקרן גובה מההפקדות, ולכן הוא נוטה להיות גבוה.</p>
           <p className="sv-coef">קצבה חודשית, אומדן: <Est src={() => penProv('pen')}>{ilsRound(out.pensionReal)}</Est> · מקדם <Sourced src={coefQ != null ? () => penProv('pen') : pick.prov}><b className="num">{coef}</b></Sourced> <span className={pick.real && coefQ == null ? 'chip pass' : 'chip est'}>{coefQ != null ? 'מקדם שלך' : pick.label}</span></p>
           <NumIn label={`מקדם המרה (${coefQ != null ? 'שלך' : cf.why})`} value={coef} min={100} max={400} step={1} onCommit={setCoefQ} />
@@ -244,7 +265,7 @@ function Sec({ title, tag, children }: { title: string; tag?: string; children: 
 }
 
 /** the reader's own numbers, from the annual statement; optional, kept in this browser. A fee above the legal ceiling is not saved. */
-function Mine({ my, f, onChange }: { my?: MyProduct; f: FundX; onChange: (p: Partial<MyProduct>) => void }) {
+function Mine({ my, f, onChange, onAmounts }: { my?: MyProduct; f: FundX; onChange: (p: Partial<MyProduct>) => void; onAmounts?: () => void }) {
   const has = [my?.balance, my?.monthly, my?.fee, my?.depfee].filter((x) => x != null).length;
   const [open, setOpen] = useState(has === 0);
   const [err, setErr] = useState<Partial<Record<'balance' | 'monthly' | 'fee' | 'depfee', string>>>({});
@@ -269,8 +290,14 @@ function Mine({ my, f, onChange }: { my?: MyProduct; f: FundX; onChange: (p: Par
     <details className="sv-mine" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>{has ? `הנתונים שלך (${has}/4)` : 'הנתונים שלך מהדוח השנתי (לא חובה)'}</summary>
       <div className="sv-form">
-        {field('balance', 'יתרה היום, ש"ח', 'למשל 150000', 1000)}
-        {field('monthly', 'הפקדה חודשית, ש"ח', 'למשל 2200', 100)}
+        {onAmounts ? (
+          // rollout 17.2: the balance and the deposit live in the shared amounts sheet (one writer, one reader)
+          <div className="sv-amt-row"><span>{my?.balance != null ? <>יתרה <b className="num">{ilsRound(my.balance)}</b>{my.monthly != null ? <>, הפקדה <b className="num">{ilsRound(my.monthly)}</b> בחודש</> : null}</> : 'יתרה והפקדה: עדיין לדוגמה'}</span>
+            <button type="button" className="btn" id={`${f.k}-amounts`} onClick={onAmounts}>{my?.balance != null ? 'לשנות את הסכומים' : 'להזין כמה יש לי וכמה מפקידים'}</button></div>
+        ) : <>
+          {field('balance', 'יתרה היום, ש"ח', 'למשל 150000', 1000)}
+          {field('monthly', 'הפקדה חודשית, ש"ח', 'למשל 2200', 100)}
+        </>}
         {field('fee', <>מצבירה, % <Tip k="fee" /></>, `ממוצע במסלול: ${pcf(f.fee)}`, 0.01, cap.fee)}
         {field('depfee', <>מהפקדה, % <Tip k="depfee" /></>, f.depfee != null ? `ממוצע במסלול: ${pcf(f.depfee)}` : 'אם יש', 0.05, cap.depfee)}
       </div>

@@ -63,6 +63,8 @@ export interface MonthGridProps {
   labels?: 'auto' | 'full' | 'short';  // month names: auto = full up to three columns, short from four
   onCell?: (rowKey: string, k: string | null) => void;  // k = null for the average column
   onCol?: (k: string) => void;         // a column head (the track sheet)
+  onAvg?: () => void;                  // the average column's head (rollout card: the type-month sheet); absent = a plain head
+  avgId?: string;                      // the average head's id when it is a button (default "avg-head")
   more?: { label: string; onClick: () => void; id?: string };  // "עוד 6 חודשים ▾" / "עוד שנים ▾"
   loading?: boolean;                   // skeleton rows of the final height
   skeletonRows?: number;               // default 6
@@ -140,7 +142,11 @@ export function MonthGrid(props: MonthGridProps) {
         ))}
         {showAvg ? (
           <th scope="col" className="avg" style={{ '--c': 'var(--line)' } as CSSProperties}>
-            <span className="mg-col"><i className="mg-bar" aria-hidden="true" /><b>{avgA}</b><small>{avgB}</small></span>
+            {props.onAvg ? (
+              <button type="button" className="mg-col mg-avgh" id={props.avgId ?? 'avg-head'} onClick={props.onAvg} aria-haspopup="dialog"><i className="mg-bar" aria-hidden="true" /><b>{avgA}</b><small>{avgB}</small></button>
+            ) : (
+              <span className="mg-col"><i className="mg-bar" aria-hidden="true" /><b>{avgA}</b><small>{avgB}</small></span>
+            )}
           </th>
         ) : null}
       </tr>

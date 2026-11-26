@@ -1,0 +1,161 @@
+/* Rollout L2-a: the fund card /funds/:k (spec §3, §16–18; mockup v4 frames card_*). Tokens only from styles.css; every class is
+   prefixed `fc-` and scoped under the card, so nothing else on the site changes. */
+
+.fc { padding-bottom: 6px; }
+.fc .tbar { margin-bottom: 4px; }
+
+/* ---------- head: the product tile, "מגדל · פנסיה כללי", the fund's name and number, worded actions ---------- */
+.fc-head { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.fc-tile { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 12px; background: var(--accent-soft); }
+.fc-tile svg { width: 34px; height: 34px; }
+.fc-head h1 { flex: 1; min-width: 0; margin: 0; font-size: 17px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 800; }
+.fc-h1 { display: inline; }
+.fc-type { display: inline-block; padding-block: 10px; margin-block: -10px; color: inherit; text-decoration: none; }
+.fc-type:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
+.fc-mine { display: inline-block; margin-inline-start: 8px; padding: 0 8px; border: 1px solid var(--accent-line); border-radius: var(--r-pill); font-size: 11.5px; font-weight: 700; line-height: 1.5; color: var(--accent-text); vertical-align: 2px; }
+.fc-gone { display: inline-block; margin-inline-start: 6px; padding: 0 7px; border-radius: var(--r-pill); background: var(--panel3); font-size: 11px; font-weight: 700; color: var(--muted); }
+.fc-head h1 small { display: block; margin-top: 1px; font-size: 12px; font-weight: 500; line-height: 1.35; color: var(--muted); letter-spacing: 0; }
+.fc-act { display: flex; gap: 6px; flex: none; }
+.fc-act button { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 50px; height: 46px; padding: 0; border-radius: 13px; border: 1px solid var(--line-soft); background: var(--panel); box-shadow: var(--e-1); font: inherit; font-size: 18px; line-height: 1.1; color: var(--fg); cursor: pointer; transition: transform var(--fast); }
+.fc-act button small { font-size: 11px; font-weight: 500; color: var(--muted); }
+.fc-act button[aria-pressed="true"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-text); }
+.fc-act button[aria-pressed="true"] small { color: var(--accent-text); }
+.fc-act button:disabled { opacity: 0.5; cursor: default; }
+.fc-act button:active { transform: scale(0.96); }
+
+/* ---------- a lens ---------- */
+.fc-lens { margin-top: 2px; }
+.fc-lens > .mgw, .fc-lens > .ro-take { margin-top: 8px; }
+.fc .guard { margin-top: 8px; }
+
+/* the compare button (ember, 48 px) */
+.fc-cta { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 48px; margin-top: 10px; padding: 6px 14px; border-radius: 14px; background: var(--accent); color: #fff; font-weight: 700; font-size: 14.5px; text-align: center; text-decoration: none; transition: transform var(--fast); }
+.fc-cta svg { width: 18px; height: 18px; flex: none; stroke: currentColor; }
+.fc-cta:active { transform: scale(0.98); }
+
+/* the three rows (isometric icon, title, one line, 52 px) */
+.fc-rows { display: grid; gap: 8px; margin-top: 10px; }
+.fc-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--line-soft); background: var(--panel); box-shadow: var(--e-1); font: inherit; color: var(--fg); text-align: start; cursor: pointer; transition: transform var(--fast); }
+.fc-row:active { transform: scale(0.98); }
+.fc-ic { display: grid; place-items: center; flex: none; width: 38px; height: 38px; }
+.fc-ic svg { max-width: 38px; max-height: 38px; }
+.fc-rt { flex: 1; min-width: 0; }
+.fc-rt b { display: block; font-size: 14.5px; line-height: 1.3; }
+.fc-rt small { display: block; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+.fc-go { flex: none; margin-inline-start: auto; font-size: 15px; font-weight: 700; color: var(--accent-text); }
+
+/* the long lens: three period tiles */
+.fc-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.fc-tile-b { display: block; width: 100%; min-height: 64px; padding: 8px 6px 9px; border-radius: var(--r-3); border: 0; background: var(--panel2); font: inherit; color: var(--fg); text-align: center; cursor: pointer; }
+.fc-tile-b[aria-pressed="true"] { background: var(--panel); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--fg) 55%, transparent); }
+.fc-tile-b:disabled { opacity: 0.5; cursor: default; }
+.fc-tile-b small { display: block; font-size: 12px; color: var(--muted); }
+.fc-tile-b b { display: block; font-size: 17px; font-weight: 800; line-height: 1.35; }
+.fc-tile-b b.pos { color: var(--up); }
+.fc-tile-b b.neg { color: var(--down); }
+.fc-tile-b em { display: block; font-style: normal; font-size: 12px; color: var(--muted); }
+.fc-chart { margin-top: 8px; }
+
+/* a facts list in a sheet or a card (manager, product, assets, fee; the fee sheet's sum) */
+.fc-dl { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; margin: 0; font-size: 14px; line-height: 1.45; }
+.fc-dl dt { color: var(--muted); }
+.fc-dl dd { margin: 0; font-weight: 700; text-align: end; }
+.fc-dl dd small { font-weight: 500; font-size: 12px; color: var(--muted); }
+.fc-dl b { color: var(--fg); }
+.fc-facts { margin-top: 8px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line-soft); background: var(--panel); box-shadow: var(--e-1); }
+#fee-sheet + .ro-rowlink, #fee-sheet ~ .cs-note { margin-top: 12px; }
+
+/* ---------- "להחלטה" (agent) ---------- */
+.fc-dec-tiles { margin-top: 8px; }
+.fc-dec-tiles .kpis { margin: 0; }
+.fc-abar { margin-top: 10px; }
+#to-pro { justify-content: flex-start; }
+
+/* ---------- "מקצועי": today's panels in sections ---------- */
+.fc-prohead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 4px; font-size: 12.5px; color: var(--muted); }
+.fc-pill { flex: none; height: 44px; padding: 0 14px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 13px; font-weight: 500; color: var(--link); white-space: nowrap; cursor: pointer; }
+.fc-sec { margin-top: 8px; border-radius: 16px; border: 1px solid var(--line-soft); background: var(--panel); box-shadow: var(--e-1); }
+.fc-sec > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 46px; padding: 10px 14px; list-style: none; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.fc-sec > summary::-webkit-details-marker { display: none; }
+.fc-sec > summary::after { content: "▾"; flex: none; color: var(--muted); transition: transform var(--mid); }
+.fc-sec[open] > summary::after { transform: rotate(180deg); }
+.fc-sec-in { padding: 0 10px 12px; }
+/* the panel inside a section: its title is the section's summary, so the panel keeps only its controls and drops its own frame */
+.fc-sec-in > .panel, .fc-sec-in > section.panel { margin: 0; padding: 0; border: 0; box-shadow: none; background: none; }
+.fc-sec-in > .panel > .hd > h2 { display: none; }
+.fc-sec-in > .panel > .hd:not(:has(.aside)) { display: none; }
+.fc-sec-in > .panel + .panel { margin-top: 10px; }
+.fc-sec-in > .kpis { margin: 0; }
+.fc-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
+
+/* the plain-words sheet: SaverVerdict as it is, under the sheet's own title */
+.fc-plain .sv-card { margin: 0; border: 0; box-shadow: none; padding: 0; background: none; }
+.fc-plain .sv-card > .hd > h2 { display: none; }
+
+@media (min-width: 900px) {
+  .fc-pro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; align-items: start; }
+  .fc-pro > .fc-prohead, .fc-pro > #sec-kpi, .fc-pro > #sec-dec, .fc-pro > #sec-heat, .fc-pro > #sec-crises, .fc-pro > .ro-stamp { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-act button, .fc-cta, .fc-row, .fc-sec > summary::after { transition: none !important; }
+}
+
+/* one column against its average: the average column carries no colour bar (mockup v4) */
+.fc table.mg th.avg .mg-bar { visibility: hidden; }
+.fc-nb { white-space: nowrap; }
+
+/* first screen (18.7: the sentence and the whole grid, fee row included, above the bottom bar at 390 × 664) */
+.fc-head { margin-top: -8px; }
+.fc .ro-tabs { padding-bottom: 4px; }
+.fc .ro-take { margin-top: 6px; padding-block: 8px; }
+.fc-lens > .mgw { margin-top: 6px; }
+/* years lens: "3 שנים, בשנה" on one line (mockup v4 card_y) */
+.fc table.mg.yrs col:first-child { width: 96px !important; }
+.fc table.mg.yrs tfoot th.m { white-space: nowrap; }
+/* "להחלטה": the pension pack in one section, closed (budget 18.7: sections closed), mounted so its figures are on the page */
+.fc-pack { margin-top: 8px; border-radius: 16px; border: 1px solid var(--line-soft); background: var(--panel); box-shadow: var(--e-1); }
+.fc-pack > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 46px; padding: 10px 14px; list-style: none; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.fc-pack > summary::-webkit-details-marker { display: none; }
+.fc-pack > summary::after { content: "▾"; flex: none; color: var(--muted); }
+.fc-pack[open] > summary::after { transform: rotate(180deg); }
+.fc-pack > .fc-sec-in > .panel { margin: 0; border: 0; box-shadow: none; }
+.fc .fc-head { margin-bottom: 3px; }
+.fc .ro-tabs { padding-top: 0; }
+.fc .ro-take { line-height: 1.36; }
+
+/* build review B1 (P2-4): on a desktop the one-track lenses (months, years, long view, facts) are one reading column, so the track's
+   figure and its average sit side by side instead of 400 px apart; "מקצועי" keeps its two-column layout. */
+@media (min-width: 900px) {
+  .fc-lens:not(.fc-pro) { max-width: 600px; }
+}
+/* build review B1 (P3-3): the pension pack is open in "להחלטה", so its "?" tips and sourced quarter figures are first-layer targets:
+   44 × 32 at least, without moving the text (the fees board's rule) */
+#lens-dec .fc-pack .tip-b { min-width: 32px; min-height: 44px; margin-block: -14px; border-radius: 12px; vertical-align: middle; }
+#lens-dec :is(a.src, button.src) { display: inline-block; min-width: 32px; min-height: 44px; padding-block: 10px; margin-block: -10px; text-align: center; }
+#lens-dec .fc-pack a:not(.src) { display: inline-block; min-height: 44px; padding-block: 12px; margin-block: -12px; }
+/* coordinator 26.11.26 (B1 P2-3): "להחלטה" opens on six compact tiles, three a row: fee, assets, equity, then the pension facts
+   (actuarial balance, service index, claims); the whole pack stays closed below ("כל נתוני ההחלטה ›"), ≤ 2.0 screens to the stamp */
+#lens-dec .fc-dec-tiles > .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#lens-dec .fc-dec-tiles > .kpis + .kpis { margin-top: 8px; }
+#lens-dec .fc-dec-tiles .kpi { padding: 10px 10px 9px; gap: 1px; }
+#lens-dec .fc-dec-tiles .kpi .l { font-size: 12px; line-height: 1.3; }
+#lens-dec .fc-dec-tiles .kpi .v { font-size: 18px; line-height: 1.25; }
+#lens-dec .fc-dec-tiles .kpi .s { font-size: 12px; line-height: 1.35; }
+/* the tiles are three a row: no "?" in their labels (each term is explained in the pack below and in every figure's source sheet) */
+#lens-dec .fc-dec-tiles .tip { display: none; }
+
+/* tests lane gates (26.11.26): the shared "?" tip inside the card's lenses ("להחלטה", "מקצועי") as a 44 × 32 target at 11 px, without
+   moving the line (negative block margin); the decision pack's links ("כל ההליכים", "התפלגות דמי הניהול", "הקובץ") at least 32 px
+   high in "מקצועי" too; the years lens' partial-year label ("עד אוק׳") at 11 px */
+.fc .tip-b { min-width: 44px; min-height: 32px; margin-block: -8px; border-radius: 16px; font-size: 11px; vertical-align: middle; }
+#lens-dec .fc-pack .tip-b { min-width: 44px; min-height: 32px; margin-block: -8px; }
+.fc .ppk a:not(.src) { display: inline-block; min-height: 32px; padding-block: 7px; margin-block: -7px; }
+.fc table.mg th.m small, .fc .mg-col small { font-size: 11px; }
+/* contrast (axe, AA): the compare button's words, white on the deep ember in the light look, ink on the ember in the dark (.dentry-go) */
+.fc-cta { background: var(--accent-text); }
+:root[data-theme="dark"] .fc-cta { background: var(--accent); color: var(--accent-ink); }
+/* build review B2 (P3-b): on a desktop the one-track lenses are a 600-px reading column at the start (right) of the row; the head and the
+   lens tabs take the same width, so the block reads as one column ("מקצועי" keeps the full width) */
+@media (min-width: 900px) {
+  .fc:not(:has(.fc-pro)) :is(.fc-head, #views) { max-width: 600px; }
+}

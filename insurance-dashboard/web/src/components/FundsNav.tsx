@@ -34,7 +34,10 @@ export function FundsNav() {
   const { p, v } = here(loc);
   if (SAVINGS_TABS.some(([, , on]) => on(p, v))) return (
     <nav className="subnav" aria-label="חיסכון">
-      {SAVINGS_TABS.map(([to, l, on]) => { const a = on(p, v); return <Link key={to} to={to} className={a ? 'active' : ''} aria-current={a ? 'page' : undefined}>{l}</Link>; })}
+      {/* B7: on /funds the lens "החודש" is that page ("מובילים ומאספים"), so its link is /funds, not /flows. Build review B1 (novice #8):
+          from every page of the section (/savings included) "החודש" opens the hub "החודש בחיסכון" (/funds); /flows stays one tap away
+          in the hub's own second row ("מי ניצח") */}
+      {SAVINGS_TABS.map(([to, l, on]) => { const a = on(p, v); return <Link key={to} to={to === '/flows' ? '/funds' : to} className={a ? 'active' : ''} aria-current={a ? 'page' : undefined}>{l}</Link>; })}
     </nav>
   );
   // a track card (/funds/p2009) belongs to the tracks tab
@@ -89,7 +92,7 @@ export function CompareTray() {
   return (
     <div className="cmptray" role="region" aria-label="מגש השוואה">
       <Link className="cmptray-go" to={`/funds/compare?k=${keys.join(',')}`}><Icon name="compare" /><span>השוואה · <span className="num">{keys.length}</span></span></Link>
-      <button type="button" className="cmptray-x" onClick={clear} aria-label="ריקון מגש ההשוואה"><Icon name="x" /></button>
+      <button type="button" className="cmptray-x" style={{ minWidth: 44 }} onClick={clear} aria-label="ריקון מגש ההשוואה"><Icon name="x" /></button>
     </div>
   );
 }

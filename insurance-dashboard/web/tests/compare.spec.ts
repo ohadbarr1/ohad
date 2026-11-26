@@ -403,7 +403,7 @@ test.describe('doors (D1–D4, B3)', () => {
     await page.locator('#dec-doc').click();
     await expect(page).toHaveURL(/\/funds\/compare\/print\?k=/);
     await page.waitForLoadState('networkidle');
-    expect((await page.locator('main').innerText()).length).toBeGreaterThan(400);
+    await expect.poll(async () => (await page.locator('main').innerText()).length, { timeout: 15_000 }).toBeGreaterThan(400);
     await noErrors(errors);
   });
 
@@ -431,17 +431,18 @@ test.describe('doors (D1–D4, B3)', () => {
     await noErrors(errors);
   });
 
-  test('Pro phone bar: "מסלולים" → /funds/compare, no "השוואה" to /industry (B3)', async ({ page }) => {
+  // rollout B8 (rollout spec §9, §18.3): Pro's "מסלולים" now opens the screener (/funds/screen); compare stays one tap away from it
+  test('Pro phone bar: "מסלולים" → /funds/screen (rollout B8), no "השוואה" to /industry (B3)', async ({ page }) => {
     const errors = await visitor(page, 'pro');
     await page.goto('/?door=pro', { waitUntil: 'networkidle' });
     const bar = page.getByRole('navigation', { name: 'ראשי' });
     const tracks = bar.getByRole('link', { name: 'מסלולים', exact: true });
     await expect(tracks).toBeVisible();
-    expect(new URL(await tracks.evaluate((a) => (a as HTMLAnchorElement).href)).pathname).toBe('/funds/compare');
+    expect(new URL(await tracks.evaluate((a) => (a as HTMLAnchorElement).href)).pathname).toBe('/funds/screen');
     const wrong = await bar.locator('a').evaluateAll((as) => as.filter((a) => (a as HTMLElement).innerText.trim() === 'השוואה' && /\/industry/.test((a as HTMLAnchorElement).getAttribute('href') ?? '')).length);
     expect(wrong).toBe(0);
     await tracks.click();
-    await expect(page).toHaveURL(/\/funds\/compare/);
+    await expect(page).toHaveURL(/\/funds\/screen/);
     await noErrors(errors);
   });
 });
@@ -551,10 +552,11 @@ for (const door of ['saver', 'agent', 'pro'] as Door[]) {
       await page.goto('/', { waitUntil: 'networkidle' });
       const row = page.locator('#home-mine');
       if (await row.count()) {
+        // rollout R1 (spec 8): the "my track" row states the month and the year and opens the card (the compare entry above keeps its route)
+        await expect(row).toContainText('בשנה האחרונה');
         await row.click();
-        await landed(page, 3);
-        expect(keysOf(page)[0]).toBe('p2102');
-        await expect(page.locator('#fee-own')).toContainText('לפי הדוח שלך');
+        await expect(page).toHaveURL(/\/funds\/p2102/);
+        await expect(page.locator('#fee-line')).toContainText('לפי הדוח שלך');
         await backTo(page, '/');
       } else {
         await page.goto('/funds/compare', { waitUntil: 'networkidle' });

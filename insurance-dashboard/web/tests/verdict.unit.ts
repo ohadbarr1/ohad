@@ -37,7 +37,7 @@ const dfile: DefaultFile = { tenders: [
   const r = textOf(v.lines.find((l) => l.key === 'rank')!.parts);
   ok(r.includes('במקום 6–7 מתוך 7') && r.includes('ב-5 השנים האחרונות'), `rank line: ${r}`);
   const g = textOf(v.lines.find((l) => l.key === 'ret')!.parts);
-  ok(g.includes('נמוכה ב-0.75 נקודות אחוז') && g.includes('9.70%'), `return line: ${g}`);
+  ok(g.includes('נמוכה ב-0.75 אחוז') && g.includes('9.70%'), `return line: ${g}`);
   const v1 = verdictOf(cat[0], cat, 202609, dfile);
   ok(v1.ret?.rank?.lo === 1 && v1.ret.rank.hi === 2, 'p1 10.5 vs p2 10.45: shared 1–2');
   ok(placeTone(v1.ret!.rank) === 'good', '1–2 of 7: top quarter (⌈7/4⌉ = 2)');
@@ -140,10 +140,10 @@ const dfile: DefaultFile = { tenders: [
   const v2 = verdictOf(cat[1], cat, 202609, dfile);  // p2 10.45 shares 1–2 with p1
   ok(placeTone({ lo: 2, hi: 3, n: 7 } as never) === 'good' && placeTone({ lo: 3, hi: 4, n: 7 } as never) === 'mid' && placeTone({ lo: 5, hi: 6, n: 7 } as never) === 'mid' && placeTone({ lo: 7, hi: 7, n: 7 } as never) === 'bad', 'shared places by the best place: 2–3/7 top, 3–4 and 5–6 middle, 7 bottom');
   const b = brief(v2).map((l) => textOf(l.parts));
-  ok(b.length <= 3 && b[0].includes('מקום 1–2 מתוך 7') && b[0].includes('ברבע העליון') && b.some((t) => t.includes('דמי הניהול מצבירה')), `brief: at most 3 lines, place and fee: ${b.join(' | ')}`);
+  ok(b.length <= 3 && b[0].includes('מקום 1–2 מתוך 7') && b[0].includes('מהראשונים') && b.some((t) => t.includes('דמי הניהול מצבירה')), `brief: at most 3 lines, place and fee: ${b.join(' | ')}`);
   const young = mk('p10', null, 0.15, { a3: 12.1, a5: null });
   const yv = verdictOf(young, [...cat, young], 202609, dfile);
-  ok(yv.ret?.why === 'אין למסלול 5 שנות היסטוריה' && textOf(brief(yv)[0].parts).includes('3Y, כי אין למסלול 5 שנות היסטוריה'), `no 5Y: says why (${yv.ret?.why})`);
+  ok(yv.ret?.why === 'אין למסלול 5 שנות היסטוריה' && textOf(brief(yv)[0].parts).includes('3 שנים, כי אין למסלול 5 שנות היסטוריה'), `no 5Y: says why (${yv.ret?.why})`);
   const stale = { ...mk('p12', 9.9, 0.15, { a3: 12.1 }), net: { a5: 1, y12: 1 } } as VFund;
   const sv = verdictOf(stale, [...cat, stale], 202609, dfile);
   ok(sv.ret?.per === 'a5' && sv.ret.v === 9.9 && sv.ret.why == null, 'a stale net field is ignored: the published gross 5Y is read');
@@ -205,7 +205,7 @@ const dfile: DefaultFile = { tenders: [
   const hs = dana.map((x) => ({ ...x, prod: 'השתלמות', track: 'כללי' }));
   const vh = verdictOf(hs[3], hs, 202609, dfile, { fee: 0.7, depfee: 0 });
   const th = textOf(vh.lines.find((l) => l.key === 'fee')!.parts);
-  ok(vh.fee.basis === 'avg' && th.includes('מעל חציון הממוצע בפועל') && th.includes('התקרה בחוק: 1.05%') && th.includes('ברבע המסלולים הזולים') && !MOST.test(th), `השתלמות, own: ${th}`);
+  ok(vh.fee.basis === 'avg' && th.includes('מעל האמצעי בפועל') && th.includes('התקרה בחוק: 1.05%') && th.includes('ברבע המסלולים הזולים') && !MOST.test(th), `השתלמות, own: ${th}`);
   // W5: a gemel on /my with no monthly deposit: no deposit-fee line
   const gm = dana.map((x) => ({ ...x, prod: 'גמל', track: 'כללי' }));
   const vg = verdictOf(gm[3], gm, 202609, dfile, { fee: 0.5, monthly: null });

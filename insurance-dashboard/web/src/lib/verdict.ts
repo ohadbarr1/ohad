@@ -50,6 +50,8 @@ export interface Verdict {
   cat: string; prod: string; track: string;
   peers: VFund[];
   self: boolean;
+  /** the reader's own track (a saved record was passed): "המסלול שלך"; else "המסלול" (build review B1) */
+  yours?: boolean;
   ret: { per: Per; basis: 'gross'; v: number | null; rank: TieRank | null; med: number | null; gap: number | null; band: number; ranked: VFund[];
     /** why the window is not 5Y, in a few words (null on 5Y) */
     why: string | null } | null;
@@ -86,6 +88,8 @@ export const fx = (v: number, d = 2) => { const t = v.toLocaleString('en-US', { 
 export const pcf = (v: number | null | undefined) => (v == null ? '–' : `${fx(v, v === Math.round(v) ? 0 : 2)}%`);
 export const pcr = (v: number | null | undefined, d = 2) => (v == null ? '–' : `${fx(v, d)}%`);
 const ymOf = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(2, 4)}`;
+/** "in the tender": the label already carries the article ("ההליך הרביעי"), so the prefix replaces it: "בהליך הרביעי", never "בההליך" (B4) */
+export const inTender = (label?: string | null) => (!label ? 'בהליך' : label.startsWith('ההליך') ? `ב${label.slice(1)}` : `ב${label}`);
 export const tenderSpan = (t: Pick<Tender, 'from' | 'to'>) => `מ-${ymOf(t.from)} עד ${ymOf(t.to)}`;
 
 /** the track's peers, as the fund card ranks them */
@@ -178,7 +182,7 @@ export function verdictOf(f: VFund, all: VFund[], asof: number, dfile: DefaultFi
   const svc: Verdict['svc'] = row ? { row, label: dec?.segments.pension?.label ?? 'קרנות פנסיה' } : null;
   const bm = f.fam === 'insurance' || /ביטוח|פוליסות/.test(f.prod) ? bmKind(f.prod) : null;
 
-  const v: Verdict = { cat: catOf(f), prod: f.prod, track: f.track, peers, self, ret, fee, dep, dflt, lever, eq, svc, bm, tiles: [], lines: [] };
+  const v: Verdict = { cat: catOf(f), prod: f.prod, track: f.track, peers, self, yours: !!mine, ret, fee, dep, dflt, lever, eq, svc, bm, tiles: [], lines: [] };
   v.tiles = tilesOf(v);
   v.lines = linesOf(v);
   return v;
@@ -200,28 +204,28 @@ const toneOf = (w: Word): Tone => (w === 'low' ? 'good' : w === 'high' ? 'bad' :
 function feeWord(fe: Verdict['fee']): string {
   if (fe.word == null) return '';
   if (fe.basis === 'tender') return `${fe.word === 'same' ? 'כמו בקרנות' : fe.word === 'low' ? 'מתחת לקרנות' : 'מעל קרנות'} ברירת המחדל (${pcf(fe.ref)})`;
-  if (fe.own) return `${fe.word === 'same' ? 'כמו ' : fe.word === 'low' ? 'מתחת ל' : 'מעל '}חציון הממוצע בפועל (${pcf(fe.med)})`;
-  return 'ממוצע במסלול, ' + (fe.word === 'low' ? `זולים מהחציון (${pcf(fe.med)})` : fe.word === 'high' ? `יקרים מהחציון (${pcf(fe.med)})` : 'כמו החציון');
+  if (fe.own) return `${fe.word === 'same' ? 'כמו ' : fe.word === 'low' ? 'מתחת ל' : 'מעל '}האמצעי בפועל (${pcf(fe.med)})`;
+  return 'ממוצע במסלול, ' + (fe.word === 'low' ? `זולים מהאמצעי (${pcf(fe.med)})` : fe.word === 'high' ? `יקרים מהאמצעי (${pcf(fe.med)})` : 'כמו האמצעי');
 }
-const placeWord = (t: Tone) => (t === 'good' ? 'ברבע העליון' : t === 'bad' ? 'ברבע התחתון' : 'באמצע הקטגוריה');
+const placeWord = (t: Tone) => (t === 'good' ? 'מהראשונים' : t === 'bad' ? 'מהאחרונים' : 'באמצע');
 export const rankLabel = (r: TieRank) => `${rankText(r)} מתוך ${r.n}`;
 
 function tilesOf(v: Verdict): Tile[] {
   const out: Tile[] = [];
   if (v.ret) {
     const t = placeTone(v.ret.rank);
-    out.push({ key: 'ret', label: `תשואה, ${v.ret.per === 'a5' ? '5Y' : v.ret.per === 'a3' ? '3Y' : 'LTM'}`, value: { t: pcr(v.ret.v), fig: 'ret' },
-      word: v.ret.gap == null ? '' : Math.abs(v.ret.gap) < v.ret.band ? 'כמו החציון' : v.ret.gap > 0 ? `מעל החציון (${pcr(v.ret.med)})` : `מתחת לחציון (${pcr(v.ret.med)})`, tone: v.ret.gap == null || Math.abs(v.ret.gap) < v.ret.band ? 'mid' : v.ret.gap > 0 ? 'good' : 'bad' });
-    if (v.ret.rank) out.push({ key: 'rank', label: 'מקום בקטגוריה', value: { t: rankLabel(v.ret.rank), fig: 'rank' }, word: placeWord(t), tone: t });
+    out.push({ key: 'ret', label: `תשואה, ${v.ret.per === 'a5' ? '5 שנים' : v.ret.per === 'a3' ? '3 שנים' : '12 חודשים'}`, value: { t: pcr(v.ret.v), fig: 'ret' },
+      word: v.ret.gap == null ? '' : Math.abs(v.ret.gap) < v.ret.band ? 'כמו האמצעי' : v.ret.gap > 0 ? `מעל האמצעי (${pcr(v.ret.med)})` : `מתחת לאמצעי (${pcr(v.ret.med)})`, tone: v.ret.gap == null || Math.abs(v.ret.gap) < v.ret.band ? 'mid' : v.ret.gap > 0 ? 'good' : 'bad' });
+    if (v.ret.rank) out.push({ key: 'rank', label: 'המקום', value: { t: rankLabel(v.ret.rank), fig: 'rank' }, word: placeWord(t), tone: t });
   }
   if (v.fee.v != null) out.push({ key: 'fee', label: v.fee.own ? 'דמי ניהול מצבירה, שלך' : 'דמי ניהול מצבירה', value: { t: pcf(v.fee.v), fig: 'fee' },
     word: feeWord(v.fee), tone: toneOf(v.fee.word) });
   // W5: the reader's own pension deposit fee above the default-fund price takes the tile (the default-fund line stays below)
   const depUp = v.dflt && v.dep?.basis === 'tender' && v.dep.word === 'high' && v.dep.v != null;
   if (depUp) out.push({ key: 'dep', label: 'מהפקדה, שלך', value: { t: pcf(v.dep!.v), fig: 'dep' }, word: `מעל קרנות ברירת המחדל (${pcf(v.dep!.ref)})`, tone: 'bad' });
-  else if (v.dflt) out.push({ key: 'dflt', label: 'קרן ברירת מחדל', value: v.dflt.winner ? 'כן' : 'לא', word: v.dflt.winner ? `${v.dflt.tender.label ?? v.dflt.tender.id}, ${tenderSpan(v.dflt.tender)}` : `לא בין הזוכות ב${v.dflt.tender.label ?? 'הליך'}`, tone: 'info' });
+  else if (v.dflt) out.push({ key: 'dflt', label: 'קרן ברירת מחדל', value: v.dflt.winner ? 'כן' : 'לא', word: v.dflt.winner ? `${v.dflt.tender.label ?? v.dflt.tender.id}, ${tenderSpan(v.dflt.tender)}` : `לא בין הזוכות ${inTender(v.dflt.tender.label)}`, tone: 'info' });
   else if (v.dep && v.dep.v != null && !v.dep.quiet) out.push({ key: 'dep', label: v.dep.own ? 'מהפקדה, שלך' : 'מהפקדה, ממוצע', value: { t: pcf(v.dep.v), fig: 'dep' },
-    word: v.dep.med == null ? '' : `${v.dep.word === 'same' ? 'כמו ' : v.dep.word === 'low' ? 'מתחת ל' : 'מעל '}${v.dep.own ? 'חציון הממוצע בפועל' : 'החציון'} (${pcf(v.dep.med)})`,
+    word: v.dep.med == null ? '' : `${v.dep.word === 'same' ? 'כמו ' : v.dep.word === 'low' ? 'מתחת ל' : 'מעל '}${v.dep.own ? 'האמצעי בפועל' : 'האמצעי'} (${pcf(v.dep.med)})`,
     tone: toneOf(v.dep.word) });
   return out;
 }
@@ -235,15 +239,15 @@ function ownFeeParts(v: Verdict, short: boolean): Part[] {
     const both = dp && dp.basis === 'tender';
     return [short ? 'דמי הניהול שלך: ' : 'דמי הניהול שלך (מהדוח שלך): ', { t: pcf(fe.v), fig: 'fee' }, ' מצבירה', ...(dp ? [' ו-', { t: pcf(dp.v), fig: 'dep' as Fig }, ' מהפקדה'] : []),
       `. בקרנות ברירת המחדל${short ? '' : ' (המחיר למצטרפים דרכן)'}: `, { t: pcf(fe.ref), fig: 'tfee' }, ' מצבירה', ...(both ? [' ו-', { t: pcf(dp!.ref), fig: 'tdep' as Fig }, ' מהפקדה'] : []), '.',
-      ...(short ? [] : [' הממוצע שמשלמים בפועל העמיתים במסלולים בקטגוריה: חציון ', { t: pcf(fe.med), fig: 'feeMed' as Fig }, ' מצבירה. זה ממוצע, לא מחיר: יש מי שמשלם יותר ויש מי שמשלם פחות.'])];
+      ...(short ? [] : [' הממוצע שמשלמים בפועל העמיתים במסלולים מאותו סוג: האמצעי ', { t: pcf(fe.med), fig: 'feeMed' as Fig }, ' מצבירה. זה ממוצע, לא מחיר: יש מי שמשלם יותר ויש מי שמשלם פחות.'])];
   }
   const w = fe.word === 'same' ? 'כמו ' : fe.word === 'low' ? 'מתחת ל' : fe.word === 'high' ? 'מעל ' : '';
   const out: Part[] = [short ? 'דמי הניהול שלך מצבירה: ' : 'דמי הניהול שלך מצבירה (מהדוח שלך): ', { t: pcf(fe.v), fig: 'fee' }];
-  if (fe.med != null) out.push(w ? `, ${w}חציון הממוצע בפועל בקטגוריה (` : '. חציון הממוצע בפועל בקטגוריה: ', { t: pcf(fe.med), fig: 'feeMed' }, w ? ')' : '');
-  if (fe.q1 != null && fe.q1 < (fe.med ?? Infinity) - 0.005) out.push(short ? '; ברבע הזול: עד ' : '. ברבע המסלולים הזולים הממוצע עד ', { t: pcf(fe.q1), fig: 'feeQ1' });
+  if (fe.med != null) out.push(w ? `, ${w}האמצעי בפועל בסוג (` : '. האמצעי בפועל בסוג: ', { t: pcf(fe.med), fig: 'feeMed' }, w ? ')' : '');
+  if (fe.q1 != null && fe.q1 < (fe.med ?? Infinity) - 0.005) out.push(short ? '; ברבע הזול מהמסלולים: עד ' : '. ברבע המסלולים הזולים הממוצע עד ', { t: pcf(fe.q1), fig: 'feeQ1' });
   if (!short && fe.cap != null) out.push(`. התקרה בחוק: ${pcf(fe.cap)}`);
   out.push('.');
-  if (!short && dp && dp.med != null) out.push(' מהפקדה: ', { t: pcf(dp.v), fig: 'dep' }, `${dp.own ? ' (שלך)' : ' (ממוצע במסלול)'}, מול חציון הממוצע בפועל של `, { t: pcf(dp.med), fig: 'depMed' }, '.');
+  if (!short && dp && dp.med != null) out.push(' מהפקדה: ', { t: pcf(dp.v), fig: 'dep' }, `${dp.own ? ' (שלך)' : ' (ממוצע במסלול)'}, מול האמצעי בפועל של `, { t: pcf(dp.med), fig: 'depMed' }, '.');
   return out;
 }
 
@@ -252,21 +256,21 @@ function linesOf(v: Verdict): Line[] {
   if (v.self) L.push({ key: 'self', tone: 'info', parts: ['זה מסלול בניהול אישי (IRA): את ההשקעות בוחר החוסך, ולכן התשואה המפורסמת אינה תוצאה של מנהל ואינה מדורגת.'] });
   if (v.ret) {
     const { per, rank, gap, med, band } = v.ret, ann = per === 'a5' || per === 'a3';
-    if (rank) L.push({ key: 'rank', tone: placeTone(rank), parts: [`${PER_HE[per]} המסלול שלך במקום `, { t: rankLabel(rank), fig: 'rank' }, ` בקטגוריה (${v.prod}, ${v.track})${v.ret.why ? ` (${v.ret.why})` : ''}${rank.lo !== rank.hi ? '. הפער בינו לבין הצמודים לו קטן מ-0.1% בשנה' : ''}.`] });
+    if (rank) L.push({ key: 'rank', tone: placeTone(rank), parts: [`${PER_HE[per]} המסלול${v.yours ? ' שלך' : ''} במקום `, { t: rankLabel(rank), fig: 'rank' }, ` מבין המסלולים מאותו סוג (${v.prod}, ${v.track})${v.ret.why ? ` (${v.ret.why})` : ''}${rank.lo !== rank.hi ? '. הפער בינו לבין הצמודים לו קטן מ-0.1% בשנה' : ''}.`] });
     if (gap != null && med != null) L.push({ key: 'ret', tone: Math.abs(gap) < band ? 'mid' : gap > 0 ? 'good' : 'bad',
       parts: [ann ? 'התשואה השנתית הממוצעת שלו, ' : 'התשואה שלו, ', { t: pcr(v.ret.v), fig: 'ret' },
-        Math.abs(gap) < band ? ', קרובה לחציון בקטגוריה (' : `, ${gap > 0 ? 'גבוהה' : 'נמוכה'} ב-${fx(Math.abs(gap))} נקודות אחוז ${ann ? 'בשנה ' : ''}מהחציון בקטגוריה (`, { t: pcr(med), fig: 'med' }, ').'] });
-  } else if (!v.self) L.push({ key: 'none', tone: 'info', parts: ['למסלול אין עדיין תשואה מפורסמת ל-12 חודשים, ולכן אין לו מקום בקטגוריה.'] });
+        Math.abs(gap) < band ? ', קרובה לאמצעי בסוג (' : `, ${gap > 0 ? 'גבוהה' : 'נמוכה'} ב-${fx(Math.abs(gap))} אחוז ${ann ? 'בשנה ' : ''}מהאמצעי בסוג (`, { t: pcr(med), fig: 'med' }, ').'] });
+  } else if (!v.self) L.push({ key: 'none', tone: 'info', parts: ['למסלול אין עדיין תשואה מפורסמת ל-12 חודשים, ולכן אין לו מקום בדירוג.'] });
 
   const fe = v.fee;
   if (fe.v != null) {
     if (fe.own) L.push({ key: 'fee', tone: toneOf(fe.word), parts: ownFeeParts(v, false) });
     else {
-      const cmp: Part[] = fe.word === 'same' ? [' כמו החציון בקטגוריה (']
-        : fe.word && fe.pct === 100 ? [` הם ${fe.word === 'low' ? 'הנמוכים' : 'הגבוהים'} בקטגוריה: `, { t: `${fe.word === 'low' ? 'אף מסלול אחר לא זול מהם' : 'אף מסלול אחר לא יקר מהם'}`, fig: 'feePct' }, `. החציון: `]
-        : fe.word && fe.pct != null && fe.pct > 0 ? [` ${fe.word === 'low' ? 'נמוכים' : 'גבוהים'} מ-`, { t: `${fe.pct}%`, fig: 'feePct' }, ` מהמסלולים בקטגוריה. החציון: `]
-        : fe.word ? [` ${fe.word === 'low' ? 'נמוכים' : 'גבוהים'} מהחציון בקטגוריה: `] : [' · חציון הקטגוריה: '];
-      const depP: Part[] = v.dep && v.dep.v != null && v.dep.med != null && !v.dep.quiet ? [` מהפקדה: `, { t: pcf(v.dep.v), fig: 'dep' }, `${v.dep.own ? ' (שלך)' : ''}, מול חציון של `, { t: pcf(v.dep.med), fig: 'depMed' }, '.'] : [];
+      const cmp: Part[] = fe.word === 'same' ? [' כמו האמצעי בסוג (']
+        : fe.word && fe.pct === 100 ? [` הם ${fe.word === 'low' ? 'הנמוכים' : 'הגבוהים'} בקטגוריה: `, { t: `${fe.word === 'low' ? 'אף מסלול אחר לא זול מהם' : 'אף מסלול אחר לא יקר מהם'}`, fig: 'feePct' }, `. האמצעי: `]
+        : fe.word && fe.pct != null && fe.pct > 0 ? [` ${fe.word === 'low' ? 'נמוכים' : 'גבוהים'} מ-`, { t: `${fe.pct}%`, fig: 'feePct' }, ` מהמסלולים מאותו סוג. האמצעי: `]
+        : fe.word ? [` ${fe.word === 'low' ? 'נמוכים' : 'גבוהים'} מהאמצעי: `] : [' · האמצעי בסוג: '];
+      const depP: Part[] = v.dep && v.dep.v != null && v.dep.med != null && !v.dep.quiet ? [` מהפקדה: `, { t: pcf(v.dep.v), fig: 'dep' }, `${v.dep.own ? ' (שלך)' : ''}, מול האמצעי, `, { t: pcf(v.dep.med), fig: 'depMed' }, '.'] : [];
       L.push({ key: 'fee', tone: toneOf(fe.word), parts: ['דמי הניהול מצבירה במסלול (', { t: pcf(fe.v), fig: 'fee' }, ', הממוצע שמשלמים העמיתים)', ...cmp, { t: pcf(fe.med), fig: 'feeMed' }, fe.word === 'same' ? ').' : '.', ...depP] });
     }
   }
@@ -282,13 +286,13 @@ function linesOf(v: Verdict): Line[] {
     const above = d.above ? ` דמי הניהול ${v.fee.own ? 'שלך' : 'הממוצעים במסלול'} גבוהים בשני הרכיבים מצירוף שההליך מתיר.` : '';
     if (d.winner) L.push({ key: 'dflt', tone: 'info', parts: ['זו אחת מקרנות ברירת המחדל שבחרה הרשות (', { t: `${nm}, ${tenderSpan(t)}`, fig: 'tender' }, '). מחיר הבסיס בהליך למי שמצטרף אליה דרך ברירת המחדל: ', ...terms, above] });
     else L.push({ key: 'dflt', tone: 'info', parts: ['הקרן אינה אחת מקרנות ברירת המחדל של ', { t: `${nm}, ${tenderSpan(t)}`, fig: 'tender' }, '. בקרנות האלה מחיר הבסיס למי שמצטרף דרך ברירת המחדל: ', ...terms, above] });
-    if (d.winner && v.ret?.rank && placeTone(v.ret.rank) === 'bad') L.push({ key: 'dfltRet', tone: 'bad', parts: ['המחיר של קרן ברירת מחדל נקבע במכרז ואינו אומר דבר על התשואה: ', PER_HE[v.ret.per], ' המסלול הזה במקום ', { t: rankLabel(v.ret.rank), fig: 'rank' }, ' בקטגוריה.'] });
+    if (d.winner && v.ret?.rank && placeTone(v.ret.rank) === 'bad') L.push({ key: 'dfltRet', tone: 'bad', parts: ['המחיר של קרן ברירת מחדל נקבע במכרז ואינו אומר דבר על התשואה: ', PER_HE[v.ret.per], ' המסלול הזה במקום ', { t: rankLabel(v.ret.rank), fig: 'rank' }, ' בסוג שלו.'] });
   }
 
   // W2: the company's service, in its own words: a description of the regulator's index, not a judgement of the track
   if (v.svc) { const r = v.svc.row; L.push({ key: 'svc', tone: 'info', parts: [`במדד השירות של רשות שוק ההון ל-${r.year}, ${r.name ?? 'החברה המנהלת'} במקום `, { t: `${r.rank} מתוך ${r.of}`, fig: 'svc' }, ' בקרנות הפנסיה (ציון ', { t: String(r.total), fig: 'svcTot' }, ' מ-100). המדד בודק שירות: שביעות רצון, תלונות, מענה טלפוני, שיוך כספים ושירות דיגיטלי, ולא תשואה או דמי ניהול.'] }); }
 
-  if (v.eq) L.push({ key: 'eq', tone: 'info', parts: ['החשיפה למניות של המסלול (', { t: pcr(v.eq.st, 1), fig: 'eq' }, `) ${v.eq.z > 0 ? 'גבוהה' : 'נמוכה'} בהרבה מהמקובל בקטגוריה (חציון `, { t: pcr(v.eq.med, 1), fig: 'eqMed' }, '). שם המסלול לא מספר את כל הסיפור.'] });
+  if (v.eq) L.push({ key: 'eq', tone: 'info', parts: ['החשיפה למניות של המסלול (', { t: pcr(v.eq.st, 1), fig: 'eq' }, `) ${v.eq.z > 0 ? 'גבוהה' : 'נמוכה'} בהרבה מהמקובל במסלולים מאותו סוג (האמצעי `, { t: pcr(v.eq.med, 1), fig: 'eqMed' }, '). שם המסלול לא מספר את כל הסיפור.'] });
   // W2: an old managers'-insurance policy may carry terms a move does not keep
   if (v.bm === 'old') L.push({ key: 'bm', tone: 'info', href: BM_HREF, link: 'מה בודקים לפני שעוזבים', parts: ['פוליסת ביטוח מנהלים מהדור הזה עשויה לכלול מקדם קצבה מובטח ותנאים נוספים שלא נשמרים אחרי מעבר, ומעבר אינו הפיך.'] });
   else if (v.bm === 'new') L.push({ key: 'bm', tone: 'info', href: BM_HREF, link: 'מה בודקים לפני שעוזבים', parts: [`אם המוצר שלך הוא ביטוח מנהלים (ולא פוליסת חיסכון) שהתחיל ${BM_CUTOFF}, ייתכן שיש בו מקדם קצבה מובטח שלא נשמר אחרי מעבר.`] });
@@ -314,12 +318,12 @@ export function headline(v: Verdict): string {
   const bits: string[] = [];
   if (v.ret?.rank) bits.push(`${PER_HE[v.ret.per]}: מקום ${rankLabel(v.ret.rank)}`);
   if (v.fee.basis === 'tender') bits.push(v.lever ? `דמי הניהול שלך מעל קרנות ברירת המחדל${v.lever === 'dep' ? ' (מהפקדה)' : v.lever === 'fee' ? ' (מצבירה)' : ''}` : 'דמי הניהול שלך לא מעל קרנות ברירת המחדל');
-  else if (v.fee.word) bits.push(v.fee.own ? `דמי הניהול שלך ${v.fee.word === 'low' ? 'מתחת ל' : v.fee.word === 'high' ? 'מעל ' : 'כמו '}חציון הממוצע בפועל` : `דמי ניהול ${v.fee.word === 'low' ? 'זולים מהחציון' : v.fee.word === 'high' ? 'יקרים מהחציון' : 'כמו החציון'}`);
+  else if (v.fee.word) bits.push(v.fee.own ? `דמי הניהול שלך ${v.fee.word === 'low' ? 'מתחת ל' : v.fee.word === 'high' ? 'מעל ' : 'כמו '}האמצעי בפועל` : `דמי ניהול ${v.fee.word === 'low' ? 'זולים מהאמצעי' : v.fee.word === 'high' ? 'יקרים מהאמצעי' : 'כמו האמצעי'}`);
   if (v.dflt?.winner) bits.push('קרן ברירת מחדל');
   return bits.join(' · ');
 }
 
-export const WIN_SHORT: Partial<Record<Per, string>> = { a5: '5Y', a3: '3Y', y12: 'LTM' };
+export const WIN_SHORT: Partial<Record<Per, string>> = { a5: '5 שנים', a3: '3 שנים', y12: '12 חודשים' };
 /** The card folded (the saver's /my): at most three short lines, each with its figures, in this order: the place, the fee, and the
  *  default-fund price (comprehensive pension) or the deposit fee or the equity flag. The full lines (linesOf) stay behind "עוד פרטים". */
 export function brief(v: Verdict, lever?: 'fee' | 'dep' | null): Line[] {
@@ -327,13 +331,13 @@ export function brief(v: Verdict, lever?: 'fee' | 'dep' | null): Line[] {
   if (v.self) L.push({ key: 'self', tone: 'info', parts: ['מסלול בניהול אישי (IRA): התשואה אינה של מנהל ואינה מדורגת.'] });
   else if (v.ret?.rank) {
     const t = placeTone(v.ret.rank);
-    L.push({ key: 'rank', tone: t, parts: [`${PER_HE[v.ret.per]}: מקום `, { t: rankLabel(v.ret.rank), fig: 'rank' }, ` בקטגוריה, ${placeWord(t)}${v.ret.why ? `. ${WIN_SHORT[v.ret.per]}, כי ${v.ret.why}` : ''}.`] });
-  } else if (!v.ret) L.push({ key: 'none', tone: 'info', parts: ['אין עדיין תשואה ל-12 חודשים, ולכן אין מקום בקטגוריה.'] });
+    L.push({ key: 'rank', tone: t, parts: [`${PER_HE[v.ret.per]}: מקום `, { t: rankLabel(v.ret.rank), fig: 'rank' }, ` בסוג, ${placeWord(t)}${v.ret.why ? `. ${WIN_SHORT[v.ret.per]}, כי ${v.ret.why}` : ''}.`] });
+  } else if (!v.ret) L.push({ key: 'none', tone: 'info', parts: ['אין עדיין תשואה ל-12 חודשים, ולכן אין מקום בדירוג.'] });
   const fe = v.fee;
   if (fe.v != null) {
     if (fe.own) L.push({ key: 'fee', tone: fe.basis === 'tender' ? (v.lever ? 'bad' : toneOf(fe.word === 'same' && v.dep?.word === 'low' ? 'low' : fe.word)) : toneOf(fe.word), parts: ownFeeParts(v, true) });
     else {
-      const w = fe.word === 'low' ? (fe.pct === 100 ? 'הזולים בקטגוריה' : 'זולים מהחציון') : fe.word === 'high' ? (fe.pct === 100 ? 'היקרים בקטגוריה' : 'יקרים מהחציון') : fe.word === 'same' ? 'כמו החציון' : '';
+      const w = fe.word === 'low' ? (fe.pct === 100 ? 'הזולים בסוג' : 'זולים מהאמצעי') : fe.word === 'high' ? (fe.pct === 100 ? 'היקרים בסוג' : 'יקרים מהאמצעי') : fe.word === 'same' ? 'כמו האמצעי' : '';
       L.push({ key: 'fee', tone: toneOf(fe.word),
         parts: ['דמי הניהול מצבירה (ממוצע במסלול): ', { t: pcf(fe.v), fig: 'fee' }, w ? `, ${w}` : '', fe.med != null && fe.word !== 'same' ? ' (' : '', ...(fe.med != null && fe.word !== 'same' ? [{ t: pcf(fe.med), fig: 'feeMed' as Fig }, ')'] : []), '.'] });
     }
@@ -348,7 +352,7 @@ export function brief(v: Verdict, lever?: 'fee' | 'dep' | null): Line[] {
   } else if (d && fe.own && fe.basis === 'tender') {
     if (d.winner) L.push({ key: 'dflt', tone: 'info', parts: ['זו אחת מקרנות ברירת המחדל (', { t: `${d.tender.label ?? d.tender.id}`, fig: 'tender' }, ').'] });
   } else if (v.dep && v.dep.v != null && v.dep.med != null && !v.dep.quiet && Math.abs(v.dep.v - v.dep.med) >= 0.005) {
-    L.push({ key: 'dep', tone: v.dep.v < v.dep.med ? 'good' : 'bad', parts: [v.dep.own ? 'מהפקדה, שלך: ' : 'מהפקדה, ממוצע במסלול: ', { t: pcf(v.dep.v), fig: 'dep' }, `, מול חציון ${v.dep.own ? 'הממוצע בפועל ' : ''}`, { t: pcf(v.dep.med), fig: 'depMed' }, '.'] });
-  } else if (v.eq) L.push({ key: 'eq', tone: 'info', parts: ['החשיפה למניות (', { t: pcr(v.eq.st, 1), fig: 'eq' }, `) ${v.eq.z > 0 ? 'גבוהה' : 'נמוכה'} בהרבה מהמקובל בקטגוריה.`] });
+    L.push({ key: 'dep', tone: v.dep.v < v.dep.med ? 'good' : 'bad', parts: [v.dep.own ? 'מהפקדה, שלך: ' : 'מהפקדה, ממוצע במסלול: ', { t: pcf(v.dep.v), fig: 'dep' }, `, מול האמצעי${v.dep.own ? ' בפועל' : ''} `, { t: pcf(v.dep.med), fig: 'depMed' }, '.'] });
+  } else if (v.eq) L.push({ key: 'eq', tone: 'info', parts: ['החשיפה למניות (', { t: pcr(v.eq.st, 1), fig: 'eq' }, `) ${v.eq.z > 0 ? 'גבוהה' : 'נמוכה'} בהרבה מהמקובל בסוג.`] });
   return L.slice(0, 3);
 }
