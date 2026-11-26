@@ -34,7 +34,8 @@ export function FundsNav() {
   const { p, v } = here(loc);
   if (SAVINGS_TABS.some(([, , on]) => on(p, v))) return (
     <nav className="subnav" aria-label="חיסכון">
-      {SAVINGS_TABS.map(([to, l, on]) => { const a = on(p, v); return <Link key={to} to={to} className={a ? 'active' : ''} aria-current={a ? 'page' : undefined}>{l}</Link>; })}
+      {/* B7: on /funds the lens "החודש" is that page ("מובילים ומאספים"), so its link is /funds, not /flows */}
+      {SAVINGS_TABS.map(([to, l, on]) => { const a = on(p, v); return <Link key={to} to={to === '/flows' && p === '/funds' ? '/funds' : to} className={a ? 'active' : ''} aria-current={a ? 'page' : undefined}>{l}</Link>; })}
     </nav>
   );
   // a track card (/funds/p2009) belongs to the tracks tab

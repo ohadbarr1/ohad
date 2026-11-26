@@ -76,7 +76,7 @@ table.fscreen tr.gone td { opacity: 0.72; }
 .fcard-meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
 .fcard-fig { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 6px; align-items: end; }
 .fcard-fig > div { display: grid; gap: 1px; min-width: 0; }
-.fcard-fig .l { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fcard-fig .l { color: var(--muted); }
 .fcard-fig .big .num { font-size: var(--t-5); font-weight: 700; }
 @media (max-width: 380px) { .fcard-fig { grid-template-columns: 1.4fr repeat(4, 1fr); gap: 4px; } }
 
@@ -121,3 +121,28 @@ table.fscreen tr.gone td { opacity: 0.72; }
   .subnav .snmore summary { padding: 9px 12px 9px 14px; min-height: 36px; }
   .subnav:has(.snmore[open]) { overflow: visible; mask-image: none; }
 }
+
+/* B2/B3: the card's monthly heat table. 12 months + the year's total fit a 390 px phone; narrower screens scroll sideways with the year column
+   and the month header pinned (header above the body cells), and the box opens on the latest months (Heatmap's layout effect). */
+.panel .heat-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+.panel .heat-scroll table.heat-m { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: 100%; min-width: 332px; direction: rtl; font-size: 11px; }
+.panel .heat-scroll table.heat-m th, .panel .heat-scroll table.heat-m td { padding: 0; font-size: 11px; line-height: 1.2; text-align: center; border: 1px solid var(--panel); background-clip: padding-box; box-shadow: none; }
+.panel .heat-scroll table.heat-m thead th { height: 22px; color: var(--muted); font-weight: 600; position: relative; z-index: 3; background: var(--panel); }
+.panel .heat-scroll table.heat-m th.y, .panel .heat-scroll table.heat-m td.y { width: 36px; min-width: 0; max-width: none; position: sticky; inset-inline-start: auto; right: 0; left: auto; z-index: 2; background: var(--panel); font-weight: 600; color: var(--muted); }
+.panel .heat-scroll table.heat-m thead th.y { z-index: 4; }
+.panel .heat-scroll table.heat-m th.t, .panel .heat-scroll table.heat-m td.tot { width: 34px; font-weight: 700; }
+.panel .heat-scroll table.heat-m td.c { height: 26px; border-radius: 4px; letter-spacing: -0.02em; overflow: hidden; }
+.panel .heat-scroll table.heat-m td.c .num { font-size: 11px; }
+main .panel .heat-scroll table.heat-m td > :is(a, button).src:not(.bar) { display: block; width: 100%; height: 100%; min-width: 0; margin: 0; padding: 0; font-size: 11px; line-height: 24px; color: inherit; }
+main .panel .heat-scroll table.heat-m td > :is(a, button).src:not(.bar)::after { content: none; }
+/* iOS WebKit paints a sticky cell inside an RTL scroller off its origin (the real cause of B2 on an iPhone; see styles.css): there the year
+   column scrolls with the table. At 334 px and wider the table does not scroll at all. */
+@supports (-webkit-touch-callout: none) { [dir="rtl"] .panel .heat-scroll table.heat-m :is(th, td).y { position: static; } }
+
+/* B5: the screener's phone head. The tools row wraps instead of sliding under a fade; the card's figure labels wrap to two lines. */
+@media (max-width: 760px) {
+  .tbar-ctl:has(> .trackpick) { flex-wrap: wrap; overflow-x: visible; mask-image: none; padding-inline-end: 0; }
+  .tbar-ctl:has(> .trackpick) > * { flex: 0 1 auto; max-width: 100%; }
+}
+.fcard-fig .l { font-size: 11px; line-height: 1.25; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.fcard-fig { align-items: end; }

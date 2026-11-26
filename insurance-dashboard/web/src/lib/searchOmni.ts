@@ -8,7 +8,7 @@ import { DOC_TYPE_HE, type Corpus, type DocMeta, type DocType } from './search';
 import { MOMENTS, momentHits, momentPath } from './moments';  // W9: life moments
 
 export type Kind = 'אחרונים' | 'חיפושים' | 'רגע' | 'חברה' | 'פונקציה' | 'שאלה' | 'קופה' | 'שורה בדוח' | 'מסמך';
-export interface Item { kind: Kind; label: string; meta: string; to: string; score: number; sub?: string }
+export interface Item { kind: Kind; label: string; meta: string; to: string; score: number; sub?: string; /** an answer to a question (askItems): the saver's door lists it */ saver?: boolean }
 
 /** Screens that exist for every company, with the short codes that reach them: "הראל csm", "phoenix dcf". */
 export const FUNCS: { code: string; badge: string; label: string; keys: string[]; to: (id: string) => string }[] = [
@@ -68,7 +68,7 @@ export const SAVER_TO = new Set(['/my', '/my/statement', '/my/moment', '/funds/t
  *  ("עזיבת עבודה" used to answer with an annual report, page 192); the other doors see everything. */
 export function forDoor(list: Item[], door: 'saver' | 'agent' | 'pro' | null | undefined): Item[] {
   if (door !== 'saver') return list.filter((x) => x.kind !== 'רגע');  // W9: the life moments are the saver's
-  return list.filter((x) => x.kind === 'חיפושים' || x.kind === 'אחרונים' || x.kind === 'רגע' || x.kind === 'חברה' || x.kind === 'קופה' || (x.kind === 'פונקציה' && SAVER_TO.has(x.to.split('?')[0])));
+  return list.filter((x) => x.kind === 'חיפושים' || x.kind === 'אחרונים' || x.kind === 'רגע' || x.kind === 'חברה' || x.kind === 'קופה' || (x.kind === 'פונקציה' && (!!x.saver || SAVER_TO.has(x.to.split('?')[0]))));
 }
 /** C14 · the saver's list: fund tracks (`/funds/<key>`) before the market groups and the rest of the "קופה" kind. `best` is the picker's
  *  answer to the query (lib/pickSearch: the saver's likely product and default track first, old-generation policies last); its first
@@ -80,6 +80,50 @@ export function tracksFirst(list: Item[], best: (FundIdx & { k: string; name: st
   const rest = list.filter((x) => key(x) && !have.has(key(x)));
   return [...lead, ...rest, ...list.filter((x) => !key(x))];
 }
+/** R3 / B10 / B11 · what a reader asks in words, answered with the page that answers it (rollout spec 8, 17, 18.2): "מי הכי טוב בפנסיה" →
+ *  the screener on that product, on the month; "מסלולים", "דירוג" → the screener; "החודש", "מה קרה" → the hub; "כמה אני משלם" → the
+ *  fees tool. Pure; the order of everything else is untouched. `mine` = the reader's saved products (their type is the default). */
+export interface AskCtx { asof?: number; mine?: { prod: string; track: string }[] }
+const MONTH_HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+const inMonth = (asof?: number) => (asof && asof % 100 >= 1 && asof % 100 <= 12 ? `ב${MONTH_HE[(asof % 100) - 1]}` : 'החודש');
+/** the product a query names (the regulator's product names, as the screener's `prod` carries them), and the short word for it */
+const ASK_PROD: [RegExp, string, string][] = [[/גמל\s+להשקעה/, 'גמל להשקעה', 'גמל להשקעה'], [/השתלמות/, 'השתלמות', 'השתלמות'], [/פנסי/, 'פנסיה מקיפה', 'פנסיה'], [/גמל/, 'גמל', 'גמל']];
+const SHORT_PROD: Record<string, string> = { 'פנסיה מקיפה': 'פנסיה', 'השתלמות': 'השתלמות', 'גמל': 'גמל', 'גמל להשקעה': 'גמל להשקעה' };
+const ASK_WHO = /הכי\s+(?:טוב|גבוה)|מי\s+(?:ראשון|מוביל|הוביל|ניצח)/;
+const ASK_RANK = /דירוג|מסלולים/;
+const ASK_MONTH = /החודש|מה\s+קרה/;
+const ASK_FEES = /כמה\s+(?:(?:אני|אנחנו)\s+)?משל[םמ]|כמה\s+(?:זה\s+)?עולה|משל[םמ](?:ים)?\s+בשנה/;
+export function askItems(q: string, ctx: AskCtx = {}): Item[] {
+  const t = q.trim();
+  if (t.length < 3) return [];
+  const out: Item[] = [];
+  const named = ASK_PROD.find(([re]) => re.test(t));
+  const who = ASK_WHO.test(t);
+  if (who || ASK_RANK.test(t)) {
+    const own = ctx.mine?.find((m) => !named || m.prod === named[1]) ?? null;
+    const prod = named?.[1] ?? own?.prod ?? null;
+    const track = prod ? (own && own.prod === prod ? own.track : 'כללי') : null;
+    const n = new URLSearchParams();
+    if (prod) n.set('prod', prod);
+    if (prod && track) n.set('track', track);
+    if (who) n.set('per', 'm1');
+    out.push({ kind: 'פונקציה', saver: true, score: 99, to: `/funds/screen${n.size ? `?${n}` : ''}`,
+      label: prod ? `דירוג המסלולים: ${SHORT_PROD[prod] ?? prod}${track ? ` ${track}` : ''}` : 'דירוג המסלולים',
+      meta: '', sub: `מי היה ראשון ${inMonth(ctx.asof)}` });
+  }
+  if (ASK_MONTH.test(t)) {
+    out.push({ kind: 'פונקציה', saver: true, score: 98, to: named ? `/funds?prod=${encodeURIComponent(named[1])}` : '/funds', label: 'החודש בחיסכון', meta: '', sub: `מה קרה ${inMonth(ctx.asof)}` });
+  }
+  if (ASK_FEES.test(t)) out.push({ kind: 'פונקציה', saver: true, score: 99, to: '/funds/tools/fees', label: 'דמי ניהול, בשקלים', meta: '', sub: 'כמה זה עולה בשנה' });
+  return out;
+}
+/** "a question about the year" ("מגדל פנסיה בשנה האחרונה", "12 חודשים"): the words are not part of a fund's name; the card opens on 12 months */
+const YEAR_ASK = /(?:^|\s)(?:ב)?(?:שנה(?:\s+(?:ה)?אחרונה)?|12\s+(?:ה)?חודשים(?:\s+(?:ה)?אחרונים)?|(?:ה)?אחרונה)(?=\s|$)/g;
+export function yearAsk(q: string): { q: string; year: boolean } {
+  const rest = q.replace(YEAR_ASK, ' ').replace(/\s+/g, ' ').trim();
+  return rest === q.replace(/\s+/g, ' ').trim() ? { q, year: false } : { q: rest, year: true };
+}
+
 /** other names a reader types for a company */
 const ALIAS: Record<string, string[]> = { phoenix: ['פניקס', 'fnx'], harel: ['harel'], migdal: ['migdal'], hachshara: ['hachshara'], ayalon: ['ayalon'], meitav: ['meitav', 'מיטב דש'], analyst: ['analyst'], menora: ['מנורה'], altshuler: ['אלטשולר'], yelin: ['ילין'], idi: ['ישיר', 'direct'], more_gemel: [], clal: ['clal'], ibi: ['איביאי', 'אי בי אי'] };
 const TYPE_WORDS: [DocType, string[]][] = [
@@ -215,7 +259,7 @@ export function orderFor(list: Item[], fundsFirst = false): Kind[] {
 export const ordered = (list: Item[], fundsFirst = false): Item[] => orderFor(list, fundsFirst).flatMap((k) => list.filter((h) => h.kind === k));
 
 /** The entity, function and statement-line results of a query, best first within each kind. */
-export function rank(q: string, pool: Pool, sheetName: (s: string) => string, docs?: Corpus | null): Item[] {
+export function rank(q: string, pool: Pool, sheetName: (s: string) => string, docs?: Corpus | null, ask?: AskCtx): Item[] {
   const p = parse(q, pool.names);
   const out: Item[] = [];
   const name = (id: string) => pool.reg.find((c) => c.id === id)?.name_he ?? id;
@@ -233,6 +277,9 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     FUNCS.filter((f) => rest.length === 0 || rest.every((w) => f.keys.some((k) => k.startsWith(w)) || f.code.toLowerCase().startsWith(w)))
       .slice(0, rest.length ? 4 : 9).forEach((f, i) => out.push({ kind: 'פונקציה', label: `${c.name_he} · ${f.label}`, meta: f.badge, to: f.to(c.id) + (p.period && /\/company\//.test(f.to(c.id)) ? `?p=${p.period}` : ''), score: (rest.length ? 95 : 50) - i }));
   }
+  // R3 / B11: questions in words (who was best, the ranking, the month, what it costs)
+  const asked = !p.company && ask ? askItems(q, ask) : [];
+  out.push(...asked);
   // screens that are not per company: the delta feed (module M2)
   if (!p.company && words.length && words.every((w) => FEED_KEYS.some((k) => k.startsWith(w)))) {
     out.push({ kind: 'פונקציה', label: 'מה השתנה · כל השינויים', meta: 'דוחות, הצגות מחדש, כושר פירעון, יעדים, נתוני הרשות', to: '/feed', score: 96 });
@@ -306,6 +353,8 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
       // the regulator's fund number ("1093") or the site's key ("p9757"): that track, first of all
       const s = fundMatch(fq, f);
       if (isIdHit(s)) { out.push({ kind: 'קופה', label: f.label, meta: fundMeta(f), to, score: FUND_ID_SCORE + tb / 10 }); continue; }
+      // R3: a number typed in part ("210") is the start of fund numbers: those tracks, below a number typed in full
+      if (fq.num && f.id && f.id.startsWith(fq.num)) { out.push({ kind: 'קופה', label: f.label, meta: fundMeta(f), to, score: 60 + tb / 10 - f.id.length / 100 }); continue; }
       if (s) out.push({ kind: 'קופה', label: f.label, meta: fundMeta(f), to, score: (named ? FUND_LEAD : 55) + s + tb - f.label.length / 200 });
     }
   }
@@ -323,6 +372,8 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     docs.docs.filter((d) => d.company === p.company!.id && (!p.type || d.type === p.type) && (!p.period || d.period === p.period))
       .slice(0, 5).forEach((d, i) => out.push({ kind: 'מסמך', label: docLabel(d, name), meta: `${d.pages} עמ׳`, to: `/doc/${d.id}`, score: 90 - i }));
   }
+  // the page an answer opens is listed once, as the answer
+  if (asked.length) for (let i = out.length - 1; i >= 0; i--) if (out[i].kind === 'פונקציה' && !asked.includes(out[i]) && asked.some((x) => x.to === out[i].to)) out.splice(i, 1);
   const cap: Partial<Record<Kind, number>> = { 'רגע': 3, 'חברה': 5, 'פונקציה': 9, 'שאלה': 5, 'קופה': 6, 'שורה בדוח': 7, 'מסמך': 5 };
   const by = new Map<Kind, Item[]>();
   out.sort((a, b) => b.score - a.score).forEach((it) => { const l = by.get(it.kind) ?? []; if (l.length < (cap[it.kind] ?? 6)) { l.push(it); by.set(it.kind, l); } });

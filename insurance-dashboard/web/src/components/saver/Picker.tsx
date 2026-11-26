@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FundX } from '../../lib/funds';
 import { buildPool, rank, type FundEnt } from '../../lib/searchOmni';
 import { pcf, selfDir } from '../../lib/verdict';
@@ -38,6 +38,19 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
   const [all, setAll] = useState(false);
   const hidePay = !all && (ageS ?? AGE_DEFAULT) < PAYOUT_AGE;
   const shownT = (f: FundX) => !hidePay || !PAYOUT(f);
+
+  // B9: a step that appears under the fold comes to the top (below the sticky header) and its heading takes focus
+  const h2 = useRef<HTMLDivElement>(null), h3 = useRef<HTMLDivElement>(null);
+  const bring = (h: HTMLDivElement | null) => {
+    const step = h?.parentElement;
+    if (!h || !step) return;
+    const bar = document.querySelector<HTMLElement>('header.top');
+    step.style.scrollMarginTop = `${(bar?.getBoundingClientRect().bottom ?? 0) + 8}px`;
+    step.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    h.focus({ preventScroll: true });
+  };
+  useEffect(() => { if (prod) bring(h2.current); }, [prod]);
+  useEffect(() => { if (grp) bring(h3.current); }, [grp]);
 
   const groups = useMemo(() => {
     if (!prod) return [];
@@ -80,13 +93,13 @@ export function Picker({ funds, have, onPick }: { funds: FundX[]; have: string[]
         </div>
       </div>
       {prod && <div className="sv-step">
-        <div className="sv-step-h"><span className="sv-num" aria-hidden="true">2</span>איזו חברה מנהלת?</div>
+        <div className="sv-step-h" ref={h2} tabIndex={-1}><span className="sv-num" aria-hidden="true">2</span>איזו חברה מנהלת?</div>
         <div className="sv-chips" role="group" aria-label="חברה מנהלת">
           {groups.map((g) => <button key={g} type="button" className="sv-chip" aria-pressed={grp === g} onClick={() => setGrp(g)}>{g}</button>)}
         </div>
       </div>}
       {prod && grp && <div className="sv-step">
-        <div className="sv-step-h"><span className="sv-num" aria-hidden="true">3</span>איזה מסלול? <span className="sv-step-note">שם המסלול ומספר הקופה כתובים בדוח השנתי</span></div>
+        <div className="sv-step-h" ref={h3} tabIndex={-1}><span className="sv-num" aria-hidden="true">3</span>איזה מסלול? <span className="sv-step-note">שם המסלול ומספר הקופה כתובים בדוח השנתי</span></div>
         <ul className="sv-pick-list">{tracks.map((f) => <Row key={f.k} f={f} sub={`${f.track} · דמי ניהול ${pcf(f.fee)} · מספר קופה ${f.id}`} />)}</ul>
         {hiddenN > 0 && <p className="sv-muted">{hiddenN === 1 ? 'מסלול אחד למקבלי קצבה מוסתר' : `${hiddenN} מסלולים למקבלי קצבה מוסתרים`} (למי שכבר מקבל פנסיה). <button type="button" className="linkbtn" onClick={() => setAll(true)}>הצגת כל המסלולים</button></p>}
       </div>}
