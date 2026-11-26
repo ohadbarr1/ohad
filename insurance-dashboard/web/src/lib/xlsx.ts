@@ -13,6 +13,8 @@ export type XCell = string | number | null | undefined | {
   band?: boolean;
   /** muted text (units, notes) */
   muted?: boolean;
+  /** drawn as a link without a relationship (a HYPERLINK formula carries its own target) */
+  ul?: boolean;
 };
 export interface XSheet { name: string; rows: XCell[][]; widths?: number[]; freeze?: { rows: number; cols: number }; ltr?: boolean;
   /** columns (0-based) hidden by default: source columns a reader can unhide */
@@ -21,6 +23,14 @@ export interface XSheet { name: string; rows: XCell[][]; widths?: number[]; free
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 const col = (i: number): string => { let s = ''; for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + ((i - 1) % 26)) + s; return s; };
 export const cellRef = (r: number, c: number) => `${col(c)}${r + 1}`;
+/** a column's letters (0 → "A") */
+export const colRef = (c: number) => col(c);
+/** a live link: =HYPERLINK("url","label"), its label cached so a preview shows it; quotes doubled, the label kept under Excel's 255 */
+export function hyperlink(url: string, label: string, bold = false): XCell {
+  const q = (s: string) => s.replace(/"/g, '""');
+  const lab = label.length > 250 ? `${label.slice(0, 249)}…` : label;
+  return url.length > 255 ? { v: lab, link: url, bold } : { v: lab, f: `HYPERLINK("${q(url)}","${q(lab)}")`, ul: true, bold };
+}
 
 // fonts: 0 plain, 1 bold, 2 italic muted, 3 link, 4 bold white, 5 muted, 6 bold link
 const FONTS = ['<font><sz val="10"/><name val="Arial"/></font>', '<font><b/><sz val="10"/><name val="Arial"/></font>', '<font><i/><sz val="10"/><color rgb="FF6B7280"/><name val="Arial"/></font>',
@@ -39,7 +49,7 @@ class Styles {
     if (c == null || typeof c === 'string') return 0;
     if (typeof c === 'number') return this.get(0, NUMFMT.n1, 0);
     const isNum = typeof c.v === 'number';
-    const font = c.head ? 4 : c.link ? (c.bold ? 6 : 3) : c.bold || c.band ? 1 : c.italic ? 2 : c.muted ? 5 : 0;
+    const font = c.head ? 4 : c.link || c.ul ? (c.bold ? 6 : 3) : c.bold || c.band ? 1 : c.italic ? 2 : c.muted ? 5 : 0;
     const fill = c.head ? 2 : c.band ? 3 : 0;
     const fmt = isNum ? NUMFMT[c.fmt ?? 'n1'] : 0;
     return this.get(font, fmt, fill);
@@ -67,7 +77,11 @@ function sheetXml(sh: XSheet, links: { ref: string; id: string; url: string }[],
       if (o.v == null && !('f' in o && o.f)) return;
       if ('link' in o && o.link) links.push({ ref, id: `rId${links.length + 1}`, url: o.link });
       const s = st.of(c);
-      if ('f' in o && o.f) cells.push(`<c r="${ref}" s="${s}"><f>${esc(o.f)}</f>${typeof o.v === 'number' ? `<v>${o.v}</v>` : ''}</c>`);
+      // a formula always carries its computed value, so a reader that does not recalculate (a preview, a mail client) still shows it:
+      // a number as <v>, a text result (HYPERLINK's label) as t="str"
+      if ('f' in o && o.f) cells.push(typeof o.v === 'number' && Number.isFinite(o.v) ? `<c r="${ref}" s="${s}"><f>${esc(o.f)}</f><v>${o.v}</v></c>`
+        : o.v != null && o.v !== '' ? `<c r="${ref}" s="${s}" t="str"><f>${esc(o.f)}</f><v>${esc(String(o.v))}</v></c>`
+        : `<c r="${ref}" s="${s}"><f>${esc(o.f)}</f></c>`);
       else if (typeof o.v === 'number') cells.push(`<c r="${ref}" s="${s}"><v>${o.v}</v></c>`);
       else cells.push(`<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(String(o.v))}</t></is></c>`);
     });
