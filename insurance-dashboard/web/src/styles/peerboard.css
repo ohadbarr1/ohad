@@ -1,45 +1,10 @@
-/* The comparison board of "השוואה ענפית" (pages/PeersBoard.tsx and pages/peers/*): the shipped tables and charts (pb-*), then the phase-6
-   board (p6-*: the hub tools, the view strip, the chips, the board and grid panels, the matrix, the focus list, the sheets) */
-.pb { display: flex; flex-direction: column; gap: 14px; }
-.pb .panel { margin: 0; }
-.pb-head { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; }
-.pb-focus { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.pb-cap { font-size: 12px; color: var(--muted); margin-inline-end: 4px; }
-.pb-focus .chip[aria-pressed='true'] { box-shadow: inset 0 0 0 1.5px var(--accent); font-weight: 600; }
-.pb-asof { font-size: 12px; color: var(--muted); line-height: 1.6; }
-.pb-asof b { color: var(--fg); font-weight: 500; }
-
-/* comps tables */
-table.pb-table th.pb-th { padding: 0; vertical-align: bottom; border-inline-start: 1px solid var(--line-soft); }
-table.pb-table th.pb-th .thsort { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 76px; padding: 7px 10px; width: 100%; }
-table.pb-table th.pb-th .thsort small { font-size: 10.5px; color: var(--muted); font-weight: 400; }
-table.pb-table td { border-inline-start: 1px solid var(--line-soft); }
-table.pb-table td.q4 { background: color-mix(in oklch, var(--up) 17%, transparent); }
-table.pb-table td.q3 { background: color-mix(in oklch, var(--up) 7%, transparent); }
-table.pb-table td.q2 { background: color-mix(in oklch, var(--down) 6%, transparent); }
-table.pb-table td.q1 { background: color-mix(in oklch, var(--down) 14%, transparent); }
-table.pb-table tr.lead td { font-weight: 600; }
-table.pb-table tr.lead td.pr-ent { box-shadow: inset 3px 0 0 var(--accent); }
-table.pb-table tfoot td { color: var(--muted); font-variant-numeric: tabular-nums; border-top: 1px solid var(--line); }
-table.pb-table tfoot tr:first-child td { color: var(--fg); font-weight: 600; }
-table.pb-table .num.stale { opacity: .75; }
-.pb-ent { all: unset; cursor: pointer; display: inline-flex; align-items: center; font-weight: 500; }
-.pb-ent:hover { text-decoration: underline; text-underline-offset: 3px; }
-.pb-ent:focus-visible { outline: 2px solid var(--accent); }
-
-/* charts */
-.pb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.pb-grid > .panel { min-width: 0; }
-.pb .hd .aside { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.linkbtn { all: unset; cursor: pointer; color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
-
-@media (max-width: 1100px) { .pb-grid { grid-template-columns: 1fr; } }
-@media (max-width: 760px) {
-  .pb { gap: 10px; }
-}
+/* The peers board of "השוואה ענפית" (pages/PeersBoard.tsx, pages/peers/{BoardLens,Matrix,FocusLens,CompanySheet,MetricSheet,ContextSheet,
+   ViewStrip}.tsx; lane P6-2a). The shipped focus tiles, positioning map, comps tables and chart grid are gone from here: the focus lens
+   replaced the first two, and the charts and tables moved to pages/peers/{ChartsLens,TableLens} with their own styles/p6-lenses.css.
+   Class prefix p6-. */
 
 /* ======================= phase 6: the board (spec p6 §3, §13, §14) ======================= */
-.p6-pb { display: flex; flex-direction: column; gap: 10px; }
+.p6-pb { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .p6-pb.desk { gap: 12px; }
 .p6-board, .p6-focus { display: flex; flex-direction: column; gap: 10px; }
 .p6-pb .ro-take { margin: 0; }
@@ -47,11 +12,12 @@ table.pb-table .num.stale { opacity: .75; }
 
 /* the hub row: Excel and the context chip (IndustryTools) */
 .p6-hubtools { display: inline-flex; gap: 6px; align-items: center; margin-inline-start: auto; }
-.p6-chipbtn { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--panel); color: var(--fg); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; box-shadow: var(--e-1); }
+.p6-chipbtn { position: relative; display: inline-flex; align-items: center; gap: 5px; height: 38px; padding: 0 11px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--panel); color: var(--fg); font: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap; cursor: pointer; box-shadow: var(--e-1); }
+.p6-chipbtn::before { content: ""; position: absolute; inset: -3px 0; }
 .p6-chipbtn:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; }
 .p6-chipbtn.dd::after { content: "▾"; font-size: 10px; color: var(--muted); }
 .p6-chipbtn .sq, .p6-pb .sq, .p6-optrow .sq { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 3px; }
-.p6-chipbtn > span { max-width: 46vw; overflow: hidden; text-overflow: ellipsis; }
+.p6-chipbtn > span { max-width: 32vw; overflow: hidden; text-overflow: ellipsis; }
 .p6-only-d { display: none; }
 @media (min-width: 1000px) {
   .p6-chipbtn { height: 34px; font-size: 13px; padding: 0 12px; }
@@ -105,7 +71,7 @@ button.src.p6-wn::after { content: ""; position: absolute; inset: -8px -2px; }
 .p6-sb-tag > .p6-w { font-style: normal; direction: ltr; unicode-bidi: isolate; }
 
 /* the board panel */
-.p6-bp { padding: 10px 10px 6px; }
+.p6-bp { padding: 10px 10px 6px; gap: 4px; }
 .p6-bp-hd h2, .p6-gp-hd h2, .p6-mx-hd h2 { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.35; }
 .p6-bp-hd h2 small, .p6-gp-hd h2 small, .p6-mx-hd h2 small { font-size: 12px; font-weight: 500; color: var(--muted); }
 .p6-pb:not(.desk) .p6-bp-hd { display: none; }
@@ -119,7 +85,7 @@ button.src.p6-wn::after { content: ""; position: absolute; inset: -8px -2px; }
 .p6-sb-val .mut, .p6-pb .mut { color: var(--faint); }
 
 /* the quarters grid panel */
-.p6-gp { padding: 10px 6px 8px; }
+.p6-gp { padding: 10px 6px 8px; gap: 4px; }
 .p6-gp-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 6px; }
 .p6-gp .p6-basis { margin-inline: 4px; }
 .p6-close { padding: 6px 8px; border-radius: var(--r-2); background: var(--panel2); }
@@ -131,7 +97,7 @@ button.src.p6-wn::after { content: ""; position: absolute; inset: -8px -2px; }
 .p6-g2a, .p6-g2b { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* the matrix */
-.p6-mx { padding: 10px 10px 8px; }
+.p6-mx { padding: 10px 10px 8px; gap: 4px; }
 .p6-mx-hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-bottom: 6px; }
 .p6-mx-w { min-width: 0; }
 table.p6-mxt { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; font-variant-numeric: tabular-nums; }
@@ -172,7 +138,7 @@ table.p6-mxt.dense thead th button { padding: 3px 2px 4px; font-size: 10.5px; }
 table.p6-mxt.dense thead th button small { font-size: 9.5px; }
 
 /* the focus list */
-#focus-list { padding: 6px 12px 8px; }
+#focus-list { padding: 6px 12px 8px; gap: 0; }
 .p6-fl-sec + .p6-fl-sec { margin-top: 6px; }
 .p6-fl-hd { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0 6px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; color: var(--muted); }
 .p6-fl-hd span:first-child { color: var(--fg); }
@@ -218,3 +184,22 @@ table.p6-mxt.dense thead th button small { font-size: 9.5px; }
 /* the stamp */
 .p6-stamp sup.p6-n { margin: 0; }
 .p6-pb #guard { margin: 0; }
+
+/* phone: the first screen holds the sentence, the reading and all seven rows above the bottom bar (14.7) */
+@media (max-width: 999px) {
+  .p6-pb { gap: 4px; margin-top: -18px; }
+  .p6-bp { gap: 0; }
+  .p6-board { gap: 5px; }
+  .p6-views.ro-tabs { padding-top: 0; padding-bottom: 2px; }
+  .p6-views .ro-tabs-in button { position: relative; height: 34px; }
+  .p6-views .ro-tabs-in button::before { content: ""; position: absolute; inset: -4px 0; }
+  .p6-chips { padding: 0; }
+  .p6-chips button { position: relative; height: 34px; padding: 0 14px; font-size: 13.5px; }
+  .p6-chips button::before { inset: -5px 0; }
+  .p6-chips button::before { content: ""; position: absolute; inset: -4px 0; }
+  .p6-pb .ro-take { padding: 4px 12px; font-size: 14px; line-height: 1.36; }
+  .p6-bp { padding: 4px 6px 2px; }
+  .p6-bhead { padding: 0 2px; min-height: 22px; }
+  .p6-bhead .p6-tag { line-height: 17px; }
+  .p6-bp .board.p6-sb { padding-top: 0; padding-bottom: 2px; }
+}

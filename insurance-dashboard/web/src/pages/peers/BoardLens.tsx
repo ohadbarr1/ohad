@@ -6,11 +6,10 @@ import { Sourced } from '../../components/Source';
 import { Takeaway } from '../../components/Takeaway';
 import { idCss } from '../../lib/identity';
 import type { Prov } from '../../lib/prov';
-import type { Book, Registry } from '../../lib/registry';
-import type { TasePrice } from '../../lib/valuation';
+import { ctxOf, type BoardData } from './exportBoard';
 import {
   basisShort, basisText, boardRows, chgKind, closeAt, fmtB, fmtRead, latestCsmBasis, medianProv, quarterGrid, quarterNamed, shOf, unitRead,
-  type BMetric, type BoardCtx, type BoardOut, type BVal, type GridRow, type Kind, type MktFile, type ReportStatus, type Stat,
+  type BMetric, type BoardOut, type GridRow,
 } from '../../lib/peerBoard';
 import { closeRuleWords, daggerNote, medWords, outHead, peersWords, rowTag, starNote, toneOf, type FigRef, type WPart } from '../../lib/peerWords';
 import { dlab, isChg, qlab, readLabel, type QRead } from '../../lib/quarters';
@@ -25,32 +24,9 @@ import '../../styles/peerboard.css';
    through <Sourced> from the same lib/peerBoard call that computed it (board rows, the sentence, every median with its n and parts, grid
    cells with their quarter-end close); a company's name or place opens the company sheet. */
 
-/** Everything the shell computes once and every lens reads (the charts and table lenses and the workbook too: p6-2b's exportBoard.ts
- *  declares the same shape; this copy goes when that file is merged). */
-export interface BoardData {
-  reg: Registry; book: Book;
-  /** the set, in set order */
-  ents: string[];
-  /** by market value, largest first (the tables' order) */
-  order: string[];
-  /** the table metrics of the set (lib/peerBoard metricsFor) */
-  ms: BMetric[];
-  /** metric × company at the board's quarter (the tables' cells) */
-  cells: Map<string, Map<string, BVal>>; stats: Map<string, Stat>;
-  focus: string; kindOf: (e: string) => Kind; major: Kind;
-  /** the financial quarter of the tables (LTM axis), the regulator's quarter */
-  p: string; pOps: string;
-  mk: MktFile | null; px: Record<string, TasePrice | null>; pxAsof: string; setName: string;
-  status: ReportStatus;
-  /** the board's quarter: status.bq, or status.cq with base=common */
-  q: string; base: 'latest' | 'common';
-  put: (k: string, v: string | null) => void; get: (k: string) => string | null;
-  /** the board's metric and its resolved reading */
-  bm: string; rd: QRead;
-}
-
-/** the board's context for lib/peerBoard */
-export const ctxOf = (d: BoardData): BoardCtx => ({ book: d.book, ents: d.ents, q: d.q, qReg: d.pOps, px: d.px, mk: d.mk, status: d.status, kindOf: d.kindOf });
+/** Everything the shell computes once and every lens reads: lane P6-2b's `BoardData` (pages/peers/exportBoard), and its `ctxOf` */
+export type { BoardData };
+export { ctxOf };
 
 /* ---------- a sentence of parts (lib/peerWords): every figure one LTR unit, tappable to its source ---------- */
 export type RefSrc = (r: FigRef, i: number) => (() => Prov) | null | undefined;
