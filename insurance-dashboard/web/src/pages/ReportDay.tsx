@@ -209,7 +209,9 @@ function csmFig(c: CsmClose | null, files: IfrsData['files']): Fig | null {
       tip: [c.label, f.src === 'chart' ? 'נקרא מגרף' : f.src === 'text' ? 'נקרא מטקסט הדוח' : '', f.cl === 1 ? 'הסכום שהודפס פחות שורת פוליסות ההשקעה' : ''].filter(Boolean).join(' · ') };
   };
   if (!c.line.sum) return { ...one(c.line.fs[0]), v: c.v, der: !!(c.flags & 1) };
-  return { v: c.v, unit: 'm', href: null, page: null, der: true, tip: c.label, calc: { formula: `חיים ועוד בריאות, ${CSM_BASIS_HE[c.b]}`, parts: c.line.fs.map((f) => ({ label: f.g === 'life' ? 'חיים וחיסכון' : 'בריאות', fig: one(f) })) } };
+  const seg = (f: RF) => (f.g === 'life' ? 'חיים וחיסכון' : f.g === 'health' ? 'בריאות' : 'קבוצה');
+  if (c.less) return { v: c.v, unit: 'm', href: null, page: null, der: true, tip: c.label, calc: { formula: 'נטו = ברוטו פחות ביטוח משנה, מאותו דוח', parts: c.line.fs.map((f, i) => ({ label: `${seg(f)} · ${i % 2 ? 'ביטוח משנה (−)' : 'ברוטו'}`, fig: one(f) })) } };
+  return { v: c.v, unit: 'm', href: null, page: null, der: true, tip: c.label, calc: { formula: `חיים ועוד בריאות, ${CSM_BASIS_HE[c.b]}`, parts: c.line.fs.map((f) => ({ label: seg(f), fig: one(f) })) } };
 }
 export function ifrsRows(cur: Pool, prev: Pool | null, end: string, rs: Reports | null, files: IfrsData['files']): HeadRow[] {
   const rows: HeadRow[] = [], both = prev ? [cur, prev] : [cur];

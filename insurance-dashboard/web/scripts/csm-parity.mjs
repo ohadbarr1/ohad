@@ -12,12 +12,12 @@ const tmp = mkdtempSync(join(tmpdir(), 'csmp-'));
 try {
   const out = join(tmp, 'r.mjs');
   await build({ entryPoints: [join(web, 'src/lib/csmResolve.ts')], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'silent' });
-  const { resolveCsm } = await import(pathToFileURL(out).href);
+  const { resolveCsm, csmDates } = await import(pathToFileURL(out).href);
   const dir = join(web, 'public/data/csm/facts'), res = {};
   for (const f of readdirSync(dir).filter((x) => x.endsWith('.json'))) {
     const d = JSON.parse(readFileSync(join(dir, f), 'utf8'));
     const rs = Object.keys(d.reports).map((p) => ({ p, F: d.reports[p].map((x) => ({ ...x, rp: p })) }));
-    const dates = [...new Set(rs.flatMap((r) => r.F.filter((x) => (x.m === 'csm_closing' || x.m === 'csm_opening') && /-(03-31|06-30|09-30|12-31)/.test(x.d)).map((x) => x.d.slice(0, 10))))].sort();
+    const dates = csmDates(rs.flatMap((r) => r.F));  // 01.01 read as the 31.12 before it, as csm_resolve.dates_of
     const co = {};
     for (const dt of dates) { const c = resolveCsm(rs, dt); if (c) co[dt] = [c.v, c.label, c.rp, c.flags]; }
     res[d.company ?? f.replace('.json', '')] = co;
