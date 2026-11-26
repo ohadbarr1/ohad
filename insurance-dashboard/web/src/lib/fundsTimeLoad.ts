@@ -3,7 +3,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { load, useFunds, useLoad } from './useData';
 import { useStored } from './local';
 import { useCurve } from './macro';
-import { catKey, netSeries, selfDirected, type Basis, type FundX, type HistX } from './funds';
+import { catKey, selfDirected, type Basis, type FundX, type HistX } from './funds';
 import { NO_WATCH, rfFromCurve, normGlide, normWatch, slugOf, watchBadge, type RankFile, type StatsFile, type StatsIndex, type WSnap, type WatchStore } from './fundsTime';
 import { EXPLAIN } from '../components/Explain';
 
@@ -59,8 +59,8 @@ export function useHists(keys: string[]): { h: Record<string, HistX>; pending: n
   }, [key]);  // eslint-disable-line react-hooks/exhaustive-deps
   return { h, pending: keys.filter((k) => !h[k] && !failed.has(k)).length };
 }
-/** a history's monthly returns on the basis (net: the build's `yn`, else gross minus each month's fee ÷ 12) */
-export const yOf = (h: HistX, b: Basis) => (b === 'net' ? netSeries(h).y : h.y);
+/** a history's monthly returns: the published gross `y` */
+export const yOf = (h: HistX, _b: Basis = 'gross') => h.y;
 
 /** the monthly risk-free rate the build uses (BoI 1-year nominal zero-coupon, macro/boi_curve.json), carried forward to `asof` */
 export function useRf(asof: number | null | undefined) {
@@ -83,10 +83,9 @@ export function useWatch(): [WatchStore, (w: WatchStore) => void] {
   const w = useMemo(() => normWatch(raw), [raw]);
   return [w, set as (w: WatchStore) => void];
 }
-/** what the reader sees of a track now, on the basis: the month's return, its LTM percentile and peers, its 3Y percentile, its fee */
-export function snapOf(f: FundX, asof: number, basis: Basis): WSnap {
-  const net = basis === 'net';
-  return { asof, b: basis, m1: net ? f.net?.m1 ?? null : f.m1, pct: (net ? f.pn : f.pr)?.y12 ?? null, pctN: (net ? f.pnn : f.prn)?.y12 ?? null, pct3: (net ? f.pn : f.pr)?.a3 ?? null, fee: f.fee };
+/** what the reader sees of a track now (gross): the month's return, its LTM percentile and peers, its 3Y percentile, its fee */
+export function snapOf(f: FundX, asof: number, _basis: Basis = 'gross'): WSnap {
+  return { asof, b: 'gross', m1: f.m1, pct: f.pr?.y12 ?? null, pctN: f.prn?.y12 ?? null, pct3: f.pr?.a3 ?? null, fee: f.fee };
 }
 /** The badge on the section tab: watched tracks with a regulator month newer than the last look. The month comes from the small stats
  *  index; on the funds pages (which hold funds.json anyway) from funds.json when the index is not published. */

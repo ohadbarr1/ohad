@@ -11,7 +11,7 @@ import type { Prov } from '../lib/prov';
 import { useMacro } from '../lib/macro';
 import { nf, sn } from '../lib/format';
 import { useFunds } from '../lib/useData';
-import { GROSS_LABEL, NET_LABEL, PER_LABEL, catKey, hasNet, pc, rankAll, realOf, refOf, retOf, shownProv, useBasis, useReal, ym, ytdPrev, type Basis, type FundX, type FundsFile, type Per, prevMonth, selfDirected, SELF_NOTE } from '../lib/funds';
+import { GROSS_LABEL, PER_LABEL, catKey, pc, rankAll, realOf, refOf, retOf, shownProv, useReal, ym, ytdPrev, type Basis, type FundX, type FundsFile, type Per, prevMonth, selfDirected, SELF_NOTE } from '../lib/funds';
 import { DEFAULT_PER, TIE_F, TIE_NOTE, edges, tieBand } from '../lib/fundsTie';
 import '../styles/lens.css';
 import '../styles/market.css';
@@ -25,7 +25,7 @@ const HUB_WIN: [Per, string][] = [['m1', 'החודש'], ['y12', 'LTM'], ['a3', '
 const MIN_N = 5;
 
 type Row = { f: FundX; v: number };
-/** a category on the chosen basis: its ranked tracks (open to everyone, with assets), best first */
+/** a category (published gross returns): its ranked tracks (open to everyone, with assets), best first */
 function ranked(fs: FundX[], per: Per, basis: Basis, real: boolean, asof: number, cpi: ReturnType<typeof useMacro>['data']): Row[] {
   return fs.map((f) => ({ f, v: real ? realOf(f, per, basis, asof, cpi?.series.cpi).v : retOf(f, per, basis).v })).filter((r): r is Row => r.v != null).sort((a, b) => b.v - a.v);
 }
@@ -64,13 +64,11 @@ export function FundsHub() {
   const { data: raw, error } = useFunds();
   const data = raw as FundsFile | undefined;
   const cpi = useMacro().data;
-  const [basisAsked] = useBasis();
   const [real] = useReal();
   const [prod, setProd] = useState('השתלמות');
   const [per, setPer] = useState<Per>(DEFAULT_PER);
   const live = useMemo(() => (data?.funds ?? []).filter((f) => f.assets && !f.closed && !f.gone && !selfDirected(f)), [data]);
-  const netOk = useMemo(() => hasNet(data?.funds ?? []), [data]);
-  const basis: Basis = basisAsked === 'net' && netOk ? 'net' : 'gross';
+  const basis: Basis = 'gross';  // owner 26.11.26: every return is the published gross
   const asof = data?.asof ?? 0;
   const C = cpi?.series.cpi;
   const hasFee1 = useMemo(() => (data?.funds ?? []).some((f) => f.fee1 != null), [data]);
@@ -90,13 +88,13 @@ export function FundsHub() {
   // where the choice mattered most: the widest spread between the best and worst track of a category (any product)
   const spread = useMemo(() => [...cats.values()].map((fs) => ({ fs, r: ranked(fs, per, basis, real, asof, cpi) })).filter((c) => c.r.length >= MIN_N)
     .map((c) => ({ ...c, d: c.r[0].v - c.r[c.r.length - 1].v })).sort((a, b) => b.d - a.d).slice(0, 5), [cats, per, basis, real, asof, cpi]);
-  // rank movers: last month's percentile (pr1 / pn1) when the build ships it, else the YTD rank a month ago vs today
+  // rank movers: last month's gross percentile (pr1) when the build ships it, else the YTD rank a month ago vs today
   const movers = useMemo(() => {
     const out: { f: FundX; from: number; to: number; n: number; how: 'pct' | 'ytd' }[] = [];
-    const pubPrev = live.some((f) => (basis === 'net' ? f.pn1 : f.pr1)?.y12 != null);
+    const pubPrev = live.some((f) => f.pr1?.y12 != null);
     [...cats.values()].filter((fs) => fs[0].prod === prod).forEach((fs) => {
       if (pubPrev) {
-        fs.forEach((f) => { const a = (basis === 'net' ? f.pn1 : f.pr1)?.y12, b = (basis === 'net' ? f.pn : f.pr)?.y12, n = (basis === 'net' ? f.pnn : f.prn)?.y12; if (a != null && b != null && n != null) out.push({ f, from: a, to: b, n, how: 'pct' }); });
+        fs.forEach((f) => { const a = f.pr1?.y12, b = f.pr?.y12, n = f.prn?.y12; if (a != null && b != null && n != null) out.push({ f, from: a, to: b, n, how: 'pct' }); });
         return;
       }
       if (asof % 100 === 1) return;
@@ -118,7 +116,7 @@ export function FundsHub() {
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data) return <Loading what="קופות" />;
-  const lbl = real ? `${basis === 'net' ? 'נטו, ' : ''}ריאלי` : basis === 'net' ? NET_LABEL : GROSS_LABEL;
+  const lbl = real ? 'ריאלי' : GROSS_LABEL;
   const V = ({ f, v }: { f: FundX; v: number }) => <Sourced src={() => shownProv(f, per, basis, real, asof, C, data)}><span className="num">{pc(v, per === 'm1' ? 2 : 1)}</span></Sourced>;
   const totalA = live.reduce((t, f) => t + (f.assets ?? 0), 0);
   const prods = PRODUCTS.filter((p) => live.some((f) => f.prod === p));
@@ -140,13 +138,13 @@ export function FundsHub() {
 
   return (
     <>
-      <FundsHead sub={<>החודש בקופות · <span className="num">{ym(asof)}</span> · <Sourced src={() => countP('מסלולים פעילים', live.length, 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים בניהול אישי')}><span className="num">{nf(live.length, 0)}</span></Sourced> מסלולים · {data.source}</>} tools={<BasisToggle netReady={netOk} />} />
+      <FundsHead sub={<>החודש בקופות · <span className="num">{ym(asof)}</span> · <Sourced src={() => countP('מסלולים פעילים', live.length, 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים בניהול אישי')}><span className="num">{nf(live.length, 0)}</span></Sourced> מסלולים · {data.source}</>} tools={<BasisToggle />} />
 
       <section className="kpis fhub-kpis">
         <div className="kpi"><div className="l">מסלולים פתוחים לציבור</div><div className="v num"><Sourced src={() => countP('מסלולים פעילים', live.length, 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים בניהול אישי')}>{nf(live.length, 0)}</Sourced></div><div className="s">{ym(asof)}</div></div>
         <div className="kpi"><div className="l">נכסים במסלולים</div><div className="v num"><Sourced src={() => ({ k: 'calc', title: 'נכסים, כל המסלולים הפתוחים לציבור', value: nf(totalA / 1000, 0), unit: 'מיליארד ש"ח', formula: 'סכום TOTAL_ASSETS של המסלולים הפתוחים לציבור, חלקי 1,000', note: 'מוצגות 40 הקטגוריות הגדולות',
           inputs: [...cats.entries()].map(([k, fs]) => ({ k, fs, a: fs.reduce((t, f) => t + (f.assets ?? 0), 0) })).sort((x, y) => y.a - x.a).slice(0, 40).map((x) => ({ label: x.k, v: nf(x.a / 1000, 1), src: () => listP(`נכסים · ${x.k}`, nf(x.a, 0), 'מיליוני ש"ח', 'סכום TOTAL_ASSETS של המסלולים בקטגוריה', x.fs.map((f) => ({ label: f.name, v: nf(f.assets ?? 0, 1), src: () => fundP(refOf(f), asof, 'TOTAL_ASSETS', 'נכסים', nf(f.assets ?? 0, 1), 'מיליוני ש"ח') }))) })) })}>{nf(totalA / 1000, 0)}</Sourced></div><div className="s">מיליארד ש"ח</div></div>
-        <div className="kpi"><div className="l">בסיס התשואה <Tip k={basis === 'net' ? 'net' : 'gross'} /></div><div className="v">{lbl}</div><div className="s">{basis === 'net' ? 'אחרי דמי ניהול מצבירה' : basisAsked === 'net' ? 'נטו עוד לא בקובץ הנתונים' : 'כפי שהרשות מפרסמת'}</div></div>
+        <div className="kpi"><div className="l">בסיס התשואה <Tip k="gross" /></div><div className="v">{lbl}</div><div className="s">כפי שהרשות מפרסמת, לפני דמי ניהול</div></div>
       </section>
 
       {big && big.r.length > 1 && (
@@ -161,7 +159,7 @@ export function FundsHub() {
         </Panel>
       )}
 
-      <Panel title={<>מובילים ומאספים · {prod}</>} aside={<><Pick label="מוצר" value={prod} onChange={setProd} options={prods.map((p) => [p, p] as [string, string])} /><Seg label="חלון" value={per} onChange={setPer} options={HUB_WIN} /><span className={`chip${basis === 'net' || real ? ' est' : ''}`}>{lbl}</span></>}>
+      <Panel title={<>מובילים ומאספים · {prod}</>} aside={<><Pick label="מוצר" value={prod} onChange={setProd} options={prods.map((p) => [p, p] as [string, string])} /><Seg label="חלון" value={per} onChange={setPer} options={HUB_WIN} /><span className={`chip${real ? ' est' : ''}`}>{lbl}</span></>}>
         {board.length === 0 ? <Empty title="אין קטגוריות מדורגות במוצר הזה בחלון שנבחר" /> : (
           <div className="fcats">
             {board.map((c) => { const m = median(c.r.map((x) => x.v)); const e = edges(c.r, (x) => x.v, band), miss = c.fs.length - c.r.length;
@@ -178,7 +176,7 @@ export function FundsHub() {
               ); })}
           </div>
         )}
-        <div className="fnote">הקטגוריות הגדולות במוצר לפי נכסים; מדורגים מסלולים פתוחים לציבור עם נכסים; מסלול בלי היסטוריה לחלון מחוץ לדירוג. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה.' : 'התשואות לפני דמי ניהול, כפי שהרשות מפרסמת.'} {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.series.cpi?.points.length ?? 0} חודשים.` : ''} 3Y ו-5Y: שנתי ממוצע. {TIE_NOTE}. {SELF_NOTE}.</div>
+        <div className="fnote">הקטגוריות הגדולות במוצר לפי נכסים; מדורגים מסלולים פתוחים לציבור עם נכסים; מסלול בלי היסטוריה לחלון מחוץ לדירוג. התשואות לפני דמי ניהול, כפי שהרשות מפרסמת. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.series.cpi?.points.length ?? 0} חודשים.` : ''} 3Y ו-5Y: שנתי ממוצע. {TIE_NOTE}. {SELF_NOTE}.</div>
       </Panel>
 
       <div className="grid2">
@@ -212,7 +210,7 @@ export function FundsHub() {
       </Panel>
 
       <nav className="ftiles" aria-label="כלי החיסכון">
-        {([['/funds/screen', 'funds', 'כל המסלולים', 'סינון לפי מוצר, משפחה, דמי ניהול וחשיפה; שמירת סינונים'], ['/funds/compare', 'compare', 'השוואה ראש בראש', '2–4 מסלולים: צמיחה נטו, חלונות מתגלגלים, ירידות, שנים'], ['/funds/tools', 'sliders', 'כלים', 'מה היה לי, דמי ניהול לאורך קריירה, קרנות ברירת מחדל, עוקבי מדד'],
+        {([['/funds/screen', 'funds', 'כל המסלולים', 'סינון לפי מוצר, משפחה, דמי ניהול וחשיפה; שמירת סינונים'], ['/funds/compare', 'compare', 'השוואה ראש בראש', '2–4 מסלולים: צמיחה, חלונות מתגלגלים, ירידות, שנים'], ['/funds/tools', 'sliders', 'כלים', 'מה היה לי, דמי ניהול לאורך קריירה, קרנות ברירת מחדל, עוקבי מדד'],
           ['/savings', 'savings', 'הענף', 'נכסים, צבירה, ניוד והכנסות דמי ניהול של הגופים'], ['/managers', 'companies', 'מנהלים', 'החברות המנהלות ודירוגן לאורך זמן'], ['/holdings', 'statement', 'הרכב נכסים', 'מה הגופים מחזיקים, ברמת גוף ומוצר']] as const).map(([to, icon, t, d]) => (
           <Link key={to} to={to} className="ftile"><span className="icotile lg"><Icon name={icon} /></span><b>{t}</b><span>{d}</span></Link>
         ))}

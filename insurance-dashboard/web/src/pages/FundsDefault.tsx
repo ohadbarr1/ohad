@@ -9,7 +9,7 @@ import { fundP, monthIn } from '../lib/market';
 import type { Prov } from '../lib/prov';
 import { nf } from '../lib/format';
 import { useFunds } from '../lib/useData';
-import { grossProv, netProv, refOf, retOf, ym, type FundX, type FundsFile, type Per } from '../lib/funds';
+import { grossProv, refOf, retOf, ym, type FundX, type FundsFile, type Per } from '../lib/funds';
 import { addM, median, monthDiff, monthsFromTo } from '../lib/fundsCalc';
 import { isoYm, priceOf, tenderAt, tendersOf, type DefaultFile, type DfRow, type Tender } from '../lib/fundsTools';
 import { useHists, useOptional } from '../lib/fundsLoad';
@@ -22,7 +22,7 @@ import '../styles/fundsTools.css';
 
 /* /funds/default (funds plan #14): the default pension funds (קרנות ברירת מחדל). The tenders of the Capital Market Authority, their
    winners and prices (funds/default.json, curated by F2 DATA, every row with its gov.il source and a verified flag), then what the
-   regulator's own files show: the winners' default age tracks against the other comprehensive pension funds on fees and net returns
+   regulator's own files show: the winners' default age tracks against the other comprehensive pension funds on fees and returns (gross, as published)
    today, and the money before vs after the tender (deposits, net transfers, assets) from the monthly track histories. */
 
 const AGE: [string, string][] = [['עד 50', 'עד 50'], ['50-60', '50–60'], ['60 ומעלה', '60+']];
@@ -81,7 +81,7 @@ export function FundsDefault() {
   const medProv = (fs: FundX[], title: string, v: (f: FundX) => number | null, src: (f: FundX) => () => Prov): Prov => ({ k: 'calc', title, value: pc(medOf(fs, v)), formula: 'החציון של המסלולים בקבוצה', inputs: fs.map((f) => ({ label: f.name, v: pc(v(f)), src: src(f) })) });
   const PERS: [Per, string][] = [['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']];
   const feeSrc = (f: FundX, c: 'fee' | 'depfee') => () => fundP(refOf(f), asof, c === 'fee' ? 'AVG_ANNUAL_MANAGEMENT_FEE' : 'AVG_DEPOSIT_FEE', c === 'fee' ? 'דמי ניהול מצבירה' : 'דמי ניהול מהפקדה', pc(f[c]));
-  const retSrc = (f: FundX, per: Per) => () => (f.net?.[per] != null ? netProv(f, per, asof, f.net[per]!, data.net_method) : grossProv(f, per, asof));
+  const retSrc = (f: FundX, per: Per) => () => grossProv(f, per, asof);
   const groups: [string, FundX[]][] = [['הזוכות במכרז', rows.filter((f) => sel.has(f.grp))], ['שאר הקרנות', rows.filter((f) => !sel.has(f.grp))]];
   const left = now ? monthDiff(asof, isoYm(now.to)) : null;
 
@@ -121,9 +121,9 @@ export function FundsDefault() {
 
       {door === 'agent' && <EmployerOnboard funds={data.funds as FundX[]} now={now} asof={asof} />}
 
-      <Panel title={<>היום: הזוכות מול שאר הקרנות · {PROD}</>} aside={<><Seg label="מסלול גיל" value={age} onChange={(a) => { const q = new URLSearchParams(sp); q.set('age', a); setSp(q, { replace: true }); }} options={AGE} /><span className="chip est">נטו, אומדן</span></>}>
+      <Panel title={<>היום: הזוכות מול שאר הקרנות · {PROD}</>} aside={<><Seg label="מסלול גיל" value={age} onChange={(a) => { const q = new URLSearchParams(sp); q.set('age', a); setSp(q, { replace: true }); }} options={AGE} /><span className="chip">ברוטו</span></>}>
         <div className="scroll"><table className="fsimple">
-          <caption className="sr-only">קרנות פנסיה מקיפה, מסלול {age}: דמי ניהול ותשואה נטו</caption>
+          <caption className="sr-only">קרנות פנסיה מקיפה, מסלול {age}: דמי ניהול ותשואה ברוטו</caption>
           <thead><tr><th scope="col">קרן</th><th scope="col">ד"נ מהפקדה</th><th scope="col">ד"נ מצבירה</th>{PERS.map(([, l]) => <th key={l} scope="col">{l}{l !== 'LTM' ? ', שנתי' : ''}</th>)}<th scope="col">נכסים, מ׳ ש"ח</th><th scope="col">הפקדות נטו LTM</th></tr></thead>
           <tbody>
             {[...rows].sort((a, b) => Number(sel.has(b.grp)) - Number(sel.has(a.grp)) || (b.assets ?? 0) - (a.assets ?? 0)).map((f) => (
@@ -131,7 +131,7 @@ export function FundsDefault() {
                 <td><Link to={`/funds/${f.k}`}>{f.grp}</Link> <MgrChip grp={f.grp} mgr={f.mgr} short />{sel.has(f.grp) && <span className="chip">זוכה {now?.id}</span>}</td>
                 <td><Sourced src={feeSrc(f, 'depfee')}><span className="num">{pc(f.depfee)}</span></Sourced></td>
                 <td><Sourced src={feeSrc(f, 'fee')}><span className="num">{pc(f.fee)}</span></Sourced></td>
-                {PERS.map(([per]) => { const r = retOf(f, per, f.net?.[per] != null ? 'net' : 'gross'); return <td key={per}>{r.v == null ? <span className="muted">–</span> : <Sourced src={retSrc(f, per)}><span className="num">{pc(r.v, 1)}</span></Sourced>}</td>; })}
+                {PERS.map(([per]) => { const r = retOf(f, per, 'gross'); return <td key={per}>{r.v == null ? <span className="muted">–</span> : <Sourced src={retSrc(f, per)}><span className="num">{pc(r.v, 1)}</span></Sourced>}</td>; })}
                 <td><Sourced src={() => fundP(refOf(f), asof, 'TOTAL_ASSETS', 'נכסים', nf(f.assets ?? 0, 1), 'מיליוני ש"ח')}><span className="num">{mn(f.assets)}</span></Sourced></td>
                 <td>{f.nd12 == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `הפקדות נטו, 12 חודשים · ${f.name}`, value: mn(f.nd12), unit: 'מיליוני ש"ח', formula: 'סכום ההפקדות נטו החודשיות (הפקדות פחות משיכות והעברות החוצה, כפי שדווח לרשות) על 12 החודשים האחרונים (מחושב בבניית הנתונים)', inputs: [] })}><span className={`num ${f.nd12 >= 0 ? 'pos' : 'neg'}`}>{mn(f.nd12)}</span></Sourced>}</td>
               </tr>))}
@@ -139,12 +139,12 @@ export function FundsDefault() {
               <tr key={l} className="muted"><th scope="row">חציון · {l} ({fs.length})</th>
                 <td><Sourced src={() => medProv(fs, `ד"נ מהפקדה, חציון · ${l}`, (f) => f.depfee, (f) => feeSrc(f, 'depfee'))}><span className="num">{pc(medOf(fs, (f) => f.depfee))}</span></Sourced></td>
                 <td><Sourced src={() => medProv(fs, `ד"נ מצבירה, חציון · ${l}`, (f) => f.fee, (f) => feeSrc(f, 'fee'))}><span className="num">{pc(medOf(fs, (f) => f.fee))}</span></Sourced></td>
-                {PERS.map(([per]) => <td key={per}><Sourced src={() => medProv(fs, `תשואה ${per}, חציון · ${l}`, (f) => f.net?.[per] ?? null, (f) => retSrc(f, per))}><span className="num">{pc(medOf(fs, (f) => f.net?.[per] ?? null), 1)}</span></Sourced></td>)}
+                {PERS.map(([per]) => <td key={per}><Sourced src={() => medProv(fs, `תשואה ${per}, חציון · ${l}`, (f) => f[per] ?? null, (f) => retSrc(f, per))}><span className="num">{pc(medOf(fs, (f) => f[per] ?? null), 1)}</span></Sourced></td>)}
                 <td /><td />
               </tr>))}
           </tbody>
         </table></div>
-        <div className="fnote">דמי הניהול: הממוצע בפועל של המסלול ב-{ym(asof)}, על כל העמיתים בו (גם הוותיקים), ולכן אינם מחיר המכרז שמשלם עמית חדש. נטו: אומדן, תשואה פחות דמי ניהול מצבירה ÷ 12. הפקדות נטו: ההפקדות החודשיות נטו כפי שדווחו לרשות, 12 חודשים. {!sel.size && 'בלי קובץ המכרזים אין סימון זוכות.'}</div>
+        <div className="fnote">דמי הניהול: הממוצע בפועל של המסלול ב-{ym(asof)}, על כל העמיתים בו (גם הוותיקים), ולכן אינם מחיר המכרז שמשלם עמית חדש. תשואות: ברוטו, כפי שפורסמו, לפני דמי ניהול. הפקדות נטו: ההפקדות החודשיות נטו כפי שדווחו לרשות, 12 חודשים. {!sel.size && 'בלי קובץ המכרזים אין סימון זוכות.'}</div>
       </Panel>
 
       {now && post && pre && (
@@ -152,9 +152,9 @@ export function FundsDefault() {
           {dataRows.length > 0 ? (
             <div className="scroll"><table className="fsimple">
               <caption className="sr-only">לפני ואחרי המכרז, מקובץ הנתונים</caption>
-              <thead><tr><th scope="col">קרן</th><th scope="col">הפקדות לפני</th><th scope="col">הפקדות אחרי</th><th scope="col">נתח מההפקדות לפני</th><th scope="col">אחרי</th><th scope="col">תשואה נטו לפני</th><th scope="col">אחרי</th></tr></thead>
+              <thead><tr><th scope="col">קרן</th><th scope="col">הפקדות לפני</th><th scope="col">הפקדות אחרי</th><th scope="col">נתח מההפקדות לפני</th><th scope="col">אחרי</th><th scope="col">תשואה לפני</th><th scope="col">אחרי</th></tr></thead>
               <tbody>{dataRows.map((r) => { const cp = (v: number | null | undefined, w: string, d = 0, u = '') => (v == null ? <span className="muted">–</span> : <Sourced src={() => ({ k: 'calc', title: `${w} · ${r.grp}`, value: u ? pc(v, d) : mn(v), unit: u ? undefined : 'מיליוני ש"ח', formula: `מחושב בבניית הנתונים (קובץ המכרזים של האתר) על מסלולי הפנסיה המקיפה של הקרן${r.ks?.length ? ` (${r.ks.length} מסלולים)` : ''}. ${dfile?.method ?? ''}`, inputs: (r.ks ?? []).map((k) => ({ label: k, v: '' })) })}><span className="num">{u ? pc(v, d) : mn(v)}</span></Sourced>);
-                return <tr key={r.grp} className={r.sel ? 'fsel' : undefined}><td>{r.grp}{r.sel && <span className="chip">זוכה</span>}</td><td>{cp(r.pre?.dep, 'הפקדות לפני')}</td><td>{cp(r.post?.dep, 'הפקדות אחרי')}</td><td>{cp(r.pre?.share, 'נתח הפקדות לפני', 1, '%')}</td><td>{cp(r.post?.share, 'נתח הפקדות אחרי', 1, '%')}</td><td>{cp(r.pre?.ret, 'תשואה נטו לפני', 1, '%')}</td><td>{cp(r.post?.ret, 'תשואה נטו אחרי', 1, '%')}</td></tr>; })}</tbody>
+                return <tr key={r.grp} className={r.sel ? 'fsel' : undefined}><td>{r.grp}{r.sel && <span className="chip">זוכה</span>}</td><td>{cp(r.pre?.dep, 'הפקדות לפני')}</td><td>{cp(r.post?.dep, 'הפקדות אחרי')}</td><td>{cp(r.pre?.share, 'נתח הפקדות לפני', 1, '%')}</td><td>{cp(r.post?.share, 'נתח הפקדות אחרי', 1, '%')}</td><td>{cp(r.pre?.ret, 'תשואה לפני', 1, '%')}</td><td>{cp(r.post?.ret, 'תשואה אחרי', 1, '%')}</td></tr>; })}</tbody>
             </table></div>
           ) : pending > 0 ? <Loading what={`היסטוריות (${ageTracks.length - pending} מתוך ${ageTracks.length})`} /> : (
             <>

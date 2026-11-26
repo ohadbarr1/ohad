@@ -63,7 +63,7 @@ export function EmployerOnboard({ funds, now, asof }: { funds: FundX[]; now: Ten
     const lab = label.trim();
     if (!lab) { setMsg('צריך שם או כינוי ללקוח'); return; }
     const note = `קליטה אצל מעסיק (${today().split('-').reverse().join('.')}): ${big === 'big' ? `מעסיק של ${DEFAULT_RULE.employees} עובדים ומעלה, ספרת ביקורת ${d}` : `מעסיק של פחות מ-${DEFAULT_RULE.employees} עובדים`}. ${runs.map(({ l, r }) => `${l.who} (${PC(l.depfee)} / ${PC(l.fee)}, ${l.sub}): חיסכון צפוי ${ILS(r.ret.balReal)} בגיל ${RETIRE_AGE}`).join('; ')}. יתרה ${ILS(plan.balance)}, הפקדה ${ILS(plan.monthly)} לחודש, גיל ${plan.age}; הנחות האתר. לא המלצה.`;
-    const r = upsert(file, { label: lab, keys, b: 'net', tags: Object.fromEntries(keys.map((k) => [k, 'נבחן' as const])), note, fields: { 'onb:neg': negFee ? `${negDep || 0}% / ${negFee}%` : '' } }, today());
+    const r = upsert(file, { label: lab, keys, b: 'gross', tags: Object.fromEntries(keys.map((k) => [k, 'נבחן' as const])), note, fields: { 'onb:neg': negFee ? `${negDep || 0}% / ${negFee}%` : '' } }, today());
     setFile(r.file);
     setMsg(`${r.created ? 'נשמר בתיק חדש' : 'התיק עודכן'}: ${r.folder.label} · ${keys.length} מסלולים`);
   };

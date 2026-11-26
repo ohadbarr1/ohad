@@ -120,10 +120,11 @@ const allText = wb.flatMap(cellsOf).map((c) => (c && typeof c === 'object' ? `${
 ok(!/fox/i.test(allText), 'pack: no site name anywhere');
 const sA = wb[1];
 const d2 = sA.rows[1][3] as { v: number; f: string };
-ok(d2.f === 'IF(OR(B2="",C2=""),"",B2-C2/12)' && near(d2.v, 1 - 0.05), 'pack: net is a live formula with its cached value');
+ok(d2.f === 'IF(B2="",100,100*(1+B2/100))' && near(d2.v, 101), 'pack: the gross index is a live formula with its cached value');
+ok(sA.rows[0].length === 5 && !/נטו/.test(allText), 'pack: gross only, no net column or net figure (owner 26.11.26)');
 const ltmRow = wb[0].rows.find((r) => r[0] === 'LTM %')! as unknown as [string, { v: number; f: string }, { v: number; f: string }];
-const expLtm = (0.95 ** 0 * 1.0095 ** 12 - 1) * 100;
-ok(near(ltmRow[1].v, expLtm, 1e-5) && /^\('1 מסלול א'!E37\/'1 מסלול א'!E25-1\)\*100$/.test(ltmRow[1].f), `pack: LTM from the index cells (${ltmRow[1].f})`);
+const expLtm = (1.01 ** 12 - 1) * 100;
+ok(near(ltmRow[1].v, expLtm, 1e-5) && /^\('1 מסלול א'!D37\/'1 מסלול א'!D25-1\)\*100$/.test(ltmRow[1].f), `pack: LTM from the index cells (${ltmRow[1].f})`);
 const a3Row = wb[0].rows.find((r) => r[0] === '3Y שנתי %')!;
 ok(near((a3Row[1] as { v: number }).v, expLtm, 1e-5) && (a3Row[2] as unknown) === '–', 'pack: 3Y over the full 36 months uses the base 100; a shorter track gets a dash');
 const cntRow = wb[0].rows.find((r) => r[0] === 'חודשים עם תשואה')!;

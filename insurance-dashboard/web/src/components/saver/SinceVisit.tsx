@@ -4,7 +4,7 @@ import { Sourced } from '../Source';
 import { useMy, type MyProduct } from '../../lib/mine';
 import type { Prov } from '../../lib/prov';
 import { fundP } from '../../lib/market';
-import { grossProv, netProv, refOf, ym, type FundX, type FundsFile } from '../../lib/funds';
+import { grossProv, refOf, ym, type FundX, type FundsFile } from '../../lib/funds';
 import type { DefaultFile } from '../../lib/fundsTools';
 import { verdictOf } from '../../lib/verdict';
 import { EMPTY_SEEN, SEEN_KEY, baselineOf, changesOf, monthsBetween, y12Of, nextSeen, normSeen, snapOf, type Change, type MySnap, type SnapP } from '../../lib/mySince';
@@ -24,7 +24,7 @@ export function SinceVisit({ data, dfile, list }: { data: FundsFile; dfile: Defa
     return list.map((m) => byK.get(m.k)).filter((f): f is FundX => !!f).map((f) => {
       const v = verdictOf(f, funds, asof, dfile, null);
       const s = snapOf(f, v);
-      const catY = v.peers.map((x) => y12Of(x as FundX, s.basis ?? 'net')).filter((x): x is number => x != null);
+      const catY = v.peers.map((x) => y12Of(x as FundX)).filter((x): x is number => x != null);
       return { f, s, catY };
     });
   }, [funds, list, asof, dfile]);
@@ -63,20 +63,20 @@ export function SinceVisit({ data, dfile, list }: { data: FundsFile; dfile: Defa
           );
         })}
       </ul>
-      <p className="sv-note">המקום והרבעים: כמו בכרטיס (5Y נטו, צמודים חולקים מקום). דמי הניהול: הממוצע בפועל במסלול, לא דמי הניהול שלך. המצב בביקור הקודם נשמר בדפדפן הזה בלבד. לעוד מעקב חודשי: <Link to="/funds/watch">המעקב שלי</Link>. אין כאן המלצה.</p>
+      <p className="sv-note">המקום והרבעים: כמו בכרטיס (5Y, ברוטו כפי שפורסם, צמודים חולקים מקום). דמי הניהול: הממוצע בפועל במסלול, לא דמי הניהול שלך. המצב בביקור הקודם נשמר בדפדפן הזה בלבד. לעוד מעקב חודשי: <Link to="/funds/watch">המעקב שלי</Link>. אין כאן המלצה.</p>
     </section>
   );
 }
 
 /** the source of one change: the regulator's column for the figures, the two snapshots for a move */
-function provOf(c: Change, f: FundX, s: SnapP, b: SnapP, asof: number, basAsof: number, data: FundsFile): Prov {
+function provOf(c: Change, f: FundX, s: SnapP, b: SnapP, asof: number, basAsof: number, _data: FundsFile): Prov {
   const R = refOf(f);
-  if (c.kind === 'ltm') return s.basis === 'net' ? netProv(f, 'y12', asof, s.y12 ?? null, data.net_method) : grossProv(f, 'y12', asof);
+  if (c.kind === 'ltm') return grossProv(f, 'y12', asof);
   if (c.kind === 'fee') return { k: 'calc', title: `דמי ניהול מצבירה, ממוצע בפועל · ${f.name}`, value: `${s.fee?.toFixed(2)}%`, formula: 'דמי הניהול מצבירה הממוצעים בפועל היום, מול אלה שנראו בביקור הקודם',
     inputs: [{ label: ym(asof), v: `${s.fee?.toFixed(2)}%`, src: () => fundP(R, asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', `${s.fee?.toFixed(2)}%`) }, { label: `בביקור הקודם · ${ym(basAsof)}`, v: `${b.fee?.toFixed(2)}%`, src: () => fundP(R, basAsof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', `${b.fee?.toFixed(2)}%`) }] };
   if (c.kind === 'dep') return { k: 'calc', title: `דמי ניהול מהפקדה, ממוצע בפועל · ${f.name}`, value: `${s.depfee?.toFixed(2)}%`, formula: 'דמי הניהול מהפקדה הממוצעים בפועל היום, מול אלה שנראו בביקור הקודם',
     inputs: [{ label: ym(asof), v: `${s.depfee?.toFixed(2)}%`, src: () => fundP(R, asof, 'AVG_DEPOSIT_FEE', 'דמי ניהול מהפקדה', `${s.depfee?.toFixed(2)}%`) }, { label: `בביקור הקודם · ${ym(basAsof)}`, v: `${b.depfee?.toFixed(2)}%` }] };
-  return { k: 'calc', est: s.basis === 'net', title: `מקום בקטגוריה · ${f.name}`, value: `${s.lo === s.hi ? s.lo : `${s.lo}–${s.hi}`} מתוך ${s.n}`,
-    formula: `מקום משותף בקטגוריה (${f.prod}, ${f.track}) על התשואה השנתית הממוצעת ל-5 שנים${s.basis === 'net' ? ' נטו (אומדן)' : ''}; פער של פחות מ-0.10 נ"א לשנה חולק מקום. רבע עליון / תחתון: כמו בכרטיס`,
+  return { k: 'calc', title: `מקום בקטגוריה · ${f.name}`, value: `${s.lo === s.hi ? s.lo : `${s.lo}–${s.hi}`} מתוך ${s.n}`,
+    formula: `מקום משותף בקטגוריה (${f.prod}, ${f.track}) על התשואה השנתית הממוצעת ל-5 שנים, ברוטו כפי שפורסמה; פער של פחות מ-0.10 נ"א לשנה חולק מקום. רבע עליון / תחתון: כמו בכרטיס`,
     inputs: [{ label: `היום · ${ym(asof)}`, v: `${s.lo}–${s.hi} מתוך ${s.n}` }, { label: `בביקור הקודם · ${ym(basAsof)} (נשמר בדפדפן)`, v: `${b.lo}–${b.hi} מתוך ${b.n}` }] };
 }

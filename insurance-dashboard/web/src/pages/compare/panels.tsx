@@ -15,8 +15,8 @@ import { useMacro } from '../../lib/macro';
 import { nf, pubLabel } from '../../lib/format';
 import { load, useFundCats, useFunds } from '../../lib/useData';
 import {
-  GROSS_LABEL, NET_LABEL, NET_NOTE, PERIODS, PER_LABEL, byYear, catKey, cpiFactor, growth, netMonthIn, netProv, netSeries, onAxis, pc, perMonths, refOf, rolling, stats,
-  underwater, useReal, winRate, winRet, ym, grossProv, type Basis, type CatX, type FundX, type FundsFile, type HistX, type Per,
+  GROSS_LABEL, PERIODS, PER_LABEL, byYear, catKey, cpiFactor, growth, onAxis, pc, perMonths, refOf, rolling, stats,
+  underwater, useReal, winRate, ym, grossProv, type Basis, type CatX, type FundX, type FundsFile, type HistX, type Per,
 } from '../../lib/funds';
 import { useOptional } from '../../lib/fundsLoad';
 import type { DefaultFile } from '../../lib/fundsTools';
@@ -42,7 +42,7 @@ import '../../styles/agent.css';
 /* Track compare: everything the page computed before the redesign, kept whole and reachable for the agent and Pro lenses (C9: cut from
    the default render, never from the code). Moved here from pages/FundsCompare.tsx by lane L2-a; the lanes of "להחלטה" (L3-a) and
    "סיכון" (L3-b) compose these blocks. Nothing here renders in the saver door's default view.
-   - useCompareData(keys, basis): funds.json, the category file, each track's history (closed tracks from funds/closed.json), net or gross,
+   - useCompareData(keys, basis): funds.json, the category file, each track's history (closed tracks from funds/closed.json), the published gross return,
      nominal or real (CPI), and the sources of every figure (Prov). One load per file: lib/useData caches.
    - useKpiRows(d, mode, win): the KPI rows (periods, both fees, assets, equity, volatility and drawdown in the window, Sharpe and sd as
      published, actuarial balance, default fund, service index, claims, the pension estimate for a man and a woman) and the descriptive
@@ -56,20 +56,20 @@ export type Win = '12' | '36' | '60' | '120' | 'max';
 export const WINDOWS: [Win, string][] = [['12', '1Y'], ['36', '3Y'], ['60', '5Y'], ['120', '10Y'], ['max', 'הכול']];
 /** a long regulator name cut for a table head (the full name in the tooltip) */
 export const shortName = (n: string) => (n.length > 30 ? n.slice(0, 28).trimEnd() + '…' : n);
-export interface Item { f: FundX; h: HistX; y: (number | null)[]; ns: ReturnType<typeof netSeries> | null }
+export interface Item { f: FundX; h: HistX; y: (number | null)[] }
 export type Mode = 'saver' | 'agent' | 'pro';
 
 export interface CompareData {
   data: FundsFile; asof: number; cats: Record<string, CatX> | undefined;
   keys: string[]; items: Item[]; unknown: string[]; loadingN: number;
-  netAsk: boolean; real: boolean; basis: Basis; lbl: string;
+  real: boolean; basis: Basis; lbl: string;
   sameCat: boolean; mixedProd: boolean; cat: CatX | undefined; catY: (number | null)[] | null;
   cpiN: number;
   fundOf: (k: string) => FundX | undefined;
   colorOf: (k: string) => string; nameOf: (k: string) => string;
-  /** one month of a track with its source (net: the net estimate; gross: as published) */
+  /** one month of a track with its source (as published, gross) */
   monthRow: (it: Item, p: number) => ReturnType<typeof monthIn>;
-  /** a period return as the page shows it (published net, or built from the net months; real when asked) and its source */
+  /** a period return as the page shows it (published gross; real when asked) and its source */
   kret: (it: Item, per: Per) => { v: number | null; src: () => Prov };
 }
 
@@ -80,7 +80,6 @@ export function useCompareData(keys: string[], basis: Basis): CompareData | { er
   const cats = useFundCats().data as Record<string, CatX> | undefined;
   const cpi = useMacro().data?.series.cpi;
   const [real] = useReal();
-  const netAsk = basis === 'net';
   // closed tracks are not in funds.json: look them up in funds/closed.json when a key is unknown
   const [gone, setGone] = useState<FundX[]>([]);
   const [goneDone, setGoneDone] = useState(false);
@@ -91,36 +90,31 @@ export function useCompareData(keys: string[], basis: Basis): CompareData | { er
   const [failed, setFailed] = useState<string[]>([]);
   // a history is asked for only for a track the files know (open, or closed): an unknown key in a link costs no 404
   useEffect(() => { keys.filter((k) => !hist[k] && !failed.includes(k) && !!fundOf(k)).forEach((k) => load<HistX>(`funds/${k}.json`).then((h) => setHist((c) => ({ ...c, [k]: h })), () => setFailed((c) => [...c, k]))); }, [keys, hist, failed, data, gone]);  // eslint-disable-line react-hooks/exhaustive-deps
-  const items: Item[] = useMemo(() => keys.map((k) => { const f = fundOf(k), h = hist[k]; if (!f || !h) return null; seedHist(refOf(f), h); const ns = netAsk ? netSeries(h) : null;
-    let y = ns ? ns.y : h.y;
+  const items: Item[] = useMemo(() => keys.map((k) => { const f = fundOf(k), h = hist[k]; if (!f || !h) return null; seedHist(refOf(f), h);
+    let y = h.y;
     // real: each month deflated by that month's CPI change; months the CPI file does not cover drop out
     if (real) { const at = new Map((cpi?.points ?? []).filter((x) => x.mom != null).map((x) => [Number(x.m.replace('-', '')), x.mom as number])); y = y.map((r, i) => { const c = at.get(h.p[i]); return r == null || c == null ? null : ((1 + r / 100) / (1 + c / 100) - 1) * 100; }); }
-    return { f, h, y, ns }; }).filter((x): x is Item => !!x), [keys, hist, data, gone, netAsk, real, cpi]);  // eslint-disable-line react-hooks/exhaustive-deps
+    return { f, h, y }; }).filter((x): x is Item => !!x), [keys, hist, data, gone, real, cpi]);  // eslint-disable-line react-hooks/exhaustive-deps
   if (error) return { error };
   if (!data) return null;
   const asof = data.asof;
   const sameCat = items.length > 0 && items.every((it) => catKey(it.f) === catKey(items[0].f));
   const mixedProd = new Set(items.map((it) => it.f.prod)).size > 1;
   const cat = sameCat && cats ? cats[catKey(items[0].f)] : undefined;
-  // the category line: net only when the build publishes the category's net (yn); never a gross average against net tracks
-  const catY = cat ? (netAsk ? (cat.yn && cat.yn.length === cat.p.length ? cat.yn : null) : cat.y) : null;
-  const lbl = real ? `ריאלי${netAsk ? ', נטו' : ''}` : netAsk ? NET_LABEL : GROSS_LABEL;
+  const catY = cat ? cat.y : null;
+  const lbl = real ? 'ריאלי' : GROSS_LABEL;
   const unknown = keys.filter((k) => failed.includes(k) || (data.funds.length > 0 && !fundOf(k) && goneDone));
-  const monthRow = (it: Item, p: number) => (netAsk && it.ns ? netMonthIn(refOf(it.f), it.h, p, it.ns) : monthIn(refOf(it.f), 'y', p, it.h.y[it.h.p.indexOf(p)]));
+  const monthRow = (it: Item, p: number) => monthIn(refOf(it.f), 'y', p, it.h.y[it.h.p.indexOf(p)]);
   const kret = (it: Item, per: Per): { v: number | null; src: () => Prov } => {
-    if (real) { const nom = netAsk ? winRet(it.h, it.ns!.y, per, asof) : it.f[per], c = cpiFactor(cpi, asof, perMonths(per, asof));
+    if (real) { const nom = it.f[per], c = cpiFactor(cpi, asof, perMonths(per, asof));
       const v = nom == null || !c ? null : per === 'a3' || per === 'a5' ? (((1 + nom / 100) ** (perMonths(per, asof) / 12) / c.f) ** (12 / perMonths(per, asof)) - 1) * 100 : ((1 + nom / 100) / c.f - 1) * 100;
-      return { v, src: () => ({ k: 'calc', est: netAsk, title: `${PER_LABEL[per]}, ${lbl} · ${it.f.name}`, value: pc(v), formula: 'התשואה הנומינלית מנוכה במדד המחירים לצרכן של חודשי החלון', inputs: [{ label: 'נומינלי', v: pc(nom), src: () => (netAsk ? netProv(it.f, per, asof, nom) : grossProv(it.f, per, asof)) }, ...(c ? [{ label: 'מדד המחירים בחלון', v: pc((c.f - 1) * 100) }] : [])] }) };
+      return { v, src: () => ({ k: 'calc', title: `${PER_LABEL[per]}, ${lbl} · ${it.f.name}`, value: pc(v), formula: 'התשואה הנומינלית מנוכה במדד המחירים לצרכן של חודשי החלון', inputs: [{ label: 'נומינלי', v: pc(nom), src: () => grossProv(it.f, per, asof) }, ...(c ? [{ label: 'מדד המחירים בחלון', v: pc((c.f - 1) * 100) }] : [])] }) };
     }
-    if (!netAsk) return { v: it.f[per], src: () => grossProv(it.f, per, asof) };
-    const pub = it.f.net?.[per];
-    if (pub != null) return { v: pub, src: () => netProv(it.f, per, asof, pub, data.net_method) };
-    const v = winRet(it.h, it.ns!.y, per, asof);
-    return { v, src: () => ({ k: 'calc', est: true, title: `${PER_LABEL[per]}, ${NET_LABEL} · ${it.f.name}`, value: pc(v), formula: `${per === 'a3' || per === 'a5' ? 'שנתי: ' : ''}ריבית דריבית על התשואות החודשיות נטו של החלון`, note: NET_NOTE, inputs: monthsBack(asof, perMonths(per, asof)).map((p) => monthRow(it, p)) }) };
+    return { v: it.f[per], src: () => grossProv(it.f, per, asof) };
   };
   const idxOf = (k: string) => Math.max(0, items.findIndex((it) => it.f.k === k));
   return {
-    data, asof, cats, keys, items, unknown, loadingN: keys.length - items.length - unknown.length, netAsk, real, basis, lbl, sameCat, mixedProd, cat, catY,
+    data, asof, cats, keys, items, unknown, loadingN: keys.length - items.length - unknown.length, real, basis, lbl, sameCat, mixedProd, cat, catY,
     cpiN: cpi?.points.length ?? 0, fundOf, colorOf: (k) => trackRgb(idxOf(k)), nameOf: (k) => items.find((it) => it.f.k === k)?.f.name ?? k, monthRow, kret,
   };
 }
@@ -167,7 +161,7 @@ export function useKpiRows(d: CompareData, mode: Mode, win: Win = '60'): KpiRows
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index and the claims rows
   const coefF = useOptional<CoefFile>(COEF_PATH);  // W6: the funds' conversion coefficients
   const axis = useAxis(d, win);
-  const { items, asof, netAsk } = d;
+  const { items, asof } = d;
   const ser = (it: Item) => onAxis(axis, it.h.p, it.y);
   const anyPension = items.some((it) => isPension(it.f));
   // W6: one projection for every pension track (the fee tool's example plan), each with its own fees, ÷ the fund's own coefficient
@@ -185,13 +179,13 @@ export function useKpiRows(d: CompareData, mode: Mode, win: Win = '60'): KpiRows
     return { v: out.pensionReal, t: ilsRound(out.pensionReal), src, sub: `מקדם ${pick.v} · ${pick.label}` };
   };
   const rows: KRow[] = [
-    ...PERIODS.map(([per, l]): KRow => ({ key: per, label: `${l}${per === 'a3' || per === 'a5' ? ', שנתי' : ''}`, tip: netAsk ? 'net' : 'gross', cells: (it) => { const r = d.kret(it, per); return { v: r.v, t: pc(r.v, per === 'm1' ? 2 : 1), src: r.src }; } })),
+    ...PERIODS.map(([per, l]): KRow => ({ key: per, label: `${l}${per === 'a3' || per === 'a5' ? ', שנתי' : ''}`, tip: 'gross', cells: (it) => { const r = d.kret(it, per); return { v: r.v, t: pc(r.v, per === 'm1' ? 2 : 1), src: r.src }; } })),
     { key: 'fee', label: 'ד"נ מצבירה, ממוצע בפועל', tip: 'fee', cells: (it) => ({ v: it.f.fee, t: it.f.fee == null ? '–' : nf(it.f.fee, 2) + '%' + (isOldGen(it.f) ? ` · ${OLD_FEE_HE}` : ''), txt: isOldGen(it.f) || undefined, src: () => fundP(refOf(it.f), it.f.end ?? asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(it.f.fee ?? 0, 2) + '%') }) },
     { key: 'depfee', label: 'ד"נ מהפקדה, ממוצע בפועל', tip: 'depfee', cells: (it) => ({ v: it.f.depfee, t: it.f.depfee == null ? '–' : nf(it.f.depfee, 2) + '%', src: () => fundP(refOf(it.f), it.f.end ?? asof, 'AVG_DEPOSIT_FEE', 'דמי ניהול מהפקדה, ממוצע בפועל', nf(it.f.depfee ?? 0, 2) + '%') }) },
     { key: 'assets', label: 'נכסים, מ׳ ש"ח', cells: (it) => ({ v: it.f.assets, t: it.f.assets == null ? '–' : nf(it.f.assets, 0), src: () => fundP(refOf(it.f), it.f.end ?? asof, 'TOTAL_ASSETS', 'נכסים', nf(it.f.assets ?? 0, 1), 'מיליוני ש"ח') }) },
     { key: 'st', label: 'חשיפה למניות', tip: 'equity', cells: (it) => ({ v: it.f.st, t: it.f.st == null ? '–' : nf(it.f.st, 0) + '%', src: () => expP(refOf(it.f), it.f.end ?? asof, 'STOCK_MARKET_EXPOSURE', 'חשיפה למניות', it.f.st, it.f.assets) }) },
     { key: 'vol', label: 'תנודתיות בחלון', tip: 'vol', cells: (it) => { const s = stats(ser(it), axis.length - 1); return { v: s?.vol ?? null, t: s ? nf(s.vol, 1) + '%' : '–', src: s ? () => ({ k: 'calc', title: `תנודתיות שנתית · ${it.f.name}`, value: nf(s.vol, 1) + '%', formula: 'סטיית תקן של התשואות החודשיות בחלון כפול שורש 12', inputs: axis.slice(1).map((p) => d.monthRow(it, p)) }) : undefined }; } },
-    { key: 'dd', label: 'ירידה מרבית בחלון', tip: 'dd', cells: (it) => { const s = stats(ser(it), axis.length - 1); return { v: s?.dd ?? null, t: pc(s?.dd, 1), src: s ? () => ({ k: 'calc', est: netAsk, title: `ירידה מרבית · ${it.f.name}`, value: pc(s.dd), formula: 'הירידה הגדולה ביותר ממדד התשואה המצטברת, משיאו לשפל שאחריו', inputs: axis.slice(1).map((p) => d.monthRow(it, p)) }) : undefined }; } },
+    { key: 'dd', label: 'ירידה מרבית בחלון', tip: 'dd', cells: (it) => { const s = stats(ser(it), axis.length - 1); return { v: s?.dd ?? null, t: pc(s?.dd, 1), src: s ? () => ({ k: 'calc', title: `ירידה מרבית · ${it.f.name}`, value: pc(s.dd), formula: 'הירידה הגדולה ביותר ממדד התשואה המצטברת, משיאו לשפל שאחריו', inputs: axis.slice(1).map((p) => d.monthRow(it, p)) }) : undefined }; } },
     { key: 'age', label: 'מועד הקמה', cells: (it) => ({ v: null, t: it.f.since ? pubLabel(it.f.since) : '–' }) },
     // W1-agent: the regulator's own risk figures, and the pension decision rows
     { key: 'sharpe', label: 'שארפ (הרשות, כפי שפורסם)', tip: 'sharpe', cells: (it) => { const v = sharpeOf(it.f); return { v, t: v == null ? '–' : nf(v, 2), src: () => fundP(refOf(it.f), it.f.end ?? asof, 'SHARPE_RATIO', 'שארפ', nf(v ?? 0, 2)) }; } },
@@ -222,10 +216,10 @@ export function ClientActions({ d, kp }: { d: CompareData; kp: KpiRows }) {
   const [clients] = useClients();
   const [folderId, setFolderId] = useState<string | null>(() => folderOfState(loc.state));
   const folder = folderId ? clients.folders.find((f) => f.id === folderId) ?? null : null;
-  const { items, keys, netAsk, asof, basis, real } = d;
-  const printHref = `/funds/compare/print?k=${keys.join(',')}&b=${basis}${real ? '&real=1' : ''}`;
+  const { items, keys, asof, basis, real } = d;
+  const printHref = `/funds/compare/print?k=${keys.join(',')}${real ? '&real=1' : ''}`;
   // W4: the figures a client folder freezes (the client document's rows, from the histories on this page)
-  const snapNow = () => { const rows = items.map((it) => docRow(it.f, { net: netAsk, asof, hist: it.h, dfile: kp.dfile, dec: kp.dec })); return snapOf(rows, bottomLines(rows, netAsk), todayIso(), asof, netAsk ? 'net' : 'gross'); };
+  const snapNow = () => { const rows = items.map((it) => docRow(it.f, { asof, hist: it.h, dfile: kp.dfile, dec: kp.dec })); return snapOf(rows, bottomLines(rows), todayIso(), asof); };
   return (
     <>
       <div className="cmp-actions">
@@ -241,7 +235,7 @@ export function ClientActions({ d, kp }: { d: CompareData; kp: KpiRows }) {
   );
 }
 
-/** the compare pack (plan #22): per track the monthly gross, fee and net as a live formula, indices and drawdowns; a summary; sources */
+/** the compare pack (plan #22): per track the monthly gross return and the published fee, indices and drawdowns; a summary; sources */
 export async function exportPack(d: CompareData) {
   const [{ downloadXlsxAsync }, { comparePack, fillFee }] = await Promise.all([import('../../lib/xlsx'), import('../../lib/fundsPack')]);
   const ts = d.items.map((it) => { const ff = fillFee(it.h.fee);
@@ -251,7 +245,7 @@ export async function exportPack(d: CompareData) {
 
 /** The descriptive bottom line (W1/W4): one tile per measure, inside one category; ties shared, never crowned. `mode` saver drops Sharpe. */
 export function BottomLinePanel({ d, kp, mode, actions }: { d: CompareData; kp: KpiRows; mode: Mode; actions?: ReactNode }) {
-  const { items, asof, lbl, netAsk, real } = d, { summary } = kp, saver = mode === 'saver';
+  const { items, asof, lbl, real } = d, { summary } = kp, saver = mode === 'saver';
   const who = (l: Lead) => l.ks.map((k) => <span key={k} className="cmpn"><i className="sw" style={{ background: d.colorOf(k) }} aria-hidden="true" />{d.nameOf(k)}</span>);
   const outOf = (l: Lead) => `${l.of} מסלולים${l.missing.length ? `; ${l.missing.length} בלי נתון` : ''}`;
   const tile = (key: string, label: string, l: Lead | null, val: (l: Lead) => ReactNode, src?: (l: Lead) => () => Prov) => (
@@ -271,7 +265,7 @@ export function BottomLinePanel({ d, kp, mode, actions }: { d: CompareData; kp: 
     ...(saver ? [] : [tile(`sharpe:${c.cat}`, LEAD_HE.sharpe, c.sharpe, (l) => <span className="num">{nf(l.v, 2)}</span>, (l) => () => fundP(refOf(itemOf(l.ks[0]).f), asof, 'SHARPE_RATIO', 'שארפ', nf(l.v, 2)))]),
   ];
   return (
-    <Panel title="השורה התחתונה" aside={<><span className={`chip${netAsk || real ? ' est' : ''}`}>{lbl}</span><span className="num">{ym(asof)}</span></>}>
+    <Panel title="השורה התחתונה" aside={<><span className={`chip${real ? ' est' : ''}`}>{lbl}</span><span className="num">{ym(asof)}</span></>}>
       {summary.old && <div className="cmp-old" role="note"><b>ביטוח מנהלים מדור ישן.</b> {OLD_WARN}. <Link to={BM_HREF}>רשימת הבדיקה לביטוחי מנהלים ישנים</Link></div>}
       {summary.cross && <div className="cmp-cross" role="note">
         <p>{CROSS_HE}.</p>
@@ -292,7 +286,7 @@ export function BottomLinePanel({ d, kp, mode, actions }: { d: CompareData; kp: 
 
 /** The old head-to-head: a table on a wide screen, one card per track on a phone (`phone`). */
 export function KpiPanel({ d, kp, mode, phone }: { d: CompareData; kp: KpiRows; mode: Mode; phone: boolean }) {
-  const { items, asof, lbl, netAsk, real } = d, saver = mode === 'saver', { axis } = kp;
+  const { items, asof, lbl, real } = d, saver = mode === 'saver', { axis } = kp;
   if (phone) return (
     <div className="cmp-cards">
       {items.map((it) => { const dn = isPension(it.f) ? defaultNow(it.f.k, kp.dfile, asof) : null; const fig = (row: string, label: string, c: KCell) => (
@@ -315,13 +309,13 @@ export function KpiPanel({ d, kp, mode, phone }: { d: CompareData; kp: KpiRows; 
     </div>
   );
   return (
-    <Panel title="זה מול זה" aside={<><span className={`chip${netAsk || real ? ' est' : ''}`}>{lbl}</span><span>● הנמוך או הגבוה בשורה, באותה קטגוריה</span></>}>
+    <Panel title="זה מול זה" aside={<><span className={`chip${real ? ' est' : ''}`}>{lbl}</span><span>● הנמוך או הגבוה בשורה, באותה קטגוריה</span></>}>
       <DataTable<KRow> caption="מדדים זה מול זה" className={`fcmp${items.length >= 5 ? ' many' : ''}`} rows={kp.shown} rowKey={(r) => r.key} export={{ name: `השוואת-מסלולים-${ym(asof).replace('/', '-')}`, title: 'השוואת מסלולים', note: `${lbl} · ${ym(asof)} · רשות שוק ההון` }}
         columns={[{ key: 'm', head: 'מדד', sortable: false, value: (r) => r.label, cell: (r) => <>{r.label}{r.tip && <Tip k={r.tip} />}</> },
           ...items.map((it): Column<KRow> => ({ key: it.f.k, sortable: false, label: it.f.name, value: (r) => r.cells(it).v ?? r.cells(it).t, text: (r) => r.cells(it).t,
             head: <><span className="fcmp-sw" style={{ background: d.colorOf(it.f.k) }} aria-hidden="true" /><Link to={`/funds/${it.f.k}`} className="fcmp-n" title={it.f.name}>{it.f.name}</Link><span className="fcmp-sub"><MgrChip grp={it.f.grp} mgr={it.f.mgr} short /> {it.f.prod} · {it.f.track}{it.f.gone && <span className="chip est">נסגר{it.f.end ? ` ${ym(it.f.end)}` : ''}</span>}</span></>,
             tdClass: (r) => (kp.isLead(r.key, it.f.k) ? 'cmp-best' : undefined), cell: (r) => { const c = r.cells(it); return <>{c.src && (c.v != null || c.txt) ? <Sourced src={c.src}><span className={c.txt ? undefined : 'num'}>{c.t}</span></Sourced> : <span className={c.t === '–' || c.txt === undefined && /[א-ת]/.test(c.t) ? 'muted' : 'num'}>{c.t}</span>}{c.sub && <span className="fcmp-q num" title="דמי הניהול בהליך: מהפקדה / מצבירה">{c.sub}</span>}</>; } }))]} />
-      <div className="fnote">{netAsk ? 'נטו: ' + (items.some((it) => it.f.net) ? 'מהקובץ כשפורסם, אחרת ' : '') + 'אומדן מההיסטוריה (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12). ' : 'ברוטו: לפני דמי ניהול, כפי שפורסם. '}תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}{saver ? '.' : '; שארפ וסטיית תקן: כפי שהרשות מפרסמת, לא על החלון כאן.'}{!saver && kp.anyPension ? ` קצבה חודשית: אומדן בגיל ${RETIRE_AGE} על הנחות אחידות לכל המסלולים (יתרה והפקדה לדוגמה, תשואה ${RET_FALLBACK}%), עם דמי הניהול של המסלול, ÷ מקדם ההמרה של הקרן מהתקנון שלה ("לפי מקדם מהתקנון, עמ'") או לפי הנחה; בשקלי היום, לא תחזית.` : ''}</div>
+      <div className="fnote">ברוטו: לפני דמי ניהול, כפי שפורסם. תנודתיות וירידה מרבית: בחלון המשותף {axis.length > 1 ? `${ym(axis[1])}–${ym(axis[axis.length - 1])}` : ''}{saver ? '.' : '; שארפ וסטיית תקן: כפי שהרשות מפרסמת, לא על החלון כאן.'}{!saver && kp.anyPension ? ` קצבה חודשית: אומדן בגיל ${RETIRE_AGE} על הנחות אחידות לכל המסלולים (יתרה והפקדה לדוגמה, תשואה ${RET_FALLBACK}%), עם דמי הניהול של המסלול, ÷ מקדם ההמרה של הקרן מהתקנון שלה ("לפי מקדם מהתקנון, עמ'") או לפי הנחה; בשקלי היום, לא תחזית.` : ''}</div>
     </Panel>
   );
 }
@@ -357,21 +351,21 @@ export function TaxLiqPanel({ d }: { d: CompareData }) {
 export function GrowthPanel({ d, win, aside }: { d: CompareData; win: Win; aside?: ReactNode }) {
   const { open } = useSource();
   const axis = useAxis(d, win);
-  const { items, keys, netAsk, real, lbl, asof, cat, catY, sameCat } = d;
+  const { items, keys, real, lbl, asof, cat, catY, sameCat } = d;
   if (axis.length <= 2) return null;
   const ser = (it: Item) => onAxis(axis, it.h.p, it.y);
   const catSer = catY && cat ? onAxis(axis, cat.p, catY) : null;
   const realNote = real ? ' Real: כל חודש מנוכה בשינוי החודשי של מדד המחירים לצרכן (הלמ"ס).' : '';
-  const idxSrc = (it: Item | null, di: number, v: number): Prov => ({ k: 'calc', est: netAsk, title: `צמיחה של 100 ש"ח · ${it ? it.f.name : `ממוצע ${items[0].f.track}`} · ${ym(axis[di])}`, value: nf(v, 1),
-    formula: `100 × (1 + r₁) × … × (1 + rₙ) על התשואות החודשיות (${lbl}) מ-${ym(axis[1])} עד ${ym(axis[di])}. בסיס: סוף ${ym(axis[0])}.${realNote}`, note: netAsk ? NET_NOTE : undefined,
+  const idxSrc = (it: Item | null, di: number, v: number): Prov => ({ k: 'calc', title: `צמיחה של 100 ש"ח · ${it ? it.f.name : `ממוצע ${items[0].f.track}`} · ${ym(axis[di])}`, value: nf(v, 1),
+    formula: `100 × (1 + r₁) × … × (1 + rₙ) על התשואות החודשיות (${lbl}) מ-${ym(axis[1])} עד ${ym(axis[di])}. בסיס: סוף ${ym(axis[0])}.${realNote}`,
     inputs: axis.slice(1, di + 1).map((p) => (it ? d.monthRow(it, p) : { label: `ממוצע הקטגוריה · ${ym(p)}`, v: pc(catY![cat!.p.indexOf(p)]) })) });
   return (
-    <Panel title={<>צמיחה של 100 ש"ח <Tip k="growth" /></>} aside={aside ?? <><span>{ym(axis[0])}–{ym(axis[axis.length - 1])}</span><span className={`chip${netAsk ? ' est' : ''}`}>{lbl}</span></>}>
-      <Chart label="צמיחה של 100 שח" exportName={`השוואה-צמיחה-${ym(asof).replace('/', '-')}`} height={320} deps={[keys.join(), win, netAsk, real, items.length, !!catSer]}
+    <Panel title={<>צמיחה של 100 ש"ח <Tip k="growth" /></>} aside={aside ?? <><span>{ym(axis[0])}–{ym(axis[axis.length - 1])}</span><span className="chip">{lbl}</span></>}>
+      <Chart label="צמיחה של 100 שח" exportName={`השוואה-צמיחה-${ym(asof).replace('/', '-')}`} height={320} deps={[keys.join(), win, real, items.length, !!catSer]}
         onPoint={(si, di) => { if (di < 1) return; if (si < items.length) { const v = growth(axis, ser(items[si]))[di]; if (v != null) open(idxSrc(items[si], di, v)); } else if (catSer) { const v = growth(axis, catSer)[di]; if (v != null) open(idxSrc(null, di, v)); } }}
         build={() => { const b = chartBase(); return foxOption({ x: axis.map(ym), unit: 'ש"ח', dense: true, scale: true, legend: true,
           series: [...items.map((it) => ({ name: it.f.name, data: growth(axis, ser(it)), kind: 'line' as const, color: d.colorOf(it.f.k), dec: 1 })), ...(catSer ? [{ name: `ממוצע ${items[0].f.track}`, data: growth(axis, catSer), kind: 'line' as const, dashed: true, color: b.mu, dec: 1 }] : [])] }); }} />
-      <div className="fnote">{sameCat ? (catSer ? 'קו מקווקו: ממוצע הקטגוריה, משוקלל נכסים.' : netAsk ? 'ממוצע הקטגוריה נטו טרם פורסם, ולכן אינו מוצג מול מסלולים נטו.' : '') : ''} בלי הפקדות נוספות; לחיצה על נקודה פותחת את החישוב.</div>
+      <div className="fnote">{sameCat ? (catSer ? 'קו מקווקו: ממוצע הקטגוריה, משוקלל נכסים.' : '') : ''} בלי הפקדות נוספות; לחיצה על נקודה פותחת את החישוב.</div>
     </Panel>
   );
 }
@@ -382,15 +376,15 @@ export function RollingPanel({ d, win }: { d: CompareData; win: Win }) {
   const { open } = useSource();
   const axis = useAxis(d, win);
   const [roll, setRoll] = useState<'12' | '36'>('36');
-  const { items, keys, netAsk, real, lbl } = d;
+  const { items, keys, real, lbl } = d;
   const ser = (it: Item) => onAxis(axis, it.h.p, it.y);
   const has = items.some((it) => rolling(ser(it), Number(roll)).some((v) => v != null));
-  const rollSrc = (it: Item, di: number, v: number, n: number): Prov => ({ k: 'calc', est: netAsk, title: `תשואה מתגלגלת ${n} חודשים · ${it.f.name} · ${ym(axis[di])}`, value: pc(v), formula: `${n > 12 ? '((1 + r₁) × … × (1 + rₙ)) בחזקת 12 ÷ n, פחות 1 (שנתי)' : '(1 + r₁) × … × (1 + r₁₂) − 1'} על ${n} החודשים שמסתיימים ב-${ym(axis[di])} (${lbl})`,
+  const rollSrc = (it: Item, di: number, v: number, n: number): Prov => ({ k: 'calc', title: `תשואה מתגלגלת ${n} חודשים · ${it.f.name} · ${ym(axis[di])}`, value: pc(v), formula: `${n > 12 ? '((1 + r₁) × … × (1 + rₙ)) בחזקת 12 ÷ n, פחות 1 (שנתי)' : '(1 + r₁) × … × (1 + r₁₂) − 1'} על ${n} החודשים שמסתיימים ב-${ym(axis[di])} (${lbl})`,
     inputs: monthsBack(axis[di], n).map((p) => d.monthRow(it, p)) });
   return (
     <Panel title={<>תשואה מתגלגלת <Tip k="rolling" /></>} aside={<Seg label="חלון מתגלגל" value={roll} onChange={setRoll} options={[['12', '12M'], ['36', '36M, שנתי']]} />}>
       {axis.length <= 2 || !has ? <Empty title={ROLL_EMPTY} icon="chart" /> : (
-        <Chart label={`תשואה מתגלגלת ${roll} חודשים`} exportName={`השוואה-מתגלגלת-${roll}`} height={260} deps={[keys.join(), win, roll, netAsk, real, items.length]}
+        <Chart label={`תשואה מתגלגלת ${roll} חודשים`} exportName={`השוואה-מתגלגלת-${roll}`} height={260} deps={[keys.join(), win, roll, real, items.length]}
           onPoint={(si, di) => { const it = items[si]; if (!it) return; const v = rolling(ser(it), Number(roll))[di]; if (v != null) open(rollSrc(it, di, v, Number(roll))); }}
           build={() => foxOption({ x: axis.map(ym), unit: '%', dense: true, full: true, legend: true, series: items.map((it) => ({ name: it.f.name, data: rolling(ser(it), Number(roll)), kind: 'line' as const, pct: true, color: d.colorOf(it.f.k), dec: 1 })) })} />
       )}
@@ -401,13 +395,13 @@ export function RollingPanel({ d, win }: { d: CompareData; win: Win }) {
 export function UnderwaterPanel({ d, win }: { d: CompareData; win: Win }) {
   const { open } = useSource();
   const axis = useAxis(d, win);
-  const { items, keys, netAsk, real, lbl } = d;
+  const { items, keys, real, lbl } = d;
   if (axis.length <= 2) return null;
   const ser = (it: Item) => onAxis(axis, it.h.p, it.y);
-  const ddSrc = (it: Item, di: number, v: number): Prov => ({ k: 'calc', est: netAsk, title: `מתחת לשיא · ${it.f.name} · ${ym(axis[di])}`, value: pc(v), formula: `מדד התשואה המצטברת (${lbl}) חלקי השיא שלפניו בחלון, פחות 1`, inputs: axis.slice(1, di + 1).map((p) => d.monthRow(it, p)) });
+  const ddSrc = (it: Item, di: number, v: number): Prov => ({ k: 'calc', title: `מתחת לשיא · ${it.f.name} · ${ym(axis[di])}`, value: pc(v), formula: `מדד התשואה המצטברת (${lbl}) חלקי השיא שלפניו בחלון, פחות 1`, inputs: axis.slice(1, di + 1).map((p) => d.monthRow(it, p)) });
   return (
     <Panel title={<>מתחת לשיא <Tip k="underwater" /></>} aside={<span>% מהשיא הקודם בחלון</span>}>
-      <Chart label="מתחת לשיא" exportName="השוואה-ירידה-מהשיא" height={260} deps={[keys.join(), win, netAsk, real, items.length]}
+      <Chart label="מתחת לשיא" exportName="השוואה-ירידה-מהשיא" height={260} deps={[keys.join(), win, real, items.length]}
         onPoint={(si, di) => { const it = items[si]; if (!it) return; const v = underwater(ser(it).slice(1))[di - 1]; if (v != null && di > 0) open(ddSrc(it, di, v)); }}
         build={() => foxOption({ x: axis.map(ym), unit: '%', dense: true, full: true, legend: true, series: items.map((it) => ({ name: it.f.name, data: [0, ...underwater(ser(it).slice(1))], kind: 'line' as const, pct: true, area: items.length === 1, color: d.colorOf(it.f.k), dec: 1 })) })} />
     </Panel>
@@ -418,24 +412,24 @@ export function UnderwaterPanel({ d, win }: { d: CompareData; win: Win }) {
 
 type YRow = { y: number };
 export function YearsPanel({ d }: { d: CompareData }) {
-  const { items, netAsk, lbl, asof } = d;
+  const { items, lbl, asof } = d;
   const yrs = items.map((it) => byYear(it.h.p, it.y));
   const years = [...new Set(yrs.flatMap((m) => [...m.keys()]))].sort((a, b) => b - a).slice(0, 12);
   return (
-    <Panel title="לפי שנה" aside={<span className={`chip${netAsk ? ' est' : ''}`}>{lbl} · ריבית דריבית</span>}>
+    <Panel title="לפי שנה" aside={<span className="chip">{lbl} · ריבית דריבית</span>}>
       <DataTable<YRow> caption="תשואה לפי שנה" rows={years.map((y) => ({ y }))} rowKey={(r) => String(r.y)} export={{ name: `השוואה-לפי-שנה-${ym(asof).replace('/', '-')}`, title: 'תשואה לפי שנה', note: `${lbl} · רשות שוק ההון` }}
         columns={[{ key: 'y', head: 'שנה', value: (r) => r.y, cell: (r) => <span className="num">{r.y}</span> }, ...items.map((it, i): Column<YRow> => ({ key: it.f.k, label: it.f.name, title: it.f.name, head: <><span className="fcmp-sw" style={{ background: d.colorOf(it.f.k) }} aria-hidden="true" />{shortName(it.f.name)}</>, value: (r) => yrs[i].get(r.y)?.r ?? null, unit: 'pct', signed: true, d: 1,
-          cell: (r) => { const e = yrs[i].get(r.y); if (!e) return <span className="muted">–</span>; return <><Sourced src={() => ({ k: 'calc', est: netAsk, title: `תשואה ${r.y} · ${it.f.name}`, value: pc(e.r), formula: `ריבית דריבית על התשואות החודשיות של השנה (${lbl})`, inputs: e.ps.map((p) => d.monthRow(it, p)) })}><span className="num">{pc(e.r, 1)}</span></Sourced>{e.n < 12 && <span className="dim num">{e.n} ח׳</span>}</>; } }))]} />
+          cell: (r) => { const e = yrs[i].get(r.y); if (!e) return <span className="muted">–</span>; return <><Sourced src={() => ({ k: 'calc', title: `תשואה ${r.y} · ${it.f.name}`, value: pc(e.r), formula: `ריבית דריבית על התשואות החודשיות של השנה (${lbl})`, inputs: e.ps.map((p) => d.monthRow(it, p)) })}><span className="num">{pc(e.r, 1)}</span></Sourced>{e.n < 12 && <span className="dim num">{e.n} ח׳</span>}</>; } }))]} />
     </Panel>
   );
 }
 
 /** Pair win rates over rolling 36 (and 12) months: Pro "who won"; agent in neutral words behind a disclosure. */
 export function PairsPanel({ d, mode }: { d: CompareData; mode: Exclude<Mode, 'saver'> }) {
-  const { items, netAsk, lbl, sameCat } = d;
+  const { items, lbl, sameCat } = d;
   const pairs = items.flatMap((a, i) => items.slice(i + 1).map((b) => ({ a, b })));
   const align = (it: Item, ax: number[]) => onAxis(ax, it.h.p, it.y);
-  const wrSrc = (a: Item, b: Item, n: number, w: ReturnType<typeof winRate>, ax: number[]): Prov => ({ k: 'calc', est: netAsk, title: `${mode === 'pro' ? 'שיעור ניצחון' : 'חלונות שבהם הראשון גבוה יותר'} ${n} חודשים · ${a.f.name} מול ${b.f.name}`, value: w.of ? `${nf(w.won / w.of * 100, 0)}%` : '–',
+  const wrSrc = (a: Item, b: Item, n: number, w: ReturnType<typeof winRate>, ax: number[]): Prov => ({ k: 'calc', title: `${mode === 'pro' ? 'שיעור ניצחון' : 'חלונות שבהם הראשון גבוה יותר'} ${n} חודשים · ${a.f.name} מול ${b.f.name}`, value: w.of ? `${nf(w.won / w.of * 100, 0)}%` : '–',
     formula: `בכמה מחלונות ${n} החודשים המתגלגלים, שבהם לשני המסלולים יש כל התשואות החודשיות (${lbl}), התשואה המצטברת של הראשון הייתה גבוהה יותר`,
     inputs: [{ label: 'חלונות שבהם הראשון גבוה יותר', v: nf(w.won, 0) }, { label: 'חלונות משותפים', v: nf(w.of, 0) }, ...(w.first != null ? [{ label: 'החלון הראשון מסתיים', v: ym(ax[w.first]) }, { label: 'החלון האחרון מסתיים', v: ym(ax[w.last!]) }] : [])] });
   const pairHead = mode === 'pro' ? ['מסלול', 'מול', '36M', '12M'] : ['מסלול א', 'מסלול ב', 'א גבוה מ-ב, 36M', '12M'];

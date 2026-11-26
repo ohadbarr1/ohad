@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Sourced } from '../Source';
 import { fundP, monthsBack } from '../../lib/market';
 import type { Prov } from '../../lib/prov';
-import { grossProv, netProv, refOf, type CatX, type FundX, type FundsFile } from '../../lib/funds';
+import { grossProv, refOf, type CatX, type FundX, type FundsFile } from '../../lib/funds';
 import { TIE_F } from '../../lib/fundsTie';
 import { annualised } from '../../lib/fundsCalc';
 import type { Tender } from '../../lib/fundsTools';
@@ -22,10 +22,10 @@ export function tenderProv(t: Tender, what: string, v: string): Prov {
 }
 
 /** The Prov of each figure of a verdict. */
-export function figsOf(f: FundX, v: Verdict, asof: number, file?: FundsFile, dec?: DecisionFile | null): Record<Fig, () => Prov> {
+export function figsOf(f: FundX, v: Verdict, asof: number, _file?: FundsFile, dec?: DecisionFile | null): Record<Fig, () => Prov> {
   const R = refOf(f);
-  const retSrc = (x: FundX) => () => (v.ret?.basis === 'net' ? netProv(x, v.ret.per, asof, x.net?.[v.ret.per] ?? null, file?.net_method) : grossProv(x, v.ret!.per, asof));
-  const val = (x: FundX) => (v.ret?.basis === 'net' ? x.net?.[v.ret.per] ?? null : x[v.ret!.per as 'a5']);
+  const retSrc = (x: FundX) => () => grossProv(x, v.ret!.per, asof);
+  const val = (x: FundX) => x[v.ret!.per as 'a5'];
   const list = () => (v.ret?.ranked ?? []).map((x) => ({ label: x.name, v: pcr(val(x as FundX)), src: retSrc(x as FundX) }));
   const feeRec = (x: FundX, w: 'fee' | 'depfee') => () => fundP(refOf(x), asof, w === 'fee' ? 'AVG_ANNUAL_MANAGEMENT_FEE' : 'AVG_DEPOSIT_FEE', w === 'fee' ? 'דמי ניהול מצבירה, ממוצע בפועל' : 'דמי ניהול מהפקדה, ממוצע בפועל', pcr(x[w]));
   const medOf = (w: 'fee' | 'depfee', value: string): Prov => ({ k: 'calc', title: `${w === 'fee' ? 'דמי ניהול מצבירה' : 'דמי ניהול מהפקדה'}, חציון · ${v.prod} | ${v.track}`, value,

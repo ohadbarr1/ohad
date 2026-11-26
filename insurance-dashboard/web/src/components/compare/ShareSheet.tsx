@@ -1,6 +1,6 @@
 /* C10 · sharing (spec §4.10, 10A.2 C10; mockup v3 frame "share"): the page ends with "שליחה בווטסאפ" (primary) and "קישור", which opens
    this sheet: the exact address, "ווטסאפ", "העתקת קישור", and the phone's own share menu (navigator.share) when there is one.
-   The link carries the tracks, the view, the range or period, the basis (b=gross when it is not the default) and the fee row's deposits
+   The link carries the tracks, the view, the range or period (no basis: returns are gross only, and an old b= / net= is dropped) and the fee row's deposits
    switch when it is off (dep=0, only with a product that has an example deposit on screen; the shell applies it for the receiver's visit,
    review B2 N2) and nothing personal: the sheet state (sheet=…), an open source (src=…) and a focus hint are dropped.
    For the shell (lane L2-a): `useShareLink(keys, basis)` → { url, text, wa } gives the page-end WhatsApp button the same link and text:
@@ -21,7 +21,7 @@ const DROP = ['sheet', 'src', 'focus'];
 
 /** the shareable address of the current view. The view is written out (v=months&r=6 too): without it the receiver's own remembered
  *  lens would open instead, so the page-end WhatsApp button and this sheet give one and the same link (review B1 #11) */
-export function shareUrl(pathname: string, search: string, keys: string[], basis: Basis, view?: View, deposits = true): string {
+export function shareUrl(pathname: string, search: string, keys: string[], _basis: Basis, view?: View, deposits = true): string {
   const q = new URLSearchParams(search);
   DROP.forEach((k) => q.delete(k));
   // the fee row's switch "בלי הפקדות": the receiver sees the same shekel figures as the sender
@@ -32,7 +32,7 @@ export function shareUrl(pathname: string, search: string, keys: string[], basis
     q.set('v', months ? 'months' : view);
     if (months) q.set('r', view === 'm12' ? '12' : view === 'y' ? 'y' : '6'); else q.delete('r');
   }
-  if (basis === 'gross' && !q.has('b')) q.set('b', 'gross');
+  q.delete('b'); q.delete('net');  // the old basis switch: every return is the published gross now
   const s = q.toString().replace(/%2C/gi, ',');
   return `${location.origin}${pathname}${s ? `?${s}` : ''}`;
 }
@@ -77,7 +77,7 @@ export function ShareSheet({ keys, basis, view, open, onClose }: SheetProps) {
           <button type="button" className="cs-btn" id="share-copy" onClick={copy}>העתקת קישור</button>
           {canShare ? <button type="button" className="cs-btn" id="share-native" onClick={share}>שיתוף…</button> : null}
         </div>
-        <p className="cs-note" role="status" aria-live="polite">{done ?? 'הקישור שומר את המסלולים, התצוגה, התקופה ואם התשואה אחרי דמי ניהול או לפניהם. אין בו שום פרט אישי.'}</p>
+        <p className="cs-note" role="status" aria-live="polite">{done ?? 'הקישור שומר את המסלולים, התצוגה והתקופה. אין בו שום פרט אישי.'}</p>
       </div>
     </DeeperSheet>
   );

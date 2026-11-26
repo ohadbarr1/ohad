@@ -66,7 +66,7 @@ export function ProdIcon({ art, size = 46 }: { art: Tile['art']; size?: number }
 
 export const SearchSvg = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>;
 const Check = () => <span className="pk-cb" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span>;
-/** "5 שנים ‎+8.6%": the 5-year average on the page's basis, signed, one decimal */
+/** "5 שנים ‎+8.6%": the 5-year average (published, gross), signed, one decimal */
 export function Five({ v, br }: { v: number | null; br?: boolean }) {
   return <>5 שנים{br ? <br /> : ' '}{v == null ? <span className="num">–</span> : <span className={`num ${v > 0 ? 'pk-up' : v < 0 ? 'pk-down' : ''}`}>{v > 0 ? '+' : ''}{nf(v, 1)}%</span>}</>;
 }

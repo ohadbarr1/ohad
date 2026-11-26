@@ -8,7 +8,7 @@ import { today } from '../../lib/visits';
    under a client label, in this browser only. `folder`: the folder this page was opened from, so a save updates it. `collect` reads the
    page's extra state at the moment of saving. */
 export function ClientSave({ keys, b, folder, collect, onSaved, compact, suggest, busy, label: btnLabel }: {
-  keys: string[]; b: 'net' | 'gross'; folder?: Folder | null;
+  keys: string[]; b: 'gross'; folder?: Folder | null;
   collect?: () => Partial<Pick<Folder, 'tags' | 'fields' | 'snap' | 'held'>>; onSaved?: (f: Folder) => void; compact?: boolean;
   /** W4: a name typed elsewhere on the page (the client document's "שם הלקוח"), offered when the form opens */
   suggest?: string;

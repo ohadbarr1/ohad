@@ -50,10 +50,10 @@ const fundP = (k: string, name: string, p: number, col: string, label: string, v
   ({ k: 'fund', title: `${label} · ${name}`, value, unit, ...refOfK(k, name), period: p, col, note });
 
 /* ---------------- provenance ---------------- */
-/** 5Y annualised net of one track: the compounded monthly net returns, or (the latest month) the figure of the track card */
+/** 5Y annualised (gross, as published) of one track: the compounded monthly returns, or (the latest month) the figure of the track card */
 export function r5Prov(U: UnderFile, r: Pick<UnderRow, 'k' | 'name' | 'r5'>, p = U.asof): Prov {
   const from = addM(p, -(U.win - 1));
-  return { k: 'calc', est: true, title: `תשואה שנתית ממוצעת, 5 שנים, נטו (אומדן) · ${r.name}`, value: `${nf(r.r5, 2)}%`, formula: U.method.net,
+  return { k: 'calc', title: `תשואה שנתית ממוצעת, 5 שנים, ברוטו · ${r.name}`, value: `${nf(r.r5, 2)}%`, formula: U.method.net,
     inputs: [
       { label: 'חלון', v: `${ym(from)}–${ym(p)} (${U.win} חודשים)` },
       { label: `תשואה שנתית ממוצעת 5 שנים, ברוטו, כפי שפורסמה · ${ym(p)}`, v: 'ברשומה', src: () => fundP(r.k, r.name, p, 'AVG_ANNUAL_YIELD_TRAILING_5YRS', 'תשואה שנתית ממוצעת 5 שנים, ברוטו', 'ברשומה', '%') },
@@ -63,17 +63,17 @@ export function r5Prov(U: UnderFile, r: Pick<UnderRow, 'k' | 'name' | 'r5'>, p =
 /** the category median: every ranked track of the category in the latest month */
 export function medProv(U: UnderFile, cat: string, rows: UnderRow[]): Prov {
   const xs = rows.filter((r) => r.cat === cat).sort((a, b) => b.r5 - a.r5), med = xs[0]?.med ?? null;
-  return { k: 'calc', est: true, title: `חציון הקטגוריה · ${cat} · 5 שנים, נטו`, value: med == null ? '–' : `${nf(med, 2)}%`, formula: U.method.med,
+  return { k: 'calc', title: `חציון הקטגוריה · ${cat} · 5 שנים, ברוטו`, value: med == null ? '–' : `${nf(med, 2)}%`, formula: U.method.med,
     inputs: xs.map((r) => ({ label: r.name, v: `${nf(r.r5, 2)}%`, src: () => r5Prov(U, r) })), note: `${U.method.cat}. ${xs.length} מסלולים` };
 }
 export function pctProv(U: UnderFile, r: UnderRow): Prov {
-  return { k: 'calc', title: `אחוזון בקטגוריה, 5 שנים נטו · ${r.name}`, value: String(r.pct), formula: U.method.pct,
-    inputs: [{ label: 'תשואה 5 שנים, נטו', v: `${nf(r.r5, 2)}%`, src: () => r5Prov(U, r) }, { label: `מסלולים מדורגים ב-${r.cat}`, v: String(r.n) }] };
+  return { k: 'calc', title: `אחוזון בקטגוריה, 5 שנים ברוטו · ${r.name}`, value: String(r.pct), formula: U.method.pct,
+    inputs: [{ label: 'תשואה 5 שנים, ברוטו', v: `${nf(r.r5, 2)}%`, src: () => r5Prov(U, r) }, { label: `מסלולים מדורגים ב-${r.cat}`, v: String(r.n) }] };
 }
 export function gapProv(U: UnderFile, r: UnderRow, rows: UnderRow[]): Prov {
   const raw = r.med - r.r5;
   return { k: 'calc', est: true, title: `פער מחציון הקטגוריה · ${r.name}`, value: `${nf(r.gap, 2)} נ"א לשנה`, formula: U.method.gap,
-    inputs: [{ label: `חציון ${r.cat}`, v: `${nf(r.med, 2)}%`, src: () => medProv(U, r.cat, rows) }, { label: 'תשואת המסלול, 5 שנים נטו', v: `${nf(r.r5, 2)}%`, src: () => r5Prov(U, r) },
+    inputs: [{ label: `חציון ${r.cat}`, v: `${nf(r.med, 2)}%`, src: () => medProv(U, r.cat, rows) }, { label: 'תשואת המסלול, 5 שנים ברוטו', v: `${nf(r.r5, 2)}%`, src: () => r5Prov(U, r) },
       { label: 'חציון פחות המסלול', v: `${sn(raw, 2)} נ"א` }, { label: 'פס השוויון', v: `${nf(U.band_bp / 100, 2)} נ"א` }], note: U.method.past };
 }
 export function aumProv(U: UnderFile, r: Pick<UnderRow, 'k' | 'name' | 'a'>, p = U.asof): Prov { return fundP(r.k, r.name, p, 'TOTAL_ASSETS', 'נכסים', nf(r.a, 1), 'מיליוני ש"ח'); }
@@ -121,14 +121,14 @@ export function headline(U: UnderFile, rows: UnderRow[]): string | null {
   const j = U.months.length - 1, S = U.series, top = h[0];
   const prev = j >= 12 ? S.cost[j - 12] : null;
   const yoy = prev != null && U.cov[j - 12]?.length === U.cov[j]?.length ? ` (לפני שנה: ${ilsM(prev)})` : '';
-  return `${ym(U.asof)}: ${h.length} מסלולים ברבעון התחתון של הקטגוריה שלהם (5 שנים, נטו) עדיין קיבלו כסף: ${ilsM(S.fl[j])} נטו ב-12 החודשים, בלי נדידה פנימית. `
+  return `${ym(U.asof)}: ${h.length} מסלולים ברבעון התחתון של הקטגוריה שלהם (5 שנים, ברוטו) עדיין קיבלו כסף: ${ilsM(S.fl[j])} נטו ב-12 החודשים, בלי נדידה פנימית. `
     + `הם מנהלים ${ilsM(S.a[j])}; הפער שלהם מחציון הקטגוריה שווה כ-${ilsM(S.cost[j])} בשנה${yoy}. `
     + `הגדול: ${top.name}, ${nf(top.gap, 2)} נ"א לשנה מתחת לחציון, כ-${ilsM(top.cost)} בשנה.`;
 }
 
 /* ---------------- the saver's line ---------------- */
 export interface SaverUnder { r: UnderRow; gap: number; ils: number; base: number; own: boolean }
-/** one line only when the track is in the bottom quartile (5Y net) AND its gap is at least `saver_bp`; ₪ on her balance when entered,
+/** one line only when the track is in the bottom quartile (5Y gross) AND its gap is at least `saver_bp`; ₪ on her balance when entered,
  *  else on ₪100,000 */
 export function saverUnder(U: UnderFile | null | undefined, k: string, balance?: number | null): SaverUnder | null {
   if (!U) return null;

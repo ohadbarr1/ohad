@@ -62,7 +62,7 @@ function HeldList({ f: f0 }: { f: Folder }) {
 function NyudDetails({ f, data, dfile, coefF }: { f: Folder; data: FundsFile | undefined; dfile: DefaultFile | null | undefined; coefF: CoefFile | null | undefined }) {
   const [basis, setBasis] = useState<Basis>('fox');
   if (!f.held.length || !f.keys.some((k) => f.tags[k] === 'מומלץ' || f.tags[k] === 'נבחן')) return null;
-  const rows: SnapRow[] = f.snap?.rows.length ? f.snap.rows : (data ? f.keys.map((k) => data.funds.find((x) => x.k === k)).filter((x): x is FundX => !!x).map((x) => docRow(x, { net: f.b === 'net', asof: data.asof, dfile })) : []);
+  const rows: SnapRow[] = f.snap?.rows.length ? f.snap.rows : (data ? f.keys.map((k) => data.funds.find((x) => x.k === k)).filter((x): x is FundX => !!x).map((x) => docRow(x, { asof: data.asof, dfile })) : []);
   if (!rows.length) return null;
   const asof = f.snap?.asof ?? data?.asof ?? 0;
   const out = nyudTable(f.held, rows, f.tags, coefF, { basis, ...nyudInOf(f) }, ym(asof), pairsOf(f.fields));
@@ -121,7 +121,7 @@ export function Clients() {
           <ul className="cl-list">
             {list.map((f) => (
               <li key={f.id} className="cl-item">
-                <div className="cl-h"><b>{f.label}</b><span className="cl-meta">{f.keys.length} מסלולים · {f.b === 'net' ? 'נטו' : 'ברוטו'} · עודכן {dmy(f.updated)}{Object.keys(f.fields).length ? ` · ${Object.keys(f.fields).length} שדות בטיוטת ההנמקה` : ''}</span>
+                <div className="cl-h"><b>{f.label}</b><span className="cl-meta">{f.keys.length} מסלולים · ברוטו · עודכן {dmy(f.updated)}{Object.keys(f.fields).length ? ` · ${Object.keys(f.fields).length} שדות בטיוטת ההנמקה` : ''}</span>
                   {f.snap ? <span className="chip cl-snap" title="המסמך ללקוח נפתח על הנתונים שהוצגו בשמירה; נתוני היום בלחיצה">צילום מ-{dmy(f.snap.at)}, נתונים עד {ym(f.snap.asof)}</span> : f.keys.length > 0 && <span className="chip est" title="תיק מגרסה קודמת: נפתח על נתוני היום. שמירה מהמסמך תוסיף צילום">בלי צילום</span>}</div>
                 <div className="cl-tracks">{f.keys.map((k) => <Link key={k} to={`/funds/${k}`} className="chip">{f.tags[k] ? `${f.tags[k]} · ` : ''}{nameOf(k)}</Link>)}</div>
                 {f.note && <p className="cl-note">{f.note}</p>}

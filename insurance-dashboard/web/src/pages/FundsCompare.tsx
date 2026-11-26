@@ -21,7 +21,7 @@ import { trackColor, trackLabels } from './compare/tracks';
 import { DOOR_CAP, type CmpCtx, type SheetId, type View } from './compare/contract';
 import type { Door } from '../lib/door';
 import { useActiveDoor } from '../components/home/doorState';
-import { catKey, useBasis, useTray, type FundX } from '../lib/funds';
+import { catKey, useTray, type Basis, type FundX } from '../lib/funds';
 import { useMine } from '../lib/mine';
 import { useMedia } from '../lib/useMedia';
 import { useStored } from '../lib/local';
@@ -36,7 +36,7 @@ import '../styles/compare-desktop.css';  // D5 desktop (lane L3-c)
 /* /funds/compare — the track comparison (redesign spec v3, lane L2-a: C1, C3, C5, C9, D1, D4). The page file is the shell:
    - State in the address: ?k= the tracks (column order), ?v= the lens (months | long | dec | risk), ?r= the range of the month table
      (6 | 12 | y), ?sheet= the open sheet (month:<yyyymm> | year:<yyyy> | fee | track:<k> | risknote | picker | share | display | why | rules),
-     ?b= the basis (lib/funds useBasis), ?per= the long view's period (lane L2-d; kept on every rewrite), ?door= honoured (the layout stores
+     ?b= / ?net= of old links are ignored (returns are the published gross only, owner 26.11.26), ?per= the long view's period (lane L2-d; kept on every rewrite), ?door= honoured (the layout stores
      it), ?focus=fee scrolls to the fee row and draws the eye to it once (the home page's fee card). Lens and range are remembered in this
      browser (cmp:lens, cmp:range) and written into the address only when they differ from the default (months, 6).
    - Doors set depth, never facts (D1): the same first screen in every door; the door sets the cap (4 / 6 / 8), the words of the lenses
@@ -82,7 +82,7 @@ export function FundsCompare() {
   const [doorRaw, setDoorStored] = useActiveDoor();
   const door = doorRaw ?? 'saver';
   const cap = DOOR_CAP[door];
-  const [basis] = useBasis();
+  const basis: Basis = 'gross';
   const tray = useTray();
   const [myList] = useMine();
   const [lensMem, setLensMem] = useStored<string>('cmp:lens', 'months');

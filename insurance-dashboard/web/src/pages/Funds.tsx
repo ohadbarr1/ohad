@@ -4,7 +4,7 @@ import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-r
 import { BasisToggle, CompareAdd, CompareTray, FundsHead, FundsNav } from '../components/FundsNav';
 import { Tip } from '../components/Explain';
 import { useMacro } from '../lib/macro';
-import { FAM_F, FAM_LABEL, NET_LABEL, NET_NOTE, equityOutlier, equitySpread, famOf, hasNet, netMonthIn, netProv, netSeries, outlierProv, realProv, toReal, useBasis, useReal, winRet, selfDirected, type CatX, type FundX, type FundsFile, type HistX } from '../lib/funds';
+import { FAM_F, FAM_LABEL, equityOutlier, equitySpread, famOf, outlierProv, realProv, toReal, useReal, selfDirected, type CatX, type FundX, type FundsFile, type HistX } from '../lib/funds';
 import { MgrChip } from '../components/MgrChip';
 import { DEFAULT_PER, TIE_F, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import { PensionPack } from '../components/agent/PensionPack';  // W1-agent
@@ -323,10 +323,8 @@ export function FundCard() {
   const h = hist.data;
   const cat = f && cats ? cats[catKey(f)] : undefined;
   const company = useRegistry().data?.find((c) => f && c.market_group === f.grp);
-  const [basisAsked] = useBasis();
   const [real] = useReal();
   const cpi = useMacro().data?.series.cpi;
-  const netOk = useMemo(() => hasNet((data?.funds ?? []) as FundX[]), [data]);
   const spread = useMemo(() => equitySpread(((data?.funds ?? []) as FundX[]).filter((x) => !x.closed && x.assets)), [data]);
   // ranked against the tracks open to everyone, as in the table
   const peers = useMemo(() => (data && f ? data.funds.filter((x) => catKey(x) === catKey(f) && (f.closed || !x.closed) && x.assets !== 0 && !selfDirected(x) && !isOldGen(x)) : []), [data, f]);
@@ -347,31 +345,25 @@ export function FundCard() {
   const s = stats(h.y, n), cs = cat ? stats(cat.y.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), n) : null;
   seedHist(ref(f), h);
   const asof = data.asof, R0 = ref(f), fx = f as FundX;
-  // net of fee: the build's net figures when the file has them, else the track's own history (gross minus each month's fee ÷ 12)
-  const net = basisAsked === 'net', ns = net ? netSeries(h) : null, yB = ns ? ns.y : h.y;
-  const rankNet = net && netOk;
-  const pv = (x: Fund, key: Per) => (rankNet ? (x as FundX).net?.[key] ?? null : x[key]);
+  // every return is the published gross (owner 26.11.26: the fee a saver pays is negotiated and varies, so it is never subtracted)
+  const pv = (x: Fund, key: Per) => x[key];
   // W6 doors: a closed generation (managers' insurance 1990-2003) has no place among tracks a member could join today
   const oldGen = isOldGen(f);
   const rankOf = (key: Per) => (oldGen ? null : tieRanks(peers, (x) => pv(x, key), tieBand(key, data.asof)).get(f.k) ?? null);
   const CLOSED_SUB = <span className="muted" title="דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון">סגור להצטרפות</span>;
   /** "מקום 3 מתוך 40", or "מקום 2–3 מתוך 40" inside the tie band, as a figure that opens its calculation */
-  const RK = ({ k }: { k: Per }) => { const t = rankOf(k); if (!t) return <>{' '}</>; const b = t.n; return <>מקום <Sourced src={() => (rankNet ? { ...rankSrc(f, k, asof, t, b), title: `מקום לפי ${PER_LABEL[k]}, ${NET_LABEL} · ${f.name}`, inputs: [{ label: `${PER_LABEL[k]}, ${NET_LABEL}`, v: pc(pv(f, k)), src: () => netProv(fx, k, asof, pv(f, k)) }, { label: 'מסלולים מדורגים', v: nf(b, 0) }, { label: 'צמודים למסלול', v: nf(t.hi - t.lo, 0) }] } : rankSrc(f, k, asof, t, b))}>{`${rankText(t)} מתוך ${b}`}</Sourced>{net && !rankNet ? ' (ברוטו)' : ''}</>; };
-  /** a window on the chosen basis: published, or built from the monthly series; real when asked */
+  const RK = ({ k }: { k: Per }) => { const t = rankOf(k); if (!t) return <>{' '}</>; const b = t.n; return <>מקום <Sourced src={() => rankSrc(f, k, asof, t, b)}>{`${rankText(t)} מתוך ${b}`}</Sourced></>; };
+  /** a window: the published gross figure; real when asked */
   const KV = (per: Per): { v: number | null; src: () => Prov } => {
-    let nom: number | null, nomSrc: () => Prov;
-    if (!net) { nom = f[per]; nomSrc = () => perSrc(f, per, asof); }
-    else if (fx.net?.[per] != null) { nom = fx.net[per]!; nomSrc = () => netProv(fx, per, asof, nom); }
-    else { nom = winRet(h, yB, per, asof); const ms = monthsBack(asof, per === 'm1' ? 1 : per === 'ytd' ? asof % 100 : per === 'y12' ? 12 : per === 'a3' ? 36 : 60);
-      nomSrc = () => ({ k: 'calc', est: true, title: `${PER_LABEL[per]}, ${NET_LABEL} · ${f.name}`, value: pc(nom), formula: `${per === 'a3' || per === 'a5' ? 'שנתי: ' : ''}ריבית דריבית על התשואות החודשיות נטו של החלון`, note: NET_NOTE, inputs: ms.map((p) => netMonthIn(R0, h, p, ns!)) }); }
+    const nom: number | null = f[per], nomSrc = () => perSrc(f, per, asof);
     if (!real) return { v: nom, src: nomSrc };
-    const pub = (net ? fx.realn : fx.real)?.[per];
-    if (pub != null) return { v: pub, src: () => realProv(fx, per, net ? 'net' : 'gross', asof, cpi, (data as FundsFile).real_method) };
+    const pub = fx.real?.[per];
+    if (pub != null) return { v: pub, src: () => realProv(fx, per, 'gross', asof, cpi, (data as FundsFile).real_method) };
     const v = toReal(nom, per, asof, cpi);
-    return { v, src: () => ({ k: 'calc', est: net, title: `${PER_LABEL[per]}, ריאלי${net ? ', נטו' : ''} · ${f.name}`, value: pc(v), formula: 'התשואה הנומינלית מנוכה במדד המחירים לצרכן של חודשי החלון (שינוי חודשי, הלמ"ס)', inputs: [{ label: 'נומינלי', v: pc(nom), src: nomSrc }] }) };
+    return { v, src: () => ({ k: 'calc', title: `${PER_LABEL[per]}, ריאלי · ${f.name}`, value: pc(v), formula: 'התשואה הנומינלית מנוכה במדד המחירים לצרכן של חודשי החלון (שינוי חודשי, הלמ"ס)', inputs: [{ label: 'נומינלי', v: pc(nom), src: nomSrc }] }) };
   };
   const out = equityOutlier(fx, spread);
-  const basisLbl = real ? `ריאלי${net ? ', נטו' : ''}` : net ? NET_LABEL : 'ברוטו';
+  const basisLbl = real ? 'ריאלי' : 'ברוטו';
   const SRC = (src: () => Prov, child: React.ReactNode) => <Sourced src={src}>{child}</Sourced>;
   const catYear = (r: (typeof years)[number]): Prov => catSrc(`תשואה ${r.y}, ממוצע ${f.track}`, { p: r.cps, y: r.cps.map((p) => cat!.y[cat!.p.indexOf(p)]), n: r.cps.map((p) => cat!.n[cat!.p.indexOf(p)]) }, r.cps.length, pc(r.cat));
   const catRows = cat ? { p: cat.p.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), y: cat.y.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), n: cat.n.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1) } : null;
@@ -412,14 +404,10 @@ export function FundCard() {
       <BmNote f={fx} />{/* W2: managers'-insurance tracks of bituach-net only */}
 
       <div className="grid21">
-        <Panel title={<>תשואה מצטברת, בסיס 100 <Tip k={net ? 'net' : 'growth'} /></>} aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} />{net && <span className="chip est">{NET_LABEL}</span>}</>}>
-          <Growth periods={axis} deps={[k, win, h.p.length, !!cat, net]} lines={net
-            ? [{ name: `${f.name} · נטו`, data: rebased(axis, { p: h.p, y: yB }) }, { name: `${f.name} · ברוטו`, data: rebased(axis, h), dash: true }]
-            : [{ name: f.name, data: rebased(axis, h) }, ...(cat ? [{ name: `ממוצע ${f.track}`, data: rebased(axis, cat), dash: true }] : [])]}
+        <Panel title={<>תשואה מצטברת, בסיס 100 <Tip k="growth" /></>} aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} /><span className="chip">ברוטו</span></>}>
+          <Growth periods={axis} deps={[k, win, h.p.length, !!cat]} lines={[{ name: f.name, data: rebased(axis, h) }, ...(cat ? [{ name: `ממוצע ${f.track}`, data: rebased(axis, cat), dash: true }] : [])]}
             onPoint={(si, di) => { if (di < 1) return;
-              if (net && si === 0) { const v = rebased(axis, { p: h.p, y: yB })[di]; if (v != null) open({ k: 'calc', est: true, title: `תשואה מצטברת נטו, בסיס 100 · ${f.name} · ${ym(axis[di])}`, value: nf(v, 1), formula: `100 × (1 + r₁) × … × (1 + rₙ) על התשואות החודשיות נטו מ-${ym(axis[1])} עד ${ym(axis[di])}`, note: NET_NOTE, inputs: axis.slice(1, di + 1).map((p) => netMonthIn(R0, h, p, ns!)) }); return; }
-              const gross = net ? si === 1 : si === 0; const v = rebased(axis, gross ? h : cat!)[di]; if (v != null) open(gross ? idxSrc(f.name, axis, di, v, R0) : idxSrc(`ממוצע ${f.track}`, axis, di, v, undefined, cat!)); }} />
-          {net && <div className="fnote">קו מלא: נטו, אומדן (תשואה חודשית פחות דמי ניהול מצבירה ÷ 12{ns && !ns.pub && ns.filled > 0 ? `; ב-${ns.filled} חודשים בלי דמי ניהול שפורסמו נלקחו האחרונים שלפניהם` : ''}). מקווקו: ברוטו. הפער ביניהם הוא דמי הניהול. הטבלאות למטה: ברוטו, כפי שפורסם.</div>}
+              const gross = si === 0; const v = rebased(axis, gross ? h : cat!)[di]; if (v != null) open(gross ? idxSrc(f.name, axis, di, v, R0) : idxSrc(`ממוצע ${f.track}`, axis, di, v, undefined, cat!)); }} />
           <div className="scroll"><table>
             <thead><tr><th>{ym(axis[0])} עד {ym(axis[axis.length - 1])} <span className="chip est">נגזר</span></th><th>תשואה</th><th>שנתי</th><th>תנודתיות, שנתי</th><th>ירידה מרבית</th><th>חודש טוב</th><th>חודש גרוע</th></tr></thead>
             <tbody>

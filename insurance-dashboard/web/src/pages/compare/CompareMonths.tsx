@@ -10,7 +10,7 @@ import { feeRing } from '../../lib/feeExample';
 import { useFeeCosts } from '../../components/compare/FeeSheet';
 import { useShareLink } from '../../components/compare/ShareSheet';
 import { count } from '../../lib/count';
-import type { CatX, FundX, HistX } from '../../lib/funds';
+import { GROSS_STAMP, useReal, type CatX, type FundX, type HistX } from '../../lib/funds';
 import type { CmpCtx } from './contract';
 import { extremes } from './extremes';
 import './shell.css';
@@ -49,6 +49,7 @@ const Sliders = () => <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h
 
 export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; setRange: (r: Range) => void }) {
   const { range, m, door, openSheet, basis, keys, cap = 4 } = props;
+  const [real] = useReal();
   const yrs = range === 'y';
   const [extra, setExtra] = useState(0);           // "עוד 6 חודשים ▾": months beyond 12
   const [allYears, setAllYears] = useState(false);
@@ -131,7 +132,7 @@ export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; se
       {door !== 'saver' && (
         <div className="cmp-tools">
           {door === 'pro' && !m.cross && !one && !!m.cat && <button type="button" className="cmp-chip" id="avg-toggle" aria-pressed={avgOn} onClick={() => setAvgOn(!avgOn)}>{avgOn ? '✓ ' : '＋ '}ממוצע הקטגוריה</button>}
-          <button type="button" className="cmp-dpill" id="display-pill" onClick={() => openSheet({ t: 'display' })} aria-haspopup="dialog" aria-label={`תצוגה: ${basis === 'net' ? 'נטו' : 'ברוטו'}`}><Sliders />{basis === 'net' ? 'נטו' : 'ברוטו'}</button>
+          <button type="button" className="cmp-dpill" id="display-pill" onClick={() => openSheet({ t: 'display' })} aria-haspopup="dialog" aria-label={`תצוגה: ${real ? 'ריאלי' : 'נומינלי'}`}><Sliders />{real ? 'ריאלי' : 'נומינלי'}</button>
         </div>
       )}
       {!m.loading && (
@@ -144,7 +145,7 @@ export function CompareMonths(props: CmpCtx & { range: Range; m: MonthsModel; se
         </details>
       )}
       <ShareRow ctx={props} />
-      <Stamp asof={m.asof} basis={basis} onWhy={() => openSheet({ t: 'why' })} />
+      <Stamp asof={m.asof} onWhy={() => openSheet({ t: 'why' })} />
     </div>
   );
 }
@@ -163,11 +164,11 @@ export function ShareRow({ ctx }: { ctx: CmpCtx }) {
 
 /** One line: source, month, basis, the five words on the past, and "איך מחשבים?" (spec §5.3 StampLine). `onSrc` (the long view, agent
  *  and Pro doors) adds "מקור המספרים ›", the list of the figures with their sources. */
-export function Stamp({ asof, basis, onWhy, onSrc }: { asof: number; basis: 'net' | 'gross'; onWhy: () => void; onSrc?: () => void }) {
+export function Stamp({ asof, onWhy, onSrc }: { asof: number; onWhy: () => void; onSrc?: () => void }) {
   const at = `${HEM[(asof % 100) - 1]} ${String(Math.floor(asof / 100)).slice(2)}`;
   return (
     <div className="cmp-stamp" id="stamp">
-      רשות שוק ההון, עד {at} · {basis === 'net' ? 'אומדן אחרי דמי ניהול' : 'לפני דמי ניהול'} · העבר אינו מבטיח עתיד
+      רשות שוק ההון, עד {at} · {GROSS_STAMP} · העבר אינו מבטיח עתיד
       <button type="button" onClick={onWhy} aria-haspopup="dialog">איך מחשבים?</button>
       {onSrc ? <button type="button" onClick={onSrc}>מקור המספרים ›</button> : null}
     </div>

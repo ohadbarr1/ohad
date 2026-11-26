@@ -8,10 +8,9 @@ import { nf, sn } from './format';
 import { useStored } from './local';
 
 /* The funds module ("חיסכון", wave F1): the shared logic of the hub, the screener, the head-to-head and the track card.
-   - Net of fee. The regulator's returns are published before the management fee. The data build (F1 DATA) adds `net` per track,
-     an estimate (monthly gross return minus that month's accumulation fee ÷ 12, compounded). Until a file carries it the pages fall
-     back: a track's own history gives a client-side estimate the same way (labelled "נטו, אומדן"); a table with no history shows
-     gross, labelled "ברוטו". Net and gross are never ranked together.
+   - Gross. Every return is the one the regulator publishes (gemelnet / pensianet / bituachnet), before the management fee. Owner,
+     26.11.26: the fee a saver pays varies per saver and is negotiated with the manager, so it is not subtracted from any return; fees
+     stay their own topic (the fees tool, the fee rows and columns). The data still carries the build's net estimates; nothing reads them.
    - Real. CPI-deflated with the CBS monthly changes in macro/macro.json, or the build's `real` / `realn` when present.
    - Every new field is optional: the pages work on today's files. */
 
@@ -23,16 +22,18 @@ export const PER_COL: Partial<Record<Per, string>> = { m1: 'MONTHLY_YIELD', ytd:
 export const perMonths = (per: Per, asof: number) => (per === 'm1' ? 1 : per === 'ytd' ? asof % 100 : per === 'y12' ? 12 : per === 'a3' ? 36 : 60);
 export const annual = (per: Per) => per === 'a3' || per === 'a5';
 
-export type Basis = 'net' | 'gross';
+/** the basis of every return in the module: the published gross return (kept as a type so the callers stay explicit) */
+export type Basis = 'gross';
 type PerSet = Partial<Record<Per | 'y3' | 'y5', number | null>>;
 /** the official taxonomy (data.gov.il transfer_bank), when the build joined it */
 export interface Tx { type?: string | null; spec?: string | null; sub?: string | null; src?: 'tb' | 'name'; dis?: boolean; tb?: number | string | null }
 /** a track with the optional fields of the F1 data contract */
 export interface FundX extends Fund {
-  net?: PerSet | null; real?: PerSet | null; realn?: PerSet | null;
-  /** percentile in the category, 100 = best (gross / net), and the peers counted per window */
-  pr?: PerSet | null; pn?: PerSet | null; prn?: PerSet | null; pnn?: PerSet | null;
-  pr1?: PerSet | null; pn1?: PerSet | null; fee1?: number | null;
+  real?: PerSet | null;
+  /** percentile in the category on the gross return, 100 = best (`pr`), the peers counted per window (`prn`) and last month's (`pr1`).
+   *  The build's net twins (pn, pnn, pn1) are not read: returns are gross only. */
+  pr?: PerSet | null; prn?: PerSet | null;
+  pr1?: PerSet | null; fee1?: number | null;
   alpha?: number | null; act?: number | null; act_p?: number | null; end_ap?: number | null; nd?: number | null; nd12?: number | null; pid?: number | string | null; mgr_id?: number | string | null;
   tx?: Tx | null; gone?: boolean; end?: number; end_assets?: number | null;
   /** W2: the last eight published quarters of the actuarial balance, [yyyymm, %] oldest first (pension only) */
@@ -40,31 +41,22 @@ export interface FundX extends Fund {
   /** W6 trust flags (lib/flags.ts): intra-group migration (the group's product total and its track count), exposures to check */
   mig?: { grp: number; n: number } | null; chk?: ('st' | 'fo' | 'fx')[] | null;
 }
-export interface FundsFile { asof: number; source: string; funds: FundX[]; net_method?: string; real_method?: string; cpi_asof?: number; closed_n?: number }
-export interface HistX extends FundHist { yn?: (number | null)[]; act?: (number | null)[]; nd?: (number | null)[]; cat?: (string | null)[] }
-export interface CatX { p: number[]; y: number[]; n: number[]; ys?: number[]; ns?: number[]; yn?: (number | null)[] }
+export interface FundsFile { asof: number; source: string; funds: FundX[]; real_method?: string; cpi_asof?: number; closed_n?: number }
+export interface HistX extends FundHist { act?: (number | null)[]; nd?: (number | null)[]; cat?: (string | null)[] }
+export interface CatX { p: number[]; y: number[]; n: number[]; ys?: number[]; ns?: number[] }
 
 export const catKey = (f: Pick<Fund, 'prod' | 'track'>) => `${f.prod} | ${f.track}`;
 export const refOf = (f: Pick<Fund, 'fam' | 'id' | 'name'>): TrackRef => ({ ds: dsOf(f.fam), id: f.id, name: f.name });
 export const pc = (v: number | null | undefined, d = 2) => (v == null ? '–' : sn(v, d) + '%');
 export const ym = ymLabel;
-export const NET_F = 'תשואה חודשית ברוטו (MONTHLY_YIELD) פחות דמי הניהול מצבירה של אותו חודש (AVG_ANNUAL_MANAGEMENT_FEE) חלקי 12, בריבית דריבית על חודשי החלון; 3Y ו-5Y: שנתי';
-export const NET_NOTE = 'אומדן: דמי הניהול הם הממוצע בפועל של המסלול, ודמי ניהול שמשלם חוסך מסוים שונים. דמי ניהול מהפקדה פועלים על ההפקדות ואינם נכללים';
-export const NET_LABEL = 'נטו, אומדן';
 export const GROSS_LABEL = 'ברוטו';
+/** the one wording of the basis, everywhere in the module: the stamp, the corner of a grid, the note of a source */
+export const GROSS_STAMP = 'תשואה ברוטו, כפי שמפורסמת';
+export const GROSS_CORNER = 'באחוזים, לפני דמי ניהול';
+export const GROSS_WHY = 'התשואות באתר הן התשואות ברוטו שמפרסמת רשות שוק ההון (גמל-נט, פנסיה-נט, ביטוח-נט), לפני דמי ניהול. דמי הניהול שמשלם כל חוסך שונים ונקבעים במשא ומתן מול הגוף המנהל, ולכן אינם מנוכים מהתשואה; דמי הניהול מוצגים בנפרד';
 
 /* ---------- basis, real and the compare tray: one preference for the whole section ---------- */
 
-/** Net or gross for the section: the URL (`b=gross|net`) when present, else the stored choice (net by default). */
-export function useBasis(): [Basis, (b: Basis) => void] {
-  const [sp, setSp] = useSearchParams();
-  const [stored, setStored] = useStored<Basis>('funds:basis', 'net');
-  // `net=1` / `net=0` (the links of the standing questions) mean the same as b=net / b=gross
-  const u = sp.get('b') ?? (sp.get('net') === '1' ? 'net' : sp.get('net') === '0' ? 'gross' : null);
-  const b: Basis = u === 'gross' || u === 'net' ? u : stored;
-  const set = useCallback((x: Basis) => { setStored(x); if (sp.has('b') || sp.has('net')) { const n = new URLSearchParams(sp); n.delete('net'); n.set('b', x); setSp(n, { replace: true }); } }, [sp, setSp, setStored]);
-  return [b, set];
-}
 /** Real (CPI-deflated) or nominal: the URL (`real=1`) or the stored choice (nominal by default). */
 export function useReal(): [boolean, (r: boolean) => void] {
   const [sp, setSp] = useSearchParams();
@@ -89,12 +81,8 @@ export function useTray(): { keys: string[]; has: (k: string) => boolean; toggle
 /* ---------- the value a page shows: net or gross, nominal or real ---------- */
 
 export interface RV { v: number | null; b: Basis; est: boolean }
-/** does the file carry net returns at all (else every table runs gross, labelled) */
-export const hasNet = (fs: FundX[]) => fs.some((f) => f.net && Object.values(f.net).some((v) => v != null));
-/** The return of a window on the effective basis. With net asked and published for the file, a track without a net figure for the
- *  window gets null (not its gross: the two are never ranked together). */
-export function retOf(f: FundX, per: Per, basis: Basis): RV {
-  if (basis === 'net') return { v: f.net?.[per] ?? null, b: 'net', est: true };
+/** The return of a window: the published gross figure. */
+export function retOf(f: FundX, per: Per, _basis: Basis = 'gross'): RV {
   return { v: f[per], b: 'gross', est: false };
 }
 
@@ -115,11 +103,11 @@ export function toReal(nom: number | null, per: Per, asof: number, cpi: CpiSerie
   const yrs = n / 12;
   return (((1 + nom / 100) ** yrs / c.f) ** (1 / yrs) - 1) * 100;
 }
-/** real on the basis: the build's figure (`real` gross, `realn` net) when present, else deflated here */
-export function realOf(f: FundX, per: Per, basis: Basis, asof: number, cpi: CpiSeries | undefined): { v: number | null; pub: boolean } {
-  const pub = (basis === 'net' ? f.realn : f.real)?.[per];
+/** real (of the gross return): the build's figure (`real`) when present, else deflated here */
+export function realOf(f: FundX, per: Per, _basis: Basis, asof: number, cpi: CpiSeries | undefined): { v: number | null; pub: boolean } {
+  const pub = f.real?.[per];
   if (pub != null) return { v: pub, pub: true };
-  return { v: toReal(retOf(f, per, basis).v, per, asof, cpi), pub: false };
+  return { v: toReal(f[per], per, asof, cpi), pub: false };
 }
 
 /* ---------- sources ---------- */
@@ -130,12 +118,6 @@ export function grossProv(f: FundX, per: Per, asof: number): Prov {
   if (per === 'y12') return { k: 'calc', title: `תשואה LTM · ${f.name}`, value: pc(f.y12), formula: '(1 + r₁) × … × (1 + r₁₂) − 1 על 12 התשואות החודשיות האחרונות (MONTHLY_YIELD)', inputs: monthsBack(asof, 12).map((p) => monthIn(r, 'y', p)) };
   return fundP(r, asof, PER_COL[per]!, PER_LABEL[per], pc(f[per]));
 }
-/** A net figure: the method, then the months of gross return and fee behind it (values from the track's history when loaded). */
-export function netProv(f: FundX, per: Per, asof: number, v: number | null, method?: string): Prov {
-  const r = refOf(f), ms = monthsBack(asof, perMonths(per, asof));
-  return { k: 'calc', est: true, title: `${PER_LABEL[per]}, ${NET_LABEL} · ${f.name}`, value: pc(v), formula: method || NET_F, note: NET_NOTE,
-    inputs: [{ label: `${PER_LABEL[per]}, ברוטו`, v: pc(f[per]), src: () => grossProv(f, per, asof) }, ...ms.flatMap((p) => [monthIn(r, 'y', p), monthIn(r, 'fee', p)])] };
-}
 /** CPI over the window as a figure with its source */
 export function cpiProv(cpi: CpiSeries, asof: number, n: number): Extract<Prov, { k: 'calc' }> | null {
   const c = cpiFactor(cpi, asof, n);
@@ -145,36 +127,19 @@ export function cpiProv(cpi: CpiSeries, asof: number, n: number): Extract<Prov, 
 }
 export function realProv(f: FundX, per: Per, basis: Basis, asof: number, cpi: CpiSeries | undefined, method?: string): Prov {
   const r = realOf(f, per, basis, asof, cpi), nom = retOf(f, per, basis).v, n = perMonths(per, asof);
-  const nomSrc = () => (basis === 'net' ? netProv(f, per, asof, nom) : grossProv(f, per, asof));
+  const nomSrc = () => grossProv(f, per, asof);
   const cp = cpi ? cpiProv(cpi, asof, n) : null;
-  return { k: 'calc', est: basis === 'net', title: `${PER_LABEL[per]}, ריאלי${basis === 'net' ? ', נטו' : ''} · ${f.name}`, value: pc(r.v),
+  return { k: 'calc', title: `${PER_LABEL[per]}, ריאלי · ${f.name}`, value: pc(r.v),
     formula: r.pub ? (method || 'מחושב בבניית הנתונים: התשואה הנומינלית מנוכה במדד המחירים לצרכן של חודשי החלון') : annual(per) ? '((1 + שנתי נומינלי) בחזקת השנים ÷ מדד החלון) בחזקת 1 ÷ השנים, פחות 1' : '(1 + תשואה נומינלית) ÷ (1 + שינוי המדד בחלון) − 1',
-    inputs: [{ label: `נומינלי${basis === 'net' ? ', נטו' : ''}`, v: pc(nom), src: nomSrc }, ...(cp ? [{ label: `מדד המחירים, ${n} חודשים`, v: cp.value, src: () => cp }] : [])] };
+    inputs: [{ label: 'נומינלי', v: pc(nom), src: nomSrc }, ...(cp ? [{ label: `מדד המחירים, ${n} חודשים`, v: cp.value, src: () => cp }] : [])] };
 }
-/** the figure a page shows for a window, with its source: net, gross or real */
+/** the figure a page shows for a window, with its source: gross, nominal or real */
 export function shownProv(f: FundX, per: Per, basis: Basis, real: boolean, asof: number, cpi: CpiSeries | undefined, file?: FundsFile): Prov {
   if (real) return realProv(f, per, basis, asof, cpi, file?.real_method);
-  return basis === 'net' ? netProv(f, per, asof, retOf(f, per, 'net').v, file?.net_method) : grossProv(f, per, asof);
+  return grossProv(f, per, asof);
 }
 
-/* ---------- histories: net series, statistics, rolling, drawdown, win-rate ---------- */
-
-/** Monthly net returns of a track: the build's `yn` when present, else gross minus that month's fee ÷ 12. A month with no fee
- *  published takes the last fee before it (or, before the first one, the first fee published); `filled` counts those months. */
-export function netSeries(h: HistX): { y: (number | null)[]; pub: boolean; filled: number; fee: (number | null)[] } {
-  if (h.yn && h.yn.length === h.p.length) return { y: h.yn, pub: true, filled: 0, fee: h.fee };
-  const first = h.fee.find((x) => x != null) ?? null;
-  let last: number | null = null, filled = 0;
-  const fee = h.fee.map((x) => { if (x != null) { last = x; return x; } filled++; return last ?? first; });
-  return { y: h.y.map((r, i) => (r == null || fee[i] == null ? null : r - fee[i]! / 12)), pub: false, filled, fee };
-}
-export const NET_EST_F = 'תשואה חודשית ברוטו (MONTHLY_YIELD) פחות דמי ניהול מצבירה של אותו חודש ÷ 12. חודש בלי דמי ניהול שפורסמו: דמי הניהול האחרונים לפניו';
-/** a month of net return as an input row */
-export function netMonthIn(f: TrackRef, h: HistX, p: number, ns: ReturnType<typeof netSeries>) {
-  const i = h.p.indexOf(p), v = i < 0 ? null : ns.y[i];
-  return { label: `תשואה חודשית נטו · ${ym(p)}`, v: pc(v), src: (): Prov => ({ k: 'calc', est: true, title: `תשואה חודשית, ${NET_LABEL} · ${f.name} · ${ym(p)}`, value: pc(v), formula: ns.pub ? 'מחושב בבניית הנתונים: ' + NET_EST_F : NET_EST_F, note: NET_NOTE,
-    inputs: [monthIn(f, 'y', p, i < 0 ? null : h.y[i]), { label: `דמי ניהול מצבירה · ${ym(p)}${i >= 0 && h.fee[i] == null ? ' (הקודם שפורסם)' : ''}`, v: i < 0 || ns.fee[i] == null ? '–' : nf(ns.fee[i]!, 2) + '%', src: () => fundP(f, p, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה', i < 0 || h.fee[i] == null ? '–' : nf(h.fee[i]!, 2) + '%') }] }) };
-}
+/* ---------- histories: statistics, rolling, drawdown, win-rate ---------- */
 
 /** the return of a window from a monthly series ending in `asof` (annualised for 3Y/5Y); null when a month is missing */
 export function winRet(h: { p: number[] }, y: (number | null)[], per: Per, asof: number): number | null {
@@ -243,8 +208,8 @@ export function rankAll<T extends { k: string }>(peers: T[], val: (f: T) => numb
 }
 export const PCT_MIN = 5;
 export const PCT_F = 'אחוזון = (מסלולים אחרים בקטגוריה עם תשואה נמוכה יותר בחלון + חצי מהשווים) ÷ (מספר המדורגים − 1) × 100, מעוגל. 100 = הגבוה בקטגוריה. רק בקטגוריה של 5 מדורגים לפחות';
-export function pctProv(f: FundX, per: Per, basis: Basis, r: { rank: number; n: number; pct: number | null }, src: () => Prov, pub = false): Prov {
-  return { k: 'calc', title: `אחוזון בקטגוריה · ${PER_LABEL[per]}${basis === 'net' ? ', נטו' : ''} · ${f.name}`, value: r.pct == null ? '–' : nf(r.pct, 0), formula: pub ? 'מחושב בבניית הנתונים. ' + PCT_F : PCT_F,
+export function pctProv(f: FundX, per: Per, _basis: Basis, r: { rank: number; n: number; pct: number | null }, src: () => Prov, pub = false): Prov {
+  return { k: 'calc', title: `אחוזון בקטגוריה · ${PER_LABEL[per]} · ${f.name}`, value: r.pct == null ? '–' : nf(r.pct, 0), formula: pub ? 'מחושב בבניית הנתונים. ' + PCT_F : PCT_F,
     inputs: [{ label: PER_LABEL[per], v: '', src }, { label: 'מקום', v: `${r.rank} מתוך ${r.n}` }, { label: 'מסלולים מדורגים', v: nf(r.n, 0) }] };
 }
 

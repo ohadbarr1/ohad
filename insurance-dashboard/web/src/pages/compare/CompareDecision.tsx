@@ -74,7 +74,7 @@ const split2 = (t: string): [string, string | undefined] => { const i = t.indexO
 const wait = <span className="muted">…</span>;
 
 function DecisionBody({ ctx, d }: { ctx: CmpCtx; d: CompareData }) {
-  const { keys, openSheet, basis } = ctx;
+  const { keys, openSheet } = ctx;
   const kp = useKpiRows(d, ctx.door === 'pro' ? 'pro' : 'agent');
   const funds: (FundX | null)[] = keys.map((k) => d.fundOf(k) ?? null);
   const items = keys.map((k) => d.items.find((it) => it.f.k === k) ?? null);
@@ -150,7 +150,7 @@ function DecisionBody({ ctx, d }: { ctx: CmpCtx; d: CompareData }) {
         </p>
       </div>
       <DecisionActions d={d} kp={kp} />
-      <Stamp asof={asof} basis={basis} onWhy={() => openSheet({ t: 'why' })} />
+      <Stamp asof={asof} onWhy={() => openSheet({ t: 'why' })} />
     </>
   );
 }
@@ -161,10 +161,10 @@ function DecisionActions({ d, kp }: { d: CompareData; kp: KpiRows }) {
   const [clients] = useClients();
   const [folderId, setFolderId] = useState<string | null>(() => folderOfState(loc.state));
   const folder = folderId ? clients.folders.find((f) => f.id === folderId) ?? null : null;
-  const { items, keys, netAsk, asof, basis, real } = d;
-  const printHref = `/funds/compare/print?k=${keys.join(',')}&b=${basis}${real ? '&real=1' : ''}`;
+  const { items, keys, asof, basis, real } = d;
+  const printHref = `/funds/compare/print?k=${keys.join(',')}${real ? '&real=1' : ''}`;
   // the figures a client folder freezes: the client document's rows, from the histories on this page (as the old ClientActions did)
-  const snapNow = () => { const rows = items.map((it) => docRow(it.f, { net: netAsk, asof, hist: it.h, dfile: kp.dfile, dec: kp.dec })); return snapOf(rows, bottomLines(rows, netAsk), todayIso(), asof, netAsk ? 'net' : 'gross'); };
+  const snapNow = () => { const rows = items.map((it) => docRow(it.f, { asof, hist: it.h, dfile: kp.dfile, dec: kp.dec })); return snapOf(rows, bottomLines(rows), todayIso(), asof); };
   // pinned: the bar sticks above the site's phone rail (fixed at the bottom on phones; a side rail on desktop)
   const bar = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {

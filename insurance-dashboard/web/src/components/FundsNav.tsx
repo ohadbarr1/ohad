@@ -1,9 +1,9 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
 import type { ReactNode } from 'react';
-import { Seg, Toolbar } from './ui';
+import { Toolbar } from './ui';
 import { Tip } from './Explain';
-import { useBasis, useReal, useTray, TRAY_MAX, type Basis } from '../lib/funds';
+import { GROSS_WHY, useReal, useTray, TRAY_MAX } from '../lib/funds';
 import '../styles/funds.css';
 import { useActiveDoor } from './home/doorState';
 import { HubTabs } from './HubTabs';
@@ -56,15 +56,14 @@ function SubTabs() {
   return null;
 }
 
-/** Net or gross, nominal or real: one choice for the whole section, kept in this browser (and in the URL when a link carries it). */
-export function BasisToggle({ real: showReal = true, netReady = true }: { real?: boolean; netReady?: boolean }) {
-  const [b, setB] = useBasis();
+/** The basis line of the section: every return is the published gross (owner 26.11.26: fees vary per saver and are negotiated, so
+ *  they are never subtracted; no net/gross switch), and nominal or real, one choice kept in this browser (and in the URL). */
+export function BasisToggle({ real: showReal = true }: { real?: boolean }) {
   const [real, setReal] = useReal();
   return (
     <div className="basis">
-      <Seg<Basis> label="בסיס התשואה" value={b} onChange={setB} options={[['net', 'נטו'], ['gross', 'ברוטו']]} />
-      {b === 'net' && !netReady && <span className="chip est" title="קובץ הנתונים עוד אינו כולל תשואה נטו לכל המסלולים: הטבלאות מציגות ברוטו; כרטיס המסלול וההשוואה מחשבים אומדן מהיסטוריית דמי הניהול">מוצג ברוטו</span>}
-      <Tip k={b === 'net' ? 'net' : 'gross'} />
+      <span className="chip" id="basis-gross" title={GROSS_WHY}>ברוטו</span>
+      <Tip k="gross" />
       {showReal && <button type="button" className="chip" aria-pressed={real} onClick={() => setReal(!real)}>ריאלי</button>}
     </div>
   );

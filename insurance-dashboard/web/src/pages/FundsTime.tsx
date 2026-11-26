@@ -11,8 +11,8 @@ import { useFunds } from '../lib/useData';
 import { useSource, type Prov } from '../lib/prov';
 import { chartBase, CHART_FONT } from '../lib/theme';
 import { nf, sn } from '../lib/format';
-import { expP, fundP } from '../lib/market';
-import { NET_LABEL, netProv, pc, refOf, retOf, selfDirected, useBasis, type Basis, type FundX, type FundsFile, type Per } from '../lib/funds';
+import { expP } from '../lib/market';
+import { grossProv, pc, refOf, retOf, selfDirected, type Basis, type FundX, type FundsFile, type Per } from '../lib/funds';
 import { BANDS, stepDown, ymL, type Band } from '../lib/fundsTime';
 import { useGlide, useHists } from '../lib/fundsTimeLoad';
 import '../styles/lens.css';
@@ -26,7 +26,7 @@ import '../styles/funds-time.css';
    the screener sorted by persistence. The persistence file (funds/persist.json) is still built: the answers Q-220 and Q-221 read it. */
 
 const useFile = () => { const { data, error } = useFunds(); return { data: data as FundsFile | undefined, error }; };
-const basisLbl = (b: Basis) => (b === 'net' ? NET_LABEL : 'ברוטו');
+const basisLbl = (_b: Basis) => 'ברוטו';
 
 /* the percentile over time by category (#11) left this page in wave 2b (fox 3.0): it is the screener's persistence column
    (/funds/screen?sort=persist; /funds/rank lands there) and the percentile chart of the track card */
@@ -37,7 +37,7 @@ type GRow = { grp: string; t: Partial<Record<Band, FundX>>; step: number | null 
 export function FundsGlide() {
   const { data, error } = useFile();
   const glide = useGlide();
-  const [b] = useBasis();
+  const b: Basis = 'gross';
   const [sp, setSp] = useSearchParams();
   const prod = GLIDE_PRODS.includes(sp.get('prod') ?? '') ? sp.get('prod')! : 'גמל';
   const [per, setPer] = useState<Per>('a3');
@@ -63,9 +63,9 @@ export function FundsGlide() {
   const stepProv = (r: GRow): Prov => ({ k: 'calc', title: `ירידת החשיפה למניות, עד 50 → 60 ומעלה · ${r.grp} · ${prod}`, value: r.step == null ? '–' : `${nf(r.step, 1)} נ"א`, formula: 'החשיפה למניות במסלול עד 50 פחות החשיפה במסלול 60 ומעלה, כפי שהגוף מדווח (STOCK_MARKET_EXPOSURE)',
     inputs: BANDS.filter((x) => r.t[x]).map((x) => ({ label: `${x}: ${r.t[x]!.name}`, v: r.t[x]!.st == null ? '–' : nf(r.t[x]!.st!, 1) + '%', src: stSrc(r.t[x]!) })) });
   const retV = (f: FundX) => retOf(f, per, b).v;
-  const retSrc = (f: FundX) => () => (b === 'net' ? netProv(f, per, asof, retOf(f, per, 'net').v, data?.net_method) : fundP(refOf(f), asof, per === 'a3' ? 'AVG_ANNUAL_YIELD_TRAILING_3YRS' : per === 'a5' ? 'AVG_ANNUAL_YIELD_TRAILING_5YRS' : 'MONTHLY_YIELD', per, pc(f[per])));
+  const retSrc = (f: FundX) => () => grossProv(f, per, asof);
   const gapProv = (r: GRow): Prov => { const a = r.t['עד 50']!, c = r.t['60 ומעלה']!;
-    return { k: 'calc', est: b === 'net', title: `פער התשואה, עד 50 מול 60 ומעלה · ${r.grp}`, value: `${sn(retV(a)! - retV(c)!, 2)} נ"א`, formula: 'התשואה של מסלול עד 50 פחות התשואה של מסלול 60 ומעלה באותו חלון', inputs: [{ label: a.name, v: pc(retV(a)), src: retSrc(a) }, { label: c.name, v: pc(retV(c)), src: retSrc(c) }] }; };
+    return { k: 'calc', title: `פער התשואה, עד 50 מול 60 ומעלה · ${r.grp}`, value: `${sn(retV(a)! - retV(c)!, 2)} נ"א`, formula: 'התשואה של מסלול עד 50 פחות התשואה של מסלול 60 ומעלה באותו חלון', inputs: [{ label: a.name, v: pc(retV(a)), src: retSrc(a) }, { label: c.name, v: pc(retV(c)), src: retSrc(c) }] }; };
   const perL = per === 'y12' ? 'LTM' : per === 'a3' ? '3Y שנתי' : '5Y שנתי';
   return (
     <>
@@ -83,7 +83,7 @@ export function FundsGlide() {
                   series: BANDS.map((x, i) => ({ name: x, type: 'bar', barGap: '10%', itemStyle: { color: cols[i], opacity: 1 - i * 0.18, borderRadius: [0, 2, 2, 0] }, data: rows.map((r) => r.t[x]?.st ?? null) })) }; }} />
             <div className="fnote">{(() => { const md = glide.data?.prods.find((x) => x.prod === prod); return md?.gapSt != null ? <>חציון הירידה בחשיפה למניות מעד 50 ל-60 ומעלה: <Sourced src={() => ({ k: 'calc', title: `חציון ירידת החשיפה למניות · ${prod}`, value: `${nf(md.gapSt!, 1)} נ"א`, formula: 'החציון על פני המנהלים של (חשיפה למניות במסלול עד 50 פחות 60 ומעלה), מחושב בבניית הנתונים (funds/glide.json)', inputs: rows.map((r) => ({ label: r.grp, v: r.step == null ? '–' : `${nf(r.step, 1)} נ"א`, src: () => stepProv(r) })) })}><span className="num">{nf(md.gapSt, 1)}</span></Sourced> נקודות אחוז. </> : null; })()}החשיפה למניות כפי שכל גוף מדווח לרשות על המסלול (לא שם המסלול). לכל מנהל ולכל גיל: {glide.data ? 'המסלול שבחרה בניית הנתונים (funds/glide.json)' : 'המסלול הגדול שלו באותו גיל'}. לחיצה על מנהל מציגה את ההיסטוריה שלו.</div>
           </Panel>
-          <Panel title="המנהלים, גיל מול גיל" aside={<><Seg label="חלון" value={per} onChange={setPer} options={[['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']]} /><span className={`chip${b === 'net' ? ' est' : ''}`}>{basisLbl(b)}</span></>}>
+          <Panel title="המנהלים, גיל מול גיל" aside={<><Seg label="חלון" value={per} onChange={setPer} options={[['y12', 'LTM'], ['a3', '3Y'], ['a5', '5Y']]} /><span className="chip">{basisLbl(b)}</span></>}>
             <DataTable caption={`מסלולי גיל · ${prod}`} rows={rows} rowKey={(r) => r.grp} maxHeight={560} export={{ name: 'fox-glide', title: `מסלולי גיל · ${prod} · ${perL} · ${basisLbl(b)}`, note: 'רשות שוק ההון' }}
               columns={[
                 { key: 'g', head: 'מנהל', value: (r) => r.grp, firstDir: 'asc', cell: (r) => <button type="button" className="linkish" aria-pressed={pick?.grp === r.grp} onClick={() => setSel(r.grp)}><IdDot grp={r.grp} /> {r.grp}</button> },

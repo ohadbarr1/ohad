@@ -1,7 +1,7 @@
 /* Track compare, "לאורך זמן" (C8, spec 4.7): the numbers behind <CompareLong>. Pure, node-tested (scripts/compare-long-test.mjs).
    - The period ("שנה אחרונה | 3 שנים | 5 שנים"; agent and Pro add YTD) picks the figure of every row, the sentence and the chart window together,
      so a tap on "שנה אחרונה" can never leave the board unchanged (regression of the old "1Y changes nothing").
-   - Figures are the site's published ones (lib/funds retOf: net = the build's estimate, gross = as the regulator publishes), the category
+   - Figures are the site's published ones (lib/funds retOf: gross, as the regulator publishes, before fees), the category
      average is compounded from funds/cat.json (lib/compareMonths periodRow). Places and ties: lib/fundsTie tieRanks on the period's band. */
 import type { Basis, CatX, FundX, HistX, Per } from './funds';
 import { growth, onAxis, retOf, underwater } from './funds';
@@ -39,15 +39,15 @@ export function periodFigures(funds: (FundX | null | undefined)[], basis: Basis,
   const vals = funds.map((f) => (f ? retOf(f, 'ytd', basis).v : null));
   let avg: V = null;
   if (cat) {
-    const s = basis === 'gross' ? cat.y : cat.yn ?? [], n = windowMonths('ytd', asof);
+    const s = cat.y, n = windowMonths('ytd', asof);
     avg = cum(Array.from({ length: n }, (_, i) => { const j = cat.p.indexOf(addMonths(asof, -i)); return j < 0 ? null : s[j] ?? null; }));
   }
   return { vals, avg };
 }
-/** how many tracks the category's average covers in `asof` (net: `nn`; gross: `n`); null when unknown */
-export function catCount(cat: CatX | null | undefined, basis: Basis, asof: number): number | null {
+/** how many tracks the category's average covers in `asof` (`n`); null when unknown */
+export function catCount(cat: CatX | null | undefined, _basis: Basis, asof: number): number | null {
   if (!cat) return null;
-  const s = basis === 'gross' ? cat.n : (cat as CatX & { nn?: number[] }).nn, j = cat.p.indexOf(asof);
+  const s = cat.n, j = cat.p.indexOf(asof);
   const v = s && j >= 0 ? s[j] : null;
   return v != null && Number.isFinite(v) && v > 0 ? v : null;
 }

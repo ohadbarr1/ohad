@@ -96,7 +96,7 @@ export function ClientImport({ funds, onDone, startOpen = false, toWizard, nextL
     // red team 06.11.26: the age from the file's birth date (whole years; the date itself is not kept)
     const age = ageAt((reads ?? []).map((x) => x.birth).find((b) => b) ?? null, today());
     const fields = age != null && age >= 16 && age <= 80 ? { [F.age]: String(age), [F.ageSrc]: 'file' } : undefined;
-    const r = upsert(file, { ...f, b: 'net', note: `ייבוא ${from}, ${today().split('-').reverse().join('.')}`, ...(fields ? { fields } : {}) }, today());
+    const r = upsert(file, { ...f, b: 'gross', note: `ייבוא ${from}, ${today().split('-').reverse().join('.')}`, ...(fields ? { fields } : {}) }, today());
     setFile(r.file);
     track('import_done');  // F2: the event name only
     const start = t0.current ?? Date.now();

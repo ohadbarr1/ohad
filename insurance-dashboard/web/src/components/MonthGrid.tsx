@@ -16,7 +16,8 @@ import '../styles/compare.css';
    the start edge; with five or more columns the grid scrolls sideways inside its card, the page never does. */
 
 export type MonthGridMark = 'row-max' | 'none';
-export type Basis = 'net' | 'gross';
+/** returns are gross only (owner 26.11.26): the corner always says "לפני דמי ניהול" */
+export type Basis = 'gross';
 
 /** One column: a track (k = fund key) */
 export interface MonthGridCol { k: string; label: string; color: string; sub?: string; closed?: boolean }
@@ -55,7 +56,7 @@ export interface MonthGridProps {
   mark?: MonthGridMark;                // default 'row-max'
   tie?: number;                        // the body's tie band in points: default 0.05 (a month, O4) / 0.10 (a year)
   scale?: number;                      // heat scale (lib/compareMonths heatScale); computed here when absent
-  basis?: Basis;                       // the corner label: after / before fees
+  basis?: Basis;                       // the corner label: before fees (gross, as published)
   unit?: ReactNode;                    // replaces the corner label
   showAvg?: boolean;                   // the category-average column (Pro)
   avgLabel?: [string, string];         // default ["ממוצע", "הסוג"]
@@ -113,13 +114,13 @@ export function gridLayout(n: number, kind: 'months' | 'years' = 'months', label
 const Dot = () => <i className="mg-dot" aria-hidden="true" />;
 
 export function MonthGrid(props: MonthGridProps) {
-  const { id = 'month-grid', cols, rows, footer = [], kind = 'months', mark = 'row-max', basis = 'net', showAvg = false, onCell, onCol, more, loading = false } = props;
+  const { id = 'month-grid', cols, rows, footer = [], kind = 'months', mark = 'row-max', showAvg = false, onCell, onCol, more, loading = false } = props;
   const yrs = kind === 'years';
   const d = props.decimals ?? (yrs ? 1 : 2), band = props.tie ?? (yrs ? 0.1 : 0.05);
   const n = cols.length + (showAvg ? 1 : 0), L = gridLayout(n, kind, props.labels);
   const scale = props.scale ?? heatScale(rows.flatMap((r) => r.vals));
   const [avgA, avgB] = props.avgLabel ?? ['ממוצע', 'הסוג'];
-  const after = basis === 'net' ? 'אחרי' : 'לפני';
+  const after = 'לפני';
   const unit = props.unit ?? (L.wideLabel ? <>באחוזים,<br />{after} דמי ניהול</> : <>%, {after}<br />דמי ניהול</>);
   const rowKey = (r: MonthGridRow) => r.key ?? String(r.p ?? r.label ?? '');
   const rowLabel = (r: MonthGridRow) => r.label ?? (r.p != null ? monthLabel(r.p, L.short) : '');

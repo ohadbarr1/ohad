@@ -56,7 +56,7 @@ function useRanks(cats: string[], keys: string[]): { ranks: Record<string, RankS
     if (idx === undefined) return { ranks: null, done: false };
     const out: Record<string, RankSeries> = {};
     for (const [c, r] of Object.entries(files)) {
-      const s = r ? pickSet(r, 'y12', 'net') : null;
+      const s = r ? pickSet(r, 'y12', 'gross') : null;
       if (!r || !s) continue;
       for (const k of keys) if (s.tracks[k]) out[k] = { cat: c, months: r.months, v: s.tracks[k], n: s.n };
     }

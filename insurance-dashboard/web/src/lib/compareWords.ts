@@ -109,14 +109,14 @@ export interface MonthInsightIn {
   p: number;
   /** the newest row, one entry per column */
   row: Col[];
-  /** last-year return (net y12 on the net basis) per column; appended only under a month row */
+  /** last-year return (the published gross y12) per column; appended only under a month row */
   lastYear?: Col[];
   /** the tracks are at different risk levels: the banner replaces the sentence */
   cross?: boolean;
   asof?: number;
   band?: number;
 }
-/** `#month-insight`: the row sentence plus, under a month row, the last-year clause. P3 at 10/26, net:
+/** `#month-insight`: the row sentence plus, under a month row, the last-year clause. P3 at 10/26:
  *  "באוקטובר כולם ירדו: הראל ומנורה הכי פחות, מגדל הכי הרבה. הכי הרבה בשנה האחרונה: הראל, ⁦+10.3%⁩." */
 export function monthInsight(i: MonthInsightIn): string {
   if (i.cross) return RISK_BANNER;

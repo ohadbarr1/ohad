@@ -7,7 +7,7 @@ import { Scoreboard, type ScoreRowData } from '../../components/Scoreboard';
 import { signed } from '../../components/MonthGrid';
 import { foxOption } from '../../lib/foxchart';
 import { nf } from '../../lib/format';
-import { catKey, grossProv, netMonthIn, netProv, netSeries, pc, refOf, ym, GROSS_LABEL, NET_LABEL, NET_NOTE, PER_LABEL, type CatX, type FundX, type FundsFile, type HistX } from '../../lib/funds';
+import { catKey, grossProv, pc, refOf, ym, GROSS_LABEL, PER_LABEL, type CatX, type FundX, type FundsFile, type HistX } from '../../lib/funds';
 import { monthIn, seedHist, listP } from '../../lib/market';
 import { useSource, type Prov } from '../../lib/prov';
 import { load, useFundCats, useFunds } from '../../lib/useData';
@@ -61,7 +61,6 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
   if (!data || !asof) return <div className="cl" id="lens-long"><div className="cl-empty" role="status">טוען…</div></div>;
   if (!have.length) return <div className="cl" id="lens-long"><div className="cl-empty">בחרו מסלולים כדי לראות אותם לאורך זמן.</div></div>;
 
-  const net = basis === 'net';
   const cross = new Set(have.map(catKey)).size > 1;
   const mixed = new Set(have.map((f) => f.prod)).size > 1;
   const old = have.some((f) => isOldGen(f));
@@ -95,13 +94,13 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
   const n = catCount(cat, basis, asof);
   const benchmark = !cross && avg != null ? { label: n ? `ממוצע כל ${n} המסלולים מהסוג הזה` : 'ממוצע המסלולים מהסוג הזה', value: avg } : null;
 
-  /* ---- sources: the board's figures open the published figure (or the net build) one by one ---- */
-  const lbl = net ? NET_LABEL : GROSS_LABEL;
+  /* ---- sources: the board's figures open the published (gross) figure one by one ---- */
+  const lbl = GROSS_LABEL;
   const perName = persOf(false).find(([p]) => p === per)?.[1] ?? PER_LABEL[per];
-  const figProv = (f: FundX, v: number | null): Prov => (net ? netProv(f, per, asof, v, data.net_method) : grossProv(f, per, asof));
+  const figProv = (f: FundX, _v: number | null): Prov => grossProv(f, per, asof);
   const boardSrc = (): Prov => listP(`${PER_LABEL[per]}, ${lbl}`, perName, undefined,
-    `${net ? 'תשואה נטו (אומדן האתר) של כל מסלול' : 'התשואה ברוטו כפי שהרשות לשוק ההון מפרסמת'}, לתקופה שמסתיימת ב-${ym(asof)}. הממוצע: תשואות הקטגוריה החודשיות (funds/cat.json) בריבית דריבית`,
-    have.map((f, i) => ({ label: labels[i], v: pc(vals[i], 1), src: () => figProv(f, vals[i]) })), net ? NET_NOTE : undefined);
+    `התשואה ברוטו כפי שהרשות לשוק ההון מפרסמת, לתקופה שמסתיימת ב-${ym(asof)}. הממוצע: תשואות הקטגוריה החודשיות (funds/cat.json) בריבית דריבית`,
+    have.map((f, i) => ({ label: labels[i], v: pc(vals[i], 1), src: () => figProv(f, vals[i]) })));
 
   /* ---- chart ---- */
   const axis = windowAxis(per, asof);
@@ -109,13 +108,13 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
   const series = ready ? have.map((f) => chartSeries(axis, hist[f.k], basis, mode)) : [];
   const last = axis.length - 1, at = touch == null ? last : Math.max(0, Math.min(last, touch));
   const fmtRo = (v: number | null) => (v == null ? '–' : mode === 'g' ? nf(v, 1) : signed(v, 1, true));
-  const monthRow = (f: FundX, p: number) => { const h = hist[f.k]; seedHist(refOf(f), h); return net ? netMonthIn(refOf(f), h, p, netSeries(h)) : monthIn(refOf(f), 'y', p, h.y[h.p.indexOf(p)]); };
+  const monthRow = (f: FundX, p: number) => { const h = hist[f.k]; seedHist(refOf(f), h); return monthIn(refOf(f), 'y', p, h.y[h.p.indexOf(p)]); };
   const pointSrc = (si: number, di: number): Prov | null => {
     const f = have[si], v = series[si]?.[di];
     if (!f || di < 1 || v == null) return null;
     return mode === 'g'
-      ? { k: 'calc', est: net, title: `צמיחה של 100 ש"ח · ${f.name} · ${ym(axis[di])}`, value: nf(v, 1), formula: `100 × (1 + r₁) × … × (1 + rₙ) על התשואות החודשיות (${lbl}) מ-${ym(axis[1])} עד ${ym(axis[di])}. בסיס: סוף ${ym(axis[0])}`, note: net ? NET_NOTE : undefined, inputs: axis.slice(1, di + 1).map((p) => monthRow(f, p)) }
-      : { k: 'calc', est: net, title: `מתחת לשיא · ${f.name} · ${ym(axis[di])}`, value: pc(v, 1), formula: `מדד התשואה המצטברת (${lbl}) חלקי השיא שלפניו בחלון, פחות 1`, inputs: axis.slice(1, di + 1).map((p) => monthRow(f, p)) };
+      ? { k: 'calc', title: `צמיחה של 100 ש"ח · ${f.name} · ${ym(axis[di])}`, value: nf(v, 1), formula: `100 × (1 + r₁) × … × (1 + rₙ) על התשואות החודשיות (${lbl}) מ-${ym(axis[1])} עד ${ym(axis[di])}. בסיס: סוף ${ym(axis[0])}`, inputs: axis.slice(1, di + 1).map((p) => monthRow(f, p)) }
+      : { k: 'calc', title: `מתחת לשיא · ${f.name} · ${ym(axis[di])}`, value: pc(v, 1), formula: `מדד התשואה המצטברת (${lbl}) חלקי השיא שלפניו בחלון, פחות 1`, inputs: axis.slice(1, di + 1).map((p) => monthRow(f, p)) };
   };
   const build = () => {
     const o = foxOption({ x: axis.map(ym), unit: mode === 'g' ? 'ש"ח' : '%', dense: true, full: true, scale: mode === 'g', legend: false,
@@ -171,7 +170,7 @@ export function CompareLong(ctx: CmpCtx & { aside?: boolean }) {
 
       {ctx.aside ? null : <>
         <ShareRow ctx={ctx} />
-        <Stamp asof={asof} basis={basis} onWhy={() => openSheet({ t: 'why' })} onSrc={saver ? undefined : () => open(boardSrc())} />
+        <Stamp asof={asof} onWhy={() => openSheet({ t: 'why' })} onSrc={saver ? undefined : () => open(boardSrc())} />
       </>}
     </div>
   );

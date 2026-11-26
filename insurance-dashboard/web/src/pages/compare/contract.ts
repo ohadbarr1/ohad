@@ -23,7 +23,7 @@ export type View = 'm6' | 'm12' | 'y' | 'long' | 'dec' | 'risk';
 /** what every lens and sheet gets from the shell */
 export interface CmpCtx {
   keys: string[];            // the tracks on screen, in column order (k = 'p2102', 'g7936', …)
-  basis: Basis;              // 'net' (after fees, the default) | 'gross'
+  basis: Basis;              // always 'gross': the published return, before fees (owner 26.11.26)
   door: Door;                // 'saver' | 'agent' | 'pro' — sets depth, never facts
   setKeys: (keys: string[]) => void;   // replace the tracks (URL ?k=, replace)
   openSheet: (s: SheetId) => void;     // the URL-backed sheet state (written with replace; the sheet itself adds the history entry)

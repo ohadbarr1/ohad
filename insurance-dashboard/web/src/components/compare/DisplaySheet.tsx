@@ -1,14 +1,11 @@
-/* D6 · the display sheet (spec §4.9): the "נטו" pill of the agent and Pro doors opens it. Basis (net / gross: lib/funds useBasis, kept
-   per browser as funds:basis and in the address when the address carries it) and, for agent and Pro, real or nominal (useReal,
-   periods of a year and more). The saver has no basis control above the fold: their switch lives in "איך מחשבים?" (WhySheet), and if
-   this sheet is opened in the saver door it speaks plain words ("אחרי דמי ניהול / לפני דמי ניהול") and offers no real/nominal. */
+/* D6 · the display sheet (spec §4.9): the display pill of the agent and Pro doors opens it. Returns are always the published gross
+   return (owner, 26.11.26: no net-of-fee basis; the fee a saver pays is negotiated and varies), so the sheet states the basis and, for
+   agent and Pro, offers real or nominal (useReal, periods of a year and more). Opened in the saver door it states the basis only. */
 import type { SheetProps } from '../../pages/compare/contract';
 import { DeeperSheet } from '../DeeperSheet';
-import { useBasis, useReal } from '../../lib/funds';
-import { BasisSwitch } from './WhySheet';
+import { GROSS_STAMP, useReal } from '../../lib/funds';
 
 export function DisplaySheet({ door, open, onClose }: SheetProps) {
-  const [basis] = useBasis();
   const [real, setReal] = useReal();
   const saver = door === 'saver';
   return (
@@ -16,10 +13,7 @@ export function DisplaySheet({ door, open, onClose }: SheetProps) {
       <div id="display-sheet">
         <div className="cs-fld">
           <b>תשואה</b>
-          <BasisSwitch plain={saver} />
-          <p>{basis === 'net'
-            ? (saver ? 'אחרי דמי ניהול: התשואה שרשות שוק ההון מפרסמת, פחות דמי הניהול הממוצעים במסלול. זה אומדן: דמי הניהול שלך יכולים להיות אחרים.' : 'נטו: אחרי דמי הניהול מהצבירה. אומדן של האתר לפי דמי הניהול הממוצעים במסלול; דמי הניהול של חוסך מסוים יכולים להיות שונים.')
-            : (saver ? 'לפני דמי ניהול: כפי שרשות שוק ההון מפרסמת.' : 'ברוטו: לפני דמי ניהול, כפי שרשות שוק ההון מפרסמת.')}</p>
+          <p id="basis-note">{GROSS_STAMP}, לפני דמי ניהול. דמי הניהול שונים מחוסך לחוסך ונקבעים מול הגוף המנהל, ולכן אינם מנוכים מהתשואה; הם מוצגים בנפרד, בשקלים.</p>
         </div>
         {saver ? null : (
           <div className="cs-fld">

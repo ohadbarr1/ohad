@@ -14,8 +14,8 @@ import { useStored } from '../lib/local';
 import { usePhone } from '../lib/useMedia';
 import { load, useFunds } from '../lib/useData';
 import {
-  FAMS, FAM_F, FAM_LABEL, GROSS_LABEL, NET_LABEL, PCT_F, PERIODS, PER_LABEL, catKey, equityOutlier, equitySpread, famOf, hasNet, outlierProv, pc, rankAll, realOf, refOf,
-  retOf, selfDirected, SELF_NOTE, shownProv, useBasis, useReal, ym, type Basis, type FamKey, type FundX, type FundsFile, type Per,
+  FAMS, FAM_F, FAM_LABEL, GROSS_LABEL, PCT_F, PERIODS, PER_LABEL, catKey, equityOutlier, equitySpread, famOf, outlierProv, pc, rankAll, realOf, refOf,
+  retOf, selfDirected, SELF_NOTE, shownProv, useReal, ym, type Basis, type FamKey, type FundX, type FundsFile, type Per,
 } from '../lib/funds';
 import { DEFAULT_PER, TIE_F, TIE_NOTE, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import { useOptional } from '../lib/fundsLoad';
@@ -74,10 +74,10 @@ function usePersist(cats: string[], on: boolean, basis: Basis): Map<string, Map<
     if (!on || (!idx.data && !idx.missing)) return null;
     const out = new Map<string, Map<string, Persist>>();
     files.forEach((f, c) => {
-      const set = f ? pickSet(f, 'y12', basis) ?? pickSet(f, 'y12', 'net') ?? pickSet(f, 'y12', 'gross') : null;
+      const set = f ? pickSet(f, 'y12', 'gross') : null;
       if (!f || !set) return;
       const m = new Map<string, Persist>();
-      Object.entries(set.tracks).forEach(([k, xs]) => { const last = xs.slice(-60).filter((v): v is number => v != null); if (last.length) m.set(k, { top: last.filter((v) => v >= 75).length, of: last.length, xs, months: f.months, n: set.n, basis: set.basis }); });
+      Object.entries(set.tracks).forEach(([k, xs]) => { const last = xs.slice(-60).filter((v): v is number => v != null); if (last.length) m.set(k, { top: last.filter((v) => v >= 75).length, of: last.length, xs, months: f.months, n: set.n, basis: 'gross' }); });
       out.set(c, m);
     });
     return out;
@@ -94,10 +94,8 @@ export function FundsScreen() {
   const cpi = useMacro().data?.series.cpi;
   const [sp, setSp] = useSearchParams();
   const phone = usePhone();
-  const [basisAsked] = useBasis();
   const [real] = useReal();
-  const netOk = useMemo(() => hasNet(data?.funds ?? []), [data]);
-  const basis: Basis = basisAsked === 'net' && netOk ? 'net' : 'gross';
+  const basis: Basis = 'gross';  // owner 26.11.26: every return is the published gross
   const set = (patch: Record<string, string | null>) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k))); setSp(n, { replace: true }); };
   const num = (k: string) => { const v = sp.get(k); return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null; };
   // the old /funds?q= links and the search palette: open the product and track of the first match
@@ -205,7 +203,7 @@ export function FundsScreen() {
 
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
   if (!data) return <Loading what="מסלולים" />;
-  const lbl = real ? `ריאלי${basis === 'net' ? ', נטו' : ''}` : basis === 'net' ? NET_LABEL : GROSS_LABEL;
+  const lbl = real ? 'ריאלי' : GROSS_LABEL;
 
   /* ---- cells: every figure opens its source ---- */
   const rankSrc = (f: FundX, r: RankInfo): Prov => ({ k: 'calc', title: `מקום לפי ${PER_LABEL[per]} (${lbl}) · ${f.name}`, value: `${rankText(r)} מתוך ${r.n}`,
@@ -217,8 +215,6 @@ export function FundsScreen() {
   const Ret = ({ f, p }: { f: FundX; p: Per }) => {
     const v = val(f, p);
     if (v != null) return <Sourced src={() => shownProv(f, p, basis, real, asof, cpi, data)}><span className="num">{pc(v, p === 'm1' ? 2 : 1)}</span></Sourced>;
-    // net asked, the file has net, this track has none for the window: its gross, dimmed and labelled, never ranked with the net figures
-    if (basis === 'net' && !real && f[p] != null) return <span className="fgross" title="אין לחלון הזה היסטוריית דמי ניהול: מוצג ברוטו, מחוץ לדירוג"><span className="num muted">{pc(f[p], 1)}</span><span className="chip">ברוטו</span></span>;
     return <span className="muted">–</span>;
   };
   const cell = (f: FundX, c: ColKey, r: RankInfo | undefined): ReactNode => {
@@ -242,8 +238,8 @@ export function FundsScreen() {
       case 'persist': { const x = persistOf(f);
         if (!x) return <span className="muted" title={persist == null ? 'טוען את קובצי האחוזונים' : 'אין אחוזון חודשי למסלול בקטגוריה (היסטוריה קצרה, או שהקטגוריה קטנה מדי)'}>–</span>;
         const L = x.months.length - 1, first = Math.max(0, x.xs.length - 60);
-        return <Sourced src={() => ({ k: 'calc', est: x.basis === 'net', title: `התמדה · ${f.name}`, value: `${x.top} מתוך ${x.of}`, formula: 'מספר החודשים מתוך 60 האחרונים שבהם האחוזון של המסלול בקטגוריה (תשואת LTM) היה 75 ומעלה, מתוך החודשים שבהם המסלול דורג',
-          note: `אחוזון היום: ${x.xs[L] == null ? '–' : nf(x.xs[L]!, 0)} · ${x.basis === 'net' ? 'נטו (אומדן)' : 'ברוטו'} · הגרף החודשי בכרטיס המסלול`,
+        return <Sourced src={() => ({ k: 'calc', title: `התמדה · ${f.name}`, value: `${x.top} מתוך ${x.of}`, formula: 'מספר החודשים מתוך 60 האחרונים שבהם האחוזון של המסלול בקטגוריה (תשואת LTM) היה 75 ומעלה, מתוך החודשים שבהם המסלול דורג',
+          note: `אחוזון היום: ${x.xs[L] == null ? '–' : nf(x.xs[L]!, 0)} · ברוטו · הגרף החודשי בכרטיס המסלול`,
           inputs: x.xs.slice(first).map((v, i) => ({ label: ymL(x.months[first + i] ?? 0), v: v == null ? '–' : nf(v, 0), src: v == null ? undefined : () => rankProv(f.name, x.months[first + i], v, x.n[first + i] ?? null, 'y12', x.basis, 'file') })).filter((z) => z.v !== '–') })}><span className="num">{x.top}/{x.of}</span></Sourced>; }
       case 'top': return f.yrs ? <Sourced src={() => ({ k: 'calc', title: `רבע עליון · ${f.name}`, value: `${f.top}/${f.yrs}`, formula: 'בכמה מהשנים הקלנדריות המלאות מתוך חמש האחרונות תשואת המסלול (ברוטו, ריבית דריבית על 12 תשואות חודשיות) הייתה ברבע העליון של הקטגוריה: מקום ≤ ⌈n÷4⌉, בקטגוריה של 4 מסלולים לפחות', inputs: [{ label: 'שנים ברבע העליון', v: nf(f.top ?? 0, 0) }, { label: 'שנים שנבדקו', v: nf(f.yrs ?? 0, 0) }], note: 'מחושב בבניית הנתונים מתשואות חברי הקטגוריה' })}><span className="num">{f.top}/{f.yrs}</span></Sourced> : <span className="muted">–</span>;
     }
@@ -313,13 +309,13 @@ export function FundsScreen() {
   const shown = (g: (typeof groups)[number]) => !multi || open.includes(g.k) || groups.length <= 2;
   return (
     <>
-      <FundsHead sub={<>מסלולים · <Sourced src={() => countP('מסלולים מוצגים', shownN, 'המסלולים שעוברים את הסינון')}><span className="num">{nf(shownN, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} tools={<>{tools}{!phone && <BasisToggle netReady={netOk} />}</>} />
-      {phone ? <Sheet open={opts} onClose={() => setOpts(false)} title="דירוג וסינון"><div className="fopts"><div className="field"><span>דירוג לפי</span><Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} /></div><div className="field"><span>בסיס</span><BasisToggle netReady={netOk} /></div>{Options}</div></Sheet> : opts && <section className="controls opts">{Options}</section>}
+      <FundsHead sub={<>מסלולים · <Sourced src={() => countP('מסלולים מוצגים', shownN, 'המסלולים שעוברים את הסינון')}><span className="num">{nf(shownN, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} tools={<>{tools}{!phone && <BasisToggle />}</>} />
+      {phone ? <Sheet open={opts} onClose={() => setOpts(false)} title="דירוג וסינון"><div className="fopts"><div className="field"><span>דירוג לפי</span><Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} /></div><div className="field"><span>בסיס</span><BasisToggle /></div>{Options}</div></Sheet> : opts && <section className="controls opts">{Options}</section>}
 
       {!opts && Refused}
       <Panel title={<>{prod === ALL ? 'כל המוצרים' : prod} · {T === ALL ? 'כל המסלולים' : T}</>} aside={<>
         {multi && groups.length > 2 && <button type="button" className="chip" onClick={() => setOpen(open.length ? [] : groups.map((g) => g.k))}>{open.length ? 'כווץ הכול' : 'פתח הכול'}</button>}
-        <span className={`chip${basis === 'net' || real ? ' est' : ''}`}>{lbl}</span>{(per === 'a3' || per === 'a5') && <span className="chip">3Y ו-5Y: שנתי ממוצע</span>}
+        <span className={`chip${real ? ' est' : ''}`}>{lbl}</span>{(per === 'a3' || per === 'a5') && <span className="chip">3Y ו-5Y: שנתי ממוצע</span>}
         {prod === 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)' && <span className="chip est" title="ביטוח-נט מפרסם מסלולי השקעה. פוליסת חיסכון וביטוח מנהלים שהונפק מ-2004 מושקעים באותו מסלול, ולכן התשואה זהה; הנכסים ודמי הניהול הממוצעים כוללים את שני המוצרים">מסלול משותף לשני המוצרים</span>}
       </>}>
         {groups.length === 0 ? <Empty title="אין מסלולים בסינון הזה">{nFilters > 0 && 'נסו לנקות חלק מהסינונים.'}</Empty> : phone ? (
@@ -364,7 +360,7 @@ export function FundsScreen() {
             </tbody>
           </table></div>
         )}
-        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. {basis === 'net' ? 'נטו: אומדן אחרי דמי ניהול מצבירה; מסלול בלי נטו לחלון מוצג ברוטו ואינו מדורג.' : basisAsked === 'net' ? 'נטו עוד לא נכלל בקובץ הנתונים, ולכן מוצג ברוטו.' : 'ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת.'} ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {agentDoor ? SELF_NOTE_AGENT : SELF_NOTE}.{agentDoor && cols.includes('clm') ? ' תביעות נכות: שיעור התביעות שאושרו מתוך אלה שנסגרו בשנה, מדיווח החברה עצמה (נספח ב3), ברמת החברה המנהלת.' : ''}</div>
+        <div className="fnote">מקום ואחוזון: בתוך הקטגוריה (אותו מוצר ומסלול), על {PER_LABEL[per]} {lbl}; מדורגים מסלולים פתוחים לציבור{closed ? ' וקופות ענפיות' : ''} עם נכסים; דורות ישנים של ביטוח מנהלים (1990-2003) סגורים להצטרפות ואינם מדורגים; מסלול בלי היסטוריה לחלון מוצג "–" ובסוף הקטגוריה. {TIE_NOTE}. ד"נ: הממוצע בפועל של המסלול (הרשות), לא דמי הניהול של חוסך מסוים. ברוטו: לפני דמי ניהול, כפי שהרשות מפרסמת; דמי הניהול בעמודה נפרדת. ▲▼ ליד החשיפה למניות: תווית מול מציאות. {real ? `ריאלי: מנוכה במדד המחירים לצרכן (הלמ"ס); המדד בקובץ מכסה ${cpi?.points.length ?? 0} חודשים, וחלון ארוך יותר מוצג "–".` : ''} {gone ? 'מסלולים שנסגרו: הנתונים לחודש האחרון שלהם, מחוץ לדירוג.' : 'ממוצעי הקטגוריה ודירוגים כוללים רק מסלולים פעילים היום.'} {agentDoor ? SELF_NOTE_AGENT : SELF_NOTE}.{agentDoor && cols.includes('clm') ? ' תביעות נכות: שיעור התביעות שאושרו מתוך אלה שנסגרו בשנה, מדיווח החברה עצמה (נספח ב3), ברמת החברה המנהלת.' : ''}</div>
       </Panel>
     </>
   );

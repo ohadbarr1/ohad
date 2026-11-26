@@ -25,7 +25,7 @@ import * as H from '../lib/hanmaka';  // W7: the binding wording
 import { DocBar, docMode, nyudInOf } from '../components/agent/DocBar';  // fox 3.0 phase 2: the wizard's step 3 and the annual-review queue
 import '../styles/agentDoc.css';
 
-/* W1 · agent door: the client document, /funds/compare/print?k=…&b=net|gross. An A4 page set, right to left: the tracks compared with
+/* W1 · agent door: the client document, /funds/compare/print?k=… (returns gross, as published; an old &b= is ignored). An A4 page set, right to left: the tracks compared with
    every figure's source and data month, the bottom line (descriptive), the tax and liquidity rule of each product, a disclaimer; then
    the הנמקה. The client's name and every typed field live in this page only (never stored) unless "שמור ללקוח"; the agent's branding
    (lib/branding) is kept in this browser (localStorage), never sent anywhere. window.print() makes the PDF.
@@ -38,7 +38,7 @@ import '../styles/agentDoc.css';
    follows, the header and the signature block carry the agent's branding, and the footer carries the document version, the date, the
    licence line and the sections followed. */
 /** the one line that replaces the "אומדן" badges: what in this document is computed by the site and what is as published */
-const EST_LINE = 'אומדנים: תשואה נטו (ברוטו פחות דמי ניהול מצבירה ÷ 12), ירידה מרבית, עלות דמי הניהול לשנה, החיסכון הצפוי בטבלת הניוד וקצבה חודשית הם חישובים של האתר על ההנחות שבהערות ובטבלאות; כל שאר הנתונים כפי שפרסמה הרשות או הגוף המנהל.';
+const EST_LINE = 'אומדנים: ירידה מרבית, עלות דמי הניהול לשנה, החיסכון הצפוי בטבלת הניוד וקצבה חודשית הם חישובים של האתר על ההנחות שבהערות ובטבלאות; כל שאר הנתונים כפי שפרסמה הרשות או הגוף המנהל.';
 /** W7: the document's version (changes when the structure or the wording changes) */
 export const DOC_VERSION = '2026.11 (W7)';
 
@@ -72,7 +72,6 @@ export function FundsComparePrint() {
   const asked = useMemo(() => (sp.get('k') ?? '').split(',').filter((k) => /^[gip]\d+$/.test(k)), [sp]);
   const keys = useMemo(() => [...new Set(asked)].slice(0, TRAY_MAX), [asked]);
   const dropped = [...new Set(asked)].length - keys.length;
-  const netAsked = sp.get('b') !== 'gross';
   const { hist, pending } = useHists(keys);
   const dfile = useOptional<DefaultFile>('funds/default.json');
   const dec = useOptional<DecisionFile>(DECISION_PATH);  // W2: the service index and claims columns
@@ -107,9 +106,8 @@ export function FundsComparePrint() {
   const fs = keys.map((k) => data.funds.find((f) => f.k === k)).filter((f): f is FundX => !!f);
   const snap = folder?.snap && folder.snap.rows.length && keys.every((k) => folder.snap!.rows.some((r) => r.k === k)) ? folder.snap : null;
   const useSnap = !!snap && !live;
-  const net = useSnap ? snap!.b === 'net' : netAsked;
   const asof = useSnap ? snap!.asof : data.asof;
-  const liveRows: SnapRow[] = fs.map((f) => docRow(f, { net, asof: data.asof, hist: hist[f.k] as HistX | undefined, dfile, dec }));
+  const liveRows: SnapRow[] = fs.map((f) => docRow(f, { asof: data.asof, hist: hist[f.k] as HistX | undefined, dfile, dec }));
   const rows: SnapRow[] = useSnap ? keys.map((k) => snap!.rows.find((r) => r.k === k)!).filter(Boolean) : liveRows;
   const held = folder?.held ?? [];
   // W5: a folder of imported products alone (none matched a published track) still makes a document: the current state and the annex
@@ -117,9 +115,9 @@ export function FundsComparePrint() {
 
   const anyPen = rows.some((r) => r.pen);
   const olds = rows.filter((r) => r.old);
-  const bottom = useSnap ? snap!.bottom : bottomLines(rows, net);
+  const bottom = useSnap ? snap!.bottom : bottomLines(rows);
   const rules = rulesOf(rows.map((r) => r.prod));
-  const lbl = net ? 'נטו' : 'ברוטו';
+  const lbl = 'ברוטו';
   const metrics = metricsOf(rows);
   const pages = pagesOf(rows, 4);
   const diffs = snap && live ? snap.rows.map((t) => { const n = liveRows.find((r) => r.k === t.k); return n ? { r: n, d: snapDiff(t, n, data.asof) } : null; }).filter((x): x is { r: SnapRow; d: ReturnType<typeof snapDiff> } => !!x && x.d.length > 0) : [];
@@ -133,7 +131,7 @@ export function FundsComparePrint() {
 
   // the notes: one per metric group, numbered as the table cites them; plain words, no field names, no %-encoded addresses
   const notes: string[] = [
-    `${data.source}, נתוני ${ym(asof)}. תשואות ${net ? 'נטו: התשואה החודשית שפורסמה (ברוטו) פחות דמי הניהול מצבירה של אותו חודש ÷ 12, בריבית דריבית' : 'ברוטו (לפני דמי ניהול), כפי שפורסמו'}; 3Y ו-5Y: ממוצע שנתי; LTM: 12 החודשים האחרונים.`,
+    `${data.source}, נתוני ${ym(asof)}. תשואות ברוטו (לפני דמי ניהול), כפי שפורסמו; 3Y ו-5Y: ממוצע שנתי; LTM: 12 החודשים האחרונים.`,
     `דמי ניהול: הממוצע בפועל שגבה המסלול מכלל עמיתיו, מצבירה ומהפקדה, ${ym(asof)}; דמי הניהול של הלקוח יכולים להיות שונים.${olds.length ? ` ${OLD_FEE_NOTE} (${OLD_FEE_SRC.title}, עמ' ${OLD_FEE_SRC.pg}).` : ''}`,
     'שארפ וסטיית תקן: כפי שהרשות מפרסמת למסלול. מסלול בניהול אישי או בלי תנודתיות: אין שארפ.',
     `ירידה מרבית: מחושבת מ-60 התשואות החודשיות האחרונות (${lbl}), מהשיא לשפל שאחריו.`,
@@ -154,9 +152,9 @@ export function FundsComparePrint() {
         <label className="chk"><input type="checkbox" checked={annex} onChange={(e) => setAnnex(e.target.checked)} /> מסמך הנמקה</label>
         <label className="chk"><input type="checkbox" checked={docB} onChange={(e) => setDocB(e.target.checked)} /> מסמך ב'</label>
         <button type="button" className="cmp-doc" onClick={() => { if (annex) track('hanmaka_pdf'); window.print(); }}><Icon name="download" />הדפסה / PDF</button>
-        <ClientSave keys={rows.map((r) => r.k)} b={net ? 'net' : 'gross'} folder={folder} onSaved={(f) => { setFolderId(f.id); setLive(false); }} suggest={client} busy={!useSnap && pending > 0}
+        <ClientSave keys={rows.map((r) => r.k)} b="gross" folder={folder} onSaved={(f) => { setFolderId(f.id); setLive(false); }} suggest={client} busy={!useSnap && pending > 0}
           collect={() => ({ tags: Object.fromEntries(rows.map((r) => [r.k, tagOf(r.k)])),
-            ...(useSnap ? {} : { snap: snapOf(rows, bottom, todayIso(), data.asof, net ? 'net' : 'gross') }),
+            ...(useSnap ? {} : { snap: snapOf(rows, bottom, todayIso(), data.asof) }),
             fields: (() => { const x = collectFields(folder?.fields); if (client.trim()) x['doc:client'] = client.trim(); else delete x['doc:client']; x['doc:kind'] = kind; return x; })() })} />
         {snap && <div className="adoc-snap" role="group" aria-label="צילום הנתונים">
           <span><b>{useSnap ? 'מוצג הצילום' : 'מוצגים נתוני היום'}</b> · התיק נשמר עם צילום מ-{dmyIso(snap.at)}, נתונים עד {ym(snap.asof)}</span>
@@ -204,7 +202,7 @@ export function FundsComparePrint() {
               <tbody>{metrics.map((m) => <tr key={m.key}><th scope="row">{m.label}{N(m.fn)}</th>{pg.map((r) => { const c = m.cell(r, asof); return <td key={r.k}>{c.t}{c.q && <span className="q">{c.q}</span>}</td>; })}</tr>)}</tbody>
             </table>
           ))}
-          <p className="adoc-cap">3Y ו-5Y: תשואה שנתית ממוצעת. {net ? 'נטו: אומדן אחרי דמי ניהול מצבירה בלבד; דמי ניהול מהפקדה פועלים על ההפקדות ואינם נכללים.' : 'ברוטו: לפני דמי ניהול.'} "–": אין נתון.</p>
+          <p className="adoc-cap">3Y ו-5Y: תשואה שנתית ממוצעת. ברוטו: לפני דמי ניהול, כפי שפורסם; דמי הניהול בשורות נפרדות. "–": אין נתון.</p>
         </section>}
 
         {rows.length > 0 && <section>

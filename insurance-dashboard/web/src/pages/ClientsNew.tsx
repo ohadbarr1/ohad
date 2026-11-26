@@ -84,7 +84,7 @@ export function ClientsNew() {
   // red team 06.11.26: the age comes from the file (lib/maslaka, at import) or is typed; no projection without it
   const ageN = age.trim() ? ageOk(+age) : null;
   const ageFile = folder?.fields[F.ageSrc] === 'file' && folder.fields[F.age] === age.trim();
-  const rows = useMemo(() => (data && folder ? plan.keys.map((k) => byK.get(k)).filter((x): x is FundX => !!x).map((x) => docRow(x, { net: true, asof: data.asof, hist: hist[x.k] as HistX | undefined, dfile, dec })) : []),
+  const rows = useMemo(() => (data && folder ? plan.keys.map((k) => byK.get(k)).filter((x): x is FundX => !!x).map((x) => docRow(x, { asof: data.asof, hist: hist[x.k] as HistX | undefined, dfile, dec })) : []),
     [data, folder, plan.keys.join(), byK, hist, dfile, dec]);  // eslint-disable-line react-hooks/exhaustive-deps
   const asofText = data ? ym(data.asof) : '';
   const ny = folder && rows.length ? nyudTable(folder.held, rows, plan.tags, coefF, { basis, age: ageN, sex: sex || null }, asofText, pairs) : null;
@@ -101,12 +101,12 @@ export function ClientsNew() {
     const why: Record<string, string> = {};
     for (const c of cands) { const rs = (ny?.rows ?? []).filter((r) => r.cand.k === c); if (rs.length) why[c] = whyText(rs.flatMap((r) => whyLines(r, r.exist.k ? byK.get(r.exist.k) : null, byK.get(c), dec, asofText))); }
     const ms = t0.current ? Date.now() - t0.current : null;
-    const inp = wizardSave(folder, cands, { snap: rows.length ? snapOf(rows, bottomLines(rows, true), today(), data.asof, 'net') : null, kind, client, meet, age: ageN, sex: sex || null, ms, today: today(), why, pairs });
+    const inp = wizardSave(folder, cands, { snap: rows.length ? snapOf(rows, bottomLines(rows), today(), data.asof) : null, kind, client, meet, age: ageN, sex: sex || null, ms, today: today(), why, pairs });
     if (!ageFile) delete inp.fields?.[F.ageSrc];
     const r = upsert(clients, inp, today());
     setClients(r.file);
     if (ms != null) setTimes(pushTime(times, ms));
-    nav(`/funds/compare/print?k=${r.folder.keys.join(',')}&b=net`, { state: { folder: r.folder.id, mode: 'wizard', print, t0: t0.current } });
+    nav(`/funds/compare/print?k=${r.folder.keys.join(',')}`, { state: { folder: r.folder.id, mode: 'wizard', print, t0: t0.current } });
   };
 
   return (
@@ -161,7 +161,7 @@ export function ClientsNew() {
             <ul className="wiz-opts" aria-label="מסלולים לבחירה">{opts.map((o) => { const on = cands.includes(o.k); return <li key={o.k}>
               <button type="button" className={`wiz-opt${on ? ' on' : ''}`} aria-pressed={on} disabled={!on && cands.length >= MAX_CANDS} onClick={() => toggle(o.k)}>
                 <span className="t"><b>{o.name}</b>{o.same && <span className="tag">אותו מסלול השקעה</span>}{o.dflt && <span className="tag">ברירת מחדל בתוקף</span>}</span>
-                <span className="f">ד"נ <bdi dir="ltr">{pc(o.depfee)} / {pc(o.fee)}</bdi> · נטו 3Y <bdi dir="ltr">{pc(o.a3)}</bdi></span>
+                <span className="f">ד"נ <bdi dir="ltr">{pc(o.depfee)} / {pc(o.fee)}</bdi> · 3Y <bdi dir="ltr">{pc(o.a3)}</bdi></span>
               </button></li>; })}</ul>
             <p className="wiz-note">כל המסלולים הפתוחים של המוצר, מסודרים: אותו מסלול השקעה כמו של הלקוח, אחר כך קרנות ברירת מחדל, אחר כך לפי גודל. ד"נ: מהפקדה / מצבירה, הממוצע בפועל ({asofText}); נטו 3Y: ממוצע שנתי. הבחירה של בעל הרישיון.</p>
           </> : <p className="wiz-note">אין בתיק מוצר עם יתרה או הפקדה שאפשר לנייד (למשל: רק כיסויים ביטוחיים). אפשר להמשיך למסמך.</p>}

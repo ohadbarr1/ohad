@@ -9,7 +9,7 @@ import { SALARY_KEY, useMine, useMy, useMyAge, useMyRetire, useMySalary, useMySe
 import { writeStored } from '../lib/local';
 import { PROFILE_ADD, PROFILE_LABEL, addProfile, removeProfile, setActive, type ProfileId } from '../lib/household';  // W7
 import { useSaverDoor } from '../lib/door';
-import { grossProv, netProv, useBasis, type CatX, type FundX, type FundsFile } from '../lib/funds';
+import { grossProv, type CatX, type FundX, type FundsFile } from '../lib/funds';
 import { deltaOf, markSeen, ymL, type WSnap } from '../lib/fundsTime';  // phase 0: the watchlist (was /funds/watch)
 import { snapOf, useWatch } from '../lib/fundsTimeLoad';
 import { WatchStar } from '../components/FundsTime';
@@ -139,11 +139,10 @@ export function My() {
  *  the fee and a "new month" chip against the last look. The look is recorded when the reader leaves, only if the list was opened. */
 function Watching({ data }: { data: FundsFile }) {
   const [w, setW] = useWatch();
-  const [b] = useBasis();
   const { hash } = useLocation();
   const asof = data.asof;
   const byK = useMemo(() => new Map(((data.funds ?? []) as FundX[]).map((f) => [f.k, f])), [data]);
-  const now = useMemo(() => { const m = new Map<string, WSnap>(); w.items.forEach((i) => { const f = byK.get(i.k); if (f) m.set(i.k, snapOf(f, asof, b)); }); return m; }, [w, byK, asof, b]);
+  const now = useMemo(() => { const m = new Map<string, WSnap>(); w.items.forEach((i) => { const f = byK.get(i.k); if (f) m.set(i.k, snapOf(f, asof)); }); return m; }, [w, byK, asof]);
   const [open, setOpen] = useState(hash === '#watch');
   // /my#watch (where /funds/watch lands) opens the list and brings it into view once the cards above it have taken their height
   useEffect(() => { if (hash !== '#watch') return; setOpen(true); const t = setTimeout(() => document.getElementById('watch')?.scrollIntoView({ block: 'start' }), 250); return () => clearTimeout(t); }, [hash]);
@@ -154,7 +153,7 @@ function Watching({ data }: { data: FundsFile }) {
     return () => { removeEventListener('pagehide', mark); mark(); };
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
   if (!w.items.length) return hash === '#watch' ? <p id="watch" className="sv-muted mw-empty">במעקב: עוד אין מסלולים. ☆ בכרטיס של כל מסלול מוסיף אותו לכאן.</p> : null;
-  const y12 = (f: FundX) => (b === 'net' ? f.net?.y12 ?? null : f.y12);
+  const y12 = (f: FundX) => f.y12;
   const fresh = w.items.filter((i) => deltaOf(i, now.get(i.k) ?? null)?.fresh).length;
   return (
     <details id="watch" className="panel mw" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
@@ -166,14 +165,14 @@ function Watching({ data }: { data: FundsFile }) {
         return (
           <li key={i.k} className={d?.fresh ? 'fresh' : undefined}>
             <Link className="sv-u" to={`/funds/${f.k}`}>{f.name}</Link>
-            <span className="mw-kv">12 חודשים {r == null ? '–' : <Sourced src={() => (b === 'net' ? netProv(f, 'y12', asof, r) : grossProv(f, 'y12', asof))}><span className="num">{nf(r, 2)}%</span></Sourced>}</span>
+            <span className="mw-kv">12 חודשים {r == null ? '–' : <Sourced src={() => grossProv(f, 'y12', asof)}><span className="num">{nf(r, 2)}%</span></Sourced>}</span>
             <span className="mw-kv">דמי ניהול {f.fee == null ? '–' : <span className="num">{nf(f.fee, 2)}%</span>}{d?.dFee ? <span> (<span className="num">{d.dFee > 0 ? '▲' : '▼'} {nf(Math.abs(d.dFee), 2)}</span> נ"א מאז)</span> : null}</span>
             {d?.fresh && <span className="chip est">{d.months === 1 ? 'חודש חדש' : `${d.months} חודשים חדשים`}</span>}
             <WatchStar f={f} asof={asof} small />
           </li>
         );
       })}</ul>
-      <p className="sv-muted mw-note">נתוני {ymL(asof)}, {b === 'net' ? 'נטו (אומדן)' : 'ברוטו'} · "חודש חדש": מאז הביקור הקודם ברשימה · נשמר רק בדפדפן הזה</p>
+      <p className="sv-muted mw-note">נתוני {ymL(asof)}, ברוטו · "חודש חדש": מאז הביקור הקודם ברשימה · נשמר רק בדפדפן הזה</p>
     </details>
   );
 }

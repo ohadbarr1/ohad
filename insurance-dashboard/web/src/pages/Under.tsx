@@ -51,7 +51,7 @@ export function Under() {
     { key: 'grp', head: 'קבוצה', value: (r) => r.grp, className: 'wide-only' },
     { key: 'cat', head: 'קטגוריה', value: (r) => r.cat, className: 'wide-only' },
     { key: 'a', head: 'נכסים', title: 'מיליוני ש"ח, סוף החודש', value: (r) => r.a, cell: (r) => num(r.a, () => aumProv(U, r), 0), total: 'sum' },
-    { key: 'r5', head: '5Y נטו', title: U.method.net, value: (r) => r.r5, cell: (r) => num(r.r5, () => r5Prov(U, r), 2) },
+    { key: 'r5', head: '5Y ברוטו', title: U.method.net, value: (r) => r.r5, cell: (r) => num(r.r5, () => r5Prov(U, r), 2) },
     { key: 'med', head: 'חציון', title: U.method.med, value: (r) => r.med, cell: (r) => num(r.med, () => medProv(U, r.cat, rows), 2) },
     { key: 'pct', head: 'אחוזון', title: U.method.pct, value: (r) => r.pct, firstDir: 'asc', cell: (r) => num(r.pct, () => pctProv(U, r), 0) },
     { key: 'gap', head: 'פער, נ"א', title: U.method.gap, value: (r) => r.gap, cell: (r) => num(r.gap, () => gapProv(U, r, rows), 2) },
@@ -70,11 +70,11 @@ export function Under() {
 
   return (
     <div className="under">
-      <FundsHead title="ברבעון התחתון, ועדיין מקבלים כסף" sub={<>מסלולים ברבע התחתון של הקטגוריה (אחוזון <span className="num">{U.bq}</span> ומטה, 5 שנים, נטו, אומדן) שקיבלו כסף ב-12 החודשים; הפער נמדד מחציון הקטגוריה · נתוני <span className="num">{ym(U.asof)}</span> · מיליוני ש"ח · <Link to="/flows">תזרימים לפי קבוצה</Link></>}
+      <FundsHead title="ברבעון התחתון, ועדיין מקבלים כסף" sub={<>מסלולים ברבע התחתון של הקטגוריה (אחוזון <span className="num">{U.bq}</span> ומטה, 5 שנים, ברוטו) שקיבלו כסף ב-12 החודשים; הפער נמדד מחציון הקטגוריה · נתוני <span className="num">{ym(U.asof)}</span> · מיליוני ש"ח · <Link to="/flows">תזרימים לפי קבוצה</Link></>}
         tools={<Pick label="מה מוצג" cap="טבלה" value={view} onChange={(v) => setSp((cur) => { const n = new URLSearchParams(cur); if (v === 'head') n.delete('v'); else n.set('v', v); return n; }, { replace: true })} options={viewOpts} />} />
       <Panel className="under-top" aside={<span>{ym(U.asof)}</span>}>
         <div className="flowdef under-def" data-testid="under-def">
-          <span>עלות הפער: נכסים × (חציון הקטגוריה − תשואת המסלול, 5 שנים נטו) בשנה; פער של פחות מ-{nf(U.band_bp / 100, 2)} נ"א = 0</span>
+          <span>עלות הפער: נכסים × (חציון הקטגוריה − תשואת המסלול, 5 שנים ברוטו) בשנה; פער של פחות מ-{nf(U.band_bp / 100, 2)} נ"א = 0</span>
           <span>צבירה נטו 12M בלי נדידה פנימית: הפקדות − משיכות + ניוד חיצוני משוער</span>
           <Link to="/methodology#flows">הגדרות התזרימים</Link>
           <a href="#under-method">שיטה ומגבלות</a>
@@ -116,7 +116,7 @@ export function Under() {
           <li><b>מה נמדד.</b> {U.method.what}.</li>
           <li><b>תשואות עבר.</b> {U.method.past}.</li>
           <li><b>למה 5 שנים.</b> {U.method.why5}.</li>
-          <li><b>נטו.</b> {U.method.net}.</li>
+          <li><b>ברוטו.</b> {U.method.net}.</li>
           <li><b>קטגוריה.</b> {U.method.cat}.</li>
           <li><b>אחוזון וחציון.</b> {U.method.pct}. {U.method.med}.</li>
           <li><b>פער.</b> {U.method.gap}.</li>

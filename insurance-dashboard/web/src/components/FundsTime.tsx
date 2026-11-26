@@ -10,7 +10,7 @@ import { nf, sn } from '../lib/format';
 import { monthIn, type TrackRef } from '../lib/market';
 import { useSource, type Prov } from '../lib/prov';
 import { GROUP_ID, idColor } from '../lib/identity';
-import { NET_LABEL, NET_NOTE, PCT_F, catKey, netMonthIn, netSeries, pc, refOf, useBasis, type Basis, type CatX, type FundX, type HistX } from '../lib/funds';
+import { PCT_F, catKey, pc, refOf, type Basis, type CatX, type FundX, type HistX } from '../lib/funds';
 import { RISK_F, RISK_LABEL, RISK_UNIT, STAT_KEYS, backM, commonDd, pickSet, rankSeries, riskFromHist, toggleWatch, isWatched, type RankMetric, type StatKey, type StatVals } from '../lib/fundsTime';
 import { membersOf, useCatFiles, useClosed, useHists, useRf, useWatch, snapOf, yOf } from '../lib/fundsTimeLoad';
 import { today } from '../lib/visits';
@@ -44,7 +44,7 @@ export function CatPicker({ fs, cat, onChange, min = 5 }: { fs: FundX[]; cat: st
 /** "★ מעקב": follow a track (this browser only) */
 export function WatchStar({ f, asof, small }: { f: FundX; asof: number; small?: boolean }) {
   const [w, setW] = useWatch();
-  const [b] = useBasis();
+  const b: Basis = 'gross';
   const on = isWatched(w, f.k);
   return (
     <button type="button" className={`wstar${small ? ' sm' : ''}`} aria-pressed={on} aria-label={on ? `הפסקת מעקב: ${f.name}` : `מעקב אחר ${f.name}`} title="מעקב פרטי, נשמר רק בדפדפן הזה"
@@ -65,9 +65,8 @@ export function statText(k: StatKey, v: number | null | undefined): string {
   if (u === 'x') return nf(v, 2);
   return k === 'dd_max' || k === 'dd_cur' || k === 'worst_m' || k === 'best_m' ? pc(v, 2) : nf(v, 2) + '%';
 }
-/** the monthly returns behind a window, as source inputs (net: each month's gross return and fee; gross: the published return) */
-export function monthsIn(f: TrackRef, h: HistX, ps: number[], b: Basis) {
-  if (b === 'net') { const ns = netSeries(h); return ps.map((p) => netMonthIn(f, h, p, ns)); }
+/** the monthly returns behind a window, as source inputs (the published gross return) */
+export function monthsIn(f: TrackRef, h: HistX, ps: number[], _b: Basis) {
   return ps.map((p) => monthIn(f, 'y', p, h.y[h.p.indexOf(p)] ?? null));
 }
 const TIPS: Partial<Record<StatKey, string>> = { dd_max_all: 'dd', vol36: 'vol', dd_max: 'dd', dd_cur: 'ddcur', rec_months: 'rec', sharpe36: 'sharpe', sortino36: 'sortino', beta36_vs_cat: 'beta', te36_vs_cat: 'te', up_cap36: 'upcap', down_cap36: 'downcap' };
@@ -77,36 +76,35 @@ export const RATE_F = 'תשואת אג"ח ממשלתי שקלי אפס-קופו�
 export function statProv(name: string, f: TrackRef | null, h: HistX | null, k: StatKey, v: number | null | undefined, months: number[], b: Basis, how: 'file' | 'browser' | 'cat', cat?: { label: string; c: CatX | null }): Prov {
   const extra: { label: string; v: string }[] = [];
   if (k === 'sharpe36' || k === 'sortino36') extra.push({ label: 'ריבית חסרת סיכון', v: RATE_F });
-  if (/_vs_cat|cap36/.test(k) && cat) extra.push({ label: 'ממוצע הקטגוריה', v: `${cat.label}: ממוצע משוקלל נכסים של תשואות החברים בכל חודש (funds/cat.json)${b === 'net' ? ', נטו' : ''}` });
+  if (/_vs_cat|cap36/.test(k) && cat) extra.push({ label: 'ממוצע הקטגוריה', v: `${cat.label}: ממוצע משוקלל נכסים של תשואות החברים בכל חודש (funds/cat.json)` });
   const inputs = how === 'cat' && cat?.c
-    ? months.map((p) => { const i = cat.c!.p.indexOf(p), y = b === 'net' ? cat.c!.yn?.[i] : cat.c!.y[i]; return { label: `ממוצע הקטגוריה · ${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`, v: y == null ? '–' : sn(y, 2) + '%' }; })
+    ? months.map((p) => { const i = cat.c!.p.indexOf(p), y = cat.c!.y[i]; return { label: `ממוצע הקטגוריה · ${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`, v: y == null ? '–' : sn(y, 2) + '%' }; })
     : f && h ? monthsIn(f, h, months, b) : [];
-  return { k: 'calc', est: b === 'net', title: `${RISK_LABEL[k]}, 36 חודשים${b === 'net' ? `, ${NET_LABEL}` : ''} · ${name}`, value: statText(k, v),
-    formula: (how === 'file' ? 'מחושב בבניית הנתונים (funds/stats): ' : how === 'cat' ? 'על סדרת ממוצע הקטגוריה: ' : '') + RISK_F[k], inputs: [...extra, ...inputs], note: b === 'net' ? NET_NOTE : undefined };
+  return { k: 'calc', title: `${RISK_LABEL[k]}, 36 חודשים · ${name}`, value: statText(k, v),
+    formula: (how === 'file' ? 'מחושב בבניית הנתונים (funds/stats): ' : how === 'cat' ? 'על סדרת ממוצע הקטגוריה: ' : '') + RISK_F[k], inputs: [...extra, ...inputs] };
 }
 
 /* ---------- the risk panel of a track card ---------- */
 export function RiskPanel({ f, h, cats }: { f: FundX; h: HistX; asof?: number; cats: Record<string, CatX> | null | undefined }) {
-  const [basisAsked] = useBasis();
-  const b: Basis = basisAsked;
+  const b: Basis = 'gross';
   const cat = catKey(f);
   const files = useCatFiles(cat, { stats: true, rank: false });
   const end = h.p[h.p.length - 1];
   const rf = useRf(end);
-  // the build's row when it is for this month and on the basis shown (a track without 36 net months is computed gross there)
+  // the build's row when it is for this month and on the gross basis (the only one shown)
   const fileRow = files.stats && files.stats.asof === end ? files.stats.tracks.find((t) => t.k === f.k && t.basis === b) ?? null : null;
   const c = cats?.[cat] ?? null;
-  const cs = useMemo(() => (c ? { p: c.p, y: (b === 'net' ? c.yn : null) ?? c.y } : null), [c, b]);
+  const cs = useMemo(() => (c ? { p: c.p, y: c.y } : null), [c]);
   const mine = useMemo(() => riskFromHist(h, yOf(h, b), end, cs, rf), [h, b, end, cs, rf]);
   // the category's own average series through the same formulas (its beta and captures against itself are not shown)
   const catAvg = useMemo(() => (cs ? riskFromHist({ p: cs.p }, cs.y, end, null, rf) : null), [cs, end, rf]);
   const vals: StatVals | null = fileRow ?? mine;
-  const med = fileRow && files.stats && b === 'net' ? files.stats.cat_median : null;
+  const med = fileRow && files.stats ? files.stats.cat_median : null;
   const months = backM(end, 36), R = refOf(f);
   if (!vals) return <Panel title="סיכון, 36 חודשים"><Empty title="אין 36 חודשי תשואה רצופים">המדדים דורשים תשואה חודשית לכל אחד מ-36 החודשים האחרונים.</Empty></Panel>;
   const shown = STAT_KEYS.filter((k) => vals[k] != null || (med ?? catAvg)?.[k] != null);
   return (
-    <Panel title={<>סיכון, 36 חודשים <Tip k="sd" /></>} aside={<><span className="num">{String(months[0] % 100).padStart(2, '0')}/{String(Math.floor(months[0] / 100)).slice(2)}–{String(end % 100).padStart(2, '0')}/{String(Math.floor(end / 100)).slice(2)}</span><span className={`chip${b === 'net' ? ' est' : ''}`}>{b === 'net' ? NET_LABEL : 'ברוטו'}</span><span className="chip">{fileRow ? 'מחושב בבניית הנתונים' : 'מחושב בדפדפן מהתשואות החודשיות'}</span></>}>
+    <Panel title={<>סיכון, 36 חודשים <Tip k="sd" /></>} aside={<><span className="num">{String(months[0] % 100).padStart(2, '0')}/{String(Math.floor(months[0] / 100)).slice(2)}–{String(end % 100).padStart(2, '0')}/{String(Math.floor(end / 100)).slice(2)}</span><span className="chip">ברוטו</span><span className="chip">{fileRow ? 'מחושב בבניית הנתונים' : 'מחושב בדפדפן מהתשואות החודשיות'}</span></>}>
       <div className="scroll"><table className="frisk">
         <thead><tr><th>מדד</th><th>המסלול</th><th>{med ? 'חציון הקטגוריה' : 'ממוצע הקטגוריה'}</th><th className="wide-only">מה זה אומר</th></tr></thead>
         <tbody>{shown.map((k) => (
@@ -120,17 +118,17 @@ export function RiskPanel({ f, h, cats }: { f: FundX; h: HistX; asof?: number; c
           </tr>
         ))}</tbody>
       </table></div>
-      <div className="fnote">{b === 'net' ? 'נטו, אומדן: התשואה החודשית פחות דמי הניהול מצבירה ÷ 12. ' : 'ברוטו, כפי שהרשות מפרסמת. '}שארפ וסורטינו: מעל תשואת אג"ח ממשלתי שקלי לשנה (עקום האפס של בנק ישראל){rf ? '' : ' (העקום לא נטען: חסרים)'}. בטא, סטיית מעקב ולכידה: מול ממוצע הקטגוריה המשוקלל בנכסים. שום מדד כאן אינו ציון; כל אחד הוא עובדה נפרדת.</div>
+      <div className="fnote">ברוטו, כפי שהרשות מפרסמת, לפני דמי ניהול. שארפ וסורטינו: מעל תשואת אג"ח ממשלתי שקלי לשנה (עקום האפס של בנק ישראל){rf ? '' : ' (העקום לא נטען: חסרים)'}. בטא, סטיית מעקב ולכידה: מול ממוצע הקטגוריה המשוקלל בנכסים. שום מדד כאן אינו ציון; כל אחד הוא עובדה נפרדת.</div>
     </Panel>
   );
 }
 
 /* ---------- the risk rows of the head-to-head ---------- */
 export function CompareRisk({ items, cats }: { items: { f: FundX; h: HistX }[]; cats: Record<string, CatX> | null | undefined }) {
-  const [b] = useBasis();
+  const b: Basis = 'gross';
   const end = items.length ? Math.min(...items.map((it) => it.h.p[it.h.p.length - 1])) : 0;
   const rf = useRf(end);
-  const rows = useMemo(() => items.map((it) => { const c = cats?.[catKey(it.f)]; const cs = c ? { p: c.p, y: (b === 'net' ? c.yn : null) ?? c.y } : null; return { ...it, c: c ?? null, s: riskFromHist(it.h, yOf(it.h, b), end, cs, rf) }; }), [items, cats, b, end, rf]);
+  const rows = useMemo(() => items.map((it) => { const c = cats?.[catKey(it.f)]; const cs = c ? { p: c.p, y: c.y } : null; return { ...it, c: c ?? null, s: riskFromHist(it.h, yOf(it.h, b), end, cs, rf) }; }), [items, cats, b, end, rf]);
   // W5: the full-history drawdown on the window all the tracks share, not on each track's own history
   const cdd = useMemo(() => commonDd(items.map((it) => ({ p: it.h.p, y: yOf(it.h, b) })), end), [items, b, end]);
   const ddRows = useMemo(() => rows.map((r, i) => ({ ...r, s: r.s ? { ...r.s, dd_max_all: cdd?.dd[i] ?? null } : r.s })), [rows, cdd]);
@@ -139,7 +137,7 @@ export function CompareRisk({ items, cats }: { items: { f: FundX; h: HistX }[]; 
   const mmyy = (p: number) => `${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`;
   const cw = cdd ? `${mmyy(cdd.months[0])}–${mmyy(cdd.months[cdd.months.length - 1])}` : null;
   return (
-    <Panel title={<>סיכון, 36 חודשים <Tip k="sd" /></>} aside={<><span className="num">עד {String(end % 100).padStart(2, '0')}/{String(Math.floor(end / 100)).slice(2)}</span><span className={`chip${b === 'net' ? ' est' : ''}`}>{b === 'net' ? NET_LABEL : 'ברוטו'}</span><span className="chip">נומינלי</span></>}>
+    <Panel title={<>סיכון, 36 חודשים <Tip k="sd" /></>} aside={<><span className="num">עד {String(end % 100).padStart(2, '0')}/{String(Math.floor(end / 100)).slice(2)}</span><span className="chip">ברוטו</span><span className="chip">נומינלי</span></>}>
       <div className="scroll"><table className="frisk">
         <thead><tr><th>מדד</th>{rows.map((r) => <th key={r.f.k} title={r.f.name}>{r.f.name.length > 26 ? r.f.name.slice(0, 24) + '…' : r.f.name}</th>)}</tr></thead>
         <tbody>{STAT_KEYS.map((k) => (
@@ -162,21 +160,20 @@ export function pctChartOption(x: string[], lines: { name: string; data: (number
   if (o.series[0]) o.series[0].markArea = QBAND(b);
   return o;
 }
-export const rankProv = (name: string, p: number, v: number | null, n: number | null, metric: RankMetric, b: Basis, how: 'file' | 'browser', inputs: { label: string; v: string; src?: () => Prov }[] = []): Prov => ({
-  k: 'calc', est: b === 'net', title: `אחוזון ${metric === 'y12' ? 'LTM' : '3Y שנתי'}${b === 'net' ? ', נטו' : ''} בקטגוריה · ${name} · ${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`, value: v == null ? '–' : nf(v, 0),
+export const rankProv = (name: string, p: number, v: number | null, n: number | null, metric: RankMetric, _b: Basis, how: 'file' | 'browser', inputs: { label: string; v: string; src?: () => Prov }[] = []): Prov => ({
+  k: 'calc', title: `אחוזון ${metric === 'y12' ? 'LTM' : '3Y שנתי'} בקטגוריה · ${name} · ${String(p % 100).padStart(2, '0')}/${String(Math.floor(p / 100)).slice(2)}`, value: v == null ? '–' : nf(v, 0),
   formula: `${how === 'file' ? 'מחושב בבניית הנתונים (funds/rank). ' : 'מחושב בדפדפן מהתשואות החודשיות של חברי הקטגוריה. '}תשואה ${metric === 'y12' ? 'מצטברת של 12 החודשים' : 'שנתית ממוצעת של 36 החודשים'} שמסתיימים בחודש. ${PCT_F}. חברי הקטגוריה כפי שהיו באותו חודש, כולל מסלולים שנסגרו מאז`,
   inputs: [{ label: 'מסלולים מדורגים בחודש', v: n == null ? '–' : nf(n, 0) }, ...inputs] });
 
 export function RankPanel({ f, h, data }: { f: FundX; h: HistX; data: { funds: FundX[] } }) {
-  const [basisAsked] = useBasis();
   // the longest window the rank files carry (no 5Y there): not the last 12 months
   const [metric, setMetric] = useState<RankMetric>('a3');
   const [own, setOwn] = useState(false);
   const { open } = useSource();
   const cat = catKey(f);
   const files = useCatFiles(cat, { stats: false, rank: true });
-  const set = pickSet(files.rank, metric, basisAsked) ?? pickSet(files.rank, metric, 'net');
-  const b: Basis = set?.basis ?? basisAsked;
+  const set = pickSet(files.rank, metric, 'gross');
+  const b: Basis = 'gross';
   const closed = useClosed(own && !set);
   const mem = useMemo(() => (own && !set && closed ? membersOf(data.funds, closed, cat) : []), [own, set, closed, data, cat]);
   const hs = useHists(mem.map((x) => x.k));
@@ -192,7 +189,7 @@ export function RankPanel({ f, h, data }: { f: FundX; h: HistX; data: { funds: F
   const ms = first > 0 ? months.slice(first) : months, ys = first > 0 ? line!.slice(first) : line;
   const id = GROUP_ID[f.grp];
   return (
-    <Panel title={<>אחוזון בקטגוריה לאורך זמן <Tip k="rank" /></>} aside={<><Seg<RankMetric> label="חלון" value={metric} onChange={setMetric} options={[['y12', 'LTM'], ['a3', '3Y']]} /><span className={`chip${b === 'net' ? ' est' : ''}`}>{b === 'net' ? NET_LABEL : 'ברוטו'}</span>{series && <span className="chip">{series.how === 'file' ? 'מחושב בבניית הנתונים' : 'מחושב בדפדפן'}</span>}</>}>
+    <Panel title={<>אחוזון בקטגוריה לאורך זמן <Tip k="rank" /></>} aside={<><Seg<RankMetric> label="חלון" value={metric} onChange={setMetric} options={[['y12', 'LTM'], ['a3', '3Y']]} /><span className="chip">ברוטו</span>{series && <span className="chip">{series.how === 'file' ? 'מחושב בבניית הנתונים' : 'מחושב בדפדפן'}</span>}</>}>
       {series && ys && ys.some((v) => v != null) ? (
         <>
           <Chart label={`אחוזון בקטגוריה · ${f.name}`} height={240} deps={[f.k, metric, b, series.how, ys.length]} onPoint={(_s, di) => { const p = ms[di], v = ys[di], i = months.indexOf(p); open(rankProv(f.name, p, v, series.n[i] ?? null, metric, b, series.how, monthsIn(refOf(f), h, backM(p, metric === 'y12' ? 12 : 36), b))); }}

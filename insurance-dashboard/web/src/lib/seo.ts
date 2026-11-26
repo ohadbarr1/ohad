@@ -8,7 +8,7 @@
 
 export const SITE = 'https://fox-research-il.web.app';
 /** index.html's description: the shell serves every address that has no prerendered file */
-export const DEFAULT_DESC = 'תשואה נטו ודמי ניהול של כל מסלולי הפנסיה, הגמל, ההשתלמות והפוליסות בישראל, ונתוני המבטחות ומנהלי החיסכון. כל מספר עם המקור שלו.';
+export const DEFAULT_DESC = 'תשואה ודמי ניהול של כל מסלולי הפנסיה, הגמל, ההשתלמות והפוליסות בישראל, כפי שפורסמו, ונתוני המבטחות ומנהלי החיסכון. כל מספר עם המקור שלו.';
 
 /** the private, draft and utility routes: noindex here and in firebase.json (scripts/hosting-check.mjs checks the header side) */
 const PRIVATE = /^\/(?:my|book|feebook|search|nowcast|fragility|data\/autopilot|(?:clients|brief|positions|consolidation)(?:\/.*)?|doc\/.+)$/;

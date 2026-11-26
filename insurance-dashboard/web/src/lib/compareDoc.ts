@@ -4,7 +4,7 @@
    across) and split into pages of at most four tracks, so every column fits an A4 portrait page. The bottom line is written here too,
    in the words of lib/compareSummary: within one category only, never a place or a winner. */
 import { nf, sn } from './format';
-import { netSeries, selfDirected, stats, ym, type FundX, type HistX } from './funds';
+import { selfDirected, stats, ym, type FundX, type HistX } from './funds';
 import type { DefaultFile } from './fundsTools';
 import { defaultNow, isPension, periodText } from './pensionPack';
 import { companyOf, isOldGen, svcOf, type DecisionFile } from './decision';
@@ -13,7 +13,7 @@ import { TIE_NOTE } from './fundsTie';
 import type { Snap, SnapRow } from './clients';
 import { catKey } from './funds';
 
-export interface DocCtx { net: boolean; asof: number; hist?: HistX | null; dfile?: DefaultFile | null; dec?: DecisionFile | null }
+export interface DocCtx { asof: number; hist?: HistX | null; dfile?: DefaultFile | null; dec?: DecisionFile | null }
 
 /** the published fee's range over the last 36 months of a history (null without one) */
 export function feeRange(h: HistX | null | undefined, n = 36): [number, number] | null {
@@ -23,8 +23,8 @@ export function feeRange(h: HistX | null | undefined, n = 36): [number, number] 
 
 /** one track's row of the document, as shown today */
 export function docRow(f: FundX, c: DocCtx): SnapRow {
-  const ret = (p: 'y12' | 'a3' | 'a5') => (c.net ? f.net?.[p] ?? null : f[p] ?? null);
-  const y = c.hist ? (c.net ? netSeries(c.hist).y : c.hist.y) : null;
+  const ret = (p: 'y12' | 'a3' | 'a5') => f[p] ?? null;  // the published gross return (owner 26.11.26: never net of fees)
+  const y = c.hist ? c.hist.y : null;
   const s = y ? stats(y, 60) : null;
   const pen = isPension(f), old = isOldGen(f);
   const d = pen && c.dfile !== undefined ? defaultNow(f.k, c.dfile, c.asof) : null;
@@ -80,10 +80,10 @@ export const cmpOf = (r: SnapRow): CmpIn => ({ k: r.k, name: r.name, prod: r.pro
 
 /** The bottom line in sentences: per category with two tracks or more, the lowest fees, the highest 5Y (tie band) and the highest
  *  Sharpe among the tracks chosen; across categories, a sentence that says why nothing is compared; old-generation policies, kept out. */
-export function bottomLines(rows: SnapRow[], net: boolean): string[] {
+export function bottomLines(rows: SnapRow[]): string[] {
   const sum = compareSummary(rows.map(cmpOf));
   const nameOf = (k: string) => rows.find((r) => r.k === k)?.name ?? k;
-  const lbl = net ? 'נטו, אומדן' : 'ברוטו';
+  const lbl = 'ברוטו';
   const miss = (n: number) => (n === 1 ? 'למסלול אחד אין נתון' : `ל-${n} מסלולים אין נתון`);
   const line = (l: Lead | null, what: string, v: string, extra = '') => (!l ? null
     : l.all ? `${what}: אין הבדל בין ${l.of} המסלולים (${v}).`
@@ -111,7 +111,7 @@ export function bottomLines(rows: SnapRow[], net: boolean): string[] {
 export const BOTTOM_CAP = `תיאור עובדתי של נתוני העבר, לא המלצה ולא תחזית. השוואה רק בין מסלולים מאותה קטגוריה (אותו מוצר ואותו מסלול השקעה). ${TIE_NOTE}.`;
 
 /** the folder's snapshot: the rows and the bottom line as shown, the day they were saved and the data month */
-export const snapOf = (rows: SnapRow[], bottom: string[], at: string, asof: number, b: 'net' | 'gross'): Snap => ({ at, asof, b, rows: rows.map((r) => ({ ...r })), bottom: [...bottom] });
+export const snapOf = (rows: SnapRow[], bottom: string[], at: string, asof: number, b: 'gross' = 'gross'): Snap => ({ at, asof, b, rows: rows.map((r) => ({ ...r })), bottom: [...bottom] });
 
 /** what changed for one track between the snapshot and today: every document figure whose text differs */
 export function snapDiff(then: SnapRow, now: SnapRow, asof: number): { label: string; then: string; now: string }[] {

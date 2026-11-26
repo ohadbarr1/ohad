@@ -194,8 +194,8 @@ const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFi
 export const BANDS = ['עד 50', '50-60', '60 ומעלה'] as const;
 export type Band = (typeof BANDS)[number];
 type Rets = { y12: number | null; a3: number | null; a5: number | null };
-export interface GlideTrack { band: Band; k: string; name?: string; assets: number | null; st: number | null; fo: number | null; net: Rets | null; gross: Rets | null; hist?: { p: number[]; st: (number | null)[] } }
-export interface GlideGroup { grp: string; tracks: GlideTrack[]; gap?: { st: number | null; n_y12: number | null; n_a3: number | null; n_a5: number | null } }
+export interface GlideTrack { band: Band; k: string; name?: string; assets: number | null; st: number | null; fo: number | null; gross: Rets | null; hist?: { p: number[]; st: (number | null)[] } }
+export interface GlideGroup { grp: string; tracks: GlideTrack[]; gap?: { st: number | null; g_y12: number | null; g_a3: number | null; g_a5: number | null } }
 export interface GlideData { asof: number | null; method: string | null; months: number[]; prods: { prod: string; groups: GlideGroup[]; med?: Partial<Record<Band, { st: number | null; n: number | null }>>; gapSt: number | null }[] }
 const rets = (v: unknown): Rets | null => { if (!v || typeof v !== 'object') return null; const o = v as Record<string, unknown>; return { y12: num(o.y12), a3: num(o.a3), a5: num(o.a5) }; };
 /** reads funds/glide.json (the F2 DATA contract: per product, per manager, its tracks keyed by age band, equity history aligned to the
@@ -212,10 +212,10 @@ export function normGlide(x: unknown): GlideData {
         if (!(BANDS as readonly string[]).includes(band) || typeof t?.k !== 'string') return [];
         const st = Array.isArray(t.st) ? (t.st as unknown[]).map(num) : null;
         return [{ band: band as Band, k: t.k, name: typeof t.name === 'string' ? t.name : undefined, assets: num(t.assets), st: num(t.st_now) ?? (st ? null : num(t.st)), fo: num(t.fo_now),
-          net: rets(t.net), gross: rets(t.gross), hist: st && st.length === months.length ? { p: months, st } : undefined }];
+          gross: rets(t.gross), hist: st && st.length === months.length ? { p: months, st } : undefined }];
       });
       const gp = (g.gap ?? null) as Record<string, unknown> | null;
-      return { grp: String(g.grp ?? ''), tracks, gap: gp ? { st: num(gp.st), n_y12: num(gp.n_y12), n_a3: num(gp.n_a3), n_a5: num(gp.n_a5) } : undefined };
+      return { grp: String(g.grp ?? ''), tracks, gap: gp ? { st: num(gp.st), g_y12: num(gp.g_y12), g_a3: num(gp.g_a3), g_a5: num(gp.g_a5) } : undefined };
     }).filter((g) => g.grp && g.tracks.length);
     const med = (p.med && typeof p.med === 'object' ? p.med : undefined) as GlideData['prods'][number]['med'];
     return { prod: String(p.prod ?? ''), groups, med, gapSt: num((p.gap_med as Record<string, unknown> | undefined)?.st) };

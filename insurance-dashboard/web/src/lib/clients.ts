@@ -4,7 +4,7 @@
 
    Storage format (v2, W4), the same in the browser and in the exported file:
      { kind: "fox-clients", v: 2, exported?: "yyyy-mm-dd", folders: [ Folder, … ] }
-     Folder = { id, label, keys: ["p2009", …] (≤ 8 track keys), b: "net"|"gross", tags: { k: "קיים"|"מומלץ"|"נבחן" },
+     Folder = { id, label, keys: ["p2009", …] (≤ 8 track keys), b: "gross" (an older "net" is read as gross), tags: { k: "קיים"|"מומלץ"|"נבחן" },
                 fields: { "<field id>": "typed text" } (the הנמקה worksheet), note, created, updated (ISO dates),
                 snap: Snap | null (the figures the client was shown, frozen at the save: lib/compareDoc),
                 held: Held[] (the client's own products from a clearing-house file: balances, their fees, insurance cover) }
@@ -31,7 +31,7 @@ export interface SnapRow {
   feeRange?: [number, number] | null;
 }
 /** the figures and the bottom line the client was shown, frozen when the folder was saved */
-export interface Snap { at: string; asof: number; b: 'net' | 'gross'; rows: SnapRow[]; bottom: string[] }
+export interface Snap { at: string; asof: number; b: 'gross'; rows: SnapRow[]; bottom: string[] }
 /** an insurance cover read from a clearing-house file (no insured person's details) */
 export interface Cover { name: string; kind: string | null; sum: number | null; cost: number | null; rate: number | null }
 /** a product of the client's, from a clearing-house file: the provider's, as the file gives it */
@@ -40,7 +40,7 @@ export interface Held extends HeldExtra {
   balance: number | null; monthly: number | null; fee: number | null; feeHow: string | null; depfee: number | null; depHow: string | null;
   asof: string | null; covers: Cover[]; note: string | null;
 }
-export interface Folder { id: string; label: string; keys: string[]; b: 'net' | 'gross'; tags: Record<string, Tag>; fields: Record<string, string>; note: string; created: string; updated: string; snap: Snap | null; held: Held[] }
+export interface Folder { id: string; label: string; keys: string[]; b: 'gross'; tags: Record<string, Tag>; fields: Record<string, string>; note: string; created: string; updated: string; snap: Snap | null; held: Held[] }
 export interface ClientsFile { kind: 'fox-clients'; v: 2; exported?: string; folders: Folder[] }
 export const CLIENTS_KEY = 'clients';
 export const EMPTY: ClientsFile = { kind: 'fox-clients', v: 2, folders: [] };
@@ -69,9 +69,12 @@ function normRow(x: unknown, keys: string[]): SnapRow | null {
 export function normSnap(x: unknown, keys: string[]): Snap | null {
   const o = x as Partial<Snap>;
   if (!o || typeof o !== 'object' || !isoD(o.at) || !Number.isInteger(o.asof) || (o.asof as number) < 199001 || (o.asof as number) > 210012) return null;
+  // returns are gross only (owner 26.11.26): a snapshot frozen on the old net-of-fee basis is dropped, and the folder opens on today's
+  // published figures (as a v1 folder does), so no net figure is shown again
+  if ((o as { b?: unknown }).b !== 'gross') return null;
   const rows = Array.isArray(o.rows) ? o.rows.map((r) => normRow(r, keys)).filter((r): r is SnapRow => !!r) : [];
   if (!rows.length) return null;
-  return { at: isoD(o.at), asof: o.asof as number, b: o.b === 'gross' ? 'gross' : 'net', rows, bottom: Array.isArray(o.bottom) ? o.bottom.filter((t): t is string => typeof t === 'string').slice(0, 40).map((t) => t.slice(0, 600)) : [] };
+  return { at: isoD(o.at), asof: o.asof as number, b: 'gross', rows, bottom: Array.isArray(o.bottom) ? o.bottom.filter((t): t is string => typeof t === 'string').slice(0, 40).map((t) => t.slice(0, 600)) : [] };
 }
 function normCover(x: unknown): Cover | null {
   const o = x as Record<string, unknown>;
@@ -128,7 +131,7 @@ export function normFolder(x: unknown): Folder | null {
   const fields: Record<string, string> = {};
   if (o.fields && typeof o.fields === 'object') for (const [k, v] of Object.entries(o.fields).slice(0, 200)) if (/^[\w:.-]{1,60}$/.test(k) && typeof v === 'string' && v.trim()) fields[k] = v.slice(0, MAX_FIELD);
   const created = isoD(o.created) || isoD(o.updated) || '1970-01-01';
-  return { id: typeof o.id === 'string' && /^[\w-]{4,40}$/.test(o.id) ? o.id : newId(), label, keys, b: o.b === 'gross' ? 'gross' : 'net', tags, fields, note: str(o.note, MAX_FIELD), created, updated: isoD(o.updated) || created,
+  return { id: typeof o.id === 'string' && /^[\w-]{4,40}$/.test(o.id) ? o.id : newId(), label, keys, b: 'gross', tags, fields, note: str(o.note, MAX_FIELD), created, updated: isoD(o.updated) || created,
     snap: normSnap(o.snap, keys), held };
 }
 

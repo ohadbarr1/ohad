@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { Sourced } from '../Source';
 import { useFunds } from '../../lib/useData';
 import { countP, fundP, listP } from '../../lib/market';
 import { nf } from '../../lib/format';
 import type { Prov } from '../../lib/prov';
-import { hasNet, refOf, selfDirected, ym, type FundX, type FundsFile } from '../../lib/funds';
+import { refOf, selfDirected, ym, type FundX, type FundsFile } from '../../lib/funds';
 
 /* W1 shell: the live facts the door pages stand on, all from funds.json (the regulator's gemel-net / pensia-net / bituach-net on
    data.gov.il), counted the way the /funds hub counts them: open to the public, with assets, not closed, not self-directed (IRA).
@@ -17,7 +16,7 @@ export function useFundFacts() {
   const { data: raw, error } = useFunds();
   const data = raw as FundsFile | undefined;
   const live = useMemo(() => (data?.funds ?? []).filter(isLive), [data]);
-  return { data, error, live, asof: data?.asof ?? 0, net: useMemo(() => hasNet(data?.funds ?? []), [data]) };
+  return { data, error, live, asof: data?.asof ?? 0 };
 }
 
 const LIVE_F = 'המסלולים הפתוחים לציבור שפורסמו בחודש האחרון, עם נכסים, ללא מסלולים סגורים ומסלולים בניהול אישי';
@@ -36,7 +35,7 @@ export function assetsScope(all: FundX[], live: FundX[]): string {
 
 /** A slim strip of the month's facts, sourced: how many tracks, how much money, how many managing groups, the month, the basis. */
 export function FundFacts({ className = '' }: { className?: string }) {
-  const { data, live, asof, net } = useFundFacts();
+  const { data, live, asof } = useFundFacts();
   if (!data) return <div className={`dfacts ${className}`} aria-busy="true"><span className="dfacts-sk" /></div>;
   const grps = [...new Set(live.map((f) => f.grp))].sort();
   return (
@@ -45,7 +44,7 @@ export function FundFacts({ className = '' }: { className?: string }) {
       <span title={assetsScope(data.funds, live)}><Sourced className="num" src={() => assetsProv('נכסים, כל המסלולים הפתוחים לציבור', live, asof, assetsScope(data.funds, live))}>{nf(bn(live), 0)}</Sourced> מיליארד ש"ח, מסלולים פתוחים</span>
       <span><Sourced className="num" src={() => listP('גופים מנהלים', nf(grps.length, 0), undefined, 'ספירת הקבוצות שמנהלות מסלול פתוח לציבור', grps.map((g) => ({ label: g, v: nf(live.filter((f) => f.grp === g).length, 0) + ' מסלולים', src: () => countP(`מסלולים · ${g}`, live.filter((f) => f.grp === g).length, LIVE_F) })))}>{nf(grps.length, 0)}</Sourced> גופים מנהלים</span>
       <span>נתוני <b className="num">{ym(asof)}</b></span>
-      {net && <span>תשואה נטו אחרי דמי ניהול <Link to="/about" className="dfacts-q">אומדן</Link></span>}
+      <span>תשואה ברוטו, כפי שמפורסמת</span>
       <span className="dfacts-src">{data.source}</span>
     </p>
   );

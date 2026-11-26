@@ -2,13 +2,12 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { CompareGrid, type CompareGridRow } from '../../components/CompareGrid';
 import { Sourced } from '../../components/Source';
 import { Tip } from '../../components/Explain';
-import { Seg } from '../../components/ui';
 import type { Prov } from '../../lib/prov';
 import { useStored } from '../../lib/local';
 import { usePhone } from '../../lib/useMedia';
 import { expP, fundP } from '../../lib/market';
 import { nf } from '../../lib/format';
-import { pc, refOf, ym, useBasis, type Basis } from '../../lib/funds';
+import { pc, refOf, ym } from '../../lib/funds';
 import { rulesOf } from '../../lib/productRules';
 import {
   BottomLinePanel, GrowthPanel, KpiPanel, PairsPanel, RiskTable, RollingPanel, ROLL_EMPTY, UnderwaterPanel, WinSeg, YearsPanel, axisOf, exportPack,
@@ -26,13 +25,13 @@ import '../../styles/compare-risk.css';
    - Head: the Pro switch "להחלטה | סיכון" and the pill "תצוגה פשוטה: חוסך ›" (door saver, same tracks, back to the month table). LensHead is imported from ./CompareDecision
      (cmp-lhead, #lens-switch, #simple-hint.cmp-hintp), so the two lenses are one component.
    - At a glance (mockup v3): one CompareGrid card: sd and Sharpe as the regulator publishes them; the worst and the best month and the
-     largest drop over the 60 months to the data month (computed here from the monthly returns, net or gross as the page shows; pure
+     largest drop over the 60 months to the data month (computed here from the published monthly returns, gross; pure
      ./extremes); equity, abroad and FX exposure; the 5Y percentile in the category (computed by the data build, with the count of ranked
      tracks). Leads are marked only inside one category.
    - Below, every block of the old Pro page, each a collapsed section (a 44-px header with a one-line "what is inside"), mounted only when
      opened so a phone draws no hidden chart: risk 36M (Sortino, beta, tracking error, capture…), rolling 12M/36M, pair win rates, under
-     the peak, growth of 100, by year, the bottom line with every KPI, tax and liquidity. The window ("1Y … הכול") and net / gross sit
-     once above them. Which sections are open, and the window, are remembered in this browser only.
+     the peak, growth of 100, by year, the bottom line with every KPI, tax and liquidity. The window ("1Y … הכול") sits
+     once above them (no basis switch: returns are gross only, owner 26.11.26). Which sections are open, and the window, are remembered in this browser only.
    - One export menu: the comparison pack for Excel (live formulas), per chart PNG / SVG / PPTX / CSV / "+ לספר", per table CSV / Excel.
      The menu drives each block's own exporter (components/Chart, components/DataTable; their toolbars are hidden in this lens), so every
      file keeps the site's title, source bar and stamp. A collapsed block is opened first, then exported.
@@ -57,13 +56,12 @@ export function CompareRisk(props: CmpCtx) {
 
 function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNode }) {
   const phone = usePhone();
-  const [, setBasis] = useBasis();
   const [win, setWin] = useStored<Win>('cmp:risk:win', '60');
   const [opened, setOpened] = useStored<Partial<Record<SecId, boolean>>>('cmp:risk:open', {});
   const [menu, setMenu] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const kp = useKpiRows(d, 'pro', win);
-  const { items, asof, netAsk, lbl, sameCat } = d;
+  const { items, asof, lbl, sameCat } = d;
   const labels = useMemo(() => trackLabels(items.map((it) => it.f)), [items]);
   const cols = items.map((it, i) => ({ k: it.f.k, label: labels[i] || it.f.grp, color: trackColor(i) }));
   const itemOf = (k: string) => items.find((it) => it.f.k === k)!;
@@ -78,12 +76,12 @@ function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNo
     const e = ext.get(it.f.k)!, x = e[what]!;
     const title = what === 'worst' ? 'החודש הגרוע' : what === 'best' ? 'החודש הטוב' : 'ירידה מרבית';
     const ms = it.h.p.filter((p, i) => p <= e.end && it.y[i] != null).slice(-60);
-    return { k: 'calc', est: netAsk, title: `${title}, ${e.n} חודשים עד ${mmyy(e.end)} · ${it.f.name}`, value: pc(x.v, what === 'mdd' ? 1 : 2),
+    return { k: 'calc', title: `${title}, ${e.n} חודשים עד ${mmyy(e.end)} · ${it.f.name}`, value: pc(x.v, what === 'mdd' ? 1 : 2),
       formula: what === 'mdd' ? `הירידה הגדולה ביותר של מדד התשואה המצטברת (${lbl}) משיאו לשפל שאחריו, ב-${e.n} החודשים שמסתיימים ב-${mmyy(e.end)}; השפל ב-${mmyy(x.p)}`
         : `התשואה החודשית ה${what === 'worst' ? 'נמוכה' : 'גבוהה'} ביותר (${lbl}) ב-${e.n} החודשים שמסתיימים ב-${mmyy(e.end)}`,
       inputs: what === 'mdd' ? ms.map((p) => d.monthRow(it, p)) : [d.monthRow(it, x.p)] };
   };
-  const pctOf = (it: Item) => ({ v: (netAsk ? it.f.pn : it.f.pr)?.a5 ?? null, n: (netAsk ? it.f.pnn : it.f.prn)?.a5 ?? null });
+  const pctOf = (it: Item) => ({ v: it.f.pr?.a5 ?? null, n: it.f.prn?.a5 ?? null });
   const sgn = (v: number) => (v < 0 ? 'neg' : v > 0 ? 'pos' : '');
   const fig = (src: (() => Prov) | null, t: string, cls = '', sub?: string) => (
     src ? <Sourced src={src}><span className={`num ${cls}`.trim()}>{t}</span>{sub ? <small className="cr-sub">{sub}</small> : null}</Sourced> : <span className="muted">{t}</span>
@@ -106,7 +104,7 @@ function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNo
     { key: 'fx', label: 'מט״ח', cell: (k) => expCell(k, 'fx') },
     { key: 'pct5', label: 'אחוזון 5Y בקטגוריה', sub: '100 = הגבוה', better: 'hi', value: (k) => pctOf(itemOf(k)).v, cell: (k) => {
       const it = itemOf(k), p = pctOf(it);
-      return p.v == null ? fig(null, '–') : fig(() => ({ k: 'calc', est: netAsk, title: `אחוזון 5Y${netAsk ? ', נטו' : ''} בקטגוריה · ${it.f.name}`, value: nf(p.v!, 0),
+      return p.v == null ? fig(null, '–') : fig(() => ({ k: 'calc', title: `אחוזון 5Y בקטגוריה · ${it.f.name}`, value: nf(p.v!, 0),
         formula: 'מחושב בבניית הנתונים: מקום התשואה השנתית הממוצעת של 5 השנים בין מסלולי הקטגוריה באותו חודש; 100 = הגבוהה בקטגוריה, 0 = הנמוכה',
         inputs: [{ label: 'מסלולים מדורגים', v: p.n == null ? '–' : nf(p.n, 0) }, { label: `תשואה 5Y, שנתי (${lbl})`, v: pc(d.kret(it, 'a5').v), src: d.kret(it, 'a5').src }] }), nf(p.v, 0), '', p.n != null ? `${p.n} מסלולים בדירוג` : undefined); } },
   ];
@@ -157,7 +155,7 @@ function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNo
 
       <div className="cr-card" id="risk-glance">
         <div className={`cr-gw${cols.length > 4 ? ' many' : ''}`} style={{ '--n': cols.length } as CSSProperties}>
-          <CompareGrid id="risk-grid" cols={cols} rows={glance} mark={sameCat} corner={<span className="cr-corner">{netAsk ? 'נטו' : 'ברוטו'}<br /><span className="num">{ym(asof)}</span></span>} onCol={(k) => ctx.openSheet({ t: 'track', k })} />
+          <CompareGrid id="risk-grid" cols={cols} rows={glance} mark={sameCat} corner={<span className="cr-corner">ברוטו<br /><span className="num">{ym(asof)}</span></span>} onCol={(k) => ctx.openSheet({ t: 'track', k })} />
         </div>
         <p className="cr-note">
           סטיית תקן ושארפ: כפי שהרשות מפרסמת. 60M: 60 החודשים עד {mmyy(asof)}, {lbl}{few ? '; מסלול צעיר יותר: על החודשים שיש לו' : ''}. מניות, חו״ל ומט״ח: % מהנכסים. {sameCat ? 'מסומן: הטוב בשורה.' : 'מסלולים מקטגוריות שונות: בלי סימון.'}
@@ -166,7 +164,6 @@ function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNo
 
       <div className="cr-ctl" id="risk-controls">
         <div className="cr-ctl-g"><span className="cr-ctl-l">חלון</span><WinSeg value={win} onChange={setWin} /></div>
-        <Seg<Basis> label="נטו או ברוטו" value={ctx.basis} onChange={setBasis} options={[['net', 'נטו'], ['gross', 'ברוטו']]} />
         <button type="button" className={`cr-exp${menu ? ' on' : ''}`} id="risk-export-btn" aria-expanded={menu} aria-controls="risk-export" onClick={() => setMenu(!menu)}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>ייצוא<small>Excel · PNG · SVG · PPTX · CSV</small>
         </button>
@@ -175,7 +172,7 @@ function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNo
       {menu && (
         <div className="cr-menu" id="risk-export" role="region" aria-label="ייצוא">
           <button type="button" className="cr-mbig" id="risk-pack" onClick={() => { setBusy('Excel…'); void exportPack(d).then(() => say('Excel: הקובץ הורד'), () => say('Excel: שגיאה')); }}>
-            <b>Excel: חבילת השוואה (נוסחאות חיות)</b><small>לכל מסלול: ברוטו, דמי ניהול ונטו בכל חודש, מדדים וירידות, ומקורות</small>
+            <b>Excel: חבילת השוואה (נוסחאות חיות)</b><small>לכל מסלול: תשואה ודמי ניהול בכל חודש, מדדים וירידות, ומקורות</small>
           </button>
           {charts.map((s) => (
             <div className="cr-mrow" key={s.id}>
@@ -214,7 +211,7 @@ function RiskBody({ d, ctx, head }: { d: CompareData; ctx: CmpCtx; head: ReactNo
         })}
       </div>
 
-      <div className="cr-stamp">מקור: הרשות לשוק ההון, נכון ל-{ym(asof)}. {netAsk ? 'נטו: אומדן של האתר.' : 'ברוטו: לפני דמי ניהול.'} עובדות היסטוריות, לא תחזית ולא המלצה.</div>
+      <div className="cr-stamp">מקור: הרשות לשוק ההון, נכון ל-{ym(asof)}. ברוטו: לפני דמי ניהול, כפי שפורסם. עובדות היסטוריות, לא תחזית ולא המלצה.</div>
     </div>
   );
 }

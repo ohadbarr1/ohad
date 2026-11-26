@@ -5,12 +5,12 @@
    - The clock is the data's month (funds.json `asof`), not the calendar: nothing fires until the regulator publishes a new month.
    - Two snapshots are kept: `cur` (the month last seen) and `prev` (the one before). On a new month the old `cur` becomes the baseline
      and stays the baseline for the whole month, so the changes do not vanish on a reload; a product added this month has no baseline yet.
-   - Place: the shared place on the card's window (5Y net, lib/verdict + the 10bp tie band of lib/fundsTie). Compared only on the same
-     window and basis. A move of the range is reported; a quarter crossing is called out ("ירד לרבע התחתון", "עלה לרבע העליון", and
+   - Place: the shared place on the card's window (5Y gross, as published, lib/verdict + the 10bp tie band of lib/fundsTie). Compared only on the same
+     window and basis (a baseline stored on the old net basis is not compared: owner 26.11.26, gross only). A move of the range is reported; a quarter crossing is called out ("ירד לרבע התחתון", "עלה לרבע העליון", and
      the way out of each), on the card's own quarter rule (verdict.placeTone).
    - Fees: the track's average actually paid (AVG_ANNUAL_MANAGEMENT_FEE / AVG_DEPOSIT_FEE), from accumulation and from deposits; a
      change of 0.01pp or more (the published precision) is reported. The reader's own fees are theirs and do not move with the data.
-   - The last 12 months: the track's LTM return in the new data month (net when the file carries net), with the category's median.
+   - The last 12 months: the track's LTM return in the new data month (gross, as published), with the category's median.
      W5 (red team 3): a one-month return is noise for a saver and is no longer shown; nothing shorter than 12 months. */
 import type { Per } from './funds';
 import { median } from './fundsCalc';
@@ -22,14 +22,14 @@ export interface MySeen { cur: MySnap | null; prev: MySnap | null }
 export const SEEN_KEY = 'my:seen';
 export const EMPTY_SEEN: MySeen = { cur: null, prev: null };
 
-/** the LTM return of a track on the card's basis */
-export const y12Of = (f: VFund, basis: 'net' | 'gross') => (basis === 'net' ? f.net?.y12 ?? null : f.y12 ?? null);
-/** the month's return of a track on the card's basis (kept in the snapshot; not shown) */
-export const m1Of = (f: VFund & { m1?: number | null }, basis: 'net' | 'gross') => (basis === 'net' ? f.net?.m1 ?? null : f.m1 ?? null);
+/** the LTM return of a track (published, gross) */
+export const y12Of = (f: VFund, _basis: 'net' | 'gross' = 'gross') => f.y12 ?? null;
+/** the month's return of a track (published, gross; kept in the snapshot; not shown) */
+export const m1Of = (f: VFund & { m1?: number | null }, _basis: 'net' | 'gross' = 'gross') => f.m1 ?? null;
 
 /** what the card shows today, as a snapshot */
 export function snapOf(f: VFund & { m1?: number | null }, v: Verdict): SnapP {
-  const r = v.ret, basis = r?.basis ?? (f.net ? 'net' : 'gross');
+  const r = v.ret, basis = 'gross' as const;
   return { per: r?.per ?? null, basis, lo: r?.rank?.lo ?? null, hi: r?.rank?.hi ?? null, n: r?.rank?.n ?? null, tone: r?.rank ? placeTone(r.rank) : null, fee: f.fee, depfee: f.depfee, m1: m1Of(f, basis), y12: y12Of(f, basis) };
 }
 
@@ -68,7 +68,7 @@ export function changesOf(base: SnapP | undefined, cur: SnapP, catY12: number[] 
   const same = base.per === cur.per && base.basis === cur.basis;
   if (same && base.lo != null && base.hi != null && cur.lo != null && cur.hi != null && (base.lo !== cur.lo || base.hi !== cur.hi)) {
     const better = (cur.lo + cur.hi) / 2 < (base.lo + base.hi) / 2;
-    out.push({ kind: 'rank', tone: better ? 'good' : 'bad', text: `המקום בקטגוריה (${WIN[cur.per!] ?? cur.per}${cur.basis === 'net' ? ' נטו' : ''}): ${rangeT(cur.lo, cur.hi)} מתוך ${cur.n}, ${better ? 'עלה' : 'ירד'} מ-${rangeT(base.lo, base.hi)} מתוך ${base.n}` });
+    out.push({ kind: 'rank', tone: better ? 'good' : 'bad', text: `המקום בקטגוריה (${WIN[cur.per!] ?? cur.per}): ${rangeT(cur.lo, cur.hi)} מתוך ${cur.n}, ${better ? 'עלה' : 'ירד'} מ-${rangeT(base.lo, base.hi)} מתוך ${base.n}` });
   }
   if (same && base.tone && cur.tone && base.tone !== cur.tone) {
     const t = cur.tone === 'bad' ? { tone: 'bad' as const, text: 'ירד לרבע התחתון של הקטגוריה' }
@@ -82,7 +82,7 @@ export function changesOf(base: SnapP | undefined, cur: SnapP, catY12: number[] 
     out.push({ kind: 'dep', tone: cur.depfee > base.depfee ? 'bad' : 'good', text: `דמי הניהול מהפקדה במסלול (ממוצע בפועל): ${r2(cur.depfee)}%, ${cur.depfee > base.depfee ? 'עלו' : 'ירדו'} מ-${r2(base.depfee)}%` });
   if (cur.y12 != null) {
     const med = median(catY12);
-    out.push({ kind: 'ltm', tone: 'info', text: `התשואה ב-12 החודשים האחרונים${cur.basis === 'net' ? ' (נטו, אומדן)' : ''}: ${pctS(cur.y12)}${med != null ? `; חציון הקטגוריה: ${pctS(med)}` : ''}` });
+    out.push({ kind: 'ltm', tone: 'info', text: `התשואה ב-12 החודשים האחרונים: ${pctS(cur.y12)}${med != null ? `; חציון הקטגוריה: ${pctS(med)}` : ''}` });
   }
   return out;
 }

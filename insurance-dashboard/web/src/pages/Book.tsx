@@ -57,9 +57,9 @@ export function Book() {
         const parsed = parseMaslaka(readTree(decodeXml(buf)));
         const held = heldOf(rowsOf(parsed, funds as MFund[], `b${n}`)) as Held[];
         const f2 = folderFromImport(f.name.replace(/\.xml$/i, ''), held);
-        out.push({ f: { id, label: f2.label, keys: f2.keys, tags: f2.tags, held: f2.held, b: 'net', fields: {}, note: '', created: today(), updated: today(), snap: null }, warn: parsed.warn });
+        out.push({ f: { id, label: f2.label, keys: f2.keys, tags: f2.tags, held: f2.held, b: 'gross', fields: {}, note: '', created: today(), updated: today(), snap: null }, warn: parsed.warn });
       } catch (e) {
-        out.push({ f: { id, label: f.name, keys: [], tags: {}, held: [], b: 'net', fields: {}, note: '', created: today(), updated: today(), snap: null }, warn: [], error: e instanceof Error ? e.message : String(e) });
+        out.push({ f: { id, label: f.name, keys: [], tags: {}, held: [], b: 'gross', fields: {}, note: '', created: today(), updated: today(), snap: null }, warn: [], error: e instanceof Error ? e.message : String(e) });
       }
     }
     setExtra([...extra, ...out]);
@@ -67,7 +67,7 @@ export function Book() {
   const saveExtra = (x: Extra) => {
     const taken = file.folders.some((f) => f.label.trim().toLowerCase() === x.f.label.trim().toLowerCase());
     const label = taken ? `${x.f.label} (${today().split('-').reverse().join('.')})` : x.f.label;
-    const r = upsert(file, { ...folderFromImport(label, x.f.held), b: 'net', note: `ייבוא מהמסלקה דרך תיק הלקוחות, ${today().split('-').reverse().join('.')}` }, today());
+    const r = upsert(file, { ...folderFromImport(label, x.f.held), b: 'gross', note: `ייבוא מהמסלקה דרך תיק הלקוחות, ${today().split('-').reverse().join('.')}` }, today());
     setFile(r.file);
     setExtra(extra.filter((e) => e !== x));
     setMsg(`נשמר תיק "${r.folder.label}" בדפדפן הזה (${x.f.held.length} מוצרים). הקובץ עצמו לא נשמר.`);

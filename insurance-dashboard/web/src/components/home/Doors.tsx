@@ -14,7 +14,7 @@ import { nf } from '../../lib/format';
 import { fundP } from '../../lib/market';
 import { compareKeys } from '../../lib/saverCompare';  // C13: the reader's track and its two largest peers
 import { isPension, type VFund } from '../../lib/verdict';
-import { NET_LABEL, netProv, refOf, retOf, ym, type FundX } from '../../lib/funds';
+import { GROSS_LABEL, grossProv, refOf, retOf, ym, type FundX } from '../../lib/funds';
 import type { Door } from '../../lib/door';
 import '../../styles/doors.css';
 
@@ -40,8 +40,8 @@ export function DoorPicker() {
       <header className="doors-hero">
         <span className="doors-mark"><Logo size={72} animated /></span>
         <div className="doors-t">
-          <h1>כל מסלולי החיסכון בישראל, נטו ובמקור.</h1>
-          <p>פנסיה, גמל, השתלמות ופוליסות: התשואה אחרי דמי ניהול ודמי הניהול בפועל של כל מסלול שהרשות מפרסמת. כל מספר נפתח למקור שלו. <b>חינם, בלי פרסומות ובלי עמלות.</b></p>
+          <h1>כל מסלולי החיסכון בישראל, כפי שפורסמו ובמקור.</h1>
+          <p>פנסיה, גמל, השתלמות ופוליסות: התשואה ודמי הניהול בפועל של כל מסלול, כפי שהרשות מפרסמת. כל מספר נפתח למקור שלו. <b>חינם, בלי פרסומות ובלי עמלות.</b></p>
         </div>
       </header>
       <FundFacts className="doors-facts" />
@@ -62,7 +62,7 @@ export function DoorPicker() {
         <article className="door door-agent" aria-labelledby="door-agent-t">
           <div className="door-hd"><span className="icotile lg"><Ico name="briefcase" /></span><span className="door-k">סוכן</span></div>
           <h3 id="door-agent-t">בחירת מוצר ללקוח</h3>
-          <p>פנסיה קודם. כל המסלולים של המוצר, נטו, עם דמי הניהול בפועל, להשוואה ולפגישה.</p>
+          <p>פנסיה קודם. כל המסלולים של המוצר, התשואה ודמי הניהול בפועל, להשוואה ולפגישה.</p>
           <ul className="door-prods" aria-label="מוצרים">
             {rows.slice(0, 5).map((r) => (
               <li key={r.prod}><Link to={`${screenHref(r.prod)}&track=all`}>{r.label}</Link><span className="dim"><ProdFigs r={r} asof={asof} /></span></li>
@@ -99,7 +99,7 @@ function Cards({ cards, label, lead }: { cards: Card[]; label: string; lead?: Re
 /** P0 (fox 3.0 plan, 05.11.26): four cards under the annual check-up; the watchlist folds into /my, "רגעים" takes its card */
 const SAVER_CARDS: Card[] = [
   ['/funds/default', 'shield', 'קרן ברירת המחדל', 'הקרנות שנבחרו במכרז המדינה ודמי הניהול שנקבעו להן.'],
-  ['/funds/compare', 'compare', 'השוואת מסלולים', 'כמה מסלולים זה לצד זה: תשואה נטו, סיכון ודמי ניהול.'],
+  ['/funds/compare', 'compare', 'השוואת מסלולים', 'כמה מסלולים זה לצד זה: תשואה, סיכון ודמי ניהול.'],
   ['/my/moment', 'moment', 'רגעים', 'עבודה חדשה, העלאה, הצעה לעבור קרן או גיל 60: מה בודקים ומה שואלים.'],
 ];
 
@@ -205,8 +205,8 @@ function MineSummary({ mine }: { mine: MyProduct[] }) {
         {mine.map((p) => { const f = by.get(p.k) as FundX | undefined;
           if (!data) return <li key={p.k} className="dmine-sk" aria-hidden="true" />;
           if (!f) return <li key={p.k}><span className="dmine-n">מסלול {p.k}</span><span className="dim">לא נמצא בנתוני {asof ? ym(asof) : 'החודש'}</span></li>;
-          // W4: the 5Y net, else the 3Y with the reason (a השתלמות S&P track has 5 years gross but no 5-year net)
-          const r5 = retOf(f, 'a5', 'net').v, r3 = r5 == null ? retOf(f, 'a3', 'net').v : null;
+          // W4: the 5Y (published gross), else the 3Y with the reason
+          const r5 = retOf(f, 'a5').v, r3 = r5 == null ? retOf(f, 'a3').v : null;
           const avg = f.fee != null ? <Sourced className="num" src={() => fundP(refOf(f), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(f.fee!, 2) + '%')}>{nf(f.fee, 2)}%</Sourced> : null;
           return (
             <li key={p.k}>
@@ -215,8 +215,8 @@ function MineSummary({ mine }: { mine: MyProduct[] }) {
                 {p.fee != null
                   ? <span>דמי הניהול שלכם מצבירה <b className="num dmine-own">{nf(p.fee, 2)}%</b>{avg && <span className="dim"> · ממוצע במסלול {avg}</span>}</span>
                   : avg && <span>דמי ניהול מצבירה <b className="dmine-own">{avg}</b> <span className="dim">ממוצע במסלול · <Link to={`/my#${f.k}`}>להזין את שלכם</Link></span></span>}
-                {r5 != null && <span>{NET_LABEL}, 5Y בשנה <Sourced className="num" src={() => netProv(f, 'a5', asof, r5, data.net_method)}>{nf(r5, 1)}%</Sourced></span>}
-                {r3 != null && <span>{NET_LABEL}, 3Y בשנה <Sourced className="num" src={() => netProv(f, 'a3', asof, r3, data.net_method)}>{nf(r3, 1)}%</Sourced> <span className="dim">({f.a5 != null ? 'אין נתון נטו ל-5 שנים' : 'אין 5 שנות היסטוריה'})</span></span>}
+                {r5 != null && <span>{GROSS_LABEL}, 5Y בשנה <Sourced className="num" src={() => grossProv(f, 'a5', asof)}>{nf(r5, 1)}%</Sourced></span>}
+                {r3 != null && <span>{GROSS_LABEL}, 3Y בשנה <Sourced className="num" src={() => grossProv(f, 'a3', asof)}>{nf(r3, 1)}%</Sourced> <span className="dim">(אין 5 שנות היסטוריה)</span></span>}
               </span>
             </li>
           ); })}
@@ -226,7 +226,7 @@ function MineSummary({ mine }: { mine: MyProduct[] }) {
 }
 
 const AGENT_CARDS: Card[] = [
-  ['/funds/compare', 'compare', 'השוואה', 'מסלולים זה לצד זה: נטו, סיכון, חלונות מתגלגלים ודמי ניהול.'],
+  ['/funds/compare', 'compare', 'השוואה', 'מסלולים זה לצד זה: תשואה, סיכון, חלונות מתגלגלים ודמי ניהול.'],
   ['/funds/default', 'shield', 'קרנות ברירת מחדל', 'הקרנות שנבחרו במכרז והתנאים שלהן.'],
   ['/managers', 'companies', 'דמי הניהול של הגופים', 'הגופים המנהלים, נכסים ודמי ניהול בפועל לאורך זמן.'],
   ['/funds/trackers', 'market', 'עוקבי מדד', 'אותו מדד בעטיפות שונות: הפער בין המסלולים הוא מחיר העטיפה.'],

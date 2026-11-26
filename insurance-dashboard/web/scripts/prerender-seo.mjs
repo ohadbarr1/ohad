@@ -59,21 +59,20 @@ const ASOF = mmyy(F.asof), SRC_REG = 'רשות שוק ההון, ביטוח וח�
 const fundsDate = changed('funds.json');
 const dupName = new Map(); for (const f of F.funds) dupName.set(f.name, (dupName.get(f.name) ?? 0) + 1);
 
-// one fund track: "[שם קרן] תשואה נטו דמי ניהול"
+// one fund track: "[שם קרן] תשואה ודמי ניהול" (returns gross, as published: owner 26.11.26)
 for (const f of F.funds) {
   if (!/^[gip]\d+$/.test(f.k)) continue;
   const name = clean(f.name) + (dupName.get(f.name) > 1 ? ` (${clean(f.prod)})` : '');
-  const n = f.net ?? {};
-  const y12 = n.y12 != null ? `תשואה נטו ב-12 חודשים ${pct(n.y12)}` : f.y12 != null ? `תשואה ברוטו ב-12 חודשים ${pct(f.y12)}` : null;
-  const avg = n.a5 != null ? `ממוצע שנתי נטו ב-5 שנים ${pct(n.a5)}` : n.a3 != null ? `ממוצע שנתי נטו ב-3 שנים ${pct(n.a3)}` : f.a5 != null ? `ממוצע שנתי ברוטו ב-5 שנים ${pct(f.a5)}` : null;
+  const y12 = f.y12 != null ? `תשואה ברוטו ב-12 חודשים ${pct(f.y12)}` : null;
+  const avg = f.a5 != null ? `ממוצע שנתי ברוטו ב-5 שנים ${pct(f.a5)}` : f.a3 != null ? `ממוצע שנתי ברוטו ב-3 שנים ${pct(f.a3)}` : null;
   const fees = f.fee != null || f.depfee != null ? `דמי ניהול ממוצעים בפועל ${join2([f.fee != null && `${pct(f.fee)} מהצבירה`, f.depfee != null && `${pct(f.depfee)} מההפקדה`])}` : null;
   const assets = f.assets ? `נכסים ${ils(f.assets)}` : null;
   const ret = join2([y12, avg]);
-  const desc = `${name}: ${[ret && `${ret}${(n.y12 ?? n.a5 ?? n.a3) != null ? ' (נטו: אומדן)' : ''}`, fees, assets].filter(Boolean).join('. ')}. נתונים ל-${ASOF}, רשות שוק ההון.`;
-  add(`/funds/${f.k}`, `${name} · תשואה נטו ודמי ניהול ${ASOF}`, desc, {
+  const desc = `${name}: ${[ret, fees, assets].filter(Boolean).join('. ')}. נתונים ל-${ASOF}, רשות שוק ההון.`;
+  add(`/funds/${f.k}`, `${name} · תשואה ודמי ניהול ${ASOF}`, desc, {
     h1: clean(f.name),
     ps: [`${clean(f.prod)}${f.track ? ` · מסלול ${clean(f.track)}` : ''} · ${clean(f.mgr)}${f.closed ? ' · סגורה' : ''}`, [ret, fees, assets].filter(Boolean).join('. ') + '.'],
-    src: `נתונים ל-${ASOF}. מקור: ${SRC_REG}. תשואה נטו: אומדן של fox, התשואה ברוטו שפורסמה פחות דמי הניהול מהצבירה; דמי הניהול הם השיעור הממוצע בפועל במסלול, לא של חוסך מסוים.`,
+    src: `נתונים ל-${ASOF}. מקור: ${SRC_REG}. תשואה: ברוטו, כפי שפורסמה, לפני דמי ניהול; דמי הניהול הם השיעור הממוצע בפועל במסלול, לא של חוסך מסוים, ואינם מנוכים מהתשואה.`,
     links: [['/funds/screen', 'כל המסלולים'], ['/funds/compare', 'השוואת מסלולים'], ['/methodology', 'מתודולוגיה']],
   }, fundsDate);
 }
@@ -115,7 +114,7 @@ const yy = (iso) => iso?.slice(0, 4);
 const tLine = tender ? `הקרנות הנבחרות בהליך ${yy(tender.from)}–${yy(tender.to)}: ${tender.winners.map((w) => clean(w.grp ?? w.co)).join(', ')}${tender.fee != null && tender.depfee != null ? `, בדמי ניהול של ${pct(tender.fee)} מהצבירה ו-${pct(tender.depfee, 1)} מההפקדה` : ''}` : null;
 const defDate = changed('funds/default.json');
 add('/funds/default', `קרנות פנסיה ברירת מחדל${tender ? ` ${yy(tender.from)}–${yy(tender.to)}` : ''}: הזוכות, דמי הניהול ומה הנתונים מראים`,
-  `${tLine ? tLine + '. ' : ''}מכרזי רשות שוק ההון לקרנות הפנסיה הנבחרות, וההפקדות, הנכסים והתשואה נטו של הזוכות לפני ואחרי. נתונים עד ${ASOF}.`,
+  `${tLine ? tLine + '. ' : ''}מכרזי רשות שוק ההון לקרנות הפנסיה הנבחרות, וההפקדות, הנכסים והתשואה של הזוכות לפני ואחרי. נתונים עד ${ASOF}.`,
   { h1: 'קרנות ברירת מחדל', ps: [tLine && tLine + '.', 'מכרזי רשות שוק ההון לקרנות הפנסיה הנבחרות, ומה הנתונים מראים לפני ואחרי כל הליך.'].filter(Boolean),
     src: `מקור: רשות שוק ההון (הודעות ההליך וחוזר 2016-9-8); ${SRC_REG}. נתונים עד ${ASOF}.`, links: [['/my/moment/default', 'הקרן שלך לפי ספרת ת"ז']] }, defDate);
 
@@ -149,9 +148,9 @@ add('/my/checkup', 'הבדיקה השנתית לחיסכון הפנסיוני: �
     src: `נתוני רשות שוק ההון עד ${ASOF}. הנתונים שלך נשארים בדפדפן.`, links: [['/my/statement', 'איך קוראים את הדוח השנתי'], ['/funds/tools/fees', 'דמי ניהול לאורך קריירה']] }, fundsDate);
 
 const openN = F.funds.filter((f) => !f.closed && f.assets).length;
-add('/funds/compare', 'השוואת מסלולי פנסיה, גמל והשתלמות: תשואה נטו ודמי ניהול',
-  `השוואה ראש בראש של מסלולי פנסיה, גמל, השתלמות ופוליסות: תשואה נטו, דמי ניהול, סיכון ונכסים, מתוך ${openN.toLocaleString('en-US')} מסלולים פתוחים. נתונים ל-${ASOF}, רשות שוק ההון.`,
-  { h1: 'השוואת מסלולים', ps: [`השוואה ראש בראש של מסלולים מתוך ${openN.toLocaleString('en-US')} מסלולים פתוחים: תשואה נטו, דמי ניהול, סיכון ונכסים.`], src: `נתונים ל-${ASOF}. מקור: ${SRC_REG}.`, links: [['/funds/screen', 'כל המסלולים']] }, fundsDate);
+add('/funds/compare', 'השוואת מסלולי פנסיה, גמל והשתלמות: תשואה ודמי ניהול',
+  `השוואה ראש בראש של מסלולי פנסיה, גמל, השתלמות ופוליסות: תשואה, דמי ניהול, סיכון ונכסים, מתוך ${openN.toLocaleString('en-US')} מסלולים פתוחים. נתונים ל-${ASOF}, רשות שוק ההון.`,
+  { h1: 'השוואת מסלולים', ps: [`השוואה ראש בראש של מסלולים מתוך ${openN.toLocaleString('en-US')} מסלולים פתוחים: תשואה, דמי ניהול, סיכון ונכסים.`], src: `נתונים ל-${ASOF}. מקור: ${SRC_REG}.`, links: [['/funds/screen', 'כל המסלולים']] }, fundsDate);
 
 const totA = F.funds.reduce((t, f) => t + (f.assets ?? 0), 0), grpN = new Set(F.funds.map((f) => f.grp)).size;
 add('/savings', 'עדשת חיסכון: נכסים, צבירה וניוד בפנסיה ובגמל לפי מנהל',
@@ -161,9 +160,9 @@ add('/savings', 'עדשת חיסכון: נכסים, צבירה וניוד בפנ
 add('/about', 'על fox: נתוני חיסכון ארוך טווח בישראל, כל מספר עם המקור',
   'אתר חינמי לנתוני חיסכון ארוך טווח בישראל: קופות גמל, השתלמות, פנסיה ופוליסות, והחברות שמנהלות אותן. המספרים מרשות שוק ההון ומהדוחות במאי"ה, וכל מספר נפתח למקור שלו.',
   { h1: 'על fox', ps: ['אתר חינמי לנתוני חיסכון ארוך טווח בישראל: קופות גמל, השתלמות, פנסיה ופוליסות, והחברות שמנהלות אותן.', 'כל מספר באתר נפתח למקור שלו: הרשומה ברשות, או העמוד בדוח.'], src: `מקורות: ${SRC_REG}; מאי"ה.`, links: [['/methodology', 'מתודולוגיה']] });
-add('/methodology', 'מתודולוגיה: איך fox מחשב תשואה נטו, דמי ניהול וניוד',
-  'איך כל מספר באתר מחושב: תשואה נטו, תשואה ריאלית, אחוזון בקטגוריה, דמי ניהול, ניוד וצבירה. מה כל מונח אומר, מאיזה מקור, ומתי הנתונים מתעדכנים.',
-  { h1: 'מתודולוגיה', ps: ['איך כל מספר באתר מחושב, מה כל מונח אומר ומתי הנתונים מתעדכנים.', clean(F.net_method)], src: `מקור: ${SRC_REG}.`, links: [['/about', 'על fox']] });
+add('/methodology', 'מתודולוגיה: איך fox מחשב תשואה, דמי ניהול וניוד',
+  'איך כל מספר באתר מחושב: תשואה ברוטו כפי שפורסמה, תשואה ריאלית, אחוזון בקטגוריה, דמי ניהול, ניוד וצבירה. מה כל מונח אומר, מאיזה מקור, ומתי הנתונים מתעדכנים.',
+  { h1: 'מתודולוגיה', ps: ['איך כל מספר באתר מחושב, מה כל מונח אומר ומתי הנתונים מתעדכנים.', 'התשואות באתר הן התשואות ברוטו שהרשות מפרסמת, לפני דמי ניהול. דמי הניהול שמשלם כל חוסך שונים ונקבעים מול הגוף המנהל, ולכן אינם מנוכים מהתשואה; הם מוצגים בנפרד.'], src: `מקור: ${SRC_REG}.`, links: [['/about', 'על fox']] });
 
 // the answer ladder: the index and each question
 const Q = opt('answers/index.json');
@@ -194,7 +193,7 @@ if (U) {
   const top = [...head].sort((a, b) => b.cost - a.cost)[0];
   const facts = [S.fl?.[j] != null && `קיבלו ${ils(S.fl[j])} נטו ב-12 החודשים, בלי נדידה פנימית`, S.a?.[j] != null && `מנהלים ${ils(S.a[j])}`,
     S.cost?.[j] != null && `הפער שלהם מחציון הקטגוריה שווה כ-${ils(S.cost[j])} בשנה (אומדן)`].filter(Boolean);
-  const lead = `${head.length} מסלולים ברבע התחתון של הקטגוריה (5 שנים, נטו) ${facts.length ? facts.join('; ') : 'עדיין מקבלים כסף'}.`;
+  const lead = `${head.length} מסלולים ברבע התחתון של הקטגוריה (5 שנים, ברוטו) ${facts.length ? facts.join('; ') : 'עדיין מקבלים כסף'}.`;
   add('/funds/under', `ברבעון התחתון ועדיין קולטים כסף: ${head.length} מסלולים · ${um}`, `${um}: ${lead} מקור: רשות שוק ההון, עיבוד fox.`, {
     h1: 'ברבעון התחתון, ועדיין מקבלים כסף', ps: [`נתוני ${um}. ${lead}`, top && `הגדול: ${clean(top.name)}, ${top.gap.toFixed(2)} נקודות אחוז לשנה מתחת לחציון.`].filter(Boolean),
     src: `נתונים ל-${um}. מקור: ${SRC_REG}. עלות הפער: נכסים × פער מחציון הקטגוריה, אומדן; תשואות עבר אינן מנבאות תשואות עתיד.`,

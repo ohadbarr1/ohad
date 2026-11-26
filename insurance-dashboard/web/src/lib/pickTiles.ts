@@ -14,7 +14,7 @@ import { shortGrp, trackColor, trackLabels } from '../pages/compare/tracks';
 /** the fields the picker reads from a funds.json row */
 export interface PFund {
   k: string; name: string; prod: string; track: string; grp: string; id?: number | string | null;
-  assets?: number | null; closed?: boolean | null; a5?: number | null; net?: Partial<Record<string, number | null>> | null;
+  assets?: number | null; closed?: boolean | null; a5?: number | null;
 }
 
 /* ---------- products ---------- */
@@ -102,14 +102,14 @@ export const labelOf = (funds: PFund[], f: PFund, sep = ' · ') => labelsOf(catO
 /* ---------- step 3: companies ---------- */
 export interface CoTile { k: string; label: string; a5: number | null; f: PFund }
 /** the open tracks of one category as tiles, alphabetical by label ("לפי א-ב") */
-export function companiesOf(funds: PFund[], prod: string, track: string, basis: 'net' | 'gross' = 'net'): CoTile[] {
+export function companiesOf(funds: PFund[], prod: string, track: string, basis: 'gross' = 'gross'): CoTile[] {
   const cat = funds.filter((f) => f.prod === prod && f.track === track && !f.closed);
   const lab = labelsOf(cat);
   return cat.map((f) => ({ k: f.k, label: lab.get(f.k) ?? house(f.grp), a5: a5Of(f, basis), f }))
     .sort((a, b) => a.label.localeCompare(b.label, 'he') || (b.f.assets ?? 0) - (a.f.assets ?? 0));
 }
-/** the 5-year average return on the page's basis (net is the site's estimate after fees; never the gross in its place) */
-export const a5Of = (f: PFund, basis: 'net' | 'gross' = 'net'): number | null => (basis === 'net' ? f.net?.a5 ?? null : f.a5 ?? null);
+/** the 5-year average return: the published gross (owner 26.11.26: never net of fees) */
+export const a5Of = (f: PFund, _basis: 'gross' = 'gross'): number | null => f.a5 ?? null;
 
 /** "להראל שתי קרנות פנסיה…": the note under the pension tiles when one fund house runs two pension funds in the category (else null).
  *  Other products tell a company's tracks apart by their labels alone ("מגדל · בניהול אישי"): a note per company would be a wall of text. */

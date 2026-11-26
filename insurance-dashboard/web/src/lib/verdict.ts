@@ -5,7 +5,7 @@
 
    Rules (the same as the fund card, so the two never disagree):
    - Peers: the track's product and track ("קטגוריה"), open to everyone (unless the track itself is a closed fund), with assets, not
-     personally managed (IRA). Ranked on 5Y annualised net of the accumulation fee (DEFAULT_PER), the shared place inside the 10bp tie
+     personally managed (IRA). Ranked on the published 5Y annualised gross return (DEFAULT_PER; owner 26.11.26: never net of fees), the shared place inside the 10bp tie
      band (lib/fundsTie). A track with no 5Y falls back to 3Y, then LTM, and the line says which.
    - Return vs the category: the track's figure minus the median of the ranked peers; inside the tie band it reads "קרובה לחציון".
    - Fee: the reader's own accumulation fee from their statement when entered, else the track's average actually paid (labelled).
@@ -33,7 +33,6 @@ export interface VFund {
   k: string; name: string; prod: string; track: string; grp: string; fam?: string; id?: number;
   fee: number | null; depfee: number | null; assets: number | null; closed?: boolean; st?: number | null;
   a5: number | null; a3: number | null; y12: number | null;
-  net?: Partial<Record<string, number | null>> | null;
 }
 /** the reader's own fees; `monthly` (W5): their monthly deposit when known (0: none), so a deposit fee on a product with none is quiet */
 export interface MyFees { fee?: number | null; depfee?: number | null; monthly?: number | null }
@@ -51,7 +50,7 @@ export interface Verdict {
   cat: string; prod: string; track: string;
   peers: VFund[];
   self: boolean;
-  ret: { per: Per; basis: 'net' | 'gross'; v: number | null; rank: TieRank | null; med: number | null; gap: number | null; band: number; ranked: VFund[];
+  ret: { per: Per; basis: 'gross'; v: number | null; rank: TieRank | null; med: number | null; gap: number | null; band: number; ranked: VFund[];
     /** why the window is not 5Y, in a few words (null on 5Y) */
     why: string | null } | null;
   /** `basis`: what `word` compares with: 'avg' the median of the tracks' averages, 'tender' the default-fund price (own fee, pension).
@@ -93,11 +92,11 @@ export const tenderSpan = (t: Pick<Tender, 'from' | 'to'>) => `מ-${ymOf(t.from)
 export function peersOf<T extends VFund>(f: VFund, all: T[]): T[] {
   return all.filter((x) => catOf(x) === catOf(f) && (f.closed || !x.closed) && x.assets !== 0 && !selfDir(x));
 }
-/** net when the file publishes net returns (the site's default basis), else gross */
-const valOf = (x: VFund, per: Per, net: boolean) => (net ? x.net?.[per] ?? null : (x[per as 'a5' | 'a3' | 'y12'] ?? null));
-/** the reason a track is read on a shorter window: no 5 years at all, or 5 years gross with a gap in the monthly history the net needs */
-export function whyNot5(f: VFund, _per: Per, net: boolean): string {
-  return net && f.a5 != null ? 'אין נתון נטו ל-5 שנים' : 'אין למסלול 5 שנות היסטוריה';
+/** the published (gross) return of a window */
+const valOf = (x: VFund, per: Per) => x[per as 'a5' | 'a3' | 'y12'] ?? null;
+/** the reason a track is read on a shorter window: it has no 5 years of history */
+export function whyNot5(_f: VFund, _per: Per, _net = false): string {
+  return 'אין למסלול 5 שנות היסטוריה';
 }
 
 /** W2: the parts of the decision file the verdict reads */
@@ -106,18 +105,17 @@ export type DecLite = Pick<DecisionFile, 'companies' | 'segments'>;
 export function verdictOf(f: VFund, all: VFund[], asof: number, dfile: DefaultFile | null | undefined, mine?: MyFees | null, dec?: DecLite | null): Verdict {
   const peers = peersOf(f, all);
   const self = selfDir(f);
-  const net = all.some((x) => x.net && Object.values(x.net).some((v) => v != null));
 
   /* ---- return and place ---- */
   let ret: Verdict['ret'] = null;
   if (!self) for (const per of FALLBACK) {
-    const v = valOf(f, per, net);
+    const v = valOf(f, per);
     if (v == null) continue;
     const band = tieBand(per, asof);
-    const ranked = peers.filter((x) => valOf(x, per, net) != null).sort((a, b) => valOf(b, per, net)! - valOf(a, per, net)!);
-    const rank = tieRanks(ranked, (x) => valOf(x, per, net), band).get(f.k) ?? null;
-    const med = median(ranked.map((x) => valOf(x, per, net)!));
-    ret = { per, basis: net ? 'net' : 'gross', v, rank, med, gap: med == null ? null : v - med, band, ranked, why: per === DEFAULT_PER ? null : whyNot5(f, per, net) };
+    const ranked = peers.filter((x) => valOf(x, per) != null).sort((a, b) => valOf(b, per)! - valOf(a, per)!);
+    const rank = tieRanks(ranked, (x) => valOf(x, per), band).get(f.k) ?? null;
+    const med = median(ranked.map((x) => valOf(x, per)!));
+    ret = { per, basis: 'gross', v, rank, med, gap: med == null ? null : v - med, band, ranked, why: per === DEFAULT_PER ? null : whyNot5(f, per) };
     break;
   }
 
@@ -212,7 +210,7 @@ function tilesOf(v: Verdict): Tile[] {
   const out: Tile[] = [];
   if (v.ret) {
     const t = placeTone(v.ret.rank);
-    out.push({ key: 'ret', label: `תשואה, ${v.ret.per === 'a5' ? '5Y' : v.ret.per === 'a3' ? '3Y' : 'LTM'}${v.ret.basis === 'net' ? ' נטו' : ''}`, value: { t: pcr(v.ret.v), fig: 'ret' },
+    out.push({ key: 'ret', label: `תשואה, ${v.ret.per === 'a5' ? '5Y' : v.ret.per === 'a3' ? '3Y' : 'LTM'}`, value: { t: pcr(v.ret.v), fig: 'ret' },
       word: v.ret.gap == null ? '' : Math.abs(v.ret.gap) < v.ret.band ? 'כמו החציון' : v.ret.gap > 0 ? `מעל החציון (${pcr(v.ret.med)})` : `מתחת לחציון (${pcr(v.ret.med)})`, tone: v.ret.gap == null || Math.abs(v.ret.gap) < v.ret.band ? 'mid' : v.ret.gap > 0 ? 'good' : 'bad' });
     if (v.ret.rank) out.push({ key: 'rank', label: 'מקום בקטגוריה', value: { t: rankLabel(v.ret.rank), fig: 'rank' }, word: placeWord(t), tone: t });
   }
@@ -254,7 +252,7 @@ function linesOf(v: Verdict): Line[] {
   if (v.self) L.push({ key: 'self', tone: 'info', parts: ['זה מסלול בניהול אישי (IRA): את ההשקעות בוחר החוסך, ולכן התשואה המפורסמת אינה תוצאה של מנהל ואינה מדורגת.'] });
   if (v.ret) {
     const { per, rank, gap, med, band } = v.ret, ann = per === 'a5' || per === 'a3';
-    if (rank) L.push({ key: 'rank', tone: placeTone(rank), parts: [`${PER_HE[per]} המסלול שלך במקום `, { t: rankLabel(rank), fig: 'rank' }, ` בקטגוריה (${v.prod}, ${v.track})${v.ret.basis === 'net' ? ', אחרי דמי ניהול' : ''}${v.ret.why ? ` (${v.ret.why})` : ''}${rank.lo !== rank.hi ? '. הפער בינו לבין הצמודים לו קטן מ-0.1% בשנה' : ''}.`] });
+    if (rank) L.push({ key: 'rank', tone: placeTone(rank), parts: [`${PER_HE[per]} המסלול שלך במקום `, { t: rankLabel(rank), fig: 'rank' }, ` בקטגוריה (${v.prod}, ${v.track})${v.ret.why ? ` (${v.ret.why})` : ''}${rank.lo !== rank.hi ? '. הפער בינו לבין הצמודים לו קטן מ-0.1% בשנה' : ''}.`] });
     if (gap != null && med != null) L.push({ key: 'ret', tone: Math.abs(gap) < band ? 'mid' : gap > 0 ? 'good' : 'bad',
       parts: [ann ? 'התשואה השנתית הממוצעת שלו, ' : 'התשואה שלו, ', { t: pcr(v.ret.v), fig: 'ret' },
         Math.abs(gap) < band ? ', קרובה לחציון בקטגוריה (' : `, ${gap > 0 ? 'גבוהה' : 'נמוכה'} ב-${fx(Math.abs(gap))} נקודות אחוז ${ann ? 'בשנה ' : ''}מהחציון בקטגוריה (`, { t: pcr(med), fig: 'med' }, ').'] });
@@ -329,7 +327,7 @@ export function brief(v: Verdict, lever?: 'fee' | 'dep' | null): Line[] {
   if (v.self) L.push({ key: 'self', tone: 'info', parts: ['מסלול בניהול אישי (IRA): התשואה אינה של מנהל ואינה מדורגת.'] });
   else if (v.ret?.rank) {
     const t = placeTone(v.ret.rank);
-    L.push({ key: 'rank', tone: t, parts: [`${PER_HE[v.ret.per]}: מקום `, { t: rankLabel(v.ret.rank), fig: 'rank' }, ` בקטגוריה, ${placeWord(t)}${v.ret.basis === 'net' ? ' (נטו)' : ''}${v.ret.why ? `. ${WIN_SHORT[v.ret.per]}, כי ${v.ret.why}` : ''}.`] });
+    L.push({ key: 'rank', tone: t, parts: [`${PER_HE[v.ret.per]}: מקום `, { t: rankLabel(v.ret.rank), fig: 'rank' }, ` בקטגוריה, ${placeWord(t)}${v.ret.why ? `. ${WIN_SHORT[v.ret.per]}, כי ${v.ret.why}` : ''}.`] });
   } else if (!v.ret) L.push({ key: 'none', tone: 'info', parts: ['אין עדיין תשואה ל-12 חודשים, ולכן אין מקום בקטגוריה.'] });
   const fe = v.fee;
   if (fe.v != null) {

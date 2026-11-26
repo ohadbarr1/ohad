@@ -1,6 +1,6 @@
 /* The compare pack (funds plan #22): the head-to-head as a workbook an analyst can audit. One sheet per track with the published
-   monthly gross return, the accumulation fee, net = gross − fee ÷ 12 as a live formula, growth indices and the fall from the peak as
-   formulas; a summary whose every statistic is a formula over those sheets; the months side by side; a sources sheet.
+   monthly gross return, the published accumulation fee (shown beside it, never subtracted: owner 26.11.26), the growth index and the
+   fall from the peak as formulas; a summary whose every statistic is a formula over those sheets; the months side by side; a sources sheet.
    Unbranded: the reader's own material (no site name in the cells or the file properties). Pure: returns the sheets; lib/xlsx writes them. */
 import type { XCell, XSheet } from './xlsx';
 
@@ -32,29 +32,24 @@ const ref = (sheet: string, cell: string) => `'${sheet.replace(/'/g, "''")}'!${c
 const r4 = (v: number) => +v.toFixed(6);
 
 /** what the summary computes for one track from its sheet (cached values mirror the formulas) */
-interface Built { sheet: string; last: number; n: number; net: (number | null)[]; ixN: number[]; ixG: number[]; ddN: number[]; ddG: number[] }
+interface Built { sheet: string; last: number; n: number; ixG: number[]; ddG: number[] }
 
 function trackSheet(t: PackTrack, name: string): { sh: XSheet; b: Built } {
-  const rows: XCell[][] = [[H('חודש'), H('תשואה ברוטו, %'), H('ד"נ מצבירה, % שנתי'), H('תשואה נטו, % (אומדן)'), H('מדד נטו (100 בבסיס)'), H('מדד ברוטו (100 בבסיס)'), H('מתחת לשיא, נטו %'), H('מתחת לשיא, ברוטו %')]];
-  const net: (number | null)[] = [], ixN: number[] = [], ixG: number[] = [], ddN: number[] = [], ddG: number[] = [];
-  let pn = 100, pg = 100, peakN = 100, peakG = 100;
+  const rows: XCell[][] = [[H('חודש'), H('תשואה ברוטו, %'), H('ד"נ מצבירה, % שנתי'), H('מדד (100 בבסיס)'), H('מתחת לשיא, %')]];
+  const ixG: number[] = [], ddG: number[] = [];
+  let pg = 100, peakG = 100;
   t.p.forEach((p, i) => {
     const r = i + 2, g = t.y[i], fe = t.fee[i];
-    const n = g == null || fe == null ? null : g - fe / 12;
-    net.push(n);
-    pn = n == null ? pn : pn * (1 + n / 100); pg = g == null ? pg : pg * (1 + g / 100);
-    peakN = Math.max(peakN, pn); peakG = Math.max(peakG, pg);
-    ixN.push(pn); ixG.push(pg); ddN.push((pn / peakN - 1) * 100); ddG.push((pg / peakG - 1) * 100);
-    const prevE = r === 2 ? '100' : `E${r - 1}`, prevF = r === 2 ? '100' : `F${r - 1}`;
+    pg = g == null ? pg : pg * (1 + g / 100);
+    peakG = Math.max(peakG, pg);
+    ixG.push(pg); ddG.push((pg / peakG - 1) * 100);
+    const prevD = r === 2 ? '100' : `D${r - 1}`;
     rows.push([ym(p), g == null ? null : { v: g, fmt: 'n2' }, fe == null ? null : { v: fe, fmt: 'n2' },
-      { v: n == null ? '' : r4(n), f: `IF(OR(B${r}="",C${r}=""),"",B${r}-C${r}/12)`, fmt: 'n2' },
-      { v: r4(pn), f: `IF(D${r}="",${prevE},${prevE}*(1+D${r}/100))`, fmt: 'n2' },
-      { v: r4(pg), f: `IF(B${r}="",${prevF},${prevF}*(1+B${r}/100))`, fmt: 'n2' },
-      { v: r4((pn / peakN - 1) * 100), f: `(E${r}/MAX(100,MAX(E$2:E${r}))-1)*100`, fmt: 'n2' },
-      { v: r4((pg / peakG - 1) * 100), f: `(F${r}/MAX(100,MAX(F$2:F${r}))-1)*100`, fmt: 'n2' }]);
+      { v: r4(pg), f: `IF(B${r}="",${prevD},${prevD}*(1+B${r}/100))`, fmt: 'n2' },
+      { v: r4((pg / peakG - 1) * 100), f: `(D${r}/MAX(100,MAX(D$2:D${r}))-1)*100`, fmt: 'n2' }]);
   });
-  const sh: XSheet = { name, rows, freeze: { rows: 1, cols: 1 }, widths: [9, 12, 12, 13, 13, 13, 12, 12] };
-  return { sh, b: { sheet: name, last: t.p.length + 1, n: t.p.length, net, ixN, ixG, ddN, ddG } };
+  const sh: XSheet = { name, rows, freeze: { rows: 1, cols: 1 }, widths: [9, 12, 12, 13, 12] };
+  return { sh, b: { sheet: name, last: t.p.length + 1, n: t.p.length, ixG, ddG } };
 }
 
 /** The workbook: summary, one sheet per track, the months side by side, sources. */
@@ -62,7 +57,7 @@ export function comparePack(ts: PackTrack[], asof: number, src = 'הרשות ל�
   const used = new Set<string>(['סיכום', 'חודשי', 'מקורות']);
   const built = ts.map((t, i) => trackSheet(t, sheetName(`${i + 1} ${t.name}`, used)));
   type Stat = { label: string; band?: boolean; cell: (t: PackTrack, b: Built) => XCell };
-  const span = (b: Built, m: number, ix: 'E' | 'F', arr: number[], annual: boolean): XCell => {
+  const span = (b: Built, m: number, ix: 'D', arr: number[], annual: boolean): XCell => {
     const lastR = b.last, baseR = lastR - m;  // the row before the window; row 1 = the base (100)
     if (baseR < 1) return '–';
     const baseV = baseR === 1 ? 100 : arr[baseR - 2], lastV = arr[lastR - 2];
@@ -70,7 +65,7 @@ export function comparePack(ts: PackTrack[], asof: number, src = 'הרשות ל�
     const v = annual ? ((lastV / baseV) ** (12 / m) - 1) * 100 : (lastV / baseV - 1) * 100;
     return { v: r4(v), f: annual ? `((${lastF}/${baseF})^(12/${m})-1)*100` : `(${lastF}/${baseF}-1)*100`, fmt: 'n2' };
   };
-  const vol = (b: Built, c: 'B' | 'D', vals: (number | null)[], m: number): XCell => {
+  const vol = (b: Built, c: 'B', vals: (number | null)[], m: number): XCell => {
     const from = Math.max(2, b.last - m + 1), xs = vals.slice(from - 2).filter((x): x is number => x != null);
     if (xs.length < 3) return '–';
     const mean = xs.reduce((s, x) => s + x, 0) / xs.length, sd = Math.sqrt(xs.reduce((s, x) => s + (x - mean) ** 2, 0) / (xs.length - 1));
@@ -86,25 +81,18 @@ export function comparePack(ts: PackTrack[], asof: number, src = 'הרשות ל�
     { label: 'מוצר', cell: (t) => t.prod }, { label: 'מסלול', cell: (t) => t.track }, { label: 'מנהל', cell: (t) => t.mgr },
     { label: 'מצב', cell: (t) => (t.gone ? `נסגר${t.end ? ' ' + ym(t.end) : ''}` : 'פעיל') },
     { label: 'חודש ראשון', cell: (t) => (t.p.length ? ym(t.p[0]) : '–') }, { label: 'חודש אחרון', cell: (t) => (t.p.length ? ym(t.p[t.p.length - 1]) : '–') },
-    { label: 'חודשים עם תשואה', cell: (_t, b) => ({ v: b.net.filter((x) => x != null).length, f: `COUNT(${ref(b.sheet, `D2:D${b.last}`)})`, fmt: 'n0' }) },
-    { label: 'נטו (אומדן): ברוטו פחות ד"נ מצבירה ÷ 12', band: true, cell: () => null },
-    { label: 'תשואה מצטברת, כל התקופה %', cell: (_t, b) => span(b, b.n, 'E', b.ixN, false) },
-    { label: 'שנתי, כל התקופה %', cell: (_t, b) => span(b, b.n, 'E', b.ixN, true) },
-    { label: 'LTM %', cell: (_t, b) => span(b, 12, 'E', b.ixN, false) },
-    { label: '3Y שנתי %', cell: (_t, b) => span(b, 36, 'E', b.ixN, true) },
-    { label: '5Y שנתי %', cell: (_t, b) => span(b, 60, 'E', b.ixN, true) },
-    { label: '10Y שנתי %', cell: (_t, b) => span(b, 120, 'E', b.ixN, true) },
-    { label: 'תנודתיות שנתית, 36 חודשים %', cell: (_t, b) => vol(b, 'D', b.net, 36) },
-    { label: 'ירידה מרבית, כל התקופה %', cell: (_t, b) => ext(b, 'G', b.ddN, 'MIN') },
-    { label: 'החודש הטוב %', cell: (_t, b) => ext(b, 'D', b.net, 'MAX') },
-    { label: 'החודש הרע %', cell: (_t, b) => ext(b, 'D', b.net, 'MIN') },
-    { label: 'ברוטו: כפי שפורסם, לפני דמי ניהול', band: true, cell: () => null },
-    { label: 'תשואה מצטברת, כל התקופה %', cell: (_t, b) => span(b, b.n, 'F', b.ixG, false) },
-    { label: 'LTM %', cell: (_t, b) => span(b, 12, 'F', b.ixG, false) },
-    { label: '3Y שנתי %', cell: (_t, b) => span(b, 36, 'F', b.ixG, true) },
-    { label: '5Y שנתי %', cell: (_t, b) => span(b, 60, 'F', b.ixG, true) },
+    { label: 'חודשים עם תשואה', cell: (t, b) => ({ v: t.y.filter((x) => x != null).length, f: `COUNT(${ref(b.sheet, `B2:B${b.last}`)})`, fmt: 'n0' }) },
+    { label: 'תשואה ברוטו: כפי שפורסמה, לפני דמי ניהול', band: true, cell: () => null },
+    { label: 'תשואה מצטברת, כל התקופה %', cell: (_t, b) => span(b, b.n, 'D', b.ixG, false) },
+    { label: 'שנתי, כל התקופה %', cell: (_t, b) => span(b, b.n, 'D', b.ixG, true) },
+    { label: 'LTM %', cell: (_t, b) => span(b, 12, 'D', b.ixG, false) },
+    { label: '3Y שנתי %', cell: (_t, b) => span(b, 36, 'D', b.ixG, true) },
+    { label: '5Y שנתי %', cell: (_t, b) => span(b, 60, 'D', b.ixG, true) },
+    { label: '10Y שנתי %', cell: (_t, b) => span(b, 120, 'D', b.ixG, true) },
     { label: 'תנודתיות שנתית, 36 חודשים %', cell: (t, b) => vol(b, 'B', gross(t), 36) },
-    { label: 'ירידה מרבית, כל התקופה %', cell: (_t, b) => ext(b, 'H', b.ddG, 'MIN') },
+    { label: 'ירידה מרבית, כל התקופה %', cell: (_t, b) => ext(b, 'E', b.ddG, 'MIN') },
+    { label: 'החודש הטוב %', cell: (t, b) => ext(b, 'B', gross(t), 'MAX') },
+    { label: 'החודש הרע %', cell: (t, b) => ext(b, 'B', gross(t), 'MIN') },
     { label: 'עלות', band: true, cell: () => null },
     { label: 'ד"נ מצבירה, חודש אחרון % שנתי', cell: (t, b) => { const v = t.fee[t.fee.length - 1]; return v == null ? '–' : { v, f: ref(b.sheet, `C${b.last}`), fmt: 'n2' }; } },
     { label: 'ד"נ מהפקדה, אחרון %', cell: (t) => (t.depfee == null ? '–' : { v: t.depfee, fmt: 'n2' }) },
@@ -115,20 +103,20 @@ export function comparePack(ts: PackTrack[], asof: number, src = 'הרשות ל�
 
   // the months side by side
   const months = [...new Set(ts.flatMap((t) => t.p))].sort((a, b) => a - b);
-  const side: XSheet = { name: 'חודשי', freeze: { rows: 1, cols: 1 }, widths: [9, ...ts.flatMap(() => [14, 14])],
-    rows: [[H('חודש'), ...ts.flatMap((t) => [H(`${t.name} · נטו %`), H('ברוטו %')])],
-      ...months.map((p) => [ym(p), ...ts.flatMap((t, i): XCell[] => { const j = t.p.indexOf(p); if (j < 0) return [null, null]; const n = built[i].b.net[j], g = t.y[j];
-        return [n == null ? null : { v: r4(n), f: ref(built[i].b.sheet, `D${j + 2}`), fmt: 'n2' }, g == null ? null : { v: g, fmt: 'n2' }]; })])] };
+  const side: XSheet = { name: 'חודשי', freeze: { rows: 1, cols: 1 }, widths: [9, ...ts.map(() => 16)],
+    rows: [[H('חודש'), ...ts.map((t) => H(`${t.name} · ברוטו %`))],
+      ...months.map((p) => [ym(p), ...ts.map((t, i): XCell => { const j = t.p.indexOf(p); const g = j < 0 ? null : t.y[j];
+        return g == null ? null : { v: g, f: ref(built[i].b.sheet, `B${j + 2}`), fmt: 'n2' }; })])] };
 
   const sources: XSheet = { name: 'מקורות', widths: [120], rows: [
     [{ v: 'מקורות ושיטה', bold: true }],
     [`מקור: ${src}. נתונים עד ${ym(asof)}.`],
     ['תשואה ברוטו: MONTHLY_YIELD, תשואה חודשית נומינלית לפני דמי ניהול, כפי שפורסמה.'],
     ['דמי ניהול מצבירה: AVG_ANNUAL_MANAGEMENT_FEE, % שנתי, ממוצע בפועל של המסלול. חודש בלי דמי ניהול שפורסמו: האחרון שפורסם לפניו (או הראשון שפורסם, לפני הפרסום הראשון).'],
-    ['תשואה נטו (אומדן) = ברוטו − דמי ניהול מצבירה ÷ 12. דמי ניהול שמשלם חוסך מסוים שונים מהממוצע; דמי ניהול מהפקדה פועלים על ההפקדות ואינם נכללים בתשואה.'],
+    ['כל התשואות ברוטו, כפי שפורסמו, לפני דמי ניהול. דמי הניהול שמשלם כל חוסך שונים ונקבעים מול הגוף המנהל, ולכן אינם מנוכים מהתשואה; הם מוצגים בעמודה נפרדת.'],
     ['מדד: 100 בבסיס, כל חודש מוכפל ב-(1 + תשואה ÷ 100); חודש בלי תשואה משאיר את המדד במקומו. מתחת לשיא = המדד ÷ השיא שלפניו − 1.'],
     ['שנתי = (מדד סוף ÷ מדד בסיס) בחזקת 12 ÷ מספר החודשים, פחות 1. תנודתיות = סטיית התקן של התשואות החודשיות × שורש 12.'],
-    ['כל הנוסחאות חיות: שינוי תשואה או דמי ניהול בגיליון מסלול מעדכן את הסיכום. תשואות עבר אינן מבטיחות תשואות בעתיד.'],
+    ['כל הנוסחאות חיות: שינוי תשואה בגיליון מסלול מעדכן את הסיכום. תשואות עבר אינן מבטיחות תשואות בעתיד.'],
     ...ts.filter((t) => t.filled).map((t) => [`${t.name}: ${t.filled} חודשים עם דמי ניהול שהושלמו מהחודש הקודם שפורסם.`]),
   ] };
   return [summary, ...built.map((x) => x.sh), side, sources];

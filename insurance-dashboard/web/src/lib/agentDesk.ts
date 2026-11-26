@@ -3,7 +3,7 @@
 
    A4 · "למי להתקשר החודש": when a new regulator month lands, every client folder (lib/clients) against the published data, one line per
    trigger on the client's own tracks, each with its data source and a draft message:
-     q4      the track's 12-month net return ranked in the bottom quartile of its category (percentile ≤ 25; 100 = best) for 3 months
+     q4      the track's 12-month return (gross, as published) ranked in the bottom quartile of its category (percentile ≤ 25; 100 = best) for 3 months
              or more in a row, ending in the data month (funds/rank/<slug>.json, the site's own ranking of the regulator's returns)
      act     a pension fund's last published actuarial balance is negative (funds.json act_h, as the fund reported to pensia-net)
      fee     the track's published average fee from savings rose in the last 12 data months (flows/fees.json `log`: moves of 5 bp+)
@@ -77,7 +77,7 @@ export interface Trigger {
   msg: string;
 }
 export interface CallRow { folder: string; label: string; triggers: Trigger[] }
-/** a category's monthly percentile series for one track: y12 net, aligned with `months` (funds/rank/<slug>.json, `sets`) */
+/** a category's monthly percentile series for one track: y12 gross, aligned with `months` (funds/rank/<slug>.json, `sets`) */
 export interface RankSeries { cat: string; months: number[]; v: (number | null)[]; n?: (number | null)[] }
 export interface CallsIn {
   folders: Folder[]; funds: FundX[];
@@ -91,7 +91,7 @@ export interface CallsIn {
 }
 export const Q4_MAX = 25, Q4_RUN = 3;
 export const SRC = {
-  rank: 'הרשות לשוק ההון (גמל-נט, פנסיה-נט, ביטוח-נט, data.gov.il); אחוזון בקטגוריה (מוצר | מסלול) לפי תשואה נטו ל-12 חודשים, חישוב האתר (funds/rank)',
+  rank: 'הרשות לשוק ההון (גמל-נט, פנסיה-נט, ביטוח-נט, data.gov.il); אחוזון בקטגוריה (מוצר | מסלול) לפי תשואה ברוטו ל-12 חודשים, כפי שפורסמה, חישוב האתר (funds/rank)',
   act: 'פנסיה-נט: האיזון האקטוארי כפי שהקרן דיווחה, באחוזים מהעתודות, פעם ברבעון (funds.json)',
   fee: 'הרשות לשוק ההון: דמי ניהול מצבירה, ממוצע בפועל של המסלול (AVG_ANNUAL_MANAGEMENT_FEE), חודשים שבהם השיעור זז ב-5 נ"ב או יותר (flows/fees.json); לא בהכרח דמי הניהול של הלקוח',
   tender: 'רשות שוק ההון: הודעות התוצאות של הליכי קרנות ברירת המחדל (funds/default.json)',
@@ -204,8 +204,8 @@ export function folderTriggers(f: Folder, inp: CallsIn, byK: Map<string, FundX>,
       const shown = br.vals.slice(-6).map((v, j, a) => `${ymShort(ms[i - (a.length - 1 - j)])}: ${v}`).join(' · ');
       push0({ id: 'q4', key: `q4|${h.k}|${br.from}`, what, k: h.k, month: inp.asof,
         title: `${br.run} חודשים ברצף ברבע התחתון של "${catKey(x)}"`,
-        detail: `אחוזון התשואה נטו ל-12 חודשים (100 = הגבוה בקטגוריה${br.n ? `, ${br.n} מסלולים` : ''}): ${shown}`,
-        src: SRC.rank, msg: `המסלול "${x.name}" נמצא ${br.run} חודשים ברצף ברבע התחתון של המסלולים הדומים לו, לפי תשואה נטו ל-12 חודשים (נתוני ${ymShort(inp.asof)}).` });
+        detail: `אחוזון התשואה ל-12 חודשים, ברוטו (100 = הגבוה בקטגוריה${br.n ? `, ${br.n} מסלולים` : ''}): ${shown}`,
+        src: SRC.rank, msg: `המסלול "${x.name}" נמצא ${br.run} חודשים ברצף ברבע התחתון של המסלולים הדומים לו, לפי התשואה ל-12 חודשים (נתוני ${ymShort(inp.asof)}).` });
     }
     // act: the last published quarter is negative
     if (isPension(x)) {

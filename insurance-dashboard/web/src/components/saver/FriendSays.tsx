@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sourced } from '../Source';
 import type { Prov } from '../../lib/prov';
-import { grossProv, netProv, refOf, ym, type FundX, type FundsFile } from '../../lib/funds';
+import { grossProv, refOf, ym, type FundX, type FundsFile } from '../../lib/funds';
 import type { DefaultFile } from '../../lib/fundsTools';
 import { fundP } from '../../lib/market';
 import { fundHits, fundIdx, fundMeta } from '../../lib/searchOmni';
@@ -16,7 +16,7 @@ import type { CardCalc } from '../../lib/myCalc';
 import { RULE } from '../../lib/productRules';
 
 /* W7 saver · "חבר אמר לעבור ל-X": the saver pastes a fund's name or number and gets one card, my track against that one, same
-   category only, in ₪ at retirement (השתלמות: at the 6-year liquidity date), the fees, the shared 5Y net place with the tie rule, the
+   category only, in ₪ at retirement (השתלמות: at the 6-year liquidity date), the fees, the shared 5Y place (gross, as published) with the tie rule, the
    actuarial balance (pension) and the service index, each figure with its source; then a short factual block on what a transfer does.
    The arithmetic is the card's own (lib/myCalc plan, lib/retire project, lib/verdict verdictOf on lib/fundsTie ranks): no new maths.
    Descriptive: it never says "move" or "stay". */
@@ -56,7 +56,7 @@ export function FriendSays({ f, data, dfile, dec, C, sex, startOpen = false }: {
   );
 }
 
-function Compare({ f, o, funds, asof, dfile, dec, C, data, sex, startOpen }: { f: FundX; o: FundX; funds: FundX[]; asof: number; dfile: DefaultFile | null | undefined; dec: DecisionFile | null | undefined; C: CardCalc; data: FundsFile; sex: 'm' | 'f' | null; startOpen?: boolean }) {
+function Compare({ f, o, funds, asof, dfile, dec, C, data: _data, sex, startOpen }: { f: FundX; o: FundX; funds: FundX[]; asof: number; dfile: DefaultFile | null | undefined; dec: DecisionFile | null | undefined; C: CardCalc; data: FundsFile; sex: 'm' | 'f' | null; startOpen?: boolean }) {
   const pen = isPension(f.prod), hish = f.prod === 'השתלמות';
   const vO: Verdict = useMemo(() => verdictOf(o, funds, asof, dfile, null, dec), [o, funds, asof, dfile, dec]);
   const vM = C.v;
@@ -73,9 +73,9 @@ function Compare({ f, o, funds, asof, dfile, dec, C, data, sex, startOpen }: { f
   const rankProv = (x: FundX, v: Verdict): Prov => {
     const r = v.ret;
     if (!r?.rank) return { k: 'none', title: `מקום בקטגוריה · ${x.name}`, why: 'אין למסלול תשואה לחלון' };
-    return { k: 'calc', est: r.basis === 'net', title: `מקום בקטגוריה (${PER_HE[r.per]}${r.basis === 'net' ? ', נטו' : ''}) · ${x.name}`, value: `${rankLabel(r.rank)}`,
-      formula: `דירוג התשואה השנתית הממוצעת${r.basis === 'net' ? ' נטו (אומדן)' : ''} בין ${r.rank.n} המסלולים בקטגוריה ${v.cat}. ${TIE_NOTE}`,
-      inputs: [{ label: 'התשואה', v: pcr(r.v), src: () => (r.basis === 'net' ? netProv(x, r.per, asof, r.v, data.net_method) : grossProv(x, r.per, asof)) }, { label: 'חציון הקטגוריה', v: pcr(r.med) }] };
+    return { k: 'calc', title: `מקום בקטגוריה (${PER_HE[r.per]}) · ${x.name}`, value: `${rankLabel(r.rank)}`,
+      formula: `דירוג התשואה השנתית הממוצעת (ברוטו, כפי שפורסמה) בין ${r.rank.n} המסלולים בקטגוריה ${v.cat}. ${TIE_NOTE}`,
+      inputs: [{ label: 'התשואה', v: pcr(r.v), src: () => grossProv(x, r.per, asof) }, { label: 'חציון הקטגוריה', v: pcr(r.med) }] };
   };
   const feeSrc = (x: FundX) => () => fundP(refOf(x), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', pcf(x.fee));
   const depSrc = (x: FundX) => () => fundP(refOf(x), asof, 'AVG_DEPOSIT_FEE', 'דמי ניהול מהפקדה, ממוצע בפועל', pcf(x.depfee));
@@ -94,7 +94,7 @@ function Compare({ f, o, funds, asof, dfile, dec, C, data, sex, startOpen }: { f
           {pen && <tr><th scope="row">קצבה לחודש, אומדן <span className="sv-a">אותו מקדם</span></th><td className="num">{ilsRound(outM.pensionReal)}</td><td className="num">{ilsRound(outO.pensionReal)}</td></tr>}
           <tr><th scope="row">דמי ניהול מצבירה</th><td className="num"><Sourced src={C.ownAny ? () => balProv(f, outM, C.mine, who) : feeSrc(f)}>{pcf(C.mine.fee)}</Sourced> <span className="sv-a">{who}</span></td><td className="num"><Sourced src={feeSrc(o)}>{pcf(o.fee)}</Sourced> <span className="sv-a">ממוצע</span></td></tr>
           <tr><th scope="row">דמי ניהול מהפקדה</th><td className="num">{pcf(C.mine.depfee)}</td><td className="num">{o.depfee != null ? <Sourced src={depSrc(o)}>{pcf(o.depfee)}</Sourced> : 'לא מתפרסם'}</td></tr>
-          <tr><th scope="row">מקום בקטגוריה{vM.ret ? ` (${PER_HE[vM.ret.per]}${vM.ret.basis === 'net' ? ', נטו' : ''})` : ''}</th>
+          <tr><th scope="row">מקום בקטגוריה{vM.ret ? ` (${PER_HE[vM.ret.per]})` : ''}</th>
             <td><Sourced src={() => rankProv(f, vM)}>{rank(vM)}</Sourced></td>
             <td><Sourced src={() => rankProv(o, vO)}>{rank(vO)}</Sourced>{vO.ret && vM.ret && vO.ret.per !== vM.ret.per ? <span className="sv-a">חלון אחר: {PER_HE[vO.ret.per]}</span> : null}</td></tr>
           {pen && <tr><th scope="row">איזון אקטוארי, רבעון אחרון</th>

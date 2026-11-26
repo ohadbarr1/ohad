@@ -32,7 +32,7 @@ export function RiskNoteSheet({ keys, basis, open, onClose }: SheetProps) {
               { key: 'b', label: BEST_MONTH, sub: 'ב-5 שנים', cell: (k) => { const r = by.get(k)!; return r.ex ? <><Fig v={r.ex.best.v} src={() => monthProv(r.c.f, r.c.h, r.ex!.best.p, basis)} /><small>{monthShortYear(r.ex.best.p)}</small></> : '–'; } },
               { key: 'y', label: 'שנה אחרונה', cell: (k) => { const f = by.get(k)!.c.f; return <Fig v={retOf(f, 'y12', basis).v} d={1} src={() => winProv(f, 'y12', basis, asof, d.file)} />; } },
             ]} />
-          <p className="cs-note">{basis === 'net' ? 'אחרי דמי ניהול (אומדן)' : 'לפני דמי ניהול'}.</p>
+          <p className="cs-note">לפני דמי ניהול.</p>
         </>}
       </div>
     </DeeperSheet>

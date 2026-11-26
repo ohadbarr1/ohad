@@ -4,7 +4,7 @@ import { Tip } from '../Explain';
 import { headline, type Fig, type Verdict } from '../../lib/verdict';
 import { Parts } from './figs';
 
-const TIP: Record<string, string> = { ret: 'net', rank: 'cat', fee: 'fee', dflt: 'dflt', dep: 'depfee' };
+const TIP: Record<string, string> = { ret: 'gross', rank: 'cat', fee: 'fee', dflt: 'dflt', dep: 'depfee' };
 const TONE_HE: Record<string, string> = { good: 'לטובה', bad: 'לרעה', mid: 'באמצע', info: 'מידע' };
 
 /** The report card's body: a headline, up to four tiles in plain words, and the verdict lines. Descriptive only. */

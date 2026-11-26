@@ -25,7 +25,7 @@ export interface Tender {
   fee_alt?: { fee: number; depfee: number }[];
 }
 /** before vs after a tender, per manager (F2 DATA): ₪m deposits / net deposits summed over the window, share = % of all
- *  comprehensive-pension deposits, ret = asset-weighted net annualised % */
+ *  comprehensive-pension deposits, ret = asset-weighted annualised % (gross, as published) */
 export interface DfWin { from: number; to: number; a0?: number | null; a1?: number | null; dep?: number | null; nd?: number | null; share?: number | null; ret?: number | null }
 export interface DfRow { tender: string; grp: string; sel: boolean; ks?: string[]; pre?: DfWin; post?: DfWin }
 export interface Cap { depfee: number; fee: number; src: string; verified: boolean; note?: string }
@@ -47,12 +47,12 @@ export function tenderAt(ts: Tender[], p: number): Tender | null {
 export type W3 = 'y12' | 'a3' | 'a5';
 export const W3S: [W3, string][] = [['y12', 'LTM'], ['a3', '3Y, שנתי'], ['a5', '5Y, שנתי']];
 type Per3 = Partial<Record<W3, number | null>>;
-export interface TrkTrack { k: string; name: string; grp: string; mgr?: string; prod: string; fee: number | null; depfee?: number | null; assets: number | null; fx?: number | null; g: Per3; nt?: Per3; td: Per3; gone?: boolean }
-export interface TrkGroup { id: string; label: string; n: number; med: Per3; med_n?: Per3; tracks: TrkTrack[]; basis_note?: string }
+export interface TrkTrack { k: string; name: string; grp: string; mgr?: string; prod: string; fee: number | null; depfee?: number | null; assets: number | null; fx?: number | null; g: Per3; td: Per3; gone?: boolean }
+export interface TrkGroup { id: string; label: string; n: number; med: Per3; tracks: TrkTrack[]; basis_note?: string }
 export interface TrackersFile { v?: number; asof: number; method?: string; groups: TrkGroup[] }
 /** the minimal track the fallback needs (a funds.json row) */
 export interface FundLike { k: string; name: string; grp: string; mgr?: string; prod: string; track: string; fee: number | null; depfee?: number | null; assets: number | null; fx?: number | null;
-  y12: number | null; a3: number | null; a5: number | null; net?: Partial<Record<string, number | null>> | null; gone?: boolean }
+  y12: number | null; a3: number | null; a5: number | null; gone?: boolean }
 
 export const TRK_LABEL: Record<string, string> = { 'עוקב מדד S&P 500': 'S&P 500', 'עוקב מדדי מניות': 'מדדי מניות', 'עוקב מדדים, גמיש': 'מדדים, גמיש', 'עוקב מדדי אג"ח': 'מדדי אג"ח' };
 /** the group ids F2 DATA uses in funds/trackers.json, so a link (?g=) means the same group with or without the file */
@@ -68,15 +68,14 @@ export function trackersFrom(funds: FundLike[], asof: number): TrackersFile {
   const by = new Map<string, FundLike[]>();
   for (const f of funds) if (isTracker(f.track) && f.assets && !selfDirected(f.name)) by.set(f.track, [...(by.get(f.track) ?? []), f]);
   const groups = [...by].map(([track, fs]): TrkGroup => {
-    const med: Per3 = {}, med_n: Per3 = {};
+    const med: Per3 = {};
     for (const [w] of W3S) {
       med[w] = median(fs.map((f) => f[w]).filter((v): v is number => v != null));
-      med_n[w] = median(fs.map((f) => f.net?.[w]).filter((v): v is number => v != null));
     }
     const tracks = fs.map((f): TrkTrack => ({ k: f.k, name: f.name, grp: f.grp, mgr: f.mgr, prod: f.prod, fee: f.fee, depfee: f.depfee ?? null, assets: f.assets, fx: f.fx ?? null,
-      g: { y12: f.y12, a3: f.a3, a5: f.a5 }, nt: { y12: f.net?.y12 ?? null, a3: f.net?.a3 ?? null, a5: f.net?.a5 ?? null },
+      g: { y12: f.y12, a3: f.a3, a5: f.a5 },
       td: Object.fromEntries(W3S.map(([w]) => [w, f[w] != null && med[w] != null ? f[w]! - med[w]! : null])) as Per3, gone: f.gone }));
-    return { id: TRK_ID[track] ?? track, label: TRK_LABEL[track] ?? track.replace(/^עוקב\s*/, ''), n: fs.length, med, med_n, tracks };
+    return { id: TRK_ID[track] ?? track, label: TRK_LABEL[track] ?? track.replace(/^עוקב\s*/, ''), n: fs.length, med, tracks };
   }).sort((a, b) => b.n - a.n);
   return { asof, groups, method: 'funds.json: מסלולים פתוחים עם נכסים ששם המסלול שלהם ברשות מתחיל ב"עוקב", לפי שם המסלול. חציון התשואה ברוטו שפורסמה בחלון; פער = ברוטו של המסלול פחות החציון' };
 }

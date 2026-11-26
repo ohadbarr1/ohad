@@ -1,17 +1,16 @@
 /* Track compare, month vs month (redesign F1): the numbers behind <MonthGrid> — tracks in columns, months (or calendar years) in rows,
    newest first, with the summary rows "חצי שנה" and "שנה אחרונה", the row's lead inside the tie band and the heat scale. Pure, node-tested
    (scripts/compare-months-test.mjs, fixtures P3 = p2102, p2172, p2009 at 10/26).
-   - Sources. A month is the regulator's monthly return of the track (`funds/<k>.json` `y`, gross) or the build's net estimate (`yn`:
-     gross minus that month's accumulation fee ÷ 12); a history without `yn` falls back to lib/funds `netSeries` (the same estimate,
-     client-side). The category average is `funds/cat.json` (`y` / `yn`): asset-weighted over the tracks that were in the category
-     that month (point-in-time membership, closed tracks included), `n` / `nn` of them.
+   - Sources. A month is the regulator's published monthly return of the track (`funds/<k>.json` `y`, gross, before fees: owner
+     26.11.26, no net-of-fee basis anywhere). The category average is `funds/cat.json` `y`: asset-weighted over the tracks that were in
+     the category that month (point-in-time membership, closed tracks included), `n` of them.
    - Summary rows. "חצי שנה" and calendar years are compounded here from the monthly series; "שנה אחרונה" is the published LTM of
-     funds.json (`f.net.y12` / `f.y12`), so it matches the rest of the site to the decimal. A track missing any month of a window gets
+     funds.json (`f.y12`), so it matches the rest of the site to the decimal. A track missing any month of a window gets
      null for that window, never a shorter window shown as if full.
    - Values are returned unrounded; the display rounds (two decimals for a month, one for a window). `rowLead` / `rowMarks` take the
      display precision so the mark matches the figures the reader sees. */
 import type { Basis, CatX, FundX, HistX, Per } from './funds';
-import { netSeries, retOf } from './funds';
+import { retOf } from './funds';
 import { addMonths } from './market';
 import { TIE_BP, TIE_M1 } from './fundsTie';
 
@@ -35,12 +34,12 @@ export interface GridOpts {
 
 /* ---------- series ---------- */
 
-/** The monthly series of a history on a basis: gross `y`; net `yn`, else the client-side estimate (lib/funds netSeries). */
-export function seriesOf(h: HistX, basis: Basis): V[] {
-  return basis === 'gross' ? h.y : netSeries(h).y;
+/** The monthly series of a history: the published gross `y`. */
+export function seriesOf(h: HistX, _basis: Basis = 'gross'): V[] {
+  return h.y;
 }
-/** the category's monthly average on a basis (net: `yn`; gross: `y`) */
-const catSeries = (c: CatX, basis: Basis): V[] => (basis === 'gross' ? c.y : c.yn ?? []);
+/** the category's monthly average (gross `y`) */
+const catSeries = (c: CatX, _basis: Basis): V[] => c.y;
 /** value of a month in a series, null when the month is not published */
 function at(p: number[], y: V[], m: number): V {
   const i = p.indexOf(m);
@@ -68,7 +67,7 @@ export function monthRows(hists: (HistX | null | undefined)[], basis: Basis, n: 
   const asof = o.asof ?? newest(hists);
   if (!asof || n <= 0) return [];
   const ser = hists.map((h) => (h ? seriesOf(h, basis) : null)), cs = o.cat ? catSeries(o.cat, basis) : null;
-  const cn = o.cat ? (basis === 'gross' ? o.cat.n : (o.cat as CatX & { nn?: number[] }).nn ?? null) : null;
+  const cn = o.cat ? o.cat.n : null;
   return back(asof, n).map((p) => {
     const vals = hists.map((h, i) => (h ? at(h.p, ser[i]!, p) : null));
     const avg = o.cat && cs ? at(o.cat.p, cs, p) : null;
@@ -111,8 +110,7 @@ export function halfYear(hists: (HistX | null | undefined)[], basis: Basis, o: G
   const rows = monthRows(hists, basis, 6, o);
   return { key: 'half', vals: hists.map((_, i) => cum(rows.map((r) => r.vals[i]))), avg: o.cat ? cum(rows.map((r) => r.avg)) : null };
 }
-/** A published window of funds.json per track (lib/funds retOf: `f.net[per]` on net, `f[per]` on gross; a track without the net
- *  figure gets null, never its gross). `avg`: the category's monthly average compounded over the window (annualised for 3Y and 5Y),
+/** A published window of funds.json per track (lib/funds retOf: `f[per]`, gross). `avg`: the category's monthly average compounded over the window (annualised for 3Y and 5Y),
  *  computed here, null without cat data or when a month is missing. */
 export function periodRow(funds: (FundX | null | undefined)[], basis: Basis, per: Extract<Per, 'y12' | 'a3' | 'a5'>, o: GridOpts = {}): SumRow {
   const vals = funds.map((f) => (f ? retOf(f, per, basis).v : null));
@@ -123,7 +121,7 @@ export function periodRow(funds: (FundX | null | undefined)[], basis: Basis, per
   }
   return { key: per, vals, avg };
 }
-/** "שנה אחרונה": the published LTM (`f.net.y12` / `f.y12`). */
+/** "שנה אחרונה": the published LTM (`f.y12`). */
 export const lastYear = (funds: (FundX | null | undefined)[], basis: Basis, o: GridOpts = {}): SumRow => periodRow(funds, basis, 'y12', o);
 
 /* ---------- marks ---------- */

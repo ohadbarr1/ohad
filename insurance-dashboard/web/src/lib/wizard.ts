@@ -57,7 +57,7 @@ export function candOptions(funds: FundX[], prod: string, held: Held[], dfile: D
   const dk = defaultKeys(dfile, asof);
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   return funds.filter((f) => f.prod === prod && !f.closed && !f.gone && !selfDirected(f) && (f.assets ?? 0) > 0 && words.every((w) => f.name.toLowerCase().includes(w)))
-    .map((f): CandOpt => ({ k: f.k, name: f.name, grp: f.grp, prod: f.prod, track: f.track, fee: f.fee ?? null, depfee: f.depfee ?? null, a3: f.net?.a3 ?? null, assets: f.assets ?? null, dflt: dk.has(f.k), same: own.has(f.track) }))
+    .map((f): CandOpt => ({ k: f.k, name: f.name, grp: f.grp, prod: f.prod, track: f.track, fee: f.fee ?? null, depfee: f.depfee ?? null, a3: f.a3 ?? null, assets: f.assets ?? null, dflt: dk.has(f.k), same: own.has(f.track) }))
     .sort((a, b) => Number(b.same) - Number(a.same) || Number(b.dflt) - Number(a.dflt) || (b.assets ?? 0) - (a.assets ?? 0))
     .slice(0, limit);
 }
@@ -84,7 +84,7 @@ export function wizardSave(f: Folder, cands: string[], opts: { snap: Folder['sna
   set(F.wizAt, opts.today); if (opts.ms != null) set(F.wizMs, String(Math.round(opts.ms)));
   // the "why" lines prefill the main-considerations field of each candidate only where the agent has typed nothing yet
   for (const [k, v] of Object.entries(opts.why ?? {})) if (!fields[`a1:${k}:why`]) set(`a1:${k}:why`, v);
-  return { id: f.id, label: f.label, keys, b: 'net', tags, fields, snap: opts.snap ?? null };
+  return { id: f.id, label: f.label, keys, b: 'gross', tags, fields, snap: opts.snap ?? null };
 }
 
 /* ---------- the "why" lines of a before/after pair, each with its source ---------- */
