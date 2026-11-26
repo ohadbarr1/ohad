@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { EChartsCoreOption } from 'echarts/core';
 import { Chart } from '../components/Chart';
+import { DeeperSheet } from '../components/DeeperSheet';
+import { GuardLine } from '../components/GuardLine';
 import { Sourced } from '../components/Source';
 import { Empty, Loading, Pick, Seg } from '../components/ui';
 import { foxOption, foxPeers } from '../lib/foxchart';
@@ -11,15 +13,35 @@ import { nf, pubLabel } from '../lib/format';
 import { chartBase, CHART_FONT, palette, tooltipCss } from '../lib/theme';
 import { useSource, type Prov } from '../lib/prov';
 import { back, plab, useBook, type Registry } from '../lib/registry';
+import { useAddressWrite, useSheetHost } from '../lib/sheetHost';
 import { load, useLoad, useRegistry } from '../lib/useData';
+import { useMedia } from '../lib/useMedia';
 import type { TasePrice } from '../lib/valuation';
 import { mayaReport } from '../lib/sources';
-import { aggMultiple, bizVal, fmtB, histVal, MBY, median, metricsFor, needIds, ols, spotVal, statOf, TAX, unitB, type BMetric, type BVal, type Kind, type MktFile, type Stat } from '../lib/peerBoard';
+import {
+  aggMultiple, BBY, boardMetrics, bizVal, fmtB, histVal, latestCsmBasis, MBY, median, metricsFor, needIds, ols, pairRead, readOf, reportStatus, shOf, spotVal, statOf, TAX, unitB,
+  type BMetric, type BVal, type Kind, type MktFile, type Stat,
+} from '../lib/peerBoard';
+import { guardWords } from '../lib/peerWords';
+import { dlab, qlab, type QRead } from '../lib/quarters';
+import { BoardLens, FullGrid, Words, type BoardData } from './peers/BoardLens';
+import { CompanySheet } from './peers/CompanySheet';
+import { ContextSheet, WhySheet } from './peers/ContextSheet';
+import { FocusLens } from './peers/FocusLens';
+import { MetricSheet } from './peers/MetricSheet';
+import { ViewStrip } from './peers/ViewStrip';
+import { IndustryTools } from './Industry';
+import '../styles/p6.css';
 import '../styles/peerboard.css';
 
-/* The comparison board (default view of "השוואה ענפית"): one company in focus against its peer set, on the stock and on the business.
-   Read top-down: who is where (focus tiles, positioning map), the two comps tables, then the charts (P/B against ROE, ranked bars,
-   multiples over time, total return). Every figure opens its source; multiples are estimates over TASE closes and printed figures. */
+/* The peers board, "השוואה ענפית" (spec p6 §3, §13, §14; lane P6-2a): the shell of /industry/peers?v=board. One metric for the whole
+   group: a metric chip and a reading are the whole state (`bm`, `rd`), with the focus company (`hl`), the basis (`base`: latest | common),
+   the lens (`lens`: none = the board · focus · charts · table), the desktop matrix's section (`sec`), the grid's depth (`gq`) and the
+   open sheet (`sheet`: co:<id> · metrics · ctx · why · grid) in the address. Old links keep their meaning: `bm` of a change column
+   (npy, csmy, …) opens its base metric on the matching reading; `bx`, `by`, `bh`, `bs`, `bw`, `bf` are the charts lens's.
+   The shell loads the peer files, the price files and mkt.json once, computes the tables' cells (the charts and table lenses and the
+   workbook read them: `BoardData`), and lays out: the hub row's Excel and context chip (IndustryTools, phone and desktop), the one
+   "תצוגה" strip, the metric chips, the lens, the partial-quarter line (#guard: under the board, above the tables) and the stamp. */
 
 interface Props { reg: Registry; ents: string[]; setName: string }
 type Win = '12' | '36' | '60';
@@ -27,18 +49,53 @@ type HWin = '12' | '24' | '40';
 type FMode = 'bn' | 'pct';
 const BAL = new Set(['oaum', 'open', 'ogem', 'opol']);
 const HK = ['bx', 'by', 'bm', 'bh', 'bw', 'bs', 'bf'];
+type Lens = 'board' | 'focus' | 'charts' | 'table';
+
+/* p6-2b moves the charts, the comps tables and the workbook to pages/peers/{ChartsLens,TableLens,exportBoard}; until those files are
+   merged the shipped components below draw the two lenses and the workbook (same props: the shell's BoardData) */
+type LensMod = { ChartsLens?: ComponentType<{ d: BoardData }>; TableLens?: ComponentType<{ d: BoardData }>; exportBoard?: (d: BoardData) => Promise<void> };
+const MODS = import.meta.glob<LensMod>(['./peers/ChartsLens.tsx', './peers/TableLens.tsx', './peers/exportBoard.ts']);
+const ChartsLens = MODS['./peers/ChartsLens.tsx'] ? lazy(() => MODS['./peers/ChartsLens.tsx']().then((m) => ({ default: m.ChartsLens! }))) : null;
+const TableLens = MODS['./peers/TableLens.tsx'] ? lazy(() => MODS['./peers/TableLens.tsx']().then((m) => ({ default: m.TableLens! }))) : null;
+const runExport = (d: BoardData) => (MODS['./peers/exportBoard.ts'] ? MODS['./peers/exportBoard.ts']().then((m) => m.exportBoard!(d)) : legacyExport(d));
+
+/** the favourite chips of a set (spec 3.2 item 4): insurers / fund houses */
+const FAV_INS = ['pbc', 'pb', 'pe', 'roe', 'np', 'csm', 'isrm', 'oshare', 'onet', 'tr'];
+const FAV_FUND = ['pb', 'pe', 'maum', 'roe', 'np', 'nm', 'aum', 'oshare', 'onet', 'tr'];
+
+/** `bm` / `rd` of the address against the set's board metrics: a change column of the tables (an old link) opens its base metric on the
+ *  matching reading; the three return windows open total return on that window; otherwise the default metric (D2: P/(B+CSM) for an
+ *  insurer set, P/B for a fund-house or mixed set) */
+export function resolveMetric(bm: string | null, rd: string | null, avail: BMetric[], allIns: boolean): { m: BMetric; rd: QRead } {
+  const has = (k: string) => avail.find((m) => m.key === k);
+  const dm = (allIns && has('pbc')) || has('pb') || avail[0];
+  let m = bm ? has(bm) : undefined, r = rd as QRead | null;
+  if (!m && bm) {
+    const x = BBY.get(bm);
+    if (x?.type === 'ret' && has('tr')) { m = has('tr'); r = r ?? (bm as QRead); }
+    else if (x?.of && has(x.of)) { m = has(x.of); const base = m!; r = r ?? (pairRead(base) ?? 'yoy'); }
+  }
+  m = m ?? dm;
+  return { m: m!, rd: readOf(m!, r) };
+}
 
 export function PeersBoard({ reg, ents, setName }: Props) {
-  const [sp, setSp] = useSearchParams();
-  const put = (k: string, v: string | null) => setSp((prev) => { const n = new URLSearchParams(prev); if (v) n.set(k, v); else n.delete(k); return n; }, { replace: true });
+  const [sp] = useSearchParams();
+  const write = useAddressWrite();
+  const put = (k: string, v: string | null) => write({ [k]: v });
+  const get = (k: string) => new URLSearchParams(window.location.search).get(k);
+  const sheet = useSheetHost();
+  const desk = useMedia('(min-width: 1000px)');
   const kindOf = (e: string): Kind => (reg.entities.find((x) => x.id === e)?.k === 'fund' ? 'fund' : 'ins');
   const kinds = ents.map(kindOf);
   const ms = useMemo(() => metricsFor(kinds), [kinds.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const bms = useMemo(() => boardMetrics(kinds), [kinds.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
   const major: Kind = kinds.filter((k) => k === 'ins').length >= kinds.length / 2 ? 'ins' : 'fund';
+  const allIns = kinds.every((k) => k === 'ins');
 
   // the metric files the board reads: parse its tokens against an empty book, then load
   const { book: b0 } = useBook(reg, []);
-  const ids = useMemo(() => needIds(b0, ms, true), [b0, ms]);
+  const ids = useMemo(() => needIds(b0, [...ms, ...bms.filter((m) => !ms.includes(m))], true), [b0, ms, bms]);
   const { book, pending } = useBook(reg, ids);
   const coReg = useRegistry().data;
   const mk = useLoad<MktFile>('mkt.json').data ?? null;
@@ -52,94 +109,178 @@ export function PeersBoard({ reg, ents, setName }: Props) {
     });
     return () => { live = false; };
   }, [ents.join(), coReg]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const pxReady = ents.every((e) => e in px);
 
   const focus0 = sp.get('hl') ?? '';
   const focus = ents.includes(focus0) ? focus0 : ents[0] ?? '';
+  const base: 'latest' | 'common' = sp.get('base') === 'common' ? 'common' : 'latest';
+  const status = useMemo(() => (book && pending === 0 ? reportStatus(book, ents) : null), [book, pending, ents.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
   const npId = major === 'ins' ? 'ifrs:profit_attributable' : 'xbrl:profit';
-  const p = book ? book.latest(npId, 'LTM', ents) ?? '' : '';
-  // the regulator's files are monthly: the operating figures run to their own latest quarter, ahead of the filings
+  const pLatest = book ? book.latest(npId, 'LTM', ents) ?? '' : '';
+  const q = status ? (base === 'common' && status.cq ? status.cq : status.bq || pLatest) : '';
+  const p = base === 'common' && status?.cq ? status.cq : pLatest;
+  // the regulator's files are monthly: the operating figures run to their own latest quarter, ahead of the filings (complete at it: 13.2 rule 3)
   const pOps = book ? book.latest('reg:assets@all', 'LTM', ents) ?? p : p;
 
-  // the grid: metric × company
+  // the tables' grid: metric × company (the charts and table lenses, the workbook)
   const cells = useMemo(() => {
     const out = new Map<string, Map<string, BVal>>();
-    if (!book || !p) return out;
+    if (!book || !p || pending > 0) return out;
     ms.forEach((m) => {
       const row = new Map<string, BVal>();
       ents.forEach((e) => row.set(e, m.spot ? spotVal(m, { book, ent: e, kind: kindOf(e), p, peers: ents, px: px[e] ?? null, mk }) : bizVal(book, m, e, kindOf(e), m.ax === 'reg' ? pOps : p, ents)));
       out.set(m.key, row);
     });
     return out;
-  }, [book, p, pOps, ms, ents.join(), px, mk]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [book, pending, p, pOps, ms, ents.join(), px, mk]);  // eslint-disable-line react-hooks/exhaustive-deps
   const stats = useMemo(() => new Map(ms.map((m) => [m.key, statOf(m, new Map(ents.map((e) => [e, cells.get(m.key)?.get(e)?.v ?? null])))])), [cells, ms]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!book || !p || pending > 0) return <Loading what="לוח ההשוואה" />;
-  const v = (k: string, e: string) => cells.get(k)?.get(e)?.v ?? null;
-  const pxAsof = ents.map((e) => px[e]?.asof).filter((x): x is string => !!x).sort().pop();
-  const order = [...ents].sort((a, b) => (v('mcap', b) ?? -1) - (v('mcap', a) ?? -1) || ents.indexOf(a) - ents.indexOf(b));
-  const mkt = ms.filter((m) => m.sec === 'mkt'), biz = ms.filter((m) => m.sec === 'biz');
-  const sav = ms.filter((m) => m.grp === 'sav'), insOps = ms.filter((m) => m.grp === 'ins');
-  const anyOf = (xs: BMetric[]) => xs.filter((m) => ents.some((e) => cells.get(m.key)?.get(e)?.v != null));
-  const savShown = anyOf(sav).filter((m) => !m.hide), insShown = anyOf(insOps);
-  const insOrder = order.filter((e) => kindOf(e) === 'ins');
-  const sumOf = (rows: string[]) => (m: BMetric) => { if (m.u !== 'bn' && m.u !== 'm') return null; const xs = rows.map((e) => v(m.key, e)).filter((x): x is number => x != null); return xs.length && (BAL.has(m.key) || (xs.length === rows.length && !rows.some((e) => cells.get(m.key)?.get(e)?.stale))) ? xs.reduce((a, x) => a + x, 0) : null; };
-  // a total over the whole set only, of one period; an asset balance by product is the exception: a group without the product holds none
-  const has = (k: string) => ms.some((m) => m.key === k);
+  const pxAsof = ents.map((e) => px[e]?.asof).filter((x): x is string => !!x).sort().pop() ?? '';
+  const order = useMemo(() => [...ents].sort((a, b) => (cells.get('mcap')?.get(b)?.v ?? -1) - (cells.get('mcap')?.get(a)?.v ?? -1) || ents.indexOf(a) - ents.indexOf(b)), [cells, ents.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const { m, rd } = resolveMetric(sp.get('bm'), sp.get('rd'), bms, allIns);
+  const lensP = sp.get('lens');
+  const lens: Lens = lensP === 'focus' || lensP === 'charts' || lensP === 'table' ? lensP : 'board';
 
+  const d: BoardData | null = useMemo(() => (!book || !status || !p || pending > 0 ? null : {
+    reg, book, ents, order, ms, cells, stats, focus, kindOf, major, p, pOps, mk, px, pxAsof, setName, status, q, base, put, get, bm: m.key, rd,
+  }), [book, status, p, pending, ents.join(), order, ms, cells, stats, focus, major, pOps, mk, px, pxAsof, setName, q, base, m.key, rd]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (status) (window as unknown as { __p6?: unknown }).__p6 = { status, q, base, bm: m.key, rd }; }, [status, q, base, m.key, rd]);
+
+  if (!d || !pxReady) return <Loading what="לוח ההשוואה" />;
+
+  const name = (e: string) => book!.short(e);
+  const gw = guardWords(status!, base, name);
+  const guard = gw ? <GuardLine kind="risk" id="guard" wrap text={<Words parts={gw.parts} src={() => null} />} more={gw.action} onOpen={() => put('base', base === 'common' ? null : 'common')} /> : null;
+  const tools = (
+    <IndustryTools>
+      <span className="p6-hubtools">
+        <button type="button" className="p6-chipbtn" id="xlsx-top" onClick={() => void runExport(d)} aria-label="הורדת Excel של הלוח">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" /></svg>Excel
+        </button>
+        <button type="button" className="p6-chipbtn dd" id="ctx" aria-haspopup="dialog" onClick={() => sheet.openSheet('ctx')}>
+          <i className="sq" style={{ background: idCss(focus) }} /><span>{setName}<span className="p6-only-d"> · {name(focus)}</span></span>
+        </button>
+      </span>
+    </IndustryTools>
+  );
+  const chips = lens === 'board' ? <Chips bms={bms} m={m} fav={allIns ? FAV_INS : FAV_FUND} onPick={(k) => write({ bm: k, rd: null })} onAll={() => sheet.openSheet('metrics')} desk={desk} /> : null;
+  const csmMixed = m.key === 'csm' || m.key === 'csmeq' || m.key === 'pbc' ? new Set(ents.map((e) => latestCsmBasis(book!, e)).filter(Boolean)).size > 1 : false;
+  const stamp = (
+    <p className="ro-stamp p6-stamp" id="stamp">
+      {setName} · דוחות החברות (IFRS 17, XBRL) · כספיים <bdi dir="ltr">{qlab(q)}</bdi>{pOps && pOps !== q ? <> · רגולטור <bdi dir="ltr">{qlab(pOps)}</bdi></> : null} · שוק: סגירה <bdi dir="ltr">{dlab(pxAsof)}</bdi>
+      {' '}· מכפילים הם אומדן: שווי שוק ÷ נתון מדווח{ms.some((x) => x.key === 'pbc') ? ` · CSM נטו ממס ${nf(TAX, 2)}% (הנחה)` : ''}{csmMixed ? ' · כל חברה על הבסיס שהיא מדפיסה' : ''} · <sup className="p6-n">n</sup> ליד חציון: מספר החברות שבו
+      {status!.waiting.length ? ' · * נתון מרבעון מוקדם יותר' : ''} · כל מספר נפתח במקור שלו ·{' '}
+      <button type="button" onClick={() => sheet.openSheet('why')} aria-haspopup="dialog">איך מחשבים?</button>
+    </p>
+  );
+
+  let body;
+  if (lens === 'focus') body = <FocusLens d={d} />;
+  else if (lens === 'charts') body = ChartsLens ? <Suspense fallback={<Loading what="הגרפים" />}><ChartsLens d={d} /></Suspense> : <LegacyCharts d={d} />;
+  else if (lens === 'table') body = <>{guard}{TableLens ? <Suspense fallback={<Loading what="הטבלאות" />}><TableLens d={d} /></Suspense> : <LegacyTable d={d} />}</>;
+  else body = <BoardLens d={d} m={m} desk={desk} guard={guard} chips={desk ? null : chips} />;
+
+  const own = sheet.own;
+  return (
+    <div className={`pb p6-pb${desk ? ' desk' : ''}`} data-lens={lens}>
+      {tools}
+      {desk ? <div className="p6-toolrow"><ViewStrip />{chips}</div> : <ViewStrip />}
+      {body}
+      {stamp}
+      {own?.[0] === 'co' && ents.includes(own[1]) ? <CompanySheet d={d} e={own[1]} onClose={sheet.closeSheet} /> : null}
+      {own?.[0] === 'metrics' ? <MetricSheet ms={bms} bm={m.key} onClose={sheet.closeSheet} /> : null}
+      {own?.[0] === 'ctx' ? <ContextSheet d={d} onClose={sheet.closeSheet} /> : null}
+      {own?.[0] === 'why' ? <WhySheet onClose={sheet.closeSheet} /> : null}
+      {own?.[0] === 'grid' ? <GridSheet d={d} m={m} rd={rd} onClose={sheet.closeSheet} /> : null}
+    </div>
+  );
+}
+export const BOARD_KEYS = HK;
+
+/* ---------- the metric chips: "מדד ▾" pinned first, ten favourites; a metric picked from the sheet that is not one comes first ---------- */
+function Chips({ bms, m, fav, onPick, onAll, desk }: { bms: BMetric[]; m: BMetric; fav: string[]; onPick: (k: string) => void; onAll: () => void; desk: boolean }) {
+  const ks = [...new Set([...(fav.includes(m.key) ? [] : [m.key]), ...fav])].filter((k) => bms.some((x) => x.key === k));
+  const ref = useRef<HTMLDivElement>(null);
+  const [over, setOver] = useState(false), [end, setEnd] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el) return;
+    const f = () => { setOver(el.scrollWidth > el.clientWidth + 2); setEnd(Math.abs(el.scrollLeft) + el.clientWidth >= el.scrollWidth - 2); };
+    f(); const ro = new ResizeObserver(f); ro.observe(el); el.addEventListener('scroll', f, { passive: true });
+    return () => { ro.disconnect(); el.removeEventListener('scroll', f); };
+  }, [ks.join()]);
+  // a phone: the chosen chip in view
+  useLayoutEffect(() => {
+    const el = ref.current, on = el?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!el || !on) return;
+    const a = el.getBoundingClientRect(), b = on.getBoundingClientRect();
+    if (b.left < a.left) el.scrollLeft -= a.left - b.left + 12; else if (b.right > a.right) el.scrollLeft += b.right - a.right + 12;
+  }, [m.key]);
+  const cue = () => { const el = ref.current; if (!el) return; const rtl = getComputedStyle(el).direction === 'rtl'; el.scrollBy({ left: (end ? 1 : -1) * (rtl ? 1 : -1) * el.clientWidth, behavior: 'smooth' }); };
+  return (
+    <div className={`p6-chipwrap${over ? ' over' : ''}${end ? ' end' : ''}`}>
+      <div className="p6-chips" id="metric-chips" role="group" aria-label="מדד" ref={ref}>
+        <button type="button" className="all" id="all-metrics" aria-haspopup="dialog" onClick={onAll}>מדד ▾</button>
+        {ks.map((k) => { const x = bms.find((y) => y.key === k)!; return <button key={k} type="button" data-m={k} aria-pressed={k === m.key} title={x.l} onClick={() => k !== m.key && onPick(k)}>{shOf(x)}</button>; })}
+      </div>
+      {desk && over ? <button type="button" className="p6-chips-more" id="chips-more" aria-label={end ? 'חזרה לתחילת המדדים' : 'עוד מדדים'} onClick={cue}>{end ? '›' : '‹'}</button> : null}
+    </div>
+  );
+}
+
+/* ---------- the full grid of a large set, in a sheet ---------- */
+function GridSheet({ d, m, rd, onClose }: { d: BoardData; m: BMetric; rd: QRead; onClose: () => void }) {
+  return <DeeperSheet open onClose={onClose} title={`${shOf(m)} לאורך רבעונים`} sub={`כל ${d.ents.length} החברות`} detent="full"><FullGrid d={d} m={m} rd={rd} /></DeeperSheet>;
+}
+
+/* ======================= the shipped charts, tables and workbook (until p6-2b's files are merged) ======================= */
+function LegacyCharts({ d }: { d: BoardData }) {
+  const { book, order, ms, cells, stats, focus, kindOf, major, p, pOps, mk, get, put } = d;
+  const has = (k: string) => ms.some((x) => x.key === k);
+  const sav = ms.filter((x) => x.grp === 'sav' && !x.hide && order.some((e) => cells.get(x.key)?.get(e)?.v != null)), insOps = ms.filter((x) => x.grp === 'ins' && order.some((e) => cells.get(x.key)?.get(e)?.v != null));
+  const bmk = get('bm');
   return (
     <div className="pb">
-      <section className="panel pb-head">
-        <div className="pb-focus" role="group" aria-label="חברה במיקוד">
-          <span className="pb-cap">במיקוד</span>
-          {order.map((e) => <button key={e} type="button" className="chip" aria-pressed={e === focus} onClick={() => put('hl', e)}><i className="sw" style={{ background: idCss(e) }} />{book.short(e)}</button>)}
-        </div>
-        <div className="pb-asof">{setName} · נתונים כספיים: <b>{plab('LTM', p)}</b> (סוף התקופה){savShown.length ? <> · פעילות (רגולטור): <b>{plab('LTM', pOps)}</b></> : null} · שוק: סגירה <b>{pxAsof ? pubLabel(pxAsof) : '–'}</b> · מכפילים הם אומדן: שווי שוק ÷ נתון מדווח{pending ? ' · טוען…' : ''}</div>
-      </section>
-
-      <FocusTiles book={book} focus={focus} ms={ms} cells={cells} stats={stats} n={ents.length} />
-
-      <section className="panel">
-        <div className="hd"><h2>מפת מיקום</h2><div className="aside"><span>כל נקודה חברה · הקו האנכי: חציון הקבוצה · מרחף לערך</span></div></div>
-        <div className="pb-maps">
-          <PosMap title="המניה" ends={['זול', 'יקר']} ms={mkt.filter((m) => m.u !== 'm' && m.u !== 'bn' && m.u !== 'pctx')} cells={cells} stats={stats} focus={focus} book={book} by="value" onPick={(k) => put('bm', k)} />
-          <PosMap title="העסק" ends={['חלש', 'חזק']} ms={biz.filter((m) => m.better)} cells={cells} stats={stats} focus={focus} book={book} by="good" onPick={(k) => put('bm', k)} />
-          {[...savShown, ...insShown].some((m) => m.better) && <PosMap title="הפעילות" ends={['חלש', 'חזק']} ms={[...savShown, ...insShown].filter((m) => m.better && (stats.get(m.key)?.n ?? 0) >= Math.min(3, ents.length))} cells={cells} stats={stats} focus={focus} book={book} by="good" onPick={(k) => put('bm', k)} />}
-        </div>
-      </section>
-
+      {(sav.length > 0 || insOps.length > 0) && <div className="pb-grid">
+        {sav.some((x) => x.key === 'open' || x.key === 'ogem') && <Mix title="תמהיל נכסים לפי מוצר" book={book} ents={order} cells={cells} focus={focus} keys={['open', 'ogem', 'opol']} total="oaum"
+          src={`רשות שוק ההון · ${plab('LTM', pOps).replace('LTM ', 'סוף ')} · מתחת לשם: סך הנכסים`} />}
+        {sav.some((x) => x.key === 'odep') && <Flows book={book} ents={order} cells={cells} focus={focus} mode={(get('bf') as FMode) ?? 'bn'} setMode={(f) => put('bf', f)} p={pOps} />}
+        {insOps.some((x) => x.key === 'rlife' || x.key === 'rpc') && <Mix title="תמהיל הכנסות מביטוח לפי מגזר" book={book} ents={order} cells={cells} focus={focus} keys={['rlife', 'rhealth', 'rpc']}
+          src={`ביאור המגזרים, IFRS 17 · ${plab('LTM', p)} · מתחת לשם: סך ההכנסות מביטוח`} />}
+      </div>}
+      <div className="pb-grid">
+        <Scatter book={book} ents={order} ms={ms} cells={cells} focus={focus} x={get('bx') ?? 'roe'} y={get('by') ?? (has('pb') ? 'pb' : 'pe')} setX={(k) => put('bx', k)} setY={(k) => put('by', k)} />
+        <Bars book={book} ents={order} ms={ms} cells={cells} stats={stats} focus={focus} k={bmk && MBY.has(bmk) && has(bmk) ? bmk : 'pe'} setK={(k) => put('bm', k)} />
+      </div>
+      <div className="pb-grid">
+        <History book={book} ents={order} kindOf={kindOf} focus={focus} p={MBY.get(get('bh') ?? 'pb')?.ax === 'reg' ? pOps : p} k={get('bh') ?? 'pb'} setK={(k) => put('bh', k)} w={(get('bs') as HWin) ?? '12'} setW={(w) => put('bs', w)} major={major} />
+        <Perf book={book} ents={order} mk={mk} focus={focus} w={(get('bw') as Win) ?? '36'} setW={(w) => put('bw', w)} />
+      </div>
+    </div>
+  );
+}
+function LegacyTable({ d }: { d: BoardData }) {
+  const { book, order, ms, cells, stats, focus, p, pOps, pxAsof, put } = d;
+  const v = (k: string, e: string) => cells.get(k)?.get(e)?.v ?? null;
+  const mkt = ms.filter((x) => x.sec === 'mkt'), biz = ms.filter((x) => x.sec === 'biz');
+  const anyOf = (xs: BMetric[]) => xs.filter((x) => order.some((e) => cells.get(x.key)?.get(e)?.v != null));
+  const savShown = anyOf(ms.filter((x) => x.grp === 'sav')).filter((x) => !x.hide), insShown = anyOf(ms.filter((x) => x.grp === 'ins'));
+  const insOrder = order.filter((e) => d.kindOf(e) === 'ins');
+  const sumOf = (rows: string[]) => (x: BMetric) => { if (x.u !== 'bn' && x.u !== 'm') return null; const xs = rows.map((e) => v(x.key, e)).filter((y): y is number => y != null); return xs.length && (BAL.has(x.key) || (xs.length === rows.length && !rows.some((e) => cells.get(x.key)?.get(e)?.stale))) ? xs.reduce((a, y) => a + y, 0) : null; };
+  return (
+    <div className="pb">
       <CompsTable title="המניה · מכפילים ותשואה" sub={`שווי שוק בסגירת ${pxAsof ? pubLabel(pxAsof) : '–'} · מכפילים על ${plab('LTM', p)}`} ms={mkt} order={order} cells={cells} stats={stats} focus={focus} book={book}
-        onFocus={(e) => put('hl', e)} onMetric={(k) => put('bm', k)} agg={(m) => aggRow(m, order, v)} />
+        onFocus={(e) => put('hl', e)} onMetric={(k) => put('bm', k)} agg={(x) => aggRow(x, order, v)} />
       <CompsTable title="העסק · רווחיות, צמיחה והון" sub={`${plab('LTM', p)} · YoY מול ${plab('LTM', back('LTM', p, 4)).replace('LTM ', '')}`} ms={biz} order={order} cells={cells} stats={stats} focus={focus} book={book}
         onFocus={(e) => put('hl', e)} onMetric={(k) => put('bm', k)} />
       {savShown.length > 0 && <CompsTable title="הפעילות · חיסכון ארוך טווח: נכסים, הפקדות, משיכות וניוד" sub={`רשות שוק ההון (גמל-נט, פנסיה-נט, ביטוח-נט) ${plab('LTM', pOps)} · ניוד יוצא ועסק חדש: מצגות החברות`}
         ms={savShown} order={order} cells={cells} stats={stats} focus={focus} book={book} onFocus={(e) => put('hl', e)} onMetric={(k) => put('bm', k)} agg={sumOf(order)} aggLabel="סך הקבוצה" />}
       {insShown.length > 0 && <CompsTable title="הפעילות · ביטוח: הכנסות, צמיחה ומרווח לפי מגזר" sub={`ביאור המגזרים (IFRS 17) ${plab('LTM', p)} · פרמיות ברוטו: כפי שהחברה מדווחת`}
         ms={insShown} order={insOrder} cells={cells} stats={stats} focus={focus} book={book} onFocus={(e) => put('hl', e)} onMetric={(k) => put('bm', k)} agg={sumOf(insOrder)} aggLabel="סך המבטחות" />}
-      {(savShown.length > 0 || insShown.length > 0) && <div className="pb-grid">
-        {savShown.some((m) => m.key === 'open' || m.key === 'ogem') && <Mix title="תמהיל נכסים לפי מוצר" book={book} ents={order} cells={cells} focus={focus} keys={['open', 'ogem', 'opol']} total="oaum"
-          src={`רשות שוק ההון · ${plab('LTM', pOps).replace('LTM ', 'סוף ')} · מתחת לשם: סך הנכסים`} />}
-        {savShown.some((m) => m.key === 'odep') && <Flows book={book} ents={order} cells={cells} focus={focus} mode={(sp.get('bf') as FMode) ?? 'bn'} setMode={(f) => put('bf', f)} p={pOps} />}
-        {insShown.some((m) => m.key === 'rlife' || m.key === 'rpc') && <Mix title="תמהיל הכנסות מביטוח לפי מגזר" book={book} ents={order} cells={cells} focus={focus} keys={['rlife', 'rhealth', 'rpc']}
-          src={`ביאור המגזרים, IFRS 17 · ${plab('LTM', p)} · מתחת לשם: סך ההכנסות מביטוח`} />}
-      </div>}
-
-      <div className="pb-grid">
-        <Scatter book={book} ents={order} ms={ms} cells={cells} focus={focus} x={sp.get('bx') ?? 'roe'} y={sp.get('by') ?? (has('pb') ? 'pb' : 'pe')} setX={(k) => put('bx', k)} setY={(k) => put('by', k)} />
-        <Bars book={book} ents={order} ms={ms} cells={cells} stats={stats} focus={focus} k={sp.get('bm') && MBY.has(sp.get('bm')!) && has(sp.get('bm')!) ? sp.get('bm')! : 'pe'} setK={(k) => put('bm', k)} />
-      </div>
-      <div className="pb-grid">
-        <History book={book} ents={order} kindOf={kindOf} focus={focus} p={MBY.get(sp.get('bh') ?? 'pb')?.ax === 'reg' ? pOps : p} k={sp.get('bh') ?? 'pb'} setK={(k) => put('bh', k)} w={(sp.get('bs') as HWin) ?? '12'} setW={(w) => put('bs', w)} major={major} />
-        <Perf book={book} ents={order} mk={mk} focus={focus} w={(sp.get('bw') as Win) ?? '36'} setW={(w) => put('bw', w)} />
-      </div>
-      <div className="src pr-foot">
-        מקורות: דוחות החברות (IFRS 17, XBRL), דוחות כושר פירעון, רשות שוק ההון (גמל-נט, פנסיה-נט, ביטוח-נט: נכסים, הפקדות, משיכות, ניוד), מצגות החברות, הבורסה לניירות ערך (שערי סגירה, שווי שוק, דיבידנד לפי שער הבסיס ביום האקס) · P/E על רווח נקי לבעלי המניות LTM; P/B על הון לבעלי המניות;
-        {has('pbc') ? ` CSM נטו ממס בשיעור ${nf(TAX, 2)}% (הנחה, כמו בדפי הערכת השווי);` : ''} מכפיל של רווח או הון שליליים אינו מוצג · "משוקלל" = סך שווי השוק ÷ סך המכנים · תשואה כוללת: דיבידנד מושקע מחדש ·
-        {' '}<button type="button" className="linkbtn" onClick={() => void exportBoard(book, ms, order, cells, stats, setName, p, pxAsof ?? '', pOps)}>ייצוא ל-Excel</button>
-      </div>
+      <div className="src pr-foot"><button type="button" className="linkbtn" onClick={() => void legacyExport(d)}>ייצוא ל-Excel</button></div>
     </div>
   );
 }
-export const BOARD_KEYS = HK;
+const legacyExport = (d: BoardData) => exportBoard(d.book, d.ms, d.order, d.cells, d.stats, d.setName, d.p, d.pxAsof, d.pOps);
 
 function aggRow(m: BMetric, order: string[], v: (k: string, e: string) => number | null): number | null {
   const mc = order.map((e) => v('mcap', e));
@@ -148,70 +289,6 @@ function aggRow(m: BMetric, order: string[], v: (k: string, e: string) => number
   if (m.key === 'pbc') return aggMultiple(mc, order.map((e) => (v('pbc', e) ? v('mcap', e)! / v('pbc', e)! : null)));
   if (m.key === 'mcap') { const xs = mc.filter((x): x is number => x != null); return xs.length ? xs.reduce((s, x) => s + x, 0) : null; }
   return null;
-}
-
-/* ---------- focus tiles ---------- */
-function FocusTiles({ book, focus, ms, cells, stats, n }: { book: NonNullable<ReturnType<typeof useBook>['book']>; focus: string; ms: BMetric[]; cells: Map<string, Map<string, BVal>>; stats: Map<string, Stat>; n: number }) {
-  const want = ['pe', 'pb', 'pbc', 'maum', 'dy', 'roe', 'npy', 'csmy', 'aumy', 'sr'].filter((k) => ms.some((m) => m.key === k)).slice(0, 8);
-  const ops = ['oshare', 'oshd', 'onetr', 'owdr', 'pout', 'rpcy', 'mhealth'].filter((k) => ms.some((m) => m.key === k) && cells.get(k)?.get(focus)?.v != null).slice(0, 6);
-  const pbx = cells.get('pb')?.get(focus)?.v, pbm = stats.get('pb')?.med, roe = cells.get('roe')?.get(focus)?.v, roem = stats.get('roe')?.med;
-  const prem = (a: number | null | undefined, b: number | null | undefined) => (a != null && b ? (a / b - 1) * 100 : null);
-  const pp = prem(pbx, pbm);
-  return (
-    <section className="panel pb-tiles">
-      <div className="hd"><h2><i className="pdot" style={{ background: idCss(focus) }} />{book.name(focus)} מול הקבוצה</h2>
-        <div className="aside"><Link to={`/company/${focus}`}>לדף החברה</Link>{book.ent.get(focus)?.k === 'ins' && <> · <Link to={`/valuation/${focus}`}>הערכת שווי</Link></>}</div></div>
-      {pbx != null && pbm != null && roe != null && roem != null && (
-        <p className="pb-lede">נסחרת ב-P/B של <b>{nf(pbx, 2)}x</b> מול חציון {nf(pbm, 2)}x ({pp! >= 0 ? 'פרמיה' : 'דיסקאונט'} של {nf(Math.abs(pp!), 0)}%), עם ROE של <b>{nf(roe, 1)}%</b> מול חציון {nf(roem, 1)}%.
-          {roe > roem === pbx > pbm ? ' המכפיל והתשואה להון באותו צד של החציון.' : roe > roem ? ' תשואה להון מעל החציון במכפיל מתחתיו.' : ' מכפיל מעל החציון בתשואה להון מתחתיו.'}</p>
-      )}
-      {[want, ops].filter((ks) => ks.length).map((ks, gi) => <div key={gi} className="pb-tilegrid" aria-label={gi ? 'פעילות' : 'המניה והעסק'}>{gi ? <div className="pb-tilecap">פעילות</div> : null}{ks.map((k) => {
-        const m = MBY.get(k)!, x = cells.get(k)?.get(focus), s = stats.get(k)!, r = s.rank.get(focus), d = x?.v != null && s.med != null ? x.v - s.med : null;
-        const good = d == null || !m.better ? null : (m.better === 'hi' ? d > 0 : d < 0);
-        return (
-          <div key={k} className="pb-tile">
-            <div className="pb-tl">{m.sh}</div>
-            <div className="pb-tv">{x?.v == null ? <span className="muted" title={x?.why}>–</span> : <Sourced className="num" src={x.prov}>{fmtB(m, x.v)}</Sourced>}</div>
-            <div className="pb-ts">חציון {s.med == null ? '–' : fmtB(m, s.med)}{d != null && <span className={good == null ? '' : good ? 'up' : 'down'}> · {d >= 0 ? '+' : '−'}{m.u === 'pp' ? `${nf(Math.abs(d), m.dec)} נק׳` : fmtB({ ...m, u: m.u === 'pctx' ? 'pct' : m.u }, Math.abs(d)).replace('%', m.u === 'pct' || m.u === 'pctx' ? ' נק׳' : '')}</span>}</div>
-            {r != null && <div className="pb-rank" title={m.better === 'lo' ? 'דירוג: 1 = הנמוך בקבוצה' : 'דירוג: 1 = הגבוה בקבוצה'}><span style={{ ['--w' as string]: `${(s.pct.get(focus) ?? 0) * 100}%` }} /><em>{r} מתוך {s.n}{m.better === 'lo' ? ' · מהזול' : ''}</em></div>}
-          </div>
-        );
-      })}</div>)}
-      <div className="src">{n} חברות בקבוצה · דירוג 1 = הגבוה ביותר (במכפילים: הזול ביותר) · ההפרש מהחציון בנקודות אחוז לשיעורים</div>
-    </section>
-  );
-}
-
-/* ---------- positioning map ---------- */
-function PosMap({ title, ends, ms, cells, stats, focus, book, by, onPick }: { title: string; ends: [string, string]; ms: BMetric[]; cells: Map<string, Map<string, BVal>>; stats: Map<string, Stat>; focus: string; book: NonNullable<ReturnType<typeof useBook>['book']>; by: 'value' | 'good'; onPick: (k: string) => void }) {
-  return (
-    <div className="pb-map">
-      <div className="pb-maphd"><h3>{title}</h3><span className="pb-ends"><i>{ends[0]}</i><i>{ends[1]}</i></span><span /></div>
-      {ms.map((m) => {
-        const s = stats.get(m.key)!, row = cells.get(m.key)!;
-        if (!s.n) return null;
-        // a robust span (median ± 3 × MAD): one extreme value pins at the edge instead of squeezing the rest together
-        const xs = [...row.values()].map((x) => x.v).filter((x): x is number => x != null), md = s.med ?? 0;
-        const mad = xs.length ? (xs.map((x) => Math.abs(x - md)).sort((a, b) => a - b)[Math.floor(xs.length / 2)] || 0) : 0;
-        const lo = mad ? Math.max(s.min, md - 3 * mad) : s.min, hi = mad ? Math.min(s.max, md + 3 * mad) : s.max;
-        const span = hi - lo || 1;
-        // position: by value (multiples: low = cheap at the start) or by goodness (business: weak at the start)
-        const pos = (x: number) => { const t = Math.min(1, Math.max(0, (Math.min(hi, Math.max(lo, x)) - lo) / span)); return by === 'value' ? (m.better === 'hi' ? 1 - t : t) : m.better === 'lo' ? 1 - t : t; };
-        const fv = row.get(focus)?.v;
-        return (
-          <button type="button" key={m.key} className="pb-maprow" onClick={() => onPick(m.key)} title={`${m.l}: עמודות בגרף הדירוג`}>
-            <span className="pb-ml">{m.sh}</span>
-            <span className="pb-track">
-              {s.med != null && <span className="pb-med" style={{ insetInlineStart: `${pos(s.med) * 100}%` }} />}
-              {[...row].filter(([e, x]) => e !== focus && x.v != null).map(([e, x]) => <span key={e} className="pb-dot" style={{ insetInlineStart: `${pos(x.v!) * 100}%`, background: idCss(e) }} title={`${book.short(e)}: ${fmtB(m, x.v!)}`} />)}
-              {fv != null && <span className="pb-dot f" style={{ insetInlineStart: `${pos(fv) * 100}%`, background: idCss(focus) }} title={`${book.short(focus)}: ${fmtB(m, fv)}`} />}
-            </span>
-            <span className="pb-mv num">{fv == null ? '–' : fmtB(m, fv)}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 /* ---------- comps table ---------- */
