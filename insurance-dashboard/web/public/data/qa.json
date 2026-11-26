@@ -1,5 +1,5 @@
 {
- "built": "2026-11-26T11:30:53+02:00",
+ "built": "2026-11-26T18:49:19+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -82,20 +82,12 @@
    "note": "web/public/data/ifrs/<company>/<period>.json equal to the company's rows of ifrs_<period>.json"
   },
   {
-   "id": "ifrs_page",
-   "ok": true,
-   "level": "fail",
-   "n": 17188,
-   "fail": 0,
-   "note": "17120/17188 on the cited page; 0 new misses; 0 facts without page text (not checked)"
-  },
-  {
-   "id": "ifrs_page_known",
+   "id": "ifrs_pages",
    "ok": false,
    "level": "warn",
-   "n": 17188,
-   "fail": 68,
-   "note": "known misses, extraction layer (graphics, image pages, targets in words): {'ayalon': 18, 'hachshara': 26, 'migdal': 14, 'clal': 8, 'phoenix': 2}"
+   "n": 0,
+   "fail": 0,
+   "note": "skipped: the synced drive is not readable from this process (manifest_quarters.json)"
   },
   {
    "id": "balance",
@@ -419,11 +411,11 @@
   },
   {
    "id": "funds_contract",
-   "ok": true,
-   "level": "fail",
-   "n": 16254,
+   "ok": false,
+   "level": "warn",
+   "n": 0,
    "fail": 0,
-   "note": "funds 202610: 1262 live, 1477 closed, 2739 histories; 16254 checks, 0 problems, 0 warnings; 8 odd history prints"
+   "note": "skipped: the synced drive is not readable from this process (gemel.parquet)"
   },
   {
    "id": "fund_stats",
@@ -543,7 +535,7 @@
    "level": "warn",
    "n": 38,
    "fail": 1,
-   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: Deserializing page header failed.)"
+   "note": "38 manager-quarters; rebuild skipped (work cache unreadable: PermissionError: [Errno 1] Operation not permitted: '/Users/ohadbar/code/ohad/in)"
   },
   {
    "id": "solvency",
@@ -655,7 +647,7 @@
    "level": "warn",
    "n": 223,
    "fail": 1,
-   "note": "223 source URLs checked 2026-10-25 (31 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867; older than 8 days"
+   "note": "223 source URLs checked 2026-10-25 (32 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867; older than 8 days"
   },
   {
    "id": "stress",
