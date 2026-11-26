@@ -86,9 +86,9 @@ export const BEFORE_FEES = 'לפני דמי ניהול';
 export interface PlaceLike { lo: number | null; hi: number | null; n: number }
 /** "מקום 5 מתוך 5" · "מהראשונים (1–3 מתוך 5)" · "מהאחרונים (4–5 מתוך 5)" · "באמצע (5–6 מתוך 13)"; the range is one isolate.
  *  Every ranked track in one group: "כל 5 המסלולים כמעט שווים". '' when not ranked. */
-export function placeWords(pl: PlaceLike | null | undefined): string {
+export function placeWords(pl: PlaceLike | null | undefined, tail = ''): string {
   if (!pl || pl.lo == null || pl.hi == null || !pl.n) return '';
-  const { lo, hi, n } = pl, of = `מתוך ${numIso(n)}`;
+  const { lo, hi, n } = pl, of = `מתוך ${numIso(n)}${tail}`;
   if (lo === hi) return `מקום ${numIso(lo)} ${of}`;
   if (lo === 1 && hi === n) return `כל ${numIso(n)} המסלולים כמעט שווים`;
   const r = `${numIso(`${lo}–${hi}`)} ${of}`;
@@ -228,6 +228,8 @@ export const feeFromBalance = (balance: number, fee: number) => `מהחיסכו�
 export const feeFromDeposits = (monthly: number, depfee: number) => `מההפקדות: ${numIso(12)} × ${ilsNum(monthly)} × ${pctAbs(depfee, 2)}`;
 export const FEE_TOTAL_YEAR = 'סך הכול בשנה, בערך';
 export const FEE_SHEET_NOTE = 'אלה דמי הניהול הממוצעים במסלול, לא מה שחוסך מסוים משלם. הסכום שלך כתוב בדוח השנתי.';
+/** build review B2 (P3-a): the fee sheet's closing note when the reader's own fee prices it (myFeeCost ownFee) */
+export const FEE_SHEET_NOTE_OWN = 'לפי דמי הניהול שהזנת מהדוח השנתי.';
 export const FEE_SHEET_CALC = 'לחשב על הסכומים שלי';
 export const FEE_SHEET_TO_TOOL = 'כל המסלולים מהסוג הזה, לפי מחיר ›';
 
@@ -329,7 +331,13 @@ export function vsAvgWords(p: number, v: N, avg: N, type: string): string {
   return x ? `${x.when} ${x.rel} ${x.rest}` : '';
 }
 /** "בשנה האחרונה: ⁦+9.2%⁩ · מקום 5 מתוך 5" (16.1 5b) */
-export const myYearLine = (y12: N, pl?: PlaceLike | null) => (has(y12) ? `בשנה האחרונה: ${pctSigned(y12, 1)}${placeWords(pl) ? ` · ${placeWords(pl)}` : ''}` : '');
+export const FULL_YEAR_TAIL = ' שיש להם שנה מלאה';
+/** Build review B2 (novice B2 #3): `typeN` = the tracks of the type the card, the hub and the screener count on the month; when fewer
+ *  are ranked over 12 months (a track younger than a year), the count says why: "באמצע (5–6 מתוך 12 שיש להם שנה מלאה)". */
+export const myYearLine = (y12: N, pl?: PlaceLike | null, typeN?: number | null) => {
+  const pw = placeWords(pl, pl && typeN && pl.n < typeN ? FULL_YEAR_TAIL : '');
+  return has(y12) ? `בשנה האחרונה: ${pctSigned(y12, 1)}${pw ? ` · ${pw}` : ''}` : '';
+};
 /** a product's fee line (5.2, 17.1): text "דמי ניהול ⁦₪560⁩ בשנה" and its tag: "לדוגמה", or the base ("על הסכומים שלך") */
 export const myFeeLine = (cost: N, own: boolean, base: string) => ({ text: `דמי ניהול ${has(cost) ? ilsSym(cost) : numIso('–')} בשנה`, tag: own ? base : 'לדוגמה' });
 const allProducts = (n: number) => (n === 1 ? 'המוצר' : n === 2 ? 'שני המוצרים' : `כל ${numIso(n)} המוצרים`);

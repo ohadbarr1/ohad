@@ -27,7 +27,7 @@ import { ONE_MONTH_NOTE, monthShortYear } from '../../lib/compareWords';
 import { addMonths } from '../../lib/market';
 import { longestPlace, prodHasDeposit, rankable, trackVsType, typeFeeAvg, typeHasDepositFee } from '../../lib/pageMonths';
 import {
-  AVG_HEAD, CARD_ROWS, FEE_ROW, FEE_SHEET_CALC, FEE_SHEET_NOTE, FEE_SHEET_TITLE, FEE_SHEET_TO_TOOL, FEE_TOTAL_YEAR, MONTH_SHEET_SUB,
+  AVG_HEAD, CARD_ROWS, FEE_ROW, FEE_SHEET_CALC, FEE_SHEET_NOTE, FEE_SHEET_NOTE_OWN, FEE_SHEET_TITLE, FEE_SHEET_TO_TOOL, FEE_TOTAL_YEAR, MONTH_SHEET_SUB,
   allTracksIn, amountsBase, avgHeadSub, cardWhoBest, cardWords, cmpCta, feeFromBalance, feeFromDeposits, feeRowSub, feeSheetSub, ilsSym,
   monthSheetVs, placeLine,
 } from '../../lib/pageWords';
@@ -233,7 +233,7 @@ export function CardFeeSheet({ c, onClose }: { c: CardCtx; onClose: () => void }
       {c.saved && !amt.own ? (
         <button type="button" className="ro-rowlink" id="fee-calc" onClick={() => host.openSheet(`amounts:${f.k}`)}><span>{FEE_SHEET_CALC}</span><span aria-hidden="true">›</span></button>
       ) : null}
-      <p className="cs-note">{FEE_SHEET_NOTE}</p>
+      <p className="cs-note">{own.ownFee ? FEE_SHEET_NOTE_OWN : FEE_SHEET_NOTE}</p>
     </DeeperSheet>
   );
 }

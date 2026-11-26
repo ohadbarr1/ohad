@@ -8,10 +8,10 @@ const web = fileURLToPath(new URL('..', import.meta.url));
 const dir = mkdtempSync(join(web, '.homelinks-'));
 const strip = (s) => s.replace(/[⁦-⁩]/g, '');
 try {
-  writeFileSync(join(dir, 'e.ts'), `export { homeLinks, homeMineLine } from '${join(web, 'src/lib/saverLinks')}';`);
+  writeFileSync(join(dir, 'e.ts'), `export { homeLinks, homeMineLine, homeMoreLine } from '${join(web, 'src/lib/saverLinks')}';`);
   await build({ entryPoints: [join(dir, 'e.ts')], bundle: true, format: 'esm', platform: 'node', outfile: join(dir, 'o.mjs'), external: ['react', 'react-router-dom'], logLevel: 'silent', define: { 'import.meta.env.BASE_URL': '"/"', 'import.meta.env.DEV': 'false', 'import.meta.env': '{}' },
     plugins: [{ name: 'no-css', setup(b) { b.onResolve({ filter: /\.css$/ }, (a) => ({ path: a.path, namespace: 'n' })); b.onLoad({ filter: /.*/, namespace: 'n' }, () => ({ contents: '', loader: 'css' })); } }] });
-  const { homeLinks, homeMineLine } = await import(pathToFileURL(join(dir, 'o.mjs')).href);
+  const { homeLinks, homeMineLine, homeMoreLine } = await import(pathToFileURL(join(dir, 'o.mjs')).href);
   const lead = { k: 'p2102', prod: 'פנסיה כללית', track: 'כללי' };
   const L = homeLinks(lead);
   assert.equal(L.screen, `/funds/screen?prod=${encodeURIComponent('פנסיה כללית')}&track=${encodeURIComponent('כללי')}&per=m1`);
@@ -22,5 +22,6 @@ try {
   assert.equal(strip(homeMineLine(202610, -1.449, 9.04)), 'באוקטובר ירד 1.45% · בשנה האחרונה +9.0%');
   assert.equal(strip(homeMineLine(202610, 0.001, null)), 'באוקטובר לא זז');
   assert.equal(homeMineLine(202610, null, null), '');
+  assert.deepEqual([0, -1, 1, 2, 6].map(homeMoreLine), ['', '', 'ועוד מוצר אחד', 'ועוד 2 מוצרים', 'ועוד 6 מוצרים']);
   console.log('home-links-test: ok');
 } finally { rmSync(dir, { recursive: true, force: true }); }

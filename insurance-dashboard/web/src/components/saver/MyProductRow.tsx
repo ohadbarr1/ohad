@@ -6,7 +6,7 @@ import { catKey, selfDirected, type CatX, type FundX, type HistX } from '../../l
 import { feeCost, type FeeBase } from '../../lib/feeExample';
 import { useMyAmounts } from '../../lib/myAmounts';
 import type { MyProduct } from '../../lib/mine';
-import { hasTypeAvg, oldGeneration, placeOf, trackVsType, typeHasDepositFee, type Place } from '../../lib/pageMonths';
+import { hasTypeAvg, oldGeneration, placeOf, trackVsType, typeCount, typeHasDepositFee, type Place } from '../../lib/pageMonths';
 import {
   MY_COMPARE, NO_MONTHLY_GUARD, SELF_MANAGED_GUARD, amountsBase, fullLabel, myFeeLine, myYearLine, typeName, vsAvgParts,
 } from '../../lib/pageWords';
@@ -38,12 +38,14 @@ export interface MyRowFig {
   /** the newest published month and its return, and the type's average that month (null: fewer than three tracks, or not published) */
   p: number | null; v: number | null; avg: number | null;
   y12: number | null; place: Place | null;
+  /** the type's ranked tracks on the month (pageMonths typeCount): the count the card, the hub and the screener show */
+  typeN?: number;
   guard: string | null;
 }
 export function myRowFigures(f: FundX, h: HistX | null | undefined, members: FundX[], cat: CatX | null | undefined, asof: number): MyRowFig {
   const key = catKey(f), type = typeName(key);
   const place = oldGeneration(f) || selfDirected(f) ? null : placeOf(f, members, 'y12', asof);
-  const base = { key, type, y12: f.y12 ?? null, place };
+  const base = { key, type, y12: f.y12 ?? null, place, typeN: place ? typeCount(members, 'm1', { asof }).ranked : undefined };
   if (selfDirected(f)) return { ...base, months: [], p: null, v: null, avg: null, guard: SELF_MANAGED_GUARD };
   const tv = trackVsType(h, f, hasTypeAvg(members) ? cat : null, 6);
   if (!h) return { ...base, months: [], p: null, v: null, avg: null, guard: null };
@@ -94,7 +96,7 @@ export function MyProductRow({ f, i, fig, members, my, example = false, cmpHref,
   useEffect(() => { onFee?.(f.k, fee); }, [f.k, fee.cost, fee.own, fee.ownFee, fee.base, fee.deposits]);  // eslint-disable-line react-hooks/exhaustive-deps
   const label = fullLabel(f.grp, fig.key);
   const vs = vsAvgParts(fig.p ?? 0, fig.v, fig.avg, fig.type);
-  const yr = myYearLine(fig.y12, fig.place);
+  const yr = myYearLine(fig.y12, fig.place, fig.typeN);
   const fl = myFeeLine(fee.cost, fee.own, fee.base);
   const loading = !fig.guard && !fig.months.length;
   const head = (

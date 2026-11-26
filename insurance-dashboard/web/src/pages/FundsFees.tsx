@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { CompareTray, FundsNav } from '../components/FundsNav';
 import { ErrorBox, Loading, Toolbar } from '../components/ui';
 import { DeeperSheet } from '../components/DeeperSheet';
 import { LensTabs } from '../components/LensTabs';
 import { AmountsSheet } from '../components/AmountsSheet';
 import { NumText } from '../components/NumText';
-import { TrackSheet } from '../components/compare/TrackSheet';
 import { ProdIcon } from '../components/compare/PickerSheet';
 import { Ico } from '../components/home/glyphs';
 import { useFundCats, useFunds } from '../lib/useData';
@@ -26,6 +25,7 @@ import { shortGrp } from './compare/tracks';
 import { BALANCE_EX, exampleMonthly } from '../lib/retire';
 import { FeesBoard } from './fees/FeesBoard';
 import { FeesEntry } from './fees/FeesEntry';
+import { FeesTrackSheet } from './fees/FeesTrackSheet';
 import { AGE_EX, AfterRetire, AgeStep, AssumeSheet, RetFig, RetLens, SensLens, feeModel, feesLensOf, useCareerOut } from './fees/FeesCareer';
 import '../styles/lens.css';
 import '../styles/fundsTools.css';
@@ -57,7 +57,6 @@ export function FundsFees() {
   const [sp] = useSearchParams();
   const write = useAddressWrite();
   const host = useSheetHost();
-  const nav = useNavigate();
   const [door] = useActiveDoor();
   const saver = door !== 'agent' && door !== 'pro';
   const doorK: DoorK = saver ? 'saver' : (door as DoorK);
@@ -116,6 +115,7 @@ export function FundsFees() {
   /** a choice made inside a sheet: back over the sheet's history entry first, then write the page's address (components/Sheet backThen) */
   const fromSheet = (patch: Record<string, string | null>) => backThen(() => set({ prod: null, track: null, ...CLEAR_PAIRS, ...patch, sheet: null }));
   const sheet = host.own?.[0] ?? null;
+  const trackK = host.cmp?.t === 'track' ? host.cmp.k : null;
   const openAmounts = () => host.openSheet('amounts');
   const openAssume = () => host.openSheet('assume');
 
@@ -193,9 +193,8 @@ export function FundsFees() {
         </div>
         <p className="cs-note">{typeName(key)}: {members.length} מסלולים פתוחים.</p>
       </DeeperSheet>
-      {host.cmp?.t === 'track' ? (
-        <TrackSheet open k={host.cmp.k} keys={[host.cmp.k]} basis="gross" door={doorK} onClose={host.closeSheet} openSheet={host.openSheet}
-          setKeys={(v) => { if (v.length) nav(`/funds/compare?k=${v.join(',')}`); }} />
+      {trackK ? (
+        <FeesTrackSheet k={trackK} file={data} cats={cats} door={doorK} own={saver ? myList.find((m) => m.k === trackK) : null} onClose={host.closeSheet} />
       ) : null}
     </div>
   );

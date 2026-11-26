@@ -90,3 +90,11 @@ tr.fsel td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
 .ftools-list > li { display: grid; }
 .ftile .ftile-q { color: var(--fg); font-weight: 600; font-size: var(--t-3); line-height: 1.45; }
 .fnote .sv-u { text-decoration: underline; text-underline-offset: 2px; }
+/* build review B2 (novice #4): on a phone a tool is a compact row (icon beside the name and its question, about 90–110 px), so the list
+   fits in about a screen and a half; the longer description stays on wider screens */
+@media (max-width: 760px) {
+  .ftools-list.ftiles { gap: 8px; }
+  .ftools-list .ftile { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; row-gap: 2px; align-items: center; padding: 12px 14px; }
+  .ftools-list .ftile .icotile.lg { grid-row: span 2; width: 44px; height: 44px; margin: 0; }
+  .ftools-list .ftile .ftile-d { display: none; }
+}

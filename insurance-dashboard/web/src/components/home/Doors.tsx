@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from '../Logo';
-import { Sourced } from '../Source';
 import { Ico } from './glyphs';
 import { FundFacts, ProdFigs, screenHref, useFundFacts, useProducts } from './fundFacts';
 import { useActiveDoor } from './doorState';
@@ -8,7 +7,7 @@ import { ClientsPanel } from './ClientsPanel';
 import { ClientImport } from '../agent/ClientImport';  // P0 · A1: the agent's home opens on a new client
 import { useState, type ReactNode } from 'react';
 import { useMine, useMy, type MyProduct } from '../../lib/mine';
-import { homeLinks, homeMineLine } from '../../lib/saverLinks';
+import { homeLinks, homeMineLine, homeMoreLine } from '../../lib/saverLinks';
 import { NumText } from '../NumText';
 import { heMonth } from '../../lib/compareWords';
 import { typeName } from '../../lib/pageWords';
@@ -18,11 +17,9 @@ import { tileOf } from '../../lib/pickTiles';
 import type { Tile } from '../../lib/pickTiles';
 import { CK_STATUS_KEY, normStatus, statusLine } from '../../lib/ckStatus';  // red team 06.11.26: the status after a check-up
 import { HomeHint } from '../saver/HomeHint';
-import { nf } from '../../lib/format';
-import { fundP } from '../../lib/market';
 import { compareKeys } from '../../lib/saverCompare';  // C13: the reader's track and its two largest peers
 import { isPension, type VFund } from '../../lib/verdict';
-import { GROSS_LABEL, grossProv, refOf, retOf, ym, type FundX } from '../../lib/funds';
+import type { FundX } from '../../lib/funds';
 import type { Door } from '../../lib/door';
 import '../../styles/doors.css';
 
@@ -128,13 +125,15 @@ function useMineCompare(mine: MyProduct[]): { keys: string[]; label: string; lea
 }
 
 /** C13 · "כמה הרוויח המסלול שלי?": the saver home's one entry to the comparison, with a second row for the saved track */
-function CompareEntry({ mine }: { mine: MyProduct[] }) {
+function CompareEntry({ mine, after }: { mine: MyProduct[]; after?: ReactNode }) {
   const m = useMineCompare(mine);
   const { asof } = useFundFacts();
   const lead = m ? (m.lead as unknown as { k: string; prod: string; track: string; m1?: number | null; y12?: number | null }) : null;
   const L = homeLinks(lead);
   const line = lead ? homeMineLine(asof, lead.m1, lead.y12) : '';
   const type = lead ? typeName(catKey(lead)) : null;
+  // build review B2 (H-1): the products panel left the home; the row says how many more products wait on /my
+  const more = homeMoreLine(mine.length - 1);
   return (
     <section className="dentry-w" aria-labelledby="dentry-t">
       <Link to="/funds/compare?v=months" className="dentry" id="home-compare">
@@ -145,7 +144,7 @@ function CompareEntry({ mine }: { mine: MyProduct[] }) {
       {m && L.card && (
         <Link to={L.card} className="dtile" id="home-mine">
           <ProdIcon art={(tileOf(lead!.prod) ?? { art: ART_MONTH }).art} size={42} />
-          <span className="dtile-t"><b>המסלול שלי: {m.label}</b>{line ? <small><NumText t={line} /></small> : <small>לכרטיס של המסלול</small>}</span>
+          <span className="dtile-t"><b>המסלול שלי: {m.label}</b><small>{line ? <NumText t={line} /> : 'לכרטיס של המסלול'}{more ? ` · ${more}` : null}</small></span>
           <span className="dtile-go" aria-hidden="true">›</span>
         </Link>
       )}
@@ -159,6 +158,7 @@ function CompareEntry({ mine }: { mine: MyProduct[] }) {
         <span className="dtile-t"><b>החודש בחיסכון</b><small>{asof ? `מה קרה ב${heMonth(asof)}, בכל סוג מסלול` : 'מה קרה החודש, בכל סוג מסלול'}</small></span>
         <span className="dtile-go" aria-hidden="true">›</span>
       </Link>
+      {after}
     </section>
   );
 }
@@ -186,21 +186,21 @@ export function SaverHome() {
   // red team 06.11.26 (bring-back): after a check-up, its status and the next date in place of the import pitch (first visit keeps it)
   const [stRaw] = useMy<unknown>(CK_STATUS_KEY, null);
   const st = has ? normStatus(stRaw) : null;
+  /* build review B2 (H-1, PM ruling B2.5): with a saved product the check-up lead folds into one tile row after the hub tile, and the
+     "המוצרים שלי" panel leaves the home (the "my track" row and the bottom bar's "המוצרים שלי" carry it). With no saved product the full
+     lead stays: it is that visitor's main action. The iPhone tip moves after the four cards. Order: entry · my track · screener · hub ·
+     import · four cards · tip · facts · note. */
+  const importRow = has ? (
+    <Link to="/my/checkup" className="dtile dtile-imp" id="home-import">
+      <span className="icotile" aria-hidden="true"><Ico name="mine" /></span>
+      <span className="dtile-t"><b>ייבוא מהמסלקה <span className="dbeta">בטא</span></b><small>{st ? statusLine(st) : 'כל המוצרים ודמי הניהול שלכם, מהדוח של המסלקה'}</small></span>
+      <span className="dtile-go" aria-hidden="true">›</span>
+    </Link>
+  ) : null;
   return (
     <div className="dhome dhome-saver">
-      <CompareEntry mine={mine} />
-      {st ? <header className="dlead dcheck" aria-labelledby="dcheck-t">
-        <span className="icotile lg"><Ico name="mine" /></span>
-        <div className="dlead-t">
-          <span className="eyebrow">חוסך · הבדיקה השנתית</span>
-          <h1 id="dcheck-t">{statusLine(st)}</h1>
-          <p>לפי הבדיקה מ-{st.at.slice(8, 10)}.{st.at.slice(5, 7)}.{st.at.slice(2, 4)}. קובץ חדש מהמסלקה מעדכן את הכול.</p>
-        </div>
-        <div className="dcheck-go">
-          <Link to="/my/checkup" className="door-go primary">לבדיקה השנתית<Ico name="arrow" /></Link>
-          <Link to="/my" className="dcheck-alt">למוצרים שלי</Link>
-        </div>
-      </header> : <header className="dlead dcheck" aria-labelledby="dcheck-t">
+      <CompareEntry mine={mine} after={importRow} />
+      {has ? null : <header className="dlead dcheck" aria-labelledby="dcheck-t">
         <span className="icotile lg"><Ico name="mine" /></span>
         <div className="dlead-t">
           <span className="eyebrow">חוסך · הבדיקה השנתית</span>
@@ -209,46 +209,14 @@ export function SaverHome() {
         </div>
         <div className="dcheck-go">
           <Link to="/my/checkup" className="door-go primary">ייבוא מהמסלקה<Ico name="arrow" /></Link>
-          <Link to={has ? '/my' : '/my#sv-add-h'} className="dcheck-alt">{has ? 'לבדיקה של המוצרים שלי' : 'או לבחור מוצר ידנית'}</Link>
+          <Link to="/my#sv-add-h" className="dcheck-alt">או לבחור מוצר ידנית</Link>
         </div>
       </header>}
-      <HomeHint />
-      {has && <MineSummary mine={mine} />}
       <Cards cards={SAVER_CARDS} label="מה אפשר לבדוק" lead={<FeesCard mine={mine} />} />
+      <HomeHint />
       <FundFacts />
       <p className="doors-note">מה שאתם מזינים נשמר בדפדפן הזה בלבד ולא נשלח לשום מקום. <Link className="sv-u" to="/about">מי אנחנו ומאיפה הנתונים</Link></p>
     </div>
-  );
-}
-
-/** "המוצרים שלי": the products the reader entered on /my, each with its track's own published figures */
-function MineSummary({ mine }: { mine: MyProduct[] }) {
-  const { data, asof } = useFundFacts();
-  const by = new Map((data?.funds ?? []).map((f) => [f.k, f]));
-  return (
-    <section className="panel dmine" aria-labelledby="dmine-t">
-      <div className="hd"><h2 id="dmine-t">המוצרים שלי</h2><div className="aside"><Link to="/my">לתמונה המלאה</Link></div></div>
-      <ul className="dmine-l">
-        {mine.map((p) => { const f = by.get(p.k) as FundX | undefined;
-          if (!data) return <li key={p.k} className="dmine-sk" aria-hidden="true" />;
-          if (!f) return <li key={p.k}><span className="dmine-n">מסלול {p.k}</span><span className="dim">לא נמצא בנתוני {asof ? ym(asof) : 'החודש'}</span></li>;
-          // W4: the 5Y (published gross), else the 3Y with the reason
-          const r5 = retOf(f, 'a5').v, r3 = r5 == null ? retOf(f, 'a3').v : null;
-          const avg = f.fee != null ? <Sourced className="num" src={() => fundP(refOf(f), asof, 'AVG_ANNUAL_MANAGEMENT_FEE', 'דמי ניהול מצבירה, ממוצע בפועל', nf(f.fee!, 2) + '%')}>{nf(f.fee, 2)}%</Sourced> : null;
-          return (
-            <li key={p.k}>
-              <span className="dmine-n"><Link to={`/my#${f.k}`}>{f.name}</Link><span className="dim">{f.prod} · {f.track}</span></span>
-              <span className="dmine-f">
-                {p.fee != null
-                  ? <span>דמי הניהול שלכם מצבירה <b className="num dmine-own">{nf(p.fee, 2)}%</b>{avg && <span className="dim"> · ממוצע במסלול {avg}</span>}</span>
-                  : avg && <span>דמי ניהול מצבירה <b className="dmine-own">{avg}</b> <span className="dim">ממוצע במסלול · <Link to={`/my#${f.k}`}>להזין את שלכם</Link></span></span>}
-                {r5 != null && <span>{GROSS_LABEL}, 5Y בשנה <Sourced className="num" src={() => grossProv(f, 'a5', asof)}>{nf(r5, 1)}%</Sourced></span>}
-                {r3 != null && <span>{GROSS_LABEL}, 3Y בשנה <Sourced className="num" src={() => grossProv(f, 'a3', asof)}>{nf(r3, 1)}%</Sourced> <span className="dim">(אין 5 שנות היסטוריה)</span></span>}
-              </span>
-            </li>
-          ); })}
-      </ul>
-    </section>
   );
 }
 

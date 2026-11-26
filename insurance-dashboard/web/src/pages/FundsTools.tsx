@@ -34,10 +34,10 @@ export function FundsTools() {
   const list = door === 'agent' ? [HUB_TOOL, ...TOOLS] : TOOLS;
   return (
     <>
-      <FundsHead sub={<><span className="num">{list.length}</span> כלים על הנתונים שהרשות מפרסמת · החישוב רץ בדפדפן; שום נתון שמוקלד לא נשלח</>} />
+      <FundsHead sub={<span>{/* build review B2 (novice #4): one run of text, "6 כלים" inline */}<span className="num">{list.length}</span> כלים על הנתונים שהרשות מפרסמת · החישוב רץ בדפדפן; שום נתון שמוקלד לא נשלח</span>} />
       <ul className="ftiles ftools-list" aria-label="כלי החיסכון">
         {list.map(([to, icon, t, q, d]) => (
-          <li key={to}><Link to={to} className="ftile" id={to === '/funds' ? 'tool-hub' : undefined}><span className="icotile lg"><Icon name={icon} /></span><b>{t}</b><span className="ftile-q">{q}</span><span>{d}</span></Link></li>
+          <li key={to}><Link to={to} className="ftile" id={to === '/funds' ? 'tool-hub' : undefined}><span className="icotile lg"><Icon name={icon} /></span><b>{t}</b><span className="ftile-q">{q}</span><span className="ftile-d">{d}</span></Link></li>
         ))}
       </ul>
       <div className="fnote">כל מספר נפתח למקורו: נתון שפורסם מוביל לרשומה ברשות שוק ההון, ונתון מחושב מציג את הנוסחה, את הקלטים ואת ההנחות. אין כאן המלצה: תוצאות עבר אינן מבטיחות תוצאות בעתיד. חבילת ההשוואה ל-Excel נמצאת ב<Link className="sv-u" to="/funds/compare">השוואת מסלולים</Link>.</div>

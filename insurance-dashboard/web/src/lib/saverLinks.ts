@@ -50,3 +50,10 @@ export function homeMineLine(asof: number, m1?: number | null, y12?: number | nu
   if (typeof y12 === 'number' && Number.isFinite(y12)) parts.push(`בשנה האחרונה ${pctSigned(y12, 1)}`);
   return parts.join(' · ');
 }
+
+/** Build review B2 (H-1): the "my track" row's tail when the reader saved more products than the one it shows: "ועוד 2 מוצרים"
+ *  ("ועוד מוצר אחד" for one); '' when there are none. */
+export function homeMoreLine(n: number): string {
+  if (!Number.isFinite(n) || n < 1) return '';
+  return n === 1 ? 'ועוד מוצר אחד' : `ועוד ${Math.floor(n)} מוצרים`;
+}

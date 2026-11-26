@@ -47,6 +47,10 @@ try {
     assert.equal(strip(A.myYearLine(P.fig.y12, P.fig.place)), 'בשנה האחרונה: +9.2% · מקום 5 מתוך 5');
     assert.equal(strip(A.myYearLine(G.fig.y12, G.fig.place)), 'בשנה האחרונה: +9.2% · באמצע (5–6 מתוך 12)');
     assert.equal(strip(A.myYearLine(H.fig.y12, H.fig.place)), 'בשנה האחרונה: +8.9% · מקום 7 מתוך 11');
+    // build review B2 (novice #3): 13 ranked on the month, 12 with a full year: the count says why
+    assert.equal(G.fig.typeN, 13);
+    assert.equal(strip(A.myYearLine(G.fig.y12, G.fig.place, G.fig.typeN)), 'בשנה האחרונה: +9.2% · באמצע (5–6 מתוך 12 שיש להם שנה מלאה)');
+    assert.equal(strip(A.myYearLine(P.fig.y12, P.fig.place, P.fig.typeN)), 'בשנה האחרונה: +9.2% · מקום 5 מתוך 5');
   });
   t('the /my sentence of 18.6', () => {
     assert.equal(strip(A.myWords(asof, [P, G, H].map((r) => ({ m: r.f.m1, y: r.f.y12 })))), 'באוקטובר שניים מהמסלולים שלך ירדו ואחד כמעט לא זז. בשנה האחרונה כולם עלו: בין +8.9% ל-+9.2%.');
