@@ -5,7 +5,8 @@ import { defineConfig, devices } from '@playwright/test';
    Chrome projects use the installed Google Chrome (channel "chrome") locally; CI sets E2E_CHROME=0 and installs Playwright's own
    chromium + webkit, so the browser version follows the lockfile and the Linux baselines stay stable.
    Projects: phone + desktop (Chrome: visual smoke, axe), webkit-phone (iPhone 13 WebKit, the owner's engine: tests/webkit.spec.ts only),
-   compare-webkit + compare-chromium (iPhone 14 at 390 × 664: tests/compare.spec.ts and tests/compare-copy.spec.ts only).
+   compare-webkit + compare-chromium (iPhone 14 at 390 × 664: tests/compare.spec.ts and tests/compare-copy.spec.ts only),
+   rollout-webkit + rollout-chromium (iPhone 14 at 390 × 664: tests/rollout.spec.ts only).
    Visual baselines are per platform (tests/__screenshots__/{darwin,linux}/): see the note in tests/visual.spec.ts. */
 const PORT = Number(process.env.E2E_PORT ?? 4174);
 const BASE = process.env.E2E_BASE ?? `http://127.0.0.1:${PORT}`;
@@ -23,12 +24,15 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]] : 'list',
   use: { baseURL: BASE, locale: 'he-IL', timezoneId: 'Asia/Jerusalem', trace: 'retain-on-failure' },
   projects: [
-    { name: 'phone', testIgnore: /webkit\.spec|compare(-copy)?\.spec/, use: { ...chrome, viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
-    { name: 'desktop', testIgnore: /webkit\.spec|compare(-copy)?\.spec/, use: { ...chrome, viewport: { width: 1440, height: 900 } } },
+    { name: 'phone', testIgnore: /webkit\.spec|compare(-copy)?\.spec|rollout\.spec/, use: { ...chrome, viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
+    { name: 'desktop', testIgnore: /webkit\.spec|compare(-copy)?\.spec|rollout\.spec/, use: { ...chrome, viewport: { width: 1440, height: 900 } } },
     { name: 'webkit-phone', testMatch: /webkit\.spec/, use: { ...devices['iPhone 13'] } },
     // track compare (spec §9.2, §10A.3: tests/compare.spec.ts, tests/compare-copy.spec.ts): iPhone 14 at 390 × 664, WebKit and Chromium
     { name: 'compare-webkit', testMatch: /compare(-copy)?\.spec/, use: { ...devices['iPhone 14'], viewport: { width: 390, height: 664 } } },
     { name: 'compare-chromium', testMatch: /compare(-copy)?\.spec/, use: { ...devices['iPhone 14'], ...chrome, browserName: 'chromium', viewport: { width: 390, height: 664 } } },
+    // rollout (spec rollout_spec §18.6, §18.7: tests/rollout.spec.ts): the card, the screener, /my, the hub and the fees tool, same phone
+    { name: 'rollout-webkit', testMatch: /rollout\.spec/, use: { ...devices['iPhone 14'], viewport: { width: 390, height: 664 } } },
+    { name: 'rollout-chromium', testMatch: /rollout\.spec/, use: { ...devices['iPhone 14'], ...chrome, browserName: 'chromium', viewport: { width: 390, height: 664 } } },
   ],
   webServer: process.env.E2E_BASE ? undefined : { command: `node scripts/serve.mjs dist ${PORT}`, url: `${BASE}/`, reuseExistingServer: true, timeout: 20_000 },
 });

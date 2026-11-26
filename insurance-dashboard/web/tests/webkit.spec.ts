@@ -63,7 +63,7 @@ test('phone bottom bar shows the Pro places and the library sheet in WebKit', as
     expect(fit.filter((f) => f.small), `a bottom-bar target under 44 px at ${width} px`).toEqual([]);
   }
   await page.setViewportSize({ width: 375, height: 812 });
-  for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/savings/], ['השוואה ענפית', /\/industry\/peers/], ['מסלולים', /\/funds\/compare/], ['בית', /\/$/]] as const) {
+  for (const [name, url] of [['שאלות', /\/questions/], ['חיסכון', /\/savings/], ['השוואה ענפית', /\/industry\/peers/], ['מסלולים', /\/funds\/screen/], ['בית', /\/$/]] as const) {  // rollout B8: Pro's "מסלולים" opens the screener
     await bar.getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(url);
     await settle(page);
@@ -80,13 +80,15 @@ test('phone bottom bar shows the Pro places and the library sheet in WebKit', as
   await expect(page).toHaveURL(/\/scenarios/);
   await expect(sheet).toBeHidden();
   // the section lights its place on every page of it
-  for (const route of ['/funds/screen', '/funds/p2009', '/savings', '/managers', '/flows']) {
+  for (const route of ['/savings', '/managers', '/flows']) {
     await page.goto(route); await settle(page);
     await expect(bar.locator('a.item.active:visible'), `חיסכון lit on ${route}`).toHaveAttribute('aria-label', 'חיסכון');
   }
-  // the track comparison lights its own place, not "חיסכון"
-  await page.goto('/funds/compare?k=p2102,p2172'); await settle(page);
-  await expect(bar.locator('a.item.active:visible'), 'מסלולים lit on /funds/compare').toHaveAttribute('aria-label', 'מסלולים');
+  // the tracks place (rollout B8: the screener) lights "מסלולים", not "חיסכון"; so do a track's card and the track comparison
+  for (const route of ['/funds/screen', '/funds/p2009', '/funds/compare?k=p2102,p2172']) {
+    await page.goto(route); await settle(page);
+    await expect(bar.locator('a.item.active:visible'), `מסלולים lit on ${route}`).toHaveAttribute('aria-label', 'מסלולים');
+  }
 });
 
 /* W1 · three doors (plan 01.11.26): a first visit lands on the picker; ?door= opens a door and keeps it; each door has its own bottom bar
@@ -130,7 +132,9 @@ test('three doors: picker, ?door=, per-door bottom bar and the door menu in WebK
   expect(errors).toEqual([]);
 });
 
-/* F1 · the funds section on the phone: hub, screener cards, the compare tray into the head-to-head; no error, no sideways scroll. */
+/* F1 · the funds section on the phone: hub, screener rows, the compare tray into the head-to-head; no error, no sideways scroll.
+   Rollout (spec rollout_spec §4, §6, 26.11.26): the hub is the month grid of the product's types (.hub-body #month-grid), the screener a
+   board of rows (#board .sb-row) whose "＋" (.sb-trail button) puts a track in the tray. */
 test('funds hub, screener and compare work on the phone in WebKit', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -140,15 +144,16 @@ test('funds hub, screener and compare work on the phone in WebKit', async ({ pag
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), `${where} scrolls sideways`).toBeLessThanOrEqual(1);
   };
   await open(page, '/funds', 'phoenix');
-  await expect(page.locator('.fcat').first()).toBeVisible();
+  await expect(page.locator('.hub-body #month-grid tbody .mg-cell').first()).toBeVisible({ timeout: 15_000 });
   await flat('/funds');
   await page.goto('/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99'); await settle(page);
-  const cards = page.locator('.fcard');
-  expect(await cards.count()).toBeGreaterThan(5);
+  const rows = page.locator('#board .sb-row');
+  await expect(rows.first()).toBeVisible({ timeout: 15_000 });
+  expect(await rows.count()).toBeGreaterThan(5);
   await flat('/funds/screen');
   // two tracks into the tray, then the tray opens compare with both
-  await cards.nth(0).locator('.cmpadd').click();
-  await cards.nth(1).locator('.cmpadd').click();
+  await page.locator('#board .sb-trail button').nth(0).click();
+  await page.locator('#board .sb-trail button').nth(1).click();
   const tray = page.getByRole('region', { name: 'מגש השוואה' });
   await expect(tray).toContainText('2');
   await tray.getByRole('link').click();
@@ -158,10 +163,10 @@ test('funds hub, screener and compare work on the phone in WebKit', async ({ pag
   await expect(page.locator('#month-grid tbody .mg-cell:not(.mg-skelcell)').first()).toBeVisible({ timeout: 15_000 });
   expect(await page.locator('#month-grid thead th:not(.m):not(.avg)').count()).toBeGreaterThanOrEqual(2);
   await flat('/funds/compare');
-  // closed tracks (funds/closed.json, F1 data) join their category when asked, flagged and unranked
+  // closed tracks (funds/closed.json, F1 data) join their type when asked, tagged "נסגר" and unranked
   if ((await page.request.get('/data/funds/closed.json')).ok()) {
     await page.goto('/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99&gone=1'); await settle(page);
-    expect(await page.locator('.fcard.gone').count()).toBeGreaterThan(0);
+    await expect(page.locator('main').getByText('נסגר', { exact: false }).first()).toBeVisible({ timeout: 15_000 });
     await flat('/funds/screen?gone=1');
   }
   // the old table link lands on the screener with its pickers
@@ -264,17 +269,25 @@ test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards 
     { k: 'p9757', added: '2026-11-01', balance: 180000, monthly: 4000, fee: 0.25, depfee: 1.5 },
     { k: 'g13502', added: '2026-11-01', balance: 120000, monthly: 1570, fee: 0.6 }])));
   await page.goto('/my'); await settle(page);
-  await expect(page.locator('article#p9757')).toBeVisible();
+  // rollout (spec rollout_spec §5, T-M1, T-M2): /my is one row per product ([data-my]); today's product card opens in the product sheet
+  // (the row's head), and the summary strip ("דבר אחד לעשות") lives in the profile sheet ("הפרטים שלי", #me-btn)
+  await expect(page.locator('[data-my=p9757]')).toBeVisible({ timeout: 15_000 });
   const seen = await page.evaluate(() => JSON.parse(localStorage.getItem('fox:my:seen') ?? 'null'));
   expect(seen?.cur?.p?.p9757, 'baseline stored on arrival').toBeTruthy();
   // the folded page
   const m = await page.evaluate(() => ({ words: (document.querySelector('main')!.innerText.match(/\S+/g) ?? []).length, side: document.documentElement.scrollWidth - innerWidth }));
   expect(m.words, '/my with two products, folded').toBeLessThan(400);
   expect(m.side, 'page scrolls sideways').toBeLessThanOrEqual(1);
-  await expect(page.locator('.sv-sum')).toContainText('דבר אחד לעשות');
+  await page.locator('#me-btn').tap();
+  const prof = page.getByRole('dialog').last();
+  await expect(prof.locator('.sv-sum')).toContainText('דבר אחד לעשות');
+  await page.goBack(); await expect(page.getByRole('dialog')).toHaveCount(0);
   // a "?" opens on a tap: on a phone the explanation is a sheet (lane L0-c, B5), closed by its "סגירה"
-  await page.locator('article#p9757 .sv-mine summary').click();  // red team 06.11.26: the glossary bar folds away once products are saved; the card's own "?" remains
-  const tip = page.locator('article#p9757 .tip-b:visible').first();  // red team 06.11.26: the glossary bar folds away once products are saved (word budget)
+  await page.locator('[data-my=p9757] .my-h').tap();
+  const sheet = page.locator('#sheet-product');
+  await expect(sheet.locator('article.sv-card')).toBeVisible();
+  await sheet.locator('article.sv-card .sv-mine summary').click();
+  const tip = sheet.locator('article.sv-card .tip-b:visible').first();
   await tip.scrollIntoViewIfNeeded(); await tip.tap();
   await expect(tip).toHaveAttribute('aria-expanded', 'true');
   const tipSheet = page.getByRole('dialog').filter({ has: page.locator('.tip-sheet') });
@@ -282,19 +295,28 @@ test('saver /my: door, baseline on arrival, tap tips, fee ceiling, folded cards 
   expect((await tipSheet.locator('.tip-sheet').innerText()).trim().length, 'the sheet explains the term').toBeGreaterThan(10);
   await tipSheet.getByRole('button', { name: 'סגירה' }).tap();
   await expect(tipSheet).toBeHidden();
-  await expect(tip).toHaveAttribute('aria-expanded', 'false');
+  await expect(sheet.locator('.tip-b[aria-expanded=true]'), 'the tip closed, the product sheet stays').toHaveCount(0);
+  await expect(sheet).toBeVisible();
+  await page.goBack(); await expect(page.locator('#sheet-product')).toHaveCount(0);
   // a 7% deposit fee in a השתלמות is refused (the ceiling is 4%)
-  const card = page.locator('article#g13502');
+  await page.locator('[data-my=g13502] .my-h').tap();
+  const card = page.locator('#sheet-product article.sv-card');
+  await expect(card).toBeVisible();
   await card.locator('.sv-mine summary').click();
-  await card.locator('.sv-mine input').nth(3).fill('7');
+  // rollout (T-F4): the amounts moved to their own sheet ("לשנות את הסכומים", lib/myAmounts); the fold keeps the two own fees
+  await card.locator('.sv-mine input[type=number], .sv-mine input[inputmode]').last().fill('7');
   await expect(card.locator('.sv-err')).toContainText('עד 4%');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fox:mine')!)[1].depfee ?? null)).toBeNull();
-  // the fee tool opens on the saver's first product, at 4%
-  await page.goto('/funds/tools/fees'); await settle(page);
-  await expect(page.locator('.fform select').nth(2)).toHaveValue('p9757');
-  await expect(page.locator('.fprivacy')).toContainText('הנחה שמרנית');
-  const tools = await page.evaluate(() => [...document.querySelectorAll('.scroll')].map((s) => s.scrollWidth - s.clientWidth));
-  expect(Math.max(...tools), 'a fee-tool table wider than the phone').toBeLessThanOrEqual(1);
+  // the fee tool (rollout T-F1) opens on the saver's first product, marked as theirs. In a fresh page of the same context: Playwright's
+  // WebKit crashes on a navigation of a page whose history went pushState, pushState, back (the sheets above; compare.spec.ts note)
+  const fees = await page.context().newPage();
+  fees.on('pageerror', (e) => errors.push(e.message));
+  await fees.goto('/funds/tools/fees'); await settle(fees);
+  await expect(fees.locator('#takeaway')).toContainText('המסלול שלך');
+  await expect(fees.locator('#board .sb-row.mine, #board-mine .sb-row')).not.toHaveCount(0);
+  const tools = await fees.evaluate(() => [...document.querySelectorAll('.scroll')].map((s) => s.scrollWidth - s.clientWidth));
+  expect(Math.max(0, ...tools), 'a fee-tool table wider than the phone').toBeLessThanOrEqual(1);
+  await expect(boundary(fees)).toHaveCount(0);
   await expect(boundary(page)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
@@ -308,19 +330,23 @@ test('screener sheet keeps its choices after closing in WebKit', async ({ page }
   for (const how of ['button', 'back'] as const) {
     await open(page, '/data', 'phoenix');
     await page.goto('/funds/screen?prod=%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&track=%D7%9B%D7%9C%D7%9C%D7%99'); await settle(page);
-    const toggle = page.locator('.tbar-ctl > button.btn[aria-expanded]');
+    // rollout (T-S1, T-S2): the period is the strip above the board (#period-seg); "סינון" (#filter-btn) opens the sheet
+    await page.locator('#period-seg button', { hasText: '1M' }).click();
+    await expect(page).toHaveURL(/per=m1/);
+    const toggle = page.locator('#filter-btn');
     await toggle.click();
-    const sheet = page.getByRole('dialog', { name: 'דירוג וסינון' });
+    const sheet = page.getByRole('dialog', { name: 'סינון' });
     await expect(sheet).toBeVisible();
-    await sheet.getByRole('group', { name: 'דירוג לפי' }).getByRole('button', { name: '1M', exact: true }).click();
     await sheet.getByRole('button', { name: 'כולל קופות ענפיות' }).click();
     await sheet.getByRole('spinbutton').first().fill('20');
-    await expect(page).toHaveURL(/per=m1.*closed=1.*eqmin=20/);
-    if (how === 'button') await sheet.getByRole('button', { name: 'סגירה' }).click(); else await page.goBack();
+    await expect(page).toHaveURL(/closed=1/); await expect(page).toHaveURL(/eqmin=20/); await expect(page).toHaveURL(/per=m1/);
+    if (how === 'button') await sheet.locator('.scr-show').click(); else await page.goBack();
     await expect(sheet).toBeHidden();
     await page.waitForTimeout(800);
-    await expect(page, `choices kept after closing (${how})`).toHaveURL(/per=m1.*closed=1.*eqmin=20/);
-    await expect(toggle).toContainText('1M');
+    await expect(page, `choices kept after closing (${how})`).toHaveURL(/closed=1/);
+    await expect(page).toHaveURL(/eqmin=20/);
+    await expect(page).toHaveURL(/per=m1/);
+    await expect(page.locator('#period-seg button[aria-pressed=true], #period-seg button.on').first()).toContainText('1M');
     await page.goBack();
     await expect(page, `no leftover sheet entry (${how})`).toHaveURL(/\/data$/);
     // let /data finish loading before the next navigation: WebKit logs a fetch that a navigation cancels ("Fetch API cannot load
