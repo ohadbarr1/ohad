@@ -82,6 +82,13 @@ export interface MyProductRowProps {
   onFee?: (k: string, fee: ProductFee) => void;
 }
 
+/** the place's bracket "(5–6 מתוך 12)" never breaks inside (build review B1, novice #10) */
+function yrParts(yr: string) {
+  const i = yr.indexOf('(');
+  if (i < 0) return <NumText t={yr} />;
+  return <><NumText t={yr.slice(0, i)} /><span style={{ whiteSpace: 'nowrap' }}><NumText t={yr.slice(i)} /></span></>;
+}
+
 export function MyProductRow({ f, i, fig, members, my, example = false, cmpHref, onOpen, onMonth, onFee }: MyProductRowProps) {
   const fee = useProductFee(f, my, members, example);
   useEffect(() => { onFee?.(f.k, fee); }, [f.k, fee.cost, fee.own, fee.ownFee, fee.base, fee.deposits]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -110,7 +117,7 @@ export function MyProductRow({ f, i, fig, members, my, example = false, cmpHref,
       {vs ? <p className="my-vs"><NumText t={`${vs.when} `} /><b>{vs.rel}</b> <NumText t={vs.rest} /></p> : null}
       <div className="my-f">
         <div className="my-lines">
-          {yr ? <span className={`my-yr${(fig.y12 ?? 0) < 0 ? ' dn' : ''}`}><NumText t={yr} /></span> : null}
+          {yr ? <span className={`my-yr${(fig.y12 ?? 0) < 0 ? ' dn' : ''}`}>{yrParts(yr)}</span> : null}
           <span className="my-fee"><NumText t={fl.text} /> <small className={fee.own ? 'own' : 'ex'}>{fl.tag}{fee.ownFee ? ` · ${OWN_FEE_TAG}` : ''}</small></span>
         </div>
         {cmpHref && !fig.guard ? <Link className="my-cmp" to={cmpHref}>{MY_COMPARE}</Link> : null}

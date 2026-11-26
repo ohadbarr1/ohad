@@ -126,7 +126,7 @@ function HubTools({ ctx }: { ctx: HubCtx }) {
     [`/funds/screen?${new URLSearchParams({ prod }).toString()}`, 'כל המסלולים', 'דירוג וסינון לפי סוג', [[18, 'blue'], [30, 'navy'], [44, 'orange']], 'hub-t-screen'],
     ['/funds/compare', 'השוואה', 'חודש מול חודש, עד 4 מסלולים', [[22, 'navy'], [40, 'orange'], [30, 'blue']], 'hub-t-compare'],
     saver ? ['/funds/tools/fees', 'דמי ניהול', 'כמה זה עולה בשנה, בשקלים', [[14, 'blue'], [24, 'blue'], [36, 'orange']], 'hub-t-fees']
-      : ['/funds/tools', 'כלים', 'דמי ניהול לאורך קריירה, ברירת מחדל, עוקבי מדד', [[14, 'blue'], [24, 'blue'], [36, 'orange']], 'hub-t-tools'],
+      : ['/funds/tools', 'כלים', 'דמי ניהול בשקלים, ברירת מחדל, עוקבי מדד', [[14, 'blue'], [24, 'blue'], [36, 'orange']], 'hub-t-tools'],
     ['/savings', 'הענף', 'נכסים, צבירה וניוד', [[30, 'blue'], [38, 'navy'], [26, 'blue']], 'hub-t-savings'],
     ['/managers', 'מנהלים', 'החברות המנהלות לאורך זמן', [[40, 'navy'], [20, 'blue'], [32, 'navy']], 'hub-t-managers'],
     ['/holdings', 'הרכב נכסים', 'מה הגופים מחזיקים', [[38, 'orange'], [18, 'blue'], [28, 'navy']], 'hub-t-holdings'],

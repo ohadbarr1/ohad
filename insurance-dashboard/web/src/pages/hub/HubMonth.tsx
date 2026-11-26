@@ -3,7 +3,7 @@ import { MonthGrid, type MonthGridCol, type MonthGridRow, type MonthGridSum } fr
 import { Takeaway } from '../../components/Takeaway';
 import { GuardLine } from '../../components/GuardLine';
 import { Empty } from '../../components/ui';
-import { typeGrid } from '../../lib/pageMonths';
+import { typeCount, typeGrid, typeMembers } from '../../lib/pageMonths';
 import { HUB_RISK_GUARD, hubColSub, hubWhoBest, hubWords, typeLabel, typeName } from '../../lib/pageWords';
 import { trackColor } from '../compare/tracks';
 import type { CatX, FundsFile } from '../../lib/funds';
@@ -40,7 +40,9 @@ export function HubMonth({ ctx }: { ctx: HubCtx }) {
   if (!g.cols.length) return <Empty title="אין במוצר הזה סוגי מסלולים עם שלושה מסלולים לפחות" />;
   const mineI = g.cols[0].mine ? 0 : null;
   const words = hubWords(asof, prod, g.cols.map((c, i) => ({ label: typeLabel(c.track), v: g.rows[0]?.vals[i] ?? null })), mineI);
-  const cols: MonthGridCol[] = g.cols.map((c, i) => ({ k: c.key, label: typeLabel(c.track), color: trackColor(i), sub: c.mine ? `שלי · ${hubColSub(c.members, true)}` : hubColSub(c.members, false) }));
+  // build review B1 (P2-1): a column head counts the tracks ranked on the data month (pageMonths typeCount), as the card and the sheets
+  const nOf = (key: string) => typeCount(typeMembers(file.funds, key), 'm1', { asof }).ranked;
+  const cols: MonthGridCol[] = g.cols.map((c, i) => ({ k: c.key, label: typeLabel(c.track), color: trackColor(i), sub: c.mine ? `שלי · ${hubColSub(nOf(c.key), true)}` : hubColSub(nOf(c.key), false) }));
   const rows: MonthGridRow[] = g.rows.map((r) => ({ p: r.p, vals: r.vals }));
   const footer: MonthGridSum[] = [{ key: 'half', label: 'חצי שנה', vals: g.half }, { key: 'y12', label: 'שנה אחרונה', vals: g.y12 }];
   return (
@@ -55,7 +57,7 @@ export function HubMonth({ ctx }: { ctx: HubCtx }) {
           <span>{hubWhoBest(asof, typeName(g.cols[0].key))}</span><span aria-hidden="true">›</span>
         </button>
       ) : null}
-      <div className="hub-guard"><GuardLine kind="risk" id="risk-line" text={HUB_RISK_GUARD} onOpen={() => openSheet('risk')} /></div>
+      <div className="hub-guard"><GuardLine kind="risk" id="risk-line" wrap text={HUB_RISK_GUARD} onOpen={() => openSheet('risk')} /></div>
     </div>
   );
 }

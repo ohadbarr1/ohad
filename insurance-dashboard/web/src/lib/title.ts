@@ -31,7 +31,7 @@ export function titleFor(path: string, name: (id: string) => string | null | und
     case 'industry': return INDUSTRY_TAB[p[1] ?? 'peers'] ? t(INDUSTRY_TAB[p[1] ?? 'peers'], 'השוואה ענפית') : null;
     case 'savings': return p[1] ? null : t('עדשת חיסכון', 'חיסכון');
     case 'feebook': return p[1] ? null : t('ערך ספר דמי הניהול', 'חיסכון');  // W11, the second tab of the savings hub's "ערך" (wave 2b)
-    case 'funds': if (p[1] === 'tools') return p[2] === 'hindsight' ? t('מה היה לי', 'חיסכון') : p[2] === 'fees' ? t('דמי ניהול לאורך קריירה', 'חיסכון') : p[2] ? null : t('כלים', 'חיסכון');
+    case 'funds': if (p[1] === 'tools') return p[2] === 'hindsight' ? t('מה היה לי', 'חיסכון') : p[2] === 'fees' ? t('דמי ניהול, בשקלים', 'חיסכון') : p[2] ? null : t('כלים', 'חיסכון');
       if (p[1] === 'bm') return p[2] ? null : t('ביטוחי מנהלים ישנים', 'חיסכון');  // W2
       if (p[1] === 'under') return p[2] ? null : t('ברבעון התחתון, ועדיין מקבלים כסף', 'חיסכון');  // W11, a tab of /flows (P3)
       if (p[1] === 'default' || p[1] === 'trackers') return p[2] ? null : t(p[1] === 'default' ? 'קרנות ברירת מחדל' : 'מעבדת עוקבי המדד', 'חיסכון');

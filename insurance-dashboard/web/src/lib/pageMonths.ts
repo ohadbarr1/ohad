@@ -167,6 +167,16 @@ export function scoreRows(members: FundX[], per: Per, o: ScoreOpts): ScoreRow[] 
   return placeOrder(vals).map((i) => rows[i]);
 }
 
+/** One count per type (build review B1, P2-1): every page that names how many tracks a type has shows `ranked`, the tracks RANKED for
+ *  the period on screen (`scoreRows` on that window: self-managed / IRA, old-generation and tracks with no figure left out), and,
+ *  where the type has self-managed tracks, `self` of them as "ועוד N בניהול אישי" (lib/pageWords `selfMore`). The card's average head
+ *  and its "מי היה ראשון", the type-month sheet, the hub's column heads, the screener's head and /my all read this one helper, so a
+ *  type reads the same on every page (hishtalmut general in 10/26: 13 ranked on the month, ועוד 7; pension general 5 everywhere). */
+export interface TypeCount { ranked: number; self: number }
+export function typeCount(members: FundX[], per: Per, o: ScoreOpts): TypeCount {
+  return { ranked: scoreRows(members, per, o).filter((r) => r.ranked).length, self: selfManaged(members).length };
+}
+
 /** The place of one track in its type for a window (null when it is not ranked or fewer than two are). */
 export function placeOf(f: FundX, members: FundX[], per: Per, asof: number): Place | null {
   const r = scoreRows(members, per, { asof }).find((x) => x.k === f.k);

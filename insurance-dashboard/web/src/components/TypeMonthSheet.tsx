@@ -10,9 +10,10 @@ import { useHists } from '../lib/fundsLoad';
 import { catKey, selfDirected, type CatX, type FundX, type FundsFile } from '../lib/funds';
 import { slugOf, type StatsIndex } from '../lib/fundsTime';
 import { ONE_MONTH_NOTE } from '../lib/compareWords';
-import { anyShared, scoreRows, typeMembers, typeMonthFromFile, typeMonthFromHists, type TypeMonth, type TypeMonthsFile } from '../lib/pageMonths';
-import { tieNote } from '../lib/pageWords';
-import { prodShort, trackColor, trackLabels } from '../pages/compare/tracks';
+import { anyShared, scoreRows, selfManaged, typeMembers, typeMonthFromFile, typeMonthFromHists, type TypeMonth, type TypeMonthsFile } from '../lib/pageMonths';
+import { BEFORE_FEES, tieNote, typeMonthSub } from '../lib/pageWords';
+import { prodShort, trackColor } from '../pages/compare/tracks';
+import { labelMap } from '../lib/trackNames';
 import type { Door } from '../lib/door';
 import '../styles/rollout.css';
 
@@ -80,12 +81,7 @@ export function TypeMonthSheet({ open, onClose, typeKey, p, mineKeys = [], door 
   const ranked = scored.filter((r) => r.ranked);
   // labels among the ranked tracks (a self-managed account of the same company does not turn "מיטב" into "מיטב 880"); the unranked
   // ones among all members
-  const labels = useMemo(() => {
-    const rk = scored.filter((r) => r.ranked).map((r) => r.f), a = trackLabels(rk), b = trackLabels(members);
-    const m = new Map<string, string>(members.map((f, i) => [f.k, b[i]]));
-    rk.forEach((f, i) => m.set(f.k, a[i]));
-    return m;
-  }, [scored, members]);
+  const labels = useMemo(() => labelMap(members, scored.filter((r) => r.ranked).map((r) => r.f)), [scored, members]);
   const labelOf = (k: string) => labels.get(k) ?? k;
   const rows: ScoreRowData[] = scored.map((r) => ({
     k: r.k, label: labelOf(r.k), color: trackColor(0), value: r.v, place: r.pl.place,
@@ -96,7 +92,7 @@ export function TypeMonthSheet({ open, onClose, typeKey, p, mineKeys = [], door 
   const all = () => (onAll ? onAll() : backThen(() => nav(screenHref(typeKey))));
   return (
     <DeeperSheet open={open} onClose={onClose} id={id} title={`${monthFull(p)} · ${name}`}
-      sub={ranked.length ? `כל ${ranked.length} המסלולים מהסוג הזה · לפני דמי ניהול` : 'לפני דמי ניהול'}
+      sub={ranked.length ? <NumText t={typeMonthSub(ranked.length, selfManaged(members).length)} /> : BEFORE_FEES}
       footer={<button type="button" className="cs-btn pri" id="to-screen" onClick={all}>לכל המסלולים מהסוג הזה ›</button>}>
       {loading && !month ? <div className="ro-skel" aria-busy="true" /> : rows.length ? (
         <Scoreboard id="type-board" rows={rows} decimals={2} bars="auto" mineWord={door === 'saver' ? 'שלי' : null}

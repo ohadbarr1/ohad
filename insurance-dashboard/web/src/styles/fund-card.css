@@ -122,3 +122,14 @@
 .fc .fc-head { margin-bottom: 3px; }
 .fc .ro-tabs { padding-top: 0; }
 .fc .ro-take { line-height: 1.36; }
+
+/* build review B1 (P2-4): on a desktop the one-track lenses (months, years, long view, facts) are one reading column, so the track's
+   figure and its average sit side by side instead of 400 px apart; "מקצועי" keeps its two-column layout. */
+@media (min-width: 900px) {
+  .fc-lens:not(.fc-pro) { max-width: 600px; }
+}
+/* build review B1 (P3-3): the pension pack is open in "להחלטה", so its "?" tips and sourced quarter figures are first-layer targets:
+   44 × 32 at least, without moving the text (the fees board's rule) */
+#lens-dec .tip-b { min-width: 32px; min-height: 44px; margin-block: -14px; border-radius: 12px; vertical-align: middle; }
+#lens-dec :is(a.src, button.src) { display: inline-block; min-width: 32px; min-height: 44px; padding-block: 10px; margin-block: -10px; text-align: center; }
+#lens-dec .fc-pack a:not(.src) { display: inline-block; min-height: 44px; padding-block: 12px; margin-block: -12px; }

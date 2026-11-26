@@ -144,12 +144,14 @@ export function ProductCard({ f, data, cats, dfile, my: myRaw, example, onChange
     if (!gp) return null;
     if (Math.abs(gp.balReal) < 500) return <>{vs}: דמי הניהול {ownAny ? 'שלך' : 'במסלול'} כמעט לא משנים את החיסכון {when} (פחות מ-500 ש"ח).</>;
     const fig = <span className="sv-nw">כ-<Est src={src}>{ilsRound(Math.abs(gp.balReal))}</Est></span>;
-    // D6 (5.2): "יהיו לך" only once the reader typed a balance; before that the example says it is one
+    // D6 (5.2): "יהיו לך" only once the reader typed a balance; before that the example says it is one. Build review B1 (novice #3):
+    // and an at-retirement figure on the reader's own balance only once the reader's age is known (no figure on an assumed age)
+    if (ownBal && ageS == null) return null;
     return ownBal
       ? <>{vs}: יהיו לך {fig} {gp.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון {when}.</>
       : <>{vs}: בדוגמה (חיסכון {ilsRound(BALANCE_EX)}, גיל {age}): {fig} {gp.balReal > 0 ? 'פחות' : 'יותר'} בחיסכון {when}.</>;
   };
-  const medLine = (gp: FeeGap | null, when: string, src: () => Prov) => (med ? gapLine(gp, ownAny ? 'לעומת חציון הממוצע בפועל בקטגוריה' : 'לעומת החציון בקטגוריה', when, src) : null);
+  const medLine = (gp: FeeGap | null, when: string, src: () => Prov) => (med ? gapLine(gp, ownAny ? 'לעומת האמצעי בפועל בקטגוריה' : 'לעומת המסלול האמצעי בקטגוריה', when, src) : null);
   const atRet = `בגיל הפרישה (${ageText(plan.retire)})`;
   const liqPlan = liq ? { ...plan, retire: plan.age + liq.years } : plan;
   // W5: the reader's own pension fees are read against the default-fund price (what a member can get), not the others' averages
@@ -159,7 +161,7 @@ export function ProductCard({ f, data, cats, dfile, my: myRaw, example, onChange
   const fold = liq
     ? medLine(liq.gMed, `בעוד ${liq.years} שנים, כשהכסף נזיל`, () => gapProv(med!, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))
     : vsT ? null : medLine(gMed, atRet, () => gapProv(med!, 'החציון בקטגוריה', gMed!, medSrc));
-  const paid = tBase && tBase.g.feesReal > 500 ? <> {ownBal ? g('תשלמי', 'תשלם', 'תשלמו') : 'בדוגמה:'} <span className="sv-nw">כ-<Est src={() => gapProv(tBase.p, 'מחיר ברירת המחדל', tBase.g, tSrc(tBase.p))}>{ilsRound(tBase.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
+  const paid = tBase && tBase.g.feesReal > 500 ? <> {ownBal && ageS != null ? g('תשלמי', 'תשלם', 'תשלמו') : 'בדוגמה:'} <span className="sv-nw">כ-<Est src={() => gapProv(tBase.p, 'מחיר ברירת המחדל', tBase.g, tSrc(tBase.p))}>{ilsRound(tBase.g.feesReal)}</Est></span> יותר בדמי ניהול עד הפרישה.</> : null;
 
   const copy = () => copyText(script, (ok) => { if (ok) { setCopied('ok'); track('letter_copied'); } else { setCopied('manual'); setOpen(true); } });
   const B = brief(v, C.lever);
@@ -208,7 +210,7 @@ export function ProductCard({ f, data, cats, dfile, my: myRaw, example, onChange
         <Sec title="כמה זה עולה בשקלים" tag="אומדן">
           <p>בשנה: <Est src={annualProv}>{ilsRound(annual.acc)}</Est> מצבירה (היתרה × {pcf(mine.fee)}){mine.depfee > 0 && <>, ועוד <Est src={annualProv}>{ilsRound(annual.dep)}</Est> מהפקדות (12 הפקדות × {pcf(mine.depfee)})</>}.</p>
           {med && gMed && <p>{liq ? <>{medLine(liq.gMed, `בעוד ${liq.years} שנים`, () => gapProv(med, 'החציון בקטגוריה', liq.gMed!, medSrc, liqPlan))} {medLine(gMed, 'אם הכסף נשאר עד גיל הפרישה', () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}</> : medLine(gMed, atRet, () => gapProv(med, 'החציון בקטגוריה', gMed, medSrc))}
-            {' '}החציון: <Est src={medSrc}>{pcf(med.fee)}</Est> מצבירה{v.dep?.med != null ? <>, <Est src={() => figs.depMed()}>{pcf(med.depfee)}</Est> מהפקדה</> : null}.</p>}
+            {' '}האמצעי: <Est src={medSrc}>{pcf(med.fee)}</Est> מצבירה{v.dep?.med != null ? <>, <Est src={() => figs.depMed()}>{pcf(med.depfee)}</Est> מהפקדה</> : null}.</p>}
           {C.med0 && mine.depfee > 0 && <p className="sv-note">בקטגוריה לא מתפרסמים דמי ניהול מהפקדה, ולכן ההשוואה מניחה 0% מהפקדה (הנחה).</p>}
           {tBase && v.dflt && <p>{tBase.g.balReal > 0 ? <>{tLine}{paid}</> : 'לעומת מחיר קרנות ברירת המחדל: דמי הניהול שלך לא יקרים ממנו בהנחות האלה.'}
             {' '}מחיר הבסיס של ההליך הוא <Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.depfee)}</Est> מהפקדה ו-<Est src={tSrc({ fee: v.dflt.fee!, depfee: v.dflt.depfee! })}>{pcf(v.dflt.fee)}</Est> מצבירה{C.tPairs.length > 1 ? ', ואפשר להמיר אותו לצירוף שווה ערך מטבלת ההמרה' : ''}.

@@ -257,7 +257,7 @@ const AGENT_CARDS: Card[] = [
   ['/funds/default', 'shield', 'קרנות ברירת מחדל', 'הקרנות שנבחרו במכרז והתנאים שלהן.'],
   ['/managers', 'companies', 'דמי הניהול של הגופים', 'הגופים המנהלים, נכסים ודמי ניהול בפועל לאורך זמן.'],
   ['/funds/trackers', 'market', 'עוקבי מדד', 'אותו מדד בעטיפות שונות: הפער בין המסלולים הוא מחיר העטיפה.'],
-  ['/funds/tools', 'sliders', 'כלים', 'דמי ניהול לאורך קריירה, מכרזי ברירת המחדל וחבילת השוואה ל-Excel.'],
+  ['/funds/tools', 'sliders', 'כלים', 'דמי ניהול בשקלים, מכרזי ברירת המחדל וחבילת השוואה ל-Excel.'],
   // W4: the old managers' insurance policies (1990-2003): what a move would lose, before any comparison
   ['/funds/bm', 'statement', 'ביטוחי מנהלים ישנים', 'פוליסות 1990-2003: מקדם מובטח, הסדר ריסק ומה נבדק לפני מעבר.'],
 ];

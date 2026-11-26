@@ -46,13 +46,13 @@ import { isWatched, toggleWatch } from '../lib/fundsTime';
 import { snapOf, useClosed, useWatch } from '../lib/fundsTimeLoad';
 import { today } from '../lib/visits';
 import { toast, useAddressWrite, useSheetHost } from '../lib/sheetHost';
-import { hasTypeAvg, monthsOnFile, prodHasDeposit, typeHasDepositFee, typeMembers } from '../lib/pageMonths';
+import { hasTypeAvg, monthsOnFile, prodHasDeposit, typeCount, typeHasDepositFee, typeMembers } from '../lib/pageMonths';
 import { ACT_COMPARE, ACT_WATCH, CARD_ROWS, NOT_FOUND, NO_FEE_TRACK, NO_MONTHLY_GUARD, OLD_POLICY_GUARD, SAVED_TOAST, SECTORAL, SELF_MANAGED_GUARD, STOPPED_TAG, WATCH_TOAST, typeName } from '../lib/pageWords';
 import { OLD_POLICY_LINE } from '../lib/compareWords';
 import { shortGrp } from './compare/tracks';
 import type { CmpCtx } from './compare/contract';
 import type { Door } from '../lib/door';
-import { CardFeeSheet, CardMonthSheet, CardMonths, CardRows, prodArt, rankedCount, type CardCtx } from './fund/CardMonths';
+import { CardFeeSheet, CardMonthSheet, CardMonths, CardRows, prodArt, type CardCtx } from './fund/CardMonths';
 import { CardYears } from './fund/CardYears';
 import { CardLong } from './fund/CardLong';
 import { CardDecision } from './fund/CardDecision';
@@ -568,8 +568,9 @@ export function FundCard() {
   const catAll = (cat as CatX | undefined) ?? null;
   const catUse = catAll && hasTypeAvg(members) ? catAll : null;
   const monthly = monthsOnFile(h as HistX) > 0;
-  const newest = (() => { for (let i = h.p.length - 1; i >= 0; i--) if (h.y[i] != null) return h.p[i]; return asof; })();
-  const avgN = (() => { const i = catAll ? catAll.p.indexOf(newest) : -1; return i >= 0 ? catAll!.n[i] : members.length; })();
+  // build review B1 (P2-1): one count per type, the tracks ranked on the month on screen (pageMonths typeCount), on the head and the sheets
+  // (a type nothing in which is ranked, the old-generation policies: the regulator's member count of the average, as before)
+  const tc = typeCount(members, 'm1', { asof }), avgN = tc.ranked > 0 ? tc.ranked : (() => { const i = catAll ? catAll.p.indexOf(asof) : -1; return i >= 0 ? catAll!.n[i] : members.length; })();
   const tabs0 = cardTabs(door, monthly);
   const q = sp.get('v') as CardView | null;
   const def: CardView = !monthly ? (door === 'saver' ? 'facts' : 'pro') : door === 'pro' ? 'm12' : 'm6';
@@ -585,7 +586,7 @@ export function FundCard() {
   };
   const saved = mineList.some((m) => m.k === f.k);
   const onMine = () => { if (!saved) setMineList([...mineList, { k: f.k, added: new Date().toISOString().slice(0, 10) }]); toast(SAVED_TOAST); };
-  const ctx: CardCtx = { f: fx, h: h as HistX, cat: catUse, members, funds: data.funds as FundX[], typeKey, tn, avgN, rankN: rankedCount(members), asof, door, saved, old: oldGen, host, setView, onMine, my: mineList.find((m) => m.k === f.k) ?? null };
+  const ctx: CardCtx = { f: fx, h: h as HistX, cat: catUse, members, funds: data.funds as FundX[], typeKey, tn, avgN, rankN: tc.ranked, selfN: tc.self, asof, door, saved, old: oldGen, host, setView, onMine, my: mineList.find((m) => m.k === f.k) ?? null };
   const cmpCtx: CmpCtx = { keys: [f.k], basis: 'gross', door, asof, openSheet: host.openSheet, setKeys: (ks) => nav(`/funds/compare?k=${ks.join(',')}`) };
   const inTray = tray.has(f.k), trayFull = !inTray && tray.keys.length >= TRAY_MAX;
   const watched = isWatched(watch, f.k);
@@ -610,7 +611,7 @@ export function FundCard() {
       <CompareTray />
       {tabs.length ? <LensTabs tabs={tabs.map((v) => [v, VIEW_LABEL[v]])} value={view} onChange={setView} /> : null}
       {!monthly ? <GuardLine kind="product" id="card-guard" wrap text={selfDirected(f) ? SELF_MANAGED_GUARD : NO_MONTHLY_GUARD} /> : null}
-      {monthly && oldGen && view !== 'pro' && view !== 'dec' ? <GuardLine kind="oldgen" id="old-line" text={OLD_POLICY_GUARD} onOpen={() => host.openSheet('old')} /> : null}
+      {monthly && oldGen && view !== 'pro' && view !== 'dec' ? <GuardLine kind="oldgen" id="old-line" wrap text={OLD_POLICY_GUARD} onOpen={() => host.openSheet('old')} /> : null}
       {view === 'm6' || view === 'm12' ? <CardMonths c={ctx} n={view === 'm6' ? 6 : 12} />
         : view === 'y' ? <CardYears c={ctx} />
         : view === 'long' ? <CardLong c={ctx} />

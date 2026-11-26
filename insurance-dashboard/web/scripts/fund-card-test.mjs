@@ -23,15 +23,17 @@ const data = JSON.parse(readFileSync(new URL('../public/data/funds.json', import
 const F = (k) => data.funds.find((f) => f.k === k);
 const p2102 = F('p2102');
 
-let r = M.cardFeeCost(p2102, null, null);
+// L3-a (one own-fee rule): the card prices with /my's myFeeCost (components/saver/MyProductRow), imported by CardMonths
+const fc = M.myFeeCost;
+let r = fc(p2102, null, null);
 ok('p2102, example, published fee: ₪560 (18.6)', r.cost === 560 && !r.ownFee, r);
-r = M.cardFeeCost(p2102, { fee: null, depfee: null }, { balance: 420000, monthly: 3100 });
+r = fc(p2102, { fee: null, depfee: null }, { balance: 420000, monthly: 3100 });
 ok('p2102 on 420,000 / 3,100: ₪1,170 (18.6)', r.cost === 1170 && !r.ownFee, r);
-r = M.cardFeeCost(p2102, { fee: 0.1, depfee: 1 }, null);
+r = fc(p2102, { fee: 0.1, depfee: 1 }, null);
 ok('own fee 0.10% + 1% of the example deposit: 100 + 266.4 → ₪370, "לפי הדוח שלך"', r.cost === 370 && r.ownFee, r);
-r = M.cardFeeCost(p2102, { fee: 0.1 }, null);
-ok('own accumulation fee only: the published deposit fee stays', r.x.depfee === p2102.depfee && r.ownFee, r);
-r = M.cardFeeCost({ prod: p2102.prod, fee: null, depfee: null }, null, null);
+r = fc(p2102, { fee: 0.1 }, null);
+ok('own accumulation fee only: the published deposit fee stays', r.cost === fc(p2102, { fee: 0.1, depfee: p2102.depfee }, null).cost && r.ownFee, r);
+r = fc({ prod: p2102.prod, fee: null, depfee: null }, null, null);
 ok('no published fee: null', r.cost == null, r);
 ok('OWN_FEE_TAG is /my\'s words', M.OWN_FEE_TAG === 'לפי הדוח שלך');
 

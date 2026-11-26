@@ -197,12 +197,14 @@ export const NOT_FOUND = 'המסלול לא נמצא או אינו פעיל';
 
 /* the month sheet of the track (16.1 1a) */
 export const MONTH_SHEET_SUB = `כמה עשה המסלול בחודש הזה · ${BEFORE_FEES}`;
-/** "המסלול מתחת לממוצע של 5 מסלולי פנסיה כללי, ב-0.41%." ("כמעט כמו הממוצע של …" inside 0.05, without the gap) */
-export function monthSheetVs(v: N, avg: N, n: number, type: string): string {
+/** "המסלול מתחת לממוצע בפנסיה כללי, ב-0.41%." ("כמעט כמו הממוצע ב…" inside 0.05, without the gap). Build review B1: one vocabulary
+ *  with the card's sentence ("הממוצע ב<סוג>"), and no member count here: the average is the regulator's asset-weighted figure over
+ *  every member, so a count beside it would be a second number for the type (P2-1). */
+export function monthSheetVs(v: N, avg: N, type: string): string {
   if (!has(v) || !has(avg)) return '';
   const d = v - avg, near = Math.abs(d) < 0.05 - EPS;
   const rel = near ? 'כמעט כמו הממוצע' : d > 0 ? 'מעל הממוצע' : 'מתחת לממוצע';
-  return `המסלול ${rel} של ${numIso(n)} מסלולי ${type}${near ? '' : `, ב-${pctAbs(d, 2)}`}.`;
+  return `המסלול ${rel} ב${type}${near ? '' : `, ב-${pctAbs(d, 2)}`}.`;
 }
 /** the month sheet's link to the type-month sheet: "כל 5 המסלולים באוקטובר" */
 export const allTracksIn = (n: number, p: number) => `כל ${numIso(n)} המסלולים ${inMonth(p)}`;
@@ -210,8 +212,10 @@ export const allTracksIn = (n: number, p: number) => `כל ${numIso(n)} המסל
 /* the type-month sheet (16.1 1a, 16.2 T-C7) */
 /** "אוקטובר 2026 · פנסיה כללי" */
 export const typeMonthTitle = (p: number, type: string) => `${monthYear(p)} · ${type}`;
-/** "כל 5 המסלולים מהסוג הזה · לפני דמי ניהול" */
-export const typeMonthSub = (n: number) => `כל ${numIso(n)} המסלולים מהסוג הזה · ${BEFORE_FEES}`;
+/** the self-managed remainder of a type (build review B1, P2-1): "ועוד 7 בניהול אישי"; '' when there are none */
+export const selfMore = (n: number) => (n > 0 ? `ועוד ${numIso(n)} בניהול אישי` : '');
+/** "כל 5 המסלולים מהסוג הזה · לפני דמי ניהול"; with self-managed tracks "כל 13 המסלולים מהסוג הזה, ועוד 7 בניהול אישי · לפני דמי ניהול" */
+export const typeMonthSub = (n: number, self = 0) => `כל ${numIso(n)} המסלולים מהסוג הזה${self > 0 ? `, ${selfMore(self)}` : ''} · ${BEFORE_FEES}`;
 export const TO_SCREEN = 'לכל המסלולים מהסוג הזה ›';
 
 /* the fee sheet (2c, 17.1 1c) */
@@ -249,8 +253,9 @@ export function screenWords(per: Per, rows: Named[], asof: number, band = tieBan
   const head = top.length > 3 ? `${numIso(top.length)} מסלולים כמעט שווים בראש` : top.length > 1 ? `${joinNames(top.map((x) => x.label))} כמעט שווים בראש` : `${top[0].label} ראשון: ${pctSigned(top[0].v, d)}${yr}`;
   return `${when} ${head}. הפער בין הראשון לאחרון: ${pctAbs(gap, d)}${yr}.`;
 }
-/** the head's second line: "5 מסלולים מהסוג הזה · 10/26" */
-export const screenHead = (n: number, asof: number) => `${numIso(n)} מסלולים מהסוג הזה · ${numIso(monthLabel(asof))}`;
+/** the head's second line: "5 מסלולים מהסוג הזה · 10/26"; `n` = ranked for the period on screen (pageMonths `typeCount`), and the
+ *  self-managed remainder when there is one: "13 מסלולים מהסוג הזה, ועוד 7 בניהול אישי · 10/26" */
+export const screenHead = (n: number, asof: number, self = 0) => `${numIso(n)} מסלולים מהסוג הזה${self > 0 ? `, ${selfMore(self)}` : ''} · ${numIso(monthLabel(asof))}`;
 export interface SubFund { m1?: N; y12?: N; fee?: N; depfee?: N; act?: N; st?: N; sharpe?: N; pr?: Partial<Record<Per, N>> | null }
 const dash = (v: N, f: (x: number) => string) => (has(v) ? f(v) : numIso('–'));
 /**
@@ -306,7 +311,10 @@ export function myWords(p: number, items: { m: N; y: N }[], o: { who?: string | 
   const ys = a.map((x) => x.y).filter(has);
   if (ys.length === a.length) {
     const lo = Math.min(...ys), hi = Math.max(...ys);
-    s += roundHalf(lo, 1) > 0 ? ` בשנה האחרונה כולם עלו: בין ${pctSigned(lo, 1)} ל-${pctSigned(hi, 1)}.` : roundHalf(hi, 1) < 0 ? ' בשנה האחרונה כולם ירדו.' : ' בשנה האחרונה חלק עלו וחלק ירדו.';
+    const lr = roundHalf(lo, 1), hr = roundHalf(hi, 1), both = a.length === 2 ? 'שניהם' : 'כולם';
+    // build review B1 (novice #1): the same figure for everyone reads as one figure, not "בין +9.2% ל-+9.2%"
+    if (lr === hr) s += lr === 0 ? ` בשנה האחרונה ${both} כמעט לא זזו.` : ` בשנה האחרונה ${both} ${lr > 0 ? 'עלו' : 'ירדו'} ${pctAbs(lo, 1)}.`;
+    else s += lr > 0 ? ` בשנה האחרונה כולם עלו: בין ${pctSigned(lo, 1)} ל-${pctSigned(hi, 1)}.` : hr < 0 ? ' בשנה האחרונה כולם ירדו.' : ' בשנה האחרונה חלק עלו וחלק ירדו.';
   }
   return s;
 }

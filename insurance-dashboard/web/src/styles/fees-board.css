@@ -96,3 +96,6 @@
   .fb-pill, .fb-x > summary::after { transition: none !important; }
   .fb-pill:active { transform: none; }
 }
+
+/* build review B1 (P3-9): on a desktop the board reads as one column, as the hub's body (820 px), not bars across 1,200 px */
+@media (min-width: 900px) { .fb-page { max-width: 820px; } }

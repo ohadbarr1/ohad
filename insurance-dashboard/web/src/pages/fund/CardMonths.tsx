@@ -1,5 +1,7 @@
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
 import { myFeeCost, OWN_FEE_TAG } from '../../components/saver/MyProductRow';
+/** re-exported for scripts/fund-card-test.mjs (the card and /my price with one rule) */
+export { myFeeCost, OWN_FEE_TAG };
 import { Link, useNavigate } from 'react-router-dom';
 import { MonthGrid, monthFull, shekels, type MonthGridSum } from '../../components/MonthGrid';
 import { Takeaway } from '../../components/Takeaway';
@@ -29,7 +31,8 @@ import {
   allTracksIn, amountsBase, avgHeadSub, cardWhoBest, cardWords, cmpCta, feeFromBalance, feeFromDeposits, feeRowSub, feeSheetSub, ilsSym,
   monthSheetVs, placeLine,
 } from '../../lib/pageWords';
-import { trackColor, trackLabels } from '../compare/tracks';
+import { trackColor } from '../compare/tracks';
+import { labelMap } from '../../lib/trackNames';
 import '../../styles/fund-card.css';
 
 /* Rollout T-C2 (spec §3.2, §16.1, §17.1 1c, §18.6; mockup v4 frames "card"): the card's months lens, 6 or 12 months.
@@ -52,10 +55,13 @@ export interface CardCtx {
   typeKey: string;
   /** the type in words: "פנסיה כללי" */
   tn: string;
-  /** the regulator's member count of the type in the newest month (the average's) */
+  /** the tracks of the type ranked on the data month (lib/pageMonths typeCount; build review B1 P2-1: the same number on the average
+   *  head, "מי היה ראשון", the month sheet's link and the type-month sheet) */
   avgN: number;
-  /** tracks ranked in the type (the type-month sheet's count) */
+  /** = avgN (kept for the lenses that name it so) */
   rankN: number;
+  /** the type's self-managed tracks, not ranked ("ועוד N בניהול אישי") */
+  selfN?: number;
   asof: number;
   door: Door;
   /** the reader saved this track ("המוצרים שלי") */
@@ -91,7 +97,7 @@ export function CardMonths({ c, n }: { c: CardCtx; n: 6 | 12 }) {
   const typeSheet = (p: number) => host.openSheet(`type:${p}`);
   const place = c.old ? null : longestPlace(f, members, c.asof);
   const peers = useMemo(() => (c.old ? [] : compareKeys([{ k: f.k }], c.funds as unknown as VFund[]).filter((k) => k !== f.k)), [c.old, f.k, c.funds]);
-  const labels = useMemo(() => { const all = trackLabels(members); return new Map(members.map((m, i) => [m.k, all[i]])); }, [members]);
+  const labels = useMemo(() => labelMap(members, members.filter(rankable)), [members]);
   const peerLabels = peers.map((k) => labels.get(k) ?? k);
 
   return (
@@ -168,7 +174,7 @@ export function CardMonthSheet({ c, p, onClose }: { c: CardCtx; p: string; onClo
       <i className={`${x < 0 ? 'neg' : 'pos'}${avgBar ? ' avg' : ''}`} style={{ '--l': `${(x < 0 ? ((x - lo) / span) * 100 : z).toFixed(1)}%`, '--w': `${Math.max(1.5, (Math.abs(x) / span) * 100).toFixed(1)}%`, '--i': i } as CSSProperties} />
     </span>
   );
-  const vs = monthSheetVs(v, avg, c.avgN, tn);
+  const vs = monthSheetVs(v, avg, tn);
   return (
     <DeeperSheet open onClose={onClose} id="month-sheet-dlg" title={isYear ? p : monthFull(pv)} sub={isYear ? MONTH_SHEET_SUB.replace('בחודש הזה', 'בשנה הזו') : MONTH_SHEET_SUB}
       footer={<div className="cs-nav">

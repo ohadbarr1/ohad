@@ -14,10 +14,10 @@ import { ProdIcon } from '../../components/compare/PickerSheet';
 import { useSheetHost } from '../../lib/sheetHost';
 import { TILES } from '../../lib/pickTiles';
 import { annual, useTray, TRAY_MAX, type FundX, type Per } from '../../lib/funds';
-import { trackLabels } from '../compare/tracks';
+import { labelMap } from '../../lib/trackNames';
 import {
   ADD_COMPARE, CLEAR_FILTER, EMPTY_FILTER, IN_COMPARE, OLD_POLICY_GUARD, TO_CARD, TO_HUB, WHY_TEXT, numIso, pctSigned, prodLabel,
-  screenBench, screenHead, screenSub, screenWords, tieNote, typeLabel, typeName,
+  screenBench, screenHead, screenSub, screenWords, selfMore, tieNote, typeLabel, typeName,
 } from '../../lib/pageWords';
 import type { Board, BoardRow, ColKey } from './screenCalc';
 import type { DoorW } from './ScreenFilters';
@@ -79,6 +79,7 @@ export interface ScreenPhoneProps {
 
 const PERS: Per[] = ['m1', 'ytd', 'y12', 'a3', 'a5'];
 
+
 /** the 46-px "＋" beside a row: in and out of the compare tray, never opening a sheet */
 function AddBtn({ k, label }: { k: string; label: string }) {
   const t = useTray();
@@ -107,7 +108,7 @@ export function ScreenPhone(p: ScreenPhoneProps) {
   const pick = (patch: () => void) => backThen(patch);
 
   /* ---- rows ---- */
-  const labelsOf = (g: ScreenGroup) => { const ls = trackLabels(g.members); return new Map(g.members.map((f, i) => [f.k, ls[i]])); };
+  const labelsOf = (g: ScreenGroup) => labelMap(g.members, g.board.rows.filter((r) => r.kind === 'ranked').map((r) => r.f));
   const subOf = (f: FundX): ReactNode => {
     const s = screenSub(p.door, { m1: p.val(f, 'm1'), y12: p.val(f, 'y12'), fee: f.fee, depfee: f.depfee, act: f.act, st: f.st, sharpe: f.sharpe, pr: f.pr }, p.per, p.asof);
     if (!p.measure) return <NumText t={s} />;
@@ -156,6 +157,9 @@ export function ScreenPhone(p: ScreenPhoneProps) {
   })();
 
   /* ---- head ---- */
+  // build review B1 (P2-1): the head counts the tracks RANKED for the period on screen, and names the self-managed remainder
+  // (the same rule as pageMonths typeCount on the card, the hub and the type-month sheet)
+  const rankedN = (g: ScreenGroup) => g.rows.filter((r) => r.kind === 'ranked').length;
   const prodName = p.prod === p.all ? 'כל המוצרים' : prodLabel(p.prod);
   const trackName = p.T === p.all ? 'כל הסוגים' : typeLabel(p.T);
   // the hub opens on the reader's own product (D5). Not /funds?prod=…: App.tsx (frozen) still redirects /funds?prod= to this page.
@@ -172,7 +176,7 @@ export function ScreenPhone(p: ScreenPhoneProps) {
     <div className="ro-page scr-page">
       <div className="pagehead scr-head"><div>
         <h1><span className="icotile"><Icon name="funds" /></span>מסלולים</h1>
-        <div className="sub">{one ? <NumText t={screenHead(p.shownN, p.asof)} /> : <><NumText t={numIso(p.shownN)} /> מסלולים · <NumText t={numIso(`${String(p.asof % 100).padStart(2, '0')}/${String(Math.floor(p.asof / 100)).slice(2)}`)} /></>}</div>
+        <div className="sub">{one ? <NumText t={screenHead(rankedN(one), p.asof, one.self.length)} /> : <><NumText t={numIso(p.shownN)} /> מסלולים · <NumText t={numIso(`${String(p.asof % 100).padStart(2, '0')}/${String(Math.floor(p.asof / 100)).slice(2)}`)} /></>}</div>
       </div></div>
       <FundsNav />
       <CompareTray />
@@ -193,7 +197,7 @@ export function ScreenPhone(p: ScreenPhoneProps) {
       ) : one ? boardOf(one, 'board') : p.groups.map((g, i) => (
         <section className="scr-grp" key={g.k}>
           <button type="button" className="scr-grp-h" aria-expanded={shown(g.k)} onClick={() => setOpen(open.includes(g.k) ? open.filter((x) => x !== g.k) : [...open, g.k])} disabled={p.groups.length <= 2}>
-            <b>{typeName(g.k)}</b><small><NumText t={numIso(g.rows.length + g.self.length)} /> מסלולים{g.avg != null && !p.real && !p.measure ? <> · ממוצע <NumText t={pctSigned(g.avg, d)} />{annual(p.per) ? ' בשנה' : ''}</> : null}</small>
+            <b>{typeName(g.k)}</b><small><NumText t={numIso(rankedN(g))} /> מסלולים{g.self.length ? <> · <NumText t={selfMore(g.self.length)} /></> : null}{g.avg != null && !p.real && !p.measure ? <> · ממוצע <NumText t={pctSigned(g.avg, d)} />{annual(p.per) ? ' בשנה' : ''}</> : null}</small>
             {p.groups.length > 2 ? <i aria-hidden="true">{shown(g.k) ? '▾' : '◂'}</i> : null}
           </button>
           {shown(g.k) ? boardOf(g, i === 0 ? 'board' : `board-${i}`) : null}

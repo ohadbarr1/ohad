@@ -126,6 +126,14 @@ ok(M.rankable(F.g880) && !M.rankable(F.g14936) && !M.rankable({ name: 'x', prod:
   const s = M.placeOf(F.g8211, gg, 'y12', ASOF);
   ok(s.place === 7 && s.n === 11 && !s.shared, 'g8211 last year: place 7 of 11', s);
 }
+/* ---- one count per type (build review B1, P2-1) ---- */
+{
+  const tp = M.typeCount(pg, 'm1', { asof: ASOF }), th = M.typeCount(hg, 'm1', { asof: ASOF }), ty = M.typeCount(hg, 'y12', { asof: ASOF });
+  ok(tp.ranked === 5 && tp.self === 0, 'pension general: 5 ranked on the month, no self-managed', tp);
+  ok(th.ranked === 13 && th.self === 7 && hg.length === 20, 'hishtalmut general: 13 ranked on the month, ועוד 7 בניהול אישי (20 open)', [th, hg.length]);
+  ok(th.ranked === M.scoreRows(hg, 'm1', { asof: ASOF }).filter((r) => r.ranked).length, 'typeCount = the ranked rows of scoreRows (the boards and the heads agree)');
+  ok(ty.ranked === M.placeOf(F.g880, hg, 'y12', ASOF).n, 'last year: the count is the n of the place /my prints ("מתוך 12")', [ty, M.placeOf(F.g880, hg, 'y12', ASOF).n]);
+}
 /* ---- hub (18.6) ---- */
 {
   const g = M.typeGrid(FUNDS, CATS, 'פנסיה מקיפה', { asof: ASOF, mineKey: PG });

@@ -59,7 +59,7 @@ function useFullText(q: string, pool: ReturnType<typeof usePool>['pool'], corpus
 /** the word to type after a company for a function: its Hebrew badge when it is a search key, else its first Hebrew key (CSM and DCF stay) */
 const word = (f: (typeof FUNCS)[number]) => (/^[A-Z]+$/.test(f.badge) && !['CSM', 'DCF'].includes(f.badge) ? f.keys.find((k) => /[\u0590-\u05FF]/.test(k)) ?? f.badge : f.badge.split(' ')[0]);
 /** W6 doors: the saver's four pages, offered when nothing is typed (SAVER_TO, lib/searchOmni) */
-const SAVER_HINTS: [string, string][] = [['המוצרים שלי', '/my'], ['רגעים: עזבתי עבודה, פרישה…', '/my/moment'], ['איך קוראים את הדוח השנתי', '/my/statement'], ['דמי ניהול לאורך קריירה', '/funds/tools/fees'], ['קרנות ברירת מחדל', '/funds/default']].filter(([, to]) => SAVER_TO.has(to)) as [string, string][];
+const SAVER_HINTS: [string, string][] = [['המוצרים שלי', '/my'], ['רגעים: עזבתי עבודה, פרישה…', '/my/moment'], ['איך קוראים את הדוח השנתי', '/my/statement'], ['דמי ניהול, בשקלים', '/funds/tools/fees'], ['קרנות ברירת מחדל', '/funds/default']].filter(([, to]) => SAVER_TO.has(to)) as [string, string][];
 /** B10: with nothing typed, the saver is offered questions to ask (R3: each opens the page that answers it) */
 const SAVER_ASKS = ['מי הכי טוב בפנסיה', 'מסלולים', 'מה קרה החודש', 'מגדל פנסיה'];
 const HEAD: Record<Kind, string> = { 'חיפושים': 'חיפושים אחרונים', 'אחרונים': 'עמודים אחרונים', 'רגע': 'רגעים בשנה', 'חברה': 'חברות', 'פונקציה': 'מסכים', 'שאלה': 'שאלות', 'קופה': 'קופות וקבוצות', 'שורה בדוח': 'שורות דוח', 'מסמך': 'מסמכים' };
@@ -183,7 +183,7 @@ export function Search({ big = false }: { big?: boolean }) {
 
   const field = (auto: boolean) => (
     <input ref={input} autoFocus={auto}
-      type="search" value={q} placeholder={saver ? 'קופה, מספר קופה, או "עזבתי עבודה"' : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
+      type="search" value={q} placeholder={saver ? (phone ? 'קופה, מספר או שאלה' : 'קופה, מספר קופה, או "עזבתי עבודה"') : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
       role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
       enterKeyHint="search" autoComplete="off" spellCheck={false}
       onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKey}

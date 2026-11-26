@@ -18,6 +18,8 @@ import '../../styles/fund-card.css';
    professional figure ("מקצועי"). Pro sees the same content as the first sections of "מקצועי". */
 
 export const DEC_TAKE = 'נתוני החלטה ללקוח: דמי ניהול, יציבות אקטוארית, שירות ותביעות. כל מספר נפתח למקור.';
+/** a track with no pension pack (build review B1, P2-3): the sentence promises only what the lens shows */
+export const DEC_TAKE_PLAIN = 'נתוני החלטה ללקוח: דמי ניהול, נכסים וחשיפה למניות. כל מספר נפתח למקור.';
 /** the pension pack's section (mockup v4: "נתוני החלטה · פנסיה מקיפה") */
 export const DEC_PACK = 'נתוני החלטה · פנסיה מקיפה: איזון אקטוארי, ברירת מחדל, שירות ותביעות';
 export const DEC_MORE = 'כל הנתונים המקצועיים: סיכון, משברים, חשיפות, תזרים ›';
@@ -26,10 +28,11 @@ export function CardDecision({ c, tiles }: { c: CardCtx; tiles: ReactNode }) {
   const { f, h } = c;
   return (
     <div className="fc-lens" id="lens-dec">
-      <Takeaway id="takeaway" text={DEC_TAKE} />
+      <Takeaway id="takeaway" text={isPension(f) ? DEC_TAKE : DEC_TAKE_PLAIN} />
       <div className="fc-dec-tiles">{tiles}</div>
       {isPension(f) ? (
-        <details className="fc-pack" id="dec-pack">
+        // build review B1 (P2-3): open by default in this lens, the decision data in view without a tap (closed inside "מקצועי")
+        <details className="fc-pack" id="dec-pack" open>
           <summary><span>{DEC_PACK}</span></summary>
           <div className="fc-sec-in"><PensionPack f={f} h={h} asof={c.asof} funds={c.funds as FundX[]} /></div>
         </details>

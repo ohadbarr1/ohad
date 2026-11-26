@@ -50,10 +50,12 @@ const FT_PAGES: [string[], string, string, string][] = ([
   [['glide', 'age', 'גיל', 'תלוי', 'מסלולי'], 'מסלולי גיל · קופות', 'עד 50, 50–60, 60 ומעלה: החשיפה למניות בפועל', '/funds/glide'],
   [['watchlist', 'מעקב', 'שלי', 'כוכב', 'עוקב'], 'במעקב · המוצרים שלי', 'המסלולים שסימנת ☆: 12 חודשים, דמי ניהול וחודש חדש · פרטי לדפדפן', '/my#watch'],  // phase 0: was /funds/watch
 ] as [string[], string, string, string][]).map(([k, l, m, to]) => [(k as string[]).map(normalize), l, m, to] as [string[], string, string, string]);
+/** words too generic to match a fund by its name (P3-4) */
+const GENERIC_W = new Set(['מסלולים', 'מסלול', 'המסלולים', 'קופות', 'קופה', 'קרנות', 'קרן'].map(normalize));
 const FD_KEYS = ['findings', 'finding', 'surprise', 'ממצא', 'ממצאים', 'הפתעה', 'הפתעות', 'חריג', 'חריגים'].map(normalize);
 // the funds tools (F2 TOOLS): each tool answers to its own words
 const FTOOLS = ([
-  [['דמי', 'ניהול', 'קריירה', 'פרישה', 'קצבה', 'עלות', 'מחשבון', 'fees', 'fee'], 'דמי ניהול לאורך קריירה', 'כמה עולים דמי ניהול מהפקדה ומצבירה עד הפרישה, בשקלים ובקצבה', '/funds/tools/fees'],
+  [['דמי', 'ניהול', 'קריירה', 'פרישה', 'קצבה', 'עלות', 'מחשבון', 'fees', 'fee'], 'דמי ניהול, בשקלים', 'כמה עולים דמי ניהול מהפקדה ומצבירה עד הפרישה, בשקלים ובקצבה', '/funds/tools/fees'],
   [['קרנות', 'ברירת', 'מחדל', 'נבחרות', 'מכרז', 'מכרזים', 'default'], 'קרנות ברירת מחדל · המכרזים והזוכות', 'המחיר, הזוכות, ומה קרה לכסף לפני ואחרי', '/funds/default'],
   [['עוקב', 'עוקבי', 'מדד', 'מדדים', 'snp', '500', 'tracker', 'index'], 'מעבדת עוקבי המדד', 'אותו מדד בעטיפות שונות: הפער הוא מחיר העטיפה', '/funds/trackers'],
 ] as [string[], string, string, string][]).map(([w, l, m, to]): [string[], string, string, string] => [w.map(normalize), l, m, to]);
@@ -348,7 +350,10 @@ export function rank(q: string, pool: Pool, sheetName: (s: string) => string, do
     pool.groups.forEach((g) => { const s = wordScore(g.words, words); if (s) out.push({ kind: 'קופה', label: g.label, meta: 'קבוצה · פנסיה, גמל וביטוח', to: `/savings?g=${encodeURIComponent(g.label)}`, score: 70 + s }); });
     // a company and more words ("אלטשולר שחם פנסיה מקיפה"): a track that carries every word is what was asked for, and leads
     const named = !!p.company && p.rest.length > 0;
-    for (const f of pool.funds) {
+    // build review B1 (P3-4): a generic word alone ("מסלולים", "קופות") asks for the screener (askItems / FTOOLS), not for every fund
+    // whose product name carries the word ("…, מסלולים ייעודיים")
+    const generic = !p.company && !fq.key && !fq.num && words.length > 0 && words.every((w) => GENERIC_W.has(w));
+    if (!generic) for (const f of pool.funds) {
       const to = f.k ? `/funds/${f.k}` : `/funds/screen?q=${encodeURIComponent(f.label)}`, tb = TRACK_RANK[f.track ?? ''] ?? 0;
       // the regulator's fund number ("1093") or the site's key ("p9757"): that track, first of all
       const s = fundMatch(fq, f);

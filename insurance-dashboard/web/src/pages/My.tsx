@@ -8,7 +8,9 @@ import { Takeaway } from '../components/Takeaway';
 import { StampLine } from '../components/StampLine';
 import { NumText } from '../components/NumText';
 import { AmountsSheet } from '../components/AmountsSheet';
-import { MonthSheet } from '../components/compare/MonthSheet';
+import { TypeMonthSheet } from '../components/TypeMonthSheet';
+import { backThen } from '../components/Sheet';
+import { CardMonthSheet, type CardCtx } from './fund/CardMonths';
 import { WhySheet } from '../components/compare/WhySheet';
 import { useFundCats, useFunds } from '../lib/useData';
 import { useHists, useOptional } from '../lib/fundsLoad';
@@ -26,10 +28,10 @@ import { COEF_PATH, birthYearOf, coefFor, type CoefFile } from '../lib/coef';  /
 import { cardCalc, type SumRow } from '../lib/myCalc';
 import { DECISION_PATH, type DecisionFile } from '../lib/decision';
 import { compareKeys } from '../lib/saverCompare';
-import { typeMembers } from '../lib/pageMonths';
+import { hasTypeAvg, oldGeneration, typeCount, typeMembers } from '../lib/pageMonths';
 import {
   ME_BTN, MY_EMPTY_LINE, MY_EXAMPLE, MY_EXAMPLE_TAG, MY_FEES_NOTE, MY_FEES_TITLE, MY_FEES_TOTAL, MY_GONE, MY_IMPORT,
-  MY_PRIVACY, MY_TITLE, fullLabel, ilsSym, monthYear, myFeeSum, myFeesRowTag, myFeesSub, myWords, todoAmounts,
+  MY_PRIVACY, MY_TITLE, fullLabel, ilsSym, monthYear, myFeeSum, myFeesRowTag, myFeesSub, myWords, todoAmounts, typeName,
 } from '../lib/pageWords';
 import { useSheetHost } from '../lib/sheetHost';
 import type { SheetId } from './compare/contract';
@@ -46,6 +48,7 @@ import '../styles/rollout.css';
 import '../styles/saver.css';
 import '../styles/my-watch.css';
 import '../styles/checkup.css';
+import '../styles/compare-sheets.css';
 
 /* /my, "המוצרים שלי" (W1 saver door; W4 after the second red team, 02.11.26; rollout phase 4, spec 5 as amended by 16–18, mockup v4
    frames 8–9, tickets T-M1 … T-M4). One page for every door: "מה שלום החיסכון שלי?".
@@ -60,7 +63,7 @@ import '../styles/checkup.css';
    - Chips: "＋ מוצר נוסף" (the three-tap add flow in place of the list), "ייבוא מהמסלקה" (today's import, in a sheet), "הבדיקה השנתית";
      then the life moments, "since the last visit", the watch list, the stamp and the privacy line.
    - Empty: the add flow (six tiles first), the import row, and one example row marked "דוגמה · לא המוצר שלך".
-   Sheets are in the address (?sheet=, lib/sheetHost, replace): "product:<k>", "mmonth:<k>:<yyyymm>", "amounts:<k>", "myfees",
+   Sheets are in the address (?sheet=, lib/sheetHost, replace): "product:<k>", "mmonth:<k>:<yyyymm>" (the card's month sheet), "mtype:<k>:<yyyymm>" (the type-month sheet), "amounts:<k>", "myfees",
    "profile", "import", and compare's "why". The list lives in this browser only (lib/mine); amounts only through lib/myAmounts.
    Descriptive, never advice. Entering /my with no door chosen is entering the saver door. /my#<k> lands on that product's row,
    /my#deposits opens the first pension or השתלמות product on its deposit watchdog, /my#watch opens the watch list. */
@@ -149,6 +152,21 @@ export function My() {
     setKeys: (ks: string[]) => nav(`/funds/compare?k=${ks.join(',')}`),
     openSheet: (s: SheetId) => (s.t === 'month' ? open(`mmonth:${k}:${s.p}`) : host.openSheet(s)),
   });
+  /* build review B1 (P2-2): a month square opens the CARD's month sheet for that one product (keys = [k]): "כמה עשה המסלול", the type
+     named, "כל N המסלולים באוקטובר ›" to the type-month sheet ("mtype:<k>:<yyyymm>"); previous / next stay on this product. */
+  const cardCtx = (k: string): CardCtx | null => {
+    const f = byK.get(k), h = hist[k];
+    if (!f || !h) return null;
+    const members = membersOf(f), key = catKey(f), tc = typeCount(members, 'm1', { asof });
+    const c = cats?.[key] ?? null;
+    return {
+      f, h, cat: c && hasTypeAvg(members) ? c : null, members, funds, typeKey: key, tn: typeName(key), avgN: tc.ranked, rankN: tc.ranked, selfN: tc.self,
+      asof, door, saved: true, old: oldGeneration(f), setView: () => {}, onMine: () => {}, my: list.find((m) => m.k === k) ?? null,
+      host: { ...host, openSheet: (s) => (typeof s === 'string' ? (s.startsWith('type:') ? open(`mtype:${k}:${s.slice(5)}`) : open(s)) : s.t === 'month' ? open(`mmonth:${k}:${s.p}`) : host.openSheet(s)) },
+    };
+  };
+  const mCtx = mK && mP ? cardCtx(mK) : null;
+  const [tK, tP] = sid === 'mtype' ? sarg.split(':') : [null, null], tF = tK ? byK.get(tK) : undefined;
   const feeItems = live.map(({ f }) => ({ f, x: fees[f.k] })).filter((r): r is { f: FundX; x: ProductFee } => !!r.x);
   const sum = myFeeSum(feeItems.map(({ x }) => ({ cost: x.cost, own: x.own })));
   const todo = feeItems.find(({ x }) => !x.own);
@@ -163,7 +181,8 @@ export function My() {
           onRemove={prodM ? () => { remove(prodF.k); close(); } : undefined} onAmounts={prodM ? () => open(`amounts:${prodF.k}`) : undefined}
           focus={depFocus && prodF.k === firstDep ? 'deposits' : undefined} />
       </DeeperSheet>}
-      {mK && mP && byK.get(mK) && <MonthSheet key={`${mK}:${mP}`} {...monthCtx(mK)} p={mP} open onClose={close} />}
+      {mCtx && mP ? <CardMonthSheet key={`${mK}:${mP}`} c={mCtx} p={mP} onClose={close} /> : null}
+      {tF && tP ? <TypeMonthSheet open onClose={close} typeKey={catKey(tF)} p={Number(tP)} mineKeys={door === 'saver' ? keys : []} door={door} typeName={typeName(catKey(tF))} onTrack={(x) => backThen(() => nav(`/funds/${x}`))} /> : null}
       {amtF && <AmountsSheet open onClose={close} target={{ k: amtF.k }} name={fullLabel(amtF.grp, catKey(amtF))} deposits={fees[amtF.k]?.deposits ?? true} />}
       <DeeperSheet open={sid === 'myfees'} onClose={close} id="sheet-myfees" title={MY_FEES_TITLE} sub={<NumText t={myFeesSub(feeItems.map(({ x }) => x))} />}>
         <dl className="my-fees" id="myfees">
@@ -203,6 +222,8 @@ export function My() {
             <MyProductRow example f={ex} i={0} fig={figOf(ex)} members={membersOf(ex)} cmpHref={cmpHref(ex.k)} />
           </>}
         </>}
+        {/* build review B1 (P3-5): the empty state ends on the stamp too (the budget is measured to it) */}
+        {empty && step === 1 ? <StampLine asof={asof} onWhy={() => host.openSheet({ t: 'why' })} /> : null}
         <p className="sv-privacy"><Icon name="shield" /> {MY_PRIVACY} <Link to="/about">על האתר והמקורות</Link></p>
         {sheets}
       </div>

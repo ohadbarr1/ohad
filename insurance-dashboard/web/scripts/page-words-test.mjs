@@ -75,12 +75,16 @@ eq(W.CORNER, 'באחוזים, לפני דמי ניהול', 'grid corner');
   eq(W.avgHeadSub(type, 5), 'פנסיה כללי · 5 ›', 'average head sub');
   eq(W.cmpCta(['מנורה', 'כלל']), 'להשוות מול מנורה וכלל ›', '#cmp-cta (3.2 #6)');
   eq(W.feeRowSub(false) + ' | ' + W.feeRowSub(true), 'בשנה, לדוגמה › | בשנה, שלך ›', 'fee row sub (16.1 2c, 17.1 1c)');
-  eq(W.monthSheetVs(-1.44, -1.033, 5, type), 'המסלול מתחת לממוצע של 5 מסלולי פנסיה כללי, ב-0.41%.', 'month sheet: below the average');
-  eq(W.monthSheetVs(-1.05, -1.033, 5, type), 'המסלול כמעט כמו הממוצע של 5 מסלולי פנסיה כללי.', 'month sheet: inside the band');
+  // build review B1: one vocabulary with the card ("הממוצע ב<סוג>"), no second count beside the asset-weighted average
+  eq(W.monthSheetVs(-1.44, -1.033, type), 'המסלול מתחת לממוצע בפנסיה כללי, ב-0.41%.', 'month sheet: below the average');
+  eq(W.monthSheetVs(-1.05, -1.033, type), 'המסלול כמעט כמו הממוצע בפנסיה כללי.', 'month sheet: inside the band');
   eq(W.allTracksIn(5, ASOF), 'כל 5 המסלולים באוקטובר', 'month sheet link');
   eq(W.typeMonthTitle(ASOF, type), 'אוקטובר 2026 · פנסיה כללי', 'type-month sheet title (16.3 T-C7)');
   eq(W.typeMonthTitle(202609, type), 'ספטמבר 2026 · פנסיה כללי', 'type-month sheet title, row 2');
   eq(W.typeMonthSub(5), 'כל 5 המסלולים מהסוג הזה · לפני דמי ניהול', 'type-month sheet sub');
+  // build review B1 (P2-1): the ranked count and the self-managed remainder
+  eq(W.typeMonthSub(13, 7), 'כל 13 המסלולים מהסוג הזה, ועוד 7 בניהול אישי · לפני דמי ניהול', 'type-month sheet sub with self-managed tracks');
+  eq(W.selfMore(7) + '|' + W.selfMore(0), 'ועוד 7 בניהול אישי|', 'self-managed remainder');
   eq(W.OLD_POLICY_GUARD, 'פוליסה ישנה (1990–2003): יש בה הבטחות שלא רואים בתשואה.', 'old-policy guard: first sentence only (3.5)');
   eq(W.newTrackWords(4), 'מסלול חדש: פורסמו 4 חודשים.', 'new track');
   eq(W.feeFromBalance(100000, 0.14) + ' | ' + W.feeFromDeposits(2220, 1.56), 'מהחיסכון: 100,000 × 0.14% | מההפקדות: 12 × 2,220 × 1.56%', 'fee sheet lines');
@@ -113,6 +117,7 @@ eq(W.tieNote('a5'), 'מסלולים בהפרש קטן מ-0.10% בשנה חולק
   eq(W.screenSub('agent', F.g880, 'a5', ASOF), `ד״נ 0.60% · מניות ${Math.round(F.g880.st)}%`, 'agent quiet line (no balance: equity)');
   eq(W.screenSub('pro', F.p2102, 'a5', ASOF), 'אחוזון 75 · ד״נ 0.14% · שארפ 1.28 · מניות 51%', 'Pro quiet line (4.2)');
   eq(W.screenHead(5, ASOF), '5 מסלולים מהסוג הזה · 10/26', 'screener head (4.2 #1)');
+  eq(W.screenHead(13, ASOF, 7), '13 מסלולים מהסוג הזה, ועוד 7 בניהול אישי · 10/26', 'screener head with self-managed tracks (B1 P2-1)');
   eq(W.screenBench('saver', 'פנסיה כללי', 'a5') + ' | ' + W.screenBench('pro', 'פנסיה כללי', 'm1'), 'ממוצע פנסיה כללי · בשנה, בממוצע | ממוצע הקטגוריה', 'board closing line');
 }
 
@@ -128,6 +133,10 @@ eq(W.tieNote('a5'), 'מסלולים בהפרש קטן מ-0.10% בשנה חולק
   eq(W.myWords(ASOF, [{ m: 0.01, y: null }, { m: -0.02, y: null }]), 'באוקטובר שני המסלולים שלך כמעט לא זזו.', 'all flat (SYNTHETIC)');
   eq(W.myWords(ASOF, [{ m: 0.01, y: 8.9 }]), 'באוקטובר המסלול שלך כמעט לא זז. בשנה האחרונה הוא עלה 8.9%.', 'one product, flat (18.2 +)');
   eq(W.myWords(ASOF, [{ m: null, y: 9 }]), 'אין עדיין תשואה חודשית למוצרים שלך.', 'no monthly data');
+  // build review B1 (novice #1): the same last-year figure reads once, not "בין +9.2% ל-+9.2%"
+  eq(W.myWords(ASOF, [{ m: -1.44, y: 9.21 }, { m: -0.19, y: 9.18 }]), 'באוקטובר שני המסלולים שלך ירדו. בשנה האחרונה שניהם עלו 9.2%.', 'two, same year figure');
+  eq(W.myWords(ASOF, [{ m: 0.4, y: 3 }, { m: 0.2, y: 3 }, { m: 0.3, y: 3.04 }]), 'באוקטובר כל 3 המסלולים שלך עלו. בשנה האחרונה כולם עלו 3.0%.', 'three, same year figure (SYNTHETIC)');
+  eq(W.myWords(ASOF, [{ m: -0.4, y: -2 }, { m: -0.2, y: -2 }]), 'באוקטובר שני המסלולים שלך ירדו. בשנה האחרונה שניהם ירדו 2.0%.', 'two, same fall (SYNTHETIC)');
   eq(W.myWords(ASOF, [{ m: -1.44, y: 9.15 }], { who: 'בן/בת הזוג' }), 'באוקטובר המסלול של בן/בת הזוג ירד 1.44%. בשנה האחרונה הוא עלה 9.2%.', 'another profile (5.5)');
   // the lines under the squares
   eq(W.vsAvgWords(ASOF, F.p2102.m1, catAt(PG, ASOF), W.typeName(PG)), 'באוקטובר: מתחת לממוצע בפנסיה כללי (‎−1.03%)', 'vs line p2102 (18.6)');
