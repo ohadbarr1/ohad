@@ -4,7 +4,7 @@
 // the row button, mine (tint + "שלי", mineWord), bars auto/always/none, no tick once `bars` is passed, head and note.
 import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync , readFileSync} from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
@@ -21,7 +21,7 @@ const bundle = async (entry, out) => {
 try {
   // the shipped board, with its sibling MonthGrid, from the base commit
   const old = join(dir, 'old', 'components'); mkdirSync(old, { recursive: true });
-  for (const f of ['Scoreboard.tsx', 'MonthGrid.tsx']) writeFileSync(join(old, f), execFileSync('git', ['show', `${BASE}:insurance-dashboard/web/src/components/${f}`], { cwd: web }));
+  for (const f of ['Scoreboard.tsx', 'MonthGrid.tsx']) writeFileSync(join(old, f), readFileSync(join(web, `scripts/fixtures/base-${BASE}/${f}`)));
   const harness = (src) => `import { createElement as h } from 'react'; import { renderToStaticMarkup } from 'react-dom/server'; export * from '${src}'; export const html = (C, p) => renderToStaticMarkup(h(C, p));`;
   writeFileSync(join(dir, 'old.tsx'), harness('./old/components/Scoreboard'));
   writeFileSync(join(dir, 'new.tsx'), harness(join(web, 'src/components/Scoreboard.tsx').replace(/\.tsx$/, '')));

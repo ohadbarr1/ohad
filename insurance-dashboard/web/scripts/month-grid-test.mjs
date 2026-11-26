@@ -1,7 +1,7 @@
 // F7: the pure helpers of <MonthGrid> (labels, signed figures, heat, row lead, layout by column count). Bundles src/components/MonthGrid.tsx
 // with esbuild (Vite's own copy; CSS imports dropped) and checks it against the P3 fixture (p2102, p2172, p2009, net, 10/26).
 import { build } from 'esbuild';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync , readFileSync} from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -68,7 +68,7 @@ try {
       return import(pathToFileURL(join(rd, `${name}.mjs`)).href);
     };
     mkdirSync(join(rd, 'old'), { recursive: true });
-    writeFileSync(join(rd, 'old', 'MonthGrid.tsx'), execFileSync('git', ['show', '1c906a5f:insurance-dashboard/web/src/components/MonthGrid.tsx'], { cwd: web }));
+    writeFileSync(join(rd, 'old', 'MonthGrid.tsx'), readFileSync(join(web, 'scripts/fixtures/base-1c906a5f/MonthGrid.tsx')));
     const R = await mk(new URL('../src/components/MonthGrid', import.meta.url).pathname, 'cur'), O = await mk('./old/MonthGrid', 'old');
     const card = {
       cols: [{ k: 'p2102', label: 'המסלול', color: 'var(--s1)' }], showAvg: true, avgLabel: ['הממוצע', 'פנסיה כללי · 5 ›'], mark: 'none',
