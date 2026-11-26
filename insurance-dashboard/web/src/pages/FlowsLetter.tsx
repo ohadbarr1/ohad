@@ -162,7 +162,7 @@ function UnderPart({ p, names }: { p: number; names: Map<string, string> }) {
   return (
     <Panel title={`ברבעון התחתון, ועדיין מקבלים כסף · ${ym(p)}`} aside={<Link className="sv-u" to="/funds/under">הרשימה המלאה</Link>}>
       <section className="kpis">
-        <Kpi label="מסלולים ברשימה" value={kpi('cost', String(S.n[j]))} sub={<>רבעון תחתון (5 שנים, נטו) מתוך <span className="num">{S.n_rk[j]}</span> מדורגים</>} />
+        <Kpi label="מסלולים ברשימה" value={kpi('cost', String(S.n[j]))} sub={<>רבעון תחתון (5 שנים, ברוטו) מתוך <span className="num">{S.n_rk[j]}</span> מדורגים</>} />
         <Kpi label="נכנס ב-12 החודשים" value={kpi('fl', ilsM(S.fl[j]))} sub="בלי נדידה פנימית" />
         <Kpi label="עלות הפער בשנה" value={kpi('cost', ilsM(S.cost[j]))} sub={yoy ? <>לפני שנה: <span className="num">{ilsM(S.cost[yi])}</span></> : 'נכסים × פער מהחציון, אומדן'} />
       </section>

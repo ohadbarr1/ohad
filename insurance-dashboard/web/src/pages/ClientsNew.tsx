@@ -163,7 +163,7 @@ export function ClientsNew() {
                 <span className="t"><b>{o.name}</b>{o.same && <span className="tag">אותו מסלול השקעה</span>}{o.dflt && <span className="tag">ברירת מחדל בתוקף</span>}</span>
                 <span className="f">ד"נ <bdi dir="ltr">{pc(o.depfee)} / {pc(o.fee)}</bdi> · 3Y <bdi dir="ltr">{pc(o.a3)}</bdi></span>
               </button></li>; })}</ul>
-            <p className="wiz-note">כל המסלולים הפתוחים של המוצר, מסודרים: אותו מסלול השקעה כמו של הלקוח, אחר כך קרנות ברירת מחדל, אחר כך לפי גודל. ד"נ: מהפקדה / מצבירה, הממוצע בפועל ({asofText}); נטו 3Y: ממוצע שנתי. הבחירה של בעל הרישיון.</p>
+            <p className="wiz-note">כל המסלולים הפתוחים של המוצר, מסודרים: אותו מסלול השקעה כמו של הלקוח, אחר כך קרנות ברירת מחדל, אחר כך לפי גודל. ד"נ: מהפקדה / מצבירה, הממוצע בפועל ({asofText}); 3Y: ממוצע שנתי, ברוטו כפי שפורסם. הבחירה של בעל הרישיון.</p>
           </> : <p className="wiz-note">אין בתיק מוצר עם יתרה או הפקדה שאפשר לנייד (למשל: רק כיסויים ביטוחיים). אפשר להמשיך למסמך.</p>}
         </div>
         {ny && cands.length > 0 && <NyudPairsPick slots={ny.slots} rows={ny.rows} pairs={pairs} onPairs={setPairs} />}

@@ -225,16 +225,16 @@ test.describe('sheets (C2, C4, C5, C7, C10, D6)', () => {
     await noErrors(errors);
   });
 
-  test('"איך מחשבים?": the plain switch "אחרי דמי ניהול / לפני דמי ניהול" (D6)', async ({ page }) => {
+  test('"איך מחשבים?": returns are gross, before fees; no basis switch (owner 26.11.26)', async ({ page }) => {
     const errors = await visitor(page, 'saver');
-    await cmp(page, `k=${P3}`);
+    await cmp(page, `k=${P3}&b=net`);  // an old net link renders gross
+    await expect(page.locator('#stamp')).toContainText('תשואה ברוטו, כפי שמפורסמת');
     await page.locator('#stamp button', { hasText: 'איך מחשבים?' }).click();
     const d = dialog(page);
-    const sw = d.locator('#basis-switch');
-    await expect(sw).toBeVisible();
-    await expect(sw).toContainText('אחרי דמי ניהול');
-    await expect(sw).toContainText('לפני דמי ניהול');
-    expect(await d.innerText()).not.toMatch(/נטו|ברוטו/);
+    await expect(d.locator('#basis-switch')).toHaveCount(0);
+    await expect(d).toContainText('לפני דמי ניהול');
+    expect(await d.innerText()).not.toMatch(/נטו|אחרי דמי ניהול/);
+    expect(await page.locator('main').innerText()).not.toMatch(/נטו|אחרי דמי ניהול/);
     await noErrors(errors);
   });
 });
