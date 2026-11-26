@@ -143,3 +143,19 @@
 #lens-dec .fc-dec-tiles .kpi .s { font-size: 12px; line-height: 1.35; }
 /* the tiles are three a row: no "?" in their labels (each term is explained in the pack below and in every figure's source sheet) */
 #lens-dec .fc-dec-tiles .tip { display: none; }
+
+/* tests lane gates (26.11.26): the shared "?" tip inside the card's lenses ("להחלטה", "מקצועי") as a 44 × 32 target at 11 px, without
+   moving the line (negative block margin); the decision pack's links ("כל ההליכים", "התפלגות דמי הניהול", "הקובץ") at least 32 px
+   high in "מקצועי" too; the years lens' partial-year label ("עד אוק׳") at 11 px */
+.fc .tip-b { min-width: 44px; min-height: 32px; margin-block: -8px; border-radius: 16px; font-size: 11px; vertical-align: middle; }
+#lens-dec .fc-pack .tip-b { min-width: 44px; min-height: 32px; margin-block: -8px; }
+.fc .ppk a:not(.src) { display: inline-block; min-height: 32px; padding-block: 7px; margin-block: -7px; }
+.fc table.mg th.m small, .fc .mg-col small { font-size: 11px; }
+/* contrast (axe, AA): the compare button's words, white on the deep ember in the light look, ink on the ember in the dark (.dentry-go) */
+.fc-cta { background: var(--accent-text); }
+:root[data-theme="dark"] .fc-cta { background: var(--accent); color: var(--accent-ink); }
+/* build review B2 (P3-b): on a desktop the one-track lenses are a 600-px reading column at the start (right) of the row; the head and the
+   lens tabs take the same width, so the block reads as one column ("מקצועי" keeps the full width) */
+@media (min-width: 900px) {
+  .fc:not(:has(.fc-pro)) :is(.fc-head, #views) { max-width: 600px; }
+}

@@ -26,10 +26,10 @@ const CARD = '#month-grid tbody .mg-cell:not(.mg-skelcell), #long-per button, #l
 
 /** [name, door, fox:mine, url, ready selector, budget × 664, the stamp line if not #stamp, { report: report-only row, hide: css to hide }] — §18.7 (saver unless noted); the hishtalmut screener from §10.5 */
 const PAGES = [
-  // TODO(build review B2, coordinator 26.11.26): REPORT-ONLY until the PM decides what to trim on the home; then either flip `report`
-  // off (hard fail at 2.1) or set the new budget. Measured to the home's stamp line (.dfacts "נתוני 10/26 · תשואה ברוטו…"), without the
+  // build review B2 (H-1, PM ruling B2.5): the home was trimmed (products panel out, check-up lead folded into #home-import, tip after
+  // the cards); a hard fail at 2.1 again (P2, 26.11.26: 1.70 WebKit / 1.71 Chromium with one product). Measured to the home's stamp line (.dfacts "נתוני 10/26 · תשואה ברוטו…"), without the
   // dismissible add-to-home-screen tip (.sv-a2hs, iPhone only).
-  ['saver home', 'saver', ONE, '/', '#home-screen', 2.1, 'main .dfacts', { report: true, hide: '.sv-a2hs' }],
+  ['saver home', 'saver', ONE, '/', '#home-screen', 2.1, 'main .dfacts', { hide: '.sv-a2hs' }],
   ['card · 6 months', 'saver', null, '/funds/p2102', CARD, 1.5],
   ['card · 12 months', 'saver', null, '/funds/p2102?v=m12', CARD, 1.85],
   ['card · years', 'saver', null, '/funds/p2102?v=y', CARD, 1.25],

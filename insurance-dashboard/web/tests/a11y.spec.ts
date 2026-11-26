@@ -7,14 +7,9 @@ import { ROUTES, THEMES, open } from './routes';
    Violations already investigated are listed in tests/a11y-known.json as "rule@route" and do not fail the run; anything new does.
    The report lists every serious/critical rule with its first targets. */
 const KNOWN = new Set<string>(JSON.parse(readFileSync(new URL('./a11y-known.json', import.meta.url), 'utf8')).known);
-/* Rollout (lane L3-b, 26.11.26): three colour-contrast defects of the new rollout pages, investigated and reported to the coordinator, owned
-   by the page lanes: the card's compare button words (#cmp-cta span, L2-a), the screener's average figure (.avgline .num.pos, L2-b) and
-   the /my strip's month labels (.ro-sc small, L2-c). Listed per route as "rule@route[:dark]" (the key routes below and the rollout routes
-   at the end of this file); they go when the pages are fixed. */
-const ROLLOUT_KNOWN = new Set<string>([
-  'color-contrast@fund', 'color-contrast@fund:dark', 'color-contrast@funds-screen', 'color-contrast@my', 'color-contrast@my:dark',
-  'color-contrast@ro-card', 'color-contrast@ro-card:dark', 'color-contrast@ro-screen', 'color-contrast@ro-my', 'color-contrast@ro-my:dark',
-]);
+/* Rollout (lane L3-b, 26.11.26): the three colour-contrast defects of the rollout pages (#cmp-cta span, .avgline .num.pos, .ro-sc small)
+   were fixed in P2; the set stays for the next one ("rule@route[:dark]"). */
+const ROLLOUT_KNOWN = new Set<string>([]);
 
 for (const theme of THEMES) {
   for (const [name, route] of ROUTES) {

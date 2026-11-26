@@ -183,7 +183,8 @@ export function Search({ big = false }: { big?: boolean }) {
 
   const field = (auto: boolean) => (
     <input ref={input} autoFocus={auto}
-      type="search" value={q} placeholder={saver ? (phone ? 'קופה, מספר או שאלה' : 'קופה, מספר קופה, או "עזבתי עבודה"') : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
+      type="search" value={q} placeholder={phone && !auto ? (saver ? 'חיפוש קופה' : 'חיפוש') /* build review B2 (novice #1): the header field on a phone shows its whole hint; the open search keeps the long one */
+        : saver ? (phone ? 'קופה, מספר או שאלה' : 'קופה, מספר קופה, או "עזבתי עבודה"') : phone ? 'חברה, קופה או מילה' : 'חברה, מספר קופה, שורה בדוח או מילה בדוחות · למשל 2155'} aria-label="חיפוש"
       role="combobox" aria-expanded={open && shown.length > 0} aria-controls="search-results" aria-autocomplete="list" aria-activedescendant={open && shown[hl] ? optId(hl) : undefined}
       enterKeyHint="search" autoComplete="off" spellCheck={false}
       onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKey}

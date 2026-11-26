@@ -177,9 +177,18 @@ export function My() {
     <>
       <ProfileSheet open={sid === 'profile'} onClose={close} rows={rows} coefF={coefF} onProduct={(k) => open(`product:${k}`)} onAmounts={(k) => open(`amounts:${k}`)} />
       {prodF && <DeeperSheet open onClose={() => { setDepFocus(false); close(); }} id="sheet-product" detent="full" title={fullLabel(prodF.grp, catKey(prodF))} sub={prodF.name}>
+        {/* T-N1 (tests lane, 26.11.26): a page link inside the sheet closes the sheet's history entry first, then moves (as compare's
+            sheets do), so one Back from the card is /my and the next leaves it; today's ProductCard stays unchanged */}
+        <div style={{ display: 'contents' }} onClickCapture={(e) => {
+          const a = (e.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
+          const to = a?.getAttribute('href');
+          if (!a || !to || !to.startsWith('/') || a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          e.preventDefault(); e.stopPropagation(); backThen(() => nav(to));
+        }}>
         <ProductCard sheet f={prodF} data={data} cats={cats} dfile={dfile} my={prodM} onChange={prodM ? patch(prodF.k) : undefined}
           onRemove={prodM ? () => { remove(prodF.k); close(); } : undefined} onAmounts={prodM ? () => open(`amounts:${prodF.k}`) : undefined}
           focus={depFocus && prodF.k === firstDep ? 'deposits' : undefined} />
+        </div>
       </DeeperSheet>}
       {mCtx && mP ? <CardMonthSheet key={`${mK}:${mP}`} c={mCtx} p={mP} onClose={close} /> : null}
       {tF && tP ? <TypeMonthSheet open onClose={close} typeKey={catKey(tF)} p={Number(tP)} mineKeys={door === 'saver' ? keys : []} door={door} typeName={typeName(catKey(tF))} onTrack={(x) => backThen(() => nav(`/funds/${x}`))} /> : null}

@@ -94,7 +94,14 @@ export function FundsFees() {
   const mineF = mineIn.find((f) => f.k === sp.get('k')) ?? mineIn[0] ?? null;
   const mineK = mineF?.k ?? null;
   const mineP = mineK ? myList.find((m) => m.k === mineK) : undefined;
-  const amounts = useMyAmounts({ prod, cat: key, funds });
+  /* build review B2 (novice B2, "amounts in the agent door"): the shekels follow ONE rule in every door. The saved product of this type
+     (any door: lib/mine is the browser's, not the door's) holds the amounts (useMyAmounts) and its own typed fee prices its row
+     (myFeeCost), exactly as on the card in the same door; only the "שלי" mark, the pinned row and the "mine" sentence stay in the saver
+     door. Before, the agent door priced that row on the track's average while the card priced it on the own fee. */
+  const ownIn = useMemo(() => myList.map((m) => byK.get(m.k)).filter((f): f is FundX => !!f && catKey(f) === key), [myList, byK, key]);
+  const ownF = (saver ? mineF : null) ?? ownIn.find((f) => f.k === sp.get('k')) ?? ownIn[0] ?? null;
+  const ownP = ownF ? myList.find((m) => m.k === ownF.k) : undefined;
+  const amounts = useMyAmounts({ k: ownF?.k ?? null, prod, cat: key, funds });
   const depFee = typeHasDepositFee(members), prodDep = prodHasDeposit(prod);
 
   // the lens: the address; a link with today's calculator inputs and no lens opens on "בפרישה" (agent, Pro) / "עד הפרישה" (saver)
@@ -127,7 +134,9 @@ export function FundsFees() {
     );
   }
 
-  const amountsName = amounts.where === 'mine' && mineF ? fullLabel(shortGrp(mineF.grp), key) : prodLabel(prod);
+  // the sheet names the record it writes: the saved product's track when the amounts live there (every door)
+  const amtF = amounts.where === 'mine' && amounts.k ? byK.get(amounts.k) : undefined;
+  const amountsName = amtF ? fullLabel(shortGrp(amtF.grp), key) : prodLabel(prod);
   const boardAmounts = { own: amounts.own, depositOwn: amounts.depositOwn, base: amounts.base, balance: amounts.balance, monthly: amounts.monthly };
   const typeChips = tracksOf(funds as unknown as PFund[], prod).filter((t) => typeCount.get(`${prod} | ${t.track}`));
   const prodsOther = [...new Set(funds.filter((f) => !f.closed && !f.gone && (f.assets ?? 0) > 0 && f.fee != null).map((f) => f.prod))]
@@ -142,7 +151,7 @@ export function FundsFees() {
   else if (career && !ageKnown) body = <AgeStep onAge={(a) => { setAge(a); set({ age: null }); }} onOther={openAmounts} onExample={() => set({ age: AGE_EX })} />;
   else if (career && model.C.age >= model.C.retire) body = <AfterRetire />;
   else body = (
-    <FeesBoard members={members} typeKey={key} prod={prod} mineK={saver ? mineK : null} ownFee={saver && mineP && mineP.fee != null && Number.isFinite(mineP.fee) ? { fee: mineP.fee, depfee: mineP.depfee } : null}  /* one own-fee rule (myFeeCost): only a typed own fee counts */
+    <FeesBoard members={members} typeKey={key} prod={prod} mineK={ownF?.k ?? null} ownFee={ownP && ownP.fee != null && Number.isFinite(ownP.fee) ? { fee: ownP.fee, depfee: ownP.depfee } : null}  /* one own-fee rule (myFeeCost): only a typed own fee counts; the mark is the saver's (FeesBoard `saver`) */
       amounts={boardAmounts} deposits={deposits} mode={career ? 'career' : 'yr'} career={career ? model.assume : undefined} ageOwn={model.ageOwn} retNote={<>התשואה: <RetFig m={model} /></>}
       saver={saver} asof={asof} onRow={(k) => host.openSheet({ t: 'track', k })} onAmounts={openAmounts} onAssume={openAssume} />
   );

@@ -118,13 +118,7 @@ const KNOWN: { check: keyof Gate; re: RegExp; where: RegExp; why: string }[] = [
   { check: 'targets', re: /^\? \d+×\d+/, where: /product sheet/, why: 'today\'s ProductCard "?" tips 23×26 inside the /my product sheet (components/saver/ProductCard.tsx, moved unchanged)' },
   { check: 'targets', re: /^(הסרה|סגירה|מגדל מקפת אישית כללי) \d+×\d+/, where: /product sheet/, why: 'today\'s ProductCard head link and "הסרה" inside the /my product sheet (moved unchanged)' },
   { check: 'jargon', re: /^נדידה$/, where: /product sheet/, why: 'today\'s ProductCard text ("נדידה") inside the /my product sheet (moved unchanged)' },
-  { check: 'targets', re: /^(\?|מה זה .+) 1\d×1\d$/, where: /card (dec|Pro)/, why: 'the shared "?" tip (17×17) beside the decision and Pro figures (components/Tip, used unchanged by the new lens and the moved panels)' },
-  { check: 'small', re: /^10\.5px \?$/, where: /card (dec|Pro)/, why: 'the same "?" tip glyph at 10.5 px' },
-  { check: 'targets', re: /×(1\d|2\d)$/, where: /card dec/, why: 'decision pack links ("כל ההליכים", "התפלגות דמי הניהול", "הקובץ") 19 px high (the agent decision pack moved into the lens)' },
   { check: 'targets', re: /./, where: /card Pro, every section open/, why: 'today\'s Pro panels opened (window chips 41×40, CSV, source links 18–21 px high): moved unchanged into the sections (§17.3)' },
-  { check: 'small', re: /^10\.5px עד /, where: /card years/, why: 'the partial-year label "עד אוק׳" under "2026" at 10.5 px (pages/fund/CardYears.tsx, MonthGrid row label)' },
-  { check: 'targets', re: /^\S+ \d+×2\d$/, where: /screener track sheet/, why: 'a company name link in the track sheet 21 px high (components/compare TrackSheet, frozen)' },
-  { check: 'clipped', re: /^סוגים שונים = רמות סיכון שונות/, where: /hub month/, why: 'hub month: the risk note row is cut with an ellipsis at 390 px (pages/hub/HubMonth.tsx, styles/funds-hub.css)' },
 ];
 /** asserts the gates on the page's main column (or `root`) and any open sheet */
 async function gate(page: Page, door: Door, where: string, root = ROOT) {
@@ -442,7 +436,7 @@ test.describe('/my (T-M1…T-M4, §18.6 /my)', () => {
       expect(vs[2]).toContain('מעל הממוצע בגמל להשקעה כללי (−0.19%)');
       const yr = (await page.locator('[data-my] .my-yr').allInnerTexts()).map(norm);
       expect(yr[0]).toContain('מקום 5 מתוך 5');
-      expect(yr[1]).toContain('באמצע (5–6 מתוך 12)');   // coordinator: self-managed / IRA not ranked (§18.5)
+      expect(yr[1]).toContain('באמצע (5–6 מתוך 12 שיש להם שנה מלאה)');   // coordinator: self-managed / IRA not ranked (§18.5); P2 (novice B2 #3): 12 of the 13 have a full year
       expect(yr[2]).toContain('מקום 7 מתוך 11');
       expect(fees.map((f) => ils(f)[0])).toEqual(['₪560', '₪600', '₪550']);
       expect(await txt(page, '#fee-sum')).toContain('כ-1,710');
@@ -700,11 +694,7 @@ test.describe('fees tool /funds/tools/fees (T-F1…T-F4, §18.6 fees)', () => {
 /* ============================ history (T-N1) ============================ */
 test.describe('history: page moves push, in-page state replaces (T-N1)', () => {
   test('fees → bar "המוצרים שלי" → product sheet → "כרטיס המסלול" → Back → /my → Back → fees', async ({ page }) => {
-    // KNOWN DEFECT (reported 26.11.26, owner L2-c): the product sheet's "כרטיס המסלול" is a plain link inside today's ProductCard, so the
-    // card is pushed over the sheet's own history entry; Back from the card reopens the product sheet on /my and the next Back only
-    // closes it (three Backs to the fees tool, not two). Compare's sheets close first (backThen) and then navigate. Marked as expected
-    // to fail: when it is fixed Playwright reports "expected to fail but passed" and this line goes.
-    test.fail(true, 'T-N1: Back from the card reopens the /my product sheet');
+    // fixed in P2 (26.11.26): a page link inside the /my product sheet closes the sheet's history entry first (backThen), then moves
     const errors = await visitor(page, 'saver', M3);
     await go(page, FEES, READY.fees);
     await page.getByRole('navigation', { name: 'ראשי' }).getByRole('link', { name: 'המוצרים שלי' }).click();
@@ -818,9 +808,8 @@ test.describe('desktop at 1280 px (Q2)', () => {
 });
 
 /* ============================ axe on the rollout pages (Chromium) ============================ */
-/* investigated and reported 26.11.26 (rule@page, as tests/a11y-known.json): colour contrast of the compare button's words on the card
-   (#cmp-cta span), of the screener's average figure (.avgline .num.pos) and of the /my strip's month labels (.ro-sc small) */
-const AXE_KNOWN = new Set(['color-contrast@card', 'color-contrast@screener', 'color-contrast@/my']);
+/* the three contrast defects reported 26.11.26 (#cmp-cta span, .avgline .num.pos, .ro-sc small) were fixed in P2: nothing is known */
+const AXE_KNOWN = new Set<string>([]);
 test.describe('axe (Chromium): no serious or critical violation on the rollout pages', () => {
   const PAGES: [string, string, string][] = [['card', '/funds/p2102', READY.card], ['screener', S, READY.screen], ['/my', '/my', READY.my], ['hub', '/funds', READY.hub], ['fees', FEES, READY.fees]];
   test('saver door, M3', async ({ page }, info) => {

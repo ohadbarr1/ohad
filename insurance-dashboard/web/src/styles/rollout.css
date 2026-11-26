@@ -107,3 +107,9 @@ table.mg th .mg-avgh small { font-size: 11px; }
 @media (prefers-reduced-motion: reduce) {
   .ro-tabs-in button, .ro-seg button, button.ro-sc, .ro-num, .ro-toast { transition: none !important; }
 }
+
+/* tests lane (axe, AA, 26.11.26): the strip's month labels and the boards' positive average a step darker (lighter in the dark look:
+   mixed toward the ink); the screener track sheet's company link a 32-px target */
+.ro-sc small { color: color-mix(in oklch, var(--muted) 62%, var(--fg)); }
+.ro-page .avgline .num.pos { color: color-mix(in oklch, var(--up) 82%, var(--fg)); }
+#track-sheet .scr-dl dd a { display: inline-flex; align-items: center; min-height: 32px; }
