@@ -1,0 +1,63 @@
+/* P6-2b: lenses גרפים and טבלה of the peers board (pages/peers/ChartsLens.tsx, TableLens.tsx; spec p6 §3.2, §13.1 F5 / F7 / F8, §14.1 G1,
+   §14.3 rules 7–8). Every rule is scoped under p6-*; the shell's peerboard.css is not relied on, so it can change freely. */
+.p6-lens { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.p6-lens .panel { margin: 0; }
+.p6-charts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.p6-ccol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (max-width: 1099px) { .p6-charts { grid-template-columns: minmax(0, 1fr); } }
+
+/* charts: drawn left to right (14.3 rule 8: the end names sit in the right margin and must not inherit the page's direction) */
+.p6-ch { direction: ltr; min-width: 0; }
+.p6-ch .chart-tools, .p6-ch [class*="tools"] { direction: rtl; }
+.p6-hsub { font-size: 12px; font-weight: 500; color: var(--muted); }
+.p6-ctl { gap: 6px; }
+.p6-note { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+.p6-note b { color: var(--fg); }
+.p6-note .num { direction: ltr; unicode-bidi: isolate; }
+
+/* the ranking chart's median: a legend line in the panel head, whole, outside the plot (14.1 G1) */
+.p6-barshd { align-items: center; }
+.p6-medleg { display: inline-block; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--fg); }
+.p6-medleg i { display: inline-block; vertical-align: middle; margin-inline-end: 6px; width: 22px; height: 0; border-top: 2px dashed var(--fg); opacity: 0.75; }
+.p6-medleg .num { direction: ltr; unicode-bidi: isolate; }
+@media (max-width: 760px) { .p6-barshd .p6-medleg { order: 3; flex-basis: 100%; } }
+/* the mix legend sits under its title (N8) */
+.p6-mixhd { flex-direction: column; align-items: flex-start; gap: 2px; }
+
+/* tables */
+.p6-btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.p6-btnrow .btn { min-height: 44px; }
+table.p6-ct { font-variant-numeric: tabular-nums; }
+table.p6-ct th.p6-th { padding: 0; vertical-align: bottom; border-inline-start: 1px solid var(--line-soft); }
+table.p6-ct th.p6-th .thsort { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 76px; min-height: 44px; padding: 7px 10px; width: 100%; font-weight: 600; text-align: end; }
+table.p6-ct th.p6-th .thsort:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+table.p6-ct th.p6-th .thsort small { font-size: 10.5px; color: var(--muted); font-weight: 400; white-space: nowrap; direction: rtl; }
+table.p6-ct th.p6-th.sel .thsort { box-shadow: inset 0 -2px 0 var(--accent); }
+table.p6-ct td { border-inline-start: 1px solid var(--line-soft); text-align: end; }
+table.p6-ct td.q4 { background: color-mix(in oklch, var(--up) 17%, transparent); }
+table.p6-ct td.q3 { background: color-mix(in oklch, var(--up) 7%, transparent); }
+table.p6-ct td.q2 { background: color-mix(in oklch, var(--down) 6%, transparent); }
+table.p6-ct td.q1 { background: color-mix(in oklch, var(--down) 14%, transparent); }
+table.p6-ct td.outc { background: repeating-linear-gradient(135deg, var(--panel2) 0 4px, var(--panel) 4px 8px); }
+table.p6-ct td.outc .num { color: var(--faint); font-weight: 400; }
+table.p6-ct td .num { direction: ltr; unicode-bidi: isolate; }
+table.p6-ct td .num.pos { color: var(--up); }
+table.p6-ct td .num.neg { color: var(--down); }
+table.p6-ct td .num.stale { opacity: 0.8; }
+table.p6-ct tr.lead td { font-weight: 600; }
+table.p6-ct tr.lead td.pr-ent { box-shadow: inset 3px 0 0 var(--accent); }
+table.p6-ct tfoot td { color: var(--muted); border-top: 1px solid var(--line); }
+table.p6-ct tfoot tr.p6-medr td { color: var(--fg); font-weight: 600; }
+table.p6-ct tfoot .p6-medc { display: inline-block; white-space: nowrap; unicode-bidi: isolate; }
+table.p6-ct tfoot sup.p6-n { margin-inline-start: 1px; }
+table.p6-ct.dense { font-size: 12px; }
+table.p6-ct.dense th.p6-th .thsort { min-width: 64px; padding: 6px 6px; }
+.p6-ent { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; min-height: 32px; font-weight: 500; }
+.p6-ent .pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px; flex: none; }
+.p6-ent:hover { text-decoration: underline; text-underline-offset: 3px; }
+.p6-ent:focus-visible { outline: 2px solid var(--accent); }
+/* phone: a standalone number is a target of at least 44 × 32 (14.1 N5) */
+@media (max-width: 760px) {
+  table.p6-ct td :is(a.src, button.src) { display: inline-block; min-width: 44px; min-height: 32px; line-height: 32px; }
+  .p6-lens { gap: 10px; }
+}
