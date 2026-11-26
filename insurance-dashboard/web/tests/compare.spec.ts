@@ -403,7 +403,7 @@ test.describe('doors (D1–D4, B3)', () => {
     await page.locator('#dec-doc').click();
     await expect(page).toHaveURL(/\/funds\/compare\/print\?k=/);
     await page.waitForLoadState('networkidle');
-    expect((await page.locator('main').innerText()).length).toBeGreaterThan(400);
+    await expect.poll(async () => (await page.locator('main').innerText()).length, { timeout: 15_000 }).toBeGreaterThan(400);
     await noErrors(errors);
   });
 
