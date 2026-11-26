@@ -17,6 +17,7 @@ import { back, F_CHART, F_DER, F_FIXED, F_OLD, F_RE, FREQS, fmtV, plab, pord, UN
 import { carriedVal, cellVal, colLabel, fmtCol, formulaTok, lexOf, parseCol, resolver, ROE_EXPR, ROE_NAME, ROE_OLD_TOK, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
 import { ALIASES, autoAlias, codeOf, ExprError, FUNCS, parse, toCode } from '../lib/seriesExpr';
 import { fundRoster, monthOf, rosterDiff, rosterText, useRosterFile } from '../lib/roster';
+import { SetEditor } from './peers/SetEditor';
 import '../styles/peers.css';
 import '../styles/restate.css';
 
@@ -631,27 +632,6 @@ function FormulaEditor({ book, ents, freq, p, onAdd }: { book: Book; ents: strin
         <div className="pr-alias">{Object.entries(ALIASES).filter(([, id]) => book.byId.has(id)).map(([a, id]) => <button key={a} type="button" onClick={() => { const l = lex.labelOf.get(id) ?? a; const at = expr.length + (expr && !/[\s(+\-*/]$/.test(expr) ? 1 : 0) + l.length + 1; setExpr(`${expr}${expr && !/[\s(+\-*/]$/.test(expr) ? ' ' : ''}${l} `); setCaret(at); }}>{lex.labelOf.get(id)}<span className="mono muted"> {a}</span></button>)}</div>
         <p className="muted">כותבים שם מדד בעברית כפי שהוא מופיע ברשימה, או קוד ({'{מזהה}'} לכל מדד). פונקציות: {(Object.keys(FUNCS) as (keyof typeof FUNCS)[]).map((f) => `${f} · ${FUNCS[f]}`).join(' · ')}.</p>
       </details>
-    </section>
-  );
-}
-
-/* ---------- peer sets ---------- */
-function SetEditor({ reg, ents, onChange, onSave, own, onDelete }: { reg: Registry; ents: string[]; onChange: (ids: string[]) => void; onSave: (name: string) => void; own: PeerSet | null; onDelete: (id: string) => void }) {
-  const [name, setName] = useState('');
-  const groups: [string, string][] = [['ins', 'מבטחות'], ['fund', 'בתי השקעות']];
-  return (
-    <section className="panel pr-seted" aria-label="עריכת קבוצת עמיתים">
-      {groups.map(([k, n]) => (
-        <div key={k} className="pr-row"><span className="muted pr-gl">{n}</span>{reg.entities.filter((e) => e.k === k).map((e) => (
-          <button key={e.id} type="button" className="chip" aria-pressed={ents.includes(e.id)} onClick={() => onChange(ents.includes(e.id) ? ents.filter((x) => x !== e.id) : reg.entities.map((x) => x.id).filter((x) => x === e.id || ents.includes(x)))}><i className="sw" style={{ background: idCss(e.id) }} />{e.sh ?? e.n}</button>
-        ))}</div>
-      ))}
-      <div className="pr-row">
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="שם הקבוצה" aria-label="שם הקבוצה" />
-        <button type="button" className="btn" disabled={!name.trim() || !ents.length} onClick={() => { onSave(name.trim()); setName(''); }}>שמירה כקבוצה</button>
-        {own && <button type="button" className="btn" onClick={() => onDelete(own.id)}>מחיקת “{own.n}”</button>}
-        <span className="src">נשמר בדפדפן זה</span>
-      </div>
     </section>
   );
 }
