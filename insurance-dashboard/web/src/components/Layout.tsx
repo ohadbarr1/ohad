@@ -150,8 +150,9 @@ export function Layout() {
 function RailItem({ p, path, news, href }: { p: Place; path: string; news: number; href: string }) {
   const [to, icon, label, short, , wide] = p;
   const badge = to === '/questions' && news > 0;
+  const on = isOn(path, p);  // P6-B1: one place is lit; NavLink's own prefix match (class and aria-current) would light a second one
   return (
-    <NavLink to={href} end={to === '/' || to === '/my'} aria-label={badge ? `${label}, ${news} תשובות במעקב השתנו` : label} className={`item${isOn(path, p) ? ' active' : ''}${wide ? ' wide-item' : ''}`}>
+    <NavLink to={href} end={to === '/' || to === '/my'} aria-label={badge ? `${label}, ${news} תשובות במעקב השתנו` : label} className={() => `item${on ? ' active' : ''}${wide ? ' wide-item' : ''}`} aria-current={on ? 'page' : undefined}>
       <Ico name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span>
       {badge && <span className="wt-badge" aria-hidden="true">{news > 99 ? '99+' : news}</span>}
     </NavLink>
