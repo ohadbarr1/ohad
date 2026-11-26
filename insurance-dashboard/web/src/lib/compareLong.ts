@@ -2,12 +2,13 @@
    - The period ("שנה אחרונה | 3 שנים | 5 שנים"; agent and Pro add YTD) picks the figure of every row, the sentence and the chart window together,
      so a tap on "שנה אחרונה" can never leave the board unchanged (regression of the old "1Y changes nothing").
    - Figures are the site's published ones (lib/funds retOf: gross, as the regulator publishes, before fees), the category
-     average is compounded from funds/cat.json (lib/compareMonths periodRow). Places and ties: lib/fundsTie tieRanks on the period's band. */
+     average is compounded from funds/cat.json (lib/compareMonths periodRow). Places and ties: lib/pageMonths placeGroups (the screener's, the hub's and the card's ranking) on the period's band. */
 import type { Basis, CatX, FundX, HistX, Per } from './funds';
 import { growth, onAxis, retOf, underwater } from './funds';
 import { cum, periodRow, seriesOf } from './compareMonths';
 import { addMonths } from './market';
-import { rankText, tieBand, tieRanks } from './fundsTie';
+import { rankText, tieBand } from './fundsTie';
+import { placeGroups } from './pageMonths';   // P6 R2: the one site-wide ranking
 
 export type LongPer = Extract<Per, 'ytd' | 'y12' | 'a3' | 'a5'>;
 export type LongMode = 'g' | 'd';   // growth of 100 | how far below the peak
@@ -58,11 +59,11 @@ export interface BoardOut { k: string; label: string; value: V; place: string | 
  *  "almost equal" flag; ties keep the order chosen. Different risk levels (`cross`): the order chosen, no places. */
 export function boardRows(rows: BoardIn[], per: LongPer, asof: number, cross: boolean): BoardOut[] {
   if (cross) return rows.map((r) => ({ ...r, place: null, tie: false }));
-  const tr = tieRanks(rows, (r) => r.value, tieBand(per, asof));
+  const pl = placeGroups(rows.map((r) => r.value), tieBand(per, asof)), tr = new Map(rows.map((r, i) => [r.k, pl[i]] as const));
   const order = rows.map((r, i) => ({ r, i })).sort((a, b) => (b.r.value ?? -Infinity) - (a.r.value ?? -Infinity) || a.i - b.i);
   return order.map(({ r }) => {
     const t = tr.get(r.k);
-    return { ...r, place: t && rows.filter((x) => x.value != null).length > 1 ? rankText(t) : null, tie: !!t && t.lo !== t.hi };
+    return { ...r, place: t && t.place != null && t.lo != null && t.hi != null && t.n > 1 ? rankText({ lo: t.lo, hi: t.hi }) : null, tie: !!t && t.shared };
   });
 }
 

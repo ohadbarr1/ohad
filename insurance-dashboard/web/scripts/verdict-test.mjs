@@ -7,11 +7,11 @@ import { pathToFileURL } from 'node:url';
 
 const dir = mkdtempSync(join(tmpdir(), 'verdicttest-')), out = join(dir, 'verdict.unit.mjs');
 try {
-  await build({ entryPoints: [new URL('../tests/verdict.unit.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error' });
+  await build({ entryPoints: [new URL('../tests/verdict.unit.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' } });
   await import(pathToFileURL(out).href);
   // B4: the tender's name carries its own article, so "לא בין הזוכות ב" + "ההליך הרביעי" must not read "בההליך"
   const out2 = join(dir, 'tender.mjs');
-  await build({ stdin: { contents: "export { inTender } from '" + new URL('../src/lib/verdict.ts', import.meta.url).pathname + "';", resolveDir: dir }, bundle: true, format: 'esm', platform: 'node', outfile: out2, logLevel: 'error' });
+  await build({ stdin: { contents: "export { inTender } from '" + new URL('../src/lib/verdict.ts', import.meta.url).pathname + "';", resolveDir: dir }, bundle: true, format: 'esm', platform: 'node', outfile: out2, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' } });
   const { inTender } = await import(pathToFileURL(out2).href);
   const eq = (a, b) => { if (a !== b) { console.error(`FAIL inTender: got "${a}", want "${b}"`); process.exit(1); } };
   eq(`לא בין הזוכות ${inTender('ההליך הרביעי')}`, 'לא בין הזוכות בהליך הרביעי');
