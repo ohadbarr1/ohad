@@ -2,10 +2,10 @@
 import * as echarts from 'echarts/core';
 import { BarChart, LineChart, PieChart, ScatterChart } from 'echarts/charts';
 import { GridComponent, LegendComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components';
-import { MarkAreaComponent } from 'echarts/components';  // F2 TIME: the quartile bands of the percentile charts
+import { GraphicComponent, MarkAreaComponent } from 'echarts/components';  // P6-B4: GraphicComponent draws the names at the lines' ends (foxchart.layoutEnds)  // F2 TIME: the quartile bands of the percentile charts
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 
 echarts.use([BarChart, LineChart, PieChart, ScatterChart, TitleComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
-echarts.use([MarkAreaComponent]);
+echarts.use([MarkAreaComponent, GraphicComponent]);
 echarts.use([SVGRenderer]);  // W8: the SVG export (Chart.tsx draws on canvas; a copy is rendered to an SVG string for the file)
 export { echarts };
