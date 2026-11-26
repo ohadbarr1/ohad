@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { idCss } from '../../lib/identity';
 import type { PeerSet, Registry } from '../../lib/registry';
 
 /* ---------- peer sets ---------- */
