@@ -41,6 +41,10 @@ export function at(row: LedgerRow, asOf: string | null): number {
   return c;
 }
 const fmt = (row: LedgerRow, v: number | null | undefined) => (v == null ? '–' : `${nf(v, row.dec)}${row.unit === '%' ? '%' : ''}`);
+/** P6-B6: the page shows a million without ".0" (a ratio or a per-share figure keeps its decimals; a source sheet keeps the printed value, `fmt`) */
+const isMillions = (row: LedgerRow) => !row.ratio && /^מיליוני/.test(row.unit);
+const noZero = (row: LedgerRow, t: string) => (isMillions(row) ? t.replace(/\.0$/, '') : t);
+const fmtD = (row: LedgerRow, v: number | null | undefined) => noZero(row, fmt(row, v));
 
 export interface Change { text: string; tone?: 'pos' | 'neg'; src: () => Prov }
 /** The change between two points: a percent only between two positive figures, otherwise the difference (points for a ratio). Opens its formula. */
@@ -49,7 +53,7 @@ export function change(row: LedgerRow, a: LedgerPoint | undefined, b: LedgerPoin
   let text: string, formula: string, unit: string, x: number;
   if (row.ratio) { x = a.v - b.v; text = `${x > 0 ? '+' : ''}${nf(x, row.dec)}${row.unit === '%' ? ' נק׳' : ''}`; formula = `${a.label} − ${b.label}`; unit = row.unit === '%' ? 'נק׳' : row.unit; }
   else if (a.v > 0 && b.v > 0) { x = (a.v / b.v - 1) * 100; text = x > 300 ? `×${nf(a.v / b.v, 1)}` : pct(Number(x.toFixed(1)) || 0, 1, true); formula = `${a.label} ÷ ${b.label} − 1`; unit = '%'; }
-  else { x = a.v - b.v; text = `${x > 0 ? '+' : ''}${nf(x, row.dec)}`; formula = `${a.label} − ${b.label}`; unit = row.unit; }
+  else { x = a.v - b.v; text = noZero(row, `${x > 0 ? '+' : ''}${nf(x, row.dec)}`); formula = `${a.label} − ${b.label}`; unit = row.unit; }
   const r = Number(x.toFixed(1)) || 0;
   return {
     text, tone: r > 0 ? 'pos' : r < 0 ? 'neg' : undefined,
@@ -76,7 +80,7 @@ function RowChart({ row, asOf, height }: { row: LedgerRow; asOf: string | null; 
   const r = readRow(row, asOf), ix = r.c < 0 ? [] : idxBack(row, r.c, 20), upto = ix.map((i) => row.pts[i]);
   return (
     <>
-    <MetricCard title={row.title} tag={row.tag} unit={row.unit === '%' ? '%' : row.unit} value={fmt(row, r.cur?.v)} dec={row.dec} color={row.color ?? 0} kind={row.kind ?? (row.ratio ? 'area' : 'bar')}
+    <MetricCard title={row.title} tag={row.tag} unit={row.unit === '%' ? '%' : row.unit} value={fmtD(row, r.cur?.v)} dec={row.dec} color={row.color ?? 0} kind={row.kind ?? (row.ratio ? 'area' : 'bar')}
       delta={r.yoy ? { text: `${r.yoy.text} YoY`, tone: r.yoy.tone } : undefined} src={r.cur?.src} href={r.cur?.href} to={row.to} height={height}
       x={upto.map((p) => p.label)} series={row.stack ? row.stack.map((s) => ({ ...s, data: ix.map((i) => s.data[i]) })) : [{ name: row.title, data: upto.map((p) => p.v) }]}
       foot={<>{row.source}{r.cur ? <> · <span className="num">{r.cur.label}</span></> : null}</>} />
@@ -86,7 +90,7 @@ function RowChart({ row, asOf, height }: { row: LedgerRow; asOf: string | null; 
 
 function Val({ row, p }: { row: LedgerRow; p: LedgerPoint | undefined }) {
   if (!p || p.v == null) return <span className="muted">–</span>;
-  const t = fmt(row, p.v);
+  const t = fmtD(row, p.v);
   return <span className={`num${p.der ? ' der' : ''}`}>{p.src ? <Sourced src={p.src} href={p.href}>{t}</Sourced> : t}</span>;
 }
 

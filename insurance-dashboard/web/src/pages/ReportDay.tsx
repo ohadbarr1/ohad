@@ -231,7 +231,11 @@ export function ifrsRows(cur: Pool, prev: Pool | null, end: string, rs: Reports 
 
 /* ---------- figures ---------- */
 const scaled = (v: number, unit: Unit): number => (unit === 'k' ? v / 1e3 : v);
+/** the figure as printed (one decimal on millions): what a source sheet shows */
 const fmt = (v: number, unit: Unit): string => nf(scaled(v, unit), unit === 'nis' ? 2 : 1) + (unit === 'pct' ? '%' : '');
+/** P6-B6: on the page a million has no ".0" (ratios and per-share figures keep their decimals); a figure with a real decimal keeps it */
+const noZero = (t: string, unit: Unit): string => (unit === 'k' ? t.replace(/\.0$/, '') : t);
+const fmtD = (v: number, unit: Unit): string => noZero(fmt(v, unit), unit);
 /** signed, without a "−0.0" */
 const signed = (x: number, d = 1): string => { const r = Number(x.toFixed(d)) || 0; return (r > 0 ? '+' : '') + nf(r, d); };
 
@@ -248,7 +252,7 @@ function V({ f, t, p, note, className = '' }: { f: Fig | null; t: string; p: str
   if (!f) return <span className="muted">–</span>;
   const c = `num ${f.der ? 'der' : ''} ${f.v < 0 ? 'neg' : ''} ${className}`;
   const tip = [f.tip, f.std === '4' ? 'IFRS 4' : '', f.page != null ? `עמ׳ ${f.page}` : ''].filter(Boolean).join(' · ');
-  return <Sourced src={() => figProv(f, t, p, note)} href={f.calc ? null : f.href} title={tip || undefined}><span className={c}>{fmt(f.v, f.unit)}</span></Sourced>;
+  return <Sourced src={() => figProv(f, t, p, note)} href={f.calc ? null : f.href} title={tip || undefined}><span className={c}>{fmtD(f.v, f.unit)}</span></Sourced>;
 }
 /** A percent only between two positive figures; otherwise the difference in the row's unit. Never a percent from or to a loss, never across standards. */
 function Delta({ a, b, t, la, lb }: { a: Fig | null; b: Fig | null; t: string; la: string; lb: string }) {
@@ -262,7 +266,7 @@ function Delta({ a, b, t, la, lb }: { a: Fig | null; b: Fig | null; t: string; l
     txt = x > 300 ? `×${nf(a.v / b.v, 1)}` : pct(Number(x.toFixed(1)) || 0, 1, true); cl = cls(Number(x.toFixed(1)) || null); formula = `${la} ÷ ${lb} − 1`;
   } else {
     const x = scaled(a.v - b.v, a.unit), dec = a.unit === 'nis' ? 2 : 1;
-    txt = `${signed(x, dec)}${a.unit === 'nis' ? '' : ' מ׳'}`; cl = cls(Number(x.toFixed(dec)) || null); title = a.unit === 'nis' ? 'הפרש בש"ח' : 'הפרש במיליוני ש"ח: אחד הנתונים אינו חיובי'; formula = `${la} − ${lb}`; u = unitTxt(a.unit);
+    txt = `${noZero(signed(x, dec), a.unit)}${a.unit === 'nis' ? '' : ' מ׳'}`; cl = cls(Number(x.toFixed(dec)) || null); title = a.unit === 'nis' ? 'הפרש בש"ח' : 'הפרש במיליוני ש"ח: אחד הנתונים אינו חיובי'; formula = `${la} − ${lb}`; u = unitTxt(a.unit);
   }
   const src = () => calc(`${t} · ${la} מול ${lb}`, txt, formula, [[a, la], [b, lb]].map(([f, l]) => ({ label: l as string, v: fmt((f as Fig).v, (f as Fig).unit), src: () => figProv(f as Fig, t, l as string) })), u);
   return <Sourced src={src}><span className={`rd-d num ${cl}`} title={title}>{txt}</span></Sourced>;
@@ -417,7 +421,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
                 {list.length === 0 ? <span className="muted">–</span> : list.map((m) => (
                   <div className="rd-mv" key={m.label}>
                     <span className="rd-ml">{m.label}</span>
-                    <span className={`rd-md num ${cls(m.d)}`}><Sourced src={() => calc(`${m.label} · ${curL} מול ${yoyL}`, signed(m.d / 1e3), `${curL} − ${yoyL}`, [[m.cur, curL], [m.prev, yoyL]].map(([f, l]) => ({ label: l as string, v: fmt((f as Fig).v, (f as Fig).unit), src: () => figProv(f as Fig, m.label, l as string) })), 'מיליוני ש"ח')}>{signed(m.d / 1e3)}</Sourced></span>
+                    <span className={`rd-md num ${cls(m.d)}`}><Sourced src={() => calc(`${m.label} · ${curL} מול ${yoyL}`, signed(m.d / 1e3), `${curL} − ${yoyL}`, [[m.cur, curL], [m.prev, yoyL]].map(([f, l]) => ({ label: l as string, v: fmt((f as Fig).v, (f as Fig).unit), src: () => figProv(f as Fig, m.label, l as string) })), 'מיליוני ש"ח')}>{noZero(signed(m.d / 1e3), 'k')}</Sourced></span>
                     <span className="rd-mb"><V f={m.cur} t={m.label} p={curL} /> <span className="muted">מול</span> <V f={m.prev} t={m.label} p={yoyL} /></span>
                   </div>
                 ))}
@@ -443,7 +447,7 @@ export function ReportDay({ card }: { card?: ReactNode }) {
                     <td className="lbl">{r.line}<span className="dim"><span className="num">{r.period}</span> · {store.d.sheets.find((x) => x.code === r.sheet)?.title ?? r.sheet} · {r.std}</span></td>
                     <td><V f={r.first} t={r.line} p={r.period} note="כפי שדווח אז" /></td>
                     <td><V f={r.last} t={r.line} p={r.period} note={`כפי שהוצג מחדש בדוח ${repName(P)}`} /></td>
-                    <td><Sourced src={() => restDiff(r, signed(scaled(r.d, r.unit), r.unit === 'nis' ? 2 : 1), 'הוצג מחדש − כפי שדווח אז', unitTxt(r.unit))}><span className={`num ${cls(r.d)}`}>{signed(scaled(r.d, r.unit), r.unit === 'nis' ? 2 : 1)}</span></Sourced>{r.first.v > 0 && r.last.v > 0 && <Sourced src={() => restDiff(r, pct(Number(((r.last.v / r.first.v - 1) * 100).toFixed(1)) || 0, 1, true), 'הוצג מחדש ÷ כפי שדווח אז − 1', '%')}><span className={`chg num ${cls(r.d)}`}>{pct(Number(((r.last.v / r.first.v - 1) * 100).toFixed(1)) || 0, 1, true)}</span></Sourced>}</td>
+                    <td><Sourced src={() => restDiff(r, signed(scaled(r.d, r.unit), r.unit === 'nis' ? 2 : 1), 'הוצג מחדש − כפי שדווח אז', unitTxt(r.unit))}><span className={`num ${cls(r.d)}`}>{noZero(signed(scaled(r.d, r.unit), r.unit === 'nis' ? 2 : 1), r.unit)}</span></Sourced>{r.first.v > 0 && r.last.v > 0 && <Sourced src={() => restDiff(r, pct(Number(((r.last.v / r.first.v - 1) * 100).toFixed(1)) || 0, 1, true), 'הוצג מחדש ÷ כפי שדווח אז − 1', '%')}><span className={`chg num ${cls(r.d)}`}>{pct(Number(((r.last.v / r.first.v - 1) * 100).toFixed(1)) || 0, 1, true)}</span></Sourced>}</td>
                   </tr>
                 ))}</tbody>
               </table></div>
