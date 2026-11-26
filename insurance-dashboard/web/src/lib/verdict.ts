@@ -86,6 +86,8 @@ export const fx = (v: number, d = 2) => { const t = v.toLocaleString('en-US', { 
 export const pcf = (v: number | null | undefined) => (v == null ? '–' : `${fx(v, v === Math.round(v) ? 0 : 2)}%`);
 export const pcr = (v: number | null | undefined, d = 2) => (v == null ? '–' : `${fx(v, d)}%`);
 const ymOf = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(2, 4)}`;
+/** "in the tender": the label already carries the article ("ההליך הרביעי"), so the prefix replaces it: "בהליך הרביעי", never "בההליך" (B4) */
+export const inTender = (label?: string | null) => (!label ? 'בהליך' : label.startsWith('ההליך') ? `ב${label.slice(1)}` : `ב${label}`);
 export const tenderSpan = (t: Pick<Tender, 'from' | 'to'>) => `מ-${ymOf(t.from)} עד ${ymOf(t.to)}`;
 
 /** the track's peers, as the fund card ranks them */
@@ -219,7 +221,7 @@ function tilesOf(v: Verdict): Tile[] {
   // W5: the reader's own pension deposit fee above the default-fund price takes the tile (the default-fund line stays below)
   const depUp = v.dflt && v.dep?.basis === 'tender' && v.dep.word === 'high' && v.dep.v != null;
   if (depUp) out.push({ key: 'dep', label: 'מהפקדה, שלך', value: { t: pcf(v.dep!.v), fig: 'dep' }, word: `מעל קרנות ברירת המחדל (${pcf(v.dep!.ref)})`, tone: 'bad' });
-  else if (v.dflt) out.push({ key: 'dflt', label: 'קרן ברירת מחדל', value: v.dflt.winner ? 'כן' : 'לא', word: v.dflt.winner ? `${v.dflt.tender.label ?? v.dflt.tender.id}, ${tenderSpan(v.dflt.tender)}` : `לא בין הזוכות ב${v.dflt.tender.label ?? 'הליך'}`, tone: 'info' });
+  else if (v.dflt) out.push({ key: 'dflt', label: 'קרן ברירת מחדל', value: v.dflt.winner ? 'כן' : 'לא', word: v.dflt.winner ? `${v.dflt.tender.label ?? v.dflt.tender.id}, ${tenderSpan(v.dflt.tender)}` : `לא בין הזוכות ${inTender(v.dflt.tender.label)}`, tone: 'info' });
   else if (v.dep && v.dep.v != null && !v.dep.quiet) out.push({ key: 'dep', label: v.dep.own ? 'מהפקדה, שלך' : 'מהפקדה, ממוצע', value: { t: pcf(v.dep.v), fig: 'dep' },
     word: v.dep.med == null ? '' : `${v.dep.word === 'same' ? 'כמו ' : v.dep.word === 'low' ? 'מתחת ל' : 'מעל '}${v.dep.own ? 'חציון הממוצע בפועל' : 'החציון'} (${pcf(v.dep.med)})`,
     tone: toneOf(v.dep.word) });

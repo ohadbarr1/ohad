@@ -40,9 +40,9 @@ const NAV: Place[] = [
   // B3 (O5): the track comparison has its own place; the insurer comparison after it is no longer called just "השוואה".
   // B1 polish: "מסלולים" comes first (a saver looking for "השוואה" meets it before the industry one); review B2: "חיסכון" sits between
   // the two comparisons, so "מסלולים" and "השוואה ענפית" are not neighbours a thumb can confuse (labels as the owner approved)
-  ['/funds/compare', 'funds', 'מסלולים', 'מסלולים', []],
+  ['/funds/screen', 'funds', 'מסלולים', 'מסלולים', ['/funds/compare', /^\/funds\/[gip]\d+$/]],  // B8: the screener; compare stays one tap away from its tray, the card and the search
   // the long-term-savings section: the lens, flows, managers, the funds pages (and the old /market links)
-  ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', /^\/funds(?!\/compare)/, '/feebook', '/nowcast', '/market']],
+  ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', /^\/funds(?!\/compare|\/screen|\/[gip]\d+$)/, '/feebook', '/nowcast', '/market']],
   ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה ענפית', ['/industry', '/capital', '/restatements']],
   ['/valuation', 'value', 'שווי', 'שווי', [], true],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', ['/warroom', '/fragility'], true],
