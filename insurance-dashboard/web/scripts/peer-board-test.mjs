@@ -182,10 +182,12 @@ if (NUM) {
   eq(P.quarterGrid(C, M('pbc'), 'now', 12).length, 12, 'grid 12 rows');
   // the CSM basis: Harel Q4'23 is gross (17,011†), its YoY at Q4'24 is "–" with the reason (T-R2b)
   const g23 = P.gridRow(C, M('csm'), 'q', '2023Q4').cells.find((x) => x.e === 'harel');
-  ok(g23.v === 17011 && g23.dag === 'gross', "Harel CSM Q4'23 = 17,011†", g23);
+  // P6-D3 landed: Harel Q4'23 is the printed net 15,904 (Q1'25 p.135); before it, the gross 17,011 carried † (fixture switch)
+  const preD3 = g23.v === 17011;
+  ok(preD3 ? g23.dag === 'gross' : (g23.v === 15904 && g23.dag == null), `Harel CSM Q4'23 = ${preD3 ? '17,011†' : '15,904 net'}`, g23);
   const y24 = P.gridRow(C, M('csm'), 'yoy', '2024Q4').cells.find((x) => x.e === 'harel');
-  ok(y24.v == null && y24.why === P.CSM_CROSS, "Harel CSM YoY Q4'24: '–', net against gross", y24.why);
-  eq(P.csmBasis(book, 'phoenix', '2025Q2'), null, 'an unstated basis is not a different basis');
+  ok(preD3 ? (y24.v == null && y24.why === P.CSM_CROSS) : (y24.v != null && y24.why == null), `Harel CSM YoY Q4'24: ${preD3 ? "'–', net against gross" : 'computed, both net'}`, y24);
+  { const b = P.csmBasis(book, 'phoenix', '2025Q2'); ok(b == null || b === 'net', 'Phoenix Q2\'25 is net or unstated, never another basis (P6-D3 states it net)', b); }
   ok(P.gridRow(C, M('csm'), 'q', '2025Q2').cells.find((x) => x.e === 'phoenix').dag == null, 'no † on an unstated basis');
   // Harel CSM YoY at Q3'26: first prints +4.4%, restated comparative +5.4% (P6-D1)
   const h25 = book.get('ifrs:csm_closing', 'harel', 'Q', '2025Q3').v, post = h25 === 16983;
