@@ -1,10 +1,10 @@
 {
- "rows": 11302,
- "rows_core": 1375,
+ "rows": 11301,
+ "rows_core": 1374,
  "rows_shared": 3285,
  "rows_own": 6642,
  "mapped_share": 0.4123,
- "facts": 116911,
+ "facts": 116907,
  "facts_mapped_share": 0.6091,
  "by_kind": {
   "company sheets": {
@@ -18,7 +18,7 @@
   },
   "statements": {
    "own": 1835,
-   "core": 1179,
+   "core": 1178,
    "shared": 752
   }
  },
@@ -34,7 +34,7 @@
   },
   "statements": {
    "own": 32493,
-   "core": 33144,
+   "core": 33140,
    "shared": 19247
   }
  },
@@ -65,7 +65,7 @@
    "own": 130
   },
   "harel": {
-   "core": 136,
+   "core": 135,
    "shared": 399,
    "own": 219
   },
@@ -113,7 +113,7 @@
  "core_ids_unused": [
   "bs.assets_yield_total"
  ],
- "conflicts": 0,
+ "conflicts": 1,
  "collisions": 58,
  "role_mismatch": [
   "altshuler: intangibles = נכסים בלתי מוחשיים"

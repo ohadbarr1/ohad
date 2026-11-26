@@ -1,11 +1,17 @@
 """One continuous quarterly record per company, 2022 onward: web/public/data/series/<company>.json
 
 Rows are (metric, reported segment, basis); columns are quarters. Each cell is the figure printed for that quarter:
-the three-month column of the interim report, or a balance at the quarter end. Sources, in order of preference:
-  1. the period's own report (data/extracted for IFRS 17 periods, data/extracted_hist for earlier ones and for asset managers)
-  2. the comparative column of a later report (flag `cmp`), which may be restated; a comparative restated under IFRS 17 is preferred
-     over the original IFRS 4 figure, so the IFRS 17 series reaches back to 2024
-  3. for Q4 only: the annual figure less the nine-month figure (flag `der`), when both come from sources 1 or 2
+the three-month column of the interim report, or a balance at the quarter end. One value per (metric, segment, basis, period), on the
+site's restatement rule (the statements' fact table, docs/FACTS.md policy `latest`): the LATEST print of the figure.
+  1. IFRS 17 before IFRS 4 (a comparative restated under IFRS 17 keeps the series on one standard as far back as it was restated)
+  2. the latest report that prints the period: the period's own report (data/extracted for IFRS 17 periods, data/extracted_hist for
+     earlier ones and for asset managers) or the comparative column of a later report (flag `cmp`). A later print that differs from
+     the first print beyond rounding is a restatement: flag `rst` = the first print, `rfrom` = the report that first printed it. It is
+     taken only when plausibly the same figure (pipeline/restate_rule.py: same sign and within 10%; a note or segment table reprinted
+     further apart is a regrouping or another basis, not a restatement); otherwise the first print stands. (Harel Q1'25 insurance
+     revenue: 3,544 in the Q1'25 report, 3,560 in the Q1'26 comparative; H1'25, 9M'25 and FY'25 were already struck on 3,560, so a
+     Q4'25 derived from the first print came out 16 too high.)
+  3. for Q4 only: the annual figure less the nine-month figure (flag `der`), both on rule 2
 `std` records the standard the figure was reported under, so the screen can draw the IFRS 4 / IFRS 17 break.
 Dividends (dividend_declared*, dividend_paid*) are stored as positive amounts whatever sign the extraction kept.
 A row whose figures are all balances carries `w: "i"` (instant), so consumers never add it up across quarters.
@@ -13,7 +19,11 @@ A row whose figures are all balances carries `w: "i"` (instant), so consumers ne
 import csv
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import restate_rule  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 FILES = "https://mayafiles.tase.co.il/"
@@ -48,6 +58,18 @@ def period_of(date, window):
     y, md = date[:4], date[5:10]
     q = {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "Q4"}.get(md)
     return f"{y}{q}" if q else None
+
+
+def latest_print(xs):
+    """The figure the site shows for one cell (pipeline/restate_rule.py): IFRS 17 before IFRS 4, then the latest report that prints it;
+    a later print that differs from the first beyond rounding carries the first print (rst, rfrom)."""
+    if not xs:
+        return None
+    std17 = [c for c in xs if c["std"] != "IFRS 4"] or xs
+    c, first = restate_rule.pick(std17, lambda c: c["from"], lambda c: c["own"])
+    if c is not first and restate_rule.restated(first["v"], c["v"]):
+        return {**c, "rst": first["v"], "rfrom": first["from"]}
+    return c
 
 
 index = {}
@@ -89,8 +111,7 @@ for comp in companies:
         m, s, b = key
         vals = {}
         for per, slots in pers.items():
-            # IFRS 17 first (a restated comparative keeps the series on one standard as far back as it was restated), then the own report, then the earliest later report
-            best = lambda xs: sorted(xs, key=lambda c: (c["std"] == "IFRS 4", not c["own"], c["from"]))[0] if xs else None
+            best = latest_print
             flow = "q" in slots or "ytd" in slots or "fy" in slots
             c = None
             if "bal" in slots and not flow:
@@ -103,18 +124,18 @@ for comp in companies:
                 nine = pers.get(per[:4] + "Q3", {}).get("ytd")
                 fy, n9 = best(slots["fy"]), best(nine) if nine else None
                 if fy and n9 and fy["std"] == n9["std"] and not re.search(r"ratio|pct|roe|eps", m):
-                    c = {**fy, "v": round(fy["v"] - n9["v"], 3), "der": 1}
+                    c = {**{k: x for k, x in fy.items() if k not in ("rst", "rfrom")}, "v": round(fy["v"] - n9["v"], 3), "der": 1}
             if c:
                 out = {k: c[k] for k in ("v", "pg", "u", "std") if c.get(k) is not None}
                 if not c["own"]:
                     out["cmp"] = 1
-                for k in ("src", "der"):
-                    if c.get(k):
+                for k in ("src", "der", "rst", "rfrom"):
+                    if c.get(k) is not None:
                         out[k] = c[k]
                 vals[per] = out
             if "fy" in slots:  # the annual figure, for the annual view
                 fy = best(slots["fy"])
-                o = {k: fy[k] for k in ("v", "pg", "u", "std") if fy.get(k) is not None}
+                o = {k: fy[k] for k in ("v", "pg", "u", "std", "rst", "rfrom") if fy.get(k) is not None}
                 if not fy["own"]:
                     o["cmp"] = 1
                 vals[per[:4] + "FY"] = o

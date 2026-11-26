@@ -91,7 +91,7 @@ STEPS = [
     step("build_search", [["pipeline/build_search.py", "--shards", "1536"]], [REG + "documents.csv", REG + "pages_manifest.json", D + "search/text"],
          [D + "search/docs.json", D + "search/ft"]),
     step("build_series", "pipeline/build_series.py", ["data/extracted", "data/extracted_hist", REG + "documents.csv", REG + "presentations.json"],
-         [D + "series"]),
+         [D + "series"], code=["pipeline/restate_rule.py"]),
     step("build_hist", "pipeline/build_hist.py", ["data/extracted_hist", REG + "documents.csv", REG + "presentations.json"], [D + "hist"]),
     step("build_sop", "pipeline/build_sop.py", ["data/extracted_sop", REG + "documents.csv", REG + "presentations.json"], [D + "sop"]),
     step("build_solvency", "pipeline/build_solvency.py", ["data/extracted_solvency", REG + "documents.csv"], [D + "csm/solvency.json"]),
@@ -145,7 +145,7 @@ STEPS = [
     step("build_registry", "pipeline/build_registry.py",
          [D + "adjusted.json", D + "companies/index.json", D + "csm/solvency.json", D + "ifrs.json", D + "ifrs_*.json", D + "kpi.json", D + "lines.json",
           D + "lts.json", D + "market.json", D + "mkt.json", D + "savings_econ.json", D + "series", D + "sop", "web/src/lib/labels.ts"],
-         [D + "peers"], groups={"deploy"}, note="Peer Table metric registry (follows the canon)"),
+         [D + "peers"], code=["pipeline/csm_resolve.py", "pipeline/restate_rule.py"], groups={"deploy"}, note="Peer Table metric registry (follows the canon)"),
     step("build_market_home", "pipeline/build_market_home.py", [D + "market.json"], [D + "market_home.json"], groups={"deploy"}),
     # lane S2: report card per filing (numbers only, every digit a fact; pipeline/check_cards.py validates) and the per-company "new since" events
     step("build_cards", "pipeline/build_cards.py",

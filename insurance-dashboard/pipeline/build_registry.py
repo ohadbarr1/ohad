@@ -23,6 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import csm_resolve  # noqa: E402
+import restate_rule  # noqa: E402
 END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "FY": "12-31"}
 DATA = ROOT / "web" / "public" / "data"
 OUT = DATA / "peers"
@@ -163,10 +164,13 @@ for per in sorted({f["period"] for f in ifrs_meta["files"]}):
         cell = {"v": x["v"], "pg": x.get("pg"), "u": x.get("u") or furl.get((x["c"], per)), "std": "IFRS 17", "own": own, "from": per, "inst": w == "instant"}
         if x.get("src") and x["src"] != "table":
             cell["src"] = x["src"]
-        slot = fx[(x["c"], x["m"], x["g"], x.get("b") or "na")]
-        cur = slot.get(k)
-        if cur is None or (own and not cur["own"]) or (own == cur["own"] and per > cur["from"]):
-            slot[k] = cell
+        fx[(x["c"], x["m"], x["g"], x.get("b") or "na")].setdefault(k, []).append(cell)
+# one value per cell on the site's restatement rule (pipeline/restate_rule.py, as series/<company>.json): the latest plausible print, flag 8
+# when it differs from the first print beyond rounding
+for slot in fx.values():
+    for k, prints in slot.items():
+        c, first = restate_rule.pick(prints, lambda c: c["from"], lambda c: c["own"])
+        slot[k] = {**c, **({"rst": first["v"]} if c is not first and restate_rule.restated(first["v"], c["v"]) else {})}
 MERGED = []
 for (c, m, g, b), cells in fx.items():
     key = (m, g)
@@ -193,7 +197,8 @@ for (c, m, g, b), cells in fx.items():
     for k, x in cells.items():
         if k in vals or (row.get("w") == "i") != x["inst"]:
             continue
-        vals[k] = {"v": round(x["v"], 3), "pg": x["pg"], "u": x["u"], "std": "IFRS 17", **({"cmp": 1} if not x["own"] else {}), **({"src": x["src"]} if x.get("src") else {})}
+        vals[k] = {"v": round(x["v"], 3), "pg": x["pg"], "u": x["u"], "std": "IFRS 17", **({"cmp": 1} if not x["own"] else {}), **({"src": x["src"]} if x.get("src") else {}),
+                   **({"rst": x["rst"]} if x.get("rst") is not None else {})}
     row["vals"] = dict(sorted(vals.items()))
 
 print("basis merged (na <-> stated):", len(MERGED))
@@ -260,7 +265,7 @@ for (m, seg), comps in sorted(by_key.items()):
                 else:
                     ch.cell(comp, p, c["v"], c.get("pg"), c.get("u"), c["fl"], aux=c["lab"], meta=meta)
                 continue
-            fl = (1 if c.get("der") else 0) | (2 if c.get("std") == "IFRS 4" else 0) | (16 if c.get("src") else 0) | (64 if c.get("cmp") else 0)
+            fl = (1 if c.get("der") else 0) | (2 if c.get("std") == "IFRS 4" else 0) | (8 if c.get("rst") is not None else 0) | (16 if c.get("src") else 0) | (64 if c.get("cmp") else 0)
             v = c["v"]
             if m in TURN and v < 0:  # a release printed as a reduction of the CSM in the roll-forward: shown as the amount released (flag 4)
                 v, fl = -v, fl | 4

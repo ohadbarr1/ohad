@@ -13,7 +13,8 @@ One workbook per company fox covers (insurers and investment houses), built from
                  company-defined KPIs from the decks (adjusted.json), and ROE computed in the sheet as live formulas
   Sources        one row per value: sheet, cell (a link to it), key, label, period, value, kind, document, report id, page, the PDF at
                  the page, the MAYA report page, a second source where the value is derived, a note
-Rows = metrics (English key + Hebrew label + unit + segment + standard), columns = Q1'23 ... Q2'26 with FY after each Q4; numbers
+Rows = metrics (English key + Hebrew label + unit + segment + standard), columns = Q1'23 ... the latest quarter any company has filed
+(kpi.json; Q3'26 on 26.11.26) with FY after each Q4, so the workbook a company page links runs to the report the page shows; numbers
 are numbers (NIS millions unless the unit column says otherwise; thousands printed in the reports are divided by 1,000). A derived
 value (Q4 = FY − 9M) is written as the site computed it, in italics, with both source pages; a formula is a live Excel formula.
 
@@ -40,8 +41,10 @@ MAYA = "https://maya.tase.co.il/he/reports/{}"
 REG_DS = {"pen": ["pensia-net"], "gem": ["gemelnet"], "hish": ["gemelnet"], "ins": ["insurance"], "pg": ["pensia-net", "gemelnet"]}
 REG_NAME = {"pensia-net": "פנסיה-נט", "gemelnet": "גמל-נט", "insurance": "ביטוח-נט"}
 
-# ---------------------------------------------------------------- periods: Q1'23 ... Q2'26, FY after each Q4
-FIRST, LAST = (2023, 1), (2026, 2)
+# ---------------------------------------------------------------- periods: Q1'23 ... the latest filed quarter, FY after each Q4
+# (main() and check() move LAST to last_reported(); the module default is the window the workbooks had before the Q3'26 season)
+FIRST0 = (2023, 1)
+FIRST, LAST = FIRST0, (2026, 2)
 
 
 def _periods():
@@ -61,8 +64,8 @@ PCOL = {p: i for i, p in enumerate(PERIODS)}
 
 
 def set_periods(first, last):
-    """Move the period window: the sheet readers below read FIRST, LAST, PERIODS and PCOL at call time. The workbooks keep Q1'23 ...
-    Q2'26; pipeline/build_tables.py reads the same layers over every period on file through these readers."""
+    """Move the period window: the sheet readers below read FIRST, LAST, PERIODS and PCOL at call time. The workbooks run Q1'23 ... the
+    latest filed quarter; pipeline/build_tables.py reads the same layers over every period on file through these readers."""
     global FIRST, LAST, PERIODS, PCOL
     FIRST, LAST = first, last
     PERIODS = _periods()
@@ -561,7 +564,10 @@ def kpis(ctx, co, name):
 
 
 # ---------------------------------------------------------------- the workbook
-WIDTHS = [26, 46, 7, 26, 8] + [10] * len(PERIODS)
+def widths():
+    return [26, 46, 7, 26, 8] + [10] * len(PERIODS)
+
+
 SRC_HEAD = ["Sheet", "Cell", "Key", "Label (he)", "Segment", "Period", "Value", "Unit", "Kind", "Document", "Report id", "Page", "Source link",
             "MAYA report", "Second source", "Note"]
 SRC_WIDTHS = [12, 8, 26, 40, 22, 8, 12, 6, 9, 48, 10, 6, 30, 30, 30, 50]
@@ -573,7 +579,7 @@ def pdf_at(url, pg):
 
 
 def write_data(book, sheet, co_name, title, note, rows, sources):
-    sh = book.sheet(sheet, widths=WIDTHS, freeze=(3, NFIX))
+    sh = book.sheet(sheet, widths=widths(), freeze=(3, NFIX))
     sh.row([Cell(f"{co_name} · {title}", "title")])
     sh.row([Cell(note, "note")])
     sh.row([Cell(h, "head") for h in ["Key", "שורה", "Unit", "Segment / entity", "Standard"] + [plabel(p) for p in PERIODS]])
@@ -671,6 +677,7 @@ def companies(ctx):
 
 def check():
     ctx = Ctx()
+    set_periods(FIRST0, last_reported(ctx))
     probs, n_vals, sizes = [], 0, {}
     cos = companies(ctx)
     on_disk = sorted(p.stem for p in OUT.glob("*.xlsx"))
@@ -746,10 +753,18 @@ def check():
     return 1 if probs else 0
 
 
+def last_reported(ctx):
+    """the latest quarter any company has filed (kpi.json, as pipeline/build_tables.py reads it): (2026, 3)"""
+    ps = [p for c in ctx.kpi["companies"].values() for p in c["periods"]]
+    q = max(p if "Q" in p else f"{p[:4]}Q4" for p in ps)
+    return int(q[:4]), int(q[5])
+
+
 def main():
     if "--check" in sys.argv:
         return check()
     ctx = Ctx()
+    set_periods(FIRST0, last_reported(ctx))
     OUT.mkdir(parents=True, exist_ok=True)
     cos = companies(ctx)
     for old in OUT.glob("*.xlsx"):

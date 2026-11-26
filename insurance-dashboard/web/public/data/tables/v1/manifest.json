@@ -1760,14 +1760,14 @@
    "last": "2026Q3",
    "first_label": "Q4'18",
    "last_label": "Q3'26",
-   "changed": "2026-11-25",
+   "changed": "2026-11-26",
    "csv": "kpi.csv",
    "json": "kpi.json",
    "pq": "pq/kpi.pq",
-   "csv_bytes": 6983404,
-   "json_bytes": 7651847,
-   "csv_sha256": "20d63389394e44661d258645eefc39086e8f2042c7f52783b99c147da69d06f8",
-   "json_sha256": "a10af3725af6ece93a9cdb48324c535cc585b728f2ba79db2caf2ac41d252e62"
+   "csv_bytes": 6988346,
+   "json_bytes": 7656799,
+   "csv_sha256": "b4b0b498f2bef49bbe97807edef86d01d979e1767e24233d56a606b7e82342e6",
+   "json_sha256": "0a1f6a5df8e9b03bef10d45b0597284cb894797dd015002778615fb7249edbce"
   },
   {
    "id": "ifrs17",
@@ -2361,14 +2361,14 @@
    "last": "2026Q3",
    "first_label": "Q1'21",
    "last_label": "Q3'26",
-   "changed": "2026-11-25",
+   "changed": "2026-11-26",
    "csv": "ifrs17.csv",
    "json": "ifrs17.json",
    "pq": "pq/ifrs17.pq",
-   "csv_bytes": 2129751,
-   "json_bytes": 2326909,
-   "csv_sha256": "8d798ac817229ccd1794d59ea205cf27df4edb3b8d6ef53b41ee757c41a973f5",
-   "json_sha256": "63ec3040c900240a94a12b791371ae43376cbcfe1b67453de99c515a817e7932"
+   "csv_bytes": 2130262,
+   "json_bytes": 2327406,
+   "csv_sha256": "fd6a38e9733e1188fa3803f4022e0bde084a5029665af254c92948d3f4ec1701",
+   "json_sha256": "96c61f56a1e0fc3f1a1d3702177061bfd44f39511f3fb81c15ea44a628edcd96"
   },
   {
    "id": "solvency",
@@ -3192,14 +3192,14 @@
    "last": "2026Q3",
    "first_label": "Q4'18",
    "last_label": "Q3'26",
-   "changed": "2026-11-25",
+   "changed": "2026-11-26",
    "csv": "solvency.csv",
    "json": "solvency.json",
    "pq": "pq/solvency.pq",
-   "csv_bytes": 1621327,
-   "json_bytes": 1764764,
-   "csv_sha256": "d3423ee506c41630a424de646800319055b6a234875de42e7de0967f196f5bfc",
-   "json_sha256": "78dbe3bcd53cbc1c9b42ccbe7ea4c8b8c1e8120cc50f922d0bb3245461a38928"
+   "csv_bytes": 1621275,
+   "json_bytes": 1764712,
+   "csv_sha256": "b37bee5928d78cfd01cda80d6eb699179a2dee882f03977ef5a73574d5f7b69a",
+   "json_sha256": "c1bd9280f9534b36cd4fbcd15ef61371c7b9d8890b6b5c3058be278d3eca00d3"
   },
   {
    "id": "pnc",
@@ -3695,12 +3695,12 @@
   "json": "changes.json",
   "csv": "changes.csv",
   "pq": "pq/changes.pq",
-  "builds": 9,
+  "builds": 11,
   "last": "2026-11-26"
  },
  "kit": {
   "xlsx": "fox_powerquery.xlsx",
-  "bytes": 36336,
-  "sha256": "a1e536433e7451ddfff14d9b42ee870bba42dcd35f4fca64bd2ca9ca2102e747"
+  "bytes": 36333,
+  "sha256": "b5851887e8033b89c8cbb27177439260ca06fa57e2935658a92272cee758ea21"
  }
 }

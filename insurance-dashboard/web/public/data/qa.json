@@ -1,5 +1,5 @@
 {
- "built": "2026-11-26T21:45:58+02:00",
+ "built": "2026-11-26T23:08:26+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -21,7 +21,7 @@
    "id": "additivity",
    "ok": true,
    "level": "fail",
-   "n": 3143,
+   "n": 3144,
    "fail": 0,
    "note": "same-report misses (IFRS 17, 2024+): none"
   },
@@ -29,9 +29,9 @@
    "id": "additivity_vintage",
    "ok": false,
    "level": "warn",
-   "n": 3143,
+   "n": 3144,
    "fail": 170,
-   "note": "misses across reports (restated between reports; full vintage model is Phase 3): ayalon 47/338, clal 14/459, hachshara 16/311, harel 40/532, menora 30/454, migdal 3/431, phoenix 20/618"
+   "note": "misses across reports (restated between reports; full vintage model is Phase 3): ayalon 47/338, clal 14/459, hachshara 16/311, harel 40/533, menora 30/454, migdal 3/431, phoenix 20/618"
   },
   {
    "id": "additivity_funds",
@@ -53,7 +53,7 @@
    "id": "latin",
    "ok": true,
    "level": "fail",
-   "n": 12672,
+   "n": 12671,
    "fail": 0,
    "note": "labels with 3+ consecutive Latin words"
   },
@@ -61,7 +61,7 @@
    "id": "placeholder",
    "ok": true,
    "level": "fail",
-   "n": 12672,
+   "n": 12671,
    "fail": 0,
    "note": "placeholder captions"
   },
@@ -69,7 +69,7 @@
    "id": "derived",
    "ok": true,
    "level": "fail",
-   "n": 16576,
+   "n": 16575,
    "fail": 0,
    "note": "derived Q4/H2 figures on non-flow lines"
   },
@@ -341,9 +341,9 @@
    "id": "consistency",
    "ok": true,
    "level": "fail",
-   "n": 26646,
+   "n": 26660,
    "fail": 0,
-   "note": "22958 equal within rounding, 3374 labelled basis differences (alt 14, filer 762, restated 1117, std 1481), last 8 quarters"
+   "note": "23013 equal within rounding, 3335 labelled basis differences (alt 14, filer 762, restated 1078, std 1481), last 8 quarters"
   },
   {
    "id": "fund_roles",
@@ -357,8 +357,8 @@
    "id": "consistency_old",
    "ok": false,
    "level": "warn",
-   "n": 26646,
-   "fail": 314,
+   "n": 26660,
+   "fail": 312,
    "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
   },
   {
@@ -389,7 +389,7 @@
    "id": "changes",
    "ok": true,
    "level": "fail",
-   "n": 1626,
+   "n": 1625,
    "fail": 0,
    "note": "83 reports, every printed figure on its page"
   },
@@ -399,7 +399,7 @@
    "level": "fail",
    "n": 408,
    "fail": 0,
-   "note": "408 events, 10928 figures, 0 problems"
+   "note": "408 events, 10934 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -477,9 +477,9 @@
    "id": "attribution",
    "ok": true,
    "level": "fail",
-   "n": 676,
+   "n": 682,
    "fail": 0,
-   "note": "attribution: 15 files, 410 bridges, 676 decompositions sum to their totals, every contribution opens to a report page; 0 problems"
+   "note": "attribution: 15 files, 413 bridges, 682 decompositions sum to their totals, every contribution opens to a report page; 0 problems"
   },
   {
    "id": "ifrs_std",
@@ -509,17 +509,17 @@
    "id": "facts",
    "ok": true,
    "level": "fail",
-   "n": 116911,
+   "n": 116907,
    "fail": 0,
-   "note": "facts: 116911 workbook figures and 1256 statement restatement pairs checked over 193584 rows of 13 companies; (1256 with the original as the cell's first print; the rest were first printed under an ol"
+   "note": "facts: 116907 workbook figures and 1256 statement restatement pairs checked over 193584 rows of 13 companies; (1256 with the original as the cell's first print; the rest were first printed under an ol"
   },
   {
    "id": "model_xlsx",
    "ok": true,
    "level": "fail",
-   "n": 44791,
+   "n": 45408,
    "fail": 0,
-   "note": "model_xlsx: 13 workbooks, 44791 value cells, every one sourced; largest menora 492 KB; 0 problems"
+   "note": "model_xlsx: 13 workbooks, 45408 value cells, every one sourced; largest phoenix 493 KB; 0 problems"
   },
   {
    "id": "tables",
@@ -645,9 +645,9 @@
    "id": "cell_sources",
    "ok": true,
    "level": "warn",
-   "n": 116911,
+   "n": 116907,
    "fail": 0,
-   "note": "116911 current statement figures; 0 without a MAYA report id + publication date"
+   "note": "116907 current statement figures; 0 without a MAYA report id + publication date"
   },
   {
    "id": "links",

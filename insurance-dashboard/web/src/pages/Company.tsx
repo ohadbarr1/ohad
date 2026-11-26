@@ -92,7 +92,7 @@ export function CompanyLayout() {
           {filer && <p className={`filer-note${noteOpen ? ' open' : ''}`} title={filer.note} onClick={() => setNoteOpen((o) => !o)}><span className="chip est">{filer.name} · <span className="num">{filer.stake}%</span></span> {filer.note}</p>}
         </div>
         <div className="head-acts">
-          {entry.has_financials && <a className="btn" href={`/data/xlsx/${entry.id}.xlsx`} download={`fox-${entry.id}.xlsx`} onClick={() => track('xlsx_dl')} title="חוברת Excel למודל: כל מדד × תקופה (Q1'23 עד Q2'26 ו-FY), לכל ערך מסמך, עמוד וקישור" style={{ display: 'inline-flex', gap: 6, alignItems: 'center', color: 'var(--fg)', textDecoration: 'none' }}><Icon name="download" />Excel למודל</a>}
+          {entry.has_financials && <a className="btn" href={`/data/xlsx/${entry.id}.xlsx`} download={`fox-${entry.id}.xlsx`} onClick={() => track('xlsx_dl')} title="חוברת Excel למודל: כל מדד × תקופה (מ-Q1'23 עד הרבעון האחרון שדווח, ו-FY), לכל ערך מסמך, עמוד וקישור" style={{ display: 'inline-flex', gap: 6, alignItems: 'center', color: 'var(--fg)', textDecoration: 'none' }}><Icon name="download" />Excel למודל</a>}
           <CompanyActions id={entry.id} valuation={entry.has_price} />
         </div>
       </div>
