@@ -51,13 +51,13 @@ test.describe('first screen and budgets (C1, C3, C4, C5, C9, D6, §9.2)', () => 
     }).map((b) => b.innerText.trim() || b.id));
     expect(stray, 'buttons above the fold that do not change the grid').toEqual([]);
     if (FIX10) {
-      expect(r1.map(norm)).toEqual(['−1.45%', '−0.73%', '−0.74%']);
+      expect(r1.map(norm)).toEqual(['−1.44%', '−0.72%', '−0.73%']);  // the published MONTHLY_YIELD, gross (owner 26.11.26)
       expect(norm(await page.locator('#month-grid tbody tr:first-child th').innerText())).toBe('אוקטובר 26');
-      expect(norm(await page.locator('#month-insight').innerText())).toBe('באוקטובר כולם ירדו: הראל ומנורה הכי פחות, מגדל הכי הרבה. הכי הרבה בשנה האחרונה: הראל, +10.3%.');
+      expect(norm(await page.locator('#month-insight').innerText())).toBe('באוקטובר כולם ירדו: הראל ומנורה הכי פחות, מגדל הכי הרבה. הכי הרבה בשנה האחרונה: הראל, +10.5%.');
       for (const v of ['₪560', '₪550', '₪610']) expect(fee).toContain(v);
       const half = norm(await page.locator('#month-grid tfoot tr:nth-child(1)').innerText()), year = norm(await page.locator('#month-grid tfoot tr:nth-child(2)').innerText());
-      expect(half).toMatch(/\+1\.4%.*\+2\.3%.*\+2\.3%/);
-      expect(year).toMatch(/\+9\.0%.*\+10\.3%.*\+10\.0%/);
+      expect(half).toMatch(/\+1\.4%.*\+2\.4%.*\+2\.4%/);
+      expect(year).toMatch(/\+9\.2%.*\+10\.5%.*\+10\.2%/);
     }
     expect(await smallTargets(page), 'touch targets ≥ 44 / 32 px').toEqual([]);
     await noErrors(errors);
@@ -122,7 +122,7 @@ test.describe('first screen and budgets (C1, C3, C4, C5, C9, D6, §9.2)', () => 
     await expect(page.locator('#month-grid tbody tr')).toHaveCount(12);
     if (FIX10) {
       const y2025 = norm(await page.locator('#month-grid tbody tr', { has: page.locator('th', { hasText: /^2025$/ }) }).innerText());
-      expect(y2025).toMatch(/\+15\.4%?.*\+14\.3%?.*\+16\.5%?/);
+      expect(y2025).toMatch(/\+15\.6%?.*\+14\.5%?.*\+16\.6%?/);
     }
     await noErrors(errors);
   });
@@ -173,7 +173,7 @@ test.describe('sheets (C2, C4, C5, C7, C10, D6)', () => {
     await page.locator('#cross-line').click();
     const d = dialog(page);
     await expect(d).toContainText('למה אין כאן ״מי הגבוה״?');
-    if (FIX10) { await expect(d).toContainText('−5.32%'); await expect(d).toContainText('−3.14%'); }
+    if (FIX10) { await expect(d).toContainText('−5.30%'); await expect(d).toContainText('−3.12%'); }
     expect(await d.innerText()).not.toContain('אינה בעלת משמעות');
     await noErrors(errors);
   });
