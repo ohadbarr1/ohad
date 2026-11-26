@@ -28,7 +28,7 @@ ok(tileOf(PRODS.pensia)?.id === 'pension' && tileOf(PRODS.hash)?.id === 'hash' &
 {
   const c = companiesOf(funds, PRODS.pensia, 'כללי');
   ok(c.map((x) => x.label).join('|') === 'הראל · גילעד|הראל · מנוף|כלל|מגדל|מנורה', `pension general tiles A–Z (${c.map((x) => x.label).join('|')})`);
-  ok(c.find((x) => x.k === 'p2102')?.a5 === 8.6, `Migdal 5Y net 8.6 (${c.find((x) => x.k === 'p2102')?.a5})`);
+  ok(c.find((x) => x.k === 'p2102')?.a5 === 8.79, `Migdal 5Y 8.79, the published a5 (${c.find((x) => x.k === 'p2102')?.a5})`);
   ok(twinNote(c) === 'להראל שתי קרנות פנסיה. השם של הקרן שלך כתוב בדוח השנתי; ברוב המקרים זו הגדולה (גילעד).', `twin note (${twinNote(c)})`);
 }
 // gemel lehashkaa general: every company, alphabetical, no twin note
@@ -40,7 +40,7 @@ ok(tileOf(PRODS.pensia)?.id === 'pension' && tileOf(PRODS.hash)?.id === 'hash' &
   ok(labs.join() === [...labs].sort((a, b) => a.localeCompare(b, 'he')).join(), `gemel lehashkaa A–Z (${labs.join('|')})`);
   ok(labs.includes('מגדל') && labs.includes('מנורה') && labs.includes('אלטשולר'), 'short company names');
   ok(twinNote(c) === null, 'no twin note');
-  ok(a5Of(F('g7936')) === 6.67 && a5Of(F('g7936'), 'gross') === F('g7936').a5, 'a5 on the basis');
+  ok(a5Of(F('g7936')) === F('g7936').a5 && a5Of(F('g7936')) === 7.36, 'a5: the published gross figure (owner 26.11.26), never the net estimate');
 }
 // a company with several tracks in a category: distinct labels
 {

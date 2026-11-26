@@ -21,9 +21,10 @@ GM = "גמל | כללי"
 GE = "גמל | מניות"
 
 
-def hist(yn, a=1000.0, dep=10.0, wd=2.0, tr=0.0, ct=GM):
+def hist(y, a=1000.0, dep=10.0, wd=2.0, tr=0.0, ct=GM):
     n = len(P)
-    return {"p": P, "y": [yn] * n, "yn": [yn] * n, "a": [a] * n, "fee": [0.5] * n, "dep": [dep] * n, "wd": [wd] * n, "tr": [tr] * n,
+    # "yn": a stale net series, never read (owner 26.11.26, gross only)
+    return {"p": P, "y": [y] * n, "yn": [y - 1.0] * n, "a": [a] * n, "fee": [0.5] * n, "dep": [dep] * n, "wd": [wd] * n, "tr": [tr] * n,
             "nd": [round(dep - wd + tr, 1)] * n, "ct": [[P[0], ct]]}
 
 
@@ -46,8 +47,8 @@ class Fixture(unittest.TestCase):
         H = {"g1": hist(0.30, tr=30.0), "g1b": hist(0.9, tr=-40.0, ct=GE), "g2": hist(0.35, dep=5.0, wd=5.0, tr=20.0),
              "g2b": hist(0.9, dep=5.0, wd=5.0, tr=-20.0, ct=GE), "g3": hist(0.50), "g4": hist(0.55), "g5": hist(0.60), "g6": hist(0.65),
              "g7": hist(0.10)}
-        for f in live:  # the card's 5Y net (funds.json net.a5): the latest month ranks on it
-            f["net"] = {"a5": round(((1 + H[f["k"]]["yn"][0] / 100) ** 12 - 1) * 100, 2)}
+        for f in live:  # the card's published 5Y (funds.json a5): the latest month ranks on it
+            f["a5"] = round(((1 + H[f["k"]]["y"][0] / 100) ** 12 - 1) * 100, 2)
         (d / "funds.json").write_text(json.dumps({"asof": ASOF, "funds": live}, ensure_ascii=False), encoding="utf-8")
         (d / "funds" / "closed.json").write_text(json.dumps({"funds": []}), encoding="utf-8")
         for k, h in H.items():
@@ -61,7 +62,7 @@ class Fixture(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.dir, ignore_errors=True)
 
-    def test_5y_net_and_median(self):
+    def test_5y_and_median(self):
         r = self.rows["g1"]
         self.assertAlmostEqual(r["r5"], round((1.003 ** 12 - 1) * 100, 2))
         self.assertNotIn("g7", self.rows)       # IRA: not ranked

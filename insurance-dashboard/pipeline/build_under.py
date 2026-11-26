@@ -12,7 +12,7 @@ python3 pipeline/build_under.py --check    rebuild in memory: byte-equal to the 
   -> web/public/data/under/m/<yyyymm>.json   one month: the category medians and the headline rows behind that month's series point
 
 Inputs: funds.json, funds/closed.json (name, group, manager of every track, closed ones included: no survivorship), funds/<k>.json
-(monthly a, yn, dep, wd, tr, nd, ct), flows/<prod>.json (the group x product monthly org and comp of build_flows.py).
+(monthly a, y, dep, wd, tr, nd, ct), flows/<prod>.json (the group x product monthly org and comp of build_flows.py).
 Units: NIS millions; returns and gaps percent per year; months yyyymm.
 """
 import json
@@ -35,7 +35,7 @@ BAND = TIE_BP / 100  # percent points per year
 BQ = 25             # bottom quartile: category percentile <= 25 (funds_lib.percentiles, 100 = best)
 SAVER_BP = 25       # the saver's line (components/saver/UnderLine.tsx) needs a gap of at least 25bp
 EPS = 1e-9
-SRC = ("הרשות לשוק ההון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il), כפי שהאתר מפרסם אותם: funds/<k>.json (תשואה חודשית נטו, נכסים, תזרימים), "
+SRC = ("הרשות לשוק ההון: גמל-נט, פנסיה-נט, ביטוח-נט (data.gov.il), כפי שהאתר מפרסם אותם: funds/<k>.json (תשואה חודשית כפי שפורסמה, נכסים, תזרימים), "
        "funds.json, funds/closed.json, flows/<prod>.json")
 
 METHOD = {
@@ -44,14 +44,14 @@ METHOD = {
     "past": "תשואות עבר אינן מנבאות תשואות עתיד. פער של 5 שנים אינו אומר שהפער יימשך, ואינו המלצה לעבור מסלול",
     "why5": "למה 5 שנים: חלון ברירת המחדל של הדירוגים באתר (lib/fundsTie.ts DEFAULT_PER); קצר מזה מושפע בעיקר מתזמון ומרעש שוק, ארוך מזה מכסה "
             "מעט מסלולים ומנהלים שהתחלפו",
-    "net": "נטו, אומדן: " + FL.NET_METHOD.split(": ", 1)[1].split(". תקופות")[0] + ". 5 שנים: ריבית דריבית של 60 התשואות החודשיות הנטו "
-           "(yn ב-funds/<k>.json) בחזקת 1/5, מעוגל ל-0.01 (עד 0.01 נ\"א מהמספר שבדף המסלול); בחודש האחרון: המספר שבדף המסלול (funds.json net.a5). דמי הניהול: הממוצע "
-           "בפועל של המסלול, לא מה שחוסך מסוים משלם; דמי ניהול מהפקדה אינם נכללים",
+    "net": "תשואה ברוטו, כפי שהרשות מפרסמת, לפני דמי ניהול (בעלים, 26.11.26: דמי הניהול שונים מחוסך לחוסך ונקבעים מול הגוף המנהל, ולכן אינם מנוכים). "
+           "5 שנים: ריבית דריבית של 60 התשואות החודשיות (y ב-funds/<k>.json) בחזקת 1/5, מעוגל ל-0.01; בחודש האחרון: המספר שבדף המסלול "
+           "(funds.json a5, AVG_ANNUAL_YIELD_TRAILING_5YRS כפי שפורסם)",
     "cat": "קטגוריה: אותו מוצר ואותו מסלול (מוצר | מסלול, כפי שהאתר מדרג), לפי הקטגוריה של המסלול באותו חודש (ct). נכנסים המסלולים הפתוחים "
            "באותו חודש עם נכסים חיוביים ועם 60 חודשי תשואה רצופים; לא מסלולים בניהול אישי (IRA). רק קטגוריה של 5 מסלולים לפחות. "
            "מסלולים שנסגרו אחר כך נכללים בחודשים שבהם היו פתוחים",
     "pct": "אחוזון בקטגוריה: " + FL.PR_METHOD.split(": ", 1)[1].split(". בקבוצה")[0] + f". רבעון תחתון: אחוזון {BQ} ומטה",
-    "med": "חציון הקטגוריה: החציון של תשואות 5 השנים הנטו של המסלולים בקטגוריה (לא משוקלל בנכסים; במספר זוגי, ממוצע שני האמצעיים)",
+    "med": "חציון הקטגוריה: החציון של תשואות 5 השנים (ברוטו) של המסלולים בקטגוריה (לא משוקלל בנכסים; במספר זוגי, ממוצע שני האמצעיים)",
     "gap": f"פער: חציון הקטגוריה פחות תשואת המסלול, נקודות אחוז לשנה. פער של פחות מ-{BAND:.2f} נ\"א לשנה (פס השוויון של האתר) = 0. "
            "מסלול מעל החציון: פער 0",
     "cost": "עלות הפער: נכסי המסלול בסוף החודש × הפער ÷ 100, מיליוני ש\"ח לשנה. כמה פחות היה צובר בשנה סכום כזה בתשואה שנתית נמוכה מהחציון "
@@ -108,7 +108,7 @@ def gap_of(med, r5):
 
 
 def ann5(yn):
-    """60 monthly net returns (percent) -> annualised percent, rounded to 0.01 (as the site's tables publish it)"""
+    """60 monthly returns (gross, percent) -> annualised percent, rounded to 0.01 (as the site's tables publish it)"""
     c = math.prod(1 + x / 100 for x in yn)
     return r2((c ** (12 / len(yn)) - 1) * 100)
 
@@ -150,8 +150,8 @@ class Track:
         i = self.ix.get(p)
         if i is None or i < WIN - 1 or self.h["p"][i - WIN + 1] != FL.madd(p, -(WIN - 1)):
             return None
-        yn = self.h["yn"][i - WIN + 1:i + 1]
-        return None if any(x is None for x in yn) else ann5(yn)
+        ys = self.h["y"][i - WIN + 1:i + 1]
+        return None if any(x is None for x in ys) else ann5(ys)
 
     def win12(self, p):
         """the 12 indexes ending in p, or None when a month is missing"""
@@ -232,8 +232,8 @@ MCOLS = ["k", "a", "r5", "pct", "gap", "cost", "nd12", "c12", "mig", "gfl12", "i
 
 
 def month(p, T, G, units, pub=None):
-    """every ranked track of month p, as dicts, and the category medians {cat: [n, median]}. pub: {k: 5Y net} the site publishes for the
-    latest month (funds.json net.a5), used there instead of the compounded figure so the page and the track card agree"""
+    """every ranked track of month p, as dicts, and the category medians {cat: [n, median]}. pub: {k: 5Y} the site publishes for the
+    latest month (funds.json a5, as the regulator publishes it), used there instead of the compounded figure so the page and the track card agree"""
     live = []
     for t in T.values():
         i = t.ix.get(p)
@@ -257,9 +257,9 @@ def month(p, T, G, units, pub=None):
     for t, a, c in live:
         if a <= 0 or t.ira:
             continue
-        r = t.r5(p)
-        if pub is not None and r is not None:
-            r = pub.get(t.k)
+        # the latest month: the published 5Y (funds.json a5) of every track that has one, the same peers funds.json ranks (pr.a5);
+        # earlier months: compounded from the 60 published monthly returns
+        r = pub.get(t.k) if pub is not None else t.r5(p)
         if r is not None:
             by.setdefault(c, []).append((t, a, r))
     out, cats = [], {}
@@ -300,7 +300,7 @@ def build(d=D):
     cov = []
     files = {}
     latest = None
-    pub = {f["k"]: f["net"]["a5"] for f in F["funds"] if (f.get("net") or {}).get("a5") is not None}
+    pub = {f["k"]: f["a5"] for f in F["funds"] if f.get("a5") is not None}
     for p in months:
         rs, cats = month(p, T, G, units, pub if p == asof else None)
         hd = [r for r in rs if r["head"]]
@@ -381,12 +381,12 @@ def parity(files, d=D):
         if f is None:
             bad.append(f"{x['k']}: not a live track")
             continue
-        a5 = (f.get("net") or {}).get("a5")
+        a5 = f.get("a5")
         if a5 is None or abs(a5 - x["r5"]) > 0.0101:
-            bad.append(f"{x['k']}: r5 {x['r5']} vs net.a5 {a5}")
-        pn = (f.get("pn") or {}).get("a5")
-        if pn != x["pct"]:
-            bad.append(f"{x['k']}: pct {x['pct']} vs pn.a5 {pn}")
+            bad.append(f"{x['k']}: r5 {x['r5']} vs a5 {a5}")
+        pr = (f.get("pr") or {}).get("a5")
+        if pr != x["pct"]:
+            bad.append(f"{x['k']}: pct {x['pct']} vs pr.a5 {pr}")
         if bool(f.get("mig")) != bool(x["mig"]):
             bad.append(f"{x['k']}: mig {x['mig']} vs funds.json {f.get('mig')}")
     return bad

@@ -3,7 +3,7 @@
  "version": "v1",
  "site": "https://fox-research-il.web.app",
  "base": "https://fox-research-il.web.app/data/tables/v1/",
- "built": "2026-11-25",
+ "built": "2026-11-26",
  "promise": "v1: a column never changes meaning, a metric id never changes meaning or unit; new columns are appended at the end, new tables and metrics are added; a breaking change opens v2 beside v1.",
  "columns": [
   {
@@ -3646,7 +3646,7 @@
    "en": "Tracks, monthly (regulator)",
    "grain": "track × metric × month, last 12 months",
    "grain_he": "מסלול × מדד × חודש, 12 החודשים האחרונים",
-   "rows": 56366,
+   "rows": 42612,
    "entities": 1262,
    "metrics": [
     {
@@ -3675,28 +3675,19 @@
       "regulator"
      ],
      "def": "תשואה חודשית כפי שפורסמה, לפני דמי ניהול (MONTHLY_YIELD)"
-    },
-    {
-     "id": "return_net",
-     "he": "תשואה נטו (אומדן)",
-     "unit": "%",
-     "kinds": [
-      "estimate"
-     ],
-     "def": "אומדן fox: התשואה ברוטו פחות שיעור דמי הניהול מהצבירה ÷ 12; שיעור ממוצע של המסלול, לא של חוסך מסוים"
     }
    ],
    "first": "2025-11",
    "last": "2026-10",
    "first_label": "11/25",
    "last_label": "10/26",
-   "changed": "2026-11-25",
+   "changed": "2026-11-26",
    "csv": "funds_m.csv",
    "json": null,
    "pq": "pq/funds_m.pq",
-   "csv_bytes": 17954191,
+   "csv_bytes": 13456429,
    "json_bytes": null,
-   "csv_sha256": "e880aea5c53183880e20168dacb28e40af590d15e3d22734c531c994f1bcff29",
+   "csv_sha256": "10eccabdfa38b293530147f4e9dea1e4ac1ba2b86997c39894113da2dd2735c9",
    "json_sha256": null
   }
  ],
@@ -3704,12 +3695,12 @@
   "json": "changes.json",
   "csv": "changes.csv",
   "pq": "pq/changes.pq",
-  "builds": 8,
-  "last": "2026-11-25"
+  "builds": 9,
+  "last": "2026-11-26"
  },
  "kit": {
   "xlsx": "fox_powerquery.xlsx",
   "bytes": 36336,
-  "sha256": "134734802ff87333f15c4619db9c25c359961aadb3ff55d5bf069711ccced787"
+  "sha256": "a1e536433e7451ddfff14d9b42ee870bba42dcd35f4fca64bd2ca9ca2102e747"
  }
 }

@@ -16064,20 +16064,6 @@
          }
         }
        },
-       "med_n": {
-        "type": "object",
-        "properties": {
-         "y12": {
-          "$ref": "#/$defs/num"
-         },
-         "a3": {
-          "$ref": "#/$defs/num"
-         },
-         "a5": {
-          "$ref": "#/$defs/num"
-         }
-        }
-       },
        "n_w": {
         "type": "object",
         "additionalProperties": {
@@ -16094,7 +16080,6 @@
           "grp",
           "prod",
           "g",
-          "nt",
           "td"
          ],
          "properties": {
@@ -16136,35 +16121,7 @@
             }
            }
           },
-          "nt": {
-           "type": "object",
-           "properties": {
-            "y12": {
-             "$ref": "#/$defs/num"
-            },
-            "a3": {
-             "$ref": "#/$defs/num"
-            },
-            "a5": {
-             "$ref": "#/$defs/num"
-            }
-           }
-          },
           "td": {
-           "type": "object",
-           "properties": {
-            "y12": {
-             "$ref": "#/$defs/num"
-            },
-            "a3": {
-             "$ref": "#/$defs/num"
-            },
-            "a5": {
-             "$ref": "#/$defs/num"
-            }
-           }
-          },
-          "tdn": {
            "type": "object",
            "properties": {
             "y12": {
@@ -16278,20 +16235,6 @@
              },
              "fo": {
               "$ref": "#/$defs/nums"
-             },
-             "net": {
-              "type": "object",
-              "properties": {
-               "y12": {
-                "$ref": "#/$defs/num"
-               },
-               "a3": {
-                "$ref": "#/$defs/num"
-               },
-               "a5": {
-                "$ref": "#/$defs/num"
-               }
-              }
              },
              "gross": {
               "type": "object",

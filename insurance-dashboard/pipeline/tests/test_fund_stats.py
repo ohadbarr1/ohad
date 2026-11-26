@@ -89,21 +89,20 @@ class Track(unittest.TestCase):
         ps = months(202301, 48)
         ys = [2.0 if j % 2 == 0 else -1.0 for j in range(48)]
         h = hist("g1", ps, ys, "גמל | כללי")
-        cat = {"p": ps, "y": [x / 2 for x in ys], "yn": [x / 2 for x in ys]}
+        cat = {"p": ps, "y": [x / 2 for x in ys], "yn": [0.0 for x in ys]}  # a stale net series in the file is never read
         rf = {p: 0.0 for p in ps}
         o = B.track_stats(h, asof, rf, cat)
-        self.assertEqual(o["basis"], "net")
+        self.assertEqual(o["basis"], "gross")  # owner 26.11.26: every statistic on the published gross return
         self.assertAlmostEqual(o["beta36_vs_cat"], 2.0)
         self.assertEqual((o["worst_m"], o["best_m"], o["pct_pos_m"]), (-1.0, 2.0, 50.0))
         self.assertAlmostEqual(o["dd_max"], -1.0)
         self.assertEqual(o["n_months"], 48)
         self.assertEqual(o["dd_all_from"], 202301)
         self.assertAlmostEqual(o["vol36"], round(S.vol_ann(ys[-36:]), 2))
-        # a missing net month falls back to gross; a short history gets no 36-month metrics
-        yn = list(ys)
-        yn[40] = None
-        o = B.track_stats(hist("g2", ps, ys, "גמל | כללי", yn=yn), asof, rf, cat)
-        self.assertEqual(o["basis"], "gross")
+        # a net series in the history (old files) is ignored: the gross y is the series; a short history gets no 36-month metrics
+        yn = [x - 1 for x in ys]
+        o2 = B.track_stats(hist("g2", ps, ys, "גמל | כללי", yn=yn), asof, rf, cat)
+        self.assertEqual((o2["basis"], o2["vol36"], o2["worst_m"]), ("gross", o["vol36"], o["worst_m"]))
         o = B.track_stats(hist("g3", ps[-20:], ys[-20:], "גמל | כללי"), asof, rf, cat)
         self.assertNotIn("vol36", o)
 
@@ -129,12 +128,12 @@ class Panel(unittest.TestCase):
         self.assertEqual(R["tracks"]["g2"][-1], 0)
         self.assertEqual(R["n"][-1], 6)
         self.assertIsNone(R["tracks"]["g0"][-1])  # closed: no rank after it closed
-        self.assertEqual([s["metric"] + s["basis"] for s in R["sets"]], ["y12net", "a3net", "y12gross", "a3gross"])
+        self.assertEqual([s["metric"] + s["basis"] for s in R["sets"]], ["y12gross", "a3gross"])
 
     def test_persistence(self):
         P = B.panel(self.H, 0, self.asof)
         doc = B.build_persist(self.H, P, self.asof)
-        row = next(x for x in doc["rows"] if x["fam"] == "גמל" and x["win"] == "12" and x["basis"] == "net")
+        row = next(x for x in doc["rows"] if x["fam"] == "גמל" and x["win"] == "12" and x["basis"] == "gross")
         self.assertEqual(row["stay_pct"], 100.0)           # perfectly persistent
         self.assertEqual(row["rows"][0]["to"], [row["top"], 0, 0, 0])
         for q in row["rows"]:

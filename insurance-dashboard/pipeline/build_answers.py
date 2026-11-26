@@ -59,6 +59,12 @@ def previous():
     return idx, hist
 
 
+# Owner, 26.11.26: the funds answers moved from the net-of-fee estimate to the published gross return. Their earlier versions stay in the
+# history (append-only), but a version seen on or before the switch is on the retired basis, so it is not offered as `prev`: "changed
+# from" would compare a net figure with a gross one, and no net figure is shown any more.
+RETIRED = {"funds": "2026-11-26"}
+
+
 def with_history(rows, idx, hist, today):
     """append each superseded version to the history and mark the rows whose current version differs from the last published one"""
     prev = {r["id"]: r for r in (idx or {}).get("rows", []) if r.get("h")}
@@ -70,6 +76,9 @@ def with_history(rows, idx, hist, today):
             if not L or L[-1]["h"] != p["h"]:
                 L.append({"h": p["h"], "corr": p["corr"], "asof": p.get("asof"), "at": today})
         L = H.get(r["id"])
+        cut = RETIRED.get(r.get("topic"))
+        if L and cut and L[-1]["at"] <= cut:
+            L = None
         if L and r["st"] == "ok" and L[-1]["h"] != r["h"]:
             r["prev"] = {"h": L[-1]["h"], "corr": L[-1]["corr"], "at": L[-1]["at"]}
     hist["v"] = 1

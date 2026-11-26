@@ -364,7 +364,6 @@ def t_savings_m(ctx):
 
 FUND_M = [  # id, file key, label, unit, kind, definition (manifest)
     ("return_gross", "y", "תשואה ברוטו", "%", "regulator", "תשואה חודשית כפי שפורסמה, לפני דמי ניהול (MONTHLY_YIELD)"),
-    ("return_net", "yn", "תשואה נטו (אומדן)", "%", "estimate", "אומדן fox: התשואה ברוטו פחות שיעור דמי הניהול מהצבירה ÷ 12; שיעור ממוצע של המסלול, לא של חוסך מסוים"),
     ("fee_rate", "fee", "דמי ניהול מהצבירה", "%", "regulator", "שיעור שנתי ממוצע של המסלול (AVG_ANNUAL_MANAGEMENT_FEE)"),
     ("aum", "a", "נכסים", "₪m", "regulator", "נכסי המסלול לסוף החודש (TOTAL_ASSETS)"),
 ]

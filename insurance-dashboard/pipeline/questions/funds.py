@@ -1,12 +1,12 @@
 """Funds and tracks (topic `funds`, module F1): the standing questions a saver, an advisor or a distributor asks about the tracks themselves,
-answered from the regulator's track files as fox publishes them: funds.json (live tracks, gross as published plus the net-of-fee estimate,
-real returns and percentile ranks), funds/closed.json (tracks that stopped reporting), funds/<k>.json (monthly histories) and
+answered from the regulator's track files as fox publishes them: funds.json (live tracks, gross as published, real returns and
+percentile ranks), funds/closed.json (tracks that stopped reporting), funds/<k>.json (monthly histories) and
 funds/cat.json (point-in-time category returns).
 
-Rules of the family: a published return is GROSS of fees (docs/FACTS.md); every net or real figure is basis "estimate" and its provenance
-is a calc node over the published gross figure and the published fee. Peer sets are the live tracks of one category (product | track)
+Rules of the family: every return is the published GROSS return, before management fees (docs/FACTS.md; owner 26.11.26: the fee a saver
+pays varies and is negotiated with the manager, so it is never subtracted; fees are answered as fees). A real figure is basis "estimate". Peer sets are the live tracks of one category (product | track)
 that are open to the public (not a sector fund), with assets, excluding personal-management and IRA tracks. Links deep-link into the
-/funds pages with their state in the URL (screener: prod, track, per, b; compare: k, win, b).
+/funds pages with their state in the URL (screener: prod, track, per; compare: k, win).
 """
 import math
 import statistics
@@ -22,8 +22,7 @@ COL = {"m1": "MONTHLY_YIELD", "ytd": "YEAR_TO_DATE_YIELD", "y3": "YIELD_TRAILING
 WL = {"a5": "ממוצע שנתי ב-5 שנים", "a3": "ממוצע שנתי ב-3 שנים", "y12": "12 חודשים", "m1": "החודש", "ytd": "מתחילת השנה"}
 PER = {"a5": "a5", "a3": "a3", "y12": "y12"}
 WIN = {"a5": 60, "a3": 36, "y12": 12}
-NET_SHORT = "נטו, אומדן: התשואה ברוטו שפורסמה פחות דמי הניהול מהצבירה של כל חודש ÷ 12, מצטבר על חודשי התקופה (funds.json net_method)"
-FOOT_NET = ["נטו = אומדן: תשואה ברוטו כפי שפורסמה פחות שיעור דמי הניהול הממוצע מהצבירה של המסלול בכל חודש ÷ 12; לא דמי הניהול של חוסך מסוים",
+FOOT_NET = ["תשואה ברוטו, כפי שפורסמה, לפני דמי ניהול; דמי הניהול שמשלם כל חוסך שונים ונקבעים מול הגוף המנהל, ולכן אינם מנוכים",
             "קבוצת ההשוואה: המסלולים הפעילים בקטגוריה, פתוחים לציבור, עם נכסים; ללא ניהול אישי ו-IRA", SRC_REG]
 SRC_CLOSED = "funds/closed.json: מסלולים שהפסיקו לדווח, השורה של החודש האחרון שלהם · " + SRC_REG
 
@@ -42,24 +41,24 @@ def AS():
 
 
 def members(prod, track, need=None):
-    """the peer set of a category; need = a window that must have a net figure"""
+    """the peer set of a category; need = a window that must have a published figure"""
     xs = [f for f in F()["funds"] if f["prod"] == prod and f["track"] == track and not f.get("closed") and (f.get("assets") or 0) > 0
           and "בניהול אישי" not in f["name"] and "IRA" not in f["name"]]
     if need:
-        xs = [f for f in xs if f.get("net", {}).get(need) is not None]
+        xs = [f for f in xs if f.get(need) is not None]
     return xs
 
 
-def screen(prod, track, per="a5", b="net"):
-    return link(f"סינון: {prod}, {track}", f"/funds/screen?prod={quote(prod, safe='')}&track={quote(track, safe='')}&per={per}&b={b}")
+def screen(prod, track, per="a5"):
+    return link(f"סינון: {prod}, {track}", f"/funds/screen?prod={quote(prod, safe='')}&track={quote(track, safe='')}&per={per}")
 
 
-def card(f, b="net"):
-    return link(f"כרטיס המסלול: {f['name']}", f"/funds/{f['k']}?b={b}")
+def card(f):
+    return link(f"כרטיס המסלול: {f['name']}", f"/funds/{f['k']}")
 
 
-def compare(fs, win=60, b="net"):
-    return link("השוואה: " + " · ".join(f["grp"] for f in fs), f"/funds/compare?k={','.join(f['k'] for f in fs)}&win={win}&b={b}")
+def compare(fs, win=60):
+    return link("השוואה: " + " · ".join(f["grp"] for f in fs), f"/funds/compare?k={','.join(f['k'] for f in fs)}&win={win}")
 
 
 # ------------------------------------------------------------------------------------------------ provenance and figures
@@ -88,18 +87,6 @@ def f_gross(f, w, label=None, c=None):
     return fig(label or f"תשואה {WL[w]}, ברוטו, {f['name']}", f[w], "pct", p_gross(f, w), AS(), d=2, c=c)
 
 
-def p_net(f, w):
-    v = f["net"][w]
-    return P_calc(f"תשואה {WL[w]}, נטו (אומדן) · {f['name']}", f"{nf(v, 2)}%", "%", NET_SHORT,
-                  [(f"תשואה {WL[w]}, ברוטו", f"{nf(f[w], 2)}%", p_gross(f, w)),
-                   ("דמי ניהול מהצבירה, החודש", f"{nf(f.get('fee'), 2)}%", p_pub(f, "fee", "דמי ניהול מהצבירה")),
-                   ("היסטוריית דמי הניהול החודשית", f"funds/{f['k']}.json", None)], est=True)
-
-
-def f_net(f, w, label=None, c=None):
-    return fig(label or f"תשואה {WL[w]}, נטו, {f['name']}", f["net"][w], "pct", p_net(f, w), AS(), b="estimate", d=2, c=c)
-
-
 def f_fee(f, label=None):
     return fig(label or f"דמי ניהול מהצבירה, {f['name']}", f["fee"], "pct", p_pub(f, "fee", "דמי ניהול מהצבירה"), AS(), d=2)
 
@@ -111,15 +98,14 @@ def f_calc(label, v, unit, title, formula, inputs, d=2, b="actual", signed=False
                                       formula, inputs, est=est), asof or AS(), b=b, d=d, signed=signed)
 
 
-def med_fig(xs, w, label, net=True):
-    vals = [(f["net"][w] if net else f[w]) for f in xs]
+def med_fig(xs, w, label):
+    vals = [f[w] for f in xs]
     m = statistics.median(vals)
-    return f_calc(label, m, "pct", label, f"חציון {'התשואה נטו' if net else 'התשואה ברוטו'} של המסלולים בקטגוריה",
-                  [(f"{f['grp']} · {f['name']}", f"{nf(v, 2)}%", p_net(f, w) if net else p_gross(f, w)) for f, v in zip(xs, vals)],
-                  b="estimate" if net else "actual", est=net)
+    return f_calc(label, m, "pct", label, "חציון התשואה ברוטו, כפי שפורסמה, של המסלולים בקטגוריה",
+                  [(f"{f['grp']} · {f['name']}", f"{nf(v, 2)}%", p_gross(f, w)) for f, v in zip(xs, vals)])
 
 
-def gap_fig(label, a, b_, title, basis="estimate"):
+def gap_fig(label, a, b_, title, basis="actual"):
     return f_calc(label, a["v"] - b_["v"], "pp", title, f"{a['l']} − {b_['l']}", [(a["l"], a["t"], None), (b_["l"], b_["t"], None)],
                   b=basis, est=basis == "estimate")
 
@@ -129,58 +115,54 @@ def wavg(xs, val, w=lambda f: f["assets"]):
     return math.fsum(val(f) * w(f) for f in xs) / W if W else None
 
 
-def net_table(title, xs, w, extra=()):
-    rows_ = [["מנהל", "מסלול", f"נטו, {WL[w]}", f"ברוטו, {WL[w]}", "דמי ניהול", "אחוזון נטו", "נכסים (מיליוני ש\"ח)"]]
+def ret_table(title, xs, w, extra=()):
+    rows_ = [["מנהל", "מסלול", f"ברוטו, {WL[w]}", "דמי ניהול מהצבירה", "אחוזון", "נכסים (מיליוני ש\"ח)"]]
     for f in xs:
-        rows_.append([f["grp"], f["name"], f"{nf(f['net'].get(w), 2)}%", f"{nf(f.get(w), 2)}%", f"{nf(f.get('fee'), 2)}%",
-                      nf(f.get("pn", {}).get(w), 0), nf(f["assets"], 0)])
+        rows_.append([f["grp"], f["name"], f"{nf(f.get(w), 2)}%", f"{nf(f.get('fee'), 2)}%", nf(f.get("pr", {}).get(w), 0), nf(f["assets"], 0)])
     return table(title, rows_, list(extra) + FOOT_NET, span=AS())
 
 
-# ------------------------------------------------------------------------------------------------ the leader of a category, net
+# ------------------------------------------------------------------------------------------------ the leader of a category (gross)
 def leader(prod, track, title, w, rel):
-    xs = sorted(members(prod, track, w), key=lambda f: -f["net"][w])
+    xs = sorted(members(prod, track, w), key=lambda f: -f[w])
     if len(xs) < 5:
-        return nodata(f"פחות מחמישה מסלולים עם תשואה נטו ל{WL[w]} ב{title}")
+        return nodata(f"פחות מחמישה מסלולים עם תשואה ל{WL[w]} ב{title}")
     top, sec, bot = xs[0], xs[1], xs[-1]
-    figs = {"top": f_net(top, w, f"תשואה נטו, {WL[w]}, {top['grp']}, {title}"),
-            "topg": f_gross(top, w, f"תשואה ברוטו, {WL[w]}, {top['grp']}, {title}"),
+    figs = {"top": f_gross(top, w, f"תשואה ברוטו, {WL[w]}, {top['grp']}, {title}"),
             "fee": f_fee(top, f"דמי ניהול מהצבירה, {top['grp']}, {title}"),
-            "med": med_fig(xs, w, f"חציון התשואה נטו, {WL[w]}, {title}"),
-            "bot": f_net(bot, w, f"תשואה נטו, {WL[w]}, {bot['grp']}, {title}")}
-    figs["gap"] = gap_fig(f"פער המוביל מהחציון, נטו, {title}", figs["top"], figs["med"], f"פער מהחציון · {title}")
-    same = top["k"] == max(xs, key=lambda f: f[w] if f.get(w) is not None else -1e9)["k"]
-    corr = f"{top['grp']}: {{top}} בשנה נטו ({WL[w]}), הגבוה ב{title}."
-    email = (f"עד {AS()}, {WL[w]}: המסלול של {top['grp']} ב{title} הניב {{top}} בשנה נטו (אומדן; ברוטו {{topg}}, דמי ניהול מהצבירה {{fee}}). "
-             f"חציון הקטגוריה {{med}}, כך שהפער של המוביל הוא {{gap}} בשנה; בתחתית {bot['grp']}, {{bot}}. "
-             + ("המוביל בנטו הוא גם המוביל בברוטו." if same else "בברוטו המוביל אחר: דמי הניהול משנים את הדירוג."))
-    ex = net_table(f"תשואה נטו, {WL[w]}, {title}, {AS()}", xs, w)
-    chg = changes_if(f"המוביל מתחלף אם התשואה נטו של {top['grp']} יורדת אל מתחת ל-{{thr}}", "top", "<", sec["net"][w])
-    return answer(figs, corr, email, ex, chg, f"top:{top['k']}|gross_same:{'y' if same else 'n'}",
+            "med": med_fig(xs, w, f"חציון התשואה ברוטו, {WL[w]}, {title}"),
+            "bot": f_gross(bot, w, f"תשואה ברוטו, {WL[w]}, {bot['grp']}, {title}")}
+    figs["gap"] = gap_fig(f"פער המוביל מהחציון, {title}", figs["top"], figs["med"], f"פער מהחציון · {title}")
+    corr = f"{top['grp']}: {{top}} בשנה ({WL[w]}, ברוטו), הגבוה ב{title}."
+    email = (f"עד {AS()}, {WL[w]}: המסלול של {top['grp']} ב{title} הניב {{top}} בשנה, ברוטו כפי שפורסם (לפני דמי ניהול; דמי הניהול מהצבירה במסלול {{fee}}). "
+             f"חציון הקטגוריה {{med}}, כך שהפער של המוביל הוא {{gap}} בשנה; בתחתית {bot['grp']}, {{bot}}.")
+    ex = ret_table(f"תשואה ברוטו, {WL[w]}, {title}, {AS()}", xs, w)
+    chg = changes_if(f"המוביל מתחלף אם התשואה של {top['grp']} יורדת אל מתחת ל-{{thr}}", "top", "<", sec[w])
+    return answer(figs, corr, email, ex, chg, f"top:{top['k']}",
                   links=[screen(prod, track, PER[w]), compare([top, sec], WIN[w]), card(top)], rel=rel, asof=AS())
 
 
-@question("Q-200", "מי מוביל נטו ב-5 שנים בהשתלמות, מסלול כללי?", ["dist", "ceo", "board"], "funds")
+@question("Q-200", "מי מוביל ב-5 שנים בהשתלמות, מסלול כללי?", ["dist", "ceo", "board"], "funds")
 def q200(A):
     return leader("השתלמות", "כללי", "השתלמות, מסלול כללי", "a5", ["Q-206", "Q-207", "Q-087"])
 
 
-@question("Q-201", "מי מוביל נטו ב-5 שנים בפנסיה המקיפה, מסלול ברירת המחדל לבני חמישים ומטה?", ["dist", "ceo", "board", "reg"], "funds")
+@question("Q-201", "מי מוביל ב-5 שנים בפנסיה המקיפה, מסלול ברירת המחדל לבני חמישים ומטה?", ["dist", "ceo", "board", "reg"], "funds")
 def q201(A):
     return leader("פנסיה מקיפה", "עד 50", "פנסיה מקיפה, מסלול לבני חמישים ומטה", "a5", ["Q-206", "Q-213", "Q-086"])
 
 
-@question("Q-202", "מי מוביל נטו ב-5 שנים בהשתלמות, מסלול מניות?", ["dist", "ceo", "inv"], "funds")
+@question("Q-202", "מי מוביל ב-5 שנים בהשתלמות, מסלול מניות?", ["dist", "ceo", "inv"], "funds")
 def q202(A):
     return leader("השתלמות", "מניות", "השתלמות, מסלול מניות", "a5", ["Q-200", "Q-205"])
 
 
-@question("Q-203", "מי מוביל נטו ב-5 שנים בפוליסות החיסכון, מסלול כללי?", ["dist", "ceo", "board"], "funds")
+@question("Q-203", "מי מוביל ב-5 שנים בפוליסות החיסכון, מסלול כללי?", ["dist", "ceo", "board"], "funds")
 def q203(A):
     return leader("פוליסות חיסכון וביטוחי מנהלים (מ-2004)", "כללי", "פוליסות חיסכון וביטוחי מנהלים מ-2004, מסלול כללי", "a5", ["Q-200", "Q-207"])
 
 
-@question("Q-204", "מי מוביל נטו ב-5 שנים בגמל, מסלול לבני חמישים עד שישים?", ["dist", "ceo"], "funds")
+@question("Q-204", "מי מוביל ב-5 שנים בגמל, מסלול לבני חמישים עד שישים?", ["dist", "ceo"], "funds")
 def q204(A):
     return leader("גמל", "50-60", "גמל, מסלול לבני חמישים עד שישים", "a5", ["Q-088", "Q-208"])
 
@@ -189,7 +171,7 @@ def q204(A):
 @question("Q-205", "בהשתלמות, האם הפער בין מסלולי המחקה של מדד S&P 500 נובע מדמי הניהול?", ["dist", "ceo", "strat"], "funds")
 def q205(A):
     prod, track, w = "השתלמות", "עוקב מדד S&P 500", "y12"
-    xs = sorted([f for f in members(prod, track, w) if f.get("y12") is not None and f.get("fee") is not None], key=lambda f: -f["net"][w])
+    xs = sorted([f for f in members(prod, track, w) if f.get("y12") is not None and f.get("fee") is not None], key=lambda f: -f[w])
     if len(xs) < 5:
         return nodata("פחות מחמישה מסלולי מחקה עם תשואה ודמי ניהול ל-12 חודשים")
     hi_g, lo_g = max(xs, key=lambda f: f["y12"]), min(xs, key=lambda f: f["y12"])
@@ -202,8 +184,8 @@ def q205(A):
             "rf": f_calc("טווח דמי הניהול מהצבירה בין מסלולי המחקה", rf, "pp", "טווח דמי הניהול · מחקי S&P 500 · השתלמות",
                          "דמי הניהול הגבוהים − הנמוכים", [(f"{hi_f['grp']}", f"{nf(hi_f['fee'], 2)}%", p_pub(hi_f, "fee", "דמי ניהול מהצבירה")),
                                                           (f"{lo_f['grp']}", f"{nf(lo_f['fee'], 2)}%", p_pub(lo_f, "fee", "דמי ניהול מהצבירה"))]),
-            "top": f_net(xs[0], w, f"תשואה נטו, 12 חודשים, {xs[0]['grp']}, מחקה S&P 500 בהשתלמות"),
-            "bot": f_net(xs[-1], w, f"תשואה נטו, 12 חודשים, {xs[-1]['grp']}, מחקה S&P 500 בהשתלמות")}
+            "top": f_gross(xs[0], w, f"תשואה ברוטו, 12 חודשים, {xs[0]['grp']}, מחקה S&P 500 בהשתלמות"),
+            "bot": f_gross(xs[-1], w, f"תשואה ברוטו, 12 חודשים, {xs[-1]['grp']}, מחקה S&P 500 בהשתלמות")}
     share = rf / rg * 100 if rg > 0 else 100.0
     figs["sh"] = f_calc("חלק טווח דמי הניהול מטווח התשואה", share, "pct", "דמי ניהול ÷ פער תשואה · מחקי S&P 500",
                         "טווח דמי הניהול ÷ טווח התשואה ברוטו × 100 (חסם עליון לחלקם של דמי הניהול בפער)",
@@ -212,58 +194,55 @@ def q205(A):
     corr = ("ברובו כן" if fees else "לא בעיקר") + ": טווח דמי הניהול הוא {sh} מטווח התשואה בין מסלולי המחקה."
     email = (f"מסלולי ההשתלמות המחקים את אותו מדד הניבו ב-12 חודשים עד {AS()} תשואות ברוטו בטווח של {{rg}}, בעוד שדמי הניהול מהצבירה שלהם נבדלים ב-{{rf}} בלבד. "
              f"{'רוב הפער מוסבר בדמי הניהול' if fees else 'רוב הפער נובע מביצוע (מועד המרה, גידור מטבע, מזומן), לא מדמי הניהול'}: "
-             f"נטו המוביל {xs[0]['grp']} עם {{top}} והאחרון {xs[-1]['grp']} עם {{bot}}.")
-    ex = net_table(f"מסלולי המחקה של S&P 500 בהשתלמות, 12 חודשים, {AS()}", xs, w,
+             f"ברוטו המוביל {xs[0]['grp']} עם {{top}} והאחרון {xs[-1]['grp']} עם {{bot}}.")
+    ex = ret_table(f"מסלולי המחקה של S&P 500 בהשתלמות, 12 חודשים, {AS()}", xs, w,
                    ["אותו מדד: פער ברוטו שאינו דמי ניהול = ביצוע (גידור מטבע, מועדי השקעה, מזומן)"])
     chg = changes_if("התשובה מתהפכת אם חלק דמי הניהול בפער חוצה את {thr}", "sh", "<" if fees else ">=", 50.0)
     return answer(figs, corr, email, ex, chg, "fees" if fees else "execution",
                   links=[screen(prod, track, "y12"), compare([xs[0], xs[-1]], 12)], rel=["Q-202", "Q-207"], asof=AS())
 
 
-def drag_of(xs, w):
-    """asset-weighted gross − net of a window, over tracks with both"""
-    ys = [f for f in xs if f.get(w) is not None and f.get("net", {}).get(w) is not None]
-    if not ys:
-        return None, None, ys
-    return wavg(ys, lambda f: f[w]), wavg(ys, lambda f: f["net"][w]), ys
+def fee_of(xs):
+    """asset-weighted accumulation fee (the track's average actually paid, % a year) over the tracks that publish one"""
+    ys = [f for f in xs if f.get("fee") is not None and (f.get("assets") or 0) > 0]
+    return (wavg(ys, lambda f: f["fee"]) if ys else None), ys
 
 
-@question("Q-206", "כמה דמי הניהול מורידים מהתשואה בפנסיה המקיפה, בשנה?", ["dist", "reg", "ceo", "board"], "funds")
+# Q-206 / Q-207 (owner 26.11.26): returns are gross only, so "how much do fees take" is answered as the fee itself, asset-weighted,
+# beside the published gross return; no net-of-fee return is computed
+@question("Q-206", "כמה דמי ניהול מהצבירה משלמים בפנסיה המקיפה, בשנה, משוקלל בנכסים?", ["dist", "reg", "ceo", "board"], "funds")
 def q206(A):
     xs = [f for f in F()["funds"] if f["prod"] == "פנסיה מקיפה" and (f.get("assets") or 0) > 0]
-    g, n, ys = drag_of(xs, "a5")
-    if g is None or len(ys) < 10:
-        return nodata("אין מספיק מסלולי פנסיה מקיפה עם תשואה נטו ל-5 שנים")
-    fee = wavg([f for f in ys if f.get("fee") is not None], lambda f: f["fee"])
-    ins = [(f"{f['grp']} · {f['name']}", f"ברוטו {nf(f['a5'], 2)}% · נטו {nf(f['net']['a5'], 2)}% · נכסים {nf(f['assets'], 0)}", p_net(f, "a5")) for f in ys]
-    figs = {"g": f_calc("תשואה ממוצעת שנתית ב-5 שנים, ברוטו, משוקללת בנכסים, פנסיה מקיפה", g, "pct", "ממוצע משוקלל ברוטו · פנסיה מקיפה",
-                        "Σ נכסים × תשואה ממוצעת שנתית 5 שנים ברוטו ÷ Σ נכסים", ins),
-            "n": f_calc("תשואה ממוצעת שנתית ב-5 שנים, נטו, משוקללת בנכסים, פנסיה מקיפה", n, "pct", "ממוצע משוקלל נטו · פנסיה מקיפה",
-                        "Σ נכסים × תשואה ממוצעת שנתית 5 שנים נטו ÷ Σ נכסים", ins, b="estimate", est=True),
-            "fee": f_calc("דמי ניהול מהצבירה, משוקללים בנכסים, פנסיה מקיפה", fee, "pct", "דמי ניהול משוקללים · פנסיה מקיפה",
-                          "Σ נכסים × דמי ניהול מהצבירה ÷ Σ נכסים", [(f"{f['grp']} · {f['name']}", f"{nf(f['fee'], 2)}%", p_pub(f, "fee", "דמי ניהול מהצבירה"))
-                                                                    for f in ys if f.get("fee") is not None])}
-    figs["d"] = f_calc("שחיקת דמי הניהול: ברוטו פחות נטו, נקודות אחוז בשנה, פנסיה מקיפה", g - n, "pct", "שחיקת דמי הניהול · פנסיה מקיפה",
-                       f"{figs['g']['l']} − {figs['n']['l']}", [(figs["g"]["l"], figs["g"]["t"], None), (figs["n"]["l"], figs["n"]["t"], None)],
-                       b="estimate", est=True)
-    corr = "דמי הניהול מורידים {d} בשנה מהתשואה של הפנסיה המקיפה."
-    email = (f"בחמש השנים עד {AS()} הניבו מסלולי הפנסיה המקיפה, משוקללים בנכסים, {{g}} בשנה ברוטו ו-{{n}} נטו (אומדן): "
-             f"שחיקה של {{d}} בשנה, כמעט כולה דמי הניהול מהצבירה ({{fee}} בממוצע משוקלל היום). דמי הניהול מהפקדה אינם בחישוב.")
+    fee, ys = fee_of(xs)
+    gs = [f for f in ys if f.get("a5") is not None]
+    if fee is None or len(ys) < 10 or len(gs) < 10:
+        return nodata("אין מספיק מסלולי פנסיה מקיפה עם דמי ניהול ותשואה ל-5 שנים")
+    g = wavg(gs, lambda f: f["a5"])
+    figs = {"fee": f_calc("דמי ניהול מהצבירה, משוקללים בנכסים, פנסיה מקיפה", fee, "pct", "דמי ניהול משוקללים · פנסיה מקיפה",
+                          "Σ נכסים × דמי ניהול מהצבירה (הממוצע בפועל של המסלול) ÷ Σ נכסים",
+                          [(f"{f['grp']} · {f['name']}", f"{nf(f['fee'], 2)}% · נכסים {nf(f['assets'], 0)}", p_pub(f, "fee", "דמי ניהול מהצבירה")) for f in ys]),
+            "g": f_calc("תשואה ממוצעת שנתית ב-5 שנים, ברוטו, משוקללת בנכסים, פנסיה מקיפה", g, "pct", "ממוצע משוקלל ברוטו · פנסיה מקיפה",
+                        "Σ נכסים × תשואה ממוצעת שנתית 5 שנים, כפי שפורסמה ÷ Σ נכסים",
+                        [(f"{f['grp']} · {f['name']}", f"{nf(f['a5'], 2)}% · נכסים {nf(f['assets'], 0)}", p_gross(f, "a5")) for f in gs])}
+    corr = "דמי הניהול מהצבירה בפנסיה המקיפה, משוקללים בנכסים: {fee} בשנה."
+    email = (f"ב-{AS()} משלמים במסלולי הפנסיה המקיפה, משוקלל בנכסים, {{fee}} בשנה דמי ניהול מהצבירה (הממוצע בפועל של כל מסלול). "
+             f"התשואה באותם מסלולים בחמש השנים, ברוטו כפי שפורסמה: {{g}} בשנה. דמי הניהול שמשלם חוסך מסוים שונים ונקבעים מול הקרן, "
+             "ולכן האתר מציג אותם בנפרד ואינו מנכה אותם מהתשואה; דמי ניהול מהפקדה אינם בחישוב.")
     by = {}
     for f in ys:
         by.setdefault(f["grp"], []).append(f)
-    rows_ = [["קבוצה", "ברוטו, 5 שנים, בשנה", "נטו, 5 שנים, בשנה", "פער", "דמי ניהול מהצבירה", "נכסים (מיליוני ש\"ח)"]]
+    rows_ = [["קבוצה", "דמי ניהול מהצבירה, משוקלל", "ברוטו, 5 שנים, בשנה", "נכסים (מיליוני ש\"ח)"]]
     for gname, zs in sorted(by.items(), key=lambda x: -math.fsum(f["assets"] for f in x[1])):
-        a, b_ = wavg(zs, lambda f: f["a5"]), wavg(zs, lambda f: f["net"]["a5"])
-        fz = [f for f in zs if f.get("fee") is not None]
-        rows_.append([gname, f"{nf(a, 2)}%", f"{nf(b_, 2)}%", f"{nf(a - b_, 2)}", f"{nf(wavg(fz, lambda f: f['fee']), 2) if fz else '–'}%",
+        za = [f for f in zs if f.get("a5") is not None]
+        rows_.append([gname, f"{nf(wavg(zs, lambda f: f['fee']), 2)}%", f"{nf(wavg(za, lambda f: f['a5']), 2) if za else '–'}%",
                       nf(math.fsum(f["assets"] for f in zs), 0)])
-    ex = table(f"פנסיה מקיפה: ברוטו מול נטו, ממוצע שנתי 5 שנים, {AS()}", rows_, ["משוקלל בנכסי המסלולים היום"] + FOOT_NET, span=AS())
-    chg = changes_if("התשובה משתנה מהותית אם השחיקה עולה מעל {thr} בשנה", "d", ">", 0.25)
-    return answer(figs, corr, email, ex, chg, f"drag:{round(g - n, 1)}", links=[screen("פנסיה מקיפה", "עד 50", "a5")], rel=["Q-201", "Q-207"], asof=AS())
+    ex = table(f"פנסיה מקיפה: דמי ניהול מהצבירה ותשואה ברוטו, {AS()}", rows_, ["משוקלל בנכסי המסלולים היום"] + FOOT_NET, span=AS())
+    chg = changes_if("התשובה משתנה מהותית אם דמי הניהול המשוקללים עולים מעל {thr}", "fee", ">", 0.25)
+    return answer(figs, corr, email, ex, chg, f"fee:{round(fee, 2)}", links=[screen("פנסיה מקיפה", "עד 50", "a5"), link("כלי דמי הניהול", "/funds/tools/fees")],
+                  rel=["Q-201", "Q-207"], asof=AS())
 
 
-@question("Q-207", "באיזו קטגוריה דמי הניהול שוחקים הכי הרבה מהתשואה?", ["dist", "reg", "strat"], "funds")
+@question("Q-207", "באיזו קטגוריה דמי הניהול מהצבירה הגבוהים ביותר, משוקללים בנכסים?", ["dist", "reg", "strat"], "funds")
 def q207(A):
     by = {}
     for f in F()["funds"]:
@@ -271,28 +250,27 @@ def q207(A):
             by.setdefault((f["prod"], f["track"]), []).append(f)
     rows = []
     for (p, t), xs in by.items():
-        g, n, ys = drag_of(xs, "a5")
-        if g is not None and len(ys) >= 5:
-            rows.append((p, t, g - n, g, n, ys))
+        fee, ys = fee_of(xs)
+        if fee is not None and len(ys) >= 5:
+            rows.append((p, t, fee, ys))
     if len(rows) < 5:
-        return nodata("פחות מחמש קטגוריות עם חמישה מסלולים לפחות ותשואה נטו ל-5 שנים")
+        return nodata("פחות מחמש קטגוריות עם חמישה מסלולים לפחות ודמי ניהול שפורסמו")
     rows.sort(key=lambda r: -r[2])
     hi, lo = rows[0], rows[-1]
 
-    def dfig(r, lab):
-        p, t, d, g, n, ys = r
-        return f_calc(f"שחיקת דמי הניהול, נקודות אחוז בשנה, {p}, {t}", d, "pct", f"ברוטו פחות נטו, ממוצע שנתי 5 שנים · {p} | {t}",
-                      "Σ נכסים × (ברוטו − נטו) ÷ Σ נכסים, ממוצע שנתי 5 שנים",
-                      [(f"{f['grp']} · {f['name']}", f"ברוטו {nf(f['a5'], 2)}% · נטו {nf(f['net']['a5'], 2)}%", p_net(f, "a5")) for f in ys],
-                      b="estimate", est=True)
-    figs = {"hi": dfig(hi, "hi"), "lo": dfig(lo, "lo")}
-    corr = f"ב{hi[0]}, מסלול {hi[1]}: דמי הניהול מורידים {{hi}} בשנה, הכי הרבה מכל הקטגוריות."
-    email = (f"בממוצע שנתי ב-5 שנים עד {AS()}, משוקלל בנכסים, השחיקה הגבוהה היא ב{hi[0]} ({hi[1]}), {{hi}} בשנה; "
-             f"הנמוכה ב{lo[0]} ({lo[1]}), {{lo}} בשנה. השחיקה היא דמי הניהול מהצבירה בפועל, אומדן.")
-    ex = exhibit("hbar", f"שחיקת דמי הניהול בשנה, ממוצע 5 שנים, לפי קטגוריה, {AS()}", "נק׳ אחוז",
-                 [f"{p} | {t}" for p, t, *_ in rows[:15]], [{"name": "ברוטו פחות נטו", "type": "bar", "data": [round(r[2], 3) for r in rows[:15]]}],
-                 ["קטגוריות עם חמישה מסלולים לפחות שיש להם תשואה נטו ל-5 שנים; משוקלל בנכסים"] + FOOT_NET, span=AS())
-    chg = changes_if("הקטגוריה המובילה מתחלפת אם השחיקה בה יורדת אל מתחת ל-{thr}", "hi", "<", rows[1][2])
+    def dfig(r):
+        p, t, fee, ys = r
+        return f_calc(f"דמי ניהול מהצבירה, משוקללים בנכסים, {p}, {t}", fee, "pct", f"דמי ניהול משוקללים · {p} | {t}",
+                      "Σ נכסים × דמי ניהול מהצבירה (הממוצע בפועל של המסלול) ÷ Σ נכסים",
+                      [(f"{f['grp']} · {f['name']}", f"{nf(f['fee'], 2)}% · נכסים {nf(f['assets'], 0)}", p_pub(f, "fee", "דמי ניהול מהצבירה")) for f in ys])
+    figs = {"hi": dfig(hi), "lo": dfig(lo)}
+    corr = f"ב{hi[0]}, מסלול {hi[1]}: דמי הניהול מהצבירה, משוקללים בנכסים, {{hi}} בשנה, הגבוהים מכל הקטגוריות."
+    email = (f"ב-{AS()}, משוקלל בנכסים, דמי הניהול מהצבירה הגבוהים הם ב{hi[0]} ({hi[1]}), {{hi}} בשנה; "
+             f"הנמוכים ב{lo[0]} ({lo[1]}), {{lo}} בשנה. הממוצע בפועל של כל מסלול, לא מה שחוסך מסוים משלם; התשואות באתר ברוטו, ודמי הניהול מוצגים בנפרד.")
+    ex = exhibit("hbar", f"דמי ניהול מהצבירה, משוקללים בנכסים, לפי קטגוריה, {AS()}", "%",
+                 [f"{p} | {t}" for p, t, *_ in rows[:15]], [{"name": "דמי ניהול מהצבירה", "type": "bar", "data": [round(r[2], 3) for r in rows[:15]]}],
+                 ["קטגוריות עם חמישה מסלולים לפחות שמפרסמים דמי ניהול; משוקלל בנכסים"] + FOOT_NET, span=AS())
+    chg = changes_if("הקטגוריה המובילה מתחלפת אם דמי הניהול בה יורדים אל מתחת ל-{thr}", "hi", "<", rows[1][2])
     return answer(figs, corr, email, ex, chg, f"hi:{hi[0]}|{hi[1]}", links=[screen(hi[0], hi[1], "a5")], rel=["Q-206", "Q-205"], asof=AS())
 
 
@@ -346,7 +324,7 @@ def q208(A):
                                                                  ["נסגרו לפני סוף השנה הבאה", nf(gone, 0)]],
                ["רבע עליון: התשואה הקלנדרית ברוטו, בתוך הקטגוריה (מוצר | מסלול) כפי שהייתה באותה שנה", SRC_CLOSED], span=f"{y1}–{y2}")
     chg = changes_if("התשובה מתהפכת אם שיעור ההתמדה חוצה את {thr}", "sh", "<" if persist else ">=", 37.5)
-    return answer(figs, corr, email, ex, chg, "persist" if persist else "random", links=[link("סינון גמל", "/funds/screen?prod=%D7%92%D7%9E%D7%9C&per=y12&b=net")],
+    return answer(figs, corr, email, ex, chg, "persist" if persist else "random", links=[link("סינון גמל", "/funds/screen?prod=%D7%92%D7%9E%D7%9C&per=y12")],
                   rel=["Q-200", "Q-209"], asof=AS())
 
 
@@ -375,7 +353,7 @@ def q209(A):
     chg = changes_if("התמונה משתנה אם הנכסים במסלולים שנסגרו עולים מעל {thr}", "a", ">", 100.0)
     return answer(figs, corr, email, ex, chg, f"n:{len(xs)}|big:{big['k']}",
                   links=[link("סינון עם מסלולים שנסגרו", f"/funds/screen?prod={quote(big['prod'], safe='')}&track={quote(big['track'], safe='')}&gone=1"),
-                         card(big, "gross")], rel=["Q-210", "Q-208"], asof=AS())
+                         card(big)], rel=["Q-210", "Q-208"], asof=AS())
 
 
 def ann_cat(rec, key, months):
@@ -421,7 +399,7 @@ def q210(A):
                [[x[1], f"{nf(x[2], 2)}%", f"{nf(x[3], 2)}%", nf(x[0], 2)] for x in out[:12]],
                ["כל המסלולים: חברי הקטגוריה בכל חודש, כולל מסלולים שנסגרו מאז; השורדים: המסלולים הפעילים היום בלבד", "ברוטו, משוקלל בנכסים", SRC_REG], span=span)
     chg = changes_if("התשובה משתנה אם ההטיה בקטגוריה יורדת אל מתחת ל-{thr}", "d", "<", 0.1)
-    return answer(figs, corr, email, ex, chg, f"cat:{c}|pos:{pos}", links=[screen(c.split(' | ')[0], c.split(' | ')[1], "a5", "gross")], rel=["Q-209", "Q-208"], asof=AS())
+    return answer(figs, corr, email, ex, chg, f"cat:{c}|pos:{pos}", links=[screen(c.split(' | ')[0], c.split(' | ')[1], "a5")], rel=["Q-209", "Q-208"], asof=AS())
 
 
 # ------------------------------------------------------------------------------------------------ the month
@@ -475,36 +453,36 @@ def q212(A):
     ex = table(f"מחלוקות סיווג, {AS()}", rows_, ["לפי הרשות: ההתמחות הראשית והמשנית ב-transfer_bank, ממופה לאוצר המסלולים של האתר",
                                                   tx.get("source", "")], span=AS())
     chg = changes_if("התמונה משתנה אם מספר המחלוקות עולה מעל {thr}", "dis", ">", float(len(xs) + 10))
-    return answer(figs, corr, email, ex, chg, f"dis:{len(xs)}", links=[card(xs[0], "gross")] if xs else [link("קופות", "/funds")], rel=["Q-207"], asof=AS())
+    return answer(figs, corr, email, ex, chg, f"dis:{len(xs)}", links=[card(xs[0])] if xs else [link("קופות", "/funds")], rel=["Q-207"], asof=AS())
 
 
 # ------------------------------------------------------------------------------------------------ real, actuarial, flows, managers
-@question("Q-213", "כמה נשאר אחרי אינפלציה ודמי ניהול בפנסיה המקיפה, מסלול לבני חמישים ומטה?", ["dist", "board", "reg"], "funds")
+@question("Q-213", "כמה נשאר אחרי אינפלציה בפנסיה המקיפה, מסלול לבני חמישים ומטה?", ["dist", "board", "reg"], "funds")
 def q213(A):
     Fd = F()
-    xs = [f for f in members("פנסיה מקיפה", "עד 50", "a5") if f.get("realn", {}).get("a5") is not None]
+    xs = [f for f in members("פנסיה מקיפה", "עד 50", "a5") if f.get("real", {}).get("a5") is not None]
     if len(xs) < 5:
-        return nodata("פחות מחמישה מסלולים עם תשואה ריאלית נטו ל-5 שנים")
+        return nodata("פחות מחמישה מסלולים עם תשואה ריאלית ל-5 שנים")
     cpi = P_calc("מדד המחירים לצרכן, השינוי ב-12 חודשים", "", "%", Fd.get("real_method", ""), [("המקור", Fd.get("cpi_src") or "", None)])
-    ins = [(f"{f['grp']} · {f['name']}", f"נטו {nf(f['net']['a5'], 2)}% · ריאלי נטו {nf(f['realn']['a5'], 2)}%", p_net(f, "a5")) for f in xs]
-    n = wavg(xs, lambda f: f["net"]["a5"])
-    r = wavg(xs, lambda f: f["realn"]["a5"])
-    figs = {"r": f_calc("תשואה ריאלית נטו, ממוצע שנתי 5 שנים, משוקלל, פנסיה מקיפה עד 50", r, "pct", "ריאלי נטו · פנסיה מקיפה עד 50",
-                        "Σ נכסים × ריאלי נטו ÷ Σ נכסים; ריאלי = (1 + נטו) ÷ (מכפלת שינויי המדד השנתיים)^(1/5) − 1", ins + [("מדד", "", cpi)], b="estimate", est=True),
-            "n": f_calc("תשואה נומינלית נטו, ממוצע שנתי 5 שנים, משוקלל, פנסיה מקיפה עד 50", n, "pct", "נומינלי נטו · פנסיה מקיפה עד 50",
-                        "Σ נכסים × נטו ÷ Σ נכסים", ins, b="estimate", est=True)}
-    lo = min(xs, key=lambda f: f["realn"]["a5"])
-    figs["lo"] = fig(f"תשואה ריאלית נטו, ממוצע שנתי 5 שנים, {lo['grp']}", lo["realn"]["a5"], "pct",
-                     P_calc(f"ריאלי נטו · {lo['name']}", f"{nf(lo['realn']['a5'], 2)}%", "%", Fd.get("real_method", ""), [("נטו", f"{nf(lo['net']['a5'], 2)}%", p_net(lo, "a5")), ("מדד", "", cpi)], est=True),
+    ins = [(f"{f['grp']} · {f['name']}", f"נומינלי {nf(f['a5'], 2)}% · ריאלי {nf(f['real']['a5'], 2)}%", p_gross(f, "a5")) for f in xs]
+    n = wavg(xs, lambda f: f["a5"])
+    r = wavg(xs, lambda f: f["real"]["a5"])
+    figs = {"r": f_calc("תשואה ריאלית, ממוצע שנתי 5 שנים, משוקלל, פנסיה מקיפה עד 50", r, "pct", "ריאלי · פנסיה מקיפה עד 50",
+                        "Σ נכסים × ריאלי ÷ Σ נכסים; ריאלי = (1 + נומינלי ברוטו) ÷ (מכפלת שינויי המדד השנתיים)^(1/5) − 1", ins + [("מדד", "", cpi)], b="estimate", est=True),
+            "n": f_calc("תשואה נומינלית, ממוצע שנתי 5 שנים, משוקלל, פנסיה מקיפה עד 50", n, "pct", "נומינלי ברוטו · פנסיה מקיפה עד 50",
+                        "Σ נכסים × תשואה ממוצעת שנתית 5 שנים, כפי שפורסמה ÷ Σ נכסים", ins)}
+    lo = min(xs, key=lambda f: f["real"]["a5"])
+    figs["lo"] = fig(f"תשואה ריאלית, ממוצע שנתי 5 שנים, {lo['grp']}", lo["real"]["a5"], "pct",
+                     P_calc(f"ריאלי · {lo['name']}", f"{nf(lo['real']['a5'], 2)}%", "%", Fd.get("real_method", ""), [("נומינלי ברוטו", f"{nf(lo['a5'], 2)}%", p_gross(lo, "a5")), ("מדד", "", cpi)], est=True),
                      AS(), b="estimate", d=2)
-    corr = "אחרי אינפלציה ודמי ניהול נשאר לחוסך בפנסיה המקיפה, מסלול ברירת המחדל, {r} בשנה."
-    email = (f"בחמש השנים עד {AS()} הניבו מסלולי הפנסיה המקיפה לבני חמישים ומטה, משוקללים בנכסים, {{n}} בשנה נטו ו-{{r}} בשנה ריאלית נטו (אומדן). "
-             f"הנמוך: {lo['grp']}, {{lo}} ריאלית בשנה.")
-    rows_ = [["מנהל", "מסלול", "נטו, 5 שנים, בשנה", "ריאלי נטו", "דמי ניהול"]] + [[f["grp"], f["name"], f"{nf(f['net']['a5'], 2)}%", f"{nf(f['realn']['a5'], 2)}%", f"{nf(f.get('fee'), 2)}%"]
-                                                                                for f in sorted(xs, key=lambda f: -f["realn"]["a5"])]
-    ex = table(f"פנסיה מקיפה, לבני חמישים ומטה: נטו וריאלי, {AS()}", rows_, [Fd.get("real_method", ""), Fd.get("cpi_src") or ""] + FOOT_NET, span=AS())
-    chg = changes_if("התשובה משתנה אם התשואה הריאלית נטו יורדת אל מתחת ל-{thr}", "r", "<", 3.0)
-    return answer(figs, corr, email, ex, chg, f"real:{round(r)}", links=[link("סינון, ריאלי נטו", "/funds/screen?prod=" + quote("פנסיה מקיפה", safe="") + "&track=" + quote("עד 50", safe="") + "&per=a5&b=net&real=1")],
+    corr = "אחרי אינפלציה הניבו מסלולי הפנסיה המקיפה לבני חמישים ומטה {r} בשנה, ברוטו, לפני דמי ניהול."
+    email = (f"בחמש השנים עד {AS()} הניבו מסלולי הפנסיה המקיפה לבני חמישים ומטה, משוקללים בנכסים, {{n}} בשנה נומינלית ו-{{r}} בשנה ריאלית, "
+             f"ברוטו כפי שפורסם (לפני דמי ניהול, שמשתנים מחוסך לחוסך). הנמוך: {lo['grp']}, {{lo}} ריאלית בשנה.")
+    rows_ = [["מנהל", "מסלול", "נומינלי, 5 שנים, בשנה", "ריאלי", "דמי ניהול מהצבירה"]] + [[f["grp"], f["name"], f"{nf(f['a5'], 2)}%", f"{nf(f['real']['a5'], 2)}%", f"{nf(f.get('fee'), 2)}%"]
+                                                                                for f in sorted(xs, key=lambda f: -f["real"]["a5"])]
+    ex = table(f"פנסיה מקיפה, לבני חמישים ומטה: נומינלי וריאלי, ברוטו, {AS()}", rows_, [Fd.get("real_method", ""), Fd.get("cpi_src") or ""] + FOOT_NET, span=AS())
+    chg = changes_if("התשובה משתנה אם התשואה הריאלית יורדת אל מתחת ל-{thr}", "r", "<", 3.0)
+    return answer(figs, corr, email, ex, chg, f"real:{round(r)}", links=[link("סינון, ריאלי", "/funds/screen?prod=" + quote("פנסיה מקיפה", safe="") + "&track=" + quote("עד 50", safe="") + "&per=a5&real=1")],
                   rel=["Q-201", "Q-206"], asof=AS())
 
 
@@ -535,7 +513,7 @@ def q214(A):
     ex = exhibit("hbar", f"איזון אקטוארי, פנסיה מקיפה, {ym(q)}", "%", [g for g, _ in rows], [{"name": "איזון אקטוארי", "type": "bar", "data": [f["act"] for _, f in rows]}],
                  ["המסלול הגדול של כל קבוצה (כללי או לבני חמישים ומטה); ACTUARIAL_ADJUSTMENT, באחוזים, מדווח רבעונית", SRC_REG], span=ym(q))
     chg = changes_if("התחתית מתחלפת אם האיזון של התחתונה עולה מעל {thr}", "lo", ">", rows[1][1]["act"])
-    return answer(figs, corr, email, ex, chg, f"lo:{lo[0]}|neg:{neg}", links=[card(lo[1], "gross")], rel=["Q-201", "Q-213"], asof=ym(q))
+    return answer(figs, corr, email, ex, chg, f"lo:{lo[0]}|neg:{neg}", links=[card(lo[1])], rel=["Q-201", "Q-213"], asof=ym(q))
 
 
 @question("Q-215", "לאן זורם הכסף בפנסיה המקיפה ב-12 החודשים האחרונים, לפי קבוצה?", ["ceo", "dist", "strat"], "funds")
@@ -566,17 +544,17 @@ def q215(A):
                   rel=["Q-201", "Q-009"], asof=AS())
 
 
-@question("Q-216", "לאיזה מנהל יש את החלק הגדול של נכסיו ברבע העליון, נטו ב-3 שנים?", ["ceo", "inv", "board", "dist"], "funds")
+@question("Q-216", "לאיזה מנהל יש את החלק הגדול של נכסיו ברבע העליון ב-3 שנים?", ["ceo", "inv", "board", "dist"], "funds")
 def q216(A):
     by = {}
     for f in F()["funds"]:
-        if f.get("pn", {}).get("a3") is not None and not f.get("closed"):
+        if f.get("pr", {}).get("a3") is not None and not f.get("closed"):
             by.setdefault(f["grp"], []).append(f)
     rows = []
     for g, zs in by.items():
         tot = math.fsum(f["assets"] for f in zs)
         if tot >= 5000 and g != "קרנות ענפיות ואחרות":
-            top = [f for f in zs if f["pn"]["a3"] >= 75]
+            top = [f for f in zs if f["pr"]["a3"] >= 75]
             rows.append((g, math.fsum(f["assets"] for f in top) / tot * 100, tot, top, zs))
     if len(rows) < 5:
         return nodata("פחות מחמישה מנהלים עם מסלולים מדורגים")
@@ -584,42 +562,41 @@ def q216(A):
 
     def sf(r):
         g, sh, tot, top, zs = r
-        return f_calc(f"חלק הנכסים ברבע העליון נטו, 3 שנים, {g}", sh, "pct", f"נכסים ברבע העליון · {g}",
-                      "Σ נכסי המסלולים עם אחוזון נטו 3 שנים 75 ומעלה בקטגוריה שלהם ÷ Σ נכסי המסלולים המדורגים של המנהל × 100",
-                      [(f["name"], f"אחוזון {f['pn']['a3']} · נכסים {nf(f['assets'], 0)}", None) for f in top] or [("אין", "", None)], d=0,
-                      b="estimate", est=True)
+        return f_calc(f"חלק הנכסים ברבע העליון, 3 שנים, {g}", sh, "pct", f"נכסים ברבע העליון · {g}",
+                      "Σ נכסי המסלולים עם אחוזון 3 שנים (ברוטו) 75 ומעלה בקטגוריה שלהם ÷ Σ נכסי המסלולים המדורגים של המנהל × 100",
+                      [(f["name"], f"אחוזון {f['pr']['a3']} · נכסים {nf(f['assets'], 0)}", None) for f in top] or [("אין", "", None)], d=0)
     figs = {"top": sf(rows[0]), "bot": sf(rows[-1])}
-    corr = f"{rows[0][0]}: {{top}} מנכסיה המדורגים במסלולים שברבע העליון בקטגוריה, נטו ב-3 שנים."
-    email = (f"נכון ל-{AS()}, {{top}} מהנכסים של {rows[0][0]} במסלולים המדורגים יושבים ברבע העליון של הקטגוריה שלהם בתשואה נטו לשלוש שנים; "
+    corr = f"{rows[0][0]}: {{top}} מנכסיה המדורגים במסלולים שברבע העליון בקטגוריה, ב-3 שנים."
+    email = (f"נכון ל-{AS()}, {{top}} מהנכסים של {rows[0][0]} במסלולים המדורגים יושבים ברבע העליון של הקטגוריה שלהם בתשואה לשלוש שנים (ברוטו, כפי שפורסמה); "
              f"אצל {rows[-1][0]} רק {{bot}}. רבע עליון: אחוזון של שלושה רבעים ומעלה, בתוך מוצר ומסלול.")
-    ex = exhibit("hbar", f"חלק הנכסים ברבע העליון, נטו, 3 שנים, {AS()}", "%", [g for g, *_ in rows],
+    ex = exhibit("hbar", f"חלק הנכסים ברבע העליון, 3 שנים, {AS()}", "%", [g for g, *_ in rows],
                  [{"name": "חלק הנכסים", "type": "bar", "data": [round(sh, 1) for _, sh, *_ in rows]}],
-                 ["מנהלים עם ₪5 מיליארד לפחות במסלולים מדורגים; אחוזון: funds.json pn.a3"] + FOOT_NET, span=AS())
+                 ["מנהלים עם ₪5 מיליארד לפחות במסלולים מדורגים; אחוזון: funds.json pr.a3 (ברוטו)"] + FOOT_NET, span=AS())
     chg = changes_if("המוביל מתחלף אם החלק שלו יורד אל מתחת ל-{thr}", "top", "<", rows[1][1])
     return answer(figs, corr, email, ex, chg, f"top:{rows[0][0]}", links=[link("קופות", "/funds")], rel=["Q-200", "Q-082", "Q-081"], asof=AS())
 
 
-@question("Q-217", "מי מוביל נטו ב-5 שנים בגמל להשקעה, מסלול כללי?", ["dist", "ceo"], "funds")
+@question("Q-217", "מי מוביל ב-5 שנים בגמל להשקעה, מסלול כללי?", ["dist", "ceo"], "funds")
 def q217(A):
     return leader("גמל להשקעה", "כללי", "גמל להשקעה, מסלול כללי", "a5", ["Q-200", "Q-207"])
 
 
-@question("Q-218", "האם מסלולי ההלכה בגמל מפגרים אחרי המסלולים הכלליים, נטו?", ["dist", "inv"], "funds")
+@question("Q-218", "האם מסלולי ההלכה בגמל מפגרים אחרי המסלולים הכלליים?", ["dist", "inv"], "funds")
 def q218(A):
     h = members("גמל", "הלכה", "a3")
     g = members("גמל", "כללי", "a3")
     if len(h) < 4 or len(g) < 4:
-        return nodata("פחות מארבעה מסלולים עם תשואה נטו ל-3 שנים באחת הקטגוריות")
-    mh = med_fig(h, "a3", "חציון התשואה נטו, 3 שנים, גמל הלכה")
-    mg = med_fig(g, "a3", "חציון התשואה נטו, 3 שנים, גמל כללי")
+        return nodata("פחות מארבעה מסלולים עם תשואה ל-3 שנים באחת הקטגוריות")
+    mh = med_fig(h, "a3", "חציון התשואה ברוטו, 3 שנים, גמל הלכה")
+    mg = med_fig(g, "a3", "חציון התשואה ברוטו, 3 שנים, גמל כללי")
     figs = {"h": mh, "g": mg}
-    figs["d"] = gap_fig("הפער בין חציון ההלכה לחציון הכללי, נטו, 3 שנים", mh, mg, "הלכה מול כללי · גמל")
+    figs["d"] = gap_fig("הפער בין חציון ההלכה לחציון הכללי, 3 שנים", mh, mg, "הלכה מול כללי · גמל")
     worse = figs["d"]["v"] < 0
-    corr = ("כן" if worse else "לא") + ": חציון מסלולי ההלכה בגמל נמצא {d} בשנה מול המסלולים הכלליים, נטו."
-    email = (f"בשלוש השנים עד {AS()} חציון מסלולי ההלכה בגמל הניב {{h}} בשנה נטו, וחציון המסלולים הכלליים {{g}}: פער של {{d}}. "
+    corr = ("כן" if worse else "לא") + ": חציון מסלולי ההלכה בגמל נמצא {d} בשנה מול המסלולים הכלליים, ברוטו."
+    email = (f"בשלוש השנים עד {AS()} חציון מסלולי ההלכה בגמל הניב {{h}} בשנה ברוטו, וחציון המסלולים הכלליים {{g}}: פער של {{d}}. "
              "מסלולי ההלכה אינם מחזיקים אג\"ח ריבית ובנקים, ולכן חשיפתם למניות ולחו\"ל שונה.")
-    xs = sorted(h + g, key=lambda f: -f["net"]["a3"])
-    ex = net_table(f"גמל: הלכה מול כללי, נטו, 3 שנים, {AS()}", xs, "a3")
+    xs = sorted(h + g, key=lambda f: -f["a3"])
+    ex = ret_table(f"גמל: הלכה מול כללי, ברוטו, 3 שנים, {AS()}", xs, "a3")
     chg = changes_if("התשובה מתהפכת אם הפער חוצה את {thr}", "d", ">=" if worse else "<", 0.0)
     return answer(figs, corr, email, ex, chg, "lag" if worse else "lead", links=[screen("גמל", "הלכה", "a3"), screen("גמל", "כללי", "a3")], rel=["Q-200"], asof=AS())
 
@@ -646,7 +623,7 @@ def q219(A):
     ex = table(f"אלפא שנתית של הרשות, עשרת מסלולי הפנסיה הגדולים, {AS()}", rows_,
                ["ALPHA: אלפא שנתית לפי 60 התשואות החודשיות האחרונות, כפי שהרשות מחשבת ומפרסמת; מדד הייחוס אינו מפורסם בשדה", SRC_REG], span=AS())
     chg = changes_if("התשובה משתנה אם האלפא המשוקללת חוצה את {thr}", "w", "<" if w > 0 else ">", 0.0)
-    return answer(figs, corr, email, ex, chg, f"pos:{pos}", links=[card(xs[0], "gross")], rel=["Q-081", "Q-201"], asof=AS())
+    return answer(figs, corr, email, ex, chg, f"pos:{pos}", links=[card(xs[0])], rel=["Q-081", "Q-201"], asof=AS())
 
 
 # ------------------------------------------------------------------------------------------------ F2: the analytics files (build_fund_stats.py)
@@ -665,7 +642,7 @@ def f2_fig(label, v, unit, title, formula, path, inputs=(), d=1, b="estimate", s
     return f_calc(label, v, unit, title, formula, ins, d=d, b=b, signed=signed, est=b == "estimate")
 
 
-def persist_row(fam, win, basis="net"):
+def persist_row(fam, win, basis="gross"):
     return next((x for x in f2("persist.json")["rows"] if x["fam"] == fam and x["win"] == win and x["basis"] == basis), None)
 
 
@@ -695,7 +672,7 @@ def persist_answer(win, rel):
     yrs = "שנה" if win == "12" else "שלוש שנים"
     nxt, nxt2 = ("בשנה שאחריה", "בשנה הבאה") if win == "12" else ("בשלוש השנים שאחריהן", "בשלוש השנים הבאות")
     meth = "funds/persist.json method: " + ("bootstrap בבלוקים" if not row["thin"] else "Wilson")
-    figs = {"sh": f2_fig(f"שיעור המסלולים מהרבע העליון שנשארו בו בחלון הבא, {yrs}, נטו", row["stay_pct"], "pct",
+    figs = {"sh": f2_fig(f"שיעור המסלולים מהרבע העליון שנשארו בו בחלון הבא, {yrs}", row["stay_pct"], "pct",
                          f"התמדה ברבע העליון · {yrs} · כל המוצרים", "נשארו ברבע העליון ÷ כל מי שהתחיל בו × 100 (נסגרו במכנה)", "persist.json",
                          [("ברבע העליון בתחילת חלון", nf(row["top"], 0), None), ("נשארו", nf(row["stay"], 0), None)]),
             "coin": f2_fig("השיעור הצפוי במקרה", 25.0, "pct", "רבע מהמסלולים", "1 ÷ 4", "persist.json", d=0, b="actual"),
@@ -705,12 +682,12 @@ def persist_answer(win, rel):
             "g4": f2_fig("שיעור הנסגרים מהרבע התחתון", row["gone_q4_pct"], "pct", "נסגרו · רבע תחתון", "נסגרו לפני סוף החלון הבא ÷ ברבע התחתון", "persist.json")}
     yes = lo > 25.0
     corr = (("כן, יותר ממקרה" if yes else "לא בבירור") + f": {{sh}} מהמסלולים שסיימו {yrs} ברבע העליון של הקטגוריה נשארו בו גם {nxt}.")
-    email = (f"בכל חודשי ההתחלה {span}, בכל המוצרים, {{sh}} מהמסלולים שהיו ברבע העליון של הקטגוריה שלהם ב{yrs} (נטו, אומדן) היו שם גם {nxt2}, "
+    email = (f"בכל חודשי ההתחלה {span}, בכל המוצרים, {{sh}} מהמסלולים שהיו ברבע העליון של הקטגוריה שלהם ב{yrs} (תשואה ברוטו, כפי שפורסמה) היו שם גם {nxt2}, "
              f"מול {{coin}} שהיה צפוי במקרה; רווח סמך של תשעים אחוז: {{lo}} עד {{hi}}. מסלולים שנסגרו בדרך נספרים כמי שלא נשארו: "
              f"נסגרו {{g1}} מהרבע העליון ו-{{g4}} מהרבע התחתון. חלק מההתמדה הוא פער קבוע ברמת הסיכון בתוך קטגוריה רחבה, לא רק כישרון.")
-    ex = matrix_table(f"מעברים בין רבעים, {yrs} ואז {yrs}, נטו, כל המוצרים", row,
+    ex = matrix_table(f"מעברים בין רבעים, {yrs} ואז {yrs}, כל המוצרים", row,
                       ["רבע: בתוך הקטגוריה (מוצר | מסלול) כפי שהייתה בחודש ההתחלה, לפחות שמונה מסלולים; חלונות חופפים מכל חודשי ההתחלה",
-                       "נסגר: הפסיק לדווח לפני סוף החלון הבא (survivorship)", "נטו = אומדן: ברוטו פחות דמי הניהול מהצבירה", SRC_F2])
+                       "נסגר: הפסיק לדווח לפני סוף החלון הבא (survivorship)", "תשואה ברוטו, כפי שפורסמה, לפני דמי ניהול", SRC_F2])
     chg = changes_if("התשובה מתהפכת אם הגבול התחתון של רווח הסמך חוצה את {thr}", "lo", "<=" if yes else ">", 25.0)
     return answer(figs, corr, email, ex, chg, "persist" if yes else "noise", links=[link("ההיכל של החיסכון", "/funds")], rel=rel, asof=AS())
 
@@ -741,42 +718,42 @@ def q222(A):
     corr = ("כן" if more else "לא") + ": {g4} מהמסלולים ברבע התחתון נסגרים בתוך שלוש שנים."
     email = (f"מהמסלולים שסיימו שלוש שנים ברבע התחתון של הקטגוריה ({ym(row['from'])}–{ym(row['to'])}, כל המוצרים) נסגרו {{g4}} בתוך שלוש השנים הבאות, "
              f"מול {{g1}} מהרבע העליון, יחס של {{x}}. ממוצע קטגוריה שסופר רק את מי ששרד מוחק את החלשים, ולכן מחמיא; האתר סופר אותם כפי שהיו.")
-    ex = matrix_table("מעברים בין רבעים, שלוש שנים ואז שלוש שנים, נטו, כל המוצרים", row,
+    ex = matrix_table("מעברים בין רבעים, שלוש שנים ואז שלוש שנים, כל המוצרים", row,
                       ["נסגר: הפסיק לדווח לפני סוף החלון הבא; חלק מהסגירות הן מיזוגים לתוך מסלול אחר של אותו מנהל", SRC_F2])
     chg = changes_if("התשובה מתהפכת אם שיעור הסגירה ברבע התחתון יורד אל מתחת ל-{thr}", "g4", "<=" if more else ">", row["gone_pct"])
     return answer(figs, corr, email, ex, chg, "losers_close" if more else "no", links=[link("ההיכל של החיסכון", "/funds")], rel=["Q-210", "Q-209", "Q-221"], asof=AS())
 
 
-@question("Q-223", "כמה עולה לחוסך העטיפה של מסלול המחקה את מדד S&P 500?", ["dist", "inv", "ceo", "strat"], "funds")
+@question("Q-223", "כמה רחוק מחציון הקבוצה מסלול המחקה את מדד S&P 500, ברוטו?", ["dist", "inv", "ceo", "strat"], "funds")
 def q223(A):
     g = next((x for x in f2("trackers.json")["groups"] if x["id"] == "sp500"), None)
-    xs = [t for t in (g or {}).get("tracks", []) if (t.get("fx") or 0) >= 90 and not t.get("sector") and "y12" in t.get("tdn", {})]
+    xs = [t for t in (g or {}).get("tracks", []) if (t.get("fx") or 0) >= 90 and not t.get("sector") and "y12" in t.get("td", {})]
     if len(xs) < 10:
         return nodata("פחות מעשרה מסלולי מחקה לא מגודרים עם תשואה ל-12 חודשים")
-    xs.sort(key=lambda t: -t["tdn"]["y12"])
+    xs.sort(key=lambda t: -t["td"]["y12"])
     top, bot = xs[0], xs[-1]
     med = g["med"]["y12"]
 
     def tf(t, lab):
-        return f2_fig(f"פער נטו מחציון הברוטו של הקבוצה, 12 חודשים, {t['grp']}, {t['prod']}", t["tdn"]["y12"], "pp", f"עלות העטיפה · {t['name']}",
-                      "תשואה נטו (אומדן) פחות חציון התשואה ברוטו של מחקי המדד", "trackers.json",
-                      [("נטו, 12 חודשים", f"{nf(t['nt']['y12'], 2)}%", None), ("חציון הקבוצה, ברוטו", f"{nf(med, 2)}%", None)], d=2, signed=True)
+        return f2_fig(f"פער מחציון הקבוצה, ברוטו, 12 חודשים, {t['grp']}, {t['prod']}", t["td"]["y12"], "pp", f"פער ביצוע · {t['name']}",
+                      "תשואה ברוטו של המסלול פחות חציון התשואה ברוטו של מחקי המדד, לפני דמי ניהול", "trackers.json",
+                      [("ברוטו, 12 חודשים", f"{nf(t['g']['y12'], 2)}%", None), ("חציון הקבוצה, ברוטו", f"{nf(med, 2)}%", None)], d=2, signed=True, b="actual")
     figs = {"med": f2_fig("חציון התשואה ברוטו של מחקי S&P 500, 12 חודשים", med, "pct", "חציון · מחקי S&P 500", "חציון התשואה ברוטו, 12 חודשים",
                           "trackers.json", d=2, b="actual"),
             "top": tf(top, "top"), "bot": tf(bot, "bot")}
-    figs["sp"] = f2_fig("טווח עלות העטיפה בין מחקי S&P 500 לא מגודרים, 12 חודשים", top["tdn"]["y12"] - bot["tdn"]["y12"], "pp", "טווח · מחקי S&P 500",
-                        f"{figs['top']['l']} − {figs['bot']['l']}", "trackers.json", [(figs["top"]["l"], figs["top"]["t"], None), (figs["bot"]["l"], figs["bot"]["t"], None)], d=2)
+    figs["sp"] = f2_fig("טווח הפער ברוטו בין מחקי S&P 500 לא מגודרים, 12 חודשים", top["td"]["y12"] - bot["td"]["y12"], "pp", "טווח · מחקי S&P 500",
+                        f"{figs['top']['l']} − {figs['bot']['l']}", "trackers.json", [(figs["top"]["l"], figs["top"]["t"], None), (figs["bot"]["l"], figs["bot"]["t"], None)], d=2, b="actual")
     figs["ft"], figs["fb"] = (fig(f"דמי ניהול מהצבירה, {t['grp']}, {t['prod']}, מחקה S&P 500", t.get("fee"), "pct",
                                   P_fund(f"דמי ניהול מהצבירה · {t['name']}", f"{nf(t.get('fee'), 2)}%", "%", DS[t["k"][0]], int(t["k"][1:]), asof(),
                                          "AVG_ANNUAL_MANAGEMENT_FEE"), AS(), d=2) for t in (top, bot))
-    corr = "בין מחקי מדד S&P הלא מגודרים, ההבדל בין העטיפה הזולה ליקרה הגיע ל-{sp} ב-12 חודשים, נטו."
+    corr = "בין מחקי מדד S&P הלא מגודרים, הפער ברוטו בין הטוב לחלש הגיע ל-{sp} ב-12 חודשים."
     email = (f"מחקי מדד S&P שאינם מגדרים מט\"ח (חשיפה של תשעים אחוז ומעלה) הניבו ב-12 חודשים עד {AS()} חציון של {{med}} ברוטו. "
-             f"נטו, הטוב ({top['grp']}, {top['prod']}) עמד {{top}} מהחציון והחלש ({bot['grp']}, {bot['prod']}) {{bot}}: טווח של {{sp}}. "
-             f"דמי הניהול מהצבירה שלהם {{ft}} ו-{{fb}}; מה שלא מוסבר בדמי הניהול הוא ביצוע: מועדי השקעה, מזומן, גידור חלקי.")
-    rows_ = [["מנהל", "מוצר", "נטו, 12 חודשים", "פער מהחציון", "דמי ניהול", "חשיפת מט\"ח"]] + \
-        [[t["grp"], t["prod"], f"{nf(t['nt']['y12'], 2)}%", nf(t["tdn"]["y12"], 2), f"{nf(t.get('fee'), 2)}%", f"{nf(t.get('fx'), 0)}%"] for t in xs[:8] + xs[-8:]]
-    ex = table(f"מחקי S&P 500 לא מגודרים: פער נטו מחציון הברוטו, 12 חודשים, {AS()}", rows_,
-               ["פער = נטו (אומדן) פחות חציון הברוטו של כל מחקי המדד; לא מגודר = חשיפת מט\"ח של תשעים אחוז ומעלה מהנכסים",
+             f"הטוב ({top['grp']}, {top['prod']}) עמד {{top}} מהחציון והחלש ({bot['grp']}, {bot['prod']}) {{bot}}: טווח של {{sp}}, לפני דמי ניהול, "
+             f"כלומר ביצוע: מועדי השקעה, מזומן, גידור חלקי. דמי הניהול מהצבירה שלהם, בנפרד: {{ft}} ו-{{fb}}.")
+    rows_ = [["מנהל", "מוצר", "ברוטו, 12 חודשים", "פער מהחציון", "דמי ניהול", "חשיפת מט\"ח"]] + \
+        [[t["grp"], t["prod"], f"{nf(t['g']['y12'], 2)}%", nf(t["td"]["y12"], 2), f"{nf(t.get('fee'), 2)}%", f"{nf(t.get('fx'), 0)}%"] for t in xs[:8] + xs[-8:]]
+    ex = table(f"מחקי S&P 500 לא מגודרים: פער ברוטו מחציון הקבוצה, 12 חודשים, {AS()}", rows_,
+               ["פער = התשואה ברוטו פחות חציון הברוטו של כל מחקי המדד, לפני דמי ניהול; לא מגודר = חשיפת מט\"ח של תשעים אחוז ומעלה מהנכסים",
                 "השמונה הטובים והשמונה החלשים", SRC_F2], span=AS())
     chg = changes_if("התשובה משתנה מהותית אם הטווח יורד אל מתחת ל-{thr}", "sp", "<", 0.5)
     return answer(figs, corr, email, ex, chg, f"top:{top['k']}|bot:{bot['k']}", links=[card(top), card(bot), compare([top, bot], 12)],
@@ -807,16 +784,16 @@ def q224(A):
                            "הפקדות הקרנות הנבחרות ÷ כל ההפקדות לפנסיה המקיפה × 100", "default.json", d=2, b="actual"),
             "d": f2_fig("שינוי נתח ההפקדות של הנבחרות", s["d"], "pp", "שינוי נתח · נבחרות", "אחרי פחות לפני", "default.json", d=2, b="actual")}
     if alls["post"].get("ret") is not None and rest["post"].get("ret") is not None:
-        figs["rs"] = f2_fig("תשואה נטו, הקרנות הנבחרות, 12 החודשים הראשונים", alls["post"]["ret"], "pct", "תשואה נטו · נבחרות", "ממוצע משוקלל בנכסים, ריבית דריבית",
+        figs["rs"] = f2_fig("תשואה ברוטו, הקרנות הנבחרות, 12 החודשים הראשונים", alls["post"]["ret"], "pct", "תשואה ברוטו · נבחרות", "ממוצע משוקלל בנכסים, ריבית דריבית, כפי שפורסמה",
                             "default.json", d=2)
-        figs["rr"] = f2_fig("תשואה נטו, שאר קרנות הפנסיה המקיפות, אותם חודשים", rest["post"]["ret"], "pct", "תשואה נטו · שאר הקרנות",
+        figs["rr"] = f2_fig("תשואה ברוטו, שאר קרנות הפנסיה המקיפות, אותם חודשים", rest["post"]["ret"], "pct", "תשואה ברוטו · שאר הקרנות",
                             "ממוצע משוקלל בנכסים, ריבית דריבית", "default.json", d=2)
     up = s["d"] > 0
     corr = ("כן, במתינות" if up and s["d"] < 2 else "כן" if up else "לא") + ": נתח ההפקדות של ארבע הנבחרות השתנה ב-{d} בשנה הראשונה."
     email = (f"ארבע הקרנות שנבחרו מ-01.11.24 גייסו {{pre}} מההפקדות לפנסיה המקיפה בשנה שלפני ו-{{post}} בשנה הראשונה ({sp}), שינוי של {{d}}. "
              "מנגנון החלוקה לפי ספרת הביקורת חל רק מ-01.06.25, ושלוש מהארבע היו נבחרות גם בהליך הקודם, כך שחלק מהאפקט קדם לתקופה. "
-             + ("התשואה נטו של הנבחרות באותה שנה {rs} מול {rr} בשאר הקרנות." if "rs" in figs else ""))
-    rows_ = [["קרן", "נתח לפני", "נתח אחרי", "הפקדות לפני", "הפקדות אחרי", "תשואה נטו אחרי"]] + \
+             + ("התשואה ברוטו של הנבחרות באותה שנה {rs} מול {rr} בשאר הקרנות." if "rs" in figs else ""))
+    rows_ = [["קרן", "נתח לפני", "נתח אחרי", "הפקדות לפני", "הפקדות אחרי", "תשואה ברוטו אחרי"]] + \
         [[f["grp"], f"{nf(f['pre']['share'], 2)}%" if "pre" in f else "–", f"{nf(f['post']['share'], 2)}%" if "post" in f else "–",
           nf(f.get("pre", {}).get("dep"), 0), nf(f.get("post", {}).get("dep"), 0), f"{nf(f.get('post', {}).get('ret'), 2)}%"] for f in rows]
     ex = table(f"קרנות הפנסיה הנבחרות, ההליך הרביעי: לפני ואחרי 01.11.24", rows_,
@@ -881,13 +858,13 @@ def q226(A):
     figs = {"hi": st_fig(hi, "עד 50", "פנסיה מקיפה"), "lo": st_fig(lo, "עד 50", "פנסיה מקיפה"),
             "med": f2_fig("חציון החשיפה למניות, מסלולי לבני חמישים ומטה, פנסיה מקיפה", med, "pct", "חציון · חשיפה למניות",
                           "חציון בין המנהלים, המסלול הגדול של כל מנהל", "glide.json", [(m["grp"], f"{nf(m['tracks']['עד 50']['st_now'], 1)}%", None) for m in ms], b="actual")}
-    nh, nl = hi["tracks"]["עד 50"]["net"], lo["tracks"]["עד 50"]["net"]
+    nh, nl = hi["tracks"]["עד 50"]["gross"], lo["tracks"]["עד 50"]["gross"]
     if "a3" in nh and "a3" in nl:
-        figs["rh"] = f2_fig(f"תשואה נטו, ממוצע שנתי 3 שנים, {hi['grp']}, לבני חמישים ומטה", nh["a3"], "pct", "נטו · 3 שנים", "funds.json net.a3", "glide.json", d=2)
-        figs["rl"] = f2_fig(f"תשואה נטו, ממוצע שנתי 3 שנים, {lo['grp']}, לבני חמישים ומטה", nl["a3"], "pct", "נטו · 3 שנים", "funds.json net.a3", "glide.json", d=2)
+        figs["rh"] = f2_fig(f"תשואה ברוטו, ממוצע שנתי 3 שנים, {hi['grp']}, לבני חמישים ומטה", nh["a3"], "pct", "ברוטו · 3 שנים", "funds.json a3, כפי שפורסם", "glide.json", d=2, b="actual")
+        figs["rl"] = f2_fig(f"תשואה ברוטו, ממוצע שנתי 3 שנים, {lo['grp']}, לבני חמישים ומטה", nl["a3"], "pct", "ברוטו · 3 שנים", "funds.json a3, כפי שפורסם", "glide.json", d=2, b="actual")
     corr = f"{hi['grp']}: {{hi}} מהנכסים במניות במסלול לבני חמישים ומטה, הגבוה בפנסיה המקיפה."
     email = (f"ב-{AS()} מחזיק המסלול לבני חמישים ומטה של {hi['grp']} {{hi}} מנכסיו במניות, מול חציון של {{med}} ו-{{lo}} אצל {lo['grp']}. "
-             + ("בשלוש שנים הניב הראשון {rh} בשנה נטו והאחרון {rl}." if "rh" in figs else "")
+             + ("בשלוש שנים הניב הראשון {rh} בשנה ברוטו והאחרון {rl}." if "rh" in figs else "")
              + " זה מסלול ברירת המחדל של רוב החוסכים הצעירים, ולכן הפער ברמת הסיכון בו הוא החלטת השקעה של המנהל, לא של החוסך.")
     rows_ = [["מנהל", "לבני חמישים ומטה", "חמישים עד שישים", "שישים ומעלה", "פער צעירים-מבוגרים"]] + \
         [[m["grp"]] + [f"{nf(m['tracks'][a]['st_now'], 1)}%" if a in m["tracks"] else "–" for a in ("עד 50", "50-60", "60 ומעלה")] +
@@ -936,9 +913,9 @@ def q227(A):
 @question("Q-228", "מי בהשתלמות, מסלול כללי, השיג את התשואה העודפת הגבוהה ביותר ליחידת סיכון בשלוש שנים?", ["inv", "dist", "board"], "funds")
 def q228(A):
     st = stats_of("השתלמות | כללי")
-    xs = [t for t in (st or {}).get("tracks", []) if t.get("sharpe36") is not None and t.get("basis") == "net" and not t.get("self_dir") and not t.get("sector")]
+    xs = [t for t in (st or {}).get("tracks", []) if t.get("sharpe36") is not None and t.get("basis") == "gross" and not t.get("self_dir") and not t.get("sector")]
     if len(xs) < 8:
-        return nodata("פחות משמונה מסלולים עם מדד שארפ ל-36 חודשים נטו")
+        return nodata("פחות משמונה מסלולים עם מדד שארפ ל-36 חודשים")
     xs.sort(key=lambda t: -t["sharpe36"])
     top, bot = xs[0], xs[-1]
     path = f"stats/{st['slug']}.json"
@@ -946,17 +923,17 @@ def q228(A):
 
     def sf(t, key, lab, unit="r", d=2):
         return f2_fig(f"{lab}, {t['grp']}, {t['name']}", t[key], unit, f"{lab} · {t['name']} · {span}", st["method"][key if key in st["method"] else "sharpe36"], path, d=d)
-    figs = {"top": sf(top, "sharpe36", "מדד שארפ, 36 חודשים, נטו"), "bot": sf(bot, "sharpe36", "מדד שארפ, 36 חודשים, נטו"),
+    figs = {"top": sf(top, "sharpe36", "מדד שארפ, 36 חודשים, ברוטו"), "bot": sf(bot, "sharpe36", "מדד שארפ, 36 חודשים, ברוטו"),
             "med": f2_fig("חציון מדד שארפ, 36 חודשים, השתלמות כללי", st["cat_median"]["sharpe36"], "r", "חציון שארפ", st["method"]["cat_median"], path, d=2),
-            "vt": sf(top, "vol36", "תנודתיות שנתית, 36 חודשים", "pct"), "at": sf(top, "a36", "תשואה ממוצעת שנתית, 36 חודשים, נטו", "pct"),
+            "vt": sf(top, "vol36", "תנודתיות שנתית, 36 חודשים", "pct"), "at": sf(top, "a36", "תשואה ממוצעת שנתית, 36 חודשים, ברוטו", "pct"),
             "rf": f2_fig("ריבית חסרת סיכון, ממוצע שנתי, 36 חודשים", st["rf"].get("a36"), "pct", "ריבית חסרת סיכון", st["rf"]["method"], path, d=2, b="actual")}
     corr = f"{top['grp']}: מדד שארפ של {{top}} בשלוש השנים, הגבוה בהשתלמות במסלול הכללי."
-    email = (f"בשלוש השנים {span} הניב המסלול הכללי של {top['grp']} {{at}} בשנה נטו בתנודתיות של {{vt}}, כלומר מדד שארפ {{top}} מעל ריבית חסרת סיכון של {{rf}}; "
+    email = (f"בשלוש השנים {span} הניב המסלול הכללי של {top['grp']} {{at}} בשנה ברוטו בתנודתיות של {{vt}}, כלומר מדד שארפ {{top}} מעל ריבית חסרת סיכון של {{rf}}; "
              f"חציון הקטגוריה {{med}} והנמוך ({bot['grp']}) {{bot}}. שארפ מודד תשואה עודפת ליחידת תנודתיות, לא ציון כולל.")
-    rows_ = [["מנהל", "שארפ", "סורטינו", "תנודתיות", "ירידה מקסימלית", "תשואה שנתית נטו"]] + \
+    rows_ = [["מנהל", "שארפ", "סורטינו", "תנודתיות", "ירידה מקסימלית", "תשואה שנתית ברוטו"]] + \
         [[t["grp"], nf(t["sharpe36"], 2), nf(t.get("sortino36"), 2), f"{nf(t.get('vol36'), 2)}%", f"{nf(t.get('dd_max'), 2)}%", f"{nf(t.get('a36'), 2)}%"] for t in xs[:12]]
-    ex = table(f"השתלמות כללי: סיכון ותשואה, 36 חודשים, נטו, {span}", rows_,
-               ["שארפ וסורטינו מעל תשואת אג\"ח ממשלתי אפס-קופון לשנה (בנק ישראל); נטו = אומדן", "שנים עשר המסלולים עם השארפ הגבוה",
+    ex = table(f"השתלמות כללי: סיכון ותשואה, 36 חודשים, ברוטו, {span}", rows_,
+               ["שארפ וסורטינו מעל תשואת אג\"ח ממשלתי אפס-קופון לשנה (בנק ישראל); תשואות ברוטו, כפי שפורסמו", "שנים עשר המסלולים עם השארפ הגבוה",
                 "מסלולים פתוחים לציבור, בלי ניהול אישי ו-IRA", SRC_F2], span=span)
     chg = changes_if(f"המוביל מתחלף אם השארפ של {top['grp']} יורד אל מתחת ל-{{thr}}", "top", "<", xs[1]["sharpe36"])
     return answer(figs, corr, email, ex, chg, f"top:{top['k']}", links=[card(top), compare([top, xs[1]], 36)], rel=["Q-200", "Q-229"], asof=AS())
@@ -967,7 +944,7 @@ def q229(A):
     R = rank_of_cat("פנסיה מקיפה | עד 50")
     if not R or len(R["months"]) < 36:
         return nodata("אין דירוג חודשי של 36 חודשים למסלולים לבני חמישים ומטה")
-    s = next(x for x in R["sets"] if x["metric"] == "y12" and x["basis"] == "net")
+    s = next(x for x in R["sets"] if x["metric"] == "y12" and x["basis"] == "gross")
     out = []
     for k, xs in s["tracks"].items():
         last = xs[-36:]
@@ -983,16 +960,16 @@ def q229(A):
     path = f"rank/{R['slug']}.json"
     cnt = sorted(x[0] for x in out)
     figs = {"n": f2_fig(f"חודשים ברבע העליון מתוך 36, {f['grp']}, לבני חמישים ומטה", n, "n", f"חודשים ברבע העליון · {f['name']}",
-                        "חודשים שבהם אחוזון תשואת 12 החודשים נטו בקטגוריה ≥ 75", path, d=0),
+                        "חודשים שבהם אחוזון תשואת 12 החודשים (ברוטו) בקטגוריה ≥ 75", path, d=0),
             "med": f2_fig("חציון החודשים ברבע העליון, מסלולי לבני חמישים ומטה", cnt[len(cnt) // 2] if len(cnt) % 2 else (cnt[len(cnt) // 2 - 1] + cnt[len(cnt) // 2]) / 2,
                           "n", "חציון חודשים ברבע העליון", "חציון בין המסלולים שדורגו בכל 36 החודשים", path, d=0),
             "k": f2_fig("מסלולים שדורגו בכל 36 החודשים", len(out), "n", "מסלולים", "ספירה", path, d=0, b="actual")}
     corr = f"{f['grp']}: {{n}} חודשים מתוך שלושים ושישה ברבע העליון, הכי הרבה מבין מסלולי הפנסיה לבני חמישים ומטה."
-    email = (f"בשלוש השנים {span}, מדורג כל חודש לפי תשואת שנים עשר החודשים נטו בתוך הקטגוריה, בילה המסלול של {f['grp']} {{n}} חודשים ברבע העליון; "
+    email = (f"בשלוש השנים {span}, מדורג כל חודש לפי תשואת שנים עשר החודשים (ברוטו) בתוך הקטגוריה, בילה המסלול של {f['grp']} {{n}} חודשים ברבע העליון; "
              f"החציון בין {{k}} המסלולים שדורגו לאורך כל התקופה הוא {{med}}. דירוג חודשי של חלון נע חופף, ולכן חודשים סמוכים אינם תצפיות בלתי תלויות.")
     rows_ = [["מנהל", "מסלול", "חודשים ברבע העליון", "אחוזון אחרון"]] + \
         [[rows.get(kk, {}).get("grp", kk), rows.get(kk, {}).get("name", kk), nf(c, 0), nf(s["tracks"][kk][-1], 0)] for c, kk in out]
     ex = table(f"פנסיה מקיפה, לבני חמישים ומטה: חודשים ברבע העליון, {span}", rows_,
-               ["אחוזון בקטגוריה של תשואת 12 החודשים נטו (אומדן), חברי הקטגוריה כפי שהיו בכל חודש; רבע עליון = אחוזון 75 ומעלה", SRC_F2], span=span)
+               ["אחוזון בקטגוריה של תשואת 12 החודשים, ברוטו כפי שפורסמה, חברי הקטגוריה כפי שהיו בכל חודש; רבע עליון = אחוזון 75 ומעלה", SRC_F2], span=span)
     chg = changes_if("המוביל מתחלף אם מספר החודשים שלו יורד אל מתחת ל-{thr}", "n", "<", out[1][0])
     return answer(figs, corr, email, ex, chg, f"top:{k}", links=[card(f)], rel=["Q-201", "Q-228"], asof=AS())

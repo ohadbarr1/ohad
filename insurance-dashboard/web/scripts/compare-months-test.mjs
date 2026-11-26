@@ -1,6 +1,6 @@
 // Track compare F1 (lib/compareMonths.ts): month and year matrices, summary rows, row lead, heat scale. Bundles the module with esbuild
 // (Vite's own copy) into a temp file, then checks hand-computed cases and the §10A.3 fixtures on the published data (P3 = p2102 מגדל,
-// p2172 הראל, p2009 מנורה; pension general; data month 10/26, net). Run: node scripts/compare-months-test.mjs
+// p2172 הראל, p2009 מנורה; pension general; data month 10/26, gross as published: owner 26.11.26, no net basis). Run: node scripts/compare-months-test.mjs
 import { build } from 'esbuild';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -36,19 +36,19 @@ ok(heatScale(Array.from({ length: 20 }, (_, i) => i + 1)) === 19, 'heat scale: 2
 const hf = heatFill(-5, 10), hu = heatFill(20, 10);
 ok(hf.dir === 'down' && hf.a === 0.24 && hu.dir === 'up' && hu.a === 0.4 && heatFill(0, 10).dir === null && heatFill(null, 10).a === 0, 'heat fill: 0.07–0.40 by size, capped');
 
-const H = (p, yn, y = yn) => ({ p, y, yn, a: p.map(() => 1), fee: p.map(() => 0.1), st: [], fo: [], fx: [] });
+const H = (p, y, yn = y) => ({ p, y, yn, a: p.map(() => 1), fee: p.map(() => 0.1), st: [], fo: [], fx: [] });
 const h1 = H([202511, 202512, 202601, 202602], [1, 2, 3, 4]), h2 = H([202601, 202602], [-1, null]);
-const mr = monthRows([h1, h2, null], 'net', 3, { asof: 202602 });
+const mr = monthRows([h1, h2, null], 'gross', 3, { asof: 202602 });
 ok(mr.length === 3 && eq(mr.map((r) => r.p), [202602, 202601, 202512]), 'months newest first, across a year end');
 ok(eq(mr[0].vals, [4, null, null]) && eq(mr[1].vals, [3, -1, null]) && eq(mr[2].vals, [2, null, null]), 'values by column; a missing month or history is null');
 ok(mr[0].avg === null && mr[1].spread === 4, 'no cat: avg null; spread per row');
-const yr = yearRows([h1, h2], 'net', 2, { asof: 202602 });
+const yr = yearRows([h1, h2], 'gross', 2, { asof: 202602 });
 ok(yr[0].yr === 2026 && yr[0].part && yr[0].months === 2 && near(yr[0].vals[0], (1.03 * 1.04 - 1) * 100) && yr[0].vals[1] === null, 'partial year: Jan–asof; a gap is null');
 ok(yr[1].yr === 2025 && !yr[1].part && yr[1].vals[0] === null, 'a track without all twelve months of a year: null');
-const hg = H([202601], [0.9], [1.0]);
-ok(monthRows([hg], 'gross', 1)[0].vals[0] === 1.0 && monthRows([hg], 'net', 1)[0].vals[0] === 0.9, 'basis: gross y, net yn; asof defaults to the newest month');
+const hg = H([202601], [1.0], [0.9]);
+ok(monthRows([hg], 'gross', 1)[0].vals[0] === 1.0, 'gross y is read (a stale net yn in the file is ignored); asof defaults to the newest month');
 const hx = { p: [202601], y: [1.2], a: [1], fee: [1.2], st: [], fo: [], fx: [] };
-ok(near(monthRows([hx], 'net', 1)[0].vals[0], 1.1), 'no yn: the net estimate of lib/funds netSeries (gross − fee/12)');
+ok(monthRows([hx], 'gross', 1)[0].vals[0] === 1.2, 'the fee is never subtracted from the month (owner 26.11.26)');
 
 /* ---- fixtures: the published data ---- */
 const D = new URL('../public/data/', import.meta.url).pathname;
@@ -57,32 +57,32 @@ const file = J('funds.json'), asof = file.asof;
 const P3 = ['p2102', 'p2172', 'p2009'], fs = P3.map((k) => file.funds.find((f) => f.k === k)), hs = P3.map((k) => J(`funds/${k}.json`));
 const cat = J('funds/cat.json')[`${fs[0].prod} | ${fs[0].track}`];
 ok(asof === 202610, `fixtures are for 10/26 (funds.json asof ${asof})`);
-const rows = monthRows(hs, 'net', 6, { asof, cat });
+const rows = monthRows(hs, 'gross', 6, { asof, cat });
 ok(rows[0].p === 202610 && rows[5].p === 202605, 'six rows, October newest');
-ok(eq(rows[0].vals.map(r2), [-1.45, -0.73, -0.74]), `P3 net first row −1.45, −0.73, −0.74 (got ${rows[0].vals.map(r2)})`);
+ok(eq(rows[0].vals.map(r2), [-1.44, -0.72, -0.73]) && eq(rows[0].vals, hs.map((h) => h.y[h.p.indexOf(202610)])), `P3 first row = the published MONTHLY_YIELD −1.44, −0.72, −0.73 (got ${rows[0].vals.map(r2)})`);
 ok(near(rows[0].spread, 0.72, 0.006), `October spread 0.72 (got ${rows[0].spread?.toFixed(3)})`);
-ok(rows[0].avg === cat.yn[cat.p.indexOf(202610)] && rows[0].avgN === 5, `October category average from cat.json yn, 5 tracks (got ${rows[0].avg}, ${rows[0].avgN})`);
-ok(eq(rowMarks(rows[0].vals, rowBand('month'), 2), [1, 2]), 'row lead of October = Harel and Menora (−0.73, −0.74 inside 0.05)');
-const half = halfYear(hs, 'net', { asof, cat });
-ok(eq(half.vals.map(r1), [1.4, 2.3, 2.3]), `half year +1.4, +2.3, +2.3 (got ${half.vals.map((v) => v.toFixed(3))})`);
+ok(rows[0].avg === cat.y[cat.p.indexOf(202610)] && rows[0].avgN === cat.n[cat.p.indexOf(202610)], `October category average from cat.json y, n tracks (got ${rows[0].avg}, ${rows[0].avgN})`);
+ok(eq(rowMarks(rows[0].vals, rowBand('month'), 2), [1, 2]), 'row lead of October = Harel and Menora (−0.72, −0.73 inside 0.05)');
+const half = halfYear(hs, 'gross', { asof, cat });
+ok(eq(half.vals.map(r1), [1.4, 2.4, 2.4]), `half year +1.4, +2.4, +2.4 (got ${half.vals.map((v) => v.toFixed(3))})`);
 ok(eq(rowMarks(half.vals, rowBand('half'), 1), [1, 2]), 'half year: Harel and Menora tie at the top, Migdal unmarked');
-const ly = lastYear(fs, 'net', { asof, cat });
-ok(eq(ly.vals.map(r1), [9.0, 10.3, 10.0]), `last year +9.0, +10.3, +10.0 (got ${ly.vals})`);
-ok(eq(ly.vals, fs.map((f) => f.net.y12)), 'last year is the published f.net.y12');
+const ly = lastYear(fs, 'gross', { asof, cat });
+ok(eq(ly.vals.map(r1), [9.2, 10.5, 10.2]), `last year +9.2, +10.5, +10.2 (got ${ly.vals})`);
+ok(eq(ly.vals, fs.map((f) => f.y12)), 'last year is the published f.y12');
 ok(eq(lastYear(fs, 'gross').vals, fs.map((f) => f.y12)), 'gross: the published f.y12');
-ok(eq(rowMarks(ly.vals, rowBand('y12'), 1), [1]), 'last year: Harel alone (10.3 vs 10.0, outside 0.10)');
+ok(eq(rowMarks(ly.vals, rowBand('y12'), 1), [1]), 'last year: Harel alone (10.5 vs 10.2, outside 0.10)');
 ok(ly.avg != null && Math.abs(ly.avg) < 30, `last year category average compounded from cat.json (${ly.avg?.toFixed(2)})`);
-const p5 = periodRow(fs, 'net', 'a5', { asof, cat });
-ok(eq(p5.vals, fs.map((f) => f.net.a5)) && p5.avg != null, '5 years, a year: the published f.net.a5; avg annualised');
-const yrs = yearRows(hs, 'net', 5, { asof, cat }), y25 = yrs.find((r) => r.yr === 2025);
+const p5 = periodRow(fs, 'gross', 'a5', { asof, cat });
+ok(eq(p5.vals, fs.map((f) => f.a5)) && p5.avg != null, '5 years, a year: the published f.a5; avg annualised');
+const yrs = yearRows(hs, 'gross', 5, { asof, cat }), y25 = yrs.find((r) => r.yr === 2025);
 ok(yrs.length === 5 && yrs[0].yr === 2026 && yrs[0].part && yrs[0].months === 10 && yrs[0].last === 202610, 'years: 2026 to October first, five rows');
-ok(y25 && eq(y25.vals.map(r1), [15.4, 14.3, 16.5]), `2025 = +15.4, +14.3, +16.5 (got ${y25?.vals.map((v) => v.toFixed(3))})`);
+ok(y25 && eq(y25.vals.map(r1), [15.6, 14.5, 16.6]), `2025 = +15.6, +14.5, +16.6 (got ${y25?.vals.map((v) => v.toFixed(3))})`);
 ok(eq(rowMarks(y25.vals, rowBand('year'), 1), [2]), '2025: Menora alone');
-const all = yearsAvailable(hs, 'net', { asof });
-ok(all >= 12 && yearRows(hs, 'net', 12, { asof }).every((r) => r.vals.every((v) => v != null)), `"עוד שנים ▾": twelve full years available (${all})`);
+const all = yearsAvailable(hs, 'gross', { asof });
+ok(all >= 12 && yearRows(hs, 'gross', 12, { asof }).every((r) => r.vals.every((v) => v != null)), `"עוד שנים ▾": twelve full years available (${all})`);
 const sc = heatScale(rows.flatMap((r) => r.vals));
 ok(sc > 1 && sc < 3, `heat scale of the six P3 months: ${sc}`);
-const m60 = monthRows(hs, 'net', 60, { asof, cat });
+const m60 = monthRows(hs, 'gross', 60, { asof, cat });
 ok(m60.length === 60 && m60.every((r) => r.vals.every((v) => v != null)), '60 months ("עוד 6 חודשים ▾" up to 60), all published');
 
 console.log(`compareMonths: ${pass} passed, ${fail} failed`);

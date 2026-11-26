@@ -6,7 +6,7 @@ python3 pipeline/build_fund_stats.py --check    rebuild in memory: byte-equal to
 
   -> web/public/data/funds/stats/index.json        the categories: {slug, cat, prod, track, n, rank}
   -> web/public/data/funds/stats/<slug>.json       risk panel per live track of a category, 36 months ending at asof, and the category median
-  -> web/public/data/funds/rank/<slug>.json        percentile rank in category over time (12M and 3Y annualised; net and gross), point-in-time
+  -> web/public/data/funds/rank/<slug>.json        percentile rank in category over time (12M and 3Y annualised; gross, as published), point-in-time
   -> web/public/data/funds/persist.json            do winners stay winners: quartile transition matrices per product, 12M→12M and 36M→36M
   -> web/public/data/funds/default.json            the default (selected) pension funds: tenders, winners, fees (data/regulation/default_funds.json)
                                                    and each winner's deposits / assets / net return before, during and after its period
@@ -14,7 +14,7 @@ python3 pipeline/build_fund_stats.py --check    rebuild in memory: byte-equal to
   -> web/public/data/funds/glide.json              age tracks (עד 50 / 50-60 / 60 ומעלה) per manager: equity share over time, returns, the gaps
 
 Slug of a category (cat.json key, "prod | track"): "c" + the first 10 hex digits of sha1(key, UTF-8); funds/stats/index.json maps both ways,
-so a reader never recomputes it. Inputs: funds.json, funds/closed.json, funds/cat.json, funds/<k>.json (monthly y, yn, a, st, fo, dep, nd, tr,
+so a reader never recomputes it. Inputs: funds.json, funds/closed.json, funds/cat.json, funds/<k>.json (monthly y, a, st, fo, dep, nd, tr,
 ct), macro/boi_curve.json (the risk-free rate), data/regulation/default_funds.json. Units: returns and fees percent, assets and flows NIS
 millions, months yyyymm.
 """
@@ -54,8 +54,8 @@ RF_METHOD = ("ריבית חסרת סיכון: תשואת אג\"ח ממשלתי �
              "מומרת לחודש: (1 + תשואה)^(1/12) − 1; חודש שאין לו נתון: הנתון האחרון שפורסם (מסומן rf.filled)")
 STATS_METHOD = {
     "window": "36 החודשים שמסתיימים ב-asof; מסלול נכנס למדדי ה-36 רק עם 36 תשואות חודשיות רצופות",
-    "basis": "net = התשואה החודשית נטו, אומדן (yn: ברוטו פחות דמי הניהול מהצבירה ÷ 12, funds.json net_method), כשהיא קיימת בכל 36 החודשים; "
-             "אחרת gross, כפי שפורסמה; מדד הקטגוריה באותו בסיס (funds/cat.json yn או y)",
+    "basis": "gross = התשואה החודשית כפי שפורסמה, לפני דמי ניהול (בעלים, 26.11.26: דמי הניהול שונים מחוסך לחוסך ואינם מנוכים); "
+             "מדד הקטגוריה באותו בסיס (funds/cat.json y)",
     "vol36": "סטיית תקן מדגמית של 36 התשואות החודשיות × √12, אחוזים לשנה",
     "dd_max": "הירידה העמוקה ביותר מהשיא המצטבר בתוך החלון (שווי מתחיל ב-1), אחוזים, ≤ 0; dd_cur = הירידה מהשיא בחודש האחרון; dd_len = חודשים מהשיא "
               "לשפל; rec_months = חודשים מהשפל עד שהשווי חזר לשיא (null = טרם חזר); dd_peak / dd_trough = חודשי השיא והשפל",
@@ -72,7 +72,7 @@ STATS_METHOD = {
 RANK_METHOD = ("אחוזון בקטגוריה בכל חודש: 100 × (מסלולים שתשואתם נמוכה + חצי מהשווים) ÷ (n − 1), מעוגל (funds_lib.percentiles, כמו pr ב-funds.json); "
                "y12 = ריבית דריבית של 12 התשואות החודשיות שמסתיימות בחודש, a3 = ממוצע שנתי של 36, מעוגלות ל-0.01 לפני הדירוג; "
                f"חברי הקטגוריה כפי שהיו באותו חודש (ct), כולל מסלולים שנסגרו בזמן שפעלו, עם נכסים חיוביים; רק חודשים עם {MIN_PEERS} מסלולים לפחות. "
-               "net = מהתשואות נטו (אומדן); gross = כפי שפורסמו. הדירוג בחודש האחרון יכול להיבדל ב-1 מ-pr / pn ב-funds.json: שם 12 החודשים מחושבים "
+               "gross = מהתשואות כפי שפורסמו, לפני דמי ניהול. הדירוג בחודש האחרון יכול להיבדל ב-1 מ-pr ב-funds.json: שם 12 החודשים מחושבים "
                "מהתשואות לפני עיגול")
 PERSIST_METHOD = ("בכל חודש התחלה t ובכל קטגוריה (מוצר | מסלול, החברים כפי שהיו ב-t, עם נכסים, לפחות 8): רבעון לפי התשואה בחלון שמסתיים ב-t "
                   "(12 או 36 חודשים, ריבית דריבית), 1 = הרבע העליון; רבעון קדימה לפי התשואה ב-12 / 36 החודשים שאחרי t, בין המסלולים מאותה קבוצה "
@@ -84,17 +84,17 @@ PERSIST_METHOD = ("בכל חודש התחלה t ובכל קטגוריה (מוצ�
 DEFAULT_METHOD = ("לכל הליך: הקרנות שנבחרו מול שאר קרנות הפנסיה המקיפות (פנסיה-נט, מסלולים שהקטגוריה שלהם באותו חודש היא פנסיה מקיפה). pre = 12 החודשים "
                   "שלפני תחילת התקופה; post = 12 החודשים הראשונים שלה (עד asof); aft = 12 החודשים שאחרי סופה, כשפורסמו. dep / nd / tr = סכום ההפקדות / "
                   "ההפקדות נטו / ההעברות בחלון (מיליוני ש\"ח); share = ההפקדות ÷ כל ההפקדות לפנסיה המקיפה × 100; a0 = נכסים בחודש שלפני החלון, a1 = בחודש "
-                  "האחרון שלו; ret = התשואה נטו (אומדן) המצטברת בחלון, ממוצע משוקלל בנכסים של מסלולי הקרן בכל חודש, רק כשהקרן דיווחה בכל 12 החודשים. "
-                  "resid = שינוי הנכסים שההפקדות נטו והתשואה אינן מסבירות (Σ חודשי: נכסים − נכסים קודמים − הפקדות נטו − נכסים קודמים × תשואה נטו): "
+                  "האחרון שלו; ret = התשואה המצטברת בחלון (ברוטו, כפי שפורסמה), ממוצע משוקלל בנכסים של מסלולי הקרן בכל חודש, רק כשהקרן דיווחה בכל 12 החודשים. "
+                  "resid = שינוי הנכסים שההפקדות נטו והתשואה אינן מסבירות (Σ חודשי: נכסים − נכסים קודמים − הפקדות נטו − נכסים קודמים × התשואה): "
                   "סכום גדול מסמן מיזוג קרן או העברה שלא נרשמה כהפקדה, והשוואת ההפקדות לפני ואחרי צריכה להתחשב בו. "
                   "שיוך הזוכה לקרן בפנסיה-נט (pid) הוא של האתר, לפי שם הקרן (map = inferred)")
 TRACKER_METHOD = ("מסלולים פעילים שהקטגוריה שלהם מחקה מדד, בקבוצה לפי המדד (ללא חלוקה למוצר). med = חציון התשואה ברוטו של הקבוצה; td = ברוטו פחות החציון "
-                  "(הפער בביצוע); tdn = נטו (אומדן) פחות חציון הברוטו: מה שהעטיפה עולה לחוסך מעבר לתשואת הקבוצה. y12: ריבית דריבית של 12 חודשים; a3 / a5: "
+                  "(הפער בביצוע), הכול לפני דמי ניהול; דמי הניהול (fee, depfee) מוצגים בנפרד. y12: ריבית דריבית של 12 חודשים; a3 / a5: "
                   "ממוצע שנתי כפי שפורסם. fx = חשיפה למט\"ח באחוזי נכסים (הבדלי גידור מסבירים חלק מהפער). same_index: רק בקבוצת S&P 500 כל המסלולים "
                   "עוקבים אחרי אותו מדד; בשאר הקבוצות המדדים שונים (ת\"א 35, עולמי, אג\"ח ממשלתי או קונצרני), וה-td משקף גם את בחירת המדד; "
                   "sector = מסלול שפתוח רק לאוכלוסייה מסוימת")
 GLIDE_METHOD = ("לכל מנהל ומוצר: מסלול הגיל הפעיל הגדול בנכסיו בכל קבוצת גיל (עד 50, 50-60, 60 ומעלה). st = חשיפה למניות באחוזי נכסים, fo = חשיפה לחו\"ל, "
-                "חודשיים מ-01/16; net / gross = תשואות 12 חודשים, ממוצע שנתי 3 ו-5 שנים (funds.json); gap = עד 50 פחות 60 ומעלה (נקודות אחוז)")
+                "חודשיים מ-01/16; gross = תשואות 12 חודשים, ממוצע שנתי 3 ו-5 שנים, כפי שפורסמו (funds.json); gap = עד 50 פחות 60 ומעלה (נקודות אחוז)")
 
 
 # ------------------------------------------------------------------------------------------------ inputs
@@ -115,14 +115,14 @@ def r(x, nd=2):
 
 
 class Hist:
-    __slots__ = ("k", "p", "ix", "y", "yn", "a", "st", "fo", "dep", "nd", "tr", "ct", "row", "_g")
+    __slots__ = ("k", "p", "ix", "y", "a", "st", "fo", "dep", "nd", "tr", "ct", "row", "_g")
 
     def __init__(self, k, h, row):
         self.k, self.row = k, row
         self.p = h["p"]
         self.ix = {FL.mi(p): i for i, p in enumerate(self.p)}
         n = len(self.p)
-        self.y, self.yn, self.a = h["y"], h.get("yn") or [None] * n, h.get("a") or [None] * n
+        self.y, self.a = h["y"], h.get("a") or [None] * n
         self.st, self.fo = h.get("st") or [None] * n, h.get("fo") or [None] * n
         self.dep, self.nd, self.tr = h.get("dep"), h.get("nd"), h.get("tr")
         self.ct = h["ct"]
@@ -142,7 +142,7 @@ class Hist:
     def run(self, T, n, net):
         """the n monthly returns ending at T (consecutive months), or None"""
         t = FL.mi(T)
-        s = self.yn if net else self.y
+        s = self.y  # gross, as published (the `net` flag is kept for the callers; owner 26.11.26: no net-of-fee series)
         out = []
         for j in range(n - 1, -1, -1):
             i = self.ix.get(t - j)
@@ -198,17 +198,16 @@ KEYS = ("vol36", "dd_max", "dd_cur", "dd_len", "rec_months", "sharpe36", "sortin
 
 def track_stats(h, asof, rf, cat_rec):
     W = [FL.madd(asof, -j) for j in range(WIN - 1, -1, -1)]
-    net = h.run(asof, WIN, True)
     gross = h.run(asof, WIN, False)
-    basis = "net" if net is not None else "gross"
-    xs = net if net is not None else gross
+    basis = "gross"  # owner 26.11.26: every return is the published gross; no net-of-fee basis
+    xs = gross
     o = {"k": h.k, "name": h.row["name"], "mgr": h.row["mgr"], "grp": h.row["grp"], "n_months": sum(1 for x in h.y if x is not None), "basis": basis}
     if SELF.search(h.row["name"]):
         o["self_dir"] = True
     if h.row.get("closed"):
         o["sector"] = True
     # the longest consecutive run of returns ending at asof, on the same basis
-    s = h.yn if basis == "net" else h.y
+    s = h.y
     t, run = FL.mi(asof), []
     while True:
         i = h.ix.get(t)
@@ -234,7 +233,7 @@ def track_stats(h, asof, rf, cat_rec):
     if all(x is not None for x in rfx):
         o["sharpe36"], o["sortino36"] = r(S.sharpe_ann(xs, rfx)), r(S.sortino_ann(xs, rfx))
     if cat_rec:
-        cy = dict(zip(cat_rec["p"], cat_rec["yn" if basis == "net" else "y"]))
+        cy = dict(zip(cat_rec["p"], cat_rec["y"]))
         bs = [cy.get(m) for m in W]
         if all(b is not None for b in bs):
             o.update({"beta36_vs_cat": r(S.beta(xs, bs), 3), "te36_vs_cat": r(S.te_ann(xs, bs)), "up_cap36": r(S.capture(xs, bs, True), 1),
@@ -289,8 +288,8 @@ def panel(H, first, asof):
             if c is None:
                 continue
             slot = P.setdefault(T, {}).setdefault(c, {})
-            for net in (True, False):
-                b = "net" if net else "gross"
+            for net in (False,):
+                b = "gross"
                 g = h.g12(T, net)
                 if g is not None:
                     slot.setdefault(("y12", b), []).append((h.k, round((g - 1) * 100, 2)))
@@ -302,7 +301,7 @@ def panel(H, first, asof):
     return P
 
 
-SETS = (("y12", "net"), ("a3", "net"), ("y12", "gross"), ("a3", "gross"))
+SETS = (("y12", "gross"), ("a3", "gross"))
 
 
 def build_ranks(P, asof):
@@ -337,8 +336,8 @@ def build_persist(H, P, asof):
     """quartile transitions per product family x window x basis, pooled over start months"""
     res = []
     for wname, w in (("12", 12), ("36", 36)):
-        for basis in ("net", "gross"):
-            net = basis == "net"
+        for basis in ("gross",):
+            net = False
             fams = {}
             for t in sorted(P):
                 end = FL.madd(t, w)
@@ -456,7 +455,7 @@ def build_default(H, asof):
             dep.extend(h.dep[i] for h, i in ys if h.dep and h.dep[i] is not None)
             nd.extend(h.nd[i] for h, i in ys if h.nd and h.nd[i] is not None)
             tr.extend(h.tr[i] for h, i in ys if h.tr and h.tr[i] is not None)
-            wa = [(h.a[i], h.yn[i]) for h, i in ys if (h.a[i] or 0) > 0 and h.yn[i] is not None]
+            wa = [(h.a[i], h.y[i]) for h, i in ys if (h.a[i] or 0) > 0 and h.y[i] is not None]
             W_ = math.fsum(a_ for a_, _ in wa)
             rets.append(math.fsum(a_ * y for a_, y in wa) / W_ if W_ else None)
 
@@ -537,25 +536,21 @@ def build_trackers(F, asof):
         if not xs:
             continue
         med = {w: S.median([f.get(w) for f in xs]) for w in ("y12", "a3", "a5")}
-        medn = {w: S.median([f.get("net", {}).get(w) for f in xs]) for w in ("y12", "a3", "a5")}
         tracks = []
         for f in sorted(xs, key=lambda f: (-(f.get("assets") or 0), f["k"])):
             g = {w: f.get(w) for w in ("y12", "a3", "a5") if f.get(w) is not None}
-            nt = {w: f["net"][w] for w in ("y12", "a3", "a5") if f.get("net", {}).get(w) is not None}
             o = {"k": f["k"], "name": f["name"], "grp": f["grp"], "prod": f["prod"], "fee": f.get("fee"), "depfee": f.get("depfee"),
-                 "assets": f.get("assets"), "fx": f.get("fx"), "g": g, "nt": nt,
-                 "td": {w: r(v - med[w]) for w, v in g.items() if med[w] is not None},
-                 "tdn": {w: r(v - med[w]) for w, v in nt.items() if med[w] is not None}}
+                 "assets": f.get("assets"), "fx": f.get("fx"), "g": g,
+                 "td": {w: r(v - med[w]) for w, v in g.items() if med[w] is not None}}
             if f.get("tx", {}).get("dis"):
                 o["tx_dis"] = True
             if f.get("closed"):
                 o["sector"] = True  # open only to a sector / employer population (funds.json closed)
             tracks.append({k: v for k, v in o.items() if v is not None})
         groups.append({"id": gid, "label": label, "track": track, "n": len(xs), "same_index": gid == "sp500", "med": {w: r(v) for w, v in med.items() if v is not None},
-                       "med_n": {w: r(v) for w, v in medn.items() if v is not None},
                        "n_w": {w: sum(1 for f in xs if f.get(w) is not None) for w in ("y12", "a3", "a5")}, "tracks": tracks})
     return {"v": V, "asof": asof, "src": SRC, "method": TRACKER_METHOD,
-            "basis_note": "g = ברוטו כפי שפורסם; nt = נטו, אומדן (funds.json net_method)", "groups": groups}
+            "basis_note": "g = ברוטו כפי שפורסם, לפני דמי ניהול", "groups": groups}
 
 
 def build_glide(F, H, asof):
@@ -583,7 +578,6 @@ def build_glide(F, H, asof):
                     if i is not None:
                         st[j], fo[j] = h.st[i], h.fo[i]
                 tr[age] = {"k": f["k"], "name": f["name"], "assets": f["assets"], "st": st, "fo": fo,
-                           "net": {w: f["net"][w] for w in ("y12", "a3", "a5") if f.get("net", {}).get(w) is not None},
                            "gross": {w: f[w] for w in ("y12", "a3", "a5") if f.get(w) is not None}, "st_now": f.get("st"), "fo_now": f.get("fo")}
             gap = {}
             y, o = tr.get(AGE[0]), tr.get(AGE[2])
@@ -591,8 +585,8 @@ def build_glide(F, H, asof):
                 if y.get("st_now") is not None and o.get("st_now") is not None:
                     gap["st"] = r(y["st_now"] - o["st_now"], 1)
                 for w in ("y12", "a3", "a5"):
-                    if w in y["net"] and w in o["net"]:
-                        gap["n_" + w] = r(y["net"][w] - o["net"][w])
+                    if w in y["gross"] and w in o["gross"]:
+                        gap["g_" + w] = r(y["gross"][w] - o["gross"][w])
             mgrs.append({"grp": grp, "tracks": tr, "gap": gap})
         med = {}
         for age in AGE:
@@ -655,7 +649,7 @@ def rules(files):
                     bad.append(f"{path}: {o['k']} pct_pos_m out of range")
                 if o.get("worst_m") is not None and o["worst_m"] > o["best_m"]:
                     bad.append(f"{path}: {o['k']} worst > best")
-                if o.get("basis") not in ("net", "gross", None):
+                if o.get("basis") not in ("gross", None):
                     bad.append(f"{path}: {o['k']} basis")
         elif path.startswith("funds/rank/"):
             m = len(doc["months"])
