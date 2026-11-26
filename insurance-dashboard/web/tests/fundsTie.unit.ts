@@ -1,5 +1,5 @@
 /* W0 · the tie band of the funds section (lib/fundsTie.ts): shared places and the "צמודים" edges, hand-computed cases, and a smoke
-   run over web/public/data/funds.json (5Y net, the section's default). Run: node scripts/fundstie-test.mjs, or bundle this file with
+   run over web/public/data/funds.json (5Y gross as published, the section's default). Run: node scripts/fundstie-test.mjs, or bundle this file with
    esbuild as scripts/funds-calc-test.mjs does. */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -40,7 +40,7 @@ const e3 = edges([T('a', 3.0), T('b', 2.97), T('c', 2.95)], (x) => x.v!, 0.1);
 ok(e3.all && e3.top.length === 3, 'the whole category inside the band: one tie');
 ok(edges([], (x: { v: number }) => x.v, 0.1).top.length === 0, 'empty');
 
-/* ---- smoke: the published file, 5Y net, open tracks with assets ---- */
+/* ---- smoke: the published file, 5Y gross, open tracks with assets ---- */
 const file = join(process.cwd(), 'public/data/funds.json');
 if (existsSync(file)) {
   type F = { k: string; prod: string; track: string; assets?: number | null; closed?: boolean; name: string; net?: Record<string, number | null> | null; a5?: number | null };
@@ -49,7 +49,7 @@ if (existsSync(file)) {
   d.funds.filter((f) => f.assets && !f.closed && !/בניהול אישי|\bIRA\b/.test(f.name)).forEach((f) => { const k = `${f.prod} | ${f.track}`; by.set(k, [...(by.get(k) ?? []), f]); });
   let cats = 0, tiedTop = 0, tiedLow = 0;
   by.forEach((fs) => {
-    const rs = fs.map((f) => ({ k: f.k, v: f.net?.a5 ?? null })).filter((x): x is { k: string; v: number } => x.v != null).sort((a, b) => b.v - a.v);
+    const rs = fs.map((f) => ({ k: f.k, v: f.a5 ?? null }))  /* the published gross 5Y (owner 26.11.26) */.filter((x): x is { k: string; v: number } => x.v != null).sort((a, b) => b.v - a.v);
     if (rs.length < 3) return;
     cats++;
     const x = edges(rs, (y) => y.v, tieBand('a5', d.asof));

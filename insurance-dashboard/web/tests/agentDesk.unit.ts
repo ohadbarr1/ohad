@@ -293,7 +293,7 @@ if (existsSync(join(DATA, 'funds.json'))) {
   ok(whys.every((w) => w.length >= 3 && w.every((x) => x.text && x.src)) && whys.flat().some((x) => /מדד השירות/.test(x.text)) && whys.flat().every((x) => !FORBIDDEN.test(x.text)), 'every pair has sourced why lines, the service index among them, none recommending');
   ok(whyText(whys[0]).split('\n').length === whys[0].length, 'the why text: one line each');
   // step 3: the save, and the document's view of the products: none dropped
-  const sv = wizardSave(f, cands, { snap: snapOf(docRows, bottomLines(docRows, true), TODAY, d.asof, 'net'), kind: 'full', client: '', meet: TODAY, age: 45, sex: 'm', ms: performance.now() - t0, today: TODAY });
+  const sv = wizardSave(f, cands, { snap: snapOf(docRows, bottomLines(docRows), TODAY, d.asof), kind: 'full', client: '', meet: TODAY, age: 45, sex: 'm', ms: performance.now() - t0, today: TODAY });
   const saved = upsert({ kind: 'fox-clients', v: 2, folders: [f] }, sv, TODAY).folder;
   const exist = saved.keys.filter((k) => saved.tags[k] === 'קיים');
   const { onRow, loose } = heldForDoc(saved.held, saved.keys, exist);

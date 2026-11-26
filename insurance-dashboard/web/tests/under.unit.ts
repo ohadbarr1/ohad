@@ -37,16 +37,16 @@ else {
     ok(r.icost != null && near(r.icost, (r.c12! * r.gap) / 100), `${r.k}: inflow cost = c12 × gap`);
   }
   /* ---- every ranked row: the band, the median, the card ---- */
-  const F = read<{ funds: { k: string; net?: { a5?: number | null } | null; pn?: { a5?: number | null } | null; mig?: unknown }[] }>('funds.json');
+  const F = read<{ funds: { k: string; a5?: number | null; pr?: { a5?: number | null } | null; mig?: unknown }[] }>('funds.json');
   const by = new Map(F.funds.map((f) => [f.k, f]));
   let nCard = 0;
   for (const r of rows) {
     ok(r.gap === 0 || r.gap >= U.band_bp / 100 - 1e-9, `${r.k}: a gap is 0 or outside the band`);
     ok(r.gap === 0 ? r.med - r.r5 < U.band_bp / 100 + 1e-9 : near(r.gap, r.med - r.r5, 0.0011), `${r.k}: gap = median − r5`);
     const f = by.get(r.k);
-    if (f) { nCard++; ok(f.net?.a5 === r.r5, `${r.k}: r5 ${r.r5} = card ${f.net?.a5}`); ok(f.pn?.a5 === r.pct, `${r.k}: pct ${r.pct} = card ${f.pn?.a5}`); ok(!!f.mig === !!r.mig, `${r.k}: migration flag = card`); }
+    if (f) { nCard++; ok(f.a5 === r.r5, `${r.k}: r5 ${r.r5} = card a5 ${f.a5}`); ok(f.pr?.a5 === r.pct, `${r.k}: pct ${r.pct} = card pr.a5 ${f.pr?.a5}`); ok(!!f.mig === !!r.mig, `${r.k}: migration flag = card`); }
   }
-  ok(nCard === rows.length && rows.length === F.funds.filter((f) => f.pn?.a5 != null).length, `every ranked track is a live card with a 5Y percentile (${nCard}/${rows.length})`);
+  ok(nCard === rows.length && rows.length === F.funds.filter((f) => f.pr?.a5 != null).length, `every ranked track is a live card with a 5Y percentile (${nCard}/${rows.length})`);
   const cats = new Map<string, number[]>();
   rows.forEach((r) => cats.set(r.cat, [...(cats.get(r.cat) ?? []), r.r5]));
   for (const [c, xs] of cats) {

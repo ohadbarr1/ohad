@@ -94,7 +94,7 @@ ok(tendersOf(null).length === 0 && tendersOf({ tenders: [] } as DefaultFile).len
 const tf = json<TrackersFile>(join(FX, 'funds-trackers.json'));
 ok(tf.groups.every((gr) => gr.tracks.every((t) => t.td.y12 == null || gr.med.y12 == null || near(t.td.y12, (t.g.y12 ?? 0) - gr.med.y12))), 'fixture: gap = gross − group median');
 const fl: FundLike[] = [
-  { k: 'a', name: 'x', grp: 'A', prod: 'גמל', track: 'עוקב מדד S&P 500', fee: 0.5, assets: 10, y12: 10, a3: 8, a5: null, net: { y12: 9.5 } },
+  { k: 'a', name: 'x', grp: 'A', prod: 'גמל', track: 'עוקב מדד S&P 500', fee: 0.5, assets: 10, y12: 10, a3: 8, a5: null },
   { k: 'b', name: 'y', grp: 'B', prod: 'גמל', track: 'עוקב מדד S&P 500', fee: 0.2, assets: 10, y12: 12, a3: 9, a5: null },
   { k: 'c', name: 'z', grp: 'C', prod: 'השתלמות', track: 'עוקב מדד S&P 500', fee: 0.8, assets: 10, y12: 11, a3: null, a5: null },
   { k: 'd', name: 'w בניהול אישי', grp: 'D', prod: 'גמל', track: 'עוקב מדד S&P 500', fee: 0, assets: 10, y12: 0, a3: 0, a5: 0 },
@@ -143,10 +143,10 @@ if (existsSync(join(DATA, 'funds.json'))) {
   const cat = 'השתלמות | כללי';
   const mem = [...funds.funds, ...closed].filter((f) => `${f.prod} | ${f.track}` === cat && !/בניהול אישי|\bIRA\b/.test(f.name));
   const cats = json<Record<string, { p: number[]; y: (number | null)[]; yn?: (number | null)[] }>>(join(DATA, 'funds', 'cat.json'));
-  const c = cats[cat], fillM = new Map(c.p.map((p, i) => [p, c.yn?.[i] ?? null] as [number, number | null]));
+  const c = cats[cat], fillM = new Map(c.p.map((p, i) => [p, c.y[i] ?? null] as [number, number | null]));  // gross (owner 26.11.26)
   const start = 201601, end = funds.asof;
   const dep = deposits({ mode: 'm', start, end, amount: 1000, raise: 0 });
-  const runs = mem.map((f) => { const h = json<{ p: number[]; y: (number | null)[]; yn?: (number | null)[] }>(join(DATA, 'funds', `${f.k}.json`)); return runTrack(h.p, h.yn ?? h.y, dep, { start, end, depfee: f.depfee ?? 0, fill: fillM }); });
+  const runs = mem.map((f) => { const h = json<{ p: number[]; y: (number | null)[]; yn?: (number | null)[] }>(join(DATA, 'funds', `${f.k}.json`)); return runTrack(h.p, h.y, dep, { start, end, depfee: f.depfee ?? 0, fill: fillM }); });
   const live = runs.filter((r): r is NonNullable<typeof r> => !!r);
   const dd = dist(live.map((r) => r.bal))!;
   ok(live.length >= 10 && dd.min > 0 && dd.min <= dd.med && dd.med <= dd.max && live.every((r) => r.dep === totalOf(dep)), `smoke ${cat}: ${live.length} of ${mem.length} tracks, median ${dd.med.toFixed(0)} on ${totalOf(dep)} deposited`);

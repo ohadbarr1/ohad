@@ -19,8 +19,8 @@ function ok(cond: unknown, what: string) { if (cond) pass++; else { fail++; bad.
 const BANNED = /עבר[וי]|כדאי לך|מומלץ|אנו ממליצים|תעביר|העבירו/;
 
 const mk = (k: string, a5: number | null, fee: number | null, extra: Partial<VFund> = {}): VFund => ({
-  k, name: `קרן ${k}`, prod: 'פנסיה מקיפה', track: 'עד 50', grp: `גוף ${k}`, fee, depfee: 1.5, assets: 1000, a5: a5 == null ? null : a5 + 0.15, a3: null, y12: 5,
-  net: { a5, y12: 4.9 }, st: 50, ...extra });
+  k, name: `קרן ${k}`, prod: 'פנסיה מקיפה', track: 'עד 50', grp: `גוף ${k}`, fee, depfee: 1.5, assets: 1000, a5, a3: null, y12: 5,
+  st: 50, ...extra } as VFund);  // returns are the published gross (owner 26.11.26); a stale `net` in a row is never read
 const cat = [mk('p1', 10.5, 0.14), mk('p2', 10.45, 0.15), mk('p3', 10.2, 0.11), mk('p4', 9.7, 0.16), mk('p5', 9.5, 0.2), mk('p6', 9.0, 0.15, { depfee: 1.2 }), mk('p7', 8.95, 0.15, { st: 80, depfee: 1.5 })];
 const dfile: DefaultFile = { tenders: [
   { id: '2024', label: 'ההליך הרביעי', from: '2024-11-01', to: '2028-10-31', fee: 0.22, depfee: 1, fee_years: 10, src: 'https://gov.il/x.pdf', verified: true, winners: [{ grp: 'גוף p7', ks: ['p7'] } as never], fee_alt: [{ fee: 0.2, depfee: 1.2 }] },
@@ -30,7 +30,7 @@ const dfile: DefaultFile = { tenders: [
 /* ---- the place, the median, ties ---- */
 {
   const v = verdictOf(cat[6], cat, 202609, dfile);
-  ok(v.ret?.per === 'a5' && v.ret.basis === 'net', '5Y net by default');
+  ok(v.ret?.per === 'a5' && v.ret.basis === 'gross', '5Y gross (as published) by default');
   ok(v.ret?.rank?.lo === 6 && v.ret.rank.hi === 7 && v.ret.rank.n === 7, 'p7 at 8.95 vs p6 at 9.0: a tie (gap < 10bp) → 6–7 of 7');
   ok(placeTone(v.ret!.rank) === 'bad', '6–7 of 7: the best place, 6, is in the bottom quarter (⌈7/4⌉ = 2 places at each end)');
   ok(Math.abs(v.ret!.med! - 9.7) < 1e-9 && Math.abs(v.ret!.gap! + 0.75) < 1e-9, 'median 9.7, gap −0.75');
@@ -82,7 +82,7 @@ const dfile: DefaultFile = { tenders: [
   const v = verdictOf(big[6], big, 202609, dfile);
   ok(v.eq != null && v.eq.st === 80 && v.eq.z > 1.5, 'p7 at 80% equity against ~50%: flagged');
   ok(verdictOf(big[0], big, 202609, dfile).eq == null, 'a track at the median: not flagged');
-  const young = mk('p10', null, 0.15, { net: { a3: 12, y12: 6 }, a3: 12.1 });
+  const young = mk('p10', null, 0.15, { a3: 12.1 });
   const yv = verdictOf(young, [...cat, young], 202609, dfile);
   ok(yv.ret?.per === 'a3' && textOf(yv.lines.find((l) => l.key === 'rank')!.parts).includes('ב-3 השנים האחרונות'), 'no 5Y: 3Y, and the line says so');
   const ira = mk('p11', 0, 0.1, { name: 'קרן בניהול אישי IRA' });
@@ -141,11 +141,12 @@ const dfile: DefaultFile = { tenders: [
   ok(placeTone({ lo: 2, hi: 3, n: 7 } as never) === 'good' && placeTone({ lo: 3, hi: 4, n: 7 } as never) === 'mid' && placeTone({ lo: 5, hi: 6, n: 7 } as never) === 'mid' && placeTone({ lo: 7, hi: 7, n: 7 } as never) === 'bad', 'shared places by the best place: 2–3/7 top, 3–4 and 5–6 middle, 7 bottom');
   const b = brief(v2).map((l) => textOf(l.parts));
   ok(b.length <= 3 && b[0].includes('מקום 1–2 מתוך 7') && b[0].includes('ברבע העליון') && b.some((t) => t.includes('דמי הניהול מצבירה')), `brief: at most 3 lines, place and fee: ${b.join(' | ')}`);
-  const young = mk('p10', null, 0.15, { net: { a3: 12, y12: 6 }, a3: 12.1, a5: null });
+  const young = mk('p10', null, 0.15, { a3: 12.1, a5: null });
   const yv = verdictOf(young, [...cat, young], 202609, dfile);
   ok(yv.ret?.why === 'אין למסלול 5 שנות היסטוריה' && textOf(brief(yv)[0].parts).includes('3Y, כי אין למסלול 5 שנות היסטוריה'), `no 5Y: says why (${yv.ret?.why})`);
-  const gapNet = mk('p12', null, 0.15, { net: { a3: 12, y12: 6 }, a3: 12.1, a5: 9.9 });
-  ok(verdictOf(gapNet, [...cat, gapNet], 202609, dfile).ret?.why === 'אין נתון נטו ל-5 שנים', 'gross 5Y without net 5Y: says so');
+  const stale = { ...mk('p12', 9.9, 0.15, { a3: 12.1 }), net: { a5: 1, y12: 1 } } as VFund;
+  const sv = verdictOf(stale, [...cat, stale], 202609, dfile);
+  ok(sv.ret?.per === 'a5' && sv.ret.v === 9.9 && sv.ret.why == null, 'a stale net field is ignored: the published gross 5Y is read');
   const dl = textOf(verdictOf(cat[6], cat, 202609, dfile).lines.find((l) => l.key === 'dflt')!.parts);
   ok(dl.includes('מחיר הבסיס בהליך') && dl.includes('צירוף שווה ערך מטבלת ההמרה') && dl.includes('1.20% מהפקדה ו-0.20% מצבירה'), `default line: the base price, then the conversion table once: ${dl}`);
   // the strip: the fees add up; the one action is the biggest gap
@@ -264,7 +265,7 @@ if (existsSync(join(root, 'funds.json')) && existsSync(join(root, 'funds', 'defa
     const all = v.lines.map((l) => textOf(l.parts));
     console.log('  p9757: ' + headline(v));
     all.forEach((t) => console.log('    · ' + t));
-    ok(v.ret?.per === 'a5' && v.ret.rank?.lo === 7 && v.ret.rank.hi === 7 && v.ret.rank.n === 7, 'p9757: 5Y net, 7 of 7 (the red team story)');
+    ok(v.ret?.per === 'a5' && v.ret.rank?.lo === 7 && v.ret.rank.hi === 7 && v.ret.rank.n === 7, 'p9757: 5Y, 7 of 7 (the red team story)');
     ok(v.dflt?.winner === true && v.dflt.tender.id === '2024', 'p9757: a winner of the fourth default-fund tender');
     ok(all.some((t) => t.includes('אינו אומר דבר על התשואה')), 'p9757: the cheap-price ≠ return line');
     ok(all.every((t) => !BANNED.test(t)), 'no advice words in p9757');

@@ -1,6 +1,6 @@
 // Track compare, the shell's pure helpers (lane L2-a): pages/compare/extremes.ts (worst / best month, largest drop over 5 years) and
 // pages/compare/tracks.ts (column labels and colours). Bundles each module with esbuild into a temp file, then checks hand-computed cases
-// and the published data (P3 = p2102 מגדל, p2172 הראל, p2009 מנורה; X2 = p2102 + p2142; data month 10/26, net).
+// and the published data (P3 = p2102 מגדל, p2172 הראל, p2009 מנורה; X2 = p2102 + p2142; data month 10/26, gross as published).
 // Run: node scripts/compare-shell-test.mjs
 import { build } from 'esbuild';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -53,16 +53,16 @@ const r = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
   ok(near(z.mdd.v, ((0.95 * 1.02 * 0.95) - 1) * 100) && z.mdd.p === 202603, 'drop measured from the running peak (the base 100), trough in the last month');
 }
 
-/* ---- extremes on the published data: P3 net (yn), 60 months to 10/26 ---- */
+/* ---- extremes on the published data: P3 gross (y, as published; owner 26.11.26), 60 months to 10/26 ---- */
 const data = (f) => JSON.parse(readFileSync(new URL(`../public/data/${f}`, import.meta.url), 'utf8'));
 const funds = data('funds.json'), asof = funds.asof;
 const hist = (k) => data(`funds/${k}.json`);
 {
-  const g = hist('p2102'), x = extremes(g.p, g.yn ?? g.y, asof, 60);
+  const g = hist('p2102'), x = extremes(g.p, g.y, asof, 60);
   ok(x.n === 60, 'p2102: 60 months counted');
-  ok(r(x.worst.v, 2) === -3.14, `p2102 worst month in 5 years −3.14% (spec 4.8), got ${x.worst && r(x.worst.v, 2)}`);
-  const e = hist('p2142'), xe = extremes(e.p, e.yn ?? e.y, asof, 60);
-  ok(r(xe.worst.v, 2) === -5.32, `p2142 worst month in 5 years −5.32% (spec 4.8), got ${xe.worst && r(xe.worst.v, 2)}`);
+  ok(r(x.worst.v, 2) === -3.12, `p2102 worst month in 5 years −3.12% (gross), got ${x.worst && r(x.worst.v, 2)}`);
+  const e = hist('p2142'), xe = extremes(e.p, e.y, asof, 60);
+  ok(r(xe.worst.v, 2) === -5.3, `p2142 worst month in 5 years −5.30% (gross), got ${xe.worst && r(xe.worst.v, 2)}`);
 }
 
 /* ---- labels and colours ---- */

@@ -56,7 +56,7 @@ const S = (asof: number, p: Record<string, Partial<SnapP>> = {}): MySnap => ({ v
   const cat = [mk('p1', 10.5, 0.14, 0.5), mk('p2', 10.2, 0.15, 0.4), mk('p3', 9.9, 0.11, 0.3), mk('p4', 9.5, 0.16, 0.2), mk('p5', 9.0, 0.2, 0.1)];
   const v = verdictOf(cat[4], cat, 202609, null);
   const s = snapOf(cat[4], v);
-  ok(s.per === 'a5' && s.basis === 'net' && s.lo === 5 && s.hi === 5 && s.n === 5 && s.tone === 'bad' && s.m1 === 0.1 && s.fee === 0.2, `snapshot of the card: ${JSON.stringify(s)}`);
+  ok(s.per === 'a5' && s.basis === 'gross' && s.lo === 5 && s.hi === 5 && s.n === 5 && s.tone === 'bad' && s.m1 === 0.11 && s.y12 === 5 && s.fee === 0.2, `snapshot of the card (gross, the published figures; a stale net is ignored): ${JSON.stringify(s)}`);
 }
 
 /* ---- client folders ---- */

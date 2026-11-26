@@ -3,6 +3,8 @@
 // and 4.0b row 7) on the acceptance fixtures P3 = p2102,p2172,p2009 · X2 = p2102,p2142 · G3 = g7936,g8211,g8675, data month 10/26, net.
 // Fixture numbers are copied from public/data/funds.json (net.y12/a3/a5/ytd, st) and public/data/funds/<k>.json (yn, the monthly net
 // series; worst month = min of the last 60), funds/cat.json (yn, nn) at asof 202610. Cases that no fixture reaches are marked SYNTHETIC.
+// The sentence functions are pure: the figures are their inputs, so these fixtures (copied from the retired net fields) still pin the
+// wording; the pages now feed them the published gross figures (owner 26.11.26).
 import { build } from 'esbuild';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';

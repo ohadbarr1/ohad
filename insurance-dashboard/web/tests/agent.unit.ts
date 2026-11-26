@@ -106,20 +106,21 @@ ok(pagesOf([1, 2, 3]).map((p) => p.length).join() === '3' && pagesOf([1, 2, 3, 4
 ok([1, 2, 3, 4, 5, 6, 7, 8].every((n) => pagesOf(Array.from({ length: n }, (_, i) => i)).every((p) => p.length <= 4 && p.length > 0) && pagesOf(Array.from({ length: n }, (_, i) => i)).flat().length === n), 'W4: every count 1–8 pages into ≤ 4 columns, none lost');
 ok(metricsOf([R('a', { pen: false })]).length === DOC_METRICS.filter((m) => !m.pen).length && metricsOf([R('a')]).length === DOC_METRICS.length, 'W4: pension rows only with a pension track');
 const BAD = /מקום ראשון|המקום הראשון|מוביל|ניצח|מנצח|זוכה|הטוב ביותר/;
-const bl1 = bottomLines([R('a'), R('b', { a5: 8.5, fee: 0.1 }), R('c', { track: 'מניות', a5: 14, st: 95 })], true);
+const bl1 = bottomLines([R('a'), R('b', { a5: 8.5, fee: 0.1 }), R('c', { track: 'מניות', a5: 14, st: 95 })]);
 ok(bl1.some((t) => /קטגוריות שונות/.test(t)) && bl1.some((t) => /באותה קטגוריה \(פנסיה מקיפה · עד 50\)/.test(t)) && !bl1.some((t) => /מסלול c/.test(t) && /הגבוהה/.test(t)), 'W4: bottom line: cross-category sentence, the same-category lines, the equity track uncrowned');
 ok(bl1.every((t) => !BAD.test(t)), 'W4: no winner / first-place words in the bottom line');
-const bl2 = bottomLines([R('a', { prod: 'ביטוחי מנהלים 1992-2003', track: 'כללי', old: true, pen: false }), R('b')], true);
+const bl2 = bottomLines([R('a', { prod: 'ביטוחי מנהלים 1992-2003', track: 'כללי', old: true, pen: false }), R('b')]);
 ok(/דור ישן|1990-2003/.test(bl2[0]) && bl2.every((t) => !/מסלול a,/.test(t)), 'W4: an old-generation policy opens the bottom line and is in no comparison');
-const sn0 = snapOf([R('a'), R('b')], ['שורה'], '2026-11-02', 202609, 'net');
+const sn0 = snapOf([R('a'), R('b')], ['שורה'], '2026-11-02', 202609);
 const ns = normSnap(JSON.parse(JSON.stringify(sn0)), ['a', 'b']);
 ok(!!ns && ns.rows.length === 2 && ns.rows[0].a5 === 9 && ns.rows[0].svc?.rank === 2 && ns.bottom[0] === 'שורה' && ns.at === '2026-11-02' && ns.asof === 202609, 'W4: a snapshot survives storage as saved');
 ok(normSnap({ ...sn0, asof: 'x' }, ['a']) === null && normSnap(sn0, ['zz']) === null, 'W4: a malformed snapshot, or one of other tracks, is dropped');
+ok(sn0.b === 'gross' && normSnap({ ...sn0, b: 'net' }, ['a', 'b']) === null, 'owner 26.11.26: snapshots are gross; one frozen on the old net basis is dropped (the folder opens on today\'s figures)');
 ok(snapDiff(R('a'), R('a', { fee: 0.25, a5: 9.4 }), 202609).map((d) => d.label).join() === '5Y, שנתי,ד"נ מצבירה' && snapDiff(R('a'), R('a'), 202609).length === 0, 'W4: what changed since the snapshot, figure by figure');
 const v1 = { kind: 'fox-clients', v: 1, folders: [{ id: 'abcd1234', label: 'ד.כ.', keys: ['p2155', 'p9654'], b: 'net', tags: { p2155: 'קיים' }, fields: { 'r:fit': 'טקסט' }, note: '', created: '2026-10-01', updated: '2026-10-02' }] };
 const mig = normClients(v1);
 ok(mig.v === CLIENTS_V && mig.v === 2 && mig.folders[0].snap === null && mig.folders[0].held.length === 0 && mig.folders[0].fields['r:fit'] === 'טקסט' && mig.folders[0].tags.p2155 === 'קיים', 'W4: a v1 folder migrates to v2, keeping all it had, with no snapshot');
-const up1 = upsert(mig, { label: 'ד.כ.', keys: ['p2155', 'p9654'], snap: snapOf([R('p2155'), R('p9654')], [], '2026-11-02', 202609, 'net') }, '2026-11-02');
+const up1 = upsert(mig, { label: 'ד.כ.', keys: ['p2155', 'p9654'], snap: snapOf([R('p2155'), R('p9654')], [], '2026-11-02', 202609) }, '2026-11-02');
 ok(up1.folder.snap?.rows.length === 2 && !up1.created, 'W4: saving the same tracks stores the snapshot');
 const up2 = upsert(up1.file, { label: 'ד.כ.', keys: ['p2155', 'p13909'] }, '2026-11-03');
 ok(up2.folder.snap === null && up2.folder.keys.join() === 'p2155,p13909', 'W4: new tracks without a new snapshot drop the old one');
@@ -234,7 +235,7 @@ if (existsSync(fj)) {
   }
   // W4: a document row of a real old-generation track: no comparison, a variable fee
   const yod = d.funds.find((f) => f.k === 'i17012') as never;
-  if (yod) { const r = docRow(yod, { net: true, asof: d.asof }); ok(r.old && !r.pen && cmpOf(r).old === true, 'smoke: i17012 (קרן י\') is old generation'); }
+  if (yod) { const r = docRow(yod, { asof: d.asof }); ok(r.old && !r.pen && cmpOf(r).old === true, 'smoke: i17012 (קרן י\') is old generation'); }
   const pj = join(data, 'funds/p2009.json');
   if (existsSync(pj)) ok(actHistory(JSON.parse(readFileSync(pj, 'utf8'))).length === 8, 'smoke: a pension history has 8 quarters to show');
 }
