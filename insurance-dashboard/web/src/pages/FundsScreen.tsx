@@ -309,7 +309,7 @@ export function FundsScreen() {
   const shown = (g: (typeof groups)[number]) => !multi || open.includes(g.k) || groups.length <= 2;
   return (
     <>
-      <FundsHead sub={<>מסלולים · <Sourced src={() => countP('מסלולים מוצגים', shownN, 'המסלולים שעוברים את הסינון')}><span className="num">{nf(shownN, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</>} tools={<>{tools}{!phone && <BasisToggle />}</>} />
+      <FundsHead sub={<span><Sourced src={() => countP('מסלולים מוצגים', shownN, 'המסלולים שעוברים את הסינון')}><span className="num">{nf(shownN, 0)}</span></Sourced> מסלולים · {ym(asof)} · {data.source}</span>} tools={<>{tools}{!phone && <BasisToggle />}</>} />
       {phone ? <Sheet open={opts} onClose={() => setOpts(false)} title="דירוג וסינון"><div className="fopts"><div className="field"><span>דירוג לפי</span><Seg label="דירוג לפי" value={per} onChange={(v) => set({ per: v, win: null })} options={PERIODS} /></div><div className="field"><span>בסיס</span><BasisToggle /></div>{Options}</div></Sheet> : opts && <section className="controls opts">{Options}</section>}
 
       {!opts && Refused}

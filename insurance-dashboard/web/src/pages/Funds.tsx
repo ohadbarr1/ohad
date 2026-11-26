@@ -1,5 +1,5 @@
 import { foxOption } from '../lib/foxchart';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { BasisToggle, CompareAdd, CompareTray, FundsHead, FundsNav } from '../components/FundsNav';
 import { Tip } from '../components/Explain';
@@ -492,19 +492,29 @@ export function FundCard() {
   );
 }
 
-/** monthly returns, year by year: each cell opens its published figure */
+/** monthly returns, year by year: each cell opens its published figure. Twelve months and the year's total fit a phone (390 px) without a
+ *  sideways swipe; narrower screens scroll, with the year column and the month header pinned and the box opened on the latest month. */
 function Heatmap({ h, f }: { h: FundHist; f: TrackRef }) {
   const years = [...new Set(h.p.map((p) => Math.floor(p / 100)))].sort((a, b) => b - a).slice(0, 10);
   const at = new Map(h.p.map((p, i) => [p, h.y[i]]));
   const max = Math.max(1, ...h.y.slice(-120).filter((x): x is number => x != null).map(Math.abs));
   const bg = (v: number) => `color-mix(in oklch, var(${v >= 0 ? '--up' : '--down'}) ${Math.round(8 + 55 * Math.min(1, Math.abs(v) / max))}%, transparent)`;
+  const last = h.p.length ? h.p[h.p.length - 1] : 0;  // the data month
+  const box = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    // B3: open on the latest months. Direction-agnostic: scrollLeft += d moves the content by -d in both LTR and RTL.
+    const sc = box.current, cell = sc?.querySelector<HTMLElement>('td[data-p="' + last + '"]');
+    if (!sc || !cell || sc.scrollWidth <= sc.clientWidth + 1) return;
+    const r = sc.getBoundingClientRect(), c = cell.getBoundingClientRect();
+    sc.scrollLeft += c.left + c.width / 2 - (r.left + r.width / 2);
+  }, [last]);
   return (
     <Panel title="תשואות חודשיות" aside={<span>% · 10 שנים · שנה: ריבית דריבית</span>}>
-      <div className="scroll"><table className="heat-m">
-        <thead><tr><th /> {Array.from({ length: 12 }, (_, i) => <th key={i}>{String(i + 1).padStart(2, '0')}</th>)}<th>שנה</th></tr></thead>
+      <div className="scroll heat-scroll" ref={box}><table className="heat-m">
+        <thead><tr><th className="y" /> {Array.from({ length: 12 }, (_, i) => <th key={i}>{String(i + 1).padStart(2, '0')}</th>)}<th className="t">שנה</th></tr></thead>
         <tbody>{years.map((y) => { const ms = Array.from({ length: 12 }, (_, i) => y * 100 + i + 1), vals = ms.map((p) => at.get(p) ?? null), have = ms.filter((_p, i) => vals[i] != null);
           const tot = have.length ? (have.reduce((t, p) => t * (1 + at.get(p)! / 100), 1) - 1) * 100 : null;
-          return <tr key={y}><td className="y num">{y}</td>{ms.map((p, i) => { const v = vals[i]; return <td key={p} className="c" style={v == null ? undefined : { background: bg(v) }}>{v == null ? '' : <Sourced src={() => fundP(f, p, 'MONTHLY_YIELD', 'תשואה חודשית', pc(v))}><span className="num">{nf(v, 1)}</span></Sourced>}</td>; })}
+          return <tr key={y}><td className="y">{y}</td>{ms.map((p, i) => { const v = vals[i]; return <td key={p} data-p={p} className="c" style={v == null ? undefined : { background: bg(v) }}>{v == null ? '' : <Sourced src={() => fundP(f, p, 'MONTHLY_YIELD', 'תשואה חודשית', pc(v))}><span className="num">{nf(v, 1)}</span></Sourced>}</td>; })}
             <td className="c tot">{tot == null ? '' : <Sourced src={() => retP(f, have, pc(tot), `תשואה ${y}`)}><span className={`num ${tot < 0 ? 'neg' : ''}`}>{nf(tot, 1)}</span></Sourced>}</td></tr>; })}</tbody>
       </table></div>
     </Panel>
