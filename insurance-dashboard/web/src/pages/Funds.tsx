@@ -1,18 +1,18 @@
 import { foxOption } from '../lib/foxchart';
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
-import { BasisToggle, CompareAdd, CompareTray, FundsHead, FundsNav } from '../components/FundsNav';
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { CompareTray, FundsHead, FundsNav } from '../components/FundsNav';
 import { Tip } from '../components/Explain';
 import { useMacro } from '../lib/macro';
-import { FAM_F, FAM_LABEL, equityOutlier, equitySpread, famOf, outlierProv, realProv, toReal, useReal, selfDirected, type CatX, type FundX, type FundsFile, type HistX } from '../lib/funds';
+import { FAM_F, FAM_LABEL, TRAY_MAX, equityOutlier, equitySpread, famOf, outlierProv, realProv, toReal, useReal, useTray, selfDirected, type CatX, type FundX, type FundsFile, type HistX } from '../lib/funds';
 import { MgrChip } from '../components/MgrChip';
 import { DEFAULT_PER, TIE_F, rankText, tieBand, tieRanks } from '../lib/fundsTie';
 import { PensionPack } from '../components/agent/PensionPack';  // W1-agent
 import { BmNote } from '../components/agent/Decision';  // W2
-import { isOldGen } from '../lib/decision';  // W6 doors: closed generations get no place
+import { bmKind, isOldGen } from '../lib/decision';  // W6 doors: closed generations get no place
 import { FlowDef, MigChip } from '../components/FlowDef';  // W6 trust: flow definition and the intra-group migration flag
 import { FeeLog, FlowSignal } from '../components/flows/FlowSignal';  // W8 flows: the flow signal and the fee change log
-import { RankPanel, RiskPanel, WatchStar } from '../components/FundsTime';
+import { RankPanel, RiskPanel } from '../components/FundsTime';
 import { CRISES, CRISIS_FORMULA, crisis, ddText } from '../lib/crisis';
 import '../styles/lens.css';
 import { Chart } from '../components/Chart';
@@ -26,7 +26,37 @@ import { DataTable, type Column } from '../components/DataTable';
 import '../styles/market.css';
 import '../styles/prov-market.css';
 import { load, useFundCats, useFundHist, useFunds, useRegistry, type Fund, type FundCats, type FundHist } from '../lib/useData';
-import { SaverFold, SaverVerdict } from '../components/saver';  // W1-saver
+import { SaverVerdict } from '../components/saver';  // W1-saver: inside the card's "במילים פשוטות" sheet
+// Rollout L2-a (T-C1 … T-C7): the card's shell and lenses
+import { LensTabs } from '../components/LensTabs';
+import { StampLine } from '../components/StampLine';
+import { GuardLine } from '../components/GuardLine';
+import { DeeperSheet } from '../components/DeeperSheet';
+import { backThen } from '../components/Sheet';
+import { TypeMonthSheet } from '../components/TypeMonthSheet';
+import { AmountsSheet } from '../components/AmountsSheet';
+import { ProdIcon } from '../components/compare/PickerSheet';
+import { WhySheet } from '../components/compare/WhySheet';
+import { DisplaySheet } from '../components/compare/DisplaySheet';
+import { useActiveDoor } from '../components/home/doorState';
+import { useStored } from '../lib/local';
+import { useMine } from '../lib/mine';
+import { isPension } from '../lib/pensionPack';
+import { isWatched, toggleWatch } from '../lib/fundsTime';
+import { snapOf, useClosed, useWatch } from '../lib/fundsTimeLoad';
+import { today } from '../lib/visits';
+import { toast, useAddressWrite, useSheetHost } from '../lib/sheetHost';
+import { hasTypeAvg, monthsOnFile, prodHasDeposit, typeHasDepositFee, typeMembers } from '../lib/pageMonths';
+import { ACT_COMPARE, ACT_WATCH, CARD_ROWS, NOT_FOUND, NO_FEE_TRACK, NO_MONTHLY_GUARD, OLD_POLICY_GUARD, SAVED_TOAST, SECTORAL, SELF_MANAGED_GUARD, STOPPED_TAG, WATCH_TOAST, typeName } from '../lib/pageWords';
+import { OLD_POLICY_LINE } from '../lib/compareWords';
+import { shortGrp } from './compare/tracks';
+import type { CmpCtx } from './compare/contract';
+import type { Door } from '../lib/door';
+import { CardFeeSheet, CardMonthSheet, CardMonths, CardRows, prodArt, rankedCount, type CardCtx } from './fund/CardMonths';
+import { CardYears } from './fund/CardYears';
+import { CardLong } from './fund/CardLong';
+import { CardDecision } from './fund/CardDecision';
+import { CardPro, type ProSection } from './fund/CardPro';
 
 const PRODUCTS = ['גמל', 'השתלמות', 'גמל להשקעה', 'חיסכון לילד', 'פנסיה מקיפה', 'פנסיה כללית', 'פוליסות חיסכון וביטוחי מנהלים (מ-2004)', 'ביטוחי מנהלים 2004 ואילך, מסלולים ייעודיים', 'ביטוחי מנהלים 1992-2003', 'ביטוחי מנהלים 1990-1991', 'מרכזית לפיצויים', 'גמל, מטרה אחרת'];
 type Per = 'm1' | 'ytd' | 'y12' | 'a3' | 'a5';
@@ -309,7 +339,18 @@ export function Funds({ makersOnly = false, embedded = false }: { makersOnly?: b
   );
 }
 
-/** One track: its record against the category, year by year, with exposure and money flows. */
+/** Rollout T-C1 (spec §3, §16–18, mockup v4 "card"): one track, as a page about one thing. The shell: the head (product tile, "מגדל ·
+ *  פנסיה כללי" with the type linking to the screener, the fund's name and number, worded "＋ השוואה" and "☆ מעקב"), the lens strip
+ *  (6 חודשים · 12 חודשים · שנים · לאורך זמן, and by door להחלטה / מקצועי; ?v= with replace, the last lens remembered in this browser, m12
+ *  from a year question), the sheets (?sheet=, lib/sheetHost) and the edge cases of 3.5. Every panel of the card before the rollout is in
+ *  the "מקצועי" lens, built below exactly as it was (its figures still open their sources) and wrapped in sections by pages/fund/CardPro. */
+type CardView = 'm6' | 'm12' | 'y' | 'long' | 'dec' | 'pro' | 'facts';
+const VIEWS: CardView[] = ['m6', 'm12', 'y', 'long', 'dec', 'pro'];
+const VIEW_LABEL: Record<CardView, string> = { m6: '6 חודשים', m12: '12 חודשים', y: 'שנים', long: 'לאורך זמן', dec: 'להחלטה', pro: 'מקצועי', facts: '' };
+/** the door's lenses: four shared ones, then "להחלטה" (agent) or "מקצועי" (Pro); a track with no monthly return: "מקצועי" only (agent, Pro) */
+const cardTabs = (door: Door, monthly: boolean): CardView[] => (!monthly ? (door === 'saver' ? [] : ['pro']) : ['m6', 'm12', 'y', 'long', ...(door === 'agent' ? ['dec' as const] : door === 'pro' ? ['pro' as const] : [])]);
+const CARD_LENS_KEY = 'card:lens';
+
 export function FundCard() {
   const { k = '' } = useParams();
   // a track key is a letter and a number (p2009, g103, i512): anything else is answered before 1 MB of fund data is fetched
@@ -319,7 +360,11 @@ export function FundCard() {
   const cats = useFundCats(valid).data;
   const [win, setWin] = useState<Win>('60');
   const { open } = useSource();
-  const f = data?.funds.find((x) => x.k === k);
+  const inFile = data?.funds.find((x) => x.k === k);
+  // a track that stopped reporting is no longer in funds.json: its last record is in funds/closed.json (3.5 "נסגר")
+  const closedList = useClosed(valid && !!data && !inFile);
+  const f: Fund | undefined = inFile ?? closedList?.find((x) => x.k === k);
+  const gone = !inFile && !!f;
   const h = hist.data;
   const cat = f && cats ? cats[catKey(f)] : undefined;
   const company = useRegistry().data?.find((c) => f && c.market_group === f.grp);
@@ -335,11 +380,27 @@ export function FundCard() {
     const comp = (xs: number[] | undefined) => (xs ? (xs.reduce((t, r) => t * (1 + r / 100), 1) - 1) * 100 : null);
     return [...mine.keys()].sort((a, b) => b - a).map((y) => ({ y, n: mine.get(y)!.r.length, ps: mine.get(y)!.p, cps: theirs.get(y)?.p ?? [], me: comp(mine.get(y)?.r), cat: theirs.get(y)?.r.length === mine.get(y)!.r.length ? comp(theirs.get(y)?.r) : null }));
   }, [h, cat]);
+  // the rollout shell's state
+  const [doorRaw] = useActiveDoor();
+  const door: Door = doorRaw ?? 'saver';  // B1 / D3: no door chosen = the saver's card
+  const host = useSheetHost();
+  const write = useAddressWrite();
+  const [sp] = useSearchParams();
+  const [lensMem, setLensMem] = useStored<string>(CARD_LENS_KEY, '');
+  const [mineList, setMineList] = useMine();
+  const tray = useTray();
+  const [watch, setWatch] = useWatch();
+  const nav = useNavigate();
+  const members = useMemo(() => {
+    if (!data || !f) return [] as FundX[];
+    const m = typeMembers(data.funds as FundX[], catKey(f), { closed: f.closed });
+    return m.some((x) => x.k === f.k) ? m : [...m, f as FundX];
+  }, [data, f]);
 
-  if (!valid) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds/screen">לכל המסלולים</Link></Empty>;
+  if (!valid) return <Empty title={NOT_FOUND}><Link to="/funds/screen">לכל המסלולים</Link></Empty>;
   if (error) return <ErrorBox what="נתוני הקופות" error={error} />;
-  if (!data || (!h && !hist.error)) return <Loading what="מסלול" />;
-  if (!f || !h) return <Empty title="המסלול לא נמצא או אינו פעיל"><Link to="/funds/screen">לכל המסלולים</Link></Empty>;
+  if (!data || (!h && !hist.error) || (!inFile && closedList == null && !hist.error)) return <Loading what="מסלול" />;
+  if (!f || !h) return <Empty title={NOT_FOUND}><Link to="/funds/screen">לכל המסלולים</Link></Empty>;
   const n = win === 'max' ? h.p.length - 1 : Math.min(Number(win), h.p.length - 1);
   const axis = h.p.slice(-(n + 1));
   const s = stats(h.y, n), cs = cat ? stats(cat.y.slice(0, cat.p.indexOf(axis[axis.length - 1]) + 1), n) : null;
@@ -379,31 +440,36 @@ export function FundCard() {
   const flow12 = (c: 'dep' | 'wd' | 'tr', l: string, shown: number): Prov => c === 'tr' ? flowP(R0, h.p[h.p.length - 1], 'tr', nf(shown, 0))
     : { k: 'calc', title: `${l}, LTM · ${f.name}`, value: nf(shown, 0), unit: 'מיליוני ש"ח', formula: `סכום ${c === 'dep' ? 'DEPOSITS' : 'WITHDRAWLS'} על 12 החודשים האחרונים`, inputs: monthsBack(h.p[h.p.length - 1], 12).map((p) => monthIn(R0, c, p)) };
 
-  return (
-    <>
-      <div className="pagehead"><div><h1>{f.name}</h1><div className="sub"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds/screen?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}{oldGen && <span className="chip est" title="דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון">סגור להצטרפות</span>}<span className="chip">{ym(data.asof)}</span>
-        <span className="chip" title={FAM_F}>{FAM_LABEL[famOf(f.track)]}</span>
-        {fx.tx?.src === 'tb' && (fx.tx.spec || fx.tx.type) && <span className={`chip${fx.tx.dis ? ' est' : ''}`} title={`${fx.tx.dis ? 'הסיווג הרשמי שונה מהסיווג לפי שם המסלול. ' : ''}הסיווג ברשות (transfer_bank): ${[fx.tx.type, fx.tx.spec, fx.tx.sub].filter(Boolean).join(' · ')}`}>סיווג רשמי: {[...new Set([fx.tx.spec, fx.tx.sub].filter(Boolean))].join(' · ') || fx.tx.type}</span>}
-        {out && <Sourced className="chip est" src={() => outlierProv(fx, out, () => expSrc(f, asof, 'st'))} title="החשיפה למניות רחוקה מהחציון בקטגוריה">{out.z > 0 ? 'מניות מעל הקטגוריה' : 'מניות מתחת לקטגוריה'}</Sourced>}<Tip k="outlier" />
-        <CompareAdd k={f.k} name={f.name} /><WatchStar f={fx} asof={asof} /></div></div></div>
-      <Toolbar lead={<FundsNav />}><BasisToggle /></Toolbar>
-      <CompareTray />
-      <SaverVerdict f={fx} data={data as FundsFile} />
-      <SaverFold>
+  /* ---------- today's panels, unchanged, as the sections of the "מקצועי" lens ---------- */
+  // the head's chips of the card before the rollout (manager, company page, category, sectoral, generation, month, family, official
+  // classification, equity outlier): in "פרטי המסלול" and in the "במילים פשוטות" sheet (3.6 #1)
+  const chips = (
+    <div className="sub fc-chips"><span>{f.mgr}</span><MgrChip grp={f.grp} mgr={f.mgr} />{company && <Link className="chip" to={`/company/${company.id}`}>עמוד החברה: {company.name_he}</Link>}<Link className="chip" to={`/funds/screen?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{f.prod} · {f.track}</Link>{f.closed && <span className="chip">קופה ענפית או מפעלית</span>}{oldGen && <span className="chip est" title="דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון">סגור להצטרפות</span>}<span className="chip">{ym(data.asof)}</span>
+      <span className="chip" title={FAM_F}>{FAM_LABEL[famOf(f.track)]}</span>
+      {fx.tx?.src === 'tb' && (fx.tx.spec || fx.tx.type) && <span className={`chip${fx.tx.dis ? ' est' : ''}`} title={`${fx.tx.dis ? 'הסיווג הרשמי שונה מהסיווג לפי שם המסלול. ' : ''}הסיווג ברשות (transfer_bank): ${[fx.tx.type, fx.tx.spec, fx.tx.sub].filter(Boolean).join(' · ')}`}>סיווג רשמי: {[...new Set([fx.tx.spec, fx.tx.sub].filter(Boolean))].join(' · ') || fx.tx.type}</span>}
+      {out && <Sourced className="chip est" src={() => outlierProv(fx, out, () => expSrc(f, asof, 'st'))} title="החשיפה למניות רחוקה מהחציון בקטגוריה">{out.z > 0 ? 'מניות מעל הקטגוריה' : 'מניות מתחת לקטגוריה'}</Sourced>}<Tip k="outlier" /></div>
+  );
+  const kFee = <Kpi label={<>ד"נ מצבירה, ממוצע בפועל <Tip k="fee" /></>} value={f.fee == null ? '–' : SRC(() => plain(f, asof, 'fee'), `${nf(f.fee, 2)}%`)} sub={f.depfee != null ? <>מהפקדה {SRC(() => plain(f, asof, 'depfee'), `${nf(f.depfee!, 2)}%`)}</> : ' '} />;
+  const kAssets = <Kpi label="נכסים" value={f.assets == null ? '–' : SRC(() => plain(f, asof, 'assets'), nf(f.assets, 0))} sub={'מיליוני ש"ח'} />;
+  const kEquity = <Kpi label={<>חשיפה למניות <Tip k="equity" /></>} value={expo('st', f.st)} sub={f.fo != null ? <>חו"ל {expo('fo', f.fo)} · מט"ח {expo('fx', f.fx)}</> : ' '} />;
+  const proSections = (): ProSection[] => [
+    { id: 'sec-kpi', title: 'מדדים', node: () => (
       <section className="kpis">
         <Kpi label={<>5Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a5'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={oldGen ? CLOSED_SUB : rankOf('a5') ? <RK k="a5" /> : ' '} />
         <Kpi label={<>3Y, שנתי <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('a3'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={oldGen ? CLOSED_SUB : rankOf('a3') ? <RK k="a3" /> : ' '} />
         <Kpi label={<>LTM <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('y12'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()}  sub={oldGen ? CLOSED_SUB : rankOf('y12') ? <RK k="y12" /> : ' '} />
         <Kpi label={<>YTD <span className="kpi-b">{basisLbl}</span></>} value={(() => { const x = KV('ytd'); return x.v == null ? '–' : SRC(x.src, pct(x.v, 1, true)); })()} sub={oldGen ? CLOSED_SUB : rankOf('ytd') ? <RK k="ytd" /> : ' '} />
-        <Kpi label={<>ד"נ מצבירה, ממוצע בפועל <Tip k="fee" /></>} value={f.fee == null ? '–' : SRC(() => plain(f, asof, 'fee'), `${nf(f.fee, 2)}%`)} sub={f.depfee != null ? <>מהפקדה {SRC(() => plain(f, asof, 'depfee'), `${nf(f.depfee!, 2)}%`)}</> : ' '} />
-        <Kpi label="נכסים" value={f.assets == null ? '–' : SRC(() => plain(f, asof, 'assets'), nf(f.assets, 0))} sub={'מיליוני ש"ח'} />
+        {kFee}
+        {kAssets}
         <Kpi label={<>שארפ (הרשות, כפי שפורסם) <Tip k="sharpe" /></>} value={f.sharpe == null ? '–' : SRC(() => plain(f, asof, 'sharpe'), nf(f.sharpe, 2))} sub={f.yrs ? <>רבע עליון ב-{SRC(() => topSrc(f), `${f.top} מתוך ${f.yrs}`)} שנים</> : f.sd != null ? <>סטיית תקן {SRC(() => plain(f, asof, 'sd'), nf(f.sd!, 2))}</> : ' '} />
-        <Kpi label={<>חשיפה למניות <Tip k="equity" /></>} value={expo('st', f.st)} sub={f.fo != null ? <>חו"ל {expo('fo', f.fo)} · מט"ח {expo('fx', f.fx)}</> : ' '} />
+        {kEquity}
       </section>
+    ) },
+    ...(isPension(fx) || bmKind(f.prod) ? [{ id: 'sec-dec', title: 'נתוני החלטה', node: () => <>
       <PensionPack f={fx} h={h} asof={asof} funds={data.funds as FundX[]} />{/* W1-agent: renders only on pension tracks */}
       <BmNote f={fx} />{/* W2: managers'-insurance tracks of bituach-net only */}
-
-      <div className="grid21">
+    </> }] : []),
+    { id: 'sec-growth', title: 'תשואה מצטברת, בסיס 100', node: () => (
         <Panel title={<>תשואה מצטברת, בסיס 100 <Tip k="growth" /></>} aside={<><Seg label="חלון" value={win} onChange={setWin} options={WINDOWS} /><span className="chip">ברוטו</span></>}>
           <Growth periods={axis} deps={[k, win, h.p.length, !!cat]} lines={[{ name: f.name, data: rebased(axis, h) }, ...(cat ? [{ name: `ממוצע ${f.track}`, data: rebased(axis, cat), dash: true }] : [])]}
             onPoint={(si, di) => { if (di < 1) return;
@@ -416,6 +482,8 @@ export function FundCard() {
             </tbody>
           </table></div>
         </Panel>
+    ) },
+    { id: 'sec-years', title: 'לפי שנה', node: () => (
         <Panel title="לפי שנה" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
           <DataTable caption="תשואה לפי שנה" maxHeight={470} rows={years} rowKey={(r) => String(r.y)} export={{ name: `fox-fund-${f.k}-years`, title: `תשואה לפי שנה · ${f.name}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }} columns={[
             { key: 'y', head: 'שנה', value: (r) => r.y, cell: (r) => <><span className="num">{r.y}</span>{r.n < 12 && <span className="dim">{r.n} חודשים</span>}</> },
@@ -426,10 +494,11 @@ export function FundCard() {
                 inputs: [{ label: 'המסלול', v: pc(r.me), src: () => retP(R0, r.ps, pc(r.me), `תשואה ${r.y}`) }, { label: `ממוצע ${f.track}`, v: pc(r.cat), src: () => catYear(r) }] }) },
           ]} />
         </Panel>
-      </div>
-      {/* F2 TIME: the track's place in its category over time, and its risk over 36 months */}
-      <div className="grid2">{oldGen ? <Panel title="אחוזון בקטגוריה לאורך זמן"><Empty title="סגור להצטרפות: אין אחוזון" icon="funds">דור ישן של ביטוח מנהלים (פוליסות 1990-2003). אי אפשר להצטרף אליו היום, ולכן אין לו מקום או אחוזון מול מסלולים שפתוחים להצטרפות; התשואות והחשיפות מוצגות כפי שפורסמו.</Empty></Panel> : <RankPanel f={fx} h={h} data={data} />}<RiskPanel f={fx} h={h} asof={asof} cats={cats as Record<string, CatX> | undefined} /></div>
-
+    ) },
+    // F2 TIME: the track's place in its category over time, and its risk over 36 months
+    { id: 'sec-pct', title: 'אחוזון בקטגוריה לאורך זמן', node: () => (oldGen ? <Panel title="אחוזון בקטגוריה לאורך זמן"><Empty title="סגור להצטרפות: אין אחוזון" icon="funds">דור ישן של ביטוח מנהלים (פוליסות 1990-2003). אי אפשר להצטרף אליו היום, ולכן אין לו מקום או אחוזון מול מסלולים שפתוחים להצטרפות; התשואות והחשיפות מוצגות כפי שפורסמו.</Empty></Panel> : <RankPanel f={fx} h={h} data={data} />) },
+    { id: 'sec-risk', title: 'סיכון, 36 חודשים', node: () => <RiskPanel f={fx} h={h} asof={asof} cats={cats as Record<string, CatX> | undefined} /> },
+    { id: 'sec-crises', title: 'משברים', node: () => (
         <Panel title="משברים" aside={<span className="chip est">נגזר מתשואות חודשיות</span>}>
           <DataTable caption="משברים" rows={CRISES.map((c) => ({ c, me: crisis(h, c.base, c.to), ct: cat ? crisis(cat, c.base, c.to) : null }))} rowKey={(r) => r.c.key}
             export={{ name: `fox-fund-${f.k}-crises`, title: `משברים · ${f.name}`, note: 'נגזר מתשואות חודשיות · רשות שוק ההון' }}
@@ -442,9 +511,9 @@ export function FundCard() {
             ]} />
           <div className="fnote">ירידה: מסוף חודש הבסיס עד השפל בחלון. התאוששות: מספר החודשים מהשפל עד חזרה לרמת הבסיס.</div>
         </Panel>
-      <Heatmap h={h} f={R0} />
-
-      <div className="grid2">
+    ) },
+    { id: 'sec-heat', title: 'תשואות חודשיות, 10 שנים', node: () => <Heatmap h={h} f={R0} /> },
+    { id: 'sec-expo', title: 'חשיפות', node: () => (
         <Panel title="חשיפות" aside={<span>% מהנכסים · 10 שנים</span>}>
           <Chart label="חשיפות" height={260} deps={[k, h.p.length]} onPoint={(si, di) => { const key = (['st', 'fo', 'fx'] as const)[si], ser = [h.st, h.fo, h.fx][si]; if (!key || !ser) return; const pv = last(ser)[di], a = last(h.a)[di], p = last(h.p)[di]; if (pv != null) open(expP(R0, p, EXP[key][0], EXP[key][1], pv, a ?? null)); }} build={() => {
             const pal = palette();
@@ -452,6 +521,8 @@ export function FundCard() {
               series: ([['מניות', h.st], ['חו"ל', h.fo], ['מט"ח', h.fx]] as [string, (number | null)[]][]).map(([name, data], i) => ({ name, data: last(data), kind: 'line' as const, pct: true, color: pal[i] })) });
             }} />
         </Panel>
+    ) },
+    { id: 'sec-assets', title: 'נכסים ודמי ניהול', node: () => (
         <Panel title="נכסים ודמי ניהול" aside={<span>10 שנים · שני צירים נפרדים</span>}>
           <Chart label="נכסים" height={190} deps={[k, h.p.length]} onPoint={(_si, di) => { const p = last(h.p)[di], v = last(h.a)[di]; if (v != null) open(fundP(R0, p, 'TOTAL_ASSETS', 'נכסים', nf(v, 1), 'מיליוני ש"ח')); }} build={() => {
             const b = chartBase();
@@ -464,7 +535,9 @@ export function FundCard() {
             }} />
           <FeeLog f={fx} h={h as HistX} R={R0} />
         </Panel>
-      </div>
+    ) },
+    { id: 'sec-details', title: 'פרטי המסלול', node: () => (<>
+      {chips}
       <Panel title="פרטי המסלול" aside={<span>כפי שמדווח לרשות שוק ההון</span>}>
         <div className="scroll"><table>
           <tbody>
@@ -476,19 +549,108 @@ export function FundCard() {
         </table></div>
         <div className="fnote">הרכב נכסים מפורט ומדיניות השקעה מוצהרת אינם במאגרי הרשות הפתוחים; הם מתפרסמים באתר של כל גוף מנהל.</div>
       </Panel>
-      {h.dep && (
+    </>) },
+    ...(h.dep ? [{ id: 'sec-flows', title: 'תזרים, LTM', node: () => (
         <Panel title="תזרים, LTM" aside={<><MigChip f={f} />{' '}<span>מיליוני ש"ח</span></>}>
           <FlowDef kinds={['netflow']} />
           <section className="kpis" style={{ border: 0, boxShadow: 'none', background: 'none' }}>
-            {([['הפקדות', h.dep, 'dep'], ['משיכות', h.wd!, 'wd'], ['העברות נטו', h.tr!, 'tr']] as const).map(([l, xs, c]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0); return <Kpi key={l} label={l} value={SRC(() => flow12(c, l, l === 'משיכות' ? -v : v), nf(l === 'משיכות' ? -v : v, 0))} tone={l === 'העברות נטו' ? (v < 0 ? 'neg' : 'pos') : undefined} />; })}
+            {([['הפקדות', h.dep!, 'dep'], ['משיכות', h.wd!, 'wd'], ['העברות נטו', h.tr!, 'tr']] as const).map(([l, xs, c]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0); return <Kpi key={l} label={l} value={SRC(() => flow12(c, l, l === 'משיכות' ? -v : v), nf(l === 'משיכות' ? -v : v, 0))} tone={l === 'העברות נטו' ? (v < 0 ? 'neg' : 'pos') : undefined} />; })}
             <Kpi label="צבירה נטו" value={SRC(() => ({ k: 'calc', title: `צבירה נטו, LTM · ${f.name}`, value: nf(netFlow, 0), unit: 'מיליוני ש"ח', formula: 'הפקדות פחות משיכות ועוד העברות נטו, 12 החודשים האחרונים',
               inputs: ([['הפקדות', 'dep', h.dep!], ['משיכות', 'wd', h.wd!], ['העברות נטו', 'tr', h.tr!]] as const).map(([l, c, xs]) => { const v = xs.slice(-12).reduce((t: number, x) => t + (x ?? 0), 0), shown = c === 'wd' ? -v : v; return { label: l, v: nf(shown, 0), src: () => flow12(c, l, shown) }; }) }), nf(netFlow, 0))} />
           </section>
           <FlowSignal f={fx} h={h as HistX} R={R0} asof={asof} funds={data.funds as FundX[]} />
         </Panel>
-      )}
-      </SaverFold>
-    </>
+    ) }] : []),
+  ];
+
+  /* ---------- the shell ---------- */
+  const typeKey = catKey(f), tn = typeName(typeKey);
+  const catAll = (cat as CatX | undefined) ?? null;
+  const catUse = catAll && hasTypeAvg(members) ? catAll : null;
+  const monthly = monthsOnFile(h as HistX) > 0;
+  const newest = (() => { for (let i = h.p.length - 1; i >= 0; i--) if (h.y[i] != null) return h.p[i]; return asof; })();
+  const avgN = (() => { const i = catAll ? catAll.p.indexOf(newest) : -1; return i >= 0 ? catAll!.n[i] : members.length; })();
+  const tabs0 = cardTabs(door, monthly);
+  const q = sp.get('v') as CardView | null;
+  const def: CardView = !monthly ? (door === 'saver' ? 'facts' : 'pro') : door === 'pro' ? 'm12' : 'm6';
+  let view: CardView = q && VIEWS.includes(q) ? q : lensMem && tabs0.includes(lensMem as CardView) ? (lensMem as CardView) : def;
+  if (door === 'pro' && view === 'dec') view = 'pro';  // Pro: "להחלטה" is the first sections of "מקצועי"
+  if (!monthly && view !== 'pro') view = def;
+  // a lens opened by address that the door does not list gets its own tab for this visit (a door never hides a lens it was sent to)
+  const tabs = view !== 'facts' && !tabs0.includes(view) ? [...tabs0, view] : tabs0;
+  const setView = (v: string) => {
+    if (tabs0.includes(v as CardView)) setLensMem(v);
+    write({ v, per: null });
+    if (window.scrollY > 0) window.scrollTo({ top: 0 });
+  };
+  const saved = mineList.some((m) => m.k === f.k);
+  const onMine = () => { if (!saved) setMineList([...mineList, { k: f.k, added: new Date().toISOString().slice(0, 10) }]); toast(SAVED_TOAST); };
+  const ctx: CardCtx = { f: fx, h: h as HistX, cat: catUse, members, funds: data.funds as FundX[], typeKey, tn, avgN, rankN: rankedCount(members), asof, door, saved, old: oldGen, host, setView, onMine, my: mineList.find((m) => m.k === f.k) ?? null };
+  const cmpCtx: CmpCtx = { keys: [f.k], basis: 'gross', door, asof, openSheet: host.openSheet, setKeys: (ks) => nav(`/funds/compare?k=${ks.join(',')}`) };
+  const inTray = tray.has(f.k), trayFull = !inTray && tray.keys.length >= TRAY_MAX;
+  const watched = isWatched(watch, f.k);
+  const toggleStar = () => { setWatch(toggleWatch(watch, f.k, f.name, gone ? null : snapOf(fx, asof), today())); if (!watched) toast(WATCH_TOAST); };
+  const own = host.own;
+  const closeSheet = host.closeSheet;
+
+  return (
+    <div className="ro-page fc">
+      {door === 'pro' ? <Toolbar lead={<FundsNav />}>{null}</Toolbar> : null}
+      <div className="fc-head" id="card-head">
+        <span className="fc-tile" aria-hidden="true"><ProdIcon art={prodArt(f.prod)} size={40} /></span>
+        <h1>
+          <span className="fc-h1">{shortGrp(f.grp)} · <Link className="fc-type" to={`/funds/screen?prod=${encodeURIComponent(f.prod)}&track=${encodeURIComponent(f.track)}`}>{tn}</Link>{saved && door === 'saver' ? <span className="fc-mine">שלי</span> : null}</span>
+          <small>{f.name} · <span className="fc-nb">קופה <bdi className="num">{f.id}</bdi></span>{f.closed ? ` · ${SECTORAL}` : ''}{gone ? <span className="fc-gone">{STOPPED_TAG}</span> : null}</small>
+        </h1>
+        <div className="fc-act">
+          <button type="button" id="cmp-add" aria-pressed={inTray} disabled={trayFull} onClick={() => tray.toggle(f.k)} aria-label={inTray ? `הוצאה מההשוואה: ${f.name}` : `הוספה להשוואה: ${f.name}`}><span aria-hidden="true">{inTray ? '✓' : '＋'}</span><small>{ACT_COMPARE}</small></button>
+          <button type="button" id="star" aria-pressed={watched} onClick={toggleStar} aria-label={watched ? `הפסקת מעקב: ${f.name}` : `מעקב אחר ${f.name}`}><span aria-hidden="true">{watched ? '★' : '☆'}</span><small>{ACT_WATCH}</small></button>
+        </div>
+      </div>
+      <CompareTray />
+      {tabs.length ? <LensTabs tabs={tabs.map((v) => [v, VIEW_LABEL[v]])} value={view} onChange={setView} /> : null}
+      {!monthly ? <GuardLine kind="product" id="card-guard" wrap text={selfDirected(f) ? SELF_MANAGED_GUARD : NO_MONTHLY_GUARD} /> : null}
+      {monthly && oldGen && view !== 'pro' && view !== 'dec' ? <GuardLine kind="oldgen" id="old-line" text={OLD_POLICY_GUARD} onOpen={() => host.openSheet('old')} /> : null}
+      {view === 'm6' || view === 'm12' ? <CardMonths c={ctx} n={view === 'm6' ? 6 : 12} />
+        : view === 'y' ? <CardYears c={ctx} />
+        : view === 'long' ? <CardLong c={ctx} />
+        : view === 'dec' ? <CardDecision c={ctx} tiles={<section className="kpis">{kFee}{kAssets}{kEquity}</section>} />
+        : view === 'pro' ? <CardPro c={ctx} sections={proSections()} />
+        : (
+          <div className="fc-lens">
+            <dl className="fc-dl fc-facts" id="card-facts">
+              <dt>גוף מנהל</dt><dd>{f.grp}</dd>
+              <dt>מוצר</dt><dd>{f.prod}</dd>
+              <dt>נכסים</dt><dd>{f.assets == null ? '–' : <>{SRC(() => plain(f, asof, 'assets'), nf(f.assets, 0))} <small>מיליוני ש"ח</small></>}</dd>
+              <dt>דמי ניהול מהחיסכון</dt><dd>{f.fee == null ? '–' : SRC(() => plain(f, asof, 'fee'), `${nf(f.fee, 2)}%`)}</dd>
+            </dl>
+            <CardRows c={ctx} place={null} />
+            <StampLine asof={asof} onWhy={() => host.openSheet({ t: 'why' })} />
+          </div>
+        )}
+
+      {host.cmp?.t === 'month' ? <CardMonthSheet c={ctx} p={host.cmp.p} onClose={closeSheet} /> : null}
+      {host.cmp?.t === 'year' ? <CardMonthSheet c={ctx} p={host.cmp.y} onClose={closeSheet} /> : null}
+      {host.cmp?.t === 'fee' ? <CardFeeSheet c={ctx} onClose={closeSheet} /> : null}
+      {host.cmp?.t === 'why' ? <WhySheet {...cmpCtx} open onClose={closeSheet} /> : null}
+      {host.cmp?.t === 'display' ? <DisplaySheet {...cmpCtx} open onClose={closeSheet} /> : null}
+      {own?.[0] === 'type' && Number(own[1]) > 0 ? <TypeMonthSheet open onClose={closeSheet} typeKey={typeKey} p={Number(own[1])} mineKeys={saved ? [f.k] : []} door={door} typeName={tn} onTrack={(x) => backThen(() => nav(`/funds/${x}`))} /> : null}
+      {own?.[0] === 'amounts' ? <AmountsSheet open onClose={closeSheet} target={{ k: f.k }} name={`${shortGrp(f.grp)} · ${tn}`} deposits={prodHasDeposit(f.prod) && typeHasDepositFee(members)} /> : null}
+      {own?.[0] === 'plain' ? (
+        <DeeperSheet open onClose={closeSheet} id="plain-sheet" title={CARD_ROWS.plain.title} sub={f.name}>
+          <div className="fc-plain">
+            {chips}
+            {f.fee == null ? <ul className="ro-facts"><li>{NO_FEE_TRACK}</li></ul> : null}
+            <SaverVerdict f={fx} data={data as FundsFile} />
+          </div>
+        </DeeperSheet>
+      ) : null}
+      {own?.[0] === 'old' ? (
+        <DeeperSheet open onClose={closeSheet} id="old-sheet" title="פוליסה ישנה">
+          <ul className="ro-facts"><li>{OLD_POLICY_LINE}</li><li>דור ישן של ביטוח מנהלים (פוליסות 1990-2003): אי אפשר להצטרף אליו היום, ולכן אין לו מקום ואחוזון.</li></ul>
+        </DeeperSheet>
+      ) : null}
+    </div>
   );
 }
 
