@@ -108,7 +108,8 @@ test('check-up: the reminder is due after 30 days', async ({ page }) => {
 test('entries: the saver home and the moments lead to the check-up; /my stays under 400 words', async ({ page }) => {
   await seed(page, 'phoenix', true);
   await go(page, '/?door=saver');
-  await expect(page.locator('a.door-go.primary', { hasText: 'ייבוא מהמסלקה' })).toHaveAttribute('href', '/my/checkup');
+  // rollout H-1 (26.11.26): with a saved product the check-up lead is one tile row on the home
+  await expect(page.locator('#home-import', { hasText: 'ייבוא מהמסלקה' })).toHaveAttribute('href', '/my/checkup');
   await go(page, '/my/moment');
   await expect(page.locator('a[href="/my/checkup"]', { hasText: 'הדוח השנתי הגיע' })).toBeVisible();
   // the cap is measured as tests/webkit.spec.ts measures it: two products, folded
@@ -132,8 +133,9 @@ test('bring-back: the annual reminder, and the status on the saver home and /my 
   expect(dl.suggestedFilename()).toBe('fox-bdika-shnatit.ics');
   await expect(page.locator('#sv-safe')).toBeVisible();
   await go(page, '/?door=saver');
-  await expect(page.locator('#dcheck-t')).toContainText('הבדיקה הבאה');
-  await expect(page.locator('#dcheck-t')).toContainText('לטיפול');
+  // rollout H-1: the status line sits in the #home-import row when the reader has a saved product
+  await expect(page.locator('#home-import')).toContainText('הבדיקה הבאה');
+  await expect(page.locator('#home-import')).toContainText('לטיפול');
   await go(page, '/my');
   await expect(page.locator('a.sv-ck')).toContainText('הבדיקה הבאה');
 });
