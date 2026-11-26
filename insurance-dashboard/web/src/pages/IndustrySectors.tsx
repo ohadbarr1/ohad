@@ -321,12 +321,16 @@ function Summary() {
     ['גמל', [['נכס מנוהל, מיליארדי ש"ח', 'gem.aum', focus, inst(b), 0], ['נתח שוק', 'gem.aum.share', focus, inst(b), 1, '%'], [`ניוד נטו ${periodLabel(ytd(b))}`, 'gem.tr_net', focus, ytd(b), 1], [`ניוד נטו ${periodLabel(quarter(b))}`, 'gem.tr_net', focus, quarter(b), 1]], rank('gem.aum', GEM, inst(b))],
   ];
   return (
-    <div className="sx-sum">{blocks.map(([name, items, rk]) => (
-      <section key={name} className="panel">
-        <h3>{name}{rk != null && <span className="chip">מקום {rk}</span>}</h3>
-        <dl>{items.map(([label, metric, c, p, dec, suf]) => { const v = lts.v(metric, c, p); return <div key={label}><dt>{label}</dt><dd className="num">{v == null ? '–' : <Sourced src={() => provOf(lts, label, metric, c, p, suf ?? '', dec)}>{nf(v, dec)}{suf ?? ''}</Sourced>}</dd></div>; })}</dl>
-      </section>
-    ))}</div>
+    <div className="sx-sum">{blocks.map(([name, items, rk]) => {
+      // P6-B7: a tile without a figure is not drawn (it used to read "–"); a block with no figure at all leaves the page
+      const live = items.map(([label, metric, c, p, dec, suf]) => ({ label, metric, c, p, dec, suf, v: lts.v(metric, c, p) })).filter((x) => x.v != null);
+      return live.length ? (
+        <section key={name} className="panel">
+          <h3>{name}{rk != null && <span className="chip">מקום {rk}</span>}</h3>
+          <dl>{live.map(({ label, metric, c, p, dec, suf, v }) => <div key={label}><dt>{label}</dt><dd className="num"><Sourced src={() => provOf(lts, label, metric, c, p, suf ?? '', dec)}>{nf(v!, dec)}{suf ?? ''}</Sourced></dd></div>)}</dl>
+        </section>
+      ) : null;
+    })}</div>
   );
 }
 
