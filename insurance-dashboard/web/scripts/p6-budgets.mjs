@@ -18,17 +18,16 @@ const JSON_OUT = args.includes('--json') ? args[args.indexOf('--json') + 1] : nu
 let BASE = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--json')?.replace(/\/$/, '');
 
 const B = '/industry/peers', C = '/company/harel';
-/* The build review (stage 4) owns these two: the charts lens measured 7.45 screens on the phone (budget 5.0; seven charts, each with
-   its pickers) and the table lens 4.51 (budget 4.5) when the suite was written (27.11.26). They are printed, not failed, until the review
-   rules on them. TODO(p6 build review): restore the hard fail or amend the budget in spec §14.7. */
-const REPORT_PHONE = 'phone over budget at hand-over (charts 7.45, table 4.51): report-only until the stage-4 build review';
+/* Build review B1 (27.11.26) ruled on the two report-only rows: the charts lens's phone budget is 6.0 (seven real charts; the exports fold
+   into one "⋯" per chart and the notes into two lines), 2.5 at 1440; the table lens keeps 4.5. Both are hard fails again (P1). */
+const REPORT_PHONE = '';
 
 /** [name, url, ready selector, budget phone, budget 1440, stamp selector (null = #stamp), { reportPhone, settle }] — spec §14.7 */
 const PAGES = [
   ['board · לוח', B, '#board .sb-row', 2.3, 1.3],
   ['board · חברה', `${B}?lens=focus`, '#focus-list', 3.0, 1.6],
-  ['board · גרפים (seven charts)', `${B}?lens=charts`, 'main svg, main canvas', 5.0, 2.5, null, { reportPhone: REPORT_PHONE, settle: 2000 }],
-  ['board · טבלה', `${B}?lens=table`, 'main table', 4.5, 3.0, null, { reportPhone: REPORT_PHONE }],
+  ['board · גרפים (seven charts)', `${B}?lens=charts`, 'main svg, main canvas', 6.0, 2.5, null, { settle: 2000 }],
+  ['board · טבלה', `${B}?lens=table`, 'main table', 4.5, 3.0],
   ['company · הרבעון', C, '#quarter-table tr[data-k]', 1.6, 1.3],
   ['company · שינויים', `${C}?cl=chg`, '[data-lens="chg"] li.chg', 3.0, 1.6],
   ['company · רבעונים (grid, ledger, review)', `${C}?cl=qs`, '[data-lens="qs"] table[data-kind="quarters"]', 5.0, 2.5, '.co6', { settle: 1500 }],
@@ -96,5 +95,5 @@ try {
 } finally { if (server) server.kill(); }
 if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify(rows, null, 1));
 console.log(`\np6 budgets: ${rows.filter((r) => r.ok).length} within, ${bad} over (or failed to load) on hard-fail rows, ${rows.filter((r) => r.reportOnly).length} report-only; ${PAGES.length} lenses × ${VIEWS.length} views`);
-console.log(`REPORT-ONLY rows: ${REPORT_PHONE} (TODO: p6 build review).`);
+if (REPORT_PHONE) console.log(`REPORT-ONLY rows: ${REPORT_PHONE}.`);
 process.exit(bad ? 1 : 0);

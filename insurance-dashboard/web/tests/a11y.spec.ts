@@ -59,14 +59,8 @@ for (const theme of THEMES) {
    door. P6_KNOWN lists what was investigated and reported to the coordinator (27.11.26, P6-3 hand-over), as "rule@route[:dark]"; anything
    else fails. Each entry names the owning lane's file; remove it when fixed. */
 const P6_KNOWN = new Set<string>([
-  'color-contrast@p6-board-csm-qoq',        // the focus row's green change (.mine .p6-sb-val .pos) on the focus tint: styles/peerboard.css (P6-2a)
-  'color-contrast@p6-board-table',          // the comps tables' signed cells (.pos / .pos.stale) on their heat: pages/peers/TableLens.tsx, styles (P6-2b)
-  'color-contrast@p6-board-table:dark',     // the same, dark theme (.neg.stale)
-  'link-in-text-block@p6-co-an',            // the "scenarios" link inside <small> of the stress fold: pages/company/StressFold.tsx (P6-2e)
-  'link-in-text-block@p6-co-an:dark',
-  'nested-interactive@p6-co-an',            // a <summary> holding an interactive child (#stress fold, the dividend-history fold): StressFold / AnalysisLens (P6-2e)
-  'nested-interactive@p6-co-an:dark',
-  'nested-interactive@p6-co-cap',           // the phone's folded bond-series list: <summary> with an interactive child: pages/company/CapitalLens.tsx (P6-2e)
+  // P1 (27.11.26): the focus row's green, the comps tables' signed / stale cells (light and dark), the stress fold's link and <summary>,
+  // and the phone capital lens's bond fold were fixed; nothing is known
 ]);
 const P6: [string, string, string][] = [
   ['p6-board', '/industry/peers', '#board .sb-row'],

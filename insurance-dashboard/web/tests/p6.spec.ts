@@ -113,10 +113,8 @@ async function openSrc(page: Page, el: Locator): Promise<Opened> {
 }
 /* Known offenders (investigated, reported to the coordinator 27.11.26, as tests/a11y-known.json): a source whose headline prints the same
    figure with a different precision. They do not fail the run; anything new does. Matched by where, tapped text and headline. */
-const KNOWN_SRC: { where: RegExp; tap: RegExp; head: RegExp; why: string }[] = [
-  { where: /^matrix/, tap: /^\d+$/, head: /^\d+\.0$/, why: 'the matrix\'s solvency column prints "130%" and its source "130.0%" (the board\'s `sr` cell vs its prov, lib/peerBoard.ts / pages/peers/Matrix.tsx, P6-1b / P6-2a)' },
-  { where: /^(changes|company sentence)/, tap: /^[−+]?\d[\d,]*$/, head: /^[−+]?\d[\d,]*\.0\b/, why: 'a ranked change (the list, and the company sentence\'s "most material change") opens a source printed with ".0" on millions: lib/changes.ts figText() formats every unit with nf(v, 1)' },
-];
+// P1 (27.11.26): the matrix's solvency (lib/peerBoard sameText) and the ranked changes (lib/changes figText) now head with the cell's own text
+const KNOWN_SRC: { where: RegExp; tap: RegExp; head: RegExp; why: string }[] = [];
 /** a figure opens a source whose headline is the tapped text, and the source names a document, a formula or components */
 async function checkSrc(page: Page, el: Locator, where: string, info: TestInfo): Promise<Opened> {
   const o = await openSrc(page, el);
@@ -366,7 +364,7 @@ test('T-F1 · every number opens its own source: sentence, board, median, grid (
     expect(mv(g.body), 'the grid source lists the market value').toBeTruthy();
     expect(g.body, 'the grid\'s market value is the quarter\'s').toMatch(new RegExp(`שווי שוק · (LTM )?${qlab(st.bq).replace("'", "['׳]")}`));
     expect(mv(g.body), 'a quarter-end multiple opens with the quarter-end market value, never the spot one (M1)').not.toBe(mv(spot.body));
-    if (!/\d{2}\.\d{2}\.\d{2}/.test(g.body)) info.annotations.push({ type: 'finding', description: `grid cell ${rep} ${qlab(st.bq)}: the source names the quarter (${qlab(st.bq)}) but not the close date ${qEnd(st.bq)} (spec T-F1 M1 "with the close of 30.09.26")` });
+    expect(g.body, `grid cell ${rep} ${qlab(st.bq)}: the source names the close date (spec T-F1 M1 "with the close of 30.09.26")`).toContain(qEnd(st.bq));
   }
   const car = page.locator(`#quarter-grid td.car[data-q="${st.bq}"] button.src`);
   if (st.waiting.length && await car.count()) {
@@ -386,8 +384,8 @@ test('T-F1 · every number opens its own source: sentence, board, median, grid (
     if (await starred.count()) {
       const c = await checkSrc(page, starred.first(), 'matrix carried', info);
       expect(c.body, 'a starred matrix cell opens on the quarter it was carried from').toContain(qlab(st.cq));
-      // spec 13.2 rule 1: "open with 'טרם דווח על Q3'26: …'"; the spot multiples' source names the carried quarter only (finding, reported)
-      if (!c.body.includes('טרם דווח על')) info.annotations.push({ type: 'finding', description: `matrix starred cell "${c.tap}": the source names ${qlab(st.cq)} but not the line "טרם דווח על ${qlab(st.bq)}" (spec 13.2 rule 1)` });
+      // spec 13.2 rule 1: "open with 'טרם דווח על Q3'26: …'"
+      expect(c.body, `matrix starred cell "${c.tap}": the line "טרם דווח על ${qlab(st.bq)}" (spec 13.2 rule 1)`).toContain(`טרם דווח על ${qlab(st.bq)}`);
     }
   }
   // a company's name opens the company sheet: its numbers open sources, its footer is on screen
@@ -727,9 +725,8 @@ test('T-N3, T-N5, T-G2 · phone: the hub row, ≥ 44 × 32 numbers, ≥ 44 px co
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
   expect(await smallOf(page, '#board .p6-sb-val button.src'), 'board numbers ≥ 44 × 32').toEqual([]);
-  // the head's median sits in a phrase ("חציון 1.50x · 6 חברות", 14.1 G1): the in-prose rule (32 px tall); under 44 wide is reported
-  expect(await smallOf(page, '#board-median button.src', 0, 32), 'the head median ≥ 32 tall').toEqual([]);
-  for (const m of await smallOf(page, '#board-median button.src')) info.annotations.push({ type: 'finding', description: `board head median ${m}: under 44 × 32 if read as a standalone number (N5)` });
+  // the head's median ("חציון 1.50x · 6 חברות", 14.1 G1): a standalone 44 × 32 target (B1 item 4)
+  expect(await smallOf(page, '#board-median button.src'), 'the head median ≥ 44 × 32').toEqual([]);
   expect(await smallOf(page, '#quarter-grid td button.src', 43.5, 32), 'grid cells ≥ 43.5 wide').toEqual([]);
   expect(await smallOf(page, '#quarter-grid-med button.src'), 'median strip ≥ 44 × 32').toEqual([]);
   expect(await smallOf(page, '#takeaway button.src', 0, 32), 'numbers in the sentence ≥ 32 tall').toEqual([]);
