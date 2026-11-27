@@ -1,0 +1,13 @@
+/* P6-2c (T-I1, decision D3): the industry hub on a phone is one 44 px row: "השוואה ענפית ▾" (the pages and the peer-table views), then the page's own controls */
+.p6-hubbar { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-height: 44px; margin-top: -12px; margin-bottom: 2px; }
+.p6-hubbar .tools-slot { display: contents; }
+.p6-hubbar .p6-hublead { flex: 1 1 auto; }
+.p6-hubh { margin: 0; font-size: inherit; line-height: 1; flex: none; }
+.p6-hubfold { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 4px; border: 0; background: none; color: var(--fg); font: inherit; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; cursor: pointer; }
+.p6-hubfold svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: var(--muted); }
+.p6-hubfold:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; border-radius: var(--r-2); }
+.p6-hubmenu { display: flex; flex-direction: column; }
+.p6-hubrow { display: flex; align-items: center; min-height: 48px; padding: 0 4px; border-bottom: 1px solid var(--line-soft); color: var(--fg); font-size: 16px; text-decoration: none; }
+.p6-hubrow[aria-current="page"] { font-weight: 700; color: var(--accent-text); }
+.p6-hubrow[aria-current="page"]::after { content: "●"; margin-inline-start: auto; font-size: 9px; }
+.p6-hubsec { padding: 14px 4px 4px; color: var(--muted); font-size: 12px; font-weight: 600; }

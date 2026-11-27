@@ -125,3 +125,8 @@ table.pr-table tfoot td.pr-ent { position: sticky; inset-inline-start: 0; backgr
    overflow-x:auto may shrink below its content). They keep their height and their buttons are 44 px. */
 .sheet-body > .seg { flex: none; }
 .sheet-body > .seg button { min-height: 44px; }
+
+.p6-n { margin-inline-start: 2px; font-size: 0.72em; color: var(--muted); font-weight: 600; }
+.p6-basis { margin-top: 6px; }
+.p6-tagq { color: var(--muted); font-size: 0.85em; margin-inline-start: 2px; }
+#guard { margin-bottom: 10px; }
