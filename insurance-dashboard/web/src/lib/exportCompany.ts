@@ -8,6 +8,13 @@ import { METRIC_HE, SEGMENT_HE } from './labels';
 import { mayaReport, pdfPage } from './sources';
 import { cellRef, downloadXlsxAsync, type XCell, type XSheet } from './xlsx';
 import { repName } from '../pages/companyProv';
+import { Book, type Registry } from './registry';
+type MetricFiles = ConstructorParameters<typeof Book>[1];
+import type { Prov } from './prov';
+import { reportStatus, type Kind } from './peerBoard';
+import { qBack, qlab } from './quarters';
+import { coCell, coNeedIds, rowsFor, type CoFig } from '../pages/company/rows';
+import { docUrl, type Changes } from './changes';
 
 /* "הורד את חוברת החברה": one workbook per company with everything the site holds on it — statements over all periods, headline KPIs,
    IFRS 17 facts, sources of profit, long-term savings metrics — and a sources sheet that maps every value to its document, page and
@@ -35,6 +42,12 @@ function derivedFrom(d: CompanyData, pi: number): [number, number] | null {
   return a >= 0 && b >= 0 ? [a, b] : null;
 }
 
+/** the statements up to the report on screen ("2026Q3"): later periods are left out, so the workbook ends where the page does */
+function cutAt(d: CompanyData, q: string): CompanyData {
+  const end = `${q.slice(0, 4)}-${['03-31', '06-30', '09-30', '12-31'][Number(q.slice(5)) - 1]}`;
+  const keep = new Set(d.periods.map((p, i) => (p.end <= end ? i : -1)).filter((i) => i >= 0));
+  return { ...d, facts: d.facts.filter((f) => keep.has(f[1])) };
+}
 function statements(d: CompanyData, name: string, src: Src[]): XSheet[] {
   const by = new Map<number, Map<number, [number, number | null, number | null | undefined, number]>>();
   const F = d.facts;
@@ -161,8 +174,89 @@ function ltsSheet(id: string, d: LtsData, prov: LtsProv | null, labels: Map<stri
   return { name: 'חיסכון ארוך טווח', rows, widths: [40, 12, ...pers.map(() => 10)], freeze: { rows: 3, cols: 1 } };
 }
 
-/** Builds and downloads the company workbook. Returns the number of values written. */
-export async function exportCompany(id: string, onStep?: (s: string) => void): Promise<number> {
+/* ---------- phase 6 (spec 13.1 F4, 14.1 N10): the quarters of the report on screen, as formulas over the printed figures ---------- */
+/** a live link: HYPERLINK with its text as the cached value (shown by a preview that does not recalculate) */
+const hl = (url: string, text: string): XCell => ({ v: text, f: `HYPERLINK("${url.replace(/"/g, '""')}","${text.replace(/"/g, '""').slice(0, 255)}")` });
+/** the document link of a figure's source: a printed page, or the first printed component of a computed one */
+function provLink(p: Prov): { url: string; pg: number | null; doc: string } | null {
+  if (p.k === 'report' && p.url) return { url: pdfPage(p.url, p.pg ?? undefined), pg: p.pg, doc: p.doc ?? 'דוח' };
+  if (p.k === 'xbrl' && p.rid) return { url: mayaReport(p.rid), pg: null, doc: 'XBRL' };
+  if (p.k === 'calc') for (const i of p.inputs) { const x = i.src ? provLink(i.src()) : null; if (x) return x; }
+  return null;
+}
+/** "רבעונים": 12 quarters to the report on screen (rows of the company table), each flow with its LTM row (=SUM of four quarter cells)
+ *  and every amount with its YoY row (=(this ÷ a year earlier − 1) × 100); every formula stores its value; a "מקור" row of live links. */
+export function quartersSheet(book: Book, e: string, kind: Kind, q: string, peers: string[], name: string, src?: Src[]): XSheet {
+  const qs = Array.from({ length: 12 }, (_, i) => qBack(q, 11 - i)), C = (j: number) => j + 1;
+  const rows: XCell[][] = [
+    [{ v: `fox · ${name} · רבעונים`, bold: true }],
+    [{ v: `עד ${qlab(q)} · מיליוני ש"ח, כפי שדווח (יחסים ב-%) · LTM = SUM של ארבעה רבעונים · YoY = (רבעון ÷ אותו רבעון לפני שנה − 1) × 100 · נוסחאות חיות; כל ערך מקושר לעמוד שלו`, muted: true }],
+    [head('שורה'), ...qs.map((x) => head(qlab(x)))],
+  ];
+  for (const r of rowsFor(kind)) {
+    if (r.k === 'sr') continue;  // semi-annual: its own sheet
+    const figs: CoFig[] = qs.map((x) => coCell(book, r, e, kind, x, 'v', peers)), ri = rows.length, pct = r.m.u === 'pct';
+    rows.push([{ v: `${r.l}${pct ? ' (%)' : ''}`, bold: true }, ...figs.map((f): XCell => (f.v == null ? null : { v: +f.v.toFixed(4), fmt: pct ? 'pct1' : r.m.u === 'bn' ? 'n1' : 'n0' }))]);
+    figs.forEach((f, j) => { if (f.v != null && src) { const pr = f.prov(), l = provLink(pr); src.push({ sheet: 'רבעונים', row: r.l, period: qlab(qs[j]), v: f.v, doc: l?.doc ?? 'מחושב', page: l?.pg ?? null, url: l?.url ?? null, how: pr.k === 'calc' ? `מחושב: ${pr.formula}` : 'מודפס' }); } });
+    if (r.m.type === 'flow') rows.push([`${r.l}, LTM`, ...qs.map((_, j): XCell => {
+      if (j < 3) return null;
+      const four = figs.slice(j - 3, j + 1);
+      if (four.some((f) => f.v == null)) return null;
+      return { v: +four.reduce((s, f) => s + f.v!, 0).toFixed(4), f: `SUM(${cellRef(ri, C(j - 3))}:${cellRef(ri, C(j))})`, fmt: 'n0', italic: true };
+    })]);
+    if (!pct) rows.push([`${r.l}, YoY %`, ...qs.map((_, j): XCell => {
+      const a = figs[j].v, b = j >= 4 ? figs[j - 4].v : null;
+      if (a == null || b == null || !(a > 0) || !(b > 0)) return null;
+      return { v: +((a / b - 1) * 100).toFixed(4), f: `(${cellRef(ri, C(j))}/${cellRef(ri, C(j - 4))}-1)*100`, fmt: 'pct1', italic: true };
+    })]);
+    rows.push([{ v: `מקור, ${r.l}`, muted: true }, ...figs.map((f): XCell => { if (f.v == null) return null; const l = provLink(f.prov()); return l ? hl(l.url, l.pg != null ? `עמ׳ ${l.pg}` : l.doc) : null; })]);
+  }
+  return { name: 'רבעונים', rows, widths: [30, ...qs.map(() => 10)], freeze: { rows: 3, cols: 1 } };
+}
+/** "שינויים": the report's ranked changes; the difference (and the percent) a formula over the two printed figures, the link live */
+export function changesSheet(d: Changes | null, p: string): XSheet | null {
+  const r = d?.reports.find((x) => x.p === p);
+  if (!d || !r) return null;
+  const rows: XCell[][] = [
+    [{ v: `fox · ${d.name} · ${repName(p)} · ${r.n} שינויים`, bold: true }],
+    [{ v: `מדורג לפי מהותיות · מיליוני ש"ח (יחסים בנק׳) · שינוי = נוכחי − קודם (נוסחה) · ${d.rule}`, muted: true }],
+    [head('#'), head('שורה'), head('השוואה'), head('קודם'), head('נוכחי'), head('שינוי'), head('שינוי %'), head('עמוד'), head('קישור')],
+  ];
+  r.items.forEach((it, i) => {
+    const ri = rows.length, pg = it.a.s.k === 'pg' ? it.a.s.pg ?? null : null, url = docUrl(d, it.a.s.rid ?? r.rid);
+    const D = cellRef(ri, 3), E = cellRef(ri, 4), fm = it.a.u === 'm' ? 'n0' : 'n1';
+    rows.push([i + 1, it.l, `${it.la} מול ${it.lb} (${it.cmp})`, { v: it.b.v, fmt: fm }, { v: it.a.v, fmt: fm }, { v: +(it.a.v - it.b.v).toFixed(4), f: `${E}-${D}`, fmt: fm },
+      it.a.u === 'm' && it.a.v > 0 && it.b.v > 0 ? { v: +((it.a.v / it.b.v - 1) * 100).toFixed(4), f: `(${E}/${D}-1)*100`, fmt: 'pct1' } : null, pg ?? '', url ? hl(pdfPage(url, pg ?? undefined), 'פתיחה') : '']);
+  });
+  return { name: 'שינויים', rows, widths: [5, 44, 22, 11, 11, 11, 10, 7, 10], freeze: { rows: 3, cols: 2 } };
+}
+/** "כושר פירעון": the economic solvency ratio by report, with and without transitional measures, each linked to its page */
+function solvencySheet(book: Book, e: string): XSheet | null {
+  const ids = [['solv:sr_wo', 'ללא הוראות מעבר'], ['solv:sr_w', 'עם הוראות מעבר']] as const;
+  const ps = [...new Set(ids.flatMap(([m]) => book.periods(m).filter((p) => /Q\d$/.test(p) && book.raw(m, e, p))))].sort();
+  if (!ps.length) return null;
+  const rows: XCell[][] = [[{ v: 'יחס כושר פירעון כלכלי · לפי דוח', bold: true }], [{ v: '% · דוחות יחס כושר פירעון (MAYA) · כל ערך מקושר לעמוד שלו', muted: true }],
+    [head('דוח'), ...ids.flatMap(([, l]) => [head(`${l} (%)`), head('עמוד')])]];
+  for (const p of ps) rows.push([qlab(p).replace(/^Q2/, 'H1').replace(/^Q4/, 'FY'), ...ids.flatMap(([m]): XCell[] => {
+    const x = book.raw(m, e, p) ? book.get(m, e, 'Q', p) : null, l = x && x.v != null ? provLink(x.prov()) : null;
+    return !x || x.v == null ? [null, null] : [{ v: x.v, fmt: 'n0' }, l ? hl(l.url, l.pg != null ? `עמ׳ ${l.pg}` : 'פתיחה') : ''];
+  })]);
+  return { name: 'כושר פירעון', rows, widths: [10, 18, 9, 18, 9], freeze: { rows: 3, cols: 1 } };
+}
+/** the peer files the quarters sheet reads, as a Book (the same engine as the page) */
+async function companyBook(kind: Kind): Promise<{ book: Book; ents: string[] } | null> {
+  const preg = await load<Registry>('peers/registry.json').catch(() => null);
+  if (!preg) return null;
+  const ents = preg.sets.find((s) => s.id === (kind === 'fund' ? 'fund' : 'ins'))?.ids ?? [];
+  const ids = new Set([...coNeedIds(new Book(preg, new Map()), kind), 'solv:sr_wo', 'solv:sr_w']);
+  const fs = [...new Set(preg.metrics.filter((m) => ids.has(m.id)).map((m) => m.f))];
+  const files: MetricFiles = new Map(await Promise.all(fs.map(async (f) => [f, await load(`peers/m/${f}.json`).catch(() => ({ u: [], e: {} }))] as [string, never])));
+  return { book: new Book(preg, files), ents };
+}
+
+/** Builds and downloads the company workbook. Returns the number of values written. With `report` ("2026Q3", the report on screen) the
+ *  workbook opens with the quarters, the changes and solvency to that report, the statements end there, and the file is named after it. */
+export async function exportCompany(id: string, onStep?: (s: string) => void, opts: { report?: string } = {}): Promise<number> {
   onStep?.('טוען');
   const [reg, kpi, ifrs, sopIdx, lts, registry, qa] = await Promise.all([
     load<RegistryCompany[]>('companies/index.json'), load<KpiData>('kpi.json').catch(() => null), load<IfrsData>('ifrs.json').catch(() => null),
@@ -180,7 +274,19 @@ export async function exportCompany(id: string, onStep?: (s: string) => void): P
     load<LtsProv>(`lts_prov/${id === 'idi' ? 'direct' : id}.json`).catch(() => null),
   ]);
   onStep?.('בונה');
-  if (data) sheets.push(...statements(data, name, src));
+  // phase 6: the report on screen first (its quarter: "2026Q3"; an annual report is its Q4), then the shipped workbook ending there
+  const rq = opts.report ? (opts.report.endsWith('FY') ? `${opts.report.slice(0, 4)}Q4` : opts.report) : null;
+  if (rq) {
+    const kind: Kind = entry.kind === 'fund_house' ? 'fund' : 'ins', pb = await companyBook(kind).catch(() => null);
+    if (pb) {
+      const st = reportStatus(pb.book, pb.ents.includes(id) ? pb.ents : [...pb.ents, id]);
+      const q = st.last[id] && st.last[id]! < rq ? st.last[id]! : rq;
+      sheets.push(quartersSheet(pb.book, id, kind, q, pb.ents, name, src));
+      const ch = changesSheet(await load<Changes>(`changes/${id}.json`).catch(() => null), opts.report!); if (ch) sheets.push(ch);
+      const sv = kind === 'ins' ? solvencySheet(pb.book, id) : null; if (sv) sheets.push(sv);
+    }
+  }
+  if (data) sheets.push(...statements(rq ? cutAt(data, rq) : data, name, src));
   const k = kpi && kpiSheet(id, kpi, src); if (k) sheets.push(k);
   const allIfrs = ifrsFacts.flat();
   if (allIfrs.length) sheets.push(factRows('IFRS 17', allIfrs, src, (f) => METRIC_HE[f.m] ?? f.m));
@@ -218,6 +324,6 @@ export async function exportCompany(id: string, onStep?: (s: string) => void): P
     ...[...docs.values()].sort((a, b) => b.n - a.n).map((d) => [{ v: d.doc, link: d.url }, `${d.n} ערכים`]),
   ] };
   onStep?.('כותב');
-  await downloadXlsxAsync(`fox-${id}-${pubLabel(built)}`, [cover, ...sheets, sources], { title: `fox · ${name}` });
+  await downloadXlsxAsync(opts.report ? `fox-${id}-${opts.report}` : `fox-${id}-${pubLabel(built)}`, [cover, ...sheets, sources], { title: `fox · ${name}` });
   return src.length;
 }
