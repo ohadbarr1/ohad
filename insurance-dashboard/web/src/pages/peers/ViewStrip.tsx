@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMedia } from '../../lib/useMedia';
+import { restoreBoard, stashBoard } from '../../lib/peerHost';
 import '../../styles/rollout.css';
 import '../../styles/peerboard.css';
 
@@ -19,9 +20,11 @@ const TABS: [ViewId, string][] = [['board', 'לוח'], ['company', 'חברה'], 
 
 /** the address of a view, from the current one */
 export function viewHref(cur: URLSearchParams, to: ViewId): URLSearchParams {
-  const n = new URLSearchParams(cur);
-  if (to === 'free' || to === 'series') { BOARD_ONLY.forEach((k) => n.delete(k)); n.set('v', to === 'free' ? 'table' : 'series'); return n; }
+  const n = new URLSearchParams(cur), from = cur.get('v');
+  if (to === 'free' || to === 'series') { if (!from) stashBoard(cur); BOARD_ONLY.forEach((k) => n.delete(k)); n.set('v', to === 'free' ? 'table' : 'series'); return n; }
   n.delete('v'); n.delete('sheet'); n.delete('src');
+  // BB11: back from the free table or the series: their column keys go, the board's own choices (its sort) come back
+  if (from === 'table' || from === 'series') restoreBoard(n);
   const l = LENS[to];
   if (l) n.set('lens', l); else n.delete('lens');
   return n;

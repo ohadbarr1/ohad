@@ -8,6 +8,23 @@ export const BOARD_KEYS = ['lens', 'bm', 'rd', 'base', 'sec', 'sheet', 'gq', 'bx
 /** keys only the free table and the series read */
 export const TABLE_KEYS = ['c', 'f', 'p', 'n', 'k', 'o', 'h', 'pin', 'w', 't'];
 
+/** BB11: the board's own choices (metric, reading, base, section, grid depth, chart keys) kept for this tab while the free table or the series
+ *  is on screen, so coming back to the board restores them (its sort) instead of the defaults. Session storage; never required */
+const STASH = 'fox:peers:board';
+const KEEP = BOARD_KEYS.filter((k) => k !== 'lens' && k !== 'sheet');
+export function stashBoard(sp: URLSearchParams): void {
+  const o: Record<string, string> = {};
+  KEEP.forEach((k) => { const v = sp.get(k); if (v != null) o[k] = v; });
+  try { sessionStorage.setItem(STASH, JSON.stringify(o)); } catch { /* private mode: the board opens on its defaults */ }
+}
+/** the board's address back from a peer-table view: the table's keys go, the stashed board keys return (the address's own win) */
+export function restoreBoard(n: URLSearchParams): URLSearchParams {
+  TABLE_KEYS.forEach((k) => n.delete(k));
+  let o: Record<string, string> = {};
+  try { o = JSON.parse(sessionStorage.getItem(STASH) ?? '{}') ?? {}; } catch { o = {}; }
+  Object.entries(o).forEach(([k, v]) => { if (KEEP.includes(k) && typeof v === 'string' && !n.has(k)) n.set(k, v); });
+  return n;
+}
 export function leaveBoard(sp: URLSearchParams): URLSearchParams {
   const n = new URLSearchParams(sp);
   BOARD_KEYS.forEach((k) => n.delete(k));
@@ -19,9 +36,12 @@ export const PEER_VIEWS: [PeerViewId, string][] = [['board', 'לוח ההשוו�
 
 /** the address of a peer-table view from the current search: the set, the focus, the door stay; the other view's own keys go */
 export function peerViewSearch(search: string, v: PeerViewId): string {
-  const n = leaveBoard(new URLSearchParams(search));
+  const sp = new URLSearchParams(search), from = sp.get('v');
+  if (!from && v !== 'board') stashBoard(sp);
+  const n = leaveBoard(sp);
   n.delete('v');
-  if (v === 'board' || v === 'deck') TABLE_KEYS.forEach((k) => n.delete(k));
+  if (v === 'board') restoreBoard(n);
+  if (v === 'deck') TABLE_KEYS.forEach((k) => n.delete(k));
   if (v !== 'board') n.set('v', v);
   const s = n.toString();
   return s ? `?${s}` : '';

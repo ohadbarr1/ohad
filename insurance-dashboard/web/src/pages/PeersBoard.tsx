@@ -197,8 +197,11 @@ function Chips({ bms, m, fav, onPick, onAll, desk }: { bms: BMetric[]; m: BMetri
   useLayoutEffect(() => {
     const el = ref.current, on = el?.querySelector<HTMLElement>('[aria-pressed="true"]');
     if (!el || !on) return;
-    const a = el.getBoundingClientRect(), b = on.getBoundingClientRect();
-    if (b.left < a.left) el.scrollLeft -= a.left - b.left + 12; else if (b.right > a.right) el.scrollLeft += b.right - a.right + 12;
+    // B1 item 8: the view is the row less the pinned "מדד ▾" (at the row's start) and the fade at its end: a chip under either is not in view
+    const a = el.getBoundingClientRect(), b = on.getBoundingClientRect(), pin = el.querySelector<HTMLElement>('#all-metrics')?.getBoundingClientRect();
+    const rtl = getComputedStyle(el).direction === 'rtl', fade = 28;
+    const lo = rtl ? a.left + fade : (pin ? pin.right : a.left), hi = rtl ? (pin ? pin.left : a.right) : a.right - fade;
+    if (b.left < lo) el.scrollLeft -= lo - b.left + 8; else if (b.right > hi) el.scrollLeft += b.right - hi + 8;
   }, [m.key]);
   const cue = () => { const el = ref.current; if (!el) return; const rtl = getComputedStyle(el).direction === 'rtl'; el.scrollBy({ left: (end ? 1 : -1) * (rtl ? 1 : -1) * el.clientWidth, behavior: 'smooth' }); };
   return (
