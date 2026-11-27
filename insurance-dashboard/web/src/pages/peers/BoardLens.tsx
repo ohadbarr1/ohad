@@ -113,7 +113,7 @@ export function BoardPanel({ d, m, b, onCo }: { d: BoardData; m: BMetric; b: Boa
       </div>
       {isChg(rd)
         ? <p className="p6-basis" id="basis">{basisText(m, rd, b.q)} · {unit}{b.strict ? ` · בדירוג ובחציון: רק מי שדיווח ${qlab(b.q)}` : ''}</p>
-        : reads.length > 1 ? <p className="p6-basis" id="basis">{m.l}{m.type === 'flow' || m.fr ? `, ${readLabel(rd, b.q)}` : ''} · {unit}</p> : null}
+        : reads.length > 1 ? <p className="p6-basis" id="basis">{m.type === 'flow' || m.fr ? `${m.l.replace(/, LTM$/, '')}, ${readLabel(rd, b.q)}` : m.l} · {unit}</p> : null}
       <Scoreboard layout="track" id="board" rows={rows} benchmark={{ label: null, value: b.med.v, line: true }} onOpen={onCo} mineWord={null} range={rb.range}
         format={(v) => fmtRead(m, rd, v)} cell={(r) => <BoardVal b={b} e={r.k} />} outHead={outHead(b.q)}
         data={{ metric: m.key, reading: rd }} label={`${shOf(m)}: דירוג החברות`} />

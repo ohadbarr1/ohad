@@ -84,9 +84,7 @@ export const isChgRd = (rd: QRead | null) => rd === 'yoy' || rd === 'qoq' || rd 
  *  a return window = total return at that window; null = no board reading (read from the shipped cell) */
 export function readingOf(d: BoardData, m: BMetric): { bm: BMetric; rd: QRead } | null {
   if (m.type === 'ret' && (m.key === 'r3' || m.key === 'rytd' || m.key === 'r12')) { const tr = BBY.get('tr'); return tr ? { bm: tr, rd: m.key as QRead } : null; }
-  // a flow filed by halves (gross premiums): its LTM is built from halves by the shipped cell (bizVal), which the board's exact-quarter read
-  // does not do; the table keeps the shipped cell so no figure is lost
-  if (m.ltmh) return null;
+  // a flow filed by halves (gross premiums): boardRows builds its LTM from halves (FY + H1 − H1 a year back), as the shipped cell did
   if (m.reads?.length && !m.of) return { bm: m, rd: defRead(m) };
   if (m.of) {
     const b = BBY.get(m.of), rd = b ? pairRead(b) : null;

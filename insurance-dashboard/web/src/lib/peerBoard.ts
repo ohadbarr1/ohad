@@ -6,7 +6,7 @@
 import { nf, pubLabel, sn } from './format';
 import { placeGroups } from './pageMonths';
 import type { Prov } from './prov';
-import { chgLag, chgPct, chgPts, fmtBnDiff, fmtPct, fmtPts, isChg, qBack, qlab, readLabel, type QRead } from './quarters';
+import { chgLag, chgPct, chgPts, fmtBnDiff, fmtPct, fmtPts, isChg, PCT_CAP, qBack, qlab, readLabel, type QRead } from './quarters';
 import { back, F_DER, plab, type Book, type Freq, type Unit, type Val } from './registry';
 import { carriedVal, cellVal, formulaTok, parseCol, ROE_EXPR, type Col } from './seriesCols';
 import type { TasePrice } from './valuation';
@@ -104,7 +104,7 @@ export const METRICS: BMetric[] = [
     { key: 'oaum', l: 'נכסים מנוהלים, כל המוצרים', sh: 'נכסים', u: 'bn', dec: 1, better: null, t: 'reg:assets@all' },
     { key: 'open', l: 'נכסים מנוהלים · פנסיה', sh: 'פנסיה', u: 'bn', dec: 1, better: null, t: 'reg:assets@pension' },
     { key: 'ogem', l: 'נכסים מנוהלים · גמל והשתלמות', sh: 'גמל והשתלמות', u: 'bn', dec: 1, better: null, t: 'reg:assets@gemel' },
-    { key: 'opol', l: 'נכסים מנוהלים · ביטוחי מנהלים ופוליסות חיסכון (ביטוח-נט)', sh: 'ביטוח-נט', u: 'bn', dec: 1, better: null, t: 'reg:assets@insurance',
+    { key: 'opol', l: 'נכסים מנוהלים · ביטוחי מנהלים ופוליסות חיסכון (ביטוח-נט)', sh: 'מנהלים ופוליסות', u: 'bn', dec: 1, better: null, t: 'reg:assets@insurance',
       note: 'ביטוח-נט: כל הנכסים בפוליסות ביטוח החיים המשתתפות ברווחים, ביטוחי מנהלים ופוליסות חיסכון; "פוליסות השקעה" במצגות החברות הן חוזי השקעה בלבד (IFRS 9), חלק מהסכום' },
     { key: 'oshare', l: 'נתח שוק בנכסים, כל המוצרים', sh: 'נתח שוק', u: 'pct', dec: 2, better: 'hi', t: 'reg:share@all', h: true },
     { key: 'oshd', l: 'שינוי נתח השוק, שנה', sh: 'Δ נתח, YoY', u: 'pp', dec: 2, better: 'hi', t: T('Δ נתח שוק', 'pct', 'reg_share__all - yago(reg_share__all)'), h: true },
@@ -275,6 +275,32 @@ export function histVal(book: Book, m: BMetric, ent: string, kind: Kind, p: stri
   if (x.v == null || !Number.isFinite(x.v)) return x;
   if ((m.key === 'pe' || m.key === 'pb' || m.key === 'pbc') && x.v <= 0) return { ...x, v: null, why: 'רווח או הון שלילי: המכפיל אינו בעל משמעות' };
   return x;
+}
+/** B1 item 7 / BB1: the source of a quarter-end multiple in the board's own words: the close it uses ("סגירת 30.09.26") and the quarter of
+ *  the reported figure, balances "סוף Q3'26" and the profit "LTM Q3'26" (never "LTM" on a market value or a balance), no code formula,
+ *  the board's "x". The inputs keep their own sources. `close` null: the quarter end is named instead of the day */
+export function histProv(m: BMetric, x: BVal, q: string, close: string | null, name: string): BVal {
+  if (x.v == null || !Number.isFinite(x.v) || m.type !== 'spot') return x;
+  const p0 = x.prov, v = x.v, dq = x.p && /Q\d$/.test(x.p) ? x.p : q, cl = close ? `סגירת ${pubLabel(close)}` : `סגירת סוף ${qlab(q)}`;
+  const den: Record<string, string> = {
+    pe: `רווח נקי לבעלי המניות, LTM ${qlab(dq)}`, pb: `הון לבעלי המניות, סוף ${qlab(dq)}`, maum: `נכסים מנוהלים, סוף ${qlab(dq)}`,
+    pbc: `(הון + CSM × (1 − ${nf(TAX, 2)}%)), סוף ${qlab(dq)}; שיעור המס הנחה`, dy: `מחיר, ${cl} (דיבידנד למניה: 12 החודשים עד הסגירה)`,
+  };
+  const formula = m.key === 'dy' ? `תשואת דיבידנד = דיבידנד למניה ÷ ${den.dy}` : m.key === 'mcap' ? '' : `${m.key === 'pbc' ? 'מחיר להון + CSM' : shOf(m)} = שווי שוק (${cl}) ÷ ${den[m.key] ?? `הנתון המדווח, ${qlab(dq)}`}`;
+  if (!formula) return x;
+  const relabel = (l: string) => {
+    const i = l.lastIndexOf(' · '), nm = i > 0 ? l.slice(0, i) : l, per = i > 0 ? l.slice(i + 3) : '', pq = per.replace(/^LTM /, '');
+    if (/שווי שוק|מחיר|דיבידנד|mkt/.test(nm)) return `${nm}, ${cl}`;
+    if (m.key === 'pe') return `${nm}, LTM ${pq || qlab(dq)}`;
+    return `${nm}, סוף ${pq || qlab(dq)}`;
+  };
+  const note = `רבעון הנתון: ${qlab(dq)}${x.stale && dq !== q ? ` (הדוח ל-${qlab(q)} טרם פורסם: הנתון האחרון שדווח)` : ''} · שווי השוק: ${cl}. בלוח: הסגירה האחרונה.`;
+  return { ...x, prov: () => {
+    const o = p0();
+    const mil0 = m.key === 'pe' || m.key === 'pb' || m.key === 'pbc';  // every input of these is in NIS millions, as on the board's sheet
+    const inputs = o.k === 'calc' ? o.inputs.map((t) => ({ ...t, label: relabel(t.label), v: mil0 && /^[−-]?[\d,.]+$/.test(t.v) ? `${t.v} מיליוני ש"ח` : t.v })) : [];
+    return { k: 'calc', title: `${shOf(m)} · ${name} · סוף ${qlab(q)}`, value: fmtB(m, v), unit: unitB(m), est: true, formula, inputs, note };
+  } };
 }
 /** the rule for a quarter not every company has reported (the board, the free table, the history chart and their medians; Methodology #peers) */
 export const CARRY_RULE = 'חברה שטרם דיווחה על הרבעון: הנתון האחרון שדיווחה (רבעון אחד אחורה; כושר פירעון עד שלושה), מסומן * עם התקופה שלו, ונכלל בחציון, בממוצע ובדירוג. מכפיל לאורך זמן: שווי השוק בסוף הרבעון ÷ הנתון המדווח האחרון. סכום מוצג רק כשכל הרכיבים מאותה תקופה.';
@@ -486,7 +512,7 @@ function levelAt(book: Book, m: BMetric, ent: string, kind: Kind, q: string, bas
  *  metrics read the quarter-end close (`histVal`); a change computes from two levels of the same lib with the basis in its source. */
 export function readVal(book: Book, m: BMetric, ent: string, kind: Kind, q: string, rd: QRead, peers: string[]): BVal {
   const title = `${shOf(m)}${isChg(rd) || rd === 'q' ? ` ${readLabel(rd, q)}` : ''} · ${book.name(ent)}`;
-  if (m.type === 'spot') return histVal(book, m, ent, kind, q, peers) ?? none(title, 'אין רצף רבעוני למדד');
+  if (m.type === 'spot') { const h = histVal(book, m, ent, kind, q, peers); return h ? histProv(m, h, q, null, book.name(ent)) : none(title, 'אין רצף רבעוני למדד'); }
   if (m.type === 'ret') return none(title, 'תשואה כוללת נמדדת עד הסגירה האחרונה, לא לפי רבעון');
   if (!isChg(rd)) return levelAt(book, m, ent, kind, q, rd === 'ltm' ? 'ltm' : 'q', peers);
   if (m.type === 'half' || m.type === 'fy') return none(title, 'מתפרסם פעמיים בשנה או פעם בשנה: אין שינוי רבעוני');
@@ -499,7 +525,7 @@ export function readVal(book: Book, m: BMetric, ent: string, kind: Kind, q: stri
   for (const id of colOf(book, m.tok![kind]!).ids) { const w = book.breakBetween(id, freq, a, b, q, q0); if (w) return { ...none(title, `שבר בהגדרה בין התקופות: ${w}`), p: q }; }
   const k = chgKind(m);
   let v: number | null;
-  if (k === 'pct') { const c = chgPct(a.v, b.v); if (c.v == null) return { ...none(title, c.why === 'בסיס שלילי' ? 'בסיס שלילי: שינוי באחוזים אינו מוגדר' : c.why!), p: q }; v = c.v; }
+  if (k === 'pct') { const c = chgPct(a.v, b.v); if (c.v == null) return { ...none(title, c.why === 'בסיס שלילי' ? 'בסיס שלילי: שינוי באחוזים אינו מוגדר' : c.why === 'בסיס קטן' ? `בסיס קטן: שינוי של יותר מ-${nf(PCT_CAP, 0)}% (${fmtRead(m, b0 === 'ltm' ? 'ltm' : 'q', a.v)} מול ${fmtRead(m, b0 === 'ltm' ? 'ltm' : 'q', b.v)}), אחוז אינו משקף` : c.why!), p: q }; v = c.v; }
   else v = chgPts(a.v, b.v);
   const vv = v!, la = levelLab(b0, q), lb = levelLab(b0, q0);
   return { v: vv, fl: a.fl | b.fl | F_DER, p: q, prov: () => ({ k: 'calc', title, value: fmtRead(m, rd, vv), unit: unitRead(m, rd),
@@ -586,7 +612,18 @@ export function bandOf(m: BMetric, rd: QRead, vals: (number | null)[]): number {
 const carryProv = (x: BVal, q: string, from: string): BVal => ({ ...x, prov: () => { const pr = x.prov(), why = `טרם דווח על ${qlab(q)}: הנתון המדווח האחרון (${qlab(from)})`;
   return pr.k === 'calc' || pr.k === 'report' ? { ...pr, note: [why, pr.note].filter(Boolean).join(' · ') } : pr; } });
 /** one company's board figure under the rule of 13.2 */
+/** B1 item 9: one format per figure: a ratio's or a change's source sheet heads with the text of its cell ("155%", not "155.0%"; "1.70x", not
+ *  "1.70×"). Amounts keep the sheet's own text (a market value's sheet carries its unit in it) */
+export function sameText(m: BMetric, rd: QRead, x: BVal): BVal {
+  if (x.v == null || !Number.isFinite(x.v) || (m.u === 'm' || m.u === 'bn') && !isChg(rd)) return x;
+  const p0 = x.prov, t = fmtRead(m, rd, x.v);
+  return { ...x, prov: () => { const o = p0(); return o.k === 'calc' || o.k === 'report' || o.k === 'xbrl' ? { ...o, value: t } : o; } };
+}
 function rowOf(c: BoardCtx, m: BMetric, rd: QRead, e: string, strict: boolean): Omit<BoardRow, 'place' | 'shared' | 'chip'> {
+  const r = rowOf0(c, m, rd, e, strict);
+  return { ...r, val: sameText(m.type === 'ret' ? MBY.get(rd) ?? MBY.get('r12')! : m, m.type === 'spot' || m.type === 'ret' ? 'now' : rd, r.val) };
+}
+function rowOf0(c: BoardCtx, m: BMetric, rd: QRead, e: string, strict: boolean): Omit<BoardRow, 'place' | 'shared' | 'chip'> {
   const { book, ents } = c, kind = c.kindOf?.(e) ?? kindOfEnt(book, e), q = m.ax === 'reg' ? c.qReg ?? c.q : c.q;
   const base = { e, out: false, per: null as string | null, dag: null as CsmBasis | null, noShare: false };
   if (m.type === 'spot' || m.type === 'ret') {
@@ -602,6 +639,12 @@ function rowOf(c: BoardCtx, m: BMetric, rd: QRead, e: string, strict: boolean): 
     // 13.2 rule 1: carried exactly as seriesCols.carriedVal (one period back, starred, counted); an LTM-based change follows its level
     const b0 = isChg(rd) ? chgBase(m, rd) : rd === 'ltm' ? 'ltm' : 'q', cv = carriedVal(book, colOf(book, m.tok[kind]!), e, freqOf(m, b0), q, ents);
     if (cv) { from = cv.from; x = isChg(rd) ? carryProv(readVal(book, m, e, kind, cv.from, rd, ents), q, cv.from) : { ...cv, p: cv.from }; if (x.v == null) from = null; }
+  }
+  if ((x.v == null || !Number.isFinite(x.v)) && m.ltmh && rd === 'ltm' && m.tok?.[kind]) {
+    // a flow filed by halves and years (gross premiums): LTM = last FY + this H1 − last H1, as the live board builds it; at Q3 it is the
+    // LTM to Q2, starred with its quarter and counted like any carried figure
+    const h = ltmFromHalves(book, colOf(book, m.tok[kind]!), m, e, q, ents);
+    if (h && h.v != null && Number.isFinite(h.v)) { x = h; from = h.p && h.p !== q ? h.p : null; }
   }
   const at = from ?? q;
   return { ...base, v: x.v, val: x, q: at, stale: !!from, dag: !isChg(rd) ? csmDagger(book, m, e, at) : null };
@@ -642,7 +685,7 @@ export function gridRow(c: BoardCtx, m: BMetric, rd0: QRead | null | undefined, 
     let x: BVal, from: string | null = null;
     if (m.type === 'spot') {
       const h = histVal(book, m, e, kind, q, ents, carry && !strict);
-      x = h ?? none(shOf(m), 'אין רצף רבעוני למדד');
+      x = h ? histProv(m, h, q, closeAt(c.mk, e, q), book.name(e)) : none(shOf(m), 'אין רצף רבעוני למדד');
       if (h?.stale && h.p) from = h.p;
     } else {
       x = readVal(book, m, e, kind, q, rd, ents);
@@ -651,6 +694,7 @@ export function gridRow(c: BoardCtx, m: BMetric, rd0: QRead | null | undefined, 
         if (cv) { const y = isChg(rd) ? carryProv(readVal(book, m, e, kind, cv.from, rd, ents), q, cv.from) : { ...cv, p: cv.from }; if (y.v != null) { x = y; from = cv.from; } }
       }
     }
+    x = sameText(m, m.type === 'spot' ? 'now' : rd, x);
     const ok = x.v != null && Number.isFinite(x.v), last = c.status?.last[e];
     const why = ok ? null : last && last < q && m.ax !== 'reg' && m.type !== 'spot' ? 'טרם דיווחה' : x.why ?? 'אין נתון';
     return { e, v: ok ? x.v : null, val: x, star: !!from, dag: ok && !isChg(rd) ? csmDagger(book, m, e, from ?? q) : null, why, from };
