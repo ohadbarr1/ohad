@@ -277,9 +277,12 @@ export function QuarterLens({ co, cp }: { co: CoData; cp: GridRead }) {
   const waitParts = co.waiting ? waitingWords({ bq: co.status.bq, q: co.q, pub: chr?.p === co.P ? chr?.pub : null, reported: co.status.reported.length, total: co.status.n,
     setWord: fund ? 'בתי ההשקעות' : 'המבטחות', expected: co.expected }) : null;
   const [wopen, setWopen] = useState(false);
+  // B1 item 5: on a phone the waiting notice is one line at the foot of the sentence card (the whole text, cut with "…"; a tap shows it all),
+  // not a block of its own: the block took 75 px and pushed the seventh row (solvency) under the bottom bar
   const lead = waitParts && phone && hasRows ? (
-    <span className="co6-wait" id="guard" role="note">{wopen ? <Words parts={waitParts} src={() => null} />
-      : <button type="button" className="co6-waitb" aria-expanded="false" onClick={() => setWopen(true)}><b className="num">{qlab(co.status.bq)}</b> טרם פורסם ›</button>}{' · '}</span>
+    <button type="button" className={`co6-wait1${wopen ? ' open' : ''}`} id="guard" aria-expanded={wopen} onClick={() => setWopen(!wopen)}>
+      <Words parts={waitParts} src={() => null} />
+    </button>
   ) : null;
   const guard: ReactNode = co.waiting && !lead ? (
     <GuardLine kind="risk" id="guard" wrap text={<Words parts={waitParts!} src={() => null} />} />
@@ -287,9 +290,9 @@ export function QuarterLens({ co, cp }: { co: CoData; cp: GridRead }) {
   return (
     <div className="co6-lens" data-lens="q">
       {co.filer && <p className="co6-filer" title={co.filer.note}>{filerWords(co.filer.name, co.filer.stake)}</p>}
-      {/* a waiting company on a phone: the notice takes the place of the top-change clause (it stays one tap away in שינויים), so the
-          sentence keeps its three lines and the seven rows stay above the bottom bar */}
-      {hasRows && <div className="co6-take" id="takeaway">{lead}<Sentence co={co} noTop={!!lead} /></div>}
+      {/* a waiting company on a phone: the notice's line takes the place of the top-change clause (it stays one tap away in שינויים), so
+          the card keeps its three lines and the seven rows stay above the bottom bar */}
+      {hasRows && <div className="co6-take" id="takeaway"><Sentence co={co} noTop={!!lead} />{lead}</div>}
       {guard}
       {hasRows ? (
         <div className="co6-g2">
