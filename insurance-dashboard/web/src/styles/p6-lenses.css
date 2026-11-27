@@ -62,7 +62,10 @@ table.p6-ct td.outc .num { color: var(--faint); font-weight: 400; }
 table.p6-ct td .num { direction: ltr; unicode-bidi: isolate; }
 table.p6-ct td .num.pos { color: var(--up); }
 table.p6-ct td .num.neg { color: var(--down); }
-table.p6-ct td .num.stale { opacity: 0.8; }
+table.p6-ct td .num.stale { opacity: 1; }   /* the star marks a carried figure; dimming it broke 4.5 : 1 on the heat (axe) */
+/* a signed figure on a heat fill keeps 4.5 : 1 (axe), as the matrix: its green / red is darkened toward the ink */
+table.p6-ct td:is(.q1, .q2, .q3, .q4) .num.pos { color: color-mix(in oklch, var(--up) 55%, var(--fg)); }
+table.p6-ct td:is(.q1, .q2, .q3, .q4) .num.neg { color: color-mix(in oklch, var(--down) 60%, var(--fg)); }
 table.p6-ct tr.lead td { font-weight: 600; }
 table.p6-ct tr.lead td.pr-ent { box-shadow: inset 3px 0 0 var(--accent); }
 table.p6-ct tfoot td { color: var(--muted); border-top: 1px solid var(--line); }

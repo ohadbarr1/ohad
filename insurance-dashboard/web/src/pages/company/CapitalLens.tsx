@@ -83,18 +83,21 @@ function BondSeries({ id, name, phone }: { id: string; name: string; phone?: boo
       <div className="p6-kv" key={r[3]}><span className="p6-kv-l">{r[1]}<small className="muted">{ent(r[0])?.name ?? ''} · {r[2]}</small></span>
         <span className="p6-kv-v"><Sourced src={() => one(r)}>{nf((r[5] ?? 0) / 1e6, 0)}</Sourced></span></div>))}</div>
   );
-  const head = <><span>חוב סחיר · <span className="num">{rows.length}</span> סדרות</span><span className="p6-kv-v">סך הכול <Sourced src={total}>{nf(tot, 0)}</Sourced> <small className="muted">{MM} ע.נ.</small></span></>;
+  // the phone's fold line holds no button (axe nested-interactive): the total is text there, and opens its source on the total row inside
+  const head = <><span>חוב סחיר · <span className="num">{rows.length}</span> סדרות</span><span className="p6-kv-v">סך הכול <span className="num">{nf(tot, 0)}</span> <small className="muted">{MM} ע.נ.</small></span></>;
+  const totRow = <div className="p6-kv p6-tot"><span className="p6-kv-l"><b>סך הכול</b></span><span className="p6-kv-v"><Sourced src={total}>{nf(tot, 0)}</Sourced></span></div>;
   return (
     <section className="panel p6-bondsp" id="bonds" aria-label="חוב סחיר לפי סדרה">
       {phone ? (
         <details className="p6-fold">
           <summary className="p6-bonds-sum">{head}<small className="muted">ע.נ. במחזור נכון ל-{pubLabel(s.asof)} · הצגת הסדרות ›</small></summary>
           {list}
+          {totRow}
         </details>
       ) : (<>
         <div className="hd"><h2>חוב סחיר<span className="muted p6-sub"> · <span className="num">{rows.length}</span> סדרות · ע.נ. במחזור, {MM} · נכון ל-{pubLabel(s.asof)}</span></h2></div>
         {list}
-        <div className="p6-kv p6-tot"><span className="p6-kv-l"><b>סך הכול</b></span><span className="p6-kv-v"><Sourced src={total}>{nf(tot, 0)}</Sourced></span></div>
+        {totRow}
       </>)}
       <p className="src">רשימת ניירות הערך של כל מנפיקה (MAYA), תמונת מצב ולא לתאריך המצבת; ערך נקוב בש"ח (סדרה צמודה: לפני הצמדה)</p>
     </section>

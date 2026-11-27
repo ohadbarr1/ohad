@@ -16,8 +16,10 @@ export default function StressFold({ id }: { id: string }) {
   if (!c || !one || !one.St.length) return null;
   return (
     <details className="p6-fold p6-stress" id="stress">
-      <summary><span>העודף אחרי תרחישי לחץ · <span className="num">{one.St.length}</span> תרחישים ›</span><small className="muted">הון בר-חלוקה ונשאר מהעודף אחרי כל תרחיש (A2), SCR קבוע · <Link to="/scenarios">חדר התרחישים</Link></small></summary>
+      {/* axe: a <summary> holds no link (nested-interactive), and the link stands on its own line (link-in-text-block) */}
+      <summary><span>העודף אחרי תרחישי לחץ · <span className="num">{one.St.length}</span> תרחישים ›</span><small className="muted">הון בר-חלוקה ונשאר מהעודף אחרי כל תרחיש (A2), SCR קבוע</small></summary>
       <StressTable c={c} S={one.St} base={one.R.dist} />
+      <p className="p6-stress-go"><Link to="/scenarios">לחדר התרחישים ›</Link></p>
     </details>
   );
 }

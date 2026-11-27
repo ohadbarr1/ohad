@@ -244,3 +244,6 @@ table.p6-mxt td:is(.q1, .q2, .q3, .q4) .num.neg { color: color-mix(in oklch, var
 
 /* BB9: a median and its n read left to right everywhere (the figure, then its n), as in the grid */
 .p6-medc { display: inline-block; white-space: nowrap; unicode-bidi: isolate; }
+/* axe: the focus row's signed figure on its tint keeps 4.5 : 1 */
+.p6-pb .mine .p6-sb-val :is(.num, .src).pos { color: color-mix(in oklch, var(--up) 75%, var(--fg)); }
+.p6-pb .mine .p6-sb-val :is(.num, .src).neg { color: color-mix(in oklch, var(--down) 80%, var(--fg)); }
