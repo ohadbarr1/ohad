@@ -39,7 +39,7 @@ defaults:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60  # suite ~37 min (route check 25 min); 45 left no room for a slow browser download (06.11.26)
+    timeout-minutes: 90  # suite ~60 min since phase 6 (Playwright 29 min + budgets); 60 cut the p6 budget step on 27.11.26
     steps:
       - uses: actions/checkout@v5
         with: { ref: '${{ inputs.ref }}' }
