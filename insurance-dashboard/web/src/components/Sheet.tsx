@@ -41,8 +41,10 @@ export function useSheetHistory(open: boolean, onClose: () => void) {
   const baseIdx = useRef<unknown>(null);         // its router index (a replace over the sheet's entry keeps it; a push adds one)
   const last = useRef<Location | null>(null);    // the last address the sheet's pickers set while it was open
   const locRef = useRef(loc); locRef.current = loc;
-  // a location with another key than the page's entry is one the sheet's entry now holds (back on the page's entry the key is base again)
-  useLayoutEffect(() => { if (open && base.current != null && loc.key !== base.current) last.current = loc; }, [open, loc]);
+  // a location with another key than the page's entry is one the sheet's entry now holds (back on the page's entry the key is base again).
+  // P6-B8: only at the sheet's own index: an entry pushed over the sheet (the source sheet's ?src=1) is a layer above it, not a choice
+  // made in it, and carrying it down would write ?src= onto the page's entry
+  useLayoutEffect(() => { if (open && base.current != null && loc.key !== base.current && (history.state as { idx?: unknown } | null)?.idx === baseIdx.current) last.current = loc; }, [open, loc]);
   useEffect(() => {
     if (!open) return;
     closing.current = false;
@@ -61,8 +63,17 @@ export function useSheetHistory(open: boolean, onClose: () => void) {
       const t = last.current; last.current = null; base.current = null;
       if (t) navRef.current({ pathname: t.pathname, search: t.search, hash: t.hash }, { replace: true, state: t.state });
     };
-    const pop = () => { closing.current = true; carry(); close.current(); };
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') history.back(); };
+    // P6-B8: a Back that pops a layer opened over the sheet (the source sheet pushes ?src=1 over the sheet's entry) lands on the
+    // sheet's own entry: the sheet stays, only that layer closes. The sheet closes once Back reaches the page's entry or below it
+    const onOwn = () => {
+      const st = history.state as { sheet?: boolean; key?: string; idx?: unknown } | null;
+      if (!st || base.current == null) return false;
+      if (st.key === base.current) return !!st.sheet;               // the entry the sheet pushed (a copy of the page's state, flagged)
+      return typeof st.idx === 'number' && typeof baseIdx.current === 'number' && st.idx >= baseIdx.current;  // written over it with replace (same index), or above it
+    };
+    const pop = () => { if (onOwn()) return; closing.current = true; carry(); close.current(); };
+    // a layer over the sheet that handles Escape itself (the source sheet) marks it handled: Escape closes the top layer only
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape' && !e.defaultPrevented) history.back(); };
     // capture phase: before the router's own popstate listener. That one re-renders the page in the microtask checkpoint that follows
     // it, and a sheet the popped address no longer names (the why sheet opened over the fee sheet) was unmounted with its listener
     // before it could close: the page's entry still said sheet=fee and the fee sheet came back
