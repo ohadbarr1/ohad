@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Sourced } from '../../components/Source';
 import { idCss } from '../../lib/identity';
 import { qlab } from '../../lib/quarters';
@@ -57,10 +57,20 @@ function CompsTable({ d, sec, cols }: { d: BoardData; sec: Sec; cols: TCol[] }) 
     if (c.bm && c.rd) { d.put('bm', c.bm.key); d.put('rd', c.rd === c.bm.reads?.[0] ? null : c.rd); }
   };
   const sel = (c: TCol) => !!c.bm && c.bm.key === d.bm && c.rd === d.rd;
+  // BB8: a table wider than its panel says so: the company column stays pinned, the far edge fades, and "עוד עמודות ‹" scrolls a screen on
+  const box = useRef<HTMLDivElement>(null);
+  const [over, setOver] = useState(false), [end, setEnd] = useState(false);
+  useLayoutEffect(() => {
+    const el = box.current; if (!el) return;
+    const f = () => { setOver(el.scrollWidth > el.clientWidth + 2); setEnd(Math.abs(el.scrollLeft) + el.clientWidth >= el.scrollWidth - 2); };
+    f(); const ro = new ResizeObserver(f); ro.observe(el); el.addEventListener('scroll', f, { passive: true });
+    return () => { ro.disconnect(); el.removeEventListener('scroll', f); };
+  }, [cols.length]);
+  const more = () => { const el = box.current; if (!el) return; const rtl = getComputedStyle(el).direction === 'rtl'; if (end) el.scrollTo({ left: 0, behavior: 'smooth' }); else el.scrollBy({ left: (rtl ? -1 : 1) * (el.clientWidth - 110), behavior: 'smooth' }); };
   return (
-    <section className="panel p6-tp" id={`tbl-${sec}`}>
-      <div className="hd"><h2>{SEC_TITLE[sec]}</h2></div>
-      <div className="scroll pr-scroll"><table className={`pr-table p6-ct${cols.length > 11 ? ' dense' : ''}`} data-cols={cols.length}>
+    <section className={`panel p6-tp${over ? ' p6-over' : ''}${end ? ' p6-end' : ''}`} id={`tbl-${sec}`}>
+      <div className="hd"><h2>{SEC_TITLE[sec]}</h2>{over ? <button type="button" className="chip p6-tmore" onClick={more} aria-label={end ? 'חזרה לעמודות הראשונות' : 'עוד עמודות'}>{end ? '› לתחילה' : `עוד עמודות ‹`}</button> : null}</div>
+      <div className="scroll pr-scroll" ref={box}><table className={`pr-table p6-ct${cols.length > 11 ? ' dense' : ''}`} data-cols={cols.length}>
         <thead><tr><th className="pr-ent">חברה</th>{cols.map((c, i) => (
           <th key={`${c.m.key}`} className={`p6-th${sel(c) ? ' sel' : ''}`} data-m={c.bm?.key ?? c.m.key} data-rd={c.rd ?? ''} aria-sort={sort?.i === i ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none'}>
             <button type="button" className="thsort" onClick={() => tap(i)} title={`${c.m.l}${c.m.note ? ` · ${c.m.note}` : ''}${c.bm?.better === 'lo' || c.m.better === 'lo' ? ' · לחיצה ראשונה: הזול / הנמוך ראשון' : ''}`}>

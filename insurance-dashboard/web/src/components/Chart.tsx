@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import type { ECharts, EChartsCoreOption } from 'echarts/core';
 import { useTheme } from '../lib/theme';
@@ -43,7 +44,10 @@ const dataDate = () => load<{ built?: string }>('qa.json').then((q) => q.built?.
 
 /** Thin ECharts wrapper. `build` runs again whenever the theme changes so chart colours follow the CSS tokens.
  *  With `exportName` the chart carries its own export: the picture as PNG and the plotted series as CSV. */
-export function Chart({ build, height = 320, deps, label, exportName: named, onPoint, source, asof, bookable = true, tools = true }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+export function Chart({ build, height = 320, deps, label, exportName: named, onPoint, source, asof, bookable = true, tools = true, fold = false }: { build: () => EChartsCoreOption; height?: number; deps: unknown[]; label: string; exportName?: string;
+  /** B1 item 3: the toolbar folded into one "⋯" menu (the peers board's charts lens: seven charts, two rows of buttons each on a phone).
+   *  The menu button is placed by the caller's CSS (.ct-fold); without it the toolbar is the row under the chart */
+  fold?: boolean;
   /** the period the plotted data runs to ("09/26", "Q2'26"), printed in the exported picture's source bar; without it, the data build date */
   asof?: string;
   /** false: no toolbar under the chart (the caller carries its own exports: the S6 exhibit, which exports without the site's mark) */
@@ -66,6 +70,9 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
   const inBook = bookable && book.has(key);
   const [busy, setBusy] = useState<string | null>(null);
   const [deck, setDeck] = useState<string | null>(null);
+  // a folded toolbar sits in the panel head's slot when the panel offers one (.ct-slot, after the head's pickers)
+  const [slot, setSlot] = useState<Element | null>(null);
+  useLayoutEffect(() => { if (fold) setSlot(el.current?.closest('section')?.querySelector('.ct-slot') ?? null); }, [fold]);
 
   useEffect(() => {
     let live = true, ro: ResizeObserver | null = null, off: (() => void) | null = null;
@@ -204,6 +211,24 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
       setDeck(null);
     } catch { setDeck('שגיאה'); setTimeout(() => setDeck(null), 1800); }
   };
+  const buttons = exportName ? (
+    <>
+      {bookable && (inBook
+        ? <Link className="booked" to="/book" title="הגרף בספר הגרפים">בספר ✓</Link>
+        : <button type="button" className="tobook" onClick={() => void addToBook()} title="הוסף לספר הגרפים">{busy ?? '+ לספר'}</button>)}
+      <button type="button" onClick={() => void png()} title="תמונה עם כותרת ושורת מקור: מקור, נתונים נכון ל, כתובת העמוד ותאריך">PNG</button>
+      <button type="button" onClick={() => void svg()} title="גרף וקטורי עם שורת מקור">SVG</button>
+      <button type="button" onClick={() => void pptx()} title="שקף PowerPoint עם גרף עריך ומקורות">{deck ?? 'PPTX'}</button>
+      <button type="button" onClick={csv}>CSV</button>
+      <button type="button" onClick={link}>העתקת קישור</button>
+    </>
+  ) : null;
+  if (fold) return (
+    <>
+      <div ref={el} style={{ width: '100%', height }} role="img" aria-label={label} />
+      {buttons && (slot ? createPortal(<FoldTools label={label}>{buttons}</FoldTools>, slot) : <FoldTools label={label}>{buttons}</FoldTools>)}
+    </>
+  );
   return (
     <>
       <div ref={el} style={{ width: '100%', height }} role="img" aria-label={label} />
@@ -220,5 +245,25 @@ export function Chart({ build, height = 320, deps, label, exportName: named, onP
         </div>
       )}
     </>
+  );
+}
+
+/** The chart's exports behind one "⋯" button (44 × 32): a menu that closes on a pick, on Escape and on a tap elsewhere */
+function FoldTools({ label, children }: { label: string; children: ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: Event) => { if (ref.current && !ref.current.contains(e.target as Node)) ref.current.open = false; };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape' && ref.current) { e.preventDefault(); ref.current.open = false; ref.current.querySelector('summary')?.focus(); } };
+    document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc, true);
+    return () => { document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc, true); };
+  }, [open]);
+  return (
+    <details ref={ref} className="ct-fold" onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
+      <summary aria-label={`ייצוא: ${label}`} title="ייצוא: PNG, SVG, PPTX, CSV, קישור, ספר הגרפים"><span aria-hidden="true">⋯</span></summary>
+      {/* a pick runs, then the menu closes (the click bubbles here after the button's own handler) */}
+      <div className="charttools ct-menu" onClick={(e) => { if ((e.target as HTMLElement).closest('button,a') && ref.current) ref.current.open = false; }}>{children}</div>
+    </details>
   );
 }

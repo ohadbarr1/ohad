@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { EChartsCoreOption } from 'echarts/core';
 import { Chart } from '../../components/Chart';
 import { Empty, Pick, Seg } from '../../components/ui';
@@ -48,6 +48,23 @@ export function ChartsLens({ d }: { d: BoardData }) {
   );
 }
 type ColFn = (k: string) => TCol | null;
+
+/** B1 item 3: a chart's note in two lines, "עוד" opens the rest (the note keeps every caveat; the lens fits its phone budget) */
+function Note({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [open, setOpen] = useState(false), [over, setOver] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el || open) return;
+    const f = () => setOver(el.scrollHeight > el.clientHeight + 2);
+    f(); const ro = new ResizeObserver(f); ro.observe(el); return () => ro.disconnect();
+  }, [open, children]);
+  return (
+    <div className={`p6-nwrap${open ? ' open' : ''}`}>
+      <p ref={ref} className={`p6-note${open ? '' : ' p6-clamp'}`}>{children}</p>
+      {(over || open) && <button type="button" className="p6-nmore" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'פחות' : 'עוד'}</button>}
+    </div>
+  );
+}
 const figOf = (c: TCol | null, e: string) => { const x = c?.cells.get(e); return x && !x.out && x.v != null && Number.isFinite(x.v) ? x : null; };
 
 /* ---------- scatter: any two metrics, with the set's least-squares line ---------- */
@@ -101,12 +118,12 @@ function Scatter({ d, col, x, y }: { d: BoardData; col: ColFn; x: string; y: str
   return (
     <section className="panel" id="scatter">
       <div className="hd"><h2>{my.sh} מול {mx.sh} <small className="p6-hsub">· גודל הבועה: שווי שוק</small></h2><div className="aside p6-ctl">
-        <Pick label="ציר אנכי" cap="Y" value={my.key} onChange={(k) => d.put('by', k)} options={opts} /><Pick label="ציר אופקי" cap="X" value={mx.key} onChange={(k) => d.put('bx', k)} options={opts} /></div></div>
+        <Pick label="ציר אנכי" cap="Y" value={my.key} onChange={(k) => d.put('by', k)} options={opts} /><Pick label="ציר אופקי" cap="X" value={mx.key} onChange={(k) => d.put('bx', k)} options={opts} /><span className="ct-slot" /></div></div>
       {pts.length < 3 ? <Empty title="פחות משלוש חברות עם שני הנתונים" /> : <>
-        <div className="p6-ch"><Chart label={`${my.sh} מול ${mx.sh}`} height={narrow() ? 300 : 340} deps={[mx.key, my.key, d.order.join(), d.focus, pts.length, d.q]} build={build} onPoint={(si, di) => { if (si === 0) open(pts[di].b!.val.prov()); }} source="דוחות החברות · TASE · fox" /></div>
-        <p className="p6-note">{fit ? <>קו ריבועים פחותים של הקבוצה: {my.sh} = <span className="num">{nf(fit.a, 2)} {fit.b >= 0 ? '+' : '−'} {nf(Math.abs(fit.b), 3)}</span> × {mx.sh} · <span className="num">R² = {nf(fit.r2, 2)}</span> ({pts.length} חברות){fit.r2 < 0.3 ? ' · קשר חלש: לפרש בזהירות' : ''}.
+        <div className="p6-ch"><Chart fold label={`${my.sh} מול ${mx.sh}`} height={narrow() ? 300 : 340} deps={[mx.key, my.key, d.order.join(), d.focus, pts.length, d.q]} build={build} onPoint={(si, di) => { if (si === 0) open(pts[di].b!.val.prov()); }} source="דוחות החברות · TASE · fox" /></div>
+        <Note>{fit ? <>קו ריבועים פחותים של הקבוצה: {my.sh} = <span className="num">{nf(fit.a, 2)} {fit.b >= 0 ? '+' : '−'} {nf(Math.abs(fit.b), 3)}</span> × {mx.sh} · <span className="num">R² = {nf(fit.r2, 2)}</span> ({pts.length} חברות){fit.r2 < 0.3 ? ' · קשר חלש: לפרש בזהירות' : ''}.
           {r ? <> <b>{book.short(d.focus)}</b>: {r.r >= 0 ? 'מעל ה' : 'מתחת ל'}קו ב-<span className="num">{fDiff(Math.abs(r.r))}</span>{my.u === 'x' && r.fy > 0 ? <> (<span className="num">{nf(Math.abs(r.r / r.fy) * 100, 0)}%</span> מהערך המותאם)</> : ''}.</> : null}</> : 'אין מספיק פיזור לקו.'}
-          {pts.some((q) => q.a!.stale || q.b!.stale) ? ' * נתון מהדוח הקודם (טרם דווח).' : ''} סטטיסטיקה תיאורית על קבוצה קטנה, לא המלצה.</p>
+          {pts.some((q) => q.a!.stale || q.b!.stale) ? ' * נתון מהדוח הקודם (טרם דווח).' : ''} סטטיסטיקה תיאורית על קבוצה קטנה, לא המלצה.</Note>
       </>}
     </section>
   );
@@ -172,15 +189,15 @@ function History({ d, k, w }: { d: BoardData; k: string; w: HWin }) {
     <section className="panel" id="hist" data-points={xs.length}>
       <div className="hd"><h2>{shOf(m)} לאורך זמן <small className="p6-hsub">· {m.type === 'spot' ? 'סגירת סוף רבעון ÷ נתון מדווח' : `${unitRead(m, rd)}${rd === 'ltm' ? ' · LTM' : ''}`}</small></h2><div className="aside p6-ctl">
         <Pick label="מדד" cap="מדד" value={m.key} onChange={(x) => d.put('bh', x)} options={hm.map((x) => [x.key, shOf(x)] as [string, string])} />
-        <Seg<HWin> label="טווח" value={w} onChange={(x) => d.put('bs', x === '12' ? null : x)} options={[['12', '3Y'], ['24', '6Y'], ['40', '10Y']]} /></div></div>
+        <Seg<HWin> label="טווח" value={w} onChange={(x) => d.put('bs', x === '12' ? null : x)} options={[['12', '3Y'], ['24', '6Y'], ['40', '10Y']]} /><span className="ct-slot" /></div></div>
       {xs.length < 2 ? <Empty title="אין רצף למדד ולטווח" /> : (
-        <div className="p6-ch"><Chart label={`${shOf(m)} לאורך זמן`} height={340} deps={[m.key, w, d.order.join(), d.focus, d.q, d.book.files.size]} source="דוחות החברות · TASE (סגירה ביום המסחר האחרון ברבעון) · fox"
+        <div className="p6-ch"><Chart fold label={`${shOf(m)} לאורך זמן`} height={340} deps={[m.key, w, d.order.join(), d.focus, d.q, d.book.files.size]} source="דוחות החברות · TASE (סגירה ביום המסחר האחרון ברבעון) · fox"
           onPoint={(si, di) => { const c = ser[si]?.xs[di]; if (c && c.v != null) open(c.val.prov()); }} build={build} /></div>
       )}
-      <p className="p6-note">{m.type === 'spot' ? 'מכפיל בסוף כל רבעון: שווי שוק ביום המסחר האחרון ברבעון ÷ הנתון המדווח לאותו רבעון (רווח: LTM).' : `${m.l}, כפי שדווח לסוף כל רבעון.`} קו מקווקו: חציון{meds.some((x) => x.v != null && x.n < full) ? <>; מנוקד ברבעונים שבהם לא לכל {full} החברות יש נתון (מספרן בחלונית)</> : <> של כל {full} החברות</>}.
+      <Note>{m.type === 'spot' ? 'מכפיל בסוף כל רבעון: שווי שוק ביום המסחר האחרון ברבעון ÷ הנתון המדווח לאותו רבעון (רווח: LTM).' : `${m.l}, כפי שדווח לסוף כל רבעון.`} קו מקווקו: חציון{meds.some((x) => x.v != null && x.n < full) ? <>; מנוקד ברבעונים שבהם לא לכל {full} החברות יש נתון (מספרן בחלונית)</> : <> של כל {full} החברות</>}.
         {nStar > 0 && <> ב-{qlab(xs[xs.length - 1])}, <span className="num">{nStar}</span> חברות שטרם דיווחו נקראות על הנתון האחרון שדיווחו (נקודה חלולה{m.type === 'spot' ? '; שווי השוק של סוף הרבעון ÷ המכנה האחרון' : ''}), כמו בלוח, ונספרות בחציון.</>}
         {startNote && <> {startNote}</>}
-        {closeRule && <><br />{closeRule}</>}</p>
+        {closeRule && <><br />{closeRule}</>}</Note>
     </section>
   );
 }
@@ -214,10 +231,10 @@ function Bars({ d }: { d: BoardData }) {
     <section className="panel" id="bars">
       <div className="hd p6-barshd"><h2>דירוג · {shOf(m)}{isChg(rd) || rd === 'q' ? ` ${readLabel(rd, b.q)}` : ''} <small className="p6-hsub">· {unitRead(m, rd)}</small></h2>
         {b.med.v != null && <span className="p6-medleg" id="bars-medlabel"><i aria-hidden="true" />חציון <span className="num">{f(b.med.v)}</span> · {b.med.n} {b.strict ? `שדיווחו ${qlab(b.q)}` : 'חברות'}</span>}
-        <div className="aside p6-ctl"><Pick label="מדד לדירוג" cap="מדד" value={m.key} onChange={(k) => { d.put('bm', k); d.put('rd', null); }} options={opts.some(([k]) => k === m.key) ? opts : [[m.key, shOf(m)], ...opts]} /></div></div>
-      {rows.length < 2 ? <Empty title="אין מספיק חברות עם נתון" /> : <div className="p6-ch"><Chart label={`דירוג ${shOf(m)}`} height={narrow() ? Math.max(240, rows.length * 34 + 20) : 300} deps={[m.key, rd, d.order.join(), d.focus, rows.length, d.q]} build={build}
+        <div className="aside p6-ctl"><Pick label="מדד לדירוג" cap="מדד" value={m.key} onChange={(k) => { d.put('bm', k); d.put('rd', null); }} options={opts.some(([k]) => k === m.key) ? opts : [[m.key, shOf(m)], ...opts]} /><span className="ct-slot" /></div></div>
+      {rows.length < 2 ? <Empty title="אין מספיק חברות עם נתון" /> : <div className="p6-ch"><Chart fold label={`דירוג ${shOf(m)}`} height={narrow() ? Math.max(240, rows.length * 34 + 20) : 300} deps={[m.key, rd, d.order.join(), d.focus, rows.length, d.q]} build={build}
         onPoint={(_, di) => open(rows[di].val.prov())} source="דוחות החברות · TASE · fox" /></div>}
-      <p className="p6-note">המדד והקריאה שנבחרו בלוח{isChg(rd) ? ` · ${b.q ? `${qlab(b.q)}` : ''}` : ''} · מודגש: {book.short(d.focus)} · קו מקווקו: חציון{rows.some((r) => r.stale) ? ' · * נתון מהדוח הקודם (הרבעון שלו מתחת לשם), נספר' : ''}{b.rows.some((r) => r.out) ? ` · לא בדירוג: ${b.rows.filter((r) => r.out).map((r) => book.short(r.e)).join(', ')} (הדוח ל-${qlab(b.q)} טרם פורסם)` : ''}{m.note ? ` · ${m.note}` : ''}</p>
+      <Note>המדד והקריאה שנבחרו בלוח{isChg(rd) ? ` · ${b.q ? `${qlab(b.q)}` : ''}` : ''} · מודגש: {book.short(d.focus)} · קו מקווקו: חציון{rows.some((r) => r.stale) ? ' · * נתון מהדוח הקודם (הרבעון שלו מתחת לשם), נספר' : ''}{b.rows.some((r) => r.out) ? ` · לא בדירוג: ${b.rows.filter((r) => r.out).map((r) => book.short(r.e)).join(', ')} (הדוח ל-${qlab(b.q)} טרם פורסם)` : ''}{m.note ? ` · ${m.note}` : ''}</Note>
     </section>
   );
 }
@@ -239,13 +256,13 @@ function Perf({ d, w }: { d: BoardData; w: Win }) {
   const lab = w === '12' ? '1Y' : w === '36' ? '3Y' : '5Y';
   return (
     <section className="panel" id="perf" data-points={ax.length}>
-      <div className="hd"><h2>תשואה כוללת · בסיס 100</h2><div className="aside p6-ctl"><Seg<Win> label="טווח" value={w} onChange={(x) => d.put('bw', x === '36' ? null : x)} options={[['12', '1Y'], ['36', '3Y'], ['60', '5Y']]} /></div></div>
+      <div className="hd"><h2>תשואה כוללת · בסיס 100</h2><div className="aside p6-ctl"><Seg<Win> label="טווח" value={w} onChange={(x) => d.put('bw', x === '36' ? null : x)} options={[['12', '1Y'], ['36', '3Y'], ['60', '5Y']]} /><span className="ct-slot" /></div></div>
       {ax.length < 4 ? <Empty title="אין היסטוריית מחירים" /> : (
-        <div className="p6-ch"><Chart label={`תשואה כוללת ${lab}`} height={340} deps={[w, d.order.join(), d.focus, mk?.asof]} source={`TASE · שערי סגירה שבועיים, דיבידנד מושקע מחדש · עד ${pubLabel(last)}`}
+        <div className="p6-ch"><Chart fold label={`תשואה כוללת ${lab}`} height={340} deps={[w, d.order.join(), d.focus, mk?.asof]} source={`TASE · שערי סגירה שבועיים, דיבידנד מושקע מחדש · עד ${pubLabel(last)}`}
           build={() => identify(foxOption({ x: ax.map((x) => `${x.slice(8, 10)}/${x.slice(5, 7)}/${x.slice(2, 4)}`), unit: 'מדד, 100 בתחילת הטווח', legend: false, labels: false, scale: true, dense: true,
             series: series.map((s) => ({ name: book.short(s.e), kind: 'line' as const, color: idColor(s.e), lead: s.e === d.focus, dim: s.e !== d.focus, dec: 0, data: s.data })) }), { height: 340 })} /></div>
       )}
-      <p className="p6-note">TASE · שערי סגירה שבועיים, דיבידנד מושקע מחדש בשער הסגירה ביום האקס · כל חברה מתחילה ב-100 בתחילת הטווח{late.length ? ` (או בהנפקה: ${late.join(', ')})` : ''} · עד {pubLabel(last)}. לפי מדיניות האתר, מחיר הוא קלט להשוואה ולא כותרת.</p>
+      <Note>TASE · שערי סגירה שבועיים, דיבידנד מושקע מחדש בשער הסגירה ביום האקס · כל חברה מתחילה ב-100 בתחילת הטווח{late.length ? ` (או בהנפקה: ${late.join(', ')})` : ''} · עד {pubLabel(last)}. לפי מדיניות האתר, מחיר הוא קלט להשוואה ולא כותרת.</Note>
     </section>
   );
 }
@@ -286,9 +303,9 @@ function Mix({ d, col, id, title, keys, total, src }: { d: BoardData; col: ColFn
   return (
     <section className="panel" id={id}>
       <div className="hd p6-mixhd"><h2>{title}{cs[0]?.q ? <small className="p6-hsub"> · {id === 'mix-rev' ? 'LTM' : `סוף ${qlab(cs[0].q)}`}</small> : null}</h2><span className="p6-hsub">חלק כל {id === 'mix-rev' ? 'מגזר' : 'מוצר'} מסך החברה, %</span></div>
-      {shown.length < 2 ? <Empty title="אין מספיק נתונים" /> : <div className="p6-ch"><Chart label={title} height={Math.max(narrow() ? 260 : 300, rows.length * (narrow() ? 38 : 30) + 70)} deps={[keys.join(), d.order.join(), d.focus, rows.length, d.q]} build={build} source="fox"
+      {shown.length < 2 ? <Empty title="אין מספיק נתונים" /> : <div className="p6-ch"><Chart fold label={title} height={Math.max(narrow() ? 260 : 300, rows.length * (narrow() ? 38 : 30) + 70)} deps={[keys.join(), d.order.join(), d.focus, rows.length, d.q]} build={build} source="fox"
         onPoint={(si, di) => { const x = rows[di]?.xs[si]; if (x) open(x.val.prov()); }} /></div>}
-      <p className="p6-note">{src} · ◂ {book.short(d.focus)}{rows.some((r) => r.stale && !r.why) ? ' · * נתון מהרבעון הקודם (טרם דווח)' : ''}{none.length > 0 && <> · {none.join(' · ')}</>}{out.length > 0 && <> · {out.map((r) => `${book.short(r.e)}: ${r.why}`).join(' · ')}</>}</p>
+      <Note>{src} · ◂ {book.short(d.focus)}{rows.some((r) => r.stale && !r.why) ? ' · * נתון מהרבעון הקודם (טרם דווח)' : ''}{none.length > 0 && <> · {none.join(' · ')}</>}{out.length > 0 && <> · {out.map((r) => `${book.short(r.e)}: ${r.why}`).join(' · ')}</>}</Note>
     </section>
   );
 }
@@ -328,10 +345,10 @@ function Flows({ d, col, mode }: { d: BoardData; col: ColFn; mode: FMode }) {
   };
   return (
     <section className="panel" id="flows">
-      <div className="hd"><h2>גשר הצבירה · LTM {qlab(q)}</h2><div className="aside p6-ctl"><Seg<FMode> label="יחידה" value={mode} onChange={(x) => d.put('bf', x === 'bn' ? null : x)} options={[['bn', 'מ׳ד ש"ח'], ['pct', '% מהנכסים']]} /></div></div>
-      {rows.length < 2 ? <Empty title="אין נתוני תזרים" /> : <div className="p6-ch"><Chart label="גשר הצבירה" height={Math.max(320, rows.length * (narrow() ? 104 : 40))} deps={[mode, d.order.join(), d.focus, rows.length, q]} build={build} source="רשות שוק ההון · fox"
+      <div className="hd"><h2>גשר הצבירה · LTM {qlab(q)}</h2><div className="aside p6-ctl"><Seg<FMode> label="יחידה" value={mode} onChange={(x) => d.put('bf', x === 'bn' ? null : x)} options={[['bn', 'מ׳ד ש"ח'], ['pct', '% מהנכסים']]} /><span className="ct-slot" /></div></div>
+      {rows.length < 2 ? <Empty title="אין נתוני תזרים" /> : <div className="p6-ch"><Chart fold label="גשר הצבירה" height={Math.max(320, rows.length * (narrow() ? 88 : 40))} deps={[mode, d.order.join(), d.focus, rows.length, q]} build={build} source="רשות שוק ההון · fox"
         onPoint={(si, di) => { const x = fig(legs[si][0], rows[di]); if (x) open(x.prov()); }} /></div>}
-      <p className="p6-note">הפקדות פחות משיכות ופדיונות ועוד ניוד נטו = צבירה נטו (LTM, כל המוצרים){mode === 'pct' ? ' · באחוזים מנכסי פנסיה וגמל בסוף התקופה (לפוליסות אין נתוני תזרים)' : ' · מיליארדי ש"ח'} · משיכות כוללות קצבאות ותשלומי פרישה, לא רק ביטולים · ◂ {book.short(d.focus)} · רשות שוק ההון.</p>
+      <Note>הפקדות פחות משיכות ופדיונות ועוד ניוד נטו = צבירה נטו (LTM, כל המוצרים){mode === 'pct' ? ' · באחוזים מנכסי פנסיה וגמל בסוף התקופה (לפוליסות אין נתוני תזרים)' : ' · מיליארדי ש"ח'} · משיכות כוללות קצבאות ותשלומי פרישה, לא רק ביטולים · ◂ {book.short(d.focus)} · רשות שוק ההון.</Note>
     </section>
   );
 }
