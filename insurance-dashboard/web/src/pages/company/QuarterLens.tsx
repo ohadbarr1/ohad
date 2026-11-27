@@ -78,7 +78,7 @@ export function Words({ parts, src, ids }: { parts: WPart[]; src: (r: FigRef) =>
 
 /** "Excel" (13.1 F4, 14.1 N10): the company workbook to the report on screen, built in the browser (quarters with LTM = SUM and YoY
  *  formulas, the ranked changes, solvency, then the shipped statements), named after the report: fox-harel-2026Q3.xlsx. One tap. */
-export function XlsxChip({ id, report, company = 'xlsx-co', className = 'co6-chip' }: { id: string; report: string; company?: string; className?: string }) {
+export function XlsxChip({ id, report, company = 'xlsx-co', className = 'co6-chip', label = 'Excel' }: { id: string; report: string; company?: string; className?: string; label?: string }) {
   const [st, setSt] = useState<string | null>(null);
   const run = async () => {
     if (st) return;
@@ -86,7 +86,7 @@ export function XlsxChip({ id, report, company = 'xlsx-co', className = 'co6-chi
     try { const { exportCompany } = await import('../../lib/exportCompany'); await exportCompany(id, (s) => setSt(`${s}…`), { report: report || undefined }); setSt(null); }
     catch { setSt('שגיאה'); setTimeout(() => setSt(null), 2000); }
   };
-  return <button type="button" className={`${className} co6-xl`} id={company} onClick={() => void run()} aria-busy={!!st} title="חוברת Excel: הרבעונים עם נוסחאות LTM ו-YoY, השינויים, כושר פירעון והדוחות, כל ערך מקושר לעמוד שלו"><Icon name="download" size={14} />{st ?? 'Excel'}</button>;
+  return <button type="button" className={`${className} co6-xl`} id={company} onClick={() => void run()} aria-busy={!!st} title="חוברת Excel: הרבעונים עם נוסחאות LTM ו-YoY, השינויים, כושר פירעון והדוחות, כל ערך מקושר לעמוד שלו"><Icon name="download" size={14} />{st ?? label}</button>;
 }
 
 /* ---------- the sentence (5.3) ---------- */

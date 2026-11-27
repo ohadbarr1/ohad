@@ -101,7 +101,7 @@ ol.co6-chg .meta :is(a.src, button.src) { font-variant-numeric: tabular-nums; }
 ol.co6-chg .d { display: flex; flex-direction: column; align-items: flex-end; font-weight: 800; font-size: 14.5px; }
 ol.co6-chg .d.pos > .co6-n { color: var(--up); } ol.co6-chg .d.neg > .co6-n { color: var(--down); }
 ol.co6-chg .d .dp { min-height: 0 !important; line-height: 1.3 !important; font-size: 11.5px; font-weight: 600; color: var(--muted); }
-.co6-pg { color: var(--accent-text); }
+.co6-pg { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- the peers strip ---------- */
 .co6-ps { display: flex; flex-direction: column; }
@@ -153,7 +153,6 @@ table.co6-rs tr.cur th { color: var(--accent-text); }
   .co6-take { font-size: 14.5px; }
   .co6-panel { padding: 8px 14px 10px; }
   table.co6-qt th, table.co6-qt td { height: 36px; }
-  .co6-chip-l::after { content: " למודל"; }
   ol.co6-chg li { padding: 3px 0; }
   ol.co6-chg .d :is(a.src, button.src) { min-height: 0; line-height: 1.35; }
   .co6-psr { min-height: 31px; }
@@ -238,3 +237,7 @@ details.co6-det > .seg { margin: 2px 0 6px; align-self: flex-start; }
 /* N5 in prose: a 32-px tall hit area that never reaches the next line's figure (the site's touch rule pads 12 px) */
 .co6-take { line-height: 1.6; }
 main .co6-take :is(a, button).src.co6-wn { padding: 6px 0; margin: -6px 0; line-height: 20px; }
+@media (max-width: 999px) {
+  .co6 { margin-top: -18px; }
+  .co6-take { line-height: 1.5; }
+}

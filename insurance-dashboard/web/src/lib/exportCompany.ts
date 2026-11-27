@@ -6,7 +6,7 @@ import { periodLabel, pubLabel } from './format';
 import { KPI_DEFS, periodTag } from './kpi';
 import { METRIC_HE, SEGMENT_HE } from './labels';
 import { mayaReport, pdfPage } from './sources';
-import { cellRef, downloadXlsxAsync, type XCell, type XSheet } from './xlsx';
+import { cellRef, downloadXlsxAsync, hyperlink, type XCell, type XSheet } from './xlsx';
 import { repName } from '../pages/companyProv';
 import { Book, type Registry } from './registry';
 type MetricFiles = ConstructorParameters<typeof Book>[1];
@@ -176,7 +176,7 @@ function ltsSheet(id: string, d: LtsData, prov: LtsProv | null, labels: Map<stri
 
 /* ---------- phase 6 (spec 13.1 F4, 14.1 N10): the quarters of the report on screen, as formulas over the printed figures ---------- */
 /** a live link: HYPERLINK with its text as the cached value (shown by a preview that does not recalculate) */
-const hl = (url: string, text: string): XCell => ({ v: text, f: `HYPERLINK("${url.replace(/"/g, '""')}","${text.replace(/"/g, '""').slice(0, 255)}")` });
+const hl = (url: string, text: string): XCell => hyperlink(url, text);
 /** the document link of a figure's source: a printed page, or the first printed component of a computed one */
 function provLink(p: Prov): { url: string; pg: number | null; doc: string } | null {
   if (p.k === 'report' && p.url) return { url: pdfPage(p.url, p.pg ?? undefined), pg: p.pg, doc: p.doc ?? 'דוח' };

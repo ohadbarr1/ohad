@@ -125,7 +125,7 @@ function CompanyRow({ entry, store, market, filer, phone }: { entry: RegistryCom
         {P ? <button type="button" className="co6-chip co6-rep" id="report-chip" aria-haspopup="dialog" onClick={() => host.openSheet('report')}><span className="num">{rep(P)}</span>{pub ? <> · <span className="num">{pubLabel(pub)}</span></> : null} <span aria-hidden="true">▾</span></button>
           : <button type="button" className="co6-chip co6-rep" id="report-chip" aria-haspopup="dialog" onClick={() => host.openSheet('report')}>{KIND[entry.kind]} <span aria-hidden="true">▾</span></button>}
         <span className="co6-sp" />
-        {entry.has_financials && <XlsxChip id={entry.id} report={P} className={phone ? 'co6-chip' : 'co6-chip co6-chip-l'} />}
+        {entry.has_financials && <XlsxChip id={entry.id} report={P} label={phone ? 'Excel' : 'Excel למודל'} />}
         {entry.has_price && <Link className="co6-chip co6-val" to={`/valuation/${entry.id}`}>שווי ›</Link>}
         {!phone && <CompanyActions id={entry.id} valuation={entry.has_price} />}
       </div>
