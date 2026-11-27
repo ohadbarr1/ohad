@@ -84,7 +84,9 @@ export const isChgRd = (rd: QRead | null) => rd === 'yoy' || rd === 'qoq' || rd 
  *  a return window = total return at that window; null = no board reading (read from the shipped cell) */
 export function readingOf(d: BoardData, m: BMetric): { bm: BMetric; rd: QRead } | null {
   if (m.type === 'ret' && (m.key === 'r3' || m.key === 'rytd' || m.key === 'r12')) { const tr = BBY.get('tr'); return tr ? { bm: tr, rd: m.key as QRead } : null; }
-  // a flow filed by halves (gross premiums): boardRows builds its LTM from halves (FY + H1 − H1 a year back), as the shipped cell did
+  // a flow filed by halves (gross premiums): boardRows now builds its LTM from halves (FY + H1 − H1 a year back) exactly as the shipped
+  // cell does (same figures, checked 27.11.26); the table keeps the shipped cell until scripts/p6-lenses-test.mjs expects 'gpc/ltm' here
+  if (m.ltmh) return null;
   if (m.reads?.length && !m.of) return { bm: m, rd: defRead(m) };
   if (m.of) {
     const b = BBY.get(m.of), rd = b ? pairRead(b) : null;
