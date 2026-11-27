@@ -290,11 +290,11 @@ export function histProv(m: BMetric, x: BVal, q: string, close: string | null, n
   if (!formula) return x;
   const relabel = (l: string) => {
     const i = l.lastIndexOf(' · '), nm = i > 0 ? l.slice(0, i) : l, per = i > 0 ? l.slice(i + 3) : '', pq = per.replace(/^LTM /, '');
-    if (/שווי שוק|מחיר|דיבידנד|mkt/.test(nm)) return `${nm}, ${cl}`;
+    if (/שווי שוק|מחיר|דיבידנד|mkt/.test(nm)) return `${nm} · ${qlab(q)}, ${cl}`;
     if (m.key === 'pe') return `${nm}, LTM ${pq || qlab(dq)}`;
     return `${nm}, סוף ${pq || qlab(dq)}`;
   };
-  const note = `רבעון הנתון: ${qlab(dq)}${x.stale && dq !== q ? ` (הדוח ל-${qlab(q)} טרם פורסם: הנתון האחרון שדווח)` : ''} · שווי השוק: ${cl}. בלוח: הסגירה האחרונה.`;
+  const note = `${x.stale && dq !== q ? `טרם דווח על ${qlab(q)}: הנתון האחרון שדווח, ${qlab(dq)}. ` : ''}רבעון הנתון: ${qlab(dq)} · שווי השוק: ${cl}. בלוח: הסגירה האחרונה.`;
   return { ...x, prov: () => {
     const o = p0();
     const mil0 = m.key === 'pe' || m.key === 'pb' || m.key === 'pbc';  // every input of these is in NIS millions, as on the board's sheet
@@ -322,6 +322,8 @@ export const minus = (d: string, months: number) => {
   return `${yy}-${String(mm + 1).padStart(2, '0')}-${String(Math.min(day, last)).padStart(2, '0')}`;
 };
 
+/** spec 13.2 rule 1: a multiple whose reported figure is carried opens with "טרם דווח על Q3'26: הנתון האחרון שדווח, Q2'26" */
+const carriedNote = (q: string, den: BVal): string | undefined => (den.stale && den.p && den.p !== q && /Q\d$/.test(den.p) ? `טרם דווח על ${qlab(q)}: הנתון האחרון שדווח, ${qlab(den.p)}` : undefined);
 export interface SpotIn { book: Book; ent: string; kind: Kind; p: string; peers: string[]; px: TasePrice | null; mk: MktFile | null }
 export function spotVal(m: BMetric, a: SpotIn): BVal {
   const { px, book, ent, kind, p, peers } = a, nm = book.name(ent), title = `${m.l} · ${nm}`;
@@ -357,7 +359,7 @@ export function spotVal(m: BMetric, a: SpotIn): BVal {
     if (den.v <= 0) return none(title, `${denLabel} שלילי: המכפיל אינו בעל משמעות`);
     const v = (mc / den.v) * scale;
     return { v, fl: 0, p: den.p, stale: den.stale, prov: () => ({ k: 'calc', title, value: fmtB(m, v), unit: unitB(m), est: true, formula,
-      inputs: [{ label: `שווי שוק, ${pubLabel(px.asof)}`, v: mil(mc), src: () => mcapProv(px) }, { label: `${denLabel}, ${plab('LTM', den.p ?? p).replace('LTM ', '')}`, v: mil(den.v!), src: den.prov }] }) };
+      inputs: [{ label: `שווי שוק, ${pubLabel(px.asof)}`, v: mil(mc), src: () => mcapProv(px) }, { label: `${denLabel}, ${plab('LTM', den.p ?? p).replace('LTM ', '')}`, v: mil(den.v!), src: den.prov }], note: carriedNote(p, den) }) };
   };
   if (m.key === 'pe') return ratio(fund('np'), 'רווח נקי LTM', 'P/E = שווי שוק (סגירה אחרונה) ÷ רווח נקי לבעלי המניות, LTM');
   if (m.key === 'pb') return ratio(fund('eq'), 'הון לבעלי המניות', 'P/B = שווי שוק (סגירה אחרונה) ÷ הון לבעלי המניות');
@@ -376,7 +378,7 @@ export function spotVal(m: BMetric, a: SpotIn): BVal {
     if (den <= 0) return none(title, 'מכנה שלילי');
     return { v, fl: 0, p: eq.p, stale: eq.stale || csm.stale, prov: () => ({ k: 'calc', title, value: fmtB(m, v), unit: 'מכפיל', est: true, formula: `מחיר להון + CSM = שווי שוק ÷ (הון + CSM × (1 − ${nf(TAX, 2)}%)); שיעור המס הנחה`,
       inputs: [{ label: `שווי שוק, ${pubLabel(px.asof)}`, v: mil(mc), src: () => mcapProv(px) }, { label: 'הון לבעלי המניות', v: mil(eq.v!), src: eq.prov },
-        { label: 'CSM, יתרת סגירה', v: mil(csm.v!), src: csm.prov }, { label: 'CSM נטו ממס (הנחה)', v: mil(net) }] }) };
+        { label: 'CSM, יתרת סגירה', v: mil(csm.v!), src: csm.prov }, { label: 'CSM נטו ממס (הנחה)', v: mil(net) }], note: carriedNote(p, eq.stale ? eq : csm) }) };
   }
   return none(title, 'מדד לא מוכר');
 }

@@ -26,7 +26,9 @@ const UNIT: Record<ChgFig['u'], string> = { m: 'מיליוני ש"ח', dm: 'מי
 /** the text a figure shows: NIS m with one decimal (the Report Day table), a ratio with one decimal and %, a change signed */
 export function figText(f: ChgFig): string {
   const sign = (f.u === 'dm' || f.u === 'pp' || f.u === 'dpct') && Number(f.v.toFixed(1)) > 0 ? '+' : '';
-  return sign + nf(f.v, 1) + (f.u === 'pct' || f.u === 'dpct' ? '%' : f.u === 'pp' ? ' נק׳' : '');
+  // millions print without a ".0" (a real decimal stays: "12.5"), as every figure that opens this source (N9)
+  const t = nf(f.v, 1), n = f.u === 'm' || f.u === 'dm' ? t.replace(/\.0$/, '') : t;
+  return sign + n + (f.u === 'pct' || f.u === 'dpct' ? '%' : f.u === 'pp' ? ' נק׳' : '');
 }
 export const docUrl = (d: Changes, rid: number | null | undefined): string | null => {
   const x = rid != null ? d.docs[String(rid)] : undefined;
