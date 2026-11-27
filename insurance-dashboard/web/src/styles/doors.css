@@ -28,7 +28,9 @@
   .door-sw { display: none; }
   .door-m { display: block; }
   .top-in { gap: 10px; }
-  .search input { text-overflow: ellipsis; }
+  /* P6-B2: the search gives way before the row overflows (an input's own min width held it at 110 px and pushed the theme button off) */
+  .top-in > .search { min-width: 0; }
+  .search input { text-overflow: ellipsis; min-width: 0; }
 }
 
 /* ---------- a Pro page opened from another door ---------- */

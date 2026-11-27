@@ -59,20 +59,33 @@ export function SourceProvider({ children }: { children: ReactNode }) {
   const { market } = useMarket(stack.some((p) => p.k === 'reg') || !!key?.startsWith('reg~'));
   const marketRef = useRef<Market | null>(null); marketRef.current = market;
 
+  // P6-B8: the sheet holds ONE history entry, pushed when it opens (a source opened from inside it steps the stack, not the history), and
+  // a close from the sheet (×, Escape, the dimmed page) goes back over that entry. Closing with replace left the pushed entry behind (a
+  // Back that did nothing), and every source opened inside the sheet pushed one more. A sheet the address opened (a pasted ?src=) has no
+  // entry of its own and closes with replace
+  const pushed = useRef(false);    // the entry on top is the one this sheet pushed
+  const leaving = useRef(false);   // a back over it is on its way (the stack is already empty; the address still says src)
   const open = useCallback((p: Prov) => {
     if (captured(p)) return;  // an export is collecting the sources of a chart
     setStack((s) => [...s, p]);
-    setSp((q) => { const n = new URLSearchParams(q); if (!n.get('src')) n.set('src', p.k === 'reg' && marketRef.current ? regKey(p, marketRef.current) : '1'); return n; }, { replace: false });
+    if (new URLSearchParams(window.location.search).get('src')) return;
+    pushed.current = true; leaving.current = false;
+    setSp((q) => { const n = new URLSearchParams(q); n.set('src', p.k === 'reg' && marketRef.current ? regKey(p, marketRef.current) : '1'); return n; }, { replace: false });
   }, [setSp]);
-  const close = useCallback(() => { setStack([]); setSp((q) => { const n = new URLSearchParams(q); n.delete('src'); return n; }, { replace: true }); }, [setSp]);
+  /** drop the sheet where it is (replace): a link inside it navigates on, or the address named a sheet that is not there */
+  const drop = useCallback(() => { pushed.current = false; leaving.current = false; setStack([]); setSp((q) => { const n = new URLSearchParams(q); n.delete('src'); return n; }, { replace: true }); }, [setSp]);
+  const close = useCallback(() => {
+    if (pushed.current && new URLSearchParams(window.location.search).get('src')) { pushed.current = false; leaving.current = true; setStack([]); history.back(); return; }
+    drop();
+  }, [drop]);
   const back = useCallback(() => setStack((s) => s.slice(0, -1)), []);
 
   // the address is the state: Back closes the sheet, a pasted link reopens a regulator figure
   useEffect(() => {
-    if (!key) { if (stack.length) setStack([]); return; }
-    if (stack.length) return;
-    if (key.startsWith('reg~')) { if (market) { const p = parseRegKey(key, market); if (p) setStack([p]); else close(); } }
-    else close();
+    if (!key) { pushed.current = false; leaving.current = false; if (stack.length) setStack([]); return; }
+    if (stack.length || leaving.current) return;
+    if (key.startsWith('reg~')) { if (market) { const p = parseRegKey(key, market); if (p) setStack([p]); else drop(); } }
+    else drop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, market]);
 
@@ -87,19 +100,20 @@ export function SourceProvider({ children }: { children: ReactNode }) {
   return (
     <SourceCtx.Provider value={api}>
       {children}
-      {top && <Sheet prov={top} market={market} depth={stack.length} onBack={back} onClose={close} />}
+      {top && <Sheet prov={top} market={market} depth={stack.length} onBack={back} onClose={close} onLeave={drop} />}
     </SourceCtx.Provider>
   );
 }
 
-function Sheet({ prov, market, depth, onBack, onClose }: { prov: Prov; market: Market | null; depth: number; onBack: () => void; onClose: () => void }) {
+function Sheet({ prov, market, depth, onBack, onClose, onLeave }: { prov: Prov; market: Market | null; depth: number; onBack: () => void; onClose: () => void; onLeave: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', esc);
+    // capture phase, marked handled: a phone sheet under this one (useSheetHistory) leaves an Escape it sees handled, so one Escape closes the top layer only
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape' && !e.defaultPrevented) { e.preventDefault(); onClose(); } };
+    window.addEventListener('keydown', esc, true);
     const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
     ref.current?.querySelector<HTMLElement>('button.x')?.focus();
-    return () => { window.removeEventListener('keydown', esc); document.body.style.overflow = prev; };
+    return () => { window.removeEventListener('keydown', esc, true); document.body.style.overflow = prev; };
   }, [onClose]);
   return (
     <div className="srcwrap" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -112,7 +126,7 @@ function Sheet({ prov, market, depth, onBack, onClose }: { prov: Prov; market: M
         <div className="srcbody">
           {prov.k === 'reg' ? (market ? <RegSheet key={regKey(prov, market)} p={prov} m={market} /> : <p className="muted">טוען…</p>) : prov.k === 'fund' ? <FundSheet p={prov} /> : <PlainSheet p={prov} />}
           <footer className="srcfoot">{/* W6 trust: the definitions behind every figure are one click from the figure */}
-            <Link to="/methodology" onClick={onClose}>איך המספרים מחושבים: מתודולוגיה</Link><span>·</span><Link to="/about#contact" onClick={onClose}>תיקונים</Link>
+            <Link to="/methodology" onClick={onLeave}>איך המספרים מחושבים: מתודולוגיה</Link><span>·</span><Link to="/about#contact" onClick={onLeave}>תיקונים</Link>
           </footer>
         </div>
       </div>

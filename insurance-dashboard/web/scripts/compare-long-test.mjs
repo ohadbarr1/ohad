@@ -14,6 +14,14 @@ try {
   await build({ entryPoints: [new URL('../src/lib/compareLong.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: out, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' } });
   L = await import(pathToFileURL(out).href);
 } finally { rmSync(dir, { recursive: true, force: true }); }
+let PM;
+{
+  const d2 = mkdtempSync(join(tmpdir(), 'comparelongpm-')), o2 = join(d2, 'pageMonths.mjs');
+  try {
+    await build({ entryPoints: [new URL('../src/lib/pageMonths.ts', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'node', outfile: o2, logLevel: 'error', define: { 'import.meta.env.BASE_URL': '"/"' } });
+    PM = await import(pathToFileURL(o2).href);
+  } finally { rmSync(d2, { recursive: true, force: true }); }
+}
 const data = (p) => JSON.parse(readFileSync(new URL(`../public/data/${p}`, import.meta.url), 'utf8'));
 const F = data('funds.json'), CAT = data('funds/cat.json'), ASOF = F.asof;
 const fx = (k) => F.funds.find((f) => f.k === k);
@@ -59,6 +67,22 @@ t('different risk levels: order kept, no places, no ties', () => {
 });
 t('YTD band is pro rata (10 months: 0.083), so 0.05 apart is a tie', () => {
   const r = L.boardRows([{ k: 'a', label: 'A', value: 7.0 }, { k: 'b', label: 'B', value: 6.95 }], 'ytd', ASOF, false); assert.ok(r[0].tie && r[1].tie);
+});
+
+/* P6 R2: compare places are the screener's places (one ranking, lib/pageMonths placeGroups) */
+t('R2: a chain of near-equal values is anchored on the group first, as on the screener (3 / 2.97 / 2.93 / 2.90 on a month: 1–2, 1–2, 3–4, 3–4)', () => {
+  const r = L.boardRows([3, 2.97, 2.93, 2.9].map((v, i) => ({ k: `c${i}`, label: `C${i}`, value: v })), 'm1', ASOF, false);
+  assert.deepEqual(r.map((x) => x.place), ['1–2', '1–2', '3–4', '3–4']); assert.ok(r.every((x) => x.tie));
+});
+t('R2: hishtalmut general, month 10/26: compare places = screener places, track by track (chained ties 3,3 / 5,5 / 7x4)', () => {
+  const hg = PM.typeMembers(F.funds, 'השתלמות | כללי'), screen = PM.scoreRows(hg, 'm1', { asof: ASOF }).filter((x) => x.ranked);
+  const like = hg.filter((f) => PM.rankable(f) && f.m1 != null);
+  const board = L.boardRows(like.map((f) => ({ k: f.k, label: f.grp, value: f.m1 })), 'm1', ASOF, false);
+  assert.equal(board.length, screen.length); assert.equal(screen.length, 13);
+  const txt = (pl) => (pl.lo === pl.hi ? String(pl.lo) : `${pl.lo}–${pl.hi}`);
+  assert.deepEqual(board.map((x) => [x.k, x.place]), screen.map((x) => [x.k, txt(x.pl)]));
+  assert.deepEqual(board.map((x) => x.tie), screen.map((x) => x.pl.shared));
+  assert.ok(board.some((x) => x.tie), 'the fixture has shared places');
 });
 
 t('persOf / perFrom: saver has three words, others four; YTD is not a saver period; default 5Y', () => {

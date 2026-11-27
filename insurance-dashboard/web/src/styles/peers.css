@@ -120,3 +120,13 @@ table.pr-table tfoot td.pr-ent { position: sticky; inset-inline-start: 0; backgr
 .pr-pn { margin-inline-start: 6px; font-size: 10.5px; color: var(--warn); }
 .pr-near { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .pr-phoneview .seg { width: 100%; } .pr-phoneview .seg button { flex: 1; }
+
+/* P6-B3: in the phone's edit sheet the frequency and view segs were squeezed to ~8 px strips (the sheet body is a flex column and a seg with
+   overflow-x:auto may shrink below its content). They keep their height and their buttons are 44 px. */
+.sheet-body > .seg { flex: none; }
+.sheet-body > .seg button { min-height: 44px; }
+
+.p6-n { margin-inline-start: 2px; font-size: 0.72em; color: var(--muted); font-weight: 600; }
+.p6-basis { margin-top: 6px; }
+.p6-tagq { color: var(--muted); font-size: 0.85em; margin-inline-start: 2px; }
+#guard { margin-bottom: 10px; }

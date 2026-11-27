@@ -203,6 +203,9 @@ def deck_rows(docs):
 # st: met (≥ the target, or inside / above a range: a range is the target, so 12,496 against 11,000–13,000 is met) · missed (below the target
 #     or the bottom of the range). "partial" is no longer produced (it marked an achieved range as partly met while the hit rate counted it).
 #     · open (horizon not reached, or not yet reported) · nc (not comparable, `why`) · policy (a standing policy with no horizon: never scored)
+# the basis a solvency target names: without / with the transitional measures (Hebrew label, English metric id, the deck's wording)
+SR_WO = re.compile(r"ללא\s+(?:התחשבות\s+ב|יישום\s+)?הוראות|without[ _](?:the[ _])?(?:transitional|tmtp)|without", re.I)
+SR_WI = re.compile(r"(?:עם|כולל|בהתחשב\s+ב|ביישום|תוך\s+התחשבות\s+ב)\s*הוראות\s+(?:ה)?מעבר|(?<!ללא )הוראות\s+המעבר|with[ _](?:the[ _])?(?:transitional|tmtp)|taking into account", re.I)
 CORE = re.compile(r"core|ליבה", re.I)
 QTR = re.compile(r"\bQ([1-4])\s*[-/]?\s*(?:20)?(\d{2})\b|\b(?:20)?(\d{2})\s*[-/]?\s*Q([1-4])\b", re.I)
 
@@ -312,11 +315,20 @@ def actuals(rows, docs=None, files=""):
         if m.startswith("target_solvency_ratio") and "step" not in m and r["u"] == "pct":
             if r["e"] not in ("חברת הביטוח", "הקבוצה", ""):
                 return None, f"יעד ל{r['e']}; יחס כושר הפירעון שלה לא נקלט"
-            wo, wi = re.search(r"ללא הוראות|without", txt, re.I), re.search(r"(?<!ללא )הוראות המעבר|with_transitional|taking into account", txt, re.I)
+            # the threshold is compared with the ratio on ITS basis (with / without the transitional measures), never across bases: Harel's
+            # dividend threshold "עם הוראות מעבר" 135% (metric ..._with_tmtp) was read against the without-transitional 148% because the
+            # basis was looked for in the question and note only, and only as "with_transitional" / "הוראות המעבר"
+            bt = f"{txt} {r.get('l', '')}"
+            wo = SR_WO.search(bt)
+            wi = None if wo else SR_WI.search(bt)
             bases = ["wo"] if wo else ["w"] if wi else ["w", "wo"]
             xs = [(b, pt(c, f"sr_{b}", y)) for b in bases]
             xs = [(b, x) for b, x in xs if x]
             if not xs:
+                if len(bases) == 1:
+                    other = pt(c, f"sr_{'w' if bases[0] == 'wo' else 'wo'}", y)
+                    return None, (f"היעד {'ללא' if bases[0] == 'wo' else 'עם'} הוראות מעבר; היחס על בסיס זה לשנת היעד לא נקלט"
+                                  + (f" (נקלט רק היחס {'עם' if bases[0] == 'wo' else 'ללא'} הוראות מעבר, {other['v']:g}%: בסיס אחר, לא מושווה)" if other else ""))
                 return None, "יחס כושר הפירעון לשנת היעד לא נקלט"
             if len(bases) == 2:
                 if len(xs) < 2:

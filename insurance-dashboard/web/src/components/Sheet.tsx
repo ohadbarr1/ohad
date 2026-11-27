@@ -26,7 +26,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
  *  commit, so a sheet that opens in the same commit adopts it instead of pushing another one. That is React StrictMode's dev re-run of
  *  the effect (a deep-linked ?sheet= stayed open in production but was closed in dev: the cleanup's back() popped the re-run's entry),
  *  and one sheet replacing another (the fee sheet's "איך מחשבים?" opens the why sheet over the same entry). */
-let handoff: { timer: ReturnType<typeof setTimeout>; base: string | null; idx: unknown; last: Location | null } | null = null;
+let handoff: { timer: ReturnType<typeof setTimeout>; base: string | null; idx: unknown; last: Location | null; token: string } | null = null;
+let tokens = 0;
 
 /** The history behaviour of a phone sheet, shared by <Sheet> and <DeeperSheet>: while `open`, one history entry over the page's own, so
  *  Back (the button or the gesture) and Escape close it (call `history.back()` to close from a button or the scrim); the page's
@@ -40,29 +41,42 @@ export function useSheetHistory(open: boolean, onClose: () => void) {
   const base = useRef<string | null>(null);      // the router key of the page's entry under the sheet
   const baseIdx = useRef<unknown>(null);         // its router index (a replace over the sheet's entry keeps it; a push adds one)
   const last = useRef<Location | null>(null);    // the last address the sheet's pickers set while it was open
+  const token = useRef('');                      // P6-B8: marks the entry this sheet pushed (a sheet over a sheet pushes a copy of its state)
   const locRef = useRef(loc); locRef.current = loc;
-  // a location with another key than the page's entry is one the sheet's entry now holds (back on the page's entry the key is base again)
-  useLayoutEffect(() => { if (open && base.current != null && loc.key !== base.current) last.current = loc; }, [open, loc]);
+  // a location with another key than the page's entry is one the sheet's entry now holds (back on the page's entry the key is base again).
+  // P6-B8: only at the sheet's own index: an entry pushed over the sheet (the source sheet's ?src=1) is a layer above it, not a choice
+  // made in it, and carrying it down would write ?src= onto the page's entry
+  useLayoutEffect(() => { if (open && base.current != null && loc.key !== base.current && (history.state as { idx?: unknown } | null)?.idx === baseIdx.current) last.current = loc; }, [open, loc]);
   useEffect(() => {
     if (!open) return;
     closing.current = false;
     if (handoff) {
       // the entry of a sheet torn down in this commit is still on top: adopt it, with the page's entry under it and what was written there
       clearTimeout(handoff.timer);
-      base.current = handoff.base; baseIdx.current = handoff.idx; last.current = handoff.last;
+      base.current = handoff.base; baseIdx.current = handoff.idx; last.current = handoff.last; token.current = handoff.token;
       if (base.current != null && locRef.current.key !== base.current) last.current = locRef.current;
       handoff = null;
     } else {
-      base.current = locRef.current.key; baseIdx.current = history.state?.idx; last.current = null;
-      history.pushState({ ...(history.state ?? {}), sheet: true }, '');
+      base.current = locRef.current.key; baseIdx.current = history.state?.idx; last.current = null; token.current = `sh${++tokens}`;
+      history.pushState({ ...(history.state ?? {}), sheet: true, sh: token.current }, '');
     }
     // back on the page's entry: carry the sheet's choices down to it
     const carry = () => {
       const t = last.current; last.current = null; base.current = null;
       if (t) navRef.current({ pathname: t.pathname, search: t.search, hash: t.hash }, { replace: true, state: t.state });
     };
-    const pop = () => { closing.current = true; carry(); close.current(); };
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') history.back(); };
+    // P6-B8: a Back that pops a layer opened over the sheet (the source sheet pushes ?src=1 over the sheet's entry) lands on the
+    // sheet's own entry: the sheet stays, only that layer closes. The sheet closes once Back reaches the page's entry or below it
+    const onOwn = () => {
+      const st = history.state as { sheet?: boolean; sh?: string; key?: string; idx?: unknown } | null;
+      if (!st || base.current == null) return false;
+      if (st.sh != null) return st.sh === token.current;            // an entry a sheet pushed: ours, or the one under ours (a sheet over a sheet)
+      if (st.key === base.current) return false;                    // the page's entry
+      return typeof st.idx === 'number' && typeof baseIdx.current === 'number' && st.idx >= baseIdx.current;  // written over it with replace (same index), or above it
+    };
+    const pop = () => { if (onOwn()) return; closing.current = true; carry(); close.current(); };
+    // a layer over the sheet that handles Escape itself (the source sheet) marks it handled: Escape closes the top layer only
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape' && !e.defaultPrevented) history.back(); };
     // capture phase: before the router's own popstate listener. That one re-renders the page in the microtask checkpoint that follows
     // it, and a sheet the popped address no longer names (the why sheet opened over the fee sheet) was unmounted with its listener
     // before it could close: the page's entry still said sheet=fee and the fee sheet came back
@@ -82,7 +96,7 @@ export function useSheetHistory(open: boolean, onClose: () => void) {
       const st = history.state as { sheet?: boolean; key?: string; idx?: unknown } | null;
       const ours = !!st?.sheet || (last.current != null && st?.key === last.current.key) || (base.current != null && st?.key != null && st.key !== base.current && st.idx === baseIdx.current);
       if (!ours) { last.current = null; base.current = null; return; }
-      const h = { base: base.current, idx: baseIdx.current, last: last.current, timer: 0 as unknown as ReturnType<typeof setTimeout> };
+      const h = { base: base.current, idx: baseIdx.current, last: last.current, token: token.current, timer: 0 as unknown as ReturnType<typeof setTimeout> };
       h.timer = setTimeout(() => {
         if (handoff === h) handoff = null;
         const t = h.last;

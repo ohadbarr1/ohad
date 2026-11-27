@@ -22,7 +22,8 @@
    - Equity exposure vs the label: |track − category median| > 1.5 standard deviations of the category (n ≥ 5), as on the card. */
 import type { Per } from './funds';
 import { median, quantile } from './fundsCalc';
-import { DEFAULT_PER, rankText, tieBand, tieRanks, type TieRank } from './fundsTie';
+import { DEFAULT_PER, rankText, tieBand, type TieRank } from './fundsTie';
+import { placeGroups, rankable } from './pageMonths';   // P6 R2: the one site-wide ranking
 import { isoYm, priceOf, tenderAt, tendersOf, type DefaultFile, type Tender } from './fundsTools';
 import { BM_CUTOFF, BM_HREF, bmKind, segOf, svcOf, type DecisionFile, type SvcRow } from './decision';  // W2
 import { capOf } from './feeCaps';
@@ -116,8 +117,9 @@ export function verdictOf(f: VFund, all: VFund[], asof: number, dfile: DefaultFi
     const v = valOf(f, per);
     if (v == null) continue;
     const band = tieBand(per, asof);
-    const ranked = peers.filter((x) => valOf(x, per) != null).sort((a, b) => valOf(b, per)! - valOf(a, per)!);
-    const rank = tieRanks(ranked, (x) => valOf(x, per), band).get(f.k) ?? null;
+    const ranked = peers.filter((x) => valOf(x, per) != null && rankable(x)).sort((a, b) => valOf(b, per)! - valOf(a, per)!);
+    const pl = placeGroups(ranked.map((x) => valOf(x, per)), band)[ranked.findIndex((x) => x.k === f.k)];
+    const rank: TieRank | null = pl && pl.place != null && pl.lo != null && pl.hi != null ? { lo: pl.lo, hi: pl.hi, n: pl.n } : null;
     const med = median(ranked.map((x) => valOf(x, per)!));
     ret = { per, basis: 'gross', v, rank, med, gap: med == null ? null : v - med, band, ranked, why: per === DEFAULT_PER ? null : whyNot5(f, per) };
     break;

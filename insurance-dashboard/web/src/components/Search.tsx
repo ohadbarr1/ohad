@@ -10,7 +10,7 @@ import { loadCorpus, recentQueries, readerHref, rememberQuery, searchText, type 
 import { askItems, buildPool, docLabel, forDoor, FUNCS, orderFor, ordered, parse, rank, SAVER_TO, tracksFirst, yearAsk, type AskCtx, type FundEnt, type Item, type Kind } from '../lib/searchOmni';
 import { useMine } from '../lib/mine';
 import { isOldGen } from '../lib/decision';
-import { useDoor } from '../lib/door';
+import { useViewDoor } from './home/doorState';
 import '../styles/search.css';
 
 /** Names the search needs from the regulator data, in a file a fraction of market.json: the shell loads it only when the search opens. */
@@ -88,7 +88,7 @@ export function Search({ big = false }: { big?: boolean }) {
   }, [open, s]);
 
   // W6 doors: the saver's search lists funds, companies and the saver's pages only (no filing pages, lines or Pro questions)
-  const [door] = useDoor();
+  const door = useViewDoor();  // P6-B2: a Pro page without a chosen door searches as Pro
   const saver = door == null || door === 'saver';  // B10 / D3: no door chosen = the saver's search (as the shell, the card and the fees tool)
   const [mine] = useMine();
   const yr = useMemo(() => yearAsk(s), [s]);  // R3: "… בשנה האחרונה" is a question about the year, not part of a fund's name

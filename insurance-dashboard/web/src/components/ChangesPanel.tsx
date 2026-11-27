@@ -8,6 +8,8 @@ import { track } from '../lib/track';
 import { chgProv, figText, repName, useChanges, type ChgFig, type ChgItem, type Changes } from '../lib/changes';
 
 const pkey = (p: string) => Number(p.slice(0, 4)) * 4 + (p.endsWith('FY') ? 4 : Number(p.slice(5)));
+/** P6-B6: on the page a million has no ".0" (a ratio keeps its decimal); the title and the source sheet keep the printed text */
+const shown = (f: ChgFig) => (f.u === 'm' || f.u === 'dm' ? figText(f).replace(/\.0$/, '') : figText(f));
 const tone = (it: ChgItem) => (it.gd > 0 ? 'pos' : it.gd < 0 ? 'neg' : '');
 
 /** The page a change is read from: the reader at that page; a computed figure says so; a T+0 figure is an XBRL tag. */
@@ -55,12 +57,12 @@ export function ChangesPanel({ id, P, latest }: { id: string; P: string; latest:
                   {it.why && <span className="rd-chg-why">{it.why.t} <Link className="sv-u" to={readerHref(it.why.s.rid ?? 0, it.why.s.pg)}>עמ׳ <span className="num">{it.why.s.pg}</span></Link></span>}
                 </div>
                 <div className="rd-chg-v">
-                  <Sourced src={() => chgProv(d, it.b, it.l, it.lb, undefined, stock(it))} className="rd-chg-b" title={`${it.lb}: ${figText(it.b)}`}>{figText(it.b)}</Sourced>
+                  <Sourced src={() => chgProv(d, it.b, it.l, it.lb, undefined, stock(it))} className="rd-chg-b" title={`${it.lb}: ${figText(it.b)}`}>{shown(it.b)}</Sourced>
                   <span className="rd-chg-arr" aria-hidden="true">←</span>
-                  <Sourced src={() => chgProv(d, it.a, it.l, it.la, undefined, stock(it))} className="rd-chg-a" title={`${it.la}: ${figText(it.a)}`}>{figText(it.a)}</Sourced>
+                  <Sourced src={() => chgProv(d, it.a, it.l, it.la, undefined, stock(it))} className="rd-chg-a" title={`${it.la}: ${figText(it.a)}`}>{shown(it.a)}</Sourced>
                 </div>
                 <div className={`rd-chg-d ${tone(it)}`}>
-                  <Sourced src={() => chgProv(d, it.d, it.l, `${it.la} מול ${it.lb}`)}>{figText(it.d)}</Sourced>
+                  <Sourced src={() => chgProv(d, it.d, it.l, `${it.la} מול ${it.lb}`)}>{shown(it.d)}</Sourced>
                   {it.dp && <Sourced src={() => chgProv(d, it.dp!, it.l, `${it.la} מול ${it.lb}`)} className="rd-chg-dp">{figText(it.dp)}</Sourced>}
                 </div>
                 <PageLink d={d} f={it.a} />

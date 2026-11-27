@@ -36,14 +36,14 @@ type Place = [to: string, icon: string, label: string, short: string, also: (str
 /** Pro: eight places; the phone's bar holds five (בית, מסלולים, חיסכון, השוואה ענפית, שאלות) and "עוד" the rest (the feed is a stream to browse, not a job). The war room is a tab of the scenarios (its address stays); the positions join only once one is published; the
  *  reference screens and the lab sit behind "ספרייה" (components/LibraryMenu) */
 const NAV: Place[] = [
-  ['/', 'home', 'בית', 'בית', ['/company/', '/pro']],
+  ['/', 'home', 'בית', 'בית', ['/pro']],
   // B3 (O5): the track comparison has its own place; the insurer comparison after it is no longer called just "השוואה".
   // B1 polish: "מסלולים" comes first (a saver looking for "השוואה" meets it before the industry one); review B2: "חיסכון" sits between
   // the two comparisons, so "מסלולים" and "השוואה ענפית" are not neighbours a thumb can confuse (labels as the owner approved)
   ['/funds/screen', 'funds', 'מסלולים', 'מסלולים', ['/funds/compare', /^\/funds\/[gip]\d+$/]],  // B8: the screener; compare stays one tap away from its tray, the card and the search
   // the long-term-savings section: the lens, flows, managers, the funds pages (and the old /market links)
   ['/savings', 'market', 'חיסכון', 'חיסכון', ['/flows', '/managers', /^\/funds(?!\/compare|\/screen|\/[gip]\d+$)/, '/feebook', '/nowcast', '/market']],
-  ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה ענפית', ['/industry', '/capital', '/restatements']],
+  ['/industry/peers', 'compare', 'השוואה ענפית', 'השוואה ענפית', ['/industry', '/company/', '/valuation/', '/capital', '/restatements']],
   ['/valuation', 'value', 'שווי', 'שווי', [], true],
   ['/scenarios', 'scenarios', 'תרחישים', 'תרחישים', ['/warroom', '/fragility'], true],
   ['/questions', 'questions', 'שאלות', 'שאלות', ['/findings', '/brief']],
@@ -73,7 +73,7 @@ const navOf = (door: Door | null, positions: boolean) => (door === 'pro' ? (posi
  *  '/funds$' that address alone, a pattern what it matches */
 const lit = (path: string, also: (string | RegExp)[]) => also.some((s) => (typeof s !== 'string' ? s.test(path) : s.endsWith('$') ? path === s.slice(0, -1) : s.endsWith('/') ? path.startsWith(s) : path === s || path.startsWith(`${s}/`)));
 /** a place is on: its own address (and below it; the home and "המוצרים שלי" only exactly), or one of the addresses it also covers */
-const isOn = (path: string, [to, , , , also]: Place) => (to === '/' || to === '/my' ? path === to : path === to || path.startsWith(`${to}/`)) || lit(path, also);
+const isOn = (path: string, [to, , , , also]: Place) => (to === '/' || to === '/my' || to === '/valuation' ? path === to : path === to || path.startsWith(`${to}/`)) || lit(path, also);
 
 export function Layout() {
   const { theme, toggle, next } = useTheme();
@@ -85,7 +85,8 @@ export function Layout() {
   const { help, setHelp } = useKeyboard(toggle);
   const news = useWatchNews();  // S10: followed answers that changed since the last look at /watch (0 when nothing is followed)
   // W1 shell: the door in force (?door= wins, then the stored choice); a ?door= is stored and dropped from the address
-  const [door, setDoor] = useActiveDoor();
+  const [chosen, setDoor] = useActiveDoor();
+  const door: Door | null = chosen ?? (isProPage(loc.pathname) ? 'pro' : null);  // P6-B2: no door on a Pro page shows the Pro shell (nothing stored)
   const go = useNavigate();
   useEffect(() => {
     const asked = doorFromSearch(loc.search);
@@ -130,7 +131,7 @@ export function Layout() {
             <NavLink to="/" className="brand-m" aria-label="fox · דף הבית"><Logo size={24} />fox<span>.</span></NavLink>
             <Search />
             {pro && <ChartBookLink />}
-            <DoorSwitch door={door} setDoor={setDoor} />
+            <DoorSwitch door={chosen} setDoor={setDoor} short={pro && !chosen} />
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
@@ -149,8 +150,9 @@ export function Layout() {
 function RailItem({ p, path, news, href }: { p: Place; path: string; news: number; href: string }) {
   const [to, icon, label, short, , wide] = p;
   const badge = to === '/questions' && news > 0;
+  const on = isOn(path, p);  // P6-B1: one place is lit; NavLink's own prefix match (class and aria-current) would light a second one
   return (
-    <NavLink to={href} end={to === '/' || to === '/my'} aria-label={badge ? `${label}, ${news} תשובות במעקב השתנו` : label} className={`item${isOn(path, p) ? ' active' : ''}${wide ? ' wide-item' : ''}`}>
+    <NavLink to={href} end={to === '/' || to === '/my'} aria-label={badge ? `${label}, ${news} תשובות במעקב השתנו` : label} className={() => `item${on ? ' active' : ''}${wide ? ' wide-item' : ''}`} aria-current={on ? 'page' : undefined}>
       <Ico name={icon} /><span className="lbl-w">{label}</span><span className="lbl-p">{short}</span>
       {badge && <span className="wt-badge" aria-hidden="true">{news > 99 ? '99+' : news}</span>}
     </NavLink>

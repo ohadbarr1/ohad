@@ -6,7 +6,7 @@ import { Ico } from './home/glyphs';
 /* W1 shell: the door switcher in the top bar. On a wide screen a compact segmented control (חוסך | סוכן | Pro) and a button back to
    the picker; on the phone, where the search needs the width, one pill with the current door that opens the same choices as a menu.
    Switching keeps the current page (the rail and the bottom bar follow the door); the picker button goes home. */
-export function DoorSwitch({ door, setDoor }: { door: Door | null; setDoor: (d: Door | null) => void }) {
+export function DoorSwitch({ door, setDoor, short = false }: { door: Door | null; setDoor: (d: Door | null) => void; short?: boolean }) {
   const nav = useNavigate();
   const pick = () => { setDoor(null); nav('/'); };
   return (
@@ -15,12 +15,12 @@ export function DoorSwitch({ door, setDoor }: { door: Door | null; setDoor: (d: 
         {DOORS.map(([d, label, line]) => <button key={d} type="button" aria-pressed={door === d} title={line} onClick={() => setDoor(d)}>{label}</button>)}
         <button type="button" className="door-sw-all" aria-label="כל הדלתות: חזרה לבחירה" title="כל הדלתות: חזרה לבחירה" onClick={pick}><Ico name="doors" /></button>
       </div>
-      <DoorMenu door={door} setDoor={setDoor} pick={pick} />
+      <DoorMenu door={door} setDoor={setDoor} pick={pick} short={short} />
     </>
   );
 }
 
-function DoorMenu({ door, setDoor, pick }: { door: Door | null; setDoor: (d: Door | null) => void; pick: () => void }) {
+function DoorMenu({ door, setDoor, pick, short }: { door: Door | null; setDoor: (d: Door | null) => void; pick: () => void; short: boolean }) {
   const [open, setOpen] = useState(false);
   const id = useId(), btn = useRef<HTMLButtonElement>(null), menu = useRef<HTMLDivElement>(null);
   const items = () => [...(menu.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [])];
@@ -43,7 +43,9 @@ function DoorMenu({ door, setDoor, pick }: { door: Door | null; setDoor: (d: Doo
   return (
     <div className="door-m">
       <button ref={btn} type="button" className="door-pill" aria-haspopup="menu" aria-expanded={open} aria-controls={id} aria-label={`דלת: ${cur ? cur[1] : 'לא נבחרה'}. החלפה`} onClick={() => setOpen((o) => !o)}>
-        <span>{cur ? cur[1] : 'בחירת דלת'}</span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" /></svg>
+        {/* P6-B2: in the Pro shell with no door chosen the pill says "דלת" (as wide as "Pro"): "בחירת דלת" beside the chart-book button
+            pushed the phone's header 22 px past the screen */}
+        <span>{cur ? cur[1] : short ? 'דלת' : 'בחירת דלת'}</span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" /></svg>
       </button>
       {open && (
         <div ref={menu} id={id} className="door-menu" role="menu" aria-label="דלת" onKeyDown={onKey}>
