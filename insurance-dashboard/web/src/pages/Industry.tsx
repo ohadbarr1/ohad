@@ -24,15 +24,16 @@ export function IndustryLayout() {
       {phone ? (
         /* D3: one 44 px row on a phone: the pages menu, then the page's own controls (the board's Excel and context chip) */
         <div className="p6-hubbar" id="hub-row"><HubTabs hub="industry" h1 /><span ref={setLead} className="tools-slot p6-hublead" /><span ref={setEnd} className="tools-slot p6-hubend" /></div>
-      ) : <>
-        <div className="pagehead"><div><h1><span className="icotile"><Icon name="compare" /></span>השוואה ענפית</h1></div></div>
-        <Toolbar className="hubtools" lead={<>
+      ) : (
+        /* spec 3.5 row 1: the H1, the hub tabs and the page's own controls (the board's Excel and context chip) in one row */
+        <Toolbar className="hubtools p6-hubdesk" lead={<>
+          <h1 className="p6-hubh1"><span className="icotile"><Icon name="compare" /></span>השוואה ענפית</h1>
           {/* wave 2b: the hub's tab row, shared with /capital and /restatements (components/HubTabs); investor presentations and the debt
               ladder are in the Pro door's library */}
           <HubTabs hub="industry" />
           <span ref={setLead} className="tools-slot" />
         </>}><span ref={setEnd} className="tools-slot" /></Toolbar>
-      </>}
+      )}
       <Outlet context={{ lead, end } satisfies IndustryCtx} />
     </>
   );
