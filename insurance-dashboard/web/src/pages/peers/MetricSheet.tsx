@@ -1,4 +1,5 @@
 import { DeeperSheet } from '../../components/DeeperSheet';
+import { backThen } from '../../components/Sheet';
 import { useAddressWrite } from '../../lib/sheetHost';
 import { shOf, type BMetric } from '../../lib/peerBoard';
 import '../../styles/peerboard.css';
@@ -24,7 +25,7 @@ export function MetricSheet({ ms, bm, onClose }: { ms: BMetric[]; bm: string; on
             <div className="p6-optgrid">
               {xs.map((m) => (
                 <button key={m.key} type="button" aria-pressed={m.key === bm} data-m={m.key} title={m.l}
-                  onClick={() => write({ bm: m.key, rd: null, sheet: null, lens: null })}>{shOf(m)}</button>
+                  onClick={() => backThen(() => write({ bm: m.key, rd: null, sheet: null, lens: null }))}>{shOf(m)}</button>
               ))}
             </div>
           </div>

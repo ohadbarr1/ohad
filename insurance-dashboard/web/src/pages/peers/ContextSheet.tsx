@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, type ComponentType } from 'react';
 import { Link } from 'react-router-dom';
 import { DeeperSheet } from '../../components/DeeperSheet';
+import { backThen } from '../../components/Sheet';
 import { idCss } from '../../lib/identity';
 import { useStored } from '../../lib/local';
 import { useAddressWrite } from '../../lib/sheetHost';
@@ -40,7 +41,7 @@ export function ContextSheet({ d, onClose }: { d: BoardData; onClose: () => void
         <div className="p6-optgrid" id="ctx-sets">
           {sp.get('e') ? <button type="button" aria-pressed>מותאמת ({d.ents.length})</button> : null}
           {all.map((x) => (
-            <button key={x.id} type="button" aria-pressed={x.id === sid} onClick={() => write({ s: x.id === 'ins' ? null : x.id, e: null, hl: null, bm: null, rd: null, sec: null, sheet: null })}>{x.n}{x.own ? ' ·' : ''}</button>
+            <button key={x.id} type="button" aria-pressed={x.id === sid} onClick={() => backThen(() => write({ s: x.id === 'ins' ? null : x.id, e: null, hl: null, bm: null, rd: null, sec: null, sheet: null }))}>{x.n}{x.own ? ' ·' : ''}</button>
           ))}
         </div>
         <button type="button" className="btn p6-edit" aria-expanded={edit} onClick={() => setEdit(!edit)}>{edit ? 'סגירת העריכה' : 'עריכת הקבוצה'}</button>
@@ -56,7 +57,7 @@ export function ContextSheet({ d, onClose }: { d: BoardData; onClose: () => void
         <h3>במיקוד</h3>
         <div className="p6-optrows" id="ctx-focus">
           {d.order.map((e) => (
-            <button key={e} type="button" className="p6-optrow" aria-pressed={e === d.focus} onClick={() => write({ hl: e, sheet: null })}>
+            <button key={e} type="button" className="p6-optrow" aria-pressed={e === d.focus} onClick={() => backThen(() => write({ hl: e, sheet: null }))}>
               <i className="sq" style={{ background: idCss(e) }} />{book.name(e)}
               {status.last[e] && status.last[e]! < status.bq ? <span className="p6-tag warn"><bdi dir="ltr">{qlab(status.last[e])}</bdi></span> : null}
               {!status.last[e] && d.kindOf(e) === 'ins' ? <span className="p6-tag">אין דוחות בקובץ</span> : null}

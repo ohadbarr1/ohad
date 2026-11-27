@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { DeeperSheet, SheetSwatch } from '../../components/DeeperSheet';
+import { backThen } from '../../components/Sheet';
 import { Sourced } from '../../components/Source';
 import { idCss } from '../../lib/identity';
 import { useAddressWrite } from '../../lib/sheetHost';
@@ -39,7 +40,7 @@ export function CompanySheet({ d, e, onClose }: { d: BoardData; e: string; onClo
   const ins = book.ent.get(e)?.k !== 'fund';
   const footer = (
     <div className="p6-sh-foot" id="sheet-foot">
-      <button type="button" className="btn primary" id="co-focus" aria-pressed={d.focus === e} onClick={() => write({ hl: e, sheet: null })}>במיקוד</button>
+      <button type="button" className="btn primary" id="co-focus" aria-pressed={d.focus === e} onClick={() => backThen(() => write({ hl: e, sheet: null }))}>במיקוד</button>
       <Link className="btn" to={`/company/${e}`}>לדף החברה</Link>
       {ins ? <Link className="btn" to={`/valuation/${e}`}>הערכת שווי</Link> : null}
     </div>
