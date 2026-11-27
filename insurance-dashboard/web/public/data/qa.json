@@ -1,5 +1,5 @@
 {
- "built": "2026-11-27T13:37:14+02:00",
+ "built": "2026-11-27T16:11:59+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -647,7 +647,7 @@
    "level": "warn",
    "n": 223,
    "fail": 1,
-   "note": "223 source URLs checked 2026-10-25 (32 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867; older than 8 days"
+   "note": "223 source URLs checked 2026-10-25 (33 days ago); 0 dead; 1 refused by a bot shield; not requested: maya api (robots.txt) 2, mayafiles (sampled) 867; older than 8 days"
   },
   {
    "id": "stress",
