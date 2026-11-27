@@ -14,7 +14,8 @@ Surfaces (each is the figure as a page shows it, with that page's own arithmetic
   lines        lines.json statement roles (build_workbook.py role mapping)                                → statements across companies
   peers.fs / peers.xbrl / peers.ifrs   peers/m/*.json cells; Q4 / Q2 / LTM as lib/registry.ts derives them → peer table
   capital      csm/capital.json (profit, comprehensive income, equity per quarter)                        → /industry/csm?view=capital
-  csm          csm/summary.json `resolved` (the one CSM rule), csm/facts/<id>.json, peers ifrs-csm_closing  → ledger, company, peers, valuation
+  csm          csm/summary.json `resolved` (the one CSM rule), csm/facts/<id>.json, peers ifrs-csm_closing, xlsx/<id>.xlsx (its CSM row)
+               → ledger, company, peers, valuation, the company workbook
 Comparable metrics: profit = net profit attributable to shareholders; oci = comprehensive income attributable; pretax; eps (basic);
 equity = equity attributable; assets = total assets; np = profit for the period incl. minorities; csm = closing CSM (one rule).
 
@@ -50,7 +51,7 @@ ALLOW = Path(__file__).resolve().parent / "consistency_allow.json"
 END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "Q4": "12-31", "FY": "12-31"}
 QOF = {"03-31": "Q1", "06-30": "Q2", "09-30": "Q3", "12-31": "Q4"}
 PAGES = {"kpi": "בית · כרטיסי KPI · הערכת שווי", "home": "בית (החברה עצמה, 100%)", "day": "דף החברה · יום הדוח", "lines": "דוחות כספיים (השוואה)", "peers.fs": "טבלת עמיתים · דוחות",
-         "peers.xbrl": "טבלת עמיתים · XBRL", "peers.ifrs": "טבלת עמיתים · IFRS 17", "capital": "CSM · הון", "csm": "CSM · ספר", "csm.co": "CSM · קובץ החברה", "csm.ts": "CSM · דף החברה והערכת שווי (lib/csmResolve.ts)",
+         "peers.xbrl": "טבלת עמיתים · XBRL", "peers.ifrs": "טבלת עמיתים · IFRS 17", "capital": "CSM · הון", "csm": "CSM · ספר", "csm.co": "CSM · קובץ החברה", "csm.ts": "CSM · דף החברה והערכת שווי (lib/csmResolve.ts)", "csm.xlsx": "CSM · חוברת Excel של החברה",
          "peers.csm": "טבלת עמיתים · CSM", "solv": "כושר פירעון · דוח כושר פירעון כלכלי", "peers.solv": "טבלת עמיתים · כושר פירעון"}
 M_HE = {"profit": "רווח נקי לבעלי המניות", "oci": "רווח כולל לבעלי המניות", "pretax": "רווח לפני מס", "eps": "רווח למניה", "equity": "הון לבעלי המניות",
         "assets": "סך הנכסים", "np": "רווח לתקופה", "teq": "סך ההון", "csm": "CSM",
@@ -263,7 +264,7 @@ for md in reg["metrics"]:
             if metric not in FLOW and p.endswith("FY"):
                 continue
             rep = rid_of(f["u"][c[3]]) if len(c) > 3 and c[3] is not None and c[3] < len(f["u"]) else (c[5] if len(c) > 5 and isinstance(c[5], int) else None)
-            tag = (c[5] if len(c) > 5 else None) if metric == "csm" else filer or ("restated" if fl & (8 | 64) else None)  # a CSM cell carries its basis label in aux
+            tag = (str(c[5]).split("; ")[0] if len(c) > 5 and c[5] else None) if metric == "csm" else filer or ("restated" if fl & (8 | 64) else None)  # a CSM cell carries its basis label in aux
             put(ent, metric, p, Obs(surf, c[1], 0.001 if metric == "csm" else prec_m(c[1], unit), 2 if fl & 1 else 1, bool(fl & 1), rep, sd(c), tag))
         if md["k"] == "f":
             qs = sorted({p[:4] + "Q" + str(k) for p in cells for k in (1, 2, 3, 4)})
@@ -312,13 +313,31 @@ for key in ("sr_w", "sr_wo"):
                 put(ent, key, c[0], Obs("peers.solv", c[1], prec_m(c[1]), 1, False, None, None, None))
 summary = load(DATA / "csm" / "summary.json")
 for ent, dates in summary.get("resolved", {}).items():
-    for d, (v, lab, rp, fl) in dates.items():
+    for d, (v, lab, rp, fl, *_) in dates.items():
         if d[5:10] in QOF:
             put(ent, "csm", qkey(d), Obs("csm", v, 0.001, 1, bool(fl & 1), tag=lab))
 for f in sorted((DATA / "csm" / "facts").glob("*.json")):
-    for d, (v, lab, rp, fl) in (load(f).get("resolved") or {}).items():
+    for d, (v, lab, rp, fl, *_) in (load(f).get("resolved") or {}).items():
         if d[5:10] in QOF:
             put(f.stem, "csm", qkey(d), Obs("csm.co", v, 0.001, 1, bool(fl & 1), tag=lab))
+
+# the company workbook (xlsx/<id>.xlsx, "Excel למודל"): its CSM row is the same figure on the same vintage (P6-D2), read from the file's
+# Sources sheet (value, period, and the basis label of its note "בסיס: נטו · קבוצה; ...")
+from xlsx_lib import read_book, split_ref  # noqa: E402
+for f in sorted((DATA / "xlsx").glob("*.xlsx")):
+    try:
+        sh = {x[0]: x[1] for x in read_book(f.read_bytes())["sheets"]}.get("Sources") or {}
+    except Exception:  # noqa: BLE001  a workbook that does not open is the model_xlsx gate's failure
+        continue
+    rows = collections.defaultdict(dict)
+    for r_, c in sh.items():
+        ri, ci = split_ref(r_)
+        rows[ri][ci] = c[1]
+    for cs in rows.values():
+        lab = re.match(r"בסיס: ([^;]+)", str(cs.get(15) or ""))
+        per = re.fullmatch(r"Q(\d)'(\d\d)", str(cs.get(5) or ""))
+        if cs.get(2) == "csm_resolved" and lab and per:
+            put(f.stem, "csm", f"20{per.group(2)}Q{per.group(1)}", Obs("csm.xlsx", cs[6], 0.001, 1, False, tag=lab.group(1)))
 
 # the browser's own rule (lib/csmResolve.ts, run by web/scripts/csm-parity.mjs): what the company page and the valuation pages show
 NODE = shutil.which("node") or next((str(p) for p in sorted(Path.home().glob(".nvm/versions/node/v2*/bin/node"))), None)
@@ -328,7 +347,7 @@ try:
 except (OSError, ValueError, subprocess.SubprocessError) as e:
     ts, TS_NOTE = None, str(e)[:80]
 for ent, dates in (ts or {}).items():
-    for d, (v, lab, rp, fl) in dates.items():
+    for d, (v, lab, rp, fl, *_) in dates.items():
         if d[5:10] in QOF:
             put(ent, "csm", qkey(d), Obs("csm.ts", v, 0.001, 1, bool(fl & 1), tag=lab))
 if ts is None:

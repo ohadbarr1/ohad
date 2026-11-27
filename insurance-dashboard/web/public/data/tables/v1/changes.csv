@@ -1,4 +1,229 @@
 ﻿build_date,table,change,entity_id,entity_name,dim_id,dim_label,metric_id,metric_label,period,period_label,old_value,new_value,unit
+2026-11-27,ifrs17,changed,ayalon,איילון,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q1,Q1'24,1209.509,1020.699,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q3,Q3'24,1282.845,1080.177,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,health|gross,health · ברוטו,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,560.877,560.876,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,health|gross,health · ברוטו,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,560.877,560.876,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,health|gross,health · ברוטו,csm_release,CSM: שחרור לרווח,2024FY,FY'24,-55.559,55.559,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,-103.85,103.85,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,-103.85,103.85,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,life|gross,life · ברוטו,csm_release,CSM: שחרור לרווח,2024FY,FY'24,-83.481,83.481,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,life|reinsurance,life · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,-274.558,274.558,₪m
+2026-11-27,ifrs17,changed,ayalon,איילון,life|reinsurance,life · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,-274.558,274.558,₪m
+2026-11-27,ifrs17,changed,clal,כלל,group|gross,group · ברוטו,losses_on_onerous_contracts,הפסדים מחוזים מכבידים,2024Q4,Q4'24,-4,-8,₪m
+2026-11-27,ifrs17,changed,clal,כלל,group|gross,group · ברוטו,losses_on_onerous_contracts,הפסדים מחוזים מכבידים,2024FY,FY'24,18,14,₪m
+2026-11-27,ifrs17,changed,clal,כלל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q1,Q1'25,10312,10313,₪m
+2026-11-27,ifrs17,changed,clal,כלל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q2,Q2'25,10058,10059,₪m
+2026-11-27,ifrs17,changed,clal,כלל,health|gross,health · ברוטו,csm_release,CSM: שחרור לרווח,2024Q4,Q4'24,-774,148,₪m
+2026-11-27,ifrs17,changed,clal,כלל,health|gross,health · ברוטו,csm_release,CSM: שחרור לרווח,2024FY,FY'24,-461,461,₪m
+2026-11-27,ifrs17,changed,clal,כלל,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,198,197,₪m
+2026-11-27,ifrs17,changed,clal,כלל,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,198,197,₪m
+2026-11-27,ifrs17,changed,clal,כלל,life|gross,life · ברוטו,csm_release,CSM: שחרור לרווח,2024Q4,Q4'24,-636,96,₪m
+2026-11-27,ifrs17,changed,clal,כלל,life|gross,life · ברוטו,csm_release,CSM: שחרור לרווח,2024FY,FY'24,-366,366,₪m
+2026-11-27,ifrs17,changed,clal,כלל,life|gross,life · ברוטו,losses_on_onerous_contracts,הפסדים מחוזים מכבידים,2024Q4,Q4'24,-13,-16,₪m
+2026-11-27,ifrs17,changed,clal,כלל,life|gross,life · ברוטו,losses_on_onerous_contracts,הפסדים מחוזים מכבידים,2024FY,FY'24,12,9,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q1,Q1'24,393.608,298.943,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|gross,life · ברוטו,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,335.223,335.224,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|gross,life · ברוטו,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,335.223,335.224,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|gross,life · ברוטו,ra_closing,RA: יתרת סגירה,2024Q4,Q4'24,125.697,125.698,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|gross,life · ברוטו,ra_closing,RA: יתרת סגירה,2024FY,FY'24,125.697,125.698,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|reinsurance,life · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,72.153,71.919,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|reinsurance,life · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,72.153,71.919,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|reinsurance,life · ביטוח משנה,ra_closing,RA: יתרת סגירה,2024Q4,Q4'24,46.998,46.997,₪m
+2026-11-27,ifrs17,changed,hachshara,הכשרה,life|reinsurance,life · ביטוח משנה,ra_closing,RA: יתרת סגירה,2024FY,FY'24,46.998,46.997,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|gross,group · ברוטו,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,17752,17562,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|gross,group · ברוטו,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,17752,17562,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|gross,group · ברוטו,rev_paa,הכנסות: PAA,2024FY,FY'24,5941,5966,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|net,group · נטו,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,16548,16358,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|net,group · נטו,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,16548,16358,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|reinsurance,group · ביטוח משנה,reins_expense_ra_release,ביטוח משנה: שחרור RA,2024FY,FY'24,32,31,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q1,Q1'25,16500,16333,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q2,Q2'25,16687,16520,₪m
+2026-11-27,ifrs17,changed,harel,הראל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q3,Q3'25,17133,16983,₪m
+2026-11-27,ifrs17,changed,harel,הראל,health|gross,health · ברוטו,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,12256,12066,₪m
+2026-11-27,ifrs17,changed,harel,הראל,health|gross,health · ברוטו,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,12256,12066,₪m
+2026-11-27,ifrs17,changed,harel,הראל,health|gross,health · ברוטו,csm_release,CSM: שחרור לרווח,2024Q4,Q4'24,-1429,221,₪m
+2026-11-27,ifrs17,changed,harel,הראל,health|gross,health · ברוטו,csm_release,CSM: שחרור לרווח,2024FY,FY'24,-825,825,₪m
+2026-11-27,ifrs17,changed,harel,הראל,life|gross,life · ברוטו,csm_release,CSM: שחרור לרווח,2024Q4,Q4'24,-1361,179,₪m
+2026-11-27,ifrs17,changed,harel,הראל,life|gross,life · ברוטו,csm_release,CSM: שחרור לרווח,2024FY,FY'24,-770,770,₪m
+2026-11-27,ifrs17,changed,harel,הראל,life|reinsurance,life · ביטוח משנה,reins_expense_ra_release,ביטוח משנה: שחרור RA,2024FY,FY'24,6,7,₪m
+2026-11-27,ifrs17,changed,harel,הראל,pc|gross,pc · ברוטו,rev_paa,הכנסות: PAA,2024FY,FY'24,4835,4860,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|gross,group · ברוטו,insurance_finance_result,הכנסות (הוצאות) מימון ביטוח,2024FY,FY'24,-3852.209,-3876.209,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|gross,group · ברוטו,insurance_service_result,תוצאות שירותי ביטוח,2024FY,FY'24,1932.036,1936.579,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|gross,group · ברוטו,rev_acquisition_cashflow_recovery,הכנסות: השבת תזרימי רכישה,2024Q4,Q4'24,46.541,14.717,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|gross,group · ברוטו,rev_acquisition_cashflow_recovery,הכנסות: השבת תזרימי רכישה,2024FY,FY'24,175.65,143.826,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|net,group · נטו,insurance_service_result,תוצאות שירותי ביטוח,2024Q4,Q4'24,371.522,352.066,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|net,group · נטו,insurance_service_result,תוצאות שירותי ביטוח,2024FY,FY'24,1529.898,1510.442,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|reinsurance,group · ביטוח משנה,insurance_finance_result,הכנסות (הוצאות) מימון ביטוח,2024FY,FY'24,156.368,156.369,₪m
+2026-11-27,ifrs17,changed,menora,מנורה מבטחים,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q1,Q1'24,7066.62,6432.292,₪m
+2026-11-27,ifrs17,changed,migdal,מגדל,group|reinsurance,group · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,732,731,₪m
+2026-11-27,ifrs17,changed,migdal,מגדל,group|reinsurance,group · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,732,731,₪m
+2026-11-27,ifrs17,changed,migdal,מגדל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q1,Q1'24,12237,11525,₪m
+2026-11-27,ifrs17,changed,migdal,מגדל,health|gross,health · ברוטו,losses_on_onerous_contracts,הפסדים מחוזים מכבידים,2024Q4,Q4'24,8,24,₪m
+2026-11-27,ifrs17,changed,migdal,מגדל,health|gross,health · ברוטו,losses_on_onerous_contracts,הפסדים מחוזים מכבידים,2024FY,FY'24,-1,15,₪m
+2026-11-27,ifrs17,changed,migdal,מגדל,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,580,579,₪m
+2026-11-27,ifrs17,changed,migdal,מגדל,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,580,579,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q1,Q1'24,11302.994,9608.763,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q1,Q1'25,8800,8809.01,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q2,Q2'25,8736,8739.669,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,1282.28,1282.277,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,health|reinsurance,health · ביטוח משנה,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,1282.28,1282.277,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,life|gross,life · ברוטו,csm_closing,CSM: יתרת סגירה,2024Q4,Q4'24,2870.584,2870.583,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,life|gross,life · ברוטו,csm_closing,CSM: יתרת סגירה,2024FY,FY'24,2870.584,2870.583,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,pc|gross,pc · ברוטו,risk_adjustment,התאמת סיכון (RA),2024Q4,Q4'24,447.263,505.434,₪m
+2026-11-27,ifrs17,changed,phoenix,הפניקס,pc|gross,pc · ברוטו,risk_adjustment,התאמת סיכון (RA),2024FY,FY'24,447.263,505.434,₪m
+2026-11-27,ifrs17,added,ayalon,איילון,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2023Q4,Q4'23,,1027,₪m
+2026-11-27,ifrs17,added,ayalon,איילון,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q4,Q4'24,,1014,₪m
+2026-11-27,ifrs17,added,ayalon,איילון,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q1,Q1'25,,1036,₪m
+2026-11-27,ifrs17,added,clal,כלל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2023Q4,Q4'23,,8813,₪m
+2026-11-27,ifrs17,added,hachshara,הכשרה,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2023Q4,Q4'23,,295.353,₪m
+2026-11-27,ifrs17,added,hachshara,הכשרה,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q4,Q4'24,,263.07,₪m
+2026-11-27,ifrs17,added,harel,הראל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2023Q4,Q4'23,,15904,₪m
+2026-11-27,ifrs17,added,harel,הראל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q4,Q4'24,,16358,₪m
+2026-11-27,ifrs17,added,menora,מנורה מבטחים,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2023Q4,Q4'23,,6451.962,₪m
+2026-11-27,ifrs17,added,menora,מנורה מבטחים,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q4,Q4'24,,6273.351,₪m
+2026-11-27,ifrs17,added,menora,מנורה מבטחים,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q1,Q1'25,,6265.837,₪m
+2026-11-27,ifrs17,added,migdal,מגדל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2023Q4,Q4'23,,11392,₪m
+2026-11-27,ifrs17,added,migdal,מגדל,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2024Q4,Q4'24,,13104,₪m
+2026-11-27,ifrs17,added,phoenix,הפניקס,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2023Q4,Q4'23,,9715.782,₪m
+2026-11-27,ifrs17,added,phoenix,הפניקס,group|resolved,,csm_resolved,"CSM, יתרת סגירה",2025Q4,Q4'25,,8392,₪m
+2026-11-27,kpi,changed,ayalon,איילון,group|gross,group · ברוטו,gross_written_premiums,פרמיות ברוטו,2024FY,FY'24,4974.1,4978.277,₪m
+2026-11-27,kpi,changed,ayalon,איילון,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024Q4,Q4'24,108.069,108.887,₪m
+2026-11-27,kpi,changed,ayalon,איילון,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024FY,FY'24,192.272,193.09,₪m
+2026-11-27,kpi,changed,ayalon,איילון,group|na,group,roe_reported,"תשואה להון, כפי שדווחה",2023FY,FY'23,10.6,9.73,%
+2026-11-27,kpi,changed,ayalon,איילון,group|na,group,roe_reported,"תשואה להון, כפי שדווחה",2024FY,FY'24,27,25.19,%
+2026-11-27,kpi,changed,ayalon,איילון,health|gross,health · ברוטו,gross_written_premiums,פרמיות ברוטו,2024FY,FY'24,864.242,865.871,₪m
+2026-11-27,kpi,changed,ayalon,איילון,life|gross,life · ברוטו,gross_written_premiums,פרמיות ברוטו,2024FY,FY'24,679.778,682.325,₪m
+2026-11-27,kpi,changed,ayalon,איילון,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2021FY,FY'21,50.85,50.849,₪m
+2026-11-27,kpi,changed,ayalon,איילון,life|na,life,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,-11.995,-11.996,₪m
+2026-11-27,kpi,changed,ayalon,איילון,life|na,life,profit_before_tax,רווח לפני מס,2021FY,FY'21,36.212,36.211,₪m
+2026-11-27,kpi,changed,ayalon,איילון,pc|na,pc,comprehensive_income_before_tax,רווח כולל לפני מס,2021FY,FY'21,-57.364,-57.363,₪m
+2026-11-27,kpi,changed,ayalon,איילון,pc|na,pc,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,-82.593,-82.592,₪m
+2026-11-27,kpi,changed,ayalon,איילון,pc|na,pc,profit_before_tax,רווח לפני מס,2021FY,FY'21,-136.693,-136.692,₪m
+2026-11-27,kpi,changed,clal,כלל,group|na,group,comprehensive_income_before_tax,רווח כולל לפני מס,2024Q4,Q4'24,250,240,₪m
+2026-11-27,kpi,changed,clal,כלל,group|na,group,comprehensive_income_before_tax,רווח כולל לפני מס,2024FY,FY'24,2286,2276,₪m
+2026-11-27,kpi,changed,clal,כלל,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024Q4,Q4'24,-81,-82,₪m
+2026-11-27,kpi,changed,clal,כלל,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024FY,FY'24,1082,1081,₪m
+2026-11-27,kpi,changed,clal,כלל,group|na,group,roe_reported,"תשואה להון, כפי שדווחה",2024FY,FY'24,21.1,21.2,%
+2026-11-27,kpi,changed,clal,כלל,investment_contracts|na,פוליסות חיסכון (חוזי השקעה),comprehensive_income_before_tax,רווח כולל לפני מס,2024Q4,Q4'24,-2,0,₪m
+2026-11-27,kpi,changed,clal,כלל,investment_contracts|na,פוליסות חיסכון (חוזי השקעה),comprehensive_income_before_tax,רווח כולל לפני מס,2024FY,FY'24,-1,1,₪m
+2026-11-27,kpi,changed,clal,כלל,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2024Q4,Q4'24,-284,-334,₪m
+2026-11-27,kpi,changed,clal,כלל,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2024FY,FY'24,602,552,₪m
+2026-11-27,kpi,changed,clal,כלל,life|na,life,management_fees,דמי ניהול,2024Q4,Q4'24,0,205,₪m
+2026-11-27,kpi,changed,clal,כלל,life|na,life,management_fees,דמי ניהול,2024FY,FY'24,599,804,₪m
+2026-11-27,kpi,changed,hachshara,הכשרה,group|na,group,total_assets,סך נכסים,2024Q4,Q4'24,31656.552,31648.716,₪m
+2026-11-27,kpi,changed,hachshara,הכשרה,group|na,group,total_assets,סך נכסים,2024FY,FY'24,31656.552,31648.716,₪m
+2026-11-27,kpi,changed,hachshara,הכשרה,hachshara_insurance|na,hachshara_insurance,capital_instruments_issued_redeemed,מכשירי הון שהונפקו ונפדו,2024Q4,Q4'24,3.852,100,₪m
+2026-11-27,kpi,changed,hachshara,הכשרה,hachshara_insurance|na,hachshara_insurance,capital_instruments_issued_redeemed,מכשירי הון שהונפקו ונפדו,2024FY,FY'24,3.852,100,₪m
+2026-11-27,kpi,changed,harel,הראל,financial_services|na,שירותים פיננסיים,management_fees,דמי ניהול,2024Q4,Q4'24,248,92,₪m
+2026-11-27,kpi,changed,harel,הראל,financial_services|na,שירותים פיננסיים,management_fees,דמי ניהול,2024FY,FY'24,456,300,₪m
+2026-11-27,kpi,changed,harel,הראל,group|na,group,management_fees,דמי ניהול,2024FY,FY'24,1429,1433,₪m
+2026-11-27,kpi,changed,harel,הראל,group|na,group,total_assets,סך נכסים,2024Q4,Q4'24,156307,156193,₪m
+2026-11-27,kpi,changed,harel,הראל,group|na,group,total_assets,סך נכסים,2024FY,FY'24,156307,156193,₪m
+2026-11-27,kpi,changed,harel,הראל,health|na,health,comprehensive_income_before_tax,רווח כולל לפני מס,2022FY,FY'22,798,787,₪m
+2026-11-27,kpi,changed,harel,הראל,health|na,health,profit_before_tax,רווח לפני מס,2022Q4,Q4'22,481,470,₪m
+2026-11-27,kpi,changed,harel,הראל,health|na,health,profit_before_tax,רווח לפני מס,2022FY,FY'22,1221,1210,₪m
+2026-11-27,kpi,changed,harel,הראל,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2024Q4,Q4'24,326,339,₪m
+2026-11-27,kpi,changed,harel,הראל,life|na,life,comprehensive_income_before_tax,רווח כולל לפני מס,2024FY,FY'24,743,756,₪m
+2026-11-27,kpi,changed,harel,הראל,life|na,life,gross_written_premiums,פרמיות ברוטו,2023Q4,Q4'23,1394,1386,₪m
+2026-11-27,kpi,changed,harel,הראל,life|na,life,gross_written_premiums,פרמיות ברוטו,2023FY,FY'23,6294,6286,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:ענפי חבויות אחרים|na,ענפי חבויות אחרים,comprehensive_income_before_tax,רווח כולל לפני מס,2022FY,FY'22,176,164,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:ענפי חבויות אחרים|na,ענפי חבויות אחרים,profit_before_tax,רווח לפני מס,2022Q4,Q4'22,15,3,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:ענפי חבויות אחרים|na,ענפי חבויות אחרים,profit_before_tax,רווח לפני מס,2022FY,FY'22,199,187,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:ענפי רכוש ואחרים|na,ענפי רכוש ואחרים,comprehensive_income_before_tax,רווח כולל לפני מס,2022FY,FY'22,103,102,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:ענפי רכוש ואחרים|na,ענפי רכוש ואחרים,profit_before_tax,רווח לפני מס,2022Q4,Q4'22,30,29,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:ענפי רכוש ואחרים|na,ענפי רכוש ואחרים,profit_before_tax,רווח לפני מס,2022FY,FY'22,104,103,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:רכב רכוש|na,רכב רכוש,comprehensive_income_before_tax,רווח כולל לפני מס,2022FY,FY'22,-253,-255,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:רכב רכוש|na,רכב רכוש,profit_before_tax,רווח לפני מס,2022Q4,Q4'22,-41,-43,₪m
+2026-11-27,kpi,changed,harel,הראל,pc:רכב רכוש|na,רכב רכוש,profit_before_tax,רווח לפני מס,2022FY,FY'22,-249,-251,₪m
+2026-11-27,kpi,changed,harel,הראל,pc|gross,pc · ברוטו,gross_written_premiums,פרמיות ברוטו,2024Q4,Q4'24,1039,1065,₪m
+2026-11-27,kpi,changed,harel,הראל,pc|gross,pc · ברוטו,gross_written_premiums,פרמיות ברוטו,2024FY,FY'24,4931,4957,₪m
+2026-11-27,kpi,changed,harel,הראל,pc|na,pc,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024Q4,Q4'24,143,118,₪m
+2026-11-27,kpi,changed,harel,הראל,pc|na,pc,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024FY,FY'24,342,317,₪m
+2026-11-27,kpi,changed,harel,הראל,unallocated|na,לא מיוחס,comprehensive_income_before_tax,רווח כולל לפני מס,2022FY,FY'22,-386,-415,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,Non-segmented|na,לא מיוחס למגזרים,comprehensive_income_before_tax,רווח כולל לפני מס,2024Q4,Q4'24,85.69,206.948,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,Non-segmented|na,לא מיוחס למגזרים,comprehensive_income_before_tax,רווח כולל לפני מס,2024FY,FY'24,379.665,500.923,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,Non-segmented|na,לא מיוחס למגזרים,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024Q4,Q4'24,-33.245,220.575,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,Non-segmented|na,לא מיוחס למגזרים,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024FY,FY'24,419.244,673.064,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|gross,group · ברוטו,insurance_service_result,תוצאות שירותי ביטוח,2024FY,FY'24,1932.036,1936.579,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,aum_insured_and_members,aum insured and members,2021Q4,Q4'21,256502,256456,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,aum_insured_and_members,aum insured and members,2021FY,FY'21,256502,256456,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,aum_nostro,נכסי נוסטרו,2021Q4,Q4'21,17959,17956,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,aum_nostro,נכסי נוסטרו,2021FY,FY'21,17959,17956,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,aum_total,"נכסים מנוהלים, סך הכול",2021Q4,Q4'21,274461,274412,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,aum_total,"נכסים מנוהלים, סך הכול",2021FY,FY'21,274461,274412,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,comprehensive_income_attributable,רווח כולל לבעלי המניות,2021Q4,Q4'21,402.092,372.429,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,comprehensive_income_attributable,רווח כולל לבעלי המניות,2021FY,FY'21,980.004,950.341,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,comprehensive_income_before_tax,רווח כולל לפני מס,2021Q4,Q4'21,594.826,549.752,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,comprehensive_income_before_tax,רווח כולל לפני מס,2021FY,FY'21,1450.394,1405.32,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,equity_attributable,הון לבעלי המניות,2021Q4,Q4'21,5541.647,5501.658,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,equity_attributable,הון לבעלי המניות,2021FY,FY'21,5541.647,5501.658,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024Q4,Q4'24,565.141,392.73,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,net_investment_and_finance_result,"תוצאות השקעה ומימון, נטו",2024FY,FY'24,1000.052,827.641,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,profit_attributable,רווח נקי לבעלי המניות,2021Q4,Q4'21,243.476,213.813,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,profit_attributable,רווח נקי לבעלי המניות,2021FY,FY'21,685.342,655.679,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,360.086,315.012,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,profit_before_tax,רווח לפני מס,2021FY,FY'21,1010.74,965.666,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,roe_reported,"תשואה להון, כפי שדווחה",2021FY,FY'21,19.7,20.2,%
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,total_assets,סך נכסים,2021Q4,Q4'21,66790.202,66831.261,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,total_assets,סך נכסים,2021FY,FY'21,66790.202,66831.261,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,total_assets,סך נכסים,2023Q4,Q4'23,70033.092,69977.354,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|na,group,total_assets,סך נכסים,2023FY,FY'23,70033.092,69977.354,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|net,group · נטו,insurance_service_result,תוצאות שירותי ביטוח,2024Q4,Q4'24,371.522,352.066,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,group|net,group · נטו,insurance_service_result,תוצאות שירותי ביטוח,2024FY,FY'24,1529.898,1510.442,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,life:ביטוח חיים|na,ביטוח חיים,aum_insurance_contracts,aum insurance contracts,2021Q4,Q4'21,35807,35761,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,life:ביטוח חיים|na,ביטוח חיים,aum_insurance_contracts,aum insurance contracts,2021FY,FY'21,35807,35761,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc:ענפי רכוש ואחרים|gross,ענפי רכוש ואחרים · ברוטו,combined_ratio,יחס משולב,2022FY,FY'22,89,90,%
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc:ענפי רכוש ואחרים|net,ענפי רכוש ואחרים · נטו,combined_ratio,יחס משולב,2022FY,FY'22,67,68,%
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc:רכב חובה|na,רכב חובה,comprehensive_income_before_tax,רווח כולל לפני מס,2021Q4,Q4'21,23.701,68.775,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc:רכב חובה|na,רכב חובה,comprehensive_income_before_tax,רווח כולל לפני מס,2021FY,FY'21,59.806,104.88,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc:רכב חובה|na,רכב חובה,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,-7.314,37.76,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc:רכב חובה|na,רכב חובה,profit_before_tax,רווח לפני מס,2021FY,FY'21,-0.66,44.414,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc|na,pc,comprehensive_income_before_tax,רווח כולל לפני מס,2021Q4,Q4'21,87.825,132.899,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc|na,pc,comprehensive_income_before_tax,רווח כולל לפני מס,2021FY,FY'21,291.208,336.282,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc|na,pc,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,32.868,77.942,₪m
+2026-11-27,kpi,changed,menora,מנורה מבטחים,pc|na,pc,profit_before_tax,רווח לפני מס,2021FY,FY'21,187.313,232.387,₪m
+2026-11-27,kpi,changed,migdal,מגדל,group|na,group,profit_attributable,רווח נקי לבעלי המניות,2021Q4,Q4'21,431.998,467.939,₪m
+2026-11-27,kpi,changed,migdal,מגדל,group|na,group,profit_attributable,רווח נקי לבעלי המניות,2021FY,FY'21,1351.942,1387.883,₪m
+2026-11-27,kpi,changed,migdal,מגדל,group|na,group,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,654.632,701.544,₪m
+2026-11-27,kpi,changed,migdal,מגדל,group|na,group,profit_before_tax,רווח לפני מס,2021FY,FY'21,2083.04,2129.952,₪m
+2026-11-27,kpi,changed,migdal,מגדל,group|na,group,total_assets,סך נכסים,2024Q4,Q4'24,226334,226407,₪m
+2026-11-27,kpi,changed,migdal,מגדל,group|na,group,total_assets,סך נכסים,2024FY,FY'24,226334,226407,₪m
+2026-11-27,kpi,changed,migdal,מגדל,health|na,health,comprehensive_income_before_tax,רווח כולל לפני מס,2024Q4,Q4'24,-301,-430,₪m
+2026-11-27,kpi,changed,migdal,מגדל,health|na,health,comprehensive_income_before_tax,רווח כולל לפני מס,2024FY,FY'24,173,44,₪m
+2026-11-27,kpi,changed,migdal,מגדל,health|na,health,gross_written_premiums,פרמיות ברוטו,2022Q4,Q4'22,475.981,475.147,₪m
+2026-11-27,kpi,changed,migdal,מגדל,health|na,health,gross_written_premiums,פרמיות ברוטו,2022FY,FY'22,1842.834,1842,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life:ביטוח חיים|na,ביטוח חיים,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,751.94,777.08,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life:ביטוח חיים|na,ביטוח חיים,profit_before_tax,רווח לפני מס,2021FY,FY'21,1869.325,1894.465,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,gross_premiums_earned,gross premiums earned,2021Q1,Q1'21,2311,2311.312,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,gross_premiums_earned,gross premiums earned,2021Q2,Q2'21,2336,2336.384,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,gross_premiums_earned,gross premiums earned,2021Q3,Q3'21,2337,2336.624,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,gross_premiums_earned,gross premiums earned,2022Q1,Q1'22,2217,2216.511,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,gross_premiums_earned,gross premiums earned,2022Q2,Q2'22,2137,2136.519,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,gross_premiums_earned,gross premiums earned,2022Q3,Q3'22,2153,2153.233,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,767.896,793.036,₪m
+2026-11-27,kpi,changed,migdal,מגדל,life|na,life,profit_before_tax,רווח לפני מס,2021FY,FY'21,1943.09,1968.23,₪m
+2026-11-27,kpi,changed,migdal,מגדל,pc:רכב חובה|na,רכב חובה,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,-65.141,-63.229,₪m
+2026-11-27,kpi,changed,migdal,מגדל,pc:רכב חובה|na,רכב חובה,profit_before_tax,רווח לפני מס,2021FY,FY'21,-62.482,-60.57,₪m
+2026-11-27,kpi,changed,migdal,מגדל,pc|na,pc,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,-25.227,-27.139,₪m
+2026-11-27,kpi,changed,migdal,מגדל,pc|na,pc,profit_before_tax,רווח לפני מס,2021FY,FY'21,1.162,-0.75,₪m
+2026-11-27,kpi,changed,migdal,מגדל,unallocated|na,לא מיוחס,profit_before_tax,רווח לפני מס,2021Q4,Q4'21,22.365,2.505,₪m
+2026-11-27,kpi,changed,migdal,מגדל,unallocated|na,לא מיוחס,profit_before_tax,רווח לפני מס,2021FY,FY'21,77.007,57.147,₪m
+2026-11-27,kpi,changed,phoenix,הפניקס,group|na,group,total_assets,סך נכסים,2024Q4,Q4'24,173420.608,172852.421,₪m
+2026-11-27,kpi,changed,phoenix,הפניקס,group|na,group,total_assets,סך נכסים,2024FY,FY'24,173420.608,172852.421,₪m
+2026-11-27,solvency,changed,clal,כלל,clal_insurance|na,כלל ביטוח,solvency_surplus,עודף הון,2023Q2,Q2'23,5677,5676,₪m
+2026-11-27,solvency,changed,clal,כלל,statements,,su,עודף הון,2023Q2,Q2'23,5677,5676,₪m
+2026-11-27,solvency,changed,hachshara,הכשרה,group|na,group,scr,הון נדרש (SCR),2023Q4,Q4'23,994.707,994.706,₪m
+2026-11-27,solvency,changed,hachshara,הכשרה,group|na,group,scr,הון נדרש (SCR),2023FY,FY'23,994.707,994.706,₪m
+2026-11-27,solvency,changed,hachshara,הכשרה,group|na,group,solvency_surplus,עודף הון,2023Q4,Q4'23,-47.907,-47.906,₪m
+2026-11-27,solvency,changed,hachshara,הכשרה,group|na,group,solvency_surplus,עודף הון,2023FY,FY'23,-47.907,-47.906,₪m
+2026-11-27,solvency,changed,menora,מנורה מבטחים,Menora Insurance|na,מנורה ביטוח,solvency_surplus,עודף הון,2024Q4,Q4'24,2912.829,3308.483,₪m
+2026-11-27,solvency,changed,menora,מנורה מבטחים,Menora Insurance|na,מנורה ביטוח,solvency_surplus,עודף הון,2024FY,FY'24,2912.829,3308.483,₪m
+2026-11-27,solvency,changed,menora,מנורה מבטחים,Menora Insurance|na,מנורה ביטוח,solvency_surplus,עודף הון,2025Q2,Q2'25,2524.836,3065.806,₪m
+2026-11-27,solvency,changed,migdal,מגדל,insurer|na,insurer,solvency_surplus,עודף הון,2024Q2,Q2'24,3829,3830,₪m
+2026-11-27,solvency,changed,migdal,מגדל,statements,,su,עודף הון,2024Q2,Q2'24,3829,3830,₪m
+2026-11-27,solvency,changed,phoenix,הפניקס,insurer|na,insurer,solvency_surplus,עודף הון,2022Q4,Q4'22,7773.401,7773.402,₪m
+2026-11-27,solvency,changed,phoenix,הפניקס,insurer|na,insurer,solvency_surplus,עודף הון,2022FY,FY'22,7773.401,7773.402,₪m
+2026-11-27,solvency,added,menora,מנורה מבטחים,statements,,su,עודף הון,2025Q2,Q2'25,,3065.806,₪m
 2026-11-26,ifrs17,changed,ayalon,איילון,group|gross,group · ברוטו,csm_closing,CSM: יתרת סגירה,2025Q4,Q4'25,1447,1446.835,₪m
 2026-11-26,ifrs17,changed,ayalon,איילון,group|gross,group · ברוטו,csm_closing,CSM: יתרת סגירה,2025FY,FY'25,1447,1446.835,₪m
 2026-11-26,ifrs17,changed,ayalon,איילון,group|gross,group · ברוטו,rev_acquisition_cashflow_recovery,הכנסות: השבת תזרימי רכישה,2025Q1,Q1'25,6.299,6.298,₪m

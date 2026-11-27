@@ -220,15 +220,15 @@ def main():
     stamp = {"built": date.today().isoformat(), "source": "דוחות כספיים של החברות, MAYA; חולץ ונבדק מול העמוד"}
     dump = lambda name, obj: (OUT / name).write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     # "the CSM" of every company and balance date by the one rule (csm_resolve.py = web/src/lib/csmResolve.ts), so the ledger's closing
-    # balances, the peer table and the valuation pages can be checked against one list: [value, basis · scope, report, flags]
+    # balances, the peer table and the valuation pages can be checked against one list: [value, basis · scope, report, flags(, first print, its report)]
     resolved = {}
     for c in sorted({x["c"] for F in reports.values() for x in F}):
         rs = [(p, [x for x in F if x["c"] == c]) for p, F in reports.items()]
-        dates = sorted({x["d"][:10] for _, F in rs for x in F if x["m"] in ("csm_closing", "csm_opening") and x["d"][5:10] in ("03-31", "06-30", "09-30", "12-31")})
-        for d in dates:
+        for d in csm_resolve.dates_of([x for _, F in rs for x in F]):
             r = csm_resolve.resolve(rs, csm_resolve.own_period(d), d)
             if r:
-                resolved.setdefault(c, {})[d] = [r["v"], r["label"], r["rp"], r["flags"]]
+                # [value, basis · scope, report, flags] + the first print of a restated figure [value, report] (flag 8)
+                resolved.setdefault(c, {})[d] = [r["v"], r["label"], r["rp"], r["flags"]] + ([r["rst"], r["rfrom"]] if r.get("rst") is not None else [])
     # one file per company (the company page reads its own, ~100-170 KB, instead of every insurer's 935 KB) and a small summary: the
     # companies, their reports and the resolved CSM of every date; the industry ledger loads the company files when it opens
     (OUT / "facts").mkdir(exist_ok=True)
