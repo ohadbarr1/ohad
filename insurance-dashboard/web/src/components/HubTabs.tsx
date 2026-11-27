@@ -70,7 +70,7 @@ function HubFold({ h1 }: { h1: boolean }) {
       <Sheet open={open} onClose={() => setOpen(false)} title={HUBS.industry.label}>
         <nav className="p6-hubmenu" aria-label={HUBS.industry.label}>
           {HUBS.industry.tabs.map((t) => { const on = isOn(path, q, t) && !(t[0] === '/industry/peers' && onPeers && cur !== 'board'); return (
-            <a key={t[0]} href={t[0]} className="p6-hubrow" aria-current={on ? 'page' : undefined} onClick={(e) => { e.preventDefault(); go(t[0]); }}>{t[1]}</a>); })}
+            <a key={t[0]} href={t[0]} className="p6-hubrow" aria-current={on ? 'page' : undefined} onClick={(e) => { e.preventDefault(); go(t[0] === '/industry/peers' && onPeers ? `/industry/peers${peerViewSearch(loc.search, 'board')}` : t[0]); }}>{t[1]}</a>); })}
           <div className="p6-hubsec">תצוגות של טבלת העמיתים</div>
           {PEER_VIEWS.map(([v, label]) => { const to = `/industry/peers${onPeers ? peerViewSearch(loc.search, v) : v === 'board' ? '' : `?v=${v}`}`; const on = onPeers && cur === v; return (
             <a key={v} id={`hub-${v}`} href={to} className="p6-hubrow" aria-current={on ? 'page' : undefined} onClick={(e) => { e.preventDefault(); go(to); }}>{label}{v === 'board' ? '' : ' ›'}</a>); })}

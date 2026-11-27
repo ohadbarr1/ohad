@@ -40,7 +40,7 @@ export function Words({ parts, src }: { parts: WPart[]; src: RefSrc }) {
         if (p.k === 't') { const s = pre ? p.s.slice(pre.length) : p.s; return s ? <Fragment key={i}>{s}</Fragment> : null; }
         if (p.k === 'b') return <b key={i}>{p.s}</b>;
         if (p.k === 'basis') return <span key={i} className="p6-basis-in">{p.s}</span>;
-        if (p.k === 'tag') return <span key={i} className="p6-tag">{p.s}</span>;
+        if (p.k === 'tag') return <span key={i}>{' '}<span className="p6-tag">{p.s}</span></span>;
         const s = p.ref ? src(p.ref, i) : null, tone = p.tone ? ` ${p.tone}` : '';
         const unit = (
           <bdi dir="ltr" className={`p6-u${tone}`}>

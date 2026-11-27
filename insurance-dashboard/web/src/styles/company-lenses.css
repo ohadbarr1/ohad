@@ -87,7 +87,12 @@
   .p6-tg-t { font-size: var(--t-2); }
   .p6-tg-t tbody th.lbl { width: 34%; font-size: var(--t-2); }
   .p6-tg-t td small.p6-tg-vs { white-space: normal; }
-  .p6-solv-t th, .p6-solv-t td { padding-inline: 4px; }
+  /* C3: five columns fit the card (fixed layout, header words may wrap, the source chip may shrink); no sideways scroll inside it */
+  table.tight.p6-solv-t { table-layout: fixed; width: 100%; font-size: 12.5px; }
+  .p6-solv-t th, .p6-solv-t td { padding-inline: 3px; }
+  .p6-solv-t thead th { white-space: normal; font-size: 12px; }
+  .p6-solv-t thead th:nth-child(1) { width: 17%; }
+  .p6-solv-t thead th:nth-child(3) { width: 24%; }
   .p6-brr { grid-template-columns: minmax(0, 1fr) 54px 52px; gap: 8px; }
 }
 

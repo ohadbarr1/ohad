@@ -69,7 +69,7 @@ export function Words({ parts, src, ids }: { parts: WPart[]; src: (r: FigRef) =>
     if (p.k === 't') return <span key={i}>{p.s}</span>;
     if (p.k === 'b') return <b key={i}>{p.s}</b>;
     if (p.k === 'basis') return <span key={i} className="co6-basis">{p.s}</span>;
-    if (p.k === 'tag') return <span key={i} className="chip est co6-tag">{p.s}</span>;
+    if (p.k === 'tag') return <span key={i}>{' '}<span className="chip est co6-tag">{p.s}</span></span>;
     const s = p.ref ? src(p.ref) : null, id = p.ref && p.ref.k === 'co' ? ids?.[p.ref.f] : undefined;
     const fig = s ? <Sourced src={s} className={`co6-wn${p.tone ? ` ${p.tone}` : ''}`}>{p.s}</Sourced> : <span className="num">{p.s}</span>;
     return <span key={i} className="co6-u" dir="ltr" id={id}>{p.pre}{fig}{p.sup != null ? <sup className="p6-n">{p.sup}</sup> : null}{p.post}</span>;
@@ -292,7 +292,7 @@ export function QuarterLens({ co, cp }: { co: CoData; cp: GridRead }) {
       {co.filer && <p className="co6-filer" title={co.filer.note}>{filerWords(co.filer.name, co.filer.stake)}</p>}
       {/* a waiting company on a phone: the notice's line takes the place of the top-change clause (it stays one tap away in שינויים), so
           the card keeps its three lines and the seven rows stay above the bottom bar */}
-      {hasRows && <div className="co6-take" id="takeaway"><Sentence co={co} noTop={!!lead} />{lead}</div>}
+      {hasRows && <div className="co6-take" id="takeaway"><div className="co6-sent"><Sentence co={co} noTop={!!lead} /></div>{lead ? <> {lead}</> : null}</div>}
       {guard}
       {hasRows ? (
         <div className="co6-g2">

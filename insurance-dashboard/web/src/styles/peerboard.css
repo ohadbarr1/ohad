@@ -40,20 +40,21 @@
 }
 
 /* the metric chips: one row, sideways inside itself; "מדד ▾" pinned first */
-.p6-chipwrap { position: relative; min-width: 0; }
+.p6-chipwrap { position: relative; min-width: 0; display: flex; align-items: center; gap: 6px; }
+.p6-chipwrap > .p6-chips { flex: 1 1 auto; min-width: 0; }
 .p6-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; padding: 2px 0; }
 .p6-chips::-webkit-scrollbar { display: none; }
-.p6-chips button { flex: none; height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--panel); color: var(--fg); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; direction: ltr; unicode-bidi: isolate; }
-.p6-chips button.all { direction: rtl; border: 1.5px solid var(--fg); font-weight: 700; }
-.p6-chips button[aria-pressed="true"] { background: var(--sel-bg, var(--fg)); color: var(--sel-fg, var(--bg)); border-color: transparent; font-weight: 700; }
-.p6-chips button:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; }
+.p6-allm, .p6-chips button { flex: none; height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--panel); color: var(--fg); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; direction: ltr; unicode-bidi: isolate; }
+:root[dir="ltr"] .p6-chips button[aria-pressed="true"] { background: var(--sel-bg, var(--fg)); color: var(--sel-fg, var(--bg)); border-color: transparent; font-weight: 700; }
+.p6-chipwrap > .p6-allm { direction: rtl; unicode-bidi: normal; border: 1.5px solid var(--fg); font-weight: 700; }
+.p6-allm:focus-visible, .p6-chips button:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; }
 .p6-chipwrap.over:not(.end)::after { content: ""; position: absolute; inset-block: 0; inset-inline-end: 0; width: 56px; pointer-events: none; background: linear-gradient(to left, var(--bg), transparent); }
 :root[dir="ltr"] .p6-chipwrap.over:not(.end)::after { background: linear-gradient(to right, var(--bg), transparent); }
 .p6-chips-more { position: absolute; z-index: 1; top: 50%; inset-inline-end: 0; width: 30px; height: 30px; margin-top: -15px; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); font: inherit; font-size: 16px; font-weight: 700; line-height: 1; cursor: pointer; box-shadow: var(--e-1); }
 .p6-chips-more::before { content: ""; position: absolute; inset: -7px; }
 @media (min-width: 1000px) {
   .p6-chips { gap: 5px; }
-  .p6-chips button { height: 30px; padding: 0 11px; font-size: 12.5px; }
+  .p6-allm, .p6-chips button { height: 30px; padding: 0 11px; font-size: 12.5px; }
   .p6-chipwrap.over .p6-chips { padding-inline-end: 36px; }
 }
 

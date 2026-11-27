@@ -202,16 +202,16 @@ function Chips({ bms, m, fav, onPick, onAll, desk }: { bms: BMetric[]; m: BMetri
     const el = ref.current, on = el?.querySelector<HTMLElement>('[aria-pressed="true"]');
     if (!el || !on) return;
     // B1 item 8: the view is the row less the pinned "מדד ▾" (at the row's start) and the fade at its end: a chip under either is not in view
-    const a = el.getBoundingClientRect(), b = on.getBoundingClientRect(), pin = el.querySelector<HTMLElement>('#all-metrics')?.getBoundingClientRect();
+    const a = el.getBoundingClientRect(), b = on.getBoundingClientRect();  // "מדד ▾" sits outside the scrolling row, so the row's own edge is the view's start
     const rtl = getComputedStyle(el).direction === 'rtl', fade = 28;
-    const lo = rtl ? a.left + fade : (pin ? pin.right : a.left), hi = rtl ? (pin ? pin.left : a.right) : a.right - fade;
+    const lo = rtl ? a.left + fade : a.left, hi = rtl ? a.right : a.right - fade;
     if (b.left < lo) el.scrollLeft -= lo - b.left + 8; else if (b.right > hi) el.scrollLeft += b.right - hi + 8;
   }, [m.key]);
   const cue = () => { const el = ref.current; if (!el) return; const rtl = getComputedStyle(el).direction === 'rtl'; el.scrollBy({ left: (end ? 1 : -1) * (rtl ? 1 : -1) * el.clientWidth, behavior: 'smooth' }); };
   return (
     <div className={`p6-chipwrap${over ? ' over' : ''}${end ? ' end' : ''}`}>
+      <button type="button" className="p6-allm" id="all-metrics" aria-haspopup="dialog" onClick={onAll}>מדד ▾</button>
       <div className="p6-chips" id="metric-chips" role="group" aria-label="מדד" ref={ref}>
-        <button type="button" className="all" id="all-metrics" aria-haspopup="dialog" onClick={onAll}>מדד ▾</button>
         {ks.map((k) => { const x = bms.find((y) => y.key === k)!; return <button key={k} type="button" data-m={k} aria-pressed={k === m.key} title={x.l} onClick={() => k !== m.key && onPick(k)}>{shOf(x)}</button>; })}
       </div>
       {desk && over ? <button type="button" className="p6-chips-more" id="chips-more" aria-label={end ? 'חזרה לתחילת המדדים' : 'עוד מדדים'} onClick={cue}>{end ? '›' : '‹'}</button> : null}
