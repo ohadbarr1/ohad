@@ -131,7 +131,7 @@ export function Layout() {
             <NavLink to="/" className="brand-m" aria-label="fox · דף הבית"><Logo size={24} />fox<span>.</span></NavLink>
             <Search />
             {pro && <ChartBookLink />}
-            <DoorSwitch door={chosen} setDoor={setDoor} />
+            <DoorSwitch door={chosen} setDoor={setDoor} short={pro && !chosen} />
             <button className="iconbtn" type="button" onClick={toggle} aria-label={`החלפת ערכת עיצוב. הבאה: ${nextName}`} title={`ערכת עיצוב: ${THEMES.find(([t]) => t === theme)![1]}. לחיצה: ${nextName}`}><Icon name={next === 'dark' ? 'moon' : 'sun'} /></button>
           </div>
         </header>
