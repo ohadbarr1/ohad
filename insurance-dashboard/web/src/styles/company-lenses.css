@@ -1,0 +1,114 @@
+/* P6-2e: the company page's depth lenses ניתוח · הון וחוב · יעדים (spec p6 §5.2, §5.4, §14.1 G2/G4, §14.3 rule 7, §14.4 T-C6–T-C8).
+   Prefix p6-; the shipped panels inside keep their own styles. Phone targets (§14.3 rule 7): a standalone number ≥ 44 × 32. */
+
+.p6-lens { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.p6-lens-g { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+.p6-lens-cell { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.p6-lens-cell:empty { display: none; }
+.p6-lens-cell > .panel, .p6-lens-cell > section { margin: 0; }
+@media (min-width: 1000px) {
+  .p6-lens-g { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .p6-lens-g:has(> .p6-lens-cell:empty) { grid-template-columns: minmax(0, 1fr); }
+}
+.p6-wait { margin: 8px 2px; font-size: var(--t-2); }
+.p6-sub { font-size: var(--t-2); font-weight: 500; }
+
+/* a block folded on the phone: one line with its total, opens in place */
+.p6-fold { min-width: 0; }
+.p6-fold > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-height: 44px; padding: 10px 14px; border-radius: var(--r-3, 14px); background: var(--panel); border: 1px solid var(--line-soft); font-weight: 700; font-size: var(--t-3); }
+.p6-fold > summary::-webkit-details-marker { display: none; }
+.p6-fold > summary small { flex-basis: 100%; font-weight: 400; font-size: var(--t-1); }
+.p6-fold[open] > summary { margin-bottom: 10px; }
+.p6-bondsp .p6-fold > summary { padding: 0; border: 0; background: none; }
+.p6-bonds-sum { justify-content: space-between; }
+
+/* key–value rows (policy, bonds, sheets) */
+.p6-kvs { display: flex; flex-direction: column; }
+.p6-kv { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); min-height: 44px; }
+.p6-kv:last-child { border-bottom: 0; }
+.p6-kv-l { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-size: var(--t-3); font-weight: 500; }
+.p6-kv-l small { font-size: var(--t-1); font-weight: 400; }
+.p6-kv-l .chip { align-self: flex-start; }
+.p6-kv-v { display: flex; align-items: center; gap: 6px; flex: none; font-weight: 700; white-space: nowrap; }
+.p6-tot { border-top: 1px solid var(--line); }
+.p6-bonds { max-height: none; }
+
+/* every standalone figure button in these lenses: a 44 × 32 target on the phone */
+.p6-lens :is(.p6-kv-v, .p6-solv-t td, .p6-tg-t td, .p6-brl-v) > :is(button.src, a.src) { min-height: 32px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* ניתוח: the bridge as a list with two-direction bars (one view; the chart is the other) */
+.p6-attr .attr-sub { margin-inline-start: 6px; }
+.p6-behind { margin: 0; padding: 8px 12px; border-radius: var(--r-2, 10px); background: color-mix(in oklch, var(--warn) 12%, transparent); color: var(--fg); font-size: var(--t-2); }
+.p6-brl { display: flex; flex-direction: column; }
+.p6-brr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(64px, 30%) 58px; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line-soft); }
+.p6-brr:last-child { border-bottom: 0; }
+.p6-brl-l { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-size: var(--t-2); font-weight: 600; }
+.p6-brl-l .chip { align-self: flex-start; }
+.p6-brl-c { color: var(--muted); font-size: var(--t-1); font-weight: 400; line-height: 1.35; }
+.p6-brl-b { position: relative; height: 12px; direction: ltr; }
+.p6-brl-b s { position: absolute; inset: 0 auto 0 50%; width: 1px; background: var(--line); }
+.p6-brl-b i { position: absolute; top: 1px; bottom: 1px; border-radius: 2px; }
+.p6-brl-b i.up { left: 50%; background: var(--up); }
+.p6-brl-b i.dn { right: 50%; background: var(--down); }
+.p6-brl-v { text-align: end; font-weight: 700; font-size: var(--t-2); }
+.p6-brl-v .pos { color: var(--up); } .p6-brl-v .neg { color: var(--down); }
+
+/* הון וחוב: solvency by report */
+.p6-solv-t { width: 100%; }
+.p6-solv-t th, .p6-solv-t td { text-align: start; white-space: nowrap; }
+.p6-solv-t thead th small { display: block; font-weight: 400; font-size: var(--t-1); color: var(--muted); }
+.p6-solv-t td.v { font-weight: 700; }
+.p6-solv-t .pos { color: var(--up); } .p6-solv-t .neg { color: var(--down); }
+.p6-scr > section, .p6-scr > .panel { margin: 0; }
+.p6-scr .kpi-sec { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 1000px) {
+  .p6-scr .kpi-sec { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .p6-scr .kpi-sec > .band, .p6-scr .kpi-sec > :first-child { grid-column: 1 / -1; }
+}
+
+/* יעדים: the table first */
+.p6-tg-t { width: 100%; }
+.p6-tg-t th, .p6-tg-t td { vertical-align: top; text-align: start; }
+.p6-tg-t thead th small { display: block; font-weight: 400; font-size: var(--t-1); color: var(--muted); }
+.p6-tg-t tbody th.lbl { font-weight: 600; white-space: normal; min-width: 150px; }
+.p6-tg-t tbody th.lbl small { display: block; font-weight: 400; font-size: var(--t-1); line-height: 1.45; }
+.p6-tg-t td.v { font-weight: 700; white-space: nowrap; }
+.p6-tg-t td small { display: block; font-size: var(--t-1); }
+.p6-tg-t td small.p6-tg-vs { white-space: nowrap; }
+.p6-tg-miss { display: flex; flex-direction: column; gap: 2px; max-width: 190px; white-space: normal; }
+.p6-tg-st { white-space: nowrap; }
+.p6-tg-doc { text-decoration: underline; text-underline-offset: 2px; }
+.p6-hist { min-height: 32px; font-weight: 600; cursor: pointer; }
+@media (max-width: 760px) {
+  .p6-tg-t tbody th.lbl { min-width: 0; }
+  .p6-tg-t th, .p6-tg-t td { padding-inline: 4px; }
+  .p6-tg-t td { white-space: normal; }
+  .p6-tg-t .p6-tg-st { white-space: normal; padding-inline: 6px; text-align: center; }
+  .p6-tg-t { font-size: var(--t-2); }
+  .p6-tg-t tbody th.lbl { width: 34%; font-size: var(--t-2); }
+  .p6-tg-t td small.p6-tg-vs { white-space: normal; }
+  .p6-solv-t th, .p6-solv-t td { padding-inline: 4px; }
+  .p6-brr { grid-template-columns: minmax(0, 1fr) 54px 52px; gap: 8px; }
+}
+
+/* ניתוח: CapitalPanel's stress table folds under one line (StressFold draws it from the same calls) */
+.p6-cap .cap-panel .cap-t.st { display: none; }
+.p6-stress > summary { background: var(--panel); }
+@media (min-width: 1000px) {
+  .p6-bonds { display: block; column-count: 2; column-gap: 24px; }
+  .p6-bonds .p6-kv { break-inside: avoid; border-bottom: 1px solid var(--line-soft); }
+}
+.p6-more { align-self: flex-start; min-height: 32px; cursor: pointer; font-weight: 600; }
+@media (max-width: 760px) {
+  .p6-tg .scroll { overflow-x: visible; }
+  table.tight.p6-tg-t { table-layout: fixed; width: 100%; }
+  table.tight.p6-tg-t thead th:nth-child(1) { width: 31%; }
+  table.tight.p6-tg-t thead th:nth-child(2) { width: 25%; }
+  table.tight.p6-tg-t thead th:nth-child(3) { width: 25%; }
+  table.tight.p6-tg-t thead th:nth-child(4) { width: 19%; }
+  .p6-tg-t td.v { white-space: normal; overflow-wrap: anywhere; }
+  .p6-tg-t th, .p6-tg-t td { padding-inline: 3px; }
+  .p6-tg-t tbody th.lbl { position: static; box-shadow: none; }
+}
+.p6-tg-t thead th small { white-space: normal; }
+.p6-ltr { unicode-bidi: isolate; direction: ltr; }
