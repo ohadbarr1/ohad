@@ -237,3 +237,6 @@ table.p6-mxt.dense thead th button small { font-size: 9.5px; }
   .p6-gp-hd h2, .p6-mx-hd h2 { font-size: 13px; }
   .p6-mx, .p6-gp { padding-block: 6px 4px; }
 }
+/* a signed figure on a heat fill keeps 4.5 : 1 (axe): its green / red is darkened toward the ink */
+table.p6-mxt td:is(.q1, .q2, .q3, .q4) .num.pos { color: color-mix(in oklch, var(--up) 55%, var(--fg)); }
+table.p6-mxt td:is(.q1, .q2, .q3, .q4) .num.neg { color: color-mix(in oklch, var(--down) 60%, var(--fg)); }
