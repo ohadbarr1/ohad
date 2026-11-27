@@ -241,3 +241,4 @@ main .co6-take :is(a, button).src.co6-wn { padding: 6px 0; margin: -6px 0; line-
   .co6 { margin-top: -18px; }
   .co6-take { line-height: 1.5; }
 }
+table.co6-rs th, table.co6-rs td, table.co6-qt th, table.co6-qt td { vertical-align: middle; }

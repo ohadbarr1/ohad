@@ -9,7 +9,7 @@ import { CompanyTear } from '../CompanyTear';
 import { FundHouseStrip } from '../../components/FundHouseStrip';
 import { DividendCapacity } from '../../components/DividendCapacity';
 import { chgProv, figText, repName as chgRep, type ChgItem, type Changes, type ChgReport } from '../../lib/changes';
-import { companyStamp, companyWords, coChgHead, filerWords, waitingWords } from '../../lib/companyWords';
+import { companyStamp, companyWords, coChgHead, filerWords, waitingWords, type CoWin } from '../../lib/companyWords';
 import type { FigRef, WPart } from '../../lib/peerWords';
 import { readerHref } from '../../lib/search';
 import { idCss } from '../../lib/identity';
@@ -22,7 +22,7 @@ import type { Market } from '../../lib/market';
 import type { Win } from '../../lib/period';
 import type { RegistryCompany } from '../../lib/types';
 import { qBack, qlab } from '../../lib/quarters';
-import { endOf, figProv, headline, type Fig } from '../ReportDay';
+import { ROLES, endOf, figAt, figProv, headline, resolve, type Fig } from '../ReportDay';
 import { calc } from '../companyProv';
 import { coBoard, coCell, coSeries, gridCell, gridKeys, gridNote, npPct, placeOf, rowDef, rowsFor, wordsChgProv, wordsIn, type CoFig, type CoKey, type GridRead } from './rows';
 import { PeerStrip } from './PeerStrip';
@@ -90,11 +90,32 @@ export function XlsxChip({ id, report, company = 'xlsx-co', className = 'co6-chi
 }
 
 /* ---------- the sentence (5.3) ---------- */
+/** the window of the report sheet (?w=) as the sentence's window: LTM; 9M for a third-quarter report read on its year to date
+ *  (other cumulative windows, H1 and FY, keep the quarter's sentence: companyWords names only 9M and LTM) */
+function sentenceWin(co: CoData): CoWin {
+  if (co.win === 'ltm') return 'ltm';
+  return co.win === 'ytd' && co.P.endsWith('Q3') && co.store ? '9m' : 'q';
+}
+/** the figure of a statement line, as the sentence reads it (ReportDay's resolver; millions) */
+const figFig = (f: Fig | null, t: string, p: string): CoFig => (f ? { v: kv(f), text: nf(kv(f), 0), prov: () => figProv(f, t, p) } : { v: null, text: '–', prov: () => ({ k: 'none', title: t, why: 'אין נתון' }) });
 function Sentence({ co }: { co: CoData }) {
   const { book, kind, entry, q, ents, chr, ch } = co;
-  const w = useMemo(() => wordsIn(book, kind, entry.id, q, ents), [book, kind, entry.id, q, ents]);
-  const top: ChgItem | null = chr && chr.p === co.P ? chr.items[0] ?? null : null;
-  const parts = companyWords({ q, np: w.np.v, npY: w.npY.v, npQ: w.npQ.v, roe: w.roe.v,
+  const win = sentenceWin(co);
+  const w = useMemo(() => {
+    const base = wordsIn(book, kind, entry.id, q, ents);
+    if (win === 'ltm') {
+      const r = rowDef(kind, 'np');
+      return { ...base, np: coCell(book, r, entry.id, kind, q, 'ltm', ents), npY: coCell(book, r, entry.id, kind, qBack(q, 4), 'ltm', ents), la: `LTM ${qlab(q)}`, lb: `LTM ${qlab(qBack(q, 4))}` };
+    }
+    if (win === '9m' && co.store) {
+      const rows = resolve(co.store, ROLES.find((x) => x.key === 'net')!).rows, end = endOf(co.P);
+      const la = `9M'${q.slice(2, 4)}`, lb = `9M'${String(Number(q.slice(0, 4)) - 1).slice(2)}`;
+      return { ...base, np: figFig(figAt(co.store, rows, '9M', end), 'רווח נקי לבעלי המניות', la), npY: figFig(figAt(co.store, rows, '9M', shiftYear(end, -1)), 'רווח נקי לבעלי המניות', lb), la, lb };
+    }
+    return { ...base, la: qlab(q), lb: qlab(qBack(q, 4)) };
+  }, [book, kind, entry.id, q, ents, win, co.store, co.P]);
+  const top: ChgItem | null = win === 'q' && chr && chr.p === co.P ? chr.items[0] ?? null : null;
+  const parts = companyWords({ q, win, np: w.np.v, npY: w.npY.v, npQ: w.npQ.v, roe: w.roe.v,
     top: top ? { l: top.l, d: top.d.v, cmp: top.cmp, u: top.d.u === 'pp' ? 'pp' : undefined } : null });
   if (!parts) return null;
   const text = (f: string) => (parts.find((p) => p.k === 'n' && p.ref?.k === 'co' && p.ref.f === f) as { s: string } | undefined)?.s ?? '';
@@ -103,8 +124,8 @@ function Sentence({ co }: { co: CoData }) {
     if (r.f === 'np') return w.np.prov;
     if (r.f === 'roe') return w.roe.prov;
     if (r.f === 'top') return top && ch ? () => chgProv(ch, top.d, top.l, `${top.la} מול ${top.lb}`) : null;
-    const b = r.f === 'npy' ? w.npY : w.npQ, lb = qlab(qBack(q, r.f === 'npy' ? 4 : 1));
-    return () => wordsChgProv(`רווח נקי ${r.f === 'npy' ? 'YoY' : 'QoQ'} · ${book.name(entry.id)}`, text(r.f), w.np, b, qlab(q), lb, npPct(w.np.v, b.v) != null);
+    const y = r.f === 'npy', b = y ? w.npY : w.npQ, la = y ? w.la : qlab(q), lb = y ? w.lb : qlab(qBack(q, 1));
+    return () => wordsChgProv(`רווח נקי ${y ? 'YoY' : 'QoQ'} · ${book.name(entry.id)}`, text(r.f), w.np, b, la, lb, npPct(w.np.v, b.v) != null);
   };
   return <Words parts={parts} src={src} ids={{ npy: 'pair-yoy', npq: 'pair-qoq', roe: 'pair-roe' }} />;
 }

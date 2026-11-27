@@ -25,7 +25,7 @@ export function RowSheet({ co, k, onClose }: { co: CoData; k: CoKey; onClose: ()
   const pl = r.board ? placeOf(coBoard(ctx, r.board), e) : null;
   const peers = `/industry/peers?hl=${e}&lens=focus${r.board ? `&bm=${r.board.key}` : ''}`;
   return (
-    <DeeperSheet open onClose={onClose} id="row-sheet" title={`${r.l} · ${entry.name_he}`} sub={<>8 רבעונים עד <span className="num">{qlab(q)}</span>{pl && pl.place != null ? <> · מקום <span className="num">{pl.text}</span> ב{co.setName}</> : null}</>}
+    <DeeperSheet open onClose={onClose} id="row-sheet" title={`${r.l} · ${entry.name_he}`} sub={<>8 רבעונים עד <span className="num">{qlab(q)}</span>{pl && pl.place != null ? <> · מקום <span className="num">{pl.text}</span> ב-{co.setName}</> : null}</>}
       footer={<div className="co6-sfoot">
         {pg && <a className="btn" href={pg.url} target="_blank" rel="noreferrer">הדוח{pg.pg != null ? <>, עמ׳ <span className="num">{pg.pg}</span></> : null} ↗</a>}
         <Link className="btn primary" to={peers}>מול העמיתים ›</Link>
