@@ -18,8 +18,8 @@ export function stashBoard(sp: URLSearchParams): void {
   try { sessionStorage.setItem(STASH, JSON.stringify(o)); } catch { /* private mode: the board opens on its defaults */ }
 }
 /** the board's address back from a peer-table view: the table's keys go, the stashed board keys return (the address's own win) */
-export function restoreBoard(n: URLSearchParams): URLSearchParams {
-  TABLE_KEYS.forEach((k) => n.delete(k));
+export function restoreBoard(n: URLSearchParams, dropTable = true): URLSearchParams {
+  if (dropTable) TABLE_KEYS.forEach((k) => n.delete(k));
   let o: Record<string, string> = {};
   try { o = JSON.parse(sessionStorage.getItem(STASH) ?? '{}') ?? {}; } catch { o = {}; }
   Object.entries(o).forEach(([k, v]) => { if (KEEP.includes(k) && typeof v === 'string' && !n.has(k)) n.set(k, v); });

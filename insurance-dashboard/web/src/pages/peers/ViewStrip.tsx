@@ -23,8 +23,9 @@ export function viewHref(cur: URLSearchParams, to: ViewId): URLSearchParams {
   const n = new URLSearchParams(cur), from = cur.get('v');
   if (to === 'free' || to === 'series') { if (!from) stashBoard(cur); BOARD_ONLY.forEach((k) => n.delete(k)); n.set('v', to === 'free' ? 'table' : 'series'); return n; }
   n.delete('v'); n.delete('sheet'); n.delete('src');
-  // BB11: back from the free table or the series: their column keys go, the board's own choices (its sort) come back
-  if (from === 'table' || from === 'series') restoreBoard(n);
+  // BB11: back from the free table or the series the board's own choices (its sort) come back; the board drops the table's column keys
+  // from its address once it is on screen (PeersBoard)
+  if (from === 'table' || from === 'series') restoreBoard(n, false);
   const l = LENS[to];
   if (l) n.set('lens', l); else n.delete('lens');
   return n;

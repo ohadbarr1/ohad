@@ -15,6 +15,7 @@ import {
   type BMetric, type BVal, type Kind, type MktFile,
 } from '../lib/peerBoard';
 import { guardWords } from '../lib/peerWords';
+import { TABLE_KEYS } from '../lib/peerHost';
 import { dlab, qlab, type QRead } from '../lib/quarters';
 import { BoardLens, FullGrid, Words } from './peers/BoardLens';
 import { exportBoard, type BoardData } from './peers/exportBoard';
@@ -69,6 +70,9 @@ export function PeersBoard({ reg, ents, setName }: Props) {
   const write = useAddressWrite();
   const put = (k: string, v: string | null) => write({ [k]: v });
   const get = (k: string) => new URLSearchParams(window.location.search).get(k);
+  // BB11: the free table's and the series' column keys mean nothing on the board: dropped from its address (replace) once it is on screen
+  const stray = TABLE_KEYS.filter((k) => sp.has(k));
+  useEffect(() => { if (stray.length) write(Object.fromEntries(stray.map((k) => [k, null]))); }, [stray.join()]);  // eslint-disable-line react-hooks/exhaustive-deps
   const sheet = useSheetHost();
   const desk = useMedia('(min-width: 1000px)');
   const kindOf = (e: string): Kind => (reg.entities.find((x) => x.id === e)?.k === 'fund' ? 'fund' : 'ins');
