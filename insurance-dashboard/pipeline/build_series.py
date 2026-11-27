@@ -60,12 +60,21 @@ def period_of(date, window):
     return f"{y}{q}" if q else None
 
 
+def window_start(end, w):
+    """the balance date a window opens on: the quarter-end three months before a quarter, 31.12 of the year before a year-to-date or a year"""
+    y, md = int(end[:4]), end[5:10]
+    if w == "q":
+        return {"03-31": f"{y - 1}-12-31", "06-30": f"{y}-03-31", "09-30": f"{y}-06-30", "12-31": f"{y}-09-30"}.get(md)
+    return f"{y - 1}-12-31" if md in ("03-31", "06-30", "09-30", "12-31") else None
+
+
 def latest_print(xs):
     """The figure the site shows for one cell (pipeline/restate_rule.py): IFRS 17 before IFRS 4, then the latest report that prints it;
     a later print that differs from the first beyond rounding carries the first print (rst, rfrom)."""
     if not xs:
         return None
     std17 = [c for c in xs if c["std"] != "IFRS 4"] or xs
+    std17 = sorted(std17, key=lambda c: bool(c.get("open")))  # in one report a closing row before the opening row of a later window
     c, first = restate_rule.pick(std17, lambda c: c["from"], lambda c: c["own"])
     if c is not first and restate_rule.restated(first["v"], c["v"]):
         return {**c, "rst": first["v"], "rfrom": first["from"]}
@@ -106,6 +115,15 @@ for comp in companies:
                 slot = "bal" if w == "instant" else w  # q, ytd, fy, bal
                 cells.setdefault((m, s, b), {}).setdefault(per, {}).setdefault(slot, []).append(c)
                 meta[(m, s, b)] = x.get("label") or ""
+                # the opening CSM of a window is the closing CSM of the date before it, as printed by a later report: the restated
+                # comparatives of a roll-forward often survive only there (Harel 31.12.24: 16,548 as first printed, 16,358 as the opening
+                # of the Q1'25 comparative in the Q1'26 report, p. 16), so it is a print of the closing balance (pipeline/csm_resolve.py
+                # reads it the same way; a closing row of the same report comes first)
+                if m == "csm_opening" and w in ("q", "ytd", "fy"):
+                    ob = window_start(date[:10], w)
+                    op = period_of(ob, "instant") if ob else None
+                    if op:
+                        cells.setdefault(("csm_closing", s, b), {}).setdefault(op, {}).setdefault("bal", []).append({**c, "own": False, "open": 1})
     rows = []
     for key, pers in cells.items():
         m, s, b = key

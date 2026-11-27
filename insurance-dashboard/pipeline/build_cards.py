@@ -31,6 +31,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import csm_resolve  # noqa: E402
+CSM_SEG = {"life": "חיים וחיסכון", "health": "בריאות", "group": "קבוצה"}
 import reportday as rd  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -352,9 +353,13 @@ def build_card(c, e, kind, P, bk, rep_docs, per_of_url, rs, led_url, peer, ifrs_
                 return None, None
             def part(f, i):
                 url = f.get("u") or led_url.get(x["rp"]) or ifrs_url.get((c, x["rp"]))
+                lab = f"{CSM_SEG.get(f['g'], f['g'])} · {'ביטוח משנה' if i % 2 else 'ברוטו'}" if x.get("less") else x["label"]
                 return card.page(f"{fid}.{i}" if x["sum"] else fid, abs(f["dv"] if f.get("dv") is not None else f["v"]), "m", url, f.get("pg"), x["rp"],
                                  "deck" if f.get("u") else "report", {"l": "csm", "d": d, "i": i}, (["der"] if x["flags"] & 1 else []) + (["chart"] if f.get("src") in ("chart", "text") else []),
-                                 x["label"])
+                                 lab)
+            if x.get("less"):  # net = gross less reinsurance, per scope, from one report (csm_resolve tiers 3c, 3d, 8b)
+                ins = [part(f, i) for i, f in enumerate(x["fs"])]
+                return card.calc(fid, x["v"], "m", "less", ins, "נטו מביטוח משנה: ברוטו פחות ביטוח משנה, מאותו דוח" + (" (חיים ועוד בריאות)" if len(ins) > 2 else "")), x
             if x["sum"]:
                 ins = [part(f, i) for i, f in enumerate(x["fs"])]
                 return card.calc(fid, x["v"], "m", "sum", ins, f"חיים ועוד בריאות, {csm_resolve.BASIS_HE[x['b']]}"), x
@@ -382,7 +387,7 @@ def build_card(c, e, kind, P, bk, rep_docs, per_of_url, rs, led_url, peer, ifrs_
                 cell = next((x for x in ent["c"] if x[0] == per), None)
                 if not cell:
                     continue
-                if cell[2] is None and len(cell) > 6 and cell[6]:
+                if len(cell) > 6 and cell[6]:  # a segment sum (its page is its first line's since P4): the lines, each at its page
                     ins = [card.page(f"{fid}{tag}.{i}", pv, "m", peer[k]["u"][pu] if pu is not None else None, ppg, per, "report",
                                      {"l": "peer", "f": k, "k": per, "i": i}, [], pl) for i, (pl, pv, ppg, pu) in enumerate(cell[6])]
                     flows[(fid, tag)] = card.calc(f"{fid}{tag}", cell[1], "m", "sum", ins, "חיים וחיסכון ועוד בריאות")
