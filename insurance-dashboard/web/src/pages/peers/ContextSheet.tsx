@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ComponentType } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DeeperSheet } from '../../components/DeeperSheet';
 import { backThen } from '../../components/Sheet';
@@ -8,7 +8,8 @@ import { useAddressWrite } from '../../lib/sheetHost';
 import { CARRY_RULE, TAX } from '../../lib/peerBoard';
 import { nf } from '../../lib/format';
 import { qlab } from '../../lib/quarters';
-import type { PeerSet, Registry } from '../../lib/registry';
+import type { PeerSet } from '../../lib/registry';
+import { SetEditor } from './SetEditor';
 import { viewHref } from './ViewStrip';
 import type { BoardData } from './BoardLens';
 import '../../styles/peerboard.css';
@@ -17,11 +18,6 @@ import '../../styles/peerboard.css';
    the reader's own, stored in this browser as the peer table does), editing a set (pages/peers/SetEditor, shared with the peer table),
    the focus company (a "Q2'26" tag on a company that has not reported the board's quarter), the companies the partial-quarter line
    names when there are more than four, and the peer table's other views (free table, series, savings deck). Plus "איך מחשבים?". */
-
-type SetEditorProps = { reg: Registry; ents: string[]; onChange: (ids: string[]) => void; onSave: (name: string) => void; own: PeerSet | null; onDelete: (id: string) => void };
-// the set editor moved out of pages/Peers.tsx (lane P6-2c); loaded when it is there
-const EDITORS = import.meta.glob<{ SetEditor: ComponentType<SetEditorProps> }>('./SetEditor.tsx');
-const Editor = EDITORS['./SetEditor.tsx'] ? lazy(() => EDITORS['./SetEditor.tsx']().then((m) => ({ default: m.SetEditor }))) : null;
 
 export function ContextSheet({ d, onClose }: { d: BoardData; onClose: () => void }) {
   const { reg, book, status } = d;
@@ -45,13 +41,11 @@ export function ContextSheet({ d, onClose }: { d: BoardData; onClose: () => void
           ))}
         </div>
         <button type="button" className="btn p6-edit" aria-expanded={edit} onClick={() => setEdit(!edit)}>{edit ? 'סגירת העריכה' : 'עריכת הקבוצה'}</button>
-        {edit ? (Editor ? (
-          <Suspense fallback={null}>
-            <Editor reg={reg} ents={d.ents} onChange={(ids) => write({ e: ids.join(','), s: null })}
-              onSave={(n) => { const id = `u${Date.now().toString(36)}`; setMySets([...mySets, { id, n, ids: d.ents }]); write({ s: id, e: null }); }}
-              own={own} onDelete={(id) => { setMySets(mySets.filter((x) => x.id !== id)); write({ s: null, e: null }); }} />
-          </Suspense>
-        ) : <p className="p6-sh-note">עריכת קבוצה: <Link to={href('free')}>בטבלה החופשית ›</Link></p>) : null}
+        {edit ? (
+          <SetEditor reg={reg} ents={d.ents} onChange={(ids) => write({ e: ids.join(','), s: null })}
+            onSave={(n) => { const id = `u${Date.now().toString(36)}`; setMySets([...mySets, { id, n, ids: d.ents }]); write({ s: id, e: null }); }}
+            own={own} onDelete={(id) => { setMySets(mySets.filter((x) => x.id !== id)); write({ s: null, e: null }); }} />
+        ) : null}
       </div>
       <div className="p6-ms-sec">
         <h3>במיקוד</h3>

@@ -192,14 +192,21 @@ table.p6-mxt.dense thead th button small { font-size: 9.5px; }
   .p6-board { gap: 5px; }
   .p6-views.ro-tabs { padding-top: 0; padding-bottom: 2px; }
   .p6-views .ro-tabs-in button { position: relative; height: 34px; }
-  .p6-views .ro-tabs-in button::before { content: ""; position: absolute; inset: -4px 0; }
+  .p6-views .ro-tabs-in button::before { content: ""; position: absolute; inset: -5px 0; }
   .p6-chips { padding: 0; }
   .p6-chips button { position: relative; height: 34px; padding: 0 14px; font-size: 13.5px; }
-  .p6-chips button::before { inset: -5px 0; }
-  .p6-chips button::before { content: ""; position: absolute; inset: -4px 0; }
+  .p6-chips button::before { content: ""; position: absolute; inset: -5px 0; }
   .p6-pb .ro-take { padding: 4px 12px; font-size: 14px; line-height: 1.36; }
   .p6-bp { padding: 4px 6px 2px; }
   .p6-bhead { padding: 0 2px; min-height: 22px; }
   .p6-bhead .p6-tag { line-height: 17px; }
   .p6-bp .board.p6-sb { padding-top: 0; padding-bottom: 2px; }
+}
+.p6-pb .sb-row.out .p6-sb-val .num, .p6-pb .sb-row.out .p6-sb-val .num.pos, .p6-pb .sb-row.out .p6-sb-val .num.neg { color: var(--muted); }
+/* desktop: the focus list's four sections two by two (1440 budget: ≤ 1.6 screens) */
+@media (min-width: 1000px) {
+  #focus-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 28px; align-items: start; }
+  .p6-fl-sec + .p6-fl-sec { margin-top: 0; }
+  .p6-fl-row { min-height: 36px; }
+  .p6-fl-name { min-height: 36px; font-size: 13.5px; }
 }

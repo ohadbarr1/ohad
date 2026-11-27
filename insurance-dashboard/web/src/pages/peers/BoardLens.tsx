@@ -172,7 +172,7 @@ export function GridPanel({ d, m, rd, id = 'quarter-grid' }: { d: BoardData; m: 
           const c = r.cells.find((x) => x.e === k)!;
           return <Sourced className="num" src={c.val.prov} label={`${book.short(k)}, ${qlab(q)}: ${text}`}>{text}</Sourced>;
         }}
-        more={many ? { label: `כל ה-${d.ents.length} ›`, onClick: () => d.put('sheet', 'grid'), id: `${id}-all` } : undefined} />
+        more={many ? { label: `כל ה-${d.ents.length} ›`, onClick: () => d.put("sheet", "grid"), id: `${id}-more` } : undefined} />
       {close}
       {anyStar ? <p className="p6-basis">{starNote(d.q)}</p> : null}
       {dagCell && latest ? <p className="p6-basis" id={`${id}-dagger`}>{daggerNote(dagCell, latest)}</p> : null}
