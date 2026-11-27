@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Chart } from '../components/Chart';
 import { Sourced } from '../components/Source';
@@ -17,6 +17,11 @@ import { back, F_CHART, F_DER, F_FIXED, F_OLD, F_RE, FREQS, fmtV, plab, pord, UN
 import { carriedVal, cellVal, colLabel, fmtCol, formulaTok, lexOf, parseCol, resolver, ROE_EXPR, ROE_NAME, ROE_OLD_TOK, shownUnit, TEMPLATES, TR_HE, withTr, type Col, type Template, type Tr } from '../lib/seriesCols';
 import { ALIASES, autoAlias, codeOf, ExprError, FUNCS, parse, toCode } from '../lib/seriesExpr';
 import { fundRoster, monthOf, rosterDiff, rosterText, useRosterFile } from '../lib/roster';
+import { SetEditor } from './peers/SetEditor';
+import { ViewStrip } from './peers/ViewStrip';
+import { GuardLine } from '../components/GuardLine';
+import { CSM_CROSS, csmBasesDiffer, csmBasis, latestCsmBasis, reportStatus } from '../lib/peerBoard';
+import { basisLine, BOARD_KEYS, medN, seriesBasis, tableGuard } from '../lib/peerHost';
 import '../styles/peers.css';
 import '../styles/restate.css';
 
@@ -30,14 +35,23 @@ const KEYS = ['s', 'e', 'f', 'p', 'n', 'v', 'k', 'c', 'o', 'h', 'pin', 'hl', 'w'
 const DEF = { s: 'ins', f: 'LTM' as Freq, n: 1, v: 'board' as View, w: 20 };
 const NOTE: Record<number, string> = { 1: 'נגזר מנתונים מדווחים (Q4 = FY פחות 9M, H מרבעונים, LTM); הנוסחה במקור', 2: 'לפי IFRS 4, כפי שדווח במקור', 3: 'נקרא מגרף או מטקסט בדוח', 4: 'בסיס שונה מרוב החברות בעמודה', 5: 'תג XBRL שתוקן מול הדוח המודפס',
   6: 'הרכב השתנה: החברות שיש להן נתון שונות בין התקופה לשנה שלפניה, ולכן הנתח אינו בר השוואה כמות שהוא', 7: 'כולל קופות חדשות במאגר הרגולטור: חלק מהשינוי הוא קופות שנכנסו לקבוצה, לא כסף שנכנס',
+  9: 'CSM שהודפס על בסיס אחר (נטו / ברוטו) מהנתון האחרון של החברה: שינוי מעליו אינו מחושב',
   8: 'החברה טרם דיווחה על התקופה: הנתון המדווח האחרון (תקופה אחת אחורה) ונתוני השוק לסוף התקופה, כמו בתצוגת ההשוואה; נכלל בחציון ובממוצע (מתודולוגיה: השוואת עמיתים בעונת דוחות)' };
-const SUP = ['', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '*'];
+const SUP = ['', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '*', '†'];
+const CSM_ID = 'ifrs:csm_closing', NP_IDS = ['ifrs:profit_attributable', 'xbrl:profit'];
 /** a cell of the latest column (the table's end period): a company that has not reported it is read by the board's rule (seriesCols.carriedVal) */
 type CVal = Val & { from?: string };
 function cellAt(book: Book, c: Col, e: string, f: Freq, p: string, latest: boolean, ents: string[]): CVal {
   const x = cellVal(book, c, e, f, p, ents);
   if (!latest || (x.v != null && Number.isFinite(x.v))) return x;
   return carriedVal(book, c, e, f, p, ents) ?? x;
+}
+
+/** spec 14.3 rule 4: a change of a CSM figure between two quarters printed on known, different bases (net / gross) is not computed */
+function csmAcross(book: Book, c: Col, e: string, f: Freq, p: string, x: CVal): CVal {
+  if (c.mid !== CSM_ID || c.tr === 'v' || c.tr === 's' || x.v == null) return x;
+  const q = x.from ?? p, pb = c.tr === 'y' ? yearAgo(f, q) : c.tr === 'q' ? back(f, q, 1) : back(f, q, 3 * (f === 'FY' ? 1 : f === 'H' ? 2 : 4));
+  return csmBasesDiffer(book, e, q, pb) ? { v: null, fl: 0, why: CSM_CROSS, prov: () => ({ k: 'none', title: `${colLabel(c)} · ${book.name(e)} · ${plab(f, q)}`, why: CSM_CROSS }) } : x;
 }
 
 function readSt(sp: URLSearchParams): St {
@@ -53,6 +67,7 @@ function readSt(sp: URLSearchParams): St {
 function writeSt(prev: URLSearchParams, st: St): URLSearchParams {
   const n = new URLSearchParams(prev);
   KEYS.forEach((k) => n.delete(k));
+  if (st.v !== 'board') BOARD_KEYS.forEach((k) => n.delete(k));  // P5: the free table and the series never keep the board's lens or metric in the address
   if (st.e) n.set('e', st.e.join(',')); else if (st.s !== DEF.s) n.set('s', st.s);
   if (st.f !== DEF.f) n.set('f', st.f);
   if (st.p) n.set('p', st.p);
@@ -88,6 +103,7 @@ export function Peers() {
   const apply = (t: Template, keep: Partial<St> = {}) => set({ c: t.c, s: t.s, e: null, f: t.f, n: 1, o: null, pin: -1, k: 0, p: '', ...(st.v === 'board' ? { v: 'table' as View } : {}), ...keep });
   useEffect(() => {
     const t = sp.get('t');
+    if (!sp.getAll('c').length && sp.get('v') !== 'table' && sp.get('v') !== 'series' && !t) return;  // the board and the deck read no columns: nothing to write into the address
     if (!sp.getAll('c').length) {
       const tpl = TEMPLATES.find((x) => x.id === t) ?? TEMPLATES[0];
       setSp((prev) => { const cur = readSt(prev); const n = writeSt(prev, { ...cur, c: tpl.c, s: prev.get('s') ?? (prev.get('e') ? cur.s : tpl.s), f: prev.get('f') ? cur.f : tpl.f }); return n; }, { replace: true });
@@ -118,8 +134,9 @@ export function Peers() {
     pre.forEach((c) => { if (c.mid) out.add(c.mid); });
     // formula inputs are known once the registry has arrived
     if (reg) { const auto = new Map(reg.metrics.map((m) => [autoAlias(m.id), m.id])); pre.forEach((c) => c.expr?.replace(/\{([^}]+)\}|[A-Za-z_][A-Za-z0-9_]*/g, (w, br) => { const id = br ? br.trim() : ALIASES[w] ?? auto.get(w); if (id) out.add(id); return w; })); }
+    if (st.v === 'table' || st.v === 'series') NP_IDS.forEach((id) => { if (reg?.metrics.some((m) => m.id === id)) out.add(id); });  // who has reported the latest quarter (the partial-quarter line)
     return [...out];
-  }, [pre, reg]);
+  }, [pre, reg, st.v]);
   const { book, pending } = useBook(reg, mids);
   const cols = useMemo(() => (book ? st.c.map((t) => parseCol(t, book)) : []), [book, st.c]);
   useEffect(() => { if (mids.some((m) => m.startsWith('lts:'))) warmLts(ents.map((e) => (e === 'idi' ? 'direct' : e))); }, [mids, ents]);
@@ -130,10 +147,15 @@ export function Peers() {
   // the axis: the latest period any column has for the set, then n periods back
   // market closes (mkt:*) run ahead of the filings: the axis follows the reported columns when there are any
   const fin = cols.filter((c) => c.ids.some((id) => !id.startsWith('mkt:'))), axisCols = fin.length ? fin : cols;
-  const pend = st.p || axisCols.reduce<string | null>((best, c) => { const id = c.ids.find((x) => !x.startsWith('mkt:')) ?? c.ids[0]; const l = id ? book.latest(id, st.f, ents) : null; return l && (!best || pord(l) > pord(best)) ? l : best; }, null) || '';
+  const auto = axisCols.reduce<string | null>((best, c) => { const id = c.ids.find((x) => !x.startsWith('mkt:')) ?? c.ids[0]; const l = id ? book.latest(id, st.f, ents) : null; return l && (!best || pord(l) > pord(best)) ? l : best; }, null) || '';
+  const pend = st.p || auto;
   const periods = pend ? Array.from({ length: st.n }, (_, i) => back(st.f, pend, i)) : [];
   const setName = st.e ? 'קבוצה מותאמת' : allSets.find((x) => x.id === st.s)?.n ?? '';
   const loading = pending > 0;
+  // who has reported the table's latest quarter (the partial-quarter line over the free table and the series, spec 4 and 13.2)
+  const status = st.v === 'table' || st.v === 'series' ? reportStatus(book, ents) : null;
+  const guardOf = (names: string[], from: string | null) => (status ? tableGuard({ f: st.f, p: st.p, auto, n: status.n || ents.length, names, from, bq: status.bq, cq: status.cq, waiting: status.waiting.length }) : null);
+  const guardLine = (names: string[], from: string | null) => { const g = guardOf(names, from); return g && <GuardLine kind="risk" id="guard" wrap text={g.text} more={g.action} onOpen={() => set({ p: g.to, o: null })} />; };
 
   // one toolbar row (ws2 L4): the set, the frequency, the period, the columns' depth and the view; then "+ מדד", the templates and the rest behind one menu
   const controls = (
@@ -147,7 +169,7 @@ export function Peers() {
       </>}
       {st.v === 'table' && <Pick label="תקופות לכל מדד" cap="תקופות" value={String(st.n)} onChange={(n) => set({ n: Number(n), o: null })} options={[['1', '1'], ['3', '3'], ['5', '5'], ['8', '8']]} />}
       {st.v === 'series' && <Pick label="טווח הסדרה" cap="טווח" value={String(st.w)} onChange={(w) => set({ w: Number(w) })} options={st.f === 'Q' ? [['8', '2 שנים'], ['12', '3 שנים'], ['20', '5 שנים'], ['40', '10 שנים']] : [['8', '8'], ['12', '12'], ['20', '20']]} />}
-      <Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['board', 'השוואה'], ['table', 'טבלה חופשית'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} />
+      {st.v === 'deck' && <Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['board', 'השוואה'], ['table', 'טבלה חופשית'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} />}
       {st.v !== 'deck' && st.v !== 'board' && <>
         <button type="button" className={`btn${panel === 'add' ? ' primary' : ''}`} aria-expanded={panel === 'add'} onClick={() => setPanel(panel === 'add' ? '' : 'add')}>+ מדד</button>
         <Menu label="תבניות" summary="תבניות" items={[
@@ -173,13 +195,13 @@ export function Peers() {
 
   return (
     <div className="pr">
-      {phone ? (
+      {st.v === 'board' ? null /* the board owns its chrome: the hub row's Excel and context chip, the lens strip (pages/peers/*) */ : phone ? (
         <>
-          {st.v !== 'deck' && <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b>{st.v === 'board' ? ' · השוואה' : <> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</>}</ContextBar>}
+          {st.v !== 'deck' && <ContextBar onOpen={() => setSheet(true)} label="עריכה"><b>{setName}</b>{<> · {pend ? plab(st.f, pend) : st.f} · {cols.length} עמודות</>}</ContextBar>}
           {/* table or series without opening the sheet: one tap */}
           <div className="pr-phoneview"><Seg<View> label="תצוגה" value={st.v} onChange={(v) => toView(v)} options={[['board', 'השוואה'], ['table', 'טבלה חופשית'], ['series', 'סדרה'], ['deck', 'מצגת חיסכון']]} /></div>
           <Sheet open={sheet} onClose={() => setSheet(false)} title="טבלת עמיתים">{controls}{panels}
-            {st.v !== 'deck' && st.v !== 'board' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
+            {st.v !== 'deck' && <div className="pr-collist"><h3>עמודות</h3>{cols.map((c, i) => (
               <div key={i} className="pr-ci"><span>{c.name}</span>
                 <select aria-label={`תצוגת ${c.name}`} value={c.tr} onChange={(e) => { const n = [...st.c]; n[i] = withTr(c, e.target.value as Tr); set({ c: n }); }}>{(Object.keys(TR_HE) as Tr[]).map((t) => <option key={t} value={t}>{TR_HE[t]}</option>)}</select>
                 <button type="button" className="btn" aria-label={`הסרת ${c.name}`} title={`הסרת ${c.name}`} onClick={() => set({ c: st.c.filter((_, j) => j !== i), o: null, pin: -1, k: 0 })}>×</button>
@@ -187,27 +209,35 @@ export function Peers() {
           </Sheet>
         </>
       ) : <IndustryTools>{controls}</IndustryTools>}
-      {!phone && panels}
+      {!phone && st.v !== 'board' && panels}
+      {!phone && (st.v === 'table' || st.v === 'series') && <ViewStrip active={st.v === 'table' ? 'free' : 'series'} />}
 
       {st.v === 'board' ? <Suspense fallback={<Loading what="לוח ההשוואה" />}><Board reg={reg} ents={ents} setName={setName} /></Suspense>
         : st.v === 'deck' ? <Suspense fallback={<Loading what="מצגת החיסכון" />}><Deck /></Suspense>
+        : !cols.length && st.c.length === 0 && !sp.get('t') ? <Loading what="העמודות" />
         : !cols.length ? <Empty title="אין עמודות"><button type="button" className="btn" onClick={() => apply(TEMPLATES[0])}>תבנית רווחיות</button></Empty>
-        : st.v === 'series' ? <SeriesView book={book} cols={cols} st={st} set={set} ents={ents} pend={pend} loading={loading} />
-        : <TableView book={book} cols={cols} st={st} set={set} ents={ents} periods={periods} loading={loading} phone={phone} cards={cards} setCards={setCards} setName={setName} />}
+        : st.v === 'series' ? <SeriesView book={book} cols={cols} st={st} set={set} ents={ents} pend={pend} loading={loading} guard={guardLine} />
+        : <TableView book={book} cols={cols} st={st} set={set} ents={ents} periods={periods} loading={loading} phone={phone} cards={cards} setCards={setCards} setName={setName} guard={guardLine} />}
       {st.v !== 'board' && <div className="src pr-foot">מקורות: {[...new Set(cols.flatMap((c) => c.ids.map((id) => book.byId.get(id)?.src)).filter(Boolean))].map((s) => reg.src[s!]).join(' · ')} · כל מספר נפתח במקור שלו · עדכון {pubLabel(reg.asof)}</div>}
     </div>
   );
 }
 
 /* ---------- table ---------- */
-interface TVProps { book: Book; cols: Col[]; st: St; set: (p: Partial<St>) => void; ents: string[]; periods: string[]; loading: boolean; phone: boolean; cards: boolean; setCards: (v: boolean) => void; setName: string }
-function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, setCards, setName }: TVProps) {
+interface TVProps { book: Book; cols: Col[]; st: St; set: (p: Partial<St>) => void; ents: string[]; periods: string[]; loading: boolean; phone: boolean; cards: boolean; setCards: (v: boolean) => void; setName: string; guard: (names: string[], from: string | null) => ReactNode }
+function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, setCards, setName, guard }: TVProps) {
   const order = cols.map((_, i) => i);
   if (st.pin >= 0 && st.pin < cols.length) { order.splice(order.indexOf(st.pin), 1); order.unshift(st.pin); }
   const sub = order.flatMap((ci) => periods.map((p, pi) => ({ ci, pi, p, col: cols[ci] })));
   const vals = new Map<string, Val>();
   const vals2 = vals as Map<string, CVal>;
-  const V = (ci: number, pi: number, e: string): CVal => { const k = `${ci}|${pi}|${e}`; let v = vals2.get(k); if (!v) { v = cellAt(book, cols[ci], e, st.f, periods[pi], pi === 0, ents); vals2.set(k, v); } return v; };
+  const V = (ci: number, pi: number, e: string): CVal => { const k = `${ci}|${pi}|${e}`; let v = vals2.get(k); if (!v) { v = csmAcross(book, cols[ci], e, st.f, periods[pi], cellAt(book, cols[ci], e, st.f, periods[pi], pi === 0, ents)); vals2.set(k, v); } return v; };
+  // the partial-quarter line (spec 4, 13.2): companies whose latest cell is carried from an earlier period, in any column
+  const carried = periods.length ? ents.filter((e) => cols.some((_, ci) => V(ci, 0, e).from)) : [];
+  const carriedFrom = carried.reduce<string | null>((b, e) => { for (let ci = 0; ci < cols.length; ci++) { const f = V(ci, 0, e).from; if (f && (!b || pord(f) > pord(b))) b = f; } return b; }, null);
+  const gl = guard(carried.map((e) => book.short(e)), carriedFrom);
+  // a change column's basis in words, once per column (the period the first column of the table ends at)
+  const basis = periods[0] ? cols.map((c) => { const t = basisLine(c.tr, st.f, periods[0]); return t ? `${c.name} · ${t}` : null; }).filter((x): x is string => !!x) : [];
   // majority basis per column: a figure on another basis carries note 4
   const usual = cols.map((c) => { if (!c.mid) return null; const n = new Map<string, number>(); ents.forEach((e) => { const b = book.meta(c.mid!, e)?.b; if (b) n.set(b, (n.get(b) ?? 0) + 1); }); return [...n.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null; });
   const sorted = (() => {
@@ -256,6 +286,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
     if (x.fl & F_CHART) m.push(3);
     if (c.mid && usual[ci] && book.meta(c.mid, e)?.b && book.meta(c.mid, e)?.b !== usual[ci]) m.push(4);
     if (x.fl & F_FIXED) m.push(5);
+    if (c.mid === CSM_ID && c.tr === 'v') { const a = csmBasis(book, e, x.from ?? periods[pi]), b = latestCsmBasis(book, e); if (a && b && a !== b) m.push(9); }
     rosterMarks(ci, pi, e, m);
     return m;
   };
@@ -294,6 +325,7 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
   if (phone && cards && periods.length === 1) {
     return (
       <>
+        {gl}
         <div className="pr-cardbar"><Seg<string> label="פריסה" value="cards" onChange={() => setCards(false)} options={[['cards', 'כרטיסים'], ['table', 'טבלה']]} />
           <Pick label="מיון" cap="מיון" value={st.o ? String(st.o.c) : ''} onChange={(v) => set({ o: v === '' ? null : { c: Number(v), i: 0, d: 1 } })} options={[['', 'לפי הקבוצה'], ...cols.map((c, i) => [String(i), colLabel(c)] as [string, string])]} /></div>
         <div className="pr-cards">{sorted.map((e, ri) => (
@@ -303,10 +335,12 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
           </section>
         ))}</div>
         <div className="src">{periods[0] ? plab(st.f, periods[0]) : ''} · {setName}</div>
+        {basis.length > 0 && <div className="src p6-basis">בסיס: {basis.join(' · ')}</div>}
       </>
     );
   }
-  return (
+  return (<>
+    {gl}
     <section className="panel pr-panel">
       <div className="hd"><h2>טבלת עמיתים</h2><div className="aside">
         {phone && periods.length === 1 && <Seg<string> label="פריסה" value="table" onChange={() => setCards(true)} options={[['cards', 'כרטיסים'], ['table', 'טבלה']]} />}
@@ -344,15 +378,16 @@ function TableView({ book, cols, st, set, ents, periods, loading, phone, cards, 
               if (xs.length < (kind === 'med' ? 3 : 2)) return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><span className="muted">–</span></td>;
               const v = kind === 'med' ? median(xs) : xs.reduce((s, x) => s + x, 0) / xs.length;
               const ro = aggRoster(ci, pi, kind);
-              return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><Sourced src={() => statProv(ci, pi, kind, v)}><span className="num">{fmtCol(cols[ci], v)}</span></Sourced>{ro && <sup className="pr-dag" title={ro} aria-label={ro}>†</sup>}</td>;
+              return <td key={`${ci}|${pi}`} className={pi === 0 ? 'g0' : ''}><Sourced src={() => statProv(ci, pi, kind, v)}><span className="num">{fmtCol(cols[ci], v)}</span></Sourced>{kind === 'med' && <sup className="p6-n num" title={medN(xs.length)} aria-label={medN(xs.length)}>{xs.length}</sup>}{ro && <sup className="pr-dag" title={ro} aria-label={ro}>†</sup>}</td>;
             })}</tr>
             );
           })}
         </tfoot>
       </table></div>
       {(used.size > 0 || brkAt.size > 0 || anyRe) && <ol className="fnotes">{[...used].sort().map((m) => <li key={m}><sup>{SUP[m]}</sup> {NOTE[m]}{m === 6 && rosterLines.size > 0 && <> · {[...rosterLines.keys()].slice(0, 4).join(' · ')}</>}</li>)}{brkAt.size > 0 && <li><span className="pr-brk" /> מעבר ל-IFRS 17: משמאל לקו המספרים כפי שדווחו לפי IFRS 4</li>}{anyRe && <li><span className="num re" /> הוצג מחדש</li>}</ol>}
+      {basis.length > 0 && <p className="src p6-basis" id="table-basis">בסיס: {basis.join(' · ')}</p>}
     </section>
-  );
+  </>);
 }
 
 function ColHead({ book, col, ci, n, st, set, span, brk, pinned, miss, total }: { book: Book; col: Col; ci: number; n: number; st: St; set: (p: Partial<St>) => void; span: number; brk: string | null; pinned: boolean; miss: { e: string; why?: string }[]; total: number }) {
@@ -417,7 +452,7 @@ function Coverage({ book, name, miss, total }: { book: Book; name: string; miss:
 }
 
 /* ---------- series: one column × companies × time ---------- */
-function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; cols: Col[]; st: St; set: (p: Partial<St>) => void; ents: string[]; pend: string; loading: boolean }) {
+function SeriesView({ book, cols, st, set, ents, pend, loading, guard }: { book: Book; cols: Col[]; st: St; set: (p: Partial<St>) => void; ents: string[]; pend: string; loading: boolean; guard: (names: string[], from: string | null) => ReactNode }) {
   const k = Math.min(st.k, cols.length - 1), col = cols[k];
   const ps = pend ? Array.from({ length: st.w }, (_, i) => back(st.f, pend, st.w - 1 - i)) : [];
   // the last point is the axis end: a company that has not reported it is read by the board's rule (hollow point, * in the table)
@@ -431,14 +466,20 @@ function SeriesView({ book, cols, st, set, ents, pend, loading }: { book: Book; 
   if (firstNew > 0) { brkAt = firstNew; brkLabel = 'IFRS 17'; }
   else for (const id of col.ids) { const b = book.byId.get(id)?.br?.find((x) => shown.some((p) => pord(p) >= pord(x.p))); if (b) { const i = shown.findIndex((p) => pord(p) + 0.9 >= pord(b.p)); if (i > 0) { brkAt = i; brkLabel = `שבר · ${b.m}`; } break; } }
   const pct = col.tr !== 'v' || col.unit === 'pct';
+  // the partial-quarter line: companies whose last point is carried from the period before; the legend tags them with that period
+  const lastIdx = ps.length - 1;
+  const carriedAt = ents.map((e, i) => ({ e, from: grid[i][lastIdx]?.from ?? null })).filter((x) => x.from && grid[ents.indexOf(x.e)][lastIdx].v != null);
+  const gl = guard(carriedAt.map((x) => book.short(x.e)), carriedAt.reduce<string | null>((b, x) => (!b || pord(x.from!) > pord(b) ? x.from : b), null));
+  const sb = seriesBasis(col.tr);
   const { open } = useSource();
   return (
     <>
+      {gl}
       <section className="panel">
         <div className="hd"><h2>{colLabel(col)}</h2><div className="aside">
           {cols.length > 1 && <select aria-label="עמודה בסדרה" value={k} onChange={(e) => set({ k: Number(e.target.value) })}>{cols.map((c, i) => <option key={i} value={i}>{colLabel(c)}</option>)}</select>}
-          <span>{shownUnit(col)} · {st.f === 'LTM' ? 'LTM, סכום ארבעה רבעונים' : st.f}{loading ? ' · טוען…' : ''}</span></div></div>
-        <div className="pr-legend" role="group" aria-label="מיקוד בחברה">{ents.map((e) => <button key={e} type="button" className="chip" aria-pressed={st.hl === e} onClick={() => set({ hl: st.hl === e ? '' : e })}><i className="sw" style={{ background: idCss(e) }} />{book.short(e)}</button>)}</div>
+          <span>{shownUnit(col)} · {st.f === 'LTM' ? 'LTM, סכום ארבעה רבעונים' : st.f}{sb ? ` · ${sb}` : ''}{loading ? ' · טוען…' : ''}</span></div></div>
+        <div className="pr-legend" role="group" aria-label="מיקוד בחברה">{ents.map((e) => <button key={e} type="button" className="chip" aria-pressed={st.hl === e} onClick={() => set({ hl: st.hl === e ? '' : e })}><i className="sw" style={{ background: idCss(e) }} />{book.short(e)}{carriedAt.find((x) => x.e === e) && <small className="p6-tagq"> {plab(st.f, carriedAt.find((x) => x.e === e)!.from!)}</small>}</button>)}</div>
         {shown.length < 2 ? <Empty title="אין רצף לעמודה ולתדירות שנבחרו" /> : (
           <Chart label={`${colLabel(col)} · ${st.f}`} height={380} deps={[st.c.join('|'), k, st.f, st.w, pend, ents.join(), st.hl, book.files.size]}
             source={`${[...new Set(col.ids.map((id) => book.reg.src[book.byId.get(id)?.src ?? '']).filter(Boolean))].join(' · ')} · fox`}
@@ -631,27 +672,6 @@ function FormulaEditor({ book, ents, freq, p, onAdd }: { book: Book; ents: strin
         <div className="pr-alias">{Object.entries(ALIASES).filter(([, id]) => book.byId.has(id)).map(([a, id]) => <button key={a} type="button" onClick={() => { const l = lex.labelOf.get(id) ?? a; const at = expr.length + (expr && !/[\s(+\-*/]$/.test(expr) ? 1 : 0) + l.length + 1; setExpr(`${expr}${expr && !/[\s(+\-*/]$/.test(expr) ? ' ' : ''}${l} `); setCaret(at); }}>{lex.labelOf.get(id)}<span className="mono muted"> {a}</span></button>)}</div>
         <p className="muted">כותבים שם מדד בעברית כפי שהוא מופיע ברשימה, או קוד ({'{מזהה}'} לכל מדד). פונקציות: {(Object.keys(FUNCS) as (keyof typeof FUNCS)[]).map((f) => `${f} · ${FUNCS[f]}`).join(' · ')}.</p>
       </details>
-    </section>
-  );
-}
-
-/* ---------- peer sets ---------- */
-function SetEditor({ reg, ents, onChange, onSave, own, onDelete }: { reg: Registry; ents: string[]; onChange: (ids: string[]) => void; onSave: (name: string) => void; own: PeerSet | null; onDelete: (id: string) => void }) {
-  const [name, setName] = useState('');
-  const groups: [string, string][] = [['ins', 'מבטחות'], ['fund', 'בתי השקעות']];
-  return (
-    <section className="panel pr-seted" aria-label="עריכת קבוצת עמיתים">
-      {groups.map(([k, n]) => (
-        <div key={k} className="pr-row"><span className="muted pr-gl">{n}</span>{reg.entities.filter((e) => e.k === k).map((e) => (
-          <button key={e.id} type="button" className="chip" aria-pressed={ents.includes(e.id)} onClick={() => onChange(ents.includes(e.id) ? ents.filter((x) => x !== e.id) : reg.entities.map((x) => x.id).filter((x) => x === e.id || ents.includes(x)))}><i className="sw" style={{ background: idCss(e.id) }} />{e.sh ?? e.n}</button>
-        ))}</div>
-      ))}
-      <div className="pr-row">
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="שם הקבוצה" aria-label="שם הקבוצה" />
-        <button type="button" className="btn" disabled={!name.trim() || !ents.length} onClick={() => { onSave(name.trim()); setName(''); }}>שמירה כקבוצה</button>
-        {own && <button type="button" className="btn" onClick={() => onDelete(own.id)}>מחיקת “{own.n}”</button>}
-        <span className="src">נשמר בדפדפן זה</span>
-      </div>
     </section>
   );
 }
