@@ -1,0 +1,244 @@
+/* P6-2d · the company overview (spec 5, 13.1 F6, 14.1 N4/N5, 14.3 rule 7): the company row, the lens strip, the sentence, the seven rows,
+   the desktop four panels, the changes, the quarters lens, the row and report sheets. Every rule is under co6-* (or scoped by .co6). */
+
+/* ---------- the company row (48 px on a phone) ---------- */
+.co6-head { margin-bottom: 2px; }
+.co6-row { display: flex; align-items: center; gap: 8px; min-height: 48px; flex-wrap: nowrap; min-width: 0; }
+.co6-row h1 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 21px; line-height: 1.15; white-space: nowrap; min-width: 0; }
+.co6-sp { flex: 1 1 auto; }
+.co6-chip { position: relative; display: inline-flex; align-items: center; gap: 5px; flex: none; height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-pill, 999px);
+  background: var(--panel); color: var(--fg); font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; box-shadow: var(--e-1); }
+.co6-chip::before { content: ""; position: absolute; inset: -5px 0; }
+.co6-chip:hover { border-color: var(--accent-line); color: var(--fg); }
+.co6-chip:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; }
+.co6-chip .num { direction: ltr; unicode-bidi: isolate; }
+.co6-chip[aria-busy="true"] { color: var(--muted); }
+.co6-rep { font-weight: 700; }
+.co6-rep span[aria-hidden] { color: var(--muted); font-size: 10px; }
+.co6-head .coacts { flex: none; }
+@media (max-width: 999px) {
+  .co6-row { gap: 6px; }
+  .co6-row h1 { font-size: 19px; gap: 6px; }
+  .co6-chip { padding: 0 10px; font-size: 12.5px; }
+}
+@media (max-width: 359px) { .co6-row .co6-val { display: none; } }
+/* the company navigation: one 38-px row on a phone (13.1 F6) */
+@media (max-width: 999px) {
+  .co6-head + .cotools { margin-top: 0; }
+  .co6-head + .cotools .cnav a { min-height: 38px; height: 38px; padding-block: 0; display: inline-flex; align-items: center; }
+}
+
+/* ---------- the lens strip: six lenses in the phone's width, a fade where it overflows ---------- */
+.co6 .ro-tabs { margin-top: 4px; }
+.co6 .ro-tabs-in.scroll { -webkit-mask-image: linear-gradient(to left, transparent 0, #000 22px); mask-image: linear-gradient(to left, transparent 0, #000 22px); }
+:root[dir="ltr"] .co6 .ro-tabs-in.scroll { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22px); mask-image: linear-gradient(to right, transparent 0, #000 22px); }
+@media (max-width: 999px) { .co6 .ro-tabs-in.scroll button { padding: 0 9px; font-size: 13px; } }
+@media (min-width: 1000px) { .co6 .ro-tabs-in.scroll { -webkit-mask-image: none; mask-image: none; } .co6 .ro-tabs-in { max-width: 720px; } }
+
+/* ---------- the lens body ---------- */
+.co6-lens { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.co6-filer { margin: 0; font-size: 12.5px; color: var(--muted); }
+.co6-take { position: relative; padding: 9px 14px 9px 12px; padding-inline-start: 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--e-1);
+  font-size: 14.5px; line-height: 1.6; font-weight: 500; color: var(--fg); }
+.co6-take::before { content: ""; position: absolute; inset-block: 12px; inset-inline-start: 0; width: 3px; border-radius: 3px; background: var(--accent); }
+.co6-u { display: inline; white-space: nowrap; unicode-bidi: isolate; }
+.co6-wn { display: inline-block; padding-block: 6px; margin-block: -6px; line-height: 20px; font-variant-numeric: tabular-nums; }
+.co6-wn.pos { color: var(--up); } .co6-wn.neg { color: var(--down); }
+.co6-basis { color: var(--muted); font-size: 0.92em; }
+.co6-tag { font-size: 10.5px; padding: 0 6px; line-height: 17px; height: auto; vertical-align: 1px; white-space: nowrap; }
+.co6-lens .guard { margin: 0; }
+
+.co6-panel { margin: 0; padding: 10px 12px 10px; min-width: 0; }
+.co6-ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; margin-bottom: 4px; flex-wrap: wrap; }
+.co6-ph h2 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+.co6-ph h2 small { font-size: 12px; font-weight: 500; color: var(--muted); }
+.co6-note { margin: 6px 2px 0; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.co6-none { margin: 8px 2px; font-size: 13px; }
+.co6-stamp { margin: 0 2px; font-size: 11.5px; line-height: 1.6; color: var(--muted); }
+.co6-stamp a { display: inline-block; min-height: 32px; line-height: 32px; }
+.co6-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+
+/* ---------- the company table: seven rows × Q3'26 · YoY · QoQ · LTM (desktop: + 8 quarters, place) ---------- */
+table.co6-qt { width: 100%; border-collapse: collapse; table-layout: auto; font-size: 13.5px; }
+table.co6-qt th, table.co6-qt td { padding: 0 2px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; height: 36px; white-space: nowrap; }
+table.co6-qt tbody tr:last-child > * { border-bottom: 0; }
+table.co6-qt thead th { height: auto; padding: 0 2px 5px; font-size: 11.5px; font-weight: 600; color: var(--muted); text-align: end; line-height: 1.2; border-bottom: 1px solid var(--line); }
+table.co6-qt thead th small { display: block; font-size: 10px; font-weight: 500; }
+table.co6-qt th.l { text-align: start; font-weight: 600; white-space: normal; }
+table.co6-qt thead th.l { white-space: nowrap; }
+table.co6-qt td { text-align: end; }
+table.co6-qt td.v { font-weight: 800; font-size: 14px; }
+table.co6-qt td.wide { text-align: center; }
+table.co6-qt .co6-pl { color: var(--muted); font-size: 12.5px; direction: ltr; unicode-bidi: isolate; }
+.co6-rowbtn { display: inline-flex; align-items: center; gap: 3px; min-height: 36px; padding: 0; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg); text-align: start; cursor: pointer; }
+.co6-rowbtn span { color: var(--muted); font-weight: 400; }
+.co6-rowbtn:hover { color: var(--accent-text); }
+.co6-qt th.l .co6-tag { margin-inline-start: 4px; }
+/* N5: a number standing alone is a 44 × 32 target */
+:is(table.co6-qt, .co6-chg .d, .co6-psr, table.co6-rs) :is(a.src, button.src) { display: inline-block; min-width: 44px; min-height: 32px; line-height: 32px; text-align: end; font-variant-numeric: tabular-nums; }
+.co6-n.pos { color: var(--up); } .co6-n.neg { color: var(--down); }
+.co6-na { display: inline-block; min-width: 24px; text-align: center; }
+.co6-spark { display: block; margin: auto; }
+@media (max-width: 999px) {
+  table.co6-qt { font-size: 13px; }
+  table.co6-qt th.l { font-size: 12.5px; max-width: 116px; }
+  table.co6-qt thead th.l { font-size: 10.5px; }
+  table.co6-qt th, table.co6-qt td { height: 34px; }
+  :is(table.co6-qt) :is(a.src, button.src) { min-width: 44px; }
+  .co6-rowbtn { min-height: 34px; white-space: normal; line-height: 1.15; }
+}
+
+/* ---------- the ranked changes ---------- */
+ol.co6-chg { list-style: none; margin: 0; padding: 0; }
+ol.co6-chg li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 2px 8px; padding: 6px 0; border-top: 1px solid var(--line-soft); }
+ol.co6-chg li:first-child { border-top: 0; }
+ol.co6-chg .place { color: var(--muted); font-weight: 700; font-size: 12.5px; text-align: center; }
+ol.co6-chg .l { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+ol.co6-chg .t { font-weight: 600; font-size: 13.5px; line-height: 1.3; }
+ol.co6-chg .rst { display: inline-block; font-size: 10.5px; line-height: 17px; padding: 0 6px; }
+ol.co6-chg .meta { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+ol.co6-chg .meta :is(a.src, button.src) { font-variant-numeric: tabular-nums; }
+ol.co6-chg .d { display: flex; flex-direction: column; align-items: flex-end; font-weight: 800; font-size: 14.5px; }
+ol.co6-chg .d.pos > .co6-n { color: var(--up); } ol.co6-chg .d.neg > .co6-n { color: var(--down); }
+ol.co6-chg .d .dp { min-height: 0 !important; line-height: 1.3 !important; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.co6-pg { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- the peers strip ---------- */
+.co6-ps { display: flex; flex-direction: column; }
+.co6-psr { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; border-top: 1px solid var(--line-soft); font-size: 13px; }
+.co6-psr:first-child { border-top: 0; }
+.co6-psr .l { color: var(--fg); font-weight: 600; }
+.co6-psr .v { display: grid; grid-template-columns: 84px 96px 44px; align-items: center; justify-items: end; gap: 0 6px; font-weight: 800; white-space: nowrap; }
+.co6-psr .co6-med { font-weight: 500; color: var(--muted); }
+.co6-psr .co6-med :is(a.src, button.src) { min-width: 0; }
+.co6-psr .co6-pl { min-width: 36px; text-align: end; font-weight: 600; color: var(--muted); }
+
+/* ---------- the quarters grid, the folded lines, movers and restated ---------- */
+.co6-grid .mgw { margin-top: 2px; }
+.co6-fold { display: flex; flex-direction: column; gap: 6px; }
+.co6-more { align-self: flex-start; min-height: 44px; padding: 0 4px; border: 0; background: none; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--accent-text); cursor: pointer; }
+table.co6-all { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.co6-all th, table.co6-all td { padding: 5px 4px; border-bottom: 1px solid var(--line-soft); text-align: end; white-space: nowrap; vertical-align: middle; }
+table.co6-all thead th { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+table.co6-all thead th small { display: block; font-size: 10px; font-weight: 500; }
+table.co6-all tbody th { text-align: start; font-weight: 600; white-space: normal; }
+table.co6-all tbody th small { display: block; color: var(--muted); font-weight: 400; font-size: 11px; }
+table.co6-all .co6-tag { margin-inline-start: 4px; }
+.co6-dp { color: var(--muted); font-size: 11.5px; margin-inline-start: 4px; }
+.co6-mv { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.co6-mv h3 { margin: 0 0 4px; font-size: 12.5px; color: var(--muted); }
+.co6-mvr { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 36px; border-top: 1px solid var(--line-soft); }
+.co6-mvr .l { display: flex; flex-direction: column; font-size: 12.5px; font-weight: 600; line-height: 1.3; min-width: 0; }
+.co6-mvr .l small { color: var(--muted); font-weight: 500; }
+.co6-mvr > :is(a.src, button.src) { font-weight: 800; min-width: 44px; min-height: 32px; line-height: 32px; text-align: end; }
+@media (max-width: 999px) { .co6-mv { grid-template-columns: 1fr; } }
+
+/* ---------- sheets ---------- */
+.co6-sfoot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; align-items: center; }
+.co6-sfoot .btn { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+.co6-rs-spark { display: flex; justify-content: center; margin: 2px 0 6px; }
+table.co6-rs { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.co6-rs th, table.co6-rs td { padding: 0 4px; height: 36px; border-bottom: 1px solid var(--line-soft); text-align: end; }
+table.co6-rs th:first-child { text-align: start; direction: ltr; unicode-bidi: isolate; }
+table.co6-rs thead th { height: auto; padding-bottom: 4px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+table.co6-rs tr.cur th { color: var(--accent-text); }
+.co6-rsh { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.co6-field { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.co6-field > span { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+
+/* ---------- desktop (≥ 1000 px): two rows of two panels (5.4) ---------- */
+.co6-g2 { display: flex; flex-direction: column; gap: 10px; }
+@media (min-width: 1000px) {
+  .co6-g2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+  .co6-take { font-size: 14.5px; }
+  .co6-panel { padding: 8px 14px 10px; }
+  table.co6-qt th, table.co6-qt td { height: 36px; }
+  ol.co6-chg li { padding: 3px 0; }
+  ol.co6-chg .d :is(a.src, button.src) { min-height: 0; line-height: 1.35; }
+  .co6-psr { min-height: 31px; }
+  .co6-psr :is(a.src, button.src) { min-height: 0; line-height: 1.3; }
+}
+
+/* ---------- density against the site's generic rules (a panel's 14-px gap, a table cell's 78-px minimum, the page's section gap) ---------- */
+.panel.co6-panel { gap: 0; }
+.panel table:is(.co6-qt, .co6-all, .co6-rs) :is(td, th):not(:first-child) { min-width: 0; }
+.co6 { margin-top: -10px; }
+.co6-head { margin-top: -6px; }
+@media (max-width: 999px) {
+  .co6-head + .cotools .subnav.cnav { padding-block: 2px; }
+  .co6-head + .cotools .subnav.cnav a { min-height: 34px !important; height: 34px; padding-block: 0; }
+  .co6 { margin-top: -12px; }
+  .co6 .ro-tabs { padding-bottom: 4px; }
+  .co6-lens { gap: 8px; margin-top: 6px; }
+  .co6-take { padding: 7px 12px 7px 10px; padding-inline-start: 13px; font-size: 14px; line-height: 1.55; }
+  .co6-panel { padding: 6px 10px 6px; }
+  .co6-ph { min-height: 36px; margin-bottom: 0; }
+  .co6-ph h2 { font-size: 14.5px; }
+  .co6-ph .co6-chip { height: 30px; }
+}
+.co6-rowbtn { min-height: 0 !important; }
+@media (max-width: 999px) {
+  .co6-head { margin-top: -12px; }
+  .co6-head + .cotools { margin-top: -14px; }
+  .co6-head + .cotools .subnav.cnav { padding: 2px; }
+  .co6-head + .cotools .subnav.cnav a { min-height: 32px !important; height: 32px; font-size: 13.5px; }
+  .co6 { margin-top: -14px; }
+  .co6 .ro-tabs { padding-top: 0; padding-bottom: 4px; }
+  .co6 .ro-tabs-in { padding: 2px; }
+  .co6-take { font-size: 13.5px; line-height: 1.5; padding-block: 6px; }
+  table.co6-qt th, table.co6-qt td { height: 33px; }
+  table.co6-qt thead th { padding-bottom: 3px; font-size: 11px; }
+  .co6-rowbtn { line-height: 1.12; }
+}
+.co6-n, .co6-psr .v :is(a.src, button.src), .co6-dp, ol.co6-chg .d .src { direction: ltr; unicode-bidi: isolate; }
+@media (max-width: 999px) {
+  .co6 .ro-tabs { margin-top: 0; }
+  .co6-lens { margin-top: 4px; gap: 6px; }
+  .co6-panel { padding-top: 2px; }
+  .co6-ph { min-height: 32px; }
+  .co6-ph .co6-chip { height: 28px; font-size: 12px; }
+  table.co6-qt th, table.co6-qt td { height: 32px; }
+  table.co6-qt thead th { padding-bottom: 2px; line-height: 1.1; }
+}
+
+.co6-grid .mg-bar { display: none; }
+.co6-psr .co6-med { display: inline-flex; align-items: baseline; }
+@media (min-width: 1000px) {
+  .co6-head { margin-top: -14px; }
+  .co6-head + .cotools { margin-top: -12px; }
+  .co6 { margin-top: -14px; }
+  .co6 .ro-tabs { margin-top: 0; padding-top: 0; padding-bottom: 4px; }
+  .co6 .ro-tabs-in { max-width: 560px; padding: 2px; }
+  .co6 .ro-tabs-in button { height: 36px; }
+  .co6-lens { margin-top: 4px; gap: 8px; }
+  .co6-take { padding-block: 7px; }
+  table.co6-qt th, table.co6-qt td { height: 32px; }
+  .co6-psr { min-height: 26px; }
+  .co6-ps { margin-top: 2px; }
+  .co6-ph { min-height: 34px; }
+  .co6-fold .co6-more { min-height: 32px; }
+}
+.co6-psr .co6-med { direction: ltr; unicode-bidi: isolate; }
+@media (min-width: 1000px) {
+  .co6-ps .co6-psr :is(a.src, button.src), ol.co6-chg li .d :is(a.src, button.src) { min-height: 0; line-height: 1.3; }
+  table.co6-qt td :is(a.src, button.src) { min-height: 0; line-height: 1.3; }
+}
+.co6-gn { font-weight: 500; }
+.co6-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+@media (min-width: 1000px) {
+  .co6-foot { flex-direction: row; align-items: center; gap: 4px 16px; flex-wrap: wrap; }
+  .co6-foot .co6-stamp { flex: 1 1 400px; }
+}
+details.co6-det > summary { list-style: none; cursor: pointer; }
+details.co6-det > summary::-webkit-details-marker { display: none; }
+details.co6-det > summary h2::after { content: " ›"; color: var(--muted); font-weight: 500; }
+details.co6-det[open] > summary h2::after { content: " ⌄"; }
+details.co6-det > .seg { margin: 2px 0 6px; align-self: flex-start; }
+/* N5 in prose: a 32-px tall hit area that never reaches the next line's figure (the site's touch rule pads 12 px) */
+.co6-take { line-height: 1.6; }
+main .co6-take :is(a, button).src.co6-wn { padding: 6px 0; margin: -6px 0; line-height: 20px; }
+@media (max-width: 999px) {
+  .co6 { margin-top: -18px; }
+  .co6-take { line-height: 1.5; }
+}
+table.co6-rs th, table.co6-rs td, table.co6-qt th, table.co6-qt td { vertical-align: middle; }

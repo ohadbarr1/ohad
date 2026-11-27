@@ -18,7 +18,13 @@ import { SinceChip } from '../components/SinceBadge';
 import { SCALES, dateLabel, fmtCell, nf, periodLabel, periodLong, scaleValue, sn, type Scale } from '../lib/format';
 import { DataTable, type Column } from '../components/DataTable';
 import { useCompanyNotes, useCompanyStore, useKpiData, useLoad, useMarket, useRegistry } from '../lib/useData';
-import { keepPeriod } from '../lib/period';
+import { keepPeriod, useWindowParam, type Win } from '../lib/period';
+import { useSheetHost } from '../lib/sheetHost';
+import { DeeperSheet } from '../components/DeeperSheet';
+import { useChanges } from '../lib/changes';
+import { pubLabel } from '../lib/format';
+import { reportsOf } from './ReportDay';
+import { XlsxChip } from './company/QuarterLens';
 import { idCss } from '../lib/identity';
 import { NotFound } from './NotFound';
 import '../styles/company.css';
@@ -57,14 +63,12 @@ export function CompanyLayout() {
   const { market } = useMarket(!!entry && (/\/(overview|numbers|savings)\/?$/.test(loc.pathname) || /^\/company\/[^/]+\/?$/.test(loc.pathname)), !/\/savings\/?$/.test(loc.pathname));
   const kpi = useKpiData(!!entry);
   const phone = usePhone();
-  const [noteOpen, setNoteOpen] = useState(false);
   useCompanyFeedAlternate(entry?.id);  // W8: the company's own RSS feed in <head>
   useMarkVisit(entry?.id);  // lane S2: the visit date moves when the reader leaves the company
   const [tools, setTools] = useState<HTMLElement | null>(null);
   if (reg.error) return <ErrorBox what="רשימת החברות" error={reg.error} />;
   if (!reg.data) return <Loading what="חברה" />;
   if (!entry) return <NotFound />;
-  const latest = entry.filings[0]?.end ? dateLabel(entry.filings[0].end) : entry.filings[0]?.period;  // the latest report, named like every other period
   const fund = entry.kind === 'fund_house';
   const inStatements = /\/(financials|profit|ifrs17)\/?$/.test(loc.pathname);
   const inNumbers = /^\/company\/[^/]+(\/numbers)?\/?$/.test(loc.pathname);  // phase 0: the company opens on its numbers
@@ -78,24 +82,7 @@ export function CompanyLayout() {
   ];
   return (
     <>
-      <div className="pagehead company-head">
-        <div className="ch-id">
-          <h1><span className="iddot" style={{ background: idCss(entry.id), color: idCss(entry.id) }} aria-hidden="true" />{entry.name_he}{entry.name_en && <> <span className="muted en"><span className="sep">· </span><bdi>{entry.name_en}</bdi></span></>}</h1>
-          <div className="sub row" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className="kind">{KIND[entry.kind]}</span>
-            {entry.has_financials && <span className="chip loaded" title="הדוח האחרון שנקרא">דוח אחרון <span className="num">{latest}</span></span>}
-            {entry.docs > 0 && <span className="chip loaded docs"><span className="num">{entry.docs}</span> מסמכים</span>}
-            <SinceChip id={entry.id} />
-            {market && entry.market_group && <span className="chip mkt">שוק: {market.plabel(market.LAST)}</span>}
-            {phone && entry.has_price && <Link className="chip valchip ph" to={`/valuation/${entry.id}`}>שווי ›</Link>}
-          </div>
-          {filer && <p className={`filer-note${noteOpen ? ' open' : ''}`} title={filer.note} onClick={() => setNoteOpen((o) => !o)}><span className="chip est">{filer.name} · <span className="num">{filer.stake}%</span></span> {filer.note}</p>}
-        </div>
-        <div className="head-acts">
-          {entry.has_financials && <a className="btn" href={`/data/xlsx/${entry.id}.xlsx`} download={`fox-${entry.id}.xlsx`} onClick={() => track('xlsx_dl')} title="חוברת Excel למודל: כל מדד × תקופה (מ-Q1'23 עד הרבעון האחרון שדווח, ו-FY), לכל ערך מסמך, עמוד וקישור" style={{ display: 'inline-flex', gap: 6, alignItems: 'center', color: 'var(--fg)', textDecoration: 'none' }}><Icon name="download" />Excel למודל</a>}
-          <CompanyActions id={entry.id} valuation={entry.has_price} />
-        </div>
-      </div>
+      <CompanyRow entry={entry} store={store} market={market} filer={filer} phone={phone} />
       {/* one toolbar row: the numbers (the report day, the default view since phase 0), the thesis, the statements with their views,
           long-term savings, documents; then the view's own controls */}
       <Toolbar className="cotools" lead={<>
@@ -114,6 +101,71 @@ export function CompanyLayout() {
       </>}><span ref={setTools} className="cotools-slot" /></Toolbar>
       <Outlet context={{ entry, store, storeError, market, tools } satisfies Ctx} />
     </>
+  );
+}
+
+/* ---------- phase 6 (spec 5.2 items 2–3, 5.4, 5.6; P6-2d): the company row ---------- */
+/** One row, 48 px on a phone: colour dot and name · the report chip "Q3'26 · 23.11.26 ▾" (the "דוח וחלון" sheet: report, window, and the
+ *  header's former chips) · Excel (the workbook to the report on screen) · "שווי ›" when the company has a price; on the desktop also
+ *  "פעולות". The English name and the kind move into the report sheet's head. */
+function CompanyRow({ entry, store, market, filer, phone }: { entry: RegistryCompany; store: CompanyStore | null; market: Market | null; filer: { name: string; stake: number; note: string } | null | undefined; phone: boolean }) {
+  const host = useSheetHost();
+  const [sp] = useSearchParams();
+  const reports = useMemo(() => (store ? reportsOf(store) : []), [store]);
+  const p = sp.get('p') ?? '';
+  const P = reports.includes(p) ? p : reports[0] ?? '';
+  const chs = useChanges(entry.has_financials ? entry.id : null).data;
+  const pub = chs?.reports.find((r) => r.p === P)?.pub ?? null;
+  const open = host.sheet === 'report';
+  const rep = (x: string) => (x.endsWith('FY') ? `FY'${x.slice(2, 4)}` : `${x.slice(4)}'${x.slice(2, 4)}`);
+  return (
+    <div className="pagehead company-head co6-head">
+      <div className="co6-row">
+        <h1 title={entry.name_en ?? undefined}><span className="iddot" style={{ background: idCss(entry.id), color: idCss(entry.id) }} aria-hidden="true" />{entry.name_he}</h1>
+        {P ? <button type="button" className="co6-chip co6-rep" id="report-chip" aria-haspopup="dialog" onClick={() => host.openSheet('report')}><span className="num">{rep(P)}</span>{pub ? <> · <span className="num">{pubLabel(pub)}</span></> : null} <span aria-hidden="true">▾</span></button>
+          : <button type="button" className="co6-chip co6-rep" id="report-chip" aria-haspopup="dialog" onClick={() => host.openSheet('report')}>{KIND[entry.kind]} <span aria-hidden="true">▾</span></button>}
+        <span className="co6-sp" />
+        {entry.has_financials && <XlsxChip id={entry.id} report={P} label={phone ? 'Excel' : 'Excel למודל'} />}
+        {entry.has_price && <Link className="co6-chip co6-val" to={`/valuation/${entry.id}`}>שווי ›</Link>}
+        {!phone && <CompanyActions id={entry.id} valuation={entry.has_price} />}
+      </div>
+      {open && <ReportSheet entry={entry} reports={reports} P={P} pub={pub} market={market} filer={filer} onClose={host.closeSheet} />}
+    </div>
+  );
+}
+/** "דוח וחלון" (the shipped sheet, from the report chip): the report and the window (Q / 9M / LTM), and in its head what the header
+ *  carried: the kind, the English name, the latest report, the documents, what is new since the last visit, the market month, the filer note.
+ *  Footer: the workbooks and the valuation (on a phone the company row has no "פעולות"). */
+function ReportSheet({ entry, reports, P, pub, market, filer, onClose }: { entry: RegistryCompany; reports: string[]; P: string; pub: string | null; market: Market | null; filer: { name: string; stake: number; note: string } | null | undefined; onClose: () => void }) {
+  const [, setSp] = useSearchParams();
+  const [w, setW] = useWindowParam();
+  const rep = (x: string) => (x.endsWith('FY') ? `FY'${x.slice(2, 4)}` : `${x.slice(4)}'${x.slice(2, 4)}`);
+  const end = P ? `${P.slice(0, 4)}-${P.endsWith('FY') ? '12-31' : ['03-31', '06-30', '09-30', '12-31'][Number(P.slice(5)) - 1]}` : '';
+  const first = P.endsWith('Q1'), W = w === 'ltm' ? 'ltm' : first ? 'q' : w || (P.endsWith('FY') ? 'ytd' : 'q');
+  const ytd = ({ '03-31': 'Q', '06-30': 'H', '09-30': '9M', '12-31': 'FY' } as Record<string, string>)[end.slice(5)] ?? 'Q';
+  const pick = (x: string) => setSp((q) => { const n = new URLSearchParams(q); n.set('p', x); return n; }, { replace: true });
+  const latest = entry.filings[0]?.end ? dateLabel(entry.filings[0].end) : entry.filings[0]?.period;
+  return (
+    <DeeperSheet open onClose={onClose} id="report-sheet" title="דוח וחלון" sub={<>{KIND[entry.kind]}{entry.name_en ? <> · <bdi>{entry.name_en}</bdi></> : null}</>}
+      footer={<div className="co6-sfoot">
+        {entry.has_financials && <a className="btn" href={`/data/xlsx/${entry.id}.xlsx`} download={`fox-${entry.id}.xlsx`} onClick={() => track('xlsx_dl')}><Icon name="download" />Excel למודל</a>}
+        <CompanyActions id={entry.id} valuation={entry.has_price} />
+        <button type="button" className="btn primary" onClick={() => history.back()}>הצג</button>
+      </div>}>
+      <div className="co6-rsh">
+        {entry.has_financials && <span className="chip loaded" title="הדוח האחרון שנקרא">דוח אחרון <span className="num">{latest}</span></span>}
+        {P && pub && <span className="chip">{rep(P)} פורסם <span className="num">{pubLabel(pub)}</span></span>}
+        {entry.docs > 0 && <Link className="chip loaded docs" to="filings"><span className="num">{entry.docs}</span> מסמכים</Link>}
+        <SinceChip id={entry.id} />
+        {market && entry.market_group && <span className="chip mkt">שוק: {market.plabel(market.LAST)}</span>}
+      </div>
+      {filer && <p className="filer-note open" title={filer.note}><span className="chip est">{filer.name} · <span className="num">{filer.stake}%</span></span> {filer.note}</p>}
+      {reports.length > 0 && <>
+        <div className="field co6-field"><span>דוח</span><div className="rd-reps">{reports.slice(0, 12).map((x) => <button key={x} type="button" className={`chip${x === P ? ' on' : ''}`} aria-pressed={x === P} onClick={() => pick(x)}><span className="num">{rep(x)}</span></button>)}</div>
+          {reports.length > 12 && <select aria-label="דוח מוקדם יותר" value={reports.slice(0, 12).includes(P) ? '' : P} onChange={(e) => e.target.value && pick(e.target.value)}><option value="">מוקדם יותר…</option>{reports.slice(12).map((x) => <option key={x} value={x}>{rep(x)}</option>)}</select>}</div>
+        <div className="field co6-field"><span>חלון</span><Seg label="חלון" value={W as Win} onChange={setW} options={[['q', periodLabel('Q', end)], ...(!first ? [['ytd', periodLabel(ytd, end)] as [Win, string]] : []), ['ltm', 'LTM']]} /></div>
+      </>}
+    </DeeperSheet>
   );
 }
 
