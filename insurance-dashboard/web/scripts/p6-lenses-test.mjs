@@ -51,7 +51,7 @@ eq(rdOf('rlifey'), 'rlife/ltmy', 'segment revenue YoY: LTM against LTM');
 eq(rdOf('oshd'), 'oshare/yoy', 'share change: points, quarter end against quarter end');
 eq(rdOf('r12'), 'tr/r12', 'a return window = total return at that window');
 eq(rdOf('pbc'), 'pbc/now', 'a multiple: the latest close');
-eq(rdOf('gpc'), null, 'gross premiums (filed by halves): the shipped cell keeps its LTM from halves');
+eq(rdOf('gpc'), 'gpc/ltm', 'gross premiums (filed by halves): boardRows builds the LTM from halves');
 eq(rdOf('gpcy'), null, 'their YoY: the shipped cell');
 eq(rdOf('aumy'), null, "insurers' AUM YoY: its own token (the base AUM is a fund-house metric)");
 eq(E.isChgRd('ltmy') && E.isChgRd('yoy') && E.isChgRd('qoq') && !E.isChgRd('ltm') && !E.isChgRd(null), true, 'isChgRd');
