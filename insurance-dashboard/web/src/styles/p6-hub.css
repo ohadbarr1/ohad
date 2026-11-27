@@ -12,6 +12,6 @@
 .p6-hubrow[aria-current="page"]::after { content: "●"; margin-inline-start: auto; font-size: 9px; }
 .p6-hubsec { padding: 14px 4px 4px; color: var(--muted); font-size: 12px; font-weight: 600; }
 /* desktop: one hub row, H1 at the start (spec 3.5) */
-.p6-hubdesk { margin-top: 4px; }
+.p6-hubdesk { margin-top: -18px; }
 .p6-hubh1 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 22px; line-height: 1.15; letter-spacing: -0.015em; font-weight: 700; white-space: nowrap; }
 .p6-hubh1 .icotile { width: 32px; height: 32px; }
