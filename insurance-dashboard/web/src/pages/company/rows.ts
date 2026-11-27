@@ -65,9 +65,9 @@ function srAt(book: Book, m: BMetric, e: string, kind: Kind, q: string, peers: s
   return bizVal(book, m, e, kind, q, peers);
 }
 /** A change of an amount that crosses zero has no percent: the difference in millions, both figures as components (5.3). */
-function diffFig(m: BMetric, title: string, a: BVal, b: BVal, la: string, lb: string): CoFig {
+function diffFig(m: BMetric, title: string, a: BVal, b: BVal, la: string, lb: string, small = false): CoFig {
   const d = chgPts(a.v, b.v)!, text = `${sn(d, 0)} מ׳`;
-  return { v: d, text, tone: true, prov: () => ({ k: 'calc', title, value: text, unit: 'מיליוני ש"ח', formula: `${la} פחות ${lb} (אחד הנתונים אינו חיובי: הפרש, לא אחוז)`,
+  return { v: d, text, tone: true, prov: () => ({ k: 'calc', title, value: text, unit: 'מיליוני ש"ח', formula: `${la} פחות ${lb} (${small ? 'בסיס קטן: שינוי של יותר מ-1,000%, הפרש ולא אחוז' : 'אחד הנתונים אינו חיובי: הפרש, לא אחוז'})`,
     inputs: [{ label: la, v: fmtLevel(m, a.v!), src: a.prov }, { label: lb, v: fmtLevel(m, b.v!), src: b.prov }] }) };
 }
 
@@ -95,10 +95,10 @@ export function coCell(book: Book, r: CoRowDef, e: string, kind: Kind, q: string
   }
   if (what === 'v') return fromVal(m, r.k === 'roe' ? 'ltm' : 'q', readVal(book, m, e, kind, q, r.k === 'roe' ? 'ltm' : 'q', peers), title);
   const x = readVal(book, m, e, kind, q, what, peers);
-  if (!fin(x.v) && /בסיס שלילי/.test(x.why ?? '') && m.u === 'm') {
-    // a flow from or to a loss: the absolute change in millions (5.3), never a percent
+  if (!fin(x.v) && /בסיס שלילי|בסיס קטן/.test(x.why ?? '') && m.u === 'm') {
+    // a flow from or to a loss, or from a base too small for a percent (above +1,000%): the absolute change in millions (5.3)
     const q0 = qBack(q, what === 'yoy' ? 4 : 1), a = readVal(book, m, e, kind, q, 'q', peers), b = readVal(book, m, e, kind, q0, 'q', peers);
-    if (fin(a.v) && fin(b.v)) return diffFig(m, `${r.l} ${what === 'yoy' ? 'YoY' : 'QoQ'} · ${book.name(e)}`, a, b, qlab(q), qlab(q0));
+    if (fin(a.v) && fin(b.v)) return diffFig(m, `${r.l} ${what === 'yoy' ? 'YoY' : 'QoQ'} · ${book.name(e)}`, a, b, qlab(q), qlab(q0), /בסיס קטן/.test(x.why ?? ''));
   }
   return fromVal(m, what, x, title);
 }

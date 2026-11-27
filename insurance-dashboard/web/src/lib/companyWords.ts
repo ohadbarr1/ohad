@@ -31,7 +31,8 @@ const fin = (v: number | null | undefined): v is number => v != null && Number.i
 /** one change of net profit: a percent on two profits; from or to a loss (or a zero base), the absolute change in ₪ millions */
 function npChg(np: number, base: number | null | undefined, cmp: 'YoY' | 'QoQ', f: 'npy' | 'npq'): WPart[] {
   if (!fin(base)) return [];
-  if (np > 0 && base > 0) { const c = chgPct(np, base).v!; return [T(', '), { k: 'n', s: `${sn(c, 1)}%`, post: ` ${cmp}`, ref: { k: 'co', f }, tone: toneOf(c) }]; }
+  const c0 = np > 0 && base > 0 ? chgPct(np, base).v : null;  // null also above +1,000% (a tiny base): the difference, as from a loss
+  if (c0 != null) { const c = c0; return [T(', '), { k: 'n', s: `${sn(c, 1)}%`, post: ` ${cmp}`, ref: { k: 'co', f }, tone: toneOf(c) }]; }
   const d = np - base;
   return [T(', '), { k: 'n', s: sn(d, 0), ref: { k: 'co', f }, tone: toneOf(d) }, T(` מיליוני ש"ח ${cmp}`)];
 }

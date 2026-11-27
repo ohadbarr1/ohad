@@ -39,12 +39,16 @@ export function ltmSum(qs: (number | null | undefined)[]): number | null {
   if (qs.length !== 4 || qs.some((v) => v == null || !Number.isFinite(v))) return null;
   return (qs as number[]).reduce((s, v) => s + v, 0);
 }
-export type ChgWhy = 'בסיס שלילי' | 'אין נתון';
+export type ChgWhy = 'בסיס שלילי' | 'אין נתון' | 'בסיס קטן';
+/** B1 item 10: a change above this many percent stands on a base too small for a percent to say anything (Hachshara's QoQ +1,831.7%):
+ *  it is read as the loss-base rule reads a change, the difference (or "–" with the reason), never as a percent */
+export const PCT_CAP = 1000;
 /** a percent change; a negative or zero base has no percent (the cell shows "–" with the title "בסיס שלילי") */
 export function chgPct(a: number | null | undefined, b: number | null | undefined): { v: number | null; why?: ChgWhy } {
   if (a == null || b == null || !Number.isFinite(a) || !Number.isFinite(b)) return { v: null, why: 'אין נתון' };
   if (!(b > 0)) return { v: null, why: 'בסיס שלילי' };
-  return { v: (a / b - 1) * 100 };
+  const v = (a / b - 1) * 100;
+  return v > PCT_CAP ? { v: null, why: 'בסיס קטן' } : { v };
 }
 /** a change in points (a ratio) or a difference (an amount whose sign may change): new less old */
 export function chgPts(a: number | null | undefined, b: number | null | undefined): number | null {

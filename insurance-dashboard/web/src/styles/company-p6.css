@@ -4,7 +4,8 @@
 /* ---------- the company row (48 px on a phone) ---------- */
 .co6-head { margin-bottom: 2px; }
 .co6-row { display: flex; align-items: center; gap: 8px; min-height: 48px; flex-wrap: nowrap; min-width: 0; }
-.co6-row h1 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 21px; line-height: 1.15; white-space: nowrap; min-width: 0; }
+.co6-row h1 { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; margin: 0; font-size: 21px; line-height: 1.15; white-space: nowrap; min-width: 0; flex: 0 1 auto; text-wrap: nowrap; }
+.co6-row h1 .co6-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .co6-sp { flex: 1 1 auto; }
 .co6-chip { position: relative; display: inline-flex; align-items: center; gap: 5px; flex: none; height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-pill, 999px);
   background: var(--panel); color: var(--fg); font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; box-shadow: var(--e-1); }
@@ -21,6 +22,7 @@
   .co6-row h1 { font-size: 19px; gap: 6px; }
   .co6-chip { padding: 0 10px; font-size: 12.5px; }
 }
+@media (max-width: 999px) { .co6-long .co6-pub { display: none; } }
 @media (max-width: 359px) { .co6-row .co6-val { display: none; } }
 /* the company navigation: one 38-px row on a phone (13.1 F6) */
 @media (max-width: 999px) {
@@ -47,6 +49,9 @@
 .co6-basis { color: var(--muted); font-size: 0.92em; }
 .co6-tag { font-size: 10.5px; padding: 0 6px; line-height: 17px; height: auto; vertical-align: 1px; white-space: nowrap; }
 .co6-lens .guard { margin: 0; }
+.co6-wait { color: var(--warn-text, var(--warn)); font-weight: 600; }   /* B1 item 5: the phone's waiting notice, the sentence's lead */
+.co6-wait .num { direction: ltr; unicode-bidi: isolate; }
+.co6-waitb { display: inline; padding: 6px 0; margin: -6px 0; border: 0; background: none; font: inherit; color: inherit; font-weight: 600; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
 
 .co6-panel { margin: 0; padding: 10px 12px 10px; min-width: 0; }
 .co6-ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; margin-bottom: 4px; flex-wrap: wrap; }
@@ -189,6 +194,8 @@ table.co6-rs tr.cur th { color: var(--accent-text); }
   table.co6-qt th, table.co6-qt td { height: 33px; }
   table.co6-qt thead th { padding-bottom: 3px; font-size: 11px; }
   .co6-rowbtn { line-height: 1.12; }
+  /* BB7: the row name is a 32-px target inside its 33-px row (the row does not grow), at least 44 px wide */
+  .co6-rowbtn { min-height: 32px !important; min-width: 44px; margin-block: -7px; }   /* the hit box grows, the row does not */
 }
 .co6-n, .co6-psr .v :is(a.src, button.src), .co6-dp, ol.co6-chg .d .src { direction: ltr; unicode-bidi: isolate; }
 @media (max-width: 999px) {

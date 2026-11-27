@@ -98,7 +98,7 @@ function sentenceWin(co: CoData): CoWin {
 }
 /** the figure of a statement line, as the sentence reads it (ReportDay's resolver; millions) */
 const figFig = (f: Fig | null, t: string, p: string): CoFig => (f ? { v: kv(f), text: nf(kv(f), 0), prov: () => figProv(f, t, p) } : { v: null, text: '–', prov: () => ({ k: 'none', title: t, why: 'אין נתון' }) });
-function Sentence({ co }: { co: CoData }) {
+function Sentence({ co, noTop = false }: { co: CoData; noTop?: boolean }) {
   const { book, kind, entry, q, ents, chr, ch } = co;
   const win = sentenceWin(co);
   const w = useMemo(() => {
@@ -114,7 +114,7 @@ function Sentence({ co }: { co: CoData }) {
     }
     return { ...base, la: qlab(q), lb: qlab(qBack(q, 4)) };
   }, [book, kind, entry.id, q, ents, win, co.store, co.P]);
-  const top: ChgItem | null = win === 'q' && chr && chr.p === co.P ? chr.items[0] ?? null : null;
+  const top: ChgItem | null = !noTop && win === 'q' && chr && chr.p === co.P ? chr.items[0] ?? null : null;
   const parts = companyWords({ q, win, np: w.np.v, npY: w.npY.v, npQ: w.npQ.v, roe: w.roe.v,
     top: top ? { l: top.l, d: top.d.v, cmp: top.cmp, u: top.d.u === 'pp' ? 'pp' : undefined } : null });
   if (!parts) return null;
@@ -272,14 +272,24 @@ export function QuarterLens({ co, cp }: { co: CoData; cp: GridRead }) {
   const [all, setAll] = useState(false);
   const fund = kind === 'fund';
   const hasRows = rowsFor(kind).some((r) => fin(coCell(co.book, r, entry.id, kind, co.q, 'v', co.ents).v));
-  const guard: ReactNode = co.waiting ? (
-    <GuardLine kind="risk" id="guard" wrap text={<Words parts={waitingWords({ bq: co.status.bq, q: co.q, pub: chr?.p === co.P ? chr?.pub : null, reported: co.status.reported.length, total: co.status.n,
-      setWord: fund ? 'בתי ההשקעות' : 'המבטחות', expected: co.expected })} src={() => null} />} />
+  // B1 item 5: on a phone the waiting notice is the sentence's lead ("Q3'26 טרם פורסם, צפוי 28.11.26 (אומדן) · Q2'26: …"), not a block of
+  // its own: the block took 75 px and pushed the seventh row (solvency) under the bottom bar. The sentence goes on with the quarter shown
+  const waitParts = co.waiting ? waitingWords({ bq: co.status.bq, q: co.q, pub: chr?.p === co.P ? chr?.pub : null, reported: co.status.reported.length, total: co.status.n,
+    setWord: fund ? 'בתי ההשקעות' : 'המבטחות', expected: co.expected }) : null;
+  const [wopen, setWopen] = useState(false);
+  const lead = waitParts && phone && hasRows ? (
+    <span className="co6-wait" id="guard" role="note">{wopen ? <Words parts={waitParts} src={() => null} />
+      : <button type="button" className="co6-waitb" aria-expanded="false" onClick={() => setWopen(true)}><b className="num">{qlab(co.status.bq)}</b> טרם פורסם ›</button>}{' · '}</span>
+  ) : null;
+  const guard: ReactNode = co.waiting && !lead ? (
+    <GuardLine kind="risk" id="guard" wrap text={<Words parts={waitParts!} src={() => null} />} />
   ) : null;
   return (
     <div className="co6-lens" data-lens="q">
       {co.filer && <p className="co6-filer" title={co.filer.note}>{filerWords(co.filer.name, co.filer.stake)}</p>}
-      {hasRows && <div className="co6-take" id="takeaway"><Sentence co={co} /></div>}
+      {/* a waiting company on a phone: the notice takes the place of the top-change clause (it stays one tap away in שינויים), so the
+          sentence keeps its three lines and the seven rows stay above the bottom bar */}
+      {hasRows && <div className="co6-take" id="takeaway">{lead}<Sentence co={co} noTop={!!lead} /></div>}
       {guard}
       {hasRows ? (
         <div className="co6-g2">

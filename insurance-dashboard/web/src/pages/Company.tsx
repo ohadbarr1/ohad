@@ -120,9 +120,11 @@ function CompanyRow({ entry, store, market, filer, phone }: { entry: RegistryCom
   const rep = (x: string) => (x.endsWith('FY') ? `FY'${x.slice(2, 4)}` : `${x.slice(4)}'${x.slice(2, 4)}`);
   return (
     <div className="pagehead company-head co6-head">
-      <div className="co6-row">
-        <h1 title={entry.name_en ?? undefined}><span className="iddot" style={{ background: idCss(entry.id), color: idCss(entry.id) }} aria-hidden="true" />{entry.name_he}</h1>
-        {P ? <button type="button" className="co6-chip co6-rep" id="report-chip" aria-haspopup="dialog" onClick={() => host.openSheet('report')}><span className="num">{rep(P)}</span>{pub ? <> · <span className="num">{pubLabel(pub)}</span></> : null} <span aria-hidden="true">▾</span></button>
+      {/* B1 item 2: a name of six letters or more (הפניקס, מנורה מבטחים, אלטשולר שחם) keeps its line on a phone: the report chip drops the
+          publication date there (the report sheet's head still carries it), and the name never wraps under its colour dot */}
+      <div className={`co6-row${entry.name_he.length >= 6 ? ' co6-long' : ''}`}>
+        <h1 title={entry.name_en ?? entry.name_he}><span className="iddot" style={{ background: idCss(entry.id), color: idCss(entry.id) }} aria-hidden="true" /><span className="co6-nm">{entry.name_he}</span></h1>
+        {P ? <button type="button" className="co6-chip co6-rep" id="report-chip" aria-haspopup="dialog" onClick={() => host.openSheet('report')}><span className="num">{rep(P)}</span>{pub ? <span className="co6-pub"> · <span className="num">{pubLabel(pub)}</span></span> : null} <span aria-hidden="true">▾</span></button>
           : <button type="button" className="co6-chip co6-rep" id="report-chip" aria-haspopup="dialog" onClick={() => host.openSheet('report')}>{KIND[entry.kind]} <span aria-hidden="true">▾</span></button>}
         <span className="co6-sp" />
         {entry.has_financials && <XlsxChip id={entry.id} report={P} label={phone ? 'Excel' : 'Excel למודל'} />}
