@@ -23,7 +23,7 @@ export function PeerStrip({ co }: { co: CoData }) {
             <span className="l">{shOf(m)}{m.type === 'flow' ? ' LTM' : ''}</span>
             <span className="v">
               {v ? <Sourced src={v.val.prov} className="co6-n">{`${fmtRead(m, b.rd, v.v!)}${v.stale ? '*' : ''}`}</Sourced> : <span className="muted" title={x?.val.why ?? 'אין נתון'}>–</span>}
-              {b.med.v != null ? <span className="co6-med"><Sourced src={() => medianProv(b, name)}>{fmtRead(m, b.rd, b.med.v)}</Sourced><sup className="p6-n">{b.med.n}</sup></span> : <span className="muted">–</span>}
+              {b.med.v != null ? <span className="co6-med" dir="ltr"><Sourced src={() => medianProv(b, name)}>{fmtRead(m, b.rd, b.med.v)}</Sourced><sup className="p6-n">{b.med.n}</sup></span> : <span className="muted">–</span>}
               <span className="co6-pl num" title={pl.star ? 'טרם דיווחה על הרבעון: לפי הדוח האחרון, מסומן ונספר' : undefined}>{pl.text}</span>
             </span>
           </div>

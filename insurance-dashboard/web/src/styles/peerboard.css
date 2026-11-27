@@ -78,6 +78,7 @@ button.src.p6-wn::after { content: ""; position: absolute; inset: -8px -2px; }
 .p6-bhead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 2px 2px 4px; }
 .p6-sp { flex: 1 1 0; }
 .p6-medline { font-size: 14px; font-weight: 700; white-space: nowrap; }
+.p6-medline :is(button.src, a.src) { min-width: 44px; display: inline-block; text-align: center; }  /* B1 item 4: a 44-px target */
 .p6-medline .p6-u .num { font-size: 15px; }
 .p6-basis { margin: 2px 2px 4px; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .p6-bp .board.p6-sb { padding-inline: 0; }
@@ -240,3 +241,6 @@ table.p6-mxt.dense thead th button small { font-size: 9.5px; }
 /* a signed figure on a heat fill keeps 4.5 : 1 (axe): its green / red is darkened toward the ink */
 table.p6-mxt td:is(.q1, .q2, .q3, .q4) .num.pos { color: color-mix(in oklch, var(--up) 55%, var(--fg)); }
 table.p6-mxt td:is(.q1, .q2, .q3, .q4) .num.neg { color: color-mix(in oklch, var(--down) 60%, var(--fg)); }
+
+/* BB9: a median and its n read left to right everywhere (the figure, then its n), as in the grid */
+.p6-medc { display: inline-block; white-space: nowrap; unicode-bidi: isolate; }

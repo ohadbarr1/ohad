@@ -39,6 +39,9 @@ table.mg.p6-q td.avg .mg-cell { background: none; color: var(--muted); font-weig
 /* a median drawn by the page: the figure takes the cell, its n right after it on the same line */
 :is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med { display: flex; align-items: center; justify-content: center; }
 :is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > :is(a.src, button.src) { flex: none; width: auto; position: relative; }
+/* B1 item 4: the median's own button is the 44-px target (the hit box below it was wider, the button itself 25 px) */
+:is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > :is(a.src, button.src) { min-width: 44px; text-align: center; }
+:is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > sup.p6-n { margin-inline-start: -6px; }
 :is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > :is(a.src, button.src)::after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(min(0px, (100% - 44px) / 2)); right: calc(min(0px, (100% - 44px) / 2)); }
 :is(table.mg.p6-q, table.p6-mr) .mg-cell.p6-x.p6-med > sup.p6-n { flex: none; margin-top: -8px; }
 sup.p6-n { font-size: 8.5px; line-height: 0; color: var(--warn); font-weight: 700; margin-inline-start: 1px; vertical-align: super; text-decoration: none; }

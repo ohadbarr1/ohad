@@ -68,7 +68,7 @@ export function CompanySheet({ d, e, onClose }: { d: BoardData; e: string; onClo
                 {has ? <Sourced className={`num${tone ? ` ${tone}` : ''}`} src={x.val.prov}>{fmtRead(m, rd, x.v!)}{x.stale ? '*' : ''}</Sourced> : <span className="mut" title={x.val.why ?? 'אין נתון'}>–</span>}
               </span>
               <span className="p6-kv-s">
-                חציון {b.med.v == null || b.med.n < 2 ? '–' : <><Sourced className="num" src={() => medianProv(b, name)}>{fmtRead(m, rd, b.med.v)}</Sourced><sup className="p6-n">{b.med.n}</sup></>}
+                חציון {b.med.v == null || b.med.n < 2 ? '–' : <span className="p6-medc" dir="ltr"><Sourced className="num" src={() => medianProv(b, name)}>{fmtRead(m, rd, b.med.v)}</Sourced><sup className="p6-n">{b.med.n}</sup></span>}
                 {dv != null ? <> · <bdi dir="ltr" className={`p6-d${good == null ? '' : good ? ' pos' : ' neg'}`} data-d={nf(dv, 4)}>{delta(m, dv)}</bdi></> : null}
                 {' · '}{has && !x.out && x.place != null ? placeText(x.place, b.n, m) : 'לא בדירוג'}
               </span>

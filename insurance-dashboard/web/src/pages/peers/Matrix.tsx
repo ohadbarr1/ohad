@@ -117,7 +117,7 @@ export function Matrix({ d, onCo }: { d: BoardData; onCo: (e: string) => void })
               {cols.map(([m, r], i) => {
                 const b = B[i];
                 return <td key={`${m.key}.${r}`} data-n={b.med.n}>{b.med.v == null || b.med.n < 2 ? <span className="mut">–</span>
-                  : <><Sourced className="num" src={() => medianProv(b, name)}>{fmtRead(m, r, b.med.v)}</Sourced><sup className="p6-n">{b.med.n}</sup></>}</td>;
+                  : <span className="p6-medc" dir="ltr"><Sourced className="num" src={() => medianProv(b, name)}>{fmtRead(m, r, b.med.v)}</Sourced><sup className="p6-n">{b.med.n}</sup></span>}</td>;
               })}
             </tr>
           </tfoot>
