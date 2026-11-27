@@ -1,5 +1,5 @@
 {
- "built": "2026-11-26T23:37:31+02:00",
+ "built": "2026-11-27T01:05:06+02:00",
  "checks": [
   {
    "id": "workbook",
@@ -213,9 +213,9 @@
    "id": "brief_lib",
    "ok": true,
    "level": "fail",
-   "n": 335,
+   "n": 347,
    "fail": 0,
-   "note": "335 passed, 0 failed"
+   "note": "347 passed, 0 failed"
   },
   {
    "id": "deliver_lib",
@@ -237,9 +237,9 @@
    "id": "watch",
    "ok": true,
    "level": "fail",
-   "n": 14,
+   "n": 15,
    "fail": 0,
-   "note": "watch: 14 snapshots, 158 changes (answer 123, finding 1, new 32, gone 2), 17 upcoming, 0 problems"
+   "note": "watch: 15 snapshots, 183 changes (answer 148, finding 1, new 32, gone 2), 17 upcoming, 0 problems"
   },
   {
    "id": "watch_ledger",
@@ -253,9 +253,9 @@
    "id": "watch_lib",
    "ok": true,
    "level": "fail",
-   "n": 88,
+   "n": 52,
    "fail": 0,
-   "note": "88 passed, 0 failed"
+   "note": "52 passed, 0 failed"
   },
   {
    "id": "capital",
@@ -341,9 +341,9 @@
    "id": "consistency",
    "ok": true,
    "level": "fail",
-   "n": 26660,
+   "n": 26948,
    "fail": 0,
-   "note": "23013 equal within rounding, 3335 labelled basis differences (alt 14, filer 762, restated 1078, std 1481), last 8 quarters"
+   "note": "23252 equal within rounding, 3384 labelled basis differences (alt 14, filer 762, restated 1127, std 1481), last 8 quarters"
   },
   {
    "id": "fund_roles",
@@ -357,7 +357,7 @@
    "id": "consistency_old",
    "ok": false,
    "level": "warn",
-   "n": 26660,
+   "n": 26948,
    "fail": 312,
    "note": "conflicts older than 8 quarters (IFRS 4 era, tag corrections; python3 pipeline/check_consistency.py --all)"
   },
@@ -375,13 +375,13 @@
    "level": "fail",
    "n": 4094,
    "fail": 0,
-   "note": "4094 files under contract, 0 failing; 96 contracts; 906 files without a contract"
+   "note": "4094 files under contract, 0 failing; 96 contracts; 907 files without a contract"
   },
   {
    "id": "cards",
    "ok": true,
    "level": "fail",
-   "n": 7418,
+   "n": 7483,
    "fail": 0,
    "note": "307 report cards, every digit a published fact"
   },
@@ -399,7 +399,7 @@
    "level": "fail",
    "n": 409,
    "fail": 0,
-   "note": "409 events, 10960 figures, 0 problems"
+   "note": "409 events, 10951 figures, 0 problems"
   },
   {
    "id": "fragility",
@@ -517,17 +517,17 @@
    "id": "model_xlsx",
    "ok": true,
    "level": "fail",
-   "n": 45408,
+   "n": 45437,
    "fail": 0,
-   "note": "model_xlsx: 13 workbooks, 45408 value cells, every one sourced; largest phoenix 493 KB; 0 problems"
+   "note": "model_xlsx: 13 workbooks, 45437 value cells, every one sourced; largest phoenix 494 KB; 0 problems"
   },
   {
    "id": "tables",
    "ok": true,
    "level": "fail",
-   "n": 120926,
+   "n": 120942,
    "fail": 0,
-   "note": "tables: 7 tables, 120926 rows, every row sourced; 0 problems"
+   "note": "tables: 7 tables, 120942 rows, every row sourced; 0 problems"
   },
   {
    "id": "consensus",
@@ -565,17 +565,9 @@
    "id": "capital_page",
    "ok": true,
    "level": "fail",
-   "n": 1110,
+   "n": 1121,
    "fail": 0,
-   "note": "capital use (csm/capital.json; 101 derived Q4 = FY less 9M not printed): 1110/1110 on the cited page; 0 new misses; 8 read from the image (note checked separately); 0 skipped (no sources)"
-  },
-  {
-   "id": "capital_page_noimgflag",
-   "ok": false,
-   "level": "warn",
-   "n": 1120,
-   "fail": 10,
-   "note": "cited page has no text layer (an image page) but the value carries no image flag: 10, e.g. menora sr_w 2022FY"
+   "note": "capital use (csm/capital.json; 101 derived Q4 = FY less 9M not printed): 1121/1121 on the cited page; 0 new misses; 8 read from the image (note checked separately); 0 skipped (no sources)"
   },
   {
    "id": "adjusted_page",

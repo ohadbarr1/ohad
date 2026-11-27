@@ -110,7 +110,7 @@ STEPS = [
          [D + "facts/*.json", D + "ifrs.json", D + "ifrs_*.json", D + "search/docs.json", D + "companies/index.json", "web/src/lib/labels.ts",
           "web/src/pages/CompanyIfrs.tsx", "web/src/pages/IndustryIfrs.tsx"], [D + "restatements.json"], groups={"facts"}),
     step("build_csm", "pipeline/build_csm.py", [D + "ifrs.json", D + "ifrs_*.json", D + "series/*.json", D + "csm/solvency.json"],
-         [D + "csm/facts", D + "csm/summary.json", D + "csm/sens.json", D + "csm/rates.json", D + "csm/capital.json"], code=["pipeline/csm_resolve.py"]),
+         [D + "csm/facts", D + "csm/summary.json", D + "csm/sens.json", D + "csm/rates.json", D + "csm/capital.json"], code=["pipeline/csm_resolve.py", "pipeline/restate_rule.py"]),
     # W10: the standardised IFRS 17 layer (portfolio-group note, CSM / RA / loss-component movements, expected CSM release); gate `ifrs_std`
     step("build_ifrs_std", "pipeline/build_ifrs_std.py", ["data/extracted_ifrs_std"], [D + "ifrs17"], code=["pipeline/bridge.py"],
          note="every cell page-cited or a labelled difference of printed figures; CSM roll-forward identity per insurer-quarter"),
@@ -151,12 +151,12 @@ STEPS = [
     step("build_cards", "pipeline/build_cards.py",
          [*WB, D + "companies/index.json", D + "companies/*.docs.json", D + "kpi.json", D + "targets.json", D + "ifrs.json", D + "ifrs_*.json",
           D + "csm/facts", D + "peers/m/ifrs-csm_new_business.json", D + "peers/m/ifrs-csm_release.json", "web/src/pages/ReportDay.tsx"],
-         [D + "cards"], code=["pipeline/reportday.py", "pipeline/csm_resolve.py"], groups={"deploy"},
+         [D + "cards"], code=["pipeline/reportday.py", "pipeline/csm_resolve.py", "pipeline/restate_rule.py"], groups={"deploy"},
          note="report cards: Report Day roles, csm_resolve, Peer Table cells, targets"),
     # lane P1 (Report Day): the <=10 most material changes of each report, both figures with their pages (gate `changes`; feeds `chg` events)
     step("build_changes", "pipeline/build_changes.py",
          [*WB, D + "companies/index.json", D + "cards", D + "search/docs.json", "data/registry/changes_why.json", "web/src/pages/ReportDay.tsx"],
-         [D + "changes"], code=["pipeline/reportday.py", "pipeline/build_cards.py", "pipeline/csm_resolve.py"], groups={"deploy"},
+         [D + "changes"], code=["pipeline/reportday.py", "pipeline/build_cards.py", "pipeline/csm_resolve.py", "pipeline/restate_rule.py"], groups={"deploy"},
          note="changes/<company>.json + index.json: materiality = |change| / equity x volatility weight (pipeline/build_changes.py --check)"),
     step("build_since", "pipeline/build_since.py",
          [*WB, D + "companies/index.json", D + "companies/*.docs.json", D + "targets.json", D + "market.json"],
@@ -188,7 +188,7 @@ STEPS = [
     step("build_drivers", "pipeline/build_drivers.py",
          [D + "lens.json", D + "flow_npv.json", D + "market.json", D + "funds/cat.json", D + "macro/boi_curve.json", D + "macro/macro.json", D + "lines.json", D + "csm/sens.json",
           D + "csm/solvency.json", D + "csm/capital.json", D + "csm/facts", D + "companies/index.json", D + "debt", *WB, "web/src/lib/valuation.ts"],
-         [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py"], groups={"deploy"},
+         [D + "drivers"], code=["pipeline/build_flow_npv.py", "pipeline/csm_resolve.py", "pipeline/restate_rule.py"], groups={"deploy"},
          note="A1: graph.json + per-company elasticities (identity / regression / disclosure / assumption, each with provenance)"),
     # module A8: the regulatory impact simulator: the hand-curated initiative register through the A1 driver files; gate `regulation`
     step("build_regulation", "pipeline/build_regulation.py",
@@ -218,7 +218,7 @@ STEPS = [
     step("build_fragility", "pipeline/build_fragility.py",
          [D + "lens.json", D + "market.json", D + "funds.json", D + "funds", D + "macro/macro.json", D + "macro/boi_curve.json", D + "calendar.json",
           D + "csm/solvency.json", D + "csm/facts", D + "cards", D + "companies/index.json", D + "drivers"],
-         [D + "fragility.json"], code=["pipeline/csm_resolve.py"], groups={"deploy"},
+         [D + "fragility.json"], code=["pipeline/csm_resolve.py", "pipeline/restate_rule.py"], groups={"deploy"},
          note="A10: flow, fee, performance, cost, solvency, CSM runway, A2 scenario headroom; gate `fragility` (rebuild, provenance, no composite)"),
     # module A3: the expectations decoder (what the multiple requires, one input at a time, scored against the company's own history); gate `expectations`
     step("build_expectations", "pipeline/build_expectations.py",
@@ -296,7 +296,7 @@ STEPS = [
          [D + "facts", D + "series", D + "csm/facts", D + "csm/capital.json", D + "csm/solvency.json", D + "savings_econ.json", D + "lens.json", D + "lts_prov",
           D + "kpi.json", D + "adjusted.json", D + "companies/index.json", D + "search/docs.json", "web/src/lib/labels.ts", "web/src/pages/CompanyIfrs.tsx",
           "web/src/lib/solvency.ts"],
-         [D + "xlsx"], code=["pipeline/xlsx_lib.py"], groups={"deploy"},
+         [D + "xlsx"], code=["pipeline/xlsx_lib.py", "pipeline/csm_resolve.py", "pipeline/restate_rule.py"], groups={"deploy"},
          note="xlsx/<company>.xlsx, < 1 MB each (python3 pipeline/build_model_xlsx.py --check)"),
     # P4 fox inside Excel: the long, versioned tables (kpi, ifrs17, solvency, pnc, savings_q, savings_m, funds_m) as CSV + JSON with a
     # source on every row, manifest.json (counts, sha256, last-changed), changes.json (dated log of rows added / changed / removed since the
