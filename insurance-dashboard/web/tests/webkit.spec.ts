@@ -54,7 +54,8 @@ test('phone bottom bar shows the Pro places and the library sheet in WebKit', as
   const items = bar.locator('a.item:visible');
   await expect(items).toHaveCount(5);
   expect(await items.evaluateAll((as) => as.map((a) => (a as HTMLElement).innerText.trim()))).toEqual(PLACES);
-  await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'בית');
+  // phase 6, stage-0 P6-B1 (spec p6 T-N1): a company page belongs to the industry section, so the bar lights "השוואה ענפית" there
+  await expect(bar.locator('a.item.active:visible')).toHaveAttribute('aria-label', 'השוואה ענפית');
   for (const width of [375, 390]) {
     await page.setViewportSize({ width, height: 812 });
     const fit = await bar.locator(':is(a.item, .lib-btn):visible').evaluateAll((as) => as.map((a) => { const l = a.querySelector('.lbl-p') as HTMLElement; const r = a.getBoundingClientRect(), lr = l.getBoundingClientRect(); return { t: l.innerText, cut: l.scrollWidth > l.clientWidth + 1 || lr.height > 20 || lr.width > r.width + 1, out: r.left < -1 || r.right > innerWidth + 1, small: r.width < 44 || r.height < 44 }; }));
